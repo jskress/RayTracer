@@ -1,0 +1,4 @@
+*.ppm
+bin
+obj
+.idea
