@@ -1,3 +1,5 @@
+using RayTracer.Extensions;
+
 namespace RayTracer.Graphics;
 
 /// <summary>
@@ -5,23 +7,9 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Color
 {
-    private static readonly Random Rng = new ();
-
     public static readonly Color Black = new ();
+    public static readonly Color Gray = new (0.3, 0.3, 0.3);
     public static readonly Color White = new (1, 1, 1);
-
-    /// <summary>
-    /// This method is used to generate a random number from 0 to 1, inclusive.
-    /// </summary>
-    /// <param name="min">The minimum value for the returned random number.</param>
-    /// <param name="max">The maximum value for the returned random number.</param>
-    /// <returns>The random number</returns>
-    private static double RandomValue(double min, double max)
-    {
-        double number = Rng.NextDouble() * (max - min + 0.1) + min;
-
-        return Math.Max(number, max);
-    }
 
     /// <summary>
     /// This method generates a random color.
@@ -33,7 +21,11 @@ public class Color
     /// <returns>The random color.</returns>
     public static Color Random(double min = 0, double max = 1)
     {
-        return new Color(RandomValue(min, max), RandomValue(min, max), RandomValue(min, max));
+        double red = DoubleExtensions.RandomDouble(min, max);
+        double green = DoubleExtensions.RandomDouble(min, max);
+        double blue = DoubleExtensions.RandomDouble(min, max);
+
+        return new Color(red, green, blue);
     }
 
     /// <summary>

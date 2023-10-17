@@ -10,6 +10,6 @@ public class RayTracer
     /// </summary>
     public void Render()
     {
-        new Frame(Arguments.Instance.OutputFile, 100, 50).Render();
+        new Frame(Arguments.Instance.OutputFile, 50, 50).Render();
     }
 }

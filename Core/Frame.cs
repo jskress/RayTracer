@@ -86,6 +86,8 @@ internal class Frame
     {
         _scene.Camera.Initialize();
 
+        DateTime startTime = DateTime.Now;
+
         for (int y = 0; y < _image.Height; y++)
         {
             for (int x = 0; x < _image.Width; x++)
@@ -99,10 +101,13 @@ internal class Frame
         while (Interlocked.Read(ref _pixelCount) > 0)
             Task.Delay(TimeSpan.FromMilliseconds(5));
 
+        DateTime endTime = DateTime.Now;
+        TimeSpan duration = endTime - startTime;
+
         _imageFile.Save(_image);
 
         Console.CursorLeft = 0;
-        Console.WriteLine("Done!");
+        Console.WriteLine($"Done!  It took {duration}");
     }
 
     /// <summary>
@@ -157,7 +162,7 @@ internal class Frame
     private Color CalculatePixelColor(Ray ray, int maxDepth)
     {
         if (maxDepth <= 0)
-            return Color.Black;
+            return Color.Gray;
 
         Interval interval = new (0.001, double.PositiveInfinity);
         Intersection? intersection = _scene.FindHit(ray, interval);
