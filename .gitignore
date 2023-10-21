@@ -1,4 +1,6 @@
 *.ppm
+*.png
 bin
 obj
 .idea
+*.DotSettings.user

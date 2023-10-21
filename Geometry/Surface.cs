@@ -1,0 +1,115 @@
+using RayTracer.Basics;
+using RayTracer.Core;
+
+namespace RayTracer.Geometry;
+
+/// <summary>
+/// This is the base class for all pieces of geometry.
+/// </summary>
+public abstract class Surface
+{
+    /// <summary>
+    /// This holds the material for the surface.
+    /// </summary>
+    public Material Material { get; set; } = new ();
+
+    /// <summary>
+    /// This property holds the transform for the surface for converting from world to
+    /// surface space.
+    /// </summary>
+    public Matrix Transform
+    {
+        get => _transform;
+        set
+        {
+            _transform = value;
+
+            if (_inverseTransform.IsValueCreated)
+                _inverseTransform = new Lazy<Matrix>(CreateInverseTransform);
+        }
+    }
+
+    /// <summary>
+    /// This property provides the inverse of the surface's transform.
+    /// </summary>
+    public Matrix InverseTransform => _inverseTransform.Value;
+
+    /// <summary>
+    /// This property provides the transposed inverse of the surface's transform.
+    /// </summary>
+    protected Matrix TransformedInverseTransform => _transposedInverseTransform.Value;
+
+    private Matrix _transform;
+    private Lazy<Matrix> _inverseTransform;
+    private Lazy<Matrix> _transposedInverseTransform;
+
+    protected Surface()
+    {
+        _transform = Matrix.Identity;
+        _inverseTransform = new Lazy<Matrix>(CreateInverseTransform);
+        _transposedInverseTransform = new Lazy<Matrix>(CreateTransposedInverseTransform);
+    }
+
+    /// <summary>
+    /// This method creates the inverse of our transformation matrix.
+    /// </summary>
+    /// <returns>The inverse of our transformation matrix.</returns>
+    private Matrix CreateInverseTransform()
+    {
+        if (_transposedInverseTransform.IsValueCreated)
+            _transposedInverseTransform = new Lazy<Matrix>(CreateTransposedInverseTransform);
+
+        return _transform.Invert();
+    }
+
+    /// <summary>
+    /// This method creates the transposed inverse of our transformation matrix.
+    /// </summary>
+    /// <returns>The transposed inverse of our transformation matrix.</returns>
+    private Matrix CreateTransposedInverseTransform()
+    {
+        return InverseTransform.Transpose();
+    }
+
+    /// <summary>
+    /// This method must be provided by subclasses to determine whether the given
+    /// ray intersects the geometry and, if so, where.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    public void Intersect(Ray ray, List<Intersection> intersections)
+    {
+        AddIntersections(InverseTransform.Transform(ray), intersections);
+    }
+
+    /// <summary>
+    /// This method must be provided by subclasses to determine whether the given
+    /// ray intersects the geometry and, if so, where.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    public abstract void AddIntersections(Ray ray, List<Intersection> intersections);
+
+    /// <summary>
+    /// This method calculate the normal for the surface at the specified point.
+    /// </summary>
+    /// <param name="point">The point at which the normal should be determined.</param>
+    /// <returns>The normal to the surface at the given point.</returns>
+    public Vector NormaAt(Point point)
+    {
+        Vector normal = SurfaceNormaAt(InverseTransform * point);
+
+        normal = TransformedInverseTransform * normal;
+
+        return normal.Clean().Unit;
+    }
+
+    /// <summary>
+    /// This method should calculate the normal for the surface at the specified point.
+    /// The point will have been transformed to surface-space coordinates.  The vector
+    /// returned should also be in surface-space coordinates.
+    /// </summary>
+    /// <param name="point">The point at which the normal should be determined.</param>
+    /// <returns>The normal to the surface at the given point.</returns>
+    public abstract Vector SurfaceNormaAt(Point point);
+}

@@ -1,138 +1,130 @@
-using RayTracer.Extensions;
+using RayTracer.Basics;
+using RayTracer.ColorSources;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
-using RayTracer.Materials;
-using RayTracer.Shapes;
 
 namespace RayTracer.Core;
 
+/// <summary>
+/// This class represents a world of things to render.
+/// </summary>
 public class Scene
 {
-    public static Scene CreateDefaultScene(Camera camera)
+    /// <summary>
+    /// This method generates a default scene with one light and two spheres.
+    /// </summary>
+    /// <returns>A default scene.</returns>
+    public static Scene DefaultScene()
     {
-        Scene scene = new (camera);
-        // Matte left = new (new Color(0, 0, 1));
-        // Matte right = new (new Color(1, 0, 0));
-        // double radius = Math.Cos(double.Pi / 4);
-        //
-        // scene.Add(new Sphere(new Point(-radius, 0, -1), radius, left));
-        // scene.Add(new Sphere(new Point(radius, 0, -1), radius, right));
-
-        // Matte ground = new (new Color(0.8, 0.8, 0));
-        // Matte center = new (new Color(0.1, 0.2, 0.5));
-        // Glass left = new (1.5);
-        // Metal right = new (new Color(0.8, 0.6, 0.2), 0);
-        //
-        // scene.Add(new Sphere(new Point(0, -100.5, -1), 100, ground));
-        // scene.Add(new Sphere(new Point(0, 0, -1), 0.5, center));
-        // scene.Add(new Sphere(new Point(-1, 0, -1), 0.5, left));
-        // scene.Add(new Sphere(new Point(-1, 0, -1), -0.4, left));
-        // scene.Add(new Sphere(new Point(1, 0, -1), 0.5, right));
-        //
-        // camera.Location = new Point(-2, 2, 1);
-        // camera.LookAt = new Point(0, 0, -1);
-        // camera.Up = new Vector(0, 1, 0);
-        // camera.VerticalFieldOfView = 20;
-        // camera.DefocusAngle = 0;
-        // camera.FocusDistance = 3.4;
-
-        Matte ground = new (new Color(0.5, 0.5, 0.5));
-        Glass glass = new (1.5);
-        Matte matte = new (new Color(0.4, 0.2, 0.1));
-        Metal metal = new (new Color(0.7, 0.6, 0.5), 0);
-        Point point = new (4, 0.2, 0);
-
-        scene.Add(new Sphere(new Point(0, -1000, 0), 1000, ground));
-
-        for (int a = -11; a < 11; a++)
+        PointLight pointLight = new()
         {
-            for (int b = -11; b < 11; b++)
+            Location = new Point(-10, 10, -10)
+        };
+        Sphere outer = new ()
+        {
+            Material = new Material
             {
-                double materialSelector = DoubleExtensions.RandomDouble();
-                double x = DoubleExtensions.RandomDouble() * 0.9 + a;
-                double z = DoubleExtensions.RandomDouble() * 0.9 + b;
-                Point center = new (x, 0.2, z);
-
-                if ((center - point).Length > 0.9)
-                {
-                    Material material;
-
-                    if (materialSelector < 0.8)
-                    {
-                        Color color = Color.Random() * Color.Random();
-
-                        material = new Matte(color);
-                    }
-                    else if (materialSelector < 0.95)
-                    {
-                        Color color = Color.Random(0.5);
-                        double fuzz = DoubleExtensions.RandomDouble(0, 0.5);
-
-                        material = new Metal(color, fuzz);
-                    }
-                    else
-                        material = glass;
-
-                    scene.Add(new Sphere(center, 0.2, material));
-                }
+                ColorSource = new ConstantColorSource(new Color(0.8, 1.0, 0.6)),
+                Diffuse = 0.7,
+                Specular = 0.2
             }
-        }
+        };
+        Sphere inner = new ()
+        {
+            Transform = Transforms.Scale(0.5)
+        };
+        Scene scene = new ();
 
-        scene.Add(new Sphere(new Point(0, 1, 0), 1.0, glass));
-        scene.Add(new Sphere(new Point(-4, 1, 0), 1.0, matte));
-        scene.Add(new Sphere(new Point(4, 1, 0), 1.0, metal));
-
-        camera.VerticalFieldOfView = 20;
-        camera.Location = new Point(13, 2, 3);
-        camera.LookAt = new Point(0, 0, 0);
-        camera.Up = new Vector(0, 1, 0);
-        camera.DefocusAngle = 0;
-        camera.FocusDistance = 10.0;
+        scene.Lights.Add(pointLight);
+        scene.Surfaces.Add(outer);
+        scene.Surfaces.Add(inner);
 
         return scene;
     }
 
-    private readonly List<Shape> _shapes = new();
-
-    public Camera Camera { get; }
-
-    public Scene(Camera camera)
-    {
-        Camera = camera;
-    }
+    /// <summary>
+    /// This list holds the collection of lights in the scene.
+    /// </summary>
+    public List<PointLight> Lights { get; set; } = new ();
 
     /// <summary>
-    /// This method is used to add a shape to our scene.
+    /// This list holds the collection of surfaces (shapes) in the scene.
     /// </summary>
-    /// <param name="shape"></param>
-    public void Add(Shape shape)
-    {
-        _shapes.Add(shape);
-    }
+    public List<Surface> Surfaces { get; set; } = new ();
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects any
-    /// shapes in the scene.
+    /// This property holds the color to use for a pixel when rays do not intersect with
+    /// anything in the scene.
     /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="interval">The interval of acceptable values for distance.</param>
-    /// <returns>A ray/shape intersection object describing the intersection, or
-    /// <c>null</c>, if the ray missed us.</returns>
-    public Intersection? FindHit(Ray ray, Interval interval)
-    {
-        Intersection? result = null;
-        Interval workingInterval = new (interval);
+    public Color BackgroundColor { get; set; } = Color.Transparent;
 
-        foreach (Shape shape in _shapes)
+    /// <summary>
+    /// This method determines the color for the given ray.
+    /// </summary>
+    /// <param name="ray">The ray to determine the color for.</param>
+    /// <returns>The color for the ray.</returns>
+    public Color GetColorFor(Ray ray)
+    {
+        List<Intersection> hits = Intersect(ray);
+        Intersection? hit = hits.Hit();
+        Color color = BackgroundColor;
+
+        if (hit != null)
         {
-            Intersection? intersection = shape.FindHit(ray, workingInterval);
+            hit.PrepareUsing(ray);
 
-            if (intersection != null)
-            {
-                result = intersection;
-                workingInterval.Maximum = result.Distance;
-            }
+            color = GetHitColor(hit);
         }
 
-        return result;
+        return color;
+    }
+
+    /// <summary>
+    /// This method finds the point of intersection, if any, of the given ray with the
+    /// things in the world.
+    /// ray intersects the geometry and, if so, where.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    public List<Intersection> Intersect(Ray ray)
+    {
+        List<Intersection> intersections = new ();
+
+        foreach (Surface surface in Surfaces)
+            surface.Intersect(ray, intersections);
+
+        intersections.Sort();
+
+        return intersections;
+    }
+
+    /// <summary>
+    /// This method is used to determine the color for the given intersection point.
+    /// </summary>
+    /// <param name="intersection">The intersection point to derive the color for.</param>
+    /// <returns>The color to use.</returns>
+    public Color GetHitColor(Intersection intersection)
+    {
+        return Lights.Aggregate(Color.Black, (color, light) =>
+            light.ApplyPhong(
+                intersection.OverPoint, intersection.Eye, intersection.Normal,
+                intersection.Surface, IsInShadow(light, intersection.OverPoint)) + color);
+    }
+
+    /// <summary>
+    /// This method returns whether the given point is in shadow in regards to the given
+    /// light source.
+    /// </summary>
+    /// <param name="light">The light source in question.</param>
+    /// <param name="point">The point to test.</param>
+    /// <returns><c>true</c>, if the point is in shadow, or <c>false</c>, if not.</returns>
+    public bool IsInShadow(PointLight light, Point point)
+    {
+        Vector vector = light.Location - point;
+        double distance = vector.Magnitude;
+        Ray ray = new (point, vector.Unit);
+        List<Intersection> intersections = Intersect(ray);
+        Intersection? hit = intersections.Hit();
+
+        return hit != null && hit.Distance < distance;
     }
 }

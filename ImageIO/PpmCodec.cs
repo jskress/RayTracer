@@ -1,5 +1,4 @@
 using System.Text;
-using RayTracer.Core;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -9,69 +8,62 @@ namespace RayTracer.ImageIO;
 /// </summary>
 public class PpmCodec : IImageCodec
 {
-    private StreamWriter _writer = null!;
-
-        /// <summary>
-        /// This method is used to set the output stream when writing an image
-        /// </summary>
-        /// <param name="stream"></param>
-    public void SetStream(Stream stream)
+    /// <summary>
+    /// This method is used to encode the given canvas to the specified stream.
+    /// </summary>
+    /// <param name="canvas">The canvas being encoded and written.</param>
+    /// <param name="stream">The stream to write to.</param>
+    public void Encode(Canvas canvas, Stream stream)
     {
-        _writer = new StreamWriter(stream, Encoding.Default);
+        using StreamWriter writer = new (stream, Encoding.Default);
+
+        WriteHeader(canvas, writer);
+        WritePixels(canvas, writer);
     }
 
     /// <summary>
-    /// This method is used to emit the appropriate header for the given image to the
-    /// stream previously set.
+    /// This method is used to write the PPM header to the file for the given canvas.
     /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    public void WriteHeader(Image image)
+    /// <param name="canvas">The canvas being encoded and written.</param>
+    /// <param name="writer">The stream to write to.</param>
+    private static void WriteHeader(Canvas canvas, StreamWriter writer)
     {
-        _writer.WriteLine($"""
+        writer.WriteLine($"""
             P3
-            {image.Width} {image.Height}
+            {canvas.Width} {canvas.Height}
             255
             """);
     }
 
     /// <summary>
-    /// This method is used to emit the appropriate pixel data for the given
-    /// image to the stream previously set.
+    /// This method is used to write the appropriate pixel data in PPM format to the
+    /// file.
     /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    public void WritePixels(Image image)
+    /// <param name="canvas">The canvas being encoded and written.</param>
+    /// <param name="writer">The stream to write to.</param>
+    private static void WritePixels(Canvas canvas, StreamWriter writer)
     {
-        Interval interval = new (0, 1);
-
-        for (int y = 0; y < image.Height; y++)
+        for (int y = 0; y < canvas.Height; y++)
         {
-            for (int x = 0; x < image.Width; x++)
+            for (int x = 0; x < canvas.Width; x++)
             {
-                Color color = image.GetPixel(x, y);
+                Color color = canvas.GetPixel(x, y);
 
                 // Apply gamma correction.
-                double r = Math.Sqrt(color.Red);
-                double g = Math.Sqrt(color.Green);
-                double b = Math.Sqrt(color.Blue);
+                // double r = Math.Sqrt(color.Red);
+                // double g = Math.Sqrt(color.Green);
+                // double b = Math.Sqrt(color.Blue);
+                double r = Math.Clamp(color.Red, 0, 1);
+                double g = Math.Clamp(color.Green, 0, 1);
+                double b = Math.Clamp(color.Blue, 0, 1);
 
                 // Now write out the color.
-                int red = Convert.ToInt32(interval.Clamp(r) * 255);
-                int green = Convert.ToInt32(interval.Clamp(g) * 255);
-                int blue = Convert.ToInt32(interval.Clamp(b) * 255);
+                int red = Convert.ToInt32(r * 255);
+                int green = Convert.ToInt32(g * 255);
+                int blue = Convert.ToInt32(b * 255);
 
-                _writer.WriteLine($"{red} {green} {blue}");
+                writer.WriteLine($"{red} {green} {blue}");
             }
         }
-    }
-
-    /// <summary>
-    /// This method is used to emit the appropriate footer for the given image to the
-    /// stream previously set.  We don't have a footer so we just do some cleanup.
-    /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    public void WriteFooter(Image image)
-    {
-        // No footer in a PPM file, so just do some cleanup.
-        _writer.Close();
     }
 }

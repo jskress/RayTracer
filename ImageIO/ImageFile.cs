@@ -26,15 +26,12 @@ public class ImageFile
     /// This method is used to save the given image to the file, in the format
     /// indicated by its extension.
     /// </summary>
-    /// <param name="image">The image to save.</param>
-    public void Save(Image image)
+    /// <param name="canvas">The image to save.</param>
+    public void Save(Canvas canvas)
     {
         using Stream stream = new FileStream(_fileName, FileMode.Create);
 
-        _codec.SetStream(stream);
-        _codec.WriteHeader(image);
-        _codec.WritePixels(image);
-        _codec.WriteFooter(image);
+        _codec.Encode(canvas, stream);
     }
 
     /// <summary>

@@ -1,139 +1,74 @@
-using RayTracer.Extensions;
+using RayTracer.Basics;
 using RayTracer.Graphics;
+using RayTracer.Scanners;
 
 namespace RayTracer.Core;
 
 /// <summary>
-/// This class represents a camera in the raytracer
+/// This class represents a camera in a scene.
 /// </summary>
 public class Camera
 {
     /// <summary>
     /// This property holds the location of the camera.
     /// </summary>
-    public Point Location { get; set; }
+    public Point Location { get; set; } = new (0, 0, -5);
 
     /// <summary>
-    /// This property holds the point the camera is looking at.
+    /// This property holds the point at which the camera is aimed.
     /// </summary>
-    public Point LookAt { get; set; }
+    public Point LookAt { get; set; } = Point.Zero;
 
     /// <summary>
-    /// This property holds the "up" vector for the camera.
+    /// This property holds a vector that indicates the direction of "up" for the
+    /// camera.
     /// </summary>
-    public Vector Up { get; set; }
+    public Vector Up { get; set; } = new (0, 1, 0);
 
     /// <summary>
-    /// This property holds the vertical field of view angle for the camera.
+    /// This property reports the field of view (in degrees) for the camera.
     /// </summary>
-    public double VerticalFieldOfView { get; set; }
+    public double FieldOfView { get; set; } = 90;
 
     /// <summary>
-    /// This property holds the defocus angle value for the camera.
+    /// This property provides the view transformation that the camera represents.
     /// </summary>
-    public double DefocusAngle { get; set; }
+    public Matrix Transform => GetTransform();
 
     /// <summary>
-    /// This property holds the focus distance value for the camera.
+    /// This method is used to render the given scene to the specified canvas.
     /// </summary>
-    public double FocusDistance { get; set; }
-
-    private readonly double _imageWidth;
-    private readonly double _imageHeight;
-
-    private Vector _defocusDiskU;
-    private Vector _defocusDiskV;
-    private Vector _pixelDeltaX;
-    private Vector _pixelDeltaY;
-    private Point _originPixelLocation;
-
-    public Camera(Image image)
+    /// <param name="scene">The scene to render.</param>
+    /// <param name="canvas">The canvas to render to.</param>
+    /// <param name="scanner">The scanner to use to visit each pixel.</param>
+    public void Render(Scene scene, Canvas canvas, IScanner scanner)
     {
-        _imageWidth = Convert.ToDouble(image.Width);
-        _imageHeight = Convert.ToDouble(image.Height);
+        CameraMechanics mechanics = new (canvas, FieldOfView.ToRadians(), GetTransform());
 
-        Location = new Point(0, 0, -1);
-        LookAt = new Point(0, 0, 0);
-        Up = new Vector(0, 1, 0);
-        VerticalFieldOfView = 90;
-        DefocusAngle = 0;
-        FocusDistance = 10;
-        _defocusDiskU = null!;
-        _defocusDiskV = null!;
-        _pixelDeltaX = null!;
-        _pixelDeltaY = null!;
-        _originPixelLocation = Location;
-    }
-
-    /// <summary>
-    /// This method is used to initialize the runtime properties of the camera.
-    /// </summary>
-    public void Initialize()
-    {
-        double h = Math.Tan(VerticalFieldOfView.ToRadians() / 2);
-        double viewportHeight = h * 2 * FocusDistance;
-        double viewportWidth = viewportHeight * (_imageWidth / _imageHeight);
-        Vector w = (Location - LookAt).Unit();
-        Vector u = Up.Cross(w).Unit();
-        Vector v = w.Cross(u);
-        Vector horizontalViewportVector = u * viewportWidth;
-        Vector verticalViewportVector = -v * viewportHeight;
-
-        _pixelDeltaX = horizontalViewportVector / _imageWidth;
-        _pixelDeltaY = verticalViewportVector / _imageHeight;
-
-        Point upperLeft = Location - w * FocusDistance -
-                          horizontalViewportVector / 2 -
-                          verticalViewportVector / 2;
-
-        _originPixelLocation = upperLeft + 0.5 * (_pixelDeltaX + _pixelDeltaY);
-
-        double halfAngle = DefocusAngle / 2;
-        double defocusRadius = FocusDistance * Math.Tan(halfAngle.ToRadians());
-
-        _defocusDiskU = u * defocusRadius;
-        _defocusDiskV = v * defocusRadius;
-    }
-
-    /// <summary>
-    /// This method is used to generate a ray for the given pixel location.
-    /// </summary>
-    /// <param name="pixel">The pixel to create a ray for.</param>
-    /// <param name="jitter">If <c>false</c>, we return the ray for the center of
-    /// the given pixel; if <c>true</c>, we return the ray for a point slightly
-    /// offset from the center.</param>
-    /// <returns>The proper ray for the pixel location.</returns>
-    public Ray CreateRayFor(Pixel pixel, bool jitter)
-    {
-        Point pixelCenter = _originPixelLocation +
-                            _pixelDeltaX * pixel.X +
-                            _pixelDeltaY * pixel.Y;
-
-        if (jitter)
+        scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
         {
-            double offsetX = DoubleExtensions.RandomDouble() - 0.5;
-            double offsetY = DoubleExtensions.RandomDouble() - 0.5;
-            Vector offset = _pixelDeltaX * offsetX + _pixelDeltaY * offsetY;
+            Ray ray = mechanics.GetRayForPixel(x, y);
 
-            pixelCenter += offset;
-        }
-
-        Point origin = DefocusAngle <= 0 ? Location : DefocusDiskSample();
-        Vector direction = pixelCenter - Location;
-
-        return new Ray(origin, direction);
+            canvas.SetColor(scene.GetColorFor(ray), x, y);
+        });
     }
 
     /// <summary>
-    /// This method generates a random origin point for a ray from within the defocus
-    /// disk.
+    /// This method generates the view transform for the camera.
     /// </summary>
-    /// <returns>The random ray origin.</returns>
-    private Point DefocusDiskSample()
+    /// <returns>The view transform the camera represents.</returns>
+    private Matrix GetTransform()
     {
-        Vector vector = Vector.RandomInUnitDisk();
-        Vector place = Location + _defocusDiskU * vector.X + _defocusDiskV * vector.Y;
+        Vector forward = (LookAt - Location).Unit;
+        Vector left = forward.Cross(Up.Unit);
+        Vector trueUp = left.Cross(forward);
 
-        return new Point(place);
+        return new Matrix(new []
+        {
+             left.X,     left.Y,     left.Z,    0,
+             trueUp.X,   trueUp.Y,   trueUp.Z,  0,
+            -forward.X, -forward.Y, -forward.Z, 0,
+             0,          0,          0,         1
+        }) * Transforms.Translate(-Location.X, -Location.Y, -Location.Z);
     }
 }

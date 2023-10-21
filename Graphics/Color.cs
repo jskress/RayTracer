@@ -1,5 +1,3 @@
-using RayTracer.Extensions;
-
 namespace RayTracer.Graphics;
 
 /// <summary>
@@ -7,26 +5,27 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Color
 {
+    public static readonly Color Transparent = new (0, 0, 0, 0);
     public static readonly Color Black = new ();
     public static readonly Color Gray = new (0.3, 0.3, 0.3);
     public static readonly Color White = new (1, 1, 1);
 
-    /// <summary>
-    /// This method generates a random color.
-    /// </summary>
-    /// <param name="min">The minimum value for the returned random number; defaults to
-    /// zero.</param>
-    /// <param name="max">The maximum value for the returned random number; defaults to
-    /// one.</param>
-    /// <returns>The random color.</returns>
-    public static Color Random(double min = 0, double max = 1)
-    {
-        double red = DoubleExtensions.RandomDouble(min, max);
-        double green = DoubleExtensions.RandomDouble(min, max);
-        double blue = DoubleExtensions.RandomDouble(min, max);
-
-        return new Color(red, green, blue);
-    }
+    // /// <summary>
+    // /// This method generates a random color.
+    // /// </summary>
+    // /// <param name="min">The minimum value for the returned random number; defaults to
+    // /// zero.</param>
+    // /// <param name="max">The maximum value for the returned random number; defaults to
+    // /// one.</param>
+    // /// <returns>The random color.</returns>
+    // public static Color Random(double min = 0, double max = 1)
+    // {
+    //     double red = DoubleExtensions.RandomDouble(min, max);
+    //     double green = DoubleExtensions.RandomDouble(min, max);
+    //     double blue = DoubleExtensions.RandomDouble(min, max);
+    //
+    //     return new Color(red, green, blue);
+    // }
 
     /// <summary>
     /// This property returns the red component of the color.
@@ -50,14 +49,24 @@ public class Color
 
     public Color() : this(0, 0, 0) {}
 
-    public Color(Vector vector) : this(vector.X, vector.Y, vector.Z) {}
-
-    public Color(double red, double green, double blue, double alpha = 0)
+    public Color(double red, double green, double blue, double alpha = 1)
     {
         Red = red;
         Green = green;
         Blue = blue;
         Alpha = alpha;
+    }
+
+    /// <summary>
+    /// This method returns whether the given color matches this one.  This will be true
+    /// if all members are equitable within a small tolerance.
+    /// </summary>
+    /// <param name="other">The color to compare to.</param>
+    /// <returns><c>true</c>, if the two colors match, or <c>false</c>, if not.</returns>
+    public bool Matches(Color other)
+    {
+        return Red.Near(other.Red) && Green.Near(other.Green) &&
+               Blue.Near(other.Blue) && Alpha.Near(other.Alpha);
     }
 
     // -------------------------------------------------------------------------
@@ -75,23 +84,21 @@ public class Color
         return new Color(
             left.Red + right.Red,
             left.Green + right.Green,
-            left.Blue + right.Blue,
-            left.Alpha + right.Alpha);
+            left.Blue + right.Blue);
     }
 
     /// <summary>
-    /// Add a number to a color.
+    /// Subtract two colors.
     /// </summary>
-    /// <param name="left">The color to add the number to.</param>
-    /// <param name="right">The number to add.</param>
-    /// <returns>The sum of the color and the number.</returns>
-    public static Color operator +(Color left, double right)
+    /// <param name="left">The left color to subtract from.</param>
+    /// <param name="right">The right color to subtract.</param>
+    /// <returns>The difference of the colors.</returns>
+    public static Color operator -(Color left, Color right)
     {
         return new Color(
-            left.Red + right,
-            left.Green + right,
-            left.Blue + right,
-            left.Alpha);
+            left.Red - right.Red,
+            left.Green - right.Green,
+            left.Blue - right.Blue);
     }
 
     /// <summary>
@@ -105,8 +112,21 @@ public class Color
         return new Color(
             left.Red * right,
             left.Green * right,
-            left.Blue * right,
-            left.Alpha * right);
+            left.Blue * right);
+    }
+
+    /// <summary>
+    /// Multiply a color by a number.
+    /// </summary>
+    /// <param name="left">The number to multiply.</param>
+    /// <param name="right">The color to multiply.</param>
+    /// <returns>The result of multiplying the color by the number.</returns>
+    public static Color operator *(double left, Color right)
+    {
+        return new Color(
+            left * right.Red,
+            left * right.Green,
+            left * right.Blue);
     }
 
     /// <summary>
@@ -120,22 +140,6 @@ public class Color
         return new Color(
             left.Red * right.Red,
             left.Green * right.Green,
-            left.Blue * right.Blue,
-            left.Alpha * right.Alpha);
-    }
-
-    /// <summary>
-    /// Divide a color by a number.
-    /// </summary>
-    /// <param name="left">The color to divide.</param>
-    /// <param name="right">The number to divide.</param>
-    /// <returns>The result of dividing the color by the number.</returns>
-    public static Color operator /(Color left, double right)
-    {
-        return new Color(
-            left.Red / right,
-            left.Green / right,
-            left.Blue / right,
-            left.Alpha / right);
+            left.Blue * right.Blue);
     }
 }

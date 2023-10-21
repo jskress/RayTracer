@@ -9,30 +9,9 @@ namespace RayTracer.ImageIO;
 public interface IImageCodec
 {
     /// <summary>
-    /// This method is used to set the output stream when writing an image
+    /// This method is used to encode the given canvas to the specified stream.
     /// </summary>
-    /// <param name="stream"></param>
-    void SetStream(Stream stream);
-
-    /// <summary>
-    /// This method is used to emit the appropriate header for the given image to the
-    /// stream previously set.
-    /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    void WriteHeader(Image image);
-
-    /// <summary>
-    /// This method is used to emit the appropriate pixel data for the given
-    /// image to the stream previously set.
-    /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    void WritePixels(Image image);
-
-    /// <summary>
-    /// This method is used to emit the appropriate footer for the given image to the
-    /// stream previously set.
-    /// </summary>
-    /// <param name="image">The image being encoded and written.</param>
-    void WriteFooter(Image image);
+    /// <param name="canvas">The canvas being encoded and written.</param>
+    /// <param name="stream">The stream to encode</param>
+    void Encode(Canvas canvas, Stream stream);
 }
-
