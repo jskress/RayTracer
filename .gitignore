@@ -1,5 +1,4 @@
 *.ppm
-*.png
 bin
 obj
 .idea
