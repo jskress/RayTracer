@@ -18,6 +18,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Add a blending color source.
 - [ ] Implement the builder pattern on color sources, since they're getting "full featured".
 - [ ] Add a color map color source ala POVRay.
+- [ ] Add a cyclical flag to the gradient color sources (start over vs bounce back).
 - [ ] Update the linear gradient to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.
 
