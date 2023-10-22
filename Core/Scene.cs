@@ -62,8 +62,9 @@ public class Scene
     /// This method determines the color for the given ray.
     /// </summary>
     /// <param name="ray">The ray to determine the color for.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
     /// <returns>The color for the ray.</returns>
-    public Color GetColorFor(Ray ray)
+    public Color GetColorFor(Ray ray, int remaining = 4)
     {
         List<Intersection> hits = Intersect(ray);
         Intersection? hit = hits.Hit();
@@ -71,9 +72,9 @@ public class Scene
 
         if (hit != null)
         {
-            hit.PrepareUsing(ray);
+            hit.PrepareUsing(ray, hits);
 
-            color = GetHitColor(hit);
+            color = GetHitColor(hit, remaining);
         }
 
         return color;
@@ -101,13 +102,33 @@ public class Scene
     /// This method is used to determine the color for the given intersection point.
     /// </summary>
     /// <param name="intersection">The intersection point to derive the color for.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
     /// <returns>The color to use.</returns>
-    public Color GetHitColor(Intersection intersection)
+    public Color GetHitColor(Intersection intersection, int remaining)
     {
         return Lights.Aggregate(Color.Black, (color, light) =>
-            light.ApplyPhong(
+        {
+            bool isInShadow = IsInShadow(light, intersection.OverPoint);
+            Color surfaceColor = light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal,
-                intersection.Surface, IsInShadow(light, intersection.OverPoint)) + color);
+                intersection.Surface, isInShadow);
+            Color reflectedColor = GetReflectionColor(intersection, remaining);
+            Color refractedColor = GetRefractedColor(intersection, remaining);
+            Material material = intersection.Surface.Material;
+            Color refColor;
+
+            if (material is {Reflective: > 0, Transparency: > 0})
+            {
+                double reflectance = intersection.Reflectance;
+
+                refColor = reflectedColor * reflectance +
+                           refractedColor * (1 - reflectance);
+            }
+            else
+                refColor = reflectedColor + refractedColor;
+
+            return surfaceColor + refColor + color;
+        });
     }
 
     /// <summary>
@@ -126,5 +147,56 @@ public class Scene
         Intersection? hit = intersections.Hit();
 
         return hit != null && hit.Distance < distance;
+    }
+
+    /// <summary>
+    /// This method is used to determine the color of the reflected ray from the given
+    /// intersection.
+    /// </summary>
+    /// <param name="intersection">The intersection to start with.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <returns>The reflected color.</returns>
+    public Color GetReflectionColor(Intersection intersection, int remaining)
+    {
+        double reflective = intersection.Surface.Material.Reflective;
+
+        if (remaining < 1 || reflective == 0)
+            return Color.Black;
+
+        Ray reflectedRay = new (intersection.OverPoint, intersection.Reflect);
+
+        return GetColorFor(reflectedRay, remaining - 1) * reflective;
+    }
+
+    /// <summary>
+    /// This method is used to determine the color of the refracted ray from the given
+    /// intersection.
+    /// </summary>
+    /// <param name="intersection">The intersection to start with.</param>
+    /// <param name="remaining">The remaining number of refraction recursions allowed.</param>
+    /// <returns>The reflected color.</returns>
+    public Color GetRefractedColor(Intersection intersection, int remaining)
+    {
+        double transparency = intersection.Surface.Material.Transparency;
+
+        if (remaining < 1 || transparency == 0)
+            return Color.Black;
+
+        double ratio = intersection.N1 / intersection.N2;
+        double cosI = intersection.Eye.Dot(intersection.Normal);
+        double sin2T = ratio * ratio * (1 - cosI * cosI);
+
+        if (sin2T > 1)
+            return Color.Black;
+
+        double cosT = Math.Sqrt(1 - sin2T);
+        Vector direction = intersection.Normal * (ratio * cosI - cosT) -
+                           intersection.Eye * ratio;
+        Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
+
+        Ray refractedRay = new(point, direction);
+        Color color = GetColorFor(refractedRay, remaining - 1);
+
+        return color * transparency;
     }
 }

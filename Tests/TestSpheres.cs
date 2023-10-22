@@ -191,4 +191,61 @@ public class TestSpheres
 
         Assert.AreSame(material, sphere.Material);
     }
+
+    [TestMethod]
+    public void TestGlassSphere()
+    {
+        Sphere glass = Sphere.CreateGlassSphere();
+
+        Assert.AreSame(Matrix.Identity, glass.Transform);
+        Assert.AreEqual(1, glass.Material.Transparency);
+        Assert.AreEqual(1.5, glass.Material.IndexOfRefraction);
+    }
+
+    private record N1N2(double N1, double N2);
+
+    [TestMethod]
+    public void TestRefractionN1N2()
+    {
+        Sphere a = Sphere.CreateGlassSphere();
+        Sphere b = Sphere.CreateGlassSphere();
+        Sphere c = Sphere.CreateGlassSphere();
+        Point origin = new (0, 0, -4);
+        Vector direction = new (0, 0, 1);
+        Ray ray = new (origin, direction);
+        List<Intersection> intersections = new ()
+        {
+            new Intersection(a, 2),
+            new Intersection(b, 2.75),
+            new Intersection(c, 3.25),
+            new Intersection(b, 4.75),
+            new Intersection(c, 5.25),
+            new Intersection(a, 6)
+        };
+
+        a.Transform = Transforms.Scale(2);
+        a.Material.IndexOfRefraction = 1.5;
+        b.Transform = Transforms.Translate(0, 0, -0.25);
+        b.Material.IndexOfRefraction = 2.0;
+        c.Transform = Transforms.Translate(0, 0, 0.25);
+        c.Material.IndexOfRefraction = 2.5;
+
+        N1N2[] expected =
+        {
+            new (1.0, 1.5),
+            new (1.5, 2.0),
+            new (2.0, 2.5),
+            new (2.5, 2.5),
+            new (2.5, 1.5),
+            new (1.5, 1.0)
+        };
+
+        for (int index = 0; index < expected.Length; index++)
+        {
+            intersections[index].PrepareUsing(ray, intersections);
+
+            Assert.AreEqual(expected[index].N1, intersections[index].N1);
+            Assert.AreEqual(expected[index].N2, intersections[index].N2);
+        }
+    }
 }

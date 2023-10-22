@@ -17,5 +17,8 @@ public class TestMaterial
         Assert.AreEqual(0.9, material.Diffuse);
         Assert.AreEqual(0.9, material.Specular);
         Assert.AreEqual(200.0, material.Shininess);
+        Assert.AreEqual(0, material.Reflective);
+        Assert.AreEqual(0, material.Transparency);
+        Assert.AreEqual(1, material.IndexOfRefraction);
     }
 }

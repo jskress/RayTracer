@@ -22,4 +22,9 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Update the linear gradient to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.
 
+### To-Dos for surface rendering:
+
+- [ ] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
+      does not cast a shadow.
+
 More to come...

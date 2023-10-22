@@ -8,31 +8,6 @@ using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Scanners;
 
-// Sphere floor = new ()
-// {
-//     Transform = Transforms.Scale(10, 0.01, 10),
-//     Material = new Material
-//     {
-//         Color = new Color(1, 0.9, 0.9),
-//         Specular = 0
-//     }
-// };
-// Sphere leftWall = new ()
-// {
-//     Transform = Transforms.Translate(0, 0, 5) *
-//                 Transforms.RotateAroundY(-45) *
-//                 Transforms.RotateAroundX(90) *
-//                 Transforms.Scale(10, 0.01, 10),
-//     Material = floor.Material
-// };
-// Sphere rightWall = new ()
-// {
-//     Transform = Transforms.Translate(0, 0, 5) *
-//                 Transforms.RotateAroundY(45) *
-//                 Transforms.RotateAroundX(90) *
-//                 Transforms.Scale(10, 0.01, 10),
-//     Material = floor.Material
-// };
 Plane floor = new ()
 {
     Material = new Material
@@ -47,18 +22,20 @@ Sphere middle = new ()
     Transform = Transforms.Translate(-0.5, 1, 0.5),
     Material = new Material
     {
-        ColorSource = new StripeColorSource(
-            new Color(0.1, 0.5, 0.2),
-            new Color(0.1, 1, 0.2))
-        {
-            Transform = Transforms.RotateAroundZ(33) *
-                        Transforms.Scale(0.25)
-        },
-        Diffuse = 0.7,
-        Specular = 0.3
+        ColorSource = new ConstantColorSource(Color.Black),
+        Reflective = 0.9,
+        Transparency = 0.9,
+        IndexOfRefraction = IndicesOfRefraction.Glass
     }
 };
-// middle.Material.ColorSource.Transform = Transforms.Scale(0.25);
+Sphere behind = new()
+{
+    Transform = Transforms.Translate(0.25, 1, 12.5),
+    Material = new Material
+    {
+        ColorSource = new ConstantColorSource(new Color(1, 1, 0))
+    }
+};
 Sphere right = new ()
 {
     Transform = Transforms.Translate(1.5, 0.5, -0.5) *
@@ -90,16 +67,16 @@ PointLight light = new ()
 {
     Location = new Point(-10, 10, -10)
 };
-Camera camera = new()
+Camera camera = new ()
 {
     Location = new Point(0, 1.5, -5),
     LookAt = new Point(0, 1, 0),
     FieldOfView = 60
 };
-Scene scene = new Scene()
+Scene scene = new ()
 {
-    Lights = new List<PointLight> {light},
-    Surfaces = new List<Surface> {floor, /* leftWall, rightWall, */ middle, left, right}
+    Lights = new List<PointLight> { light },
+    Surfaces = new List<Surface> { floor, left, middle, right, behind }
 };
 Canvas canvas = new (800, 400);
 

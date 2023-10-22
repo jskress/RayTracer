@@ -34,6 +34,22 @@ public class Material
     public double Shininess { get; set; } = 200.0;
 
     /// <summary>
+    /// This property holds how reflective the material is.  Typical range is between 0
+    /// and 1.
+    /// </summary>
+    public double Reflective { get; set; }
+
+    /// <summary>
+    /// This property holds the amount of transparency for the material.
+    /// </summary>
+    public double Transparency { get; set; }
+
+    /// <summary>
+    /// This property holds the material's index of refraction.
+    /// </summary>
+    public double IndexOfRefraction { get; set; } = 1;
+
+    /// <summary>
     /// This method returns whether this material matches the given one.  This will be
     /// true if the colors match and all the other properties match as well.
     /// </summary>
