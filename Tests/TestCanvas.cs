@@ -16,7 +16,7 @@ public class TestCanvas
         for (int y = 0; y < canvas.Height; y++)
         {
             for (int x = 0; x < canvas.Width; x++)
-                Assert.AreSame(Color.Transparent, canvas.GetPixel(x, y));
+                Assert.AreSame(Colors.Transparent, canvas.GetPixel(x, y));
         }
     }
 

@@ -6,7 +6,7 @@ namespace Tests;
 
 public class TestColorSource : ColorSource
 {
-    public Color Color { get; private set; }
+    public Color? Color { get; private set; }
 
     public override Color GetColorFor(Point point)
     {

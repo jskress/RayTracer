@@ -9,13 +9,13 @@ namespace RayTracer.ColorSources;
 /// </summary>
 public class CheckerColorSource : ColorSource
 {
-    private readonly Color _evenColor;
-    private readonly Color _oddColor;
+    private readonly ColorSource _evenColorSource;
+    private readonly ColorSource _oddColorSource;
 
-    public CheckerColorSource(Color evenColor, Color oddColor)
+    public CheckerColorSource(ColorSource evenColorSource, ColorSource oddColorSource)
     {
-        _evenColor = evenColor;
-        _oddColor = oddColor;
+        _evenColorSource = evenColorSource;
+        _oddColorSource = oddColorSource;
     }
 
     /// <summary>
@@ -29,7 +29,9 @@ public class CheckerColorSource : ColorSource
     {
         double sum = Math.Floor(point.X) + Math.Floor(point.Y) + Math.Floor(point.Z);
 
-        return sum % 2 == 0 ? _evenColor : _oddColor;
+        return sum % 2 == 0
+            ? _evenColorSource.GetColorFor(point)
+            : _oddColorSource.GetColorFor(point);
     }
 
     /// <summary>
@@ -40,7 +42,7 @@ public class CheckerColorSource : ColorSource
     public override bool Matches(ColorSource other)
     {
         return other is CheckerColorSource source &&
-               _evenColor.Matches(source._evenColor) &&
-               _oddColor.Matches(source._oddColor);
+               _evenColorSource.Matches(source._evenColorSource) &&
+               _oddColorSource.Matches(source._oddColorSource);
     }
 }

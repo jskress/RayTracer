@@ -28,7 +28,7 @@ public abstract class ColorSource
     /// <summary>
     /// This property provides the inverse of the surface's transform.
     /// </summary>
-    public Matrix InverseTransform => _inverseTransform.Value;
+    private Matrix InverseTransform => _inverseTransform.Value;
 
     private Matrix _transform;
     private Lazy<Matrix> _inverseTransform;

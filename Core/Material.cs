@@ -11,7 +11,7 @@ public class Material
     /// <summary>
     /// This property holds the source of color for the material.
     /// </summary>
-    public ColorSource ColorSource { get; set; } = ConstantColorSource.White;
+    public ColorSource ColorSource { get; set; } = SolidColorSource.White;
 
     /// <summary>
     /// The amount of ambient light for the material.
@@ -47,7 +47,7 @@ public class Material
     /// <summary>
     /// This property holds the material's index of refraction.
     /// </summary>
-    public double IndexOfRefraction { get; set; } = 1;
+    public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
 
     /// <summary>
     /// This method returns whether this material matches the given one.  This will be

@@ -48,7 +48,7 @@ public class ImageFile
         if (extension == null || extension.Trim() == string.Empty)
             throw new ArgumentException($"Cannot determine image format from '{name}'.");
 
-        if (ImageCodecs.TryGetValue(extension.ToLower(), out Func<IImageCodec>? codecCreator))
+        if (ImageCodecs.TryGetValue(extension.ToLower(), out Func<IImageCodec> codecCreator))
             return codecCreator.Invoke();
 
         throw new ArgumentException($"The extension, '{extension}', is not supported.");

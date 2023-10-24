@@ -13,7 +13,7 @@ public static class IntersectionExtensions
     /// </summary>
     /// <param name="intersections">The list of intersections to examine.</param>
     /// <returns>The "hit" intersection.</returns>
-    public static Intersection? Hit(this List<Intersection> intersections)
+    public static Intersection Hit(this List<Intersection> intersections)
     {
         intersections.Sort();
 

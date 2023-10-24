@@ -103,7 +103,7 @@ public class TestScenes
         Scene scene = Scene.DefaultScene();
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 1, 0));
 
-        Assert.IsTrue(Color.Transparent.Matches(scene.GetColorFor(ray)));
+        Assert.IsTrue(Colors.Transparent.Matches(scene.GetColorFor(ray)));
 
         ray = new Ray(new Point(0, 0, -5), new Vector(0, 0, 1));
 
@@ -155,7 +155,7 @@ public class TestScenes
 
         Color color = scene.GetReflectionColor(intersection, 1);
 
-        Assert.IsTrue(Color.Black.Matches(color));
+        Assert.IsTrue(Colors.Black.Matches(color));
     }
 
     [TestMethod]
@@ -202,7 +202,7 @@ public class TestScenes
 
         Color color = scene.GetRefractedColor(intersections[0], 5);
 
-        Assert.IsTrue(Color.Black.Matches(color));
+        Assert.IsTrue(Colors.Black.Matches(color));
 
         surface.Material.Transparency = 1;
         surface.Material.IndexOfRefraction = 1.5;
@@ -216,7 +216,7 @@ public class TestScenes
 
         color = scene.GetRefractedColor(intersections[0], 0);
 
-        Assert.IsTrue(Color.Black.Matches(color));
+        Assert.IsTrue(Colors.Black.Matches(color));
     }
 
     [TestMethod]
@@ -240,7 +240,7 @@ public class TestScenes
 
         Color color = scene.GetRefractedColor(intersections[1], 5);
 
-        Assert.IsTrue(Color.Black.Matches(color));
+        Assert.IsTrue(Colors.Black.Matches(color));
     }
 
     [TestMethod]
@@ -291,7 +291,7 @@ public class TestScenes
         {
             Material = new Material
             {
-                ColorSource = new ConstantColorSource(new Color(1, 0, 0)),
+                ColorSource = new SolidColorSource(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)
@@ -332,7 +332,7 @@ public class TestScenes
         {
             Material = new Material
             {
-                ColorSource = new ConstantColorSource(new Color(1, 0, 0)),
+                ColorSource = new SolidColorSource(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)
@@ -406,7 +406,7 @@ public class TestScenes
 
         Color color = scene.GetReflectionColor(intersection, 0);
 
-        Assert.IsTrue(Color.Black.Matches(color));
+        Assert.IsTrue(Colors.Black.Matches(color));
     }
 
     [TestMethod]

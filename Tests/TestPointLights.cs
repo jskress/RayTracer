@@ -15,7 +15,7 @@ public class TestPointLights
         PointLight pointLight = new ();
 
         Assert.AreSame(Point.Zero, pointLight.Location);
-        Assert.AreSame(Color.White, pointLight.Color);
+        Assert.AreSame(Colors.White, pointLight.Color);
     }
 
     [TestMethod]
@@ -115,7 +115,8 @@ public class TestPointLights
     {
         Material material = new ()
         {
-            ColorSource = new StripeColorSource(Color.White, Color.Black),
+            ColorSource = new StripeColorSource(
+                SolidColorSource.White, SolidColorSource.Black),
             Ambient = 1,
             Diffuse = 0,
             Specular = 0
@@ -137,7 +138,7 @@ public class TestPointLights
             new Point(1.1, 0, 0), eye, normal, sphere, false
         );
 
-        Assert.IsTrue(Color.White.Matches(c1));
-        Assert.IsTrue(Color.Black.Matches(c2));
+        Assert.IsTrue(Colors.White.Matches(c1));
+        Assert.IsTrue(Colors.Black.Matches(c2));
     }
 }

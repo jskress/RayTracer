@@ -24,7 +24,7 @@ public class Scene
         {
             Material = new Material
             {
-                ColorSource = new ConstantColorSource(new Color(0.8, 1.0, 0.6)),
+                ColorSource = new SolidColorSource(new Color(0.8, 1.0, 0.6)),
                 Diffuse = 0.7,
                 Specular = 0.2
             }
@@ -56,7 +56,7 @@ public class Scene
     /// This property holds the color to use for a pixel when rays do not intersect with
     /// anything in the scene.
     /// </summary>
-    public Color BackgroundColor { get; set; } = Color.Transparent;
+    public Color BackgroundColor { get; set; } = Colors.Transparent;
 
     /// <summary>
     /// This method determines the color for the given ray.
@@ -67,7 +67,7 @@ public class Scene
     public Color GetColorFor(Ray ray, int remaining = 4)
     {
         List<Intersection> hits = Intersect(ray);
-        Intersection? hit = hits.Hit();
+        Intersection hit = hits.Hit();
         Color color = BackgroundColor;
 
         if (hit != null)
@@ -106,7 +106,7 @@ public class Scene
     /// <returns>The color to use.</returns>
     public Color GetHitColor(Intersection intersection, int remaining)
     {
-        return Lights.Aggregate(Color.Black, (color, light) =>
+        return Lights.Aggregate(Colors.Black, (color, light) =>
         {
             bool isInShadow = IsInShadow(light, intersection.OverPoint);
             Color surfaceColor = light.ApplyPhong(
@@ -144,7 +144,7 @@ public class Scene
         double distance = vector.Magnitude;
         Ray ray = new (point, vector.Unit);
         List<Intersection> intersections = Intersect(ray);
-        Intersection? hit = intersections.Hit();
+        Intersection hit = intersections.Hit();
 
         return hit != null && hit.Distance < distance;
     }
@@ -161,7 +161,7 @@ public class Scene
         double reflective = intersection.Surface.Material.Reflective;
 
         if (remaining < 1 || reflective == 0)
-            return Color.Black;
+            return Colors.Black;
 
         Ray reflectedRay = new (intersection.OverPoint, intersection.Reflect);
 
@@ -180,14 +180,14 @@ public class Scene
         double transparency = intersection.Surface.Material.Transparency;
 
         if (remaining < 1 || transparency == 0)
-            return Color.Black;
+            return Colors.Black;
 
         double ratio = intersection.N1 / intersection.N2;
         double cosI = intersection.Eye.Dot(intersection.Normal);
         double sin2T = ratio * ratio * (1 - cosI * cosI);
 
         if (sin2T > 1)
-            return Color.Black;
+            return Colors.Black;
 
         double cosT = Math.Sqrt(1 - sin2T);
         Vector direction = intersection.Normal * (ratio * cosI - cosT) -

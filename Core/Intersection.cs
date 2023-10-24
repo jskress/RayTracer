@@ -138,7 +138,7 @@ public sealed class Intersection : IComparable<Intersection>
     /// </summary>
     /// <param name="other">The other intersection to compare to.</param>
     /// <returns>The appropriate comparison of the intersections' distances.</returns>
-    public int CompareTo(Intersection? other)
+    public int CompareTo(Intersection other)
     {
         if (ReferenceEquals(this, other))
             return 0;

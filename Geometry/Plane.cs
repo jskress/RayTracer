@@ -8,8 +8,6 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class Plane : Surface
 {
-    private static readonly Vector Normal = new (0, 1, 0);
-
     /// <summary>
     /// This method is used to determine whether the given ray intersects the plane and,
     /// if so, where.
@@ -36,6 +34,6 @@ public class Plane : Surface
     /// <returns>The normal to the surface at the given point.</returns>
     public override Vector SurfaceNormaAt(Point point)
     {
-        return Normal;
+        return Directions.Up;
     }
 }

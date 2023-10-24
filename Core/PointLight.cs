@@ -17,7 +17,7 @@ public class PointLight
     /// <summary>
     /// This property notes the color of the light.
     /// </summary>
-    public Color Color { get; set; } = Color.White;
+    public Color Color { get; set; } = Colors.White;
 
     /// <summary>
     /// This method is used to determine the color for this light at a particular
@@ -44,7 +44,7 @@ public class PointLight
         double lightDotNormal = vector.Dot(normal);
 
         if (lightDotNormal < 0)
-            diffuseColor = specularColor = Color.Black;
+            diffuseColor = specularColor = Colors.Black;
         else
         {
             diffuseColor = color * material.Diffuse * lightDotNormal;
@@ -53,7 +53,7 @@ public class PointLight
             double reflectDotEye = reflect.Dot(eye);
 
             if (reflectDotEye < 0)
-                specularColor = Color.Black;
+                specularColor = Colors.Black;
             else
             {
                 double factor = Math.Pow(reflectDotEye, material.Shininess);

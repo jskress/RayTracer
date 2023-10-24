@@ -6,13 +6,17 @@ namespace RayTracer.ColorSources;
 /// <summary>
 /// This class provides a color source that always returns the same color.
 /// </summary>
-public class ConstantColorSource : ColorSource
+public class SolidColorSource : ColorSource
 {
-    public static readonly ConstantColorSource White = new (Color.White);
+    /// <summary>
+    /// Some useful constants.
+    /// </summary>
+    public static readonly SolidColorSource White = new (Colors.White);
+    public static readonly SolidColorSource Black = new (Colors.Black);
 
     private readonly Color _color;
 
-    public ConstantColorSource(Color color)
+    public SolidColorSource(Color color)
     {
         _color = color;
     }
@@ -35,7 +39,7 @@ public class ConstantColorSource : ColorSource
     /// <returns><c>true</c>, if the two color sources match, or <c>false</c>, if not.</returns>
     public override bool Matches(ColorSource other)
     {
-        return other is ConstantColorSource source &&
+        return other is SolidColorSource source &&
                _color.Matches(source._color);
     }
 }

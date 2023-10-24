@@ -9,13 +9,13 @@ namespace RayTracer.ColorSources;
 /// </summary>
 public class StripeColorSource : ColorSource
 {
-    private readonly Color _evenColor;
-    private readonly Color _oddColor;
+    private readonly ColorSource _evenColorSource;
+    private readonly ColorSource _oddColorSource;
 
-    public StripeColorSource(Color evenColor, Color oddColor)
+    public StripeColorSource(ColorSource evenColorSource, ColorSource oddColorSource)
     {
-        _evenColor = evenColor;
-        _oddColor = oddColor;
+        _evenColorSource = evenColorSource;
+        _oddColorSource = oddColorSource;
     }
 
     /// <summary>
@@ -26,7 +26,9 @@ public class StripeColorSource : ColorSource
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        return Math.Floor(point.X) % 2 == 0 ? _evenColor : _oddColor;
+        return Math.Floor(point.X) % 2 == 0
+            ? _evenColorSource.GetColorFor(point)
+            : _oddColorSource.GetColorFor(point);
     }
 
     /// <summary>
@@ -37,7 +39,7 @@ public class StripeColorSource : ColorSource
     public override bool Matches(ColorSource other)
     {
         return other is StripeColorSource source &&
-               _evenColor.Matches(source._evenColor) &&
-               _oddColor.Matches(source._oddColor);
+               _evenColorSource.Matches(source._evenColorSource) &&
+               _oddColorSource.Matches(source._oddColorSource);
     }
 }

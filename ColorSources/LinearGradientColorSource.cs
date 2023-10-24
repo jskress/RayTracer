@@ -9,15 +9,13 @@ namespace RayTracer.ColorSources;
 /// </summary>
 public class LinearGradientColorSource : ColorSource
 {
-    private readonly Color _firstColor;
-    private readonly Color _secondColor;
-    private readonly Color _difference;
+    private readonly ColorSource _firstColorSource;
+    private readonly ColorSource _secondColorSource;
 
-    public LinearGradientColorSource(Color firstColor, Color secondColor)
+    public LinearGradientColorSource(ColorSource firstColorSource, ColorSource secondColorSource)
     {
-        _firstColor = firstColor;
-        _secondColor = secondColor;
-        _difference = secondColor - firstColor;
+        _firstColorSource = firstColorSource;
+        _secondColorSource = secondColorSource;
     }
 
     /// <summary>
@@ -29,9 +27,12 @@ public class LinearGradientColorSource : ColorSource
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
+        Color firstColor = _firstColorSource.GetColorFor(point);
+        Color secondColor = _secondColorSource.GetColorFor(point);
+        Color difference = secondColor - firstColor;
         double fraction = point.X - Math.Floor(point.X);
 
-        return _firstColor + _difference * fraction;
+        return firstColor + difference * fraction;
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public class LinearGradientColorSource : ColorSource
     public override bool Matches(ColorSource other)
     {
         return other is LinearGradientColorSource source &&
-               _firstColor.Matches(source._firstColor) &&
-               _secondColor.Matches(source._secondColor);
+               _firstColorSource.Matches(source._firstColorSource) &&
+               _secondColorSource.Matches(source._secondColorSource);
     }
 }

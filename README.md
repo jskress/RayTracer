@@ -10,13 +10,18 @@ The following are improvements I want to make.  Most of the ones relating to pat
 from the "Putting It Together" section of chapter 10, plus some things that POVRay has that
 I want to add.  Once an item is checked, you can assume it's done.
 
+### General To-Dos:
+
+- [X] Add a "cheesy" file parser to get things going in that direction.
+- [ ] Add lots of named colors.
+- [X] Add a named set of direction vectors.
+
 ### To-Dos for Patterns:
 
 - [ ] Add a radial gradient color source.
-- [ ] Update all color sources to use nested color sources.
+- [X] Update all color sources to use nested color sources.
 - [ ] Add a perturbing noise function to all color sources.
 - [ ] Add a blending color source.
-- [ ] Implement the builder pattern on color sources, since they're getting "full featured".
 - [ ] Add a color map color source ala POVRay.
 - [ ] Add a cyclical flag to the gradient color sources (start over vs bounce back).
 - [ ] Update the linear gradient to do multiples, similar to how most graphics engines

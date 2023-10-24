@@ -47,7 +47,7 @@ public class CameraMechanics
     private Matrix _transform;
     private Matrix _inverseTransform;
 
-    public CameraMechanics(Canvas canvas, double fieldOfView, Matrix? transform = null!)
+    public CameraMechanics(Canvas canvas, double fieldOfView, Matrix transform = null!)
     {
         _transform = transform ?? Matrix.Identity;
         _inverseTransform = _transform.Invert();

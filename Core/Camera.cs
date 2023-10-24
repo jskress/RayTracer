@@ -23,7 +23,7 @@ public class Camera
     /// This property holds a vector that indicates the direction of "up" for the
     /// camera.
     /// </summary>
-    public Vector Up { get; set; } = new (0, 1, 0);
+    public Vector Up { get; set; } = Directions.Up;
 
     /// <summary>
     /// This property reports the field of view (in degrees) for the camera.

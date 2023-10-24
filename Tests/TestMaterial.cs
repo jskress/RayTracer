@@ -12,7 +12,7 @@ public class TestMaterial
     {
         Material material = new ();
 
-        Assert.AreSame(ConstantColorSource.White, material.ColorSource);
+        Assert.AreSame(SolidColorSource.White, material.ColorSource);
         Assert.AreEqual(0.1, material.Ambient);
         Assert.AreEqual(0.9, material.Diffuse);
         Assert.AreEqual(0.9, material.Specular);

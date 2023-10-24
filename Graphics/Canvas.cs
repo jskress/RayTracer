@@ -29,7 +29,7 @@ public class Canvas
         {
             _pixels[y] = new Color[width];
 
-            Array.Fill(_pixels[y], Color.Transparent);
+            Array.Fill(_pixels[y], Colors.Transparent);
         }
     }
 

@@ -5,27 +5,15 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Color
 {
-    public static readonly Color Transparent = new (0, 0, 0, 0);
-    public static readonly Color Black = new ();
-    public static readonly Color Gray = new (0.3, 0.3, 0.3);
-    public static readonly Color White = new (1, 1, 1);
+    internal static Color FromUint(uint rawValue)
+    {
+        int red = (int) ((rawValue & 0x00ff0000) >> 0x10);
+        int green = (int) ((rawValue & 0x0000ff00) >> 0x8);
+        int blue = (int) (rawValue & 0x000000ff);
+        int alpha = (int) ((rawValue & 0xff000000) >> 0x18);
 
-    // /// <summary>
-    // /// This method generates a random color.
-    // /// </summary>
-    // /// <param name="min">The minimum value for the returned random number; defaults to
-    // /// zero.</param>
-    // /// <param name="max">The maximum value for the returned random number; defaults to
-    // /// one.</param>
-    // /// <returns>The random color.</returns>
-    // public static Color Random(double min = 0, double max = 1)
-    // {
-    //     double red = DoubleExtensions.RandomDouble(min, max);
-    //     double green = DoubleExtensions.RandomDouble(min, max);
-    //     double blue = DoubleExtensions.RandomDouble(min, max);
-    //
-    //     return new Color(red, green, blue);
-    // }
+        return new Color(red / 255.0d, green / 255.0d, blue / 255.0d, alpha / 255.0d);
+    }
 
     /// <summary>
     /// This property returns the red component of the color.

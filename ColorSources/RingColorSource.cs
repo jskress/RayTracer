@@ -9,13 +9,13 @@ namespace RayTracer.ColorSources;
 /// </summary>
 public class RingColorSource : ColorSource
 {
-    private readonly Color _evenColor;
-    private readonly Color _oddColor;
+    private readonly ColorSource _evenColorSource;
+    private readonly ColorSource _oddColorSource;
 
-    public RingColorSource(Color evenColor, Color oddColor)
+    public RingColorSource(ColorSource evenColorSource, ColorSource oddColorSource)
     {
-        _evenColor = evenColor;
-        _oddColor = oddColor;
+        _evenColorSource = evenColorSource;
+        _oddColorSource = oddColorSource;
     }
 
     /// <summary>
@@ -28,8 +28,8 @@ public class RingColorSource : ColorSource
     public override Color GetColorFor(Point point)
     {
         return Math.Floor(Math.Sqrt(point.X * point.X + point.Z * point.Z)) % 2 == 0
-            ? _evenColor
-            : _oddColor;
+            ? _evenColorSource.GetColorFor(point)
+            : _oddColorSource.GetColorFor(point);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class RingColorSource : ColorSource
     public override bool Matches(ColorSource other)
     {
         return other is RingColorSource source &&
-               _evenColor.Matches(source._evenColor) &&
-               _oddColor.Matches(source._oddColor);
+               _evenColorSource.Matches(source._evenColorSource) &&
+               _oddColorSource.Matches(source._oddColorSource);
     }
 }
