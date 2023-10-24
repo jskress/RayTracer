@@ -13,7 +13,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### General To-Dos:
 
 - [X] Add a "cheesy" file parser to get things going in that direction.
-- [ ] Add lots of named colors.
+- [X] Add lots of named colors.
 - [X] Add a named set of direction vectors.
 
 ### To-Dos for Patterns:
