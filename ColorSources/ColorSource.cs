@@ -56,7 +56,7 @@ public abstract class ColorSource
     /// <returns>The appropriate color at the given point.</returns>
     public Color GetColorFor(Surface surface, Point point)
     {
-        Point objectPoint = surface.InverseTransform * point;
+        Point objectPoint = surface.WorldToSurface(point);
         Point patternPoint = InverseTransform * objectPoint;
 
         return GetColorFor(patternPoint);

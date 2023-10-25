@@ -9,6 +9,11 @@ namespace RayTracer.Geometry;
 public abstract class Surface
 {
     /// <summary>
+    /// This property holds a reference to the parent of the surface, if there is one.
+    /// </summary>
+    public Group Parent { get; set; }
+
+    /// <summary>
     /// This holds the material for the surface.
     /// </summary>
     public Material Material { get; set; } = new ();
@@ -97,11 +102,9 @@ public abstract class Surface
     /// <returns>The normal to the surface at the given point.</returns>
     public Vector NormaAt(Point point)
     {
-        Vector normal = SurfaceNormaAt(InverseTransform * point);
+        Vector normal = SurfaceNormaAt(WorldToSurface(point));
 
-        normal = TransformedInverseTransform * normal;
-
-        return normal.Clean().Unit;
+        return NormalToWorld(normal);
     }
 
     /// <summary>
@@ -112,4 +115,35 @@ public abstract class Surface
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <returns>The normal to the surface at the given point.</returns>
     public abstract Vector SurfaceNormaAt(Point point);
+
+    /// <summary>
+    /// This method handles converting a given point from the world's coordinate system to
+    /// the surface's.
+    /// </summary>
+    /// <param name="point">The point to convert.</param>
+    /// <returns>The converted point.</returns>
+    public Point WorldToSurface(Point point)
+    {
+        if (Parent != null)
+            point = Parent.WorldToSurface(point);
+
+        return InverseTransform * point;
+    }
+
+    /// <summary>
+    /// This method handls converting a given normal from the surface's coordinate system
+    /// to the world's
+    /// </summary>
+    /// <param name="normal">The normal to convert.</param>
+    /// <returns>The converted normal.</returns>
+    public Vector NormalToWorld(Vector normal)
+    {
+        normal = TransformedInverseTransform * normal;
+        normal = normal.Clean().Unit;
+
+        if (Parent != null)
+            normal = Parent.NormalToWorld(normal);
+
+        return normal;
+    }
 }

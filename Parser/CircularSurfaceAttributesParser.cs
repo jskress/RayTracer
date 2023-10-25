@@ -3,7 +3,8 @@ using RayTracer.Geometry;
 namespace RayTracer.Parser;
 
 /// <summary>
-/// This class handles parsing the extra attributes for a cylinder at the surface level.
+/// This class handles parsing the extra attributes for a circular surfaces (cylinders and
+/// conics) at the surface level.
 /// </summary>
 internal class CircularSurfaceAttributesParser : AttributeParser
 {
@@ -16,7 +17,7 @@ internal class CircularSurfaceAttributesParser : AttributeParser
     }
 
     /// <summary>
-    /// This method adds a transform of the indicated type to our working list.
+    /// This method adds the named attribute to our surface.
     /// </summary>
     /// <param name="name">The name of the attribute.</param>
     /// <returns><c>true</c>, if the name was a supported attribute, or <c>false</c>, if

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using RayTracer.Core;
 using RayTracer.Graphics;
 using RayTracer.Parser;
 
@@ -9,6 +10,8 @@ Canvas canvas = renderData.Canvas;
 Console.WriteLine("Generating...");
 
 Stopwatch stopwatch = Stopwatch.StartNew();
+
+renderData.Scene.Surfaces.Add(Scene.Hexagon());
 
 renderData.Camera.Render(renderData.Scene, canvas, renderData.Scanner);
 

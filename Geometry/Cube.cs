@@ -9,6 +9,9 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class Cube : Surface
 {
+    private static readonly BoundingBox BoundingBox = new BoundingBox(
+        new Point(-1, -1, -1), new Point(1, 1, 1));
+
     /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,
     /// if so, where.
@@ -17,47 +20,13 @@ public class Cube : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        (double xMin, double xMax) = CheckAxis(ray.Origin.X, ray.Direction.X);
-        (double yMin, double yMax) = CheckAxis(ray.Origin.Y, ray.Direction.Y);
-        (double zMin, double zMax) = CheckAxis(ray.Origin.Z, ray.Direction.Z);
-        double tMin = Math.Max(xMin, Math.Max(yMin, zMin));
-        double tMax = Math.Min(xMax, Math.Min(yMax, zMax));
+        (double tMin, double tMax) = BoundingBox.GetIntersections(ray);
 
         if (tMin <= tMax)
         {
             intersections.Add(new Intersection(this, tMin));
             intersections.Add(new Intersection(this, tMax));
         }
-    }
-
-    /// <summary>
-    /// This method handles finding intersection points for a specific pair of axis planes.
-    /// </summary>
-    /// <param name="origin">The origin value for the axis.</param>
-    /// <param name="direction">The direction value for the axis.</param>
-    /// <returns>The min and max intersection points for the axis being tested..</returns>
-    private static (double min, double max) CheckAxis(double origin, double direction)
-    {
-        double minNumerator = -1 - origin;
-        double maxNumerator = 1 - origin;
-        double min;
-        double max;
-
-        if (Math.Abs(direction) >= DoubleExtensions.Epsilon)
-        {
-            min = minNumerator / direction;
-            max = maxNumerator / direction;
-        }
-        else
-        {
-            min = minNumerator * double.PositiveInfinity;
-            max = maxNumerator * double.PositiveInfinity;
-        }
-
-        if (min > max)
-            (min, max) = (max, min);
-
-        return (min, max);
     }
 
     /// <summary>

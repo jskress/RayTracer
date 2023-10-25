@@ -1,5 +1,4 @@
 using RayTracer.Core;
-using RayTracer.Geometry;
 using RayTracer.ImageIO;
 
 namespace RayTracer.Parser;
@@ -17,6 +16,7 @@ public class FileParser
     private FileContent _fileContent;
     private ScannerParser _scannerParser;
     private LightParser _lightParser;
+    private SurfaceParser _surfaceParser;
 
     public FileParser(IReadOnlyList<string> args)
     {
@@ -26,6 +26,7 @@ public class FileParser
         _fileContent = null;
         _scannerParser = null;
         _lightParser = null;
+        _surfaceParser = null;
 
         ReadFile();
     }
@@ -42,6 +43,8 @@ public class FileParser
             Camera = new Camera(),
             Scene = new Scene()
         };
+
+        _surfaceParser = new SurfaceParser(_fileContent, _renderData.Scene);
 
         while (_fileContent.GetNextWord() is { } word)
             ParseNextClause(word);
@@ -100,47 +103,14 @@ public class FileParser
             case "light":
                 _renderData.Scene.Lights.Add(_lightParser.ParseLight());
                 break;
-            case "sphere":
-                _renderData.Scene.Surfaces.Add(ParseSurface(new Sphere()));
-                break;
-            case "plane":
-                _renderData.Scene.Surfaces.Add(ParseSurface(new Plane()));
-                break;
-            case "cube":
-                _renderData.Scene.Surfaces.Add(ParseSurface(new Cube()));
-                break;
-            case "cylinder":
-                Cylinder cylinder = new ();
-                CircularSurfaceAttributesParser circularSurfaceAttributesParser = new (_fileContent, cylinder);
-                _renderData.Scene.Surfaces.Add(ParseSurface(cylinder, circularSurfaceAttributesParser));
-                break;
-            case "conic":
-                Conic conic = new ();
-                CircularSurfaceAttributesParser conicAttributesParser = new (_fileContent, conic);
-                _renderData.Scene.Surfaces.Add(ParseSurface(conic, conicAttributesParser));
-                break;
             case "backgroundColor":
                 _renderData.Scene.BackgroundColor = _fileContent.GetNextColor();
                 break;
             default:
-                ErrorOut($"I don't know what to do with {word}");
+                if (!_surfaceParser.TryParseAttributes(word))
+                    ErrorOut($"I don't know what to do with {word}");
                 break;
         }
-    }
-
-    /// <summary>
-    /// This method is used to parse the details about a surface.
-    /// </summary>
-    /// <param name="surface"></param>
-    /// <param name="attributeParser">An optional parser for extra attributes.</param>
-    /// <returns></returns>
-    private Surface ParseSurface(Surface surface, AttributeParser attributeParser = null)
-    {
-        SurfaceParser parser = new (_fileContent, surface, attributeParser);
-
-        parser.Parse();
-
-        return surface;
     }
 
     /// <summary>
