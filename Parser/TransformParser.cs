@@ -5,15 +5,13 @@ namespace RayTracer.Parser;
 /// <summary>
 /// This class supports parsing transforms for surfaces or materials.
 /// </summary>
-internal class TransformParser
+internal class TransformParser : AttributeParser
 {
-    private readonly FileContent _fileContent;
     private readonly TupleParser _tupleParser;
     private readonly List<Matrix> _transforms;
 
-    internal TransformParser(FileContent fileContent)
+    internal TransformParser(FileContent fileContent) : base(fileContent)
     {
-        _fileContent = fileContent;
         _tupleParser = new TupleParser(fileContent);
         _transforms = new List<Matrix>();
     }
@@ -21,11 +19,12 @@ internal class TransformParser
     /// <summary>
     /// This method adds a transform of the indicated type to our working list.
     /// </summary>
-    /// <param name="type"></param>
-    /// <returns><c>true</c>, if the type was a transform, or <c>false</c>, if not.</returns>
-    internal bool TryAddTransform(string type)
+    /// <param name="name">The name of the attribute.</param>
+    /// <returns><c>true</c>, if the name was a supported attribute, or <c>false</c>, if
+    /// not.</returns>
+    internal override bool TryParseAttributes(string name)
     {
-        switch (type)
+        switch (name)
         {
             case "translate":
                 ParseTranslate();
@@ -85,7 +84,7 @@ internal class TransformParser
     /// </summary>
     private void ParseScale()
     {
-        if (_fileContent.Peek() == '<')
+        if (FileContent.Peek() == '<')
         {
             double[] tuple = _tupleParser.ParseTuple();
 
@@ -93,7 +92,7 @@ internal class TransformParser
         }
         else
         {
-            double scale = _fileContent.GetNextDouble();
+            double scale = FileContent.GetNextDouble();
 
             _transforms.Add(Transforms.Scale(scale));
         }
@@ -135,8 +134,8 @@ internal class TransformParser
     /// <returns>A tuple containing the angle and an "is radians" flag.</returns>
     private (double, bool) ParseAngle()
     {
-        double angle = _fileContent.GetNextDouble();
-        bool isRadians = _fileContent.IsNext('*');
+        double angle = FileContent.GetNextDouble();
+        bool isRadians = FileContent.IsNext('*');
 
         return (angle, isRadians);
     }

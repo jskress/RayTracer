@@ -4,7 +4,7 @@ using RayTracer.Core;
 namespace RayTracer.Geometry;
 
 /// <summary>
-/// This class represents a cube.  It is defined as centered at the origin and extens from
+/// This class represents a cube.  It is defined as centered at the origin and extends from
 /// <c>-1</c> to <c>1</c> along each axis.
 /// </summary>
 public class Cube : Surface
@@ -36,7 +36,7 @@ public class Cube : Surface
     /// <param name="origin">The origin value for the axis.</param>
     /// <param name="direction">The direction value for the axis.</param>
     /// <returns>The min and max intersection points for the axis being tested..</returns>
-    private (double min, double max) CheckAxis(double origin, double direction)
+    private static (double min, double max) CheckAxis(double origin, double direction)
     {
         double minNumerator = -1 - origin;
         double maxNumerator = 1 - origin;

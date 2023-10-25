@@ -59,7 +59,7 @@ internal class ColorSourceParser : BoundedContentParser
 
             string word = FileContent.GetNextWord(true);
 
-            if (!_transformParser.TryAddTransform(word))
+            if (!_transformParser.TryParseAttributes(word))
             {
                 ColorSourceParser nested = new (FileContent, word);
 

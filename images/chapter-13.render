@@ -1,0 +1,92 @@
+// This holds the information for how to render our image for chappter 11.
+
+camera {
+	location <0 1.5 -5>
+	lookAt <0 1 0>
+	fieldOfView 60
+}
+
+light {
+	location <-10 10 -10>
+}
+
+// Floor
+plane {
+	material {
+		colorSource ring {
+			color <0.25 0.25 0.25>
+			color <0.5 0.75 0.5>
+		}
+	}
+}
+
+// Middle sphere
+sphere {
+	material {
+		colorSource color Black
+		reflective 0.9
+		transparency 0.9
+		ior Glass
+	}
+	translate <-0.5 1 0.5>
+}
+
+// "Background" yellow cylinder
+cylinder {
+	material {
+		colorSource color Yellow
+	}
+	translate <0.25 1 12.5>
+}
+
+// Right cylinder
+cylinder {
+	minY 1
+	maxY 2
+	closed
+	material {
+		colorSource checker {
+			color White
+			color Red
+			scale 0.33
+		}
+		diffuse 0.7
+		specular 0.3
+	}
+	rotateZ 45
+	rotateY -45
+	scale 0.5
+	translate <1.5 0.5 1.5>
+}
+
+// Left sphere
+sphere {
+	material {
+		colorSource linearGradient {
+			color Blue
+			color White
+			translate <0.5 0 0>
+		}
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.33
+	translate <-1.5 0.33 -0.75>
+}
+
+// How about a conic...
+conic {
+	minY -1
+	maxY 1
+	closed
+	material {
+		colorSource stripe {
+			color DarkOrange
+			color SkyBlue
+			scale 0.33
+		}
+	}
+	scale <0.3 1 0.3>
+	rotateX -45
+	translate <1.5 1.5 -0.5>
+}
