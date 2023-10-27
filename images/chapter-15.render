@@ -20,14 +20,13 @@ plane {
 	}
 }
 
-objFile 'teapot.obj' {
+objFile 'teapot-with-normals.obj' {
 	material {
 		colorSource color Gold
 		diffuse 0.3
 		specular 0.2
 		shininess 300
 	}
-	scale 0.67
-	rotateY 20
-	translate <0 0.25 0>
+	scale 0.12
+	translate <0 1.2 0>
 }
