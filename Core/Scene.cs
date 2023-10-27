@@ -42,63 +42,6 @@ public class Scene
         return scene;
     }
 
-    public static Group Hexagon()
-    {
-        Group group = new ()
-        {
-            Transform = Transforms.RotateAroundX(-30) *
-                        Transforms.Translate(0, 1.5, 0)
-        };
-
-        for (int i = 0; i < 6; i++)
-        {
-            Group side = HexagonSide();
-
-            side.Transform = Transforms.RotateAroundY(i * Math.PI / 3, true);
-
-            group.Add(side);
-        }
-
-        return group;
-    }
-
-    private static Group HexagonSide()
-    {
-        return new Group()
-            .Add(HexagonCorner())
-            .Add(HexagonEdge());
-    }
-
-    private static Cylinder HexagonEdge()
-    {
-        return new Cylinder
-        {
-            MinimumY = 0,
-            MaximumY = 1,
-            Material =
-            {
-                ColorSource = new SolidColorSource(Colors.SkyBlue)
-            },
-            Transform = Transforms.Translate(0, 0, -1) *
-                        Transforms.RotateAroundY(-Math.PI / 6, true) *
-                        Transforms.RotateAroundZ(-Math.PI / 2, true) *
-                        Transforms.Scale(0.25, 1, 0.25)
-        };
-    }
-
-    private static Sphere HexagonCorner()
-    {
-        return new Sphere
-        {
-            Material =
-            {
-                ColorSource = new SolidColorSource(Colors.SkyBlue)
-            },
-            Transform = Transforms.Translate(0, 0, -1) *
-                        Transforms.Scale(0.25)
-        };
-    }
-
     /// <summary>
     /// This list holds the collection of lights in the scene.
     /// </summary>

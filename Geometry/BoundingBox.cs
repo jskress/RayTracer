@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 
 namespace RayTracer.Geometry;
@@ -8,13 +9,69 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class BoundingBox
 {
-    private readonly Point _point1;
-    private readonly Point _point2;
+    private double _xMin;
+    private double _yMin;
+    private double _zMin;
+    private double _xMax;
+    private double _yMax;
+    private double _zMax;
 
+    [SuppressMessage("ReSharper", "SuggestBaseTypeForParameterInConstructor")]
     public BoundingBox(Point point1, Point point2)
     {
-        _point1 = point1;
-        _point2 = point2;
+        _xMin = Math.Min(point1.X, point2.X);
+        _yMin = Math.Min(point1.Y, point2.Y);
+        _zMin = Math.Min(point1.Z, point2.Z);
+        _xMax = Math.Max(point1.X, point2.X);
+        _yMax = Math.Max(point1.Y, point2.Y);
+        _zMax = Math.Max(point1.Z, point2.Z);
+    }
+
+    /// <summary>
+    /// This method is used to add the point to the bounding box, expanding it as necessary.
+    /// </summary>
+    /// <param name="point">The point to add.</param>
+    public void Add(Point point)
+    {
+        _xMin = Math.Min(_xMin, point.X);
+        _yMin = Math.Min(_yMin, point.Y);
+        _zMin = Math.Min(_zMin, point.Z);
+        _xMax = Math.Max(_xMax, point.X);
+        _yMax = Math.Max(_yMax, point.Y);
+        _zMax = Math.Max(_zMax, point.Z);
+    }
+
+
+    /// <summary>
+    /// This method is used to add the other bounding box to this one, expanding it as
+    /// necessary.  This one is <c>null</c>-safe.
+    /// </summary>
+    /// <param name="other">The bounding box to add.</param>
+    public void Add(BoundingBox other)
+    {
+        if (other != null)
+        {
+            _xMin = Math.Min(_xMin, other._xMin);
+            _yMin = Math.Min(_yMin, other._yMin);
+            _zMin = Math.Min(_zMin, other._zMin);
+            _xMax = Math.Max(_xMax, other._xMax);
+            _yMax = Math.Max(_yMax, other._yMax);
+            _zMax = Math.Max(_zMax, other._zMax);
+        }
+    }
+
+    /// <summary>
+    /// This method adjusts the extents of the bounding box by <c>Epsilon</c> to help
+    /// make sure we don't miss any intersections.
+    /// </summary>
+    public void Adjust()
+    {
+        _xMin -= DoubleExtensions.Epsilon;
+        _yMin -= DoubleExtensions.Epsilon;
+        _zMin -= DoubleExtensions.Epsilon;
+        _xMax += DoubleExtensions.Epsilon;
+        _yMax += DoubleExtensions.Epsilon;
+        _zMax += DoubleExtensions.Epsilon;
     }
 
     /// <summary>
@@ -24,20 +81,12 @@ public class BoundingBox
     /// <returns>The min and max intersection points for the axis being tested..</returns>
     internal (double min, double max) GetIntersections(Ray ray)
     {
-        // First, find the min/max for each axis.
-        double xMin = Math.Min(_point1.X, _point2.X);
-        double xMax = Math.Max(_point1.X, _point2.X);
-        double yMin = Math.Min(_point1.Y, _point2.Y);
-        double yMax = Math.Max(_point1.Y, _point2.Y);
-        double zMin = Math.Min(_point1.Z, _point2.Z);
-        double zMax = Math.Max(_point1.Z, _point2.Z);
+        // First, find the points of intersection on each axis.
+        (double xMin, double xMax) = CheckAxis(ray.Origin.X, ray.Direction.X, _xMin, _xMax);
+        (double yMin, double yMax) = CheckAxis(ray.Origin.Y, ray.Direction.Y, _yMin, _yMax);
+        (double zMin, double zMax) = CheckAxis(ray.Origin.Z, ray.Direction.Z, _zMin, _zMax);
 
-        // Next, find the points of intersection on each axis.
-        (xMin, xMax) = CheckAxis(ray.Origin.X, ray.Direction.X, xMin, xMax);
-        (yMin, yMax) = CheckAxis(ray.Origin.Y, ray.Direction.Y, yMin, yMax);
-        (zMin, zMax) = CheckAxis(ray.Origin.Z, ray.Direction.Z, zMin, zMax);
-
-        // Last, find the intersections.
+        // Then, find the intersections.
         double tMin = Math.Max(xMin, Math.Max(yMin, zMin));
         double tMax = Math.Min(xMax, Math.Min(yMax, zMax));
 

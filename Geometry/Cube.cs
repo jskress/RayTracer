@@ -9,6 +9,10 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class Cube : Surface
 {
+    /// <summary>
+    /// This holds a bounding box that aligns with our own shape.  Our ray/intersection
+    /// stuff is delegated to this.
+    /// </summary>
     private static readonly BoundingBox BoundingBox = new BoundingBox(
         new Point(-1, -1, -1), new Point(1, 1, 1));
 
@@ -35,8 +39,9 @@ public class Cube : Surface
     /// also be in surface-space coordinates.
     /// </summary>
     /// <param name="point">The point at which the normal should be determined.</param>
+    /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public override Vector SurfaceNormaAt(Point point)
+    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
     {
         double x = Math.Abs(point.X);
         double y = Math.Abs(point.Y);

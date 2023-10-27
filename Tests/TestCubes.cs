@@ -97,6 +97,6 @@ public class TestCubes
         Cube cube = new ();
 
         foreach (CubeNormalTestCase testCase in CubeNormalTestCases)
-            Assert.IsTrue(testCase.Normal.Matches(cube.SurfaceNormaAt(testCase.Point)));
+            Assert.IsTrue(testCase.Normal.Matches(cube.SurfaceNormaAt(testCase.Point, null)));
     }
 }

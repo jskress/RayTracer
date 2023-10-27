@@ -6,7 +6,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents an intersection between a ray and a piece of geometry.
 /// </summary>
-public sealed class Intersection : IComparable<Intersection>
+public class Intersection : IComparable<Intersection>
 {
     /// <summary>
     /// This holds the geometry that was intersected.
@@ -91,7 +91,7 @@ public sealed class Intersection : IComparable<Intersection>
     {
         Point = ray.At(Distance);
         Eye = -ray.Direction;
-        Normal = Surface.NormaAt(Point);
+        Normal = Surface.NormaAt(Point, this);
         Inside = Normal.Dot(Eye) < 0;
 
         Vector adjustment = Normal * DoubleExtensions.Epsilon;

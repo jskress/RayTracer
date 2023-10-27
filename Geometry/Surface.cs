@@ -99,10 +99,11 @@ public abstract class Surface
     /// This method calculate the normal for the surface at the specified point.
     /// </summary>
     /// <param name="point">The point at which the normal should be determined.</param>
+    /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public Vector NormaAt(Point point)
+    public Vector NormaAt(Point point, Intersection intersection)
     {
-        Vector normal = SurfaceNormaAt(WorldToSurface(point));
+        Vector normal = SurfaceNormaAt(WorldToSurface(point), intersection);
 
         return NormalToWorld(normal);
     }
@@ -113,8 +114,9 @@ public abstract class Surface
     /// returned should also be in surface-space coordinates.
     /// </summary>
     /// <param name="point">The point at which the normal should be determined.</param>
+    /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public abstract Vector SurfaceNormaAt(Point point);
+    public abstract Vector SurfaceNormaAt(Point point, Intersection intersection);
 
     /// <summary>
     /// This method handles converting a given point from the world's coordinate system to
@@ -131,7 +133,7 @@ public abstract class Surface
     }
 
     /// <summary>
-    /// This method handls converting a given normal from the surface's coordinate system
+    /// This method handles converting a given normal from the surface's coordinate system
     /// to the world's
     /// </summary>
     /// <param name="normal">The normal to convert.</param>

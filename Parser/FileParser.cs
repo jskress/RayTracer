@@ -44,7 +44,7 @@ public class FileParser
             Scene = new Scene()
         };
 
-        _surfaceParser = new SurfaceParser(_fileContent, _renderData.Scene);
+        _surfaceParser = new SurfaceParser(_fileContent, Path.GetDirectoryName(_inputFileName), _renderData.Scene);
 
         while (_fileContent.GetNextWord() is { } word)
             ParseNextClause(word);

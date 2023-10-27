@@ -1,4 +1,5 @@
 *.ppm
+*.obj
 bin
 obj
 .idea

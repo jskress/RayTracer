@@ -98,7 +98,7 @@ public class TestCylinder
 
         foreach ((Point point, Vector expected) in NormalsAtPoints)
         {
-            Vector vector = cylinder.SurfaceNormaAt(point);
+            Vector vector = cylinder.SurfaceNormaAt(point, null);
 
             Assert.IsTrue(expected.Matches(vector));
         }
@@ -165,7 +165,7 @@ public class TestCylinder
 
         foreach ((Point point, Vector expected) in NormalsAtPointsWithCaps)
         {
-            Vector vector = cylinder.SurfaceNormaAt(point);
+            Vector vector = cylinder.SurfaceNormaAt(point, null);
 
             Assert.IsTrue(expected.Matches(vector));
         }

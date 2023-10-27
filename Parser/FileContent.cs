@@ -142,6 +142,36 @@ internal class FileContent
     }
 
     /// <summary>
+    /// This method returns the next quoted string from the content.  It is assumed that
+    /// the string is required.
+    /// </summary>
+    /// <returns>The next string from the content.</returns>
+    internal string GetNextQuotedString()
+    {
+        if (!IsNext('\''))
+            FileParser.ErrorOut($"Expecting a single quote here but found {Peek()}");
+
+        int start = _cp;
+
+        while (_cp < _length)
+        {
+            char ch = _content[_cp];
+
+            if (ch == '\'')
+            {
+                _cp++;
+
+                if (_cp >= _length || _content[_cp] != '\'')
+                    break;
+            }
+
+            _cp++;
+        }
+
+        return _content[start..(_cp - 1)].Replace("''", "'");
+    }
+
+    /// <summary>
     /// This method reads the next word from the content.  Words are composed of letters
     /// only, of either case.  If we've hit the end of the content, then we will return
     /// <c>null</c>.  If what's next in the content is not a word, that's an error and

@@ -98,8 +98,9 @@ public class Cylinder : CircularSurface
     /// also be in surface-space coordinates.
     /// </summary>
     /// <param name="point">The point at which the normal should be determined.</param>
+    /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public override Vector SurfaceNormaAt(Point point)
+    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
     {
         double distance = point.X * point.X + point.Z * point.Z;
 

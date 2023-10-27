@@ -86,7 +86,7 @@ public class TestConics
 
         foreach ((Point point, Vector expected) in NormalsAtPoints)
         {
-            Vector vector = conic.SurfaceNormaAt(point);
+            Vector vector = conic.SurfaceNormaAt(point, null);
 
             Assert.IsTrue(expected.Matches(vector));
         }
