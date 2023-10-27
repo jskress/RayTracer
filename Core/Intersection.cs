@@ -39,6 +39,12 @@ public class Intersection : IComparable<Intersection>
     public Vector Eye { get; private set; }
 
     /// <summary>
+    /// This property notes whether the intersection information needs to be flipped
+    /// inside for outside.
+    /// </summary>
+    public bool ShouldFlipInsideForOut { get; set; }
+
+    /// <summary>
     /// This property holds the surface normal at this point of intersection.
     /// </summary>
     public Vector Normal { get; private set; }
@@ -93,6 +99,12 @@ public class Intersection : IComparable<Intersection>
         Eye = -ray.Direction;
         Normal = Surface.NormaAt(Point, this);
         Inside = Normal.Dot(Eye) < 0;
+
+        if (ShouldFlipInsideForOut)
+        {
+            Normal = -Normal;
+            Inside = !Inside;
+        }
 
         Vector adjustment = Normal * DoubleExtensions.Epsilon;
 

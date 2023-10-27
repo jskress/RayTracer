@@ -42,8 +42,6 @@ public class Group : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        List<Intersection> ours = new ();
-
         if (BoundingBox != null)
         {
             (double tMin, double tMax) = BoundingBox.GetIntersections(ray);
@@ -52,6 +50,8 @@ public class Group : Surface
             if (tMin > tMax)
                 return;
         }
+
+        List<Intersection> ours = new ();
 
         foreach (Surface surface in Surfaces)
             surface.Intersect(ray, ours);

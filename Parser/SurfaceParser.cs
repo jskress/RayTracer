@@ -12,12 +12,15 @@ internal class SurfaceParser : AttributeParser
     private readonly string _directory;
     private readonly Scene _scene;
     private readonly Group _group;
+    private readonly CsgSurface _csgSurface;
 
-    internal SurfaceParser(FileContent fileContent, string directory, Scene scene = null, Group group = null) : base(fileContent)
+    internal SurfaceParser(FileContent fileContent, string directory,
+        Scene scene = null, Group group = null, CsgSurface csgSurface = null) : base(fileContent)
     {
         _directory = directory;
         _scene = scene;
         _group = group;
+        _csgSurface = csgSurface;
     }
 
     /// <summary>
@@ -58,8 +61,20 @@ internal class SurfaceParser : AttributeParser
             case "triangle":
                 ParseTriangle();
                 break;
+            case "smoothTriangle":
+                ParseSmoothTriangle();
+                break;
             case "objFile":
                 ParseObjectFile();
+                break;
+            case "union":
+                ParseCsgSurface(CsgOperation.Union);
+                break;
+            case "intersect":
+                ParseCsgSurface(CsgOperation.Intersection);
+                break;
+            case "difference":
+                ParseCsgSurface(CsgOperation.Difference);
                 break;
             default:
                 return false;
@@ -76,7 +91,26 @@ internal class SurfaceParser : AttributeParser
         Point point1 = FileContent.GetNextPoint();
         Point point2 = FileContent.GetNextPoint();
         Point point3 = FileContent.GetNextPoint();
-        Triangle triangle= new (point1, point2, point3);
+        Triangle triangle = new (point1, point2, point3);
+
+        if (FileContent.Peek() == '{')
+            ParseSurface(triangle);
+        else
+            Store(triangle);
+    }
+
+    /// <summary>
+    /// This method is used to parse a smooth triangle.
+   /// </summary>
+    private void ParseSmoothTriangle()
+    {
+        Point point1 = FileContent.GetNextPoint();
+        Point point2 = FileContent.GetNextPoint();
+        Point point3 = FileContent.GetNextPoint();
+        Vector normal1 = FileContent.GetNextVector(true);
+        Vector normal2 = FileContent.GetNextVector(true);
+        Vector normal3 = FileContent.GetNextVector(true);
+        SmoothTriangle triangle = new (point1, point2, point3, normal1, normal2, normal3);
 
         if (FileContent.Peek() == '{')
             ParseSurface(triangle);
@@ -154,6 +188,18 @@ internal class SurfaceParser : AttributeParser
     }
 
     /// <summary>
+    /// This method is used to parse a CSG surface.
+    /// </summary>
+    /// <param name="operation">The CSG operation to use.</param>
+    private void ParseCsgSurface(CsgOperation operation)
+    {
+        CsgSurface surface = new (operation);
+        SurfaceParser surfaceParser = new (FileContent, _directory, csgSurface: surface);
+
+        ParseSurface(surface, surfaceParser);
+    }
+
+    /// <summary>
     /// This method is used to parse the details about a surface.
     /// </summary>
     /// <param name="surface">The surface to fill in with details.</param>
@@ -180,5 +226,12 @@ internal class SurfaceParser : AttributeParser
             _scene.Surfaces.Add(surface);
         else if (_group != null)
             _group.Add(surface);
+        else if (_csgSurface != null)
+        {
+            if (_csgSurface.Left is null)
+                _csgSurface.Left = surface;
+            else
+                _csgSurface.Right = surface;
+        }
     }
 }

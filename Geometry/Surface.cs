@@ -11,7 +11,7 @@ public abstract class Surface
     /// <summary>
     /// This property holds a reference to the parent of the surface, if there is one.
     /// </summary>
-    public Group Parent { get; set; }
+    public Surface Parent { get; set; }
 
     /// <summary>
     /// This holds the material for the surface.
@@ -147,5 +147,23 @@ public abstract class Surface
             normal = Parent.NormalToWorld(normal);
 
         return normal;
+    }
+
+    /// <summary>
+    /// This method decides whether the given child surface is, or is contained by, the
+    /// given (potential) parent surface..
+    /// </summary>
+    /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
+    /// <param name="child">the child surface to test.</param>
+    /// <returns><c>true</c>, if <c>child</c> either is, or is contained by, <c>parent</c>.</returns>
+    protected static bool IsOrIncludes(Surface parent, Surface child)
+    {
+        return parent switch
+        {
+            Group group => group.Surfaces.Any(surface => IsOrIncludes(surface, child)),
+            CsgSurface csgSurface => IsOrIncludes(csgSurface.Left, child) ||
+                                     IsOrIncludes(csgSurface.Right, child),
+            _ => parent == child
+        };
     }
 }
