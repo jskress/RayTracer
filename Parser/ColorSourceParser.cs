@@ -30,12 +30,13 @@ internal class ColorSourceParser : BoundedContentParser
     internal ColorSource ParseColorSource()
     {
         if (_type.Length == 0)
-        {
             _type = FileContent.GetNextWord(true);
 
-            if (!ValidTypes.Contains(_type))
-                FileParser.ErrorOut($"{_type} is not a valid type of color source");
-        }
+        if (FileContent.ColorSources.TryGetValue(_type, out ColorSource source))
+            return source;
+
+        if (!ValidTypes.Contains(_type))
+            FileParser.ErrorOut($"{_type} is not a valid type of color source");
 
         if ("color" == _type)
             return new SolidColorSource(FileContent.GetNextColor());

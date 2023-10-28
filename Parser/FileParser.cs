@@ -1,3 +1,4 @@
+using RayTracer.ColorSources;
 using RayTracer.Core;
 using RayTracer.ImageIO;
 
@@ -106,9 +107,36 @@ public class FileParser
             case "backgroundColor":
                 _renderData.Scene.BackgroundColor = _fileContent.GetNextColor();
                 break;
+            case "define":
+                ParseDefinition();
+                break;
             default:
                 if (!_surfaceParser.TryParseAttributes(word))
                     ErrorOut($"I don't know what to do with {word}");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// This method is used to parse the assignment of something to a name.
+    /// </summary>
+    private void ParseDefinition()
+    {
+        string name = _fileContent.GetNextWord(true);
+        string type = _fileContent.GetNextWord(true);
+
+        switch (type)
+        {
+            case "colorSource":
+                _fileContent.ColorSources[name] =
+                    new ColorSourceParser(_fileContent).ParseColorSource();
+                break;
+            case "material":
+                _fileContent.Materials[name] =
+                    new MaterialParser(_fileContent).ParseMaterial();
+                break;
+            default:
+                ErrorOut($"Cannot define something of type {type}");
                 break;
         }
     }
@@ -120,7 +148,6 @@ public class FileParser
     internal static void ErrorOut(string message)
     {
         Console.WriteLine($"Error: {message}");
-        // Environment.Exit(1);
-        throw new Exception(message);
+        Environment.Exit(1);
     }
 }

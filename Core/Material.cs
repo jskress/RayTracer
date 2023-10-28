@@ -1,5 +1,4 @@
 using RayTracer.ColorSources;
-using RayTracer.Graphics;
 
 namespace RayTracer.Core;
 
@@ -48,6 +47,25 @@ public class Material
     /// This property holds the material's index of refraction.
     /// </summary>
     public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
+
+    /// <summary>
+    /// This method is used to create a copy of this material.
+    /// </summary>
+    /// <returns></returns>
+    public Material Copy()
+    {
+        return new Material
+        {
+            ColorSource = ColorSource,
+            Ambient = Ambient,
+            Diffuse = Diffuse,
+            Specular = Specular,
+            Shininess = Shininess,
+            Reflective = Reflective,
+            Transparency = Transparency,
+            IndexOfRefraction = IndexOfRefraction
+        };
+    }
 
     /// <summary>
     /// This method returns whether this material matches the given one.  This will be

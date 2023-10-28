@@ -21,7 +21,17 @@ internal class MaterialParser : BoundedContentParser
     /// <returns>The parsed material.</returns>
     internal Material ParseMaterial()
     {
-        _material = new Material();
+        if (FileContent.Peek() == '{')
+            _material = new Material();
+        else
+        {
+            string name = FileContent.GetNextWord(true);
+
+            if (!FileContent.Materials.TryGetValue(name, out _material))
+                FileParser.ErrorOut($"No material named {name} defined");
+
+            _material = _material?.Copy();
+        }
 
         Parse();
 
