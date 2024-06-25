@@ -33,7 +33,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Texture mapping.
 - [ ] Normal perturbation.
 - [ ] Torus.
-- [ ] Other surfaces (Height fields SORs, etc.)
+- [ ] Other surfaces (Height fields, SORs, etc.)
 
 ### To-Dos for Patterns:
 

@@ -4,7 +4,6 @@ using RayTracer.Parser;
 
 RenderData renderData = new FileParser(args).Parse();
 Canvas canvas = renderData.Canvas;
-// Canvas canvas = new (800, 400);
 
 Console.WriteLine("Generating...");
 
