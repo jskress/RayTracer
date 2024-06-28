@@ -1,4 +1,3 @@
-using RayTracer.ColorSources;
 using RayTracer.Core;
 using RayTracer.ImageIO;
 
@@ -19,10 +18,10 @@ public class FileParser
     private LightParser _lightParser;
     private SurfaceParser _surfaceParser;
 
-    public FileParser(IReadOnlyList<string> args)
+    public FileParser(ProgramOptions options)
     {
-        _inputFileName = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), args[0]));
-        _outputFileName = Path.ChangeExtension(_inputFileName, ".ppm");
+        _inputFileName = options.InputFileName;
+        _outputFileName = options.OutputFileName;
         _renderData = null;
         _fileContent = null;
         _scannerParser = null;

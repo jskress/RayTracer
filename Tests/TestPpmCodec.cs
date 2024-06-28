@@ -6,7 +6,7 @@ namespace Tests;
 [TestClass]
 public class TestPpmCodec
 {
-    private readonly PpmCodec _codec = new();
+    private readonly Ppm3Codec _codec = new();
 
     [TestMethod]
     public void TestHeader()

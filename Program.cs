@@ -1,20 +1,33 @@
 using System.Diagnostics;
+using CommandLine;
+using RayTracer;
 using RayTracer.Graphics;
 using RayTracer.Parser;
 
-RenderData renderData = new FileParser(args).Parse();
-Canvas canvas = renderData.Canvas;
+Parser.Default.ParseArguments<ProgramOptions>(args)
+    .WithParsed(options =>
+    {
+        RenderData renderData = new FileParser(options)
+            .Parse();
+        Canvas canvas = renderData.NewCanvas;
 
-Console.WriteLine("Generating...");
+        Terminal.Out("Ray Tracer v1.0.0");
+        Terminal.Out("Input file:", true);
+        Terminal.Out($"--> {options.InputFileName}", true);
+        Terminal.Out("Output file:", true);
+        Terminal.Out($"--> {options.OutputFileName}", true);
 
-Stopwatch stopwatch = Stopwatch.StartNew();
+        Terminal.Out("Generating...");
 
-renderData.Camera.Render(renderData.Scene, canvas, renderData.Scanner);
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
-stopwatch.Stop();
+        renderData.Camera.Render(renderData.Scene, canvas, renderData.Scanner);
 
-Console.WriteLine("Writing...");
+        stopwatch.Stop();
 
-renderData.OutputFile.Save(canvas);
+        Terminal.Out("Writing...");
 
-Console.WriteLine($"Done!  It took {stopwatch.Elapsed}");
+        renderData.OutputFile.Save(canvas);
+
+        Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
+    });

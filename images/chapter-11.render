@@ -1,4 +1,4 @@
-// This holds the information for how to render our image for chappter 11.
+// This holds the information for how to render our image for chapter 11.
 
 camera {
 	location <0 1.5 -5>

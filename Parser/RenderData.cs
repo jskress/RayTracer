@@ -43,5 +43,5 @@ public class RenderData
     /// <summary>
     /// This property produces a new canvas to render on.
     /// </summary>
-    public Canvas Canvas => new (Width, Height);
+    public Canvas NewCanvas => new (Width, Height);
 }

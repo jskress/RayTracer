@@ -16,6 +16,37 @@ public class Color
     }
 
     /// <summary>
+    /// This method creates a color from integer channel values.
+    /// </summary>
+    /// <param name="red">The channel value for red.</param>
+    /// <param name="green">The channel value for green.</param>
+    /// <param name="blue">The channel value for blue.</param>
+    /// <param name="maxValue">The maximum value for a channel.</param>
+    /// <returns>The resulting color.</returns>
+    public static Color FromChannelValues(int red, int green, int blue, int maxValue)
+    {
+        double max = Convert.ToDouble(maxValue);
+
+        return new Color(red / max, green / max, blue / max);
+    }
+
+    /// <summary>
+    /// This method creates a color from integer channel values.
+    /// </summary>
+    /// <param name="red">The channel value for red.</param>
+    /// <param name="green">The channel value for green.</param>
+    /// <param name="blue">The channel value for blue.</param>
+    /// <param name="alpha">The channel value for alpha.</param>
+    /// <param name="maxValue">The maximum value for a channel.</param>
+    /// <returns>The resulting color.</returns>
+    public static Color FromChannelValues(int red, int green, int blue, int alpha, int maxValue)
+    {
+        double max = Convert.ToDouble(maxValue);
+
+        return new Color(red / max, green / max, blue / max, alpha / max);
+    }
+
+    /// <summary>
     /// This property returns the red component of the color.
     /// </summary>
     public double Red { get; }
@@ -43,6 +74,41 @@ public class Color
         Green = green;
         Blue = blue;
         Alpha = alpha;
+    }
+
+    /// <summary>
+    /// This method returns the 4 color channel values as integers in a range from 0 to
+    /// the currently configured largest color channel value.
+    /// </summary>
+    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
+    /// <returns>A tuple containing the converted channel values.</returns>
+    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(bool gammaCorrect = true)
+    {
+        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+
+        return (ChannelToInt(Red, power, gammaCorrect, maxValue),
+            ChannelToInt(Green, power, gammaCorrect, maxValue),
+            ChannelToInt(Blue, power, gammaCorrect, maxValue),
+            ChannelToInt(Alpha, power, gammaCorrect, maxValue));
+    }
+
+    /// <summary>
+    /// This is a helper method for converting a channel value to an integer, applying
+    /// gamma correction upon request.
+    /// </summary>
+    /// <param name="value">The value to convert</param>
+    /// <param name="power">The power factor to use when gamma correcting.</param>
+    /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
+    /// <param name="maxValue">The maximum value the integer form can take.</param>
+    /// <returns>The channel value converted to an integer.</returns>
+    private static int ChannelToInt(
+        double value, double power, bool gammaCorrect, double maxValue)
+    {
+        if (gammaCorrect)
+            value = Math.Pow(value, power);
+
+        return Convert.ToInt32(Math.Clamp(value, 0, 1) * maxValue);
     }
 
     /// <summary>
