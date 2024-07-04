@@ -6,7 +6,7 @@ namespace Tests;
 [TestClass]
 public class TestPpmCodec
 {
-    private readonly PpmCodec _codec = new();
+    private readonly Ppm3Codec _codec = new();
 
     [TestMethod]
     public void TestHeader()
@@ -59,7 +59,7 @@ public class TestPpmCodec
     {
         using MemoryStream streamToWrite = new ();
 
-        _codec.Encode(canvas, streamToWrite);
+        _codec.Encode(canvas, streamToWrite, null);
 
         using MemoryStream streamToRead = new (streamToWrite.GetBuffer());
         using StreamReader reader = new (streamToRead);

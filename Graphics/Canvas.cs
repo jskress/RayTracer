@@ -16,6 +16,11 @@ public class Canvas
     /// </summary>
     public int Height { get; }
 
+    /// <summary>
+    /// This property reports whether this image makes any use of the alpha channel.
+    /// </summary>
+    public bool NeedsAlphaChannel => HasAlphaValues();
+
     private readonly Color[][] _pixels;
 
     public Canvas(int width, int height)
@@ -53,5 +58,24 @@ public class Canvas
     public void SetColor(Color color, int x, int y)
     {
         _pixels[y][x] = color;
+    }
+
+    /// <summary>
+    /// This method scans our pixels to see if there are any that make use of the alpha
+    /// channel.
+    /// </summary>
+    /// <returns><c>true</c>, if the alpha channel is used, or <c>false</c>, if not.</returns>
+    private bool HasAlphaValues()
+    {
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                if (_pixels[y][x].Alpha < 1.0d)
+                    return true;
+            }
+        }
+
+        return false;
     }
 }
