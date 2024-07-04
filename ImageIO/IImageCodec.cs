@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -12,8 +13,9 @@ public interface IImageCodec
     /// This method is used to encode the given canvas to the specified stream.
     /// </summary>
     /// <param name="canvas">The canvas being encoded and written.</param>
-    /// <param name="stream">The stream to encode</param>
-    void Encode(Canvas canvas, Stream stream);
+    /// <param name="stream">The stream to encode.</param>
+    /// <param name="info">Metadata about the image.</param>
+    void Encode(Canvas canvas, Stream stream, ImageInformation info);
 
     /// <summary>
     /// This method is used to decode the given screen into one or more canvases, one

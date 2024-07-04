@@ -1,3 +1,5 @@
+using System.Text;
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -8,7 +10,7 @@ namespace RayTracer.ImageIO;
 public abstract class PpmCodec : BaseCodec
 {
     /// <summary>
-    /// This property is reprted by subclasses to indicate the specific value of the magic
+    /// This property is reported by subclasses to indicate the specific value of the magic
     /// number to put, or expect, in the image file's marker.
     /// </summary>
     protected abstract int MagicNumber { get; }
@@ -18,9 +20,10 @@ public abstract class PpmCodec : BaseCodec
     /// </summary>
     /// <param name="canvas">The canvas being encoded and written.</param>
     /// <param name="stream">The stream to write to.</param>
-    public override void Encode(Canvas canvas, Stream stream)
+    /// <param name="info">Metadata about the image.</param>
+    public override void Encode(Canvas canvas, Stream stream, ImageInformation info)
     {
-        WriteHeader(canvas, stream);
+        WriteHeader(canvas, stream, info);
         WritePixels(canvas, stream);
     }
 
@@ -29,11 +32,42 @@ public abstract class PpmCodec : BaseCodec
     /// </summary>
     /// <param name="canvas">The canvas which holds the image we are writing out.</param>
     /// <param name="stream">The stream to write to.</param>
-    private void WriteHeader(Canvas canvas, Stream stream)
+    /// <param name="info">Metadata about the image.</param>
+    private void WriteHeader(Canvas canvas, Stream stream, ImageInformation info)
     {
-        WriteText(stream, $"P{MagicNumber}\n" +
-                          $"{canvas.Width} {canvas.Height}\n" +
-                          $"{ProgramOptions.Instance.MaxColorChannelValue}\n");
+        StringBuilder builder = new StringBuilder()
+            .Append($"P{MagicNumber}\n");
+
+        if (info != null)
+        {
+            AddInfoField(builder, PredefinedTextKeywords.Title, info.Title);
+            AddInfoField(builder, PredefinedTextKeywords.Author, info.Author);
+            AddInfoField(builder, PredefinedTextKeywords.Description, info.Description);
+            AddInfoField(builder, PredefinedTextKeywords.Copyright, info.Copyright);
+            AddInfoField(builder, PredefinedTextKeywords.CreationTime, info.CreationTime.ToString("r"));
+            AddInfoField(builder, PredefinedTextKeywords.Software, info.Software);
+            AddInfoField(builder, PredefinedTextKeywords.Disclaimer, info.Disclaimer);
+            AddInfoField(builder, PredefinedTextKeywords.Warning, info.Warning);
+            AddInfoField(builder, PredefinedTextKeywords.Source, info.Source);
+            AddInfoField(builder, PredefinedTextKeywords.Comment, info.Comment);
+        }
+
+        builder.Append($"{canvas.Width} {canvas.Height}\n" +
+                       $"{ProgramOptions.Instance.MaxColorChannelValue}\n");
+
+        ImageFileIo.WriteText(stream, builder.ToString());
+    }
+
+    /// <summary>
+    /// This is a helper method for conditionally adding a field to a string builder.
+    /// </summary>
+    /// <param name="builder">The builder to append to.</param>
+    /// <param name="label">The label for the field.</param>
+    /// <param name="value">The value of the field.</param>
+    private static void AddInfoField(StringBuilder builder, string label, string value)
+    {
+        if (value != null && value.Trim().Length > 0)
+            builder.Append($"# {label}: {value.Trim()}\n");
     }
 
     /// <summary>
@@ -88,7 +122,7 @@ public abstract class PpmCodec : BaseCodec
         {
             do
             {
-                string line = ReadLine(stream);
+                string line = ImageFileIo.ReadLine(stream);
 
                 if (line == null)
                     return (null, null);
@@ -115,5 +149,24 @@ public abstract class PpmCodec : BaseCodec
     protected static int ToSafeInt(string text)
     {
         return text == null ? -1 : int.TryParse(text, out int result) ? result : -1;
+    }
+
+    /// <summary>
+    /// This is a helper method for converting a color to its appropriate RGB values.
+    /// </summary>
+    /// <param name="color">The colors to convert.</param>
+    /// <returns>The color as its separate channel values.</returns>
+    protected static (int, int, int) ToChannelValues(Color color)
+    {
+        if (ProgramOptions.Instance.Grayscale)
+        {
+            (int gray, _) = color.ToGrayValue();
+
+            return (gray, gray, gray);
+        }
+
+        (int red, int green, int blue, _) = color.ToChannelValues();
+
+        return (red, green, blue);
     }
 }

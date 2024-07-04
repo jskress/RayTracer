@@ -12,9 +12,9 @@ internal class CodecFormatInfo
     internal string[] Extensions { get; init; }
 
     /// <summary>
-    /// This property holds the marker for the file format.
+    /// This property holds the markers for the file format.
     /// </summary>
-    internal FileTypeMarker Marker { get; init; }
+    internal FileTypeMarker[] Markers { get; init; }
 
     /// <summary>
     /// This property holds a lambda that creates an instance of the supporting codec

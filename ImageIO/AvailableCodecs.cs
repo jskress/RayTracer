@@ -12,19 +12,39 @@ public static class AvailableCodecs
     [
         new CodecMetaData
         {
+            Name = "Portable Network Graphics",
+            Extensions = [ "png" ],
+            Formats = [
+                new CodecFormatInfo
+                {
+                    Extensions = [ "png" ],
+                    Markers = [
+                        new FileTypeMarker("0x89", "P", "N", "G", "0x0D", "0x0A", "0x1A", "0x0A")
+                    ],
+                    Creator = () => new PngCodec()
+                }
+            ],
+            DefaultFormatIndex = 0
+        },
+        new CodecMetaData
+        {
             Name = "Portable Pixel Map",
             Extensions = [ "ppm" ],
             Formats = [
                 new CodecFormatInfo
                 {
                     Extensions = [ "p3" ],
-                    Marker = new FileTypeMarker("P", "3", FileTypeMarker.Whitespace),
+                    Markers = [
+                        new FileTypeMarker("P", "3", FileTypeMarker.Whitespace)
+                    ],
                     Creator = () => new Ppm3Codec()
                 },
                 new CodecFormatInfo
                 {
                     Extensions = [ "p6" ],
-                    Marker = new FileTypeMarker("P", "6", FileTypeMarker.Whitespace),
+                    Markers = [
+                        new FileTypeMarker("P", "6", FileTypeMarker.Whitespace)
+                    ],
                     Creator = () => new Ppm6Codec()
                 }
             ],
@@ -41,7 +61,8 @@ public static class AvailableCodecs
     private static readonly Lazy<int> LazyLongestMarkerLength = new (
         () => MetaData
             .SelectMany(metadata => metadata.Formats)
-            .Select(format => format.Marker.Length)
+            .SelectMany(format => format.Markers)
+            .Select(marker => marker.Length)
             .Max());
 
     /// <summary>
@@ -54,7 +75,7 @@ public static class AvailableCodecs
     {
         return MetaData
             .SelectMany(metadata => metadata.Formats)
-            .FirstOrDefault(format => format.Marker.Matches(marker));
+            .FirstOrDefault(format => format.Markers.Any(m => m.Matches(marker)));
     }
 
     /// <summary>

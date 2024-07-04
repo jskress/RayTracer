@@ -28,7 +28,7 @@ public class Ppm6Codec : PpmCodec
             for (int x = 0; x < canvas.Width; x++)
             {
                 Color color = canvas.GetPixel(x, y);
-                (int red, int green, int blue, _) = color.ToChannelValues();
+                (int red, int green, int blue) = ToChannelValues(color);
 
                 if (twoBytes)
                 {
@@ -67,15 +67,15 @@ public class Ppm6Codec : PpmCodec
 
         while (canvas != null)
         {
-            bool twoBytes = maxColorValue > 255;
+            int byteCount = maxColorValue > 255 ? 2 : 1;
 
             for (int y = 0; y < canvas.Height; y++)
             {
                 for (int x = 0; x < canvas.Width; x++)
                 {
-                    int red = ReadChannelValue(stream, twoBytes);
-                    int green = ReadChannelValue(stream, twoBytes);
-                    int blue = ReadChannelValue(stream, twoBytes);
+                    int red = ImageFileIo.ReadInt(stream, byteCount) ?? 0;
+                    int green = ImageFileIo.ReadInt(stream, byteCount) ?? 0;
+                    int blue = ImageFileIo.ReadInt(stream, byteCount) ?? 0;
 
                     if (red < 0 || red > maxColorValue ||
                         green < 0 || green > maxColorValue ||
@@ -94,22 +94,5 @@ public class Ppm6Codec : PpmCodec
         }
 
         return result.ToArray();
-    }
-
-    private static int ReadChannelValue(Stream stream, bool twoBytes)
-    {
-        int value = stream.ReadByte();
-
-        if (twoBytes & value >= 0)
-        {
-            int low = stream.ReadByte();
-
-            if (low < 0)
-                value = -1;
-            else
-                value = ((value & 0x000000FF) << 8) | (low & 0x000000FF);
-        }
-
-        return value;
     }
 }

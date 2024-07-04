@@ -29,7 +29,7 @@ public class Ppm3Codec : PpmCodec
             for (int x = 0; x < canvas.Width; x++)
             {
                 Color color = canvas.GetPixel(x, y);
-                (int red, int green, int blue, _) = color.ToChannelValues();
+                (int red, int green, int blue) = ToChannelValues(color);
                 string text = $"{red} {green} {blue}";
 
                 if (builder.Length + text.Length + 1 <= 70)
@@ -41,7 +41,7 @@ public class Ppm3Codec : PpmCodec
                 }
                 else
                 {
-                    WriteText(stream, builder.Append('\n').ToString());
+                    ImageFileIo.WriteText(stream, builder.Append('\n').ToString());
 
                     builder.Length = 0;
                     builder.Append(text);
@@ -50,7 +50,7 @@ public class Ppm3Codec : PpmCodec
 
             if (builder.Length > 0)
             {
-                WriteText(stream, builder.Append('\n').ToString());
+                ImageFileIo.WriteText(stream, builder.Append('\n').ToString());
                 builder.Length = 0;
             }
         }

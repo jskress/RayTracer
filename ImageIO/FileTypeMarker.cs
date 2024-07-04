@@ -1,4 +1,5 @@
-using System.Linq.Expressions;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace RayTracer.ImageIO;
 
@@ -11,19 +12,47 @@ internal class FileTypeMarker
 {
     internal const string Whitespace = @"\s";
 
+    private static readonly Regex HexPattern = new ("^0x[0-9a-fA-F][0-9a-fA-F]$");
+
     /// <summary>
     /// This property reports how many bytes this marker contains.
     /// </summary>
-    internal int Length => _characters.Length;
+    internal int Length => _matchers.Length;
 
-    private readonly string[] _characters;
+    private readonly Func<byte, bool>[] _matchers;
 
-    internal FileTypeMarker(params string[] characters)
+    internal FileTypeMarker(params string[] matcherSource)
     {
-        if (!characters.All(text => text.Length == 1 || text == Whitespace))
-            throw new ArgumentException("Invalid matching instruction found.", nameof(characters));
+        _matchers = ToFunctions(matcherSource);
+    }
 
-        _characters = characters;
+    /// <summary>
+    /// This is a helper method that will convert an array of matching "instructions" into
+    /// an appropriate list of evaluation functions.
+    /// </summary>
+    /// <param name="matcherSource">The matching instructions to convert.</param>
+    /// <returns>The matching instructions converted to appropriate evaluation functions.</returns>
+    private static Func<byte, bool>[] ToFunctions(string[] matcherSource)
+    {
+        List<Func<byte, bool>> matchers = [];
+
+        foreach (string matcher in matcherSource)
+        {
+            if (HexPattern.IsMatch(matcher))
+            {
+                byte expected = (byte) int.Parse(matcher[2..], NumberStyles.AllowHexSpecifier);
+                
+                matchers.Add(data => Matches(data, expected));
+            }
+            else if (matcher == Whitespace)
+                matchers.Add(IsWhitespace);
+            else if (matcher.Length == 1 && matcher[0] < 256)
+                matchers.Add(data => Matches(data, (byte) matcher[0]));
+            else
+                throw new ArgumentException($"Invalid matching instruction, '{matcher}', found.", nameof(matcherSource));
+        }
+
+        return matchers.ToArray();
     }
 
     /// <summary>
@@ -34,20 +63,32 @@ internal class FileTypeMarker
     /// if not.</returns>
     internal bool Matches(byte[] bytes)
     {
-        if (bytes == null || bytes.Length < _characters.Length)
+        if (bytes == null || bytes.Length < _matchers.Length)
             return false;
 
-        for (int index = 0; index < _characters.Length; index++)
-        {
-            char ch = Convert.ToChar(bytes[index]);
+        return !_matchers
+            .Where((match, index) => !match(bytes[index]))
+            .Any();
+    }
 
-            if (_characters[index] == Whitespace && !char.IsWhiteSpace(ch))
-                return false;
+    /// <summary>
+    /// This is a method used to test whether a character is whitespace or not.
+    /// </summary>
+    /// <param name="data">The raw data as a byte.</param>
+    /// <param name="expected">The byte to compare against.</param>
+    /// <returns><c>true</c>, if the data is whitespace, or <c>false</c>, if not.</returns>
+    private static bool Matches(byte data, byte expected)
+    {
+        return expected == data;
+    }
 
-            if (ch != _characters[index][0])
-                return false;
-        }
-
-        return true;
+    /// <summary>
+    /// This is a method used to test whether a character is whitespace or not.
+    /// </summary>
+    /// <param name="data">The raw data as a byte.</param>
+    /// <returns><c>true</c>, if the data is whitespace, or <c>false</c>, if not.</returns>
+    private static bool IsWhitespace(byte data)
+    {
+        return char.IsWhiteSpace((char) data);
     }
 }

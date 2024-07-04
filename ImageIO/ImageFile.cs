@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -23,7 +24,7 @@ public class ImageFile
     {
         IImageCodec codec = DetermineCodec(_fileName, false, null);
 
-        using Stream stream = new FileStream(_fileName, FileMode.Open);
+        using Stream stream = File.OpenRead(_fileName);
 
         return codec.Decode(stream);
     }
@@ -34,13 +35,16 @@ public class ImageFile
     /// </summary>
     /// <param name="canvas">The image to save.</param>
     /// <param name="extension">An optional concrete extension to use.</param>
-    public void Save(Canvas canvas, string extension = null)
+    /// <param name="info">Metadata about the image.</param>
+    public void Save(Canvas canvas, string extension = null, ImageInformation info = null)
     {
+        extension ??= ProgramOptions.Instance.OutputImageFormat;
+
         IImageCodec codec = DetermineCodec(_fileName, true, extension);
 
-        using Stream stream = new FileStream(_fileName, FileMode.Create);
+        using Stream stream = File.OpenWrite(_fileName);
 
-        codec.Encode(canvas, stream);
+        codec.Encode(canvas, stream, info);
     }
 
     /// <summary>

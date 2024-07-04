@@ -59,7 +59,7 @@ public class TestPpmCodec
     {
         using MemoryStream streamToWrite = new ();
 
-        _codec.Encode(canvas, streamToWrite);
+        _codec.Encode(canvas, streamToWrite, null);
 
         using MemoryStream streamToRead = new (streamToWrite.GetBuffer());
         using StreamReader reader = new (streamToRead);

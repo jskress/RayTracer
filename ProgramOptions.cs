@@ -7,6 +7,7 @@ namespace RayTracer;
 /// This class represents the command line options that the user may specify to the ray
 /// tracer.
 /// </summary>
+// ReSharper disable once ClassNeverInstantiated.Global
 public class ProgramOptions
 {
     /// <summary>
@@ -67,7 +68,7 @@ public class ProgramOptions
         set => _outputFileExtension = value.StartsWith('.') ? value : $".{value}";
     }
 
-    [Option('f', "output-image-format", Required = true,
+    [Option('f', "output-image-format", Required = false,
         HelpText = "The image format to use for saving the rendered image to the output file.")]
     public string OutputImageFormat
     {
@@ -88,15 +89,15 @@ public class ProgramOptions
         get => _bitsPerChannel;
         set
         {
-            if (value is < 8 or > 16)
-                throw new ArgumentException($"Bits per color channel must be between 8 and 16.");
+            if (value is not 8 and not 16)
+                throw new ArgumentException($"Bits per color channel must be either 8 or 16.");
 
             _bitsPerChannel = value;
         }
     }
 
     [Option('g', "gamma", Required = false,
-        HelpText = "The gamma correction to apply to colors in the image output file.")]
+        HelpText = "The gamma correction to apply to colors in the image output file.  Set this to 1 to turn gamma correction off.")]
     public double Gamma
     {
         get => _gamma;
@@ -108,6 +109,10 @@ public class ProgramOptions
             _gamma = value;
         }
     }
+
+    [Option("grayscale", Required = false,
+        HelpText = "Grayscale the image when written to image file.")]
+    public bool Grayscale { get; set; }
 
     [Option('q', "quiet", Required = false,
         HelpText = "Set this to true to get no output.")]
@@ -134,6 +139,7 @@ public class ProgramOptions
     {
         _bitsPerChannel = 8;
         _gamma = 2.2;
+        _outputImageFormat = "png";
 
         Instance = this;
     }

@@ -87,10 +87,27 @@ public class Color
         double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
         double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
 
-        return (ChannelToInt(Red, power, gammaCorrect, maxValue),
-            ChannelToInt(Green, power, gammaCorrect, maxValue),
-            ChannelToInt(Blue, power, gammaCorrect, maxValue),
-            ChannelToInt(Alpha, power, gammaCorrect, maxValue));
+        return (ChannelToInt(Red, maxValue, power, gammaCorrect),
+            ChannelToInt(Green, maxValue, power, gammaCorrect),
+            ChannelToInt(Blue, maxValue, power, gammaCorrect),
+            // Note: the alpha channel is linear so we never gamma correct it.
+            ChannelToInt(Alpha, maxValue));
+    }
+
+    /// <summary>
+    /// This method returns this color as an appropriate shade of gray.
+    /// </summary>
+    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
+    /// <returns>A tuple containing the gray and alpha values.</returns>
+    public (int Gray, int Alpha) ToGrayValue(bool gammaCorrect = true)
+    {
+        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+        double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +
+                      PrepareChannelValue(Green, power, gammaCorrect) * 0.587 +
+                      PrepareChannelValue(Green, power, gammaCorrect) * 0.114;
+
+        return (ChannelToInt(gray, maxValue), ChannelToInt(Alpha, maxValue));
     }
 
     /// <summary>
@@ -98,17 +115,31 @@ public class Color
     /// gamma correction upon request.
     /// </summary>
     /// <param name="value">The value to convert</param>
+    /// <param name="maxValue">The maximum value the integer form can take.</param>
     /// <param name="power">The power factor to use when gamma correcting.</param>
     /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
-    /// <param name="maxValue">The maximum value the integer form can take.</param>
     /// <returns>The channel value converted to an integer.</returns>
     private static int ChannelToInt(
-        double value, double power, bool gammaCorrect, double maxValue)
+        double value, double maxValue, double power = 0, bool gammaCorrect = false)
+    {
+        return Convert.ToInt32(PrepareChannelValue(value, power, gammaCorrect) * maxValue);
+    }
+
+    /// <summary>
+    /// This is a helper method for preparing a channel value for output by (conditionally)
+    /// applying gamma correction and clamping the value into the appropriate range.
+    /// </summary>
+    /// <param name="value">The channel value to prepare.</param>
+    /// <param name="power">The power factor to use when gamma correcting.</param>
+    /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
+    /// <returns>The prepared channel value.</returns>
+    private static double PrepareChannelValue(
+        double value, double power = 0, bool gammaCorrect = false)
     {
         if (gammaCorrect)
             value = Math.Pow(value, power);
 
-        return Convert.ToInt32(Math.Clamp(value, 0, 1) * maxValue);
+        return Math.Clamp(value, 0, 1);
     }
 
     /// <summary>
@@ -121,6 +152,17 @@ public class Color
     {
         return Red.Near(other.Red) && Green.Near(other.Green) &&
                Blue.Near(other.Blue) && Alpha.Near(other.Alpha);
+    }
+
+    /// <summary>
+    /// This method creates a copy of this color, replacing its current alpha value with
+    /// the one provided.
+    /// </summary>
+    /// <param name="alpha">The new alpha value to use.</param>
+    /// <returns>A copy of this color, with the new alpha value.</returns>
+    public Color WithAlpha(double alpha)
+    {
+        return new Color(Red, Green, Blue, alpha);
     }
 
     // -------------------------------------------------------------------------
