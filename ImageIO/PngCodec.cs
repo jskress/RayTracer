@@ -17,11 +17,6 @@ public class PngCodec : BaseCodec
         0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
     ];
 
-    public PngCodec()
-    {
-        throw new Exception("PNG support is written but not working yet.");
-    }
-
     /// <summary>
     /// This method is used to encode the given canvas to the specified stream.
     /// </summary>

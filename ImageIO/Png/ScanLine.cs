@@ -7,22 +7,23 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 internal class ScanLine
 {
-    /// <summary>
-    /// This property makes available the length of the scan line, in bytes.
-    /// </summary>
-    internal int Count => _pixelData.Length;
-
-    private readonly PngHeaderChunk _headerChunk;
     private readonly byte[] _pixelData;
     private readonly byte[] _filteredData;
     private readonly int _bytesPerPixel;
+    private readonly bool _twoBytes;
+    private readonly bool _grayscale;
+    private readonly bool _includeAlpha;
 
     internal ScanLine(PngHeaderChunk headerChunk)
     {
-        _headerChunk = headerChunk;
         _pixelData = new byte[headerChunk.ScanlineByteCount];
         _filteredData = new byte[headerChunk.ScanlineByteCount];
         _bytesPerPixel = headerChunk.ScanlineBytesPerPixel;
+        _twoBytes = headerChunk.BitDepth > 8;
+        _grayscale = headerChunk.ColorType is
+            PngColorType.Grayscale or PngColorType.GrayscaleWithAlpha;
+        _includeAlpha = headerChunk.ColorType is
+            PngColorType.GrayscaleWithAlpha or PngColorType.TrueColorWithAlpha;
     }
 
     /// <summary>
@@ -33,18 +34,13 @@ internal class ScanLine
     /// <param name="y">The index of the line to pull from.</param>
     internal void ReadFromCanvas(Canvas canvas, int y)
     {
-        int byteCount = _headerChunk.BitDepth == 8 ? 1 : 2;
-        bool grayscale = _headerChunk.ColorType is
-            PngColorType.Grayscale or PngColorType.GrayscaleWithAlpha;
-        bool includeAlpha = _headerChunk.ColorType is
-            PngColorType.GrayscaleWithAlpha or PngColorType.TrueColorWithAlpha;
         int cp = 0;
 
         for (int x = 0; x < canvas.Width; x++)
         {
-            cp = grayscale
-                ? AddGrayColor(canvas.GetPixel(x, y), byteCount, includeAlpha, cp)
-                : AddTrueColor(canvas.GetPixel(x, y), byteCount, includeAlpha, cp);
+            cp = _grayscale
+                ? AddGrayColor(canvas.GetPixel(x, y), cp)
+                : AddTrueColor(canvas.GetPixel(x, y), cp);
         }
 
         if (cp != _pixelData.Length)
@@ -56,18 +52,16 @@ internal class ScanLine
     /// to our scanline data.
     /// </summary>
     /// <param name="color">The color to convert to gray and add to the scanline.</param>
-    /// <param name="byteCount">The number of bytes to write per sample.</param>
-    /// <param name="includeAlpha">Whether to include the alpha channel.</param>
     /// <param name="cp">The current point in the scanline to store the bytes.</param>
     /// <returns>The updated point in the scanline after the bytes we just added.</returns>
-    private int AddGrayColor(Color color, int byteCount, bool includeAlpha, int cp)
+    private int AddGrayColor(Color color, int cp)
     {
         (int gray, int alpha) = color.ToGrayValue();
 
-        cp = WriteInt(gray, byteCount, cp);
+        cp = WriteSample(gray, cp);
 
-        if (includeAlpha)
-            cp = WriteInt(alpha, byteCount, cp);
+        if (_includeAlpha)
+            cp = WriteSample(alpha, cp);
 
         return cp;
     }
@@ -76,20 +70,18 @@ internal class ScanLine
     /// This method is used to add the raw bytes for the given color to our scanline data.
     /// </summary>
     /// <param name="color">The color to add to the scanline.</param>
-    /// <param name="byteCount">The number of bytes to write per sample.</param>
-    /// <param name="includeAlpha">Whether to include the alpha channel.</param>
     /// <param name="cp">The current point in the scanline to store the bytes.</param>
     /// <returns>The updated point in the scanline after the bytes we just added.</returns>
-    private int AddTrueColor(Color color, int byteCount, bool includeAlpha, int cp)
+    private int AddTrueColor(Color color, int cp)
     {
         (int red, int green, int blue, int alpha) = color.ToChannelValues();
 
-        cp = WriteInt(red, byteCount, cp);
-        cp = WriteInt(green, byteCount, cp);
-        cp = WriteInt(blue, byteCount, cp);
+        cp = WriteSample(red, cp);
+        cp = WriteSample(green, cp);
+        cp = WriteSample(blue, cp);
 
-        if (includeAlpha)
-            cp = WriteInt(alpha, byteCount, cp);
+        if (_includeAlpha)
+            cp = WriteSample(alpha, cp);
 
         return cp;
     }
@@ -98,21 +90,19 @@ internal class ScanLine
     /// THis is a helper method for writing a binary integer to our scanline data.
     /// </summary>
     /// <param name="number">The number to write out.</param>
-    /// <param name="byteCount">The number of bytes to write.</param>
     /// <param name="cp">The current point in the scanline to store the bytes.</param>
     /// <returns>The updated point in the scanline after the bytes we just added.</returns>
-    private int WriteInt(int number, int byteCount, int cp)
+    private int WriteSample(int number, int cp)
     {
-        int endIndex = cp + byteCount;
-
-        for (int index = endIndex - 1; index >= cp; index--)
+        if (_twoBytes)
         {
-            _pixelData[index] = (byte) (number & 0x000000FF);
-
-            number >>>= 8;
+            _pixelData[cp++] = (byte)(number >> 8);
+            number &= 0x000000FF;
         }
 
-        return endIndex;
+        _pixelData[cp++] = (byte) number;
+
+        return cp;
     }
 
     /// <summary>
@@ -133,29 +123,15 @@ internal class ScanLine
     /// <summary>
     /// This method is used to accumulate the Adler32 checksum for this scan line.
     /// </summary>
-    /// <param name="filterType">The filter type that was written for the scan line.</param>
-    /// <param name="adler1">The current Adler32 checksum, part 1.</param>
-    /// <param name="adler2">The current Adler32 checksum, part 1.</param>
-    /// <returns>A tuple containing the updated checksum parts.</returns>
-    internal (uint, uint) AccumulateAdlerChecksum(PngFilterType filterType, uint adler1, uint adler2)
+    /// <param name="checksum">The Adler32 checksum accumulator.</param>
+    internal void AddToChecksum(Adler32 checksum)
     {
-        byte type = (byte) filterType;
-
-        adler1 = (adler1 + type) % 65521;
-        adler2 = (adler2 + adler1) % 65521;
-
-        foreach (byte data in _pixelData)
-        {
-            adler1 = (adler1 + data) % 65521;
-            adler2 = (adler2 + adler1) % 65521;
-        }
-
-        return (adler1, adler2);
+        checksum.Add(_pixelData);
     }
 
     /// <summary>
     /// This method is used to apply the given filter type and return a sum of the resulting
-    /// filter bytes.  This is used to help decide which filter type to ultimataely use.
+    /// filter bytes.  This is used to help decide which filter type to ultimately use.
     /// </summary>
     /// <param name="filterType">The filter type to apply.</param>
     /// <param name="previous">The scan line above us</param>
@@ -163,7 +139,7 @@ internal class ScanLine
     internal int GetFilterSum(PngFilterType filterType, ScanLine previous)
     {
         filterType.ApplyFilter(_pixelData, previous._pixelData, _filteredData, _bytesPerPixel);
-        
+
         return _filteredData
             .Select(data =>
             {
@@ -171,7 +147,6 @@ internal class ScanLine
 
                 return Math.Abs(value);
             })
-            .Cast<int>()
             .Sum();
     }
 

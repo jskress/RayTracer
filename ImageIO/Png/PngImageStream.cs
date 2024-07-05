@@ -100,6 +100,7 @@ public class PngImageStream : Stream
             Buffer.BlockCopy(buffer, offset, _imageDataChunk.ImageData, _cp, count);
 
             _cp += count;
+            offset += count;
             maxCount -= count;
 
             // If we've exhausted the current chunk, go get the next one.
@@ -124,9 +125,13 @@ public class PngImageStream : Stream
             // Otherwise, create a new chunk that carries an appropriately sized array.
             else
             {
+                byte[] rest = new byte[_cp];
+                
+                Buffer.BlockCopy(_imageDataChunk.ImageData, 0, rest, 0, _cp);
+
                 _writer.WriteImageDataChunk(new PngImageDataChunk
                 {
-                    ImageData = _imageDataChunk.ImageData[.._cp]
+                    ImageData = rest
                 });
             }
 
