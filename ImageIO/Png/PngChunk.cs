@@ -44,11 +44,12 @@ public abstract class PngChunk
     }
 
     /// <summary>
-    /// This method must be provided by subclasses to serialize their specific data into a
-    /// byte array.
+    /// This method returns the chunk's data as a byte array.  By default, we create a
+    /// memory stream and delegate to the <see cref="WriteData"/> method.  If the chunk
+    /// can provide the byte array, it may override this method.
     /// </summary>
     /// <returns>The array of bytes that represents this chunk's payload.</returns>
-    private byte[] GetData()
+    protected virtual byte[] GetData()
     {
         using MemoryStream stream = new MemoryStream();
         

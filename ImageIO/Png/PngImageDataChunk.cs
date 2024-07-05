@@ -13,12 +13,22 @@ public class PngImageDataChunk : PngChunk
     public PngImageDataChunk() : base(ChunkTypes.ImageDataChunk) {}
 
     /// <summary>
+    /// This method returns the chunk's data as a byte array.  We override it because it's
+    /// more efficient to bypass the serialization step.
+    /// </summary>
+    /// <returns>The array of bytes that represents this chunk's payload.</returns>
+    protected override byte[] GetData()
+    {
+        return ImageData;
+    }
+
+    /// <summary>
     /// This method is used to serialize our specific data into the given stream.
     /// </summary>
     /// <param name="stream">The stream to write to.</param>
     protected override void WriteData(Stream stream)
     {
-        ImageFileIo.WriteBytes(stream, ImageData);
+        // No-op; this method will never be called since we override the GetData() method.
     }
 
     /// <summary>
