@@ -272,12 +272,24 @@ public static class ImageFileIo
     /// and the end of the stream has been reached.</returns>
     public static int ReadBytes(Stream stream, byte[] bytes, bool isRequired = true)
     {
-        int read = stream.Read(bytes, 0, bytes.Length);
+        int offset = 0;
+        int bytesToRead = bytes.Length;
 
-        if ((read == 0 && isRequired) || (read > 0 && read < bytes.Length))
+        while (bytesToRead > 0)
+        {
+            int read = stream.Read(bytes, offset, bytesToRead);
+
+            bytesToRead -= read;
+            offset += read;
+
+            if (read == 0)
+                break;
+        }
+
+        if (bytesToRead > 0 && isRequired)
             throw new Exception("PNG Image file is corrupted.  End of file unexpectedly reached.");
 
-        return read;
+        return bytesToRead > 0 ? 0 : bytes.Length;
     }
 
     /// <summary>

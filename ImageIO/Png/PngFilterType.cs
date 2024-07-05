@@ -122,7 +122,7 @@ internal static class PngFilterTypeExtensions
             _ => throw new Exception("Internal error: unknown filter type.")
         };
 
-        filtered[x] = (byte) (value & 0x000000FF);
+        current[x] = (byte) (value & 0x000000FF);
     }
 
     /// <summary>

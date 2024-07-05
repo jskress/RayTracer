@@ -9,6 +9,9 @@ internal class ScanLine
 {
     private readonly byte[] _pixelData;
     private readonly byte[] _filteredData;
+    private readonly int _bitDepth;
+    private readonly int _pixelsPerByte;
+    private readonly int _maxSampleValue;
     private readonly int _bytesPerPixel;
     private readonly bool _twoBytes;
     private readonly bool _grayscale;
@@ -18,8 +21,13 @@ internal class ScanLine
     {
         _pixelData = new byte[headerChunk.ScanlineByteCount];
         _filteredData = new byte[headerChunk.ScanlineByteCount];
+        _bitDepth = headerChunk.BitDepth;
+        _pixelsPerByte = _bitDepth < 8 ? 8 / _bitDepth : 0;
+        _twoBytes = _bitDepth > 8;
+        _maxSampleValue = _pixelsPerByte == 0
+            ? _twoBytes ? 65535 : 255
+            : (1 << _bitDepth) - 1;
         _bytesPerPixel = headerChunk.ScanlineBytesPerPixel;
-        _twoBytes = headerChunk.BitDepth > 8;
         _grayscale = headerChunk.ColorType is
             PngColorType.Grayscale or PngColorType.GrayscaleWithAlpha;
         _includeAlpha = headerChunk.ColorType is
@@ -169,9 +177,147 @@ internal class ScanLine
     /// This method is used to populate the specified line of the given canvas with our
     /// scan line byte data.
     /// </summary>
+    /// <param name="reader">The controlling image reader.</param>
     /// <param name="canvas">The canvas to push pixel color information to.</param>
     /// <param name="y">The index of the line to push to.</param>
-    internal void WriteToCanvas(Canvas canvas, int y)
+    internal void WriteToCanvas(PngChunkReader reader, Canvas canvas, int y)
     {
+        PngColorType colorType = reader.HeaderChunk.ColorType;
+        Color[] palette = reader.PaletteChunk?.Palette;
+        List<Color> colors = [];
+        int cp = 0;
+
+        for (int x = 0; x < canvas.Width; x++)
+        {
+            if (colors.Count == 0)
+                cp = GetColorsAt(colorType, palette, colors, cp);
+
+            canvas.SetColor(colors[0], x, y);
+
+            colors.RemoveRange(0, 1);
+        }
+    }
+
+    private int GetColorsAt(PngColorType colorType, Color[] palette, List<Color> colors, int cp)
+    {
+        return colorType switch
+        {
+            PngColorType.Grayscale => _pixelsPerByte == 0
+                ? GetSingleGrayColor(colors, cp)
+                : GetMultipleGrays(colors, cp),
+            PngColorType.TrueColor => GetTrueColor(colors, cp),
+            PngColorType.IndexedColor => GetIndexedColor(colors, palette, cp),
+            PngColorType.GrayscaleWithAlpha => GetSingleGrayColor(colors, cp),
+            PngColorType.TrueColorWithAlpha => GetTrueColor(colors, cp),
+            _ => throw new ArgumentOutOfRangeException(nameof(colorType), $"Internal error: Unknown color type found, {colors}")
+        };
+    }
+
+    /// <summary>
+    /// This method is used to gather the list of gray colors from a single byte of our
+    /// scan data.
+    /// </summary>
+    /// <param name="colors">The list to put discovered colors in.</param>
+    /// <param name="cp">The current point in the scan line where the color is to be found.</param>
+    /// <returns>The updated location in the scan line.</returns>
+    private int GetMultipleGrays(List<Color> colors, int cp)
+    {
+        int samples = _pixelData[cp++];
+
+        for (int index = 0; index < _pixelsPerByte; index++)
+        {
+            int gray = samples & _maxSampleValue;
+
+            colors.Add(Color.FromChannelValues(gray, gray, gray, _maxSampleValue));
+
+            samples >>= _bitDepth;
+        }
+
+        colors.Reverse();
+
+        return cp;
+    }
+
+    /// <summary>
+    /// This method converts a one- or two-byte gray value, with or without an alpha channel,
+    /// into a color.
+    /// </summary>
+    /// <param name="colors">The list to put discovered colors in.</param>
+    /// <param name="cp">The current point in the scan line where the color is to be found.</param>
+    /// <returns>The updated location in the scan line.</returns>
+    private int GetSingleGrayColor(List<Color> colors, int cp)
+    {
+        (int gray, cp) = ReadSample(cp);
+
+        if (_includeAlpha)
+        {
+            (int alpha, cp) = ReadSample(cp);
+
+            colors.Add(Color.FromChannelValues(gray, gray, gray, alpha, _maxSampleValue));            
+        }
+        else
+            colors.Add(Color.FromChannelValues(gray, gray, gray, _maxSampleValue));
+
+        return cp;
+    }
+
+    /// <summary>
+    /// This method converts a one-byte index to a color by selecting the color from the
+    /// given palette that the index points to.
+    /// </summary>
+    /// <param name="colors">The list to put discovered colors in.</param>
+    /// <param name="palette">The palette of colors to select from.</param>
+    /// <param name="cp">The current point in the scan line where the color is to be found.</param>
+    /// <returns>The updated location in the scan line.</returns>
+    private int GetIndexedColor(List<Color> colors, Color[] palette, int cp)
+    {
+        int index = _pixelData[cp++];
+
+        colors.Add(palette[index]);
+
+        return cp;
+    }
+
+    /// <summary>
+    /// This method converts a one- or two-byte-per-sample true color value, with or
+    /// without an alpha channel, into a color.
+    /// </summary>
+    /// <param name="colors">The list to put discovered colors in.</param>
+    /// <param name="cp">The current point in the scan line where the color is to be found.</param>
+    /// <returns>The updated location in the scan line.</returns>
+    private int GetTrueColor(List<Color> colors, int cp)
+    {
+        (int red, cp) = ReadSample(cp);
+        (int green, cp) = ReadSample(cp);
+        (int blue, cp) = ReadSample(cp);
+
+        if (_includeAlpha)
+        {
+            (int alpha, cp) = ReadSample(cp);
+
+            colors.Add(Color.FromChannelValues(red, green, blue, alpha, _maxSampleValue));
+        }
+        else
+            colors.Add(Color.FromChannelValues(red, green, blue, _maxSampleValue));
+
+        return cp;
+    }
+
+    /// <summary>
+    /// THis is a helper method for reading a binary integer from our scanline data.
+    /// </summary>
+    /// <param name="cp">The current point in the scanline to store the bytes.</param>
+    /// <returns>A tuple containing the sample value and the updated point in the scanline
+    /// after the bytes we just added.</returns>
+    private (int, int) ReadSample(int cp)
+    {
+        int number = 0;
+
+        if (_twoBytes)
+            number = _pixelData[cp++] << 8;
+
+        number += _pixelData[cp++];
+
+        return (number, cp);
     }
 }

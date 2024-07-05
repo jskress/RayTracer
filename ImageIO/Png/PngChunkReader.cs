@@ -101,20 +101,22 @@ public class PngChunkReader
         Canvas canvas = new (HeaderChunk.ImageWidth, HeaderChunk.ImageHeight);
         using PngImageStream imageStream = new PngImageStream(this);
         using DeflateStream decompressor = new DeflateStream(imageStream, CompressionMode.Decompress);
-
-        byte? b1 = ImageFileIo.ReadByte(imageStream);
-        byte? b2 = ImageFileIo.ReadByte(imageStream);
-
         ScanLine previous = new ScanLine(HeaderChunk);
         ScanLine current = new ScanLine(HeaderChunk);
+
+        // Read the ZLib header.
+        _ = ImageFileIo.ReadByte(imageStream);
+        _ = ImageFileIo.ReadByte(imageStream);
 
         for (int y = 0; y < canvas.Height; y++)
         {
             current.ReadAndFilter(decompressor, previous);
-            current.WriteToCanvas(canvas, y);
+            current.WriteToCanvas(this, canvas, y);
 
             (current, previous) = (previous, current);
         }
+
+        decompressor.Close();
 
         VerifyFileTrailer();
 
@@ -244,7 +246,7 @@ public class PngChunkReader
             return (null, null);
 
         string chunkType = VerifyChunkType(ImageFileIo.ReadText(stream, 4));
-        byte[] data = ImageFileIo.ReadBytes(stream, length.Value);
+        byte[] data = ImageFileIo.ReadBytes(stream, length.Value) ?? [];
         uint storedCrc = ImageFileIo.ReadUInt(stream, 4) ?? 0;
         uint calculatedCrc = new Crc32()
             .Append(chunkType)
@@ -325,32 +327,41 @@ public class PngChunkReader
 
         chunk.SetData(this, data);
 
-        Dump(chunk, data.Length);
+        // Only dump if the user wants to see it all.
+        if (ProgramOptions.Instance.Verbose)
+            Dump(chunk, data.Length);
 
         return chunk;
     }
 
+    /// <summary>
+    /// This is a helper method for debugging.  It dumps what chunks a reader has read.
+    /// </summary>
+    /// <param name="chunk">The chunk to dump.</param>
+    /// <param name="length">The length of the chunck.</param>
     private static void Dump(PngChunk chunk, int length)
     {
         string name = chunk.GetType().Name;
 
         if (name.StartsWith("Png"))
             name = name[3..];
-        Console.WriteLine($"--> {chunk.Type}: {name} ({length})");
 
-        if (chunk is PngHeaderChunk headerChunk)
+        Terminal.Out($"--> {chunk.Type}: {name} ({length})", true);
+
+        switch (chunk)
         {
-            Console.WriteLine($"---->  Dimension: ({headerChunk.ImageWidth}, {headerChunk.ImageHeight})");
-            Console.WriteLine($"---->  Bit depth: {headerChunk.BitDepth}");
-            Console.WriteLine($"----> Color type: {headerChunk.ColorType}");
-        }
-        else if (chunk is PngI18NTextChunk i18NTextChunk)
-        {
-            Console.WriteLine($"----> Keyword: {i18NTextChunk.Keyword}");
-            Console.WriteLine($"----> Language tag: {i18NTextChunk.LanguageTag}");
-            Console.WriteLine($"----> Translated keyword: {i18NTextChunk.TranslatedKeyword}");
-            Console.WriteLine($"----> Text:");
-            Console.WriteLine($"---->     {i18NTextChunk.Text}");
+            case PngHeaderChunk headerChunk:
+                Terminal.Out($"---->  Dimension: ({headerChunk.ImageWidth}, {headerChunk.ImageHeight})", true);
+                Terminal.Out($"---->  Bit depth: {headerChunk.BitDepth}", true);
+                Terminal.Out($"----> Color type: {headerChunk.ColorType}", true);
+                break;
+            case PngI18NTextChunk i18NTextChunk:
+                Terminal.Out($"----> Keyword: {i18NTextChunk.Keyword}", true);
+                Terminal.Out($"----> Language tag: {i18NTextChunk.LanguageTag}", true);
+                Terminal.Out($"----> Translated keyword: {i18NTextChunk.TranslatedKeyword}", true);
+                Terminal.Out($"----> Text:", true);
+                Terminal.Out($"---->     {i18NTextChunk.Text}", true);
+                break;
         }
     }
 }

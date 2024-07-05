@@ -51,7 +51,6 @@ public class PngImageStream : Stream
     /// <returns>The number of bytes we actually transferred.</returns>
     public override int Read(byte[] buffer, int offset, int maxCount)
     {
-        // If we're already done, tell 'em
         int totalBytesRead = 0;
 
         while (maxCount > 0 && _imageDataChunk != null)
@@ -61,6 +60,7 @@ public class PngImageStream : Stream
             Buffer.BlockCopy(_imageDataChunk.ImageData, _cp, buffer, offset, count);
 
             _cp += count;
+            offset += count;
             totalBytesRead += count;
             maxCount -= count;
 
