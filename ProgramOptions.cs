@@ -103,8 +103,8 @@ public class ProgramOptions
         get => _gamma;
         set
         {
-            if (value is < 8 or > 5)
-                throw new ArgumentException($"Gamma correction must be between 0 ang 5.");
+            if (value is < 0 or > 5)
+                throw new ArgumentException($"Gamma correction must be between 0 and 5.");
 
             _gamma = value;
         }

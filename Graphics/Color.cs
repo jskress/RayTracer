@@ -134,9 +134,9 @@ public class Color
     /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
     /// <returns>The prepared channel value.</returns>
     private static double PrepareChannelValue(
-        double value, double power = 0, bool gammaCorrect = false)
+        double value, double power = 1, bool gammaCorrect = false)
     {
-        if (gammaCorrect)
+        if (gammaCorrect && Math.Abs(power - 1) > 0.0000001)
             value = Math.Pow(value, power);
 
         return Math.Clamp(value, 0, 1);
@@ -163,6 +163,16 @@ public class Color
     public Color WithAlpha(double alpha)
     {
         return new Color(Red, Green, Blue, alpha);
+    }
+
+    /// <summary>
+    /// This method produces a string representation for the color  It is intended for use
+    /// in debugging so is very simplistic.
+    /// </summary>
+    /// <returns>A descriptive string that represents this color.</returns>
+    public override string ToString()
+    {
+        return $"Color({Red}, {Green}, {Blue}, {Alpha})";
     }
 
     // -------------------------------------------------------------------------
