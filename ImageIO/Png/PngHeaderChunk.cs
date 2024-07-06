@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -142,5 +144,15 @@ public class PngHeaderChunk : PngChunk
         CompressionMethod = ImageFileIo.ReadByte(stream) ?? 0;
         FilterMethod = ImageFileIo.ReadByte(stream) ?? 0;
         Interlaced = ImageFileIo.ReadByte(stream) > 0;
+    }
+
+    /// <summary>
+    /// This method dumps the contents of this chunk to the terminal.
+    /// </summary>
+    protected override void DumpDetails()
+    {
+        Terminal.Out($"---->  Dimension: ({ImageWidth}, {ImageHeight})", OutputLevel.Verbose);
+        Terminal.Out($"---->  Bit depth: {BitDepth}", OutputLevel.Verbose);
+        Terminal.Out($"----> Color type: {ColorType}", OutputLevel.Verbose);
     }
 }

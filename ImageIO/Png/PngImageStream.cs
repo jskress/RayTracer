@@ -9,9 +9,8 @@ public class PngImageStream : Stream
 {
     private const int BufferSize = 16384;
 
-    private readonly PngChunkReader _reader;
-    private readonly PngChunkWriter _writer;
-
+    private PngChunkReader _reader;
+    private PngChunkWriter _writer;
     private PngImageDataChunk _imageDataChunk;
     private int _cp;
 
@@ -105,10 +104,7 @@ public class PngImageStream : Stream
 
             // If we've exhausted the current chunk, go get the next one.
             if (_cp >= _imageDataChunk.ImageData.Length)
-            {
-                _writer.WriteImageDataChunk(_imageDataChunk);
-                _cp = 0;
-            }
+                Flush();
         }
     }
 
@@ -180,11 +176,18 @@ public class PngImageStream : Stream
     /// <summary>
     /// This method makes sure we're all cleaned up.
     /// </summary>
-    /// <param name="disposing"></param>
+    /// <param name="disposing">Whether we are being disposed.</param>
     protected override void Dispose(bool disposing)
     {
-        if (disposing && CanWrite)
-            Flush();
+        if (disposing && (CanRead || CanWrite))
+        {
+            if (CanWrite && _cp > 0)
+                Flush();
+
+            _reader = null;
+            _writer = null;
+            _imageDataChunk = null;
+        }
 
         base.Dispose(disposing);
     }

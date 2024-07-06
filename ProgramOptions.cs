@@ -1,5 +1,12 @@
+using System.Reflection;
 using CommandLine;
+using RayTracer.General;
 using RayTracer.ImageIO;
+
+[assembly: AssemblyTitle("My Ray Tracer")]
+[assembly: AssemblyDescription("A ray tracer based on the book, 'The Ray Tracer Challenge'")]
+[assembly: AssemblyCopyright("Copyright \u00a9 2024")]
+[assembly: AssemblyInformationalVersion("1.0.1")]
 
 namespace RayTracer;
 
@@ -114,13 +121,10 @@ public class ProgramOptions
         HelpText = "Grayscale the image when written to image file.")]
     public bool Grayscale { get; set; }
 
-    [Option('q', "quiet", Required = false,
-        HelpText = "Set this to true to get no output.")]
-    public bool Quiet { get; set; }
-
-    [Option('v', "verbose", Required = false,
-        HelpText = "Set this to true to get more output.")]
-    public bool Verbose { get; set; }
+    [Option('l', "output-level", Required = false,
+        Default = OutputLevel.Normal,
+        HelpText = "Sets the desired level of output.  Must be one of, Quiet, Normal, Chatty or Verbose.")]
+    public OutputLevel OutputLevel { get; set; }
 
     /// <summary>
     /// This property provides the largest value a color channel can have.

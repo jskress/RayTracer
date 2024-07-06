@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using CommandLine;
+using CommandLine.Text;
 using RayTracer;
+using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Parser;
 
@@ -11,11 +13,11 @@ Parser.Default.ParseArguments<ProgramOptions>(args)
             .Parse();
         Canvas canvas = renderData.NewCanvas;
 
-        Terminal.Out("Ray Tracer v1.0.0");
-        Terminal.Out("Input file:", true);
-        Terminal.Out($"--> {options.InputFileName}", true);
-        Terminal.Out("Output file:", true);
-        Terminal.Out($"--> {options.OutputFileName}", true);
+        Terminal.Out(HeadingInfo.Default);
+        Terminal.Out("Input file:", OutputLevel.Chatty);
+        Terminal.Out($"--> {options.InputFileName}", OutputLevel.Chatty);
+        Terminal.Out("Output file:", OutputLevel.Chatty);
+        Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
 
         Terminal.Out("Generating...");
 
