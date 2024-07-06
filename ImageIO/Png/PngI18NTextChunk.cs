@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using RayTracer.General;
 
 namespace RayTracer.ImageIO.Png;
 
@@ -72,5 +73,17 @@ public class PngI18NTextChunk : PngChunk
 
             Text = Encoding.UTF8.GetString(buffer.ToArray());
         }
+    }
+
+    /// <summary>
+    /// This method dumps the contents of this chunk to the terminal.
+    /// </summary>
+    protected override void DumpDetails()
+    {
+        Terminal.Out($"----> Keyword: {Keyword}", OutputLevel.Verbose);
+        Terminal.Out($"----> Language tag: {LanguageTag}", OutputLevel.Verbose);
+        Terminal.Out($"----> Translated keyword: {TranslatedKeyword}", OutputLevel.Verbose);
+        Terminal.Out($"----> Text:", OutputLevel.Verbose);
+        Terminal.Out($"---->     {Text}", OutputLevel.Verbose);
     }
 }

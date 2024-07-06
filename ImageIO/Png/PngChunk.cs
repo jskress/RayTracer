@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -41,6 +43,8 @@ public abstract class PngChunk
         ImageFileIo.WriteText(stream, Type);
         ImageFileIo.WriteBytes(stream, data);
         ImageFileIo.WriteUInt(stream, calculatedCrc, 4);
+
+        Dump(data.Length);
     }
 
     /// <summary>
@@ -75,6 +79,7 @@ public abstract class PngChunk
         using MemoryStream stream = new MemoryStream(data);
 
         ReadData(reader, data, stream);
+        Dump(data.Length);
     }
 
     /// <summary>
@@ -85,4 +90,35 @@ public abstract class PngChunk
     /// <param name="data">The raw data to initialize from.</param>
     /// <param name="stream">The raw data as a stream.</param>
     protected abstract void ReadData(PngChunkReader reader, byte[] data, Stream stream);
+
+    /// <summary>
+    /// This method is used to print out details about this chunk.  Output level must be
+    /// higher than normal to see anything.
+    /// </summary>
+    /// <param name="length">The length of the raw data.</param>
+    private void Dump(int length)
+    {
+        if (ProgramOptions.Instance.OutputLevel < OutputLevel.Chatty)
+            return;
+
+        string name = GetType().Name;
+
+        if (name.StartsWith("Png"))
+            name = name[3..];
+
+        Terminal.Out($"--> {Type}: {name} ({length})", OutputLevel.Chatty);
+
+        if (ProgramOptions.Instance.OutputLevel > OutputLevel.Chatty)
+            DumpDetails();
+    }
+
+    /// <summary>
+    /// This may be overridden by subclasses that know out to write out details about
+    /// themselves.  <see cref="Terminal"/>'s <c>Out()</c> method must be called with the
+    /// <c>Verbose</c> level.
+    /// </summary>
+    protected virtual void DumpDetails()
+    {
+        // No-op.
+    }
 }

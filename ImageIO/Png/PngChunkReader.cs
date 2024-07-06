@@ -184,20 +184,13 @@ public class PngChunkReader
     /// </summary>
     private void VerifyFileTrailer()
     {
-        PngChunk chunk;
-
         while (EndChunk == null)
         {
-            chunk = GetNextChunk();
-            
+            PngChunk chunk = GetNextChunk();
+
             if (chunk.IsCritical && EndChunk == null)
                 throw new Exception($"PNG image file format is incorrect.  Found ${chunk.Type} after image data.");
         }
-
-        chunk = GetNextChunk();
-
-        if (chunk != null)
-            throw new Exception($"PNG image file format is incorrect.  Found ${chunk.Type} after end chunk.");
     }
 
     /// <summary>
@@ -327,41 +320,6 @@ public class PngChunkReader
 
         chunk.SetData(this, data);
 
-        // Only dump if the user wants to see it all.
-        if (ProgramOptions.Instance.Verbose)
-            Dump(chunk, data.Length);
-
         return chunk;
-    }
-
-    /// <summary>
-    /// This is a helper method for debugging.  It dumps what chunks a reader has read.
-    /// </summary>
-    /// <param name="chunk">The chunk to dump.</param>
-    /// <param name="length">The length of the chunck.</param>
-    private static void Dump(PngChunk chunk, int length)
-    {
-        string name = chunk.GetType().Name;
-
-        if (name.StartsWith("Png"))
-            name = name[3..];
-
-        Terminal.Out($"--> {chunk.Type}: {name} ({length})", true);
-
-        switch (chunk)
-        {
-            case PngHeaderChunk headerChunk:
-                Terminal.Out($"---->  Dimension: ({headerChunk.ImageWidth}, {headerChunk.ImageHeight})", true);
-                Terminal.Out($"---->  Bit depth: {headerChunk.BitDepth}", true);
-                Terminal.Out($"----> Color type: {headerChunk.ColorType}", true);
-                break;
-            case PngI18NTextChunk i18NTextChunk:
-                Terminal.Out($"----> Keyword: {i18NTextChunk.Keyword}", true);
-                Terminal.Out($"----> Language tag: {i18NTextChunk.LanguageTag}", true);
-                Terminal.Out($"----> Translated keyword: {i18NTextChunk.TranslatedKeyword}", true);
-                Terminal.Out($"----> Text:", true);
-                Terminal.Out($"---->     {i18NTextChunk.Text}", true);
-                break;
-        }
     }
 }

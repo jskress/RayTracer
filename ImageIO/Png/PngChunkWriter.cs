@@ -115,15 +115,11 @@ public class PngChunkWriter
     /// </summary>
     private void WriteImageData()
     {
-        using PngImageStream imageStream = new PngImageStream(this);
-        using DeflateStream compressor = new DeflateStream(imageStream, CompressionLevel.Optimal);
+        using MemoryStream memoryStream = new MemoryStream();
+        using DeflateStream compressor = new DeflateStream(memoryStream, CompressionLevel.SmallestSize);
         ScanLine previous = new ScanLine(_headerChunk);
         ScanLine current = new ScanLine(_headerChunk);
         Adler32 checksum = new Adler32();
-
-        // Write out the ZLib header.
-        imageStream.WriteByte(120);
-        imageStream.WriteByte(1);
 
         for (int y = 0; y < _canvas.Height; y++)
         {
@@ -139,11 +135,21 @@ public class PngChunkWriter
         }
 
         compressor.Flush();
-        compressor.Close();
-        
+        memoryStream.Seek(0, SeekOrigin.Begin);
+
+        using PngImageStream imageStream = new PngImageStream(this);
+
+        // Write out the ZLib header.
+        imageStream.WriteByte(120);
+        imageStream.WriteByte(1);
+
+        memoryStream.CopyTo(imageStream);
+
         ImageFileIo.WriteInt(imageStream, checksum.Checksum, 4);
 
-        imageStream.Flush();
+        compressor.Close();
+        memoryStream.Close();
+        imageStream.Close();
     }
 
     /// <summary>
