@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using CommandLine;
 using RayTracer.General;
@@ -121,10 +122,19 @@ public class ProgramOptions
         HelpText = "Grayscale the image when written to image file.")]
     public bool Grayscale { get; set; }
 
-    [Option('l', "output-level", Required = false,
-        Default = OutputLevel.Normal,
-        HelpText = "Sets the desired level of output.  Must be one of, Quiet, Normal, Chatty or Verbose.")]
-    public OutputLevel OutputLevel { get; set; }
+    [Option('l', "output-level", Required = false, Default = "normal",
+        // ReSharper disable once StringLiteralTypo
+        HelpText = "Sets the desired level of output.  Must be one of, [q]uiet, [n]ormal, [c]hatty or [v]erbose.  The values are not case-sensitive.")]
+    public string OutputLevelText
+    {
+        get => OutputLevel.ToString();
+        set => OutputLevel = ToOutputLevel(value);
+    }
+
+    /// <summary>
+    /// This property holds the output level the renderer is to use.
+    /// </summary>
+    public OutputLevel OutputLevel { get; private set; }
 
     /// <summary>
     /// This property provides the largest value a color channel can have.
@@ -145,6 +155,7 @@ public class ProgramOptions
         _gamma = 2.2;
         _outputImageFormat = "png";
 
+        OutputLevel = OutputLevel.Normal;
         Instance = this;
     }
     
@@ -167,5 +178,29 @@ public class ProgramOptions
             : $"{name}.{extension}";
 
         return Path.Combine(dir!, name);
+    }
+
+    /// <summary>
+    /// This is a helper method for converting a piece of text to the output level it
+    /// represents.  We do so by making the input case-insensitive and allowed to be an
+    /// abbreviation.
+    /// </summary>
+    /// <param name="levelText">The text to start with.</param>
+    /// <returns>The output level the text represents.</returns>
+    private static OutputLevel ToOutputLevel(string levelText)
+    {
+        levelText = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(levelText);
+
+        foreach (string name in Enum.GetNames(typeof(OutputLevel)))
+        {
+            if (name.StartsWith(levelText))
+            {
+                return Enum.TryParse(name, out OutputLevel outputLevel)
+                    ? outputLevel
+                    : OutputLevel.Normal;
+            }
+        }
+
+        throw new ArgumentException($"The text, '{levelText}', is not a valid output level.");
     }
 }
