@@ -1,3 +1,4 @@
+using RayTracer;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 
@@ -34,30 +35,20 @@ public class TestPpmCodec
         string[] text = Encode(canvas).Split(Environment.NewLine);
 
         // y = 0...
-        Assert.AreEqual("255 0 0", text[3]);
-        Assert.AreEqual("0 0 0", text[4]);
-        Assert.AreEqual("0 0 0", text[5]);
-        Assert.AreEqual("0 0 0", text[6]);
-        Assert.AreEqual("0 0 0", text[7]);
+        Assert.AreEqual("255 0 0 0 0 0 0 0 0 0 0 0 0 0 0", text[3]);
 
-        // y = 1...
-        Assert.AreEqual("0 0 0", text[8]);
-        Assert.AreEqual("0 0 0", text[9]);
-        Assert.AreEqual("0 128 0", text[10]);
-        Assert.AreEqual("0 0 0", text[11]);
-        Assert.AreEqual("0 0 0", text[12]);
+        // y = 1... (Note the 0.5 becomes 186 instead of 128 due to gamma correction.
+        Assert.AreEqual("0 0 0 0 0 0 0 186 0 0 0 0 0 0 0", text[4]);
 
         // y = 2...
-        Assert.AreEqual("0 0 0", text[13]);
-        Assert.AreEqual("0 0 0", text[14]);
-        Assert.AreEqual("0 0 0", text[15]);
-        Assert.AreEqual("0 0 0", text[16]);
-        Assert.AreEqual("0 0 255", text[17]);
+        Assert.AreEqual("0 0 0 0 0 0 0 0 0 0 0 0 0 0 255", text[5]);
     }
 
     private string Encode(Canvas canvas)
     {
         using MemoryStream streamToWrite = new ();
+
+        _ = new ProgramOptions();
 
         _codec.Encode(canvas, streamToWrite, null);
 

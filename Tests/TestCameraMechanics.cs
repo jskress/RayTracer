@@ -54,7 +54,7 @@ public class TestCameraMechanics
         Assert.IsTrue(direction.Matches(ray.Direction));
 
         ray = mechanics.GetRayForPixel(0, 0);
-        direction = new Vector(0.66519, 0.33259, -0.66851);
+        direction = new Vector(0.665186, 0.332593, -0.668512);
 
         Assert.IsTrue(Point.Zero.Matches(ray.Origin));
         Assert.IsTrue(direction.Matches(ray.Direction));

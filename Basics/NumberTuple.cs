@@ -31,4 +31,14 @@ public class NumberTuple
                X.Near(other.X) && Y.Near(other.Y) &&
                Z.Near(other.Z) && W.Near(other.W);
     }
+
+    /// <summary>
+    /// This method produces a string representation for the tuple.  It is intended for use
+    /// in debugging so is very simplistic.
+    /// </summary>
+    /// <returns>A descriptive string that represents this color.</returns>
+    public override string ToString()
+    {
+        return $"[{X}, {Y}, {Z} {W}]";
+    }
 }

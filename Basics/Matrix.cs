@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -218,6 +220,55 @@ public class Matrix
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// This method produces a string representation for the matrix.  It is intended for
+    /// use in debugging so is very simplistic.
+    /// </summary>
+    /// <returns>A descriptive string that represents this color.</returns>
+    public override string ToString()
+    {
+        List<List<string>> columns = [];
+        List<int> columnWidths = [];
+
+        for (int column = 0; column < _extent; column++)
+        {
+            List<string> data = [];
+            int width = 0;
+
+            for (int row = 0; row < _extent; row++)
+            {
+                int index = row * _extent + column;
+                string text = $"{_data[index]}";
+
+                width = Math.Max(width, text.Length);
+
+                data.Add(text);
+            }
+
+            columns.Add(data);
+            columnWidths.Add(width);
+        }
+
+        StringBuilder builder = new ();
+
+        for (int row = 0; row < _extent; row++)
+        {
+            builder.Append("| ");
+
+            for (int column = 0; column < _extent; column++)
+            {
+                string text = columns[column][row];
+                int width = columnWidths[column] + 1;
+
+                builder.Append(text.PadLeft(width));
+            }
+
+            builder.Append(" |\n");
+        }
+
+        return builder.ToString()[..^1];
     }
 
     // ---------

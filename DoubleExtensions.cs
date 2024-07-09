@@ -2,7 +2,7 @@ namespace RayTracer;
 
 public static class DoubleExtensions
 {
-    public const double Epsilon = 0.00001;
+    public const double Epsilon = 0.000001;
 
     /// <summary>
     /// This method is used to convert a value in degrees to its equivalent in radians.
@@ -20,10 +20,11 @@ public static class DoubleExtensions
     /// </summary>
     /// <param name="left">The left number to compare.</param>
     /// <param name="right">The right number to compare.</param>
+    /// <param name="epsilon">The error range to use.</param>
     /// <returns><c>true</c>, if the two numbers are close enough, or <c>false</c>
     /// if not.</returns>
-    public static bool Near(this double left, double right)
+    public static bool Near(this double left, double right, double epsilon = Epsilon)
     {
-        return Math.Abs(left - right) < Epsilon;
+        return Math.Abs(left - right) < epsilon;
     }
 }

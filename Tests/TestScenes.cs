@@ -48,7 +48,7 @@ public class TestScenes
         intersection.PrepareUsing(ray, new List<Intersection> { intersection });
 
         Color color = scene.GetHitColor(intersection, 0);
-        Color expected = new (0.38066, 0.47583, 0.2855);
+        Color expected = new (0.380661, 0.475826, 0.285496);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -107,9 +107,10 @@ public class TestScenes
 
         ray = new Ray(new Point(0, 0, -5), new Vector(0, 0, 1));
 
-        Color expected = new (0.38066, 0.47583, 0.2855);
+        Color expected = new (0.380661, 0.475826, 0.285496);
+        Color color = scene.GetColorFor(ray);
 
-        Assert.IsTrue(expected.Matches(scene.GetColorFor(ray)));
+        Assert.IsTrue(expected.Matches(color));
 
         scene.Surfaces[0].Material.Ambient = 1;
         scene.Surfaces[1].Material.Ambient = 1;
@@ -181,7 +182,7 @@ public class TestScenes
         intersection.PrepareUsing(ray, new List<Intersection> { intersection });
 
         Color color = scene.GetReflectionColor(intersection, 1);
-        Color expected = new (0.19033, 0.23791, 0.14274);
+        Color expected = new (0.190330, 0.237913, 0.142748);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -268,7 +269,7 @@ public class TestScenes
         intersections[2].PrepareUsing(ray, intersections);
 
         Color color = scene.GetRefractedColor(intersections[2], 5);
-        Color expected = new (0, 0.99889, 0.04721);
+        Color expected = new (0, 0.998886, 0.047217);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -308,7 +309,7 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.93642, 0.68642, 0.68642);
+        Color expected = new (0.936425, 0.686425, 0.686425);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -349,7 +350,7 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.93391, 0.69643, 0.69243);
+        Color expected = new (0.933915, 0.696434, 0.692430);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -377,7 +378,7 @@ public class TestScenes
         intersection.PrepareUsing(ray, new List<Intersection> { intersection });
 
         Color color = scene.GetHitColor(intersection, 1);
-        Color expected = new (0.87675, 0.92434, 0.82917);
+        Color expected = new (0.876756, 0.924339, 0.829173);
 
         Assert.IsTrue(expected.Matches(color));
     }

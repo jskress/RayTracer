@@ -59,7 +59,7 @@ public class TestPointLights
         {
             Location = new Point(0, 10, -10)
         };
-        Color expected = new (0.7364, 0.7364, 0.7364);
+        Color expected = new (0.736396, 0.736396, 0.736396);
 
         Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
     }
@@ -75,7 +75,7 @@ public class TestPointLights
         {
             Location = new Point(0, 10, -10)
         };
-        Color expected = new (1.6364, 1.6364, 1.6364);
+        Color expected = new (1.636396, 1.636396, 1.636396);
 
         Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
     }

@@ -107,7 +107,7 @@ public class TestVectors
         Assert.IsTrue(expected.Matches(vector.Unit));
 
         vector = new Vector(1, 2, 3);
-        expected = new Vector(0.26726, 0.53452, 0.80178);
+        expected = new Vector(0.267261, 0.534522, 0.801784);
 
         Vector unit = vector.Unit;
 

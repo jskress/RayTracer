@@ -5,16 +5,6 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Color
 {
-    internal static Color FromUint(uint rawValue)
-    {
-        int red = (int) ((rawValue & 0x00ff0000) >> 0x10);
-        int green = (int) ((rawValue & 0x0000ff00) >> 0x8);
-        int blue = (int) (rawValue & 0x000000ff);
-        int alpha = (int) ((rawValue & 0xff000000) >> 0x18);
-
-        return new Color(red / 255.0d, green / 255.0d, blue / 255.0d, alpha / 255.0d);
-    }
-
     /// <summary>
     /// This method creates a color from integer channel values.
     /// </summary>
@@ -65,8 +55,6 @@ public class Color
     /// This property returns the alpha component of the color.
     /// </summary>
     public double Alpha { get; }
-
-    public Color() : this(0, 0, 0) {}
 
     public Color(double red, double green, double blue, double alpha = 1)
     {
@@ -137,7 +125,13 @@ public class Color
         double value, double power = 1, bool gammaCorrect = false)
     {
         if (gammaCorrect && Math.Abs(power - 1) > 0.0000001)
+        {
             value = Math.Pow(value, power);
+
+            // For colors, this should be ok.
+            if (double.IsNaN(value))
+                value = 0;
+        }
 
         return Math.Clamp(value, 0, 1);
     }
@@ -166,13 +160,16 @@ public class Color
     }
 
     /// <summary>
-    /// This method produces a string representation for the color  It is intended for use
+    /// This method produces a string representation for the color.  It is intended for use
     /// in debugging so is very simplistic.
     /// </summary>
     /// <returns>A descriptive string that represents this color.</returns>
     public override string ToString()
     {
-        return $"Color({Red}, {Green}, {Blue}, {Alpha})";
+        string alpha = Alpha.Near(1)
+            ? string.Empty
+            : $", {Alpha}";
+        return $"Color({Red}, {Green}, {Blue}{alpha})";
     }
 
     // -------------------------------------------------------------------------
