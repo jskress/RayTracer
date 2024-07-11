@@ -1,3 +1,4 @@
+using RayTracer.Core;
 using RayTracer.Graphics;
 using RayTracer.Scanners;
 
@@ -52,6 +53,8 @@ public class RenderContext
     /// This property notes whether output images should be in grayscale or full color.
     /// </summary>
     public bool Grayscale { get; set; }
+    
+    public Variables Variables { get; private set; }
 
     /// <summary>
     /// This method is used to apply any options the user specified on the command line to
@@ -65,5 +68,17 @@ public class RenderContext
         Gamma = options.Gamma ?? Gamma;
         BitsPerChannel = options.BitsPerChannel;
         Grayscale = options.Grayscale;
+    }
+
+    /// <summary>
+    /// This method is used to create and populate our base variable pool.
+    /// </summary>
+    public void SetInitialVariables()
+    {
+        Variables = new Variables();
+
+        Colors.AddToVariables(Variables);
+        IndicesOfRefraction.AddToVariables(Variables);
+        Directions.AddToVariables(Variables);
     }
 }

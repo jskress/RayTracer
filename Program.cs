@@ -18,6 +18,7 @@ Parser.Default.ParseArguments<ProgramOptions>(args)
             .Parse();
 
         context.ApplyOptions(options);
+        context.SetInitialVariables();
 
         Terminal.Out(HeadingInfo.Default);
         Terminal.Out("Input file:", OutputLevel.Chatty);

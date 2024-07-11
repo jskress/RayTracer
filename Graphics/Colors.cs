@@ -267,6 +267,6 @@ public static class Colors
 	public static void AddToVariables(Variables variables)
 	{
 		foreach (KeyValuePair<string, Color> pair in LazyNamedColors.Value)
-			variables[pair.Key] = pair.Value;
+			variables.SetValue(pair.Key, pair.Value);
 	}
 }

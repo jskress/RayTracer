@@ -39,6 +39,6 @@ public class NumberTuple
     /// <returns>A descriptive string that represents this color.</returns>
     public override string ToString()
     {
-        return $"[{X}, {Y}, {Z} {W}]";
+        return $"[{X}, {Y}, {Z}, {W}]";
     }
 }
