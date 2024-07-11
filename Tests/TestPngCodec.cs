@@ -1,4 +1,4 @@
-using RayTracer;
+using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 
@@ -17,18 +17,18 @@ public class TestPngCodec
     {
         // For testing, it's important to make sure we don't do gamma correction since
         // that will throw off roundtrip color matching.
-        _ = new ProgramOptions { Gamma = 1 };
+        RenderContext context = new RenderContext() { Gamma = 1 };
 
         PngCodec codec = new PngCodec();
         Canvas source = CreateCanvas();
 
         using MemoryStream stream = new MemoryStream();
 
-        codec.Encode(source, stream, null);
+        codec.Encode(context, source, stream, null);
 
         stream.Seek(0, SeekOrigin.Begin);
 
-        Canvas[] targets = codec.Decode(stream);
+        Canvas[] targets = codec.Decode(context, stream);
         
         Assert.AreEqual(1, targets.Length);
         Assert.AreEqual(6, targets[0].Width);

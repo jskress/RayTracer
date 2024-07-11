@@ -9,14 +9,16 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 public class PngChunkWriter
 {
+    private readonly RenderContext _context;
     private readonly Stream _stream;
     private readonly Canvas _canvas;
     private readonly ImageInformation _info;
 
     private PngHeaderChunk _headerChunk;
 
-    public PngChunkWriter(Stream stream, Canvas canvas, ImageInformation info)
+    public PngChunkWriter(RenderContext context, Stream stream, Canvas canvas, ImageInformation info)
     {
+        _context = context;
         _stream = stream;
         _canvas = canvas;
         _info = info;
@@ -35,12 +37,12 @@ public class PngChunkWriter
         WriteImageInformation();
 
         // Let's add a gamma chunk.
-        new PngGammaChunk().Write(_stream);
+        new PngGammaChunk(_context).Write(_stream);
 
         WriteImageData();
 
         // Finally, write out an end chunk.
-        new PngEndChunk().Write(_stream);
+        new PngEndChunk(_context).Write(_stream);
     }
 
     /// <summary>
@@ -51,12 +53,12 @@ public class PngChunkWriter
     {
         bool needsAlphaChannel = _canvas.NeedsAlphaChannel;
 
-        _headerChunk = new PngHeaderChunk
+        _headerChunk = new PngHeaderChunk(_context)
         {
             ImageWidth = _canvas.Width,
             ImageHeight = _canvas.Height,
-            BitDepth = (byte) (ProgramOptions.Instance.BitsPerChannel == 8 ? 8 : 16),
-            ColorType = ProgramOptions.Instance.Grayscale
+            BitDepth = (byte) (_context.BitsPerChannel == 8 ? 8 : 16),
+            ColorType = _context.Grayscale
                 ? needsAlphaChannel
                     ? PngColorType.GrayscaleWithAlpha
                     : PngColorType.Grayscale
@@ -100,7 +102,7 @@ public class PngChunkWriter
     {
         if (value != null && value.Trim().Length > 0)
         {
-            PngI18NTextChunk chunk = new PngI18NTextChunk()
+            PngI18NTextChunk chunk = new PngI18NTextChunk(_context)
             {
                 Keyword = label,
                 Text = value
@@ -117,8 +119,8 @@ public class PngChunkWriter
     {
         using MemoryStream memoryStream = new MemoryStream();
         using DeflateStream compressor = new DeflateStream(memoryStream, CompressionLevel.SmallestSize);
-        ScanLine previous = new ScanLine(_headerChunk);
-        ScanLine current = new ScanLine(_headerChunk);
+        ScanLine previous = new ScanLine(_context, _headerChunk);
+        ScanLine current = new ScanLine(_context, _headerChunk);
         Adler32 checksum = new Adler32();
 
         for (int y = 0; y < _canvas.Height; y++)
@@ -137,7 +139,7 @@ public class PngChunkWriter
         compressor.Flush();
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        using PngImageStream imageStream = new PngImageStream(this);
+        using PngImageStream imageStream = new PngImageStream(_context, this);
 
         // Write out the ZLib header.
         imageStream.WriteByte(120);

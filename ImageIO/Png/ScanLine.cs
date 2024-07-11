@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO.Png;
@@ -7,6 +8,7 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 internal class ScanLine
 {
+    private readonly RenderContext _context;
     private readonly byte[] _pixelData;
     private readonly byte[] _filteredData;
     private readonly int _bitDepth;
@@ -17,8 +19,9 @@ internal class ScanLine
     private readonly bool _grayscale;
     private readonly bool _includeAlpha;
 
-    internal ScanLine(PngHeaderChunk headerChunk)
+    internal ScanLine(RenderContext context, PngHeaderChunk headerChunk)
     {
+        _context = context;
         _pixelData = new byte[headerChunk.ScanlineByteCount];
         _filteredData = new byte[headerChunk.ScanlineByteCount];
         _bitDepth = headerChunk.BitDepth;
@@ -64,7 +67,7 @@ internal class ScanLine
     /// <returns>The updated point in the scanline after the bytes we just added.</returns>
     private int AddGrayColor(Color color, int cp)
     {
-        (int gray, int alpha) = color.ToGrayValue();
+        (int gray, int alpha) = color.ToGrayValue(_context);
 
         cp = WriteSample(gray, cp);
 
@@ -82,7 +85,7 @@ internal class ScanLine
     /// <returns>The updated point in the scanline after the bytes we just added.</returns>
     private int AddTrueColor(Color color, int cp)
     {
-        (int red, int green, int blue, int alpha) = color.ToChannelValues();
+        (int red, int green, int blue, int alpha) = color.ToChannelValues(_context);
 
         cp = WriteSample(red, cp);
         cp = WriteSample(green, cp);

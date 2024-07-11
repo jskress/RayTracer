@@ -2,16 +2,22 @@ using System.Diagnostics;
 using CommandLine;
 using CommandLine.Text;
 using RayTracer;
+using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.ImageIO;
 using RayTracer.Parser;
 
 Parser.Default.ParseArguments<ProgramOptions>(args)
     .WithParsed(options =>
     {
-        RenderData renderData = new FileParser(options)
+        Terminal.OutputLevel = options.OutputLevel;
+
+        RenderContext context = new ();
+        List<Scene> scenes = new FileParser(context, options)
             .Parse();
-        Canvas canvas = renderData.NewCanvas;
+
+        context.ApplyOptions(options);
 
         Terminal.Out(HeadingInfo.Default);
         Terminal.Out("Input file:", OutputLevel.Chatty);
@@ -22,14 +28,17 @@ Parser.Default.ParseArguments<ProgramOptions>(args)
         Terminal.Out("Generating...");
 
         Stopwatch stopwatch = Stopwatch.StartNew();
-
-        renderData.Camera.Render(renderData.Scene, canvas, renderData.Scanner);
+        Scene scene = scenes.First();
+        Camera camera = scene.Cameras.First();
+        Canvas canvas = camera.Render(context, scene);
 
         stopwatch.Stop();
 
         Terminal.Out("Writing...");
 
-        renderData.OutputFile.Save(canvas);
+        ImageFile outputFile = new ImageFile(options.OutputFileName, options.OutputImageFormat);
+
+        outputFile.Save(context, canvas, info: context.ImageInformation);
 
         Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
     });

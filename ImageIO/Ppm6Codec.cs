@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -21,7 +22,7 @@ public class Ppm6Codec : PpmCodec
     /// <param name="stream">The stream to write to.</param>
     protected override void WritePixels(Canvas canvas, Stream stream)
     {
-        bool twoBytes = ProgramOptions.Instance.MaxColorChannelValue > 255;
+        bool twoBytes = Context.MaxColorChannelValue > 255;
 
         for (int y = 0; y < canvas.Height; y++)
         {
@@ -55,9 +56,10 @@ public class Ppm6Codec : PpmCodec
     /// This method is used to decode the given screen into one or more canvases, one
     /// canvas per image found in the stream.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="stream">The stream to read from.</param>
     /// <returns>The canvases that hold the images found in the stream.</returns>
-    public override Canvas[] Decode(Stream stream)
+    public override Canvas[] Decode(RenderContext context, Stream stream)
     {
         (Canvas canvas, int maxColorValue) = ReadHeader(stream);
         List<Canvas> result = [];

@@ -1,4 +1,5 @@
 using RayTracer;
+using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 
@@ -50,7 +51,7 @@ public class TestPpmCodec
 
         _ = new ProgramOptions();
 
-        _codec.Encode(canvas, streamToWrite, null);
+        _codec.Encode(new RenderContext(), canvas, streamToWrite, null);
 
         using MemoryStream streamToRead = new (streamToWrite.GetBuffer());
         using StreamReader reader = new (streamToRead);

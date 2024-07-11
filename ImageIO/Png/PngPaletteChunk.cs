@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO.Png;
@@ -12,7 +13,7 @@ public class PngPaletteChunk : PngChunk
     /// </summary>
     public Color[] Palette { get; set; }
 
-    public PngPaletteChunk() : base(ChunkTypes.PaletteChunk) {}
+    public PngPaletteChunk(RenderContext context) : base(context, ChunkTypes.PaletteChunk) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.  Since

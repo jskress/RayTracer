@@ -1,28 +1,13 @@
 using RayTracer.Basics;
-using RayTracer.Graphics;
+using RayTracer.General;
 
 namespace RayTracer.Core;
 
 /// <summary>
 /// This class encapsulates the information how a camera will convert from 3D to 2D.
 /// </summary>
-public class CameraMechanics
+public class PixelToRayConverter
 {
-    /// <summary>
-    /// This property reports the width of the target image.
-    /// </summary>
-    public int Width { get; }
-
-    /// <summary>
-    /// This property reports the height of the target image.
-    /// </summary>
-    public int Height { get; }
-
-    /// <summary>
-    /// This property reports the field of view (in radians) for the camera.
-    /// </summary>
-    public double FieldOfView { get; }
-
     /// <summary>
     /// This property holds the transform to use.
     /// </summary>
@@ -47,18 +32,14 @@ public class CameraMechanics
     private Matrix _transform;
     private Matrix _inverseTransform;
 
-    public CameraMechanics(Canvas canvas, double fieldOfView, Matrix transform = null!)
+    public PixelToRayConverter(RenderContext context, double fieldOfView, Matrix transform = null)
     {
         _transform = transform ?? Matrix.Identity;
         _inverseTransform = _transform.Invert();
 
-        Width = canvas.Width;
-        Height = canvas.Height;
-        FieldOfView = fieldOfView;
-
-        double width = Convert.ToDouble(Width);
+        double width = Convert.ToDouble(context.Width);
         double halfView = Math.Tan(fieldOfView / 2);
-        double aspectRatio = width / Convert.ToDouble(Height);
+        double aspectRatio = width / Convert.ToDouble(context.Height);
 
         if (aspectRatio >= 1)
         {
@@ -79,11 +60,13 @@ public class CameraMechanics
     /// </summary>
     /// <param name="x">The X coordinate of the pixel to get the ray for.</param>
     /// <param name="y">The Y coordinate of the pixel to get the ray for.</param>
+    /// <param name="shiftX">The amount to shift the X coordinate off center of the pixel.</param>
+    /// <param name="shiftY">The amount to shift the Y coordinate off center of the pixel.</param>
     /// <returns>The ray for the pixel.</returns>
-    public Ray GetRayForPixel(int x, int y)
+    public Ray GetRayForPixel(int x, int y, double shiftX = 0, double shiftY = 0)
     {
-        double xOffset = (Convert.ToDouble(x) + 0.5) * PixelSize;
-        double yOffset = (Convert.ToDouble(y) + 0.5) * PixelSize;
+        double xOffset = (Convert.ToDouble(x) + 0.5 + shiftX) * PixelSize;
+        double yOffset = (Convert.ToDouble(y) + 0.5 + shiftY) * PixelSize;
         double worldX = _halfWidth - xOffset;
         double worldY = _halfHeight - yOffset;
         Point pixel = _inverseTransform * new Point(worldX, worldY, -1);

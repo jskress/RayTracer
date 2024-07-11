@@ -1,7 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.General;
 using RayTracer.Graphics;
-using RayTracer.Scanners;
 
 namespace Tests;
 
@@ -62,10 +62,10 @@ public class TestCamera
     {
         Scene scene = Scene.DefaultScene();
         Camera camera = new ();
-        Canvas canvas = new (11, 11);
+        RenderContext context = new RenderContext { Width = 11, Height = 11 };
         Color expected = new (0.380661, 0.475826, 0.285496);
 
-        camera.Render(scene, canvas, new SingleThreadScanner());
+        Canvas canvas = camera.Render(context, scene);
 
         Assert.IsTrue(expected.Matches(canvas.GetPixel(5, 5)));
     }

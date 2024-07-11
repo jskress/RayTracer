@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO.Png;
@@ -56,20 +57,22 @@ public class PngChunkReader
     /// This property reports the palette chunk that we carry.
     /// </summary>
     private PngEndChunk EndChunk => GetChunk<PngEndChunk>(ChunkTypes.EndChunk);
-    
+
+    private readonly RenderContext _context;
     private readonly Stream _stream;
     private readonly Dictionary<string, PngChunk> _chunks;
     private readonly HashSet<string> _seenChunks;
 
     private PngChunk _lastReadChunk;
 
-    public PngChunkReader(Stream stream)
+    public PngChunkReader(RenderContext context, Stream stream)
     {
         byte[] header = ImageFileIo.ReadBytes(stream, 8);
 
         if (!PngCodec.FileHeader.SequenceEqual(header))
             throw new Exception("File does not look like a PNG file or it is corrupted.");
 
+        _context = context;
         _stream = stream;
         _chunks = new Dictionary<string, PngChunk>();
         _seenChunks = [];
@@ -99,10 +102,10 @@ public class PngChunkReader
     public Canvas Read()
     {
         Canvas canvas = new (HeaderChunk.ImageWidth, HeaderChunk.ImageHeight);
-        using PngImageStream imageStream = new PngImageStream(this);
+        using PngImageStream imageStream = new PngImageStream(_context, this);
         using DeflateStream decompressor = new DeflateStream(imageStream, CompressionMode.Decompress);
-        ScanLine previous = new ScanLine(HeaderChunk);
-        ScanLine current = new ScanLine(HeaderChunk);
+        ScanLine previous = new ScanLine(_context, HeaderChunk);
+        ScanLine current = new ScanLine(_context, HeaderChunk);
 
         // Read the ZLib header.
         _ = ImageFileIo.ReadByte(imageStream);
@@ -309,13 +312,13 @@ public class PngChunkReader
     {
         PngChunk chunk = type switch
         {
-            ChunkTypes.HeaderChunk => new PngHeaderChunk(),
-            ChunkTypes.InternationalTextChunk => new PngI18NTextChunk(),
-            ChunkTypes.PaletteChunk => new PngPaletteChunk(),
-            ChunkTypes.GammaChunk => new PngGammaChunk(),
-            ChunkTypes.ImageDataChunk => new PngImageDataChunk(),
-            ChunkTypes.EndChunk => new PngEndChunk(),
-            _ => new UnknownPngChunk(type)
+            ChunkTypes.HeaderChunk => new PngHeaderChunk(_context),
+            ChunkTypes.InternationalTextChunk => new PngI18NTextChunk(_context),
+            ChunkTypes.PaletteChunk => new PngPaletteChunk(_context),
+            ChunkTypes.GammaChunk => new PngGammaChunk(_context),
+            ChunkTypes.ImageDataChunk => new PngImageDataChunk(_context),
+            ChunkTypes.EndChunk => new PngEndChunk(_context),
+            _ => new UnknownPngChunk(_context, type)
         };
 
         chunk.SetData(this, data);

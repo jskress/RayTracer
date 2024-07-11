@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.Graphics;
 
 /// <summary>
@@ -68,12 +70,14 @@ public class Color
     /// This method returns the 4 color channel values as integers in a range from 0 to
     /// the currently configured largest color channel value.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
     /// <returns>A tuple containing the converted channel values.</returns>
-    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(bool gammaCorrect = true)
+    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(
+        RenderContext context, bool gammaCorrect = true)
     {
-        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+        double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / context.Gamma : 1;
 
         return (ChannelToInt(Red, maxValue, power, gammaCorrect),
             ChannelToInt(Green, maxValue, power, gammaCorrect),
@@ -85,12 +89,13 @@ public class Color
     /// <summary>
     /// This method returns this color as an appropriate shade of gray.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
     /// <returns>A tuple containing the gray and alpha values.</returns>
-    public (int Gray, int Alpha) ToGrayValue(bool gammaCorrect = true)
+    public (int Gray, int Alpha) ToGrayValue(RenderContext context, bool gammaCorrect = true)
     {
-        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+        double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / context.Gamma : 1;
         double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +
                       PrepareChannelValue(Green, power, gammaCorrect) * 0.587 +
                       PrepareChannelValue(Green, power, gammaCorrect) * 0.114;

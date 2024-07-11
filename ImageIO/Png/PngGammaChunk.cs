@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 public class PngGammaChunk : PngChunk
 {
-    public PngGammaChunk() : base(ChunkTypes.GammaChunk) {}
+    public PngGammaChunk(RenderContext context) : base(context, ChunkTypes.GammaChunk) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.  We have
@@ -14,7 +16,7 @@ public class PngGammaChunk : PngChunk
     /// <param name="stream">The stream to write to.</param>
     protected override void WriteData(Stream stream)
     {
-        int value = (int) Math.Round(1 / ProgramOptions.Instance.Gamma * 100_000);
+        int value = (int) Math.Round(1 / Context.Gamma * 100_000);
 
         ImageFileIo.WriteInt(stream, value, 4);
     }

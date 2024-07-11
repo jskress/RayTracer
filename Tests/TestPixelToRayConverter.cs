@@ -1,11 +1,11 @@
 using RayTracer.Basics;
 using RayTracer.Core;
-using RayTracer.Graphics;
+using RayTracer.General;
 
 namespace Tests;
 
 [TestClass]
-public class TestCameraMechanics
+public class TestPixelToRayConverter
 {
     private const double PiOver2 = Math.PI / 2;
     private const double PiOver4 = Math.PI / 4;
@@ -13,28 +13,25 @@ public class TestCameraMechanics
     [TestMethod]
     public void TestConstruction()
     {
-        Canvas canvas = new (160, 120);
-        CameraMechanics mechanics = new CameraMechanics(canvas, PiOver2);
+        RenderContext context = new () { Width = 160, Height = 120 };
+        PixelToRayConverter mechanics = new PixelToRayConverter(context, PiOver2);
 
-        Assert.AreEqual(160, mechanics.Width);
-        Assert.AreEqual(120, mechanics.Height);
-        Assert.AreEqual(PiOver2, mechanics.FieldOfView);
         Assert.AreSame(Matrix.Identity, mechanics.Transform);
     }
 
     [TestMethod]
     public void TestPixelSize()
     {
-        Canvas canvas = new (200, 125);
-        CameraMechanics mechanics = new (canvas, PiOver2);
+        RenderContext context = new () { Width = 200, Height = 125 };
+        PixelToRayConverter mechanics = new (context, PiOver2);
 
         // Round to our expected value.
         double actual = Math.Round(mechanics.PixelSize * 100) / 100;
 
         Assert.AreEqual(0.01, actual);
 
-        canvas = new Canvas(125, 200);
-        mechanics = new CameraMechanics(canvas, PiOver2);
+        context = new RenderContext { Width = 125, Height = 200 };
+        mechanics = new PixelToRayConverter(context, PiOver2);
 
         // Round to our expected value.
         actual = Math.Round(mechanics.PixelSize * 100) / 100;
@@ -45,8 +42,8 @@ public class TestCameraMechanics
     [TestMethod]
     public void TestGetRayFor()
     {
-        Canvas canvas = new (201, 101);
-        CameraMechanics mechanics = new (canvas, PiOver2);
+        RenderContext context = new () { Width = 201, Height = 101 };
+        PixelToRayConverter mechanics = new (context, PiOver2);
         Ray ray = mechanics.GetRayForPixel(100, 50);
         Vector direction = new (0, 0, -1);
 

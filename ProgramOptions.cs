@@ -18,11 +18,6 @@ namespace RayTracer;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class ProgramOptions
 {
-    /// <summary>
-    /// This property exposes our singleton instance.
-    /// </summary>
-    public static ProgramOptions Instance { get; private set; }
-
     [Option('i', "input-file", Required = true,
         HelpText = "The name of the input file to process.")]
     public string InputFileName
@@ -90,6 +85,34 @@ public class ProgramOptions
         }
     }
 
+    [Option('w', "width", Required = false, Default = 800,
+        HelpText = "The width of the image to generate.")]
+    public int? Width
+    {
+        get => _width;
+        set
+        {
+            if (value is < 1 or > 16384)
+                throw new ArgumentException("Width must be between 1 and 16,384.");
+
+            _width = value;
+        }
+    }
+
+    [Option('h', "height", Required = false, Default = 600,
+        HelpText = "The height of the image to generate.")]
+    public int? Height
+    {
+        get => _height;
+        set
+        {
+            if (value is < 1 or > 16384)
+                throw new ArgumentException("Height must be between 1 and 16,384.");
+
+            _height = value;
+        }
+    }
+
     [Option('c', "bits-per-channel", Required = false,
         HelpText = "The number of bits to use for each channel in colors in the image output file.")]
     public int BitsPerChannel
@@ -106,7 +129,7 @@ public class ProgramOptions
 
     [Option('g', "gamma", Required = false,
         HelpText = "The gamma correction to apply to colors in the image output file.  Set this to 1 to turn gamma correction off.")]
-    public double Gamma
+    public double? Gamma
     {
         get => _gamma;
         set
@@ -136,27 +159,25 @@ public class ProgramOptions
     /// </summary>
     public OutputLevel OutputLevel { get; private set; }
 
-    /// <summary>
-    /// This property provides the largest value a color channel can have.
-    /// </summary>
-    public int MaxColorChannelValue => (1 << _bitsPerChannel) - 1;
-
     private string _inputFileName;
     private string _outputDirectory;
     private string _outputFileName;
     private string _outputFileExtension;
     private string _outputImageFormat;
+    private int? _width;
+    private int? _height;
     private int _bitsPerChannel;
-    private double _gamma;
+    private double? _gamma;
 
     public ProgramOptions()
     {
+        _width = null;
+        _height = null;
         _bitsPerChannel = 8;
-        _gamma = 2.2;
+        _gamma = null;
         _outputImageFormat = "png";
 
         OutputLevel = OutputLevel.Normal;
-        Instance = this;
     }
     
     /// <summary>

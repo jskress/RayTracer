@@ -37,12 +37,12 @@ public abstract class Surface
     /// <summary>
     /// This property provides the inverse of the surface's transform.
     /// </summary>
-    public Matrix InverseTransform => _inverseTransform.Value;
+    private Matrix InverseTransform => _inverseTransform.Value;
 
     /// <summary>
     /// This property provides the transposed inverse of the surface's transform.
     /// </summary>
-    protected Matrix TransformedInverseTransform => _transposedInverseTransform.Value;
+    private Matrix TransformedInverseTransform => _transposedInverseTransform.Value;
 
     private Matrix _transform;
     private Lazy<Matrix> _inverseTransform;
@@ -151,7 +151,7 @@ public abstract class Surface
 
     /// <summary>
     /// This method decides whether the given child surface is, or is contained by, the
-    /// given (potential) parent surface..
+    /// given (potential) parent surface.
     /// </summary>
     /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
     /// <param name="child">the child surface to test.</param>

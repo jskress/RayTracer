@@ -1,4 +1,5 @@
 using System.Text;
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO;
@@ -60,9 +61,10 @@ public class Ppm3Codec : PpmCodec
     /// This method is used to decode the given screen into one or more canvases, one
     /// canvas per image found in the stream.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="stream">The stream to read from.</param>
     /// <returns>The canvases that hold the images found in the stream.</returns>
-    public override Canvas[] Decode(Stream stream)
+    public override Canvas[] Decode(RenderContext context, Stream stream)
     {
         (Canvas canvas, int maxColorValue) = ReadHeader(stream);
         string[] words = null;

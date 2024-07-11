@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -9,25 +11,28 @@ public class PngImageStream : Stream
 {
     private const int BufferSize = 16384;
 
+    private RenderContext _context;
     private PngChunkReader _reader;
     private PngChunkWriter _writer;
     private PngImageDataChunk _imageDataChunk;
     private int _cp;
 
     private PngImageStream(
-        PngChunkReader reader, PngChunkWriter writer, PngImageDataChunk firstChunk)
+        RenderContext context, PngChunkReader reader, PngChunkWriter writer,
+        PngImageDataChunk firstChunk)
     {
+        _context = context;
         _reader = reader;
         _writer = writer;
         _imageDataChunk = firstChunk;
         _cp = 0;
     }
 
-    public PngImageStream(PngChunkReader reader)
-        : this(reader, null, reader.GetImageDataChunk()) {}
+    public PngImageStream(RenderContext context, PngChunkReader reader)
+        : this(context, reader, null, reader.GetImageDataChunk()) {}
 
-    public PngImageStream(PngChunkWriter writer)
-        : this(null, writer, new PngImageDataChunk
+    public PngImageStream(RenderContext context, PngChunkWriter writer)
+        : this(context, null, writer, new PngImageDataChunk(context)
         {
             ImageData = new byte[BufferSize]
         }) {}
@@ -125,7 +130,7 @@ public class PngImageStream : Stream
                 
                 Buffer.BlockCopy(_imageDataChunk.ImageData, 0, rest, 0, _cp);
 
-                _writer.WriteImageDataChunk(new PngImageDataChunk
+                _writer.WriteImageDataChunk(new PngImageDataChunk(_context)
                 {
                     ImageData = rest
                 });

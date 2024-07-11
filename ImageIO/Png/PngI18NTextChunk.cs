@@ -29,7 +29,7 @@ public class PngI18NTextChunk : PngChunk
     /// </summary>
     public string Text { get; set; } = string.Empty;
 
-    public PngI18NTextChunk() : base(ChunkTypes.InternationalTextChunk) {}
+    public PngI18NTextChunk(RenderContext context) : base(context, ChunkTypes.InternationalTextChunk) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.

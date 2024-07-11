@@ -43,14 +43,19 @@ public class Scene
     }
 
     /// <summary>
+    /// This list holds the collection of cameras in the scene.
+    /// </summary>
+    public List<Camera> Cameras { get; set; } = [];
+
+    /// <summary>
     /// This list holds the collection of lights in the scene.
     /// </summary>
-    public List<PointLight> Lights { get; set; } = new ();
+    public List<PointLight> Lights { get; set; } = [];
 
     /// <summary>
     /// This list holds the collection of surfaces (shapes) in the scene.
     /// </summary>
-    public List<Surface> Surfaces { get; set; } = new ();
+    public List<Surface> Surfaces { get; set; } = [];
 
     /// <summary>
     /// This property holds the color to use for a pixel when rays do not intersect with
@@ -88,7 +93,7 @@ public class Scene
     /// <param name="ray">The ray to test.</param>
     public List<Intersection> Intersect(Ray ray)
     {
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         foreach (Surface surface in Surfaces)
             surface.Intersect(ray, intersections);

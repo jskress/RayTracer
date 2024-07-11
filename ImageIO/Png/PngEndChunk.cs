@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 public class PngEndChunk : PngChunk
 {
-    public PngEndChunk() : base(ChunkTypes.EndChunk) {}
+    public PngEndChunk(RenderContext context) : base(context, ChunkTypes.EndChunk) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.  We have

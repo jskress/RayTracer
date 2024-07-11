@@ -1,5 +1,5 @@
 using RayTracer.Core;
-using RayTracer.ImageIO;
+using RayTracer.General;
 
 namespace RayTracer.Parser;
 
@@ -9,21 +9,21 @@ namespace RayTracer.Parser;
 /// </summary>
 public class FileParser
 {
+    private readonly RenderContext _context;
     private readonly string _inputFileName;
-    private readonly string _outputFileName;
 
-    private RenderData _renderData;
     private FileContent _fileContent;
+    private Scene _scene;
     private ScannerParser _scannerParser;
     private LightParser _lightParser;
     private SurfaceParser _surfaceParser;
 
-    public FileParser(ProgramOptions options)
+    public FileParser(RenderContext context, ProgramOptions options)
     {
+        _context = context;
         _inputFileName = options.InputFileName;
-        _outputFileName = options.OutputFileName;
-        _renderData = null;
         _fileContent = null;
+        _scene = null;
         _scannerParser = null;
         _lightParser = null;
         _surfaceParser = null;
@@ -35,21 +35,16 @@ public class FileParser
     /// This method is used to actually perform the parsing of the input file.
     /// </summary>
     /// <returns>The data that should control the render.</returns>
-    public RenderData Parse()
+    public List<Scene> Parse()
     {
-        _renderData = new RenderData
-        {
-            OutputFile = new ImageFile(_outputFileName),
-            Camera = new Camera(),
-            Scene = new Scene()
-        };
+        _scene = new Scene();
 
-        _surfaceParser = new SurfaceParser(_fileContent, Path.GetDirectoryName(_inputFileName), _renderData.Scene);
+        _surfaceParser = new SurfaceParser(_fileContent, Path.GetDirectoryName(_inputFileName), _scene);
 
         while (_fileContent.GetNextWord() is { } word)
             ParseNextClause(word);
 
-        return _renderData;
+        return [_scene];
     }
 
     /// <summary>
@@ -88,23 +83,25 @@ public class FileParser
         switch (word)
         {
             case "width":
-                _renderData.Width = _fileContent.GetNextInt(0, 16384);
+                _context.Width = _fileContent.GetNextInt(1, 16384);
                 break;
             case "height":
-                _renderData.Height = _fileContent.GetNextInt(0, 16384);
+                _context.Height = _fileContent.GetNextInt(1, 16384);
                 break;
             case "scanner":
-                _renderData.Scanner = _scannerParser.Parse();
+                _context.Scanner = _scannerParser.Parse();
                 break;
             case "camera":
-                CameraParser cameraParser = new (_fileContent, _renderData.Camera);
+                Camera camera = new Camera();
+                CameraParser cameraParser = new (_fileContent, camera);
                 cameraParser.Parse();
+                _scene.Cameras.Add(camera);
                 break;
             case "light":
-                _renderData.Scene.Lights.Add(_lightParser.ParseLight());
+                _scene.Lights.Add(_lightParser.ParseLight());
                 break;
             case "backgroundColor":
-                _renderData.Scene.BackgroundColor = _fileContent.GetNextColor();
+                _scene.BackgroundColor = _fileContent.GetNextColor();
                 break;
             case "define":
                 ParseDefinition();
