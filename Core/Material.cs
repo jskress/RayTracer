@@ -1,4 +1,5 @@
-using RayTracer.ColorSources;
+using RayTracer.Extensions;
+using RayTracer.Pigmentation;
 
 namespace RayTracer.Core;
 
@@ -10,7 +11,7 @@ public class Material
     /// <summary>
     /// This property holds the source of color for the material.
     /// </summary>
-    public ColorSource ColorSource { get; set; } = SolidColorSource.White;
+    public Pigmentation.Pigmentation Pigmentation { get; set; } = SolidPigmentation.White;
 
     /// <summary>
     /// The amount of ambient light for the material.
@@ -56,7 +57,7 @@ public class Material
     {
         return new Material
         {
-            ColorSource = ColorSource,
+            Pigmentation = Pigmentation,
             Ambient = Ambient,
             Diffuse = Diffuse,
             Specular = Specular,
@@ -75,7 +76,7 @@ public class Material
     /// <returns><c>true</c>if this matrix matches the given one.</returns>
     public bool Matches(Material other)
     {
-        return ColorSource.Matches(other.ColorSource) &&
+        return Pigmentation.Matches(other.Pigmentation) &&
                Ambient.Near(other.Ambient) &&
                Diffuse.Near(other.Diffuse) &&
                Specular.Near(other.Specular) &&

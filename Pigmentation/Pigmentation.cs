@@ -2,16 +2,17 @@ using RayTracer.Basics;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 
-namespace RayTracer.ColorSources;
+namespace RayTracer.Pigmentation;
 
 /// <summary>
-/// This interface defines something that can accept a point in space and return a color
-/// for it.  This gives us support for patterns, gradients and so forth.
+/// This class defines the base class for something that can accept a point in space and
+/// return a color for it.  This gives us support for patterns, gradients and so forth, in
+/// addition to solid colors.
 /// </summary>
-public abstract class ColorSource
+public abstract class Pigmentation
 {
     /// <summary>
-    /// This property holds the transformation matrix for the color source.
+    /// This property holds the transformation matrix for the pigmentation.
     /// </summary>
     public Matrix Transform
     {
@@ -26,14 +27,14 @@ public abstract class ColorSource
     }
 
     /// <summary>
-    /// This property provides the inverse of the surface's transform.
+    /// This property provides the inverse of the pigmentation's transform.
     /// </summary>
     private Matrix InverseTransform => _inverseTransform.Value;
 
     private Matrix _transform;
     private Lazy<Matrix> _inverseTransform;
 
-    protected ColorSource()
+    protected Pigmentation()
     {
         _transform = Matrix.Identity;
         _inverseTransform = new Lazy<Matrix>(CreateInverseTransform);
@@ -70,9 +71,9 @@ public abstract class ColorSource
     public abstract Color GetColorFor(Point point);
 
     /// <summary>
-    /// This method returns whether the given color source matches this one.
+    /// This method returns whether the given pigmentation matches this one.
     /// </summary>
-    /// <param name="other">The color source to compare to.</param>
-    /// <returns><c>true</c>, if the two color sources match, or <c>false</c>, if not.</returns>
-    public abstract bool Matches(ColorSource other);
+    /// <param name="other">The pigmentation to compare to.</param>
+    /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
+    public abstract bool Matches(Pigmentation other);
 }

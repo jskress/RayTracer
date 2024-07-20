@@ -1,6 +1,7 @@
 using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 
 namespace Tests;

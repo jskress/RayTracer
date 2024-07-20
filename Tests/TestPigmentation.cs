@@ -1,10 +1,10 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
 using RayTracer.Graphics;
+using RayTracer.Pigmentation;
 
 namespace Tests;
 
-public class TestColorSource : ColorSource
+public class TestPigmentation : Pigmentation
 {
     public Color? Color { get; private set; }
 
@@ -13,7 +13,7 @@ public class TestColorSource : ColorSource
         return Color = new Color(point.X, point.Y, point.Z);
     }
 
-    public override bool Matches(ColorSource other)
+    public override bool Matches(Pigmentation other)
     {
         return false;
     }

@@ -1,4 +1,4 @@
-using RayTracer.ColorSources;
+using RayTracer.Pigmentation;
 
 namespace RayTracer.Parser;
 
@@ -14,36 +14,36 @@ internal class ColorSourceParser : BoundedContentParser
     private readonly TransformParser _transformParser;
 
     private string _type;
-    private ColorSource _colorSource;
+    private Pigmentation.Pigmentation _pigmentation;
 
     internal ColorSourceParser(FileContent fileContent, string type = "") : base(fileContent, '{', '}')
     {
         _transformParser = new TransformParser(fileContent);
         _type = type;
-        _colorSource = null;
+        _pigmentation = null;
     }
 
     /// <summary>
     /// This method handles parsing the next color source from the content.
     /// </summary>
     /// <returns>The parsed color source.</returns>
-    internal ColorSource ParseColorSource()
+    internal Pigmentation.Pigmentation ParseColorSource()
     {
         if (_type.Length == 0)
             _type = FileContent.GetNextWord(true);
 
-        if (FileContent.ColorSources.TryGetValue(_type, out ColorSource source))
+        if (FileContent.ColorSources.TryGetValue(_type, out Pigmentation.Pigmentation source))
             return source;
 
         if (!ValidTypes.Contains(_type))
             FileParser.ErrorOut($"{_type} is not a valid type of color source");
 
         if ("color" == _type)
-            return new SolidColorSource(FileContent.GetNextColor());
+            return new SolidPigmentation(FileContent.GetNextColor());
 
         Parse();
 
-        return _colorSource;
+        return _pigmentation;
     }
 
     /// <summary>
@@ -51,7 +51,7 @@ internal class ColorSourceParser : BoundedContentParser
     /// </summary>
     protected override void ParseContent()
     {
-        List<ColorSource> nestedSources = new ();
+        List<Pigmentation.Pigmentation> nestedSources = new ();
 
         while (true)
         {
@@ -70,14 +70,14 @@ internal class ColorSourceParser : BoundedContentParser
 
         CreateProperColorSource(nestedSources);
 
-        _colorSource.Transform = _transformParser.GetFinalTransform();
+        _pigmentation.Transform = _transformParser.GetFinalTransform();
     }
 
     /// <summary>
     /// This method handles creating our final color source.
     /// </summary>
     /// <param name="sources"></param>
-    private void CreateProperColorSource(List<ColorSource> sources)
+    private void CreateProperColorSource(List<Pigmentation.Pigmentation> sources)
     {
         if (sources.Count < 2)
             FileParser.ErrorOut("Not enough color sources specified");
@@ -85,12 +85,12 @@ internal class ColorSourceParser : BoundedContentParser
         if (sources.Count > 2)
             FileParser.ErrorOut("Too many color sources specified");
 
-        _colorSource = _type switch
+        _pigmentation = _type switch
         {
-            "checker" => new CheckerColorSource(sources[0], sources[1]),
-            "linearGradient" => new LinearGradientColorSource(sources[0], sources[1]),
-            "ring" => new RingColorSource(sources[0], sources[1]),
-            "stripe" => new StripeColorSource(sources[0], sources[1]),
+            "checker" => new CheckerPigmentation(sources[0], sources[1]),
+            "linearGradient" => new LinearGradientPigmentation(sources[0], sources[1]),
+            "ring" => new RingPigmentation(sources[0], sources[1]),
+            "stripe" => new StripePigmentation(sources[0], sources[1]),
             _ => null // We'll never get here.
         };
     }

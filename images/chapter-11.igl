@@ -1,0 +1,19 @@
+// This holds the information for how to render our image for chapter 11 (new language).
+
+context {
+	parallel pixel scanner
+	angles are degrees
+	info {
+		title 'Chapter 11'
+		author 'J. Stephen Kress'
+		description 'The image that Chapter 11 walks us through to create.'
+		copyright true
+		software __software__
+	}
+}
+
+camera {
+	location [0, 1.5, -5]
+	look at [0 1 0]
+	field of view 60
+}

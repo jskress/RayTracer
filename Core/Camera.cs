@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -7,7 +8,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents a camera in a scene.
 /// </summary>
-public class Camera
+public class Camera : NamedThing
 {
     /// <summary>
     /// This property holds the location of the camera.
@@ -28,7 +29,7 @@ public class Camera
     /// <summary>
     /// This property reports the field of view (in degrees) for the camera.
     /// </summary>
-    public double FieldOfView { get; set; } = 90;
+    public double FieldOfView { get; set; } = 90.0.ToRadians();
 
     /// <summary>
     /// This property provides the view transformation that the camera represents.
@@ -44,7 +45,7 @@ public class Camera
     public Canvas Render(RenderContext context, Scene scene)
     {
         Canvas canvas = context.NewCanvas;
-        PixelToRayConverter converter = new (context, FieldOfView.ToRadians(), GetTransform());
+        PixelToRayConverter converter = new (context, FieldOfView, GetTransform());
 
         context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
         {

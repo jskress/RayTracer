@@ -1,3 +1,5 @@
+using RayTracer.Extensions;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -10,7 +12,7 @@ public class NumberTuple
     public double Z { get; }
     public double W { get; protected set; }
 
-    protected NumberTuple(double x, double y, double z, double w)
+    public NumberTuple(double x, double y, double z, double w)
     {
         X = x;
         Y = y;

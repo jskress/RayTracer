@@ -1,3 +1,4 @@
+using RayTracer.Extensions;
 using RayTracer.General;
 
 namespace RayTracer.Graphics;
@@ -71,11 +72,10 @@ public class Color
     /// the currently configured largest color channel value.
     /// </summary>
     /// <param name="context">The current rendering context.</param>
-    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
     /// <returns>A tuple containing the converted channel values.</returns>
-    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(
-        RenderContext context, bool gammaCorrect = true)
+    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(RenderContext context)
     {
+        bool gammaCorrect = context.ApplyGamma;
         double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
         double power = gammaCorrect ? 1 / context.Gamma : 1;
 
@@ -90,10 +90,10 @@ public class Color
     /// This method returns this color as an appropriate shade of gray.
     /// </summary>
     /// <param name="context">The current rendering context.</param>
-    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
     /// <returns>A tuple containing the gray and alpha values.</returns>
-    public (int Gray, int Alpha) ToGrayValue(RenderContext context, bool gammaCorrect = true)
+    public (int Gray, int Alpha) ToGrayValue(RenderContext context)
     {
+        bool gammaCorrect = context.ApplyGamma;
         double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
         double power = gammaCorrect ? 1 / context.Gamma : 1;
         double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +

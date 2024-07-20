@@ -37,7 +37,8 @@ public class PngChunkWriter
         WriteImageInformation();
 
         // Let's add a gamma chunk.
-        new PngGammaChunk(_context).Write(_stream);
+        if (_context.ReportGamma)
+            new PngGammaChunk(_context).Write(_stream);
 
         WriteImageData();
 

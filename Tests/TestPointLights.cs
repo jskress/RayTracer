@@ -1,8 +1,8 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Pigmentation;
 
 namespace Tests;
 
@@ -115,8 +115,8 @@ public class TestPointLights
     {
         Material material = new ()
         {
-            ColorSource = new StripeColorSource(
-                SolidColorSource.White, SolidColorSource.Black),
+            Pigmentation = new StripePigmentation(
+                SolidPigmentation.White, SolidPigmentation.Black),
             Ambient = 1,
             Diffuse = 0,
             Specular = 0

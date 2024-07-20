@@ -1,47 +1,16 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Pigmentation;
 
 namespace RayTracer.Core;
 
 /// <summary>
 /// This class represents a world of things to render.
 /// </summary>
-public class Scene
+public class Scene : NamedThing
 {
-    /// <summary>
-    /// This method generates a default scene with one light and two spheres.
-    /// </summary>
-    /// <returns>A default scene.</returns>
-    public static Scene DefaultScene()
-    {
-        PointLight pointLight = new()
-        {
-            Location = new Point(-10, 10, -10)
-        };
-        Sphere outer = new ()
-        {
-            Material = new Material
-            {
-                ColorSource = new SolidColorSource(new Color(0.8, 1.0, 0.6)),
-                Diffuse = 0.7,
-                Specular = 0.2
-            }
-        };
-        Sphere inner = new ()
-        {
-            Transform = Transforms.Scale(0.5)
-        };
-        Scene scene = new ();
-
-        scene.Lights.Add(pointLight);
-        scene.Surfaces.Add(outer);
-        scene.Surfaces.Add(inner);
-
-        return scene;
-    }
-
     /// <summary>
     /// This list holds the collection of cameras in the scene.
     /// </summary>

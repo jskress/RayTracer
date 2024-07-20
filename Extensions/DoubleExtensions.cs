@@ -1,4 +1,4 @@
-namespace RayTracer;
+namespace RayTracer.Extensions;
 
 public static class DoubleExtensions
 {

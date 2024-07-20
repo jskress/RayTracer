@@ -60,7 +60,7 @@ public class TestCamera
     [TestMethod]
     public void TestRender()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = TestScenes.DefaultScene();
         Camera camera = new ();
         RenderContext context = new RenderContext { Width = 11, Height = 11 };
         Color expected = new (0.380661, 0.475826, 0.285496);

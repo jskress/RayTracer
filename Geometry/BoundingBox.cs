@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
+using RayTracer.Extensions;
 
 namespace RayTracer.Geometry;
 

@@ -1,7 +1,7 @@
 using RayTracer.Core;
 using RayTracer.Geometry;
 
-namespace RayTracer;
+namespace RayTracer.Extensions;
 
 /// <summary>
 /// This class provides extension methods relating to intersections.

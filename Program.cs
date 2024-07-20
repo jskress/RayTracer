@@ -7,39 +7,47 @@ using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Parser;
+using RayTracer.Renderer;
 
 Parser.Default.ParseArguments<ProgramOptions>(args)
     .WithParsed(options =>
     {
         Terminal.OutputLevel = options.OutputLevel;
 
-        RenderContext context = new ();
-        List<Scene> scenes = new FileParser(context, options)
-            .Parse();
+        LanguageParser parser = new LanguageParser(options.InputFileName);
+        ImageRenderer renderer = parser.Parse();
 
-        context.ApplyOptions(options);
-        context.SetInitialVariables();
+        if (renderer != null)
+        {
+            renderer.Render(options);
 
-        Terminal.Out(HeadingInfo.Default);
-        Terminal.Out("Input file:", OutputLevel.Chatty);
-        Terminal.Out($"--> {options.InputFileName}", OutputLevel.Chatty);
-        Terminal.Out("Output file:", OutputLevel.Chatty);
-        Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
+            // Everything below here is legacy, and will be moved as appropriate to the
+            // ImageRenderer class.
 
-        Terminal.Out("Generating...");
+            RenderContext context = new ();
+            List<Scene> scenes = new FileParser(context, options)
+                .Parse();
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        Scene scene = scenes.First();
-        Camera camera = scene.Cameras.First();
-        Canvas canvas = camera.Render(context, scene);
+            Terminal.Out(HeadingInfo.Default);
+            Terminal.Out("Input file:", OutputLevel.Chatty);
+            Terminal.Out($"--> {options.InputFileName}", OutputLevel.Chatty);
+            Terminal.Out("Generating...");
 
-        stopwatch.Stop();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            Scene scene = scenes.First();
+            Camera camera = scene.Cameras.First();
+            Canvas canvas = camera.Render(context, scene);
 
-        Terminal.Out("Writing...");
+            stopwatch.Stop();
 
-        ImageFile outputFile = new ImageFile(options.OutputFileName, options.OutputImageFormat);
+            Terminal.Out("Output file:", OutputLevel.Chatty);
+            Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
+            Terminal.Out("Writing...");
 
-        outputFile.Save(context, canvas, info: context.ImageInformation);
+            ImageFile outputFile = new ImageFile(options.OutputFileName, options.OutputImageFormat);
 
-        Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
+            outputFile.Save(context, canvas, info: context.ImageInformation);
+
+            Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
+        }
     });

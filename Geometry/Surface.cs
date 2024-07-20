@@ -6,7 +6,7 @@ namespace RayTracer.Geometry;
 /// <summary>
 /// This is the base class for all pieces of geometry.
 /// </summary>
-public abstract class Surface
+public abstract class Surface : NamedThing
 {
     /// <summary>
     /// This property holds a reference to the parent of the surface, if there is one.

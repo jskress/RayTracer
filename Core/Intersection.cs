@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 
 namespace RayTracer.Core;
