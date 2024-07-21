@@ -1,5 +1,6 @@
 using RayTracer.Core;
 using RayTracer.General;
+using RayTracer.Pigments;
 
 namespace RayTracer.Parser;
 
@@ -100,8 +101,8 @@ public class FileParser
             case "light":
                 _scene.Lights.Add(_lightParser.ParseLight());
                 break;
-            case "backgroundColor":
-                _scene.BackgroundColor = _fileContent.GetNextColor();
+            case "background":
+                _scene.Background = new SolidPigment(_fileContent.GetNextColor());
                 break;
             case "define":
                 ParseDefinition();

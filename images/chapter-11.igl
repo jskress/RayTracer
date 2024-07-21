@@ -17,3 +17,7 @@ camera {
 	look at [0 1 0]
 	field of view 60
 }
+
+point light {
+	location [-10 10 -10]
+}

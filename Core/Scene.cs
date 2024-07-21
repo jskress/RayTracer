@@ -2,7 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
-using RayTracer.Pigmentation;
+using RayTracer.Pigments;
 
 namespace RayTracer.Core;
 
@@ -27,10 +27,10 @@ public class Scene : NamedThing
     public List<Surface> Surfaces { get; set; } = [];
 
     /// <summary>
-    /// This property holds the color to use for a pixel when rays do not intersect with
+    /// This property holds the pigment to use for a pixel when rays do not intersect with
     /// anything in the scene.
     /// </summary>
-    public Color BackgroundColor { get; set; } = Colors.Transparent;
+    public Pigment Background { get; set; } = new SolidPigment(Colors.Transparent);
 
     /// <summary>
     /// This method determines the color for the given ray.
@@ -42,7 +42,7 @@ public class Scene : NamedThing
     {
         List<Intersection> hits = Intersect(ray);
         Intersection hit = hits.Hit();
-        Color color = BackgroundColor;
+        Color color = Background.GetTransformedColorFor(ray.Origin);
 
         if (hit != null)
         {

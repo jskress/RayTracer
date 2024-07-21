@@ -1,6 +1,6 @@
 using RayTracer.Core;
 using RayTracer.Graphics;
-using RayTracer.Pigmentation;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -12,7 +12,7 @@ public class TestMaterial
     {
         Material material = new ();
 
-        Assert.AreSame(SolidPigmentation.White, material.Pigmentation);
+        Assert.AreSame(SolidPigment.White, material.Pigment);
         Assert.AreEqual(0.1, material.Ambient);
         Assert.AreEqual(0.9, material.Diffuse);
         Assert.AreEqual(0.9, material.Specular);

@@ -113,13 +113,24 @@ public partial class LanguageParser
         }
         cameraEntryClause:
         [
-            namedClause | locationClause | lookAtClause| upClause | fieldOfViewClause
+            namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause
         ] ?? 'Expecting a camera property here.'
 
+        startPointLightClause:
+        {
+            [ { point > light } | light ] > openBrace ?? 'Expecting an open brace to follow "light" here.'
+        }
+        lightColorClause: { color > _expression }
+        pointLightEntryClause:
+        [
+            namedClause | locationClause | lightColorClause
+        ] ?? 'Expecting a point light property here.'
+        
         // Top-level clause.
         [
-            startContextClause => 'HandleStartContextClause' |
-            startCameraClause  => 'HandleStartCameraClause'
+            startContextClause    => 'HandleStartContextClause' |
+            startCameraClause     => 'HandleStartCameraClause' |
+            startPointLightClause => 'HandleStartPointLightClause'
         ] ?? 'Unsupported object type found.'
         """";
 

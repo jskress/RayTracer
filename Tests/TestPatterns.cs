@@ -2,7 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
-using RayTracer.Pigmentation;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -12,7 +12,7 @@ public class TestPatterns
     [TestMethod]
     public void TestStripedPattern()
     {
-        StripePigmentation source = new (SolidPigmentation.White, SolidPigmentation.Black);
+        StripePigment source = new (SolidPigment.White, SolidPigment.Black);
 
         Assert.AreSame(Colors.White, source.GetColorFor(Point.Zero));
         Assert.AreSame(Colors.White, source.GetColorFor(new Point(0, 1, 0)));
@@ -35,27 +35,27 @@ public class TestPatterns
         {
             Material = new Material
             {
-                Pigmentation = new StripePigmentation(
-                    SolidPigmentation.White, SolidPigmentation.Black)
+                Pigment = new StripePigment(
+                    SolidPigment.White, SolidPigment.Black)
             },
             Transform = Transforms.Scale(2)
         };
         Point point = new (1.5, 0, 0);
-        Color color = sphere.Material.Pigmentation.GetColorFor(sphere, point);
+        Color color = sphere.Material.Pigment.GetColorFor(sphere, point);
 
         Assert.IsTrue(Colors.White.Matches(color));
 
-        Pigmentation pigmentation = new StripePigmentation(
-            SolidPigmentation.White, SolidPigmentation.Black)
+        Pigment pigment = new StripePigment(
+            SolidPigment.White, SolidPigment.Black)
         {
             Transform = Transforms.Scale(2)
         };
 
         sphere = new Sphere
         {
-            Material = new Material { Pigmentation = pigmentation }
+            Material = new Material { Pigment = pigment }
         };
-        color = sphere.Material.Pigmentation.GetColorFor(sphere, point);
+        color = sphere.Material.Pigment.GetColorFor(sphere, point);
 
         Assert.IsTrue(Colors.White.Matches(color));
     }
@@ -63,8 +63,8 @@ public class TestPatterns
     [TestMethod]
     public void TestLinearGradientPattern()
     {
-        LinearGradientPigmentation source = new (
-            SolidPigmentation.White, SolidPigmentation.Black);
+        LinearGradientPigment source = new (
+            SolidPigment.White, SolidPigment.Black);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
         Assert.IsTrue(new Color(0.75, 0.75, 0.75).Matches(
@@ -78,8 +78,8 @@ public class TestPatterns
     [TestMethod]
     public void TestRingPattern()
     {
-        RingPigmentation source = new (
-            SolidPigmentation.White, SolidPigmentation.Black);
+        RingPigment source = new (
+            SolidPigment.White, SolidPigment.Black);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
         Assert.IsTrue(Colors.Black.Matches(source.GetColorFor(new Point(1, 0, 0))));
@@ -90,8 +90,8 @@ public class TestPatterns
     [TestMethod]
     public void TestCheckerboardPattern()
     {
-        CheckerPigmentation source = new (
-            SolidPigmentation.White, SolidPigmentation.Black);
+        CheckerPigment source = new (
+            SolidPigment.White, SolidPigment.Black);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(new Point(0.99, 0, 0))));

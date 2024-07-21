@@ -1,21 +1,21 @@
 using RayTracer.Basics;
 using RayTracer.Graphics;
 
-namespace RayTracer.Pigmentation;
+namespace RayTracer.Pigments;
 
 /// <summary>
 /// This class provides a pigmentation that returns a color from a gradient between two
 /// colors, based on the X component of a point.
 /// </summary>
-public class LinearGradientPigmentation : Pigmentation
+public class LinearGradientPigment : Pigment
 {
-    private readonly Pigmentation _firstPigmentation;
-    private readonly Pigmentation _secondPigmentation;
+    private readonly Pigment _firstPigment;
+    private readonly Pigment _secondPigment;
 
-    public LinearGradientPigmentation(Pigmentation firstPigmentation, Pigmentation secondPigmentation)
+    public LinearGradientPigment(Pigment firstPigment, Pigment secondPigment)
     {
-        _firstPigmentation = firstPigmentation;
-        _secondPigmentation = secondPigmentation;
+        _firstPigment = firstPigment;
+        _secondPigment = secondPigment;
     }
 
     /// <summary>
@@ -27,8 +27,8 @@ public class LinearGradientPigmentation : Pigmentation
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        Color firstColor = _firstPigmentation.GetColorFor(point);
-        Color secondColor = _secondPigmentation.GetColorFor(point);
+        Color firstColor = _firstPigment.GetColorFor(point);
+        Color secondColor = _secondPigment.GetColorFor(point);
         Color difference = secondColor - firstColor;
         double fraction = point.X - Math.Floor(point.X);
 
@@ -40,10 +40,10 @@ public class LinearGradientPigmentation : Pigmentation
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
-    public override bool Matches(Pigmentation other)
+    public override bool Matches(Pigment other)
     {
-        return other is LinearGradientPigmentation pigmentation &&
-               _firstPigmentation.Matches(pigmentation._firstPigmentation) &&
-               _secondPigmentation.Matches(pigmentation._secondPigmentation);
+        return other is LinearGradientPigment pigmentation &&
+               _firstPigment.Matches(pigmentation._firstPigment) &&
+               _secondPigment.Matches(pigmentation._secondPigment);
     }
 }

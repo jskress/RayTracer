@@ -26,6 +26,8 @@ public partial class LanguageParser
         _clauseHandlers.Add(nameof(HandleContextPropertyClause), HandleContextPropertyClause);
         _clauseHandlers.Add(nameof(HandleStartCameraClause), HandleStartCameraClause);
         _clauseHandlers.Add(nameof(HandleCameraEntryClause), HandleCameraEntryClause);
+        _clauseHandlers.Add(nameof(HandleStartPointLightClause), HandleStartPointLightClause);
+        _clauseHandlers.Add(nameof(HandlePointLightEntryClause), HandlePointLightEntryClause);
     }
 
     /// <summary>

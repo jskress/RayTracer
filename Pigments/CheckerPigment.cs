@@ -1,21 +1,21 @@
 using RayTracer.Basics;
 using RayTracer.Graphics;
 
-namespace RayTracer.Pigmentation;
+namespace RayTracer.Pigments;
 
 /// <summary>
 /// This class provides a pigmentation that returns a color from a 2x2 checkerboard pattern
 /// in all 3 dimensions.
 /// </summary>
-public class CheckerPigmentation : Pigmentation
+public class CheckerPigment : Pigment
 {
-    private readonly Pigmentation _evenPigmentation;
-    private readonly Pigmentation _oddPigmentation;
+    private readonly Pigment _evenPigment;
+    private readonly Pigment _oddPigment;
 
-    public CheckerPigmentation(Pigmentation evenPigmentation, Pigmentation oddPigmentation)
+    public CheckerPigment(Pigment evenPigment, Pigment oddPigment)
     {
-        _evenPigmentation = evenPigmentation;
-        _oddPigmentation = oddPigmentation;
+        _evenPigment = evenPigment;
+        _oddPigment = oddPigment;
     }
 
     /// <summary>
@@ -29,8 +29,8 @@ public class CheckerPigmentation : Pigmentation
         double sum = Math.Floor(point.X) + Math.Floor(point.Y) + Math.Floor(point.Z);
 
         return sum % 2 == 0
-            ? _evenPigmentation.GetColorFor(point)
-            : _oddPigmentation.GetColorFor(point);
+            ? _evenPigment.GetColorFor(point)
+            : _oddPigment.GetColorFor(point);
     }
 
     /// <summary>
@@ -38,10 +38,10 @@ public class CheckerPigmentation : Pigmentation
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
-    public override bool Matches(Pigmentation other)
+    public override bool Matches(Pigment other)
     {
-        return other is CheckerPigmentation pigmentation &&
-               _evenPigmentation.Matches(pigmentation._evenPigmentation) &&
-               _oddPigmentation.Matches(pigmentation._oddPigmentation);
+        return other is CheckerPigment pigmentation &&
+               _evenPigment.Matches(pigmentation._evenPigment) &&
+               _oddPigment.Matches(pigmentation._oddPigment);
     }
 }

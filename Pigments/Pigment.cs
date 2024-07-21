@@ -2,14 +2,14 @@ using RayTracer.Basics;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 
-namespace RayTracer.Pigmentation;
+namespace RayTracer.Pigments;
 
 /// <summary>
 /// This class defines the base class for something that can accept a point in space and
 /// return a color for it.  This gives us support for patterns, gradients and so forth, in
 /// addition to solid colors.
 /// </summary>
-public abstract class Pigmentation
+public abstract class Pigment
 {
     /// <summary>
     /// This property holds the transformation matrix for the pigmentation.
@@ -34,7 +34,7 @@ public abstract class Pigmentation
     private Matrix _transform;
     private Lazy<Matrix> _inverseTransform;
 
-    protected Pigmentation()
+    protected Pigment()
     {
         _transform = Matrix.Identity;
         _inverseTransform = new Lazy<Matrix>(CreateInverseTransform);
@@ -57,8 +57,18 @@ public abstract class Pigmentation
     /// <returns>The appropriate color at the given point.</returns>
     public Color GetColorFor(Surface surface, Point point)
     {
-        Point objectPoint = surface.WorldToSurface(point);
-        Point patternPoint = InverseTransform * objectPoint;
+        return GetTransformedColorFor(surface.WorldToSurface(point));
+    }
+
+    /// <summary>
+    /// This method is used to transform the given point, relative to the pigment's
+    /// pattern, and return the appropriate color for it.
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <returns>The appropriate color at the given point.</returns>
+    public Color GetTransformedColorFor(Point point)
+    {
+        Point patternPoint = InverseTransform * point;
 
         return GetColorFor(patternPoint);
     }
@@ -75,5 +85,5 @@ public abstract class Pigmentation
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
-    public abstract bool Matches(Pigmentation other);
+    public abstract bool Matches(Pigment other);
 }

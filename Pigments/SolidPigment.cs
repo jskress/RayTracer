@@ -1,22 +1,22 @@
 using RayTracer.Basics;
 using RayTracer.Graphics;
 
-namespace RayTracer.Pigmentation;
+namespace RayTracer.Pigments;
 
 /// <summary>
 /// This class provides a pigmentation that always returns the same color.
 /// </summary>
-public class SolidPigmentation : Pigmentation
+public class SolidPigment : Pigment
 {
     /// <summary>
     /// Some useful constants.
     /// </summary>
-    public static readonly SolidPigmentation White = new (Colors.White);
-    public static readonly SolidPigmentation Black = new (Colors.Black);
+    public static readonly SolidPigment White = new (Colors.White);
+    public static readonly SolidPigment Black = new (Colors.Black);
 
     private readonly Color _color;
 
-    public SolidPigmentation(Color color)
+    public SolidPigment(Color color)
     {
         _color = color;
     }
@@ -37,9 +37,9 @@ public class SolidPigmentation : Pigmentation
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
-    public override bool Matches(Pigmentation other)
+    public override bool Matches(Pigment other)
     {
-        return other is SolidPigmentation pigmentation &&
+        return other is SolidPigment pigmentation &&
                _color.Matches(pigmentation._color);
     }
 }

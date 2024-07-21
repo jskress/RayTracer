@@ -2,7 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
-using RayTracer.Pigmentation;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -23,7 +23,7 @@ public class TestScenes
         {
             Material = new Material
             {
-                Pigmentation = new SolidPigmentation(new Color(0.8, 1.0, 0.6)),
+                Pigment = new SolidPigment(new Color(0.8, 1.0, 0.6)),
                 Diffuse = 0.7,
                 Specular = 0.2
             }
@@ -147,7 +147,7 @@ public class TestScenes
         scene.Surfaces[0].Material.Ambient = 1;
         scene.Surfaces[1].Material.Ambient = 1;
         ray = new Ray(new Point(0, 0, 0.75), new Vector(0, 0, -1));
-        expected = scene.Surfaces[1].Material.Pigmentation.GetColorFor(new Sphere(), ray.Origin);
+        expected = scene.Surfaces[1].Material.Pigment.GetColorFor(new Sphere(), ray.Origin);
 
         Assert.IsTrue(expected.Matches(scene.GetColorFor(ray)));
     }
@@ -282,11 +282,11 @@ public class TestScenes
         Scene scene = DefaultScene();
         Surface a = scene.Surfaces[0];
         Surface b = scene.Surfaces[1];
-        TestPigmentation pigmentation = new ();
+        TestPigment pigment = new ();
         Ray ray = new (new Point(0, 0, 0.1), new Vector(0, 1, 0));
 
         a.Material.Ambient = 1;
-        a.Material.Pigmentation = pigmentation;
+        a.Material.Pigment = pigment;
         b.Material.Transparency = 1;
         b.Material.IndexOfRefraction = 1.5;
 
@@ -324,7 +324,7 @@ public class TestScenes
         {
             Material = new Material
             {
-                Pigmentation = new SolidPigmentation(new Color(1, 0, 0)),
+                Pigment = new SolidPigment(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)
@@ -362,7 +362,7 @@ public class TestScenes
         {
             Material = new Material
             {
-                Pigmentation = new SolidPigmentation(new Color(1, 0, 0)),
+                Pigment = new SolidPigment(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)

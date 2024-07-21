@@ -57,7 +57,7 @@ public partial class LanguageParser
                 target => target.Up, term),
             "field" => new SetAnglePropertyInstruction<Camera>(
                 target => target.FieldOfView, term),
-            _ => throw new Exception($"Internal error: unknown camera prop found: {field}.")
+            _ => throw new Exception($"Internal error: unknown camera property found: {field}.")
         };
 
         instructionSet.AddInstruction(instruction);
