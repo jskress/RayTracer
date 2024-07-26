@@ -1,4 +1,5 @@
 using CommandLine.Text;
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -25,6 +26,9 @@ public class ImageRenderer
 
         _globals.SetValue("__software__", software);
         _globals.SetValue("π", Math.PI);
+        _globals.SetValue("Identity", Matrix.Identity);
+        _globals.SetValue("NegativeInfinity", double.NegativeInfinity);
+        _globals.SetValue("PositiveInfinity", double.PositiveInfinity);
 
         Colors.AddToVariables(_globals);
         IndicesOfRefraction.AddToVariables(_globals);

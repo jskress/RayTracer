@@ -17,22 +17,25 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Camera");
 
-        CameraInstructionSet cameraInstructionSet = new ();
+        CameraInstructionSet instructionSet = ParseCameraClause();
 
-        _context.PushInstructionSet(cameraInstructionSet);
+        _ = new TopLevelObjectInstruction<Camera>(_context.InstructionContext, instructionSet);
+    }
 
-        ParseBlock("cameraEntryClause");
-        
+    /// <summary>
+    /// This method is used to create the instruction set from a camera block.
+    /// </summary>
+    private CameraInstructionSet ParseCameraClause()
+    {
+        CameraInstructionSet instructionSet = new ();
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("cameraEntryClause", HandleCameraEntryClause);
+
         _context.PopInstructionSet();
 
-        if (_context.CurrentSet is SceneInstructionSet sceneInstructionSet)
-        {
-            sceneInstructionSet.AddInstruction(new AddChildInstruction<Scene, Camera>(
-                sceneInstructionSet, cameraInstructionSet,
-                scene => scene.Cameras));
-        }
-        else
-            _ = new TopLevelObjectInstruction<Camera>(_context.InstructionContext, cameraInstructionSet);
+        return instructionSet;
     }
 
     /// <summary>
@@ -47,8 +50,7 @@ public partial class LanguageParser
 
         ObjectInstruction<Camera> instruction = field switch
         {
-            "named" => new SetObjectPropertyInstruction<Camera, string>(
-                target => target.Name, term),
+            "named" => CreateNamedInstruction<Camera>(term),
             "location" => new SetObjectPropertyInstruction<Camera, Point>(
                 target => target.Location, term),
             "look" => new SetObjectPropertyInstruction<Camera, Point>(

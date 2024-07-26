@@ -5,22 +5,22 @@ namespace RayTracer.Instructions;
 
 /// <summary>
 /// This class represents the work of adding a new value to a list property on an object.
+/// This class represents the work of adding a new value to a list property on an object
+/// where the type of the list is a parent type of the child being added.
 /// </summary>
-public class AddChildInstruction<TParentObject, TChildObject>
-    : AffectObjectPropertyInstruction<TParentObject, List<TChildObject>>
-    where TParentObject : class, new()
-    where TChildObject : class, new()
+public class AddChildInstruction<TContainingObject, TParentObject, TChildObject>
+    : AffectObjectPropertyInstruction<TContainingObject, List<TParentObject>>
+    where TContainingObject : class
+    where TParentObject : class
+    where TChildObject : class, TParentObject
 {
-    private readonly InstructionSet<TParentObject> _parentInstructionSet;
     private readonly InstructionSet<TChildObject> _objectInstructionSet;
 
     public AddChildInstruction(
-        InstructionSet<TParentObject> parentInstructionSet,
         InstructionSet<TChildObject> objectInstructionSet,
-        Expression<Func<TParentObject, List<TChildObject>>> propertyLambda)
+        Expression<Func<TContainingObject, List<TParentObject>>> propertyLambda)
         : base(propertyLambda)
     {
-        _parentInstructionSet = parentInstructionSet;
         _objectInstructionSet = objectInstructionSet;
     }
 
@@ -34,9 +34,24 @@ public class AddChildInstruction<TParentObject, TChildObject>
         _objectInstructionSet.Execute(context, variables);
 
         TChildObject value = _objectInstructionSet.CreatedObject;
-        List<TChildObject> list = (List<TChildObject>) Getter
-            .Invoke(_parentInstructionSet.CreatedObject, null);
+        List<TParentObject> list = (List<TParentObject>) Getter
+            .Invoke(Target, null);
 
         list?.Add(value);
     }
+}
+
+/// <summary>
+/// This class represents the work of adding a new value to a list property on an object
+/// where the type of the list is the same as the child being added.
+/// </summary>
+public class AddChildInstruction<TContainingObject, TChildObject>
+    : AddChildInstruction<TContainingObject, TChildObject, TChildObject>
+    where TContainingObject : class
+    where TChildObject : class
+{
+    public AddChildInstruction(
+        InstructionSet<TChildObject> objectInstructionSet,
+        Expression<Func<TContainingObject, List<TChildObject>>> propertyLambda)
+        : base(objectInstructionSet, propertyLambda) {}
 }

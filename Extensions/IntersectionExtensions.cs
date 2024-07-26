@@ -30,14 +30,14 @@ public static class IntersectionExtensions
     public static (double N1, double N2) FindIndicesOfRefraction(
         this List<Intersection> intersections, Intersection hit)
     {
-        List<Surface> containers = new ();
+        List<Surface> containers = [];
         double n1 = 0;
         double n2 = 0;
 
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit)
-                n1 = containers.Count == 0 ? 1 : containers.Last().Material.IndexOfRefraction;
+                n1 = containers.IsEmpty() ? 1 : containers.Last().Material.IndexOfRefraction;
 
             if (containers.Contains(intersection.Surface))
                 containers.Remove(intersection.Surface);
@@ -46,7 +46,7 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                n2 = containers.Count == 0 ? 1 : containers.Last().Material.IndexOfRefraction;
+                n2 = containers.IsEmpty() ? 1 : containers.Last().Material.IndexOfRefraction;
 
                 break;
             }

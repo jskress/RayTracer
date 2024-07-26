@@ -11,7 +11,7 @@
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="Lex" Version="1.1.1" />
+      <PackageReference Include="Lex" Version="1.1.3" />
     </ItemGroup>
 
     <ItemGroup>

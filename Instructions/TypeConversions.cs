@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Instructions;
 
@@ -44,13 +45,17 @@ internal static class TypeConversions
             return (CoercionResult.CouldNotCoerce, null);
 
         // If the value is already of the right type, we're done.
-        if (value == null || value.GetType() == targetType)
+        if (value == null || value.GetType() == targetType || value.GetType().IsSubclassOf(targetType))
             return (CoercionResult.OfProperType, value);
 
         // Handle going to some form of tuple.
         if (targetType == typeof(Point) || targetType == typeof(Vector) ||
             targetType == typeof(Color))
             return CoerceTuples(value, targetType);
+        
+        // Handle going to a pigment.
+        if (targetType == typeof(Pigment))
+            return CoerceToPigment(value);
 
         return targetType == typeof(string)
             ? (CoercionResult.OfProperType, value.ToString())
@@ -93,5 +98,25 @@ internal static class TypeConversions
             coercionResult = CoercionResult.CouldNotCoerce;
 
         return (coercionResult, value);
+    }
+
+    /// <summary>
+    /// This method is used to coerce a number tuple into a pigment.
+    /// </summary>
+    /// <param name="value">The value to coerce.</param>
+    /// <returns>A result describing whether the value could be coerced and the value.</returns>
+    private static (CoercionResult, object) CoerceToPigment(object value)
+    {
+        CoercionResult result = CoercionResult.OfProperType;
+
+        if (value is NumberTuple numberTuple)
+            (result, value) = CoerceTuples(value, typeof(Color));
+
+        if (value.GetType() == typeof(Color))
+            value = new SolidPigment((Color)value);
+        else
+            result = CoercionResult.CouldNotCoerce;
+
+        return (result, value);
     }
 }

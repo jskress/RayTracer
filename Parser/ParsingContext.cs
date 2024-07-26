@@ -1,3 +1,4 @@
+using RayTracer.Extensions;
 using RayTracer.Instructions;
 
 namespace RayTracer.Parser;
@@ -21,7 +22,7 @@ internal class ParsingContext
     /// <summary>
     /// This property reports whether we have any open object definitions being parsed.
     /// </summary>
-    public bool IsEmpty => _sets.Count == 0;
+    public bool IsEmpty => _sets.IsEmpty();
 
     /// <summary>
     /// This property reports the current instruction set in our stack, if we have one.
@@ -44,8 +45,9 @@ internal class ParsingContext
     /// <summary>
     /// This method is used to remove the current instruction set from our set stack.
     /// </summary>
-    internal void PopInstructionSet()
+    /// <returns>The instruction set just removed from our stack.</returns>
+    internal IInstructionSet PopInstructionSet()
     {
-        _sets.Pop();
+        return _sets.Pop();
     }
 }

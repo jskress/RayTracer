@@ -7,6 +7,22 @@ namespace Tests;
 [TestClass]
 public class TestSpheres
 {
+    /// <summary>
+    /// This is a helper method for creating a glass sphere.
+    /// </summary>
+    /// <returns>A new glass sphere.</returns>
+    public static Sphere CreateGlassSphere()
+    {
+        return new Sphere
+        {
+            Material = new Material
+            {
+                Transparency = 1,
+                IndexOfRefraction = 1.5
+            }
+        };
+    }
+
     [TestMethod]
     public void TestConstruction()
     {
@@ -195,7 +211,7 @@ public class TestSpheres
     [TestMethod]
     public void TestGlassSphere()
     {
-        Sphere glass = Sphere.CreateGlassSphere();
+        Sphere glass = CreateGlassSphere();
 
         Assert.AreSame(Matrix.Identity, glass.Transform);
         Assert.AreEqual(1, glass.Material.Transparency);
@@ -207,9 +223,9 @@ public class TestSpheres
     [TestMethod]
     public void TestRefractionN1N2()
     {
-        Sphere a = Sphere.CreateGlassSphere();
-        Sphere b = Sphere.CreateGlassSphere();
-        Sphere c = Sphere.CreateGlassSphere();
+        Sphere a = CreateGlassSphere();
+        Sphere b = CreateGlassSphere();
+        Sphere c = CreateGlassSphere();
         Point origin = new (0, 0, -4);
         Vector direction = new (0, 0, 1);
         Ray ray = new (origin, direction);

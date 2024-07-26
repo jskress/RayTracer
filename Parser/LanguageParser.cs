@@ -1,6 +1,9 @@
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Core;
+using RayTracer.Extensions;
+using RayTracer.Instructions;
 using RayTracer.Renderer;
 
 namespace RayTracer.Parser;
@@ -21,12 +24,12 @@ public partial class LanguageParser
     /// <summary>
     /// This is a helper property for accessing the current file name.
     /// </summary>
-    private string CurrentFileName => _entries.Count == 0 ? null : _entries.Peek().FileName;
+    private string CurrentFileName => _entries.IsEmpty() ? null : _entries.Peek().FileName;
 
     /// <summary>
     /// This is a helper property for accessing the current parser.
     /// </summary>
-    private LexicalParser CurrentParser => _entries.Count == 0 ? null : _entries.Peek().Parser;
+    private LexicalParser CurrentParser => _entries.IsEmpty() ? null : _entries.Peek().Parser;
 
     private readonly ParsingContext _context;
     private readonly Stack<Entry> _entries;
@@ -104,7 +107,7 @@ public partial class LanguageParser
         while (_entries.Count > 0 && CurrentParser.IsAtEnd())
             PopEntry();
 
-        return _entries.Count == 0;
+        return _entries.IsEmpty();
     }
 
     /// <summary>
@@ -145,11 +148,30 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method is used to parse the named clause.  It is assumed that parsing the
+    /// clause will result in zero or one clause only.
+    /// </summary>
+    /// <param name="clauseName">The name of the clause to parse.</param>
+    /// <returns></returns>
+    private Clause ParseClause(string clauseName)
+    {
+        HandleIncludes();
+        HandleIncludeEnd();
+
+        Clause clause = LanguageDsl.ParseClause(CurrentParser, clauseName);
+
+        HandleIncludeEnd();
+
+        return clause;
+    }
+
+    /// <summary>
     /// This is a helper method used to parse the content of a block.  The given name must
     /// be the name of the clause that defines what the block can contain.
     /// </summary>
     /// <param name="blockClauseName">The clause that defines the block's content</param>
-    private void ParseBlock(string blockClauseName)
+    /// <param name="handleClause">An action that handles the clause we parsed.</param>
+    private void ParseBlock(string blockClauseName, Action<Clause> handleClause)
     {
         while (!CurrentParser.IsNext(BounderToken.CloseBrace))
         {
@@ -160,7 +182,8 @@ public partial class LanguageParser
             {
                 Clause clause = LanguageDsl.ParseClause(CurrentParser, blockClauseName);
 
-                ProcessClause(clause, blockClauseName);
+                handleClause(clause);
+
                 HandleIncludeEnd();
             }
         }
@@ -188,6 +211,19 @@ public partial class LanguageParser
                 Token = clause?.Tokens.First()
             };
         }
+    }
+
+    /// <summary>
+    /// This is a helper method for creating an appropriate instruction for setting the
+    /// name of a named thing.
+    /// </summary>
+    /// <param name="term">The term to use to resolve the name.</param>
+    /// <returns>The appropriate instruction for setting a thing's name.</returns>
+    private static ObjectInstruction<TObject> CreateNamedInstruction<TObject>(Term term)
+        where TObject : NamedThing, new()
+    {
+        return new SetObjectPropertyInstruction<TObject, string>(
+            target => target.Name, term);
     }
 
     /// <summary>

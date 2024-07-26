@@ -15,14 +15,62 @@ public partial class LanguageParser
     /// </summary>
     private void HandleStartContextClause()
     {
-        ParseBlock("contextEntryClause");
+        ParseBlock("contextEntryClause", HandleContextClauseEntry);
     }
 
     /// <summary>
-    /// This method is used to handle the scanner clause of a context block.
+    /// This method handles a single entry in the context block.
+    /// </summary>
+    /// <param name="clause">The clause that represents the entry.</param>
+    private void HandleContextClauseEntry(Clause clause)
+    {
+        string field = clause.Tokens[0].Text;
+
+        if (field == "info")
+        {
+            ParseBlock("infoEntryClause", HandleInfoEntryClause);
+
+            return;
+        }
+
+        Term term = (Term) clause.Expressions.FirstOrDefault();
+
+        Instruction instruction = field switch
+        {
+            "serial" => CreateScannerClauseInstruction(clause),
+            "parallel" => CreateScannerClauseInstruction(clause),
+            "angles" => CreateAnglesClauseInstruction(clause),
+            "width" => new SetContextPropertyInstruction<int>(
+                target => target.Width, term,
+                value => value is < 1 or > 16384
+                    ? "Width must be between 1 and 16,384."
+                    : null
+            ),
+            "height" => new SetContextPropertyInstruction<int>(
+                target => target.Height, term,
+                value => value is < 1 or > 16384
+                    ? "Height must be between 1 and 16,384."
+                    : null
+            ),
+            "gamma" => new SetContextPropertyInstruction<double>(
+                target => target.Gamma, term,
+                value => value is < 0 or > 5
+                    ? "Gamma correction must be between 0 and 5."
+                    : null
+            ),
+            _ => throw new Exception($"Internal error: unknown context property found: {field}.")
+        };
+
+        _context.InstructionContext.AddInstruction(instruction);
+    }
+
+    /// <summary>
+    /// This method is used to create the appropriate instruction for the scanner clause
+    /// of a context block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    private void HandleScannerClause(Clause clause)
+    /// <returns>The created instruction.</returns>
+    private static Instruction CreateScannerClauseInstruction(Clause clause)
     {
         Token first = clause.Tokens[0];
         Token second = clause.Tokens[1];
@@ -46,63 +94,21 @@ public partial class LanguageParser
             }
         }
 
-        _context.InstructionContext.AddInstruction(instruction);
+        return instruction;
     }
 
     /// <summary>
-    /// This method is used to handle the angles clause of a context block.
+    /// This method is used to create the appropriate instruction for the angles clause of
+    /// a context block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    private void HandleAnglesClause(Clause clause)
+    /// <returns>The created instruction.</returns>
+    private static Instruction CreateAnglesClauseInstruction(Clause clause)
     {
         bool isRadians = clause.Tokens[2].Text == "radians";
-        Instruction instruction = new SetContextPropertyInstruction<bool>(
+
+        return new SetContextPropertyInstruction<bool>(
             context => context.AnglesAreRadians, isRadians);
-
-        _context.InstructionContext.AddInstruction(instruction);
-    }
-
-    /// <summary>
-    /// This method is used to handle an item clause of a context block.
-    /// </summary>
-    /// <param name="clause">The clause to process.</param>
-    private void HandleContextPropertyClause(Clause clause)
-    {
-        string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
-
-        Instruction instruction = field switch
-        {
-            "width" => new SetContextPropertyInstruction<int>(
-                target => target.Width, term,
-                value => value is < 1 or > 16384
-                    ? "Width must be between 1 and 16,384."
-                    : null
-                ),
-            "height" => new SetContextPropertyInstruction<int>(
-                target => target.Height, term,
-                value => value is < 1 or > 16384
-                    ? "Height must be between 1 and 16,384."
-                    : null
-                ),
-            "gamma" => new SetContextPropertyInstruction<double>(
-                target => target.Gamma, term,
-                value => value is < 0 or > 5
-                    ? "Gamma correction must be between 0 and 5."
-                    : null
-                ),
-            _ => throw new Exception($"Internal error: unknown context field found: {field}.")
-        };
-
-        _context.InstructionContext.AddInstruction(instruction);
-    }
-
-    /// <summary>
-    /// This method is used to handle the beginning of an info block.
-    /// </summary>
-    private void HandleStartInfoClause()
-    {
-        ParseBlock("infoEntryClause");
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System.Text;
+using RayTracer.Extensions;
 
 namespace RayTracer.ImageIO;
 
@@ -313,6 +314,6 @@ public static class ImageFileIo
             data = stream.ReadByte();
         }
 
-        return data < 0 && bytes.Count == 0 ? null : encoding.GetString(bytes.ToArray());
+        return data < 0 && bytes.IsEmpty() ? null : encoding.GetString(bytes.ToArray());
     }
 }

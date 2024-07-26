@@ -1,3 +1,4 @@
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -192,7 +193,7 @@ internal class ScanLine
 
         for (int x = 0; x < canvas.Width; x++)
         {
-            if (colors.Count == 0)
+            if (colors.IsEmpty())
                 cp = GetColorsAt(colorType, palette, colors, cp);
 
             canvas.SetColor(colors[0], x, y);

@@ -10,22 +10,6 @@ namespace RayTracer.Geometry;
 public class Sphere : Surface
 {
     /// <summary>
-    /// This is a helper method for creating a glass sphere.
-    /// </summary>
-    /// <returns>A new glass sphere.</returns>
-    public static Sphere CreateGlassSphere()
-    {
-        return new Sphere
-        {
-            Material = new Material
-            {
-                Transparency = 1,
-                IndexOfRefraction = 1.5
-            }
-        };
-    }
-
-    /// <summary>
     /// This method is used to determine whether the given ray intersects the sphere and,
     /// if so, where.
     /// </summary>

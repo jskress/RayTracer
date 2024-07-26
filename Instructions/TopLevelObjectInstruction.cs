@@ -8,7 +8,7 @@ namespace RayTracer.Instructions;
 /// then gets added to the instruction context we were provided upon construction.
 /// </summary>
 public class TopLevelObjectInstruction<TObject> : Instruction
-    where TObject : class, new()
+    where TObject : class
 {
     private readonly InstructionContext _context;
     private readonly InstructionSet<TObject> _instructionSet;

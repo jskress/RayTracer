@@ -77,7 +77,7 @@ public class TestIntersections
     public void TestUnderPoint()
     {
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
-        Sphere sphere = Sphere.CreateGlassSphere();
+        Sphere sphere = TestSpheres.CreateGlassSphere();
 
         sphere.Transform = Transforms.Translate(0, 0, 1);
 
@@ -131,7 +131,7 @@ public class TestIntersections
     public void TestReflectanceTotalInternalReflection()
     {
         double value = Math.Sqrt(2) / 2;
-        Sphere sphere = Sphere.CreateGlassSphere();
+        Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (new Point(0, 0, value), new Vector(0, 1, 0));
         List<Intersection> intersections = new ()
         {
@@ -147,7 +147,7 @@ public class TestIntersections
     [TestMethod]
     public void TestReflectancePerpendicularRay()
     {
-        Sphere sphere = Sphere.CreateGlassSphere();
+        Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (Point.Zero, new Vector(0, 1, 0));
         List<Intersection> intersections = new ()
         {
@@ -165,7 +165,7 @@ public class TestIntersections
     [TestMethod]
     public void TestReflectanceN2GreaterThanN1()
     {
-        Sphere sphere = Sphere.CreateGlassSphere();
+        Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (new Point(0, 0.99, -2), new Vector(0, 0, 1));
         List<Intersection> intersections = new ()
         {

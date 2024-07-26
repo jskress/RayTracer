@@ -18,22 +18,25 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Point light");
 
-        PointLightInstructionSet lightInstructionSet = new ();
+        PointLightInstructionSet instructionSet = ParsePointLightClause();
 
-        _context.PushInstructionSet(lightInstructionSet);
+        _ = new TopLevelObjectInstruction<PointLight>(_context.InstructionContext, instructionSet);
+    }
 
-        ParseBlock("pointLightEntryClause");
-        
+    /// <summary>
+    /// This method is used to create the instruction set from a point light block.
+    /// </summary>
+    private PointLightInstructionSet ParsePointLightClause()
+    {
+        PointLightInstructionSet instructionSet = new ();
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("pointLightEntryClause", HandlePointLightEntryClause);
+
         _context.PopInstructionSet();
 
-        if (_context.CurrentSet is SceneInstructionSet sceneInstructionSet)
-        {
-            sceneInstructionSet.AddInstruction(new AddChildInstruction<Scene, PointLight>(
-                sceneInstructionSet, lightInstructionSet,
-                scene => scene.Lights));
-        }
-        else
-            _ = new TopLevelObjectInstruction<PointLight>(_context.InstructionContext, lightInstructionSet);
+        return instructionSet;
     }
 
     /// <summary>
@@ -45,11 +48,10 @@ public partial class LanguageParser
         PointLightInstructionSet instructionSet = (PointLightInstructionSet) _context.CurrentSet;
         string field = clause.Tokens[0].Text;
         Term term = (Term) clause.Expressions.First();
-
+    
         ObjectInstruction<PointLight> instruction = field switch
         {
-            "named" => new SetObjectPropertyInstruction<PointLight, string>(
-                target => target.Name, term),
+            "named" => CreateNamedInstruction<PointLight>(term),
             "location" => new SetObjectPropertyInstruction<PointLight, Point>(
                 target => target.Location, term),
             "color" => new SetObjectPropertyInstruction<PointLight, Color>(

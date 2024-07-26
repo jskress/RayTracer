@@ -17,17 +17,14 @@ public partial class LanguageParser
     {
         // Block starters.
         _blockStartHandlers.Add(nameof(HandleStartContextClause), HandleStartContextClause);
-        _blockStartHandlers.Add(nameof(HandleStartInfoClause), HandleStartInfoClause);
+        _blockStartHandlers.Add(nameof(HandleStartSceneClause), HandleStartSceneClause);
 
         // Clause handlers.
-        _clauseHandlers.Add(nameof(HandleInfoEntryClause), HandleInfoEntryClause);
-        _clauseHandlers.Add(nameof(HandleScannerClause), HandleScannerClause);
-        _clauseHandlers.Add(nameof(HandleAnglesClause), HandleAnglesClause);
-        _clauseHandlers.Add(nameof(HandleContextPropertyClause), HandleContextPropertyClause);
         _clauseHandlers.Add(nameof(HandleStartCameraClause), HandleStartCameraClause);
-        _clauseHandlers.Add(nameof(HandleCameraEntryClause), HandleCameraEntryClause);
         _clauseHandlers.Add(nameof(HandleStartPointLightClause), HandleStartPointLightClause);
-        _clauseHandlers.Add(nameof(HandlePointLightEntryClause), HandlePointLightEntryClause);
+        _clauseHandlers.Add(nameof(HandleStartPlaneClause), HandleStartPlaneClause);
+        _clauseHandlers.Add(nameof(HandleStartSphereClause), HandleStartSphereClause);
+        _clauseHandlers.Add(nameof(HandleBackgroundClause), HandleBackgroundClause);
     }
 
     /// <summary>

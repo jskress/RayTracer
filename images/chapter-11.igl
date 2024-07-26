@@ -19,5 +19,73 @@ camera {
 }
 
 point light {
-	location [-10 10 -10]
+	location [-10, 10, -10]
+}
+
+// Floor
+plane {
+	material {
+		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+	}
+}
+
+// Middle sphere
+sphere {
+	material {
+		pigment Black
+		reflective 0.9
+		transparency 0.9
+		index of refraction Glass
+	}
+	translate [-0.5, 1, 0.5]
+}
+
+// "Background" yellow sphere
+sphere {
+	material {
+		pigment Yellow
+	}
+	translate [0.25, 1, 12.5]
+}
+
+// Right sphere
+sphere {
+	material {
+		pigment checker {
+			White, Red
+			scale 0.33
+		}
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.5
+	translate [1.5, 0.5, -0.5]
+}
+
+// Right sphere
+sphere {
+	material {
+		colorSource checker {
+			color White
+			color Red
+			scale 0.33
+		}
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.5
+	translate <1.5 0.5 -0.5>
+}
+
+// Left sphere
+sphere {
+	material {
+		pigment linear gradient {
+			Green, Blue
+		}
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.33
+	translate [-1.5, 0.33, -0.75]
 }
