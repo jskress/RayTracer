@@ -50,8 +50,11 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
         _solidPigmentInstruction = solidPigmentInstruction;
         _transformInstructionSet = transformInstructionSet;
 
-        foreach (PigmentInstructionSet instructionSet in pigmentInstructionSets)
-            AddInstruction(instructionSet);
+        if (pigmentInstructionSets != null)
+        {
+            foreach (PigmentInstructionSet instructionSet in pigmentInstructionSets)
+                AddInstruction(instructionSet);
+        }
     }
 
     /// <summary>
@@ -83,5 +86,8 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
             PigmentType.Color => _solidPigmentInstruction.Target,
             _ => throw new Exception($"Internal error: unknown pigment type: {_type}")
         };
+
+        if (_transformInstructionSet != null)
+            CreatedObject.Transform = _transformInstructionSet.CreatedObject;
     }
 }

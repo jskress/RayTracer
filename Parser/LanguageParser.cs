@@ -90,11 +90,12 @@ public partial class LanguageParser
             string[] lines = File.ReadAllLines(fileName);
 
             Console.WriteLine($"{Path.GetFileName(fileName)}: [{line}:{column}]");
-            Console.WriteLine(lines[line]);
+            Console.WriteLine(lines[line - 1]);
 
             if (column > 0)
                 Console.WriteLine($"{new string('-', column - 1)}^");
         }
+        Console.WriteLine(exception.Token);
     }
 
     /// <summary>
@@ -143,7 +144,7 @@ public partial class LanguageParser
     /// </summary>
     private void HandleIncludeEnd()
     {
-        if (CurrentParser.IsAtEnd())
+        if (CurrentParser?.IsAtEnd() ?? false)
             PopEntry();
     }
 

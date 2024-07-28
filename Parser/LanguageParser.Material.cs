@@ -19,7 +19,7 @@ public partial class LanguageParser
 
         _context.PushInstructionSet(instructionSet);
 
-        ParseBlock("pointLightEntryClause", HandleMaterialEntryClause);
+        ParseBlock("materialEntryClause", HandleMaterialEntryClause);
 
         _context.PopInstructionSet();
 
@@ -34,7 +34,7 @@ public partial class LanguageParser
     {
         MaterialInstructionSet instructionSet = (MaterialInstructionSet) _context.CurrentSet;
         string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
+        Term term = (Term) clause.Expressions.FirstOrDefault();
 
         ObjectInstruction<Material> instruction = field switch
         {

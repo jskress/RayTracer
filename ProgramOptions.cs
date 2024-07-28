@@ -211,7 +211,6 @@ public class ProgramOptions
     private int _bitsPerChannel;
     private double? _gamma;
     private bool? _applyGamma;
-    private bool? _reportGamma;
 
     public ProgramOptions()
     {
@@ -222,7 +221,6 @@ public class ProgramOptions
         _bitsPerChannel = 8;
         _gamma = null;
         _applyGamma = null;
-        _reportGamma = null;
         _outputImageFormat = "png";
 
         OutputLevel = OutputLevel.Normal;

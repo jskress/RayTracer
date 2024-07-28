@@ -122,7 +122,7 @@ public partial class LanguageParser
 
         Instruction instruction = field switch
         {
-            "location" => new SetInfoPropertyInstruction<string>(
+            "title" => new SetInfoPropertyInstruction<string>(
                 target => target.Title, term),
             "author" => new SetInfoPropertyInstruction<string>(
                 target => target.Author, term),

@@ -14,12 +14,15 @@ public partial class LanguageParser
             identifiers starting with defaults, greekLetters containing defaults, greekLetters
             single quoted strings multiChar
             double quoted strings
-            tripple quoted strings
+            triple quoted strings
             numbers
             bounders
             dsl operators
             whitespace
             """
+        _operators: predefined
+        squared: _operator("\u00b2")
+        cubed: _operator("\u00b3")
         _keywords: 'ambient', 'angles', 'at', 'are', 'author', 'background', 'bits',
             'bounding', 'box', 'camera', 'channel', 'checker', 'closed', 'color', 'comment',
             'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees', 'description',
@@ -27,16 +30,12 @@ public partial class LanguageParser
             'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index', 'info',
             'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
             'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'null',
-            'object', 'of', 'open', 'parallel', 'per', 'pigmentation', 'pixel', 'plane',
-            'point', 'radians', 'reflective', 'refraction', 'ring', 'rotate', 'scale',
-            'scanner', 'scene', 'serial', 'shear', 'shininess', 'smooth', 'software',
-            'source', 'specular', 'sphere', 'stripe', 'title', 'to', 'translate',
-            'transparency', 'triangle', 'true', 'union', 'up', 'vector', 'view', 'warning',
-            'width', 'X',
-            'Y', 'Z'
-        _operators: predefined
-        squared: _operator("\u00b2")
-        cubed: _operator("\u00b3")
+            'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
+            'point', 'radians', 'reflective', 'refraction', 'render', 'ring', 'rotate',
+            'scale', 'scanner', 'scene', 'serial', 'shear', 'shininess', 'smooth',
+            'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
+            'translate', 'transparency', 'triangle', 'true', 'union', 'up', 'vector',
+            'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -48,7 +47,8 @@ public partial class LanguageParser
                 _identifier => 'variable'
             ]
             unary: [
-                not*, *squared, *cubed, dollar*, point*, color*, vector*
+                not*, *squared, *cubed, dollar*, point*, color*, vector*,
+                minus*
             ]
             binary: [
                 plus, minus, multiply, divide, modulo
@@ -138,14 +138,14 @@ public partial class LanguageParser
         shearClause:
         {
             shear > openBracket ?? 'Expecting an open bracket to follow "shear" here.' >
-            { _expression > comma ?? 'Expecting a comma here.' }{5} >
-            _expression > closeBracket ?? 'Expecting a close bracket here.' >
+            { _expression > comma ?? 'Expecting a comma here.' }{5..5} >
+            _expression > closeBracket ?? 'Expecting a close bracket here.'
         }
         matrixClause:
         {
             matrix > openBracket ?? 'Expecting an open bracket to follow "matrix" here.' >
-            { _expression > comma ?? 'Expecting a comma here.' }{15} >
-            _expression > closeBracket ?? 'Expecting a close bracket here.' >
+            { _expression > comma ?? 'Expecting a comma here.' }{15..15} >
+            _expression > closeBracket ?? 'Expecting a close bracket here.'
         }
         transformClause:
         [
@@ -183,21 +183,27 @@ public partial class LanguageParser
             [ {
                 index > of ?? 'Expecting "of" to follow "index" here.' >
                 refraction ?? 'Expecting "refraction" to follow "of" here.'
-            } | ior ] > _express
+            } | ior ] > _expression
         }
         materialEntryClause:
-        {
+        [
             pigment | materialValueClause | materialIorClause
-        }
-        
+        ] ?? 'Expecting a material property here.'
+
         // Plane clause.
         startPlaneClause:
         {
             plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
         }
         
+        // Sphere clause.
+        startSphereClause:
+        {
+            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
+        }
+        
         // Common surface clause.
-        surfaceEntryClause: { namedClause | startMaterialClause }
+        surfaceEntryClause: [ namedClause | startMaterialClause ]
 
         // Scene clauses.
         startSceneClause:
@@ -207,8 +213,16 @@ public partial class LanguageParser
         sceneEntryClause:
         [
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
-            background
+            startSphereClause | background
         ] ?? 'Unsupported scene property found.'
+
+        renderClause:
+        {
+            render > { scene > _expression }{?} > {
+                with > camera ?? 'Expecting "camera" to follow "with" here.' > 
+                _expression
+            }{?}
+        }
 
         // Top-level clause.
         [
@@ -217,7 +231,9 @@ public partial class LanguageParser
             startCameraClause     => 'HandleStartCameraClause' |
             startPointLightClause => 'HandleStartPointLightClause' |
             startPlaneClause      => 'HandleStartPlaneClause' |
-            background            => `HandleBackgroundClause`
+            startSphereClause     => 'HandleStartSphereClause' |
+            background            => 'HandleBackgroundClause' |
+            renderClause          => 'HandleRenderClause'
         ] ?? 'Unsupported object type found.'
         """";
 

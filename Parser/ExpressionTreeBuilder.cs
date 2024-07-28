@@ -43,6 +43,9 @@ public class ExpressionTreeBuilder : IExpressionTreeBuilder
     /// <returns>A term that represents a unary operation.</returns>
     public IExpressionTerm CreateUnaryOperation(List<Token> tokens, IExpressionTerm term, bool isPrefix)
     {
+        if (isPrefix && OperatorToken.Minus.Matches(tokens[0]))
+            return new UnaryMinusTerm((Term) term);
+
         throw new NotImplementedException();
     }
 

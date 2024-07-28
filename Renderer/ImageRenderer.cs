@@ -57,8 +57,6 @@ public class ImageRenderer
         };
         Variables variables = new Variables(_globals);
 
-        _instructionContext.Execute(context, variables);
-
-        context.ApplyOptions(options, frame);
+        _instructionContext.Execute(options, context, variables, frame);
     }
 }

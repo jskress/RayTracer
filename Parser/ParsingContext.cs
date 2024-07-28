@@ -46,8 +46,8 @@ internal class ParsingContext
     /// This method is used to remove the current instruction set from our set stack.
     /// </summary>
     /// <returns>The instruction set just removed from our stack.</returns>
-    internal IInstructionSet PopInstructionSet()
+    internal void PopInstructionSet()
     {
-        return _sets.Pop();
+        _sets.Pop();
     }
 }

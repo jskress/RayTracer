@@ -36,8 +36,6 @@ public partial class LanguageParser
 
         _context.PopInstructionSet();
 
-        HandleSurfaceTransform(instructionSet);
-
         return instructionSet;
     }
 
@@ -49,7 +47,10 @@ public partial class LanguageParser
     {
         PlaneInstructionSet instructionSet = (PlaneInstructionSet) _context.CurrentSet;
 
-        HandleSurfaceClause(clause, instructionSet, "plane");
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+            HandleSurfaceClause(clause, instructionSet, "plane");
     }
 
     /// <summary>
@@ -77,8 +78,6 @@ public partial class LanguageParser
 
         _context.PopInstructionSet();
 
-        HandleSurfaceTransform(instructionSet);
-
         return instructionSet;
     }
 
@@ -90,7 +89,10 @@ public partial class LanguageParser
     {
         SphereInstructionSet instructionSet = (SphereInstructionSet) _context.CurrentSet;
 
-        HandleSurfaceClause(clause, instructionSet, "sphere");
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+            HandleSurfaceClause(clause, instructionSet, "sphere");
     }
 
     /// <summary>
@@ -104,7 +106,7 @@ public partial class LanguageParser
         where TObject : Surface, new()
     {
         string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
+        Term term = (Term) clause.Expressions.FirstOrDefault();
 
         ObjectInstruction<TObject> instruction = field switch
         {

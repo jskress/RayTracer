@@ -14,7 +14,7 @@ context {
 
 camera {
 	location [0, 1.5, -5]
-	look at [0 1 0]
+	look at [0, 1, 0]
 	field of view 60
 }
 
@@ -60,21 +60,6 @@ sphere {
 	}
 	scale 0.5
 	translate [1.5, 0.5, -0.5]
-}
-
-// Right sphere
-sphere {
-	material {
-		colorSource checker {
-			color White
-			color Red
-			scale 0.33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate <1.5 0.5 -0.5>
 }
 
 // Left sphere
