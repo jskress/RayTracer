@@ -34,8 +34,8 @@ public partial class LanguageParser
             'point', 'radians', 'reflective', 'refraction', 'render', 'report', 'ring',
             'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadows', 'shear', 'shininess',
             'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
-            'translate', 'transparency', 'triangle', 'true', 'union', 'up', 'vector',
-            'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
+            'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
+            'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -47,8 +47,7 @@ public partial class LanguageParser
                 _identifier => 'variable'
             ]
             unary: [
-                not*, *squared, *cubed, dollar*, point*, color*, vector*,
-                minus*
+                not*, minus*, *squared, *cubed, dollar*
             ]
             binary: [
                 plus, minus, multiply, divide, modulo
@@ -177,7 +176,7 @@ public partial class LanguageParser
         // Material clauses.
         startMaterialClause:
         {
-            material > openBrace ?? 'Expecting an open brace to follow "plane" here.'
+            material > [ openBrace | _identifier ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
         }
         materialValueClause:
         {
@@ -213,7 +212,14 @@ public partial class LanguageParser
         {
             no > shadows ?? 'Expecting "shadows" to follow "no" here.'
         }
-        surfaceEntryClause: [ namedClause | startMaterialClause | noShadowsClause ]
+        surfaceTransformClause:
+        {
+            transform > _identifier ?? 'Expecting an identifier to follow "transform" here.'
+        }
+        surfaceEntryClause:
+        [
+            namedClause | startMaterialClause | surfaceTransformClause | noShadowsClause
+        ]
 
         // Scene clauses.
         startSceneClause:
@@ -234,6 +240,17 @@ public partial class LanguageParser
             }{?}
         }
 
+        setThingToVariable:
+        {
+            [ _identifier | _keyword ] > assignment >
+            [ material | pigment | transform ] >
+            openBrace ?? 'Expecting an open brace here.'
+        }
+        setVariableClause:
+        {
+            [ _identifier | _keyword ] > assignment > _expression
+        }
+
         // Top-level clause.
         [
             startContextClause    => 'HandleStartContextClause' |
@@ -243,7 +260,9 @@ public partial class LanguageParser
             startPlaneClause      => 'HandleStartPlaneClause' |
             startSphereClause     => 'HandleStartSphereClause' |
             background            => 'HandleBackgroundClause' |
-            renderClause          => 'HandleRenderClause'
+            renderClause          => 'HandleRenderClause' |
+            setThingToVariable    => 'HandleSetThingToVariableClause' |
+            setVariableClause     => 'HandleSetVariableClause'
         ] ?? 'Unsupported object type found.'
         """";
 

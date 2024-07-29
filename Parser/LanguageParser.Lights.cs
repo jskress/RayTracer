@@ -3,6 +3,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 

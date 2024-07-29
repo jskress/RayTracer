@@ -3,6 +3,7 @@ using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
+using RayTracer.Terms;
 
 namespace RayTracer.Instructions;
 

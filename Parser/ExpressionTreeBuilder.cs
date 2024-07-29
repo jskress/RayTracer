@@ -1,6 +1,6 @@
 using Lex.Expressions;
 using Lex.Tokens;
-using RayTracer.Instructions;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -9,6 +9,9 @@ namespace RayTracer.Parser;
 /// </summary>
 public class ExpressionTreeBuilder : IExpressionTreeBuilder
 {
+    private static readonly OperatorToken SquareToken = new ("\u00b2");
+    private static readonly OperatorToken CubeToken = new ("\u00b3");
+
     /// <summary>
     /// This method is used to create a term in an expression tree.  It is provided the
     /// list of tokens that are not part of a sub-expression or decoration tokens and the
@@ -37,16 +40,25 @@ public class ExpressionTreeBuilder : IExpressionTreeBuilder
     /// This method is used to create a term that represents a unary operation.
     /// </summary>
     /// <param name="tokens">The list of tokens that define the operator.</param>
-    /// <param name="term">The term the operator should act on.</param>
+    /// <param name="expressionTerm">The expression term the operator should act on.</param>
     /// <param name="isPrefix">A flag that indicates whether the operator preceded the term
     /// or followed it.</param>
     /// <returns>A term that represents a unary operation.</returns>
-    public IExpressionTerm CreateUnaryOperation(List<Token> tokens, IExpressionTerm term, bool isPrefix)
+    public IExpressionTerm CreateUnaryOperation(
+        List<Token> tokens, IExpressionTerm expressionTerm, bool isPrefix)
     {
-        if (isPrefix && OperatorToken.Minus.Matches(tokens[0]))
-            return new UnaryMinusTerm((Term) term);
+        Token token = tokens[0];
+        Term term = (Term)expressionTerm;
 
-        throw new NotImplementedException();
+        return isPrefix switch
+        {
+            true when OperatorToken.Not.Matches(token) => new NotOperation(term),
+            true when OperatorToken.Minus.Matches(token) => new UnaryMinusOperation(term),
+            false when SquareToken.Matches(token) => new SquareOperation(term),
+            false when CubeToken.Matches(token) => new CubeOperation(term),
+            true when OperatorToken.Dollar.Matches(token) => new StringSubstitutionOperation(term),
+            _ => throw new NotImplementedException()
+        };
     }
 
     /// <summary>

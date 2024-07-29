@@ -16,6 +16,16 @@ public class Variables
     }
 
     /// <summary>
+    /// This method returns whether we carry a variable by the given name.
+    /// </summary>
+    /// <param name="key">The name of the variable to check.</param>
+    /// <returns><c>true</c>, if we have the named variable, or <c>false</c>, if not.</returns>
+    public bool ContainsKey(string key)
+    {
+        return _variables.ContainsKey(key) || (_parent?.ContainsKey(key) ?? false);
+    }
+
+    /// <summary>
     /// This method is used to look up the named variable.  If we don't have it, and we
     /// have a parent, pass the request on to the parent.
     /// </summary>

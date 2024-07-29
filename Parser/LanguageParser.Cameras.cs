@@ -2,6 +2,7 @@ using Lex.Clauses;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Instructions;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 

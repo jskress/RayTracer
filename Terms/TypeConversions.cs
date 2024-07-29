@@ -2,7 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
 
-namespace RayTracer.Instructions;
+namespace RayTracer.Terms;
 
 /// <summary>
 /// This class contains all our supported type conversions.

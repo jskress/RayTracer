@@ -1,7 +1,7 @@
 using Lex.Tokens;
 using RayTracer.General;
 
-namespace RayTracer.Instructions;
+namespace RayTracer.Terms;
 
 /// <summary>
 /// This class represents a term that represents a variable reference.

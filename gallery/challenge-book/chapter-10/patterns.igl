@@ -1,17 +1,8 @@
 // This holds the information for how to render our image for chapter 10.
 
-context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title 'Chapter 9'
-		author 'J. Stephen Kress'
-		description 'The image that Chapter 10 walks us through to create.'
-		copyright true
-		software __software__
-	}
-}
+chapter = 10
+
+include '../default-context.igl'
 
 camera {
 	location [0, 1.5, -5]

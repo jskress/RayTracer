@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using RayTracer.Extensions;
 using RayTracer.General;
+using RayTracer.Terms;
 
 namespace RayTracer.Instructions;
 

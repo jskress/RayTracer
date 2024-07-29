@@ -2,7 +2,7 @@ using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 
-namespace RayTracer.Instructions;
+namespace RayTracer.Terms;
 
 /// <summary>
 /// This class represents a term that is a tuple of 3 or 4 terms.
