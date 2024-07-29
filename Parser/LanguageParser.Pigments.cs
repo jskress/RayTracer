@@ -17,12 +17,20 @@ public partial class LanguageParser
     private PigmentInstructionSet ParsePigmentClause()
     {
         Clause clause = ParseClause("pigmentClause");
+        bool bouncing = false;
         
         if (clause.Tokens.IsNullOrEmpty() || clause.Tokens[0].Text == "color")
         {
             Term term = (Term) clause.Expressions.RemoveFirst();
 
             return PigmentInstructionSet.SolidPigmentInstructionSet(term);
+        }
+
+        if (clause.Tokens[0].Text == "bouncing")
+        {
+            bouncing = true;
+
+            clause.Tokens.RemoveFirst();
         }
 
         PigmentType type = ToPigmentType(clause);
@@ -38,7 +46,7 @@ public partial class LanguageParser
             true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
 
         return PigmentInstructionSet.CompoundPigmentInstructionSet(
-            type, transformInstructionSet, first, second);
+            type, transformInstructionSet, bouncing, first, second);
     }
 
     /// <summary>
@@ -56,7 +64,9 @@ public partial class LanguageParser
             "checker" => PigmentType.Checker,
             "ring" => PigmentType.Ring,
             "stripe" => PigmentType.Stripe,
+            "blend" => PigmentType.Blend,
             "linear" => PigmentType.LinearGradient,
+            "radial" => PigmentType.RadialGradient,
             _ => throw new Exception($"Internal error: unknown pigment type: {token.Text}")
         };
     }

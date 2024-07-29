@@ -250,4 +250,18 @@ public class Color
             left.Green * right.Green,
             left.Blue * right.Blue);
     }
+
+    /// <summary>
+    /// Divide a color by a number.
+    /// </summary>
+    /// <param name="left">The color to multiply.</param>
+    /// <param name="right">The number to multiply.</param>
+    /// <returns>The result of multiplying the color by the number.</returns>
+    public static Color operator /(Color left, double right)
+    {
+        return new Color(
+            left.Red / right,
+            left.Green / right,
+            left.Blue / right);
+    }
 }

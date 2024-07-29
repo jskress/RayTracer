@@ -8,6 +8,8 @@ public enum PigmentType
     Checker,
     Ring,
     Stripe,
+    Blend,
     LinearGradient,
+    RadialGradient,
     Color
 }

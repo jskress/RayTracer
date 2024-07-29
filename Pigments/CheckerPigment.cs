@@ -29,8 +29,8 @@ public class CheckerPigment : Pigment
         double sum = Math.Floor(point.X) + Math.Floor(point.Y) + Math.Floor(point.Z);
 
         return sum % 2 == 0
-            ? _evenPigment.GetColorFor(point)
-            : _oddPigment.GetColorFor(point);
+            ? _evenPigment.GetTransformedColorFor(point)
+            : _oddPigment.GetTransformedColorFor(point);
     }
 
     /// <summary>

@@ -4,15 +4,14 @@ using RayTracer.Graphics;
 namespace RayTracer.Pigments;
 
 /// <summary>
-/// This class provides a pigment that returns a color from a gradient between two colors,
-/// based on the X component of a point.
+/// This class provides a pigment that returns a color that is a blend of two others.
 /// </summary>
-public class LinearGradientPigment : GradientPigment
+public class BlendPigment : Pigment
 {
     private readonly Pigment _firstPigment;
     private readonly Pigment _secondPigment;
 
-    public LinearGradientPigment(Pigment firstPigment, Pigment secondPigment)
+    public BlendPigment(Pigment firstPigment, Pigment secondPigment)
     {
         _firstPigment = firstPigment;
         _secondPigment = secondPigment;
@@ -20,8 +19,7 @@ public class LinearGradientPigment : GradientPigment
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we
-    /// return is based on a linearly interpolated (lerp) value between our two colors
-    /// based on the X component of the given point.
+    /// return is based on a blend of colors from our child pigments at the given point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
@@ -29,17 +27,8 @@ public class LinearGradientPigment : GradientPigment
     {
         Color firstColor = _firstPigment.GetTransformedColorFor(point);
         Color secondColor = _secondPigment.GetTransformedColorFor(point);
-        double fraction = point.X - Math.Floor(point.X);
 
-        if (Bounces)
-        {
-            if (Math.Floor(point.X) % 2 == 0)
-                (firstColor, secondColor) = (secondColor, firstColor);
-        }
-
-        Color difference = secondColor - firstColor;
-
-        return firstColor + difference * fraction;
+        return (firstColor + secondColor) / 2;
     }
 
     /// <summary>
@@ -49,7 +38,7 @@ public class LinearGradientPigment : GradientPigment
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
     public override bool Matches(Pigment other)
     {
-        return other is LinearGradientPigment pigmentation &&
+        return other is BlendPigment pigmentation &&
                _firstPigment.Matches(pigmentation._firstPigment) &&
                _secondPigment.Matches(pigmentation._secondPigment);
     }
