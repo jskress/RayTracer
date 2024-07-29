@@ -1,3 +1,5 @@
+using RayTracer.Extensions;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -10,7 +12,7 @@ public class NumberTuple
     public double Z { get; }
     public double W { get; protected set; }
 
-    protected NumberTuple(double x, double y, double z, double w)
+    public NumberTuple(double x, double y, double z, double w)
     {
         X = x;
         Y = y;
@@ -30,5 +32,15 @@ public class NumberTuple
         return GetType() == other.GetType() &&
                X.Near(other.X) && Y.Near(other.Y) &&
                Z.Near(other.Z) && W.Near(other.W);
+    }
+
+    /// <summary>
+    /// This method produces a string representation for the tuple.  It is intended for use
+    /// in debugging so is very simplistic.
+    /// </summary>
+    /// <returns>A descriptive string that represents this color.</returns>
+    public override string ToString()
+    {
+        return $"[{X}, {Y}, {Z}, {W}]";
     }
 }

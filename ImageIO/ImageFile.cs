@@ -10,41 +10,45 @@ namespace RayTracer.ImageIO;
 public class ImageFile
 {
     private readonly string _fileName;
+    private readonly string _outputImageFormat;
 
-    public ImageFile(string name)
+    public ImageFile(string name, string outputImageFormat = null)
     {
         _fileName = name;
+        _outputImageFormat = outputImageFormat;
     }
 
     /// <summary>
     /// This method is used to load images from the image file.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <returns>An array of the images found in the image file.</returns>
-    public Canvas[] Load()
+    public Canvas[] Load(RenderContext context)
     {
         IImageCodec codec = DetermineCodec(_fileName, false, null);
 
         using Stream stream = File.OpenRead(_fileName);
 
-        return codec.Decode(stream);
+        return codec.Decode(context, stream);
     }
 
     /// <summary>
     /// This method is used to save the given image to the file, in the format
     /// indicated by its extension.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="canvas">The image to save.</param>
     /// <param name="extension">An optional concrete extension to use.</param>
     /// <param name="info">Metadata about the image.</param>
-    public void Save(Canvas canvas, string extension = null, ImageInformation info = null)
+    public void Save(RenderContext context, Canvas canvas, string extension = null, ImageInformation info = null)
     {
-        extension ??= ProgramOptions.Instance.OutputImageFormat;
+        extension ??= _outputImageFormat;
 
         IImageCodec codec = DetermineCodec(_fileName, true, extension);
 
         using Stream stream = File.OpenWrite(_fileName);
 
-        codec.Encode(canvas, stream, info);
+        codec.Encode(context, canvas, stream, info);
     }
 
     /// <summary>

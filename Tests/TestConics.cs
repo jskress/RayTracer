@@ -1,6 +1,7 @@
 using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 
 namespace Tests;
@@ -8,26 +9,26 @@ namespace Tests;
 [TestClass]
 public class TestConics
 {
-    private static readonly List<(Ray Ray, double T0, double T1)> RaysThatHit = new ()
-    {
+    private static readonly List<(Ray Ray, double T0, double T1)> RaysThatHit =
+    [
         (new Ray(new Point(0, 0, -5), Directions.In.Unit), 5, 5),
-        (new Ray(new Point(0, 0, -5), new Vector(1, 1, 1).Unit), 8.66025, 8.66025),
-        (new Ray(new Point(1, 1, -5), new Vector(-0.5, -1, 1).Unit), 4.55006, 49.44994)
-    };
+        (new Ray(new Point(0, 0, -5), new Vector(1, 1, 1).Unit), 8.660254, 8.660254),
+        (new Ray(new Point(1, 1, -5), new Vector(-0.5, -1, 1).Unit), 4.550056, 49.449944)
+    ];
 
-    private static readonly List<(Ray, int)> CappedIntersections = new ()
-    {
+    private static readonly List<(Ray, int)> CappedIntersections =
+    [
         (new Ray(new Point(0, 0, -5), Directions.Up.Unit), 0),
         (new Ray(new Point(0, 0, -0.25), new Vector(0, 1, 1).Unit), 2),
         (new Ray(new Point(0, 0, -0.25), Directions.Up.Unit), 4)
-    };
+    ];
 
-    private static readonly List<(Point, Vector)> NormalsAtPoints = new ()
-    {
+    private static readonly List<(Point, Vector)> NormalsAtPoints =
+    [
         (new Point(0, 0, 0), new Vector(0, 0, 0)),
         (new Point(1, 1, 1), new Vector(1, -Math.Sqrt(2), 1)),
         (new Point(-1, -1, 0), new Vector(-1, 1, 0))
-    };
+    ];
 
     [TestMethod]
     public void TestRayHitsConic()
@@ -56,7 +57,7 @@ public class TestConics
         conic.AddIntersections(ray, intersections);
 
         Assert.AreEqual(1, intersections.Count);
-        Assert.IsTrue(0.35355.Near(intersections[0].Distance));
+        Assert.IsTrue(0.353553.Near(intersections[0].Distance));
     }
 
     [TestMethod]

@@ -1,0 +1,64 @@
+// This holds the information for how to render our image for chapter 9.
+
+context {
+	parallel pixel scanner
+	angles are degrees
+	no gamma
+	info {
+		title 'Chapter 9'
+		author 'J. Stephen Kress'
+		description 'The image that Chapter 9 walks us through to create.'
+		copyright true
+		software __software__
+	}
+}
+
+camera {
+	location [0, 1.5, -5]
+	look at [0, 1, 0]
+	field of view 60
+}
+
+point light {
+	location [-10, 10, -10]
+}
+
+// Floor
+plane {
+	material {
+		pigment [1, 0.9, 0.9]
+		specular 0
+	}
+}
+
+// Middle sphere
+sphere {
+	material {
+		pigment [0.1, 1, 0.5]
+		diffuse 0.7
+		specular 0.3
+	}
+	translate [-0.5, 1, 0.5]
+}
+
+// Right sphere
+sphere {
+	material {
+		pigment [0.5, 1, 0.1]
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.5
+	translate [1.5, 0.5, -0.5]
+}
+
+// Left sphere
+sphere {
+	material {
+		pigment [1, 0.8, 0.1]
+		diffuse 0.7
+		specular 0.3
+	}
+	scale 0.33
+	translate [-1.5, 0.33, -0.75]
+}

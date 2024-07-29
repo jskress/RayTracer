@@ -1,62 +1,36 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Core;
 
 /// <summary>
 /// This class represents a world of things to render.
 /// </summary>
-public class Scene
+public class Scene : NamedThing
 {
     /// <summary>
-    /// This method generates a default scene with one light and two spheres.
+    /// This list holds the collection of cameras in the scene.
     /// </summary>
-    /// <returns>A default scene.</returns>
-    public static Scene DefaultScene()
-    {
-        PointLight pointLight = new()
-        {
-            Location = new Point(-10, 10, -10)
-        };
-        Sphere outer = new ()
-        {
-            Material = new Material
-            {
-                ColorSource = new SolidColorSource(new Color(0.8, 1.0, 0.6)),
-                Diffuse = 0.7,
-                Specular = 0.2
-            }
-        };
-        Sphere inner = new ()
-        {
-            Transform = Transforms.Scale(0.5)
-        };
-        Scene scene = new ();
-
-        scene.Lights.Add(pointLight);
-        scene.Surfaces.Add(outer);
-        scene.Surfaces.Add(inner);
-
-        return scene;
-    }
+    public List<Camera> Cameras { get; set; } = [];
 
     /// <summary>
     /// This list holds the collection of lights in the scene.
     /// </summary>
-    public List<PointLight> Lights { get; set; } = new ();
+    public List<PointLight> Lights { get; set; } = [];
 
     /// <summary>
     /// This list holds the collection of surfaces (shapes) in the scene.
     /// </summary>
-    public List<Surface> Surfaces { get; set; } = new ();
+    public List<Surface> Surfaces { get; set; } = [];
 
     /// <summary>
-    /// This property holds the color to use for a pixel when rays do not intersect with
+    /// This property holds the pigment to use for a pixel when rays do not intersect with
     /// anything in the scene.
     /// </summary>
-    public Color BackgroundColor { get; set; } = Colors.Transparent;
+    public Pigment Background { get; set; } = new SolidPigment(Colors.Transparent);
 
     /// <summary>
     /// This method determines the color for the given ray.
@@ -68,7 +42,7 @@ public class Scene
     {
         List<Intersection> hits = Intersect(ray);
         Intersection hit = hits.Hit();
-        Color color = BackgroundColor;
+        Color color = Background.GetTransformedColorFor(ray.Origin);
 
         if (hit != null)
         {
@@ -88,7 +62,7 @@ public class Scene
     /// <param name="ray">The ray to test.</param>
     public List<Intersection> Intersect(Ray ray)
     {
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         foreach (Surface surface in Surfaces)
             surface.Intersect(ray, intersections);
@@ -108,7 +82,8 @@ public class Scene
     {
         return Lights.Aggregate(Colors.Black, (color, light) =>
         {
-            bool isInShadow = IsInShadow(light, intersection.OverPoint);
+            bool isInShadow = !intersection.Surface.NoShadow &&
+                              IsInShadow(light, intersection.OverPoint);
             Color surfaceColor = light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal,
                 intersection.Surface, isInShadow);

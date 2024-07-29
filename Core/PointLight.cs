@@ -7,7 +7,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents a point light source in a rendered scene.
 /// </summary>
-public class PointLight
+public class PointLight : NamedThing
 {
     /// <summary>
     /// This property notes the location of the light source.
@@ -32,7 +32,7 @@ public class PointLight
     public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, bool inShadow)
     {
         Material material = surface.Material;
-        Color color = material.ColorSource.GetColorFor(surface, point) * Color;
+        Color color = material.Pigment.GetColorFor(surface, point) * Color;
         Vector vector = (Location - point).Unit;
         Color ambientColor = color * material.Ambient;
 

@@ -16,13 +16,21 @@ public abstract class PpmCodec : BaseCodec
     protected abstract int MagicNumber { get; }
 
     /// <summary>
+    /// This field holds the current rendering context in play.
+    /// </summary>
+    protected RenderContext Context;
+
+    /// <summary>
     /// This method is used to encode the given canvas to the specified stream.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="canvas">The canvas being encoded and written.</param>
     /// <param name="stream">The stream to write to.</param>
     /// <param name="info">Metadata about the image.</param>
-    public override void Encode(Canvas canvas, Stream stream, ImageInformation info)
+    public override void Encode(RenderContext context, Canvas canvas, Stream stream, ImageInformation info)
     {
+        Context = context;
+
         WriteHeader(canvas, stream, info);
         WritePixels(canvas, stream);
     }
@@ -53,7 +61,7 @@ public abstract class PpmCodec : BaseCodec
         }
 
         builder.Append($"{canvas.Width} {canvas.Height}\n" +
-                       $"{ProgramOptions.Instance.MaxColorChannelValue}\n");
+                       $"{Context.MaxColorChannelValue}\n");
 
         ImageFileIo.WriteText(stream, builder.ToString());
     }
@@ -156,16 +164,16 @@ public abstract class PpmCodec : BaseCodec
     /// </summary>
     /// <param name="color">The colors to convert.</param>
     /// <returns>The color as its separate channel values.</returns>
-    protected static (int, int, int) ToChannelValues(Color color)
+    protected (int, int, int) ToChannelValues(Color color)
     {
-        if (ProgramOptions.Instance.Grayscale)
+        if (Context.Grayscale)
         {
-            (int gray, _) = color.ToGrayValue();
+            (int gray, _) = color.ToGrayValue(Context);
 
             return (gray, gray, gray);
         }
 
-        (int red, int green, int blue, _) = color.ToChannelValues();
+        (int red, int green, int blue, _) = color.ToChannelValues(Context);
 
         return (red, green, blue);
     }

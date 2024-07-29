@@ -1,3 +1,5 @@
+using RayTracer.Extensions;
+
 namespace RayTracer.Basics;
 
 /// <summary>

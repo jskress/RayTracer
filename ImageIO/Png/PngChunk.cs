@@ -22,8 +22,14 @@ public abstract class PngChunk
     /// </summary>
     public bool IsAncillary => char.IsLower(Type[0]);
 
-    protected PngChunk(string type)
+    /// <summary>
+    /// This property holds the current rendering context.
+    /// </summary>
+    protected readonly RenderContext Context;
+
+    protected PngChunk(RenderContext context, string type)
     {
+        Context = context;
         Type = type;
     }
 
@@ -98,7 +104,7 @@ public abstract class PngChunk
     /// <param name="length">The length of the raw data.</param>
     private void Dump(int length)
     {
-        if (ProgramOptions.Instance.OutputLevel < OutputLevel.Chatty)
+        if (Terminal.OutputLevel < OutputLevel.Chatty)
             return;
 
         string name = GetType().Name;
@@ -108,7 +114,7 @@ public abstract class PngChunk
 
         Terminal.Out($"--> {Type}: {name} ({length})", OutputLevel.Chatty);
 
-        if (ProgramOptions.Instance.OutputLevel > OutputLevel.Chatty)
+        if (Terminal.OutputLevel > OutputLevel.Chatty)
             DumpDetails();
     }
 

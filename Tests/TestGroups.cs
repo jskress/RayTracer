@@ -137,7 +137,7 @@ public class TestGroups
 
         double value = Math.Sqrt(3) / 3;
         Vector normal = sphere.NormalToWorld(new Vector(value, value, value));
-        Vector expected = new (0.28571, 0.42857, -0.85714);
+        Vector expected = new (0.285714, 0.428571, -0.857143);
 
         Assert.IsTrue(expected.Matches(normal));
     }
@@ -162,7 +162,7 @@ public class TestGroups
         inner.Add(sphere);
 
         Vector normal = sphere.NormaAt(new Point(1.7321, 1.1547, -5.5774), null);
-        Vector expected = new (0.28570, 0.42854, -0.85716);
+        Vector expected = new (0.285704, 0.428543, -0.857161);
 
         Assert.IsTrue(expected.Matches(normal));
     }

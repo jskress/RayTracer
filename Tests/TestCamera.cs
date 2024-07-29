@@ -1,7 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.General;
 using RayTracer.Graphics;
-using RayTracer.Scanners;
 
 namespace Tests;
 
@@ -46,13 +46,13 @@ public class TestCamera
             Up = new Vector(1, 1, 0)
         };
 
-        expected = new Matrix(new []
-        {
-            -0.50709, 0.50709,  0.67612, -2.36643,
-             0.76772, 0.60609,  0.12122, -2.82843,
-            -0.35857, 0.59761, -0.71714,  0.00000,
-             0.00000, 0.00000,  0.00000,  1.00000,
-        });
+        expected = new Matrix(
+        [
+            -0.507093, 0.507093,  0.676123, -2.366432,
+             0.767716, 0.606092,  0.121218, -2.828427,
+            -0.358569, 0.597614, -0.717137,  0.000000,
+             0.000000, 0.000000,  0.000000,  1.000000
+        ]);
 
         Assert.IsTrue(expected.Matches(camera.Transform));
     }
@@ -60,12 +60,12 @@ public class TestCamera
     [TestMethod]
     public void TestRender()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = TestScenes.DefaultScene();
         Camera camera = new ();
-        Canvas canvas = new (11, 11);
-        Color expected = new (0.38066, 0.47583, 0.2855);
+        RenderContext context = new RenderContext { Width = 11, Height = 11 };
+        Color expected = new (0.380661, 0.475826, 0.285496);
 
-        camera.Render(scene, canvas, new SingleThreadScanner());
+        Canvas canvas = camera.Render(context, scene);
 
         Assert.IsTrue(expected.Matches(canvas.GetPixel(5, 5)));
     }

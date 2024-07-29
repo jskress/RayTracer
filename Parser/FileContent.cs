@@ -1,7 +1,7 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
 using RayTracer.Core;
 using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Parser;
 
@@ -11,7 +11,7 @@ namespace RayTracer.Parser;
 /// </summary>
 internal class FileContent
 {
-    internal readonly Dictionary<string, ColorSource> ColorSources = new ();
+    internal readonly Dictionary<string, Pigment> ColorSources = new ();
     internal readonly Dictionary<string, Material> Materials = new ();
 
     private readonly string _content;

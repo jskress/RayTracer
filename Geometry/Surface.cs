@@ -6,7 +6,7 @@ namespace RayTracer.Geometry;
 /// <summary>
 /// This is the base class for all pieces of geometry.
 /// </summary>
-public abstract class Surface
+public abstract class Surface : NamedThing
 {
     /// <summary>
     /// This property holds a reference to the parent of the surface, if there is one.
@@ -17,6 +17,11 @@ public abstract class Surface
     /// This holds the material for the surface.
     /// </summary>
     public Material Material { get; set; } = new ();
+
+    /// <summary>
+    /// This property suppresses shadow detection on this object.
+    /// </summary>
+    public bool NoShadow { get; set; }
 
     /// <summary>
     /// This property holds the transform for the surface for converting from world to
@@ -37,12 +42,12 @@ public abstract class Surface
     /// <summary>
     /// This property provides the inverse of the surface's transform.
     /// </summary>
-    public Matrix InverseTransform => _inverseTransform.Value;
+    private Matrix InverseTransform => _inverseTransform.Value;
 
     /// <summary>
     /// This property provides the transposed inverse of the surface's transform.
     /// </summary>
-    protected Matrix TransformedInverseTransform => _transposedInverseTransform.Value;
+    private Matrix TransformedInverseTransform => _transposedInverseTransform.Value;
 
     private Matrix _transform;
     private Lazy<Matrix> _inverseTransform;
@@ -151,7 +156,7 @@ public abstract class Surface
 
     /// <summary>
     /// This method decides whether the given child surface is, or is contained by, the
-    /// given (potential) parent surface..
+    /// given (potential) parent surface.
     /// </summary>
     /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
     /// <param name="child">the child surface to test.</param>

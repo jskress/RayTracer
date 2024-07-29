@@ -1,3 +1,4 @@
+using RayTracer.General;
 using RayTracer.Graphics;
 
 namespace RayTracer.ImageIO.Png;
@@ -12,7 +13,7 @@ public class PngTransparencyChunk : PngChunk
     /// </summary>
     public Color TransparentColor { get; private set; }
 
-    public PngTransparencyChunk() : base(ChunkTypes.TransparencyChunk) {}
+    public PngTransparencyChunk(RenderContext context) : base(context, ChunkTypes.TransparencyChunk) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.  The

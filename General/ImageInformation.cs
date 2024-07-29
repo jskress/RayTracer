@@ -10,7 +10,7 @@ public class ImageInformation
     public string Author { get; set; }
     public string Description { get; set; }
     public string Copyright { get; set; }
-    public DateTime CreationTime { get; set; } = DateTime.UtcNow;
+    public DateTime CreationTime { get; } = DateTime.UtcNow;
     public string Software { get; set; }
     public string Disclaimer { get; set; }
     public string Warning { get; set; }

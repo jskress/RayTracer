@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -7,7 +9,7 @@ namespace RayTracer.ImageIO.Png;
 /// </summary>
 public class UnknownPngChunk : PngChunk
 {
-    internal UnknownPngChunk(string type) : base(type) {}
+    internal UnknownPngChunk(RenderContext context, string type) : base(context, type) {}
 
     /// <summary>
     /// This method is used to serialize our specific data into the given stream.  We

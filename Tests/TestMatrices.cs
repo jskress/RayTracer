@@ -293,20 +293,20 @@ public class TestMatrices
     [TestMethod]
     public void TestInvert()
     {
-        Matrix matrix = new (new double[]
-        {
+        Matrix matrix = new (
+        [
             -5, 2, 6, -8,
             1, -5, 1, 8,
             7, 7, -6, -7,
             1, -3, 7, 4
-        });
-        Matrix expected = new (new double[]
-        {
-             0.21805,  0.45113,  0.24060, -0.04511,
-            -0.80827, -1.45677, -0.44361,  0.52068,
-            -0.07895, -0.22368, -0.05263,  0.19737,
-            -0.52256, -0.81391, -0.30075,  0.30639
-        });
+        ]);
+        Matrix expected = new (
+        [
+            0.218045,  0.451128,  0.240602, -0.045113,
+            -0.808271, -1.456767, -0.443609,  0.520677,
+            -0.078947, -0.223684, -0.052632,  0.197368,
+            -0.522556, -0.813910, -0.300752,  0.306391
+        ]);
 
         Assert.AreEqual(532, matrix.Determinant);
         Assert.AreEqual(-160, matrix.GetCofactor(2, 3));
@@ -318,20 +318,20 @@ public class TestMatrices
         Assert.AreEqual(105.0 / 532.0, inverse.Entry(2, 3));
         Assert.IsTrue(expected.Matches(inverse));
 
-        matrix = new Matrix(new double[]
-        {
+        matrix = new Matrix(
+        [
             8, -5, 9, 2,
             7, 5, 6, 1,
             -6, 0, 9, 6,
             -3, 0, -9, -4
-        });
-        expected = new (new double[]
-        {
-            -0.15385, -0.15385, -0.28205, -0.53846,
-            -0.07692,  0.12308,  0.02564,  0.03077,
-             0.35897,  0.35897,  0.43590,  0.92308,
-            -0.69231, -0.69231, -0.76923, -1.92308
-        });
+        ]);
+        expected = new Matrix(
+        [
+            -0.153846, -0.153846, -0.282051, -0.538462,
+            -0.076923,  0.123077,  0.025641,  0.030769,
+             0.358974,  0.358974,  0.435897,  0.923077,
+            -0.692308, -0.692308, -0.769231, -1.923077
+        ]);
 
         Assert.IsTrue(expected.Matches(matrix.Invert()));
 
@@ -344,29 +344,29 @@ public class TestMatrices
         });
         expected = new Matrix(new double[]
         {
-            -0.04074, -0.07778,  0.14444, -0.22222,
-            -0.07778,  0.03333,  0.36667, -0.33333,
-            -0.02901, -0.14630, -0.10926,  0.12963,
-             0.17778,  0.06667, -0.26667,  0.33333
+            -0.040740, -0.077778,  0.144444, -0.222222,
+            -0.077778,  0.033333,  0.366667, -0.333333,
+            -0.029012, -0.146296, -0.109259,  0.129630,
+             0.177778,  0.066667, -0.266667,  0.333333
         });
 
         Assert.IsTrue(expected.Matches(matrix.Invert()));
 
-        matrix = new Matrix(new double[]
-        {
+        matrix = new Matrix(
+        [
             3, -9, 7, 3,
             3, -8, 2, -9,
             -4, 4, 4, 1,
             -6, 5, -1, 1
-        });
+        ]);
 
-        Matrix other = new Matrix(new double[]
-        {
+        Matrix other = new Matrix(
+        [
             8, 2, 2, 2,
             3, -1, 7, 0,
             7, 0, 5, 4,
             6, -2, 0, 5
-        });
+        ]);
         Matrix product = matrix * other;
         Matrix reverted = product * other.Invert();
 

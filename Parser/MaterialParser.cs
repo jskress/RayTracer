@@ -53,7 +53,7 @@ internal class MaterialParser : BoundedContentParser
             switch (word)
             {
                 case "colorSource":
-                    _material.ColorSource = new ColorSourceParser(FileContent).ParseColorSource();
+                    _material.Pigment = new ColorSourceParser(FileContent).ParseColorSource();
                     break;
                 case "ambient":
                     _material.Ambient = FileContent.GetNextDouble();

@@ -1,13 +1,14 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
+using RayTracer.General;
 using RayTracer.Graphics;
-using RayTracer.Scanners;
 
 namespace RayTracer.Core;
 
 /// <summary>
 /// This class represents a camera in a scene.
 /// </summary>
-public class Camera
+public class Camera : NamedThing
 {
     /// <summary>
     /// This property holds the location of the camera.
@@ -28,7 +29,7 @@ public class Camera
     /// <summary>
     /// This property reports the field of view (in degrees) for the camera.
     /// </summary>
-    public double FieldOfView { get; set; } = 90;
+    public double FieldOfView { get; set; } = 90.0.ToRadians();
 
     /// <summary>
     /// This property provides the view transformation that the camera represents.
@@ -38,19 +39,22 @@ public class Camera
     /// <summary>
     /// This method is used to render the given scene to the specified canvas.
     /// </summary>
+    /// <param name="context">The current rendering context.</param>
     /// <param name="scene">The scene to render.</param>
-    /// <param name="canvas">The canvas to render to.</param>
-    /// <param name="scanner">The scanner to use to visit each pixel.</param>
-    public void Render(Scene scene, Canvas canvas, IScanner scanner)
+    /// <returns>The image, as a canvas, that resulted from the render.</returns>
+    public Canvas Render(RenderContext context, Scene scene)
     {
-        CameraMechanics mechanics = new (canvas, FieldOfView.ToRadians(), GetTransform());
+        Canvas canvas = context.NewCanvas;
+        PixelToRayConverter converter = new (context, FieldOfView, GetTransform());
 
-        scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
+        context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
         {
-            Ray ray = mechanics.GetRayForPixel(x, y);
+            Ray ray = converter.GetRayForPixel(x, y);
 
             canvas.SetColor(scene.GetColorFor(ray), x, y);
         });
+
+        return canvas;
     }
 
     /// <summary>
@@ -63,12 +67,12 @@ public class Camera
         Vector left = forward.Cross(Up.Unit);
         Vector trueUp = left.Cross(forward);
 
-        return new Matrix(new []
-        {
+        return new Matrix(
+        [
              left.X,     left.Y,     left.Z,    0,
              trueUp.X,   trueUp.Y,   trueUp.Z,  0,
             -forward.X, -forward.Y, -forward.Z, 0,
              0,          0,          0,         1
-        }) * Transforms.Translate(-Location.X, -Location.Y, -Location.Z);
+        ]) * Transforms.Translate(-Location.X, -Location.Y, -Location.Z);
     }
 }

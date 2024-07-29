@@ -4,8 +4,8 @@ using CommandLine;
 using RayTracer.General;
 using RayTracer.ImageIO;
 
-[assembly: AssemblyTitle("My Ray Tracer")]
-[assembly: AssemblyDescription("A ray tracer based on the book, 'The Ray Tracer Challenge'")]
+[assembly: AssemblyTitle("Raymond")]
+[assembly: AssemblyDescription("A CSG ray tracer based on the book, 'The Ray Tracer Challenge.'")]
 [assembly: AssemblyCopyright("Copyright \u00a9 2024")]
 [assembly: AssemblyInformationalVersion("1.0.1")]
 
@@ -18,11 +18,6 @@ namespace RayTracer;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class ProgramOptions
 {
-    /// <summary>
-    /// This property exposes our singleton instance.
-    /// </summary>
-    public static ProgramOptions Instance { get; private set; }
-
     [Option('i', "input-file", Required = true,
         HelpText = "The name of the input file to process.")]
     public string InputFileName
@@ -90,6 +85,62 @@ public class ProgramOptions
         }
     }
 
+    [Option('w', "width", Required = false, Default = 800,
+        HelpText = "The width of the image to generate.")]
+    public int? Width
+    {
+        get => _width;
+        set
+        {
+            if (value is < 1 or > 16384)
+                throw new ArgumentException("Width must be between 1 and 16,384.");
+
+            _width = value;
+        }
+    }
+
+    [Option('h', "height", Required = false, Default = 600,
+        HelpText = "The height of the image to generate.")]
+    public int? Height
+    {
+        get => _height;
+        set
+        {
+            if (value is < 1 or > 16384)
+                throw new ArgumentException("Height must be between 1 and 16,384.");
+
+            _height = value;
+        }
+    }
+
+    [Option('r', "frame-rate", Required = false, Default = 24,
+        HelpText = "The rate, in frames per second, to use when generating a series of images.")]
+    public int FrameRate
+    {
+        get => _frameRate;
+        set
+        {
+            if (value is < 1)
+                throw new ArgumentException("Frame rate must be at least 1.");
+
+            _frameRate = value;
+        }
+    }
+
+    [Option('m', "frame", Required = false,
+        HelpText = "The specific frame in an animation to render.")]
+    public long? Frame
+    {
+        get => _frame;
+        set
+        {
+            if (value is < 0)
+                throw new ArgumentException("Frame must be at least 0.");
+
+            _frame = value;
+        }
+    }
+
     [Option('c', "bits-per-channel", Required = false,
         HelpText = "The number of bits to use for each channel in colors in the image output file.")]
     public int BitsPerChannel
@@ -98,25 +149,41 @@ public class ProgramOptions
         set
         {
             if (value is not 8 and not 16)
-                throw new ArgumentException($"Bits per color channel must be either 8 or 16.");
+                throw new ArgumentException("Bits per color channel must be either 8 or 16.");
 
             _bitsPerChannel = value;
         }
     }
 
     [Option('g', "gamma", Required = false,
-        HelpText = "The gamma correction to apply to colors in the image output file.  Set this to 1 to turn gamma correction off.")]
-    public double Gamma
+        HelpText = "The gamma correction to apply to colors in the image output file.")]
+    public double? Gamma
     {
         get => _gamma;
         set
         {
             if (value is < 0 or > 5)
-                throw new ArgumentException($"Gamma correction must be between 0 and 5.");
+                throw new ArgumentException("Gamma correction must be between 0 and 5.");
 
             _gamma = value;
         }
     }
+
+    [Option("no-gamma", Required = false,
+        HelpText = "If specified, gamma correction will not be applied to colors in the image output file.")]
+    public bool? NoGamma
+    {
+        get => !_applyGamma;
+        set => _applyGamma = !value;
+    }
+
+    [Option("report-gamma", Required = false,
+        HelpText = "If specified, the gamma correction value will be included in the image output file, if supported.")]
+    public bool? ReportGamma { get; set; }
+
+    [Option("no-shadows", Required = false,
+        HelpText = "Disable shadow rendering on all objects.")]
+    public bool? NoShadows { get; set; }
 
     [Option("grayscale", Required = false,
         HelpText = "Grayscale the image when written to image file.")]
@@ -127,7 +194,7 @@ public class ProgramOptions
         HelpText = "Sets the desired level of output.  Must be one of, [q]uiet, [n]ormal, [c]hatty or [v]erbose.  The values are not case-sensitive.")]
     public string OutputLevelText
     {
-        get => OutputLevel.ToString();
+        get => OutputLevel.ToString().ToLowerInvariant();
         set => OutputLevel = ToOutputLevel(value);
     }
 
@@ -136,27 +203,31 @@ public class ProgramOptions
     /// </summary>
     public OutputLevel OutputLevel { get; private set; }
 
-    /// <summary>
-    /// This property provides the largest value a color channel can have.
-    /// </summary>
-    public int MaxColorChannelValue => (1 << _bitsPerChannel) - 1;
-
     private string _inputFileName;
     private string _outputDirectory;
     private string _outputFileName;
     private string _outputFileExtension;
     private string _outputImageFormat;
+    private int? _width;
+    private int? _height;
+    private int _frameRate;
+    private long? _frame;
     private int _bitsPerChannel;
-    private double _gamma;
+    private double? _gamma;
+    private bool? _applyGamma;
 
     public ProgramOptions()
     {
+        _width = null;
+        _height = null;
+        _frameRate = 24;
+        _frame = null;
         _bitsPerChannel = 8;
-        _gamma = 2.2;
+        _gamma = null;
+        _applyGamma = null;
         _outputImageFormat = "png";
 
         OutputLevel = OutputLevel.Normal;
-        Instance = this;
     }
     
     /// <summary>

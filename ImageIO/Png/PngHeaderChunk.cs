@@ -57,7 +57,7 @@ public class PngHeaderChunk : PngChunk
     /// </summary>
     public int ScanlineByteCount => GetScanlineByteCount();
 
-    public PngHeaderChunk() : base(ChunkTypes.HeaderChunk) {}
+    public PngHeaderChunk(RenderContext context) : base(context, ChunkTypes.HeaderChunk) {}
 
     /// <summary>
     /// This method examines <see cref="ColorType"/> and <see cref="BitDepth"/> to determine

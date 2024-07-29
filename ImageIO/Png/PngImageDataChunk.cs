@@ -1,3 +1,5 @@
+using RayTracer.General;
+
 namespace RayTracer.ImageIO.Png;
 
 /// <summary>
@@ -10,7 +12,7 @@ public class PngImageDataChunk : PngChunk
     /// </summary>
     public byte[] ImageData { get; set; }
 
-    public PngImageDataChunk() : base(ChunkTypes.ImageDataChunk) {}
+    public PngImageDataChunk(RenderContext context) : base(context, ChunkTypes.ImageDataChunk) {}
 
     /// <summary>
     /// This method returns the chunk's data as a byte array.  We override it because it's

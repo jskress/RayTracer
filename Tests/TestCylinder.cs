@@ -1,6 +1,7 @@
 using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 
 namespace Tests;
@@ -19,7 +20,7 @@ public class TestCylinder
     {
         (new Ray(new Point(1, 0, -5), Directions.In.Unit), 5, 5),
         (new Ray(new Point(0, 0, -5), Directions.In.Unit), 4, 6),
-        (new Ray(new Point(0.5, 0, -5), new Vector(0.1, 1, 1).Unit), 6.80798, 7.08872)
+        (new Ray(new Point(0.5, 0, -5), new Vector(0.1, 1, 1).Unit), 6.807981, 7.088723)
     };
 
     private static readonly List<(Point, Vector)> NormalsAtPoints = new ()

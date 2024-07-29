@@ -1,14 +1,46 @@
 using RayTracer.Basics;
-using RayTracer.ColorSources;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace Tests;
 
 [TestClass]
 public class TestScenes
 {
+    /// <summary>
+    /// This method generates a default scene with one light and two spheres.
+    /// </summary>
+    /// <returns>A default scene.</returns>
+    public static Scene DefaultScene()
+    {
+        PointLight pointLight = new()
+        {
+            Location = new Point(-10, 10, -10)
+        };
+        Sphere outer = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(new Color(0.8, 1.0, 0.6)),
+                Diffuse = 0.7,
+                Specular = 0.2
+            }
+        };
+        Sphere inner = new ()
+        {
+            Transform = Transforms.Scale(0.5)
+        };
+        Scene scene = new ();
+
+        scene.Lights.Add(pointLight);
+        scene.Surfaces.Add(outer);
+        scene.Surfaces.Add(inner);
+
+        return scene;
+    }
+
     [TestMethod]
     public void TestConstruction()
     {
@@ -17,7 +49,7 @@ public class TestScenes
         Assert.AreEqual(0, scene.Lights.Count);
         Assert.AreEqual(0, scene.Surfaces.Count);
 
-        scene = Scene.DefaultScene();
+        scene = DefaultScene();
 
         Assert.AreEqual(1, scene.Lights.Count);
         Assert.AreEqual(2, scene.Surfaces.Count);
@@ -26,7 +58,7 @@ public class TestScenes
     [TestMethod]
     public void TestIntersections()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
         List<Intersection> intersections = scene.Intersect(ray);
 
@@ -40,15 +72,15 @@ public class TestScenes
     [TestMethod]
     public void TestGetHitColorOutside()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
         Surface surface = scene.Surfaces[0];
         Intersection intersection = new (surface, 4);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetHitColor(intersection, 0);
-        Color expected = new (0.38066, 0.47583, 0.2855);
+        Color expected = new (0.380661, 0.475826, 0.285496);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -56,7 +88,7 @@ public class TestScenes
     [TestMethod]
     public void TestGetHitColorInside()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         scene.Lights[0] = new PointLight
         {
             Location = new Point(0, 0.25, 0)
@@ -65,7 +97,7 @@ public class TestScenes
         Surface surface = scene.Surfaces[1];
         Intersection intersection = new (surface, 0.5);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetHitColor(intersection, 0);
         Color expected = new (0.1, 0.1, 0.1);
@@ -89,7 +121,7 @@ public class TestScenes
         Ray ray = new (new Point(0, 0, 5), new Vector(0, 0, 1));
         Intersection intersection = new (scene.Surfaces[1], 4);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetHitColor(intersection, 0);
         Color expected = new (0.1, 0.1, 0.1);
@@ -100,21 +132,22 @@ public class TestScenes
     [TestMethod]
     public void TestGetColorFor()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 1, 0));
 
         Assert.IsTrue(Colors.Transparent.Matches(scene.GetColorFor(ray)));
 
         ray = new Ray(new Point(0, 0, -5), new Vector(0, 0, 1));
 
-        Color expected = new (0.38066, 0.47583, 0.2855);
+        Color expected = new (0.380661, 0.475826, 0.285496);
+        Color color = scene.GetColorFor(ray);
 
-        Assert.IsTrue(expected.Matches(scene.GetColorFor(ray)));
+        Assert.IsTrue(expected.Matches(color));
 
         scene.Surfaces[0].Material.Ambient = 1;
         scene.Surfaces[1].Material.Ambient = 1;
         ray = new Ray(new Point(0, 0, 0.75), new Vector(0, 0, -1));
-        expected = scene.Surfaces[1].Material.ColorSource.GetColorFor(new Sphere(), ray.Origin);
+        expected = scene.Surfaces[1].Material.Pigment.GetColorFor(new Sphere(), ray.Origin);
 
         Assert.IsTrue(expected.Matches(scene.GetColorFor(ray)));
     }
@@ -122,7 +155,7 @@ public class TestScenes
     [TestMethod]
     public void TestIsInShadow()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Point point = new (0, 10, 0);
 
         Assert.IsFalse(scene.IsInShadow(scene.Lights[0], point));
@@ -143,7 +176,7 @@ public class TestScenes
     [TestMethod]
     public void TestGetReflectionColorNoReflection()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Ray ray = new (Point.Zero, new Vector(0, 0, 1));
         Surface surface = scene.Surfaces[1];
 
@@ -151,7 +184,7 @@ public class TestScenes
 
         Intersection intersection = new (surface, 1);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetReflectionColor(intersection, 1);
 
@@ -163,7 +196,7 @@ public class TestScenes
     {
         double squareRootOf2 = Math.Sqrt(2);
         double value = squareRootOf2 / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Plane plane = new ()
         {
             Material = new Material
@@ -178,10 +211,10 @@ public class TestScenes
 
         Intersection intersection = new (plane, squareRootOf2);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetReflectionColor(intersection, 1);
-        Color expected = new (0.19033, 0.23791, 0.14274);
+        Color expected = new (0.190330, 0.237913, 0.142748);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -189,14 +222,14 @@ public class TestScenes
     [TestMethod]
     public void TestGetRefractionColorOpaque()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Surface surface = scene.Surfaces[0];
         Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
-        List<Intersection> intersections = new ()
-        {
+        List<Intersection> intersections =
+        [
             new Intersection(surface, 4),
             new Intersection(surface, 6)
-        };
+        ];
 
         intersections[0].PrepareUsing(ray, intersections);
 
@@ -206,11 +239,11 @@ public class TestScenes
 
         surface.Material.Transparency = 1;
         surface.Material.IndexOfRefraction = 1.5;
-        intersections = new List<Intersection>
-        {
-            new (surface, 4),
-            new (surface, 6)
-        };
+        intersections =
+        [
+            new Intersection(surface, 4),
+            new Intersection(surface, 6)
+        ];
 
         intersections[0].PrepareUsing(ray, intersections);
 
@@ -223,18 +256,18 @@ public class TestScenes
     public void TestTotalInternalReflection()
     {
         double value = Math.Sqrt(2) / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Surface surface = scene.Surfaces[0];
         Ray ray = new (new Point(0, 0, value), new Vector(0, 1, 0));
 
         surface.Material.Transparency = 1;
         surface.Material.IndexOfRefraction = 1.5;
 
-        List<Intersection> intersections = new ()
-        {
+        List<Intersection> intersections =
+        [
             new Intersection(surface, -value),
             new Intersection(surface, value)
-        };
+        ];
 
         intersections[1].PrepareUsing(ray, intersections);
 
@@ -246,29 +279,29 @@ public class TestScenes
     [TestMethod]
     public void TestGetRefractedColor()
     {
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Surface a = scene.Surfaces[0];
         Surface b = scene.Surfaces[1];
-        TestColorSource colorSource = new ();
+        TestPigment pigment = new ();
         Ray ray = new (new Point(0, 0, 0.1), new Vector(0, 1, 0));
 
         a.Material.Ambient = 1;
-        a.Material.ColorSource = colorSource;
+        a.Material.Pigment = pigment;
         b.Material.Transparency = 1;
         b.Material.IndexOfRefraction = 1.5;
 
-        List<Intersection> intersections = new ()
-        {
+        List<Intersection> intersections =
+        [
             new Intersection(a, -0.9899),
             new Intersection(b, -0.4899),
             new Intersection(b, 0.4899),
             new Intersection(a, 0.9899)
-        };
+        ];
 
         intersections[2].PrepareUsing(ray, intersections);
 
         Color color = scene.GetRefractedColor(intersections[2], 5);
-        Color expected = new (0, 0.99889, 0.04721);
+        Color expected = new (0, 0.998886, 0.047217);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -277,7 +310,7 @@ public class TestScenes
     public void TestGetHitColorWithRefraction()
     {
         double value = Math.Sqrt(2) / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Plane floor = new ()
         {
             Material = new Material
@@ -291,16 +324,13 @@ public class TestScenes
         {
             Material = new Material
             {
-                ColorSource = new SolidColorSource(new Color(1, 0, 0)),
+                Pigment = new SolidPigment(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)
         };
         Ray ray = new (new Point(0, 0, -3), new Vector(0, -value, value));
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(floor, value * 2)
-        };
+        List<Intersection> intersections = [new Intersection(floor, value * 2)];
 
         scene.Surfaces.Add(floor);
         scene.Surfaces.Add(ball);
@@ -308,7 +338,7 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.93642, 0.68642, 0.68642);
+        Color expected = new (0.936425, 0.686425, 0.686425);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -317,7 +347,7 @@ public class TestScenes
     public void TestGetHitColorReflectance()
     {
         double value = Math.Sqrt(2) / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Plane floor = new ()
         {
             Material = new Material
@@ -332,16 +362,13 @@ public class TestScenes
         {
             Material = new Material
             {
-                ColorSource = new SolidColorSource(new Color(1, 0, 0)),
+                Pigment = new SolidPigment(new Color(1, 0, 0)),
                 Ambient = 0.5
             },
             Transform = Transforms.Translate(0, -3.5, -0.5)
         };
         Ray ray = new (new Point(0, 0, -3), new Vector(0, -value, value));
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(floor, value * 2)
-        };
+        List<Intersection> intersections = [new Intersection(floor, value * 2)];
 
         scene.Surfaces.Add(floor);
         scene.Surfaces.Add(ball);
@@ -349,7 +376,7 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.93391, 0.69643, 0.69243);
+        Color expected = new (0.933915, 0.696434, 0.692430);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -359,7 +386,7 @@ public class TestScenes
     {
         double squareRootOf2 = Math.Sqrt(2);
         double value = squareRootOf2 / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Plane plane = new ()
         {
             Material = new Material
@@ -374,10 +401,10 @@ public class TestScenes
 
         Intersection intersection = new (plane, squareRootOf2);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetHitColor(intersection, 1);
-        Color expected = new (0.87675, 0.92434, 0.82917);
+        Color expected = new (0.876756, 0.924339, 0.829173);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -387,7 +414,7 @@ public class TestScenes
     {
         double squareRootOf2 = Math.Sqrt(2);
         double value = squareRootOf2 / 2;
-        Scene scene = Scene.DefaultScene();
+        Scene scene = DefaultScene();
         Plane plane = new ()
         {
             Material = new Material
@@ -402,7 +429,7 @@ public class TestScenes
 
         Intersection intersection = new (plane, squareRootOf2);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetReflectionColor(intersection, 0);
 

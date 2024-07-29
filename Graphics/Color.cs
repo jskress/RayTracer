@@ -1,3 +1,6 @@
+using RayTracer.Extensions;
+using RayTracer.General;
+
 namespace RayTracer.Graphics;
 
 /// <summary>
@@ -5,16 +8,6 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Color
 {
-    internal static Color FromUint(uint rawValue)
-    {
-        int red = (int) ((rawValue & 0x00ff0000) >> 0x10);
-        int green = (int) ((rawValue & 0x0000ff00) >> 0x8);
-        int blue = (int) (rawValue & 0x000000ff);
-        int alpha = (int) ((rawValue & 0xff000000) >> 0x18);
-
-        return new Color(red / 255.0d, green / 255.0d, blue / 255.0d, alpha / 255.0d);
-    }
-
     /// <summary>
     /// This method creates a color from integer channel values.
     /// </summary>
@@ -66,8 +59,6 @@ public class Color
     /// </summary>
     public double Alpha { get; }
 
-    public Color() : this(0, 0, 0) {}
-
     public Color(double red, double green, double blue, double alpha = 1)
     {
         Red = red;
@@ -80,12 +71,13 @@ public class Color
     /// This method returns the 4 color channel values as integers in a range from 0 to
     /// the currently configured largest color channel value.
     /// </summary>
-    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
+    /// <param name="context">The current rendering context.</param>
     /// <returns>A tuple containing the converted channel values.</returns>
-    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(bool gammaCorrect = true)
+    public (int Red, int Green, int Blue, int Alpha) ToChannelValues(RenderContext context)
     {
-        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+        bool gammaCorrect = context.ApplyGamma;
+        double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / context.Gamma : 1;
 
         return (ChannelToInt(Red, maxValue, power, gammaCorrect),
             ChannelToInt(Green, maxValue, power, gammaCorrect),
@@ -97,12 +89,13 @@ public class Color
     /// <summary>
     /// This method returns this color as an appropriate shade of gray.
     /// </summary>
-    /// <param name="gammaCorrect">Whether gamma correction should be applied.</param>
+    /// <param name="context">The current rendering context.</param>
     /// <returns>A tuple containing the gray and alpha values.</returns>
-    public (int Gray, int Alpha) ToGrayValue(bool gammaCorrect = true)
+    public (int Gray, int Alpha) ToGrayValue(RenderContext context)
     {
-        double maxValue = Convert.ToDouble(ProgramOptions.Instance.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / ProgramOptions.Instance.Gamma : 1;
+        bool gammaCorrect = context.ApplyGamma;
+        double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
+        double power = gammaCorrect ? 1 / context.Gamma : 1;
         double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +
                       PrepareChannelValue(Green, power, gammaCorrect) * 0.587 +
                       PrepareChannelValue(Green, power, gammaCorrect) * 0.114;
@@ -137,7 +130,13 @@ public class Color
         double value, double power = 1, bool gammaCorrect = false)
     {
         if (gammaCorrect && Math.Abs(power - 1) > 0.0000001)
+        {
             value = Math.Pow(value, power);
+
+            // For colors, this should be ok.
+            if (double.IsNaN(value))
+                value = 0;
+        }
 
         return Math.Clamp(value, 0, 1);
     }
@@ -166,13 +165,16 @@ public class Color
     }
 
     /// <summary>
-    /// This method produces a string representation for the color  It is intended for use
+    /// This method produces a string representation for the color.  It is intended for use
     /// in debugging so is very simplistic.
     /// </summary>
     /// <returns>A descriptive string that represents this color.</returns>
     public override string ToString()
     {
-        return $"Color({Red}, {Green}, {Blue}, {Alpha})";
+        string alpha = Alpha.Near(1)
+            ? string.Empty
+            : $", {Alpha}";
+        return $"Color({Red}, {Green}, {Blue}{alpha})";
     }
 
     // -------------------------------------------------------------------------
