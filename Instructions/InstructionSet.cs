@@ -51,6 +51,20 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     }
 
     /// <summary>
+    /// This method returns whether then named property is affected by any of the instructions
+    /// we carry.
+    /// </summary>
+    /// <param name="name">The name of the property to check for.</param>
+    /// <returns><c>true</c>, if we have an instruction that affects the named property, or
+    /// <c>false</c>, if not.</returns>
+    public bool TouchesPropertyNamed(string name)
+    {
+        return _instructions.Any(
+            instruction => instruction is ITouchesProperty touchesProperty &&
+                           touchesProperty.PropertyName == name);
+    }
+
+    /// <summary>
     /// This method is used to run all our instructions.
     /// </summary>
     /// <param name="context">The current render context.</param>

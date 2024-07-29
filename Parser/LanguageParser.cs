@@ -5,6 +5,7 @@ using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Renderer;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -254,5 +255,21 @@ public partial class LanguageParser
         entry.Parser.Dispose();
 
         return entry.FileName;
+    }
+
+    /// <summary>
+    /// This is a helper method for creating a consolidated "command" from tokens.
+    /// </summary>
+    /// <param name="clause">The clause to pull tokens from.</param>
+    /// <returns>The consolidated "command" we found.</returns>
+    private string ToCmd(Clause clause)
+    {
+        string first = clause.Tokens[0].Text;
+        List<string> words = [first];
+
+        if (first == "no")
+            words.Add(clause.Tokens[1].Text);
+
+        return string.Join('.', words);
     }
 }

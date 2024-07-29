@@ -1,4 +1,4 @@
-namespace RayTracer.Instructions;
+namespace RayTracer.Terms;
 
 /// <summary>
 /// This enumeration notes the possible result of trying to coerce a value to a type.

@@ -1,17 +1,11 @@
 // This holds the information for how to render our image for chapter 7.
 
+chapter = 7
+
+include '../default-context.igl'
+
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
 	no shadows
-	info {
-		title 'Chapter 7'
-		author 'J. Stephen Kress'
-		description 'The image that Chapter 7 walks us through to create.'
-		copyright true
-		software __software__
-	}
 }
 
 camera {
@@ -24,21 +18,20 @@ point light {
 	location [-10, 10, -10]
 }
 
+floorMaterial =	material {
+	pigment [1, 0.9, 0.9]
+	specular 0
+}
+
 // Floor
 sphere {
-	material {
-		pigment [1, 0.9, 0.9]
-		specular 0
-	}
+	material floorMaterial
 	scale [10, 0.01, 10]
 }
 
 // Left wall
 sphere {
-	material {
-		pigment [1, 0.9, 0.9]
-		specular 0
-	}
+	material floorMaterial
 	scale [10, 0.01, 10]
 	rotate X 90
 	rotate Y -45
@@ -47,10 +40,7 @@ sphere {
 
 // Right wall
 sphere {
-	material {
-		pigment [1, 0.9, 0.9]
-		specular 0
-	}
+	material floorMaterial
 	scale [10, 0.01, 10]
 	rotate X 90
 	rotate Y 45

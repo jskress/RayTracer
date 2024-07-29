@@ -1,5 +1,6 @@
 using RayTracer.General;
 using RayTracer.Pigments;
+using RayTracer.Terms;
 
 namespace RayTracer.Instructions;
 

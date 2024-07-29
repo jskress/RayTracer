@@ -2,8 +2,9 @@ using Lex.Expressions;
 using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
+using RayTracer.Instructions;
 
-namespace RayTracer.Instructions;
+namespace RayTracer.Terms;
 
 /// <summary>
 /// This class is the base class for all types of terms.

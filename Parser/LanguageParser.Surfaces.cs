@@ -1,8 +1,11 @@
 using Lex.Clauses;
+using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -111,8 +114,14 @@ public partial class LanguageParser
         ObjectInstruction<TObject> instruction = field switch
         {
             "named" => CreateNamedInstruction<TObject>(term),
-            "material" => new SetChildInstruction<TObject, Material>(
-                ParseMaterialClause(), target => target.Material),
+            "material" => BounderToken.OpenBrace.Matches(clause.Tokens[1])
+                ? new SetChildInstruction<TObject, Material>(
+                    ParseMaterialClause(), target => target.Material)
+                : new SetObjectPropertyInstruction<TObject, Material>(
+                    target => target.Material,
+                    new VariableTerm(clause.Tokens[1])),
+            "transform" => new SetObjectPropertyInstruction<TObject, Matrix>(
+                target => target.Transform, new VariableTerm(clause.Tokens[1])),
             "no" => new SetObjectPropertyInstruction<TObject, bool>(
                 target => target.NoShadow, true),
             _ => throw new Exception($"Internal error: unknown {noun} property found: {field}.")
@@ -129,12 +138,26 @@ public partial class LanguageParser
     private void HandleSurfaceTransform<TObject>(ObjectInstructionSet<TObject> instructionSet)
         where TObject : Surface, new()
     {
+        Token token = CurrentParser.PeekNextToken();
         TransformInstructionSet instructions = ParseTransformClause();
-        
-        if (instructions != null)
+
+        if (instructions == null) // We found something we don't understand.
         {
-            instructionSet.AddInstruction(new SetChildInstruction<TObject, Matrix>(
-                instructions, target => target.Transform));
+            throw new TokenException("Expecting a close brace here.")
+            {
+                Token = token
+            };
         }
+
+        if (instructionSet.TouchesPropertyNamed("Transform"))
+        {
+            throw new TokenException("Cannot specify transforms when the transform property is used directly.")
+            {
+                Token = token
+            };
+        }
+
+        instructionSet.AddInstruction(new SetChildInstruction<TObject, Matrix>(
+            instructions, target => target.Transform));
     }
 }
