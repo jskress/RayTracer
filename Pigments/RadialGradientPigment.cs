@@ -4,15 +4,15 @@ using RayTracer.Graphics;
 namespace RayTracer.Pigments;
 
 /// <summary>
-/// This class provides a pigment that returns a color from a gradient between two colors,
-/// based on the X component of a point.
+/// This class provides a pigmentation that returns a color from a gradient between concentric
+/// rings based on a point's position in the X/Z plane.
 /// </summary>
-public class LinearGradientPigment : GradientPigment
+public class RadialGradientPigment : GradientPigment
 {
     private readonly Pigment _firstPigment;
     private readonly Pigment _secondPigment;
 
-    public LinearGradientPigment(Pigment firstPigment, Pigment secondPigment)
+    public RadialGradientPigment(Pigment firstPigment, Pigment secondPigment)
     {
         _firstPigment = firstPigment;
         _secondPigment = secondPigment;
@@ -27,13 +27,14 @@ public class LinearGradientPigment : GradientPigment
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
+        double number = Math.Sqrt(point.X * point.X + point.Z * point.Z);
+        double fraction = number - Math.Floor(number);
         Color firstColor = _firstPigment.GetTransformedColorFor(point);
         Color secondColor = _secondPigment.GetTransformedColorFor(point);
-        double fraction = point.X - Math.Floor(point.X);
 
         if (Bounces)
         {
-            if (Math.Floor(point.X) % 2 == 0)
+            if (Math.Floor(number) % 2 == 0)
                 (firstColor, secondColor) = (secondColor, firstColor);
         }
 
@@ -49,7 +50,7 @@ public class LinearGradientPigment : GradientPigment
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
     public override bool Matches(Pigment other)
     {
-        return other is LinearGradientPigment pigmentation &&
+        return other is RadialGradientPigment pigmentation &&
                _firstPigment.Matches(pigmentation._firstPigment) &&
                _secondPigment.Matches(pigmentation._secondPigment);
     }

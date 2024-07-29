@@ -4,8 +4,8 @@ using RayTracer.Graphics;
 namespace RayTracer.Pigments;
 
 /// <summary>
-/// This class provides a pigmentation that returns one of two colors, based on the X
-/// component of a point.
+/// This class provides a pigment that returns one of two colors, based on the X component
+/// of a point.
 /// </summary>
 public class StripePigment : Pigment
 {
@@ -27,8 +27,8 @@ public class StripePigment : Pigment
     public override Color GetColorFor(Point point)
     {
         return Math.Floor(point.X) % 2 == 0
-            ? _evenPigment.GetColorFor(point)
-            : _oddPigment.GetColorFor(point);
+            ? _evenPigment.GetTransformedColorFor(point)
+            : _oddPigment.GetTransformedColorFor(point);
     }
 
     /// <summary>

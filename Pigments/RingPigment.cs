@@ -27,8 +27,8 @@ public class RingPigment : Pigment
     public override Color GetColorFor(Point point)
     {
         return Math.Floor(Math.Sqrt(point.X * point.X + point.Z * point.Z)) % 2 == 0
-            ? _evenPigment.GetColorFor(point)
-            : _oddPigment.GetColorFor(point);
+            ? _evenPigment.GetTransformedColorFor(point)
+            : _oddPigment.GetTransformedColorFor(point);
     }
 
     /// <summary>

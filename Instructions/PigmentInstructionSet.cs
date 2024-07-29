@@ -15,14 +15,15 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
     /// </summary>
     /// <param name="type">The type of pigment to create.</param>
     /// <param name="transformInstructionSet">The transform instruction set, if any.</param>
+    /// <param name="bouncing">For gradients, this notes whether they should bounce or cycle.</param>
     /// <param name="instructionSets">The set of child pigment instruction sets.</param>
     /// <returns>The created pigment instruction set.</returns>
     public static PigmentInstructionSet CompoundPigmentInstructionSet(
         PigmentType type, TransformInstructionSet transformInstructionSet,
-        params PigmentInstructionSet[] instructionSets)
+        bool bouncing, params PigmentInstructionSet[] instructionSets)
     {
         return new PigmentInstructionSet(
-            type, instructionSets, null, transformInstructionSet);
+            type, bouncing, instructionSets, null, transformInstructionSet);
     }
 
     /// <summary>
@@ -34,20 +35,22 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
     public static PigmentInstructionSet SolidPigmentInstructionSet(Term term)
     {
         return new PigmentInstructionSet(
-            PigmentType.Color, null, new SolidPigmentInstruction(term),
+            PigmentType.Color, false, null, new SolidPigmentInstruction(term),
             null);
     }
 
     private readonly PigmentType _type;
+    private readonly bool _bouncing;
     private readonly SolidPigmentInstruction _solidPigmentInstruction;
     private readonly TransformInstructionSet _transformInstructionSet;
 
     private PigmentInstructionSet(
-        PigmentType type, PigmentInstructionSet[] pigmentInstructionSets,
+        PigmentType type, bool bouncing, PigmentInstructionSet[] pigmentInstructionSets,
         SolidPigmentInstruction solidPigmentInstruction,
         TransformInstructionSet transformInstructionSet)
     {
         _type = type;
+        _bouncing = bouncing;
         _solidPigmentInstruction = solidPigmentInstruction;
         _transformInstructionSet = transformInstructionSet;
 
@@ -83,7 +86,15 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
             PigmentType.Checker => new CheckerPigment(pigments[0], pigments[1]),
             PigmentType.Ring => new RingPigment(pigments[0], pigments[1]),
             PigmentType.Stripe => new StripePigment(pigments[0], pigments[1]),
-            PigmentType.LinearGradient => new LinearGradientPigment(pigments[0], pigments[1]),
+            PigmentType.Blend => new BlendPigment(pigments[0], pigments[1]),
+            PigmentType.LinearGradient => new LinearGradientPigment(pigments[0], pigments[1])
+            {
+                Bounces = _bouncing
+            },
+            PigmentType.RadialGradient => new RadialGradientPigment(pigments[0], pigments[1])
+            {
+                Bounces = _bouncing
+            },
             PigmentType.Color => _solidPigmentInstruction.Target,
             _ => throw new Exception($"Internal error: unknown pigment type: {_type}")
         };

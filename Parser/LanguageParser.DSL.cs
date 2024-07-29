@@ -23,19 +23,19 @@ public partial class LanguageParser
         _operators: predefined
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
-        _keywords: 'ambient', 'angles', 'at', 'are', 'author', 'background', 'bits',
-            'bounding', 'box', 'camera', 'channel', 'checker', 'closed', 'color', 'comment',
-            'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees', 'description',
-            'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file', 'from',
-            'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index', 'info',
-            'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
+        _keywords: 'ambient', 'angles', 'at', 'are', 'author', 'background', 'bits', 'blend',
+            'bouncing', 'bounding', 'box', 'camera', 'channel', 'checker', 'closed', 'color',
+            'comment', 'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees',
+            'description', 'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file',
+            'from', 'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index',
+            'info', 'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
             'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'no', 'null',
             'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
-            'point', 'radians', 'reflective', 'refraction', 'render', 'report', 'ring',
-            'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadows', 'shear', 'shininess',
-            'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
-            'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
-            'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
+            'point', 'radial', 'radians', 'reflective', 'refraction', 'render', 'report',
+            'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadows', 'shear',
+            'shininess', 'smooth', 'software', 'source', 'specular', 'sphere', 'stripe',
+            'title', 'to', 'transform', 'translate', 'transparency', 'triangle', 'true',
+            'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -158,12 +158,17 @@ public partial class LanguageParser
         ]{*}
 
         // Pigment clauses.
+        linearGradientClause:
+        {
+            bouncing{?} > linear > gradient ?? 'Expecting "gradient" to follow "linear" here.'
+        }
+        radialGradientClause:
+        {
+            bouncing{?} > radial > gradient ?? 'Expecting "gradient" to follow "radial" here.'
+        }
         startPigmentPairClause:
         {
-            [
-                checker | ring | stripe |
-                { linear > gradient ?? 'Expecting "gradient" to follow "linear" here.' }
-            ] >
+            [ checker | ring | stripe | blend | linearGradientClause | radialGradientClause ] >
             openBrace ?? 'Expecting an open brace to follow pigment type here.'
         }
         pigmentClause:

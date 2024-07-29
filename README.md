@@ -37,12 +37,12 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 ### To-Dos for Patterns:
 
-- [ ] Add a radial gradient pigment.
+- [X] Add a radial gradient pigment.
 - [X] Update all pigments to use nested color sources.
 - [ ] Add a perturbing noise function to all pigments.
-- [ ] Add a blending pigment.
+- [X] Add a blending pigment.
 - [ ] Add a color map pigment ala POVRay.
-- [ ] Add a cyclical flag to the gradient pigment (start over vs bounce back).
+- [X] Add a cyclical flag to the gradient pigments (start over vs bounce back).
 - [ ] Update the linear gradient to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.
 
