@@ -40,6 +40,16 @@ public partial class LanguageParser
             "serial" => CreateScannerClauseInstruction(clause),
             "parallel" => CreateScannerClauseInstruction(clause),
             "angles" => CreateAnglesClauseInstruction(clause),
+            "no" => clause.Tokens[1].Text switch
+            {
+                "gamma" => new SetContextPropertyInstruction<bool>(
+                    target => target.ApplyGamma, false),
+                "shadows" => new SetContextPropertyInstruction<bool>(
+                    target => target.SuppressAllShadows, true),
+                _ => throw new Exception($"Internal error: unknown 'no' property found: {clause.Tokens[1].Text}.")
+            },
+            "report" => new SetContextPropertyInstruction<bool>(
+                target => target.ReportGamma, true),
             "width" => new SetContextPropertyInstruction<int>(
                 target => target.Width, term,
                 value => value is < 1 or > 16384

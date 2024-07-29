@@ -19,7 +19,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [X] Add a named set of indices of refraction.
 - [ ] Motion blur.
 - [ ] Antialiasing.
-- [ ] Support PNGs.
+- [X] Support PNGs.
 - [ ] Support other image formats.
 
 ### To-Dos for Lights:
@@ -37,23 +37,25 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 ### To-Dos for Patterns:
 
-- [ ] Add a radial gradient color source.
-- [X] Update all color sources to use nested color sources.
-- [ ] Add a perturbing noise function to all color sources.
-- [ ] Add a blending color source.
-- [ ] Add a color map color source ala POVRay.
-- [ ] Add a cyclical flag to the gradient color sources (start over vs bounce back).
+- [ ] Add a radial gradient pigment.
+- [X] Update all pigments to use nested color sources.
+- [ ] Add a perturbing noise function to all pigments.
+- [ ] Add a blending pigment.
+- [ ] Add a color map pigment ala POVRay.
+- [ ] Add a cyclical flag to the gradient pigment (start over vs bounce back).
 - [ ] Update the linear gradient to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.
 
 ### To-Dos for surface rendering:
 
+- [X] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
+      does not have a shadow cast on it.
 - [ ] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
       does not cast a shadow.
 
 ### To-Dos for the render file language:
 
-- [ ] Move to the Lex port, when available.
+- [X] Move to the Lex port, when available.
 - [ ] Support loops for object graph construction.
 - [ ] Support variables for easier surface reuse, among other things.
 

@@ -113,6 +113,8 @@ public partial class LanguageParser
             "named" => CreateNamedInstruction<TObject>(term),
             "material" => new SetChildInstruction<TObject, Material>(
                 ParseMaterialClause(), target => target.Material),
+            "no" => new SetObjectPropertyInstruction<TObject, bool>(
+                target => target.NoShadow, true),
             _ => throw new Exception($"Internal error: unknown {noun} property found: {field}.")
         };
 

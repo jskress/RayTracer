@@ -1,4 +1,5 @@
 using RayTracer.Core;
+using RayTracer.General;
 using RayTracer.Geometry;
 
 namespace RayTracer.Instructions;
@@ -23,12 +24,26 @@ public class PointLightInstructionSet : ObjectInstructionSet<PointLight>;
 /// </summary>
 public class MaterialInstructionSet : ObjectInstructionSet<Material>;
 
+public class SurfaceInstructionSet<TObject> : ObjectInstructionSet<TObject>
+    where TObject : Surface, new()
+{
+    /// <summary>
+    /// This method may be used by subclasses to perform any initialization on our created
+    /// object that is needed.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    protected override void InitObject(RenderContext context)
+    {
+        CreatedObject.NoShadow = context.SuppressAllShadows;
+    }
+}
+
 /// <summary>
 /// This class is used to create planes.
 /// </summary>
-public class PlaneInstructionSet : ObjectInstructionSet<Plane>;
+public class PlaneInstructionSet : SurfaceInstructionSet<Plane>;
 
 /// <summary>
 /// This class is used to create spheres.
 /// </summary>
-public class SphereInstructionSet : ObjectInstructionSet<Sphere>;
+public class SphereInstructionSet : SurfaceInstructionSet<Sphere>;

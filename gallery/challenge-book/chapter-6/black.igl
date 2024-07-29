@@ -1,0 +1,32 @@
+// This holds the information for how to render our image for chapter 6.
+
+context {
+	parallel pixel scanner
+	angles are degrees
+	no gamma
+	info {
+		title 'Chapter 6'
+		author 'J. Stephen Kress'
+		description 'The image that Chapter 6 walks us through to create.'
+		copyright true
+		software __software__
+	}
+}
+
+background Black
+
+camera {
+	location [0, 1.5, -5]
+	look at [0, 0, 0]
+	field of view 30
+}
+
+point light {
+	location [-10, 10, -10]
+}
+
+sphere {
+	material {
+		pigment [1, 0.2, 1]
+	}
+}

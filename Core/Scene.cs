@@ -82,7 +82,8 @@ public class Scene : NamedThing
     {
         return Lights.Aggregate(Colors.Black, (color, light) =>
         {
-            bool isInShadow = IsInShadow(light, intersection.OverPoint);
+            bool isInShadow = !intersection.Surface.NoShadow &&
+                              IsInShadow(light, intersection.OverPoint);
             Color surfaceColor = light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal,
                 intersection.Surface, isInShadow);

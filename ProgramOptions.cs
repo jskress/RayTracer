@@ -181,6 +181,10 @@ public class ProgramOptions
         HelpText = "If specified, the gamma correction value will be included in the image output file, if supported.")]
     public bool? ReportGamma { get; set; }
 
+    [Option("no-shadows", Required = false,
+        HelpText = "Disable shadow rendering on all objects.")]
+    public bool? NoShadows { get; set; }
+
     [Option("grayscale", Required = false,
         HelpText = "Grayscale the image when written to image file.")]
     public bool Grayscale { get; set; }

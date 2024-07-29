@@ -19,6 +19,11 @@ public abstract class Surface : NamedThing
     public Material Material { get; set; } = new ();
 
     /// <summary>
+    /// This property suppresses shadow detection on this object.
+    /// </summary>
+    public bool NoShadow { get; set; }
+
+    /// <summary>
     /// This property holds the transform for the surface for converting from world to
     /// surface space.
     /// </summary>

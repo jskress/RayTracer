@@ -3,7 +3,7 @@
 context {
 	parallel pixel scanner
 	angles are degrees
-	gamma 1
+	no gamma
 	info {
 		title 'Chapter 6'
 		author 'J. Stephen Kress'

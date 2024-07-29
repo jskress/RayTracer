@@ -116,7 +116,7 @@ public class TransformInstruction : InstructionSet<Matrix>
             TransformType.Scale when doubles.Length > 0 =>
                 Transforms.Scale(doubles[0]),
             TransformType.Scale when tuples.Length > 0 =>
-                Transforms.Translate(tuples[0].X, tuples[0].Y, tuples[0].Z),
+                Transforms.Scale(tuples[0].X, tuples[0].Y, tuples[0].Z),
             // Rotations
             TransformType.Rotate when _axis == TransformAxis.X =>
                 Transforms.RotateAroundX(doubles[0], context.AnglesAreRadians),

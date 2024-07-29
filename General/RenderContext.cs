@@ -57,6 +57,11 @@ public class RenderContext
     public bool ReportGamma { get; set; }
 
     /// <summary>
+    /// This property is used to suppress all shadow rendering.
+    /// </summary>
+    public bool SuppressAllShadows { get; set; }
+
+    /// <summary>
     /// This property holds the bits per color channel to use when writing image files.
     /// </summary>
     public int BitsPerChannel { get; set; } = 8;
@@ -100,6 +105,7 @@ public class RenderContext
         Gamma = options.Gamma ?? Gamma;
         ApplyGamma = !options.NoGamma ?? ApplyGamma;
         ReportGamma = options.ReportGamma ?? ReportGamma;
+        SuppressAllShadows = options.NoShadows ?? SuppressAllShadows;
         BitsPerChannel = options.BitsPerChannel;
         Grayscale = options.Grayscale;
         Ticks = seconds * 1_000 + fraction;

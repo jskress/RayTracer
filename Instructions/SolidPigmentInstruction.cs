@@ -7,7 +7,7 @@ namespace RayTracer.Instructions;
 /// <summary>
 /// This class represents an instruction for constructing a solid color pigment.
 /// </summary>
-public class SolidPigmentInstruction : ObjectInstruction<SolidPigment>
+public class SolidPigmentInstruction : ObjectInstruction<Pigment>
 {
     private readonly Term _term;
 
@@ -23,8 +23,10 @@ public class SolidPigmentInstruction : ObjectInstruction<SolidPigment>
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        Color color = (Color) _term.GetValue(variables, typeof(Color));
+        object result = _term.GetValue(variables, typeof(Color), typeof(Pigment));
 
-        Target = new SolidPigment(color);
+        Target = result is Color color
+            ? new SolidPigment(color)
+            : (Pigment) result;
     }
 }

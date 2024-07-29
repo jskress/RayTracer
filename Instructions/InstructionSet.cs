@@ -59,6 +59,8 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     {
         CreatedObject = new TObject();
 
+        InitObject(context);
+
         foreach (ObjectInstruction<TObject> instruction in _instructions)
         {
             instruction.Target = CreatedObject;
@@ -66,6 +68,13 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
             instruction.Execute(context, variables);
         }
     }
+
+    /// <summary>
+    /// This method may be used by subclasses to perform any initialization on our created
+    /// object that is needed.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    protected virtual void InitObject(RenderContext context) {}
 }
 
 /// <summary>

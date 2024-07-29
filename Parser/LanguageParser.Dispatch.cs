@@ -38,7 +38,7 @@ public partial class LanguageParser
 
         if (tag.StartsWith("HandleStart") && _blockStartHandlers.TryGetValue(tag, out Action action))
             action();
-        else if (tag.StartsWith("HandleStart") && _clauseHandlers.TryGetValue(tag, out Action<Clause> clauseAction))
+        else if (_clauseHandlers.TryGetValue(tag, out Action<Clause> clauseAction))
             clauseAction(clause);
         else
             throw new Exception($"No handler registered for the {tag} tag.");

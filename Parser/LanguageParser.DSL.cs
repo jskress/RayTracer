@@ -29,11 +29,11 @@ public partial class LanguageParser
             'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file', 'from',
             'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index', 'info',
             'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
-            'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'null',
+            'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'no', 'null',
             'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
-            'point', 'radians', 'reflective', 'refraction', 'render', 'ring', 'rotate',
-            'scale', 'scanner', 'scene', 'serial', 'shear', 'shininess', 'smooth',
-            'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
+            'point', 'radians', 'reflective', 'refraction', 'render', 'report', 'ring',
+            'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadows', 'shear', 'shininess',
+            'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
             'translate', 'transparency', 'triangle', 'true', 'union', 'up', 'vector',
             'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
@@ -89,6 +89,11 @@ public partial class LanguageParser
             angles > are ?? 'Expecting "are" to follow "angles" here.' >
             [ degrees | radians ] ?? 'Expecting "degrees" or "radians" to follow "are" here.'
         }
+        settingOffClause:
+        {
+            no > [ gamma | shadows ] ?? 'Expecting "gamma" or "shadows" to follow "no" here.'
+        }
+        reportGammaClause: { report > gamma ?? 'Expecting "gamma" to follow "report" here.' }
         contextPropertyClause:
         {
             [ width | height | gamma ] ?? 'Expecting a context block item here.' >
@@ -96,7 +101,8 @@ public partial class LanguageParser
         }
         contextEntryClause:
         [
-            startInfoClause | scannerClause | anglesClause | contextPropertyClause
+            startInfoClause | scannerClause | anglesClause | settingOffClause |
+            contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // Camera clauses.
@@ -203,7 +209,11 @@ public partial class LanguageParser
         }
         
         // Common surface clause.
-        surfaceEntryClause: [ namedClause | startMaterialClause ]
+        noShadowsClause:
+        {
+            no > shadows ?? 'Expecting "shadows" to follow "no" here.'
+        }
+        surfaceEntryClause: [ namedClause | startMaterialClause | noShadowsClause ]
 
         // Scene clauses.
         startSceneClause:
