@@ -49,8 +49,6 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### To-Dos for surface rendering:
 
 - [X] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
-      does not have a shadow cast on it.
-- [ ] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
       does not cast a shadow.
 
 ### To-Dos for the render file language:

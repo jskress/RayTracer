@@ -1,15 +1,11 @@
 // This holds the information for how to render our image for chapter 11 (new language).
 
+chapter = 11
+
+include '../default-context.igl'
+
 context {
-	parallel pixel scanner
-	angles are degrees
-	info {
-		title 'Chapter 11'
-		author 'J. Stephen Kress'
-		description 'The image that Chapter 11 walks us through to create.'
-		copyright true
-		software __software__
-	}
+	apply gamma
 }
 
 camera {
@@ -34,7 +30,10 @@ sphere {
 	material {
 		pigment Black
 		reflective 0.9
-		transparency 0.9
+		transparency 1
+		diffuse 0.2
+		specular 1
+		shininess 300
 		index of refraction Glass
 	}
 	translate [-0.5, 1, 0.5]

@@ -1,0 +1,84 @@
+// This holds the information for how to render our image for chapter 11 (new language).
+
+// The "lake" here ends up looking like fog.  The horizontal banding you can see is
+// actually a reflection of the background gradient.  You also get an interesting effect
+// if you remove the "no shadow" from the water.
+
+chapter = 11
+
+include '../default-context.igl'
+
+context {
+	apply gamma
+}
+
+camera {
+	location [0, 1.5, -5]
+	look at [0, 1, 0]
+	field of view 60
+}
+
+point light {
+	location [-10, 10, -10]
+}
+
+background bouncing linear gradient {
+	DeepSkyBlue, LightSkyBlue
+	scale 10
+	rotate Y 90
+}
+
+// Floor
+plane {
+	material {
+		pigment SandyBrown
+	}
+	translate Y -2
+}
+
+rockMaterial = material {
+	pigment DarkSlateGray
+	specular 0
+}
+
+// Rocks
+sphere {
+	material rockMaterial
+	scale [1, 0.25, 0.45]
+	rotate Y 12
+	translate [0, -1.75, 4]
+}
+
+sphere {
+	material rockMaterial
+	scale [1, 0.25, 0.45]
+	rotate Y -45
+	translate [-2, -1.75, 6]
+}
+
+sphere {
+	material rockMaterial
+	scale [1, 0.25, 0.45]
+	rotate Y -50
+	translate [4, -1.75, 5]
+}
+
+sphere {
+	material rockMaterial
+	scale [1, 0.25, 0.45]
+	rotate Y 85
+	translate [2, -1.75, 6.5]
+}
+
+// Water
+plane {
+	material {
+		pigment Black
+		reflective 0.9
+		transparency 0.9
+		diffuse 0.4
+		shininess 300
+		index of refraction Water
+	}
+	no shadow
+}

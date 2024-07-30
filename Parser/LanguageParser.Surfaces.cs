@@ -108,7 +108,7 @@ public partial class LanguageParser
         Clause clause, ObjectInstructionSet<TObject> instructionSet, string noun)
         where TObject : Surface, new()
     {
-        string field = clause.Tokens[0].Text;
+        string field = ToCmd(clause);
         Term term = (Term) clause.Expressions.FirstOrDefault();
 
         ObjectInstruction<TObject> instruction = field switch
@@ -122,7 +122,7 @@ public partial class LanguageParser
                     new VariableTerm(clause.Tokens[1])),
             "transform" => new SetObjectPropertyInstruction<TObject, Matrix>(
                 target => target.Transform, new VariableTerm(clause.Tokens[1])),
-            "no" => new SetObjectPropertyInstruction<TObject, bool>(
+            "no.shadow" => new SetObjectPropertyInstruction<TObject, bool>(
                 target => target.NoShadow, true),
             _ => throw new Exception($"Internal error: unknown {noun} property found: {field}.")
         };

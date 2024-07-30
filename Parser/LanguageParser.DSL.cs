@@ -23,19 +23,20 @@ public partial class LanguageParser
         _operators: predefined
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
-        _keywords: 'ambient', 'angles', 'at', 'are', 'author', 'background', 'bits', 'blend',
-            'bouncing', 'bounding', 'box', 'camera', 'channel', 'checker', 'closed', 'color',
-            'comment', 'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees',
+        _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background', 'bits',
+            'blend', 'bouncing', 'bounding', 'box', 'camera', 'channel', 'checker', 'closed',
+            'color', 'comment', 'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees',
             'description', 'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file',
             'from', 'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index',
             'info', 'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
             'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'no', 'null',
             'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
             'point', 'radial', 'radians', 'reflective', 'refraction', 'render', 'report',
-            'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadows', 'shear',
-            'shininess', 'smooth', 'software', 'source', 'specular', 'sphere', 'stripe',
-            'title', 'to', 'transform', 'translate', 'transparency', 'triangle', 'true',
-            'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
+            'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows',
+            'shear', 'shininess', 'smooth', 'software', 'source', 'specular', 'sphere',
+            'stripe', 'title', 'to', 'transform', 'translate', 'transparency', 'triangle',
+            'true', 'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y',
+            'Z'
 
         _expressions:
         {
@@ -88,6 +89,10 @@ public partial class LanguageParser
             angles > are ?? 'Expecting "are" to follow "angles" here.' >
             [ degrees | radians ] ?? 'Expecting "degrees" or "radians" to follow "are" here.'
         }
+        settingOnClause:
+        {
+            apply > gamma ?? 'Expecting "gamma" to follow "apply" here.'
+        }
         settingOffClause:
         {
             no > [ gamma | shadows ] ?? 'Expecting "gamma" or "shadows" to follow "no" here.'
@@ -100,8 +105,8 @@ public partial class LanguageParser
         }
         contextEntryClause:
         [
-            startInfoClause | scannerClause | anglesClause | settingOffClause |
-            contextPropertyClause
+            startInfoClause | scannerClause | anglesClause | settingOnClause |
+            settingOffClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // Camera clauses.
@@ -213,9 +218,9 @@ public partial class LanguageParser
         }
         
         // Common surface clause.
-        noShadowsClause:
+        noShadowClause:
         {
-            no > shadows ?? 'Expecting "shadows" to follow "no" here.'
+            no > shadow ?? 'Expecting "shadow" to follow "no" here.'
         }
         surfaceTransformClause:
         {
@@ -223,7 +228,7 @@ public partial class LanguageParser
         }
         surfaceEntryClause:
         [
-            namedClause | startMaterialClause | surfaceTransformClause | noShadowsClause
+            namedClause | startMaterialClause | surfaceTransformClause | noShadowClause
         ]
 
         // Scene clauses.
