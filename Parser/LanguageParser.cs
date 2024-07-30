@@ -262,12 +262,12 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause to pull tokens from.</param>
     /// <returns>The consolidated "command" we found.</returns>
-    private string ToCmd(Clause clause)
+    private static string ToCmd(Clause clause)
     {
         string first = clause.Tokens[0].Text;
         List<string> words = [first];
 
-        if (first == "no")
+        if (first is "apply" or "no")
             words.Add(clause.Tokens[1].Text);
 
         return string.Join('.', words);

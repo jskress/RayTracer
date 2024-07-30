@@ -25,7 +25,7 @@ public partial class LanguageParser
     /// <param name="clause">The clause that represents the entry.</param>
     private void HandleContextClauseEntry(Clause clause)
     {
-        string field = clause.Tokens[0].Text;
+        string field = ToCmd(clause);
 
         if (field == "info")
         {
@@ -41,14 +41,12 @@ public partial class LanguageParser
             "serial" => CreateScannerClauseInstruction(clause),
             "parallel" => CreateScannerClauseInstruction(clause),
             "angles" => CreateAnglesClauseInstruction(clause),
-            "no" => clause.Tokens[1].Text switch
-            {
-                "gamma" => new SetContextPropertyInstruction<bool>(
-                    target => target.ApplyGamma, false),
-                "shadows" => new SetContextPropertyInstruction<bool>(
-                    target => target.SuppressAllShadows, true),
-                _ => throw new Exception($"Internal error: unknown 'no' property found: {clause.Tokens[1].Text}.")
-            },
+            "apply.gamma" => new SetContextPropertyInstruction<bool>(
+                target => target.ApplyGamma, true),
+            "no.gamma" => new SetContextPropertyInstruction<bool>(
+                target => target.ApplyGamma, false),
+            "no.shadows" => new SetContextPropertyInstruction<bool>(
+                target => target.SuppressAllShadows, true),
             "report" => new SetContextPropertyInstruction<bool>(
                 target => target.ReportGamma, true),
             "width" => new SetContextPropertyInstruction<int>(

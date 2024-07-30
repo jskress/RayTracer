@@ -82,8 +82,7 @@ public class Scene : NamedThing
     {
         return Lights.Aggregate(Colors.Black, (color, light) =>
         {
-            bool isInShadow = !intersection.Surface.NoShadow &&
-                              IsInShadow(light, intersection.OverPoint);
+            bool isInShadow = IsInShadow(light, intersection.OverPoint);
             Color surfaceColor = light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal,
                 intersection.Surface, isInShadow);
@@ -118,7 +117,9 @@ public class Scene : NamedThing
         Vector vector = light.Location - point;
         double distance = vector.Magnitude;
         Ray ray = new (point, vector.Unit);
-        List<Intersection> intersections = Intersect(ray);
+        List<Intersection> intersections = Intersect(ray)
+            .Where(intersection => !intersection.Surface.NoShadow)
+            .ToList();
         Intersection hit = intersections.Hit();
 
         return hit != null && hit.Distance < distance;
