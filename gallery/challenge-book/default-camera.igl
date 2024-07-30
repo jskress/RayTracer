@@ -1,0 +1,7 @@
+// The default camera we should use for all our Challenge book images.
+
+camera {
+	location [0, 1.5, -5]
+	look at [0, 1, 0]
+	field of view 60
+}

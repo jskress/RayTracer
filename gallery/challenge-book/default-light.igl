@@ -1,0 +1,5 @@
+// The default light we should use for all our Challenge book images.
+
+point light {
+	location [-10, 10, -10]
+}

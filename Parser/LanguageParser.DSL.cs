@@ -23,20 +23,20 @@ public partial class LanguageParser
         _operators: predefined
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
-        _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background', 'bits',
-            'blend', 'bouncing', 'bounding', 'box', 'camera', 'channel', 'checker', 'closed',
-            'color', 'comment', 'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees',
-            'description', 'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file',
-            'from', 'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index',
-            'info', 'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
-            'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'no', 'null',
-            'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
-            'point', 'radial', 'radians', 'reflective', 'refraction', 'render', 'report',
-            'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows',
-            'shear', 'shininess', 'smooth', 'software', 'source', 'specular', 'sphere',
-            'stripe', 'title', 'to', 'transform', 'translate', 'transparency', 'triangle',
-            'true', 'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y',
-            'Z'
+        _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background',
+            'bits', 'blend', 'bouncing', 'bounding', 'camera', 'channel', 'checker',
+            'closed', 'color', 'comment', 'conic', 'context', 'copyright', 'cube',
+            'cylinder', 'degrees', 'description', 'difference', 'diffuse', 'disclaimer',
+            'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
+            'height', 'include', 'index', 'info', 'intersection', 'ior', 'light', 'line',
+            'linear', 'location', 'look', 'material', 'matrix', 'max', 'maximum', 'min',
+            'minimum', 'named', 'no', 'null', 'object', 'of', 'open', 'parallel', 'per',
+            'pigment', 'pixel', 'plane', 'point', 'radial', 'radians', 'reflective',
+            'refraction', 'render', 'report', 'ring', 'rotate', 'scale', 'scanner',
+            'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess', 'smooth',
+            'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
+            'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
+            'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -217,6 +217,12 @@ public partial class LanguageParser
             sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
         }
         
+        // Cube clause.
+        startCubeClause:
+        {
+            cube > openBrace ?? 'Expecting an open brace to follow "cube" here.'
+        }
+        
         // Common surface clause.
         noShadowClause:
         {
@@ -269,6 +275,7 @@ public partial class LanguageParser
             startPointLightClause => 'HandleStartPointLightClause' |
             startPlaneClause      => 'HandleStartPlaneClause' |
             startSphereClause     => 'HandleStartSphereClause' |
+            startCubeClause       => 'HandleStartCubeClause' |
             background            => 'HandleBackgroundClause' |
             renderClause          => 'HandleRenderClause' |
             setThingToVariable    => 'HandleSetThingToVariableClause' |

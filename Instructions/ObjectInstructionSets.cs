@@ -47,3 +47,8 @@ public class PlaneInstructionSet : SurfaceInstructionSet<Plane>;
 /// This class is used to create spheres.
 /// </summary>
 public class SphereInstructionSet : SurfaceInstructionSet<Sphere>;
+
+/// <summary>
+/// This class is used to create cubes.
+/// </summary>
+public class CubeInstructionSet : SurfaceInstructionSet<Cube>;
