@@ -2,17 +2,7 @@
 
 chapter = 10
 
-include '../default-context.igl'
-
-camera {
-	location [0, 1.5, -5]
-	look at [0, 1, 0]
-	field of view 60
-}
-
-point light {
-	location [-10, 10, -10]
-}
+include '../defaults.igl'
 
 // Floor
 plane {

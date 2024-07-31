@@ -1,0 +1,6 @@
+// The basic context and default camera and light we should use for all our Challenge book
+// images.
+
+include 'default-context.igl'
+include 'default-camera.igl'
+include 'default-light.igl'

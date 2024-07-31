@@ -47,3 +47,18 @@ public class PlaneInstructionSet : SurfaceInstructionSet<Plane>;
 /// This class is used to create spheres.
 /// </summary>
 public class SphereInstructionSet : SurfaceInstructionSet<Sphere>;
+
+/// <summary>
+/// This class is used to create cubes.
+/// </summary>
+public class CubeInstructionSet : SurfaceInstructionSet<Cube>;
+
+/// <summary>
+/// This class is used to create cylinders.  Declared for completeness, though not used.
+/// </summary>
+public class CylinderInstructionSet : SurfaceInstructionSet<Cylinder>;
+
+/// <summary>
+/// This class is used to create conics.  Declared for completeness, though not used.
+/// </summary>
+public class ConicInstructionSet : SurfaceInstructionSet<Conic>;

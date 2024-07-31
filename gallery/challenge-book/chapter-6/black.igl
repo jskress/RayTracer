@@ -3,6 +3,7 @@
 chapter = 6
 
 include '../default-context.igl'
+include '../default-light.igl'
 
 background Black
 
@@ -10,10 +11,6 @@ camera {
 	location [0, 1.5, -5]
 	look at [0, 0, 0]
 	field of view 30
-}
-
-point light {
-	location [-10, 10, -10]
 }
 
 sphere {

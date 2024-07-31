@@ -23,20 +23,20 @@ public partial class LanguageParser
         _operators: predefined
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
-        _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background', 'bits',
-            'blend', 'bouncing', 'bounding', 'box', 'camera', 'channel', 'checker', 'closed',
-            'color', 'comment', 'conic', 'context', 'copyright', 'cube', 'cylinder', 'degrees',
-            'description', 'difference', 'diffuse', 'disclaimer', 'false', 'field', 'file',
-            'from', 'gamma', 'gradient', 'grayscale', 'group', 'height', 'include', 'index',
-            'info', 'intersection', 'ior', 'light', 'line', 'linear', 'location', 'look',
-            'material', 'matrix', 'max', 'maximum', 'min', 'minimum', 'named', 'no', 'null',
-            'object', 'of', 'open', 'parallel', 'per', 'pigment', 'pixel', 'plane',
-            'point', 'radial', 'radians', 'reflective', 'refraction', 'render', 'report',
-            'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows',
-            'shear', 'shininess', 'smooth', 'software', 'source', 'specular', 'sphere',
-            'stripe', 'title', 'to', 'transform', 'translate', 'transparency', 'triangle',
-            'true', 'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y',
-            'Z'
+        _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background',
+            'bits', 'blend', 'bouncing', 'bounding', 'camera', 'channel', 'checker',
+            'closed', 'color', 'comment', 'conic', 'context', 'copyright', 'cube',
+            'cylinder', 'degrees', 'description', 'difference', 'diffuse', 'disclaimer',
+            'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
+            'height', 'include', 'index', 'info', 'intersection', 'ior', 'light', 'line',
+            'linear', 'location', 'look', 'material', 'matrix', 'max', 'maximum', 'min',
+            'minimum', 'named', 'no', 'null', 'object', 'of', 'open', 'parallel', 'per',
+            'pigment', 'pixel', 'plane', 'point', 'radial', 'radians', 'reflective',
+            'refraction', 'render', 'report', 'ring', 'rotate', 'scale', 'scanner',
+            'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess', 'smooth',
+            'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
+            'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
+            'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -205,19 +205,7 @@ public partial class LanguageParser
             pigment | materialValueClause | materialIorClause
         ] ?? 'Expecting a material property here.'
 
-        // Plane clause.
-        startPlaneClause:
-        {
-            plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
-        }
-        
-        // Sphere clause.
-        startSphereClause:
-        {
-            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
-        }
-        
-        // Common surface clause.
+        // Common surface clauses.
         noShadowClause:
         {
             no > shadow ?? 'Expecting "shadow" to follow "no" here.'
@@ -229,6 +217,35 @@ public partial class LanguageParser
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause
+        ]
+        
+        // Plane clause.
+        startPlaneClause:
+        {
+            plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
+        }
+        
+        // Sphere clause.
+        startSphereClause:
+        {
+            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
+        }
+
+        // Cube clause.
+        startCubeClause:
+        {
+            cube > openBrace ?? 'Expecting an open brace to follow "cube" here.'
+        }
+        
+        // Circular surface clauses.
+        startCircularSurfaceClause:
+        {
+            open{?} > [ cylinder | conic ] > openBrace ?? 'Expecting an open brace here.'
+        }
+        circularSurfaceEntryClause:
+        [
+            { [ min | max ] > Y ?? 'Expecting "X" or "Y" to follow "max" here.' > _expression } |
+            surfaceEntryClause
         ]
 
         // Scene clauses.
@@ -263,16 +280,18 @@ public partial class LanguageParser
 
         // Top-level clause.
         [
-            startContextClause    => 'HandleStartContextClause' |
-            startSceneClause      => 'HandleStartSceneClause' |
-            startCameraClause     => 'HandleStartCameraClause' |
-            startPointLightClause => 'HandleStartPointLightClause' |
-            startPlaneClause      => 'HandleStartPlaneClause' |
-            startSphereClause     => 'HandleStartSphereClause' |
-            background            => 'HandleBackgroundClause' |
-            renderClause          => 'HandleRenderClause' |
-            setThingToVariable    => 'HandleSetThingToVariableClause' |
-            setVariableClause     => 'HandleSetVariableClause'
+            startContextClause         => 'HandleStartContextClause' |
+            startSceneClause           => 'HandleStartSceneClause' |
+            startCameraClause          => 'HandleStartCameraClause' |
+            startPointLightClause      => 'HandleStartPointLightClause' |
+            startPlaneClause           => 'HandleStartPlaneClause' |
+            startSphereClause          => 'HandleStartSphereClause' |
+            startCubeClause            => 'HandleStartCubeClause' |
+            startCircularSurfaceClause => 'HandleStartCircularSurfaceClause' |
+            background                 => 'HandleBackgroundClause' |
+            renderClause               => 'HandleRenderClause' |
+            setThingToVariable         => 'HandleSetThingToVariableClause' |
+            setVariableClause          => 'HandleSetVariableClause'
         ] ?? 'Unsupported object type found.'
         """";
 
