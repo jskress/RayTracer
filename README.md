@@ -43,7 +43,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [X] Add a blending pigment.
 - [ ] Add a color map pigment ala POVRay.
 - [X] Add a cyclical flag to the gradient pigments (start over vs bounce back).
-- [ ] Update the linear gradient to do multiples, similar to how most graphics engines
+- [ ] Update the gradients to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.
 
 ### To-Dos for surface rendering:

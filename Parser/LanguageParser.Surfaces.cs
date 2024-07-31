@@ -3,6 +3,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
 using RayTracer.Terms;
@@ -138,6 +139,120 @@ public partial class LanguageParser
             HandleSurfaceTransform(instructionSet);
         else
             HandleSurfaceClause(clause, instructionSet, "cube");
+    }
+
+    /// <summary>
+    /// This method is used to handle the beginning of a circular surface block.
+    /// </summary>
+    private void HandleStartCircularSurfaceClause(Clause clause)
+    {
+        bool open = clause.Tokens[0].Text == "open";
+
+        if (open)
+            clause.Tokens.RemoveFirst();
+
+        string text = clause.Tokens[0].Text;
+
+        VerifyDefaultSceneUsage(clause, $"{char.ToUpper(text[0])}{text[1..]}");
+
+        switch (text)
+        {
+            case "cylinder":
+            {
+                ObjectInstructionSet<Cylinder> cylinderInstructionSet =
+                    ParseCircularSurfaceClause<Cylinder>(open);
+                _ = new TopLevelObjectInstruction<Cylinder>(_context.InstructionContext, cylinderInstructionSet);
+                break;
+            }
+            case "conic":
+            {
+                ObjectInstructionSet<Conic> conicInstructionSet =
+                    ParseCircularSurfaceClause<Conic>(open);
+                _ = new TopLevelObjectInstruction<Conic>(_context.InstructionContext, conicInstructionSet);
+                break;
+            }
+            default:
+                throw new TokenException($"Internal error: unknown circular surface type: {text}.")
+                {
+                    Token = clause.Tokens[0]
+                };
+        }
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a circularSurface block.
+    /// </summary>
+    private ObjectInstructionSet<TObject> ParseCircularSurfaceClause<TObject>(bool open)
+        where TObject : CircularSurface, new()
+    {
+        ObjectInstructionSet<TObject> instructionSet = new ();
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("circularSurfaceEntryClause", HandleCircularSurfaceEntryClause);
+
+        _context.PopInstructionSet();
+
+        if (open)
+        {
+            instructionSet.AddInstruction(new SetObjectPropertyInstruction<TObject, bool>(
+                target => target.Closed, false));
+        }
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a circularSurface block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleCircularSurfaceEntryClause(Clause clause)
+    {
+        IInstructionSet instructionSet = _context.CurrentSet;
+
+        switch (instructionSet)
+        {
+            case ObjectInstructionSet<Cylinder> cylinderInstructionSet:
+                HandleCircularSurfaceEntryClause(cylinderInstructionSet, clause);
+                break;
+            case ObjectInstructionSet<Conic> conicInstructionSet:
+                HandleCircularSurfaceEntryClause(conicInstructionSet, clause);
+                break;
+            default:
+                throw new Exception("Internal error: unknown circular surface instruction set type.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a circularSurface block.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set to work with.</param>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleCircularSurfaceEntryClause<TObject>(
+        ObjectInstructionSet<TObject> instructionSet, Clause clause)
+        where TObject : CircularSurface, new()
+    {
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+        {
+            string text = clause.Tokens[0].Text;
+
+            switch (text)
+            {
+                case "min":
+                    instructionSet.AddInstruction(new SetObjectPropertyInstruction<TObject, double>(
+                        target => target.MinimumY, (Term) clause.Expressions[0]));
+                    break;
+                case "max":
+                    instructionSet.AddInstruction(new SetObjectPropertyInstruction<TObject, double>(
+                        target => target.MaximumY, (Term) clause.Expressions[0]));
+                    break;
+                default:
+                    HandleSurfaceClause(clause, instructionSet, "circularSurface");
+                    break;
+            }
+        }
     }
 
     /// <summary>

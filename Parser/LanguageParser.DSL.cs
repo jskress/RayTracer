@@ -205,25 +205,7 @@ public partial class LanguageParser
             pigment | materialValueClause | materialIorClause
         ] ?? 'Expecting a material property here.'
 
-        // Plane clause.
-        startPlaneClause:
-        {
-            plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
-        }
-        
-        // Sphere clause.
-        startSphereClause:
-        {
-            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
-        }
-        
-        // Cube clause.
-        startCubeClause:
-        {
-            cube > openBrace ?? 'Expecting an open brace to follow "cube" here.'
-        }
-        
-        // Common surface clause.
+        // Common surface clauses.
         noShadowClause:
         {
             no > shadow ?? 'Expecting "shadow" to follow "no" here.'
@@ -235,6 +217,35 @@ public partial class LanguageParser
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause
+        ]
+        
+        // Plane clause.
+        startPlaneClause:
+        {
+            plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
+        }
+        
+        // Sphere clause.
+        startSphereClause:
+        {
+            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
+        }
+
+        // Cube clause.
+        startCubeClause:
+        {
+            cube > openBrace ?? 'Expecting an open brace to follow "cube" here.'
+        }
+        
+        // Circular surface clauses.
+        startCircularSurfaceClause:
+        {
+            open{?} > [ cylinder | conic ] > openBrace ?? 'Expecting an open brace here.'
+        }
+        circularSurfaceEntryClause:
+        [
+            { [ min | max ] > Y ?? 'Expecting "X" or "Y" to follow "max" here.' > _expression } |
+            surfaceEntryClause
         ]
 
         // Scene clauses.
@@ -269,17 +280,18 @@ public partial class LanguageParser
 
         // Top-level clause.
         [
-            startContextClause    => 'HandleStartContextClause' |
-            startSceneClause      => 'HandleStartSceneClause' |
-            startCameraClause     => 'HandleStartCameraClause' |
-            startPointLightClause => 'HandleStartPointLightClause' |
-            startPlaneClause      => 'HandleStartPlaneClause' |
-            startSphereClause     => 'HandleStartSphereClause' |
-            startCubeClause       => 'HandleStartCubeClause' |
-            background            => 'HandleBackgroundClause' |
-            renderClause          => 'HandleRenderClause' |
-            setThingToVariable    => 'HandleSetThingToVariableClause' |
-            setVariableClause     => 'HandleSetVariableClause'
+            startContextClause         => 'HandleStartContextClause' |
+            startSceneClause           => 'HandleStartSceneClause' |
+            startCameraClause          => 'HandleStartCameraClause' |
+            startPointLightClause      => 'HandleStartPointLightClause' |
+            startPlaneClause           => 'HandleStartPlaneClause' |
+            startSphereClause          => 'HandleStartSphereClause' |
+            startCubeClause            => 'HandleStartCubeClause' |
+            startCircularSurfaceClause => 'HandleStartCircularSurfaceClause' |
+            background                 => 'HandleBackgroundClause' |
+            renderClause               => 'HandleRenderClause' |
+            setThingToVariable         => 'HandleSetThingToVariableClause' |
+            setVariableClause          => 'HandleSetVariableClause'
         ] ?? 'Unsupported object type found.'
         """";
 
