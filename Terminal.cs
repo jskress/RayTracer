@@ -1,3 +1,4 @@
+using Lex.Parser;
 using RayTracer.General;
 
 namespace RayTracer;
@@ -28,5 +29,31 @@ public static class Terminal
             if (newLine)
                 Console.WriteLine();
         }
+    }
+
+    /// <summary>
+    /// This method is used to show details about the given exception.
+    /// </summary>
+    /// <param name="exception">The exception to show.</param>
+    public static void ShowException(Exception exception)
+    {
+        Console.WriteLine($"Error: {exception.Message}");
+
+        if (exception is TokenException tokenException)
+        {
+            int line = tokenException.Token.Line;
+            int column = tokenException.Token.Column;
+
+            if (line > 0)
+            {
+                Console.WriteLine($"[{line}:{column}] -> {tokenException.Token}");
+
+                if (column > 0)
+                    Console.WriteLine($"{new string('-', column - 1)}^");
+            }
+        }
+
+        if (OutputLevel is OutputLevel.Verbose)
+            Console.WriteLine(exception.StackTrace);
     }
 }

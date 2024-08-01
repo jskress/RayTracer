@@ -261,6 +261,11 @@ public partial class LanguageParser
             { [ _identifier | _keyword ] > assignment }{?} > intervalClause >
             { by > _expression }{?}
         }
+        groupBoundedByClause:
+        {
+            bounded > by ?? 'Expecting "by" to follow "bounded" here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression
+        }
         startGroupClause:
         {
             group > groupIntervalClause{?} > openBrace ?? 'Expecting an open brace here.'
@@ -272,6 +277,7 @@ public partial class LanguageParser
             startCubeClause => 'cube' |
             startCircularSurfaceClause => 'circularSurface' |
             startGroupClause => 'group' |
+            groupBoundedByClause => 'boundingBox' |
             surfaceEntryClause => 'surface'
         ]
 

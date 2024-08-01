@@ -380,6 +380,10 @@ public partial class LanguageParser
             case "group":
                 instructionSet.AddInstruction(ParseGroupClause(clause));
                 break;
+            case "boundingBox":
+                instructionSet.AddInstruction(new SetBoundingBoxInstruction(
+                    (Term) clause.Expressions[0], (Term) clause.Expressions[1]));
+                break;
             case "surface":
                 HandleSurfaceClause(clause, instructionSet, "group");
                 break;
