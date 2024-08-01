@@ -71,10 +71,19 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        CreatedObject = new TObject();
-
+        CreateObject(variables);
         InitObject(context);
         ApplyInstructions(context, variables);
+    }
+
+    /// <summary>
+    /// This method may be used by subclasses to perform any initialization on our created
+    /// object that is needed.
+    /// </summary>
+    /// <param name="variables">The current set of scoped variables.</param>
+    protected virtual void CreateObject(Variables variables)
+    {
+        CreatedObject = new TObject();
     }
 
     /// <summary>

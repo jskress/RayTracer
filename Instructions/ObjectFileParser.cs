@@ -1,7 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Geometry;
 
-namespace RayTracer.Parser;
+namespace RayTracer.Instructions;
 
 /// <summary>
 /// This class handles parsing Wavefront OBJ files.
@@ -25,9 +25,9 @@ public class ObjectFileParser
         _topGroup = null;
         _currentGroup = null;
 
-        Vertices = new List<Point>();
-        Normals = new List<Vector>();
-        Triangles = new List<Triangle>();
+        Vertices = [];
+        Normals = [];
+        Triangles = [];
     }
 
     /// <summary>
@@ -99,6 +99,9 @@ public class ObjectFileParser
                 ? new Triangle(point1, point2, point3)
                 : new SmoothTriangle(point1, point2, point3, normal1, normal2, normal3);
 
+            // Always inherit our material from the owning group.
+            triangle.Material = null;
+
             Triangles.Add(triangle);
 
             _currentGroup.Add(triangle);
@@ -136,6 +139,9 @@ public class ObjectFileParser
 
         _currentGroup = new Group();
         _topGroup.Add(_currentGroup);
+
+        // Always inherit our material from the owning group.
+        _currentGroup.Material = null;
     }
 
     /// <summary>

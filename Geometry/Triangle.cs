@@ -28,6 +28,13 @@ public class Triangle : Surface
     private readonly Vector _e2;
     private readonly Vector _normal;
 
+    public Triangle()
+    {
+        // This constructor is present to satisfy the type system but should never
+        // be used, so...
+        throw new Exception("Internal error: cannot create triangles this way.");
+    }
+
     public Triangle(Point point1, Point point2, Point point3)
     {
         _e1 = point2 - point1;

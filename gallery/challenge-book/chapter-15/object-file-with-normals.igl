@@ -1,0 +1,27 @@
+// This holds the information for how to render our image for chapter 15 (new language).
+
+chapter = 15
+
+include '../defaults.igl'
+
+// Floor
+plane {
+	material {
+		pigment checker { LightSkyBlue, SkyBlue rotate Y 37 }
+	}
+}
+
+// Pulled from Virtual Lands: https://virtual-lands-3d.com/model-tags/?tags=.obj+models
+object file 'xmas-ball.obj' {
+	material {
+		pigment Green
+		reflective 0.3
+		//diffuse 0.2
+		specular 1
+		shininess 300
+	}
+	scale 0.07
+	rotate X -30
+	rotate Z -25
+	translate [-0.4, 0.2, 0]
+}

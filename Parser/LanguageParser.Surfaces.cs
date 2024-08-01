@@ -275,6 +275,146 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method is used to handle the beginning of a triangle block.
+    /// </summary>
+    private void HandleStartTriangleClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Triangle");
+
+        TriangleInstructionSet instructionSet = ParseTriangleClause(clause);
+
+        _ = new TopLevelObjectInstruction<Triangle>(_context.InstructionContext, instructionSet);
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a triangle block.
+    /// </summary>
+    private TriangleInstructionSet ParseTriangleClause(Clause clause)
+    {
+        Term first = (Term) clause.Expressions[0];
+        Term second = (Term) clause.Expressions[1];
+        Term third = (Term) clause.Expressions[2];
+
+        TriangleInstructionSet instructionSet = new (first, second, third);
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("surfaceEntryClause", HandleTriangleEntryClause);
+
+        _context.PopInstructionSet();
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a triangle block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleTriangleEntryClause(Clause clause)
+    {
+        TriangleInstructionSet instructionSet = (TriangleInstructionSet) _context.CurrentSet;
+
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+            HandleSurfaceClause(clause, instructionSet, "triangle");
+    }
+
+    /// <summary>
+    /// This method is used to handle the beginning of a smooth triangle block.
+    /// </summary>
+    private void HandleStartSmoothTriangleClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Smooth triangle");
+
+        SmoothTriangleInstructionSet instructionSet = ParseSmoothTriangleClause(clause);
+
+        _ = new TopLevelObjectInstruction<SmoothTriangle>(_context.InstructionContext, instructionSet);
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a smoothTriangle block.
+    /// </summary>
+    private SmoothTriangleInstructionSet ParseSmoothTriangleClause(Clause clause)
+    {
+        List<Term> terms = clause.Expressions
+            .Cast<Term>()
+            .ToList();
+
+        SmoothTriangleInstructionSet instructionSet = new (
+            terms[0], terms[1], terms[2],
+            terms[3], terms[4], terms[5]);
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("surfaceEntryClause", HandleSmoothTriangleEntryClause);
+
+        _context.PopInstructionSet();
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a smoothTriangle block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSmoothTriangleEntryClause(Clause clause)
+    {
+        SmoothTriangleInstructionSet instructionSet = (SmoothTriangleInstructionSet) _context.CurrentSet;
+
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+            HandleSurfaceClause(clause, instructionSet, "smoothTriangle");
+    }
+
+    /// <summary>
+    /// This method is used to handle the beginning of a object file block.
+    /// </summary>
+    private void HandleStartObjectFileClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Object file");
+
+        ObjectFileInstructionSet instructionSet = ParseObjectFileClause(clause);
+
+        _ = new TopLevelObjectInstruction<Group>(_context.InstructionContext, instructionSet);
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a object file block.
+    /// </summary>
+    private ObjectFileInstructionSet ParseObjectFileClause(Clause clause)
+    {
+        Term fileName = (Term) clause.Expressions[0];
+
+        ObjectFileInstructionSet instructionSet = new (CurrentDirectory, fileName);
+
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("surfaceEntryClause", HandleObjectFileEntryClause);
+
+        _context.PopInstructionSet();
+
+        instructionSet.AddInstruction(new FinalizeGroupInstruction());
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a objectFile block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleObjectFileEntryClause(Clause clause)
+    {
+        ObjectFileInstructionSet instructionSet = (ObjectFileInstructionSet) _context.CurrentSet;
+
+        if (clause == null) // We must have hit a transform property...
+            HandleSurfaceTransform(instructionSet);
+        else
+            HandleSurfaceClause(clause, instructionSet, "object file");
+    }
+
+    /// <summary>
     /// This method is used to handle the beginning of a group block.
     /// </summary>
     private void HandleStartGroupClause(Clause clause)
@@ -376,6 +516,15 @@ public partial class LanguageParser
                     instructionSet.AddInstruction(ParseConicClause(open));
                 else
                     throw new Exception("Internal error: unknown circular surface type.");
+                break;
+            case "triangle":
+                instructionSet.AddInstruction(ParseTriangleClause(clause));
+                break;
+            case "smooth":
+                instructionSet.AddInstruction(ParseSmoothTriangleClause(clause));
+                break;
+            case "objectFile":
+                instructionSet.AddInstruction(ParseObjectFileClause(clause));
                 break;
             case "group":
                 instructionSet.AddInstruction(ParseGroupClause(clause));

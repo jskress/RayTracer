@@ -30,10 +30,10 @@ public class TupleTerm : Term
     /// <returns>The current value of this term.</returns>
     protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
-        double x = (double) _x.GetValue(variables, typeof(double));
-        double y = (double) _y.GetValue(variables, typeof(double));
-        double z = (double) _z.GetValue(variables, typeof(double));
-        double? w = (double?) _w?.GetValue(variables, typeof(double));
+        double x = _x.GetValue<double>(variables);
+        double y = _y.GetValue<double>(variables);
+        double z = _z.GetValue<double>(variables);
+        double? w = _w?.GetValue<double?>(variables, false);
 
         return new NumberTuple(x, y, z, w ?? double.NaN);
     }

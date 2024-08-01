@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
+using RayTracer.Instructions;
 
 namespace RayTracer.Parser;
 

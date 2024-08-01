@@ -28,6 +28,11 @@ public partial class LanguageParser
     private string CurrentFileName => _entries.IsEmpty() ? null : _entries.Peek().FileName;
 
     /// <summary>
+    /// This is a helper property for accessing the current file's directory.
+    /// </summary>
+    private string CurrentDirectory => Path.GetDirectoryName(CurrentFileName);
+
+    /// <summary>
     /// This is a helper property for accessing the current parser.
     /// </summary>
     private LexicalParser CurrentParser => _entries.IsEmpty() ? null : _entries.Peek().Parser;
@@ -120,10 +125,9 @@ public partial class LanguageParser
 
         while (includeClause != null)
         {
-            string directory = Path.GetDirectoryName(CurrentFileName);
             string path = includeClause.Tokens[1].Text;
             
-            path = Path.GetFullPath(Path.Combine(directory!, path));
+            path = Path.GetFullPath(Path.Combine(CurrentDirectory, path));
 
             if (!File.Exists(path))
             {
