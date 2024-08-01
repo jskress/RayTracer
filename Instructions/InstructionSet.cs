@@ -74,13 +74,7 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
         CreatedObject = new TObject();
 
         InitObject(context);
-
-        foreach (ObjectInstruction<TObject> instruction in _instructions)
-        {
-            instruction.Target = CreatedObject;
-
-            instruction.Execute(context, variables);
-        }
+        ApplyInstructions(context, variables);
     }
 
     /// <summary>
@@ -89,6 +83,21 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// </summary>
     /// <param name="context">The current render context.</param>
     protected virtual void InitObject(RenderContext context) {}
+
+    /// <summary>
+    /// This method is used to run actually apply our instructions.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    protected void ApplyInstructions(RenderContext context, Variables variables)
+    {
+        foreach (ObjectInstruction<TObject> instruction in _instructions)
+        {
+            instruction.Target = CreatedObject;
+
+            instruction.Execute(context, variables);
+        }
+    }
 }
 
 /// <summary>

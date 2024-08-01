@@ -90,13 +90,12 @@ public partial class LanguageParser
         {
             string[] lines = File.ReadAllLines(fileName);
 
-            Console.WriteLine($"{Path.GetFileName(fileName)}: [{line}:{column}]");
+            Console.WriteLine($"{Path.GetFileName(fileName)}: [{line}:{column}] -> {exception.Token}");
             Console.WriteLine(lines[line - 1]);
 
             if (column > 0)
                 Console.WriteLine($"{new string('-', column - 1)}^");
         }
-        Console.WriteLine(exception.Token);
     }
 
     /// <summary>

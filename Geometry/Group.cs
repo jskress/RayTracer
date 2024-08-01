@@ -13,7 +13,7 @@ public class Group : Surface
     /// This property holds the list of child surfaces we carry.  Do not add surfaces to
     /// this list directly; use the <c>Add()</c> method instead.
     /// </summary>
-    public List<Surface> Surfaces { get; } = new ();
+    public List<Surface> Surfaces { get; } = [];
 
     /// <summary>
     /// This property holds an optional bounding box for the group.
@@ -46,12 +46,12 @@ public class Group : Surface
         {
             (double tMin, double tMax) = BoundingBox.GetIntersections(ray);
 
-            // If we dont even intersect the bounding box, then don't try anything else.
+            // If we don't even intersect the bounding box, then don't try anything else.
             if (tMin > tMax)
                 return;
         }
 
-        List<Intersection> ours = new ();
+        List<Intersection> ours = [];
 
         foreach (Surface surface in Surfaces)
             surface.Intersect(ray, ours);

@@ -37,6 +37,14 @@ public partial class LanguageParser
         SceneInstructionSet instructionSet = (SceneInstructionSet) _context.CurrentSet;
         string field = clause.Tokens[0].Text;
         Term term = (Term) clause.Expressions.First();
+        bool open = false;
+
+        if (field == "open")
+        {
+            field = clause.Tokens[1].Text;
+            open = true;
+        }
+
         ObjectInstruction<Scene> instruction = field switch
         {
             "named" => CreateNamedInstruction<Scene>(term),
@@ -48,6 +56,16 @@ public partial class LanguageParser
                 ParsePointLightClause(), scene => scene.Lights),
             "plane" => new AddChildInstruction<Scene, Surface, Plane>(
                 ParsePlaneClause(), scene => scene.Surfaces),
+            "sphere" => new AddChildInstruction<Scene, Surface, Sphere>(
+                ParseSphereClause(), scene => scene.Surfaces),
+            "cube" => new AddChildInstruction<Scene, Surface, Cube>(
+                ParseCubeClause(), scene => scene.Surfaces),
+            "cylinder" => new AddChildInstruction<Scene, Surface, Cylinder>(
+                ParseCylinderClause(open), scene => scene.Surfaces),
+            "conic" => new AddChildInstruction<Scene, Surface, Conic>(
+                ParseConicClause(open), scene => scene.Surfaces),
+            "group" => new AddChildInstruction<Scene, Surface, Group>(
+                ParseGroupClause(clause), scene => scene.Surfaces),
             "background" => new SetChildInstruction<Scene, Pigment>(
                 ParsePigmentClause(), scene => scene.Background),
             _ => throw new Exception($"Internal error: unknown scene property found: {field}.")

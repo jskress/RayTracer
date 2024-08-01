@@ -42,7 +42,6 @@ public class BoundingBox
         _zMax = Math.Max(_zMax, point.Z);
     }
 
-
     /// <summary>
     /// This method is used to add the other bounding box to this one, expanding it as
     /// necessary.  This one is <c>null</c>-safe.

@@ -54,11 +54,11 @@ public class SphereInstructionSet : SurfaceInstructionSet<Sphere>;
 public class CubeInstructionSet : SurfaceInstructionSet<Cube>;
 
 /// <summary>
-/// This class is used to create cylinders.  Declared for completeness, though not used.
+/// This class is used to create cylinders.
 /// </summary>
 public class CylinderInstructionSet : SurfaceInstructionSet<Cylinder>;
 
 /// <summary>
-/// This class is used to create conics.  Declared for completeness, though not used.
+/// This class is used to create conics.
 /// </summary>
 public class ConicInstructionSet : SurfaceInstructionSet<Conic>;
