@@ -20,7 +20,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Motion blur.
 - [ ] Antialiasing.
 - [X] Support PNGs.
-- [ ] Support other image formats.
+- [ ] Support other image formats?
 
 ### To-Dos for Lights:
 - [ ] Area lights/soft shadows.
@@ -54,7 +54,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### To-Dos for the render file language:
 
 - [X] Move to the Lex port, when available.
-- [ ] Support loops for object graph construction.
+- [X] Support loops for object graph construction.
 - [ ] Support variables for easier surface reuse, among other things.
 
 More to come...

@@ -1,3 +1,4 @@
+using Lex.Parser;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
@@ -25,6 +26,14 @@ public class SolidPigmentInstruction : ObjectInstruction<Pigment>
     public override void Execute(RenderContext context, Variables variables)
     {
         object result = _term.GetValue(variables, typeof(Color), typeof(Pigment));
+
+        if (result == null)
+        {
+            throw new TokenException("Could not resolve this to a color or pigment.")
+            {
+                Token = _term.ErrorToken
+            };
+        }
 
         Target = result is Color color
             ? new SolidPigment(color)

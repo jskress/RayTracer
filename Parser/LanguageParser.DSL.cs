@@ -24,17 +24,17 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
         _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background',
-            'bits', 'blend', 'bouncing', 'bounding', 'camera', 'channel', 'checker',
+            'bits', 'blend', 'bouncing', 'bounded', 'by', 'camera', 'channel', 'checker',
             'closed', 'color', 'comment', 'conic', 'context', 'copyright', 'cube',
             'cylinder', 'degrees', 'description', 'difference', 'diffuse', 'disclaimer',
             'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
-            'height', 'include', 'index', 'info', 'intersection', 'ior', 'light', 'line',
-            'linear', 'location', 'look', 'material', 'matrix', 'max', 'maximum', 'min',
-            'minimum', 'named', 'no', 'null', 'object', 'of', 'open', 'parallel', 'per',
-            'pigment', 'pixel', 'plane', 'point', 'radial', 'radians', 'reflective',
-            'refraction', 'render', 'report', 'ring', 'rotate', 'scale', 'scanner',
-            'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess', 'smooth',
-            'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
+            'height', 'include', 'index', 'info', 'inherited', 'intersection', 'ior',
+            'light', 'line', 'linear', 'location', 'look', 'material', 'matrix', 'max',
+            'maximum', 'min', 'minimum', 'named', 'no', 'null', 'object', 'of', 'open',
+            'parallel', 'per', 'pigment', 'pixel', 'plane', 'point', 'radial', 'radians',
+            'reflective', 'refraction', 'render', 'report', 'ring', 'rotate', 'scale',
+            'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess',
+            'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
             'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
             'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
@@ -45,10 +45,11 @@ public partial class LanguageParser
                 openBracket _expression(3..4, comma) /closeBracket => 'tuple',
                 _number => 'number',
                 _string => 'string',
-                _identifier => 'variable'
+                _identifier => 'variable',
+                _keyword => 'variable'
             ]
             unary: [
-                not*, minus*, *squared, *cubed, dollar*
+                not*, minus*, *squared, *cubed, dollar*, color*, point*, vector*
             ]
             binary: [
                 plus, minus, multiply, divide, modulo
@@ -57,6 +58,12 @@ public partial class LanguageParser
 
         includeClause: { include > _string ?? 'Expecting a string to follow "include" here.' }
         namedClause: { named > _expression }
+        intervalClause:
+        {
+            [ leftParen | openBracket ] > _expression >
+            comma ?? 'Expecting a comma here.' > _expression >
+            [ closeBracket | rightParen ] ?? 'Expecting a close bracket or right parenthesis here.'
+        }
 
         // Info clauses.
         startInfoClause:
@@ -186,7 +193,7 @@ public partial class LanguageParser
         // Material clauses.
         startMaterialClause:
         {
-            material > [ openBrace | _identifier ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
+            material > [ openBrace | _identifier | _keyword ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
         }
         materialValueClause:
         {
@@ -248,6 +255,32 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Group clauses.
+        groupIntervalClause:
+        {
+            { [ _identifier | _keyword ] > assignment }{?} > intervalClause >
+            { by > _expression }{?}
+        }
+        groupBoundedByClause:
+        {
+            bounded > by ?? 'Expecting "by" to follow "bounded" here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression
+        }
+        startGroupClause:
+        {
+            group > groupIntervalClause{?} > openBrace ?? 'Expecting an open brace here.'
+        }
+        groupEntryClause:
+        [
+            startPlaneClause => 'plane' |
+            startSphereClause => 'sphere' |
+            startCubeClause => 'cube' |
+            startCircularSurfaceClause => 'circularSurface' |
+            startGroupClause => 'group' |
+            groupBoundedByClause => 'boundingBox' |
+            surfaceEntryClause => 'surface'
+        ]
+
         // Scene clauses.
         startSceneClause:
         {
@@ -256,7 +289,8 @@ public partial class LanguageParser
         sceneEntryClause:
         [
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
-            startSphereClause | background
+            startSphereClause | startCubeClause | startCircularSurfaceClause |
+            startGroupClause | background
         ] ?? 'Unsupported scene property found.'
 
         renderClause:
@@ -288,6 +322,7 @@ public partial class LanguageParser
             startSphereClause          => 'HandleStartSphereClause' |
             startCubeClause            => 'HandleStartCubeClause' |
             startCircularSurfaceClause => 'HandleStartCircularSurfaceClause' |
+            startGroupClause           => 'HandleStartGroupClause' |
             background                 => 'HandleBackgroundClause' |
             renderClause               => 'HandleRenderClause' |
             setThingToVariable         => 'HandleSetThingToVariableClause' |

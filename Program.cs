@@ -11,5 +11,12 @@ Parser.Default.ParseArguments<ProgramOptions>(args)
         LanguageParser parser = new LanguageParser(options.InputFileName);
         ImageRenderer renderer = parser.Parse();
 
-        renderer?.Render(options);
+        try
+        {
+            renderer?.Render(options);
+        }
+        catch (Exception exception)
+        {
+            Terminal.ShowException(exception);
+        }
     });

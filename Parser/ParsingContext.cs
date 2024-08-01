@@ -29,6 +29,13 @@ internal class ParsingContext
     /// </summary>
     internal IInstructionSet CurrentSet => IsEmpty ? null : _sets.Peek();
 
+    /// <summary>
+    /// This property reports the parent set of the current instruction set, if we have
+    /// one.
+    /// </summary>
+    internal IInstructionSet ParentSet => _sets.Count < 2
+        ? null : _sets.Skip(1).First();
+
     private readonly Stack<IInstructionSet> _sets = [];
 
     /// <summary>

@@ -1,5 +1,7 @@
 using Lex.Expressions;
 using Lex.Tokens;
+using RayTracer.Basics;
+using RayTracer.Graphics;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -9,8 +11,8 @@ namespace RayTracer.Parser;
 /// </summary>
 public class ExpressionTreeBuilder : IExpressionTreeBuilder
 {
-    private static readonly OperatorToken SquareToken = new ("\u00b2");
-    private static readonly OperatorToken CubeToken = new ("\u00b3");
+    private const string Square = "\u00b2";
+    private const string Cube = "\u00b3";
 
     /// <summary>
     /// This method is used to create a term in an expression tree.  It is provided the
@@ -47,17 +49,22 @@ public class ExpressionTreeBuilder : IExpressionTreeBuilder
     public IExpressionTerm CreateUnaryOperation(
         List<Token> tokens, IExpressionTerm expressionTerm, bool isPrefix)
     {
-        Token token = tokens[0];
-        Term term = (Term)expressionTerm;
+        string text = tokens[0].Text;
+        Term term = (Term) expressionTerm;
 
         return isPrefix switch
         {
-            true when OperatorToken.Not.Matches(token) => new NotOperation(term),
-            true when OperatorToken.Minus.Matches(token) => new UnaryMinusOperation(term),
-            false when SquareToken.Matches(token) => new SquareOperation(term),
-            false when CubeToken.Matches(token) => new CubeOperation(term),
-            true when OperatorToken.Dollar.Matches(token) => new StringSubstitutionOperation(term),
-            _ => throw new NotImplementedException()
+            true when text == OperatorToken.Not.Text => new NotOperation(term),
+            true when text == OperatorToken.Minus.Text => new UnaryMinusOperation(term),
+            false when text == Square => new SquareOperation(term),
+            false when text == Cube => new CubeOperation(term),
+            true when text == OperatorToken.Dollar.Text => new StringSubstitutionOperation(term),
+            true when text == "color" => new UnaryCastOperation<Color>(term),
+            true when text == "point" => new UnaryCastOperation<Point>(term),
+            true when text == "vector" => new UnaryCastOperation<Vector>(term),
+            _ => throw new Exception(
+                $"Internal error: cannot interpret unary operator of " +
+                $"{string.Join(' ', tokens.Select(token => token.Text))}.")
         };
     }
 
@@ -70,7 +77,28 @@ public class ExpressionTreeBuilder : IExpressionTreeBuilder
     /// <returns>A term that represents a binary operation.</returns>
     public IExpressionTerm CreateBinaryOperation(List<Token> tokens, IExpressionTerm left, IExpressionTerm right)
     {
-        throw new NotImplementedException();
+        Token operation = tokens[0];
+        Term leftTerm = (Term) left;
+        Term rightTerm = (Term) right;
+
+        if (OperatorToken.Plus.Matches(operation))
+            return new BinaryPlusOperation(leftTerm, rightTerm);
+
+        if (OperatorToken.Minus.Matches(operation))
+            return new BinaryMinusOperation(leftTerm, rightTerm);
+
+        if (OperatorToken.Multiply.Matches(operation))
+            return new BinaryMultiplyOperation(leftTerm, rightTerm);
+
+        if (OperatorToken.Divide.Matches(operation))
+            return new BinaryDivideOperation(leftTerm, rightTerm);
+
+        if (OperatorToken.Modulo.Matches(operation))
+            return new BinaryModuloOperation(leftTerm, rightTerm);
+
+        throw new Exception(
+            $"Internal error: cannot interpret binary operator of " +
+            $"{string.Join(' ', tokens.Select(token => token.Text))}.");
     }
 
     /// <summary>

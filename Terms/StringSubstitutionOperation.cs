@@ -6,21 +6,22 @@ namespace RayTracer.Terms;
 /// <summary>
 /// This class represents the unary string substitution operation.
 /// </summary>
-public class StringSubstitutionOperation : UnaryOperation<string>
+public class StringSubstitutionOperation : UnaryOperation
 {
     private static readonly Regex VariablePattern = new Regex(@"\${(.*)}");
 
     public StringSubstitutionOperation(Term term) : base(term) {}
 
     /// <summary>
-    /// This method is used to perform any variable substitution required in the given
-    /// string.
+    /// This method is used to evaluate this term to inject variable values into a string. 
     /// </summary>
     /// <param name="variables">The variables that are currently in scope.</param>
-    /// <param name="value">The value to operate on.</param>
-    /// <returns>The updated value.</returns>
-    protected override string Apply(Variables variables, string value)
+    /// <param name="targetTypes">The expected type of the evaluated value, if known.</param>
+    /// <returns>The current value of this term.</returns>
+    protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
+        string value = (string) Operand.GetValue(variables, typeof(string));
+
         // Don't bother doing anything if the string doesn't have variable references.
         if (!string.IsNullOrEmpty(value))
         {

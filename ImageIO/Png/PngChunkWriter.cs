@@ -119,7 +119,7 @@ public class PngChunkWriter
     private void WriteImageData()
     {
         using MemoryStream memoryStream = new MemoryStream();
-        using DeflateStream compressor = new DeflateStream(memoryStream, CompressionLevel.SmallestSize);
+        using DeflateStream compressor = new DeflateStream(memoryStream, CompressionLevel.Optimal);
         ScanLine previous = new ScanLine(_context, _headerChunk);
         ScanLine current = new ScanLine(_context, _headerChunk);
         Adler32 checksum = new Adler32();
