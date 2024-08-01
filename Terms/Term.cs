@@ -49,6 +49,29 @@ public abstract class Term : IExpressionTerm
     }
 
     /// <summary>
+    /// This is a convenience method for getting a value of a specific type from this
+    /// term.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <param name="isRequired">A flag noting whether the value is required (i.e., cannot
+    /// be <c>null</c>.</param>
+    /// <returns>The current value of this term.</returns>
+    public TValue GetValue<TValue>(Variables variables, bool isRequired = true)
+    {
+        TValue value = (TValue) GetValue(variables, typeof(TValue));
+
+        if (isRequired && value == null)
+        {
+            throw new TokenException($"Could not resolve this to something of type {typeof(TValue).Name}")
+            {
+                Token = ErrorToken
+            };
+        }
+
+        return value;
+    }
+
+    /// <summary>
     /// This method must be provided by subclasses to evaluate this term to produce a
     /// value.  If the type of value returned does not match the given target type, an
     /// attempt will be made to coerce the returned value to that type. 

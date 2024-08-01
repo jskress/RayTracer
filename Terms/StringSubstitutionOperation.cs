@@ -20,7 +20,7 @@ public class StringSubstitutionOperation : UnaryOperation
     /// <returns>The current value of this term.</returns>
     protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
-        string value = (string) Operand.GetValue(variables, typeof(string));
+        string value = Operand.GetValue<string>(variables, false);
 
         // Don't bother doing anything if the string doesn't have variable references.
         if (!string.IsNullOrEmpty(value))

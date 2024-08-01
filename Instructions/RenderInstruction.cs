@@ -128,7 +128,7 @@ public class RenderInstruction : Instruction
         Variables variables, List<TItem> items, Term nameTerm, string noun)
         where TItem : NamedThing
     {
-        string name = (string) nameTerm?.GetValue(variables, typeof(string));
+        string name = nameTerm?.GetValue<string>(variables, false);
 
         if (name == null)
         {

@@ -83,13 +83,11 @@ public class GroupInstructionSet : SurfaceInstructionSet<Group>
             start = end = 1;
         else
         {
-            start = (double) _startTerm.GetValue(variables, typeof(double));
-            end = (double) _endTerm.GetValue(variables, typeof(double));
+            start = _startTerm.GetValue<double>(variables);
+            end = _endTerm.GetValue<double>(variables);
         }
 
-        double step = _stepTerm == null
-            ? 1
-            : (double) _stepTerm.GetValue(variables, typeof(double));
+        double step = _stepTerm?.GetValue<double>(variables) ?? 1;
 
         return new Interval
         {

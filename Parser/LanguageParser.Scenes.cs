@@ -64,6 +64,12 @@ public partial class LanguageParser
                 ParseCylinderClause(open), scene => scene.Surfaces),
             "conic" => new AddChildInstruction<Scene, Surface, Conic>(
                 ParseConicClause(open), scene => scene.Surfaces),
+            "triangle" => new AddChildInstruction<Scene, Surface, Triangle>(
+                ParseTriangleClause(clause), scene => scene.Surfaces),
+            "smooth" => new AddChildInstruction<Scene, Surface, SmoothTriangle>(
+                ParseSmoothTriangleClause(clause), scene => scene.Surfaces),
+            "object" => new AddChildInstruction<Scene, Surface, Group>(
+                ParseObjectFileClause(clause), scene => scene.Surfaces),
             "group" => new AddChildInstruction<Scene, Surface, Group>(
                 ParseGroupClause(clause), scene => scene.Surfaces),
             "background" => new SetChildInstruction<Scene, Pigment>(

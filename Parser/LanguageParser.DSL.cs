@@ -30,10 +30,10 @@ public partial class LanguageParser
             'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
             'height', 'include', 'index', 'info', 'inherited', 'intersection', 'ior',
             'light', 'line', 'linear', 'location', 'look', 'material', 'matrix', 'max',
-            'maximum', 'min', 'minimum', 'named', 'no', 'null', 'object', 'of', 'open',
-            'parallel', 'per', 'pigment', 'pixel', 'plane', 'point', 'radial', 'radians',
-            'reflective', 'refraction', 'render', 'report', 'ring', 'rotate', 'scale',
-            'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess',
+            'maximum', 'min', 'minimum', 'named', 'no', 'normals', 'null', 'object', 'of',
+            'open', 'parallel', 'per', 'pigment', 'pixel', 'plane', 'point', 'radial',
+            'radians', 'reflective', 'refraction', 'render', 'report', 'ring', 'rotate',
+            'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess',
             'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
             'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
             'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
@@ -255,6 +255,29 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Triangle clauses.
+        tripleTupleClause:
+        {
+            _expression > comma ?? 'Expecting a comma here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression
+        }
+        startTriangleClause:
+        {
+            triangle > tripleTupleClause > openBrace ?? 'Expecting an open brece here.' 
+        }
+        startSmoothTriangleClause:
+        {
+            smooth > triangle > tripleTupleClause >
+            normals ?? 'Expecting "normals" here.' >
+            tripleTupleClause > openBrace ?? 'Expecting an open brece here.' 
+        }
+
+        // Object file clause.
+        startObjectFileClause:
+        {
+            object > file > _expression > openBrace ?? 'Expecting an open brece here.'
+        }
+
         // Group clauses.
         groupIntervalClause:
         {
@@ -276,6 +299,9 @@ public partial class LanguageParser
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
             startCircularSurfaceClause => 'circularSurface' |
+            startTriangleClause => 'triangle' |
+            startSmoothTriangleClause => 'smoothTriangle' |
+            startObjectFileClause => 'objectFile' |
             startGroupClause => 'group' |
             groupBoundedByClause => 'boundingBox' |
             surfaceEntryClause => 'surface'
@@ -290,6 +316,7 @@ public partial class LanguageParser
         [
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
             startSphereClause | startCubeClause | startCircularSurfaceClause |
+            startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
             startGroupClause | background
         ] ?? 'Unsupported scene property found.'
 
@@ -322,6 +349,9 @@ public partial class LanguageParser
             startSphereClause          => 'HandleStartSphereClause' |
             startCubeClause            => 'HandleStartCubeClause' |
             startCircularSurfaceClause => 'HandleStartCircularSurfaceClause' |
+            startTriangleClause        => 'HandleStartTriangleClause' |
+            startSmoothTriangleClause  => 'HandleStartSmoothTriangleClause' |
+            startObjectFileClause      => 'HandleStartObjectFileClause' |
             startGroupClause           => 'HandleStartGroupClause' |
             background                 => 'HandleBackgroundClause' |
             renderClause               => 'HandleRenderClause' |

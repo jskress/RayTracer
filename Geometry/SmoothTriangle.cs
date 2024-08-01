@@ -24,6 +24,13 @@ public class SmoothTriangle : Triangle
     /// </summary>
     public Vector Normal3 { get; }
 
+    public SmoothTriangle()
+    {
+        // This constructor is present to satisfy the type system but should never
+        // be used, so...
+        throw new Exception("Internal error: cannot create smooth triangles this way.");
+    }
+
     public SmoothTriangle(
         Point point1, Point point2, Point point3,
         Vector normal1, Vector normal2, Vector normal3) : base(point1, point2, point3)

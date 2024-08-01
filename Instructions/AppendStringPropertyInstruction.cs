@@ -13,7 +13,7 @@ public class AppendStringPropertyInstruction<TObject> : AffectObjectPropertyInst
 {
     private readonly Term _term;
 
-    public AppendStringPropertyInstruction(Expression<Func<TObject, string>> propertyLambda, Term term)
+    protected AppendStringPropertyInstruction(Expression<Func<TObject, string>> propertyLambda, Term term)
         : base(propertyLambda)
     {
         _term = term;
@@ -26,8 +26,8 @@ public class AppendStringPropertyInstruction<TObject> : AffectObjectPropertyInst
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        string current = (string)Getter.Invoke(Target, null);
-        string value = (string) _term.GetValue(variables, typeof(string));
+        string current = (string) Getter.Invoke(Target, null);
+        string value = _term.GetValue<string>(variables, false);
 
         value = string.IsNullOrEmpty(current) || value == null
             ? value
