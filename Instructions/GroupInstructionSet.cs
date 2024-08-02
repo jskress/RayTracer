@@ -107,21 +107,9 @@ public class GroupInstructionSet : SurfaceInstructionSet<Group>
     /// <param name="variables">The current set of scoped variables.</param>
     private void CreateChildSurfaces(RenderContext context, Variables variables)
     {
-        foreach (IInstructionSet instruction in _instructions)
+        foreach (Surface surface in _instructions
+                     .Select(instruction => CreateSurface(context, variables, instruction)))
         {
-            instruction.Execute(context, variables);
-
-            Surface surface = instruction switch
-            {
-                PlaneInstructionSet planeInstructionSet => planeInstructionSet.CreatedObject,
-                SphereInstructionSet sphereInstructionSet => sphereInstructionSet.CreatedObject,
-                CubeInstructionSet cubeInstructionSet => cubeInstructionSet.CreatedObject,
-                CylinderInstructionSet cylinderInstructionSet => cylinderInstructionSet.CreatedObject,
-                ConicInstructionSet conicInstructionSet => conicInstructionSet.CreatedObject,
-                GroupInstructionSet groupInstructionSet => groupInstructionSet.CreatedObject,
-                _ => throw new Exception($"Internal error: unknown surface type: {instruction.GetType().Name}.")
-            };
-
             CreatedObject.Add(surface);
         }
     }

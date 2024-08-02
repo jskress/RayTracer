@@ -50,6 +50,13 @@ public class CsgSurface : Surface
     private Surface _left;
     private Surface _right;
 
+    public CsgSurface()
+    {
+        // This constructor is present to satisfy the type system but should never
+        // be used, so...
+        throw new Exception("Internal error: cannot create CSG surfaces this way.");
+    }
+
     public CsgSurface(CsgOperation operation)
     {
         _left = null;
@@ -66,7 +73,7 @@ public class CsgSurface : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        List<Intersection> ours = new ();
+        List<Intersection> ours = [];
 
         Left.Intersect(ray, ours);
         Right.Intersect(ray, ours);

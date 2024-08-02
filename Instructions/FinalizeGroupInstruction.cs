@@ -35,12 +35,7 @@ public class FinalizeGroupInstruction : ObjectInstruction<Group>
     private static void SetMaterial(List<Surface> surfaces, Material material)
     {
         foreach (Surface surface in surfaces)
-        {
-            surface.Material ??= material;
-
-            if (surface is Group group)
-                SetMaterial(group.Surfaces, material);
-        }
+            surface.SetMaterial(material);
     }
 
     /// <summary>
