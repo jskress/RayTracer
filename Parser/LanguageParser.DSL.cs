@@ -193,7 +193,10 @@ public partial class LanguageParser
         // Material clauses.
         startMaterialClause:
         {
-            material > [ openBrace | _identifier | _keyword ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
+            material > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }
         materialValueClause:
         {
@@ -219,7 +222,8 @@ public partial class LanguageParser
         }
         surfaceTransformClause:
         {
-            transform > _identifier ?? 'Expecting an identifier to follow "transform" here.'
+            transform > _identifier ?? 'Expecting an identifier to follow "transform" here.' >
+            openBrace{?}
         }
         surfaceEntryClause:
         [
@@ -348,11 +352,16 @@ public partial class LanguageParser
             }{?}
         }
 
+        // Variable clauses.
+        startThingClause:
+        [
+            { [ _identifier | _keyword ] > openBrace{?} } |
+            openBrace ?? 'Expecting an open brace here'
+        ]
         setThingToVariable:
         {
             [ _identifier | _keyword ] > assignment >
-            [ material | pigment | transform ] >
-            openBrace ?? 'Expecting an open brace here.'
+            [ pigment | material | transform ]
         }
         setVariableClause:
         {

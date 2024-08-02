@@ -1,0 +1,123 @@
+// This holds the information for how to render our image for chapter 16 (new language).
+
+chapter = 16
+
+include '../default-context.igl'
+
+camera {
+	location [0, 2.5, -5]
+	look at [0, 1, 0]
+	field of view 60
+}
+
+point light {
+	location [-3, 10, -3]
+}
+
+paper = material { pigment checker { White, Gray85 scale 0.3 } }
+
+// Floor
+plane {
+	material paper
+}
+
+// Wall
+plane {
+	material paper
+	rotate X -90
+	translate Z 5
+}
+
+// Left object
+intersection {
+	cylinder {
+		material { pigment [1, 0.2, 0.2] }
+	}
+	cylinder {
+		material { pigment LightGreen }
+		rotate X 90
+	}
+	cylinder {
+		material { pigment Blue }
+		rotate Z 90
+	}
+	scale 0.75
+	rotate Y 40
+	rotate X -15
+	translate [-2, 1.15, 0]
+}
+
+// Middle object
+difference {
+	intersection {
+		sphere {
+			material inherited
+		}
+		cube {
+			material inherited
+			scale 0.72
+		}
+		material {
+			pigment Gray15
+			reflective 0.5
+			diffuse 0.2
+			specular 1
+			shininess 300
+		}
+	}
+	union {
+		cylinder {
+			min Y -4
+			max Y 4
+			material { pigment [1, 0.2, 0.2] }
+		}
+		cylinder {
+			min Y -4
+			max Y 4
+			material { pigment LightGreen }
+			rotate X 90
+		}
+		cylinder {
+			min Y -4
+			max Y 4
+			material { pigment Blue }
+			rotate Z 90
+		}
+		scale 0.4
+	}
+	scale 0.85
+	rotate Y -110
+	rotate X -10
+	translate Y 1.15
+}
+
+shinyRed = material {
+	pigment Red 
+	specular 1
+	shininess 300
+}
+
+// Right object.
+difference {
+	sphere {
+		material inherited
+	}
+	group index = [0, 11] {
+		cube {
+			material inherited
+			rotate Y 45
+			scale X 0.1
+			translate Z -1.47
+			rotate Y index * 30
+		}
+		material inherited
+	}
+	sphere {
+		material inherited
+		scale 0.98
+	}
+	material shinyRed
+	scale 0.75
+	rotate X -10
+	translate [2, 1.15, 0]
+}

@@ -7,7 +7,7 @@ namespace RayTracer.Instructions;
 /// <summary>
 /// This class is used to create matrices from a list of them.
 /// </summary>
-public class TransformInstructionSet : ListInstructionSet<Matrix>
+public class TransformInstructionSet : CopyableListInstructionSet<Matrix>
 {
     private bool _reversed;
 
@@ -39,5 +39,13 @@ public class TransformInstructionSet : ListInstructionSet<Matrix>
             : transforms[1..].Aggregate(
                 transforms[0],
                 (accumulator, next) => accumulator * next);
+    }
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        return CopyInto(new TransformInstructionSet());
     }
 }

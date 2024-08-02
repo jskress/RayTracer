@@ -22,7 +22,17 @@ public class PointLightInstructionSet : ObjectInstructionSet<PointLight>;
 /// <summary>
 /// This class is used to create materials.
 /// </summary>
-public class MaterialInstructionSet : ObjectInstructionSet<Material>;
+public class MaterialInstructionSet : CopyableObjectInstructionSet<Material>
+{
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        return CopyInto(new MaterialInstructionSet());
+    }
+}
 
 public class SurfaceInstructionSet<TObject> : ObjectInstructionSet<TObject>
     where TObject : Surface, new()

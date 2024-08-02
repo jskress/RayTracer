@@ -1,0 +1,196 @@
+// This file produces the cover art for the Challenge book.
+
+context {
+	angles are degrees
+	no gamma
+	height 800
+	info {
+		title 'The Ray Tracer Challenge Cover Art'
+		author 'J. Stephen Kress'
+		description $'The image that is on the front cover of the book.'
+		software __software__
+	}
+}
+
+camera {
+	location [-6, 6, -10]
+	look at [6, 0, 6]
+	up [-0.45, 1, 0]
+	field of view 45
+}
+
+light {
+	location [50, 100, -50]
+}
+
+light {
+	location [-400, 50, -10]
+	color [0.2, 0.2, 0.2]
+}
+
+background White
+
+purple = color [0.373, 0.404, 0.550]
+blue = color [0.537, 0.831, 0.914]
+red = color [0.941, 0.322, 0.388]
+
+whiteMaterial = material {
+	diffuse 0.9
+	specular 0
+	ambient 0
+	reflective 0.1
+}
+blueMaterial = material whiteMaterial {	pigment blue }
+redMaterial = material whiteMaterial { pigment red }
+purpleMaterial = material whiteMaterial { pigment purple }
+
+sphere {
+	material {
+		pigment purple
+		diffuse 0.2
+		ambient 0
+		specular 1
+		reflective 0.7
+		transparency 0.7
+		ior Glass
+	}
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3
+	translate [4, 0, 0]
+}
+
+cylinder {
+	material blueMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [8.5, 1.5, -0.5]
+}
+
+cube {
+	material redMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [0, 0, 4]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 2
+	translate [4, 0, 4]
+}
+
+cube {
+	material purpleMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3
+	translate [7.5, 0.5, 4]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3
+	translate [-0.25, 0.25, 8]
+}
+
+cube {
+	material blueMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [4, 1, 7.5]
+}
+
+cube {
+	material redMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3
+	translate [10, 2, 7.5]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 2
+	translate [8, 2, 12]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 2
+	translate [20, 1, 9]
+}
+
+cube {
+	material blueMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [-0.5, -5, 0.25]
+}
+
+cube {
+	material redMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [4, -4, 0]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [8.5, -4, 0]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [0, -4, 4]
+}
+
+cube {
+	material purpleMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [-0.5, -4.5, 8]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [0, -8, 4]
+}
+
+cube {
+	material whiteMaterial
+	translate [1, -1, 1]
+	scale 0.5
+	scale 3.5
+	translate [-0.5, -8.5, 8]
+}
