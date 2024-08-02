@@ -171,4 +171,25 @@ public abstract class Surface : NamedThing
             _ => parent == child
         };
     }
+
+    /// <summary>
+    /// This is a helper method that will push the given material down to all descendents
+    /// who want it.  It will recurse as necessary.
+    /// </summary>
+    /// <param name="material">The material to apply.</param>
+    public void SetMaterial(Material material)
+    {
+        Material ??= material;
+
+        if (this is Group group)
+        {
+            foreach (Surface child in group.Surfaces)
+                child.SetMaterial(material);
+        }
+        else if (this is CsgSurface csgSurface)
+        {
+            csgSurface.Left.SetMaterial(material);
+            csgSurface.Right.SetMaterial(material);
+        }
+    }
 }

@@ -70,6 +70,12 @@ public partial class LanguageParser
                 ParseSmoothTriangleClause(clause), scene => scene.Surfaces),
             "object" => new AddChildInstruction<Scene, Surface, Group>(
                 ParseObjectFileClause(clause), scene => scene.Surfaces),
+            "union" => new AddChildInstruction<Scene, Surface, CsgSurface>(
+                ParseCsgClause(clause), scene => scene.Surfaces),
+            "difference" => new AddChildInstruction<Scene, Surface, CsgSurface>(
+                ParseCsgClause(clause), scene => scene.Surfaces),
+            "intersection" => new AddChildInstruction<Scene, Surface, CsgSurface>(
+                ParseCsgClause(clause), scene => scene.Surfaces),
             "group" => new AddChildInstruction<Scene, Surface, Group>(
                 ParseGroupClause(clause), scene => scene.Surfaces),
             "background" => new SetChildInstruction<Scene, Pigment>(

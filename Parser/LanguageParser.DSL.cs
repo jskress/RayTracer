@@ -277,7 +277,26 @@ public partial class LanguageParser
         {
             object > file > _expression > openBrace ?? 'Expecting an open brece here.'
         }
-
+        
+        // CSG clauses.
+        startCsgClause:
+        {
+            [ union | difference | intersection ] > openBrace ?? 'Expecting an open brece here.'
+        }
+        csgEntryClause:
+        [
+            startPlaneClause => 'plane' |
+            startSphereClause => 'sphere' |
+            startCubeClause => 'cube' |
+            startCircularSurfaceClause => 'circularSurface' |
+            startTriangleClause => 'triangle' |
+            startSmoothTriangleClause => 'smoothTriangle' |
+            startObjectFileClause => 'objectFile' |
+            startCsgClause => 'csg' |
+            startGroupClause => 'group' |
+            surfaceEntryClause => 'surface'
+        ]
+        
         // Group clauses.
         groupIntervalClause:
         {
@@ -302,6 +321,7 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startObjectFileClause => 'objectFile' |
+            startCsgClause => 'csg' |
             startGroupClause => 'group' |
             groupBoundedByClause => 'boundingBox' |
             surfaceEntryClause => 'surface'
@@ -317,7 +337,7 @@ public partial class LanguageParser
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
             startSphereClause | startCubeClause | startCircularSurfaceClause |
             startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
-            startGroupClause | background
+            startCsgClause | startGroupClause | background
         ] ?? 'Unsupported scene property found.'
 
         renderClause:
@@ -352,6 +372,7 @@ public partial class LanguageParser
             startTriangleClause        => 'HandleStartTriangleClause' |
             startSmoothTriangleClause  => 'HandleStartSmoothTriangleClause' |
             startObjectFileClause      => 'HandleStartObjectFileClause' |
+            startCsgClause             => 'HandleStartCsgClause' |
             startGroupClause           => 'HandleStartGroupClause' |
             background                 => 'HandleBackgroundClause' |
             renderClause               => 'HandleRenderClause' |
