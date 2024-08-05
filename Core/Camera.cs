@@ -47,12 +47,17 @@ public class Camera : NamedThing
         Canvas canvas = context.NewCanvas;
         PixelToRayConverter converter = new (context, FieldOfView, GetTransform());
 
+        context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);
+
         context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
         {
             Ray ray = converter.GetRayForPixel(x, y);
 
             canvas.SetColor(scene.GetColorFor(ray), x, y);
+            context.ProgressBar?.Bump();
         });
+
+        context.ProgressBar?.Done();
 
         return canvas;
     }
