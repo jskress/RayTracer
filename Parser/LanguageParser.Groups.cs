@@ -133,6 +133,9 @@ public partial class LanguageParser
                 else
                     throw new Exception("Internal error: unknown circular surface type.");
                 break;
+            case "torus":
+                instructionSet.AddInstruction(ParseTorusClause(clause));
+                break;
             case "triangle":
                 instructionSet.AddInstruction(ParseTriangleClause(clause));
                 break;

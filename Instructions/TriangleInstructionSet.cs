@@ -22,7 +22,7 @@ public class TriangleInstructionSet : SurfaceInstructionSet<Triangle>
     }
 
     /// <summary>
-    /// This method may be used by subclasses to create our group.
+    /// This method is used to create our triangle.
     /// </summary>
     /// <param name="variables">The current set of scoped variables.</param>
     protected override void CreateObject(Variables variables)

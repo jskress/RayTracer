@@ -1,0 +1,22 @@
+// The first POVRay image.
+
+include 'default-context.igl'
+
+context { info { title 'The first image.' } }
+
+background Cyan
+
+camera {
+	location [0, 2, -3]
+	look at [0, 1, 2]
+}
+
+light {
+	location [2, 4, -3]
+}
+
+sphere {
+	material { pigment Yellow }
+	scale 2
+	translate [0, 1, 2]
+}

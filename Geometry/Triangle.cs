@@ -47,7 +47,7 @@ public class Triangle : Surface
     }
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects the cube and,
+    /// This method is used to determine whether the given ray intersects the triangle and,
     /// if so, where.
     /// </summary>
     /// <param name="ray">The ray to test.</param>
@@ -92,7 +92,7 @@ public class Triangle : Surface
     }
 
     /// <summary>
-    /// This method returns the normal for the cube.  It is assumed that the point will
+    /// This method returns the normal for the triangle.  It is assumed that the point will
     /// have been transformed to surface-space coordinates.  The vector returned will
     /// also be in surface-space coordinates.
     /// </summary>

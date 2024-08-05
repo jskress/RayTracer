@@ -1,0 +1,12 @@
+// The basic context we should use for all our POVRay images.
+
+context {
+	parallel pixel scanner
+	angles are degrees
+	no gamma
+	info {
+		author 'J. Stephen Kress'
+		description $'An image from the POV Ray ray tracer.'
+		software __software__
+	}
+}
