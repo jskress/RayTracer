@@ -53,6 +53,7 @@ public class ImageRenderer
     {
         RenderContext context = new ()
         {
+            ProgressBar = new ProgressBar(),
             Statistics = _statistics
         };
         Variables variables = new Variables(_globals);

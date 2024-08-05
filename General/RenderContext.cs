@@ -82,6 +82,11 @@ public class RenderContext
     public long Ticks { get; set; }
 
     /// <summary>
+    /// This property holds the progress bar we are using.
+    /// </summary>
+    public ProgressBar ProgressBar { get; set; }
+
+    /// <summary>
     /// This property holds the statistics collector being used.
     /// </summary>
     public Statistics Statistics { get; set; }
