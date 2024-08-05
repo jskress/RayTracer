@@ -45,4 +45,18 @@ public class SmoothTriangleInstructionSet : SurfaceInstructionSet<SmoothTriangle
         CreatedObject = new SmoothTriangle(
             point1, point2, point3, normal1, normal2, normal3);
     }
+
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        SmoothTriangleInstructionSet instructionSet = new (
+            _point1Term, _point2Term, _point3Term, _normal1Term, _normal2Term, _normal3Term);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
+    }
 }

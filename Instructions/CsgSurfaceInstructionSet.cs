@@ -51,28 +51,39 @@ public class CsgSurfaceInstructionSet : SurfaceInstructionSet<CsgSurface>
         List<Surface> surfaces = _instructions
             .Select(instruction => CreateSurface(context, variables, instruction))
             .ToList();
-        int count = 2;
 
         do
         {
-            Surface left = CreatedObject ?? surfaces[0];
-            Surface right = surfaces[1];
-
-            CreatedObject = new CsgSurface(_operation)
+            surfaces[1] = new CsgSurface(_operation)
             {
-                Left = left,
-                Right = right
+                Left = surfaces[0],
+                Right = surfaces[1]
             };
 
-            surfaces.RemoveRange(0, count);
-
-            count = 1;
+            surfaces.RemoveFirst();
         }
-        while (!surfaces.IsEmpty());
+        while (surfaces.Count > 1);
+
+        CreatedObject = (CsgSurface) surfaces[0];
 
         ApplyInstructions(context, variables);
 
         if (CreatedObject.Material != null)
             CreatedObject.SetMaterial(CreatedObject.Material);
+    }
+
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        CsgSurfaceInstructionSet instructionSet = new (_operation, _errorToken);
+
+        instructionSet._instructions.AddRange(_instructions);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
     }
 }

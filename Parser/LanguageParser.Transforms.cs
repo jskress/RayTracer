@@ -14,7 +14,7 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse a clause of zero or more transformations.
     /// </summary>
-    private TransformInstructionSet ParseTransformClause()
+    private TransformInstructionSet ParseTransformClause(TransformInstructionSet instructions = null)
     {
         Clause clause = ParseClause("transformClause");
         
@@ -22,7 +22,8 @@ public partial class LanguageParser
             return null;
 
         List<Term> terms = clause.Expressions.Cast<Term>().ToList();
-        TransformInstructionSet instructions = new ();
+
+        instructions ??= new TransformInstructionSet();
 
         while (clause.Tokens.Count > 0)
         {

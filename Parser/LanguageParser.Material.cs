@@ -18,6 +18,16 @@ public partial class LanguageParser
     {
         MaterialInstructionSet instructionSet = new ();
 
+        ParseMaterialClause(instructionSet);
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to parse a clause of zero or more transformations.
+    /// </summary>
+    private MaterialInstructionSet ParseMaterialClause(MaterialInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("materialEntryClause", HandleMaterialEntryClause);

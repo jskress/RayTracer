@@ -1,0 +1,211 @@
+// This file defines a single, 6-sided die.
+
+rods = union {
+	cylinder {
+		material inherited
+		min Y -0.4
+		max Y 0.4
+		scale [0.1, 1, 0.1]
+		translate [0.4, 0, 0.4]
+	}
+	cylinder {
+		material inherited
+		min Y -0.4
+		max Y 0.4
+		scale [0.1, 1, 0.1]
+		translate [0.4, 0, -0.4]
+	}
+	cylinder {
+		material inherited
+		min Y -0.4
+		max Y 0.4
+		scale [0.1, 1, 0.1]
+		translate [-0.4, 0, -0.4]
+	}
+	cylinder {
+		material inherited
+		min Y -0.4
+		max Y 0.4
+		scale [0.1, 1, 0.1]
+		translate [-0.4, 0, 0.4]
+	}
+	material inherited
+}
+
+dieBody = union {
+	cube {
+		material inherited
+		scale [0.4, 0.4, 0.5]
+	}
+	cube {
+		material inherited
+		scale [0.4, 0.5, 0.4]
+	}
+	cube {
+		material inherited
+		scale [0.5, 0.4, 0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [0.4, 0.4, 0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [-0.4, 0.4, 0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [-0.4, 0.4, -0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [0.4, 0.4, -0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [0.4, -0.4, 0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [-0.4, -0.4, 0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [-0.4, -0.4, -0.4]
+	}
+	sphere {
+		material inherited
+		scale 0.1
+		translate [0.4, -0.4, -0.4]
+	}
+	csg rods
+	csg rods {
+		rotate X 90
+	}
+	csg rods {
+	   rotate Z 90
+	}
+	material inherited
+}
+
+onePip = sphere {
+	scale [0.1, 0.1, 0.02]
+	translate [0, 0, -0.5]
+	rotate X 180
+}
+
+twoPips = union {
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, -0.27, -0.5]
+	}
+	rotate X 90
+}
+
+threePips = union {
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0, 0, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, -0.27, -0.5]
+	}
+	rotate Y 90
+}
+
+fourPips = union {
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, -0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, -0.27, -0.5]
+	}
+	rotate Y 270
+}
+
+fivePips = union {
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0, 0, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, -0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, -0.27, -0.5]
+	}
+	rotate X 270
+}
+
+sixPips = union {
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, 0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0, -0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [-0.27, -0.27, -0.5]
+	}
+	sphere {
+		scale [0.1, 0.1, 0.02]
+		translate [0.27, -0.27, -0.5]
+	}
+}
+
+die = difference {
+	csg dieBody
+	csg sixPips
+	csg fivePips
+	object onePip
+	csg twoPips
+	csg threePips
+	csg fourPips
+}

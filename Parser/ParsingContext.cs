@@ -15,6 +15,12 @@ internal class ParsingContext
     internal InstructionContext InstructionContext { get; } = new ();
 
     /// <summary>
+    /// This property holds a dictionary of items that havve been assigned to a variable
+    /// name and are extensible where referenced.
+    /// </summary>
+    internal Dictionary<string, ICopyableInstructionSet> ExtensibleItems { get; } = new ();
+
+    /// <summary>
     /// This property reports whether we have seen any scene definitions.
     /// </summary>
     public bool SeenSceneDefinition { get; private set; }

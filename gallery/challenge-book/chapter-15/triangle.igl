@@ -15,7 +15,7 @@ plane {
 	}
 }
 
-triangle [-1, 0, 0], [1, 0, 0], [0, 2, 0] {
+triangle ([-1, 0, 0], [1, 0, 0], [0, 2, 0]) {
 	material {
 		pigment bouncing linear gradient {
 			DeepSkyBlue, LightSkyBlue

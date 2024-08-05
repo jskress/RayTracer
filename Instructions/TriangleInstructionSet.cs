@@ -33,4 +33,17 @@ public class TriangleInstructionSet : SurfaceInstructionSet<Triangle>
 
         CreatedObject = new Triangle(point1, point2, point3);
     }
+
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        TriangleInstructionSet instructionSet = new (_point1Term, _point2Term, _point3Term);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
+    }
 }

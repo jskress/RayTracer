@@ -113,4 +113,20 @@ public class GroupInstructionSet : SurfaceInstructionSet<Group>
             CreatedObject.Add(surface);
         }
     }
+
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        GroupInstructionSet instructionSet = new (
+            _variableName, _startTerm, _endTerm, _stepTerm, _startIsOpen, _endIsOpen);
+
+        instructionSet._instructions.AddRange(_instructions);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
+    }
 }

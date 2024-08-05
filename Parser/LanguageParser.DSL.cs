@@ -25,7 +25,7 @@ public partial class LanguageParser
         cubed: _operator("\u00b3")
         _keywords: 'ambient', 'angles', 'apply', 'at', 'are', 'author', 'background',
             'bits', 'blend', 'bouncing', 'bounded', 'by', 'camera', 'channel', 'checker',
-            'closed', 'color', 'comment', 'conic', 'context', 'copyright', 'cube',
+            'closed', 'color', 'comment', 'conic', 'context', 'copyright', 'csg', 'cube',
             'cylinder', 'degrees', 'description', 'difference', 'diffuse', 'disclaimer',
             'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
             'height', 'include', 'index', 'info', 'inherited', 'intersection', 'ior',
@@ -193,7 +193,10 @@ public partial class LanguageParser
         // Material clauses.
         startMaterialClause:
         {
-            material > [ openBrace | _identifier | _keyword ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
+            material > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }
         materialValueClause:
         {
@@ -219,7 +222,8 @@ public partial class LanguageParser
         }
         surfaceTransformClause:
         {
-            transform > _identifier ?? 'Expecting an identifier to follow "transform" here.'
+            transform > _identifier ?? 'Expecting an identifier to follow "transform" here.' >
+            openBrace{?}
         }
         surfaceEntryClause:
         [
@@ -229,25 +233,29 @@ public partial class LanguageParser
         // Plane clause.
         startPlaneClause:
         {
-            plane > openBrace ?? 'Expecting an open brace to follow "plane" here.'
+            plane > [ _identifier | _keyword ]{?} >
+            openBrace ?? 'Expecting an open brace to follow "plane" here.'
         }
         
         // Sphere clause.
         startSphereClause:
         {
-            sphere > openBrace ?? 'Expecting an open brace to follow "sphere" here.'
+            sphere > [ _identifier | _keyword ]{?} >
+            openBrace ?? 'Expecting an open brace to follow "sphere" here.'
         }
 
         // Cube clause.
         startCubeClause:
         {
-            cube > openBrace ?? 'Expecting an open brace to follow "cube" here.'
+            cube > [ _identifier | _keyword ]{?} >
+            openBrace ?? 'Expecting an open brace to follow "cube" here.'
         }
         
         // Circular surface clauses.
         startCircularSurfaceClause:
         {
-            open{?} > [ cylinder | conic ] > openBrace ?? 'Expecting an open brace here.'
+            open{?} > [ cylinder | conic ] > [ _identifier | _keyword ]{?} >
+            openBrace ?? 'Expecting an open brace here.'
         }
         circularSurfaceEntryClause:
         [
@@ -258,18 +266,24 @@ public partial class LanguageParser
         // Triangle clauses.
         tripleTupleClause:
         {
-            _expression > comma ?? 'Expecting a comma here.' > _expression >
-            comma ?? 'Expecting a comma here.' > _expression
+            leftParen > _expression > comma ?? 'Expecting a comma here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression >
+            rightParen ?? 'Expecting a right parenthesis here.'
         }
         startTriangleClause:
         {
-            triangle > tripleTupleClause > openBrace ?? 'Expecting an open brece here.' 
+            triangle > [
+                { [ _identifier | _keyword ] > openBrace{?} } |
+                { tripleTupleClause > openBrace ?? 'Expecting an open brece here.' }
+            ] ?? 'Expectinbg a triangle specification or variable reference here.'
         }
         startSmoothTriangleClause:
         {
-            smooth > triangle > tripleTupleClause >
-            normals ?? 'Expecting "normals" here.' >
-            tripleTupleClause > openBrace ?? 'Expecting an open brece here.' 
+            smooth > triangle > [
+               { [ _identifier | _keyword ] > openBrace{?} } |
+               { tripleTupleClause > normals ?? 'Expecting "normals" here.' >
+                 tripleTupleClause > openBrace ?? 'Expecting an open brece here.' }
+            ] ?? 'Expectinbg a smooth triangle specification or variable reference here.'
         }
 
         // Object file clause.
@@ -277,12 +291,25 @@ public partial class LanguageParser
         {
             object > file > _expression > openBrace ?? 'Expecting an open brece here.'
         }
-        
+
+        // Object clause.
+        startObjectClause:
+        {
+            object >
+            [ _identifier | _keyword ] ?? 'Expecting an identifier or keyword after "object" here.' >
+            openBrace{?}
+        }
+
         // CSG clauses.
         startCsgClause:
-        {
-            [ union | difference | intersection ] > openBrace ?? 'Expecting an open brece here.'
-        }
+        [
+            { [ union | difference | intersection ] > openBrace ?? 'Expecting an open brece here.' } |
+            {
+                csg >
+                [ _identifier | _keyword ] ?? 'Expecting an identifier or keyword after "csg" here.' >
+                openBrace{?}
+            }
+        ]
         csgEntryClause:
         [
             startPlaneClause => 'plane' |
@@ -292,6 +319,7 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startObjectFileClause => 'objectFile' |
+            startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
             surfaceEntryClause => 'surface'
@@ -310,7 +338,10 @@ public partial class LanguageParser
         }
         startGroupClause:
         {
-            group > groupIntervalClause{?} > openBrace ?? 'Expecting an open brace here.'
+            group > [
+                { groupIntervalClause{?} > openBrace ?? 'Expecting an open brace here.' } |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting a group or variable reference.'
         }
         groupEntryClause:
         [
@@ -321,6 +352,7 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startObjectFileClause => 'objectFile' |
+            startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
             groupBoundedByClause => 'boundingBox' |
@@ -337,7 +369,7 @@ public partial class LanguageParser
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
             startSphereClause | startCubeClause | startCircularSurfaceClause |
             startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
-            startCsgClause | startGroupClause | background
+            startObjectClause | startCsgClause | startGroupClause | background
         ] ?? 'Unsupported scene property found.'
 
         renderClause:
@@ -348,11 +380,21 @@ public partial class LanguageParser
             }{?}
         }
 
+        // Variable clauses.
+        startThingClause:
+        [
+            { [ _identifier | _keyword ] > openBrace{?} } |
+            openBrace ?? 'Expecting an open brace here'
+        ]
         setThingToVariable:
         {
             [ _identifier | _keyword ] > assignment >
-            [ material | pigment | transform ] >
-            openBrace ?? 'Expecting an open brace here.'
+            [
+                pigment | material | transform | startPlaneClause | startPlaneClause |
+                startSphereClause | startCubeClause | startCircularSurfaceClause |
+                startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
+                startObjectClause | startCsgClause | startGroupClause
+            ]
         }
         setVariableClause:
         {
@@ -372,6 +414,7 @@ public partial class LanguageParser
             startTriangleClause        => 'HandleStartTriangleClause' |
             startSmoothTriangleClause  => 'HandleStartSmoothTriangleClause' |
             startObjectFileClause      => 'HandleStartObjectFileClause' |
+            startObjectClause          => 'HandleStartObjectClause' |
             startCsgClause             => 'HandleStartCsgClause' |
             startGroupClause           => 'HandleStartGroupClause' |
             background                 => 'HandleBackgroundClause' |

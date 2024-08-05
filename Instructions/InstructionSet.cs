@@ -17,6 +17,18 @@ public interface IInstructionSet
 }
 
 /// <summary>
+/// This interface is used to mark instruction sets that can be copied.
+/// </summary>
+public interface ICopyableInstructionSet : IInstructionSet
+{
+    /// <summary>
+    /// This method must be implemented to perform the copy operation.
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public object Copy();
+}
+
+/// <summary>
 /// This class represents a set of instructions to run against a particular type of object.
 /// </summary>
 public abstract class InstructionSet<TObject> : Instruction, IInstructionSet
@@ -37,7 +49,7 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// <summary>
     /// This property holds the list of instructions for the set.
     /// </summary>
-    private readonly List<ObjectInstruction<TObject>> _instructions = [];
+    protected List<ObjectInstruction<TObject>> Instructions = [];
 
     /// <summary>
     /// This method is used to add a new instruction to the set.
@@ -47,7 +59,7 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     {
         ArgumentNullException.ThrowIfNull(instruction);
 
-        _instructions.Add(instruction);
+        Instructions.Add(instruction);
     }
 
     /// <summary>
@@ -59,7 +71,7 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// <c>false</c>, if not.</returns>
     public bool TouchesPropertyNamed(string name)
     {
-        return _instructions.Any(
+        return Instructions.Any(
             instruction => instruction is ITouchesProperty touchesProperty &&
                            touchesProperty.PropertyName == name);
     }
@@ -100,13 +112,42 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// <param name="variables">The current set of scoped variables.</param>
     protected void ApplyInstructions(RenderContext context, Variables variables)
     {
-        foreach (ObjectInstruction<TObject> instruction in _instructions)
+        foreach (ObjectInstruction<TObject> instruction in Instructions)
         {
             instruction.Target = CreatedObject;
 
             instruction.Execute(context, variables);
         }
     }
+
+    /// <summary>
+    /// This method is used to copy relevant information from this instruction set to the
+    /// one provided.
+    /// </summary>
+    /// <param name="target">The instruction set to copy into.</param>
+    /// <returns>The given target; it makes things easier.</returns>
+    protected virtual TSet CopyInto<TSet>(TSet target)
+        where TSet : ObjectInstructionSet<TObject>
+    {
+        target.Instructions = [..Instructions];
+
+        return target;
+    }
+}
+
+/// <summary>
+/// This class represents a set of instructions to run against a particular type of object
+/// that can be copied.
+/// </summary>
+public abstract class CopyableObjectInstructionSet<TObject>
+    : ObjectInstructionSet<TObject>, ICopyableInstructionSet
+    where TObject : class, new()
+{
+    /// <summary>
+    /// This method must be implemented to perform the copy operation.
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public abstract object Copy();
 }
 
 /// <summary>
@@ -119,7 +160,7 @@ public abstract class ListInstructionSet<TObject> : InstructionSet<TObject>
     /// <summary>
     /// This property holds the list of instruction sets for the set.
     /// </summary>
-    protected readonly List<InstructionSet<TObject>> Instructions = [];
+    protected List<InstructionSet<TObject>> Instructions = [];
 
     /// <summary>
     /// This method is used to add a new instruction to the set.
@@ -157,4 +198,33 @@ public abstract class ListInstructionSet<TObject> : InstructionSet<TObject>
     /// </summary>
     /// <param name="objects">The list of child objects.</param>
     protected abstract void CreateTargetFrom(List<TObject> objects);
+
+    /// <summary>
+    /// This method is used to copy relevant information from this instruction set to the
+    /// one provided.
+    /// </summary>
+    /// <param name="target">The instruction set to copy into.</param>
+    /// <returns>The given target; it makes things easier.</returns>
+    protected TSet CopyInto<TSet>(TSet target)
+        where TSet : ListInstructionSet<TObject>
+    {
+        target.Instructions = [..Instructions];
+
+        return target;
+    }
+}
+
+/// <summary>
+/// This class represents a set of instructions to run against a list of created objects
+/// that can be copied.
+/// </summary>
+public abstract class CopyableListInstructionSet<TObject>
+    : ListInstructionSet<TObject>, ICopyableInstructionSet
+    where TObject : class, new()
+{
+    /// <summary>
+    /// This method must be implemented to perform the copy operation.
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public abstract object Copy();
 }
