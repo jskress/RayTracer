@@ -25,7 +25,7 @@ public interface ICopyableInstructionSet : IInstructionSet
     /// This method must be implemented to perform the copy operation.
     /// </summary>
     /// <returns>The copy of this instruction set.</returns>
-    public abstract object Copy();
+    public object Copy();
 }
 
 /// <summary>
@@ -126,7 +126,7 @@ public class ObjectInstructionSet<TObject> : InstructionSet<TObject>
     /// </summary>
     /// <param name="target">The instruction set to copy into.</param>
     /// <returns>The given target; it makes things easier.</returns>
-    protected TSet CopyInto<TSet>(TSet target)
+    protected virtual TSet CopyInto<TSet>(TSet target)
         where TSet : ObjectInstructionSet<TObject>
     {
         target.Instructions = [..Instructions];

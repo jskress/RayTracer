@@ -13,6 +13,15 @@ namespace RayTracer.Instructions;
 public class RenderInstruction : Instruction
 {
     /// <summary>
+    /// The material to use for surfaces that asked to inherit their material but the
+    /// inheritance never happened.
+    /// </summary>
+    private static readonly Material OrphanMaterial = new ()
+    {
+        Pigment = new SolidPigment(Colors.Gray35)
+    };
+
+    /// <summary>
     /// This property is used to inform the instruction of the current set of objects.
     /// </summary>
     internal List<object> Objects { private get; set; }
@@ -46,7 +55,32 @@ public class RenderInstruction : Instruction
         Scene scene = GetScene(variables);
         Camera camera = GetCamera(variables);
 
+        EnsureMaterials(scene.Surfaces);
+ 
         Canvas = camera.Render(context, scene);
+    }
+
+    /// <summary>
+    /// This method ensures that all given surfaces have a material attached.  It will
+    /// recurse as necessary.
+    /// </summary>
+    /// <param name="surfaces">The list of surfaces to examine.</param>
+    private static void EnsureMaterials(List<Surface> surfaces)
+    {
+        foreach (Surface surface in surfaces)
+        {
+            surface.Material ??= OrphanMaterial;
+
+            switch (surface)
+            {
+                case Group group:
+                    EnsureMaterials(group.Surfaces);
+                    break;
+                case CsgSurface csgSurface:
+                    EnsureMaterials([csgSurface.Left, csgSurface.Right]);
+                    break;
+            }
+        }
     }
 
     /// <summary>

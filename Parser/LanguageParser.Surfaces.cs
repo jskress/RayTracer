@@ -59,18 +59,7 @@ public partial class LanguageParser
         }
 
         if (token.Text == "inherited")
-        {
-            if (_context.ParentSet is not GroupInstructionSet &&
-                _context.ParentSet is not CsgSurfaceInstructionSet)
-            {
-                throw new TokenException("The material cannot be inherited since the surface is not in a group.")
-                {
-                    Token = token
-                };
-            }
-
             return new MarkMaterialForInheritanceInstruction<TObject>();
-        }
 
         if (clause.Tokens.Count > 2)
         {
@@ -142,5 +131,49 @@ public partial class LanguageParser
 
         instructionSet.AddInstruction(new SetChildInstruction<TObject, Matrix>(
             instructions, target => target.Transform));
+    }
+
+    /// <summary>
+    /// This method is used to handle a clause for general surface properties.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set to add instructions to.</param>
+    private void ParseSurfaceInfo<TObject>(ObjectInstructionSet<TObject> instructionSet)
+        where TObject : Surface, new()
+    {
+        _context.PushInstructionSet(instructionSet);
+
+        ParseBlock("surfaceEntryClause", HandleSurfaceInfoEntry);
+
+        _context.PopInstructionSet();
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of an object block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSurfaceInfoEntry(Clause clause)
+    {
+        IInstructionSet instructionSet = _context.CurrentSet;
+
+        if (instructionSet is PlaneInstructionSet)
+            HandlePlaneEntryClause(clause);
+        else if (instructionSet is SphereInstructionSet)
+            HandleSphereEntryClause(clause);
+        else if (instructionSet is CubeInstructionSet)
+            HandleCubeEntryClause(clause);
+        else if (instructionSet is CylinderInstructionSet)
+            HandleCircularSurfaceEntryClause(clause);
+        else if (instructionSet is ConicInstructionSet)
+            HandleCircularSurfaceEntryClause(clause);
+        else if (instructionSet is TriangleInstructionSet)
+            HandleTriangleEntryClause(clause);
+        else if (instructionSet is SmoothTriangleInstructionSet)
+            HandleSmoothTriangleEntryClause(clause);
+        else if (instructionSet is ObjectFileInstructionSet)
+            HandleObjectFileEntryClause(clause);
+        else if (instructionSet is CsgSurfaceInstructionSet)
+            HandleCsgEntryClause(clause, "surface");
+        else if (instructionSet is GroupInstructionSet)
+            HandleGroupEntryClause(clause);
     }
 }

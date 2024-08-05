@@ -24,10 +24,17 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a csg block.
     /// </summary>
-    /// <param name="clause">The clause that started the csg.</param>
+    /// <param name="clause">The clause that started the CSG.</param>
     private CsgSurfaceInstructionSet ParseCsgClause(Clause clause)
     {
         string text = clause.Tokens[0].Text;
+
+        if (text == "csg")
+        {
+            return DetermineProperInstructionSet<CsgSurfaceInstructionSet>(
+                clause, null, ParseCsgClause);
+        }
+
         CsgOperation operation = text switch
         {
             "union" => CsgOperation.Union,
@@ -38,13 +45,22 @@ public partial class LanguageParser
 
         CsgSurfaceInstructionSet instructionSet = new (operation, clause.Tokens[0]);
 
+        ParseCsgClause(instructionSet);
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a csg block.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set to use.</param>
+    private void ParseCsgClause(CsgSurfaceInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("csgEntryClause", HandleCsgEntryClause);
 
         _context.PopInstructionSet();
-
-        return instructionSet;
     }
 
     /// <summary>
@@ -52,6 +68,16 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     private void HandleCsgEntryClause(Clause clause)
+    {
+        HandleCsgEntryClause(clause, null);
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a csg block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="tag">The tag to use, if we need to override the one in the clause.</param>
+    private void HandleCsgEntryClause(Clause clause, string tag)
     {
         CsgSurfaceInstructionSet instructionSet = (CsgSurfaceInstructionSet) _context.CurrentSet;
 
@@ -62,23 +88,22 @@ public partial class LanguageParser
             return;            
         }
 
-        switch (clause.Tag)
+        switch (tag ?? clause.Tag)
         {
             case "plane":
-                instructionSet.AddInstruction(ParsePlaneClause());
+                instructionSet.AddInstruction(ParsePlaneClause(clause));
                 break;
             case "sphere":
-                instructionSet.AddInstruction(ParseSphereClause());
+                instructionSet.AddInstruction(ParseSphereClause(clause));
                 break;
             case "cube":
-                instructionSet.AddInstruction(ParseCubeClause());
+                instructionSet.AddInstruction(ParseCubeClause(clause));
                 break;
             case "circularSurface":
-                bool open = clause.Tokens[0].Text == "open";
                 if (clause.Tokens[0].Text == "cylinder" || clause.Tokens[1].Text == "cylinder")
-                    instructionSet.AddInstruction(ParseCylinderClause(open));
+                    instructionSet.AddInstruction(ParseCylinderClause(clause));
                 else if (clause.Tokens[0].Text == "conic" || clause.Tokens[1].Text == "conic")
-                    instructionSet.AddInstruction(ParseConicClause(open));
+                    instructionSet.AddInstruction(ParseConicClause(clause));
                 else
                     throw new Exception("Internal error: unknown circular surface type.");
                 break;
@@ -90,6 +115,9 @@ public partial class LanguageParser
                 break;
             case "objectFile":
                 instructionSet.AddInstruction(ParseObjectFileClause(clause));
+                break;
+            case "object":
+                ParseObjectClause(clause, csgSurfaceInstructionSet: instructionSet);
                 break;
             case "csg":
                 instructionSet.AddInstruction(ParseCsgClause(clause));

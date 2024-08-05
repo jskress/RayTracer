@@ -71,4 +71,19 @@ public class CsgSurfaceInstructionSet : SurfaceInstructionSet<CsgSurface>
         if (CreatedObject.Material != null)
             CreatedObject.SetMaterial(CreatedObject.Material);
     }
+
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        CsgSurfaceInstructionSet instructionSet = new (_operation, _errorToken);
+
+        instructionSet._instructions.AddRange(_instructions);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
+    }
 }

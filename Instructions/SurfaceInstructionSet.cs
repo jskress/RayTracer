@@ -1,40 +1,12 @@
-using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
 
 namespace RayTracer.Instructions;
 
 /// <summary>
-/// This class is used to create scenes.
+/// This class is the base class for all instruction sets that create surfaces.
 /// </summary>
-public class SceneInstructionSet : ObjectInstructionSet<Scene>;
-
-/// <summary>
-/// This class is used to create cameras.
-/// </summary>
-public class CameraInstructionSet : ObjectInstructionSet<Camera>;
-
-/// <summary>
-/// This class is used to create point lights.
-/// </summary>
-public class PointLightInstructionSet : ObjectInstructionSet<PointLight>;
-
-/// <summary>
-/// This class is used to create materials.
-/// </summary>
-public class MaterialInstructionSet : CopyableObjectInstructionSet<Material>
-{
-    /// <summary>
-    /// This method creates a copy of this instruction set,
-    /// </summary>
-    /// <returns>The copy of this instruction set.</returns>
-    public override object Copy()
-    {
-        return CopyInto(new MaterialInstructionSet());
-    }
-}
-
-public class SurfaceInstructionSet<TObject> : ObjectInstructionSet<TObject>
+public abstract class SurfaceInstructionSet<TObject> : CopyableObjectInstructionSet<TObject>
     where TObject : Surface, new()
 {
     /// <summary>
@@ -76,28 +48,3 @@ public class SurfaceInstructionSet<TObject> : ObjectInstructionSet<TObject>
         };
     }
 }
-
-/// <summary>
-/// This class is used to create planes.
-/// </summary>
-public class PlaneInstructionSet : SurfaceInstructionSet<Plane>;
-
-/// <summary>
-/// This class is used to create spheres.
-/// </summary>
-public class SphereInstructionSet : SurfaceInstructionSet<Sphere>;
-
-/// <summary>
-/// This class is used to create cubes.
-/// </summary>
-public class CubeInstructionSet : SurfaceInstructionSet<Cube>;
-
-/// <summary>
-/// This class is used to create cylinders.
-/// </summary>
-public class CylinderInstructionSet : SurfaceInstructionSet<Cylinder>;
-
-/// <summary>
-/// This class is used to create conics.
-/// </summary>
-public class ConicInstructionSet : SurfaceInstructionSet<Conic>;

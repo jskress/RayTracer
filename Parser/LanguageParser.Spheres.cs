@@ -16,7 +16,7 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Sphere");
 
-        SphereInstructionSet instructionSet = ParseSphereClause();
+        SphereInstructionSet instructionSet = ParseSphereClause(clause);
 
         _ = new TopLevelObjectInstruction<Sphere>(_context.InstructionContext, instructionSet);
     }
@@ -24,17 +24,25 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a sphere block.
     /// </summary>
-    private SphereInstructionSet ParseSphereClause()
+    /// <param name="clause">The clause that starts the sphere.</param>
+    private SphereInstructionSet ParseSphereClause(Clause clause)
     {
-        SphereInstructionSet instructionSet = new ();
+        return DetermineProperInstructionSet(
+            clause, () => new SphereInstructionSet(), 
+            ParseSphereClause);
+    }
 
+    /// <summary>
+    /// This method is used to create the instruction set from a sphere block.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set to parse out.</param>
+    private void ParseSphereClause(SphereInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("surfaceEntryClause", HandleSphereEntryClause);
 
         _context.PopInstructionSet();
-
-        return instructionSet;
     }
 
     /// <summary>

@@ -15,8 +15,8 @@ plane {
 	}
 }
 
-smooth triangle [-1, 0, 0], [1, 0, 0], [0, 2, 0]
- 	normals [-1, 0, -1], [0, 1, -1], [2.5, 0, -1] {
+smooth triangle ([-1, 0, 0], [1, 0, 0], [0, 2, 0])
+ 	normals ([-1, 0, -1], [0, 1, -1], [2.5, 0, -1]) {
 	material {
 		pigment SkyBlue
 	}

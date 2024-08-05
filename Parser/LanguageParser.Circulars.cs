@@ -17,12 +17,7 @@ public partial class LanguageParser
     /// </summary>
     private void HandleStartCircularSurfaceClause(Clause clause)
     {
-        bool open = clause.Tokens[0].Text == "open";
-
-        if (open)
-            clause.Tokens.RemoveFirst();
-
-        string text = clause.Tokens[0].Text;
+        string text = clause.Tokens[clause.Tokens[0].Text == "open" ? 1: 0].Text;
 
         VerifyDefaultSceneUsage(clause, $"{char.ToUpper(text[0])}{text[1..]}");
 
@@ -30,14 +25,16 @@ public partial class LanguageParser
         {
             case "cylinder":
             {
-                CylinderInstructionSet cylinderInstructionSet = ParseCylinderClause(open);
-                _ = new TopLevelObjectInstruction<Cylinder>(_context.InstructionContext, cylinderInstructionSet);
+                CylinderInstructionSet cylinderInstructionSet = ParseCylinderClause(clause);
+                _ = new TopLevelObjectInstruction<Cylinder>(
+                    _context.InstructionContext, cylinderInstructionSet);
                 break;
             }
             case "conic":
             {
-                ConicInstructionSet conicInstructionSet = ParseConicClause(open);
-                _ = new TopLevelObjectInstruction<Conic>(_context.InstructionContext, conicInstructionSet);
+                ConicInstructionSet conicInstructionSet = ParseConicClause(clause);
+                _ = new TopLevelObjectInstruction<Conic>(
+                    _context.InstructionContext, conicInstructionSet);
                 break;
             }
             default:
@@ -51,25 +48,44 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a cylinder block.
     /// </summary>
-    private CylinderInstructionSet ParseCylinderClause(bool open)
+    private CylinderInstructionSet ParseCylinderClause(Clause clause)
     {
-        CylinderInstructionSet instructionSet = new ();
+        bool open = IsCircularOpen(clause);
 
-        ParseCircularSurfaceClause(instructionSet, open);
-
-        return instructionSet;
+        return DetermineProperInstructionSet(
+            clause, () => new CylinderInstructionSet(), 
+            set => ParseCircularSurfaceClause(set, open));
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a conic block.
     /// </summary>
-    private ConicInstructionSet ParseConicClause(bool open)
+    private ConicInstructionSet ParseConicClause(Clause clause)
     {
-        ConicInstructionSet instructionSet = new ();
+        bool open = IsCircularOpen(clause);
 
-        ParseCircularSurfaceClause(instructionSet, open);
+        return DetermineProperInstructionSet(
+            clause, () => new ConicInstructionSet(), 
+            set => ParseCircularSurfaceClause(set, open));
+    }
 
-        return instructionSet;
+    /// <summary>
+    /// This is a helper method for checking the given clause to see if it starts with the
+    /// "open" token.  If so, it is removed.
+    /// </summary>
+    /// <param name="clause">The clause to check.</param>
+    /// <returns><c>true</c>, if the clause started with an "open" token, or <c>false</c>,
+    /// if not.</returns>
+    private static bool IsCircularOpen(Clause clause)
+    {
+        if (clause.Tokens[0].Text == "open")
+        {
+            clause.Tokens.RemoveFirst();
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

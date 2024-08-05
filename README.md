@@ -55,6 +55,6 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 - [X] Move to the Lex port, when available.
 - [X] Support loops for object graph construction.
-- [ ] Support variables for easier surface reuse, among other things.
+- [X] Support variables for easier surface reuse, among other things.
 
 More to come...

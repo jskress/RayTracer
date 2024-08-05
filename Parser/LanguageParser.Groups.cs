@@ -30,6 +30,16 @@ public partial class LanguageParser
     /// <param name="clause">The clause that started the group.</param>
     private GroupInstructionSet ParseGroupClause(Clause clause)
     {
+        string text = string.Join('.', clause.Tokens[1..]
+            .Select(t => t is IdToken || (t is KeywordToken && t.Text != "by")
+                ? "<id>" : t.Text));
+
+        if (text == "<id>" || text == "<id>." + BounderToken.OpenBrace.Text)
+        {
+            return DetermineProperInstructionSet<GroupInstructionSet>(
+                clause, null, ParseGroupClause);
+        }
+
         Token token = clause.Tokens[1];
         string variableName = null;
         Term startTerm = null;
@@ -38,7 +48,7 @@ public partial class LanguageParser
         bool startIsOpen = false;
         bool endIsOpen = false;
 
-        if (token is IdToken or KeywordToken)
+        if (text.StartsWith("<id>"))
         {
             clause.Tokens.RemoveRange(1, 2);
 
@@ -66,9 +76,20 @@ public partial class LanguageParser
             }
         }
 
-        GroupInstructionSet instructionSet = new (
+        GroupInstructionSet instructionSet = new GroupInstructionSet(
             variableName, startTerm, endTerm, stepTerm, startIsOpen, endIsOpen);
 
+        ParseGroupClause(instructionSet);
+
+        return instructionSet;
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a group block.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set for the group.</param>
+    private void ParseGroupClause(GroupInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("groupEntryClause", HandleGroupEntryClause);
@@ -76,8 +97,6 @@ public partial class LanguageParser
         _context.PopInstructionSet();
 
         instructionSet.AddInstruction(new FinalizeGroupInstruction());
-
-        return instructionSet;
     }
 
     /// <summary>
@@ -98,20 +117,19 @@ public partial class LanguageParser
         switch (clause.Tag)
         {
             case "plane":
-                instructionSet.AddInstruction(ParsePlaneClause());
+                instructionSet.AddInstruction(ParsePlaneClause(clause));
                 break;
             case "sphere":
-                instructionSet.AddInstruction(ParseSphereClause());
+                instructionSet.AddInstruction(ParseSphereClause(clause));
                 break;
             case "cube":
-                instructionSet.AddInstruction(ParseCubeClause());
+                instructionSet.AddInstruction(ParseCubeClause(clause));
                 break;
             case "circularSurface":
-                bool open = clause.Tokens[0].Text == "open";
                 if (clause.Tokens[0].Text == "cylinder" || clause.Tokens[1].Text == "cylinder")
-                    instructionSet.AddInstruction(ParseCylinderClause(open));
+                    instructionSet.AddInstruction(ParseCylinderClause(clause));
                 else if (clause.Tokens[0].Text == "conic" || clause.Tokens[1].Text == "conic")
-                    instructionSet.AddInstruction(ParseConicClause(open));
+                    instructionSet.AddInstruction(ParseConicClause(clause));
                 else
                     throw new Exception("Internal error: unknown circular surface type.");
                 break;
@@ -123,6 +141,9 @@ public partial class LanguageParser
                 break;
             case "objectFile":
                 instructionSet.AddInstruction(ParseObjectFileClause(clause));
+                break;
+            case "object":
+                ParseObjectClause(clause, groupInstructionSet: instructionSet);
                 break;
             case "csg":
                 instructionSet.AddInstruction(ParseCsgClause(clause));

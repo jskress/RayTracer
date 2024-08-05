@@ -29,4 +29,17 @@ public class ObjectFileInstructionSet : SurfaceInstructionSet<Group>
 
         CreatedObject = objectFileParser.Parse();
     }
+    
+    /// <summary>
+    /// This method creates a copy of this instruction set,
+    /// </summary>
+    /// <returns>The copy of this instruction set.</returns>
+    public override object Copy()
+    {
+        ObjectFileInstructionSet instructionSet = new (_directory, _term);
+
+        CopyInto(instructionSet);
+
+        return instructionSet;
+    }
 }

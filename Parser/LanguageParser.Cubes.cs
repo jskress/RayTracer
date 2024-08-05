@@ -16,7 +16,7 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Cube");
 
-        CubeInstructionSet instructionSet = ParseCubeClause();
+        CubeInstructionSet instructionSet = ParseCubeClause(clause);
 
         _ = new TopLevelObjectInstruction<Cube>(_context.InstructionContext, instructionSet);
     }
@@ -24,17 +24,24 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a cube block.
     /// </summary>
-    private CubeInstructionSet ParseCubeClause()
+    /// <param name="clause">The clause that starts the cube.</param>
+    private CubeInstructionSet ParseCubeClause(Clause clause)
     {
-        CubeInstructionSet instructionSet = new ();
+        return DetermineProperInstructionSet(
+            clause, () => new CubeInstructionSet(), 
+            ParseCubeClause);
+    }
 
+    /// <summary>
+    /// This method is used to create the instruction set from a cube block.
+    /// </summary>
+    private void ParseCubeClause(CubeInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("surfaceEntryClause", HandleCubeEntryClause);
 
         _context.PopInstructionSet();
-
-        return instructionSet;
     }
 
     /// <summary>

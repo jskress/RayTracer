@@ -36,13 +36,14 @@ public partial class LanguageParser
     {
         SceneInstructionSet instructionSet = (SceneInstructionSet) _context.CurrentSet;
         string field = clause.Tokens[0].Text;
+        string second = clause.Tokens[1].Text;
         Term term = (Term) clause.Expressions.First();
-        bool open = false;
 
-        if (field == "open")
+        if (field == "object" && second != "file")
         {
-            field = clause.Tokens[1].Text;
-            open = true;
+            ParseObjectClause(clause, sceneInstructionSet: instructionSet);
+            
+            return;
         }
 
         ObjectInstruction<Scene> instruction = field switch
@@ -55,15 +56,19 @@ public partial class LanguageParser
             "light" => new AddChildInstruction<Scene, PointLight>(
                 ParsePointLightClause(), scene => scene.Lights),
             "plane" => new AddChildInstruction<Scene, Surface, Plane>(
-                ParsePlaneClause(), scene => scene.Surfaces),
+                ParsePlaneClause(clause), scene => scene.Surfaces),
             "sphere" => new AddChildInstruction<Scene, Surface, Sphere>(
-                ParseSphereClause(), scene => scene.Surfaces),
+                ParseSphereClause(clause), scene => scene.Surfaces),
             "cube" => new AddChildInstruction<Scene, Surface, Cube>(
-                ParseCubeClause(), scene => scene.Surfaces),
+                ParseCubeClause(clause), scene => scene.Surfaces),
             "cylinder" => new AddChildInstruction<Scene, Surface, Cylinder>(
-                ParseCylinderClause(open), scene => scene.Surfaces),
+                ParseCylinderClause(clause), scene => scene.Surfaces),
             "conic" => new AddChildInstruction<Scene, Surface, Conic>(
-                ParseConicClause(open), scene => scene.Surfaces),
+                ParseConicClause(clause), scene => scene.Surfaces),
+            "open" when second == "cylinder" => new AddChildInstruction<Scene, Surface, Cylinder>(
+                ParseCylinderClause(clause), scene => scene.Surfaces),
+            "open" when second == "conic" => new AddChildInstruction<Scene, Surface, Conic>(
+                ParseConicClause(clause), scene => scene.Surfaces),
             "triangle" => new AddChildInstruction<Scene, Surface, Triangle>(
                 ParseTriangleClause(clause), scene => scene.Surfaces),
             "smooth" => new AddChildInstruction<Scene, Surface, SmoothTriangle>(

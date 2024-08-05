@@ -12,11 +12,12 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to handle the beginning of a plane block.
     /// </summary>
+    /// <param name="clause">The clause that starts the plane.</param>
     private void HandleStartPlaneClause(Clause clause)
     {
         VerifyDefaultSceneUsage(clause, "Plane");
 
-        PlaneInstructionSet instructionSet = ParsePlaneClause();
+        PlaneInstructionSet instructionSet = ParsePlaneClause(clause);
 
         _ = new TopLevelObjectInstruction<Plane>(_context.InstructionContext, instructionSet);
     }
@@ -24,17 +25,25 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a plane block.
     /// </summary>
-    private PlaneInstructionSet ParsePlaneClause()
+    /// <param name="clause">The clause that starts the plane.</param>
+    private PlaneInstructionSet ParsePlaneClause(Clause clause)
     {
-        PlaneInstructionSet instructionSet = new ();
+        return DetermineProperInstructionSet(
+            clause, () => new PlaneInstructionSet(), 
+            ParsePlaneClause);
+    }
 
+    /// <summary>
+    /// This method is used to create the instruction set from a plane block.
+    /// </summary>
+    /// <param name="instructionSet">The instruction set to parse out.</param>
+    private void ParsePlaneClause(PlaneInstructionSet instructionSet)
+    {
         _context.PushInstructionSet(instructionSet);
 
         ParseBlock("surfaceEntryClause", HandlePlaneEntryClause);
 
         _context.PopInstructionSet();
-
-        return instructionSet;
     }
 
     /// <summary>
