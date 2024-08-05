@@ -19,6 +19,8 @@ public class Vector : NumberTuple
 
     public Vector(double x, double y, double z, double w = 0) : base(x, y, z, w) {}
 
+    public Vector(Point point) : base(point.X, point.Y, point.Z, 0) {}
+
     /// <summary>
     /// This method normalizes this vector into its unit form.
     /// </summary>

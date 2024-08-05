@@ -32,8 +32,8 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### To-Dos for Surfaces:
 - [ ] Texture mapping.
 - [ ] Normal perturbation.
-- [ ] Torus.
-- [ ] Other surfaces (Height fields, SORs, etc.)
+- [X] Torus.
+- [ ] Other surfaces (Height fields, SORs, sweeps, etc.)
 
 ### To-Dos for Patterns:
 

@@ -42,8 +42,7 @@ public partial class LanguageParser
         }
 
         return DetermineProperInstructionSet<TriangleInstructionSet>(
-            clause, null,
-            ParseTriangleClause);
+            clause, null, ParseTriangleClause);
     }
 
     /// <summary>

@@ -35,8 +35,8 @@ public partial class LanguageParser
             'radians', 'reflective', 'refraction', 'render', 'report', 'ring', 'rotate',
             'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess',
             'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
-            'transform', 'translate', 'transparency', 'triangle', 'true', 'union', 'up',
-            'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
+            'torus', 'transform', 'translate', 'transparency', 'triangle', 'true', 'union',
+            'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -263,6 +263,20 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Torus clauses.
+        doubleTupleClause:
+        {
+            leftParen > _expression > comma ?? 'Expecting a comma here.' > _expression >
+            rightParen ?? 'Expecting a right parenthesis here.'
+        }
+        startTorusClause:
+        {
+            torus > [
+                { [ _identifier | _keyword ] > openBrace{?} } |
+                { doubleTupleClause > openBrace ?? 'Expecting an open brece here.' }
+            ] ?? 'Expectinbg a torus specification or variable reference here.'
+        }
+
         // Triangle clauses.
         tripleTupleClause:
         {
@@ -316,6 +330,7 @@ public partial class LanguageParser
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
             startCircularSurfaceClause => 'circularSurface' |
+            startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startObjectFileClause => 'objectFile' |
@@ -349,6 +364,7 @@ public partial class LanguageParser
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
             startCircularSurfaceClause => 'circularSurface' |
+            startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startObjectFileClause => 'objectFile' |
@@ -368,8 +384,9 @@ public partial class LanguageParser
         [
             namedClause | startCameraClause | startPointLightClause | startPlaneClause |
             startSphereClause | startCubeClause | startCircularSurfaceClause |
-            startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
-            startObjectClause | startCsgClause | startGroupClause | background
+            startTorusClause | startTriangleClause | startSmoothTriangleClause |
+            startObjectFileClause | startObjectClause | startCsgClause | startGroupClause |
+            background
         ] ?? 'Unsupported scene property found.'
 
         renderClause:
@@ -392,8 +409,8 @@ public partial class LanguageParser
             [
                 pigment | material | transform | startPlaneClause | startPlaneClause |
                 startSphereClause | startCubeClause | startCircularSurfaceClause |
-                startTriangleClause | startSmoothTriangleClause | startObjectFileClause |
-                startObjectClause | startCsgClause | startGroupClause
+                startTorusClause | startTriangleClause | startSmoothTriangleClause |
+                startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -411,6 +428,7 @@ public partial class LanguageParser
             startSphereClause          => 'HandleStartSphereClause' |
             startCubeClause            => 'HandleStartCubeClause' |
             startCircularSurfaceClause => 'HandleStartCircularSurfaceClause' |
+            startTorusClause           => 'HandleStartTorusClause' |
             startTriangleClause        => 'HandleStartTriangleClause' |
             startSmoothTriangleClause  => 'HandleStartSmoothTriangleClause' |
             startObjectFileClause      => 'HandleStartObjectFileClause' |

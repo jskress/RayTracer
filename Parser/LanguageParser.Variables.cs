@@ -100,6 +100,12 @@ public partial class LanguageParser
                     new SetVariableInstruction<Conic>(name, conicInstructionSet));
                 instructionSet = conicInstructionSet;
                 break;
+            case "torus":
+                TorusInstructionSet torusInstructionSet = ParseTorusClause(clause);
+                _context.InstructionContext.AddInstruction(
+                    new SetVariableInstruction<Torus>(name, torusInstructionSet));
+                instructionSet = torusInstructionSet;
+                break;
             case "triangle":
                 TriangleInstructionSet triangleInstructionSet = ParseTriangleClause(clause);
                 _context.InstructionContext.AddInstruction(

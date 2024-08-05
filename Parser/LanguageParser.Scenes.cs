@@ -69,6 +69,8 @@ public partial class LanguageParser
                 ParseCylinderClause(clause), scene => scene.Surfaces),
             "open" when second == "conic" => new AddChildInstruction<Scene, Surface, Conic>(
                 ParseConicClause(clause), scene => scene.Surfaces),
+            "torus" => new AddChildInstruction<Scene, Surface, Torus>(
+                ParseTorusClause(clause), scene => scene.Surfaces),
             "triangle" => new AddChildInstruction<Scene, Surface, Triangle>(
                 ParseTriangleClause(clause), scene => scene.Surfaces),
             "smooth" => new AddChildInstruction<Scene, Surface, SmoothTriangle>(
