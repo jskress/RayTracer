@@ -31,9 +31,9 @@ public partial class LanguageParser
     {
         if (BounderToken.LeftParen.Matches(clause.Tokens[1]))
         {
-            Term first = (Term) clause.Expressions[0];
-            Term second = (Term) clause.Expressions[1];
-            Term third = (Term) clause.Expressions[2];
+            Term first = clause.Term();
+            Term second = clause.Term(1);
+            Term third = clause.Term(2);
             TriangleInstructionSet instructionSet = new (first, second, third);
 
             ParseTriangleClause(instructionSet);

@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Terms;
 
@@ -46,8 +47,8 @@ public partial class LanguageParser
     private void HandleCameraEntryClause(Clause clause)
     {
         CameraInstructionSet instructionSet = (CameraInstructionSet) _context.CurrentSet;
-        string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
+        string field = clause.Text();
+        Term term = clause.Term();
 
         ObjectInstruction<Camera> instruction = field switch
         {

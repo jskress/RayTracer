@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
 using RayTracer.Pigments;
@@ -35,8 +36,8 @@ public partial class LanguageParser
     private void HandleSceneEntryClause(Clause clause)
     {
         SceneInstructionSet instructionSet = (SceneInstructionSet) _context.CurrentSet;
-        string field = clause.Tokens[0].Text;
-        string second = clause.Tokens[1].Text;
+        string field = clause.Text();
+        string second = clause.Text(1);
         Term term = (Term) clause.Expressions.First();
 
         if (field == "object" && second != "file")

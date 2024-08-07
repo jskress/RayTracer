@@ -267,11 +267,11 @@ public partial class LanguageParser
     /// <returns>The consolidated "command" we found.</returns>
     private static string ToCmd(Clause clause)
     {
-        string first = clause.Tokens[0].Text;
+        string first = clause.Text();
         List<string> words = [first];
 
         if (first is "apply" or "no")
-            words.Add(clause.Tokens[1].Text);
+            words.Add(clause.Text(1));
 
         return string.Join('.', words);
     }

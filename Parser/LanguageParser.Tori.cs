@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using Lex.Tokens;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
 using RayTracer.Terms;
@@ -30,8 +31,8 @@ public partial class LanguageParser
     {
         if (BounderToken.LeftParen.Matches(clause.Tokens[1]))
         {
-            Term first = (Term) clause.Expressions[0];
-            Term second = (Term) clause.Expressions[1];
+            Term first = clause.Term();
+            Term second = clause.Term(1);
             TorusInstructionSet instructionSet = new (first, second);
 
             ParseTorusClause(instructionSet);

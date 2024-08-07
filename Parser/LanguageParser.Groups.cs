@@ -59,17 +59,17 @@ public partial class LanguageParser
         if (BounderToken.LeftParen.Matches(token) ||
             BounderToken.OpenBracket.Matches(token))
         {
-            startTerm = (Term) clause.Expressions[0];
-            endTerm = (Term) clause.Expressions[1];
+            startTerm = clause.Term();
+            endTerm = clause.Term(1);
             startIsOpen = BounderToken.LeftParen.Matches(token);
             endIsOpen = BounderToken.LeftParen.Matches(clause.Tokens[3]);
 
             clause.Expressions.RemoveRange(0, 2);
             clause.Tokens.RemoveRange(1, 3);
 
-            if (clause.Tokens[1].Text == "by")
+            if (clause.Text(1) == "by")
             {
-                stepTerm = (Term) clause.Expressions[0];
+                stepTerm = clause.Term();
 
                 clause.Expressions.RemoveFirst();
                 clause.Tokens.RemoveAt(1);
@@ -156,7 +156,7 @@ public partial class LanguageParser
                 break;
             case "boundingBox":
                 instructionSet.AddInstruction(new SetBoundingBoxInstruction(
-                    (Term) clause.Expressions[0], (Term) clause.Expressions[1]));
+                    clause.Term(), clause.Term(1)));
                 break;
             case "surface":
                 HandleSurfaceClause(clause, instructionSet, "group");

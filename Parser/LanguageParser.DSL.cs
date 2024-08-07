@@ -30,13 +30,14 @@ public partial class LanguageParser
             'false', 'field', 'file', 'from', 'gamma', 'gradient', 'grayscale', 'group',
             'height', 'include', 'index', 'info', 'inherited', 'intersection', 'ior',
             'light', 'line', 'linear', 'location', 'look', 'material', 'matrix', 'max',
-            'maximum', 'min', 'minimum', 'named', 'no', 'normals', 'null', 'object', 'of',
-            'open', 'parallel', 'per', 'pigment', 'pixel', 'plane', 'point', 'radial',
-            'radians', 'reflective', 'refraction', 'render', 'report', 'ring', 'rotate',
-            'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear', 'shininess',
-            'smooth', 'software', 'source', 'specular', 'sphere', 'stripe', 'title', 'to',
-            'torus', 'transform', 'translate', 'transparency', 'triangle', 'true', 'union',
-            'up', 'vector', 'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
+            'maximum', 'min', 'minimum', 'named', 'no', 'noisy', 'normals', 'null',
+            'object', 'of', 'open', 'parallel', 'per', 'phased', 'pigment', 'pixel',
+            'plane', 'point', 'radial', 'radians', 'reflective', 'refraction', 'render',
+            'report', 'ring', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow',
+            'shadows', 'shear', 'shininess', 'smooth', 'software', 'source', 'specular',
+            'sphere', 'stripe', 'title', 'to', 'torus', 'transform', 'translate',
+            'transparency', 'triangle', 'true', 'turbulence', 'union', 'up', 'vector',
+            'view', 'warning', 'width', 'with', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -178,9 +179,15 @@ public partial class LanguageParser
         {
             bouncing{?} > radial > gradient ?? 'Expecting "gradient" to follow "radial" here.'
         }
+        turbulenceClause:
+        {
+            turbulence > _expression >
+            { phased > _expression > { comma > _expression }{?} }{?}
+        }
         startPigmentPairClause:
         {
-            [ checker | ring | stripe | blend | linearGradientClause | radialGradientClause ] >
+            [ checker | ring | stripe | blend | linearGradientClause | radialGradientClause |
+              noisy ] >
             openBrace ?? 'Expecting an open brace to follow pigment type here.'
         }
         pigmentClause:

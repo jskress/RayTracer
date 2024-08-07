@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Pigments;
 using RayTracer.Terms;
@@ -44,8 +45,8 @@ public partial class LanguageParser
     private void HandleMaterialEntryClause(Clause clause)
     {
         MaterialInstructionSet instructionSet = (MaterialInstructionSet) _context.CurrentSet;
-        string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.FirstOrDefault();
+        string field = clause.Text();
+        Term term = clause.Term();
 
         ObjectInstruction<Material> instruction = field switch
         {

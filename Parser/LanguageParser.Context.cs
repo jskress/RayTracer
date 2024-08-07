@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using Lex.Tokens;
+using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Scanners;
 using RayTracer.Terms;
@@ -34,7 +35,7 @@ public partial class LanguageParser
             return;
         }
 
-        Term term = (Term) clause.Expressions.FirstOrDefault();
+        Term term = clause.Term();
 
         Instruction instruction = field switch
         {
@@ -114,7 +115,7 @@ public partial class LanguageParser
     /// <returns>The created instruction.</returns>
     private static Instruction CreateAnglesClauseInstruction(Clause clause)
     {
-        bool isRadians = clause.Tokens[2].Text == "radians";
+        bool isRadians = clause.Text(2) == "radians";
 
         return new SetContextPropertyInstruction<bool>(
             context => context.AnglesAreRadians, isRadians);
@@ -126,8 +127,8 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleInfoEntryClause(Clause clause)
     {
-        string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
+        string field = clause.Text();
+        Term term = clause.Term();
 
         Instruction instruction = field switch
         {

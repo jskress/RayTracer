@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
 
@@ -14,7 +15,7 @@ public partial class LanguageParser
     /// </summary>
     private void HandleStartCsgClause(Clause clause)
     {
-        VerifyDefaultSceneUsage(clause, clause.Tokens[0].Text);
+        VerifyDefaultSceneUsage(clause, clause.Text());
 
         CsgSurfaceInstructionSet instructionSet = ParseCsgClause(clause);
 
@@ -27,7 +28,7 @@ public partial class LanguageParser
     /// <param name="clause">The clause that started the CSG.</param>
     private CsgSurfaceInstructionSet ParseCsgClause(Clause clause)
     {
-        string text = clause.Tokens[0].Text;
+        string text = clause.Text();
 
         if (text == "csg")
         {
