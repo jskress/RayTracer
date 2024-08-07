@@ -39,9 +39,9 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 - [X] Add a radial gradient pigment.
 - [X] Update all pigments to use nested color sources.
-- [ ] Add a perturbing noise function to all pigments.
+- [X] Add a perturbing noise pigment.
 - [X] Add a blending pigment.
-- [ ] Add a color map pigment ala POVRay.
+- [ ] Add pattern with color map pigment ala POVRay.
 - [X] Add a cyclical flag to the gradient pigments (start over vs bounce back).
 - [ ] Update the gradients to do multiples, similar to how most graphics engines
       handle dash patterns.  POVRay has this, too.

@@ -37,9 +37,7 @@ public class LinearGradientPigment : GradientPigment
                 (firstColor, secondColor) = (secondColor, firstColor);
         }
 
-        Color difference = secondColor - firstColor;
-
-        return firstColor + difference * fraction;
+        return firstColor + (secondColor - firstColor) * fraction;
     }
 
     /// <summary>

@@ -14,16 +14,20 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
     /// other pigments.
     /// </summary>
     /// <param name="type">The type of pigment to create.</param>
+    /// <param name="initializeNoisyPigmentInstruction">An initializing instruction for
+    /// when we are to create a noisy pigment.</param>
     /// <param name="transformInstructionSet">The transform instruction set, if any.</param>
     /// <param name="bouncing">For gradients, this notes whether they should bounce or cycle.</param>
     /// <param name="instructionSets">The set of child pigment instruction sets.</param>
     /// <returns>The created pigment instruction set.</returns>
     public static PigmentInstructionSet CompoundPigmentInstructionSet(
-        PigmentType type, TransformInstructionSet transformInstructionSet,
-        bool bouncing, params PigmentInstructionSet[] instructionSets)
+        PigmentType type, InitializeNoisyPigment initializeNoisyPigmentInstruction,
+        TransformInstructionSet transformInstructionSet, bool bouncing,
+        params PigmentInstructionSet[] instructionSets)
     {
         return new PigmentInstructionSet(
-            type, bouncing, instructionSets, null, transformInstructionSet);
+            type, bouncing, instructionSets, null,
+            initializeNoisyPigmentInstruction, transformInstructionSet);
     }
 
     /// <summary>
@@ -36,22 +40,25 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
     {
         return new PigmentInstructionSet(
             PigmentType.Color, false, null, new SolidPigmentInstruction(term),
-            null);
+            null, null);
     }
 
     private readonly PigmentType _type;
     private readonly bool _bouncing;
     private readonly SolidPigmentInstruction _solidPigmentInstruction;
+    private readonly InitializeNoisyPigment _initializeNoisyPigmentInstruction;
     private readonly TransformInstructionSet _transformInstructionSet;
 
     private PigmentInstructionSet(
         PigmentType type, bool bouncing, PigmentInstructionSet[] pigmentInstructionSets,
         SolidPigmentInstruction solidPigmentInstruction,
+        InitializeNoisyPigment initializeNoisyPigmentInstruction,
         TransformInstructionSet transformInstructionSet)
     {
         _type = type;
         _bouncing = bouncing;
         _solidPigmentInstruction = solidPigmentInstruction;
+        _initializeNoisyPigmentInstruction = initializeNoisyPigmentInstruction;
         _transformInstructionSet = transformInstructionSet;
 
         if (pigmentInstructionSets != null)
@@ -69,6 +76,7 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
     public override void Execute(RenderContext context, Variables variables)
     {
         _solidPigmentInstruction?.Execute(context, variables);
+        _initializeNoisyPigmentInstruction?.Execute(context, variables);
         _transformInstructionSet?.Execute(context, variables);
 
         base.Execute(context, variables);
@@ -95,9 +103,13 @@ public class PigmentInstructionSet : ListInstructionSet<Pigment>
             {
                 Bounces = _bouncing
             },
+            PigmentType.Noise => new NoisyPigment(pigments[0]),
             PigmentType.Color => _solidPigmentInstruction.Target,
             _ => throw new Exception($"Internal error: unknown pigment type: {_type}")
         };
+
+        if (CreatedObject is NoisyPigment noisyPigment)
+            _initializeNoisyPigmentInstruction?.ApplyTo(noisyPigment);
 
         if (_transformInstructionSet != null)
             CreatedObject.Transform = _transformInstructionSet.CreatedObject;

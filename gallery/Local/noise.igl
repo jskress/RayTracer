@@ -1,13 +1,13 @@
-// A scene to test the torus.
+// A scene to test pigment noise.
 
 context {
 	parallel pixel scanner
 	angles are degrees
 	no gamma
 	info {
-		title 'Torus Test'
+		title 'Pigment Noise Test'
 		author 'J. Stephen Kress'
-		description 'A scene to test the torus primitive.'
+		description 'A scene to test noise in pigments.'
 		copyright true
 		software __software__
 	}
@@ -26,19 +26,29 @@ point light {
 // Floor
 plane {
 	material {
-		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+		pigment checker {
+			noisy {
+				turbulence 3 phased 5
+				Yellow
+			},
+			Green
+		}
 	}
 }
 
-// Ring
-torus (1, 0.3) {
+// focal point
+sphere {
 	material {
-		pigment Gold
+		pigment noisy {
+			turbulence 7 phased 20
+			Gray50
+			scale 0.5
+		}
 		ambient 0.1
 		reflective 0.25
 		specular 1
 		shininess 300
 	}
-	rotate X -15
-	translate Y 1
+	scale 1.5
+	translate Y 1.5
 }

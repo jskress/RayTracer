@@ -17,7 +17,10 @@ public partial class LanguageParser
     /// </summary>
     private void HandleStartCircularSurfaceClause(Clause clause)
     {
-        string text = clause.Tokens[clause.Tokens[0].Text == "open" ? 1: 0].Text;
+        string text = clause.Text();
+
+        if (text == "open")
+            text = clause.Text(1);
 
         VerifyDefaultSceneUsage(clause, $"{char.ToUpper(text[0])}{text[1..]}");
 
@@ -78,7 +81,7 @@ public partial class LanguageParser
     /// if not.</returns>
     private static bool IsCircularOpen(Clause clause)
     {
-        if (clause.Tokens[0].Text == "open")
+        if (clause.Text() == "open")
         {
             clause.Tokens.RemoveFirst();
 
@@ -142,17 +145,17 @@ public partial class LanguageParser
             HandleSurfaceTransform(instructionSet);
         else
         {
-            string text = clause.Tokens[0].Text;
+            string text = clause.Text();
 
             switch (text)
             {
                 case "min":
                     instructionSet.AddInstruction(new SetObjectPropertyInstruction<TObject, double>(
-                        target => target.MinimumY, (Term) clause.Expressions[0]));
+                        target => target.MinimumY, clause.Term()));
                     break;
                 case "max":
                     instructionSet.AddInstruction(new SetObjectPropertyInstruction<TObject, double>(
-                        target => target.MaximumY, (Term) clause.Expressions[0]));
+                        target => target.MaximumY, clause.Term()));
                     break;
                 default:
                     HandleSurfaceClause(clause, instructionSet, "circularSurface");

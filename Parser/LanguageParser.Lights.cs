@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Terms;
@@ -47,8 +48,8 @@ public partial class LanguageParser
     private void HandlePointLightEntryClause(Clause clause)
     {
         PointLightInstructionSet instructionSet = (PointLightInstructionSet) _context.CurrentSet;
-        string field = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions.First();
+        string field = clause.Text();
+        Term term = clause.Term();
     
         ObjectInstruction<PointLight> instruction = field switch
         {

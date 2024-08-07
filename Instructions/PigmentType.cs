@@ -11,5 +11,6 @@ public enum PigmentType
     Blend,
     LinearGradient,
     RadialGradient,
+    Noise,
     Color
 }

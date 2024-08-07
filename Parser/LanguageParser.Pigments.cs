@@ -17,16 +17,17 @@ public partial class LanguageParser
     private PigmentInstructionSet ParsePigmentClause()
     {
         Clause clause = ParseClause("pigmentClause");
+        string text = clause.Text();
         bool bouncing = false;
         
-        if (clause.Tokens.IsNullOrEmpty() || clause.Tokens[0].Text == "color")
+        if (text is "" or "color")
         {
             Term term = (Term) clause.Expressions.RemoveFirst();
 
             return PigmentInstructionSet.SolidPigmentInstructionSet(term);
         }
 
-        if (clause.Tokens[0].Text == "bouncing")
+        if (text == "bouncing")
         {
             bouncing = true;
 
@@ -34,19 +35,26 @@ public partial class LanguageParser
         }
 
         PigmentType type = ToPigmentType(clause);
-        PigmentInstructionSet first = ParsePigmentClause();
+        InitializeNoisyPigment initializeInstruction = type == PigmentType.Noise
+            ? ParseNoisyPigmentInstruction()
+            : null;
+        List<PigmentInstructionSet> sets = [ParsePigmentClause()];
 
-        CurrentParser.MatchToken(
-            true, () => "Expecting a comma here.", OperatorToken.Comma);
+        if (type != PigmentType.Noise)
+        {
+            CurrentParser.MatchToken(
+                true, () => "Expecting a comma here.", OperatorToken.Comma);
 
-        PigmentInstructionSet second = ParsePigmentClause();
+            sets.Add(ParsePigmentClause());
+        }
+
         TransformInstructionSet transformInstructionSet = ParseTransformClause();
 
         CurrentParser.MatchToken(
             true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
 
         return PigmentInstructionSet.CompoundPigmentInstructionSet(
-            type, transformInstructionSet, bouncing, first, second);
+            type, initializeInstruction, transformInstructionSet, bouncing, sets.ToArray());
     }
 
     /// <summary>
@@ -67,7 +75,36 @@ public partial class LanguageParser
             "blend" => PigmentType.Blend,
             "linear" => PigmentType.LinearGradient,
             "radial" => PigmentType.RadialGradient,
+            "noisy" => PigmentType.Noise,
             _ => throw new Exception($"Internal error: unknown pigment type: {token.Text}")
         };
+    }
+
+    /// <summary>
+    /// This method is used to parse the turbulence clause for a moisy pigment, if the
+    /// clause is present.
+    /// </summary>
+    /// <returns>The initialization instruction, or <c>null</c>.</returns>
+    private InitializeNoisyPigment ParseNoisyPigmentInstruction()
+    {
+        Clause clause = LanguageDsl.ParseClause(CurrentParser, "turbulenceClause");
+
+        if (clause == null)
+            return null;
+
+        Term depthTerm = clause.Term();
+        bool phased = clause.Tokens.Count > 1;
+        Term tightnessTerm = null;
+        Term scaleTerm = null;
+
+        if (phased)
+        {
+            tightnessTerm = clause.Term(1);
+            
+            if (clause.Tokens.Count > 2)
+                scaleTerm = clause.Term(2);
+        }
+
+        return new InitializeNoisyPigment(depthTerm, phased, tightnessTerm, scaleTerm);
     }
 }

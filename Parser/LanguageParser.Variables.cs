@@ -22,8 +22,8 @@ public partial class LanguageParser
     /// </summary>
     private void HandleSetVariableClause(Clause clause)
     {
-        string name = clause.Tokens[0].Text;
-        Term term = (Term) clause.Expressions[0];
+        string name = clause.Text();
+        Term term = clause.Term();
 
         _context.InstructionContext.AddInstruction(new SetVariableInstruction(name, term));
     }
@@ -34,9 +34,9 @@ public partial class LanguageParser
     /// </summary>
     private void HandleSetThingToVariableClause(Clause clause)
     {
-        string name = clause.Tokens[0].Text;
-        string type = clause.Tokens[2].Text;
-        string second = clause.Tokens.Count > 3 ? clause.Tokens[3].Text : string.Empty;
+        string name = clause.Text();
+        string type = clause.Text(2);
+        string second = clause.Text(3);
         ICopyableInstructionSet instructionSet = null;
 
         clause.Tokens.RemoveRange(0, 2);
@@ -199,7 +199,7 @@ public partial class LanguageParser
         Clause clause, Action<TSet> parser, bool consumesBrace)
         where TSet : ICopyableInstructionSet
     {
-        string baseName = clause.Tokens[0].Text;
+        string baseName = clause.Text();
 
         if (!_context.ExtensibleItems.TryGetValue(baseName, out ICopyableInstructionSet set) ||
             set is not TSet instructionSet)

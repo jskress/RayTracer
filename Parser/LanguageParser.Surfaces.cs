@@ -26,7 +26,7 @@ public partial class LanguageParser
         where TObject : Surface, new()
     {
         string field = ToCmd(clause);
-        Term term = (Term) clause.Expressions.FirstOrDefault();
+        Term term = clause.Term();
 
         ObjectInstruction<TObject> instruction = field switch
         {
@@ -155,25 +155,36 @@ public partial class LanguageParser
     {
         IInstructionSet instructionSet = _context.CurrentSet;
 
-        if (instructionSet is PlaneInstructionSet)
-            HandlePlaneEntryClause(clause);
-        else if (instructionSet is SphereInstructionSet)
-            HandleSphereEntryClause(clause);
-        else if (instructionSet is CubeInstructionSet)
-            HandleCubeEntryClause(clause);
-        else if (instructionSet is CylinderInstructionSet)
-            HandleCircularSurfaceEntryClause(clause);
-        else if (instructionSet is ConicInstructionSet)
-            HandleCircularSurfaceEntryClause(clause);
-        else if (instructionSet is TriangleInstructionSet)
-            HandleTriangleEntryClause(clause);
-        else if (instructionSet is SmoothTriangleInstructionSet)
-            HandleSmoothTriangleEntryClause(clause);
-        else if (instructionSet is ObjectFileInstructionSet)
-            HandleObjectFileEntryClause(clause);
-        else if (instructionSet is CsgSurfaceInstructionSet)
-            HandleCsgEntryClause(clause, "surface");
-        else if (instructionSet is GroupInstructionSet)
-            HandleGroupEntryClause(clause);
+        switch (instructionSet)
+        {
+            case PlaneInstructionSet:
+                HandlePlaneEntryClause(clause);
+                break;
+            case SphereInstructionSet:
+                HandleSphereEntryClause(clause);
+                break;
+            case CubeInstructionSet:
+                HandleCubeEntryClause(clause);
+                break;
+            case CylinderInstructionSet:
+            case ConicInstructionSet:
+                HandleCircularSurfaceEntryClause(clause);
+                break;
+            case TriangleInstructionSet:
+                HandleTriangleEntryClause(clause);
+                break;
+            case SmoothTriangleInstructionSet:
+                HandleSmoothTriangleEntryClause(clause);
+                break;
+            case ObjectFileInstructionSet:
+                HandleObjectFileEntryClause(clause);
+                break;
+            case CsgSurfaceInstructionSet:
+                HandleCsgEntryClause(clause, "surface");
+                break;
+            case GroupInstructionSet:
+                HandleGroupEntryClause(clause);
+                break;
+        }
     }
 }
