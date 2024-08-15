@@ -1,0 +1,33 @@
+// A scene to test an extrusion.
+
+context {
+	parallel pixel scanner
+	angles are degrees
+	no gamma
+	info {
+		title 'Extrusion Test'
+		author 'J. Stephen Kress'
+		description 'A scene to test the extrusion primitive.'
+		copyright true
+		software __software__
+	}
+}
+
+camera {
+	location [2, 10, -30]
+	look at [0, 1, 0]
+	field of view 20
+}
+
+point light {
+	location [20, 20, -20]
+}
+
+// Floor
+plane {
+	material {
+		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+	}
+}
+
+// Extrusion added in code for now.

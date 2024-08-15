@@ -96,7 +96,7 @@ public partial class LanguageParser
     /// </summary>
     private void ParseCircularSurfaceClause<TObject>(
         ObjectInstructionSet<TObject> instructionSet, bool open)
-        where TObject : CircularSurface, new()
+        where TObject : ExtrudedSurface, new()
     {
         _context.PushInstructionSet(instructionSet);
 
@@ -139,7 +139,7 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleCircularSurfaceEntryClause<TObject>(
         ObjectInstructionSet<TObject> instructionSet, Clause clause)
-        where TObject : CircularSurface, new()
+        where TObject : ExtrudedSurface, new()
     {
         if (clause == null) // We must have hit a transform property...
             HandleSurfaceTransform(instructionSet);

@@ -87,24 +87,10 @@ public partial class LanguageParser
     /// <returns>The initialization instruction, or <c>null</c>.</returns>
     private InitializeNoisyPigment ParseNoisyPigmentInstruction()
     {
-        Clause clause = LanguageDsl.ParseClause(CurrentParser, "turbulenceClause");
+        TurbulenceInstructionSet instructionSet = ParseTurbulenceClause();
 
-        if (clause == null)
-            return null;
-
-        Term depthTerm = clause.Term();
-        bool phased = clause.Tokens.Count > 1;
-        Term tightnessTerm = null;
-        Term scaleTerm = null;
-
-        if (phased)
-        {
-            tightnessTerm = clause.Term(1);
-            
-            if (clause.Tokens.Count > 2)
-                scaleTerm = clause.Term(2);
-        }
-
-        return new InitializeNoisyPigment(depthTerm, phased, tightnessTerm, scaleTerm);
+        return instructionSet == null
+            ? null
+            : new InitializeNoisyPigment(instructionSet);
     }
 }

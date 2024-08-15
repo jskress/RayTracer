@@ -14,7 +14,7 @@ public class Cube : Surface
     /// This holds a bounding box that aligns with our own shape.  Our ray/intersection
     /// stuff is delegated to this.
     /// </summary>
-    private static readonly BoundingBox BoundingBox = new BoundingBox(
+    private static readonly BoundingBox BoundingBox = new (
         new Point(-1, -1, -1), new Point(1, 1, 1));
 
     /// <summary>

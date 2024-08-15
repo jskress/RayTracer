@@ -43,7 +43,7 @@ public partial class LanguageParser
         {
             term: [
                 true, false, null,
-                openBracket _expression(3..4, comma) /closeBracket => 'tuple',
+                openBracket _expression(2..4, comma) /closeBracket => 'tuple',
                 _number => 'number',
                 _string => 'string',
                 _identifier => 'variable',

@@ -10,25 +10,11 @@ namespace RayTracer.Instructions;
 /// </summary>
 public class InitializeNoisyPigment : Instruction
 {
-    private readonly Term _depthTerm;
-    private readonly bool _phased;
-    private readonly Term _tightnessTerm;
-    private readonly Term _scaleTerm;
+    private readonly TurbulenceInstructionSet _turbulenceInstructionSet;
 
-    private int _depth;
-    private int _tightness;
-    private double _scale;
- 
-    public InitializeNoisyPigment(Term depthTerm, bool phased, Term tightnessTerm, Term scaleTerm)
+    public InitializeNoisyPigment(TurbulenceInstructionSet turbulenceInstructionSet)
     {
-        _depthTerm = depthTerm;
-        _phased = phased;
-        _tightnessTerm = tightnessTerm;
-        _scaleTerm = scaleTerm;
-
-        _depth = 1;
-        _tightness = 10;
-        _scale = 1;
+        _turbulenceInstructionSet = turbulenceInstructionSet;
     }
 
     /// <summary>
@@ -38,13 +24,7 @@ public class InitializeNoisyPigment : Instruction
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        _depth = _depthTerm.GetValue<int>(variables);
-
-        if (_tightnessTerm != null)
-            _tightness = _tightnessTerm.GetValue<int>(variables);
-
-        if (_scaleTerm != null)
-            _scale = _scaleTerm.GetValue<double>(variables);
+        _turbulenceInstructionSet.Execute(context, variables);
     }
 
     /// <summary>
@@ -53,9 +33,6 @@ public class InitializeNoisyPigment : Instruction
     /// <param name="pigment">The pigment to apply our values to.</param>
     internal void ApplyTo(NoisyPigment pigment)
     {
-        pigment.Depth = _depth;
-        pigment.Phased = _phased;
-        pigment.Tightness = _tightness;
-        pigment.Scale = _scale;
+        pigment.Turbulence = _turbulenceInstructionSet.CreatedObject;
     }
 }

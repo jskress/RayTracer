@@ -8,31 +8,12 @@ namespace RayTracer.Pigments;
 /// </summary>
 public class NoisyPigment : Pigment
 {
-    private static readonly PerlinNoise PerlinNoise = new ();
-
     private readonly Pigment _wrappedPigment;
 
     /// <summary>
-    /// This property controls the depth of the turbulence we will apply.
+    /// This property controls the turbulence we will apply.
     /// </summary>
-    public int Depth { get; set; } = 1;
-
-    /// <summary>
-    /// This property controls whether we will apply phasing to the turbulence.
-    /// </summary>
-    public bool Phased { get; set; }
-
-    /// <summary>
-    /// This property controls the tightness of the turbulence we will apply.  It applies
-    /// only if <see cref="Phased"/> is <c>true</c>.
-    /// </summary>
-    public int Tightness { get; set; } = 10;
-
-    /// <summary>
-    /// This property controls the scale of the turbulence we will apply.  It applies only
-    /// if <see cref="Phased"/> is <c>true</c>.
-    /// </summary>
-    public double Scale { get; set; } = 1;
+    public Turbulence Turbulence { get; set; }
 
     public NoisyPigment(Pigment wrappedPigment)
     {
@@ -47,12 +28,7 @@ public class NoisyPigment : Pigment
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        double noise = PerlinNoise.Turbulence(point, Depth);
-
-        if (Phased)
-            noise = 1 + Math.Sin(Scale * point.Z + Tightness * noise);
-
-        return _wrappedPigment.GetColorFor(point) * noise;
+        return _wrappedPigment.GetColorFor(point) * Turbulence.Generate(point);
     }
 
     /// <summary>

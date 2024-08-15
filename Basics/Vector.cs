@@ -128,8 +128,8 @@ public class Vector : NumberTuple
     /// <summary>
     /// This method is used to multiply a vector by a scalar.
     /// </summary>
-    /// <param name="left">The vector to apply the scalar to.</param>
-    /// <param name="right">The scalar to multiply the vector by.</param>
+    /// <param name="left">The scalar to multiply the vector by.</param>
+    /// <param name="right">The vector to apply the scalar to.</param>
     /// <returns>The new vector.</returns>
     public static Vector operator *(double left, Vector right)
     {
