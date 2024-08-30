@@ -8,17 +8,15 @@ namespace RayTracer.Pigments;
 /// </summary>
 public class NoisyPigment : Pigment
 {
-    private readonly Pigment _wrappedPigment;
+    /// <summary>
+    /// This property holds the pigment to apply noise to.
+    /// </summary>
+    public Pigment Pigment { get; set; }
 
     /// <summary>
     /// This property controls the turbulence we will apply.
     /// </summary>
     public Turbulence Turbulence { get; set; }
-
-    public NoisyPigment(Pigment wrappedPigment)
-    {
-        _wrappedPigment = wrappedPigment;
-    }
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.  We return the
@@ -28,7 +26,7 @@ public class NoisyPigment : Pigment
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        return _wrappedPigment.GetColorFor(point) * Turbulence.Generate(point);
+        return Pigment.GetColorFor(point) * Turbulence.Generate(point);
     }
 
     /// <summary>
@@ -39,6 +37,6 @@ public class NoisyPigment : Pigment
     public override bool Matches(Pigment other)
     {
         return other is NoisyPigment pigmentation &&
-               _wrappedPigment.Matches(pigmentation._wrappedPigment);
+               Pigment.Matches(pigmentation.Pigment);
     }
 }

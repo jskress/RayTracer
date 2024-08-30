@@ -2,6 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Patterns;
 using RayTracer.Pigments;
 
 namespace Tests;
@@ -12,20 +13,20 @@ public class TestPatterns
     [TestMethod]
     public void TestStripedPattern()
     {
-        StripePigment source = new (SolidPigment.White, SolidPigment.Black);
+        PatternPigment pigment = CreateStripedPigment(BandType.LinearX);
+        
+        Assert.AreSame(Colors.White, pigment.GetColorFor(Point.Zero));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(0, 1, 0)));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(0, 2, 0)));
 
-        Assert.AreSame(Colors.White, source.GetColorFor(Point.Zero));
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(0, 1, 0)));
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(0, 2, 0)));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(0, 0, 1)));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(0, 0, 2)));
 
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(0, 0, 1)));
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(0, 0, 2)));
-
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(0.9, 0, 0)));
-        Assert.AreSame(Colors.Black, source.GetColorFor(new Point(1, 0, 0)));
-        Assert.AreSame(Colors.Black, source.GetColorFor(new Point(-0.1, 0, 0)));
-        Assert.AreSame(Colors.Black, source.GetColorFor(new Point(-1, 0, 0)));
-        Assert.AreSame(Colors.White, source.GetColorFor(new Point(-1.1, 0, 0)));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(0.9, 0, 0)));
+        Assert.AreSame(Colors.Black, pigment.GetColorFor(new Point(1, 0, 0)));
+        Assert.AreSame(Colors.Black, pigment.GetColorFor(new Point(-0.1, 0, 0)));
+        Assert.AreSame(Colors.Black, pigment.GetColorFor(new Point(-1, 0, 0)));
+        Assert.AreSame(Colors.White, pigment.GetColorFor(new Point(-1.1, 0, 0)));
     }
 
     [TestMethod]
@@ -35,8 +36,7 @@ public class TestPatterns
         {
             Material = new Material
             {
-                Pigment = new StripePigment(
-                    SolidPigment.White, SolidPigment.Black)
+                Pigment = CreateStripedPigment(BandType.LinearX)
             },
             Transform = Transforms.Scale(2)
         };
@@ -63,23 +63,18 @@ public class TestPatterns
     [TestMethod]
     public void TestLinearGradientPattern()
     {
-        LinearGradientPigment source = new (
-            SolidPigment.White, SolidPigment.Black);
+        Pigment source = CreateGradientPigment(BandType.LinearX);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
-        Assert.IsTrue(new Color(0.75, 0.75, 0.75).Matches(
-            source.GetColorFor(new Point(0.25, 0, 0))));
-        Assert.IsTrue(new Color(0.5, 0.5, 0.5).Matches(
-            source.GetColorFor(new Point(0.5, 0, 0))));
-        Assert.IsTrue(new Color(0.25, 0.25, 0.25).Matches(
-            source.GetColorFor(new Point(0.75, 0, 0))));
+        Assert.IsTrue(Colors.Gray25.Matches(source.GetColorFor(new Point(0.25, 0, 0))));
+        Assert.IsTrue(Colors.Gray50.Matches(source.GetColorFor(new Point(0.5, 0, 0))));
+        Assert.IsTrue(Colors.Gray75.Matches(source.GetColorFor(new Point(0.75, 0, 0))));
     }
 
     [TestMethod]
     public void TestRingPattern()
     {
-        RingPigment source = new (
-            SolidPigment.White, SolidPigment.Black);
+        Pigment source = CreateStripedPigment(BandType.Cylindrical);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
         Assert.IsTrue(Colors.Black.Matches(source.GetColorFor(new Point(1, 0, 0))));
@@ -90,8 +85,7 @@ public class TestPatterns
     [TestMethod]
     public void TestCheckerboardPattern()
     {
-        CheckerPigment source = new (
-            SolidPigment.White, SolidPigment.Black);
+        Pigment source = CreatePigment(new CheckerPattern());
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(new Point(0.99, 0, 0))));
@@ -102,5 +96,35 @@ public class TestPatterns
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(new Point(0, 0, 0.99))));
         Assert.IsTrue(Colors.Black.Matches(source.GetColorFor(new Point(0, 0, 1.01))));
+    }
+
+    private static PatternPigment CreateStripedPigment(BandType bandType)
+    {
+        return CreatePigment(new StripedPattern
+        {
+            BandType = bandType
+        });
+    }
+
+    private static PatternPigment CreateGradientPigment(BandType bandType)
+    {
+        return CreatePigment(new GradientPattern
+        {
+            BandType = bandType
+        });
+    }
+
+    private static PatternPigment CreatePigment(Pattern pattern)
+    {
+        PatternPigment pigment = new PatternPigment
+        {
+            Pattern = pattern,
+            PigmentSet = new PigmentSet()
+        };
+        
+        pigment.PigmentSet.AddEntry(SolidPigment.White);
+        pigment.PigmentSet.AddEntry(SolidPigment.Black, 1);
+
+        return pigment;
     }
 }

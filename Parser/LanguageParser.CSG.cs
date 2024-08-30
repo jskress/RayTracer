@@ -2,6 +2,7 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -17,23 +18,28 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, clause.Text());
 
-        CsgSurfaceInstructionSet instructionSet = ParseCsgClause(clause);
+        CsgSurfaceResolver resolver = ParseCsgClause(clause);
 
-        _ = new TopLevelObjectInstruction<CsgSurface>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a csg block.
     /// </summary>
     /// <param name="clause">The clause that started the CSG.</param>
-    private CsgSurfaceInstructionSet ParseCsgClause(Clause clause)
+    private CsgSurfaceResolver ParseCsgClause(Clause clause)
     {
         string text = clause.Text();
 
+        // Handle the case when the only option is a variable reference.
         if (text == "csg")
         {
-            return DetermineProperInstructionSet<CsgSurfaceInstructionSet>(
-                clause, null, ParseCsgClause);
+            return GetSurfaceResolver<CsgSurfaceResolver>(
+                clause, null, "csgEntryClause", HandleCsgEntryClause);
         }
 
         CsgOperation operation = text switch
@@ -44,24 +50,16 @@ public partial class LanguageParser
             _ => throw new Exception($"Internal error: unknown CSG type: {text}.")
         };
 
-        CsgSurfaceInstructionSet instructionSet = new (operation, clause.Tokens[0]);
+        return GetSurfaceResolver(
+            clause, () =>
+            {
+                CsgSurfaceResolver resolver = new CsgSurfaceResolver { Operation = operation };
 
-        ParseCsgClause(instructionSet);
+                ParseObjectResolver("csgEntryClause", HandleCsgEntryClause, resolver);
 
-        return instructionSet;
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a csg block.
-    /// </summary>
-    /// <param name="instructionSet">The instruction set to use.</param>
-    private void ParseCsgClause(CsgSurfaceInstructionSet instructionSet)
-    {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("csgEntryClause", HandleCsgEntryClause);
-
-        _context.PopInstructionSet();
+                return resolver;
+            },
+            "csgEntryClause", HandleCsgEntryClause);
     }
 
     /// <summary>
@@ -70,68 +68,56 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleCsgEntryClause(Clause clause)
     {
-        HandleCsgEntryClause(clause, null);
-    }
+        CsgSurfaceResolver resolver = (CsgSurfaceResolver) _context.CurrentTarget;
 
-    /// <summary>
-    /// This method is used to handle an item clause of a csg block.
-    /// </summary>
-    /// <param name="clause">The clause to process.</param>
-    /// <param name="tag">The tag to use, if we need to override the one in the clause.</param>
-    private void HandleCsgEntryClause(Clause clause, string tag)
-    {
-        CsgSurfaceInstructionSet instructionSet = (CsgSurfaceInstructionSet) _context.CurrentSet;
-
-        if (clause == null)
+        if (clause == null) // We must have hit a transform property...
+            resolver.TransformResolver = ParseTransformClause();
+        else
         {
-            HandleSurfaceTransform(instructionSet);
-
-            return;            
-        }
-
-        switch (tag ?? clause.Tag)
-        {
-            case "plane":
-                instructionSet.AddInstruction(ParsePlaneClause(clause));
-                break;
-            case "sphere":
-                instructionSet.AddInstruction(ParseSphereClause(clause));
-                break;
-            case "cube":
-                instructionSet.AddInstruction(ParseCubeClause(clause));
-                break;
-            case "circularSurface":
-                if (clause.Tokens[0].Text == "cylinder" || clause.Tokens[1].Text == "cylinder")
-                    instructionSet.AddInstruction(ParseCylinderClause(clause));
-                else if (clause.Tokens[0].Text == "conic" || clause.Tokens[1].Text == "conic")
-                    instructionSet.AddInstruction(ParseConicClause(clause));
-                else
-                    throw new Exception("Internal error: unknown circular surface type.");
-                break;
-            case "torus":
-                instructionSet.AddInstruction(ParseTorusClause(clause));
-                break;
-            case "triangle":
-                instructionSet.AddInstruction(ParseTriangleClause(clause));
-                break;
-            case "smooth":
-                instructionSet.AddInstruction(ParseSmoothTriangleClause(clause));
-                break;
-            case "objectFile":
-                instructionSet.AddInstruction(ParseObjectFileClause(clause));
-                break;
-            case "object":
-                ParseObjectClause(clause, csgSurfaceInstructionSet: instructionSet);
-                break;
-            case "csg":
-                instructionSet.AddInstruction(ParseCsgClause(clause));
-                break;
-            case "group":
-                instructionSet.AddInstruction(ParseGroupClause(clause));
-                break;
-            case "surface":
-                HandleSurfaceClause(clause, instructionSet, "csg");
-                break;
+            switch (clause.Tag)
+            {
+                case "plane":
+                    resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));
+                    break;
+                case "sphere":
+                    resolver.SurfaceResolvers.Add(ParseSphereClause(clause));
+                    break;
+                case "cube":
+                    resolver.SurfaceResolvers.Add(ParseCubeClause(clause));
+                    break;
+                case "cylinder":
+                    resolver.SurfaceResolvers.Add(ParseCylinderClause(clause));
+                    break;
+                case "conic":
+                    resolver.SurfaceResolvers.Add(ParseConicClause(clause));
+                    break;
+                case "torus":
+                    resolver.SurfaceResolvers.Add(ParseTorusClause(clause));
+                    break;
+                case "triangle":
+                    resolver.SurfaceResolvers.Add(ParseTriangleClause(clause));
+                    break;
+                case "smoothTriangle":
+                    resolver.SurfaceResolvers.Add(ParseSmoothTriangleClause(clause));
+                    break;
+                case "objectFile":
+                    resolver.SurfaceResolvers.Add(ParseObjectFileClause(clause));
+                    break;
+                case "object":
+                    resolver.SurfaceResolvers.Add(GetSurfaceResolver(clause));
+                    break;
+                case "csg":
+                    resolver.SurfaceResolvers.Add(ParseCsgClause(clause));
+                    break;
+                case "group":
+                    resolver.SurfaceResolvers.Add(ParseGroupClause(clause));
+                    break;
+                case "surface":
+                    HandleSurfaceClause(clause, resolver, "CSG object");
+                    break;
+                default:
+                    throw new Exception($"Internal error: unknown {clause.Tag} property found on a CSG object.");
+            }
         }
     }
 }

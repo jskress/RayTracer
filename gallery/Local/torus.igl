@@ -31,7 +31,8 @@ plane {
 }
 
 // Ring
-torus (1, 0.3) {
+torus {
+	radii 1, 0.3
 	material {
 		pigment Gold
 		ambient 0.1

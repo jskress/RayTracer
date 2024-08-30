@@ -12,33 +12,17 @@ public class SmoothTriangle : Triangle
     /// <summary>
     /// This property provides the normal at the first point of the triangle.
     /// </summary>
-    public Vector Normal1 { get; }
+    public Vector Normal1 { get; set; }
 
     /// <summary>
     /// This property provides the normal at the second point of the triangle.
     /// </summary>
-    public Vector Normal2 { get; }
+    public Vector Normal2 { get; set; }
 
     /// <summary>
     /// This property provides the normal at the third point of the triangle.
     /// </summary>
-    public Vector Normal3 { get; }
-
-    public SmoothTriangle()
-    {
-        // This constructor is present to satisfy the type system but should never
-        // be used, so...
-        throw new Exception("Internal error: cannot create smooth triangles this way.");
-    }
-
-    public SmoothTriangle(
-        Point point1, Point point2, Point point3,
-        Vector normal1, Vector normal2, Vector normal3) : base(point1, point2, point3)
-    {
-        Normal1 = normal1;
-        Normal2 = normal2;
-        Normal3 = normal3;
-    }
+    public Vector Normal3 { get; set; }
 
     /// <summary>
     /// This is a helper method for creating an intersection.  It's overridable since

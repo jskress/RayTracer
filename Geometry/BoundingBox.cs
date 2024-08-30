@@ -10,29 +10,18 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class BoundingBox
 {
-    private double _xMin;
-    private double _yMin;
-    private double _zMin;
-    private double _xMax;
-    private double _yMax;
-    private double _zMax;
-
-    [SuppressMessage("ReSharper", "SuggestBaseTypeForParameterInConstructor")]
-    public BoundingBox(Point point1, Point point2)
-    {
-        _xMin = Math.Min(point1.X, point2.X);
-        _yMin = Math.Min(point1.Y, point2.Y);
-        _zMin = Math.Min(point1.Z, point2.Z);
-        _xMax = Math.Max(point1.X, point2.X);
-        _yMax = Math.Max(point1.Y, point2.Y);
-        _zMax = Math.Max(point1.Z, point2.Z);
-    }
+    private double _xMin = double.MaxValue;
+    private double _yMin = double.MaxValue;
+    private double _zMin = double.MaxValue;
+    private double _xMax = double.MinValue;
+    private double _yMax = double.MinValue;
+    private double _zMax = double.MinValue;
 
     /// <summary>
     /// This method is used to add the point to the bounding box, expanding it as necessary.
     /// </summary>
     /// <param name="point">The point to add.</param>
-    public void Add(Point point)
+    public BoundingBox Add(Point point)
     {
         _xMin = Math.Min(_xMin, point.X);
         _yMin = Math.Min(_yMin, point.Y);
@@ -40,6 +29,8 @@ public class BoundingBox
         _xMax = Math.Max(_xMax, point.X);
         _yMax = Math.Max(_yMax, point.Y);
         _zMax = Math.Max(_zMax, point.Z);
+
+        return this;
     }
 
     /// <summary>

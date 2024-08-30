@@ -19,7 +19,7 @@ public class CsgSurface : Surface
     /// <summary>
     /// This property reports the operation this CSG surface will apply.
     /// </summary>
-    public CsgOperation Operation { get; }
+    public CsgOperation Operation { get; set; }
 
     /// <summary>
     /// The left surface for the operation,
@@ -49,21 +49,6 @@ public class CsgSurface : Surface
 
     private Surface _left;
     private Surface _right;
-
-    public CsgSurface()
-    {
-        // This constructor is present to satisfy the type system but should never
-        // be used, so...
-        throw new Exception("Internal error: cannot create CSG surfaces this way.");
-    }
-
-    public CsgSurface(CsgOperation operation)
-    {
-        _left = null;
-        _right = null;
-
-        Operation = operation;
-    }
 
     /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,

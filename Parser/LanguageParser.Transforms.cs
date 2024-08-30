@@ -1,7 +1,7 @@
 using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Extensions;
-using RayTracer.Instructions;
+using RayTracer.Instructions.Transforms;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -14,7 +14,7 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse a clause of zero or more transformations.
     /// </summary>
-    private TransformInstructionSet ParseTransformClause(TransformInstructionSet instructions = null)
+    private TransformResolver ParseTransformClause(TransformResolver resolver = null)
     {
         Clause clause = ParseClause("transformClause");
         
@@ -23,44 +23,50 @@ public partial class LanguageParser
 
         List<Term> terms = clause.Expressions.Cast<Term>().ToList();
 
-        instructions ??= new TransformInstructionSet();
+        resolver ??= new TransformResolver();
 
         while (clause.Tokens.Count > 0)
         {
             TransformType type = ToTransformType(clause);
             TransformAxis axis = ToTransformAxis(clause, type);
-            TransformInstruction instruction;
+            TransformCreator creator;
+            Term[] transformTerms;
 
             switch (type)
             {
                 case TransformType.Translate:
-                    instruction = TransformInstruction.TranslationInstruction(
-                        terms.RemoveFirst(), axis);
+                    creator = new TranslationCreator();
+                    transformTerms = [terms.RemoveFirst()];
                     break;
                 case TransformType.Scale:
-                    instruction = TransformInstruction.ScaleInstruction(
-                        terms.RemoveFirst(), axis);
+                    creator = new ScaleCreator();
+                    transformTerms = [terms.RemoveFirst()];
                     break;
                 case TransformType.Rotate:
-                    instruction = TransformInstruction.RotationInstruction(
-                        terms.RemoveFirst(), axis);
+                    creator = new RotationCreator();
+                    transformTerms = [terms.RemoveFirst()];
                     break;
                 case TransformType.Shear:
-                    instruction = TransformInstruction.ShearInstruction(terms[..6].ToArray());
+                    creator = new ShearCreator();
+                    transformTerms = terms[..6].ToArray();
                     terms.RemoveRange(0, 6);
                     break;
                 case TransformType.Matrix:
-                    instruction = TransformInstruction.ShearInstruction(terms[..16].ToArray());
+                    creator = new MatrixCreator();
+                    transformTerms = terms[..16].ToArray();
                     terms.RemoveRange(0, 16);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new Exception("Unknown transform type");
             }
 
-            instructions.AddInstruction(instruction);
+            creator.Terms = transformTerms;
+            creator.Axis = axis;
+
+            resolver.TransformCreators.Add(creator);
         }
 
-        return instructions;
+        return resolver;
     }
 
     /// <summary>
@@ -109,5 +115,42 @@ public partial class LanguageParser
             clause.Tokens.RemoveFirst();
 
         return axis;
+    }
+
+    /// <summary>
+    /// This is a helper method for creating the right resolver, either by parsing an
+    /// in-place definition or a variable reference.
+    /// </summary>
+    /// <param name="clause">The clause that tells us how to get the transform resolver.</param>
+    /// <returns>The proper resolver.</returns>
+    private TransformResolver GetTransformResolver(Clause clause)
+    {
+        Token token = clause.Tokens[1];
+        bool extending = clause.Tokens.Count > 2;
+        bool expectCloseBrace;
+        TransformResolver resolver;
+
+        if (BounderToken.OpenBrace.Matches(token))
+        {
+            resolver = ParseTransformClause();
+            expectCloseBrace = true;
+        }
+        else
+        {
+            resolver = GetExtensibleItem<TransformResolver>(token, extending);
+            expectCloseBrace = extending;
+        }
+
+        if (clause.Tokens.Count > 2)
+            ParseTransformClause(resolver);
+
+        if (expectCloseBrace)
+        {
+            CurrentParser.MatchToken(
+                true, () => "Expecting a close brace here.",
+                BounderToken.CloseBrace);
+        }
+
+        return resolver;
     }
 }

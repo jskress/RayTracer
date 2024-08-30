@@ -269,4 +269,39 @@ public static class Colors
 		foreach (KeyValuePair<string, Color> pair in LazyNamedColors.Value)
 			variables.SetValue(pair.Key, pair.Value);
 	}
+
+	/// <summary>
+	/// This method is used to get the average of the colors in the given list.  The
+	/// color returned includes an average of the alpha channels as well.
+	/// </summary>
+	/// <param name="colors">The list of colors to average.</param>
+	/// <returns>The average color.</returns>
+	public static Color Average(List<Color> colors)
+	{
+		// This gives us the average color, regardless of alpha.
+		Color average = colors.Aggregate(
+			Black, (accumulator, current) => accumulator + current) / colors.Count;
+		double alpha = colors.Average(x => x.Alpha);
+
+		return average.WithAlpha(alpha);
+	}
+
+	/// <summary>
+	/// This method is used to layer colors on top of each other, based on transparency.
+	/// </summary>
+	/// <param name="colors">The list of colors to layer.</param>
+	/// <returns>The result of layering the colors.</returns>
+	public static Color Layer(List<Color> colors)
+	{
+		Color result = colors[0];
+
+		foreach (Color next in colors[1..]
+			         .Select(color => result.LayerOnTopOf(color))
+			         .TakeWhile(next => result != next))
+		{
+			result = next;
+		}
+
+		return result;
+	}
 }

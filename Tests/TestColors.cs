@@ -62,4 +62,15 @@ public class TestColors
 
         Assert.IsTrue(expected.Matches(result));
     }
+
+    [TestMethod]
+    public void TestLayer()
+    {
+        Color color = Colors.Transparent.LayerOnTopOf(Colors.Gray75);
+        
+        Assert.AreEqual(color.Red, 0.75);
+        Assert.AreEqual(color.Green, 0.75);
+        Assert.AreEqual(color.Blue, 0.75);
+        Assert.AreEqual(color.Alpha, 1);
+    }
 }

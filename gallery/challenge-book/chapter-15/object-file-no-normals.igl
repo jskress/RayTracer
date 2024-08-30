@@ -12,7 +12,8 @@ plane {
 }
 
 // Pulled from MIT: https://groups.csail.mit.edu/graphics/classes/6.837/F03/models/teddy.obj
-object file 'teddy.obj' {
+object file {
+	source 'teddy.obj'
 	material {
 		pigment SandyBrown
 	}

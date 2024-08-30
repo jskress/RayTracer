@@ -8,11 +8,21 @@ namespace RayTracer.Basics;
 public static class Transforms
 {
     /// <summary>
-    /// This method creates a translation matrix based on the given deltas.
+    /// This method creates a uniformly translation matrix based on the given factor.
     /// </summary>
-    /// <param name="dx">The desired delta in the x direction.</param>
-    /// <param name="dy">The desired delta in the y direction.</param>
-    /// <param name="dz">The desired delta in the z direction.</param>
+    /// <param name="distance">The desired scale in all directions.</param>
+    /// <returns>The appropriate scaling matrix.</returns>
+    public static Matrix Translate(double distance)
+    {
+        return Scale(distance, distance, distance);
+    }
+
+    /// <summary>
+    /// This method creates a translation matrix based on the given distances.
+    /// </summary>
+    /// <param name="dx">The desired distance in the x direction.</param>
+    /// <param name="dy">The desired distance in the y direction.</param>
+    /// <param name="dz">The desired distance in the z direction.</param>
     /// <returns>The appropriate translation matrix.</returns>
     public static Matrix Translate(double dx, double dy, double dz)
     {

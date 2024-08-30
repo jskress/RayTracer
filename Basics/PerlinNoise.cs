@@ -9,7 +9,15 @@ public class PerlinNoise
 {
     private const int TableSize = 256;
 
+    /// <summary>
+    /// This property makes available a default noise generator.
+    /// </summary>
+    public static PerlinNoise Instance => LazyInstance.Value;
+
     private static readonly Random Rng = new ();
+
+    private static readonly Lazy<PerlinNoise> LazyInstance = new(
+        () => new PerlinNoise());
 
     private readonly Vector[] _numbers;
     private readonly int[] _x;

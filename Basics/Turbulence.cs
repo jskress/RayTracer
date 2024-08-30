@@ -5,8 +5,6 @@ namespace RayTracer.Basics;
 /// </summary>
 public class Turbulence
 {
-    private static readonly PerlinNoise Noise = new ();
-
     /// <summary>
     /// This property controls the depth of the turbulence we will apply.
     /// </summary>
@@ -42,7 +40,7 @@ public class Turbulence
 
         for (int i = 0; i < Depth; i++)
         {
-            noise += weight * Noise.Noise(point);
+            noise += weight * PerlinNoise.Instance.Noise(point);
             weight *= 0.5;
             point = new Point(point.X * 2, point.Y * 2, point.Z * 2);
         }

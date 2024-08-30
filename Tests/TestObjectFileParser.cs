@@ -1,8 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
-using RayTracer.Instructions;
-using RayTracer.Parser;
+using RayTracer.Instructions.Surfaces;
 
 namespace Tests;
 

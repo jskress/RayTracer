@@ -1,7 +1,8 @@
 using Lex.Clauses;
-using RayTracer.Basics;
+using Lex.Parser;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 
 namespace RayTracer.Parser;
 
@@ -11,35 +12,39 @@ namespace RayTracer.Parser;
 public partial class LanguageParser
 {
     /// <summary>
-    /// This method is used to parse a clause of zero one turbulence.
+    /// This method is used to parse a clause of one required turbulence.
     /// </summary>
-    private TurbulenceInstructionSet ParseTurbulenceClause()
+    private TurbulenceResolver ParseTurbulenceClause()
     {
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "turbulenceClause");
 
         if (clause == null)
-            return null;
+        {
+            throw new TokenException("Expecting a turbulence definition here.")
+            {
+                Token = CurrentParser.PeekNextToken()
+            };
+        }
 
-        TurbulenceInstructionSet instructionSet = new ();
+        Resolver<int> depthResolver = new TermResolver<int> { Term = clause.Term() };
+        Resolver<int> tightnessResolver = null;
+        Resolver<double> scaleResolver = null;
         bool phased = clause.Tokens.Count > 1;
-
-        instructionSet.AddInstruction(new SetObjectPropertyInstruction<Turbulence, int>(
-            target => target.Depth, clause.Term()));
-        instructionSet.AddInstruction(new SetObjectPropertyInstruction<Turbulence, bool>(
-            target => target.Phased, phased));
 
         if (phased)
         {
-            instructionSet.AddInstruction(new SetObjectPropertyInstruction<Turbulence, int>(
-                target => target.Tightness, clause.Term(1)));
+            tightnessResolver = new TermResolver<int> { Term = clause.Term(1) };
 
             if (clause.Tokens.Count > 2)
-            {
-                instructionSet.AddInstruction(new SetObjectPropertyInstruction<Turbulence, double>(
-                    target => target.Scale, clause.Term(2)));
-            }
+                scaleResolver = new TermResolver<double> { Term = clause.Term(2) };
         }
 
-        return instructionSet;
+        return new TurbulenceResolver
+        {
+            DepthResolver = depthResolver,
+            PhasedResolver = new LiteralResolver<bool> { Value = phased },
+            TightnessResolver = tightnessResolver,
+            ScaleResolver = scaleResolver
+        };
     }
 }

@@ -1,5 +1,6 @@
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -15,10 +16,10 @@ internal class ParsingContext
     internal InstructionContext InstructionContext { get; } = new ();
 
     /// <summary>
-    /// This property holds a dictionary of items that havve been assigned to a variable
+    /// This property holds a dictionary of items that have been assigned to a variable
     /// name and are extensible where referenced.
     /// </summary>
-    internal Dictionary<string, ICopyableInstructionSet> ExtensibleItems { get; } = new ();
+    internal Dictionary<string, ICloneable> ExtensibleItems { get; } = new ();
 
     /// <summary>
     /// This property reports whether we have seen any scene definitions.
@@ -28,39 +29,32 @@ internal class ParsingContext
     /// <summary>
     /// This property reports whether we have any open object definitions being parsed.
     /// </summary>
-    public bool IsEmpty => _sets.IsEmpty();
+    public bool IsEmpty => _targets.IsEmpty();
 
     /// <summary>
-    /// This property reports the current instruction set in our stack, if we have one.
+    /// This property reports the current target into which parsing should inject
+    /// instructions and/or resolvers, if we have one.
     /// </summary>
-    internal IInstructionSet CurrentSet => IsEmpty ? null : _sets.Peek();
+    internal object CurrentTarget => IsEmpty ? null : _targets.Peek();
+
+    private readonly Stack<object> _targets = [];
 
     /// <summary>
-    /// This property reports the parent set of the current instruction set, if we have
-    /// one.
+    /// This method is used to push a new target onto our target stack.
     /// </summary>
-    internal IInstructionSet ParentSet => _sets.Count < 2
-        ? null : _sets.Skip(1).First();
-
-    private readonly Stack<IInstructionSet> _sets = [];
-
-    /// <summary>
-    /// This method is used to push a new instruction set onto our set stack.
-    /// </summary>
-    /// <param name="instructionSet">The new instruction set to start using.</param>
-    internal void PushInstructionSet(IInstructionSet instructionSet)
+    /// <param name="target">The new target to start using.</param>
+    internal void PushTarget(object target)
     {
-        SeenSceneDefinition |= instructionSet is SceneInstructionSet;
+        SeenSceneDefinition |= target is SceneResolver;
 
-        _sets.Push(instructionSet);
+        _targets.Push(target);
     }
 
     /// <summary>
-    /// This method is used to remove the current instruction set from our set stack.
+    /// This method is used to remove the current target from our target stack.
     /// </summary>
-    /// <returns>The instruction set just removed from our stack.</returns>
-    internal void PopInstructionSet()
+    internal void PopTarget()
     {
-        _sets.Pop();
+        _targets.Pop();
     }
 }
