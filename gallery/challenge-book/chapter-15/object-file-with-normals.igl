@@ -12,7 +12,8 @@ plane {
 }
 
 // Pulled from Virtual Lands: https://virtual-lands-3d.com/model-tags/?tags=.obj+models
-object file 'xmas-ball.obj' {
+object file {
+	source 'xmas-ball.obj'
 	material {
 		pigment Green
 		reflective 0.3

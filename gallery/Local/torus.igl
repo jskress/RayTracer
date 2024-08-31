@@ -26,7 +26,7 @@ point light {
 // Floor
 plane {
 	material {
-		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
 	}
 }
 

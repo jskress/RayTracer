@@ -9,6 +9,11 @@ namespace RayTracer.Basics;
 public record Interval
 {
     /// <summary>
+    /// This property produces an interval that will execute exactly once.
+    /// </summary>
+    public static Interval Once => new Interval { Start = 1, End = 1 }.Reset(1);
+
+    /// <summary>
     /// This property holds the start value for the interval.
     /// </summary>
     public double Start { get; init; }

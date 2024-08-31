@@ -102,7 +102,8 @@ difference {
 	sphere {
 		material inherited
 	}
-	group index = [0, 11] {
+	group {
+		index = [0, 11]
 		cube {
 			material inherited
 			rotate Y 45
@@ -113,7 +114,7 @@ difference {
 		material inherited
 	}
 	sphere {
-		material inherited
+		material { pigment Transparent }
 		scale 0.98
 	}
 	material shinyRed

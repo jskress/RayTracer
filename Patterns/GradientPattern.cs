@@ -27,7 +27,7 @@ public class GradientPattern : BandPattern
     /// <returns>The adjusted value.</returns>
     protected override double Adjust(double value)
     {
-        bool isOdd = value % 2 != 0;
+        bool isOdd = Math.Floor(value) % 2 != 0;
 
         value = InvertedClip(value.Fraction());
 

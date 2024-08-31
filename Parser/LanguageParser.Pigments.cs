@@ -3,6 +3,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
 using RayTracer.Instructions.Pigments;
 using RayTracer.Pigments;
@@ -80,10 +81,13 @@ public partial class LanguageParser
     /// <returns>The noisy pigment resolver.</returns>
     private NoisyPigmentResolver ParseNoisyPigmentClause()
     {
+        // We want the turbulence specification before the pigment.
+        TurbulenceResolver turbulenceResolver = ParseTurbulenceClause();
+
         return new NoisyPigmentResolver
         {
             PigmentResolver = ParsePigmentClause(),
-            TurbulenceResolver = ParseTurbulenceClause(),
+            TurbulenceResolver = turbulenceResolver,
             TransformResolver = ParseTransformClause()
         };
     }
@@ -129,8 +133,8 @@ public partial class LanguageParser
 
             IPigmentResolver pigmentResolver = ParsePigmentClause();
             
-            resolver.PigmentResolvers.Add(pigmentResolver);
             resolver.BreakValueResolvers.Add(new TermResolver<double> { Term = breakValueTerm });
+            resolver.PigmentResolvers.Add(pigmentResolver);
 
             if (!CurrentParser.IsNext(OperatorToken.Comma, BounderToken.CloseBracket))
             {

@@ -17,6 +17,6 @@ light {
 
 sphere {
 	material { pigment Yellow }
-	scale 2
+	scale 2.75
 	translate [0, 1, 2]
 }

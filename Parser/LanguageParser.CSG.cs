@@ -36,7 +36,7 @@ public partial class LanguageParser
         string text = clause.Text();
 
         // Handle the case when the only option is a variable reference.
-        if (text == "csg")
+        if (text == "csg" || text == "object")
         {
             return GetSurfaceResolver<CsgSurfaceResolver>(
                 clause, null, "csgEntryClause", HandleCsgEntryClause);

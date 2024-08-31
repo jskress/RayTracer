@@ -49,6 +49,8 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 
+        value.NoShadow |= context.SuppressAllShadows;
+
         base.SetProperties(context, variables, value);
     }
 

@@ -7,7 +7,7 @@ include '../defaults.igl'
 // Floor
 plane {
 	material {
-		pigment ring { Gray25, DarkSeaGreen }
+		pigment cylindrical stripes { Gray25, DarkSeaGreen }
 	}
 }
 
@@ -26,11 +26,10 @@ sphere {
 }
 
 // "Background" yellow cylinder
-open cylinder {
+cylinder {
+	open
 	max Y PositiveInfinity
-	material {
-		pigment Yellow
-	}
+	material { pigment Yellow }
 	translate [0.25, 1, 12.5]
 }
 
@@ -55,8 +54,8 @@ cylinder {
 // Left cube
 cube {
 	material {
-		pigment bouncing linear gradient {
-			Blue, White
+		pigment linear bouncing gradient {
+			[0, Blue, 1, White]
 			translate X 0.5
 		}
 		diffuse 0.7
@@ -69,7 +68,7 @@ cube {
 // How about a conic...
 conic {
 	material {
-		pigment stripe {
+		pigment linear stripes {
 			DarkOrange, SkyBlue
 			scale 0.33
 		}

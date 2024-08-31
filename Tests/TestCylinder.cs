@@ -63,7 +63,7 @@ public class TestCylinder
     [TestMethod]
     public void TestRayMissesCylinder()
     {
-        Cylinder cylinder = new ();
+        Cylinder cylinder = new () { MinimumY = double.NegativeInfinity, MaximumY = double.PositiveInfinity };;
 
         foreach (Ray ray in RaysThatMiss)
         {
@@ -78,7 +78,7 @@ public class TestCylinder
     [TestMethod]
     public void TestRayHitsCylinder()
     {
-        Cylinder cylinder = new ();
+        Cylinder cylinder = new () { MinimumY = double.NegativeInfinity, MaximumY = double.PositiveInfinity };;
 
         foreach ((Ray ray, double t0, double t1) in RaysThatHit)
         {
@@ -110,9 +110,9 @@ public class TestCylinder
     {
         Cylinder cylinder = new ();
 
-        Assert.AreEqual(double.NegativeInfinity, cylinder.MinimumY);
-        Assert.AreEqual(double.PositiveInfinity, cylinder.MaximumY);
-        Assert.IsFalse(cylinder.Closed);
+        Assert.AreEqual(-1, cylinder.MinimumY);
+        Assert.AreEqual(1, cylinder.MaximumY);
+        Assert.IsTrue(cylinder.Closed);
     }
 
     [TestMethod]
@@ -121,12 +121,13 @@ public class TestCylinder
         Cylinder cylinder = new ()
         {
             MinimumY = 1,
-            MaximumY = 2
+            MaximumY = 2,
+            Closed = false
         };
 
         foreach ((Ray ray, int count) in TruncatedIntersections)
         {
-            List<Intersection> intersections = new ();
+            List<Intersection> intersections = [];
 
             cylinder.AddIntersections(ray, intersections);
 

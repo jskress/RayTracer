@@ -9,16 +9,16 @@ namespace RayTracer.Instructions.Pigments;
 public class PigmentMapResolver : ObjectResolver<PigmentSet>
 {
     /// <summary>
-    /// This property holds the list of resolvers that will evaluate to the list of pigments
-    /// for our pigment set.
-    /// </summary>
-    public List<IPigmentResolver> PigmentResolvers { get; set; }
-
-    /// <summary>
     /// This property holds the list of resolvers that will evaluate to the list of break
     /// values for our pigment set.
     /// </summary>
     public List<Resolver<double>> BreakValueResolvers { get; set; }
+
+    /// <summary>
+    /// This property holds the list of resolvers that will evaluate to the list of pigments
+    /// for our pigment set.
+    /// </summary>
+    public List<IPigmentResolver> PigmentResolvers { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the banded property of our pigment set.
@@ -36,8 +36,8 @@ public class PigmentMapResolver : ObjectResolver<PigmentSet>
     {
         for (int index = 0; index < PigmentResolvers.Count; index++)
         {
-            Pigment pigment = PigmentResolvers[index].ResolveToPigment(context, variables);
             double breakValue = BreakValueResolvers[index].Resolve(context, variables);
+            Pigment pigment = PigmentResolvers[index].ResolveToPigment(context, variables);
             
             value.AddEntry(pigment, breakValue);
         }

@@ -28,7 +28,7 @@ public class BlendedPigment : Pigment
     public override Color GetColorFor(Point point)
     {
         List<Color> colors = Pigments
-            .Select(p => p.GetColorFor(point))
+            .Select(p => p.GetTransformedColorFor(point))
             .ToList();
 
         return Layer ? Colors.Layer(colors) : Colors.Average(colors);

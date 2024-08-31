@@ -33,7 +33,7 @@ public class TestConics
     [TestMethod]
     public void TestRayHitsConic()
     {
-        Conic conic = new ();
+        Conic conic = new () { MinimumY = double.NegativeInfinity, MaximumY = double.PositiveInfinity };
 
         foreach ((Ray ray, double t0, double t1) in RaysThatHit)
         {
@@ -50,9 +50,9 @@ public class TestConics
     [TestMethod]
     public void TestParallelRay()
     {
-        Conic conic = new ();
+        Conic conic = new () { MinimumY = double.NegativeInfinity, MaximumY = double.PositiveInfinity };
         Ray ray = new (new Point(0, 0, -1), new Vector(0, 1, 1).Unit);
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         conic.AddIntersections(ray, intersections);
 

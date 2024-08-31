@@ -8,17 +8,18 @@ include '../defaults.igl'
 plane {
 	material {
 		pigment blend {
-		    stripe { Red, White },
-		    stripe { Red, White rotate Y 90 }
+		    linear stripes { Red, White },
+		    linear stripes { Red, White rotate Y 90 }
 			rotate Y 15
 		}
 	}
 }
 
-triangle ([-1, 0, 0], [1, 0, 0], [0, 2, 0]) {
+triangle {
+	points [-1, 0, 0], [1, 0, 0], [0, 2, 0]
 	material {
-		pigment bouncing linear gradient {
-			DeepSkyBlue, LightSkyBlue
+		pigment linear bouncing gradient {
+			[0, DeepSkyBlue, 1, LightSkyBlue]
 			scale 0.4
 		}
 	}

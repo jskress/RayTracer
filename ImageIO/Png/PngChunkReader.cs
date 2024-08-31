@@ -1,4 +1,4 @@
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -103,13 +103,9 @@ public class PngChunkReader
     {
         Canvas canvas = new (HeaderChunk.ImageWidth, HeaderChunk.ImageHeight);
         using PngImageStream imageStream = new PngImageStream(_context, this);
-        using DeflateStream decompressor = new DeflateStream(imageStream, CompressionMode.Decompress);
+        using InflaterInputStream decompressor = new (imageStream);
         ScanLine previous = new ScanLine(_context, HeaderChunk);
         ScanLine current = new ScanLine(_context, HeaderChunk);
-
-        // Read the ZLib header.
-        _ = ImageFileIo.ReadByte(imageStream);
-        _ = ImageFileIo.ReadByte(imageStream);
 
         for (int y = 0; y < canvas.Height; y++)
         {

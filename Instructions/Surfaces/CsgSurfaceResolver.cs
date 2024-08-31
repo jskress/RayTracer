@@ -1,3 +1,4 @@
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Geometry;
 
@@ -38,22 +39,35 @@ public class CsgSurfaceResolver : SurfaceResolver<CsgSurface>, IValidatable
         SetChildren(value, surfaces);
 
         base.SetProperties(context, variables, value);
+
+        if (value.Material is not null)
+            value.SetMaterial(value.Material);
     }
 
+    /// <summary>
+    /// This method is used to create the proper CSG operation tree from the given list of
+    /// surfaces.
+    /// </summary>
+    /// <param name="parent">The CSG surface to set the left and right surfaces for.</param>
+    /// <param name="surfaces">The list of surfaces to pull from.</param>
     private void SetChildren(CsgSurface parent, List<Surface> surfaces)
     {
-        parent.Left = surfaces[0];
-
-        if (surfaces.Count > 2)
+        while (surfaces.Count > 2)
         {
-            CsgSurface child = new CsgSurface { Operation = Operation };
+            CsgSurface child = new CsgSurface
+            {
+                Operation = Operation,
+                Left = surfaces[0],
+                Right = surfaces[1]
+            };
 
-            SetChildren(child, surfaces[1..]);
+            surfaces.RemoveFirst();
 
-            parent.Right = child;
+            surfaces[0] = child;
         }
-        else
-            parent.Right = surfaces[1];
+
+        parent.Left = surfaces[0];
+        parent.Right = surfaces[1];
     }
 
     /// <summary>

@@ -7,11 +7,12 @@ include '../defaults.igl'
 // Floor
 plane {
 	material {
-		pigment ring { Gray25, DarkSeaGreen }
+		pigment cylindrical stripes { Gray25, DarkSeaGreen }
 	}
 }
 
-group index = [0, 5] {
+group {
+	index = [0, 5]
 	group {
 		sphere {
 			material inherited
@@ -32,7 +33,5 @@ group index = [0, 5] {
 	}
 	rotate X -30
 	translate Y 1.5
-	material {
-		pigment LightSkyBlue
-	}
+	material { pigment LightSkyBlue }
 }

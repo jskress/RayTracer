@@ -223,7 +223,7 @@ public partial class LanguageParser
         {
             material > [
                 openBrace | inherited |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }
         materialValueClause:
@@ -263,7 +263,7 @@ public partial class LanguageParser
         {
             plane > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "plane" here.'
         }
         
@@ -272,7 +272,7 @@ public partial class LanguageParser
         {
             sphere > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "sphere" here.'
         }
 
@@ -281,7 +281,7 @@ public partial class LanguageParser
         {
             cube > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "cube" here.'
         }
 
@@ -290,14 +290,14 @@ public partial class LanguageParser
         {
             cylinder > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "cylinder" here.'
         }
         startConicClause:
         {
             conic > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "conic" here.'
         }
         extrudedSurfaceEntryClause:
@@ -311,12 +311,12 @@ public partial class LanguageParser
         {
             torus > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "torus" here.'
         }
         torusEntryClause:
         [
-            { radii > _expression > comma ?? 'Expecting a comma' here.' > _expression } |
+            { radii > _expression > comma ?? 'Expecting a comma here.' > _expression } |
             surfaceEntryClause
         ]
 
@@ -325,14 +325,14 @@ public partial class LanguageParser
         {
             triangle > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "triangle" here.'
         }
         triangleEntryClause:
         [
             {
-                points > _expression > comma ?? 'Expecting a comma' here.' > _expression >
-                comma ?? 'Expecting a comma' here.' > _expression
+                points > _expression > comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression
             } |
             surfaceEntryClause
         ]
@@ -340,14 +340,14 @@ public partial class LanguageParser
         {
             smooth > triangle > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "triangle" here.'
         }
         smoothTriangleEntryClause:
         [
             {
-                normals > _expression > comma ?? 'Expecting a comma' here.' > _expression >
-                comma ?? 'Expecting a comma' here.' > _expression
+                normals > _expression > comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression
             } |
             triangleEntryClause
         ]
@@ -376,7 +376,7 @@ public partial class LanguageParser
             {
                 [ union | difference | intersection ] > [
                     openBrace |
-                    { [ _identifier | _keyword ] > openBrace{?} } |
+                    { [ _identifier | _keyword ] > openBrace{?} }
                 ] ?? 'Expecting an identifier or open brace to follow "triangle" here.'
             } |
             {
@@ -417,7 +417,7 @@ public partial class LanguageParser
         {
             group > [
                 openBrace |
-                { [ _identifier | _keyword ] > openBrace{?} } |
+                { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "group" here.'
         }
         groupEntryClause:
@@ -448,7 +448,7 @@ public partial class LanguageParser
         [
             namedClause => 'name' |
             startCameraClause => 'camera' |
-            startPointLightClause = 'pointLight' |
+            startPointLightClause => 'pointLight' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
@@ -484,7 +484,7 @@ public partial class LanguageParser
             [
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
-                startPlaneClause | startSphereClause | startCubeClause | startCCylinderClause |
+                startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startTriangleClause |
                 startSmoothTriangleClause | startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
@@ -504,8 +504,8 @@ public partial class LanguageParser
             startPlaneClause          => 'HandleStartPlaneClause' |
             startSphereClause         => 'HandleStartSphereClause' |
             startCubeClause           => 'HandleStartCubeClause' |
-            startCylinderClause       => 'HandleStartCircularSurfaceClause' |
-            startConicClause          => 'HandleStartCircularSurfaceClause' |
+            startCylinderClause       => 'HandleStartCylinderClause' |
+            startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |

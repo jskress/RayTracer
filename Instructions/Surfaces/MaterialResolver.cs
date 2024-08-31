@@ -73,7 +73,8 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Material value)
     {
-        value.Pigment = PigmentResolver.ResolveToPigment(context, variables);
+        if (PigmentResolver != null)
+            value.Pigment = PigmentResolver.ResolveToPigment(context, variables);
         
         AmbientResolver.AssignTo(value, target => target.Ambient, context, variables);
         DiffuseResolver.AssignTo(value, target => target.Diffuse, context, variables);

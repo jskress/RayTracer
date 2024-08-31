@@ -35,8 +35,7 @@ public class GroupResolver : SurfaceResolver<Group>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Group value)
     {
-        Interval interval = GroupInterval?.GetInterval(variables) ??
-                            new Interval { Start = 1, End = 1 };
+        Interval interval = GroupInterval?.GetInterval(variables) ?? Interval.Once;
         string variableName = GroupInterval?.VariableName;
 
         while (!interval.IsAtEnd)
@@ -49,6 +48,8 @@ public class GroupResolver : SurfaceResolver<Group>
             CreateChildSurfaces(context, variables, value);
         }
 
+        base.SetProperties(context, variables, value);
+
         // Push our material to interested children, if we have one.  If not, this will
         // be filled in by our parent, and so on...
         if (value.Material != null)
@@ -58,8 +59,6 @@ public class GroupResolver : SurfaceResolver<Group>
         SetBoundingBox(value);
 
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
-
-        base.SetProperties(context, variables, value);
     }
 
     /// <summary>
@@ -71,8 +70,10 @@ public class GroupResolver : SurfaceResolver<Group>
     /// <param name="group">The group to add things to.</param>
     private void CreateChildSurfaces(RenderContext context, Variables variables, Group group)
     {
-        group.Surfaces.AddRange(SurfaceResolvers
-            .Select(surface => surface.ResolveToSurface(context, variables)));
+        SurfaceResolvers
+            .Select(surface => surface.ResolveToSurface(context, variables))
+            .ToList()
+            .ForEach(surface => group.Add(surface));
     }
 
     /// <summary>
@@ -81,7 +82,7 @@ public class GroupResolver : SurfaceResolver<Group>
     /// </summary>
     /// <param name="surfaces">The list of surfaces to apply the material to.</param>
     /// <param name="material">The material to apply.</param>
-    private static void SetMaterial(List<Surface> surfaces, Material material)
+    internal static void SetMaterial(List<Surface> surfaces, Material material)
     {
         foreach (Surface surface in surfaces)
             surface.SetMaterial(material);

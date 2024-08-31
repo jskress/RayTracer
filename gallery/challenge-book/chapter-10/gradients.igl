@@ -7,7 +7,7 @@ include '../defaults.igl'
 // Floor
 plane {
 	material {
-		pigment bouncing radial gradient { DarkBlue, AliceBlue }
+		pigment cylindrical bouncing gradient { [0, DarkBlue, 1, AliceBlue] }
 		specular 0
 	}
 }
@@ -15,8 +15,8 @@ plane {
 // Middle sphere
 sphere {
 	material {
-		pigment radial gradient {
-			Green, White
+		pigment cylindrical gradient {
+			[0, Green, 1, White]
 			scale 0.33
 			rotate X 90
 		}
@@ -29,8 +29,8 @@ sphere {
 // Right sphere
 sphere {
 	material {
-		pigment bouncing linear gradient {
-			Red, White
+		pigment linear bouncing gradient {
+			[0, Red, 1, White]
 			scale 0.33
 		}
 		diffuse 0.7
@@ -44,7 +44,7 @@ sphere {
 sphere {
 	material {
 		pigment linear gradient {
-			Yellow, Blue
+			[0, Yellow, 1, Blue]
 			rotate Z 90
 		}
 		diffuse 0.7
