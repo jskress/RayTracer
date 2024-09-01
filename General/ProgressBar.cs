@@ -115,7 +115,7 @@ public class ProgressBar
         double todo = _total - _current;
         long ticksLeft = Convert.ToInt64(elapsed / _current * todo);
 
-        return TimeSpan.FromTicks(ticksLeft);
+        return TimeSpan.FromTicks(ticksLeft).Add(TimeSpan.FromSeconds(1));
     }
 
     /// <summary>
