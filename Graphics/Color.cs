@@ -177,8 +177,9 @@ public class Color
         if (Alpha >= 1)
             return this;
 
-        if (Alpha == 0 && other.Alpha == 0) // If both alphas are fully transparent,
-            return Colors.Transparent; 
+        // If we are fully transparent, then the other color is good.
+        if (Alpha == 0)
+            return other; 
 
         double alpha = 1 - (1 - Alpha) * (1 - other.Alpha);
         double red = Red * Alpha / alpha + other.Red * other.Alpha * (1 - Alpha) / alpha;

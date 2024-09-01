@@ -2,7 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
-using RayTracer.Pigments;
+using RayTracer.Patterns;
 
 namespace Tests;
 
@@ -115,8 +115,7 @@ public class TestPointLights
     {
         Material material = new ()
         {
-            Pigment = new StripePigment(
-                SolidPigment.White, SolidPigment.Black),
+            Pigment = TestPatterns.CreateStripedPigment(BandType.LinearX),
             Ambient = 1,
             Diffuse = 0,
             Specular = 0

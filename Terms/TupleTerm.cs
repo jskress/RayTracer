@@ -33,7 +33,7 @@ public class TupleTerm : Term
         double x = _x.GetValue<double>(variables);
         double y = _y.GetValue<double>(variables);
         double? z = _z?.GetValue<double>(variables, false);
-        double? w = _w?.GetValue<double?>(variables, false);
+        double? w = _w?.GetValue<double>(variables, false);
 
         return z.HasValue
             ? new NumberTuple(x, y, z.Value, w ?? double.NaN)

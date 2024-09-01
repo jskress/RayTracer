@@ -45,11 +45,9 @@ public class TestPatterns
 
         Assert.IsTrue(Colors.White.Matches(color));
 
-        Pigment pigment = new StripePigment(
-            SolidPigment.White, SolidPigment.Black)
-        {
-            Transform = Transforms.Scale(2)
-        };
+        Pigment pigment = CreateStripedPigment(BandType.LinearX);
+        
+        pigment.Transform = Transforms.Scale(2);
 
         sphere = new Sphere
         {
@@ -98,7 +96,7 @@ public class TestPatterns
         Assert.IsTrue(Colors.Black.Matches(source.GetColorFor(new Point(0, 0, 1.01))));
     }
 
-    private static PatternPigment CreateStripedPigment(BandType bandType)
+    internal static PatternPigment CreateStripedPigment(BandType bandType)
     {
         return CreatePigment(new StripedPattern
         {

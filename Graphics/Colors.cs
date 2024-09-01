@@ -295,11 +295,12 @@ public static class Colors
 	{
 		Color result = colors[0];
 
-		foreach (Color next in colors[1..]
-			         .Select(color => result.LayerOnTopOf(color))
-			         .TakeWhile(next => result != next))
+		for (int index = 1; index < colors.Count; index++)
 		{
-			result = next;
+			result = result.LayerOnTopOf(colors[index]);
+			
+			if (result.Alpha >= 1)
+				break;
 		}
 
 		return result;

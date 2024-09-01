@@ -90,8 +90,9 @@ public class PigmentSet
         double end = _entries[index].BreakValue;
         double fraction = (end - start) * value;
         Color secondColor = _entries[index].Pigment.GetTransformedColorFor(point);
+        double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 
-        return firstColor + (secondColor - firstColor) * fraction;
+        return (firstColor + (secondColor - firstColor) * fraction).WithAlpha(alpha);
     }
 
     /// <summary>

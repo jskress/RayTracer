@@ -35,7 +35,6 @@ sphere {
 	material {
 		pigment granite {
 			[0, Gray20, 1, Gray80]
-			//scale 3
 		}
 		ambient 0.1
 		reflective 0.25

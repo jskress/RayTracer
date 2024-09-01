@@ -24,7 +24,9 @@ public class SinglePigmentResolver : PigmentResolver<Pigment>
     /// <param name="variables">The current set of scoped variables.</param>
     public override Pigment Resolve(RenderContext context, Variables variables)
     {
-        object result = Term.GetValue(variables, typeof(Color), typeof(Pigment));
+        object result = Term.GetValue(
+            variables, typeof(Color), typeof(Pigment), typeof(PatternPigment),
+            typeof(BlendedPigment), typeof(NoisyPigment), typeof(SolidPigment));
 
         if (result == null)
         {
@@ -34,8 +36,12 @@ public class SinglePigmentResolver : PigmentResolver<Pigment>
             };
         }
 
-        return result is Color color
-            ? new SolidPigment(color)
-            : (Pigment) result;
+        return result switch
+        {
+            Color color => new SolidPigment(color),
+            IPigmentResolver resolver => resolver.ResolveToPigment(context, variables),
+            Pigment pigment => pigment,
+            _ => throw new TokenException("Could not resolve this to a color or pigment.")
+        };
     }
 }
