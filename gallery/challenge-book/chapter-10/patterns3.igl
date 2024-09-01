@@ -1,0 +1,89 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+
+include '../defaults.igl'
+
+// Floor
+plane {
+	material {
+		pigment noisy {
+			turbulence 3 phased 20
+			leopard {
+				[0, Orange, 1, Brown]
+				scale 0.5
+			}
+		}
+		specular 0
+	}
+}
+
+// Wall
+plane {
+	material {
+		pigment square {
+			Yellow, LimeGreen, ForestGreen, Gray30
+		}
+		specular 0
+	}
+	rotate X -90
+	rotate Y 20
+	translate Z 4
+}
+
+sphere {
+	material {
+		pigment agate {
+			turbulence 7 phased 20
+			[0, Gray20, 1, Gray80]
+			rotate X -45
+			scale 100
+		}
+		ambient 0.1
+		reflective 0.25
+		specular 1
+		shininess 300
+	}
+	translate X -1
+	translate Y 1.5
+}
+
+cube {
+	material {
+		pigment planar { [0, Blue, 1, White] scale 0.5 }
+		ambient 0.1
+		reflective 0.25
+		specular 1
+		shininess 300
+	}
+	scale 0.5
+	rotate Y 33
+	rotate X -33
+	translate X 1
+	translate Y 1.5
+}
+
+torus {
+	radii 0.75, 0.3
+	material {
+		pigment wrinkles {
+			[0, SkyBlue, 1, DeepSkyBlue]
+			scale 0.1
+		}
+	}
+	translate Y 0.3
+	translate Z -1
+}
+
+cylinder {
+	material {
+		pigment triangular {
+			Red, Yellow, Green, Blue, Orange, White
+			scale 0.5
+		}
+	}
+	scale [0.4, 0.8, 0.4]
+	rotate X -50
+	translate X -1.75
+	translate Z -1
+}
