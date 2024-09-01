@@ -13,13 +13,8 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 ### General To-Dos:
 
-- [X] Add a "cheesy" file parser to get things going in that direction.
-- [X] Add lots of named colors.
-- [X] Add a named set of direction vectors.
-- [X] Add a named set of indices of refraction.
 - [ ] Motion blur.
 - [ ] Antialiasing.
-- [X] Support PNGs.
 - [ ] Support other image formats?
 
 ### To-Dos for Lights:
@@ -32,29 +27,6 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### To-Dos for Surfaces:
 - [ ] Texture mapping.
 - [ ] Normal perturbation.
-- [X] Torus.
 - [ ] Other surfaces (Height fields, SORs, sweeps, etc.)
-
-### To-Dos for Patterns:
-
-- [X] Add a radial gradient pigment.
-- [X] Update all pigments to use nested color sources.
-- [X] Add a perturbing noise pigment.
-- [X] Add a blending pigment.
-- [ ] Add pattern with color map pigment ala POVRay.
-- [X] Add a cyclical flag to the gradient pigments (start over vs bounce back).
-- [ ] Update the gradients to do multiples, similar to how most graphics engines
-      handle dash patterns.  POVRay has this, too.
-
-### To-Dos for surface rendering:
-
-- [X] Add a flag that will opt a surface out of shadow consideration; i.e., the surface
-      does not cast a shadow.
-
-### To-Dos for the render file language:
-
-- [X] Move to the Lex port, when available.
-- [X] Support loops for object graph construction.
-- [X] Support variables for easier surface reuse, among other things.
 
 More to come...
