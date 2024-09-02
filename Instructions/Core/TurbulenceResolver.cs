@@ -9,6 +9,15 @@ namespace RayTracer.Instructions.Core;
 public class TurbulenceResolver : ObjectResolver<Turbulence>
 {
     /// <summary>
+    /// This is a default turbulence resolver instance that creates a turbulence instance
+    /// that is an effective no-op around a single call to our Perlin noise function.
+    /// </summary>
+    public static readonly TurbulenceResolver NoiseWithNoTurbulenceResolver = new ()
+    {
+        DepthResolver = new LiteralResolver<int> { Value = 0 }
+    };
+
+    /// <summary>
     /// This property holds the resolver for our turbulence's depth property.
     /// </summary>
     public Resolver<int> DepthResolver { get; set; }

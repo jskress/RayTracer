@@ -19,12 +19,7 @@ public partial class LanguageParser
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "turbulenceClause");
 
         if (clause == null)
-        {
-            throw new TokenException("Expecting a turbulence definition here.")
-            {
-                Token = CurrentParser.PeekNextToken()
-            };
-        }
+            return TurbulenceResolver.NoiseWithNoTurbulenceResolver;
 
         Resolver<int> depthResolver = new TermResolver<int> { Term = clause.Term() };
         Resolver<int> tightnessResolver = null;

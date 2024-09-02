@@ -35,6 +35,9 @@ public class Turbulence
     /// <returns></returns>
     public double Generate(Point point)
     {
+        if (Depth == 0)
+            return PerlinNoise.Instance.Noise(point);
+
         double noise = 0.0;
         double weight = 1.0;
 
