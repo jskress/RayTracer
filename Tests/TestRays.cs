@@ -1,5 +1,4 @@
 using RayTracer.Basics;
-using RayTracer.Core;
 
 namespace Tests;
 

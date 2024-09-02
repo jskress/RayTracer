@@ -1,0 +1,73 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+
+include '../defaults.igl'
+
+// Floor
+plane {
+	material {
+		pigment hexagon {
+			White, Gray50, Gray10
+			scale 0.3
+		}
+		specular 0
+	}
+}
+
+// Wall
+plane {
+	material {
+		pigment brick {
+			Gray50, Firebrick
+			scale 0.2
+			rotate Z 90
+			rotate Y 90
+		}
+		specular 0
+	}
+	rotate X -90
+	rotate Y 20
+	translate Z 4
+}
+
+sphere {
+	material {
+		pigment granite {
+			[0, Gray20, 1, Gray80]
+		}
+		ambient 0.1
+		reflective 0.25
+		specular 1
+		shininess 300
+	}
+	translate X -1
+	translate Y 1.5
+}
+
+cube {
+	material {
+		pigment dents { [0, Blue, 1, White] scale 0.5 }
+		ambient 0.1
+		reflective 0.25
+		specular 1
+		shininess 300
+	}
+	scale 0.5
+	rotate Y 33
+	rotate X -33
+	translate X 1
+	translate Y 1.5
+}
+
+torus {
+	radii 0.75, 0.3
+	material {
+		pigment cubic {
+			White, Blue, Yellow, Green, Purple, Red
+			scale 0.01
+		}
+	}
+	translate Y 0.3
+	translate Z -1
+}

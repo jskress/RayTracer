@@ -8,7 +8,7 @@ namespace RayTracer.Geometry;
 /// This class represents a cylinder.  It is defined as centered at the origin and extends
 /// along the Y axis.  It has a radius of 1.  It may be stopped or capped.
 /// </summary>
-public class Cylinder : CircularSurface
+public class Cylinder : ExtrudedSurface
 {
     /// <summary>
     /// This method is used to determine whether the given ray intersects the cylinder and,

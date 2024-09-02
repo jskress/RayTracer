@@ -26,12 +26,13 @@ point light {
 // Floor
 plane {
 	material {
-		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
 	}
 }
 
 // Ring
-torus (1, 0.3) {
+torus {
+	radii 1, 0.3
 	material {
 		pigment Gold
 		ambient 0.1

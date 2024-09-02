@@ -8,12 +8,13 @@ public class TestMatrices
     [TestMethod]
     public void TestConstruction()
     {
-        double[] data = {
+        double[] data =
+        [
             1, 2, 3, 4,
             5.5, 6.5, 7.5, 8.5,
             9, 10, 11, 12,
             13.5, 14.5, 15.5, 16.5
-        };
+        ];
         Matrix matrix = new (data);
 
         Assert.AreEqual(1, matrix.Entry(0, 0));
@@ -24,7 +25,7 @@ public class TestMatrices
         Assert.AreEqual(13.5, matrix.Entry(3, 0));
         Assert.AreEqual(15.5, matrix.Entry(3, 2));
 
-        data = new double[] { -3, 5, 1, -2 };
+        data = [-3, 5, 1, -2];
         matrix = new Matrix(data);
 
         Assert.AreEqual(-3, matrix.Entry(0, 0));
@@ -36,24 +37,25 @@ public class TestMatrices
     [TestMethod]
     public void TestMatches()
     {
-        double[] data = {
+        double[] data =
+        [
             1, 2, 3, 4,
             5, 6, 7, 8,
             9, 8, 7, 6,
             5, 4, 3, 2
-        };
+        ];
         Matrix matrix1 = new (data);
         Matrix matrix2 = new (data);
 
         Assert.IsTrue(matrix1.Matches(matrix2));
 
-        matrix2 = new Matrix(new double[]
-        {
+        matrix2 = new Matrix(
+        [
             2, 3, 4, 5,
             6, 7, 8, 9,
             8, 7, 6, 5,
             4, 3, 2, 1
-        });
+        ]);
 
         Assert.IsFalse(matrix1.Matches(matrix2));
     }
@@ -61,26 +63,27 @@ public class TestMatrices
     [TestMethod]
     public void TestMultiplicationByMatrix()
     {
-        Matrix matrix1 = new (new double[] {
+        Matrix matrix1 = new (
+        [
             1, 2, 3, 4,
             5, 6, 7, 8,
             9, 8, 7, 6,
             5, 4, 3, 2
-        });
-        Matrix matrix2 = new (new double[]
-        {
+        ]);
+        Matrix matrix2 = new (
+        [
             -2, 1, 2, 3,
             3, 2, 1, -1,
             4, 3, 6, 5,
             1, 2, 7, 8
-        });
-        Matrix expected = new (new double[]
-        {
+        ]);
+        Matrix expected = new (
+        [
             20, 22, 50, 48,
             44, 54, 114, 108,
             40, 58, 110, 102,
             16, 26, 46,42
-        });
+        ]);
 
         Assert.IsTrue(expected.Matches(matrix1 * matrix2));
         Assert.IsTrue(matrix1.Matches(matrix1 * Matrix.Identity));
@@ -89,19 +92,13 @@ public class TestMatrices
     [TestMethod]
     public void TestMultiplicationByPoint()
     {
-        Matrix matrix = new (new double[] {
+        Matrix matrix = new (
+        [
             1, 2, 3, 4,
             2, 4, 4, 2,
             8, 6, 4, 1,
             0, 0, 0, 1
-        });
-        Matrix matrix2 = new (new double[]
-        {
-            -2, 1, 2, 3,
-            3, 2, 1, -1,
-            4, 3, 6, 5,
-            1, 2, 7, 8
-        });
+        ]);
         Point point = new (1, 2, 3);
         Point expected = new (18, 24, 33);
 
@@ -116,19 +113,13 @@ public class TestMatrices
     [TestMethod]
     public void TestMultiplicationByVector()
     {
-        Matrix matrix = new (new double[] {
+        Matrix matrix = new (
+        [
             1, 2, 3, 4,
             2, 4, 4, 2,
             8, 6, 4, 1,
             0, 0, 0, 1
-        });
-        Matrix matrix2 = new (new double[]
-        {
-            -2, 1, 2, 3,
-            3, 2, 1, -1,
-            4, 3, 6, 5,
-            1, 2, 7, 8
-        });
+        ]);
         Vector vector = new (1, 2, 3, 1);
         Vector expected = new (18, 24, 33, 1);
 

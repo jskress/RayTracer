@@ -2,6 +2,9 @@ using RayTracer.Geometry;
 
 namespace RayTracer.Core;
 
+/// <summary>
+/// This class represents an intersection with a smooth triangle.
+/// </summary>
 public class SmoothTriangleIntersection : Intersection
 {
     /// <summary>

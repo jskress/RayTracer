@@ -1,11 +1,9 @@
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
-using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Renderer;
-using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -176,7 +174,8 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="blockClauseName">The clause that defines the block's content</param>
     /// <param name="handleClause">An action that handles the clause we parsed.</param>
-    private void ParseBlock(string blockClauseName, Action<Clause> handleClause)
+    /// <returns>The token for the closing brace that ended the block.</returns>
+    private Token ParseBlock(string blockClauseName, Action<Clause> handleClause)
     {
         while (!CurrentParser.IsNext(BounderToken.CloseBrace))
         {
@@ -196,9 +195,11 @@ public partial class LanguageParser
         HandleIncludeEnd();
 
         // Make sure we eat the closing brace.
-        _ = CurrentParser.GetNextToken();
+        Token brace = CurrentParser.GetNextToken();
 
         HandleIncludeEnd();
+
+        return brace;
     }
 
     /// <summary>
@@ -219,16 +220,39 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This is a helper method for creating an appropriate instruction for setting the
-    /// name of a named thing.
+    /// This is a helper method for parsing an object block.
     /// </summary>
-    /// <param name="term">The term to use to resolve the name.</param>
-    /// <returns>The appropriate instruction for setting a thing's name.</returns>
-    private static ObjectInstruction<TObject> CreateNamedInstruction<TObject>(Term term)
-        where TObject : NamedThing, new()
+    /// <param name="blockName">The name of the block that describes the block's entries.</param>
+    /// <param name="handleClause">The action that will be used to handle the block's entry
+    /// clauses.</param>
+    /// <param name="resolver">The resolver to use, if we don't need a new one.</param>
+    /// <returns>The created resolver.</returns>
+    private TResolver ParseObjectResolver<TResolver>(
+        string blockName, Action<Clause> handleClause, TResolver resolver = null)
+        where TResolver : class, IObjectResolver, new()
     {
-        return new SetObjectPropertyInstruction<TObject, string>(
-            target => target.Name, term);
+        resolver ??= new TResolver();
+
+        _context.PushTarget(resolver);
+
+        Token token = ParseBlock(blockName, handleClause);
+
+        _context.PopTarget();
+
+        if (resolver is IValidatable validatable)
+        {
+            string errorMessage = validatable.Validate();
+
+            if (errorMessage != null)
+            {
+                throw new TokenException(errorMessage)
+                {
+                    Token = token
+                };
+            }
+        }
+
+        return resolver;
     }
 
     /// <summary>

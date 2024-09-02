@@ -1,9 +1,9 @@
 using Lex.Clauses;
 using RayTracer.Basics;
-using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -20,25 +20,22 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Point light");
 
-        PointLightInstructionSet instructionSet = ParsePointLightClause();
+        PointLightResolver resolver = ParsePointLightClause();
 
-        _ = new TopLevelObjectInstruction<PointLight>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
-    /// This method is used to create the instruction set from a point light block.
+    /// This method is used to create the resolver from a point light block.
     /// </summary>
-    private PointLightInstructionSet ParsePointLightClause()
+    private PointLightResolver ParsePointLightClause()
     {
-        PointLightInstructionSet instructionSet = new ();
-
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("pointLightEntryClause", HandlePointLightEntryClause);
-
-        _context.PopInstructionSet();
-
-        return instructionSet;
+        return ParseObjectResolver<PointLightResolver>(
+            "pointLightEntryClause", HandlePointLightEntryClause);
     }
 
     /// <summary>
@@ -47,20 +44,23 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandlePointLightEntryClause(Clause clause)
     {
-        PointLightInstructionSet instructionSet = (PointLightInstructionSet) _context.CurrentSet;
+        PointLightResolver resolver = (PointLightResolver) _context.CurrentTarget;
         string field = clause.Text();
         Term term = clause.Term();
     
-        ObjectInstruction<PointLight> instruction = field switch
+        switch (field)
         {
-            "named" => CreateNamedInstruction<PointLight>(term),
-            "location" => new SetObjectPropertyInstruction<PointLight, Point>(
-                target => target.Location, term),
-            "color" => new SetObjectPropertyInstruction<PointLight, Color>(
-                target => target.Color, term),
-            _ => throw new Exception($"Internal error: unknown light property found: {field}.")
-        };
-
-        instructionSet.AddInstruction(instruction);
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "location":
+                resolver.LocationResolver = new TermResolver<Point> { Term = term };
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown light property found: {field}.");
+        }
     }
 }

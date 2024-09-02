@@ -7,9 +7,9 @@ namespace RayTracer.General;
 public class ProgressBar
 {
     private static readonly TimeSpan Threshold = TimeSpan.FromSeconds(2);
-    private static readonly string Blank = new (' ', 52);
 
     private long _start;
+    private long _threshold;
     private long _current;
     private long _total;
     private int _used;
@@ -22,7 +22,10 @@ public class ProgressBar
     /// <param name="total">The total count to expect.</param>
     public void SetTotal(long total)
     {
-        _start = DateTime.Now.Add(Threshold).Ticks;
+        DateTime now = DateTime.Now;
+
+        _start = now.Ticks;
+        _threshold = now.Add(Threshold).Ticks;
         _current = 0;
         _total = total;
         _used = 0;
@@ -65,8 +68,10 @@ public class ProgressBar
     /// </summary>
     private void Show()
     {
+        long now = DateTime.Now.Ticks;
+
         // Only show the progress bar if, we've past our time threshold.
-        if (DateTime.Now.Ticks > _start && _used != _lastUsed)
+        if (now > _threshold && _used != _lastUsed)
         {
             ConsoleColor hold = Console.ForegroundColor;
 
@@ -78,14 +83,13 @@ public class ProgressBar
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
 
-                if (_used > 1 && _current < _total)
+                if (_current >= _total)
+                    Console.Write(new string('=', 50));
+                else if (_used > 1)
                 {
                     Console.Write(new string('=', _used - 1));
-
                     Console.Write('>');
                 }
-                else
-                    Console.Write(new string('=', 50));
             }
 
             Console.ForegroundColor = hold;
@@ -94,9 +98,24 @@ public class ProgressBar
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write(']');
             Console.ForegroundColor = hold;
+            Console.Write($@" {TimeRemaining(now):hh\:mm\:ss} ");
 
             _lastUsed = _used;
         }
+    }
+
+    /// <summary>
+    /// This method determines an estimate as to the amount of time remaining for the render.
+    /// </summary>
+    /// <param name="ticks">The current time in ticks.</param>
+    /// <returns>The time remaining estimate.</returns>
+    private TimeSpan TimeRemaining(long ticks)
+    {
+        double elapsed = ticks - _start;
+        double todo = _total - _current;
+        long ticksLeft = Convert.ToInt64(elapsed / _current * todo);
+
+        return TimeSpan.FromTicks(ticksLeft).Add(TimeSpan.FromSeconds(1));
     }
 
     /// <summary>

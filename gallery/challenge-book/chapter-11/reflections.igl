@@ -11,7 +11,7 @@ context {
 // Floor
 plane {
 	material {
-		pigment ring { [0, 0, 0.25], [0, 0, 0.75] }
+		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
 	}
 }
 
@@ -55,7 +55,7 @@ sphere {
 sphere {
 	material {
 		pigment linear gradient {
-			Green, Blue
+			[0, Green, 1, Blue]
 		}
 		diffuse 0.7
 		specular 0.3

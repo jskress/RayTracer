@@ -1,6 +1,5 @@
 using Lex.Tokens;
 using RayTracer.General;
-using RayTracer.Instructions;
 
 namespace RayTracer.Terms;
 

@@ -1,4 +1,3 @@
-using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -17,25 +16,25 @@ public class TestIntersections
         Intersection i2 = new (sphere, 2);
         Intersection i3 = new (sphere, -3);
         Intersection i4 = new (sphere, 2);
-        List<Intersection> intersections = new () { i1, i2 };
+        List<Intersection> intersections = [i1, i2];
 
         Assert.AreSame(i1, intersections.Hit());
 
         i1 = new Intersection(sphere, -1);
         i2 = new Intersection(sphere, 1);
-        intersections = new List<Intersection> { i1, i2 };
+        intersections = [i1, i2];
 
         Assert.AreSame(i2, intersections.Hit());
 
         i1 = new Intersection(sphere, -2);
         i2 = new Intersection(sphere, -1);
-        intersections = new List<Intersection> { i1, i2 };
+        intersections = [i1, i2];
 
         Assert.IsNull(intersections.Hit());
 
         i1 = new Intersection(sphere, 5);
         i2 = new Intersection(sphere, 7);
-        intersections = new List<Intersection> { i1, i2, i3, i4 };
+        intersections = [i1, i2, i3, i4];
 
         Assert.AreSame(i4, intersections.Hit());
     }
@@ -47,7 +46,7 @@ public class TestIntersections
         Sphere sphere = new ();
         Intersection intersection = new (sphere, 4);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Assert.AreSame(sphere, intersection.Surface);
         Assert.AreEqual(4, intersection.Distance);
@@ -67,7 +66,7 @@ public class TestIntersections
         Intersection intersection = new (sphere, 5);
         double tolerance = -DoubleExtensions.Epsilon / 2;
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Assert.IsTrue(intersection.OverPoint.Z < tolerance);
         Assert.IsTrue(intersection.Point.Z > intersection.OverPoint.Z);
@@ -82,7 +81,7 @@ public class TestIntersections
         sphere.Transform = Transforms.Translate(0, 0, 1);
 
         Intersection intersection = new (sphere, 5);
-        List<Intersection> intersections = new () { intersection };
+        List<Intersection> intersections = [intersection];
 
         intersection.PrepareUsing(ray, intersections);
 
@@ -100,7 +99,7 @@ public class TestIntersections
         Intersection intersection = new (plane, squareRootOf2);
         Vector expected = new (0, value, value);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Assert.IsTrue(expected.Matches(intersection.Reflect));
     }
@@ -112,14 +111,14 @@ public class TestIntersections
         Sphere sphere = new ();
         Intersection intersection = new (sphere, 4);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Assert.IsFalse(intersection.Inside);
 
         ray = new Ray(new Point(0, 0, 0), new Vector(0, 0, 1));
         intersection = new Intersection(sphere, 1);
 
-        intersection.PrepareUsing(ray, new List<Intersection> { intersection });
+        intersection.PrepareUsing(ray, [intersection]);
 
         Assert.IsTrue(new Point(0, 0, 1).Matches(intersection.Point));
         Assert.IsTrue(new Vector(0, 0, -1).Matches(intersection.Eye));
@@ -133,11 +132,11 @@ public class TestIntersections
         double value = Math.Sqrt(2) / 2;
         Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (new Point(0, 0, value), new Vector(0, 1, 0));
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(sphere, -value),
-            new Intersection(sphere, value)
-        };
+        List<Intersection> intersections =
+        [
+            new (sphere, -value),
+            new (sphere, value)
+        ];
 
         intersections[1].PrepareUsing(ray, intersections);
 
@@ -149,11 +148,11 @@ public class TestIntersections
     {
         Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (Point.Zero, new Vector(0, 1, 0));
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(sphere, -1),
-            new Intersection(sphere, 1)
-        };
+        List<Intersection> intersections =
+        [
+            new (sphere, -1),
+            new (sphere, 1)
+        ];
 
         intersections[1].PrepareUsing(ray, intersections);
 
@@ -167,10 +166,7 @@ public class TestIntersections
     {
         Sphere sphere = TestSpheres.CreateGlassSphere();
         Ray ray = new (new Point(0, 0.99, -2), new Vector(0, 0, 1));
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(sphere, 1.8589)
-        };
+        List<Intersection> intersections = [new (sphere, 1.8589)];
 
         intersections[0].PrepareUsing(ray, intersections);
 

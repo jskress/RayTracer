@@ -1,7 +1,12 @@
 using Lex.Clauses;
+using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
+using RayTracer.Instructions.Patterns;
+using RayTracer.Instructions.Pigments;
+using RayTracer.Pigments;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -14,97 +19,165 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse a clause that defines a pigment.
     /// </summary>
-    private PigmentInstructionSet ParsePigmentClause()
+    private IPigmentResolver ParsePigmentClause()
     {
         Clause clause = ParseClause("pigmentClause");
         string text = clause.Text();
-        bool bouncing = false;
+        IPigmentResolver resolver;
         
-        if (text is "" or "color")
+        switch (text)
         {
-            Term term = (Term) clause.Expressions.RemoveFirst();
+            case "" or "color":
+            {
+                Term term = (Term) clause.Expressions.RemoveFirst();
 
-            return PigmentInstructionSet.SolidPigmentInstructionSet(term);
+                return new SinglePigmentResolver { Term = term };
+            }
+            case "blend" or "layer":
+                resolver = ParseBlendedPigmentClause(text is "layer");
+                break;
+            case "noisy":
+                resolver = ParseNoisyPigmentClause();
+                break;
+            default:
+                resolver = ParsePatternPigmentClause(clause);
+                break;
         }
-
-        if (text == "bouncing")
-        {
-            bouncing = true;
-
-            clause.Tokens.RemoveFirst();
-        }
-
-        PigmentType type = ToPigmentType(clause);
-        InitializeNoisyPigment initializeInstruction = type == PigmentType.Noise
-            ? ParseNoisyPigmentInstruction()
-            : null;
-        List<PigmentInstructionSet> sets = [ParsePigmentClause()];
-
-        if (type != PigmentType.Noise)
-        {
-            CurrentParser.MatchToken(
-                true, () => "Expecting a comma here.", OperatorToken.Comma);
-
-            sets.Add(ParsePigmentClause());
-        }
-
-        TransformInstructionSet transformInstructionSet = ParseTransformClause();
 
         CurrentParser.MatchToken(
             true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
 
-        return PigmentInstructionSet.CompoundPigmentInstructionSet(
-            type, initializeInstruction, transformInstructionSet, bouncing, sets.ToArray());
+        return resolver;
     }
 
     /// <summary>
-    /// This is a helper method for converting the next token into a representative
-    /// pigment type.
+    /// This method is used to parse the definition of a blended or layered pigment.
     /// </summary>
-    /// <param name="clause">The clause to pull from.</param>
-    /// <returns>The representative pigment type.</returns>
-    private static PigmentType ToPigmentType(Clause clause)
+    /// <param name="layer">A flag noting whether we need to layer or blend the child
+    /// pigments.</param>
+    /// <returns>The blended pigment resolver.</returns>
+    private BlendedPigmentResolver ParseBlendedPigmentClause(bool layer)
     {
-        Token token = clause.Tokens.RemoveFirst();
+        List<IPigmentResolver> resolvers = [ParsePigmentClause()];
 
-        return token.Text switch
+        while (CurrentParser.IsNext(OperatorToken.Comma))
         {
-            "checker" => PigmentType.Checker,
-            "ring" => PigmentType.Ring,
-            "stripe" => PigmentType.Stripe,
-            "blend" => PigmentType.Blend,
-            "linear" => PigmentType.LinearGradient,
-            "radial" => PigmentType.RadialGradient,
-            "noisy" => PigmentType.Noise,
-            _ => throw new Exception($"Internal error: unknown pigment type: {token.Text}")
+            CurrentParser.GetNextToken(); // Eat the comma.
+
+            resolvers.Add(ParsePigmentClause());
+        }
+
+        return new BlendedPigmentResolver
+        {
+            PigmentResolvers = resolvers,
+            LayerResolver = new LiteralResolver<bool> { Value = layer },
+            TransformResolver = ParseTransformClause()
         };
     }
 
     /// <summary>
-    /// This method is used to parse the turbulence clause for a moisy pigment, if the
-    /// clause is present.
+    /// This method is used to parse the definition of a noisy pigment.
     /// </summary>
-    /// <returns>The initialization instruction, or <c>null</c>.</returns>
-    private InitializeNoisyPigment ParseNoisyPigmentInstruction()
+    /// <returns>The noisy pigment resolver.</returns>
+    private NoisyPigmentResolver ParseNoisyPigmentClause()
     {
-        Clause clause = LanguageDsl.ParseClause(CurrentParser, "turbulenceClause");
+        // We want the turbulence specification before the pigment.
+        TurbulenceResolver turbulenceResolver = ParseTurbulenceClause();
 
-        if (clause == null)
-            return null;
-
-        Term depthTerm = clause.Term();
-        bool phased = clause.Tokens.Count > 1;
-        Term tightnessTerm = null;
-        Term scaleTerm = null;
-
-        if (phased)
+        return new NoisyPigmentResolver
         {
-            tightnessTerm = clause.Term(1);
+            PigmentResolver = ParsePigmentClause(),
+            TurbulenceResolver = turbulenceResolver,
+            TransformResolver = ParseTransformClause()
+        };
+    }
+
+    /// <summary>
+    /// This method is used to parse the definition of a patterned pigment.
+    /// </summary>
+    /// <param name="clause">The clause that defines the pattern.</param>
+    /// <returns>The pattern pigment resolver.</returns>
+    private PatternPigmentResolver ParsePatternPigmentClause(Clause clause)
+    {
+        (IPatternResolver resolver, int discretePigmentsNeeded) = ParsePatternClause(clause);
+
+        return new PatternPigmentResolver
+        {
+            PatternResolver = resolver,
+            PigmentSetResolver = discretePigmentsNeeded == 0
+                ? ParsePigmentMapClause()
+                : ParsePigmentListClause(discretePigmentsNeeded),
+            TransformResolver = ParseTransformClause()
+        };
+    }
+
+    /// <summary>
+    /// This method is used to parse out a pigment set resolver.
+    /// </summary>
+    /// <returns>The appropriate resolver for a pigment set.</returns>
+    private Resolver<PigmentSet> ParsePigmentMapClause()
+    {
+        Clause clause = LanguageDsl.ParseClause(CurrentParser, "pigmentMapClause");
+        PigmentMapResolver resolver = new ()
+        {
+            PigmentResolvers = [],
+            BreakValueResolvers = [],
+            BandedResolver = new LiteralResolver<bool> { Value = clause.Text() == "banded" }
+        };
+
+        while (!CurrentParser.IsNext(BounderToken.CloseBracket))
+        {
+            Term breakValueTerm = (Term) LanguageDsl.ParseExpression(CurrentParser);
+
+            CurrentParser.MatchToken(true, () => "Expecting a comma here.", OperatorToken.Comma);
+
+            IPigmentResolver pigmentResolver = ParsePigmentClause();
             
-            if (clause.Tokens.Count > 2)
-                scaleTerm = clause.Term(2);
+            resolver.BreakValueResolvers.Add(new TermResolver<double> { Term = breakValueTerm });
+            resolver.PigmentResolvers.Add(pigmentResolver);
+
+            if (!CurrentParser.IsNext(OperatorToken.Comma, BounderToken.CloseBracket))
+            {
+                throw new TokenException("Expecting a comma or close bracket here.")
+                {
+                    Token = CurrentParser.GetNextToken()
+                };
+            }
+
+            if (CurrentParser.IsNext(OperatorToken.Comma))
+                CurrentParser.GetNextToken();
         }
 
-        return new InitializeNoisyPigment(depthTerm, phased, tightnessTerm, scaleTerm);
+        Token bracket = CurrentParser.GetNextToken();
+
+        if (resolver.PigmentResolvers.Count < 2)
+        {
+            throw new TokenException("At least two pigments should be provided here.")
+            {
+                Token = bracket
+            };
+        }
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to parse out a pigment set resolver.
+    /// </summary>
+    /// <param name="discretePigmentsNeeded"></param>
+    /// <returns>The appropriate resolver for a list of pigments.</returns>
+    private Resolver<PigmentSet> ParsePigmentListClause(int discretePigmentsNeeded)
+    {
+        List<IPigmentResolver> resolvers = [];
+
+        for (int _ = 0; _ < discretePigmentsNeeded; _++)
+        {
+            if (resolvers.Count > 0)
+                CurrentParser.MatchToken(true, () => "Expecting a comma here.", OperatorToken.Comma);
+
+            resolvers.Add(ParsePigmentClause());
+        }
+
+        return new PigmentListResolver { PigmentResolvers = resolvers };
     }
 }

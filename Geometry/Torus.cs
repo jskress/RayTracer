@@ -12,31 +12,33 @@ public class Torus : Surface
     /// <summary>
     /// This property provides the major radius of the torus.
     /// </summary>
-    public double MajorRadius { get; }
+    public double MajorRadius
+    {
+        get => _majorRadius;
+        set
+        {
+            _majorRadius = value;
+            _majorSquared = value * value;
+        }
+    }
 
     /// <summary>
     /// This property provides the minor radius of the torus.
     /// </summary>
-    public double MinorRadius { get; }
-
-    private readonly double _majorSquared;
-    private readonly double _minorSquared;
-
-    public Torus()
+    public double MinorRadius
     {
-        // This constructor is present to satisfy the type system but should never
-        // be used, so...
-        throw new Exception("Internal error: cannot create torii this way.");
+        get => _minorRadius;
+        set
+        {
+            _minorRadius = value;
+            _minorSquared = value * value;
+        }
     }
 
-    public Torus(double majorRadius, double minorRadius)
-    {
-        _majorSquared = majorRadius * majorRadius;
-        _minorSquared = minorRadius * minorRadius;
-
-        MajorRadius = majorRadius;
-        MinorRadius = minorRadius;
-    }
+    private double _majorRadius;
+    private double _minorRadius;
+    private double _majorSquared;
+    private double _minorSquared;
 
     /// <summary>
     /// This method is used to determine whether the given ray intersects the torus and,
@@ -90,8 +92,8 @@ public class Torus : Surface
         Vector vector = distance.Near(0)
             ? new Vector(0, 0, 0)
             : new Vector(
-                MajorRadius * x / distance, 0,
-                MajorRadius * z / distance);
+                _majorRadius * x / distance, 0,
+                _majorRadius * z / distance);
 
         return new Vector(point) - vector;
     }

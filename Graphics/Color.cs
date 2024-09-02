@@ -165,6 +165,31 @@ public class Color
     }
 
     /// <summary>
+    /// This method is used to layer this color on top of another color.  The colors are
+    /// combined by applying the alpha channel.  If this color has no transparency, this
+    /// color is returned unaltered (since nothing of the other color can show through).
+    /// </summary>
+    /// <param name="other">The color to layer this one on top of.</param>
+    /// <returns>The color resulting from layering this color on the one given.</returns>
+    public Color LayerOnTopOf(Color other)
+    {
+        // If we have no alpha, then there's no layering possible.
+        if (Alpha >= 1)
+            return this;
+
+        // If we are fully transparent, then the other color is good.
+        if (Alpha == 0)
+            return other; 
+
+        double alpha = 1 - (1 - Alpha) * (1 - other.Alpha);
+        double red = Red * Alpha / alpha + other.Red * other.Alpha * (1 - Alpha) / alpha;
+        double green = Green * Alpha / alpha + other.Green * other.Alpha * (1 - Alpha) / alpha;
+        double blue = Blue * Alpha / alpha + other.Blue * other.Alpha * (1 - Alpha) / alpha;
+
+        return new Color(red, green, blue, alpha);
+    }
+
+    /// <summary>
     /// This method produces a string representation for the color.  It is intended for use
     /// in debugging so is very simplistic.
     /// </summary>

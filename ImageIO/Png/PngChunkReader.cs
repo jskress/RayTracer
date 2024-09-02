@@ -1,4 +1,4 @@
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -103,18 +103,15 @@ public class PngChunkReader
     {
         Canvas canvas = new (HeaderChunk.ImageWidth, HeaderChunk.ImageHeight);
         using PngImageStream imageStream = new PngImageStream(_context, this);
-        using DeflateStream decompressor = new DeflateStream(imageStream, CompressionMode.Decompress);
+        using InflaterInputStream decompressor = new (imageStream);
         ScanLine previous = new ScanLine(_context, HeaderChunk);
         ScanLine current = new ScanLine(_context, HeaderChunk);
-
-        // Read the ZLib header.
-        _ = ImageFileIo.ReadByte(imageStream);
-        _ = ImageFileIo.ReadByte(imageStream);
+        Color transparentColor = GetChunk<PngTransparencyChunk>(ChunkTypes.TransparencyChunk)?.TransparentColor;
 
         for (int y = 0; y < canvas.Height; y++)
         {
             current.ReadAndFilter(decompressor, previous);
-            current.WriteToCanvas(this, canvas, y);
+            current.WriteToCanvas(this, canvas, y, transparentColor);
 
             (current, previous) = (previous, current);
         }
@@ -316,6 +313,7 @@ public class PngChunkReader
             ChunkTypes.InternationalTextChunk => new PngI18NTextChunk(_context),
             ChunkTypes.PaletteChunk => new PngPaletteChunk(_context),
             ChunkTypes.GammaChunk => new PngGammaChunk(_context),
+            ChunkTypes.TransparencyChunk => new PngTransparencyChunk(_context),
             ChunkTypes.ImageDataChunk => new PngImageDataChunk(_context),
             ChunkTypes.EndChunk => new PngEndChunk(_context),
             _ => new UnknownPngChunk(_context, type)

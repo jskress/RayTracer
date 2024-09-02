@@ -18,7 +18,7 @@ public class TupleTerm : Term
     {
         _x = terms[0];
         _y = terms[1];
-        _z = terms[2];
+        _z = terms.Count > 2 ? terms[2] : null;
         _w = terms.Count == 3 ? null : terms[3];
     }
 
@@ -32,9 +32,11 @@ public class TupleTerm : Term
     {
         double x = _x.GetValue<double>(variables);
         double y = _y.GetValue<double>(variables);
-        double z = _z.GetValue<double>(variables);
-        double? w = _w?.GetValue<double?>(variables, false);
+        double? z = _z?.GetValue<double>(variables, false);
+        double? w = _w?.GetValue<double>(variables, false);
 
-        return new NumberTuple(x, y, z, w ?? double.NaN);
+        return z.HasValue
+            ? new NumberTuple(x, y, z.Value, w ?? double.NaN)
+            : new TwoDPoint(x, y);
     }
 }

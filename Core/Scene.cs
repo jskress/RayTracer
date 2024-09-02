@@ -14,17 +14,17 @@ public class Scene : NamedThing
     /// <summary>
     /// This list holds the collection of cameras in the scene.
     /// </summary>
-    public List<Camera> Cameras { get; set; } = [];
+    public List<Camera> Cameras { get; } = [];
 
     /// <summary>
     /// This list holds the collection of lights in the scene.
     /// </summary>
-    public List<PointLight> Lights { get; set; } = [];
+    public List<PointLight> Lights { get; } = [];
 
     /// <summary>
     /// This list holds the collection of surfaces (shapes) in the scene.
     /// </summary>
-    public List<Surface> Surfaces { get; set; } = [];
+    public List<Surface> Surfaces { get; } = [];
 
     /// <summary>
     /// This property holds the pigment to use for a pixel when rays do not intersect with
@@ -106,7 +106,7 @@ public class Scene : NamedThing
     }
 
     /// <summary>
-    /// This method returns whether the given point is in shadow in regards to the given
+    /// This method returns whether the given point is in shadow with respect to the given
     /// light source.
     /// </summary>
     /// <param name="light">The light source in question.</param>

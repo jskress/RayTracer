@@ -14,8 +14,9 @@ public class Cube : Surface
     /// This holds a bounding box that aligns with our own shape.  Our ray/intersection
     /// stuff is delegated to this.
     /// </summary>
-    private static readonly BoundingBox BoundingBox = new BoundingBox(
-        new Point(-1, -1, -1), new Point(1, 1, 1));
+    private static readonly BoundingBox BoundingBox = new BoundingBox()
+        .Add(new Point(-1, -1, -1))
+        .Add(new Point(1, 1, 1));
 
     /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,

@@ -2,6 +2,7 @@ using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Context;
 using RayTracer.Scanners;
 using RayTracer.Terms;
 
@@ -17,7 +18,15 @@ public partial class LanguageParser
     /// </summary>
     private void HandleStartContextClause()
     {
+        ContextUpdater updater = new();
+        
+        _context.PushTarget(updater);
+
         ParseBlock("contextEntryClause", HandleContextClauseEntry);
+        
+        _context.PopTarget();
+
+        _context.InstructionContext.AddInstruction(updater);
     }
 
     /// <summary>
@@ -26,75 +35,100 @@ public partial class LanguageParser
     /// <param name="clause">The clause that represents the entry.</param>
     private void HandleContextClauseEntry(Clause clause)
     {
+        ContextUpdater updater = (ContextUpdater) _context.CurrentTarget;
         string field = ToCmd(clause);
 
         if (field == "info")
         {
-            ParseBlock("infoEntryClause", HandleInfoEntryClause);
+            HandleStartImageInfoClause(updater);
 
             return;
         }
 
         Term term = clause.Term();
 
-        Instruction instruction = field switch
+        switch (field)
         {
-            "serial" => CreateScannerClauseInstruction(clause),
-            "parallel" => CreateScannerClauseInstruction(clause),
-            "angles" => CreateAnglesClauseInstruction(clause),
-            "apply.gamma" => new SetContextPropertyInstruction<bool>(
-                target => target.ApplyGamma, true),
-            "no.gamma" => new SetContextPropertyInstruction<bool>(
-                target => target.ApplyGamma, false),
-            "no.shadows" => new SetContextPropertyInstruction<bool>(
-                target => target.SuppressAllShadows, true),
-            "report" => new SetContextPropertyInstruction<bool>(
-                target => target.ReportGamma, true),
-            "width" => new SetContextPropertyInstruction<int>(
-                target => target.Width, term,
-                value => value is < 1 or > 16384
-                    ? "Width must be between 1 and 16,384."
-                    : null
-            ),
-            "height" => new SetContextPropertyInstruction<int>(
-                target => target.Height, term,
-                value => value is < 1 or > 16384
-                    ? "Height must be between 1 and 16,384."
-                    : null
-            ),
-            "gamma" => new SetContextPropertyInstruction<double>(
-                target => target.Gamma, term,
-                value => value is < 0 or > 5
-                    ? "Gamma correction must be between 0 and 5."
-                    : null
-            ),
-            _ => throw new Exception($"Internal error: unknown context property found: {field}.")
-        };
-
-        _context.InstructionContext.AddInstruction(instruction);
+            case "serial":
+            case "parallel":
+                CreateScannerResolver(clause, updater);
+                break;
+            case "angles":
+                CreateAnglesAreRadiansResolver(clause, updater);
+                break;
+            case "apply.gamma":
+                updater.ApplyGammaResolver = new LiteralResolver<bool> { Value = true };
+                break;
+            case "no.gamma":
+                updater.ApplyGammaResolver = new LiteralResolver<bool> { Value = false };
+                break;
+            case "no.shadows":
+                updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
+                break;
+            case "report":
+                updater.ReportGammaResolver = new LiteralResolver<bool> { Value = true };
+                break;
+            case "width":
+                updater.WidthResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value is < 1 or > 16384 ? "Width must be between 1 and 16,384." : null
+                };
+                break;
+            case "height":
+                updater.HeightResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value is < 1 or > 16384 ? "Height must be between 1 and 16,384." : null
+                };
+                break;
+            case "gamma":
+                updater.GammaResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = value => value is < 0 or > 5 ? "Gamma correction must be between 0 and 5." : null
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown context property found: {field}.");
+        }
     }
 
     /// <summary>
-    /// This method is used to create the appropriate instruction for the scanner clause
+    /// This method is used to handle the beginning of an image information block.
+    /// </summary>
+    private void HandleStartImageInfoClause(ContextUpdater contextUpdater)
+    {
+        contextUpdater.ImageInfoUpdater ??= new ImageInfoUpdater();
+
+        _context.PushTarget(contextUpdater.ImageInfoUpdater);
+
+        ParseBlock("infoEntryClause", HandleInfoEntryClause);
+
+        _context.PopTarget();
+    }
+
+    /// <summary>
+    /// This method is used to create the appropriate resolver for the scanner clause
     /// of a context block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    /// <returns>The created instruction.</returns>
-    private static Instruction CreateScannerClauseInstruction(Clause clause)
+    /// <param name="contextUpdater">The context updater to add the resolver to.</param>
+    private static void CreateScannerResolver(Clause clause, ContextUpdater contextUpdater)
     {
         Token first = clause.Tokens[0];
         Token second = clause.Tokens[1];
-        Instruction instruction;
+        Func<IScanner> creator;
 
         if (first.Text == "serial")
-            instruction = new SetScannerInstruction(() => new SingleThreadScanner());
+            creator = () => new SingleThreadScanner();
         else switch (second.Text)
         {
             case "line":
-                instruction = new SetScannerInstruction(() => new LineParallelScanner());
+                creator = () => new LineParallelScanner();
                 break;
             case "pixel":
-                instruction = new SetScannerInstruction(() => new PixelParallelScanner());
+                creator = () => new PixelParallelScanner();
                 break;
             default:
             {
@@ -104,7 +138,7 @@ public partial class LanguageParser
             }
         }
 
-        return instruction;
+        contextUpdater.ScannerResolver = new ScannerResolver { ScannerFactory = creator };
     }
 
     /// <summary>
@@ -112,13 +146,13 @@ public partial class LanguageParser
     /// a context block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    /// <returns>The created instruction.</returns>
-    private static Instruction CreateAnglesClauseInstruction(Clause clause)
+    /// <param name="contextUpdater">The context updater to add the resolver to.</param>
+    private static void CreateAnglesAreRadiansResolver(Clause clause, ContextUpdater contextUpdater)
     {
-        bool isRadians = clause.Text(2) == "radians";
-
-        return new SetContextPropertyInstruction<bool>(
-            context => context.AnglesAreRadians, isRadians);
+        contextUpdater.AnglesAreRadiansResolver = new LiteralResolver<bool>
+        {
+            Value = clause.Text(2) == "radians"
+        };
     }
 
     /// <summary>
@@ -127,31 +161,41 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleInfoEntryClause(Clause clause)
     {
+        ImageInfoUpdater updater = (ImageInfoUpdater) _context.CurrentTarget;
         string field = clause.Text();
         Term term = clause.Term();
 
-        Instruction instruction = field switch
+        switch (field)
         {
-            "title" => new SetInfoPropertyInstruction<string>(
-                target => target.Title, term),
-            "author" => new SetInfoPropertyInstruction<string>(
-                target => target.Author, term),
-            "description" => new SetInfoPropertyInstruction<string>(
-                target => target.Description, term),
-            "copyright" => new SetCopyrightInstruction(term),
-            "software" => new SetInfoPropertyInstruction<string>(
-                target => target.Software, term),
-            "disclaimer" => new SetInfoPropertyInstruction<string>(
-                target => target.Disclaimer, term),
-            "warning" => new SetInfoPropertyInstruction<string>(
-                target => target.Warning, term),
-            "source" => new SetInfoPropertyInstruction<string>(
-                target => target.Source, term),
-            "comment" => new AppendInfoStringPropertyInstruction(
-                target => target.Comment, term),
-            _ => throw new Exception($"Internal error: unknown info field found: {field}.")
-        };
-
-        _context.InstructionContext.AddInstruction(instruction);
+            case "title":
+                updater.TitleResolver = new TermResolver<string> { Term = term };
+                break;
+            case "author":
+                updater.AuthorResolver = new TermResolver<string> { Term = term };
+                break;
+            case "description":
+                updater.DescriptionResolver = new TermResolver<string> { Term = term };
+                break;
+            case "copyright":
+                updater.CopyrightResolver = new CopyrightResolver { Term = term };
+                break;
+            case "software":
+                updater.SoftwareResolver = new TermResolver<string> { Term = term };
+                break;
+            case "disclaimer":
+                updater.DisclaimerResolver = new TermResolver<string> { Term = term };
+                break;
+            case "warning":
+                updater.WarningResolver = new TermResolver<string> { Term = term };
+                break;
+            case "source":
+                updater.SourceResolver = new TermResolver<string> { Term = term };
+                break;
+            case "comment":
+                updater.CommentResolver = new CommentResolver { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown info field found: {field}.");
+        }
     }
 }

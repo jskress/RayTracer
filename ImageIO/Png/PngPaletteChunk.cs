@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -11,6 +12,7 @@ public class PngPaletteChunk : PngChunk
     /// <summary>
     /// This property holds the palette specified in the chunk.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public Color[] Palette { get; set; }
 
     public PngPaletteChunk(RenderContext context) : base(context, ChunkTypes.PaletteChunk) {}

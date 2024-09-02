@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -12,11 +13,13 @@ public class PointLight : NamedThing
     /// <summary>
     /// This property notes the location of the light source.
     /// </summary>
+    [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
     public Point Location { get; set; } = Point.Zero;
 
     /// <summary>
     /// This property notes the color of the light.
     /// </summary>
+    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public Color Color { get; set; } = Colors.White;
 
     /// <summary>

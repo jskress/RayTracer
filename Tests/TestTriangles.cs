@@ -10,8 +10,12 @@ public class TestTriangles
     [TestMethod]
     public void TestTriangleNormal()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Vector n1 = triangle.SurfaceNormaAt(new Point(0, 0.5, 0), null);
         Vector n2 = triangle.SurfaceNormaAt(new Point(-0.5, 0.75, 0), null);
         Vector n3 = triangle.SurfaceNormaAt(new Point(0.5, 0.25, 0), null);
@@ -24,8 +28,12 @@ public class TestTriangles
     [TestMethod]
     public void TestParallelRayMisses()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Ray ray = new Ray(new Point(0, -1, -2), Directions.Up);
         List<Intersection> intersections = new ();
 
@@ -37,8 +45,12 @@ public class TestTriangles
     [TestMethod]
     public void TestRayMissesOverP1P3()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Ray ray = new Ray(new Point(1, 1, -2), Directions.In);
         List<Intersection> intersections = new ();
 
@@ -50,8 +62,12 @@ public class TestTriangles
     [TestMethod]
     public void TestRayMissesOverP1P2()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Ray ray = new Ray(new Point(-1, 1, -2), Directions.In);
         List<Intersection> intersections = new ();
 
@@ -63,8 +79,12 @@ public class TestTriangles
     [TestMethod]
     public void TestRayMissesOverP2P3()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Ray ray = new Ray(new Point(0, -1, -2), Directions.In);
         List<Intersection> intersections = new ();
 
@@ -76,8 +96,12 @@ public class TestTriangles
     [TestMethod]
     public void TestRayHits()
     {
-        Triangle triangle = new (
-            new Point(0, 1, 0), new Point(-1, 0, 0), new Point(1, 0, 0));
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
         Ray ray = new Ray(new Point(0, 0.5, -2), Directions.In);
         List<Intersection> intersections = new ();
 

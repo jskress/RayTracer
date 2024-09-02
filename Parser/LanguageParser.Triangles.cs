@@ -1,9 +1,8 @@
 using Lex.Clauses;
-using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
-using RayTracer.Geometry;
 using RayTracer.Instructions;
-using RayTracer.Terms;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -19,42 +18,24 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Triangle");
 
-        TriangleInstructionSet instructionSet = ParseTriangleClause(clause);
+        TriangleResolver resolver = ParseTriangleClause(clause);
 
-        _ = new TopLevelObjectInstruction<Triangle>(_context.InstructionContext, instructionSet);
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a triangle block.
-    /// </summary>
-    private TriangleInstructionSet ParseTriangleClause(Clause clause)
-    {
-        if (BounderToken.LeftParen.Matches(clause.Tokens[1]))
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
         {
-            Term first = clause.Term();
-            Term second = clause.Term(1);
-            Term third = clause.Term(2);
-            TriangleInstructionSet instructionSet = new (first, second, third);
-
-            ParseTriangleClause(instructionSet);
-
-            return instructionSet;
-        }
-
-        return DetermineProperInstructionSet<TriangleInstructionSet>(
-            clause, null, ParseTriangleClause);
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a triangle block.
     /// </summary>
-    private void ParseTriangleClause(TriangleInstructionSet instructionSet)
+    private TriangleResolver ParseTriangleClause(Clause clause)
     {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("surfaceEntryClause", HandleTriangleEntryClause);
-
-        _context.PopInstructionSet();
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<TriangleResolver>(
+                "triangleEntryClause", HandleTriangleEntryClause),
+            "triangleEntryClause", HandleTriangleEntryClause);
     }
 
     /// <summary>
@@ -63,12 +44,24 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleTriangleEntryClause(Clause clause)
     {
-        TriangleInstructionSet instructionSet = (TriangleInstructionSet) _context.CurrentSet;
+        TriangleResolver resolver = (TriangleResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
-            HandleSurfaceTransform(instructionSet);
+            resolver.TransformResolver = ParseTransformClause();
         else
-            HandleSurfaceClause(clause, instructionSet, "triangle");
+        {
+            switch (clause.Text())
+            {
+                case "points":
+                    resolver.Point1Resolver = new TermResolver<Point> { Term = clause.Term() };
+                    resolver.Point2Resolver = new TermResolver<Point> { Term = clause.Term(1) };
+                    resolver.Point3Resolver = new TermResolver<Point> { Term = clause.Term(2) };
+                    break;
+                default:
+                    HandleSurfaceClause(clause, resolver, "triangle");
+                    break;
+            }
+        }
     }
 
     /// <summary>
@@ -78,47 +71,27 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Smooth triangle");
 
-        SmoothTriangleInstructionSet instructionSet = ParseSmoothTriangleClause(clause);
+        SmoothTriangleResolver resolver = ParseSmoothTriangleClause(clause);
 
-        _ = new TopLevelObjectInstruction<SmoothTriangle>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a smooth triangle block.
     /// </summary>
-    private SmoothTriangleInstructionSet ParseSmoothTriangleClause(Clause clause)
+    private SmoothTriangleResolver ParseSmoothTriangleClause(Clause clause)
     {
-        if (BounderToken.LeftParen.Matches(clause.Tokens[2]))
-        {
-            List<Term> terms = clause.Expressions
-                .Cast<Term>()
-                .ToList();
-            SmoothTriangleInstructionSet instructionSet = new(
-                terms[0], terms[1], terms[2],
-                terms[3], terms[4], terms[5]);
-
-            ParseSmoothTriangleClause(instructionSet);
-
-            return instructionSet;
-        }
-
+        // We do this to make the token count match for the common code to deal with.
         clause.Tokens.RemoveFirst();
 
-        return DetermineProperInstructionSet<SmoothTriangleInstructionSet>(
-            clause, null,
-            ParseSmoothTriangleClause);
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a smooth triangle block.
-    /// </summary>
-    private void ParseSmoothTriangleClause(SmoothTriangleInstructionSet instructionSet)
-    {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("surfaceEntryClause", HandleSmoothTriangleEntryClause);
-
-        _context.PopInstructionSet();
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<SmoothTriangleResolver>(
+                "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause),
+            "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause);
     }
 
     /// <summary>
@@ -127,11 +100,28 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleSmoothTriangleEntryClause(Clause clause)
     {
-        SmoothTriangleInstructionSet instructionSet = (SmoothTriangleInstructionSet) _context.CurrentSet;
+        SmoothTriangleResolver resolver = (SmoothTriangleResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
-            HandleSurfaceTransform(instructionSet);
+            resolver.TransformResolver = ParseTransformClause();
         else
-            HandleSurfaceClause(clause, instructionSet, "smooth triangle");
+        {
+            switch (clause.Text())
+            {
+                case "points":
+                    resolver.Point1Resolver = new TermResolver<Point> { Term = clause.Term() };
+                    resolver.Point2Resolver = new TermResolver<Point> { Term = clause.Term(1) };
+                    resolver.Point3Resolver = new TermResolver<Point> { Term = clause.Term(2) };
+                    break;
+                case "normals":
+                    resolver.Normal1Resolver = new TermResolver<Vector> { Term = clause.Term() };
+                    resolver.Normal2Resolver = new TermResolver<Vector> { Term = clause.Term(1) };
+                    resolver.Normal3Resolver = new TermResolver<Vector> { Term = clause.Term(2) };
+                    break;
+                default:
+                    HandleSurfaceClause(clause, resolver, "smooth triangle");
+                    break;
+            }
+        }
     }
 }

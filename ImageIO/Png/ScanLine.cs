@@ -133,15 +133,6 @@ internal class ScanLine
     }
 
     /// <summary>
-    /// This method is used to accumulate the Adler32 checksum for this scan line.
-    /// </summary>
-    /// <param name="checksum">The Adler32 checksum accumulator.</param>
-    internal void AddToChecksum(Adler32 checksum)
-    {
-        checksum.Add(_pixelData);
-    }
-
-    /// <summary>
     /// This method is used to apply the given filter type and return a sum of the resulting
     /// filter bytes.  This is used to help decide which filter type to ultimately use.
     /// </summary>
@@ -184,7 +175,8 @@ internal class ScanLine
     /// <param name="reader">The controlling image reader.</param>
     /// <param name="canvas">The canvas to push pixel color information to.</param>
     /// <param name="y">The index of the line to push to.</param>
-    internal void WriteToCanvas(PngChunkReader reader, Canvas canvas, int y)
+    /// <param name="transparentColor">The color, if any, that should become transparent.</param>
+    internal void WriteToCanvas(PngChunkReader reader, Canvas canvas, int y, Color transparentColor)
     {
         PngColorType colorType = reader.HeaderChunk.ColorType;
         Color[] palette = reader.PaletteChunk?.Palette;
@@ -196,7 +188,12 @@ internal class ScanLine
             if (colors.IsEmpty())
                 cp = GetColorsAt(colorType, palette, colors, cp);
 
-            canvas.SetColor(colors[0], x, y);
+            Color color = colors[0];
+
+            if (transparentColor != null && transparentColor.Matches(color))
+                color = Colors.Transparent;
+
+            canvas.SetColor(color, x, y);
 
             colors.RemoveRange(0, 1);
         }

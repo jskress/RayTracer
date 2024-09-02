@@ -1,6 +1,6 @@
 using Lex.Clauses;
-using RayTracer.Geometry;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -16,33 +16,25 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Sphere");
 
-        SphereInstructionSet instructionSet = ParseSphereClause(clause);
+        SphereResolver resolver = ParseSphereClause(clause);
 
-        _ = new TopLevelObjectInstruction<Sphere>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a sphere block.
     /// </summary>
     /// <param name="clause">The clause that starts the sphere.</param>
-    private SphereInstructionSet ParseSphereClause(Clause clause)
+    private SphereResolver ParseSphereClause(Clause clause)
     {
-        return DetermineProperInstructionSet(
-            clause, () => new SphereInstructionSet(), 
-            ParseSphereClause);
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a sphere block.
-    /// </summary>
-    /// <param name="instructionSet">The instruction set to parse out.</param>
-    private void ParseSphereClause(SphereInstructionSet instructionSet)
-    {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("surfaceEntryClause", HandleSphereEntryClause);
-
-        _context.PopInstructionSet();
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<SphereResolver>(
+                "surfaceEntryClause", HandleSphereEntryClause),
+            "surfaceEntryClause", HandleSphereEntryClause);
     }
 
     /// <summary>
@@ -51,11 +43,11 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleSphereEntryClause(Clause clause)
     {
-        SphereInstructionSet instructionSet = (SphereInstructionSet) _context.CurrentSet;
+        SphereResolver resolver = (SphereResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
-            HandleSurfaceTransform(instructionSet);
+            resolver.TransformResolver = ParseTransformClause();
         else
-            HandleSurfaceClause(clause, instructionSet, "sphere");
+            HandleSurfaceClause(clause, resolver, "sphere");
     }
 }

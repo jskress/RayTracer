@@ -1,5 +1,4 @@
 using RayTracer.Core;
-using RayTracer.Graphics;
 using RayTracer.Pigments;
 
 namespace Tests;

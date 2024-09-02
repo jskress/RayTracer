@@ -1,4 +1,3 @@
-using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -13,9 +12,15 @@ public class TestSmoothTriangles
     private static readonly Point Point2 = new (-1, 0, 0);
     private static readonly Point Point3 = new (1, 0, 0);
 
-    private SmoothTriangle _smoothTriangle = new (
-        Point1, Point2, Point3,
-        Directions.Up, Directions.Left, Directions.Right);
+    private readonly SmoothTriangle _smoothTriangle = new ()
+    {
+        Point1 = Point1,
+        Point2 = Point2,
+        Point3 = Point3,
+        Normal1 = Directions.Up,
+        Normal2 = Directions.Left,
+        Normal3 = Directions.Right
+    };
 
     [TestMethod]
     public void TestConstruction()
@@ -74,7 +79,7 @@ public class TestSmoothTriangles
         SmoothTriangleIntersection intersection = new (
             _smoothTriangle, 1, 0.45, 0.25);
         Ray ray = new Ray(new Point(-0.2, 0.3, -2), Directions.In);
-        List<Intersection> intersections = new () { intersection };
+        List<Intersection> intersections = [intersection];
         Vector expected = new (-0.5547, 0.83205, 0);
 
         intersection.PrepareUsing(ray, intersections);

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -7,43 +8,74 @@ namespace RayTracer.Geometry;
 /// <summary>
 /// This class represents a triangle.  It is defined by three points.
 /// </summary>
+[SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class Triangle : Surface
 {
     /// <summary>
     /// This property provides the first point of the triangle.
     /// </summary>
-    public Point Point1 { get; }
+    public Point Point1
+    {
+        get => _point1;
+        set
+        {
+            _point1 = value;
+
+            PointChanged(value, _point2, _point3);
+        }
+    }
 
     /// <summary>
     /// This property provides the second point of the triangle.
     /// </summary>
-    public Point Point2 { get; }
+    public Point Point2
+    {
+        get => _point2;
+        set
+        {
+            _point2 = value;
+
+            PointChanged(_point1, value, _point3);
+        }
+    }
 
     /// <summary>
     /// This property provides the third point of the triangle.
     /// </summary>
-    public Point Point3 { get; }
-
-    private readonly Vector _e1;
-    private readonly Vector _e2;
-    private readonly Vector _normal;
-
-    public Triangle()
+    public Point Point3
     {
-        // This constructor is present to satisfy the type system but should never
-        // be used, so...
-        throw new Exception("Internal error: cannot create triangles this way.");
+        get => _point3;
+        set
+        {
+            _point3 = value;
+
+            PointChanged(_point1, _point2, value);
+        }
     }
 
-    public Triangle(Point point1, Point point2, Point point3)
-    {
-        _e1 = point2 - point1;
-        _e2 = point3 - point1;
-        _normal = _e2.Cross(_e1).Unit;
+    private Point _point1;
+    private Point _point2;
+    private Point _point3;
+    private Vector _e1;
+    private Vector _e2;
+    private Vector _normal;
 
-        Point1 = point1;
-        Point2 = point2;
-        Point3 = point3;
+    /// <summary>
+    /// This method is used to reset our control information when one of our points change.
+    /// If any of the points is <c>null</c> (as will be during initial creation), we
+    /// silently no-op.
+    /// </summary>
+    /// <param name="point1">Point 1 of the triangle</param>
+    /// <param name="point2">Point 2 of the triangle</param>
+    /// <param name="point3">Point 3 of the triangle</param>
+    private void PointChanged(Point point1, Point point2, Point point3)
+    {
+        if (point1 is not null && point2 is not null && point3 is not null)
+        {
+            _e1 = point2 - point1;
+            _e2 = point3 - point1;
+            _normal = _e2.Cross(_e1).Unit;
+        }
     }
 
     /// <summary>
@@ -80,7 +112,7 @@ public class Triangle : Surface
 
     /// <summary>
     /// This is a helper method for creating an intersection.  It's overridable since
-    /// smooth triangles the the u/v pair.
+    /// smooth triangles the u/v pair.
     /// </summary>
     /// <param name="distance">The distance along the ray where the intersection occurred.</param>
     /// <param name="u">The U value for the intersection with the triangle.</param>

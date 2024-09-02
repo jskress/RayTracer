@@ -1,6 +1,6 @@
 using Lex.Clauses;
 using RayTracer.Instructions;
-using RayTracer.Pigments;
+using RayTracer.Instructions.Pigments;
 
 namespace RayTracer.Parser;
 
@@ -16,8 +16,12 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Background");
 
-        PigmentInstructionSet pigmentInstructionSet = ParsePigmentClause();
+        IPigmentResolver resolver = ParsePigmentClause();
 
-        _ = new TopLevelObjectInstruction<Pigment>(_context.InstructionContext, pigmentInstructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 }

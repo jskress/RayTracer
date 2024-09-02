@@ -1,4 +1,4 @@
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -118,11 +118,10 @@ public class PngChunkWriter
     /// </summary>
     private void WriteImageData()
     {
-        using MemoryStream memoryStream = new MemoryStream();
-        using DeflateStream compressor = new DeflateStream(memoryStream, CompressionLevel.Optimal);
+        using PngImageStream imageStream = new PngImageStream(_context, this);
+        using DeflaterOutputStream compressor = new DeflaterOutputStream(imageStream);
         ScanLine previous = new ScanLine(_context, _headerChunk);
         ScanLine current = new ScanLine(_context, _headerChunk);
-        Adler32 checksum = new Adler32();
 
         for (int y = 0; y < _canvas.Height; y++)
         {
@@ -131,27 +130,10 @@ public class PngChunkWriter
             current.ReadFromCanvas(_canvas, y);
             current.FilterAndWrite(filterType, previous, compressor);
 
-            checksum.Add((byte) filterType);
-            current.AddToChecksum(checksum);
-
             (current, previous) = (previous, current);
         }
 
-        compressor.Flush();
-        memoryStream.Seek(0, SeekOrigin.Begin);
-
-        using PngImageStream imageStream = new PngImageStream(_context, this);
-
-        // Write out the ZLib header.
-        imageStream.WriteByte(120);
-        imageStream.WriteByte(1);
-
-        memoryStream.CopyTo(imageStream);
-
-        ImageFileIo.WriteInt(imageStream, checksum.Checksum, 4);
-
         compressor.Close();
-        memoryStream.Close();
         imageStream.Close();
     }
 

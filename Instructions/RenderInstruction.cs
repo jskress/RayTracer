@@ -18,7 +18,7 @@ public class RenderInstruction : Instruction
     /// </summary>
     private static readonly Material OrphanMaterial = new ()
     {
-        Pigment = new SolidPigment(Colors.Gray35)
+        Pigment = new SolidPigment(Colors.Gray40)
     };
 
     /// <summary>
@@ -53,7 +53,7 @@ public class RenderInstruction : Instruction
     public override void Execute(RenderContext context, Variables variables)
     {
         Scene scene = GetScene(variables);
-        Camera camera = GetCamera(variables);
+        Camera camera = GetCamera(scene, variables);
 
         EnsureMaterials(scene.Surfaces);
  
@@ -136,16 +136,12 @@ public class RenderInstruction : Instruction
     /// <summary>
     /// This method is used to find the proper camera to use.
     /// </summary>
+    /// <param name="scene">The scene to look for the camera.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <returns>The camera to use.</returns>
-    private Camera GetCamera(Variables variables)
+    private Camera GetCamera(Scene scene, Variables variables)
     {
-        List<Camera> cameras = Objects
-            .Where(thing => thing is Camera)
-            .Cast<Camera>()
-            .ToList();
-
-        return IsolateObject(variables, cameras, _cameraName, "camera");
+        return IsolateObject(variables, scene.Cameras, _cameraName, "camera");
     }
 
     /// <summary>

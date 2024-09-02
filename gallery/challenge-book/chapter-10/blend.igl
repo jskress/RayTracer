@@ -8,10 +8,10 @@ include '../defaults.igl'
 plane {
 	material {
 		pigment blend {
-			stripe {
+			linear stripes {
 				ForestGreen, White
 			},
-			stripe {
+			linear stripes {
 				ForestGreen, White
 				rotate Y 90
 			}

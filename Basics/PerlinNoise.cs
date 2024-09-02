@@ -9,7 +9,15 @@ public class PerlinNoise
 {
     private const int TableSize = 256;
 
+    /// <summary>
+    /// This property makes available a default noise generator.
+    /// </summary>
+    public static PerlinNoise Instance => LazyInstance.Value;
+
     private static readonly Random Rng = new ();
+
+    private static readonly Lazy<PerlinNoise> LazyInstance = new(
+        () => new PerlinNoise());
 
     private readonly Vector[] _numbers;
     private readonly int[] _x;
@@ -41,28 +49,6 @@ public class PerlinNoise
             data[index] = index;
 
         Rng.Shuffle(data);
-    }
-
-    /// <summary>
-    /// This method produces turbulence by accumulating multiple calls to the
-    /// <see cref="Noise"/> method.
-    /// </summary>
-    /// <param name="point">The point to determine some noise for.</param>
-    /// <param name="depth">The depth of turbulence to apply.</param>
-    /// <returns></returns>
-    public double Turbulence(Point point, int depth)
-    {
-        double accumulator = 0.0;
-        double weight = 1.0;
-
-        for (int i = 0; i < depth; i++)
-        {
-            accumulator += weight * Noise(point);
-            weight *= 0.5;
-            point = new Point(point.X * 2, point.Y * 2, point.Z * 2);
-        }
-
-        return Math.Abs(accumulator);
     }
 
     /// <summary>

@@ -31,7 +31,7 @@ public static class DoubleExtensions
     /// <summary>
     /// This method is used to return the fractional part of a number.
     /// </summary>
-    /// <param name="number">The number to get the fracitonal part of.</param>
+    /// <param name="number">The number to get the fractional part of.</param>
     /// <returns>The fractional part of the number.</returns>
     public static double Fraction(this double number)
     {

@@ -1,6 +1,6 @@
 using Lex.Clauses;
-using RayTracer.Geometry;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -16,32 +16,25 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Cube");
 
-        CubeInstructionSet instructionSet = ParseCubeClause(clause);
+        CubeResolver resolver = ParseCubeClause(clause);
 
-        _ = new TopLevelObjectInstruction<Cube>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a cube block.
     /// </summary>
     /// <param name="clause">The clause that starts the cube.</param>
-    private CubeInstructionSet ParseCubeClause(Clause clause)
+    private CubeResolver ParseCubeClause(Clause clause)
     {
-        return DetermineProperInstructionSet(
-            clause, () => new CubeInstructionSet(), 
-            ParseCubeClause);
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a cube block.
-    /// </summary>
-    private void ParseCubeClause(CubeInstructionSet instructionSet)
-    {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("surfaceEntryClause", HandleCubeEntryClause);
-
-        _context.PopInstructionSet();
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<CubeResolver>(
+                "surfaceEntryClause", HandleCubeEntryClause),
+            "surfaceEntryClause", HandleCubeEntryClause);
     }
 
     /// <summary>
@@ -50,11 +43,11 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleCubeEntryClause(Clause clause)
     {
-        CubeInstructionSet instructionSet = (CubeInstructionSet) _context.CurrentSet;
+        CubeResolver resolver = (CubeResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
-            HandleSurfaceTransform(instructionSet);
+            resolver.TransformResolver = ParseTransformClause();
         else
-            HandleSurfaceClause(clause, instructionSet, "cube");
+            HandleSurfaceClause(clause, resolver, "cube");
     }
 }

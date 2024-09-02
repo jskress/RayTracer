@@ -3,7 +3,7 @@ namespace RayTracer.ImageIO;
 /// <summary>
 /// This class defines the predefined keyword names used in PNG text chunks.
 /// </summary>
-public class PredefinedTextKeywords
+public static class PredefinedTextKeywords
 {
     public const string Title = "Title";
     public const string Author = "Author";

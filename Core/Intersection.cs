@@ -63,12 +63,12 @@ public class Intersection : IComparable<Intersection>
     /// <summary>
     /// This holds the index of refraction of where the ray came from.
     /// </summary>
-    public double N1 { get; set; }
+    public double N1 { get; private set; }
 
     /// <summary>
     /// This holds the index of refraction of the surface being entered.
     /// </summary>
-    public double N2 { get; set; }
+    public double N2 { get; private set; }
 
     /// <summary>
     /// This property exposes the reflectance for this intersection.

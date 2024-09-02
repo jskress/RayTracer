@@ -1,8 +1,8 @@
 using Lex.Clauses;
 using RayTracer.Basics;
-using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -19,25 +19,22 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Camera");
 
-        CameraInstructionSet instructionSet = ParseCameraClause();
+        CameraResolver resolver = ParseCameraClause();
 
-        _ = new TopLevelObjectInstruction<Camera>(_context.InstructionContext, instructionSet);
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
-    /// This method is used to create the instruction set from a camera block.
+    /// This method is used to create the resolver from a camera block.
     /// </summary>
-    private CameraInstructionSet ParseCameraClause()
+    private CameraResolver ParseCameraClause()
     {
-        CameraInstructionSet instructionSet = new ();
-
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("cameraEntryClause", HandleCameraEntryClause);
-
-        _context.PopInstructionSet();
-
-        return instructionSet;
+        return ParseObjectResolver<CameraResolver>(
+            "cameraEntryClause", HandleCameraEntryClause);
     }
 
     /// <summary>
@@ -46,24 +43,29 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleCameraEntryClause(Clause clause)
     {
-        CameraInstructionSet instructionSet = (CameraInstructionSet) _context.CurrentSet;
+        CameraResolver resolver = (CameraResolver) _context.CurrentTarget;
         string field = clause.Text();
         Term term = clause.Term();
 
-        ObjectInstruction<Camera> instruction = field switch
+        switch (field)
         {
-            "named" => CreateNamedInstruction<Camera>(term),
-            "location" => new SetObjectPropertyInstruction<Camera, Point>(
-                target => target.Location, term),
-            "look" => new SetObjectPropertyInstruction<Camera, Point>(
-                target => target.LookAt, term),
-            "up" => new SetObjectPropertyInstruction<Camera, Vector>(
-                target => target.Up, term),
-            "field" => new SetAnglePropertyInstruction<Camera>(
-                target => target.FieldOfView, term),
-            _ => throw new Exception($"Internal error: unknown camera property found: {field}.")
-        };
-
-        instructionSet.AddInstruction(instruction);
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "location":
+                resolver.LocationResolver = new TermResolver<Point> { Term = term };
+                break;
+            case "look":
+                resolver.LookAtResolver = new TermResolver<Point> { Term = term };
+                break;
+            case "up":
+                resolver.UpResolver = new TermResolver<Vector> { Term = term };
+                break;
+            case "field":
+                resolver.FieldOfViewResolver = new AngleResolver { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown camera property found: {field}.");
+        }
     }
 }

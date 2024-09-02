@@ -8,12 +8,12 @@ include '../defaults.igl'
 plane {
 	material {
 		pigment checker {
-			stripe {
+			linear stripes {
 				DarkBlue, AliceBlue
 				scale 0.33
 				rotate Y -33
 			},
-			stripe {
+			linear stripes {
 				Yellow, Red
 				scale 0.25
 				rotate Y 33

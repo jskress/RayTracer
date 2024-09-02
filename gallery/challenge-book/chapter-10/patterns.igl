@@ -7,7 +7,7 @@ include '../defaults.igl'
 // Floor
 plane {
 	material {
-		pigment ring { DarkBlue, AliceBlue }
+		pigment cylindrical stripes { DarkBlue, AliceBlue }
 		specular 0
 	}
 }
@@ -15,7 +15,7 @@ plane {
 // Middle sphere
 sphere {
 	material {
-		pigment stripe {
+		pigment linear stripes {
 			Green, LightGreen
 			scale 0.25
 			rotate Z 33
@@ -44,7 +44,7 @@ sphere {
 sphere {
 	material {
 		pigment linear gradient {
-			Yellow, Blue
+			[0, Yellow, 1, Blue ]
 			rotate Z 90
 		}
 		diffuse 0.7

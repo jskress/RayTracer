@@ -1,9 +1,7 @@
 using Lex.Clauses;
-using Lex.Tokens;
 using RayTracer.Extensions;
-using RayTracer.Geometry;
 using RayTracer.Instructions;
-using RayTracer.Terms;
+using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
 
@@ -19,41 +17,24 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Torus");
 
-        TorusInstructionSet instructionSet = ParseTorusClause(clause);
+        TorusResolver resolver = ParseTorusClause(clause);
 
-        _ = new TopLevelObjectInstruction<Torus>(_context.InstructionContext, instructionSet);
-    }
-
-    /// <summary>
-    /// This method is used to create the instruction set from a torus block.
-    /// </summary>
-    private TorusInstructionSet ParseTorusClause(Clause clause)
-    {
-        if (BounderToken.LeftParen.Matches(clause.Tokens[1]))
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
         {
-            Term first = clause.Term();
-            Term second = clause.Term(1);
-            TorusInstructionSet instructionSet = new (first, second);
-
-            ParseTorusClause(instructionSet);
-
-            return instructionSet;
-        }
-
-        return DetermineProperInstructionSet<TorusInstructionSet>(
-            clause, null, ParseTorusClause);
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
     }
 
     /// <summary>
     /// This method is used to create the instruction set from a torus block.
     /// </summary>
-    private void ParseTorusClause(TorusInstructionSet instructionSet)
+    private TorusResolver ParseTorusClause(Clause clause)
     {
-        _context.PushInstructionSet(instructionSet);
-
-        ParseBlock("surfaceEntryClause", HandleTorusEntryClause);
-
-        _context.PopInstructionSet();
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<TorusResolver>(
+                "torusEntryClause", HandleTorusEntryClause),
+            "torusEntryClause", HandleTorusEntryClause);
     }
 
     /// <summary>
@@ -62,11 +43,22 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleTorusEntryClause(Clause clause)
     {
-        TorusInstructionSet instructionSet = (TorusInstructionSet) _context.CurrentSet;
+        TorusResolver resolver = (TorusResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
-            HandleSurfaceTransform(instructionSet);
+            resolver.TransformResolver = ParseTransformClause();
         else
-            HandleSurfaceClause(clause, instructionSet, "torus");
+        {
+            switch (clause.Text())
+            {
+                case "radii":
+                    resolver.MajorRadiusResolver = new TermResolver<double> { Term = clause.Term() };
+                    resolver.MinorRadiusResolver = new TermResolver<double> { Term = clause.Term(1) };
+                    break;
+                default:
+                    HandleSurfaceClause(clause, resolver, "torus");
+                    break;
+            }
+        }
     }
 }

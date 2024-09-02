@@ -25,7 +25,8 @@ public partial class LanguageParser
         _clauseHandlers.Add(nameof(HandleStartPlaneClause), HandleStartPlaneClause);
         _clauseHandlers.Add(nameof(HandleStartSphereClause), HandleStartSphereClause);
         _clauseHandlers.Add(nameof(HandleStartCubeClause), HandleStartCubeClause);
-        _clauseHandlers.Add(nameof(HandleStartCircularSurfaceClause), HandleStartCircularSurfaceClause);
+        _clauseHandlers.Add(nameof(HandleStartCylinderClause), HandleStartCylinderClause);
+        _clauseHandlers.Add(nameof(HandleStartConicClause), HandleStartConicClause);
         _clauseHandlers.Add(nameof(HandleStartTorusClause), HandleStartTorusClause);
         _clauseHandlers.Add(nameof(HandleStartTriangleClause), HandleStartTriangleClause);
         _clauseHandlers.Add(nameof(HandleStartSmoothTriangleClause), HandleStartSmoothTriangleClause);

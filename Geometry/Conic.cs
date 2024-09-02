@@ -9,7 +9,7 @@ namespace RayTracer.Geometry;
 /// origin, with its apex at the origin and extends along the Y axis.  It may be stopped
 /// or capped.
 /// </summary>
-public class Conic : CircularSurface
+public class Conic : ExtrudedSurface
 {
     /// <summary>
     /// This method is used to determine whether the given ray intersects the conic and,

@@ -12,8 +12,8 @@ context {
 	apply gamma
 }
 
-background bouncing linear gradient {
-	DeepSkyBlue, LightSkyBlue
+background linear bouncing gradient {
+	[0, DeepSkyBlue, 1, LightSkyBlue]
 	scale 10
 	rotate Y 90
 }

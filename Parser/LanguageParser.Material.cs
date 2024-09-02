@@ -1,8 +1,8 @@
 using Lex.Clauses;
-using RayTracer.Core;
+using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
-using RayTracer.Pigments;
+using RayTracer.Instructions.Surfaces;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -15,27 +15,36 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse a clause of zero or more transformations.
     /// </summary>
-    private MaterialInstructionSet ParseMaterialClause()
+    private MaterialResolver ParseMaterialClause()
     {
-        MaterialInstructionSet instructionSet = new ();
-
-        ParseMaterialClause(instructionSet);
-
-        return instructionSet;
+        return ParseObjectResolver<MaterialResolver>(
+            "materialEntryClause", HandleMaterialEntryClause);
     }
 
     /// <summary>
-    /// This method is used to parse a clause of zero or more transformations.
+    /// This is a helper method for creating the right resolver, either by parsing an
+    /// in-place definition or a variable reference.
     /// </summary>
-    private MaterialInstructionSet ParseMaterialClause(MaterialInstructionSet instructionSet)
+    /// <param name="clause">The clause that tells us how to get the material resolver.</param>
+    /// <returns>The proper resolver.</returns>
+    private MaterialResolver GetMaterialResolver(Clause clause)
     {
-        _context.PushInstructionSet(instructionSet);
+        Token token = clause.Tokens[1];
 
-        ParseBlock("materialEntryClause", HandleMaterialEntryClause);
+        // Complete definition.
+        if (BounderToken.OpenBrace.Matches(token))
+            return ParseMaterialClause();
 
-        _context.PopInstructionSet();
+        if (token.Text == "inherited")
+            return new MaterialResolver { SetToNull = true };
 
-        return instructionSet;
+        bool extending = clause.Tokens.Count > 2;
+        MaterialResolver resolver = GetExtensibleItem<MaterialResolver>(token, extending);
+
+        if (extending)
+            ParseObjectResolver("materialEntryClause", HandleMaterialEntryClause, resolver);
+
+        return resolver;
     }
 
     /// <summary>
@@ -44,33 +53,41 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleMaterialEntryClause(Clause clause)
     {
-        MaterialInstructionSet instructionSet = (MaterialInstructionSet) _context.CurrentSet;
+        MaterialResolver resolver = (MaterialResolver) _context.CurrentTarget;
         string field = clause.Text();
         Term term = clause.Term();
 
-        ObjectInstruction<Material> instruction = field switch
+        switch (field)
         {
-            "pigment" => new SetChildInstruction<Material, Pigment>(
-                ParsePigmentClause(), target => target.Pigment),
-            "ambient" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Ambient, term),
-            "diffuse" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Diffuse, term),
-            "specular" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Specular, term),
-            "shininess" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Shininess, term),
-            "reflective" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Reflective, term),
-            "transparency" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.Transparency, term),
-            "index" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.IndexOfRefraction, term),
-            "ior" => new SetObjectPropertyInstruction<Material, double>(
-                target => target.IndexOfRefraction, term),
-            _ => throw new Exception($"Internal error: unknown material property found: {field}.")
-        };
-
-        instructionSet.AddInstruction(instruction);
+            case "pigment":
+                resolver.PigmentResolver = ParsePigmentClause();
+                break;
+            case "ambient":
+                resolver.AmbientResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "diffuse":
+                resolver.DiffuseResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "specular":
+                resolver.SpecularResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "shininess":
+                resolver.ShininessResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "reflective":
+                resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "transparency":
+                resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "index":
+                resolver.IndexOfRefractionResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "ior":
+                resolver.IndexOfRefractionResolver = new TermResolver<double>() { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown material property found: {field}.");
+        }
     }
 }
