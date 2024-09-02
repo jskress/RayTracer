@@ -12,5 +12,5 @@ public interface IObjectResolver
     /// </summary>
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
-    public object ResolveToObject(RenderContext context, Variables variables);
+    object ResolveToObject(RenderContext context, Variables variables);
 }

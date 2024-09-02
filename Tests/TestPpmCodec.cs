@@ -38,7 +38,7 @@ public class TestPpmCodec
         // y = 0...
         Assert.AreEqual("255 0 0 0 0 0 0 0 0 0 0 0 0 0 0", text[3]);
 
-        // y = 1... (Note the 0.5 becomes 186 instead of 128 due to gamma correction.
+        // y = 1... (Note the 0.5 becomes 186 instead of 128 due to gamma correction.)
         Assert.AreEqual("0 0 0 0 0 0 0 186 0 0 0 0 0 0 0", text[4]);
 
         // y = 2...

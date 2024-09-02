@@ -1,9 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class provides the common base class for surfaces that are extruded, like cylinders,
 /// cones and generalized extrusions.
 /// </summary>
+[SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public abstract class ExtrudedSurface : Surface
 {
     /// <summary>

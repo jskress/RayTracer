@@ -112,7 +112,7 @@ internal static class TypeConversions
     {
         CoercionResult result = CoercionResult.OfProperType;
 
-        if (value is NumberTuple numberTuple)
+        if (value is NumberTuple)
             (result, value) = CoerceTuples(value, typeof(Color));
 
         if (value.GetType() == typeof(Color))

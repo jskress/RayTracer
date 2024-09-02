@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.General;
@@ -8,6 +9,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents a camera in a scene.
 /// </summary>
+[SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class Camera : NamedThing
 {
     /// <summary>
@@ -29,6 +31,7 @@ public class Camera : NamedThing
     /// <summary>
     /// This property reports the field of view (in degrees) for the camera.
     /// </summary>
+    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public double FieldOfView { get; set; } = 90.0.ToRadians();
 
     /// <summary>

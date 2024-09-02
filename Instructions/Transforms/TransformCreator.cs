@@ -34,7 +34,7 @@ public abstract class TransformCreator : Resolver<Matrix>
     /// <summary>
     /// This method is triggered when the <see cref="Axis"/> property is set.
     /// </summary>
-    /// <param name="axis"></param>
+    /// <param name="axis">The new transform axis.</param>
     private void AxisChangedTo(TransformAxis axis)
     {
         _expectedTypes = axis == TransformAxis.All

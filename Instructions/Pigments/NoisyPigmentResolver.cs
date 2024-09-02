@@ -12,12 +12,12 @@ public class NoisyPigmentResolver : PigmentResolver<NoisyPigment>
     /// <summary>
     /// This property holds the resolver for our pigment's wrapped pigment property.
     /// </summary>
-    public IPigmentResolver PigmentResolver { get; set; }
+    public IPigmentResolver PigmentResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our pigment's turbulence property.
     /// </summary>
-    public Resolver<Turbulence> TurbulenceResolver { get; set; }
+    public Resolver<Turbulence> TurbulenceResolver { get; init; }
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value.

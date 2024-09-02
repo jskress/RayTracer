@@ -12,13 +12,13 @@ public class PatternPigment : Pigment
     /// <summary>
     /// This property holds the pattern that will drive the pigment.
     /// </summary>
-    public Pattern Pattern { get; set; }
+    public Pattern Pattern { get; init; }
 
     /// <summary>
     /// This property holds the pigment set from which we will source the actual color for
     /// a point.
     /// </summary>
-    public PigmentSet PigmentSet { get; set; }
+    public PigmentSet PigmentSet { get; init; }
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we

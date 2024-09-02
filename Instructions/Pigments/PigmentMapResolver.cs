@@ -12,18 +12,18 @@ public class PigmentMapResolver : ObjectResolver<PigmentSet>
     /// This property holds the list of resolvers that will evaluate to the list of break
     /// values for our pigment set.
     /// </summary>
-    public List<Resolver<double>> BreakValueResolvers { get; set; }
+    public List<Resolver<double>> BreakValueResolvers { get; init; }
 
     /// <summary>
     /// This property holds the list of resolvers that will evaluate to the list of pigments
     /// for our pigment set.
     /// </summary>
-    public List<IPigmentResolver> PigmentResolvers { get; set; }
+    public List<IPigmentResolver> PigmentResolvers { get; init; }
 
     /// <summary>
     /// This property holds the resolver for the banded property of our pigment set.
     /// </summary>
-    public Resolver<bool> BandedResolver { get; set; }
+    public Resolver<bool> BandedResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an agate

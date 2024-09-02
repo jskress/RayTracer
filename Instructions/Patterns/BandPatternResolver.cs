@@ -1,5 +1,4 @@
 using RayTracer.General;
-using RayTracer.Instructions.Core;
 using RayTracer.Patterns;
 
 namespace RayTracer.Instructions.Patterns;
@@ -13,7 +12,7 @@ public abstract class BandPatternResolver<TValue> : PatternResolver<TValue>
     /// <summary>
     /// This property holds the resolver for our pattern's band type property.
     /// </summary>
-    public Resolver<BandType> BandTypeResolver { get; set; }
+    public Resolver<BandType> BandTypeResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a camera.

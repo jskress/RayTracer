@@ -11,12 +11,12 @@ public class NoisyPigment : Pigment
     /// <summary>
     /// This property holds the pigment to apply noise to.
     /// </summary>
-    public Pigment Pigment { get; set; }
+    public Pigment Pigment { get; init; }
 
     /// <summary>
     /// This property controls the turbulence we will apply.
     /// </summary>
-    public Turbulence Turbulence { get; set; }
+    public Turbulence Turbulence { get; init; }
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.  We return the

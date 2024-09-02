@@ -86,7 +86,7 @@ public static class Polynomials
             c4 = coefficients[4] / c0;
         }
 
-        /* Compute the cubic resolvant */
+        /* Compute the cubic resolvent */
         double c1Squared = c1 * c1;
         double p = -0.375 * c1Squared + c2;
         double q = 0.125 * c1Squared * c1 - 0.5 * c1 * c2 + c3;

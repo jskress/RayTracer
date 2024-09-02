@@ -2,7 +2,6 @@ using Lex.Expressions;
 using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
-using RayTracer.Instructions;
 
 namespace RayTracer.Terms;
 
@@ -54,7 +53,7 @@ public abstract class Term : IExpressionTerm
     /// </summary>
     /// <param name="variables">The variables that are currently in scope.</param>
     /// <param name="isRequired">A flag noting whether the value is required (i.e., cannot
-    /// be <c>null</c>.</param>
+    /// be <c>null</c>).</param>
     /// <returns>The current value of this term.</returns>
     public TValue GetValue<TValue>(Variables variables, bool isRequired = true)
     {

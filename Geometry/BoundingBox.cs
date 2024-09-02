@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 
@@ -69,7 +68,7 @@ public class BoundingBox
     /// This method handles finding intersection points for a ray with the box.
     /// </summary>
     /// <param name="ray">The ray to test.</param>
-    /// <returns>The min and max intersection points for the axis being tested..</returns>
+    /// <returns>The min and max intersection points for the axis being tested.</returns>
     internal (double min, double max) GetIntersections(Ray ray)
     {
         // First, find the points of intersection on each axis.
@@ -91,7 +90,7 @@ public class BoundingBox
     /// <param name="direction">The direction value for the axis.</param>
     /// <param name="axisMin">The minimum allowed value for the axis.</param>
     /// <param name="axisMax">The maximum allowed value for the axis.</param>
-    /// <returns>The min and max intersection points for the axis being tested..</returns>
+    /// <returns>The min and max intersection points for the axis being tested.</returns>
     private static (double min, double max) CheckAxis(
         double origin, double direction, double axisMin, double axisMax)
     {

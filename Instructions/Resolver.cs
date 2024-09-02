@@ -33,9 +33,10 @@ internal static class ResolverExtensions
     /// <param name="propertyLambda">The lambda that identifies the property.</param>
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
-    internal static void AssignTo<TObject, TValue>(this Resolver<TValue> resolver,
-        TObject target,
-        Expression<Func<TObject, TValue>> propertyLambda, RenderContext context, Variables variables)
+    internal static void AssignTo<TObject, TValue>(
+        this Resolver<TValue> resolver, TObject target,
+        Expression<Func<TObject, TValue>> propertyLambda, RenderContext context,
+        Variables variables)
     {
         if (resolver is not null)
         {

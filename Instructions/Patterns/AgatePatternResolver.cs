@@ -12,7 +12,7 @@ public class AgatePatternResolver : PatternResolver<AgatePattern>
     /// <summary>
     /// This property holds the resolver for our pigment's turbulence property.
     /// </summary>
-    public Resolver<Turbulence> TurbulenceResolver { get; set; }
+    public Resolver<Turbulence> TurbulenceResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an agate

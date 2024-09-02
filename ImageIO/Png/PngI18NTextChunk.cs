@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Text;
 using RayTracer.General;
@@ -7,6 +8,7 @@ namespace RayTracer.ImageIO.Png;
 /// <summary>
 /// This class represents the international text chunk in a PNG file.
 /// </summary>
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class PngI18NTextChunk : PngChunk
 {
     /// <summary>

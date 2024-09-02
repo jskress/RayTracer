@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace RayTracer.Basics;
 
 /// <summary>

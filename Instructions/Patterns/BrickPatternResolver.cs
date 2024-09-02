@@ -5,7 +5,7 @@ using RayTracer.Patterns;
 namespace RayTracer.Instructions.Patterns;
 
 /// <summary>
-/// This class is used to resolve an brick pattern value.
+/// This class is used to resolve a brick pattern value.
 /// </summary>
 public class BrickPatternResolver : PatternResolver<BrickPattern>
 {

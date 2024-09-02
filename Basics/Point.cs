@@ -38,7 +38,7 @@ public class Point : NumberTuple
     /// <summary>
     /// This method subtracts one point from another to produce a vector.
     /// </summary>
-    /// <param name="left">The point to subtract from..</param>
+    /// <param name="left">The point to subtract from.</param>
     /// <param name="right">The point to subtract.</param>
     /// <returns>The resulting vector.</returns>
     public static Vector operator -(Point left, Point right)

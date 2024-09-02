@@ -229,15 +229,15 @@ public class TestSpheres
         Point origin = new (0, 0, -4);
         Vector direction = new (0, 0, 1);
         Ray ray = new (origin, direction);
-        List<Intersection> intersections = new ()
-        {
-            new Intersection(a, 2),
-            new Intersection(b, 2.75),
-            new Intersection(c, 3.25),
-            new Intersection(b, 4.75),
-            new Intersection(c, 5.25),
-            new Intersection(a, 6)
-        };
+        List<Intersection> intersections =
+        [
+            new (a, 2),
+            new (b, 2.75),
+            new (c, 3.25),
+            new (b, 4.75),
+            new (c, 5.25),
+            new (a, 6)
+        ];
 
         a.Transform = Transforms.Scale(2);
         a.Material.IndexOfRefraction = 1.5;
@@ -247,14 +247,14 @@ public class TestSpheres
         c.Material.IndexOfRefraction = 2.5;
 
         N1N2[] expected =
-        {
+        [
             new (1.0, 1.5),
             new (1.5, 2.0),
             new (2.0, 2.5),
             new (2.5, 2.5),
             new (2.5, 1.5),
             new (1.5, 1.0)
-        };
+        ];
 
         for (int index = 0; index < expected.Length; index++)
         {

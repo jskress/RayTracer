@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.General;
 
 namespace RayTracer.ImageIO.Png;
@@ -30,11 +31,13 @@ public class PngHeaderChunk : PngChunk
     /// <summary>
     /// This property holds the compression method used in the image.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public byte CompressionMethod { get; set; }
 
     /// <summary>
     /// This property holds the filter method used in the image.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public byte FilterMethod { get; set; }
 
     /// <summary>
@@ -44,7 +47,7 @@ public class PngHeaderChunk : PngChunk
 
     /// <summary>
     /// This property reports the number of bytes required per pixel in a scanline for the
-    /// purposes of PNG's scanline filtering algorithms.  This is based on a combination of
+    /// purposes of the scanline filtering algorithms.  This is based on a combination of
     /// <see cref="ColorType"/> and <see cref="BitDepth"/>.  Bit depths requiring less than
     /// a byte are rounded up to 1.
     /// </summary>
@@ -63,7 +66,7 @@ public class PngHeaderChunk : PngChunk
     /// This method examines <see cref="ColorType"/> and <see cref="BitDepth"/> to determine
     /// the bytes per pixel the PNG filtering algorithms use in their calculations.
     /// </summary>
-    /// <remarks>Note that this is different than the number of bytes a pixel may occupy.
+    /// <remarks>Note that this is different from the number of bytes a pixel may occupy.
     /// Even though we will never write out images with multiple pixels per byte, we should
     /// still be able to read such images.</remarks>
     /// <returns>The number of bytes required per pixel for the sake of filtering.</returns>

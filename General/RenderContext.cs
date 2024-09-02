@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Renderer;
@@ -33,11 +34,13 @@ public class RenderContext
     /// <summary>
     /// This property holds the scanner that should be used to render the image.
     /// </summary>
+    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public IScanner Scanner { get; set; } = new PixelParallelScanner();
 
     /// <summary>
     /// This property holds whether angles are in radians or degrees.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool AnglesAreRadians { get; set; }
 
     /// <summary>
@@ -48,22 +51,26 @@ public class RenderContext
     /// <summary>
     /// This property notes whether gamma correction should actually be applied.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public bool ApplyGamma { get; set; } = true;
 
     /// <summary>
     /// This property notes whether gamma correction information should be noted in the
     /// output image, if the image format supports this.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public bool ReportGamma { get; set; }
 
     /// <summary>
     /// This property is used to suppress all shadow rendering.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public bool SuppressAllShadows { get; set; }
 
     /// <summary>
     /// This property holds the bits per color channel to use when writing image files.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public int BitsPerChannel { get; set; } = 8;
 
     /// <summary>
@@ -74,6 +81,7 @@ public class RenderContext
     /// <summary>
     /// This property notes whether output images should be in grayscale or full color.
     /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public bool Grayscale { get; set; }
 
     /// <summary>
@@ -84,7 +92,7 @@ public class RenderContext
     /// <summary>
     /// This property holds the progress bar we are using.
     /// </summary>
-    public ProgressBar ProgressBar { get; set; }
+    public ProgressBar ProgressBar { get; init; }
 
     /// <summary>
     /// This property holds the statistics collector being used.

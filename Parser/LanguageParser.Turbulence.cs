@@ -1,5 +1,4 @@
 using Lex.Clauses;
-using Lex.Parser;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;

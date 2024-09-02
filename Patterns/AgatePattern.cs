@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 
 namespace RayTracer.Patterns;
@@ -18,6 +19,7 @@ public class AgatePattern : Pattern
     /// <summary>
     /// This property controls the turbulence we will use.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public Turbulence Turbulence { get; set; }
 
     /// <summary>

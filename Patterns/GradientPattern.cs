@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 
 namespace RayTracer.Patterns;
@@ -18,6 +19,7 @@ public class GradientPattern : BandPattern
     /// <summary>
     /// This property notes whether the gradient value bounces.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool Bouncing { get; set; }
 
     /// <summary>

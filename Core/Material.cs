@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 using RayTracer.Pigments;
 
@@ -6,6 +7,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents the material properties for a surface.
 /// </summary>
+[SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
 public class Material
 {
     /// <summary>
@@ -48,25 +50,6 @@ public class Material
     /// This property holds the material's index of refraction.
     /// </summary>
     public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
-
-    /// <summary>
-    /// This method is used to create a copy of this material.
-    /// </summary>
-    /// <returns></returns>
-    public Material Copy()
-    {
-        return new Material
-        {
-            Pigment = Pigment,
-            Ambient = Ambient,
-            Diffuse = Diffuse,
-            Specular = Specular,
-            Shininess = Shininess,
-            Reflective = Reflective,
-            Transparency = Transparency,
-            IndexOfRefraction = IndexOfRefraction
-        };
-    }
 
     /// <summary>
     /// This method returns whether this material matches the given one.  This will be

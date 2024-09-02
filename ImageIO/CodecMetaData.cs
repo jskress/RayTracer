@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace RayTracer.ImageIO;
 
 /// <summary>
@@ -8,6 +10,7 @@ internal class CodecMetaData
     /// <summary>
     /// This property provides the name of the codec, suitable for display.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     internal string Name { get; init; }
 
     /// <summary>

@@ -11,7 +11,8 @@ public class PngImageStream : Stream
 {
     private const int BufferSize = 16384;
 
-    private RenderContext _context;
+    private readonly RenderContext _context;
+
     private PngChunkReader _reader;
     private PngChunkWriter _writer;
     private PngImageDataChunk _imageDataChunk;
@@ -154,8 +155,8 @@ public class PngImageStream : Stream
     /// </summary>
     public override long Position
     {
-        get => throw new NotImplementedException();
-        set => throw new NotImplementedException();
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
     }
 
     /// <summary>
@@ -165,18 +166,18 @@ public class PngImageStream : Stream
     /// <param name="offset">The amount to move the read/write position.</param>
     /// <param name="origin">How to interpret the offset.</param>
     /// <returns>The new read/write position of the stream.</returns>
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     /// <summary>
     /// This method reports the length of the stream.  We don't support doing this.
     /// </summary>
-    public override long Length => throw new NotImplementedException();
+    public override long Length => throw new NotSupportedException();
 
     /// <summary>
     /// This would normally be used to set the length for the stream.  We don't support this.
     /// </summary>
     /// <param name="value">The new length of the stream</param>
-    public override void SetLength(long value) => throw new NotImplementedException();
+    public override void SetLength(long value) => throw new NotSupportedException();
 
     /// <summary>
     /// This method makes sure we're all cleaned up.

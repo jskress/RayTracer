@@ -19,7 +19,7 @@ public class UnknownPngChunk : PngChunk
     /// <param name="stream">The stream to write to.</param>
     protected override void WriteData(Stream stream)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 
@@ -19,11 +20,13 @@ public class BrickPattern : Pattern
     /// <summary>
     /// This property specifies the size of the brick.
     /// </summary>
+    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public Vector BrickSize { get; set; } = new (8, 3, 4.5);
 
     /// <summary>
     /// This property specifies the size of the mortar.
     /// </summary>
+    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
     public double MortarSize { get; set; } = 0.5;
 
     /// <summary>

@@ -14,7 +14,7 @@ public abstract class PigmentResolver<TValue> : Resolver<TValue>, IPigmentResolv
     /// <summary>
     /// This property holds the resolver for our pigment's transform.
     /// </summary>
-    public TransformResolver TransformResolver { get; set; }
+    public TransformResolver TransformResolver { get; init; }
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value as a pigment.

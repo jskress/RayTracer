@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace RayTracer.Basics;
 
 /// <summary>
 /// This class provides a generator for turbulence.
 /// </summary>
+[SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
 public class Turbulence
 {
     /// <summary>
@@ -13,6 +16,7 @@ public class Turbulence
     /// <summary>
     /// This property controls whether we will apply phasing to the turbulence.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool Phased { get; set; }
 
     /// <summary>

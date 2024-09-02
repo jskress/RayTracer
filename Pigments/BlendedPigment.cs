@@ -11,13 +11,13 @@ public class BlendedPigment : Pigment
     /// <summary>
     /// This property holds the list of pigments to blend or layer.
     /// </summary>
-    public List<Pigment> Pigments { get; set; } = [];
+    public List<Pigment> Pigments { get; init; } = [];
 
     /// <summary>
     /// This property indicates that we will blend by layering (combining based on alpha)
     /// as opposed to averaging.
     /// </summary>
-    public bool Layer { get; set; }
+    public bool Layer { get; init; }
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we

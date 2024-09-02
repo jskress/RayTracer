@@ -1,5 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
-using RayTracer.Extensions;
 
 namespace RayTracer.Patterns;
 
@@ -12,6 +12,7 @@ public abstract class BandPattern : Pattern
     /// <summary>
     /// This property notes the type of band this instance implements.
     /// </summary>
+    [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
     public BandType BandType { get; set; }
 
     /// <summary>

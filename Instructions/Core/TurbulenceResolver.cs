@@ -20,22 +20,22 @@ public class TurbulenceResolver : ObjectResolver<Turbulence>
     /// <summary>
     /// This property holds the resolver for our turbulence's depth property.
     /// </summary>
-    public Resolver<int> DepthResolver { get; set; }
+    public Resolver<int> DepthResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our turbulence's phased property.
     /// </summary>
-    public Resolver<bool> PhasedResolver { get; set; }
+    public Resolver<bool> PhasedResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our turbulence's tightness property.
     /// </summary>
-    public Resolver<int> TightnessResolver { get; set; }
+    public Resolver<int> TightnessResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our turbulence's scale property.
     /// </summary>
-    public Resolver<double> ScaleResolver { get; set; }
+    public Resolver<double> ScaleResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a turbulence

@@ -3,7 +3,7 @@ using RayTracer.General;
 namespace RayTracer.Instructions.Context;
 
 /// <summary>
-/// This class is used to resolve a value from a term to append as a cooment.
+/// This class is used to resolve a value from a term to append as a comment.
 /// </summary>
 public class CommentResolver : TermResolver<string>
 {

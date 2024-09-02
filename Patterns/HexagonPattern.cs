@@ -47,7 +47,6 @@ public class HexagonPattern : Pattern
 
         // Get a block in the 6 x 6 grid.
 
-        // TODO: Make sure the two different floors used in POV translated here correctly.
         int xm = (int) Math.Floor(xs) % 6;
         int zm = (int) Math.Floor(zs) % 6;
 

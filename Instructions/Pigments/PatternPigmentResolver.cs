@@ -12,12 +12,12 @@ public class PatternPigmentResolver : PigmentResolver<PatternPigment>
     /// <summary>
     /// This property holds the resolver for our pigment's pattern property.
     /// </summary>
-    public IPatternResolver PatternResolver { get; set; }
+    public IPatternResolver PatternResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our pigment's pigment set property.
     /// </summary>
-    public Resolver<PigmentSet> PigmentSetResolver { get; set; }
+    public Resolver<PigmentSet> PigmentSetResolver { get; init; }
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value.

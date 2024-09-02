@@ -12,7 +12,7 @@ public class PigmentListResolver : ObjectResolver<PigmentSet>
     /// This property holds the list of resolvers that will evaluate to the list of pigments
     /// for our pigment set.
     /// </summary>
-    public List<IPigmentResolver> PigmentResolvers { get; set; }
+    public List<IPigmentResolver> PigmentResolvers { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an agate

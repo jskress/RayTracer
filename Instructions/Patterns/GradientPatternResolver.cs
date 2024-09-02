@@ -11,7 +11,7 @@ public class GradientPatternResolver : BandPatternResolver<GradientPattern>
     /// <summary>
     /// This property holds the resolver for our pigment's bouncing property.
     /// </summary>
-    public Resolver<bool> BouncingResolver { get; set; }
+    public Resolver<bool> BouncingResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an agate

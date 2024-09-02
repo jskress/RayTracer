@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Core;
 
@@ -7,6 +8,7 @@ namespace RayTracer.Geometry;
 /// This class represents a smooth triangle.  It is defined by three points and the normals
 /// at those points.
 /// </summary>
+[SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class SmoothTriangle : Triangle
 {
     /// <summary>
@@ -26,7 +28,7 @@ public class SmoothTriangle : Triangle
 
     /// <summary>
     /// This is a helper method for creating an intersection.  It's overridable since
-    /// smooth triangles the the u/v pair.
+    /// smooth triangles the u/v pair.
     /// </summary>
     /// <param name="distance">The distance along the ray where the intersection occurred.</param>
     /// <param name="u">The U value for the intersection with the triangle.</param>

@@ -30,20 +30,3 @@ public enum BandType
     /// </summary>
     Spherical
 }
-
-/// <summary>
-/// This class provides some useful additions to the <see cref="BandType"/> enumeration.
-/// </summary>
-internal static class BandTypeExtensions
-{
-    /// <summary>
-    /// This method tells us whether the given band type is linear.
-    /// </summary>
-    /// <param name="bandType">The band type to test.</param>
-    /// <returns><c>true</c>, if the band type is one of the linear ones, or <c>false</c>,
-    /// if not.</returns>
-    internal static bool IsLinear(this BandType bandType)
-    {
-        return bandType is BandType.LinearX or BandType.LinearY or BandType.LinearZ;
-    }
-}

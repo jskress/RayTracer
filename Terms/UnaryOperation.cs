@@ -1,5 +1,3 @@
-using RayTracer.General;
-
 namespace RayTracer.Terms;
 
 /// <summary>

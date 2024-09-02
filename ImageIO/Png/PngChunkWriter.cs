@@ -122,7 +122,6 @@ public class PngChunkWriter
         using DeflaterOutputStream compressor = new DeflaterOutputStream(imageStream);
         ScanLine previous = new ScanLine(_context, _headerChunk);
         ScanLine current = new ScanLine(_context, _headerChunk);
-        Adler32 checksum = new Adler32();
 
         for (int y = 0; y < _canvas.Height; y++)
         {
@@ -130,9 +129,6 @@ public class PngChunkWriter
 
             current.ReadFromCanvas(_canvas, y);
             current.FilterAndWrite(filterType, previous, compressor);
-
-            checksum.Add((byte) filterType);
-            current.AddToChecksum(checksum);
 
             (current, previous) = (previous, current);
         }

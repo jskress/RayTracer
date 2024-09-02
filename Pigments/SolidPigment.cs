@@ -4,7 +4,7 @@ using RayTracer.Graphics;
 namespace RayTracer.Pigments;
 
 /// <summary>
-/// This class provides a pigmenta that always returns the same color.
+/// This class provides a pigment that always returns the same color.
 /// </summary>
 public class SolidPigment : Pigment
 {

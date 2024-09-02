@@ -106,7 +106,7 @@ public class Scene : NamedThing
     }
 
     /// <summary>
-    /// This method returns whether the given point is in shadow in regards to the given
+    /// This method returns whether the given point is in shadow with respect to the given
     /// light source.
     /// </summary>
     /// <param name="light">The light source in question.</param>
