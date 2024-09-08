@@ -36,12 +36,12 @@ public partial class LanguageParser
             'mortar', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
             'parallel', 'per', 'phased', 'pigment', 'pixel', 'planar', 'plane', 'point',
             'points', 'radians', 'radii', 'reflective', 'refraction', 'render', 'report',
-            'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear',
-            'shininess', 'size', 'smooth', 'software', 'source', 'specular', 'sphere',
-            'spherical', 'square', 'stripes', 'title', 'to', 'torus', 'transform',
-            'translate', 'transparency', 'triangle', 'triangular', 'true', 'turbulence',
-            'union', 'up', 'vector', 'view', 'warning', 'width', 'with', 'wrinkles', 'X',
-            'Y', 'Z'
+            'rhombus', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow',
+            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
+            'source', 'specular', 'sphere', 'spherical', 'square', 'stripes', 'title',
+            'to', 'torus', 'transform', 'translate', 'transparency', 'triangle',
+            'triangular', 'true', 'turbulence', 'union', 'up', 'vector', 'view',
+            'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -351,7 +351,22 @@ public partial class LanguageParser
             } |
             triangleEntryClause
         ]
-
+        
+        // Rhombus clauses.
+        startRhombusClause:
+        {
+            rhombus > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "rhombus" here.'
+        }
+        rhombusEntryClause:
+        [
+            { at > _expression } |
+            { sides > _expression > comma ?? 'Expecting a comma here.' > _expression } |
+            surfaceEntryClause
+        ]
+        
         // Object file clauses.
         startObjectFileClause:
         {
@@ -377,7 +392,7 @@ public partial class LanguageParser
                 [ union | difference | intersection ] > [
                     openBrace |
                     { [ _identifier | _keyword ] > openBrace{?} }
-                ] ?? 'Expecting an identifier or open brace to follow "triangle" here.'
+                ] ?? 'Expecting an identifier or open brace here.'
             } |
             {
                 csg >
@@ -395,6 +410,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
+            startRhombusClause => 'rhombus' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -431,6 +447,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
+            startRhombusClause => 'rhombus' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -457,6 +474,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
+            startRhombusClause => 'rhombus' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -486,8 +504,8 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startTriangleClause |
-                startSmoothTriangleClause | startObjectFileClause | startObjectClause |
-                startCsgClause | startGroupClause
+                startSmoothTriangleClause | startRhombusClause | startObjectFileClause |
+                startObjectClause | startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -509,6 +527,7 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
+            startRhombusClause        => 'HandleStartRhombusClause' |
             startObjectFileClause     => 'HandleStartObjectFileClause' |
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |

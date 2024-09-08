@@ -41,6 +41,17 @@ public class Vector : NumberTuple
     }
 
     /// <summary>
+    /// This method produces the dot product of this vector with the given point, interpreted
+    /// as a vector.
+    /// </summary>
+    /// <param name="point">The point to compute the dot product with.</param>
+    /// <returns>The dot product of this vector with the given one.</returns>
+    public double Dot(Point point)
+    {
+        return X * point.X + Y * point.Y + Z * point.Z;
+    }
+
+    /// <summary>
     /// This method produces the reflection of this vector around the given normal.
     /// </summary>
     /// <param name="normal">The normal to reflect around.</param>
