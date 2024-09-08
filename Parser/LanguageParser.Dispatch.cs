@@ -30,6 +30,7 @@ public partial class LanguageParser
         _clauseHandlers.Add(nameof(HandleStartTorusClause), HandleStartTorusClause);
         _clauseHandlers.Add(nameof(HandleStartTriangleClause), HandleStartTriangleClause);
         _clauseHandlers.Add(nameof(HandleStartSmoothTriangleClause), HandleStartSmoothTriangleClause);
+        _clauseHandlers.Add(nameof(HandleStartRhombusClause), HandleStartRhombusClause);
         _clauseHandlers.Add(nameof(HandleStartObjectFileClause), HandleStartObjectFileClause);
         _clauseHandlers.Add(nameof(HandleStartObjectClause), HandleStartObjectClause);
         _clauseHandlers.Add(nameof(HandleStartCsgClause), HandleStartCsgClause);

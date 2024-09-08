@@ -1,0 +1,31 @@
+// This holds the information for how to render our image for chapter 15 (new language).
+
+chapter = 15
+
+include '../defaults.igl'
+
+// Floor
+plane {
+	material {
+		pigment blend {
+		    linear stripes { Red, White },
+		    linear stripes { Red, White rotate Y 90 }
+			rotate Y 15
+		}
+	}
+}
+
+rhombus {
+	at [-1, 0.5, 0]
+	sides [0.5, 2, 0], [5, 0, 0] 
+	material {
+		pigment linear bouncing gradient {
+			[0, DeepSkyBlue, 1, LightSkyBlue]
+			scale 0.4
+		}
+	}
+	rotate X 42
+	rotate Y 25
+	translate X 3
+	translate Y 1.75
+}
