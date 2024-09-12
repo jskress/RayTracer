@@ -34,9 +34,9 @@ public partial class LanguageParser
             'intersection', 'ior', 'layer', 'leopard', 'light', 'line', 'linear',
             'location', 'look', 'material', 'matrix', 'max', 'maximum', 'min', 'minimum',
             'mortar', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
-            'parallel', 'per', 'phased', 'pigment', 'pixel', 'planar', 'plane', 'point',
-            'points', 'radians', 'radii', 'reflective', 'refraction', 'render', 'report',
-            'rhombus', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow',
+            'parallel', 'parallelogram', 'per', 'phased', 'pigment', 'pixel', 'planar',
+            'plane', 'point', 'points', 'radians', 'radii', 'reflective', 'refraction',
+            'render', 'report', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow',
             'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
             'source', 'specular', 'sphere', 'spherical', 'square', 'stripes', 'title',
             'to', 'torus', 'transform', 'translate', 'transparency', 'triangle',
@@ -352,15 +352,15 @@ public partial class LanguageParser
             triangleEntryClause
         ]
         
-        // Rhombus clauses.
-        startRhombusClause:
+        // Parallelogram clauses.
+        startParallelogramClause:
         {
-            rhombus > [
+            parallelogram > [
                 openBrace |
                 { [ _identifier | _keyword ] > openBrace{?} }
-            ] ?? 'Expecting an identifier or open brace to follow "rhombus" here.'
+            ] ?? 'Expecting an identifier or open brace to follow "parallelogram" here.'
         }
-        rhombusEntryClause:
+        parallelogramEntryClause:
         [
             { at > _expression } |
             { sides > _expression > comma ?? 'Expecting a comma here.' > _expression } |
@@ -410,7 +410,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -447,7 +447,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -474,7 +474,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -504,7 +504,7 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startTriangleClause |
-                startSmoothTriangleClause | startRhombusClause | startObjectFileClause |
+                startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
             ]
         }
@@ -527,7 +527,7 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
-            startRhombusClause        => 'HandleStartRhombusClause' |
+            startParallelogramClause        => 'HandleStartParallelogramClause' |
             startObjectFileClause     => 'HandleStartObjectFileClause' |
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |

@@ -49,7 +49,7 @@ public partial class LanguageParser
             "torus" => ParseTorusClause(clause),
             "triangle" => ParseTriangleClause(clause),
             "smooth" when second == "triangle" => ParseSmoothTriangleClause(clause),
-            "rhombus" => ParseRhombusClause(clause),
+            "parallelogram" => ParseParallelogramClause(clause),
             "object" when second == "file" => ParseObjectFileClause(clause),
             "union" or "difference" or "intersection" or "csg" => ParseCsgClause(clause),
             "group" => ParseGroupClause(clause),

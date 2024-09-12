@@ -70,8 +70,8 @@ public partial class LanguageParser
             case "smoothTriangle":
                 resolver.SurfaceResolvers.Add(ParseSmoothTriangleClause(clause));
                 break;
-            case "rhombus":
-                resolver.SurfaceResolvers.Add(ParseRhombusClause(clause));
+            case "parallelogram":
+                resolver.SurfaceResolvers.Add(ParseParallelogramClause(clause));
                 break;
             case "objectFile":
                 resolver.SurfaceResolvers.Add(ParseObjectFileClause(clause));

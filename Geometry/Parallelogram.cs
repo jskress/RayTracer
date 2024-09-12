@@ -4,13 +4,13 @@ using RayTracer.Core;
 namespace RayTracer.Geometry;
 
 /// <summary>
-/// This class represents a rhombus.  It is defined by one point, and two side vectors
+/// This class represents a parallelogram.  It is defined by one point, and two side vectors
 /// intiating from that point.
 /// </summary>
-public class Rhombus : Surface
+public class Parallelogram : Surface
 {
     /// <summary>
-    /// This property provides the "anchor" point of the rhombus.
+    /// This property provides the "anchor" point of the parallelogram.
     /// </summary>
     public Point Point
     {
@@ -24,7 +24,7 @@ public class Rhombus : Surface
     }
 
     /// <summary>
-    /// This property provides the first side vector of the rhombus.
+    /// This property provides the first side vector of the parallelogram.
     /// </summary>
     public Vector Side1
     {
@@ -38,7 +38,7 @@ public class Rhombus : Surface
     }
 
     /// <summary>
-    /// This property provides the second side vector of the rhombus.
+    /// This property provides the second side vector of the parallelogram.
     /// </summary>
     public Vector Side2
     {
@@ -63,14 +63,14 @@ public class Rhombus : Surface
     /// our side vectors change.  If any of the information is <c>null</c> (as will be
     /// during initial creation), we silently no-op.
     /// </summary>
-    /// <param name="point">The anchor point of the rhombus.</param>
-    /// <param name="side1">The first side of the rhombus.</param>
-    /// <param name="side2">The second side of the rhombus.</param>
+    /// <param name="point">The anchor point of the parallelogram.</param>
+    /// <param name="side1">The first side of the parallelogram.</param>
+    /// <param name="side2">The second side of the parallelogram.</param>
     private void DefinitionChanged(Point point, Vector side1, Vector side2)
     {
         if (point is not null && side1 is not null && side2 is not null)
         {
-            Vector cross = side1.Cross(side2);
+            Vector cross = side2.Cross(side1);
 
             _normal = cross.Unit;
             _constantD = _normal.Dot(point);
@@ -79,17 +79,31 @@ public class Rhombus : Surface
     }
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects the triangle and,
-    /// if so, where.
+    /// This method is used to determine whether the given ray intersects the parallelogram
+    /// and, if so, where.
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
+        double intersection = GetIntersection(ray);
+
+        if (!double.IsNaN(intersection))
+            intersections.Add(new Intersection(this, intersection));
+    }
+
+    /// <summary>
+    /// This method is used to determine whether the given ray intersects the parallelogram
+    /// and, if so, where.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <returns>The value of <c>t</c> along the ray where it intersects the parallelogram.</returns>
+    public double GetIntersection(Ray ray)
+    {
         double denominator = _normal.Dot(ray.Direction);
         
         if (denominator == 0)
-            return;
+            return double.NaN;
         
         double t = (_constantD - _normal.Dot(ray.Origin)) / denominator;
 
@@ -101,8 +115,10 @@ public class Rhombus : Surface
             double beta = _constantW.Dot(_side2.Cross(vector));
 
             if (alpha is >= 0 and <= 1 && beta is >= 0 and <= 1)
-                intersections.Add(new Intersection(this, t));
+                return t;
         }
+
+        return double.NaN;
     }
 
     /// <summary>

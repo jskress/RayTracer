@@ -82,6 +82,12 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
+    /// This method is called once prior to rendering to give the surface a chance to
+    /// perform any expensive precomputing that will help ray/intersection tests go faster.
+    /// </summary>
+    public virtual void PrepareForRendering() {}
+
+    /// <summary>
     /// This method must be provided by subclasses to determine whether the given
     /// ray intersects the geometry and, if so, where.
     /// </summary>

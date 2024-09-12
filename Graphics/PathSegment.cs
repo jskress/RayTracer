@@ -1,7 +1,4 @@
 using RayTracer.Basics;
-using RayTracer.Core;
-using RayTracer.Extensions;
-using RayTracer.Geometry;
 
 namespace RayTracer.Graphics;
 
@@ -11,62 +8,22 @@ namespace RayTracer.Graphics;
 public abstract class PathSegment
 {
     /// <summary>
-    /// This property holds the A coefficient.
+    /// This property holds the set of points, if any, the segment needs.
     /// </summary>
-    internal TwoDPoint A { get; }
+    internal TwoDPoint[] Points { get; }
 
-    /// <summary>
-    /// This property holds the B coefficient.
-    /// </summary>
-    internal TwoDPoint B { get; }
-
-    /// <summary>
-    /// This property holds the C coefficient.
-    /// </summary>
-    internal TwoDPoint C { get; }
-
-    /// <summary>
-    /// This property holds the D coefficient.
-    /// </summary>
-    internal TwoDPoint D { get; }
-
-    protected PathSegment(TwoDPoint a, TwoDPoint b, TwoDPoint c, TwoDPoint d)
+    protected PathSegment(params TwoDPoint[] points)
     {
-        A = a;
-        B = b;
-        C = c;
-        D = d;
+        Points = points;
     }
 
     /// <summary>
-    /// This method must be provided by subclasses to determine whether the given
-    /// ray intersects the geometry and, if so, where.
+    /// This method is used to determine the intersection points in X of this segment along
+    /// the horizontal line at the given Y.
     /// </summary>
-    /// <param name="surface">The surface we are acting on behalf of.</param>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    public abstract void AddIntersections(
-        ExtrudedSurface surface, Ray ray, List<Intersection> intersections);
-
-    /// <summary>
-    /// This method performs the final checks to see if a ray intersects this segment.
-    /// </summary>
-    /// <param name="surface">The surface we are acting on behalf of.</param>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    /// <param name="distances">The set of distances to check.</param>
-    protected void FinalizeIntersections(
-        ExtrudedSurface surface, Ray ray, List<Intersection> intersections, double[] distances)
-    {
-        intersections.AddRange(from distance in distances
-            where distance is >= 0 and <= 1
-            let k = ray.Direction.X.Near(0)
-                ? (distance * (distance * (distance * A.Y + B.Y) + C.Y) + D.Y - ray.Origin.Z) / ray.Direction.Z
-                : (distance * (distance * (distance * A.X + B.X) + C.X) + D.X - ray.Origin.X) / ray.Direction.X
-            let height = ray.Origin.Y + k * ray.Direction.Y
-            where height >= surface.MinimumY && height <= surface.MaximumY
-            select new PathSegmentIntersection(surface, distance / ray.Direction.Magnitude, this));
-    }
+    /// <param name="y">The Y coordinate of the line to find the intersections on.</param>
+    /// <returns>An array of intersection points, if any.</returns>
+    internal abstract double[] XIntersectionsWith(double y);
 }
 
 /// <summary>
@@ -74,56 +31,67 @@ public abstract class PathSegment
 /// </summary>
 public class LinearPathSegment : PathSegment
 {
-    public LinearPathSegment(TwoDPoint c, TwoDPoint d)
-        : base(TwoDPoint.Zero, TwoDPoint.Zero, c, d) {}
+    private readonly double _minX;
+    private readonly double _maxX;
+
+    internal LinearPathSegment(TwoDPoint start, TwoDPoint end)
+        : base(start, end)
+    {
+        _minX = Math.Min(start.X, end.X);
+        _maxX = Math.Max(start.X, end.X);
+    }
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects the path segment and,
-    /// if so, where.
+    /// This method is used to determine the intersection points in X of this segment along
+    /// the horizontal line at the given Y.
     /// </summary>
-    /// <param name="surface">The surface we are acting on behalf of.</param>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    public override void AddIntersections(
-        ExtrudedSurface surface, Ray ray, List<Intersection> intersections)
+    /// <param name="y">The Y coordinate of the line to find the intersections on.</param>
+    /// <returns>An array of intersection points, if any.</returns>
+    internal override double[] XIntersectionsWith(double y)
     {
-        double x0 = C.X * ray.Direction.Z - C.Y * ray.Direction.X;
-        double x1 = ray.Direction.Z * (D.X - ray.Origin.X) - ray.Direction.X * (D.Y - ray.Origin.Z);
+        double x = (y - Points[0].Y) * (Points[1].X - Points[0].X) /
+            (Points[1].Y - Points[0].Y) + Points[0].X;
 
-        if (!x0.Near(0))
-            FinalizeIntersections(surface, ray, intersections, [x1 / x0]);
+        return x >= _minX && x <= _maxX ? [x] : [];
     }
 }
 
 /// <summary>
-/// This class represents a bezier segment of a general path.
+/// This class represents a quadratic segment of a general path.
 /// </summary>
-public class BezierPathSegment : PathSegment
+internal class QuadPathSegment : PathSegment
 {
-    public BezierPathSegment(TwoDPoint a, TwoDPoint b, TwoDPoint c, TwoDPoint d)
-        : base(a, b, c, d) {}
+    internal QuadPathSegment(TwoDPoint start, TwoDPoint control, TwoDPoint end)
+        : base(start, control, end) {}
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects the path segment and,
-    /// if so, where.
+    /// This method is used to determine the intersection points in X of this segment along
+    /// the horizontal line at the given Y.
     /// </summary>
-    /// <param name="surface">The surface we are acting on behalf of.</param>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    public override void AddIntersections(
-        ExtrudedSurface surface, Ray ray, List<Intersection> intersections)
+    /// <param name="y">The Y coordinate of the line to find the intersections on.</param>
+    /// <returns>An array of intersection points, if any.</returns>
+    internal override double[] XIntersectionsWith(double y)
     {
-        double dx = ray.Direction.X;
-        double dz = ray.Direction.Z;
-        double[] coefficients = [
-            A.X * dz - A.Y * dx,
-            B.X * dz - B.Y * dx,
-            C.X * dz - C.Y * dx,
-            dz * (D.X - ray.Origin.X) - dx * (D.Y - ray.Origin.Z)
-        ];
-        double[] distances = Polynomials.Solve(coefficients);
+        return [];
+    }
+}
 
-        if (distances.Length > 0)
-            FinalizeIntersections(surface, ray, intersections, distances);
+/// <summary>
+/// This class represents a cubic segment of a general path.
+/// </summary>
+internal class CubicPathSegment : PathSegment
+{
+    internal CubicPathSegment(TwoDPoint start, TwoDPoint control1, TwoDPoint control2, TwoDPoint end)
+        : base(start, control1, control2, end) {}
+
+    /// <summary>
+    /// This method is used to determine the intersection points in X of this segment along
+    /// the horizontal line at the given Y.
+    /// </summary>
+    /// <param name="y">The Y coordinate of the line to find the intersections on.</param>
+    /// <returns>An array of intersection points, if any.</returns>
+    internal override double[] XIntersectionsWith(double y)
+    {
+        return [];
     }
 }
