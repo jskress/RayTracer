@@ -7,14 +7,13 @@ namespace RayTracer.Graphics;
 public class SvgPathFactory
 {
     private readonly string _pathSpec;
-    private readonly GeneralPath _path;
 
+    private GeneralPath _path;
     private int _cp;
 
     public SvgPathFactory(string pathSpec)
     {
         _pathSpec = pathSpec;
-        _path = new GeneralPath();
     }
 
     /// <summary>
@@ -24,14 +23,25 @@ public class SvgPathFactory
     /// <returns>The parsed general path.</returns>
     public GeneralPath Parse()
     {
+        ParseInto(new GeneralPath());
+
+        return _path;
+    }
+
+    /// <summary>
+    /// This method is used to parse the SVC path we were constructed with into the given
+    /// general path.
+    /// </summary>
+    /// <param name="path">The path to parse the SVG path information into.</param>
+    public void ParseInto(GeneralPath path)
+    {
         char lastCommand = ' ';
 
+        _path = path;
         _cp = 0;
 
         while (MoreToParse())
             lastCommand = ParseCommand(lastCommand);
-
-        return _path;
     }
 
     /// <summary>
