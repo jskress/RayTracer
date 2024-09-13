@@ -56,32 +56,6 @@ public class RenderInstruction : Instruction
         Scene scene = GetScene(variables);
         Camera camera = GetCamera(scene, variables);
 
-        scene.Surfaces.Add(new Extrusion
-        {
-            MinimumY = 0,
-            MaximumY = 1,
-            Closed = true,
-            Path = new GeneralPath()
-                .MoveTo(new TwoDPoint(3, 5))
-                .LineTo(new TwoDPoint(-3, 5))
-                .LineTo(new TwoDPoint(-5, 0))
-                .LineTo(new TwoDPoint(-3, -5))
-                .LineTo(new TwoDPoint(3, -5))
-                .LineTo(new TwoDPoint(5, 0))
-                .ClosePath()
-                .MoveTo(new TwoDPoint(1, 3))
-                .LineTo(new TwoDPoint(3, 0))
-                .LineTo(new TwoDPoint(1, -3))
-                .LineTo(new TwoDPoint(-1, -3))
-                .LineTo(new TwoDPoint(-3, 0))
-                .LineTo(new TwoDPoint(-1, 3))
-                .ClosePath(),
-            Material = new Material
-            {
-                Pigment = new SolidPigment(Colors.Green)
-            }
-        });
-
         // Give each surface a chance to do any precomputing needed.
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering();

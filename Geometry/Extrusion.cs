@@ -35,14 +35,14 @@ public class Extrusion : ExtrudedSurface
             _top = new Parallelogram
             {
                 Point = new Point(Path.MinX, MaximumY, Path.MinY),
-                Side1 = new Vector(Path.MaxY - Path.MinY, 0, 0),
-                Side2 = new Vector(0, 0, Path.MaxX - Path.MinX),
+                Side1 = new Vector(Path.MaxX - Path.MinX, 0, 0),
+                Side2 = new Vector(0, 0, Path.MaxY - Path.MinY)
             };
             _bottom = new Parallelogram
             {
                 Point = new Point(Path.MinX, MinimumY, Path.MinY),
-                Side1 = new Vector(Path.MaxY - Path.MinY, 0, 0),
-                Side2 = new Vector(0, 0, Path.MaxX - Path.MinX)
+                Side1 = new Vector(Path.MaxX - Path.MinX, 0, 0),
+                Side2 = new Vector(0, 0, Path.MaxY - Path.MinY)
             };
         }
     }
@@ -99,7 +99,7 @@ public class Extrusion : ExtrudedSurface
         {
             Point point = ray.At(intersection);
             TwoDPoint twoDPoint = new TwoDPoint(point.X, point.Z);
-            
+
             if (Path.Contains(twoDPoint))
                 intersections.Add(new Intersection(this, intersection));
         }

@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 
 namespace RayTracer.Graphics;
 
@@ -31,14 +32,20 @@ public abstract class PathSegment
 /// </summary>
 public class LinearPathSegment : PathSegment
 {
+    private static readonly double[] Empty = [];
+
     private readonly double _minX;
+    private readonly double _minY;
     private readonly double _maxX;
+    private readonly double _maxY;
 
     internal LinearPathSegment(TwoDPoint start, TwoDPoint end)
         : base(start, end)
     {
         _minX = Math.Min(start.X, end.X);
+        _minY = Math.Min(start.Y, end.Y);
         _maxX = Math.Max(start.X, end.X);
+        _maxY = Math.Max(start.Y, end.Y);
     }
 
     /// <summary>
@@ -49,10 +56,17 @@ public class LinearPathSegment : PathSegment
     /// <returns>An array of intersection points, if any.</returns>
     internal override double[] XIntersectionsWith(double y)
     {
+        if (y < _minY || y > _maxY)
+            return Empty;
+
+        // If the line is vertical, we've got an intersection (without divide by zero issues)
+        if (_minX.Near(_maxX))
+            return [_minX];
+
         double x = (y - Points[0].Y) * (Points[1].X - Points[0].X) /
             (Points[1].Y - Points[0].Y) + Points[0].X;
 
-        return x >= _minX && x <= _maxX ? [x] : [];
+        return [x];
     }
 }
 

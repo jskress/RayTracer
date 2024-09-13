@@ -47,6 +47,7 @@ public partial class LanguageParser
             "cylinder" => ParseCylinderClause(clause),
             "conic" => ParseConicClause(clause),
             "torus" => ParseTorusClause(clause),
+            "extrusion" => ParseExtrusionClause(clause),
             "triangle" => ParseTriangleClause(clause),
             "smooth" when second == "triangle" => ParseSmoothTriangleClause(clause),
             "parallelogram" => ParseParallelogramClause(clause),

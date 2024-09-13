@@ -94,6 +94,9 @@ public partial class LanguageParser
                 case "torus":
                     resolver.SurfaceResolvers.Add(ParseTorusClause(clause));
                     break;
+                case "extrusion":
+                    resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
+                    break;
                 case "triangle":
                     resolver.SurfaceResolvers.Add(ParseTriangleClause(clause));
                     break;
