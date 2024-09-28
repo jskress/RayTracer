@@ -1,11 +1,11 @@
 using RayTracer.Basics;
-using RayTracer.Graphics;
+using RayTracer.Core;
 
 namespace RayTracer.Geometry;
 
 /// <summary>
 /// This is the base class for a surface that is used to render a general path segment.
-/// It is assumed that the path segment is in the X/Z plane.
+/// It is assumed that the path segment is on the X/Z plane.
 /// </summary>
 public abstract class PathSurface
 {
@@ -30,48 +30,27 @@ public abstract class PathSurface
     /// intersects this path surface.
     /// </summary>
     /// <param name="ray">The ray to test.</param>
-    /// <returns>A tuple containing the intersection distance and normal vector.  If the
-    /// ray doesn't intersect the surface, the distance will be <c>NaN</c> and the normal
-    /// will be <c>null</c>.</returns>
-    public abstract (double, Vector) GetIntersection(Ray ray);
-}
-
-/// <summary>
-/// This class represents the surface for a linear path segment.
-/// </summary>
-public class LinearPathSurface : PathSurface
-{
-    private readonly Parallelogram _parallelogram;
-
-    public LinearPathSurface(LinearPathSegment segment, double minimumY, double maximumY)
-        : base(minimumY, maximumY)
-    {
-        Point point0 = new Point(segment.Points[0].X, minimumY, segment.Points[0].Y);
-        Point point1 = new Point(segment.Points[1].X, minimumY, segment.Points[1].Y);
-        Point point2 = new Point(segment.Points[0].X, maximumY, segment.Points[0].Y);
-
-        _parallelogram = new Parallelogram
-        {
-            Point = point0,
-            Side1 = point1 - point0,
-            Side2 = point2 - point0
-        };
-    }
+    /// <returns>An array of the intersection distance and normal vector pairs.
+    /// If the ray doesn't intersect the surface, the array will be <c>null</c>.</returns>
+    public abstract SimpleIntersection[] GetIntersection(Ray ray);
 
     /// <summary>
-    /// This method is used to locate the intersection point, if any, where the given ray
-    /// intersects this path surface.
+    /// This is a helper method that will take a point on the X/Z plane and projects it
+    /// up to the given ray to find the distance from the ray's origin to the point of
+    /// intersection.
+    /// If the intersection occurs either above or below the surface, then <c>NaN</c>
+    /// will be returned. 
     /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <returns>A tuple containing the intersection distance and normal vector.  If the
-    /// ray doesn't intersect the surface, the distance will be <c>NaN</c> and the normal
-    /// will be <c>null</c>.</returns>
-    public override (double, Vector) GetIntersection(Ray ray)
+    /// <param name="ray">The ray along which the distance is required.</param>
+    /// <param name="point">The point at which the ray, projected on to the X/Z plane,
+    /// intersects the surface.</param>
+    /// <returns>The distance along the ray where the intersection happens, or <c>NaN</c>,
+    /// if the intersection is too low or too high for this surface.</returns>
+    protected double GetRayDistance(Ray ray, TwoDPoint point)
     {
-        double intersection = _parallelogram.GetIntersection(ray);
-        
-        return double.IsNaN(intersection)
-            ? (intersection, null)
-            : (intersection, _parallelogram.SurfaceNormaAt(null, null));
+         double distance = (point.X - ray.Origin.X) / ray.Direction.X;
+         double y = ray.Origin.Y + distance * ray.Direction.Y;
+         
+         return y < MinimumY || y > MaximumY ? double.NaN : distance;
     }
 }

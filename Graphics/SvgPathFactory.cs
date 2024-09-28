@@ -1,7 +1,7 @@
 namespace RayTracer.Graphics;
 
 /// <summary>
-/// This class provides the work of parsing a standard SVG path string and produce a
+/// This class provides the work of parsing a standard SVG path string and produces a
 /// <see cref="GeneralPath"/> from it.
 /// </summary>
 public class SvgPathFactory
@@ -83,6 +83,18 @@ public class SvgPathFactory
                 break;
             case 'v':
                 ParseRelativeVerticalLineTo();
+                break;
+            case 'Q':
+                ParseQuadTo();
+                break;
+            case 'q':
+                ParseRelativeQuadTo();
+                break;
+            case 'T':
+                ParseSmoothQuadTo();
+                break;
+            case 't':
+                ParseRelativeSmoothQuadTo();
                 break;
             case 'Z':
             case 'z':
@@ -176,6 +188,46 @@ public class SvgPathFactory
     }
 
     /// <summary>
+    /// This method parses the absolute "quad curve to" command.
+    /// </summary>
+    private void ParseQuadTo()
+    {
+        double[] coordinates = ParseNumbers(4);
+
+        _path.QuadTo(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
+    }
+
+    /// <summary>
+    /// This method parses the relative "quad to" command.
+    /// </summary>
+    private void ParseRelativeQuadTo()
+    {
+        double[] coordinates = ParseNumbers(4);
+
+        _path.RelativeQuadTo(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
+    }
+
+    /// <summary>
+    /// This method parses the absolute "smooth quad curve to" command.
+    /// </summary>
+    private void ParseSmoothQuadTo()
+    {
+        double[] coordinates = ParseNumbers(2);
+
+        _path.SmoothQuadTo(coordinates[0], coordinates[1]);
+    }
+
+    /// <summary>
+    /// This method parses the relative "quad to" command.
+    /// </summary>
+    private void ParseRelativeSmoothQuadTo()
+    {
+        double[] coordinates = ParseNumbers(2);
+
+        _path.RelativeSmoothQuadTo(coordinates[0], coordinates[1]);
+    }
+
+    /// <summary>
     /// This method is used to parse a series of numbers from the path spec.
     /// </summary>
     /// <param name="count">The number of numbers that need to be parsed.</param>
@@ -243,15 +295,15 @@ public class SvgPathFactory
     /// Access the current character in the path spec.  If the end of the spec has been
     /// reached, the <c>null</c> character is returned.
     /// </summary>
-    /// <returns>The current character form the path spec.</returns>
+    /// <returns>The current character from the path spec.</returns>
     private char Char()
     {
         return _cp < _pathSpec.Length ? _pathSpec[_cp] : '\0';
     }
 
     /// <summary>
-    /// This method is used to test whether there is still text to be parsed.  It consumes
-    /// any leading whitespace in the process.
+    /// This method is used to test whether there is any more text to be parsed.
+    /// It consumes any leading whitespace in the process.
     /// </summary>
     /// <returns><c>true</c>, if there is more text to parse, or <c>false</c>, if not.</returns>
     private bool MoreToParse()

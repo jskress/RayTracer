@@ -57,6 +57,7 @@ public class Extrusion : ExtrudedSurface
         return segment switch
         {
             LinearPathSegment line => new LinearPathSurface(line, MinimumY, MaximumY),
+            QuadPathSegment quad => new QuadPathSurface(quad, MinimumY, MaximumY),
             _ => throw new NotSupportedException()
         };
     }
@@ -75,13 +76,11 @@ public class Extrusion : ExtrudedSurface
             AddCapIntersections(ray, intersections, _bottom);
         }
 
-        foreach (PathSurface surface in _surfaces)
-        {
-            (double t, Vector normal) = surface.GetIntersection(ray);
-
-            if (!double.IsNaN(t))
-                intersections.Add(new PrecomputedNormalIntersection(this, t, normal));
-        }
+        intersections.AddRange(_surfaces.Select(surface => surface.GetIntersection(ray))
+            .Where(intersectionData => intersectionData != null)
+            .SelectMany(intersectionData => intersectionData)
+            .Where(intersectionData => intersectionData != null)
+            .Select(data => data.AsIntersection(this)));
     }
 
     /// <summary>

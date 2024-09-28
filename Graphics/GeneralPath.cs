@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 
 namespace RayTracer.Graphics;
@@ -69,6 +70,7 @@ public class GeneralPath
     /// <param name="point">The point to add to the current location to make the final
     /// location to move to.</param>
     /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public GeneralPath RelativeMoveTo(TwoDPoint point)
     {
         return MoveTo(_cp + point);
@@ -118,6 +120,7 @@ public class GeneralPath
     /// <param name="point">The point to add to the current location to make the final
     /// location to draw a line to.</param>
     /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public GeneralPath RelativeLineTo(TwoDPoint point)
     {
         return LineTo(_cp + point);
@@ -183,6 +186,105 @@ public class GeneralPath
     }
 
     /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPointX">The X coordinate of the control point that governs the curve.</param>
+    /// <param name="controlPointY">The Y coordinate of the control point that governs the curve.</param>
+    /// <param name="x">The X coordinate to draw a quad curve to.</param>
+    /// <param name="y">The Y coordinate to draw a quad curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath QuadTo(double controlPointX, double controlPointY, double x, double y)
+    {
+        return QuadTo(new TwoDPoint(controlPointX, controlPointY), new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPointX">The X coordinate of the control point that governs the curve.</param>
+    /// <param name="controlPointY">The Y coordinate of the control point that governs the curve.</param>
+    /// <param name="x">The relative X coordinate to draw a quad curve to.</param>
+    /// <param name="y">The relative Y coordinate to draw a quad curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath RelativeQuadTo(double controlPointX, double controlPointY, double x, double y)
+    {
+        return RelativeQuadTo(new TwoDPoint(controlPointX, controlPointY), new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPoint">The control point that governs the curve.</param>
+    /// <param name="point">The point to add a quadratic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath RelativeQuadTo(TwoDPoint controlPoint, TwoDPoint point)
+    {
+        return QuadTo(_cp + controlPoint, _cp + point);
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// quad segment.
+    /// </summary>
+    /// <param name="x">The X coordinate to draw a smooth quad curve to.</param>
+    /// <param name="y">The Y coordinate to draw a smooth quad to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath SmoothQuadTo(double x, double y)
+    {
+        return SmoothQuadTo(new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// quad segment.
+    /// </summary>
+    /// <param name="x">The relative X coordinate to draw a smooth quad curve to.</param>
+    /// <param name="y">The relative Y coordinate to draw a smooth quad to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath RelativeSmoothQuadTo(double x, double y)
+    {
+        return RelativeSmoothQuadTo(new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// quad segment.
+    /// </summary>
+    /// <param name="point">The point to add a smooth quadratic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath RelativeSmoothQuadTo(TwoDPoint point)
+    {
+        return SmoothQuadTo(_cp + point);
+    }
+
+    /// <summary>
+    /// This method is used to draw a quadratic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// quad segment.
+    /// </summary>
+    /// <param name="point">The point to add a quadratic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath SmoothQuadTo(TwoDPoint point)
+    {
+        if (Segments.Last() is not QuadPathSegment)
+            throw new Exception("A smooth quad path must follow a previous quad path.");
+
+        TwoDPoint previousControlPoint = Segments.Last().Points[1];
+        TwoDPoint delta = _cp - previousControlPoint;
+
+        return QuadTo(_cp + delta, point);
+    }
+
+    /// <summary>
     /// This method is used to add a quadratic Bézier curve to the current point to the path.
     /// </summary>
     /// <param name="controlPoint">The control point that governs the curve.</param>
@@ -242,7 +344,7 @@ public class GeneralPath
     public bool Contains(TwoDPoint point)
     {
         int count = Segments
-            .SelectMany(segment => segment.XIntersectionsWith(point.Y))
+            .SelectMany(segment => segment.XIntersectionsWith(point))
             .Count(x => point.X <= x);
 
         return count % 2 == 1;

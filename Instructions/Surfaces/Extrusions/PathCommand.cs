@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Terms;
@@ -38,17 +39,18 @@ public class PathCommand
     /// <param name="path">The path to apply the command to.</param>
     private void ApplyCommand(Variables variables, GeneralPath path)
     {
-        double[] numbers = _terms
-            .Select(term => term.GetValue<double>(variables))
-            .ToArray();
+        TwoDPoint[] points = GetPoints(variables);
 
         switch (_commandType)
         {
             case PathCommandType.MoveTo:
-                path.MoveTo(numbers[0], numbers[1]);
+                path.MoveTo(points[0]);
                 break;
             case PathCommandType.LineTo:
-                path.LineTo(numbers[0], numbers[1]);
+                path.LineTo(points[0]);
+                break;
+            case PathCommandType.QuadTo:
+                path.QuadTo(points[0], points[1]);
                 break;
             case PathCommandType.Close:
                 path.ClosePath();
@@ -57,6 +59,27 @@ public class PathCommand
             default:
                 throw new ArgumentOutOfRangeException($"Unknown path command type: {_commandType}.");
         }
+    }
+
+    /// <summary>
+    /// This method is used to evaluate our list of terms into a list of points.  Each
+    /// term evaluates to a double, each two of which are paired up to a point.
+    /// </summary>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <returns>The list of points our terms evaluate to.</returns>
+    private TwoDPoint[] GetPoints(Variables variables)
+    {
+        TwoDPoint[] points = new TwoDPoint[_terms.Length / 2];
+
+        for (int index = 0; index < _terms.Length; index += 2)
+        {
+            double x = _terms[index].GetValue<double>(variables);
+            double y = _terms[index + 1].GetValue<double>(variables);
+            
+            points[index / 2] = new TwoDPoint(x, y);
+        }
+
+        return points;
     }
 
     /// <summary>
