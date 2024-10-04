@@ -47,36 +47,24 @@ extrusion {
         line to -5, 0
         line to -3, -5
         line to 3, -5
-        // line to 5, 0
         quad 5, -5 to 5, 0
         close
  	}
- 	// open
 	material { pigment LimeGreen }
 }
 
-/*
-cylinder {
+extrusion {
 	min Y 0
 	max Y 1
-	material { pigment Red }
-	scale [0.1, 1, 0.1]
-	translate [3, 0, -5]
+	path {
+        move to 3, 5
+        line to -3, 5
+        line to -5, 0
+        line to -3, -5
+        line to 3, -5
+        curve 4, -5, 4, 0 to 5, 0
+        close
+ 	}
+	material { pigment Yellow }
+	translate [-1, 1.4, 1]
 }
-
-cylinder {
-	min Y 0
-	max Y 1
-	material { pigment Green }
-	scale [0.1, 1, 0.1]
-	translate [5, 0, -5]
-}
-
-cylinder {
-	min Y 0
-	max Y 1
-	material { pigment Blue }
-	scale [0.1, 1, 0.1]
-	translate [5, 0, 0]
-}
-*/

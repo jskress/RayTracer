@@ -58,6 +58,7 @@ public class Extrusion : ExtrudedSurface
         {
             LinearPathSegment line => new LinearPathSurface(line, MinimumY, MaximumY),
             QuadPathSegment quad => new QuadPathSurface(quad, MinimumY, MaximumY),
+            CubicPathSegment cubic => new CubicPathSurface(cubic, MinimumY, MaximumY),
             _ => throw new NotSupportedException()
         };
     }

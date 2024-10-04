@@ -302,6 +302,136 @@ public class GeneralPath
     }
 
     /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPoint1X">The X coordinate of the first control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint1Y">The Y coordinate of the first control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2X">The X coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2Y">The Y coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="x">The X coordinate to draw a cubic curve to.</param>
+    /// <param name="y">The Y coordinate to draw a cubic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath CubicTo(
+        double controlPoint1X, double controlPoint1Y, double controlPoint2X, double controlPoint2Y,
+        double x, double y)
+    {
+        return CubicTo(
+            new TwoDPoint(controlPoint1X, controlPoint1Y), new TwoDPoint(controlPoint2X, controlPoint2Y),
+            new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPoint1X">The X coordinate of the first control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint1Y">The Y coordinate of the first control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2X">The X coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2Y">The Y coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="x">The relative X coordinate to draw a cubic curve to.</param>
+    /// <param name="y">The relative Y coordinate to draw a cubic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath RelativeCubicTo(
+        double controlPoint1X, double controlPoint1Y, double controlPoint2X, double controlPoint2Y,
+        double x, double y)
+    {
+        return RelativeCubicTo(
+            new TwoDPoint(controlPoint1X, controlPoint1Y), new TwoDPoint(controlPoint2X, controlPoint2Y),
+            new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point.
+    /// </summary>
+    /// <param name="controlPoint1">The first control point that governs the curve.</param>
+    /// <param name="controlPoint2">The second control point that governs the curve.</param>
+    /// <param name="point">The point to add a cubic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath RelativeCubicTo(TwoDPoint controlPoint1, TwoDPoint controlPoint2, TwoDPoint point)
+    {
+        return CubicTo(_cp + controlPoint1, _cp + controlPoint2, _cp + point);
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// cubic segment.
+    /// </summary>
+    /// <param name="controlPoint2X">The X coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2Y">The Y coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="x">The X coordinate to draw a smooth cubic curve to.</param>
+    /// <param name="y">The Y coordinate to draw a smooth cubic to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath SmoothCubicTo(double controlPoint2X, double controlPoint2Y, double x, double y)
+    {
+        return SmoothCubicTo(new TwoDPoint(controlPoint2X, controlPoint2Y), new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// cubic segment.
+    /// </summary>
+    /// <param name="controlPoint2X">The X coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="controlPoint2Y">The Y coordinate of the second control point that governs
+    /// the curve.</param>
+    /// <param name="x">The relative X coordinate to draw a smooth cubic curve to.</param>
+    /// <param name="y">The relative Y coordinate to draw a smooth cubic to.</param>
+    /// <returns>This object, for fluency.</returns>
+    public GeneralPath RelativeSmoothCubicTo(double controlPoint2X, double controlPoint2Y, double x, double y)
+    {
+        return RelativeSmoothCubicTo(new TwoDPoint(controlPoint2X, controlPoint2Y), new TwoDPoint(x, y));
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// cubic segment.
+    /// </summary>
+    /// <param name="controlPoint2">The second control point that governs the curve.</param>
+    /// <param name="point">The point to add a smooth cubic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath RelativeSmoothCubicTo(TwoDPoint controlPoint2, TwoDPoint point)
+    {
+        return SmoothCubicTo(_cp + controlPoint2, _cp + point);
+    }
+
+    /// <summary>
+    /// This method is used to draw a cubic Bézier curve from the current point to a new
+    /// point, deriving the control point from the previous segment, which must be a
+    /// cubic segment.
+    /// </summary>
+    /// <param name="controlPoint2">The second control point that governs the curve.</param>
+    /// <param name="point">The point to add a cubic curve to.</param>
+    /// <returns>This object, for fluency.</returns>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public GeneralPath SmoothCubicTo(TwoDPoint controlPoint2, TwoDPoint point)
+    {
+        if (Segments.Last() is not CubicPathSegment)
+            throw new Exception("A smooth cubic path must follow a previous cubic path.");
+
+        TwoDPoint previousControlPoint = Segments.Last().Points[1];
+        TwoDPoint delta = _cp - previousControlPoint;
+
+        return CubicTo(_cp + delta, controlPoint2, point);
+    }
+
+    /// <summary>
     /// This method is used to add a cubic Bézier curve to the current point to the path.
     /// </summary>
     /// <param name="controlPoint1">The first control point that governs the curve.</param>

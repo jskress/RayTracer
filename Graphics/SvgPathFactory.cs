@@ -96,6 +96,18 @@ public class SvgPathFactory
             case 't':
                 ParseRelativeSmoothQuadTo();
                 break;
+            case 'C':
+                ParseCurveTo();
+                break;
+            case 'c':
+                ParseRelativeCurveTo();
+                break;
+            case 'S':
+                ParseSmoothCubicTo();
+                break;
+            case 's':
+                ParseRelativeSmoothCubicTo();
+                break;
             case 'Z':
             case 'z':
                 _path.ClosePath();
@@ -225,6 +237,52 @@ public class SvgPathFactory
         double[] coordinates = ParseNumbers(2);
 
         _path.RelativeSmoothQuadTo(coordinates[0], coordinates[1]);
+    }
+
+    /// <summary>
+    /// This method parses the absolute "cubic curve to" command.
+    /// </summary>
+    private void ParseCurveTo()
+    {
+        double[] coordinates = ParseNumbers(6);
+
+        _path.CubicTo(
+            coordinates[0], coordinates[1], coordinates[2], coordinates[3],
+            coordinates[4], coordinates[5]);
+    }
+
+    /// <summary>
+    /// This method parses the relative "curve to" command.
+    /// </summary>
+    private void ParseRelativeCurveTo()
+    {
+        double[] coordinates = ParseNumbers(6);
+
+        _path.RelativeCubicTo(
+            coordinates[0], coordinates[1], coordinates[2], coordinates[3],
+            coordinates[4], coordinates[5]);
+    }
+
+    /// <summary>
+    /// This method parses the absolute "smooth cubic curve to" command.
+    /// </summary>
+    private void ParseSmoothCubicTo()
+    {
+        double[] coordinates = ParseNumbers(4);
+
+        _path.SmoothCubicTo(
+            coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
+    }
+
+    /// <summary>
+    /// This method parses the relative "cubic to" command.
+    /// </summary>
+    private void ParseRelativeSmoothCubicTo()
+    {
+        double[] coordinates = ParseNumbers(4);
+
+        _path.RelativeSmoothCubicTo(
+            coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
     }
 
     /// <summary>

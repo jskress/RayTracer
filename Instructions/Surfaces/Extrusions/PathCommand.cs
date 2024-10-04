@@ -52,6 +52,9 @@ public class PathCommand
             case PathCommandType.QuadTo:
                 path.QuadTo(points[0], points[1]);
                 break;
+            case PathCommandType.CurveTo:
+                path.CubicTo(points[0], points[1], points[2]);
+                break;
             case PathCommandType.Close:
                 path.ClosePath();
                 break;
