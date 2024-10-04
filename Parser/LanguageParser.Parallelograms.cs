@@ -14,11 +14,11 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to handle the beginning of a triangle block.
     /// </summary>
-    private void HandleStartRhombusClause(Clause clause)
+    private void HandleStartParallelogramClause(Clause clause)
     {
-        VerifyDefaultSceneUsage(clause, "Rhombus");
+        VerifyDefaultSceneUsage(clause, "Parallelogram");
 
-        RhombusResolver resolver = ParseRhombusClause(clause);
+        ParallelogramResolver resolver = ParseParallelogramClause(clause);
 
         _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
         {
@@ -28,23 +28,23 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to create the instruction set from a rhombus block.
+    /// This method is used to create the instruction set from a parallelogram block.
     /// </summary>
-    private RhombusResolver ParseRhombusClause(Clause clause)
+    private ParallelogramResolver ParseParallelogramClause(Clause clause)
     {
         return GetSurfaceResolver(
-            clause, () => ParseObjectResolver<RhombusResolver>(
-                "rhombusEntryClause", HandleRhombusEntryClause),
-            "rhombusEntryClause", HandleRhombusEntryClause);
+            clause, () => ParseObjectResolver<ParallelogramResolver>(
+                "parallelogramEntryClause", HandleParallelogramEntryClause),
+            "parallelogramEntryClause", HandleParallelogramEntryClause);
     }
 
     /// <summary>
-    /// This method is used to handle an item clause of a rhombus block.
+    /// This method is used to handle an item clause of a parallelogram block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    private void HandleRhombusEntryClause(Clause clause)
+    private void HandleParallelogramEntryClause(Clause clause)
     {
-        RhombusResolver resolver = (RhombusResolver) _context.CurrentTarget;
+        ParallelogramResolver resolver = (ParallelogramResolver) _context.CurrentTarget;
 
         if (clause == null) // We must have hit a transform property...
             resolver.TransformResolver = ParseTransformClause();
@@ -60,7 +60,7 @@ public partial class LanguageParser
                     resolver.Side2Resolver = new TermResolver<Vector> { Term = clause.Term(1) };
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "rhombus");
+                    HandleSurfaceClause(clause, resolver, "parallelogram");
                     break;
             }
         }

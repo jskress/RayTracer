@@ -35,6 +35,16 @@ public class Group : Surface
     }
 
     /// <summary>
+    /// This method is called once prior to rendering to give the surface a chance to
+    /// perform any expensive precomputing that will help ray/intersection tests go faster.
+    /// </summary>
+    public override void PrepareForRendering()
+    {
+        foreach (Surface surface in Surfaces)
+            surface.PrepareForRendering();
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,
     /// if so, where.
     /// </summary>

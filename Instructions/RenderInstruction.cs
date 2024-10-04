@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -54,6 +55,10 @@ public class RenderInstruction : Instruction
     {
         Scene scene = GetScene(variables);
         Camera camera = GetCamera(scene, variables);
+
+        // Give each surface a chance to do any precomputing needed.
+        foreach (Surface surface in scene.Surfaces)
+            surface.PrepareForRendering();
 
         EnsureMaterials(scene.Surfaces);
  

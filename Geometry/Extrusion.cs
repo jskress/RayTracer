@@ -10,7 +10,58 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class Extrusion : ExtrudedSurface
 {
+    /// <summary>
+    /// This attribute holds the path that represents the outline of the extrusion in the
+    /// X/Z plane.
+    /// </summary>
     public GeneralPath Path { get; set; }
+
+    private readonly List<PathSurface> _surfaces = [];
+
+    private Parallelogram _top;
+    private Parallelogram _bottom;
+
+    /// <summary>
+    /// This method is called once prior to rendering to give the surface a chance to
+    /// perform any expensive precomputing that will help ray/intersection tests go faster.
+    /// </summary>
+    public override void PrepareForRendering()
+    {
+        _surfaces.Clear();
+        _surfaces.AddRange(Path.Segments.Select(ToSurface));
+
+        if (Closed)
+        {
+            _top = new Parallelogram
+            {
+                Point = new Point(Path.MinX, MaximumY, Path.MinY),
+                Side1 = new Vector(Path.MaxX - Path.MinX, 0, 0),
+                Side2 = new Vector(0, 0, Path.MaxY - Path.MinY)
+            };
+            _bottom = new Parallelogram
+            {
+                Point = new Point(Path.MinX, MinimumY, Path.MinY),
+                Side1 = new Vector(Path.MaxX - Path.MinX, 0, 0),
+                Side2 = new Vector(0, 0, Path.MaxY - Path.MinY)
+            };
+        }
+    }
+
+    /// <summary>
+    /// This method is used to convert a path segment into its representative surface.
+    /// </summary>
+    /// <param name="segment">The segment to convert.</param>
+    /// <returns>The segment as a surface.</returns>
+    private PathSurface ToSurface(PathSegment segment)
+    {
+        return segment switch
+        {
+            LinearPathSegment line => new LinearPathSurface(line, MinimumY, MaximumY),
+            QuadPathSegment quad => new QuadPathSurface(quad, MinimumY, MaximumY),
+            CubicPathSegment cubic => new CubicPathSurface(cubic, MinimumY, MaximumY),
+            _ => throw new NotSupportedException()
+        };
+    }
 
     /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,
@@ -20,11 +71,17 @@ public class Extrusion : ExtrudedSurface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        AddCapIntersections(ray, intersections, MinimumY);
-        AddCapIntersections(ray, intersections, MaximumY);
+        if (Closed)
+        {
+            AddCapIntersections(ray, intersections, _top);
+            AddCapIntersections(ray, intersections, _bottom);
+        }
 
-        foreach (PathSegment segment in Path.Segments)
-            segment.AddIntersections(this, ray, intersections);
+        intersections.AddRange(_surfaces.Select(surface => surface.GetIntersection(ray))
+            .Where(intersectionData => intersectionData != null)
+            .SelectMany(intersectionData => intersectionData)
+            .Where(intersectionData => intersectionData != null)
+            .Select(data => data.AsIntersection(this)));
     }
 
     /// <summary>
@@ -33,17 +90,19 @@ public class Extrusion : ExtrudedSurface
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add intersections to.</param>
-    /// <param name="height">The height of the cap to test.</param>
-    private void AddCapIntersections(Ray ray, List<Intersection> intersections, double height)
+    /// <param name="cap">The parallelogram we are suing for a cap.</param>
+    private void AddCapIntersections(Ray ray, List<Intersection> intersections, Parallelogram cap)
     {
-        double k = (height - ray.Origin.Y) / ray.Direction.Y;
-        TwoDPoint point = new TwoDPoint(
-            ray.Origin.X + k * ray.Direction.X,
-            ray.Origin.Z + k * ray.Direction.Z
-        );
+        double intersection = cap.GetIntersection(ray);
 
-        if (Path.Contains(point))
-            intersections.Add(new Intersection(this, k / ray.Direction.Magnitude));
+        if (!double.IsNaN(intersection))
+        {
+            Point point = ray.At(intersection);
+            TwoDPoint twoDPoint = new TwoDPoint(point.X, point.Z);
+
+            if (Path.Contains(twoDPoint))
+                intersections.Add(new Intersection(this, intersection));
+        }
     }
 
     /// <summary>
@@ -56,20 +115,10 @@ public class Extrusion : ExtrudedSurface
     /// <returns>The normal to the surface at the given point.</returns>
     public override Vector SurfaceNormaAt(Point point, Intersection intersection)
     {
-        if (intersection is PathSegmentIntersection segmentIntersection)
-        {
-            PathSegment segment = segmentIntersection.Segment;
-            double distance = intersection.Distance;
-
-            return new Vector(
-                distance * (3.0 * segment.A.Y * distance + 2.0 * segment.B.Y) + segment.C.Y,
-                0,
-                -(distance * (3.0 * segment.A.X * distance + 2.0 * segment.B.X) + segment.C.X)
-            );
-        }
-
-        return point.Y < MinimumY + (MaximumY - MinimumY) / 2
-            ? Directions.Up
-            : Directions.Down;
+        return intersection is PrecomputedNormalIntersection precomputed
+            ? precomputed.PrecomputedNormal
+            : point.Y < MinimumY + (MaximumY - MinimumY) / 2
+                ? Directions.Down
+                : Directions.Up;
     }
 }

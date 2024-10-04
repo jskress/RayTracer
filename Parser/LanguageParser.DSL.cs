@@ -26,22 +26,23 @@ public partial class LanguageParser
 
         _keywords: 'agate', 'ambient', 'angles', 'apply', 'at', 'are', 'author',
             'background', 'banded', 'bits', 'blend', 'bouncing', 'bounded', 'boxed',
-            'brick', 'by', 'camera', 'channel', 'checker', 'color', 'comment', 'conic',
-            'context', 'copyright', 'csg', 'cube', 'cubic', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'description', 'difference', 'diffuse', 'disclaimer',
-            'false', 'field', 'file', 'from', 'gamma', 'gradient', 'granite', 'grayscale',
-            'group', 'height', 'hexagon', 'include', 'index', 'info', 'inherited',
-            'intersection', 'ior', 'layer', 'leopard', 'light', 'line', 'linear',
-            'location', 'look', 'material', 'matrix', 'max', 'maximum', 'min', 'minimum',
-            'mortar', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
-            'parallel', 'per', 'phased', 'pigment', 'pixel', 'planar', 'plane', 'point',
-            'points', 'radians', 'radii', 'reflective', 'refraction', 'render', 'report',
-            'rhombus', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow',
-            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
-            'source', 'specular', 'sphere', 'spherical', 'square', 'stripes', 'title',
-            'to', 'torus', 'transform', 'translate', 'transparency', 'triangle',
-            'triangular', 'true', 'turbulence', 'union', 'up', 'vector', 'view',
-            'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
+            'brick', 'by', 'camera', 'channel', 'checker', 'close', 'color', 'comment',
+            'conic', 'context', 'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder',
+            'cylindrical', 'degrees', 'dents', 'description', 'difference', 'diffuse',
+            'disclaimer', 'extrusion', 'false', 'field', 'file', 'from', 'gamma',
+            'gradient', 'granite', 'grayscale', 'group', 'height', 'hexagon', 'include',
+            'index', 'info', 'inherited', 'intersection', 'ior', 'layer', 'leopard',
+            'light', 'line', 'linear', 'location', 'look', 'material', 'matrix', 'max',
+            'maximum', 'min', 'minimum', 'mortar', 'move', 'named', 'no', 'noisy',
+            'normals', 'null', 'object', 'of', 'open', 'parallel', 'parallelogram',
+            'path', 'phased', 'pigment', 'pixel', 'planar', 'plane', 'point', 'points',
+            'quad', 'radians', 'radii', 'reflective', 'refraction', 'render', 'report',
+            'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear',
+            'shininess', 'sides', 'size', 'smooth', 'software', 'source', 'specular',
+            'sphere', 'spherical', 'square', 'stripes', 'svg', 'title', 'to', 'torus',
+            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true',
+            'turbulence', 'union', 'up', 'vector', 'view', 'warning', 'width', 'with',
+            'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -320,6 +321,49 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Extrusion clauses.
+        xyPairClause:
+        {
+            _expression > comma ?? 'Expecting a comma here.' > _expression
+        }
+        controlPointsClause:
+        {
+            xyPairClause > comma ?? 'Expecting a comma here.' > xyPairClause
+        }
+        moveToClause:
+        {
+            move > to ?? 'Expecting "to" to follow "move" here.' > xyPairClause
+        }
+        lineToClause:
+        {
+            line > to ?? 'Expecting "to" to follow "line" here.' > xyPairClause
+        }
+        quadToClause:
+        {
+            quad > xyPairClause > to ?? 'Expecting "to" to follow "quad" control point here.' > xyPairClause
+        }
+        curveToClause:
+        {
+            curve > controlPointsClause > to ?? 'Expecting "to" to follow "curve" control point here.' > xyPairClause
+        }
+        extrusionPathClause:
+        [
+            moveToClause | lineToClause | quadToClause | curveToClause | close |
+            { svg > _expression }
+        ] ?? 'Expecting a path command here.'
+        startExtrusionClause:
+        {
+            extrusion > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "extrusion" here.'
+        }
+        extrusionEntryClause:
+        [
+            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            extrudedSurfaceEntryClause
+        ]
+
         // Triangle clauses.
         startTriangleClause:
         {
@@ -352,15 +396,15 @@ public partial class LanguageParser
             triangleEntryClause
         ]
         
-        // Rhombus clauses.
-        startRhombusClause:
+        // Parallelogram clauses.
+        startParallelogramClause:
         {
-            rhombus > [
+            parallelogram > [
                 openBrace |
                 { [ _identifier | _keyword ] > openBrace{?} }
-            ] ?? 'Expecting an identifier or open brace to follow "rhombus" here.'
+            ] ?? 'Expecting an identifier or open brace to follow "parallelogram" here.'
         }
-        rhombusEntryClause:
+        parallelogramEntryClause:
         [
             { at > _expression } |
             { sides > _expression > comma ?? 'Expecting a comma here.' > _expression } |
@@ -408,9 +452,10 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startExtrusionClause => 'extrusion' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -445,9 +490,10 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startExtrusionClause => 'extrusion' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -472,9 +518,10 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startExtrusionClause => 'extrusion' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
-            startRhombusClause => 'rhombus' |
+            startParallelogramClause => 'parallelogram' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -503,8 +550,8 @@ public partial class LanguageParser
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
-                startConicClause | startTorusClause | startTriangleClause |
-                startSmoothTriangleClause | startRhombusClause | startObjectFileClause |
+                startConicClause | startTorusClause | startExtrusionClause | startTriangleClause |
+                startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
             ]
         }
@@ -525,9 +572,10 @@ public partial class LanguageParser
             startCylinderClause       => 'HandleStartCylinderClause' |
             startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
+            startExtrusionClause      => 'HandleStartExtrusionClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
-            startRhombusClause        => 'HandleStartRhombusClause' |
+            startParallelogramClause  => 'HandleStartParallelogramClause' |
             startObjectFileClause     => 'HandleStartObjectFileClause' |
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |

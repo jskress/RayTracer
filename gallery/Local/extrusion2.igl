@@ -1,5 +1,15 @@
 // A scene to test an extrusion.
 
+/*
+Proposed syntax:
+	move to 10, 10
+	line to 20, 30
+	quad 3, 4 to 40, 70
+	curve 10, 20, 100, 200 to 30, 30
+	close
+	svg '...'
+*/
+
 context {
 	parallel pixel scanner
 	angles are degrees
@@ -32,32 +42,29 @@ plane {
 
 extrusion {
 	path {
-		svg 'M0 11H3L3 0H5L5 11H8V12L4 16L0 12V11Z  M16 2H10V0H16V2Z  M10 4H14V6H10V4Z  M10 8H12V10H10V8Z'
+        move to 3, 5
+        line to -3, 5
+        line to -5, 0
+        line to -3, -5
+        line to 3, -5
+        quad 5, -5 to 5, 0
+        close
  	}
-	material { pigment Yellow }
-	scale 0.3
-	rotate X -90
-	rotate Y -45
-	translate [-2.5, 1, -2]
+	material { pigment LimeGreen }
 }
 
 extrusion {
+	min Y 0
+	max Y 1
 	path {
         move to 3, 5
         line to -3, 5
         line to -5, 0
         line to -3, -5
         line to 3, -5
-        line to 5, 0
-        close
-
-        move to 1, 3
-        line to 3, 0
-        line to 1, -3
-        line to -1, -3
-        line to -3, 0
-        line to -1, 3
+        curve 4, -5, 4, 0 to 5, 0
         close
  	}
-	material { pigment LimeGreen }
+	material { pigment Yellow }
+	translate [-1, 1.4, 1]
 }

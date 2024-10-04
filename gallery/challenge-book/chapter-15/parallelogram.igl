@@ -15,17 +15,40 @@ plane {
 	}
 }
 
-rhombus {
+parallelogram {
+	at [0, 0, 0]
+	sides [1, 0, 0], [0, 1, 0]
+	material {
+		pigment Green
+	}
+}
+
+parallelogram {
+	at [0, 1, 0]
+	sides [1, 0, 0], [0, 1, 0]
+	material {
+		pigment Red
+	}
+}
+
+parallelogram {
+	at [0, 0, 0.2]
+	sides [2, 0, 0], [0, 2, 0]
+	material {
+		pigment Yellow
+	}
+}
+
+parallelogram {
 	at [-1, 0.5, 0]
-	sides [0.5, 2, 0], [5, 0, 0] 
+	sides [5, 0, 0], [0.5, 2, 0] 
 	material {
 		pigment linear bouncing gradient {
 			[0, DeepSkyBlue, 1, LightSkyBlue]
 			scale 0.4
 		}
 	}
-	rotate X 42
 	rotate Y 25
-	translate X 3
-	translate Y 1.75
+	translate X -3
+	translate Z 5
 }

@@ -5,22 +5,22 @@ using RayTracer.Geometry;
 namespace RayTracer.Instructions.Surfaces;
 
 /// <summary>
-/// This class is used to resolve a rhombus value.
+/// This class is used to resolve a parallelogram value.
 /// </summary>
-public class RhombusResolver : SurfaceResolver<Rhombus>, IValidatable
+public class ParallelogramResolver : SurfaceResolver<Parallelogram>, IValidatable
 {
     /// <summary>
-    /// This property holds the resolver for the "anchor" point property on a rhombus.
+    /// This property holds the resolver for the "anchor" point property on a parallelogram.
     /// </summary>
     public Resolver<Point> PointResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the side 1 property on a rhombus.
+    /// This property holds the resolver for the side 1 property on a parallelogram.
     /// </summary>
     public Resolver<Vector> Side1Resolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the side 2 property on a rhombus.
+    /// This property holds the resolver for the side 2 property on a parallelogram.
     /// </summary>
     public Resolver<Vector> Side2Resolver { get; set; }
 
@@ -31,7 +31,7 @@ public class RhombusResolver : SurfaceResolver<Rhombus>, IValidatable
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="value">The value to update.</param>
-    protected override void SetProperties(RenderContext context, Variables variables, Rhombus value)
+    protected override void SetProperties(RenderContext context, Variables variables, Parallelogram value)
     {
         PointResolver.AssignTo(value, target => target.Point, context, variables);
         Side1Resolver.AssignTo(value, target => target.Side1, context, variables);
