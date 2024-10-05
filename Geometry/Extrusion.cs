@@ -25,7 +25,7 @@ public class Extrusion : ExtrudedSurface
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
-    public override void PrepareForRendering()
+    protected override void PrepareSurfaceForRendering()
     {
         _surfaces.Clear();
         _surfaces.AddRange(Path.Segments.Select(ToSurface));
@@ -45,6 +45,17 @@ public class Extrusion : ExtrudedSurface
                 Side2 = new Vector(0, 0, Path.MaxY - Path.MinY)
             };
         }
+    }
+
+    /// <summary>
+    /// This method is used to produce a default bounding box for this shape.
+    /// </summary>
+    /// <returns>A default bounding box, if any, for the surface.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        return new BoundingBox()
+            .Add(new Point(Path.MinX, MinimumY, Path.MinY))
+            .Add(new Point(Path.MaxX, MaximumY, Path.MaxY));
     }
 
     /// <summary>

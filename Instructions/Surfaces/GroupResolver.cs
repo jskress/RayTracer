@@ -17,11 +17,6 @@ public class GroupResolver : SurfaceResolver<Group>
     public GroupInterval GroupInterval { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the bounding box property of our group.
-    /// </summary>
-    public BoundingBoxResolver BoundingBoxResolver { get; set; }
-
-    /// <summary>
     /// This property holds the list of resolvers that will evaluate to the list of surfaces
     /// for our group.
     /// </summary>
@@ -50,15 +45,10 @@ public class GroupResolver : SurfaceResolver<Group>
 
         base.SetProperties(context, variables, value);
 
-        // Push our material to interested children, if we have one.  If not, this will
-        // be filled in by our parent, and so on...
+        // Push our material to interested children if we have any.
+        // If not, this will be filled in by our parent group, and so on...
         if (value.Material != null)
             SetMaterial(value.Surfaces, value.Material);
-        
-        // Now, roll up our bounding box.
-        SetBoundingBox(value);
-
-        BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
     }
 
     /// <summary>
@@ -86,41 +76,6 @@ public class GroupResolver : SurfaceResolver<Group>
     {
         foreach (Surface surface in surfaces)
             surface.SetMaterial(material);
-    }
-
-    /// <summary>
-    /// This is a helper method that will set the bounding box as needed, base on the
-    /// group's children.
-    /// </summary>
-    private static void SetBoundingBox(Group parent)
-    {
-        BoundingBox boundingBox = null;
-
-        foreach (Surface surface in parent.Surfaces)
-        {
-            switch (surface)
-            {
-                case Group group when boundingBox == null:
-                    boundingBox = group.BoundingBox;
-                    break;
-                case Group group:
-                    boundingBox.Add(group.BoundingBox);
-                    break;
-                case Triangle triangle:
-                {
-                    boundingBox ??= new BoundingBox();
-
-                    boundingBox.Add(triangle.Point1);
-                    boundingBox.Add(triangle.Point2);
-                    boundingBox.Add(triangle.Point3);
-                    break;
-                }
-            }
-        }
-
-        boundingBox?.Adjust();
-
-        parent.BoundingBox = boundingBox;
     }
 
     /// <summary>

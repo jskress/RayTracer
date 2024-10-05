@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Instructions;
@@ -36,6 +37,13 @@ public partial class LanguageParser
                 break;
             case "no.shadow":
                 resolver.NoShadowResolver = new LiteralResolver<bool> { Value = true };
+                break;
+            case "bounded.by":
+                resolver.BoundingBoxResolver = new BoundingBoxResolver
+                {
+                    FirstPointResolver = new TermResolver<Point>() { Term = term },
+                    SecondPointResolver = new TermResolver<Point>() { Term = clause.Term(1) }
+                };
                 break;
             case "transform":
                 resolver.TransformResolver = GetTransformResolver(clause);

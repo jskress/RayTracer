@@ -23,6 +23,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public Resolver<bool> NoShadowResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the bounding box property of our group.
+    /// </summary>
+    public BoundingBoxResolver BoundingBoxResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for our surface's transform.
     /// </summary>
     public TransformResolver TransformResolver { get; set; }
@@ -47,6 +52,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     {
         MaterialResolver.AssignTo(value, target => target.Material, context, variables);
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
+        BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 
         value.NoShadow |= context.SuppressAllShadows;

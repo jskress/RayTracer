@@ -1,6 +1,5 @@
 using Lex.Clauses;
 using Lex.Tokens;
-using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
@@ -99,13 +98,6 @@ public partial class LanguageParser
                     break;
                 case "group":
                     resolver.SurfaceResolvers.Add(ParseGroupClause(clause));
-                    break;
-                case "boundingBox":
-                    resolver.BoundingBoxResolver = new BoundingBoxResolver
-                    {
-                        FirstPointResolver = new TermResolver<Point>() { Term = clause.Term() },
-                        SecondPointResolver = new TermResolver<Point>() { Term = clause.Term(1) }
-                    };
                     break;
                 case "surface":
                     HandleSurfaceClause(clause, resolver, "CSG object");

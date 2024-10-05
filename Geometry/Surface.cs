@@ -9,7 +9,7 @@ namespace RayTracer.Geometry;
 public abstract class Surface : NamedThing
 {
     /// <summary>
-    /// This property holds a reference to the parent of the surface, if there is one.
+    /// This property holds a reference to the parent of the surface if there is one.
     /// </summary>
     public Surface Parent { get; set; }
 
@@ -22,6 +22,11 @@ public abstract class Surface : NamedThing
     /// This property suppresses shadow detection on this object.
     /// </summary>
     public bool NoShadow { get; set; }
+
+    /// <summary>
+    /// This property holds an optional bounding box for the group.
+    /// </summary>
+    public BoundingBox BoundingBox { get; set; }
 
     /// <summary>
     /// This property holds the transform for the surface for converting from world to
@@ -85,7 +90,32 @@ public abstract class Surface : NamedThing
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
-    public virtual void PrepareForRendering() {}
+    public void PrepareForRendering()
+    {
+        PrepareSurfaceForRendering();
+
+        BoundingBox ??= GetDefaultBoundingBox();
+
+        BoundingBox?.Expand();
+    }
+
+    /// <summary>
+    /// This method is called once prior to rendering to give the surface a chance to
+    /// perform any expensive precomputing that will help ray/intersection tests go faster.
+    /// </summary>
+    protected virtual void PrepareSurfaceForRendering() {}
+
+    /// <summary>
+    /// This method may be overridden to produce a default bounding box for this
+    /// shape.
+    /// If the user specified one, it will not be replaced and this method
+    /// will not be called.
+    /// </summary>
+    /// <returns>A default bounding box, if any, for the surface.</returns>
+    protected virtual BoundingBox GetDefaultBoundingBox()
+    {
+        return null;
+    }
 
     /// <summary>
     /// This method must be provided by subclasses to determine whether the given
@@ -95,7 +125,10 @@ public abstract class Surface : NamedThing
     /// <param name="intersections">The list to add any intersections to.</param>
     public void Intersect(Ray ray, List<Intersection> intersections)
     {
-        AddIntersections(InverseTransform.Transform(ray), intersections);
+        ray = InverseTransform.Transform(ray);
+
+        if (BoundingBox == null || BoundingBox.IsHitBy(ray))
+            AddIntersections(ray, intersections);
     }
 
     /// <summary>
@@ -107,7 +140,7 @@ public abstract class Surface : NamedThing
     public abstract void AddIntersections(Ray ray, List<Intersection> intersections);
 
     /// <summary>
-    /// This method calculate the normal for the surface at the specified point.
+    /// This method calculates the normal for the surface at the specified point.
     /// </summary>
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <param name="intersection">The intersection information.</param>
@@ -144,7 +177,7 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
-    /// This method handles converting a given normal from the surface's coordinate system
+    /// This method handles converting the given normal from the surface's coordinate system
     /// to the world's
     /// </summary>
     /// <param name="normal">The normal to convert.</param>

@@ -14,7 +14,7 @@ public class Cube : Surface
     /// This holds a bounding box that aligns with our own shape.  Our ray/intersection
     /// stuff is delegated to this.
     /// </summary>
-    private static readonly BoundingBox BoundingBox = new BoundingBox()
+    private static readonly BoundingBox OurShape = new BoundingBox()
         .Add(new Point(-1, -1, -1))
         .Add(new Point(1, 1, 1));
 
@@ -26,7 +26,7 @@ public class Cube : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        (double tMin, double tMax) = BoundingBox.GetIntersections(ray);
+        (double tMin, double tMax) = OurShape.GetIntersections(ray);
 
         if (tMin <= tMax)
         {

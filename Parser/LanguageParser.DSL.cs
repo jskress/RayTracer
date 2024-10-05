@@ -254,9 +254,15 @@ public partial class LanguageParser
             transform > [ _identifier | _keyword ] ?? 'Expecting an identifier to follow "transform" here.' >
             openBrace{?}
         }
+        boundedByClause:
+        {
+            bounded > by ?? 'Expecting "by" to follow "bounded" here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression
+        }
         surfaceEntryClause:
         [
-            namedClause | startMaterialClause | surfaceTransformClause | noShadowClause
+            namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
+            boundedByClause
         ]
         
         // Plane clause.
@@ -469,11 +475,6 @@ public partial class LanguageParser
             { [ _identifier | _keyword ] > assignment }{?} > intervalClause >
             { by > _expression }{?}
         }
-        boundedByClause:
-        {
-            bounded > by ?? 'Expecting "by" to follow "bounded" here.' > _expression >
-            comma ?? 'Expecting a comma here.' > _expression
-        }
         startGroupClause:
         {
             group > [
@@ -498,7 +499,6 @@ public partial class LanguageParser
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
-            boundedByClause => 'boundingBox' |
             surfaceEntryClause => 'surface'
         ]
 

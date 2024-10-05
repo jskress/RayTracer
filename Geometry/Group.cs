@@ -16,11 +16,6 @@ public class Group : Surface
     public List<Surface> Surfaces { get; } = [];
 
     /// <summary>
-    /// This property holds an optional bounding box for the group.
-    /// </summary>
-    public BoundingBox BoundingBox { get; set; }
-
-    /// <summary>
     /// This method is used to add a surface to the group.
     /// </summary>
     /// <param name="surface">The surface to add.</param>
@@ -38,10 +33,33 @@ public class Group : Surface
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
-    public override void PrepareForRendering()
+    protected override void PrepareSurfaceForRendering()
     {
         foreach (Surface surface in Surfaces)
             surface.PrepareForRendering();
+    }
+
+    /// <summary>
+    /// This method is used to produce a default bounding box for this shape.
+    /// </summary>
+    /// <returns>A default bounding box, if any, for the surface.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        BoundingBox box = new BoundingBox();
+
+        foreach (Surface surface in Surfaces)
+        {
+            if (surface.BoundingBox != null)
+                box.Add(surface.BoundingBox);
+            else if (surface is Triangle triangle)
+            {
+                box.Add(triangle.Point1);
+                box.Add(triangle.Point2);
+                box.Add(triangle.Point3);
+            }
+        }
+
+        return box.IsEmpty ? null : box;
     }
 
     /// <summary>
@@ -52,15 +70,6 @@ public class Group : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        if (BoundingBox != null)
-        {
-            (double tMin, double tMax) = BoundingBox.GetIntersections(ray);
-
-            // If we don't even intersect the bounding box, then don't try anything else.
-            if (tMin > tMax)
-                return;
-        }
-
         List<Intersection> ours = [];
 
         foreach (Surface surface in Surfaces)
