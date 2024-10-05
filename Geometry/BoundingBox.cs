@@ -9,6 +9,13 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class BoundingBox
 {
+    private const double Padding = 0.0001;
+
+    /// <summary>
+    /// This property notes whether the bounding box is empty or not.
+    /// </summary>
+    internal bool IsEmpty { get; private set; } = true;
+
     private double _xMin = double.MaxValue;
     private double _yMin = double.MaxValue;
     private double _zMin = double.MaxValue;
@@ -29,6 +36,8 @@ public class BoundingBox
         _yMax = Math.Max(_yMax, point.Y);
         _zMax = Math.Max(_zMax, point.Z);
 
+        IsEmpty = false;
+
         return this;
     }
 
@@ -47,6 +56,8 @@ public class BoundingBox
             _xMax = Math.Max(_xMax, other._xMax);
             _yMax = Math.Max(_yMax, other._yMax);
             _zMax = Math.Max(_zMax, other._zMax);
+
+            IsEmpty = false;
         }
     }
 
@@ -54,14 +65,28 @@ public class BoundingBox
     /// This method adjusts the extents of the bounding box by <c>Epsilon</c> to help
     /// make sure we don't miss any intersections.
     /// </summary>
-    public void Adjust()
+    public void Expand()
     {
-        _xMin -= DoubleExtensions.Epsilon;
-        _yMin -= DoubleExtensions.Epsilon;
-        _zMin -= DoubleExtensions.Epsilon;
-        _xMax += DoubleExtensions.Epsilon;
-        _yMax += DoubleExtensions.Epsilon;
-        _zMax += DoubleExtensions.Epsilon;
+        _xMin -= Padding;
+        _yMin -= Padding;
+        _zMin -= Padding;
+        _xMax += Padding;
+        _yMax += Padding;
+        _zMax += Padding;
+    }
+
+    /// <summary>
+    /// This method is used to test whether the given ray intersects with this
+    /// bounding box.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <returns><c>true</c>, if the ray intersects the bounding box, or <c>false</c>,
+    /// if not.</returns>
+    internal bool IsHitBy(Ray ray)
+    {
+        (double tMin, double tMax) = GetIntersections(ray);
+
+        return tMin <= tMax;
     }
 
     /// <summary>

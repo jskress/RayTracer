@@ -54,7 +54,7 @@ public class CsgSurface : Surface
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
-    public override void PrepareForRendering()
+    protected override void PrepareSurfaceForRendering()
     {
         Left.PrepareForRendering();
         Right.PrepareForRendering();
