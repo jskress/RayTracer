@@ -14,10 +14,10 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to handle the beginning of an extrusion block.
     /// </summary>
-    /// <param name="clause">The clause that starts the cylinder.</param>
+    /// <param name="clause">The clause that starts the extrusion.</param>
     private void HandleStartExtrusionClause(Clause clause)
     {
-        VerifyDefaultSceneUsage(clause, "Cylinder");
+        VerifyDefaultSceneUsage(clause, "Extrusion");
 
         ExtrusionResolver resolver = ParseExtrusionClause(clause);
 
@@ -31,7 +31,7 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from an extrusion block.
     /// </summary>
-    /// <param name="clause">The clause that starts the cylinder.</param>
+    /// <param name="clause">The clause that starts the extrusion.</param>
     private ExtrusionResolver ParseExtrusionClause(Clause clause)
     {
         return GetSurfaceResolver(

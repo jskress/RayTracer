@@ -39,9 +39,6 @@ public class CsgSurfaceResolver : SurfaceResolver<CsgSurface>, IValidatable
         SetChildren(value, surfaces);
 
         base.SetProperties(context, variables, value);
-
-        if (value.Material is not null)
-            value.SetMaterial(value.Material);
     }
 
     /// <summary>

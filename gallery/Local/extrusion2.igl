@@ -1,15 +1,5 @@
 // A scene to test an extrusion.
 
-/*
-Proposed syntax:
-	move to 10, 10
-	line to 20, 30
-	quad 3, 4 to 40, 70
-	curve 10, 20, 100, 200 to 30, 30
-	close
-	svg '...'
-*/
-
 context {
 	parallel pixel scanner
 	angles are degrees

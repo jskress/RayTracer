@@ -220,15 +220,18 @@ public abstract class Surface : NamedThing
     {
         Material ??= material;
 
-        if (this is Group group)
+        switch (this)
         {
-            foreach (Surface child in group.Surfaces)
-                child.SetMaterial(material);
-        }
-        else if (this is CsgSurface csgSurface)
-        {
-            csgSurface.Left.SetMaterial(material);
-            csgSurface.Right.SetMaterial(material);
+            case Group group:
+            {
+                foreach (Surface child in group.Surfaces)
+                    child.SetMaterial(material);
+                break;
+            }
+            case CsgSurface csgSurface:
+                csgSurface.Left.SetMaterial(material);
+                csgSurface.Right.SetMaterial(material);
+                break;
         }
     }
 }

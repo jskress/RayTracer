@@ -15,7 +15,7 @@ public abstract class PathSegment
     /// <summary>
     /// This property holds the set of points, if any, the segment needs.
     /// </summary>
-    internal TwoDPoint[] Points { get; }
+    internal TwoDPoint[] Points { get; private set; }
 
     protected PathSegment(params TwoDPoint[] points)
     {
@@ -23,10 +23,10 @@ public abstract class PathSegment
     }
 
     /// <summary>
-    /// This method is used to determine the intersection points in X of this segment along
-    /// the horizontal line at the given Y.
+    /// This method is used to reverse the order of the points in this segment.
     /// </summary>
-    /// <param name="point">A point on the line to find the intersections on.</param>
-    /// <returns>An array of intersection points, if any.</returns>
-    internal abstract double[] XIntersectionsWith(TwoDPoint point);
+    internal void Reverse()
+    {
+        Points = Points.Reverse().ToArray();
+    }
 }

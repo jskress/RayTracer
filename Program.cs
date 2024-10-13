@@ -1,7 +1,13 @@
 using CommandLine;
+using Newtonsoft.Json;
 using RayTracer;
 using RayTracer.Parser;
 using RayTracer.Renderer;
+
+JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+{
+    Formatting = Formatting.Indented
+};
 
 Parser.Default.ParseArguments<ProgramOptions>(args)
     .WithParsed(options =>

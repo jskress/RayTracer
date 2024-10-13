@@ -24,25 +24,27 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
 
-        _keywords: 'agate', 'ambient', 'angles', 'apply', 'at', 'are', 'author',
-            'background', 'banded', 'bits', 'blend', 'bouncing', 'bounded', 'boxed',
-            'brick', 'by', 'camera', 'channel', 'checker', 'close', 'color', 'comment',
-            'conic', 'context', 'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder',
-            'cylindrical', 'degrees', 'dents', 'description', 'difference', 'diffuse',
-            'disclaimer', 'extrusion', 'false', 'field', 'file', 'from', 'gamma',
-            'gradient', 'granite', 'grayscale', 'group', 'height', 'hexagon', 'include',
-            'index', 'info', 'inherited', 'intersection', 'ior', 'layer', 'leopard',
-            'light', 'line', 'linear', 'location', 'look', 'material', 'matrix', 'max',
-            'maximum', 'min', 'minimum', 'mortar', 'move', 'named', 'no', 'noisy',
-            'normals', 'null', 'object', 'of', 'open', 'parallel', 'parallelogram',
-            'path', 'phased', 'pigment', 'pixel', 'planar', 'plane', 'point', 'points',
-            'quad', 'radians', 'radii', 'reflective', 'refraction', 'render', 'report',
-            'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear',
+        _keywords: 'agate', 'alignment', 'ambient', 'angles', 'apply', 'at', 'are',
+            'author', 'background', 'banded', 'baseline', 'bits', 'black', 'blend', 'bold',
+            'bottom', 'bouncing', 'bounded', 'boxed', 'brick', 'by', 'camera', 'center',
+            'channel', 'checker', 'close', 'color', 'comment', 'conic', 'context',
+            'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
+            'degrees', 'dents', 'description', 'difference', 'diffuse', 'disclaimer',
+            'extrusion', 'false', 'field', 'file', 'font', 'from', 'gamma', 'gap', 
+            'gradient', 'granite', 'grayscale', 'group', 'height', 'hexagon', 'horizontal',
+            'include', 'index', 'info', 'inherited', 'intersection', 'ior', 'italic',
+            'layer', 'layout', 'left', 'leopard', 'light', 'line', 'linear', 'location',
+            'look', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum',
+            'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of',
+            'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pixel',
+            'planar', 'plane', 'point', 'points', 'position', 'quad', 'radians', 'radii',
+            'reflective', 'refraction', 'regular', 'render', 'report', 'right', 'rotate',
+            'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear',
             'shininess', 'sides', 'size', 'smooth', 'software', 'source', 'specular',
-            'sphere', 'spherical', 'square', 'stripes', 'svg', 'title', 'to', 'torus',
-            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true',
-            'turbulence', 'union', 'up', 'vector', 'view', 'warning', 'width', 'with',
-            'wrinkles', 'X', 'Y', 'Z'
+            'sphere', 'spherical', 'square', 'stripes', 'svg', 'text', 'thin', 'title',
+            'to', 'top', 'torus', 'transform', 'translate', 'transparency', 'triangle',
+            'triangular', 'true', 'turbulence', 'union', 'up', 'vector', 'vertical',
+            'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -370,6 +372,39 @@ public partial class LanguageParser
             extrudedSurfaceEntryClause
         ]
 
+        // Text clauses.
+        fontWeightClause:
+        [
+            thin | light | regular | medium | bold | black
+        ]
+        fontClause:
+        {
+            font > _expression > fontWeightClause{?} > italic{?}
+        }
+        textLayoutEntryClause:
+        [
+            { text > alignment ?? 'Expecting "alignment" to follow "text" here.' >
+                [ left | center | right | _expression ] } |
+            { horizontal > position ?? 'Expecting "position" to follow "horizontal" here.' >
+                [ left | center | right | _expression ] } |
+            { vertical > position ?? 'Expecting "position" to follow "vertical" here.' >
+                [ top | baseline | center | bottom | _expression ] } |
+            { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression }
+        ] ?? 'Expecting a text layout property here.'
+        startTextClause:
+        {
+            text > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "text" here.'
+        }
+        textEntryClause:
+        [
+            { text > _expression } | fontClause |
+            { layout > openBrace ?? 'Expecting an open brace after "layout" here.' } |
+            open | surfaceEntryClause
+        ]
+
         // Triangle clauses.
         startTriangleClause:
         {
@@ -459,6 +494,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startTextClause => 'text' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -492,6 +528,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startTextClause => 'text' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -519,6 +556,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startTextClause => 'text' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -550,9 +588,9 @@ public partial class LanguageParser
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
-                startConicClause | startTorusClause | startExtrusionClause | startTriangleClause |
-                startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
-                startObjectClause | startCsgClause | startGroupClause
+                startConicClause | startTorusClause | startExtrusionClause | startTextClause |
+                startTriangleClause | startSmoothTriangleClause | startParallelogramClause |
+                startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -573,6 +611,7 @@ public partial class LanguageParser
             startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
+            startTextClause           => 'HandleStartTextClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
             startParallelogramClause  => 'HandleStartParallelogramClause' |

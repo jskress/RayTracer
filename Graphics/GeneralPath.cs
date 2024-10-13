@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
+using SkiaSharp;
 
 namespace RayTracer.Graphics;
 
@@ -36,6 +37,8 @@ public class GeneralPath
     /// construction.
     /// </summary>
     internal double MaxY { get; private set; } = double.MinValue;
+
+    private readonly SKPath _skPath = new ();
 
     private TwoDPoint _subPathStart = TwoDPoint.Zero;
     private TwoDPoint _cp = TwoDPoint.Zero;
@@ -86,6 +89,8 @@ public class GeneralPath
         Add(point);
 
         _subPathStart = _cp = point;
+ 
+        _skPath.MoveTo(point.ToSkPoint());
 
         return this;
     }
@@ -181,6 +186,8 @@ public class GeneralPath
         Add(point);
 
         _cp = point;
+
+        _skPath.LineTo(point.ToSkPoint());
 
         return this;
     }
@@ -297,6 +304,8 @@ public class GeneralPath
         Add(point);
 
         _cp = point;
+
+        _skPath.QuadTo(controlPoint.ToSkPoint(), point.ToSkPoint());
 
         return this;
     }
@@ -447,6 +456,8 @@ public class GeneralPath
 
         _cp = point;
 
+        _skPath.CubicTo(controlPoint1.ToSkPoint(), controlPoint2.ToSkPoint(), point.ToSkPoint());
+
         return this;
     }
 
@@ -463,6 +474,8 @@ public class GeneralPath
             _subPathStart = _cp;
         }
 
+        _skPath.Close();
+
         return this;
     }
 
@@ -473,11 +486,7 @@ public class GeneralPath
     /// <returns><c>true</c>, if the path contains the point, or <c>false</c>, if not.</returns>
     public bool Contains(TwoDPoint point)
     {
-        int count = Segments
-            .SelectMany(segment => segment.XIntersectionsWith(point))
-            .Count(x => point.X <= x);
-
-        return count % 2 == 1;
+        return _skPath.Contains((float) point.X, (float) point.Y);
     }
 
     /// <summary>
@@ -490,5 +499,19 @@ public class GeneralPath
         MinY = Math.Min(MinY, point.Y);
         MaxX = Math.Max(MaxX, point.X);
         MaxY = Math.Max(MaxY, point.Y);
+    }
+
+    /// <summary>
+    /// This method is used to reverse the order of the segments in this path.
+    /// </summary>
+    /// <returns>This object, for fluency.</returns>
+    internal GeneralPath Reverse()
+    {
+        Segments.Reverse();
+
+        foreach (PathSegment segment in Segments)
+            segment.Reverse();
+
+        return this;
     }
 }

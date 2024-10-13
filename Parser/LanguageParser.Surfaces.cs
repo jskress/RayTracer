@@ -41,8 +41,8 @@ public partial class LanguageParser
             case "bounded.by":
                 resolver.BoundingBoxResolver = new BoundingBoxResolver
                 {
-                    FirstPointResolver = new TermResolver<Point>() { Term = term },
-                    SecondPointResolver = new TermResolver<Point>() { Term = clause.Term(1) }
+                    FirstPointResolver = new TermResolver<Point> { Term = term },
+                    SecondPointResolver = new TermResolver<Point> { Term = clause.Term(1) }
                 };
                 break;
             case "transform":
