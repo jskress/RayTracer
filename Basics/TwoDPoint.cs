@@ -1,3 +1,5 @@
+using SkiaSharp;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -6,6 +8,15 @@ namespace RayTracer.Basics;
 public record TwoDPoint(double X, double Y)
 {
     public static readonly TwoDPoint Zero = new (0, 0);
+
+    /// <summary>
+    /// This method creates a point for the SkiaSharp library from this point.
+    /// </summary>
+    /// <returns>This point, as a SkiaSharp point.</returns>
+    public SKPoint ToSkPoint()
+    {
+        return new SKPoint((float) X, (float) Y);
+    }
 
     /// <summary>
     /// This method is used to add two points together.

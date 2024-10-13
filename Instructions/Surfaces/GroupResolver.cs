@@ -44,11 +44,6 @@ public class GroupResolver : SurfaceResolver<Group>
         }
 
         base.SetProperties(context, variables, value);
-
-        // Push our material to interested children if we have any.
-        // If not, this will be filled in by our parent group, and so on...
-        if (value.Material != null)
-            SetMaterial(value.Surfaces, value.Material);
     }
 
     /// <summary>
@@ -64,18 +59,6 @@ public class GroupResolver : SurfaceResolver<Group>
             .Select(surface => surface.ResolveToSurface(context, variables))
             .ToList()
             .ForEach(surface => group.Add(surface));
-    }
-
-    /// <summary>
-    /// This is a helper method that will push the given material down to all descendents
-    /// who want it.  It will recurse as necessary.
-    /// </summary>
-    /// <param name="surfaces">The list of surfaces to apply the material to.</param>
-    /// <param name="material">The material to apply.</param>
-    internal static void SetMaterial(List<Surface> surfaces, Material material)
-    {
-        foreach (Surface surface in surfaces)
-            surface.SetMaterial(material);
     }
 
     /// <summary>

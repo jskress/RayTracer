@@ -37,9 +37,6 @@ public class ObjectFileResolver : SurfaceResolver<Group>, IValidatable
 
         SetProperties(context, variables, group);
 
-        if (group.Material is not null)
-            GroupResolver.SetMaterial(group.Surfaces, group.Material);
-
         return group;
     }
 

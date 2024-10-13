@@ -97,6 +97,9 @@ public partial class LanguageParser
                 case "extrusion":
                     resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
                     break;
+                case "text":
+                    resolver.SurfaceResolvers.Add(ParseTextClause(clause));
+                    break;
                 case "triangle":
                     resolver.SurfaceResolvers.Add(ParseTriangleClause(clause));
                     break;

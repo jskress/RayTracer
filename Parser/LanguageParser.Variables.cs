@@ -48,6 +48,7 @@ public partial class LanguageParser
             "conic" => ParseConicClause(clause),
             "torus" => ParseTorusClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
+            "text" => ParseTextClause(clause),
             "triangle" => ParseTriangleClause(clause),
             "smooth" when second == "triangle" => ParseSmoothTriangleClause(clause),
             "parallelogram" => ParseParallelogramClause(clause),
@@ -67,7 +68,7 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This is a helper method for obtaining an extensible item and, if necessary,
+    /// This is a helper method that finds an extensible item and, if necessary,
     /// creating a copy of it.
     /// </summary>
     /// <param name="name">The name of the item to gain a copy of.</param>

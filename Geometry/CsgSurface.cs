@@ -58,6 +58,9 @@ public class CsgSurface : Surface
     {
         Left.PrepareForRendering();
         Right.PrepareForRendering();
+        
+        if (Material is not null)
+            SetMaterial(Material);
     }
 
     /// <summary>

@@ -37,6 +37,12 @@ public class Group : Surface
     {
         foreach (Surface surface in Surfaces)
             surface.PrepareForRendering();
+
+        if (Material is not null)
+        {
+            foreach (Surface surface in Surfaces)
+                surface.SetMaterial(Material);
+        }
     }
 
     /// <summary>
