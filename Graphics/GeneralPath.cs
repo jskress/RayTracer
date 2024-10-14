@@ -7,7 +7,7 @@ namespace RayTracer.Graphics;
 /// <summary>
 /// This class represents a path made up of lines and curves.
 /// </summary>
-public class GeneralPath
+public class GeneralPath : IDisposable
 {
     /// <summary>
     /// This property holds the current set of segments in the general path.
@@ -38,10 +38,9 @@ public class GeneralPath
     /// </summary>
     internal double MaxY { get; private set; } = double.MinValue;
 
-    private readonly SKPath _skPath = new ();
-
     private TwoDPoint _subPathStart = TwoDPoint.Zero;
     private TwoDPoint _cp = TwoDPoint.Zero;
+    private SKPath _skPath = new ();
 
     /// <summary>
     /// This method is used to move the current point to a new location.
@@ -513,5 +512,16 @@ public class GeneralPath
             segment.Reverse();
 
         return this;
+    }
+
+    /// <summary>
+    /// This method is used to properly clean up our resources.
+    /// </summary>
+    public void Dispose()
+    {
+        _skPath?.Dispose();
+        _skPath = null;
+
+        GC.SuppressFinalize(this);
     }
 }

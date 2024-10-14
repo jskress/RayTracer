@@ -9,7 +9,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents a world of things to render.
 /// </summary>
-public class Scene : NamedThing
+public class Scene : NamedThing, IDisposable
 {
     /// <summary>
     /// This list holds the collection of cameras in the scene.
@@ -174,5 +174,41 @@ public class Scene : NamedThing
         Color color = GetColorFor(refractedRay, remaining - 1);
 
         return color * transparency;
+    }
+
+    /// <summary>
+    /// This method is used to properly clean up our resources.
+    /// </summary>
+    public void Dispose()
+    {
+        CleanUpDisposables(Surfaces);
+
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// This method is used to chase the given list of surfaces, disposing of the ones that
+    /// need it.  It will recurse as necessary.
+    /// </summary>
+    /// <param name="surfaces">The list of surfaces to chase.</param>
+    private static void CleanUpDisposables(List<Surface> surfaces)
+    {
+        foreach (Surface surface in surfaces)
+        {
+            if (surface is IDisposable disposable)
+                disposable.Dispose();
+
+            switch (surface)
+            {
+                case Group group:
+                {
+                    CleanUpDisposables(group.Surfaces);
+                    break;
+                }
+                case CsgSurface csgSurface:
+                    CleanUpDisposables([csgSurface.Left, csgSurface.Right]);
+                    break;
+            }
+        }
     }
 }

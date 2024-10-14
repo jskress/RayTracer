@@ -8,7 +8,7 @@ namespace RayTracer.Geometry;
 /// This class represents an extrusion.  It is defined by one or more closed paths in 2D
 /// that are extruded along the Y axis.
 /// </summary>
-public class Extrusion : ExtrudedSurface
+public class Extrusion : ExtrudedSurface, IDisposable
 {
     /// <summary>
     /// This attribute holds the path that represents the outline of the extrusion in the
@@ -131,5 +131,16 @@ public class Extrusion : ExtrudedSurface
             : point.Y < MinimumY + (MaximumY - MinimumY) / 2
                 ? Directions.Down
                 : Directions.Up;
+    }
+
+    /// <summary>
+    /// This method is used to properly clean up our resources.
+    /// </summary>
+    public void Dispose()
+    {
+        Path?.Dispose();
+        Path = null;
+
+        GC.SuppressFinalize(this);
     }
 }
