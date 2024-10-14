@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -53,7 +52,7 @@ public class RenderInstruction : Instruction
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        Scene scene = GetScene(variables);
+        using Scene scene = GetScene(variables);
         Camera camera = GetCamera(scene, variables);
 
         // Give each surface a chance to do any precomputing needed.
