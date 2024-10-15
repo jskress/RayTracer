@@ -1,3 +1,5 @@
+using System.Text;
+using Lex;
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
@@ -91,10 +93,11 @@ public partial class LanguageParser
 
         if (line > 0)
         {
-            string[] lines = File.ReadAllLines(fileName);
+            string source = File.ReadAllLines(fileName)[line - 1]
+                .Replace("\t", "    ");
 
             Console.WriteLine($"{Path.GetFileName(fileName)}: [{line}:{column}] -> {exception.Token}");
-            Console.WriteLine(lines[line - 1]);
+            Console.WriteLine(source);
 
             if (column > 0)
                 Console.WriteLine($"{new string('-', column - 1)}^");
@@ -152,7 +155,7 @@ public partial class LanguageParser
 
     /// <summary>
     /// This method is used to parse the named clause.  It is assumed that parsing the
-    /// clause will result in zero or one clause only.
+    /// clause will result in only one clause or no clause at all.
     /// </summary>
     /// <param name="clauseName">The name of the clause to parse.</param>
     /// <returns></returns>
@@ -207,7 +210,7 @@ public partial class LanguageParser
     /// explicit scene definition or there are no explicit scene definitions.
     /// </summary>
     /// <param name="clause">The current clause in play.  We pull the error token from this.</param>
-    /// <param name="noun">The noun to use in the error, if we find one.</param>
+    /// <param name="noun">The noun to use in the error if we find one.</param>
     private void VerifyDefaultSceneUsage(Clause clause, string noun)
     {
         if (_context.IsEmpty && _context.SeenSceneDefinition)
@@ -225,7 +228,7 @@ public partial class LanguageParser
     /// <param name="blockName">The name of the block that describes the block's entries.</param>
     /// <param name="handleClause">The action that will be used to handle the block's entry
     /// clauses.</param>
-    /// <param name="resolver">The resolver to use, if we don't need a new one.</param>
+    /// <param name="resolver">The resolver to use if we don't need a new one.</param>
     /// <returns>The created resolver.</returns>
     private TResolver ParseObjectResolver<TResolver>(
         string blockName, Action<Clause> handleClause, TResolver resolver = null)
@@ -263,8 +266,10 @@ public partial class LanguageParser
     private void PushEntry(string fileName)
     {
         LexicalParser parser = LanguageDsl.CreateLexicalParser();
+        string text = File.ReadAllText(fileName, Encoding.UTF8)
+            .Replace("\t", "    ");
 
-        parser.SetSource(File.OpenText(fileName));
+        parser.SetSource(text.AsReader());
 
         _entries.Push(new Entry(fileName, parser));
     }
