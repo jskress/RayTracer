@@ -7,8 +7,8 @@ will show the source `.igl` file that generated it.
 
 ### Ray Tracer Challenge Book
 
-<table style="width: 100%; border: none">
-    <tr>
+<table style="width: 100%; border-collapse: collapse">
+    <tr style="height: 120px">
         <td><a href="challenge-book/chapter-6/black.igl">
             <img alt="Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>
         </a></td>
