@@ -7,7 +7,14 @@ will show the source `.igl` file that generated it.
 
 ### Ray Tracer Challenge Book
 
-| [<img alt="Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>](challenge-book/chapter-6/black.igl) | Basic Sphere, Black Background
+<table>
+    <tr>
+        <td>
+            [<img alt="Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>](challenge-book/chapter-6/black.igl)
+        </td>
+        <td>Basic Sphere, Black Background</td>
+    </tr>
+</table>
 | [<img alt="Basic Sphere, Transparent Background" height="120" src="challenge-book/chapter-6/transparent.png" width="160"/>](challenge-book/chapter-6/transparent.igl) | Basic Sphere, Transparent Background
 
 #### Spheres in a Box, No Shadows
