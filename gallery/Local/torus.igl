@@ -1,45 +1,45 @@
 // A scene to test the torus.
 
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title 'Torus Test'
-		author 'J. Stephen Kress'
-		description 'A scene to test the torus primitive.'
-		copyright true
-		software __software__
-	}
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Torus Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the torus primitive.'
+        copyright true
+        software __software__
+    }
 }
 
 camera {
-	location [0, 1.5, -5]
-	look at [0, 1, 0]
-	field of view 60
+    location [0, 1.5, -5]
+    look at [0, 1, 0]
+    field of view 60
 }
 
 point light {
-	location [-10, 10, -10]
+    location [-10, 10, -10]
 }
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
-	}
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
 }
 
 // Ring
 torus {
-	radii 1, 0.3
-	material {
-		pigment Gold
-		ambient 0.1
-		reflective 0.25
-		specular 1
-		shininess 300
-	}
-	rotate X -15
-	translate Y 1
+    radii 1, 0.3
+    material {
+        pigment Gold
+        ambient 0.1
+        reflective 0.25
+        specular 1
+        shininess 300
+    }
+    rotate X -15
+    translate Y 1
 }

@@ -1,57 +1,58 @@
 // This holds the information for how to render our image for chapter 14 (new language).
 
 chapter = 14
+title = 'A Pointy Thing'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { Gray25, DarkSeaGreen }
-	}
+    material {
+        pigment cylindrical stripes { Gray25, DarkSeaGreen }
+    }
 }
 
 group {
-	index = [0, 5]
-	group {
-		sphere {
-			material inherited
-			scale 0.25
-			translate Z -1
-		}
-		conic {
-			min Y -1
-			max Y 0
-			material inherited
-			translate Y 1
-			scale [0.25, 1.36, 0.25]
-			rotate X 45
-			translate [0, 0, -1]
-		}
-		conic {
-			min Y 0
-			max Y 1
-			material inherited
-			translate Y -1
-			scale [0.25, 1.36, 0.25]
-			rotate X -45
-			translate [0, 0, -1]
-		}
-		cylinder {
-			min Y 0
-			max Y 1
-			material inherited
-			scale [0.25, 1, 0.25]
-			rotate Z -90
-			rotate Y -30
-			translate Z -1
-		}
-		material inherited
-		rotate Y index * 60
-	}
-	scale 1.2
-	rotate X -30
-	rotate Y 18
-	translate Y 1.5
-	material { pigment NeonBlue }
+    index = [0, 5]
+    group {
+        sphere {
+            material inherited
+            scale 0.25
+            translate Z -1
+        }
+        conic {
+            min Y -1
+            max Y 0
+            material inherited
+            translate Y 1
+            scale [0.25, 1.36, 0.25]
+            rotate X 45
+            translate [0, 0, -1]
+        }
+        conic {
+            min Y 0
+            max Y 1
+            material inherited
+            translate Y -1
+            scale [0.25, 1.36, 0.25]
+            rotate X -45
+            translate [0, 0, -1]
+        }
+        cylinder {
+            min Y 0
+            max Y 1
+            material inherited
+            scale [0.25, 1, 0.25]
+            rotate Z -90
+            rotate Y -30
+            translate Z -1
+        }
+        material inherited
+        rotate Y index * 60
+    }
+    scale 1.2
+    rotate X -30
+    rotate Y 18
+    translate Y 1.5
+    material { pigment NeonBlue }
 }

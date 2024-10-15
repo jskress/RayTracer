@@ -1,55 +1,56 @@
 // This holds the information for how to render our image for chapter 10.
 
 chapter = 10
+title = 'Things with Basic Patterns'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { DarkBlue, AliceBlue }
-		specular 0
-	}
+    material {
+        pigment cylindrical stripes { DarkBlue, AliceBlue }
+        specular 0
+    }
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment linear stripes {
-			Green, LightGreen
-			scale 0.25
-			rotate Z 33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment linear stripes {
+            Green, LightGreen
+            scale 0.25
+            rotate Z 33
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // Right sphere
 sphere {
-	material {
-		pigment checker {
-			Red, White
-			scale 0.33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate [1.5, 0.5, -0.5]
+    material {
+        pigment checker {
+            Red, White
+            scale 0.33
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.5
+    translate [1.5, 0.5, -0.5]
 }
 
 // Left sphere
 sphere {
-	material {
-		pigment linear gradient {
-			[0, Yellow, 1, Blue ]
-			rotate Z 90
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment linear gradient {
+            [0, Yellow, 1, Blue ]
+            rotate Z 90
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }

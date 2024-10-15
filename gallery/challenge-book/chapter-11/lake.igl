@@ -5,70 +5,71 @@
 // if you remove the "no shadow" from the water.
 
 chapter = 11
+title = 'A Lake, Kind of'
 
 include '../defaults.igl'
 
 context {
-	apply gamma
+    apply gamma
 }
 
 background linear bouncing gradient {
-	[0, DeepSkyBlue, 1, LightSkyBlue]
-	scale 10
-	rotate Y 90
+    [0, DeepSkyBlue, 1, LightSkyBlue]
+    scale 10
+    rotate Y 90
 }
 
 // Floor
 plane {
-	material {
-		pigment SandyBrown
-	}
-	translate Y -2
+    material {
+        pigment SandyBrown
+    }
+    translate Y -2
 }
 
 rockMaterial = material {
-	pigment DarkSlateGray
-	specular 0
+    pigment DarkSlateGray
+    specular 0
 }
 
 // Rocks
 sphere {
-	material rockMaterial
-	scale [1, 0.25, 0.45]
-	rotate Y 12
-	translate [0, -1.75, 4]
+    material rockMaterial
+    scale [1, 0.25, 0.45]
+    rotate Y 12
+    translate [0, -1.75, 4]
 }
 
 sphere {
-	material rockMaterial
-	scale [1, 0.25, 0.45]
-	rotate Y -45
-	translate [-2, -1.75, 6]
+    material rockMaterial
+    scale [1, 0.25, 0.45]
+    rotate Y -45
+    translate [-2, -1.75, 6]
 }
 
 sphere {
-	material rockMaterial
-	scale [1, 0.25, 0.45]
-	rotate Y -50
-	translate [4, -1.75, 5]
+    material rockMaterial
+    scale [1, 0.25, 0.45]
+    rotate Y -50
+    translate [4, -1.75, 5]
 }
 
 sphere {
-	material rockMaterial
-	scale [1, 0.25, 0.45]
-	rotate Y 85
-	translate [2, -1.75, 6.5]
+    material rockMaterial
+    scale [1, 0.25, 0.45]
+    rotate Y 85
+    translate [2, -1.75, 6.5]
 }
 
 // Water
 plane {
-	material {
-		pigment Black
-		reflective 0.9
-		transparency 0.9
-		diffuse 0.4
-		shininess 300
-		index of refraction Water
-	}
-	no shadow
+    material {
+        pigment Black
+        reflective 0.9
+        transparency 0.9
+        diffuse 0.4
+        shininess 300
+        index of refraction Water
+    }
+    no shadow
 }

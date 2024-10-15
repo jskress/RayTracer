@@ -1,79 +1,80 @@
 // This holds the information for how to render our image for chapter 13 (new language).
 
 chapter = 13
+title = 'Cylinders and Conics'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { Gray25, DarkSeaGreen }
-	}
+    material {
+        pigment cylindrical stripes { Gray25, DarkSeaGreen }
+    }
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment Black
-		reflective 0.9
-		transparency 1
-		diffuse 0.2
-		specular 1
-		shininess 300
-		index of refraction Glass
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment Black
+        reflective 0.9
+        transparency 1
+        diffuse 0.2
+        specular 1
+        shininess 300
+        index of refraction Glass
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // "Background" yellow cylinder
 cylinder {
-	open
-	max Y PositiveInfinity
-	material { pigment Yellow }
-	translate [0.25, 1, 12.5]
+    open
+    max Y PositiveInfinity
+    material { pigment Yellow }
+    translate [0.25, 1, 12.5]
 }
 
 // Right cylinder
 cylinder {
-	min Y 1
-	max Y 2
-	material {
-		pigment checker {
-			White, Red
-			scale 0.33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	rotate Z 45
-	rotate Y -45
-	scale 0.5
-	translate [1.5, 0.5, 1.5]
+    min Y 1
+    max Y 2
+    material {
+        pigment checker {
+            White, Red
+            scale 0.33
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    rotate Z 45
+    rotate Y -45
+    scale 0.5
+    translate [1.5, 0.5, 1.5]
 }
 
 // Left cube
 cube {
-	material {
-		pigment linear bouncing gradient {
-			[0, Blue, 1, White]
-			translate X 0.5
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment linear bouncing gradient {
+            [0, Blue, 1, White]
+            translate X 0.5
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }
 
 // How about a conic...
 conic {
-	material {
-		pigment linear stripes {
-			DarkOrange, SkyBlue
-			scale 0.33
-		}
-	}
-	scale [0.3, 1, 0.3]
-	rotate X -45
-	translate [1.5, 1.5, -0.5]
+    material {
+        pigment linear stripes {
+            DarkOrange, SkyBlue
+            scale 0.33
+        }
+    }
+    scale [0.3, 1, 0.3]
+    rotate X -45
+    translate [1.5, 1.5, -0.5]
 }

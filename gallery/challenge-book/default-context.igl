@@ -1,14 +1,14 @@
 // The basic context we should use for all our Challenge book images.
 
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title $'Chapter ${chapter}'
-		author 'J. Stephen Kress'
-		description $'The image that Chapter ${chapter} walks us through to create.'
-		copyright true
-		software __software__
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title $'Chapter ${chapter}, ${title}'
+        author 'J. Stephen Kress'
+        description $'The image that Chapter ${chapter} walks us through to create.'
+        copyright true
+        software __software__
 	}
 }

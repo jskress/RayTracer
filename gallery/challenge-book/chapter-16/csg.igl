@@ -1,89 +1,90 @@
 // This holds the information for how to render our image for chapter 16 (new language).
 
 chapter = 16
+title = 'Basic CSG Examples'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { [0.25, 0.25, 0.25], [0.5, 0.75, 0.5] }
-	}
+    material {
+        pigment cylindrical stripes { [0.25, 0.25, 0.25], [0.5, 0.75, 0.5] }
+    }
 }
 
 union {
-	cube {
-		material {
-			pigment Yellow
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-	}
-	sphere {
-		material {
-			pigment Red
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-		translate [0.7, 0.7, -0.7]
-	}
-	scale 0.6
-	rotate X -15
-	rotate Y 15
-	translate [-1.3, 1, 0]
+    cube {
+        material {
+            pigment Yellow
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+    }
+    sphere {
+        material {
+            pigment Red
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+        translate [0.7, 0.7, -0.7]
+    }
+    scale 0.6
+    rotate X -15
+    rotate Y 15
+    translate [-1.3, 1, 0]
 }
 
 intersection {
-	cube {
-		material {
-			pigment Yellow
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-	}
-	sphere {
-		material {
-			pigment Red
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-		translate [0.7, 0.7, -0.7]
-	}
-	rotate X -15
-	rotate Y 310
-	translate [-0.75, 1, -1.25]
+    cube {
+        material {
+            pigment Yellow
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+    }
+    sphere {
+        material {
+            pigment Red
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+        translate [0.7, 0.7, -0.7]
+    }
+    rotate X -15
+    rotate Y 310
+    translate [-0.75, 1, -1.25]
 }
 
 difference {
-	cube {
-		material {
-			pigment Yellow
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-	}
-	sphere {
-		material {
-			pigment Red
-			diffuse 0.8
-			specular 0.3
-			shininess 300
-		}
-		scale 0.7
-		translate [0.7, 0.7, -0.7]
-	}
-	scale 0.6
-	rotate X -15
-	rotate Y 80
-	translate [1.3, 1, 0]
+    cube {
+        material {
+            pigment Yellow
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+    }
+    sphere {
+        material {
+            pigment Red
+            diffuse 0.8
+            specular 0.3
+            shininess 300
+        }
+        scale 0.7
+        translate [0.7, 0.7, -0.7]
+    }
+    scale 0.6
+    rotate X -15
+    rotate Y 80
+    translate [1.3, 1, 0]
 }

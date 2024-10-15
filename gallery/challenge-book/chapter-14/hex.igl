@@ -1,37 +1,38 @@
 // This holds the information for how to render our image for chapter 14 (new language).
 
 chapter = 14
+title = 'Hexagon from a Repeating Group'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { Gray25, DarkSeaGreen }
-	}
+    material {
+        pigment cylindrical stripes { Gray25, DarkSeaGreen }
+    }
 }
 
 group {
-	index = [0, 5]
-	group {
-		sphere {
-			material inherited
-			scale 0.25
-			translate Z -1
-		}
-		cylinder {
-			min Y 0
-			max Y 1
-			material inherited
-			scale [0.25, 1, 0.25]
-			rotate Z -90
-			rotate Y -30
-			translate Z -1
-		}
-		material inherited
-		rotate Y index * 60
-	}
-	rotate X -30
-	translate Y 1.5
-	material { pigment LightSkyBlue }
+    index = [0, 5]
+    group {
+        sphere {
+            material inherited
+            scale 0.25
+            translate Z -1
+        }
+        cylinder {
+            min Y 0
+            max Y 1
+            material inherited
+            scale [0.25, 1, 0.25]
+            rotate Z -90
+            rotate Y -30
+            translate Z -1
+        }
+        material inherited
+        rotate Y index * 60
+    }
+    rotate X -30
+    translate Y 1.5
+    material { pigment LightSkyBlue }
 }
