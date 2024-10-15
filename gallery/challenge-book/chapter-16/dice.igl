@@ -1,67 +1,68 @@
 // This holds the information for how to render our image for chapter 16 (new language).
 
 chapter = 16
+title = 'Three Dice: Another Picture from the Book'
 
 include '../default-context.igl'
 
 camera {
-	location [0, 2.5, -4]
-	look at [5, 0, 5]
-	field of view 60
+    location [0, 2.5, -4]
+    look at [5, 0, 5]
+    field of view 60
 }
 
 point light {
-	location [-3, 10, -3]
+    location [-3, 10, -3]
 }
 
 paper = material { pigment checker { White, Gray85 scale 0.75 } }
 
 // Floor
 plane {
-	material paper
+    material paper
 }
 
 // Walls
 plane {
-	material paper
-	rotate X -90
-	translate Z 5
+    material paper
+    rotate X -90
+    translate Z 5
 }
 plane {
-	material paper
-	rotate Z 90
-	translate X 5
+    material paper
+    rotate Z 90
+    translate X 5
 }
 
 include 'die.igl'
 
 object die {
-	material {
-		pigment BlueViolet
-		reflective 0.1
-	}
-	rotate X 180
-	rotate Z 270
-	rotate Y 24
-	translate [1.2, 0.5, 0]
+    material {
+        pigment BlueViolet
+        reflective 0.1
+    }
+    rotate X 180
+    rotate Z 270
+    rotate Y 24
+    translate [1.2, 0.5, 0]
 }
 
 object die {
-	material {
-		pigment SaddleBrown
-		reflective 0.1
-	}
-	rotate Z 180
-	rotate Y 60
-	translate [2.5, 0.5, -0.3]
+    material {
+        pigment SaddleBrown
+        reflective 0.1
+    }
+    rotate Z 180
+    rotate Y 60
+    translate [2.5, 0.5, -0.3]
 }
 
 object die {
-	material {
-		pigment ForestGreen
-		reflective 0.1
-	}
-	rotate Z -270
-	rotate Y -20
-	translate [1.8, 1.5, 0]
+    material {
+        pigment ForestGreen
+        reflective 0.1
+    }
+    rotate Z -270
+    rotate Y -20
+    translate [1.8, 1.5, 0]
 }

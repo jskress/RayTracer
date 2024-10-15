@@ -1,6 +1,7 @@
 // This holds the information for how to render our image for chapter 10.
 
 chapter = 10
+title = 'A Floor with Nested Striping'
 
 include '../defaults.igl'
 

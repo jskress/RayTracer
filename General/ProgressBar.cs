@@ -7,7 +7,9 @@ namespace RayTracer.General;
 public class ProgressBar
 {
     private static readonly TimeSpan Threshold = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
+    private Timer _timer;
     private long _start;
     private long _threshold;
     private long _current;
@@ -24,6 +26,7 @@ public class ProgressBar
     {
         DateTime now = DateTime.Now;
 
+        _timer = new Timer(_ => Show(true), null, Threshold, OneSecond);
         _start = now.Ticks;
         _threshold = now.Add(Threshold).Ticks;
         _current = 0;
@@ -43,9 +46,9 @@ public class ProgressBar
         {
             _current++;
             _used = (int) (_current * 50 / _total);
-
-            Show();
         }
+
+        Show(true);
     }
 
     /// <summary>
@@ -56,8 +59,10 @@ public class ProgressBar
         _current = _total;
         _used = 50;
         _lastUsed = _used - 1;
+        _timer.Change(-1, -1);
+        _timer.Dispose();
 
-        Show();
+        Show(false);
 
         if (Console.CursorLeft > 0)
             Console.WriteLine();
@@ -66,41 +71,44 @@ public class ProgressBar
     /// <summary>
     /// This method shows the current state of the progress bar.
     /// </summary>
-    private void Show()
+    private void Show(bool fromClock)
     {
         long now = DateTime.Now.Ticks;
 
-        // Only show the progress bar if, we've past our time threshold.
-        if (now > _threshold && _used != _lastUsed)
+        lock (this)
         {
-            ConsoleColor hold = Console.ForegroundColor;
-
-            Console.CursorLeft = 0;
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write('[');
-
-            if (_used > 0)
+            // Only show the progress bar if, we've past our time threshold.
+            if (now > _threshold && (_used != _lastUsed || fromClock))
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
+                ConsoleColor hold = Console.ForegroundColor;
 
-                if (_current >= _total)
-                    Console.Write(new string('=', 50));
-                else if (_used > 1)
+                Console.CursorLeft = 0;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write('[');
+
+                if (_used > 0)
                 {
-                    Console.Write(new string('=', _used - 1));
-                    Console.Write('>');
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+
+                    if (_current >= _total)
+                        Console.Write(new string('=', 50));
+                    else if (_used > 1)
+                    {
+                        Console.Write(new string('=', _used - 1));
+                        Console.Write('>');
+                    }
                 }
+
+                Console.ForegroundColor = hold;
+                Console.Write(new string(' ', 50 - _used));
+
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write(']');
+                Console.ForegroundColor = hold;
+                Console.Write($@" {TimeRemaining(now):hh\:mm\:ss} ");
+
+                _lastUsed = _used;
             }
-
-            Console.ForegroundColor = hold;
-            Console.Write(new string(' ', 50 - _used));
-
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write(']');
-            Console.ForegroundColor = hold;
-            Console.Write($@" {TimeRemaining(now):hh\:mm\:ss} ");
-
-            _lastUsed = _used;
         }
     }
 

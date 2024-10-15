@@ -1,92 +1,92 @@
 // A scene to test text solids.
 
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title 'Text Solid Test'
-		author 'J. Stephen Kress'
-		description 'A scene to test the text solid primitive.'
-		copyright true
-		software __software__
-	}
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Text Solid Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the text solid primitive.'
+        copyright true
+        software __software__
+    }
 }
 
 camera {
-	location [2, 5, -30]
-	look at [0, 3, 0]
-	field of view 20
+    location [2, 5, -30]
+    look at [0, 3, 0]
+    field of view 20
 }
 
 point light {
-	location [20, 20, -20]
+    location [20, 20, -20]
 }
 
 // Floor
 plane {
-	material {
-		pigment blend {
-			linear stripes {
-				ForestGreen, White
-			},
-			linear stripes {
-				ForestGreen, White
-				rotate Y 90
-			}
-			rotate Y 45
-		}
-	}
+    material {
+        pigment blend {
+            linear stripes {
+                ForestGreen, White
+            },
+            linear stripes {
+                ForestGreen, White
+                rotate Y 90
+            }
+            rotate Y 45
+        }
+    }
 }
 
 group {
-	cube {
-		material {
-			pigment linear stripes {
-				Navy, MidnightBlue
-				scale 0.2
-				rotate Y 90
-			}
-		}
-		scale [2.5, 0.05, 2.5]
-	}
-	
-	difference {
-		cube {
-			material {
-				pigment Gray80
-				shininess 350
-				reflective 0.9
-			}
-			scale [2.75, 0.1, 2.75]
-		}
-		cube {
-			material {
-				pigment Gray80
-				shininess 350
-				reflective 0.9
-			}
-			scale [2.5, 0.2, 2.5]
-		}
-		bounded by [-3, -1, -3] , [3, 1, 3]
-	}
+    cube {
+        material {
+            pigment linear stripes {
+                Navy, MidnightBlue
+                scale 0.2
+                rotate Y 90
+            }
+        }
+        scale [2.5, 0.05, 2.5]
+    }
 
-	text {
-		text 'The\nFaçade\nAPI'
-		font 'Merriweather'
-		layout {
-			text alignment center
-			horizontal position center
-			vertical position center
-			line gap 0
-		}
-		material {
-			pigment Yellow
-			shininess 300
-		}
-		scale [1, 2, 1]
-	}
-	rotate X -90
-	translate [-0.1, 3.5, 0]
-	rotate Y -35
+    difference {
+        cube {
+            material {
+                pigment Gray80
+                shininess 350
+                reflective 0.9
+            }
+            scale [2.75, 0.1, 2.75]
+        }
+        cube {
+            material {
+                pigment Gray80
+                shininess 350
+                reflective 0.9
+            }
+            scale [2.5, 0.2, 2.5]
+        }
+        bounded by [-3, -1, -3] , [3, 1, 3]
+    }
+
+    text {
+        text 'The\nFaçade\nAPI'
+        font 'Merriweather'
+        layout {
+            text alignment center
+            horizontal position center
+            vertical position center
+            line gap 0
+        }
+        material {
+            pigment Yellow
+            shininess 300
+        }
+        scale [1, 2, 1]
+    }
+    rotate X -90
+    translate [-0.1, 3.5, 0]
+    rotate Y -35
 }

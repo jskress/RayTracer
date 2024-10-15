@@ -1,55 +1,56 @@
 // This holds the information for how to render our image for chapter 10.
 
 chapter = 10
+title = 'Things with Gradients'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment cylindrical bouncing gradient { [0, DarkBlue, 1, AliceBlue] }
-		specular 0
-	}
+    material {
+        pigment cylindrical bouncing gradient { [0, DarkBlue, 1, AliceBlue] }
+        specular 0
+    }
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment cylindrical gradient {
-			[0, Green, 1, White]
-			scale 0.33
-			rotate X 90
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment cylindrical gradient {
+            [0, Green, 1, White]
+            scale 0.33
+            rotate X 90
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // Right sphere
 sphere {
-	material {
-		pigment linear bouncing gradient {
-			[0, Red, 1, White]
-			scale 0.33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate [1.5, 0.5, -0.5]
+    material {
+        pigment linear bouncing gradient {
+            [0, Red, 1, White]
+            scale 0.33
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.5
+    translate [1.5, 0.5, -0.5]
 }
 
 // Left sphere
 sphere {
-	material {
-		pigment linear gradient {
-			[0, Yellow, 1, Blue]
-			rotate Z 90
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment linear gradient {
+            [0, Yellow, 1, Blue]
+            rotate Z 90
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }

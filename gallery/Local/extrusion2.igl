@@ -1,37 +1,37 @@
 // A scene to test an extrusion.
 
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title 'Extrusion Test'
-		author 'J. Stephen Kress'
-		description 'A scene to test the extrusion primitive.'
-		copyright true
-		software __software__
-	}
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Another Extrusion Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the extrusion primitive.'
+        copyright true
+        software __software__
+    }
 }
 
 camera {
-	location [2, 10, -30]
-	look at [0, 1.4, 0]
-	field of view 20
+    location [2, 10, -30]
+    look at [0, 1.4, 0]
+    field of view 20
 }
 
 point light {
-	location [20, 20, -20]
+    location [20, 20, -20]
 }
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
-	}
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
 }
 
 extrusion {
-	path {
+    path {
         move to 3, 5
         line to -3, 5
         line to -5, 0
@@ -39,14 +39,14 @@ extrusion {
         line to 3, -5
         quad 5, -5 to 5, 0
         close
- 	}
-	material { pigment LimeGreen }
+    }
+    material { pigment LimeGreen }
 }
 
 extrusion {
-	min Y 0
-	max Y 1
-	path {
+    min Y 0
+    max Y 1
+    path {
         move to 3, 5
         line to -3, 5
         line to -5, 0
@@ -54,7 +54,7 @@ extrusion {
         line to 3, -5
         curve 4, -5, 4, 0 to 5, 0
         close
- 	}
-	material { pigment Yellow }
-	translate [-1, 1.4, 1]
+    }
+    material { pigment Yellow }
+    translate [-1, 1.4, 1]
 }

@@ -1,65 +1,66 @@
 // This holds the information for how to render our image for chapter 11 (new language).
 
 chapter = 11
+title = 'Glassy Reflections'
 
 include '../defaults.igl'
 
 context {
-	apply gamma
+    apply gamma
 }
 
 // Floor
 plane {
-	material {
-		pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
-	}
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment Black
-		reflective 0.9
-		transparency 1
-		diffuse 0.2
-		specular 1
-		shininess 300
-		index of refraction Glass
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment Black
+        reflective 0.9
+        transparency 1
+        diffuse 0.2
+        specular 1
+        shininess 300
+        index of refraction Glass
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // "Background" yellow sphere
 sphere {
-	material {
-		pigment Yellow
-	}
-	translate [0.25, 1, 12.5]
+    material {
+        pigment Yellow
+    }
+    translate [0.25, 1, 12.5]
 }
 
 // Right sphere
 sphere {
-	material {
-		pigment checker {
-			White, Red
-			scale 0.33
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate [1.5, 0.5, -0.5]
+    material {
+        pigment checker {
+            White, Red
+            scale 0.33
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.5
+    translate [1.5, 0.5, -0.5]
 }
 
 // Left sphere
 sphere {
-	material {
-		pigment linear gradient {
-			[0, Green, 1, Blue]
-		}
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment linear gradient {
+            [0, Green, 1, Blue]
+        }
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }

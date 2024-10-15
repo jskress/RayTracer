@@ -1,66 +1,67 @@
 // This holds the information for how to render our image for chapter 8.
 
 chapter = 8
+title = 'Spheres in a Box, Shadows'
 
 include '../defaults.igl'
 
 floorMaterial =	material {
-	pigment [1, 0.9, 0.9]
-	specular 0
+    pigment [1, 0.9, 0.9]
+    specular 0
 }
 
 // Floor
 sphere {
-	material floorMaterial
-	scale [10, 0.01, 10]
+    material floorMaterial
+    scale [10, 0.01, 10]
 }
 
 // Left wall
 sphere {
-	material floorMaterial
-	scale [10, 0.01, 10]
-	rotate X 90
-	rotate Y -45
-	translate Z 5
+    material floorMaterial
+    scale [10, 0.01, 10]
+    rotate X 90
+    rotate Y -45
+    translate Z 5
 }
 
 // Right wall
 sphere {
-	material floorMaterial
-	scale [10, 0.01, 10]
-	rotate X 90
-	rotate Y 45
-	translate Z 5
+    material floorMaterial
+    scale [10, 0.01, 10]
+    rotate X 90
+    rotate Y 45
+    translate Z 5
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment [0.1, 1, 0.5]
-		diffuse 0.7
-		specular 0.3
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment [0.1, 1, 0.5]
+        diffuse 0.7
+        specular 0.3
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // Right sphere
 sphere {
-	material {
-		pigment [0.5, 1, 0.1]
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate [1.5, 0.5, -0.5]
+    material {
+        pigment [0.5, 1, 0.1]
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.5
+    translate [1.5, 0.5, -0.5]
 }
 
 // Left sphere
 sphere {
-	material {
-		pigment [1, 0.8, 0.1]
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment [1, 0.8, 0.1]
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }

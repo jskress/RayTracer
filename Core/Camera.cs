@@ -3,6 +3,7 @@ using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Pixels;
 
 namespace RayTracer.Core;
 
@@ -49,14 +50,15 @@ public class Camera : NamedThing
     {
         Canvas canvas = context.NewCanvas;
         PixelToRayConverter converter = new (context, FieldOfView, GetTransform());
+        PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
         context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);
 
         context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
         {
-            Ray ray = converter.GetRayForPixel(x, y);
+            Color color = renderer.Render(scene, x, y);
 
-            canvas.SetColor(scene.GetColorFor(ray), x, y);
+            canvas.SetColor(color, x, y);
             context.ProgressBar?.Bump();
         });
 

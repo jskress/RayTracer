@@ -1,45 +1,46 @@
 // This holds the information for how to render our image for chapter 9.
 
 chapter = 9
+title = 'Spheres on the Floor'
 
 include '../defaults.igl'
 
 // Floor
 plane {
-	material {
-		pigment [1, 0.9, 0.9]
-		specular 0
-	}
+    material {
+        pigment [1, 0.9, 0.9]
+        specular 0
+    }
 }
 
 // Middle sphere
 sphere {
-	material {
-		pigment [0.1, 1, 0.5]
-		diffuse 0.7
-		specular 0.3
-	}
-	translate [-0.5, 1, 0.5]
+    material {
+        pigment [0.1, 1, 0.5]
+        diffuse 0.7
+        specular 0.3
+    }
+    translate [-0.5, 1, 0.5]
 }
 
 // Right sphere
 sphere {
-	material {
-		pigment [0.5, 1, 0.1]
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.5
-	translate [1.5, 0.5, -0.5]
+    material {
+        pigment [0.5, 1, 0.1]
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.5
+    translate [1.5, 0.5, -0.5]
 }
 
 // Left sphere
 sphere {
-	material {
-		pigment [1, 0.8, 0.1]
-		diffuse 0.7
-		specular 0.3
-	}
-	scale 0.33
-	translate [-1.5, 0.33, -0.75]
+    material {
+        pigment [1, 0.8, 0.1]
+        diffuse 0.7
+        specular 0.3
+    }
+    scale 0.33
+    translate [-1.5, 0.33, -0.75]
 }

@@ -1,46 +1,47 @@
 // This holds the information for rendering some demo images of our patterns.
 
 chapter = 10
+title = 'A Planet'
 
 include '../defaults.igl'
 
 background Black
 
 land = pigment granite {
-	[0.00, SaddleBrown,
-	 0.13, ForestGreen,
-	 0.23, Green,
-	 0.33, ForestGreen,
-	 0.40, Gray40,
-	 0.45, Gray70,
-	 0.50, Gray40,
-	 0.70, ForestGreen,
-	 0.80, Green,
-	 0.95, ForestGreen,
-	 1.00, SaddleBrown]
-	 scale 0.7
+    [0.00, SaddleBrown,
+     0.13, ForestGreen,
+     0.23, Green,
+     0.33, ForestGreen,
+     0.40, Gray40,
+     0.45, Gray70,
+     0.50, Gray40,
+     0.70, ForestGreen,
+     0.80, Green,
+     0.95, ForestGreen,
+     1.00, SaddleBrown]
+     scale 0.7
 }
 
 ocean = pigment granite {
-	banded [0.0, DarkBlue,
-	        0.2, Transparent,
-	        0.8, DarkBlue]
-	scale 4 
+    banded [0.0, DarkBlue,
+            0.2, Transparent,
+            0.8, DarkBlue]
+    scale 4 
 }
 
 clouds1 = pigment granite {
-	[0, Transparent, 0.5, White, 1, Transparent]
+    [0, Transparent, 0.5, White, 1, Transparent]
 }
 clouds = pigment linear Y gradient {
-	[0, clouds1, 0.25, clouds1, 0.50, clouds1, 0.75, clouds1, 1, clouds1]
+    [0, clouds1, 0.25, clouds1, 0.50, clouds1, 0.75, clouds1, 1, clouds1]
 }
 
 sphere {
-	material {
-		pigment layer {
-			clouds, ocean, land
-		}
-	}
-	scale 1.5
-	translate Y 1 
+    material {
+        pigment layer {
+            clouds, ocean, land
+        }
+    }
+    scale 1.5
+    translate Y 1 
 }

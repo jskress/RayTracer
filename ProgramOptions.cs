@@ -3,6 +3,7 @@ using System.Reflection;
 using CommandLine;
 using RayTracer.General;
 using RayTracer.ImageIO;
+using RayTracer.Pixels;
 
 [assembly: AssemblyTitle("Raymond")]
 [assembly: AssemblyDescription("A CSG ray tracer based on the book, 'The Ray Tracer Challenge.'")]
@@ -203,6 +204,19 @@ public class ProgramOptions
     /// </summary>
     public OutputLevel OutputLevel { get; private set; }
 
+    [Option('a', "antialias", Required = false,
+        HelpText = "Sets what sort of antialiasing should be applied to the image being rendered.")]
+    public string AntiAliasingText
+    {
+        get => AntiAliasing.ToString();
+        set => AntiAliasing.Configure(value);
+    }
+
+    /// <summary>
+    /// This property holds the antialiasing option for the ray tracer.
+    /// </summary>
+    public AliasingOption AntiAliasing { get; }
+
     private string _inputFileName;
     private string _outputDirectory;
     private string _outputFileName;
@@ -228,6 +242,7 @@ public class ProgramOptions
         _outputImageFormat = "png";
 
         OutputLevel = OutputLevel.Normal;
+        AntiAliasing = new AliasingOption();
     }
     
     /// <summary>

@@ -60,13 +60,17 @@ public class PixelToRayConverter
     /// </summary>
     /// <param name="x">The X coordinate of the pixel to get the ray for.</param>
     /// <param name="y">The Y coordinate of the pixel to get the ray for.</param>
+    /// <param name="centerX">The X offset within the pixel to treat as center.</param>
+    /// <param name="centerY">The Y offset within the pixel to treat as center.</param>
     /// <param name="shiftX">The amount to shift the X coordinate off center of the pixel.</param>
     /// <param name="shiftY">The amount to shift the Y coordinate off center of the pixel.</param>
     /// <returns>The ray for the pixel.</returns>
-    public Ray GetRayForPixel(int x, int y, double shiftX = 0, double shiftY = 0)
+    public Ray GetRayForPixel(
+        int x, int y, double centerX = 0.5, double centerY = 0.5,
+        double shiftX = 0, double shiftY = 0)
     {
-        double xOffset = (Convert.ToDouble(x) + 0.5 + shiftX) * PixelSize;
-        double yOffset = (Convert.ToDouble(y) + 0.5 + shiftY) * PixelSize;
+        double xOffset = (Convert.ToDouble(x) + centerX + shiftX) * PixelSize;
+        double yOffset = (Convert.ToDouble(y) + centerY + shiftY) * PixelSize;
         double worldX = _halfWidth - xOffset;
         double worldY = _halfHeight - yOffset;
         Point pixel = _inverseTransform * new Point(worldX, worldY, -1);

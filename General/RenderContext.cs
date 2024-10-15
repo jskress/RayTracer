@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
+using RayTracer.Pixels;
 using RayTracer.Renderer;
 using RayTracer.Scanners;
 
@@ -85,6 +86,11 @@ public class RenderContext
     public bool Grayscale { get; set; }
 
     /// <summary>
+    /// This property holds the antialiasing option for the ray tracer.
+    /// </summary>
+    public AliasingOption AntiAliasing { get; set; }
+
+    /// <summary>
     /// This property holds the time value (in ticks) for the frame currently being rendered.
     /// </summary>
     public long Ticks { get; set; }
@@ -121,6 +127,7 @@ public class RenderContext
         SuppressAllShadows = options.NoShadows ?? SuppressAllShadows;
         BitsPerChannel = options.BitsPerChannel;
         Grayscale = options.Grayscale;
+        AntiAliasing = options.AntiAliasing;
         Ticks = seconds * 1_000 + fraction;
     }
 }

@@ -1,176 +1,177 @@
 // This holds the information for how to render our image for chapter 12.
 
 chapter = 12
+title = 'A Room with a Mirror, All Rectangular Solids'
 
 include '../default-context.igl'
 
 camera {
-	location [4, 2.5, -5]
-	look at [0, 1, 0]
-	field of view 60
+    location [4, 2.5, -5]
+    look at [0, 1, 0]
+    field of view 60
 }
 
 point light {
-	location [2, 10, -10]
+    location [2, 10, -10]
 }
 
 // Floor
 plane {
-	material {
-		pigment checker { Black, Gray }
-	}
+    material {
+        pigment checker { Black, Gray }
+    }
 }
 
 // Left wall
 plane {
-	material {
-		pigment linear stripes {
-			SaddleBrown, SandyBrown
-			rotate Y 90
-			scale 0.5
-		}
-		ambient 0.2
-	}
-	rotate Z 90
-	translate X -2
+    material {
+        pigment linear stripes {
+            SaddleBrown, SandyBrown
+            rotate Y 90
+            scale 0.5
+        }
+        ambient 0.2
+    }
+    rotate Z 90
+    translate X -2
 }
 
 // Right wall
 plane {
-	material {
-		pigment linear stripes {
-			SandyBrown, SaddleBrown
-			scale 0.5
-		}
-		ambient 0.2
-	}
-	rotate X 90
-	translate Z 2
+    material {
+        pigment linear stripes {
+            SandyBrown, SaddleBrown
+            scale 0.5
+        }
+        ambient 0.2
+    }
+    rotate X 90
+    translate Z 2
 }
 
 // Legs
 cube {
-	material {
-		pigment SandyBrown
-	}
-	scale [0.05, 1, 0.05]
-	translate [0, 0.2, 0]
+    material {
+        pigment SandyBrown
+    }
+    scale [0.05, 1, 0.05]
+    translate [0, 0.2, 0]
 }
 
 cube {
-	material {
-		pigment SandyBrown
-	}
-	scale [0.05, 1, 0.05]
-	translate [0, 0.2, -2]
+    material {
+        pigment SandyBrown
+    }
+    scale [0.05, 1, 0.05]
+    translate [0, 0.2, -2]
 }
 
 cube {
-	material {
-		pigment SandyBrown
-	}
-	scale [0.05, 1, 0.05]
-	translate [2.5, 0.2, 0]
+    material {
+        pigment SandyBrown
+    }
+    scale [0.05, 1, 0.05]
+    translate [2.5, 0.2, 0]
 }
 
 cube {
-	material {
-		pigment SandyBrown
-	}
-	scale [0.05, 1, 0.05]
-	translate [2.5, 0.2, -2]
+    material {
+        pigment SandyBrown
+    }
+    scale [0.05, 1, 0.05]
+    translate [2.5, 0.2, -2]
 }
 
 // Table top
 cube {
-	material {
-		pigment linear stripes {
-			SandyBrown, SaddleBrown
-			scale 0.05
-		}
-		reflective 0.2
-		shininess 300
-	}
-	scale [1.35, 0.05, 1.15]
-	translate [1.25, 1.25, -1]
+    material {
+        pigment linear stripes {
+            SandyBrown, SaddleBrown
+            scale 0.05
+        }
+        reflective 0.2
+        shininess 300
+    }
+    scale [1.35, 0.05, 1.15]
+    translate [1.25, 1.25, -1]
 }
 
 // Decor on the table
 cube {
-	material {
-		pigment White
-		reflective 0.4
-		shininess 300
-	}
-	scale 0.1
-	translate [1, 1.4, -1]
+    material {
+        pigment White
+        reflective 0.4
+        shininess 300
+    }
+    scale 0.1
+    translate [1, 1.4, -1]
 }
 
 cube {
-	material { pigment Yellow }
-	scale [0.1, 0.05, 0.1]
-	rotate Y 12
-	translate [0.5, 1.3, -1]
+    material { pigment Yellow }
+    scale [0.1, 0.05, 0.1]
+    rotate Y 12
+    translate [0.5, 1.3, -1]
 }
 
 cube {
-	material { pigment LightGreen }
-	scale [0.1, 0.05, 0.05]
-	rotate Y 20
-	translate [1.2, 1.3, -0.5]
+    material { pigment LightGreen }
+    scale [0.1, 0.05, 0.05]
+    rotate Y 20
+    translate [1.2, 1.3, -0.5]
 }
 
 cube {
-	material { pigment Magenta }
-	scale [0.025, 0.1, 0.025]
-	translate [0.8, 1.4, -1.5]
+    material { pigment Magenta }
+    scale [0.025, 0.1, 0.025]
+    translate [0.8, 1.4, -1.5]
 }
 
 cube {
-	material { pigment Cyan	}
-	scale [0.025, 0.1, 0.025]
-	translate [2.2, 1.4, -0.8]
+    material { pigment Cyan	}
+    scale [0.025, 0.1, 0.025]
+    translate [2.2, 1.4, -0.8]
 }
 
 cube {
-	material {
-		pigment OrangeRed
-		reflective 0.4
-		shininess 300
-	}
-	scale 0.075
-	rotate Y -15
-	translate [1.6, 1.38, -1.5]
+    material {
+        pigment OrangeRed
+        reflective 0.4
+        shininess 300
+    }
+    scale 0.075
+    rotate Y -15
+    translate [1.6, 1.38, -1.5]
 }
 
 // Art on the left
 cube {
-	material { pigment Red }
-	scale [0.05, 0.5, 0.5]
-	translate [-1.95, 2.5, -2]
+    material { pigment Red }
+    scale [0.05, 0.5, 0.5]
+    translate [-1.95, 2.5, -2]
 }
 
 cube {
-	material { pigment Green }
-	scale [0.05, 0.2, 0.25]
-	translate [-1.95, 2.8, -1]
+    material { pigment Green }
+    scale [0.05, 0.2, 0.25]
+    translate [-1.95, 2.8, -1]
 }
 
 cube {
-	material { pigment Blue }
-	scale [0.05, 0.2, 0.25]
-	translate [-1.95, 2.2, -1]
+    material { pigment Blue }
+    scale [0.05, 0.2, 0.25]
+    translate [-1.95, 2.2, -1]
 }
 
 // Mirror
 cube {
-	material {
-		pigment [0.1, 0.1, 0.1]
-		reflective 1
-		diffuse 0.2
-		specular 1
-		shininess 300
-	}
-	scale [1.7, 1, 0.05]
-	translate [1, 2.2, 1.95]
+    material {
+        pigment [0.1, 0.1, 0.1]
+        reflective 1
+        diffuse 0.2
+        specular 1
+        shininess 300
+    }
+    scale [1.7, 1, 0.05]
+    translate [1, 2.2, 1.95]
 }

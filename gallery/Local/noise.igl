@@ -1,54 +1,54 @@
 // A scene to test pigment noise.
 
 context {
-	parallel pixel scanner
-	angles are degrees
-	no gamma
-	info {
-		title 'Pigment Noise Test'
-		author 'J. Stephen Kress'
-		description 'A scene to test noise in pigments.'
-		copyright true
-		software __software__
-	}
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Pigment Noise Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test noise in pigments.'
+        copyright true
+        software __software__
+    }
 }
 
 camera {
-	location [0, 1.5, -5]
-	look at [0, 1, 0]
-	field of view 60
+    location [0, 1.5, -5]
+    look at [0, 1, 0]
+    field of view 60
 }
 
 point light {
-	location [-10, 10, -10]
+    location [-10, 10, -10]
 }
 
 // Floor
 plane {
-	material {
-		pigment checker {
-			noisy {
-				turbulence 3 phased 5
-				Yellow
-			},
-			Green
-		}
-	}
+    material {
+        pigment checker {
+            noisy {
+                turbulence 3 phased 5
+                Yellow
+            },
+            Green
+        }
+    }
 }
 
 // focal point
 sphere {
-	material {
-		pigment noisy {
-			turbulence 7 phased 20
-			Gray50
-			scale 0.5
-		}
-		ambient 0.1
-		reflective 0.25
-		specular 1
-		shininess 300
-	}
-	scale 1.5
-	translate Y 1.5
+    material {
+        pigment noisy {
+            turbulence 7 phased 20
+            Gray50
+            scale 0.5
+        }
+        ambient 0.1
+        reflective 0.25
+        specular 1
+        shininess 300
+    }
+    scale 1.5
+    translate Y 1.5
 }
