@@ -68,7 +68,7 @@ public class Color
     }
 
     /// <summary>
-    /// This method returns the 4 color channel values as integers in a range from 0 to
+    /// This method returns the 4-color channel values as integers in a range from zero to
     /// the currently configured largest color channel value.
     /// </summary>
     /// <param name="context">The current rendering context.</param>
@@ -82,7 +82,7 @@ public class Color
         return (ChannelToInt(Red, maxValue, power, gammaCorrect),
             ChannelToInt(Green, maxValue, power, gammaCorrect),
             ChannelToInt(Blue, maxValue, power, gammaCorrect),
-            // Note: the alpha channel is linear so we never gamma correct it.
+            // Note: the alpha channel is linear, so we never gamma correct it.
             ChannelToInt(Alpha, maxValue));
     }
 
@@ -143,7 +143,7 @@ public class Color
 
     /// <summary>
     /// This method returns whether the given color matches this one.  This will be true
-    /// if all members are equitable within a small tolerance.
+    /// if all members are the same within a small tolerance.
     /// </summary>
     /// <param name="other">The color to compare to.</param>
     /// <returns><c>true</c>, if the two colors match, or <c>false</c>, if not.</returns>
@@ -187,6 +187,21 @@ public class Color
         double blue = Blue * Alpha / alpha + other.Blue * other.Alpha * (1 - Alpha) / alpha;
 
         return new Color(red, green, blue, alpha);
+    }
+
+    /// <summary>
+    /// This method returns a "distance" from this color to another one.
+    /// The distance is defined as the sum of the differences, as absolute values, for
+    /// each channel, including the alpha channel.
+    /// </summary>
+    /// <param name="other">The color to calculate a distance from.</param>
+    /// <returns>The effective distance from this color to the one provided.</returns>
+    public double Distance(Color other)
+    {
+        return Math.Abs(Red - other.Red) +
+               Math.Abs(Green - other.Green) +
+               Math.Abs(Blue - other.Blue) +
+               Math.Abs(Alpha - other.Alpha);
     }
 
     /// <summary>

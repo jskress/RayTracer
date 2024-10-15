@@ -14,7 +14,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### General To-Dos:
 
 - [ ] Motion blur.
-- [ ] Antialiasing.
+- [X] Antialiasing.
 - [ ] Support other image formats?
 
 ### To-Dos for Lights:
