@@ -7,12 +7,14 @@ will show the source `.igl` file that generated it.
 
 ### Ray Tracer Challenge Book
 
-<table style="width: 100%; border-collapse: collapse">
-    <tr style="height: 120px">
-        <td><a href="challenge-book/chapter-6/black.igl">
+<table style="width: 100%; border-collapse: collapse;">
+    <tr style="border-collapse: collapse;">
+        <td style="border-collapse: collapse;"><a href="challenge-book/chapter-6/black.igl">
             <img alt="Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>
         </a></td>
-        <td style="padding-left: 8px;">Basic Sphere, Black Background</td>
+        <td style="padding-left: 8px; border-collapse: collapse; vertical-align: middle;">
+            Basic Sphere, Black Background
+        </td>
     </tr>
 </table>
 | [<img alt="Basic Sphere, Transparent Background" height="120" src="challenge-book/chapter-6/transparent.png" width="160"/>](challenge-book/chapter-6/transparent.igl) | Basic Sphere, Transparent Background
