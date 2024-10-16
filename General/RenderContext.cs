@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
+using RayTracer.Options;
 using RayTracer.Pixels;
 using RayTracer.Renderer;
 using RayTracer.Scanners;
@@ -111,7 +112,7 @@ public class RenderContext
     /// </summary>
     /// <param name="options">The command line options to apply.</param>
     /// <param name="frame">The frame to render.</param>
-    public void ApplyOptions(ProgramOptions options, long frame)
+    public void ApplyOptions(RenderOptions options, long frame)
     {
         long seconds = frame / options.FrameRate;
         double remainder = frame % options.FrameRate;

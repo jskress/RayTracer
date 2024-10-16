@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using RayTracer.General;
 using RayTracer.ImageIO;
+using RayTracer.Options;
 
 namespace RayTracer.Instructions;
 
@@ -49,7 +50,7 @@ public class InstructionContext
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="frame">The frame to render.</param>
     public void Execute(
-        ProgramOptions options, RenderContext context, Variables variables, long frame)
+        RenderOptions options, RenderContext context, Variables variables, long frame)
     {
         if (_renderInstructions == 0)
             AddInstruction(new RenderInstruction(null, null));
@@ -76,7 +77,7 @@ public class InstructionContext
     /// <param name="renderInstruction">The render instruction to use.</param>
     /// <param name="frame">The frame to render.</param>
     private void CreateImage(
-        ProgramOptions options, RenderContext context, Variables variables,
+        RenderOptions options, RenderContext context, Variables variables,
         RenderInstruction renderInstruction, long frame)
     {
         context.ApplyOptions(options, frame);
@@ -110,7 +111,7 @@ public class InstructionContext
     /// <param name="options">The command line options supplied by the user.</param>
     /// <param name="frame">The frame to render.</param>
     /// <returns>The image file to write the generated image to.</returns>
-    private string GetOutputImageFile(ProgramOptions options, long frame)
+    private string GetOutputImageFile(RenderOptions options, long frame)
     {
         string fileName = options.OutputFileName;
 
