@@ -274,10 +274,12 @@ public class FontManager
         if (kerning == null)
             throw new ArgumentException("The specified font face is not registered.");
 
-        kerning.RemoveKern(pair.Left, pair.Right);
-        kerning.UpdateFontFace();
+        if (kerning.RemoveKern(pair.Left, pair.Right))
+        {
+            kerning.UpdateFontFace();
 
-        RewriteCatalog();
+            RewriteCatalog();
+        }
     }
 
     /// <summary>
@@ -313,14 +315,18 @@ public class FontManager
     /// be between the two specified code points within the typeface.
     /// </summary>
     /// <param name="typeface">The typeface that gives us our kerning context.</param>
+    /// <param name="kerningOverrides">A collection of kerning pairs that may override everything.</param>
     /// <param name="left">The code point of the left glyph the kerning is for.</param>
     /// <param name="right">The code point of the right glyph the kerning is for.</param>
     /// <returns>The amount to adjust the space between the two code points.</returns>
-    public short GetKerningFor(Typeface typeface, int left, int right)
+    public short GetKerningFor(Typeface typeface, Kerning kerningOverrides, int left, int right)
     {
         short result = 0;
+        
+        if (kerningOverrides != null)
+            result = kerningOverrides.GetKern(left, right);
 
-        if (_kerning.TryGetValue(typeface.Filename, out Kerning kerning))
+        if (result == 0 && _kerning.TryGetValue(typeface.Filename, out Kerning kerning))
             result = kerning.GetKern(left, right);
 
         if (result == 0 && typeface.HasKernTable())

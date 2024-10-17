@@ -380,6 +380,11 @@ public static class FontsCommand
             !short.TryParse(split[1], out short kern))
             throw new ArgumentException($"\"{spec}\" is not a valid kerning pair specification.");
 
-        return new KerningPair(leftCodePoints[0], rightCodePoints[0], kern);
+        return new KerningPair
+        {
+            Left = leftCodePoints[0],
+            Right = rightCodePoints[0],
+            Kern = kern
+        };
     }
 }

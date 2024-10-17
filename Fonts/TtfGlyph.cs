@@ -45,12 +45,13 @@ public class TtfGlyph
     /// This method is used to determine what the kerning adjustment, if any, there should
     /// be between this glyph and the one given.
     /// </summary>
+    /// <param name="kerningOverrides">A collection of kerning pairs that may override everything.</param>
     /// <param name="other">The glyph to follow this one.</param>
     /// <returns>The kerning distance between them.</returns>
-    public double GetKerningTo(TtfGlyph other)
+    public double GetKerningTo(Kerning kerningOverrides, TtfGlyph other)
     {
         return FontManager.Instance.GetKerningFor(
-            _typeface, _codePoint, other._codePoint) * _emScale;
+            _typeface, kerningOverrides, _codePoint, other._codePoint) * _emScale;
     }
 
     /// <summary>

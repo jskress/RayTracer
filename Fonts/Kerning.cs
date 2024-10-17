@@ -8,7 +8,7 @@ public class Kerning
     /// <summary>
     /// This property holds the font face from which this kerning object came.
     /// </summary>
-    public FontFace FontFace { get; internal set; }
+    public FontFace FontFace { get; internal init; }
 
     /// <summary>
     /// This property exposes the list of kerning pairs we carry.
@@ -28,12 +28,18 @@ public class Kerning
     /// <param name="kern">The adjustment amount to apply between the two characters.</param>
     public void AddKerning(int left, int right, short kern)
     {
+        KerningPair pair = new KerningPair
+        {
+            Left = left,
+            Right = right,
+            Kern = kern
+        };
         int index = FindEntry(left, right);
 
         if (index < 0)
-            KerningPairs.Add(new KerningPair(left, right, kern));
+            KerningPairs.Add(pair);
         else
-            KerningPairs[index] = KerningPairs[index] with { Kern = kern };
+            KerningPairs[index] = pair;
     }
 
     /// <summary>

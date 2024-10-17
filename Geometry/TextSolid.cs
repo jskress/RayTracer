@@ -38,6 +38,11 @@ public class TextSolid : Group
     public TextLayoutSettings LayoutSettings { get; set; } = new ();
 
     /// <summary>
+    /// This property allows for overriding character kerning for this specific text solid.
+    /// </summary>
+    public Kerning KerningOverrides { get; set; }
+
+    /// <summary>
     /// This property notes whether the text has surface caps.
     /// </summary>
     public bool Closed { get; set; } = true;
@@ -57,7 +62,7 @@ public class TextSolid : Group
         Typeface typeface = FontManager.Instance.GetTypeFace(id);
         GlyphLayout layout = new GlyphLayout(typeface, LayoutSettings, Text);
 
-        layout.Arrange();
+        layout.Arrange(KerningOverrides);
 
         foreach (GeneralPath path in layout)
         {

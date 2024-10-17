@@ -25,7 +25,8 @@ public class GlyphLayout : IEnumerable<GeneralPath>
     /// <summary>
     /// This method is used to arrange the lines in this layout.
     /// </summary>
-    public void Arrange()
+    /// <param name="kerningOverrides">A collection of kerning pairs that may override everything.</param>
+    public void Arrange(Kerning kerningOverrides)
     {
         double verticalAdvance = 1 + _settings.LineGap;
         double totalHeight = _glyphLines.Length * verticalAdvance - _settings.LineGap;
@@ -34,7 +35,7 @@ public class GlyphLayout : IEnumerable<GeneralPath>
         // First, Arrange the glyphs in each line.
         foreach (GlyphLine line in _glyphLines)
         {
-            line.Layout();
+            line.Layout(kerningOverrides);
 
             totalWidth = Math.Max(totalWidth, line.Advance);
         }

@@ -33,18 +33,18 @@ public partial class LanguageParser
             'extrusion', 'false', 'field', 'file', 'font', 'from', 'gamma', 'gap', 
             'gradient', 'granite', 'grayscale', 'group', 'height', 'hexagon', 'horizontal',
             'include', 'index', 'info', 'inherited', 'intersection', 'ior', 'italic',
-            'layer', 'layout', 'left', 'leopard', 'light', 'line', 'linear', 'location',
-            'look', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum',
-            'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of',
-            'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pixel',
-            'planar', 'plane', 'point', 'points', 'position', 'quad', 'radians', 'radii',
-            'reflective', 'refraction', 'regular', 'render', 'report', 'right', 'rotate',
-            'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows', 'shear',
-            'shininess', 'sides', 'size', 'smooth', 'software', 'source', 'specular',
-            'sphere', 'spherical', 'square', 'stripes', 'svg', 'text', 'thin', 'title',
-            'to', 'top', 'torus', 'transform', 'translate', 'transparency', 'triangle',
-            'triangular', 'true', 'turbulence', 'union', 'up', 'vector', 'vertical',
-            'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
+            'kern', 'kerning', 'layer', 'layout', 'left', 'leopard', 'light', 'line',
+            'linear', 'location', 'look', 'material', 'matrix', 'max', 'maximum', 'medium',
+            'min', 'minimum', 'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null',
+            'object', 'of', 'open', 'parallel', 'parallelogram', 'path', 'phased',
+            'pigment', 'pixel', 'planar', 'plane', 'point', 'points', 'position', 'quad',
+            'radians', 'radii', 'reflective', 'refraction', 'regular', 'render', 'report',
+            'right', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows',
+            'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
+            'specular', 'sphere', 'spherical', 'square', 'stripes', 'svg', 'text', 'thin',
+            'title', 'to', 'top', 'torus', 'transform', 'translate', 'transparency',
+            'triangle', 'triangular', 'true', 'turbulence', 'union', 'up', 'vector',
+            'vertical', 'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -95,6 +95,9 @@ public partial class LanguageParser
         {
             context > openBrace ?? 'Expecting an open brace to follow "context" here.'
         }
+        /// <summary>
+        /// This property holds the resolver for the closed property on a text solid.
+        /// </summary>
         scannerClause:
         [
             { serial > scanner ?? 'Expecting "scanner" to follow "serial" here.' } |
@@ -391,6 +394,16 @@ public partial class LanguageParser
                 [ top | baseline | center | bottom | _expression ] } |
             { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression }
         ] ?? 'Expecting a text layout property here.'
+        kerningPairClause:
+        {
+            kern > _expression > comma ?? 'Expecting a comma here.' > _expression >
+            comma ?? 'Expecting a comma here.' > _expression
+        }
+        KerningClause:
+        {
+            kerning > openBrace ?? 'Expecting an open brace to follow "kerning" here.' >
+            kerningPairClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
         startTextClause:
         {
             text > [
@@ -402,7 +415,7 @@ public partial class LanguageParser
         [
             { text > _expression } | fontClause |
             { layout > openBrace ?? 'Expecting an open brace after "layout" here.' } |
-            open | surfaceEntryClause
+            kerningClause | open | surfaceEntryClause
         ]
 
         // Triangle clauses.

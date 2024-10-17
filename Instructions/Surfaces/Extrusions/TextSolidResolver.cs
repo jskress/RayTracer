@@ -36,6 +36,11 @@ public class TextSolidResolver : SurfaceResolver<TextSolid>, IValidatable
     public TextLayoutSettingsResolver LayoutSettingsResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the kerning overrides property on a text solid.
+    /// </summary>
+    public KerningResolver KerningResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the closed property on a text solid.
     /// </summary>
     public Resolver<bool> ClosedResolver { get; set; }
@@ -54,6 +59,7 @@ public class TextSolidResolver : SurfaceResolver<TextSolid>, IValidatable
         FontWeightResolver.AssignTo(value, target => target.FontWeight, context, variables);
         IsItalicResolver.AssignTo(value, target => target.IsItalic, context, variables);
         LayoutSettingsResolver.AssignTo(value, target => target.LayoutSettings, context, variables);
+        KerningResolver.AssignTo(value, target => target.KerningOverrides, context, variables);
         ClosedResolver.AssignTo(value, target => target.Closed, context, variables);
 
         base.SetProperties(context, variables, value);
