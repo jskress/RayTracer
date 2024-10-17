@@ -12,11 +12,13 @@ public class TextSolid : Group
     /// <summary>
     /// This property holds the text that we are to represent.
     /// </summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string Text { get; set; }
 
     /// <summary>
     /// This property holds the name of the font family to use.
     /// </summary>
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string FontFamilyName { get; set; }
 
     /// <summary>
@@ -46,8 +48,13 @@ public class TextSolid : Group
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        Typeface typeface = FontManager.Instance
-            .GetGoogleFont(FontFamilyName, (int) FontWeight, IsItalic);
+        FaceIdentifier id = new FaceIdentifier
+        {
+            FamilyName = FontFamilyName,
+            Weight = (int) FontWeight,
+            Italic = IsItalic
+        };
+        Typeface typeface = FontManager.Instance.GetTypeFace(id);
         GlyphLayout layout = new GlyphLayout(typeface, LayoutSettings, Text);
 
         layout.Arrange();

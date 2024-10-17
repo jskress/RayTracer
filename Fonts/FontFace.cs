@@ -24,6 +24,11 @@ public class FontFace
     public string FileName { get; set; }
 
     /// <summary>
+    /// This property notes whether the font face is from the local system or from Google.
+    /// </summary>
+    public bool IsLocal { get; set; }
+
+    /// <summary>
     /// This property holds the raw kerning information.  Each entry is expected to be a
     /// list with exactly three strings.  The first two are the code points (as the strings
     /// that represent them) between which the kern value applies.  The third string is the
@@ -37,7 +42,7 @@ public class FontFace
     /// <returns>Our kerning data in a more useful form.</returns>
     internal Kerning GetKerning()
     {
-        Kerning kerning = new ();
+        Kerning kerning = new Kerning{ FontFace = this };
 
         if (KerningData != null)
         {

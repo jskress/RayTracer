@@ -15,9 +15,10 @@ namespace RayTracer.Options;
 
 /// <summary>
 /// This class represents the command line options that the user may specify to the ray
-/// tracer.
+/// tracer for rendering.
 /// </summary>
 // ReSharper disable once ClassNeverInstantiated.Global
+[Verb("render", isDefault: true, HelpText = "This command is used to render ray traced images.")]
 public class RenderOptions
 {
     [Option('i', "input-file", Required = true,

@@ -8,5 +8,6 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     Formatting = Formatting.Indented
 };
 
-Parser.Default.ParseArguments<RenderOptions>(args)
-    .WithParsed(RenderCommand.Render);
+Parser.Default.ParseArguments<RenderOptions, FontsOptions>(args)
+    .WithParsed<RenderOptions>(RenderCommand.Render)
+    .WithParsed<FontsOptions>(FontsCommand.ManageFonts);
