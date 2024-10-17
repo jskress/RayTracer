@@ -64,6 +64,9 @@ public partial class LanguageParser
                 case "layout":
                     resolver.LayoutSettingsResolver = ParseTextLayoutSettingsClause();
                     break;
+                case "kerning":
+                    resolver.KerningResolver = ParseKerningClause(clause);
+                    break;
                 case "open":
                     resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
                     break;
@@ -191,5 +194,32 @@ public partial class LanguageParser
         VerticalPosition position = Enum.Parse<VerticalPosition>(clause.Text(2), true);
 
         return new LiteralResolver<VerticalPosition> { Value = position };
+    }
+
+    /// <summary>
+    /// This method is used to parse the given kerning clause into a kerning resolver.
+    /// </summary>
+    /// <param name="clause">The clause to parse.</param>
+    /// <returns>The resulting kerning resolver.</returns>
+    private static KerningResolver ParseKerningClause(Clause clause)
+    {
+        KerningResolver resolver = new KerningResolver();
+
+        // The terms will be in sets of three, each representing a single pair.
+        for (int index = 0; index < clause.Expressions.Count; index += 2)
+        {
+            Term left = clause.Term(index);
+            Term right = clause.Term(index + 1);
+            Term kern = clause.Term(index + 2);
+            
+            resolver.PairResolvers.Add(new KerningPairResolver
+            {
+                LeftCharacterResolver = new TermResolver<string>{ Term = left },
+                RightCharacterResolver = new TermResolver<string>{ Term = right },
+                KernCharacterResolver = new TermResolver<short>{ Term = kern }
+            });
+        }
+
+        return resolver;
     }
 }

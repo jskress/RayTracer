@@ -30,6 +30,7 @@ public class TextLayoutSettingsResolver : ObjectResolver<TextLayoutSettings>
     /// This property holds the resolver for the line gap property of the layout settings.
     /// </summary>
     public Resolver<double> LineGapResolver { get; set; }
+
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a material.
     /// </summary>

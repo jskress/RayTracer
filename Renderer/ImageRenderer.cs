@@ -4,6 +4,7 @@ using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
+using RayTracer.Options;
 
 namespace RayTracer.Renderer;
 
@@ -39,7 +40,7 @@ public class ImageRenderer
     /// This method is used to render all images called for in our input files.
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>
-    public void Render(ProgramOptions options)
+    public void Render(RenderOptions options)
     {
         RenderImage(options, options.Frame ?? 0);
     }
@@ -49,7 +50,7 @@ public class ImageRenderer
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>
     /// <param name="frame">The frame to render.</param>
-    private void RenderImage(ProgramOptions options, long frame)
+    private void RenderImage(RenderOptions options, long frame)
     {
         RenderContext context = new ()
         {

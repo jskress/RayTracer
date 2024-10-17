@@ -12,18 +12,18 @@ internal class FontFaceLoader
     private readonly bool _italic;
     private readonly string _url;
 
-    internal FontFaceLoader(string name, int weight, bool italic)
+    internal FontFaceLoader(FaceIdentifier id)
     {
-        string marker = italic ? "1" : "0";
+        string marker = id.Italic ? "1" : "0";
 
-        _name = name;
-        _weight = weight;
-        _italic = italic;
+        _name = id.FamilyName;
+        _weight = id.Weight;
+        _italic = id.Italic;
 
-        name = name.Replace(' ', '+');
+        string name = _name.Replace(' ', '+');
 
         // ReSharper disable once StringLiteralTypo
-        _url = $"{BaseUrl}?family={name}:ital,wght@{marker},{weight}";
+        _url = $"{BaseUrl}?family={name}:ital,wght@{marker},{_weight}";
     }
 
     /// <summary>

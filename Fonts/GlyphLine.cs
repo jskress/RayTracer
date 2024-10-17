@@ -22,8 +22,6 @@ public class GlyphLine : IEnumerable<GeneralPath>
 
     private readonly TtfGlyph[] _glyphs;
 
-    private TwoDPoint _offset = TwoDPoint.Zero;
-
     public GlyphLine(Typeface typeface, string text)
     {
         _glyphs = text.EnumerateRunes()
@@ -36,7 +34,8 @@ public class GlyphLine : IEnumerable<GeneralPath>
     /// determining the total advance along the way.  The layout makes use of any applicable
     /// kerning between glyphs.
     /// </summary>
-    internal void Layout()
+    /// <param name="kerningOverrides">A collection of kerning pairs that may override everything.</param>
+    internal void Layout(Kerning kerningOverrides)
     {
         double advance = 0;
         TtfGlyph previous = null;
@@ -44,7 +43,7 @@ public class GlyphLine : IEnumerable<GeneralPath>
         foreach (TtfGlyph glyph in _glyphs)
         {
             if (previous is not null)
-                advance += previous.GetKerningTo(glyph);
+                advance += previous.GetKerningTo(kerningOverrides, glyph);
 
             glyph.Offset = new TwoDPoint(advance, 0);
 

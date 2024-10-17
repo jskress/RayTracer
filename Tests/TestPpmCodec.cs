@@ -2,6 +2,7 @@ using RayTracer;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
+using RayTracer.Options;
 
 namespace Tests;
 
@@ -49,7 +50,7 @@ public class TestPpmCodec
     {
         using MemoryStream streamToWrite = new ();
 
-        _ = new ProgramOptions();
+        _ = new RenderOptions();
 
         _codec.Encode(new RenderContext(), canvas, streamToWrite, null);
 
