@@ -40,8 +40,8 @@ public class Group : Surface
 
         if (Material is not null)
         {
-            foreach (Surface surface in Surfaces)
-                surface.SetMaterial(Material);
+            foreach (Surface surface in new SurfaceIterator(Surfaces).Surfaces)
+                surface.Material ??= Material;
         }
     }
 

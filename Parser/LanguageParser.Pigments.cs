@@ -21,7 +21,14 @@ public partial class LanguageParser
     /// </summary>
     private IPigmentResolver ParsePigmentClause()
     {
-        Clause clause = ParseClause("pigmentClause");
+        Clause clause = ParseClause("withSeedClause");
+        Resolver<int?> seedResolver = null;
+
+        if (clause != null)
+            seedResolver = new TermResolver<int?> { Term = clause.Term() };
+
+        clause = ParseClause("pigmentClause");
+
         string text = clause.Text();
         IPigmentResolver resolver;
         
@@ -34,13 +41,13 @@ public partial class LanguageParser
                 return new SinglePigmentResolver { Term = term };
             }
             case "blend" or "layer":
-                resolver = ParseBlendedPigmentClause(text is "layer");
+                resolver = ParseBlendedPigmentClause(seedResolver, text is "layer");
                 break;
             case "noisy":
-                resolver = ParseNoisyPigmentClause();
+                resolver = ParseNoisyPigmentClause(seedResolver);
                 break;
             default:
-                resolver = ParsePatternPigmentClause(clause);
+                resolver = ParsePatternPigmentClause(seedResolver, clause);
                 break;
         }
 
@@ -53,10 +60,12 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse the definition of a blended or layered pigment.
     /// </summary>
+    /// <param name="seedResolver">The resolver, if any, for the pigment seed.</param>
     /// <param name="layer">A flag noting whether we need to layer or blend the child
     /// pigments.</param>
     /// <returns>The blended pigment resolver.</returns>
-    private BlendedPigmentResolver ParseBlendedPigmentClause(bool layer)
+    private BlendedPigmentResolver ParseBlendedPigmentClause(
+        Resolver<int?> seedResolver, bool layer)
     {
         List<IPigmentResolver> resolvers = [ParsePigmentClause()];
 
@@ -69,6 +78,7 @@ public partial class LanguageParser
 
         return new BlendedPigmentResolver
         {
+            SeedResolver = seedResolver,
             PigmentResolvers = resolvers,
             LayerResolver = new LiteralResolver<bool> { Value = layer },
             TransformResolver = ParseTransformClause()
@@ -78,14 +88,16 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse the definition of a noisy pigment.
     /// </summary>
+    /// <param name="seedResolver">The resolver, if any, for the pigment seed.</param>
     /// <returns>The noisy pigment resolver.</returns>
-    private NoisyPigmentResolver ParseNoisyPigmentClause()
+    private NoisyPigmentResolver ParseNoisyPigmentClause(Resolver<int?> seedResolver)
     {
         // We want the turbulence specification before the pigment.
         TurbulenceResolver turbulenceResolver = ParseTurbulenceClause();
 
         return new NoisyPigmentResolver
         {
+            SeedResolver = seedResolver,
             PigmentResolver = ParsePigmentClause(),
             TurbulenceResolver = turbulenceResolver,
             TransformResolver = ParseTransformClause()
@@ -95,14 +107,17 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to parse the definition of a patterned pigment.
     /// </summary>
+    /// <param name="seedResolver">The resolver, if any, for the pigment seed.</param>
     /// <param name="clause">The clause that defines the pattern.</param>
     /// <returns>The pattern pigment resolver.</returns>
-    private PatternPigmentResolver ParsePatternPigmentClause(Clause clause)
+    private PatternPigmentResolver ParsePatternPigmentClause(
+        Resolver<int?> seedResolver, Clause clause)
     {
         (IPatternResolver resolver, int discretePigmentsNeeded) = ParsePatternClause(clause);
 
         return new PatternPigmentResolver
         {
+            SeedResolver = seedResolver,
             PatternResolver = resolver,
             PigmentSetResolver = discretePigmentsNeeded == 0
                 ? ParsePigmentMapClause()

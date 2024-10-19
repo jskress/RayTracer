@@ -18,6 +18,19 @@ public abstract class Pattern
     public abstract int DiscretePigmentsNeeded { get; }
 
     /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// By default, if this pattern implements the <see cref="INoiseConsumer"/> interface,
+    /// the seed will be set.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public virtual void SetSeed(int seed)
+    {
+        if (this is INoiseConsumer consumer)
+            consumer.Seed ??= seed;
+    }
+
+    /// <summary>
     /// This method is used to determine an appropriate value, typically between 0 and 1,
     /// for the given point.
     /// </summary>

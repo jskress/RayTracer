@@ -15,14 +15,15 @@ public partial class LanguageParser
 {
     /// <summary>
     /// This method creates a pattern resolver represented by the given clause.  As
-    /// necessary, further clauses are parsed.  The number of discrete pigments that the
-    /// pattern needs is also returned.
+    /// necessary, further clauses are parsed.  We also return the number of discrete
+    /// pigments that the pattern needs.
     /// </summary>
     /// <param name="clause">The clause to interpret.</param>
     /// <returns>A tuple carrying the pattern resolver and the number of discrete pigments
     /// needed.</returns>
     private (IPatternResolver, int) ParsePatternClause(Clause clause)
     {
+        Resolver<int?> seedResolver = null;
         string text = string.Join('.', clause.Tokens[..^1]
             .Select(token => token.Text));
         bool bouncing = false;
@@ -36,6 +37,12 @@ public partial class LanguageParser
             bouncing = true;
         }
 
+        if (text.Contains(".with.seed"))
+        {
+            seedResolver = new TermResolver<int?> { Term = clause.Term() };
+            text = text.Replace(".with.seed", "");
+        }
+
         return text switch
         {
             // Simple ones.
@@ -47,14 +54,23 @@ public partial class LanguageParser
             "brick" => (ParseBrickPattern(), new BrickPattern().DiscretePigmentsNeeded),
             "checker" => (new CheckerPatternResolver(), new CheckerPattern().DiscretePigmentsNeeded),
             "cubic" => (new CubicPatternResolver(), new CubicPattern().DiscretePigmentsNeeded),
-            "dents" => (new DentsPatternResolver(), new DentsPattern().DiscretePigmentsNeeded),
-            "granite" => (new GranitePatternResolver(), new GranitePattern().DiscretePigmentsNeeded),
+            "dents" => (new DentsPatternResolver
+            {
+                SeedResolver = seedResolver
+            }, new DentsPattern().DiscretePigmentsNeeded),
+            "granite" => (new GranitePatternResolver
+            {
+                SeedResolver = seedResolver
+            }, new GranitePattern().DiscretePigmentsNeeded),
             "hexagon" => (new HexagonPatternResolver(), new HexagonPattern().DiscretePigmentsNeeded),
             "leopard" => (new LeopardPatternResolver(), new LeopardPattern().DiscretePigmentsNeeded),
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
             "triangular" => (new TriangularPatternResolver(), new TriangularPattern().DiscretePigmentsNeeded),
-            "wrinkles" => (new WrinklesPatternResolver(), new WrinklesPattern().DiscretePigmentsNeeded),
+            "wrinkles" => (new WrinklesPatternResolver
+            {
+                SeedResolver = seedResolver
+            }, new WrinklesPattern().DiscretePigmentsNeeded),
             // Stripes
             "linear.stripes" => (new StripedPatternResolver
             {

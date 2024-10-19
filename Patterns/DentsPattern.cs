@@ -3,10 +3,16 @@ using RayTracer.Basics;
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides the dents pattern.
+/// This class provides a pattern of dents.
 /// </summary>
-public class DentsPattern : Pattern
+public class DentsPattern : Pattern, INoiseConsumer
 {
+    /// <summary>
+    /// This property holds the seed for the noise generator to use.
+    /// If it is not specified, a default noise generator will be used.
+    /// </summary>
+    public int? Seed { get; set; }
+
     /// <summary>
     /// This property reports the number of discrete pigments this pattern supports.  In
     /// this case, the <see cref="Evaluate"/> method will return the index of the pigment
@@ -23,7 +29,7 @@ public class DentsPattern : Pattern
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        double noise = PerlinNoise.Instance.Noise(point);
+        double noise = PerlinNoise.GetNoise(Seed).Noise(point);
 
         return noise * noise * noise;
     }

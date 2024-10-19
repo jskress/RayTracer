@@ -3,10 +3,16 @@ using RayTracer.Basics;
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides the wrinkles pattern.
+/// This class provides a pattern of wrinkles.
 /// </summary>
-public class WrinklesPattern : Pattern
+public class WrinklesPattern : Pattern, INoiseConsumer
 {
+    /// <summary>
+    /// This property holds the seed for the noise generator to use.
+    /// If it is not specified, a default noise generator will be used.
+    /// </summary>
+    public int? Seed { get; set; }
+
     /// <summary>
     /// This property reports the number of discrete pigments this pattern supports.  In
     /// this case, the <see cref="Evaluate"/> method will return the index of the pigment
@@ -24,15 +30,15 @@ public class WrinklesPattern : Pattern
     public override double Evaluate(Point point)
     {
         Vector vector = new Vector(point);
-        double value = PerlinNoise.Instance.Noise(point);
+        double value = PerlinNoise.GetNoise(Seed).Noise(point);
         double lambda = 2;
         double omega = 0.5;
 
         for (int _ = 0; _ < 10; _++)
         {
             Vector work = vector * lambda;
-            
-            value += omega * PerlinNoise.Instance.Noise(new Point(work.X, work.Y, work.Z));
+
+            value += omega * PerlinNoise.GetNoise(Seed).Noise(new Point(work.X, work.Y, work.Z));
             lambda += 2;
             omega *= 0.5;
         }

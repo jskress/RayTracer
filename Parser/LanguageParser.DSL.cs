@@ -39,12 +39,13 @@ public partial class LanguageParser
             'object', 'of', 'open', 'parallel', 'parallelogram', 'path', 'phased',
             'pigment', 'pixel', 'planar', 'plane', 'point', 'points', 'position', 'quad',
             'radians', 'radii', 'reflective', 'refraction', 'regular', 'render', 'report',
-            'right', 'rotate', 'scale', 'scanner', 'scene', 'serial', 'shadow', 'shadows',
-            'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'square', 'stripes', 'svg', 'text', 'thin',
-            'title', 'to', 'top', 'torus', 'transform', 'translate', 'transparency',
-            'triangle', 'triangular', 'true', 'turbulence', 'union', 'up', 'vector',
-            'vertical', 'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
+            'right', 'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow',
+            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
+            'source', 'specular', 'sphere', 'spherical', 'square', 'stripes', 'svg',
+            'text', 'thin', 'title', 'to', 'top', 'torus', 'transform', 'translate',
+            'transparency', 'triangle', 'triangular', 'true', 'turbulence', 'union', 'up',
+            'vector', 'vertical', 'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y',
+            'Z'
 
         _expressions:
         {
@@ -72,10 +73,15 @@ public partial class LanguageParser
             comma ?? 'Expecting a comma here.' > _expression >
             [ closeBracket | rightParen ] ?? 'Expecting a close bracket or right parenthesis here.'
         }
+        withSeedClause:
+        {
+            with > seed ?? 'Expecting "seed" to follow "with" here.' > _expression
+        }
         turbulenceClause:
         {
             turbulence > _expression >
-            { phased > _expression > { comma > _expression }{?} }{?}
+            { phased > _expression > { comma > _expression }{?} }{?} >
+            withSeedClause{?}
         }
 
         // Info clauses.
@@ -188,8 +194,11 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            agate | boxed | brick | checker | cubic | dents | granite | hexagon | leopard |
-            planar | square | triangular | wrinkles |
+            agate | boxed | brick | checker | cubic | hexagon | leopard | planar | square |
+            triangular |
+            {
+                [ dents | granite | wrinkles ] > withSeedClause{?}
+            } |
             {
                 [ { linear > [ X | Y | Z ]{?} } | cylindrical | spherical ] >
                 [ stripes | { bouncing{?} > gradient } ] ?? 'Expecting "stripes" or "gradient" here.'

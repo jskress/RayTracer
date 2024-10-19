@@ -192,46 +192,4 @@ public abstract class Surface : NamedThing
 
         return normal;
     }
-
-    /// <summary>
-    /// This method decides whether the given child surface is, or is contained by, the
-    /// given (potential) parent surface.
-    /// </summary>
-    /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
-    /// <param name="child">the child surface to test.</param>
-    /// <returns><c>true</c>, if <c>child</c> either is, or is contained by, <c>parent</c>.</returns>
-    protected static bool IsOrIncludes(Surface parent, Surface child)
-    {
-        return parent switch
-        {
-            Group group => group.Surfaces.Any(surface => IsOrIncludes(surface, child)),
-            CsgSurface csgSurface => IsOrIncludes(csgSurface.Left, child) ||
-                                     IsOrIncludes(csgSurface.Right, child),
-            _ => parent == child
-        };
-    }
-
-    /// <summary>
-    /// This is a helper method that will push the given material down to all descendents
-    /// who want it.  It will recurse as necessary.
-    /// </summary>
-    /// <param name="material">The material to apply.</param>
-    public void SetMaterial(Material material)
-    {
-        Material ??= material;
-
-        switch (this)
-        {
-            case Group group:
-            {
-                foreach (Surface child in group.Surfaces)
-                    child.SetMaterial(material);
-                break;
-            }
-            case CsgSurface csgSurface:
-                csgSurface.Left.SetMaterial(material);
-                csgSurface.Right.SetMaterial(material);
-                break;
-        }
-    }
 }

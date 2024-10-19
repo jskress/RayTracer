@@ -49,6 +49,17 @@ public class PigmentSet
     }
 
     /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public void SetSeed(int seed)
+    {
+        foreach (Pigment pigment in _entries.Select(entry => entry.Pigment))
+            pigment.SetSeed(seed);
+    }
+
+    /// <summary>
     /// This method is used to resolve a given index number to the proper corresponding color.
     /// </summary>
     /// <param name="point">The point to get the color for.</param>
