@@ -2,6 +2,7 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
+using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -20,10 +21,11 @@ public partial class LanguageParser
         if (clause == null)
             return TurbulenceResolver.NoiseWithNoTurbulenceResolver;
 
+        Resolver<int?> seedResolver = null;
         Resolver<int> depthResolver = new TermResolver<int> { Term = clause.Term() };
         Resolver<int> tightnessResolver = null;
         Resolver<double> scaleResolver = null;
-        bool phased = clause.Tokens.Count > 1;
+        bool phased = clause.Text(1) == "phased";
 
         if (phased)
         {
@@ -33,8 +35,16 @@ public partial class LanguageParser
                 scaleResolver = new TermResolver<double> { Term = clause.Term(2) };
         }
 
+        if (clause.Tokens.Select(token => token.Text).Any(text => text == "seed"))
+        {
+            Term seedTerm = (Term) clause.Expressions.Last();
+            
+            seedResolver = new TermResolver<int?> { Term = seedTerm };
+        }
+
         return new TurbulenceResolver
         {
+            SeedResolver = seedResolver,
             DepthResolver = depthResolver,
             PhasedResolver = new LiteralResolver<bool> { Value = phased },
             TightnessResolver = tightnessResolver,

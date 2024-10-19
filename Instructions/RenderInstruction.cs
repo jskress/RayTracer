@@ -59,31 +59,26 @@ public class RenderInstruction : Instruction
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering();
 
-        EnsureMaterials(scene.Surfaces);
+        FinalizeSurfaceData(scene.Surfaces);
  
         Canvas = camera.Render(context, scene);
     }
 
     /// <summary>
-    /// This method ensures that all given surfaces have a material attached.  It will
-    /// recurse as necessary.
+    /// This method ensures that all given surfaces have all relevant data finalized.
+    /// This includes making sure a material is attached to all surfaces.
     /// </summary>
     /// <param name="surfaces">The list of surfaces to examine.</param>
-    private static void EnsureMaterials(List<Surface> surfaces)
+    private static void FinalizeSurfaceData(List<Surface> surfaces)
     {
-        foreach (Surface surface in surfaces)
+        foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
             surface.Material ??= OrphanMaterial;
 
-            switch (surface)
-            {
-                case Group group:
-                    EnsureMaterials(group.Surfaces);
-                    break;
-                case CsgSurface csgSurface:
-                    EnsureMaterials([csgSurface.Left, csgSurface.Right]);
-                    break;
-            }
+            Pigment pigment = surface.Material.Pigment;
+
+            if (pigment.Seed.HasValue)
+                pigment.SetSeed(pigment.Seed.Value);
         }
     }
 

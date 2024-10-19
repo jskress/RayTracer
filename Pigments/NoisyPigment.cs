@@ -19,8 +19,19 @@ public class NoisyPigment : Pigment
     public Turbulence Turbulence { get; init; }
 
     /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public override void SetSeed(int seed)
+    {
+        Pigment.SetSeed(seed);
+        Turbulence.Seed ??= seed;
+    }
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  We return the
-    /// color our wrapped pigment returns, with noise applied.
+    /// color that our wrapped pigment returns, with noise applied.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>

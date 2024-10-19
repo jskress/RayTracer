@@ -21,6 +21,17 @@ public class PatternPigment : Pigment
     public PigmentSet PigmentSet { get; init; }
 
     /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public override void SetSeed(int seed)
+    {
+        Pattern.SetSeed(seed);
+        PigmentSet.SetSeed(seed);
+    }
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we
     /// return is based on a blend of colors from our child pigments at the given point.
     /// </summary>

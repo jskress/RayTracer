@@ -18,6 +18,11 @@ public class TurbulenceResolver : ObjectResolver<Turbulence>
     };
 
     /// <summary>
+    /// This property holds the resolver for our turbulence's seed property.
+    /// </summary>
+    public Resolver<int?> SeedResolver { get; init; }
+
+    /// <summary>
     /// This property holds the resolver for our turbulence's depth property.
     /// </summary>
     public Resolver<int> DepthResolver { get; init; }
@@ -46,6 +51,7 @@ public class TurbulenceResolver : ObjectResolver<Turbulence>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Turbulence value)
     {
+        SeedResolver.AssignTo(value, target => target.Seed, context, variables);
         DepthResolver.AssignTo(value, target => target.Depth, context, variables);
         PhasedResolver.AssignTo(value, target => target.Phased, context, variables);
         TightnessResolver.AssignTo(value, target => target.Tightness, context, variables);

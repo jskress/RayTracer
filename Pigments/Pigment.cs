@@ -12,6 +12,13 @@ namespace RayTracer.Pigments;
 public abstract class Pigment
 {
     /// <summary>
+    /// This property holds the seed for the noise generator to use.
+    /// If it is not specified, a default noise generator will be used where
+    /// needed.
+    /// </summary>
+    public int? Seed { get; set; }
+
+    /// <summary>
     /// This property holds the transformation matrix for the pigmentation.
     /// </summary>
     public Matrix Transform
@@ -48,6 +55,13 @@ public abstract class Pigment
     {
         return _transform.Invert();
     }
+
+    /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public virtual void SetSeed(int seed) {}
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.

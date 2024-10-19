@@ -58,9 +58,12 @@ public class CsgSurface : Surface
     {
         Left.PrepareForRendering();
         Right.PrepareForRendering();
-        
+
         if (Material is not null)
-            SetMaterial(Material);
+        {
+            foreach (Surface surface in new SurfaceIterator([Left, Right]).Surfaces)
+                surface.Material ??= Material;
+        }
     }
 
     /// <summary>
@@ -109,6 +112,19 @@ public class CsgSurface : Surface
 
                 return result;
             });
+    }
+
+    /// <summary>
+    /// This method decides whether the given child surface is, or is contained by, the
+    /// given (potential) parent surface.
+    /// </summary>
+    /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
+    /// <param name="child">the child surface to test.</param>
+    /// <returns><c>true</c>, if <c>child</c> either is, or is contained by, <c>parent</c>.</returns>
+    private static bool IsOrIncludes(Surface parent, Surface child)
+    {
+        return new SurfaceIterator(parent).Surfaces
+            .Any(surface => surface == child);
     }
 
     /// <summary>

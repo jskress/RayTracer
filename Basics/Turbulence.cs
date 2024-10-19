@@ -6,8 +6,14 @@ namespace RayTracer.Basics;
 /// This class provides a generator for turbulence.
 /// </summary>
 [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
-public class Turbulence
+public class Turbulence : INoiseConsumer
 {
+    /// <summary>
+    /// This property holds the seed for the noise generator to use.
+    /// If it is not specified, a default noise generator will be used.
+    /// </summary>
+    public int? Seed { get; set; }
+
     /// <summary>
     /// This property controls the depth of the turbulence we will apply.
     /// </summary>
@@ -40,14 +46,14 @@ public class Turbulence
     public double Generate(Point point)
     {
         if (Depth == 0)
-            return PerlinNoise.Instance.Noise(point);
+            return PerlinNoise.GetNoise(Seed).Noise(point);
 
         double noise = 0.0;
         double weight = 1.0;
 
         for (int i = 0; i < Depth; i++)
         {
-            noise += weight * PerlinNoise.Instance.Noise(point);
+            noise += weight * PerlinNoise.GetNoise(Seed).Noise(point);
             weight *= 0.5;
             point = new Point(point.X * 2, point.Y * 2, point.Z * 2);
         }

@@ -8,24 +8,41 @@ namespace RayTracer.Basics;
 public class PerlinNoise
 {
     private const int TableSize = 256;
+    
+    private static readonly Dictionary<int, PerlinNoise> NoiseGenerators = new ();
 
     /// <summary>
-    /// This property makes available a default noise generator.
+    /// This method returns an appropriate noise generator.
+    /// If a specific random number generator seed is not provided, a default shared
+    /// instance is returned.
+    /// The same seed will always yield the same generator.
     /// </summary>
-    public static PerlinNoise Instance => LazyInstance.Value;
+    /// <param name="seed">The seed to the random number generator to use.</param>
+    /// <returns>The appropriate noise generator.</returns>
+    public static PerlinNoise GetNoise(int? seed = null)
+    {
+        PerlinNoise noise = DefaultInstance;
 
-    private static readonly Random Rng = new ();
+        if (seed.HasValue)
+        {
+            if (!NoiseGenerators.TryGetValue(seed.Value, out noise))
+                NoiseGenerators[seed.Value] = noise = new PerlinNoise(new Random(seed.Value));
+        }
 
-    private static readonly Lazy<PerlinNoise> LazyInstance = new(
-        () => new PerlinNoise());
+        return noise; 
+    }
 
+    private static readonly PerlinNoise DefaultInstance = new (Random.Shared);
+
+    private readonly Random _rng;
     private readonly Vector[] _numbers;
     private readonly int[] _x;
     private readonly int[] _y;
     private readonly int[] _z;
 
-    public PerlinNoise()
+    private PerlinNoise(Random rng)
     {
+        _rng = rng;
         _numbers = new Vector[TableSize];
         _x = new int[TableSize];
         _y = new int[TableSize];
@@ -40,15 +57,15 @@ public class PerlinNoise
     }
 
     /// <summary>
-    /// This method is used to generate the contents of one of our 3 axis tables.
+    /// This method is used to generate the contents of one of our three axis tables.
     /// </summary>
     /// <param name="data">the axis table to populate.</param>
-    private static void GenerateAxis(int[] data)
+    private void GenerateAxis(int[] data)
     {
         for (int index = 0; index < data.Length; index++)
             data[index] = index;
 
-        Rng.Shuffle(data);
+        _rng.Shuffle(data);
     }
 
     /// <summary>
@@ -66,15 +83,6 @@ public class PerlinNoise
         int j = Convert.ToInt32(Math.Floor(point.Y));
         int k = Convert.ToInt32(Math.Floor(point.Z));
         Vector[,,] buffer = new Vector[2, 2, 2];
-
-        // buffer[0, 0, 0] = _numbers[_x[(i + 0) & 255] ^ _y[(j + 0) & 255] ^ _z[(k + 0) & 255]];
-        // buffer[0, 0, 1] = _numbers[_x[(i + 0) & 255] ^ _y[(j + 0) & 255] ^ _z[(k + 1) & 255]];
-        // buffer[0, 1, 0] = _numbers[_x[(i + 0) & 255] ^ _y[(j + 1) & 255] ^ _z[(k + 0) & 255]];
-        // buffer[0, 1, 1] = _numbers[_x[(i + 0) & 255] ^ _y[(j + 1) & 255] ^ _z[(k + 1) & 255]];
-        // buffer[1, 0, 0] = _numbers[_x[(i + 1) & 255] ^ _y[(j + 0) & 255] ^ _z[(k + 0) & 255]];
-        // buffer[1, 0, 1] = _numbers[_x[(i + 1) & 255] ^ _y[(j + 0) & 255] ^ _z[(k + 1) & 255]];
-        // buffer[1, 1, 0] = _numbers[_x[(i + 1) & 255] ^ _y[(j + 1) & 255] ^ _z[(k + 0) & 255]];
-        // buffer[1, 1, 1] = _numbers[_x[(i + 1) & 255] ^ _y[(j + 1) & 255] ^ _z[(k + 1) & 255]];
 
         for (int di=0; di < 2; di++)
         {
@@ -113,16 +121,6 @@ public class PerlinNoise
         double v1 = 1 - vv;
         double w1 = 1 - ww;
 
-        // return
-        //     (0 * uu + (1 - 0) * u1) * (0 * v + (1 - 0) * v1) * (0 * w + (1 - 0) * w1) * buffer[0, 0, 0] +
-        //     (0 * uu + (1 - 0) * u1) * (0 * v + (1 - 0) * v1) * (1 * w + (1 - 1) * w1) * buffer[0, 0, 1] +
-        //     (0 * uu + (1 - 0) * u1) * (1 * v + (1 - 1) * v1) * (0 * w + (1 - 0) * w1) * buffer[0, 1, 0] +
-        //     (0 * uu + (1 - 0) * u1) * (1 * v + (1 - 1) * v1) * (1 * w + (1 - 1) * w1) * buffer[0, 1, 1] +
-        //     (1 * uu + (1 - 1) * u1) * (0 * v + (1 - 0) * v1) * (0 * w + (1 - 0) * w1) * buffer[1, 0, 0] +
-        //     (1 * uu + (1 - 1) * u1) * (0 * v + (1 - 0) * v1) * (1 * w + (1 - 1) * w1) * buffer[1, 0, 1] +
-        //     (1 * uu + (1 - 1) * u1) * (1 * v + (1 - 1) * v1) * (0 * w + (1 - 0) * w1) * buffer[1, 1, 0] +
-        //     (1 * uu + (1 - 1) * u1) * (1 * v + (1 - 1) * v1) * (1 * w + (1 - 1) * w1) * buffer[1, 1, 1];
-
         double accumulator = 0;
         
         for (int i=0; i < 2; i++)
@@ -151,11 +149,11 @@ public class PerlinNoise
     /// <param name="min">The minimum of the interval.</param>
     /// <param name="max">The maximum of the interval.</param>
     /// <returns>A random vector in the space.</returns>
-    private static Vector RandomVector(double min = -1, double max = 1)
+    private Vector RandomVector(double min = -1, double max = 1)
     {
         return new Vector(
-            Rng.NextDouble(min, max),
-            Rng.NextDouble(min, max),
-            Rng.NextDouble(min, max)).Unit;
+            _rng.NextDouble(min, max),
+            _rng.NextDouble(min, max),
+            _rng.NextDouble(min, max)).Unit;
     }
 }

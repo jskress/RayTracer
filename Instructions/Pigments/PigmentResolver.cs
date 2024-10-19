@@ -12,6 +12,11 @@ public abstract class PigmentResolver<TValue> : Resolver<TValue>, IPigmentResolv
     where TValue : Pigment
 {
     /// <summary>
+    /// This property holds the resolver for our turbulence's seed property.
+    /// </summary>
+    public Resolver<int?> SeedResolver { get; init; }
+
+    /// <summary>
     /// This property holds the resolver for our pigment's transform.
     /// </summary>
     public TransformResolver TransformResolver { get; init; }
@@ -45,6 +50,7 @@ public abstract class PigmentResolver<TValue> : Resolver<TValue>, IPigmentResolv
     /// <param name="value">The value to update.</param>
     protected void SetProperties(RenderContext context, Variables variables, TValue value)
     {
+        SeedResolver.AssignTo(value, target => target.Seed, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
     }
 }

@@ -23,6 +23,16 @@ public class AgatePattern : Pattern
     public Turbulence Turbulence { get; set; }
 
     /// <summary>
+    /// This method is used to push any random number generator seeds throughout the pigment
+    /// tree.
+    /// </summary>
+    /// <param name="seed">The seed value to set.</param>
+    public override void SetSeed(int seed)
+    {
+        Turbulence.Seed ??= seed;
+    }
+
+    /// <summary>
     /// This method is used to determine an appropriate value, typically between 0 and 1,
     /// for the given point.
     /// </summary>
