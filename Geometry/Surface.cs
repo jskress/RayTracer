@@ -14,6 +14,12 @@ public abstract class Surface : NamedThing
     public Surface Parent { get; set; }
 
     /// <summary>
+    /// This property holds the seed for any randomness to use.
+    /// If it is not specified, default randomness will be used where needed.
+    /// </summary>
+    public int? Seed { get; set; }
+
+    /// <summary>
     /// This holds the material for the surface.
     /// </summary>
     public Material Material { get; set; } = new ();

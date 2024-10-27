@@ -4,10 +4,10 @@ using RayTracer.General;
 namespace RayTracer.Instructions.Core;
 
 /// <summary>
-/// This class is used to resolve a value that is an angle, which is converted, as needed,
-/// to radians.
+/// This class is used to resolve a value that is a percentage, which divides the term
+/// result by 100 to reach a final value.
 /// </summary>
-public class AngleResolver : TermResolver<double>
+public class PercentResolver : TermResolver<double>
 {
     /// <summary>
     /// This method is used to ensure the result of the term evaluation is of the proper
@@ -19,8 +19,6 @@ public class AngleResolver : TermResolver<double>
     /// <returns>The coerced value.</returns>
     protected override double Coerce(RenderContext context, object value)
     {
-        double angle = (double) value;
-
-        return context.AnglesAreRadians ? angle : angle.ToRadians();
+        return (double) value / 100.0;
     }
 }

@@ -40,12 +40,15 @@ public partial class LanguageParser
     private readonly ParsingContext _context;
     private readonly Stack<Entry> _entries;
 
+    private string _lastFileName;
+
     public LanguageParser(string fileName)
     {
         FillDispatchTables();
 
         _entries = new Stack<Entry>();
         _context = new ParsingContext();
+        _lastFileName = fileName;
 
         PushEntry(fileName);
     }
@@ -82,7 +85,7 @@ public partial class LanguageParser
     /// <param name="exception">The token exception we trapped.</param>
     private void ShowError(TokenException exception)
     {
-        string fileName = PopEntry();
+        string fileName = _entries.IsEmpty() ? _lastFileName : PopEntry();
         int line = exception.Token.Line;
         int column = exception.Token.Column;
 
@@ -286,7 +289,7 @@ public partial class LanguageParser
         // Must do this for proper file closure.
         entry.Parser.Dispose();
 
-        return entry.FileName;
+        return _lastFileName = entry.FileName;
     }
 
     /// <summary>
@@ -299,7 +302,7 @@ public partial class LanguageParser
         string first = clause.Text();
         List<string> words = [first];
 
-        if (first is "apply" or "no" or "bounded")
+        if (first is "apply" or "no" or "bounded" or "with")
             words.Add(clause.Text(1));
 
         return string.Join('.', words);

@@ -77,6 +77,8 @@ public class RenderInstruction : Instruction
 
             Pigment pigment = surface.Material.Pigment;
 
+            pigment.Seed ??= surface.Seed;
+
             if (pigment.Seed.HasValue)
                 pigment.SetSeed(pigment.Seed.Value);
         }
