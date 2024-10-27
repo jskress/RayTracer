@@ -32,7 +32,8 @@ public class TextLayoutSettingsResolver : ObjectResolver<TextLayoutSettings>
     public Resolver<double> LineGapResolver { get; set; }
 
     /// <summary>
-    /// This method is used to apply our resolvers to the appropriate properties of a material.
+    /// This method is used to apply our resolvers to the appropriate properties of a text
+    /// layout settings.
     /// </summary>
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>

@@ -24,20 +24,21 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
 
-        _keywords: 'agate', 'alignment', 'ambient', 'angles', 'apply', 'at', 'are',
-            'author', 'background', 'banded', 'baseline', 'bits', 'black', 'blend', 'bold',
-            'bottom', 'bouncing', 'bounded', 'boxed', 'brick', 'by', 'camera', 'center',
-            'channel', 'checker', 'close', 'color', 'comment', 'conic', 'context',
-            'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'description', 'difference', 'diffuse', 'disclaimer',
-            'extrusion', 'false', 'field', 'file', 'font', 'from', 'gamma', 'gap', 
-            'gradient', 'granite', 'grayscale', 'group', 'height', 'hexagon', 'horizontal',
-            'include', 'index', 'info', 'inherited', 'intersection', 'ior', 'italic',
-            'kern', 'kerning', 'layer', 'layout', 'left', 'leopard', 'light', 'line',
-            'linear', 'location', 'look', 'material', 'matrix', 'max', 'maximum', 'medium',
-            'min', 'minimum', 'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null',
-            'object', 'of', 'open', 'parallel', 'parallelogram', 'path', 'phased',
-            'pigment', 'pixel', 'planar', 'plane', 'point', 'points', 'position', 'quad',
+        _keywords: 'agate', 'alignment', 'ambient', 'angle', 'angles', 'apply', 'at',
+            'are', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits', 'black',
+            'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick', 'by',
+            'camera', 'center', 'channel', 'checker', 'close', 'color', 'comment', 'conic',
+            'context', 'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder',
+            'cylindrical', 'degrees', 'dents', 'description', 'difference', 'diffuse',
+            'disclaimer', 'distance', 'extrusion', 'false', 'field', 'file', 'font',
+            'from', 'gamma', 'gap', 'generations', 'gradient', 'granite', 'grayscale',
+            'group', 'height', 'hexagon', 'horizontal', 'include', 'index', 'info',
+            'inherited', 'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer',
+            'layout', 'left', 'leopard', 'light', 'line', 'linear', 'location', 'look',
+            'lsystem', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum',
+            'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of',
+            'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pixel',
+            'planar', 'plane', 'point', 'points', 'position', 'productions', 'quad',
             'radians', 'radii', 'reflective', 'refraction', 'regular', 'render', 'report',
             'right', 'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow',
             'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
@@ -276,7 +277,7 @@ public partial class LanguageParser
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
-            boundedByClause
+            boundedByClause | withSeedClause
         ]
         
         // Plane clause.
@@ -427,6 +428,37 @@ public partial class LanguageParser
             kerningClause | open | surfaceEntryClause
         ]
 
+        // L-system clauses.
+        startLsystemClause:
+        {
+            lsystem > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "lsystem" here.'
+        }
+        lsystemProductionProbabilityClause:
+        {
+            leftParen > _expression > modulo{?} >
+            rightParen ?? 'Expecting a right parenthesis here.'
+        }
+        lsystemProductionClause:
+        {
+            _string > lsystemProductionProbabilityClause{?} >
+            arrow ?? 'Expecting an arrow to follow the rule variable here.' >
+            _expression
+        }
+        lsystemProductionsClause:
+        {
+            productions > openBrace ?? 'Expecting an open brace to follow "productions" here.' >
+            lsystemProductionClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
+        lsystemEntryClause:
+        [
+            extrusion | { axiom > _expression } | { generations > _expression } |
+            { angle > _expression } | { distance > _expression } | lsystemProductionsClause |
+            surfaceEntryClause
+        ]
+
         // Triangle clauses.
         startTriangleClause:
         {
@@ -517,6 +549,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
+            startLsystemClause => 'lsystem' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -551,6 +584,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
+            startLsystemClause => 'lsystem' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -579,6 +613,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
+            startLsystemClause => 'lsystem' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -611,8 +646,9 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startTextClause |
-                startTriangleClause | startSmoothTriangleClause | startParallelogramClause |
-                startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
+                startLsystemClause | startTriangleClause | startSmoothTriangleClause |
+                startParallelogramClause | startObjectFileClause | startObjectClause |
+                startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -634,6 +670,7 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startTextClause           => 'HandleStartTextClause' |
+            startLsystemClause        => 'HandleStartLSystemClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
             startParallelogramClause  => 'HandleStartParallelogramClause' |

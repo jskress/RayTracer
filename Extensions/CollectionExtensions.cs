@@ -30,9 +30,19 @@ public static class CollectionExtensions
     /// </summary>
     /// <param name="list">The list to examine.</param>
     /// <returns><c>true</c>, if the list is <c>null</c> or empty.</returns>
-    internal static bool IsNullOrEmpty<T>(this List<T> list)
+    internal static bool IsNullOrEmpty<T>(this IEnumerable<T> list)
     {
-        return list == null || list.IsEmpty();
+        return list == null || !list.Any();
+    }
+
+    /// <summary>
+    /// This is a helper method for checking an array for being either <c>null</c> or empty.
+    /// </summary>
+    /// <param name="array">The list to examine.</param>
+    /// <returns><c>true</c>, if the array is <c>null</c> or empty.</returns>
+    internal static bool IsNullOrEmpty<T>(this T[] array)
+    {
+        return array == null || array.Length == 0;
     }
 
     /// <summary>

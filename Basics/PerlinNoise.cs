@@ -25,22 +25,27 @@ public class PerlinNoise
 
         if (seed.HasValue)
         {
-            if (!NoiseGenerators.TryGetValue(seed.Value, out noise))
-                NoiseGenerators[seed.Value] = noise = new PerlinNoise(new Random(seed.Value));
+            int value = seed.Value;
+
+            if (!NoiseGenerators.TryGetValue(value, out noise))
+            {
+                NoiseGenerators[value] = noise = new PerlinNoise(
+                    ThreadSafeRandom.GetGenerator(value));
+            }
         }
 
         return noise; 
     }
 
-    private static readonly PerlinNoise DefaultInstance = new (Random.Shared);
+    private static readonly PerlinNoise DefaultInstance = new (ThreadSafeRandom.GetGenerator());
 
-    private readonly Random _rng;
+    private readonly ThreadSafeRandom _rng;
     private readonly Vector[] _numbers;
     private readonly int[] _x;
     private readonly int[] _y;
     private readonly int[] _z;
 
-    private PerlinNoise(Random rng)
+    private PerlinNoise(ThreadSafeRandom rng)
     {
         _rng = rng;
         _numbers = new Vector[TableSize];

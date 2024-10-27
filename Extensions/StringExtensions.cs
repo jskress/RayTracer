@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace RayTracer.Extensions;
 
 /// <summary>
@@ -5,6 +7,35 @@ namespace RayTracer.Extensions;
 /// </summary>
 public static class StringExtensions
 {
+    /// <summary>
+    /// This method is used to return the string as an array of the runes of which it is
+    /// made.  If the string is <c>null</c>, then <c>null</c> will be returned.
+    /// If the string is empty, an empty array is returned.
+    /// </summary>
+    /// <param name="text">The text to return the runes for.</param>
+    /// <returns>The array of runes that make up the string, or <c>null</c>.</returns>
+    public static Rune[] AsRunes(this string text)
+    {
+        if (text == null)
+            return null;
+
+        if (text.Length == 0)
+            return [];
+
+        return text.EnumerateRunes()
+            .ToArray();
+    }
+
+    /// <summary>
+    /// This method is used to convert an array of runes into a representative string.
+    /// </summary>
+    /// <param name="runes">The runes to convert to a string.</param>
+    /// <returns>The resulting string.</returns>
+    public static string AsString(this Rune[] runes)
+    {
+        return string.Join("", runes);
+    }
+
     /// <summary>
     /// This method is used to return the string as a list of the Unicode code
     /// points for the characters in that string.  If the string is <c>null</c>,

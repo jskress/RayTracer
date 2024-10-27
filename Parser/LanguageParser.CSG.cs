@@ -100,6 +100,10 @@ public partial class LanguageParser
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;
+                // ReSharper disable once StringLiteralTypo
+                case "lsystem":
+                    resolver.SurfaceResolvers.Add(ParseLSystemClause(clause));
+                    break;
                 case "triangle":
                     resolver.SurfaceResolvers.Add(ParseTriangleClause(clause));
                     break;

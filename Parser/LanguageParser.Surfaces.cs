@@ -32,6 +32,9 @@ public partial class LanguageParser
             case "named":
                 resolver.NameResolver = new TermResolver<string> { Term = term };
                 break;
+            case "with.seed":
+                resolver.SeedResolver = new TermResolver<int?> { Term = term };
+                break;
             case "material":
                 resolver.MaterialResolver = GetMaterialResolver(clause);
                 break;

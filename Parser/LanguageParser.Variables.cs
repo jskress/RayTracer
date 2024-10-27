@@ -49,6 +49,8 @@ public partial class LanguageParser
             "torus" => ParseTorusClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "text" => ParseTextClause(clause),
+            // ReSharper disable once StringLiteralTypo
+            "lsystem" => ParseLSystemClause(clause),
             "triangle" => ParseTriangleClause(clause),
             "smooth" when second == "triangle" => ParseSmoothTriangleClause(clause),
             "parallelogram" => ParseParallelogramClause(clause),

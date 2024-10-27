@@ -13,6 +13,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     where TValue : Surface, new()
 {
     /// <summary>
+    /// This property holds the resolver for our turbulence's seed property.
+    /// </summary>
+    public Resolver<int?> SeedResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the material property of the surface.
     /// </summary>
     public Resolver<Material> MaterialResolver { get; set; }
@@ -50,6 +55,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, TValue value)
     {
+        SeedResolver.AssignTo(value, target => target.Seed, context, variables);
         MaterialResolver.AssignTo(value, target => target.Material, context, variables);
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
