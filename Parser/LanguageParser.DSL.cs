@@ -27,26 +27,28 @@ public partial class LanguageParser
         _keywords: 'agate', 'alignment', 'ambient', 'angle', 'angles', 'apply', 'at',
             'are', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits', 'black',
             'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick', 'by',
-            'camera', 'center', 'channel', 'checker', 'close', 'color', 'comment', 'conic',
-            'context', 'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder',
-            'cylindrical', 'degrees', 'dents', 'description', 'difference', 'diffuse',
-            'disclaimer', 'distance', 'extrusion', 'false', 'field', 'file', 'font',
-            'from', 'gamma', 'gap', 'generations', 'gradient', 'granite', 'grayscale',
-            'group', 'height', 'hexagon', 'horizontal', 'include', 'index', 'info',
-            'inherited', 'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer',
-            'layout', 'left', 'leopard', 'light', 'line', 'linear', 'location', 'look',
-            'lsystem', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum',
-            'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of',
-            'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pixel',
-            'planar', 'plane', 'point', 'points', 'position', 'productions', 'quad',
-            'radians', 'radii', 'reflective', 'refraction', 'regular', 'render', 'report',
-            'right', 'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow',
-            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
-            'source', 'specular', 'sphere', 'spherical', 'square', 'stripes', 'svg',
-            'text', 'thin', 'title', 'to', 'top', 'torus', 'transform', 'translate',
-            'transparency', 'triangle', 'triangular', 'true', 'turbulence', 'union', 'up',
-            'vector', 'vertical', 'view', 'warning', 'width', 'with', 'wrinkles', 'X', 'Y',
-            'Z'
+            'camera', 'center', 'channel', 'checker', 'close', 'color', 'commands',
+            'comment', 'completeBranch', 'conic', 'context', 'copyright', 'csg', 'cube',
+            'cubic', 'curve', 'cylinder', 'cylindrical', 'degrees', 'dents', 'description',
+            'diameter', 'difference', 'diffuse', 'disclaimer', 'distance', 'drawLine',
+            'extrusion', 'false', 'field', 'file', 'font', 'from', 'gamma', 'gap',
+            'generations', 'gradient', 'granite', 'grayscale', 'group', 'height',
+            'hexagon', 'horizontal', 'include', 'index', 'info', 'inherited',
+            'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer', 'layout', 'left',
+            'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
+            'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
+            'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
+            'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes', 'pitchDown',
+            'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'position',
+            'productions', 'quad', 'radians', 'radii', 'reflective', 'refraction',
+            'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight', 'rotate',
+            'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'shear',
+            'shininess', 'sides', 'size', 'smooth', 'software', 'source', 'specular',
+            'sphere', 'spherical', 'square', 'startBranch', 'stripes', 'svg', 'text',
+            'thin', 'title', 'to', 'top', 'torus', 'toVertical', 'transform', 'translate',
+            'transparency', 'triangle', 'triangular', 'true', 'turbulence', 'turnAround',
+            'turnLeft', 'turnRight', 'union', 'up', 'vector', 'vertical', 'view',
+            'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -436,6 +438,19 @@ public partial class LanguageParser
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "lsystem" here.'
         }
+        lsystemCommandClause:
+        {
+            _string > arrow ?? 'Expecting an arrow to follow the command character here.' >
+            [
+                move | drawLine | turnLeft | turnRight | pitchUp | pitchDown | rollLeft |
+                rollRight | turnAround | ToVertical | startBranch | completeBranch
+            ] ?? 'Expecting a turtle command to follow the arrow here.'
+        }
+        lsystemCommandsClause:
+        {
+            commands > openBrace ?? 'Expecting an open brace to follow "commands" here.' >
+            lsystemCommandClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
         lsystemProductionProbabilityClause:
         {
             leftParen > _expression > modulo{?} >
@@ -454,9 +469,9 @@ public partial class LanguageParser
         }
         lsystemEntryClause:
         [
-            extrusion | { axiom > _expression } | { generations > _expression } |
-            { angle > _expression } | { distance > _expression } | lsystemProductionsClause |
-            surfaceEntryClause
+            extrusion | pipes | { axiom > _expression } | { generations > _expression } |
+            { angle > _expression } | { distance > _expression } | { diameter > _expression } |
+            lsystemCommandsClause | lsystemProductionsClause | surfaceEntryClause
         ]
 
         // Triangle clauses.

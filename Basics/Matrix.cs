@@ -115,12 +115,12 @@ public class Matrix
     }
 
     /// <summary>
-    /// This method determines the sub-matrix of this matrix by removing the specified row
+    /// This method determines the submatrix of this matrix by removing the specified row
     /// and column.
     /// </summary>
     /// <param name="row">The row to remove.</param>
     /// <param name="column">The column to remove.</param>
-    /// <returns>The sub-matrix of this matrix that is the result of removing the indicated
+    /// <returns>The submatrix of this matrix that is the result of removing the indicated
     /// row and column.</returns>
     public Matrix GetSubMatrix(int row, int column)
     {
@@ -277,12 +277,30 @@ public class Matrix
     // ---------
 
     /// <summary>
+    /// This method is used to add two matrices together.  It is assumed that both
+    /// are 4x4 matrices.
+    /// </summary>
+    /// <param name="left">The left matrix to add.</param>
+    /// <param name="right">The right matrix to add.</param>
+    /// <returns>The new matrix.</returns>
+    public static Matrix operator +(Matrix left, Matrix right)
+    {
+        int count = left._data.Length;
+        double[] data = new double[count];
+
+        for (int index = 0; index < count; index++)
+            data[index] = left._data[index] + right._data[index];
+
+        return new Matrix(data);
+    }
+
+    /// <summary>
     /// This method is used to multiply two matrices together.  It is assumed that both
     /// are 4x4 matrices.
     /// </summary>
     /// <param name="left">The left matrix to multiply.</param>
     /// <param name="right">The right matrix to multiply by.</param>
-    /// <returns>The new vector.</returns>
+    /// <returns>The new matrix.</returns>
     public static Matrix operator *(Matrix left, Matrix right)
     {
         Matrix result = new (4);
@@ -382,6 +400,36 @@ public class Matrix
     /// <param name="right">The matrix to multiply to.</param>
     /// <returns>The new vector.</returns>
     public static Vector operator *(Vector left, Matrix right)
+    {
+        return right * left;
+    }
+
+    /// <summary>
+    /// This method is used to multiply a matrix by a number.  It is assumed that the
+    /// matrix is a 4x4 matrix.
+    /// </summary>
+    /// <param name="left">The matrix to multiply.</param>
+    /// <param name="right">The number to multiply by.</param>
+    /// <returns>The new matrix.</returns>
+    public static Matrix operator *(Matrix left, double right)
+    {
+        int count = left._data.Length;
+        double[] data = new double[count];
+
+        for (int index = 0; index < count; index++)
+            data[index] = left._data[index] * right;
+
+        return new Matrix(data);
+    }
+
+    /// <summary>
+    /// This method is used to multiply a matrix by a number.  It is assumed that the
+    /// matrix is a 4x4 matrix.
+    /// </summary>
+    /// <param name="left">The number to multiply by.</param>
+    /// <param name="right">The matrix to multiply.</param>
+    /// <returns>The new matrix.</returns>
+    public static Matrix operator *(double left, Matrix right)
     {
         return right * left;
     }

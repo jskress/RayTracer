@@ -69,6 +69,12 @@ public partial class LanguageParser
                         Value = LSystemRendererType.Extrusion
                     };
                     break;
+                case "pipes":
+                    resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
+                    {
+                        Value = LSystemRendererType.Pipes
+                    };
+                    break;
                 case "axiom":
                     resolver.AxiomResolver = new TermResolver<string> { Term = term };
                     break;
@@ -81,6 +87,12 @@ public partial class LanguageParser
                 case "distance":
                     resolver.DistanceResolver = new TermResolver<double> { Term = term };
                     break;
+                case "diameter":
+                    resolver.DiameterResolver = new TermResolver<double> { Term = term };
+                    break;
+                case "commands":
+                    ParseCommandMappingsClause(resolver, clause);
+                    break;
                 case "productions":
                     resolver.ProductionRuleResolvers = ParseProductionRulesClause(clause);
                     break;
@@ -89,6 +101,55 @@ public partial class LanguageParser
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// This method is used to handle a commands block.
+    /// </summary>
+    /// <param name="resolver">The resolver to add the command mappings to.</param>
+    /// <param name="clause">The clause to process.</param>
+    private static void ParseCommandMappingsClause(LSystemResolver resolver, Clause clause)
+    {
+        int tokenIndex = 2;
+
+        while (tokenIndex < clause.Tokens.Count && !BounderToken.CloseBrace.Matches(clause.Tokens[tokenIndex]))
+        {
+            Rune commandCharacter = ParseCommandCharacter(clause, tokenIndex);
+
+            tokenIndex += 2;
+
+            TurtleCommand command = Enum.Parse<TurtleCommand>(clause.Tokens[tokenIndex].Text, true);
+
+            resolver.CommandMappings.Add(new LSystemRenderCommandMapping
+            {
+                CommandCharacter = commandCharacter,
+                TurtleCommand = command
+            });
+
+            tokenIndex++;
+        }
+    }
+
+    /// <summary>
+    /// This method is used to parse the command character for a render command mapping.
+    /// </summary>
+    /// <param name="clause">The clause to pull the variable from.</param>
+    /// <param name="tokenIndex">The index at which to expect the variable.</param>
+    /// <returns>The token index following the variable.</returns>
+    private static Rune ParseCommandCharacter(Clause clause, int tokenIndex)
+    {
+        string command = clause.Tokens[tokenIndex].Text;
+        Rune[] runes = command.AsRunes();
+
+        if (runes.IsNullOrEmpty() || runes.Length > 1)
+        {
+            throw new TokenException("The command character must contain exactly one Unicode character.")
+            {
+                Token = clause.Tokens[tokenIndex]
+            };
+        }
+
+        return runes[0];
     }
 
     /// <summary>
@@ -124,7 +185,7 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to set up the variable resolver for a production rule.
+    /// This method is used to parse the variable resolver for a production rule.
     /// </summary>
     /// <param name="resolver">The resolver to add the variable resolver to.</param>
     /// <param name="clause">The clause to pull the variable from.</param>

@@ -15,6 +15,16 @@ public static class DoubleExtensions
     }
 
     /// <summary>
+    /// This method is used to convert a value in radians to its equivalent in degrees.
+    /// </summary>
+    /// <param name="degrees">The radians to convert to degrees.</param>
+    /// <returns>The radians as degrees.</returns>
+    public static double ToDegrees(this double degrees)
+    {
+        return degrees * 180 / Math.PI;
+    }
+
+    /// <summary>
     /// This method tests two doubles to see if they are near enough to each other to be
     /// considered equivalent.
     /// </summary>

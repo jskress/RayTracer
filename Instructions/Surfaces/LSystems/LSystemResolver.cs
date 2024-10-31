@@ -21,6 +21,11 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public Resolver<int> GenerationsResolver { get; set; }
 
     /// <summary>
+    /// This property holds the list of command mapping overrides to use.
+    /// </summary>
+    public List<LSystemRenderCommandMapping> CommandMappings { get; } = [];
+
+    /// <summary>
     /// This property holds the resolver for the "generations" property of an L-system.
     /// </summary>
     public List<ProductionRuleResolver> ProductionRuleResolvers { get; set; } = [];
@@ -41,6 +46,11 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public Resolver<double> DistanceResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the diameter property of an L-system.
+    /// </summary>
+    public Resolver<double> DiameterResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// text solid surface.
     /// </summary>
@@ -54,7 +64,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         RenderTypeResolver.AssignTo(value, target => target.RendererType, context, variables);
         AngleResolver.AssignTo(value, target => target.Angle, context, variables);
         DistanceResolver.AssignTo(value, target => target.Distance, context, variables);
+        DiameterResolver.AssignTo(value, target => target.Diameter, context, variables);
 
+        value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers
             .Select(resolver => resolver.Resolve(context, variables)));
 
