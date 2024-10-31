@@ -22,7 +22,7 @@ public class NumberTuple
 
     /// <summary>
     /// This method returns whether the given tuple matches this one.  This will be true
-    /// if both tuples are of the same class and all members are equitable within a small
+    /// if both tuples are of the same class and all members are equal within a small
     /// tolerance.
     /// </summary>
     /// <param name="other">The tuple to compare to.</param>

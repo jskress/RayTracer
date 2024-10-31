@@ -2,6 +2,9 @@ using RayTracer.Graphics;
 
 namespace RayTracer.Geometry.LSystems;
 
+/// <summary>
+/// This class implements rendering a closed, 2D, L-system generated curve as an extrusion.
+/// </summary>
 public class LSystemExtrusionRenderer : LSystemShapeRenderer
 {
     private GeneralPath _path;
@@ -27,7 +30,7 @@ public class LSystemExtrusionRenderer : LSystemShapeRenderer
     protected override void Execute(Turtle turtle, TurtleCommand command)
     {
         if (command == TurtleCommand.DrawLine)
-            _path.LineTo(turtle.Location.X, turtle.Location.Y);
+            _path.LineTo(turtle.Location.X, turtle.Location.Z);
     }
 
     /// <summary>
@@ -38,13 +41,13 @@ public class LSystemExtrusionRenderer : LSystemShapeRenderer
     {
         _path.ClosePath();
 
-        Surface = new Extrusion
+        Surfaces.Add(new Extrusion
         {
-            Path = _path,
+            Path = _path.Reverse(),
             MinimumY = 0,
             MaximumY = 1,
             Material = null // <-- This is important.
-        };
+        });
 
         // Note that since we hand the path to the extrusion, it will be disposed of at a
         // more appropriate time.

@@ -17,10 +17,15 @@ public class LSystem : Group
     public int Generations { get; set; }
 
     /// <summary>
+    /// This property holds the list of render command overrides to use with this L-system.
+    /// </summary>
+    public List<LSystemRenderCommandMapping> CommandMappings { get; } = [];
+
+    /// <summary>
     /// This property holds the list of production rules that the L-system producer should
     /// use.
     /// </summary>
-    public List<ProductionRule> ProductionRules { get; set; } = [];
+    public List<ProductionRule> ProductionRules { get; } = [];
 
     /// <summary>
     /// This property holds the type of renderer to use when converting an L-system
@@ -40,6 +45,12 @@ public class LSystem : Group
     public double Distance { get; set; } = 1;
 
     /// <summary>
+    /// This property carries the global diameter of the "stroke" that the turtle is to
+    /// use for each move in rendering the surface. 
+    /// </summary>
+    public double Diameter { get; set; } = 0.1;
+
+    /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
@@ -50,8 +61,17 @@ public class LSystem : Group
 
         renderer.Angle = Angle;
         renderer.Distance = Distance;
+        renderer.Diameter = Diameter;
+        
+        foreach (LSystemRenderCommandMapping mapping in CommandMappings)
+            renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
 
-        Add(renderer.Render());
+        renderer.Render();
+
+        foreach (Surface surface in renderer.Surfaces)
+            Add(surface);
+
+        BoundingBox ??= renderer.BoundingBox;
 
         base.PrepareSurfaceForRendering();
     }

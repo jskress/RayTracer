@@ -62,17 +62,18 @@ public class BoundingBox
     }
 
     /// <summary>
-    /// This method adjusts the extents of the bounding box by <c>Epsilon</c> to help
-    /// make sure we don't miss any intersections.
+    /// This method adjusts the extents of the bounding box by some amount.  The defailt is
+    /// a small fraction to help make sure we don't miss any intersections.
     /// </summary>
-    public void Expand()
+    /// <param name="amount">The amount to pad by.</param>
+    public void Expand(double amount = Padding)
     {
-        _xMin -= Padding;
-        _yMin -= Padding;
-        _zMin -= Padding;
-        _xMax += Padding;
-        _yMax += Padding;
-        _zMax += Padding;
+        _xMin -= amount;
+        _yMin -= amount;
+        _zMin -= amount;
+        _xMax += amount;
+        _yMax += amount;
+        _zMax += amount;
     }
 
     /// <summary>

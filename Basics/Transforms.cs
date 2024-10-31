@@ -20,6 +20,16 @@ public static class Transforms
     /// <summary>
     /// This method creates a translation matrix based on the given distances.
     /// </summary>
+    /// <param name="point">The desired distance to translate.</param>
+    /// <returns>The appropriate translation matrix.</returns>
+    public static Matrix Translate(Point point)
+    {
+        return Translate(point.X, point.Y, point.Z);
+    }
+
+    /// <summary>
+    /// This method creates a translation matrix based on the given distances.
+    /// </summary>
     /// <param name="dx">The desired distance in the x direction.</param>
     /// <param name="dy">The desired distance in the y direction.</param>
     /// <param name="dz">The desired distance in the z direction.</param>
