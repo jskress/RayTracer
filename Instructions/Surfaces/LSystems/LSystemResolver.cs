@@ -31,24 +31,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public List<ProductionRuleResolver> ProductionRuleResolvers { get; set; } = [];
 
     /// <summary>
-    /// This property holds the resolver for the render type property of an L-system.
+    /// This property holds the resolver for the rendering controls property of an L-system.
     /// </summary>
-    public Resolver<LSystemRendererType> RenderTypeResolver { get; set; }
-
-    /// <summary>
-    /// This property holds the resolver for the angle property of an L-system.
-    /// </summary>
-    public AngleResolver AngleResolver { get; set; }
-
-    /// <summary>
-    /// This property holds the resolver for the distance property of an L-system.
-    /// </summary>
-    public Resolver<double> DistanceResolver { get; set; }
-
-    /// <summary>
-    /// This property holds the resolver for the diameter property of an L-system.
-    /// </summary>
-    public Resolver<double> DiameterResolver { get; set; }
+    public LSystemRenderingControlsResolver RenderingControlsResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
@@ -61,10 +46,7 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     {
         AxiomResolver.AssignTo(value, target => target.Axiom, context, variables);
         GenerationsResolver.AssignTo(value, target => target.Generations, context, variables);
-        RenderTypeResolver.AssignTo(value, target => target.RendererType, context, variables);
-        AngleResolver.AssignTo(value, target => target.Angle, context, variables);
-        DistanceResolver.AssignTo(value, target => target.Distance, context, variables);
-        DiameterResolver.AssignTo(value, target => target.Diameter, context, variables);
+        RenderingControlsResolver.AssignTo(value, targter => targter.RenderingControls, context, variables);
 
         value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers

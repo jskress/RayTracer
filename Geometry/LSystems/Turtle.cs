@@ -28,42 +28,52 @@ public class Turtle
     /// </summary>
     public Vector Direction { get; private set; }
 
-    internal Turtle()
+    /// <summary>
+    /// This property holds the current segment diameter for the turtle.
+    /// </summary>
+    public double Diameter { get; private set; }
+
+    private readonly LSystemRenderingControls _controls;
+
+    internal Turtle(LSystemRenderingControls controls)
     {
+        _controls = controls;
+
         Location = Point.Zero;
         PreviousLocation = Point.Zero;
         Up = Directions.Up;
         Direction = Directions.Right;
+        Diameter = controls.Diameter;
     }
 
     /// <summary>
-    /// This method is used to move the turtle by the given distance in the current
+    /// This method is used to move the turtle by the current distance in the current
     /// direction.
     /// </summary>
-    /// <param name="distance">The distance to move the turtle.</param>
-    public void Move(double distance)
+    public void Move()
     {
         PreviousLocation = Location;
-        Location += Direction * distance;
+        Location += Direction * _controls.Length;
     }
 
     /// <summary>
     /// This method is used to turn the turtle left or right.
     /// </summary>
-    /// <param name="angle">The amount to turn the turtle.</param>
-    public void Yaw(double angle)
+    /// <param name="sign">The direction of the turn.</param>
+    public void Yaw(int sign)
     {
-        Direction = RotateAround(Direction, Up, angle);
+        Direction = RotateAround(Direction, Up, _controls.Angle * sign);
     }
 
     /// <summary>
     /// This method is used to change the pitch of the turtle.
     /// </summary>
-    /// <param name="angle">The amount to pitch the turtle.</param>
-    public void Pitch(double angle)
+    /// <param name="sign">The direction of the pitch.</param>
+    public void Pitch(int sign)
     {
         Vector axis = Direction.Cross(Up);
-        
+        double angle = _controls.Angle * sign;
+
         Direction = RotateAround(Direction, axis, angle);
         Up = RotateAround(Up, axis, angle);
     }
@@ -71,10 +81,10 @@ public class Turtle
     /// <summary>
     /// This method is used to change the roll of the turtle.
     /// </summary>
-    /// <param name="angle">The amount to roll the turtle.</param>
-    public void Roll(double angle)
+    /// <param name="sign">The direction of the roll.</param>
+    public void Roll(int sign)
     {
-        Up = RotateAround(Up, Direction, angle);
+        Up = RotateAround(Up, Direction, _controls.Angle * sign);
     }
 
     /// <summary>
@@ -111,17 +121,27 @@ public class Turtle
     }
 
     /// <summary>
+    /// This method is used to decrease the segment diameter by the factor provided during
+    /// construction.
+    /// </summary>
+    public void DecreaseDiameter()
+    {
+        Diameter *= _controls.Factor;
+    }
+
+    /// <summary>
     /// This method creates a copy of the current turtle.
     /// </summary>
     /// <returns>A copy of this turtle.</returns>
     public Turtle Copy()
     {
-        return new Turtle
+        return new Turtle(_controls)
         {
             Location = Location,
             PreviousLocation = PreviousLocation,
             Up = Up,
-            Direction = Direction
+            Direction = Direction,
+            Diameter = Diameter
         };
     }
 }

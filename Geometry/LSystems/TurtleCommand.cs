@@ -18,5 +18,6 @@ public enum TurtleCommand
     TurnAround,
     ToVertical,
     StartBranch,
-    CompleteBranch
+    CompleteBranch,
+    DecreaseDiameter
 }

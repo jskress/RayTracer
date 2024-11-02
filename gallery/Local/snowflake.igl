@@ -30,18 +30,17 @@ plane {
     }
 }
 
-koch = lsystem {
-    extrusion
+lsystem {
+    controls {
+        extrusion
+        angle 60
+        length 2 / 3 / 3 / 3
+    }
     axiom 'F--F--F'
-    angle 60
     productions {
         'F' -> 'F+F--F+F'
     }
-}
-
-lsystem koch {
     generations 4
-    distance 2 / 3 / 3 / 3
     material {
         pigment Red
         shininess 300
@@ -50,9 +49,17 @@ lsystem koch {
     translate [-3, 0, 1]
 }
 
-lsystem koch {
+lsystem {
+    controls {
+        extrusion
+        angle 60
+        length 2 / 3 / 3
+    }
+    axiom 'F--F--F'
+    productions {
+        'F' -> 'F+F--F+F'
+    }
     generations 3
-    distance 2 / 3 / 3
     material {
         pigment Yellow
         shininess 300
@@ -61,9 +68,17 @@ lsystem koch {
     translate [-3, 0.5, 1]
 }
 
-lsystem koch {
+lsystem {
+    controls {
+        extrusion
+        angle 60
+        length 2 / 3
+    }
+    axiom 'F--F--F'
+    productions {
+        'F' -> 'F+F--F+F'
+    }
     generations 2
-    distance 2 / 3
     material {
         pigment Blue
         shininess 300
@@ -72,9 +87,17 @@ lsystem koch {
     translate [-3, 1, 1]
 }
 
-lsystem koch {
+lsystem {
+    controls {
+        extrusion
+        angle 60
+        length 2
+    }
+    axiom 'F--F--F'
+    productions {
+        'F' -> 'F+F--F+F'
+    }
     generations 1
-    distance 2
     material {
         pigment Green
         shininess 300
@@ -83,9 +106,17 @@ lsystem koch {
     translate [-3, 1.5, 1]
 }
 
-lsystem koch {
+lsystem {
+    controls {
+        extrusion
+        angle 60
+        length 6
+    }
+    axiom 'F--F--F'
+    productions {
+        'F' -> 'F+F--F+F'
+    }
     generations 0
-    distance 6
     material {
         pigment Cyan
         shininess 300

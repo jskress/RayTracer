@@ -5,7 +5,7 @@ context {
     angles are degrees
     no gamma
     info {
-        title 'L-System Test: Hilbert Curve'
+        title 'L-System Test: Axial Tree'
         author 'J. Stephen Kress'
         description 'A scene to test the L-system primitive.'
         copyright true
@@ -32,25 +32,25 @@ plane {
 
 koch = lsystem {
     controls {
+        pipes
+        length 1
         diameter 0.2
-        length 0.5
+        angle 30
     }
-    axiom 'A'
+    axiom '$F'
     productions {
-        'A' -> 'B-F+CFC+F-D&F∧D-F+&&CFC+F+B>>'
-        'B' -> 'A&F∧CFB∧F∧D∧∧-F-D∧|F∧B|FC∧F∧A//'
-        'C' -> '|D∧|F∧B-F+C∧F∧A&&FA&F∧C+F+B∧F∧D//'
-        'D' -> '|CFB-F+B|FA&F∧A&&FB-F+B|FC//'
+        'F' (0.33) -> 'F[+F]F[-F]F'
+        'F' (0.33) -> 'F[+F]F'
+        'F' (0.34) -> 'F[-F]F'
     }
 }
 
 lsystem koch {
-    generations 3
+    generations 5
     material {
-        pigment Cyan
-        shininess 300
+        pigment SandyBrown
+        specular 0
     }
-    translate [-1.75, 0, 1.75]
-    rotate Y 30
-    translate Y 4
+    scale 0.2
+    rotate Y -90
 }

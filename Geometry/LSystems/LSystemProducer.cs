@@ -24,6 +24,7 @@ public class LSystemProducer
     public int? Seed { get; init; }
 
     private readonly Dictionary<Rune, Spectrum<Rune[]>> _entries = new ();
+    private readonly Dictionary<Rune, double> _bands = new ();
 
     private Rune[] _axiom;
     private ThreadSafeRandom _random;
@@ -44,13 +45,21 @@ public class LSystemProducer
 
         Rune[] runes = rule.Variable.AsRunes();
         Rune key = runes[0];
+        double band = _bands.GetValueOrDefault(key);
 
         runes = rule.Production.AsRunes();
 
         if (!_entries.TryGetValue(key, out Spectrum<Rune[]> entry))
             _entries[key] = entry = new Spectrum<Rune[]>();
 
-        entry.AddEntry(runes, rule.BreakValue);
+        entry.AddEntry(runes, band);
+
+        band += rule.BreakValue;
+
+        if (band > 1)
+            throw new Exception($"Probabilities for the {key} productions are larger than 100%.");
+
+        _bands[key] = band;
 
         return this;
     }

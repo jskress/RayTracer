@@ -63,32 +63,14 @@ public partial class LanguageParser
 
             switch (ToCmd(clause))
             {
-                case "extrusion":
-                    resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
-                    {
-                        Value = LSystemRendererType.Extrusion
-                    };
-                    break;
-                case "pipes":
-                    resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
-                    {
-                        Value = LSystemRendererType.Pipes
-                    };
-                    break;
                 case "axiom":
                     resolver.AxiomResolver = new TermResolver<string> { Term = term };
                     break;
                 case "generations":
                     resolver.GenerationsResolver = new TermResolver<int> { Term = term };
                     break;
-                case "angle":
-                    resolver.AngleResolver = new AngleResolver { Term = term };
-                    break;
-                case "distance":
-                    resolver.DistanceResolver = new TermResolver<double> { Term = term };
-                    break;
-                case "diameter":
-                    resolver.DiameterResolver = new TermResolver<double> { Term = term };
+                case "controls":
+                    resolver.RenderingControlsResolver = ParseLSystemRenderingControlsClause();
                     break;
                 case "commands":
                     ParseCommandMappingsClause(resolver, clause);
@@ -100,6 +82,57 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "l-system");
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// This method is used to create an L-system rendering controls resolver from an
+    /// L-system rendering controls resolver block.
+    /// </summary>
+    private LSystemRenderingControlsResolver ParseLSystemRenderingControlsClause()
+    {
+        return ParseObjectResolver<LSystemRenderingControlsResolver>(
+            // ReSharper disable once StringLiteralTypo
+            "lsystemRenderingControlsEntryClause", HandleLSystemRenderingControlsEntryClause);
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of an L-system rendering controls block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleLSystemRenderingControlsEntryClause(Clause clause)
+    {
+        LSystemRenderingControlsResolver resolver = (LSystemRenderingControlsResolver) _context.CurrentTarget;
+        Term term = clause.Term();
+
+        switch (ToCmd(clause))
+        {
+            case "extrusion":
+                resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
+                {
+                    Value = LSystemRendererType.Extrusion
+                };
+                break;
+            case "pipes":
+                resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
+                {
+                    Value = LSystemRendererType.Pipes
+                };
+                break;
+            case "angle":
+                resolver.AngleResolver = new AngleResolver { Term = term };
+                break;
+            case "length":
+                resolver.LengthResolver = new TermResolver<double> { Term = term };
+                break;
+            case "diameter":
+                resolver.DiameterResolver = new TermResolver<double> { Term = term };
+                break;
+            case "factor":
+                resolver.FactorResolver = new TermResolver<double> { Term = term };
+                break;
+            default:
+                throw new NotSupportedException("Unknown rendering controls property found.");
         }
     }
 

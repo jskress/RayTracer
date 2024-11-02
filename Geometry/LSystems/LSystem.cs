@@ -28,27 +28,10 @@ public class LSystem : Group
     public List<ProductionRule> ProductionRules { get; } = [];
 
     /// <summary>
-    /// This property holds the type of renderer to use when converting an L-system
-    /// production into geometry.
+    /// This property holds the set of controls that dictate how productions from this
+    /// L-system are rendered into geometry.
     /// </summary>
-    public LSystemRendererType RendererType { get; set; }
-
-    /// <summary>
-    /// This property carries the global angle to use in rendering the surface. 
-    /// </summary>
-    public double Angle { get; set; }
-
-    /// <summary>
-    /// This property carries the global distance the turtle is to travel for each move
-    /// to use in rendering the surface. 
-    /// </summary>
-    public double Distance { get; set; } = 1;
-
-    /// <summary>
-    /// This property carries the global diameter of the "stroke" that the turtle is to
-    /// use for each move in rendering the surface. 
-    /// </summary>
-    public double Diameter { get; set; } = 0.1;
+    public LSystemRenderingControls RenderingControls { get; set; } = new ();
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -57,11 +40,7 @@ public class LSystem : Group
     protected override void PrepareSurfaceForRendering()
     {
         string production = GetProduction();
-        LSystemShapeRenderer renderer = RendererType.GetRenderer(production);
-
-        renderer.Angle = Angle;
-        renderer.Distance = Distance;
-        renderer.Diameter = Diameter;
+        LSystemShapeRenderer renderer = RenderingControls.CreateRenderer(production);
         
         foreach (LSystemRenderCommandMapping mapping in CommandMappings)
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
