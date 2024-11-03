@@ -31,17 +31,16 @@ plane {
 }
 
 koch = lsystem {
-    controls {
-        pipes
-        length 1
-        diameter 0.2
-        angle 30
-    }
     axiom '$F'
     productions {
         'F' (0.33) -> 'F[+F]F[-F]F'
         'F' (0.33) -> 'F[+F]F'
         'F' (0.34) -> 'F[-F]F'
+    }
+    controls {
+        pipes
+        angle 30
+        diameter 0.2
     }
 }
 

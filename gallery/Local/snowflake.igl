@@ -30,15 +30,20 @@ plane {
     }
 }
 
-lsystem {
-    controls {
-        extrusion
-        angle 60
-        length 2 / 3 / 3 / 3
-    }
+koch = lsystem {
     axiom 'F--F--F'
     productions {
         'F' -> 'F+F--F+F'
+    }
+    controls {
+        extrusion
+        angle 60
+    }
+}
+
+lsystem koch {
+    controls {
+        length 2 / 3 / 3 / 3
     }
     generations 4
     material {
@@ -49,15 +54,9 @@ lsystem {
     translate [-3, 0, 1]
 }
 
-lsystem {
+lsystem koch {
     controls {
-        extrusion
-        angle 60
         length 2 / 3 / 3
-    }
-    axiom 'F--F--F'
-    productions {
-        'F' -> 'F+F--F+F'
     }
     generations 3
     material {
@@ -68,15 +67,9 @@ lsystem {
     translate [-3, 0.5, 1]
 }
 
-lsystem {
+lsystem koch {
     controls {
-        extrusion
-        angle 60
         length 2 / 3
-    }
-    axiom 'F--F--F'
-    productions {
-        'F' -> 'F+F--F+F'
     }
     generations 2
     material {
@@ -87,15 +80,9 @@ lsystem {
     translate [-3, 1, 1]
 }
 
-lsystem {
+lsystem koch {
     controls {
-        extrusion
-        angle 60
         length 2
-    }
-    axiom 'F--F--F'
-    productions {
-        'F' -> 'F+F--F+F'
     }
     generations 1
     material {
@@ -106,15 +93,9 @@ lsystem {
     translate [-3, 1.5, 1]
 }
 
-lsystem {
+lsystem koch {
     controls {
-        extrusion
-        angle 60
         length 6
-    }
-    axiom 'F--F--F'
-    productions {
-        'F' -> 'F+F--F+F'
     }
     generations 0
     material {

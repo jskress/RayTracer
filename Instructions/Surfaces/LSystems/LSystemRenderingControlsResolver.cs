@@ -49,4 +49,13 @@ public class LSystemRenderingControlsResolver : ObjectResolver<LSystemRenderingC
         DiameterResolver.AssignTo(value, target => target.Diameter, context, variables);
         FactorResolver.AssignTo(value, target => target.Factor, context, variables);
     }
+
+    /// <summary>
+    /// This method creates a copy of this resolver.
+    /// </summary>
+    /// <returns>A clone of this resolver.</returns>
+    public virtual object Clone()
+    {
+        return MemberwiseClone();
+    }
 }

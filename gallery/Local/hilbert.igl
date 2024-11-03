@@ -30,11 +30,7 @@ plane {
     }
 }
 
-koch = lsystem {
-    controls {
-        diameter 0.2
-        length 0.5
-    }
+hilbert = lsystem {
     axiom 'A'
     productions {
         'A' -> 'B-F+CFC+F-D&F∧D-F+&&CFC+F+B>>'
@@ -42,9 +38,13 @@ koch = lsystem {
         'C' -> '|D∧|F∧B-F+C∧F∧A&&FA&F∧C+F+B∧F∧D//'
         'D' -> '|CFB-F+B|FA&F∧A&&FB-F+B|FC//'
     }
+    controls {
+        diameter 0.2
+        length 0.5
+    }
 }
 
-lsystem koch {
+lsystem hilbert {
     generations 3
     material {
         pigment Cyan

@@ -70,7 +70,7 @@ public partial class LanguageParser
                     resolver.GenerationsResolver = new TermResolver<int> { Term = term };
                     break;
                 case "controls":
-                    resolver.RenderingControlsResolver = ParseLSystemRenderingControlsClause();
+                    ParseLSystemRenderingControlsClause(resolver);
                     break;
                 case "commands":
                     ParseCommandMappingsClause(resolver, clause);
@@ -89,11 +89,14 @@ public partial class LanguageParser
     /// This method is used to create an L-system rendering controls resolver from an
     /// L-system rendering controls resolver block.
     /// </summary>
-    private LSystemRenderingControlsResolver ParseLSystemRenderingControlsClause()
+    private void ParseLSystemRenderingControlsClause(LSystemResolver resolver)
     {
-        return ParseObjectResolver<LSystemRenderingControlsResolver>(
+        resolver.RenderingControlsResolver ??= new LSystemRenderingControlsResolver();
+
+        _ = ParseObjectResolver(
             // ReSharper disable once StringLiteralTypo
-            "lsystemRenderingControlsEntryClause", HandleLSystemRenderingControlsEntryClause);
+            "lsystemRenderingControlsEntryClause", HandleLSystemRenderingControlsEntryClause,
+            resolver.RenderingControlsResolver);
     }
 
     /// <summary>

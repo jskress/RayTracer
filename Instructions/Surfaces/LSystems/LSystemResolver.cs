@@ -69,4 +69,18 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
             ? "At least one production rule must be provided."
             : null;
     }
+
+    /// <summary>
+    /// This method creates a copy of this resolver.
+    /// </summary>
+    /// <returns>A clone of this resolver.</returns>
+    public override object Clone()
+    {
+        LSystemResolver resolver = (LSystemResolver) base.Clone();
+
+        if (resolver.RenderingControlsResolver is not null)
+            resolver.RenderingControlsResolver = (LSystemRenderingControlsResolver) RenderingControlsResolver.Clone();
+
+        return resolver;
+    }
 }
