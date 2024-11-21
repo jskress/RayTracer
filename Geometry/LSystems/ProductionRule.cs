@@ -34,11 +34,43 @@ public class ProductionRule : ProductionRuleBase
     public bool Matches(Rune[] source, int index)
     {
         // Note: we will only be here in this method if our variable was already matched.
+        if (!SymbolsToIgnore.IsNullOrEmpty() &&
+            (LeftContext is not null || RightContext is not null))
+            (source, index) = RemoveIgnoredSymbols(source, index);
 
         if (LeftContext is not null && !LeftContextMatches(source, index))
             return false;
 
         return RightContext is null || RightContextMatches(source, index);
+    }
+
+    /// <summary>
+    /// This method is used to create an array of runes that does not contain any symbols
+    /// we are to ignore.
+    /// </summary>
+    /// <param name="source">The array to start with.</param>
+    /// <param name="index">The index in the array of the current symbol.</param>
+    /// <returns>A new array that does not contain any of our ignored symbols and the
+    /// updated index that accounts for removals.</returns>
+    private (Rune[], int) RemoveIgnoredSymbols(Rune[] source, int index)
+    {
+        List<Rune> work = [];
+        int leftCount = 0;
+
+        for (int i = 0; i < source.Length; i++)
+        {
+            if (SymbolsToIgnore.Contains(source[i]))
+            {
+                if (i < index)
+                    leftCount++;
+            }
+            else
+                work.Add(source[i]);
+        }
+
+        index -= leftCount;
+
+        return (work.ToArray(), index);
     }
 
     /// <summary>
@@ -59,7 +91,7 @@ public class ProductionRule : ProductionRuleBase
 
             if (start < index)
             {
-                ProductionBranch left = ProductionBranch.Parse(source[(start + 1)..index], SymbolsToIgnore);
+                ProductionBranch left = ProductionBranch.Parse(source[(start + 1)..index]);
 
                 return LeftContext.Matches(left, ProductBranchMatchStyle.AtEnd);
             }
@@ -83,7 +115,7 @@ public class ProductionRule : ProductionRuleBase
 
             if (index < end)
             {
-                ProductionBranch right = ProductionBranch.Parse(source[(index + 1)..end], SymbolsToIgnore);
+                ProductionBranch right = ProductionBranch.Parse(source[(index + 1)..end]);
 
                 return RightContext.Matches(right, ProductBranchMatchStyle.AtStart);
             }

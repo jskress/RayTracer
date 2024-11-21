@@ -94,12 +94,12 @@ public class TestLSystemProductions
             .AddRule(NewRule("-", "+"));
 
         Verify(producer, "F1F1F1", "F1F0F1", "F1F1F1F1", "F1F0F0F1",
-            "F1F0F1[+F1F1]F1", "F1F1F1F1[-F1F1]F1", "F1F0F0F0[+F1F1]F1");
+            "F1F0F1[+F1F1]F1", "F1F1F1F1[-F0F1]F1", "F1F0F0F0[+F1F1F1]F1");
     }
 
     private static void Verify(LSystemProducer producer, params string[] expected)
     {
         for (int generation = 0; generation < expected.Length; generation++)
-            Assert.AreEqual(expected[generation], producer.Produce(generation));
+            Assert.AreEqual(expected[generation], producer.Produce(generation), $"Generation {generation}");
     }
 }
