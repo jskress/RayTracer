@@ -9,6 +9,9 @@ namespace RayTracer.Geometry.LSystems;
 /// </summary>
 public class LSystemProducer
 {
+    internal static readonly Rune LeftBracket = new ('[');
+    internal static readonly Rune RightBracket = new (']');
+
     /// <summary>
     /// This property holds the axiom, or starting point, for the L-system production.
     /// </summary>
@@ -23,7 +26,13 @@ public class LSystemProducer
     /// </summary>
     public int? Seed { get; init; }
 
-    private readonly Dictionary<Rune, Spectrum<Rune[]>> _entries = new ();
+    /// <summary>
+    /// This property holds the collection of runes that should be ignored regarding
+    /// context evaluation.
+    /// </summary>
+    public Rune[] SymbolsToIgnore { get; init; }
+
+    private readonly Dictionary<Rune, ProductionRuleSet> _ruleSets = new ();
 
     private Rune[] _axiom;
     private ThreadSafeRandom _random;
@@ -31,26 +40,21 @@ public class LSystemProducer
     /// <summary>
     /// This method is used to add a production rule to the L-system.
     /// </summary>
-    /// <param name="rule">The production rule to add.</param>
+    /// <param name="ruleSpec">The production rule to add.</param>
     /// <returns>This object, for fluency.</returns>
-    public LSystemProducer AddRule(ProductionRule rule)
+    public LSystemProducer AddRule(ProductionRuleSpec ruleSpec)
     {
-        string error = rule == null
-            ? "A proud rule is required."
-            : rule.Validate();
+        ArgumentNullException.ThrowIfNull(ruleSpec);
 
-        if (error != null)
-            throw new ArgumentException(error);
+        if (!_ruleSets.TryGetValue(ruleSpec.Variable, out ProductionRuleSet ruleSet))
+        {
+            _ruleSets[ruleSpec.Variable] = ruleSet = new ProductionRuleSet
+            {
+                SymbolsToIgnore = SymbolsToIgnore
+            };
+        }
 
-        Rune[] runes = rule.Variable.AsRunes();
-        Rune key = runes[0];
-
-        runes = rule.Production.AsRunes();
-
-        if (!_entries.TryGetValue(key, out Spectrum<Rune[]> entry))
-            _entries[key] = entry = new Spectrum<Rune[]>();
-
-        entry.AddEntry(runes, rule.BreakValue);
+        ruleSet.Add(ruleSpec);
 
         return this;
     }
@@ -89,19 +93,12 @@ public class LSystemProducer
     {
         List<Rune> runes = [];
 
-        foreach (Rune rune in source)
+        for (int index = 0; index < source.Length; index++)
         {
-            if (_entries.TryGetValue(rune, out Spectrum<Rune[]> entry))
-            {
-                Rune[] replacement;
-
-                if (entry.Count > 1)
-                    (_, replacement) = entry.GetByValue(_random.NextDouble());
-                else
-                    (_, replacement) = entry.GetByIndex(0);
-
-                runes.AddRange(replacement);
-            }
+            Rune rune = source[index];
+            
+            if (_ruleSets.TryGetValue(rune, out ProductionRuleSet ruleSet))
+                runes.AddRange(ruleSet.GetProduction(source, index, _random));
             else
                 runes.Add(rune);
         }

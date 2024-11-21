@@ -1,7 +1,7 @@
+using System.Text;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Geometry.LSystems;
-using RayTracer.Instructions.Core;
 
 namespace RayTracer.Instructions.Surfaces.LSystems;
 
@@ -28,27 +28,23 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     /// <summary>
     /// This property holds the resolver for the "generations" property of an L-system.
     /// </summary>
-    public List<ProductionRuleResolver> ProductionRuleResolvers { get; set; } = [];
+    public List<ProductionRuleSpecResolver> ProductionRuleResolvers { get; set; } = [];
 
     /// <summary>
-    /// This property holds the resolver for the render type property of an L-system.
+    /// This property holds the resolver for the rendering controls property of an L-system.
     /// </summary>
-    public Resolver<LSystemRendererType> RenderTypeResolver { get; set; }
+    public LSystemRenderingControlsResolver RenderingControlsResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the angle property of an L-system.
+    /// This property holds the resolver for whether turtle orientation commands should be
+    /// ignored.
     /// </summary>
-    public AngleResolver AngleResolver { get; set; }
+    public Resolver<bool> IgnoreOrientationCommandsResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the distance property of an L-system.
+    /// This property holds the resolver for any extra symbols that should be ignored.
     /// </summary>
-    public Resolver<double> DistanceResolver { get; set; }
-
-    /// <summary>
-    /// This property holds the resolver for the diameter property of an L-system.
-    /// </summary>
-    public Resolver<double> DiameterResolver { get; set; }
+    public Resolver<Rune[]> SymbolsToIgnoreResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
@@ -61,10 +57,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     {
         AxiomResolver.AssignTo(value, target => target.Axiom, context, variables);
         GenerationsResolver.AssignTo(value, target => target.Generations, context, variables);
-        RenderTypeResolver.AssignTo(value, target => target.RendererType, context, variables);
-        AngleResolver.AssignTo(value, target => target.Angle, context, variables);
-        DistanceResolver.AssignTo(value, target => target.Distance, context, variables);
-        DiameterResolver.AssignTo(value, target => target.Diameter, context, variables);
+        RenderingControlsResolver.AssignTo(value, target => target.RenderingControls, context, variables);
+        IgnoreOrientationCommandsResolver.AssignTo(value, target => target.IgnoreOrientationCommands, context, variables);
+        SymbolsToIgnoreResolver.AssignTo(value, target => target.SymbolsToIgnore, context, variables);
 
         value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers
@@ -86,5 +81,19 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         return ProductionRuleResolvers.IsNullOrEmpty()
             ? "At least one production rule must be provided."
             : null;
+    }
+
+    /// <summary>
+    /// This method creates a copy of this resolver.
+    /// </summary>
+    /// <returns>A clone of this resolver.</returns>
+    public override object Clone()
+    {
+        LSystemResolver resolver = (LSystemResolver) base.Clone();
+
+        if (resolver.RenderingControlsResolver is not null)
+            resolver.RenderingControlsResolver = (LSystemRenderingControlsResolver) RenderingControlsResolver.Clone();
+
+        return resolver;
     }
 }

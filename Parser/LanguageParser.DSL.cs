@@ -24,18 +24,18 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
 
-        _keywords: 'agate', 'alignment', 'ambient', 'angle', 'angles', 'apply', 'at',
-            'are', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits', 'black',
-            'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick', 'by',
-            'camera', 'center', 'channel', 'checker', 'close', 'color', 'commands',
-            'comment', 'completeBranch', 'conic', 'context', 'copyright', 'csg', 'cube',
-            'cubic', 'curve', 'cylinder', 'cylindrical', 'degrees', 'dents', 'description',
-            'diameter', 'difference', 'diffuse', 'disclaimer', 'distance', 'drawLine',
-            'extrusion', 'false', 'field', 'file', 'font', 'from', 'gamma', 'gap',
-            'generations', 'gradient', 'granite', 'grayscale', 'group', 'height',
-            'hexagon', 'horizontal', 'include', 'index', 'info', 'inherited',
+        _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
+            'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
+            'black', 'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick',
+            'by', 'camera', 'center', 'channel', 'checker', 'close', 'color', 'commands',
+            'comment', 'completeBranch', 'conic', 'context', 'controls', 'copyright',
+            'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical', 'degrees', 'dents',
+            'description', 'diameter', 'difference', 'diffuse', 'disclaimer', 'drawLine',
+            'extrusion', 'factor', 'false', 'field', 'file', 'font', 'from', 'gamma',
+            'gap', 'generations', 'gradient', 'granite', 'grayscale', 'group', 'height',
+            'hexagon', 'horizontal', 'ignore', 'include', 'index', 'info', 'inherited',
             'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer', 'layout', 'left',
-            'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
+            'length', 'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
             'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes', 'pitchDown',
@@ -467,11 +467,22 @@ public partial class LanguageParser
             productions > openBrace ?? 'Expecting an open brace to follow "productions" here.' >
             lsystemProductionClause{*} > closeBrace ?? 'Expecting a close brace here.'
         }
+        lsystemIgnoreClause:
+        {
+            ignore > [ { commands > and > _string } | commands | _string ]
+                ?? 'Expecting "commands" or a string to follow "ignore" here.'
+        }
         lsystemEntryClause:
         [
-            extrusion | pipes | { axiom > _expression } | { generations > _expression } |
-            { angle > _expression } | { distance > _expression } | { diameter > _expression } |
-            lsystemCommandsClause | lsystemProductionsClause | surfaceEntryClause
+            { axiom > _expression } | { generations > _expression } |
+            { controls > openBrace ?? 'Expecting an open brace to follow "controls" here.' } |
+            lsystemCommandsClause | lsystemProductionsClause | lsystemIgnoreClause |
+            surfaceEntryClause
+        ]
+        lsystemRenderingControlsEntryClause:
+        [
+            extrusion | pipes | { angle > _expression } | { length > _expression } |
+            { diameter > _expression } | { factor > _expression }
         ]
 
         // Triangle clauses.

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace RayTracer.Geometry.LSystems;
 
 /// <summary>
@@ -25,30 +27,25 @@ public class LSystem : Group
     /// This property holds the list of production rules that the L-system producer should
     /// use.
     /// </summary>
-    public List<ProductionRule> ProductionRules { get; } = [];
+    public List<ProductionRuleSpec> ProductionRules { get; } = [];
 
     /// <summary>
-    /// This property holds the type of renderer to use when converting an L-system
-    /// production into geometry.
+    /// This property holds the set of controls that dictate how productions from this
+    /// L-system are rendered into geometry.
     /// </summary>
-    public LSystemRendererType RendererType { get; set; }
+    public LSystemRenderingControls RenderingControls { get; set; } = new ();
 
     /// <summary>
-    /// This property carries the global angle to use in rendering the surface. 
+    /// This property notes whether turtle orientation commands should be ignored regarding
+    /// context sensitive evaluation.
     /// </summary>
-    public double Angle { get; set; }
+    public bool IgnoreOrientationCommands { get; set; }
 
     /// <summary>
-    /// This property carries the global distance the turtle is to travel for each move
-    /// to use in rendering the surface. 
+    /// This property holds the collection of runes that should be ignored regarding
+    /// context sensitive evaluation.
     /// </summary>
-    public double Distance { get; set; } = 1;
-
-    /// <summary>
-    /// This property carries the global diameter of the "stroke" that the turtle is to
-    /// use for each move in rendering the surface. 
-    /// </summary>
-    public double Diameter { get; set; } = 0.1;
+    public Rune[] SymbolsToIgnore { get; init; }
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -57,12 +54,8 @@ public class LSystem : Group
     protected override void PrepareSurfaceForRendering()
     {
         string production = GetProduction();
-        LSystemShapeRenderer renderer = RendererType.GetRenderer(production);
+        LSystemShapeRenderer renderer = RenderingControls.CreateRenderer(production);
 
-        renderer.Angle = Angle;
-        renderer.Distance = Distance;
-        renderer.Diameter = Diameter;
-        
         foreach (LSystemRenderCommandMapping mapping in CommandMappings)
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
 
@@ -86,12 +79,31 @@ public class LSystem : Group
         LSystemProducer producer = new LSystemProducer
         {
             Axiom = Axiom,
-            Seed = Seed
+            Seed = Seed,
+            SymbolsToIgnore = GetAllSymbolsToIgnore()
         };
 
-        foreach (ProductionRule rule in ProductionRules)
+        foreach (ProductionRuleSpec rule in ProductionRules)
             producer.AddRule(rule);
 
         return producer.Produce(Generations);
+    }
+
+    /// <summary>
+    /// This method creates an array of the runes that should be ignored regarding context
+    /// sensitive evaluation..
+    /// </summary>
+    /// <returns>The array of runes that should be ignored.</returns>
+    private Rune[] GetAllSymbolsToIgnore()
+    {
+        HashSet<Rune> renderCommands = [];
+
+        if (IgnoreOrientationCommands)
+            renderCommands.UnionWith(LSystemShapeRenderer.Commands);
+
+        if (SymbolsToIgnore != null)
+            renderCommands.UnionWith(SymbolsToIgnore);
+
+        return renderCommands.ToArray();
     }
 }

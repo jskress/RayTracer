@@ -1,0 +1,180 @@
+// A scene to test an L-system.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: Context-Sensitive'
+        author 'J. Stephen Kress'
+        description 'A scene to test the L-system primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2, 10, -30]
+    look at [0, 1.4, 0]
+    field of view 20
+}
+
+point light {
+    location [20, 20, -20]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}
+
+lsystem {
+    axiom '$F1F1F1'
+    ignore '$+-F'
+    productions {
+        '0<0>0' -> '0'
+        '0<0>1' -> '1[+F1F1]'
+        '0<1>0' -> '1'
+        '0<1>1' -> '1'
+        '1<0>0' -> '0'
+        '1<0>1' -> '1F1'
+        '1<1>0' -> '0'
+        '1<1>1' -> '0'
+        '+' -> '-'
+        '-' -> '+'
+    }
+    controls {
+        pipes
+        angle 22.5
+        diameter 0.2
+    }
+    generations 30
+    material {
+        pigment SandyBrown
+        specular 0
+    }
+    scale 0.2
+    rotate Y -90
+}
+
+lsystem {
+    axiom '$F1F1F1'
+    ignore '$+-F'
+    productions {
+        '0<0>0' -> '1'
+        '0<0>1' -> '1[-F1F1]'
+        '0<1>0' -> '1'
+        '0<1>1' -> '1'
+        '1<0>0' -> '0'
+        '1<0>1' -> '1F1'
+        '1<1>0' -> '0'
+        '1<1>1' -> '0'
+        '+' -> '-'
+        '-' -> '+'
+    }
+    controls {
+        pipes
+        angle 22.5
+        diameter 0.2
+    }
+    generations 30
+    material {
+        pigment SandyBrown
+        specular 0
+    }
+    scale 0.2
+    rotate Y -90
+    translate [-2, 0, -1]
+}
+
+lsystem {
+    axiom '$F1F1F1'
+    ignore '$+-F'
+    productions {
+        '0<0>0' -> '0'
+        '0<0>1' -> '1'
+        '0<1>0' -> '0'
+        '0<1>1' -> '1[+F1F1]'
+        '1<0>0' -> '0'
+        '1<0>1' -> '1F1'
+        '1<1>0' -> '0'
+        '1<1>1' -> '0'
+        '+' -> '-'
+        '-' -> '+'
+    }
+    controls {
+        pipes
+        angle 25.75
+        diameter 0.2
+    }
+    generations 26
+    material {
+        pigment SandyBrown
+        specular 0
+    }
+    scale 0.2
+    rotate Y -90
+    translate [-4, 0, -2]
+}
+
+lsystem {
+    axiom '$F1F1F1'
+    ignore '$+-F'
+    productions {
+        '0<0>0' -> '1'
+        '0<0>1' -> '0'
+        '0<1>0' -> '0'
+        '0<1>1' -> '1F1'
+        '1<0>0' -> '1'
+        '1<0>1' -> '1[+F1F1]'
+        '1<1>0' -> '1'
+        '1<1>1' -> '0'
+        '+' -> '-'
+        '-' -> '+'
+    }
+    controls {
+        pipes
+        angle 25.75
+        diameter 0.2
+    }
+    generations 24
+    material {
+        pigment SandyBrown
+        specular 0
+    }
+    scale 0.2
+    rotate Y -90
+    translate [2, 0, -1]
+}
+
+lsystem {
+    axiom '$F1F1F1'
+    ignore '$+-F'
+    productions {
+        '0<0>0' -> '0'
+        '0<0>1' -> '1[-F1F1]'
+        '0<1>0' -> '1'
+        '0<1>1' -> '1'
+        '1<0>0' -> '0'
+        '1<0>1' -> '1F1'
+        '1<1>0' -> '1'
+        '1<1>1' -> '0'
+        '+' -> '-'
+        '-' -> '+'
+    }
+    controls {
+        pipes
+        angle 22.5
+        diameter 0.2
+    }
+    generations 26
+    material {
+        pigment SandyBrown
+        specular 0
+    }
+    scale 0.2
+    rotate Y -90
+    translate [4, 0, -2]
+}

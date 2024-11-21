@@ -97,7 +97,7 @@ public class Spectrum<T> : IEnumerable<T>
     {
         for (int index = 0; index < _entries.Count - 1; index++)
         {
-            if (_entries[index].Equals(value))
+            if (_entries[index].Value.Equals(value))
             {
                 Entry entry = _entries[index + 1];
 

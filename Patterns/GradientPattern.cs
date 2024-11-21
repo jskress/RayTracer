@@ -31,7 +31,7 @@ public class GradientPattern : BandPattern
     {
         bool isOdd = Math.Floor(value) % 2 != 0;
 
-        value = InvertedClip(value.Fraction());
+        value = 1 - InvertedClip(value.Fraction());
 
         if (Bouncing && isOdd)
             value = 1 - value;

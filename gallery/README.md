@@ -253,6 +253,46 @@ thumbnail will show the full sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/axial.png">
+      <img alt="L-System Test: Axial Tree" height="120" src="Local/l-systems/axial.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/axial.igl">L-System Test: Axial Tree</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/context-sensitive.png">
+      <img alt="L-System Test: Context-Sensitive" height="120" src="Local/l-systems/context-sensitive.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/context-sensitive.igl">L-System Test: Context-Sensitive</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/hilbert.png">
+      <img alt="L-System Test: Hilbert Curve" height="120" src="Local/l-systems/hilbert.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/hilbert.igl">L-System Test: Hilbert Curve</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/snowflake-2.png">
+      <img alt="L-System Test: Snowflake Outline" height="120" src="Local/l-systems/snowflake-2.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/snowflake-2.igl">L-System Test: Snowflake Outline</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/snowflake.png">
+      <img alt="L-System Test: Snowflake" height="120" src="Local/l-systems/snowflake.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/snowflake.igl">L-System Test: Snowflake</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/noise.png">
       <img alt="Pigment Noise Test" height="120" src="Local/noise.png" width="160"/>
     </a></td>

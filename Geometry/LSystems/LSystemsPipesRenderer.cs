@@ -10,7 +10,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
 {
     public LSystemsPipesRenderer(string production) : base(production) {}
 
-    private double _radius;
+    private double _initialRadius;
 
     /// <summary>
     /// This method is used to tell us that the rendering to a surface is starting.
@@ -18,13 +18,14 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     /// <param name="turtle">The initial turtle.</param>
     protected override void Begin(Turtle turtle)
     {
-        _radius = Diameter / 2;
+        _initialRadius = turtle.Diameter / 2;
 
         Surfaces.Add(new Sphere
         {
-            Transform = Transforms.Scale(_radius),
+            Transform = Transforms.Scale(_initialRadius),
             Material = null // <-- This is important.
         });
+
         BoundingBox = new BoundingBox()
             .Add(Point.Zero);
     }
@@ -38,8 +39,6 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     {
         if (command == TurtleCommand.DrawLine)
         {
-            Point point = new Point(turtle.Location.X, turtle.Location.Y, turtle.Location.Z);
-
             CreateCylinder(turtle);
             CreateSphere(turtle);
 
@@ -54,14 +53,15 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     private void CreateCylinder(Turtle turtle)
     {
+        double radius = turtle.Diameter / 2;
         Matrix matrix = Transforms.Translate(turtle.PreviousLocation) *
             GetRotation(turtle.Direction) *
-            Transforms.Scale(_radius, 1, _radius);
+            Transforms.Scale(radius, 1, radius);
 
         Surfaces.Add(new Cylinder
         {
             MinimumY = 0,
-            MaximumY = Distance,
+            MaximumY = RenderingControls.Length,
             Transform = matrix,
             Material = null // <-- This is important.
         });
@@ -75,7 +75,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     private void CreateSphere(Turtle turtle)
     {
         Matrix matrix = Transforms.Translate(turtle.Location) *
-            Transforms.Scale(_radius);
+            Transforms.Scale(turtle.Diameter / 2);
 
         Surfaces.Add(new Sphere
         {
@@ -90,7 +90,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     protected override void Complete(Turtle turtle)
     {
-        BoundingBox.Expand(_radius);
+        BoundingBox.Expand(_initialRadius);
     }
 
     /// <summary>

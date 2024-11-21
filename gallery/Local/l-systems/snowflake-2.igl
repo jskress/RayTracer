@@ -5,7 +5,7 @@ context {
     angles are degrees
     no gamma
     info {
-        title 'L-System Test: Snowflake'
+        title 'L-System Test: Snowflake Outline'
         author 'J. Stephen Kress'
         description 'A scene to test the L-system primitive.'
         copyright true
@@ -31,65 +31,77 @@ plane {
 }
 
 koch = lsystem {
-    extrusion
     axiom 'F--F--F'
-    angle 60
     productions {
         'F' -> 'F+F--F+F'
+    }
+    controls {
+        pipes
+        angle 60
+        diameter 0.4
     }
 }
 
 lsystem koch {
+    controls {
+        length 2 / 3 / 3 / 3
+    }
     generations 4
-    distance 2 / 3 / 3 / 3
     material {
         pigment Red
         shininess 300
     }
-    scale Y 0.5
     translate [-3, 0, 1]
 }
 
 lsystem koch {
+    controls {
+        length 2 / 3 / 3
+    }
     generations 3
-    distance 2 / 3 / 3
     material {
         pigment Yellow
         shininess 300
     }
-    scale Y 0.5
     translate [-3, 0.5, 1]
 }
 
 lsystem koch {
+    controls {
+        length 2 / 3
+    }
     generations 2
-    distance 2 / 3
     material {
         pigment Blue
         shininess 300
     }
-    scale Y 0.5
     translate [-3, 1, 1]
 }
 
 lsystem koch {
+    controls {
+        length 2
+    }
     generations 1
-    distance 2
     material {
         pigment Green
         shininess 300
     }
-    scale Y 0.5
     translate [-3, 1.5, 1]
 }
 
 lsystem koch {
+    controls {
+        length 6
+    }
+    axiom 'F--F--F'
+    productions {
+        'F' -> 'F+F--F+F'
+    }
     generations 0
-    distance 6
     material {
         pigment Cyan
         shininess 300
     }
-    scale Y 0.5
     translate [-3, 2, 1]
 }
