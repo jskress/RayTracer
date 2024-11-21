@@ -37,30 +37,24 @@ public class ProductionBranch
     /// This method is used to create a production branch from the given set of runes.
     /// </summary>
     /// <param name="source">The runes to create the branch from.</param>
-    /// <param name="symbolsToIgnore">The array of runes that are to be ignored.</param>
     /// <returns>The created branch.</returns>
-    public static ProductionBranch Parse(Rune[] source, Rune[] symbolsToIgnore = null)
+    public static ProductionBranch Parse(Rune[] source)
     {
         List<Entry> entries = [];
         int index = 0;
         
-        symbolsToIgnore ??= [];
-
         while (index < source.Length)
         {
-            if (!symbolsToIgnore.Contains(source[index]))
+            if (source[index] == LSystemProducer.LeftBracket)
             {
-                if (source[index] == LSystemProducer.LeftBracket)
-                {
-                    int end = FindClosingBracket(source, index);
+                int end = FindClosingBracket(source, index);
 
-                    entries.Add(new Entry(Branch: Parse(source[(index + 1)..end], symbolsToIgnore)));
+                entries.Add(new Entry(Branch: Parse(source[(index + 1)..end])));
 
-                    index = end;
-                }
-                else if (source[index] != LSystemProducer.RightBracket)
-                    entries.Add(new Entry(Rune: source[index]));
+                index = end;
             }
+            else if (source[index] != LSystemProducer.RightBracket)
+                entries.Add(new Entry(Rune: source[index]));
 
             index++;
         }
