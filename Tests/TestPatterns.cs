@@ -64,9 +64,9 @@ public class TestPatterns
         Pigment source = CreateGradientPigment(BandType.LinearX);
 
         Assert.IsTrue(Colors.White.Matches(source.GetColorFor(Point.Zero)));
-        Assert.IsTrue(Colors.Gray25.Matches(source.GetColorFor(new Point(0.25, 0, 0))));
+        Assert.IsTrue(Colors.Gray75.Matches(source.GetColorFor(new Point(0.25, 0, 0))));
         Assert.IsTrue(Colors.Gray50.Matches(source.GetColorFor(new Point(0.5, 0, 0))));
-        Assert.IsTrue(Colors.Gray75.Matches(source.GetColorFor(new Point(0.75, 0, 0))));
+        Assert.IsTrue(Colors.Gray25.Matches(source.GetColorFor(new Point(0.75, 0, 0))));
     }
 
     [TestMethod]

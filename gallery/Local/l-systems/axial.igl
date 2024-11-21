@@ -30,7 +30,7 @@ plane {
     }
 }
 
-koch = lsystem {
+tree = lsystem {
     axiom '$F'
     productions {
         'F' (0.33) -> 'F[+F]F[-F]F'
@@ -44,7 +44,7 @@ koch = lsystem {
     }
 }
 
-lsystem koch {
+lsystem tree {
     generations 5
     material {
         pigment SandyBrown

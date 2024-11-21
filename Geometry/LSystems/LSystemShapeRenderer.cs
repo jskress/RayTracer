@@ -9,13 +9,16 @@ namespace RayTracer.Geometry.LSystems;
 /// </summary>
 public abstract class LSystemShapeRenderer
 {
+    private static readonly Rune Move = new('f');
+    private static readonly Rune Draw = new('F');
+
     /// <summary>
     /// This field holds the standard rune (character) to turtle command mapping.
     /// </summary>
     private static readonly Dictionary<Rune, TurtleCommand> StandardCommandMapping = new ()
     {
-        { new Rune('f'), TurtleCommand.Move },
-        { new Rune('F'), TurtleCommand.DrawLine },
+        { Move, TurtleCommand.Move },
+        { Draw, TurtleCommand.DrawLine },
         { new Rune('+'), TurtleCommand.TurnLeft },
         { new Rune('-'), TurtleCommand.TurnRight },
         { new Rune('\u2212'), TurtleCommand.TurnRight },
@@ -39,6 +42,15 @@ public abstract class LSystemShapeRenderer
         // "'" - Increment color index.
         // '%' - Cut off the remainder of the branch.
     };
+
+    /// <summary>
+    /// This property returns the set of standard render command runes.
+    /// </summary>
+    internal static HashSet<Rune> Commands => StandardCommandMapping.Keys
+        .Where(cmd => cmd != LSystemProducer.LeftBracket &&
+                      cmd != LSystemProducer.RightBracket &&
+                      cmd != Move && cmd != Draw)
+        .ToHashSet();
 
     /// <summary>
     /// This property holds the set of controls that dictate how productions from this

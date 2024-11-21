@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace RayTracer.Geometry.LSystems;
 
 /// <summary>
@@ -25,13 +27,25 @@ public class LSystem : Group
     /// This property holds the list of production rules that the L-system producer should
     /// use.
     /// </summary>
-    public List<ProductionRule> ProductionRules { get; } = [];
+    public List<ProductionRuleSpec> ProductionRules { get; } = [];
 
     /// <summary>
     /// This property holds the set of controls that dictate how productions from this
     /// L-system are rendered into geometry.
     /// </summary>
     public LSystemRenderingControls RenderingControls { get; set; } = new ();
+
+    /// <summary>
+    /// This property notes whether turtle orientation commands should be ignored regarding
+    /// context sensitive evaluation.
+    /// </summary>
+    public bool IgnoreOrientationCommands { get; set; }
+
+    /// <summary>
+    /// This property holds the collection of runes that should be ignored regarding
+    /// context sensitive evaluation.
+    /// </summary>
+    public Rune[] SymbolsToIgnore { get; init; }
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -41,7 +55,7 @@ public class LSystem : Group
     {
         string production = GetProduction();
         LSystemShapeRenderer renderer = RenderingControls.CreateRenderer(production);
-        
+
         foreach (LSystemRenderCommandMapping mapping in CommandMappings)
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
 
@@ -65,12 +79,31 @@ public class LSystem : Group
         LSystemProducer producer = new LSystemProducer
         {
             Axiom = Axiom,
-            Seed = Seed
+            Seed = Seed,
+            SymbolsToIgnore = GetAllSymbolsToIgnore()
         };
 
-        foreach (ProductionRule rule in ProductionRules)
+        foreach (ProductionRuleSpec rule in ProductionRules)
             producer.AddRule(rule);
 
         return producer.Produce(Generations);
+    }
+
+    /// <summary>
+    /// This method creates an array of the runes that should be ignored regarding context
+    /// sensitive evaluation..
+    /// </summary>
+    /// <returns>The array of runes that should be ignored.</returns>
+    private Rune[] GetAllSymbolsToIgnore()
+    {
+        HashSet<Rune> renderCommands = [];
+
+        if (IgnoreOrientationCommands)
+            renderCommands.UnionWith(LSystemShapeRenderer.Commands);
+
+        if (SymbolsToIgnore != null)
+            renderCommands.UnionWith(SymbolsToIgnore);
+
+        return renderCommands.ToArray();
     }
 }

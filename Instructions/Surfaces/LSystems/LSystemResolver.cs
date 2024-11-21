@@ -1,7 +1,7 @@
+using System.Text;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Geometry.LSystems;
-using RayTracer.Instructions.Core;
 
 namespace RayTracer.Instructions.Surfaces.LSystems;
 
@@ -28,12 +28,23 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     /// <summary>
     /// This property holds the resolver for the "generations" property of an L-system.
     /// </summary>
-    public List<ProductionRuleResolver> ProductionRuleResolvers { get; set; } = [];
+    public List<ProductionRuleSpecResolver> ProductionRuleResolvers { get; set; } = [];
 
     /// <summary>
     /// This property holds the resolver for the rendering controls property of an L-system.
     /// </summary>
     public LSystemRenderingControlsResolver RenderingControlsResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for whether turtle orientation commands should be
+    /// ignored.
+    /// </summary>
+    public Resolver<bool> IgnoreOrientationCommandsResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for any extra symbols that should be ignored.
+    /// </summary>
+    public Resolver<Rune[]> SymbolsToIgnoreResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
@@ -46,7 +57,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     {
         AxiomResolver.AssignTo(value, target => target.Axiom, context, variables);
         GenerationsResolver.AssignTo(value, target => target.Generations, context, variables);
-        RenderingControlsResolver.AssignTo(value, targter => targter.RenderingControls, context, variables);
+        RenderingControlsResolver.AssignTo(value, target => target.RenderingControls, context, variables);
+        IgnoreOrientationCommandsResolver.AssignTo(value, target => target.IgnoreOrientationCommands, context, variables);
+        SymbolsToIgnoreResolver.AssignTo(value, target => target.SymbolsToIgnore, context, variables);
 
         value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers

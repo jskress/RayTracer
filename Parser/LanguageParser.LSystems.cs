@@ -69,6 +69,9 @@ public partial class LanguageParser
                 case "generations":
                     resolver.GenerationsResolver = new TermResolver<int> { Term = term };
                     break;
+                case "ignore":
+                    ParseLSystemIgnoreClause(clause, resolver);
+                    break;
                 case "controls":
                     ParseLSystemRenderingControlsClause(resolver);
                     break;
@@ -82,6 +85,43 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "l-system");
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// This method is used to parse an "ignore" clause for an L-system.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="resolver">The L-system resoler to update.</param>
+    private void ParseLSystemIgnoreClause(Clause clause, LSystemResolver resolver)
+    {
+        string first = clause.Text(1);
+        string extras = null;
+
+        if (first == "commands")
+        {
+            resolver.IgnoreOrientationCommandsResolver = new LiteralResolver<bool> { Value = true };
+            
+            if (clause.Tokens.Count > 3)
+                extras = clause.Text(3);
+        }
+        else
+            extras = first;
+
+        if (extras != null)
+        {
+            extras = extras.RemoveAllWhitespace();
+
+            if (extras.Length == 0)
+            {
+                throw new TokenException("No extra symbols provided to ignore.")
+                {
+                    Token = clause.Tokens.Last()
+                };
+            }
+            
+            resolver.SymbolsToIgnoreResolver =
+                new LiteralResolver<Rune[]> { Value = extras.AsRunes() };
         }
     }
 
@@ -193,17 +233,17 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     /// <returns>The list of production rule resolvers.</returns>
-    private static List<ProductionRuleResolver> ParseProductionRulesClause(Clause clause)
+    private static List<ProductionRuleSpecResolver> ParseProductionRulesClause(Clause clause)
     {
-        List<ProductionRuleResolver> rules = [];
+        List<ProductionRuleSpecResolver> rules = [];
 
         int tokenIndex = 2;
 
         while (tokenIndex < clause.Tokens.Count && !BounderToken.CloseBrace.Matches(clause.Tokens[tokenIndex]))
         {
-            ProductionRuleResolver resolver = new ProductionRuleResolver();
+            ProductionRuleSpecResolver resolver = new ProductionRuleSpecResolver();
 
-            tokenIndex = ParseProductionRuleVariable(
+            tokenIndex = ParseProductionRuleSpecKeyInfo(
                 resolver, clause, tokenIndex);
             tokenIndex = ParseProductionRuleProbability(resolver, clause, tokenIndex);
 
@@ -221,27 +261,52 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to parse the variable resolver for a production rule.
+    /// This method is used to parse the key information resolvers for a production rule
+    /// specification.
     /// </summary>
     /// <param name="resolver">The resolver to add the variable resolver to.</param>
     /// <param name="clause">The clause to pull the variable from.</param>
     /// <param name="tokenIndex">The index at which to expect the variable.</param>
     /// <returns>The token index following the variable.</returns>
-    private static int ParseProductionRuleVariable(
-        ProductionRuleResolver resolver, Clause clause, int tokenIndex)
+    private static int ParseProductionRuleSpecKeyInfo(
+        ProductionRuleSpecResolver resolver, Clause clause, int tokenIndex)
     {
-        string variable = clause.Tokens[tokenIndex].Text;
-        Rune[] runes = variable.AsRunes();
+        string key = clause.Tokens[tokenIndex].Text.RemoveAllWhitespace();
+        Rune[] runes = key.AsRunes();
+        int leftIndex = Array.IndexOf(runes, new Rune('<'));
+        int rightIndex = Array.IndexOf(runes, new Rune('>'));
+        int vStart = leftIndex < 0 ? 0 : leftIndex + 1;
+        int vEnd = rightIndex < 0 ? runes.Length : rightIndex;
+        Rune[] left = leftIndex < 0 ? null : runes[..leftIndex];
+        Rune[] right = rightIndex < 0 ? null : runes[(rightIndex + 1)..];
+        Rune[] variable = vEnd <= vStart ? [] : runes[vStart..vEnd];
+        string message = null;
 
-        if (runes.IsNullOrEmpty() || runes.Length > 1)
+        if (left is { Length: 0 })
+            message = "Left context indicated but not provided.";
+        else if (right is { Length: 0 })
+            message = "Right context indicated but not provided.";
+        else if (variable.Length != 1)
+            message = "The variable must contain exactly one Unicode character.";
+
+        if (message != null)
         {
-            throw new TokenException("The variable must contain exactly one Unicode character.")
+            throw new TokenException($"The production rule key is not valid. {message}")
             {
                 Token = clause.Tokens[tokenIndex]
             };
         }
 
-        resolver.VariableResolver = new LiteralResolver<string> { Value = variable };
+        resolver.KeyResolver = new LiteralResolver<string> { Value = key };
+        resolver.VariableResolver = new LiteralResolver<Rune> { Value = variable[0] };
+        resolver.LeftContextResolver = new LiteralResolver<ProductionBranch>
+        {
+            Value = left == null ? null : ProductionBranch.Parse(left)
+        };
+        resolver.RightContextResolver = new LiteralResolver<ProductionBranch>
+        {
+            Value = right == null ? null : ProductionBranch.Parse(right)
+        };
 
         return tokenIndex + 1;
     }
@@ -254,7 +319,7 @@ public partial class LanguageParser
     /// <param name="tokenIndex">The index at which to expect the probability.</param>
     /// <returns>The token index following the probability clause.</returns>
     private static int ParseProductionRuleProbability(
-        ProductionRuleResolver resolver, Clause clause, int tokenIndex)
+        ProductionRuleSpecResolver resolver, Clause clause, int tokenIndex)
     {
         if (tokenIndex >= clause.Tokens.Count || !BounderToken.LeftParen.Matches(clause.Tokens[tokenIndex]))
             return tokenIndex;

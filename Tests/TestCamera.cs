@@ -2,6 +2,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Pixels;
 
 namespace Tests;
 
@@ -62,7 +63,11 @@ public class TestCamera
     {
         Scene scene = TestScenes.DefaultScene();
         Camera camera = new ();
-        RenderContext context = new RenderContext { Width = 11, Height = 11 };
+        RenderContext context = new RenderContext
+        {
+            Width = 11, Height = 11,
+            AntiAliasing = new AliasingOption() 
+        };
         Color expected = new (0.380661, 0.475826, 0.285496);
 
         Canvas canvas = camera.Render(context, scene);

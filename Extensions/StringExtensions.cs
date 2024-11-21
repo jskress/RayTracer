@@ -67,4 +67,16 @@ public static class StringExtensions
     {
         return text.AsCodePoints().First();
     }
+
+    /// <summary>
+    /// This method is used to remove all whitespace characters from a string.
+    /// </summary>
+    /// <param name="text">The text to remove whitespace from.</param>
+    /// <returns>The original string, without any whitespace.</returns>
+    public static string RemoveAllWhitespace(this string text)
+    {
+        return text == null
+            ? null
+            : string.Join("", text.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+    }
 }
