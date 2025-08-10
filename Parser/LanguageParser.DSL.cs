@@ -48,7 +48,7 @@ public partial class LanguageParser
             'thin', 'title', 'to', 'top', 'torus', 'toVertical', 'transform', 'translate',
             'transparency', 'triangle', 'triangular', 'true', 'turbulence', 'turnAround',
             'turnLeft', 'turnRight', 'union', 'up', 'vector', 'vertical', 'view',
-            'warning', 'width', 'with', 'wrinkles', 'X', 'Y', 'Z'
+            'warning', 'width', 'with', 'wood', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -201,7 +201,7 @@ public partial class LanguageParser
             triangular |
             {
                 [ dents | granite | wrinkles ] > withSeedClause{?}
-            } |
+            } | wood |
             {
                 [ { linear > [ X | Y | Z ]{?} } | cylindrical | spherical ] >
                 [ stripes | { bouncing{?} > gradient } ] ?? 'Expecting "stripes" or "gradient" here.'
