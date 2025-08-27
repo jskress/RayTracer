@@ -1,3 +1,5 @@
+using RayTracer.Utils;
+
 namespace RayTracer.Fonts;
 
 /// <summary>
@@ -52,9 +54,7 @@ internal class FontFaceLoader
     /// <returns>The content of Google's CSS file for the font face.</returns>
     private string LoadCssFile()
     {
-        using HttpResponseMessage message = FontManager.HttpClient.GetAsync(_url)
-            .GetAwaiter()
-            .GetResult();
+        using HttpResponseMessage message = HttpUtils.Get(_url);
         string content = message.Content.ReadAsStringAsync()
             .GetAwaiter()
             .GetResult();
@@ -112,9 +112,7 @@ internal class FontFaceLoader
     /// <param name="fileName">The file name.</param>
     private void DownloadFontFile(string path, string fileName)
     {
-        using HttpResponseMessage message = FontManager.HttpClient.GetAsync(path + fileName)
-            .GetAwaiter()
-            .GetResult();
+        using HttpResponseMessage message = HttpUtils.Get(path + fileName);
 
         if (message.IsSuccessStatusCode)
         {

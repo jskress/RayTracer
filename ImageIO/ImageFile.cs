@@ -1,5 +1,8 @@
+using System.Text.RegularExpressions;
+using ImageMagick;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Utils;
 
 namespace RayTracer.ImageIO;
 
@@ -9,99 +12,133 @@ namespace RayTracer.ImageIO;
 /// </summary>
 public class ImageFile
 {
-    private readonly string _fileName;
-    private readonly string _outputImageFormat;
+    private static readonly IMagickColor<float> Transparent = new MagickColor(0, 0, 0, 0);
+    private static readonly Regex HttpUrlStart = new Regex(@"^https?://");
 
-    public ImageFile(string name, string outputImageFormat = null)
+    private readonly string _fileName;
+
+    public ImageFile(string name)
     {
         _fileName = name;
-        _outputImageFormat = outputImageFormat;
     }
 
     /// <summary>
     /// This method is used to load images from the image file.
     /// </summary>
-    /// <param name="context">The current rendering context.</param>
     /// <returns>An array of the images found in the image file.</returns>
-    public Canvas[] Load(RenderContext context)
+    public Canvas[] Load()
     {
-        IImageCodec codec = DetermineCodec(_fileName, false, null);
+        using Stream stream = GetImageStream();
+        using MagickImage image = new MagickImage(stream);
+        using IPixelCollection<float> pixels = image.GetPixels();
+        Canvas canvas = new Canvas((int) image.Width, (int) image.Height);
 
-        using Stream stream = File.OpenRead(_fileName);
+        foreach (IPixel<float> pixel in pixels)
+        {
+            float[] values = pixel.ToArray();
+            float red, green, blue, alpha = 0;
 
-        return codec.Decode(context, stream);
+            if (pixel.Channels == 1)
+                red = green = blue = values[0] / 65535;
+            else
+            {
+                red = values[0] / 65535;
+                green = values[1] / 65535;
+                blue = values[2] / 65535;
+
+                if (pixel.Channels > 3)
+                    alpha = values[3] / 65535;
+            }
+            
+            Color color = pixel.Channels > 3
+                ? new Color(red, green, blue, alpha)
+                : new Color(red, green, blue);
+
+            canvas.SetColor(color, pixel.X, pixel.Y);
+        }
+
+        return [canvas];
+    }
+
+    /// <summary>
+    /// This method is used to open our source as a stream.
+    /// If it looks like an HTTP URL, we'll open it by making an HHTO GET call.
+    /// Otherwise, we'll try to open it as a local file.
+    /// </summary>
+    /// <returns>The stream to read the image from.</returns>
+    private Stream GetImageStream()
+    {
+        if (HttpUrlStart.IsMatch(_fileName))
+        {
+            HttpResponseMessage response = HttpUtils.Get(_fileName);
+
+            response.EnsureSuccessStatusCode();
+
+            return response.Content.ReadAsStreamAsync()
+                .GetAwaiter()
+                .GetResult();
+        }
+
+        return File.OpenRead(_fileName);
     }
 
     /// <summary>
     /// This method is used to save the given image to the file, in the format
     /// indicated by its extension.
     /// </summary>
-    /// <param name="context">The current rendering context.</param>
     /// <param name="canvas">The image to save.</param>
-    /// <param name="extension">An optional concrete extension to use.</param>
-    /// <param name="info">Metadata about the image.</param>
-    public void Save(RenderContext context, Canvas canvas, string extension = null, ImageInformation info = null)
+    /// <param name="info">The information about the image.</param>
+    public void Save(Canvas canvas, ImageInformation info = null)
     {
-        extension ??= _outputImageFormat;
+        using MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
+        using IPixelCollection<float> pixels = image.GetPixels();
 
-        IImageCodec codec = DetermineCodec(_fileName, true, extension);
+        foreach (IPixel<float> pixel in pixels)
+        {
+            Color color = canvas.GetPixel(pixel.X, pixel.Y);
+            float red = (float) Math.Round(color.Red * 65535);
+            float green = (float) Math.Round(color.Green * 65535);
+            float blue = (float) Math.Round(color.Blue * 65535);
+            float alpha = (float) Math.Round(color.Alpha * 65535);
 
-        using Stream stream = File.OpenWrite(_fileName);
+            pixel.SetValues([red, green, blue, alpha]);
+        }
 
-        codec.Encode(context, canvas, stream, info);
+        if (info != null)
+            AddInformation(image, info);
+
+        image.Write(_fileName);
     }
 
     /// <summary>
-    /// This method is used to resolve our file's extension into an appropriate
-    /// image codec.
+    /// This method is used to copy all the information we have about an image into the
+    /// given image.
     /// </summary>
-    /// <param name="name">The file name to start with.</param>
-    /// <param name="forOutput">A flag noting whether we need a codec for input or output.</param>
-    /// <param name="extension">An optional concrete extension to use.</param>
-    /// <returns>A properly constructed image codec.</returns>
-    private static IImageCodec DetermineCodec(string name, bool forOutput, string extension)
+    /// <param name="image">The image to put the information in.</param>
+    /// <param name="info">The info object to pull the information from.</param>
+    private static void AddInformation(MagickImage image, ImageInformation info)
     {
-        CodecFormatInfo format = null;
-
-        // If we're reading the file, then try to resolve the codec by marker first.
-        if (!forOutput && File.Exists(name))
-        {
-            format = AvailableCodecs.FindByMarker(
-                ReadFileMarker(name, AvailableCodecs.LongestMarkerLength));
-        }
-
-        extension ??= Path.GetExtension(name);
-
-        if (format == null)
-        {
-            if (extension == null || extension.Trim() == string.Empty)
-                throw new ArgumentException($"Cannot determine image format from '{name}'.");
-
-            if (extension.StartsWith('.'))
-                extension = extension[1..];
-
-            format = AvailableCodecs.FindByExtension(extension);
-        }
-
-        if (format == null)
-            throw new ArgumentException($"The format, '{extension}', is not supported.");
-
-        return format.Creator();
+        AddAttribute(image, PredefinedTextKeywords.Title, info.Title);
+        AddAttribute(image, PredefinedTextKeywords.Author, info.Author);
+        AddAttribute(image, PredefinedTextKeywords.Description, info.Description);
+        AddAttribute(image, PredefinedTextKeywords.Copyright, info.Copyright);
+        AddAttribute(image, PredefinedTextKeywords.CreationTime, info.CreationTime.ToString("r"));
+        AddAttribute(image, PredefinedTextKeywords.Software, info.Software);
+        AddAttribute(image, PredefinedTextKeywords.Disclaimer, info.Disclaimer);
+        AddAttribute(image, PredefinedTextKeywords.Warning, info.Warning);
+        AddAttribute(image, PredefinedTextKeywords.Source, info.Source);
+        AddAttribute(image, PredefinedTextKeywords.Comment, info.Comment);
     }
 
     /// <summary>
-    /// This is a helper method for reading the first <c>size</c> bytes of the given file.
+    /// This is a helper method for conditionally adding an attribute on an image.
     /// </summary>
-    /// <param name="fileName">The name of the file to read.</param>
-    /// <param name="size">The largest marker size.</param>
-    /// <returns>A byte array containing the first bytes of the file.  The array will never
-    /// be larger than <c>size</c>.</returns>
-    private static byte[] ReadFileMarker(string fileName, int size)
+    /// <param name="image">The image to set an attribute on.</param>
+    /// <param name="label">The label for the field.</param>
+    /// <param name="value">The value of the field.</param>
+    private static void AddAttribute(MagickImage image, string label, string value)
     {
-        using FileStream stream = new FileStream(fileName, FileMode.Open);
-        byte[] buffer = new byte[size];
-        int count = stream.Read(buffer, 0, size);
-
-        return count < size ? buffer[..count] : buffer;
+        if (value != null && value.Trim().Length > 0)
+            image.SetAttribute(label, value);
     }
 }

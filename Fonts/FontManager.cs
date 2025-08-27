@@ -13,17 +13,11 @@ public class FontManager
 {
     internal static readonly string FontsDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".rayTracerFonts");
+        ".rayTracer", "Fonts");
 
     private static readonly string CatalogPath = Path.Combine(FontsDirectory, "fonts.json");
 
     private static readonly Lazy<FontManager> LazyInstance = new (() => new FontManager());
-    private static readonly HttpClientHandler Handler = new ()
-    { 
-        AutomaticDecompression = DecompressionMethods.All 
-    };
-
-    internal static readonly HttpClient HttpClient = new (Handler);
 
     /// <summary>
     /// This property provides the singleton instance of the font catalog.

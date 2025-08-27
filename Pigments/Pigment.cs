@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 
@@ -57,11 +58,36 @@ public abstract class Pigment
     }
 
     /// <summary>
+    /// This method is used to give the pigment a chance to prepare for rendering.
+    /// It is where we push any seed down through the pigment tree and give the pigment
+    /// a chance to do any other initialization work, etc.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface that this pigment is set on.</param>
+    public void RenderingIsAboutToStart(RenderContext context, Surface surface)
+    {
+        if (Seed.HasValue)
+            SetSeed(Seed.Value);
+
+        PrepareForRendering(context, surface);
+    }
+
+    /// <summary>
     /// This method is used to push any random number generator seeds throughout the pigment
     /// tree.
     /// </summary>
     /// <param name="seed">The seed value to set.</param>
     public virtual void SetSeed(int seed) {}
+
+    /// <summary>
+    /// This method is used to give the pigment a time to prepare for rendering.
+    /// For example, a pigment that uses an image would use this as the opportunity to load
+    /// the required image before rendering actually begins.
+    /// This will be invoked after the seed has been set.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface that this pigment is set on.</param>
+    protected virtual void PrepareForRendering(RenderContext context, Surface surface) {}
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.

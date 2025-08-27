@@ -1,4 +1,6 @@
 using Lex.Clauses;
+using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
@@ -50,5 +52,18 @@ public partial class LanguageParser
             TightnessResolver = tightnessResolver,
             ScaleResolver = scaleResolver
         };
+    }
+
+    /// <summary>
+    /// This method is used to parse a resolver for an optional turbulence clause.
+    /// </summary>
+    /// <returns>A resolver for turbulence that is optional.</returns>
+    private Resolver<Turbulence> ParseOptionalTurbulence()
+    {
+        Token token = CurrentParser.PeekNextToken();
+        
+        return token is KeywordToken && token.Text == "turbulence"
+            ? ParseTurbulenceClause()
+            : new LiteralResolver<Turbulence> { Value = null };
     }
 }

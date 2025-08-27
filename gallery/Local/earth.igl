@@ -1,0 +1,40 @@
+// This example uses a spherical image pigment to render the Earth.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Earth'
+        author 'J. Stephen Kress'
+        description 'A scene to test the spherical image pigments.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2, 10, -30]
+    look at [0, 1.4, 0]
+    field of view 20
+}
+
+point light {
+    location [20, 20, -20]
+}
+
+sphere {
+    material {
+        // You'll need to find a good satellite composite of Earth's surface for this.
+        // I got the one I used from https://www.solarsystemscope.com/textures/
+        pigment image 'earth-satellite.png'
+
+        // Comment out the above and uncomment the next line to use a web-based image
+        // pigment image 'https://images.unsplash.com/photo-1579353977828-2a4eab540b9a?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c2FtcGxlfGVufDB8fDB8fHww'
+        ambient 0.4
+    }
+    scale 3.5
+    rotate Y 220
+    rotate Z -23.5
+    translate Y 1 
+}

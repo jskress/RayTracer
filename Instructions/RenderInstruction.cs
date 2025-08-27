@@ -59,7 +59,7 @@ public class RenderInstruction : Instruction
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering();
 
-        FinalizeSurfaceData(scene.Surfaces);
+        FinalizeSurfaceData(context, scene.Surfaces);
  
         Canvas = camera.Render(context, scene);
     }
@@ -68,8 +68,9 @@ public class RenderInstruction : Instruction
     /// This method ensures that all given surfaces have all relevant data finalized.
     /// This includes making sure a material is attached to all surfaces.
     /// </summary>
+    /// <param name="context">The current render context.</param>
     /// <param name="surfaces">The list of surfaces to examine.</param>
-    private static void FinalizeSurfaceData(List<Surface> surfaces)
+    private static void FinalizeSurfaceData(RenderContext context, List<Surface> surfaces)
     {
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
@@ -79,8 +80,7 @@ public class RenderInstruction : Instruction
 
             pigment.Seed ??= surface.Seed;
 
-            if (pigment.Seed.HasValue)
-                pigment.SetSeed(pigment.Seed.Value);
+            pigment.RenderingIsAboutToStart(context, surface);
         }
     }
 

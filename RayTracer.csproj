@@ -2,18 +2,18 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
-        <LangVersion>12</LangVersion>
+        <LangVersion>13</LangVersion>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.9.1" />
       <PackageReference Include="Lex" Version="1.1.4" />
+      <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="14.8.1" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="SharpZipLib" Version="1.4.2" />
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
       <PackageReference Include="Typography.OpenFont.NetCore" Version="1.0.0" />
     </ItemGroup>

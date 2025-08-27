@@ -15,7 +15,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 - [ ] Motion blur.
 - [X] Antialiasing.
-- [ ] Support other image formats?
+- [X] Support other image formats?
 
 ### To-Dos for Lights:
 - [ ] Area lights/soft shadows.
@@ -25,7 +25,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Focal blur.
 
 ### To-Dos for Surfaces:
-- [ ] Texture mapping.
+- [X] Texture mapping.
 - [ ] Normal perturbation.
 - [ ] Other surfaces (Height fields, SORs, sweeps, etc.)
 

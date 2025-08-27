@@ -93,13 +93,13 @@ public class InstructionContext
         stopwatch.Stop();
 
         string fileName = GetOutputImageFile(options, frame);
-        ImageFile outputFile = new ImageFile(fileName, options.OutputImageFormat);
+        ImageFile outputFile = new ImageFile(fileName);
 
         Terminal.Out("Output file:", OutputLevel.Chatty);
         Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
         Terminal.Out("Writing...");
 
-        outputFile.Save(context, renderInstruction.Canvas, info: context.ImageInformation);
+        outputFile.Save(renderInstruction.Canvas, context.ImageInformation);
 
         Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
     }

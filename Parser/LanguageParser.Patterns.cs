@@ -1,8 +1,10 @@
 using Lex.Clauses;
 using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
 using RayTracer.Patterns;
 
@@ -67,6 +69,10 @@ public partial class LanguageParser
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
             "triangular" => (new TriangularPatternResolver(), new TriangularPattern().DiscretePigmentsNeeded),
+            "wood" => (new WoodPatternResolver
+            {
+                TurbulenceResolver = ParseOptionalTurbulence()
+            }, new WoodPattern().DiscretePigmentsNeeded),
             "wrinkles" => (new WrinklesPatternResolver
             {
                 SeedResolver = seedResolver
