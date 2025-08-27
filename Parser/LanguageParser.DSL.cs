@@ -33,22 +33,23 @@ public partial class LanguageParser
             'description', 'diameter', 'difference', 'diffuse', 'disclaimer', 'drawLine',
             'extrusion', 'factor', 'false', 'field', 'file', 'font', 'from', 'gamma',
             'gap', 'generations', 'gradient', 'granite', 'grayscale', 'group', 'height',
-            'hexagon', 'horizontal', 'ignore', 'include', 'index', 'info', 'inherited',
-            'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer', 'layout', 'left',
-            'length', 'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
-            'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'open',
-            'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes', 'pitchDown',
-            'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'position',
-            'productions', 'quad', 'radians', 'radii', 'reflective', 'refraction',
-            'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight', 'rotate',
-            'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'shear',
-            'shininess', 'sides', 'size', 'smooth', 'software', 'source', 'specular',
-            'sphere', 'spherical', 'square', 'startBranch', 'stripes', 'svg', 'text',
-            'thin', 'title', 'to', 'top', 'torus', 'toVertical', 'transform', 'translate',
-            'transparency', 'triangle', 'triangular', 'true', 'turbulence', 'turnAround',
-            'turnLeft', 'turnRight', 'union', 'up', 'vector', 'vertical', 'view',
-            'warning', 'width', 'with', 'wood', 'wrinkles', 'X', 'Y', 'Z'
+            'hexagon', 'horizontal', 'ignore', 'image', 'include', 'index', 'info',
+            'inherited', 'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer',
+            'layout', 'left', 'length', 'leopard', 'light', 'line', 'linear', 'location',
+            'look', 'lsystem', 'material', 'matrix', 'max', 'maximum', 'medium', 'min',
+            'minimum', 'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null',
+            'object', 'of', 'once', 'open', 'parallel', 'parallelogram', 'path', 'phased',
+            'pigment', 'pipes', 'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane',
+            'point', 'points', 'position', 'productions', 'quad', 'radians', 'radii',
+            'reflective', 'refraction', 'regular', 'render', 'report', 'right', 'rollLeft',
+            'rollRight', 'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow',
+            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
+            'source', 'specular', 'sphere', 'spherical', 'square', 'startBranch',
+            'stripes', 'svg', 'text', 'thin', 'title', 'to', 'top', 'toroidal', 'torus',
+            'toVertical', 'transform', 'translate', 'transparency', 'triangle',
+            'triangular', 'true', 'turbulence', 'turnAround', 'turnLeft', 'turnRight',
+            'union', 'up', 'vector', 'vertical', 'view', 'warning', 'width', 'with',
+            'wood', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -104,9 +105,6 @@ public partial class LanguageParser
         {
             context > openBrace ?? 'Expecting an open brace to follow "context" here.'
         }
-        /// <summary>
-        /// This property holds the resolver for the closed property on a text solid.
-        /// </summary>
         scannerClause:
         [
             { serial > scanner ?? 'Expecting "scanner" to follow "serial" here.' } |
@@ -225,6 +223,15 @@ public partial class LanguageParser
         {
             noisy > openBrace ?? 'Expecting an open brace to follow "noisy" here.'
         }
+        imageMapTypeClause:
+        [
+            { planar > once{?} } | spherical |
+            { cylindrical > once{?} } | toroidal
+        ]
+        imagePigmentClause:
+        {
+            image > _expression > imageMapTypeClause{?}
+        }
         patternPigmentClause:
         {
             patternClause > openBrace ?? 'Expecting an open brace to follow "noisy" here.'
@@ -232,7 +239,7 @@ public partial class LanguageParser
         pigmentClause:
         [
             blendPigmentClause | noisyPigmentClause | patternPigmentClause |
-            { color > _expression } |
+            imagePigmentClause | { color > _expression } |
             _expression
         ] ?? 'Expecting a pigment definition here.'
 

@@ -237,6 +237,14 @@ thumbnail will show the full sized image.  Clicking the image title will show th
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/earth.png">
+      <img alt="Extrusion Test" height="120" src="Local/earth.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/earth.igl">Spherical Image Pigment Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/extrusion.png">
       <img alt="Extrusion Test" height="120" src="Local/extrusion.png" width="160"/>
     </a></td>

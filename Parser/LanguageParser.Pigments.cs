@@ -46,6 +46,8 @@ public partial class LanguageParser
             case "noisy":
                 resolver = ParseNoisyPigmentClause(seedResolver);
                 break;
+            case "image":
+                return ParseImagePigmentClause(clause);
             default:
                 resolver = ParsePatternPigmentClause(seedResolver, clause);
                 break;
@@ -101,6 +103,34 @@ public partial class LanguageParser
             PigmentResolver = ParsePigmentClause(),
             TurbulenceResolver = turbulenceResolver,
             TransformResolver = ParseTransformClause()
+        };
+    }
+
+    /// <summary>
+    /// This method is used to parse the definition of an image pigment.
+    /// </summary>
+    /// <param name="clause">The clause that defines the image pigment.</param>
+    /// <returns>The image pigment resolver.</returns>
+    private static ImagePigmentResolver ParseImagePigmentClause(Clause clause)
+    {
+        List<string> texts = clause.Tokens.Select(t => t.Text).ToList();
+        bool once = texts.Contains("once");
+        ImageMapType? imageMapType = null;
+
+        if (texts.Contains("planar"))
+            imageMapType = ImageMapType.Planar;
+        else if (texts.Contains("spherical"))
+            imageMapType = ImageMapType.Spherical;
+        else if (texts.Contains("cylindrical"))
+            imageMapType = ImageMapType.Cylindrical;
+        else if (texts.Contains("toroidal"))
+            imageMapType = ImageMapType.Toroidal;
+
+        return new ImagePigmentResolver
+        {
+            ImageName = clause.Term(),
+            MapTypeResolver = new LiteralResolver<ImageMapType?> { Value = imageMapType },
+            OnceResolver = new LiteralResolver<bool> { Value = once }
         };
     }
 

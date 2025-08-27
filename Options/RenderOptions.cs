@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Reflection;
 using CommandLine;
 using RayTracer.General;
-using RayTracer.ImageIO;
 using RayTracer.Pixels;
 
 [assembly: AssemblyTitle("Raymond")]
@@ -76,21 +75,6 @@ public class RenderOptions
     {
         get => _outputFileExtension;
         set => _outputFileExtension = value.StartsWith('.') ? value : $".{value}";
-    }
-
-    [Option('f', "output-image-format", Required = false,
-        HelpText = "The image format to use for saving the rendered image to the output file.")]
-    public string OutputImageFormat
-    {
-        get => _outputImageFormat;
-        // ReSharper disable once UnusedMember.Global
-        set
-        {
-            if (!AvailableCodecs.IsFormatSupported(value))
-                throw new ArgumentException($"There is no image format named, '{value}'");
-
-            _outputImageFormat = value;
-        }
     }
 
     [Option('w', "width", Required = false, Default = 800,
