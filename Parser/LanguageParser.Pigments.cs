@@ -111,10 +111,11 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause that defines the image pigment.</param>
     /// <returns>The image pigment resolver.</returns>
-    private static ImagePigmentResolver ParseImagePigmentClause(Clause clause)
+    private ImagePigmentResolver ParseImagePigmentClause(Clause clause)
     {
         List<string> texts = clause.Tokens.Select(t => t.Text).ToList();
         bool once = texts.Contains("once");
+        bool alwaysLoad = texts.Contains("uncached");
         ImageMapType? imageMapType = null;
 
         if (texts.Contains("planar"))
@@ -129,8 +130,10 @@ public partial class LanguageParser
         return new ImagePigmentResolver
         {
             ImageName = clause.Term(),
+            SourceDirectoryResolver = new LiteralResolver<string> { Value = CurrentDirectory },
             MapTypeResolver = new LiteralResolver<ImageMapType?> { Value = imageMapType },
-            OnceResolver = new LiteralResolver<bool> { Value = once }
+            OnceResolver = new LiteralResolver<bool> { Value = once },
+            AlwaysLoadResolver = new LiteralResolver<bool> { Value = alwaysLoad }
         };
     }
 

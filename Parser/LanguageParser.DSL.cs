@@ -48,8 +48,8 @@ public partial class LanguageParser
             'stripes', 'svg', 'text', 'thin', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical', 'transform', 'translate', 'transparency', 'triangle',
             'triangular', 'true', 'turbulence', 'turnAround', 'turnLeft', 'turnRight',
-            'union', 'up', 'vector', 'vertical', 'view', 'warning', 'width', 'with',
-            'wood', 'wrinkles', 'X', 'Y', 'Z'
+            'uncached', 'union', 'up', 'vector', 'vertical', 'view', 'warning', 'width',
+            'with', 'wood', 'wrinkles', 'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -230,7 +230,7 @@ public partial class LanguageParser
         ]
         imagePigmentClause:
         {
-            image > _expression > imageMapTypeClause{?}
+            uncached{?} > image > _expression > imageMapTypeClause{?}
         }
         patternPigmentClause:
         {
