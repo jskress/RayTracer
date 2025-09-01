@@ -13,7 +13,6 @@ namespace RayTracer.ImageIO;
 public class ImageFile
 {
     private static readonly IMagickColor<float> Transparent = new MagickColor(0, 0, 0, 0);
-    private static readonly Regex HttpUrlStart = new Regex(@"^https?://");
 
     private readonly string _fileName;
 
@@ -68,7 +67,7 @@ public class ImageFile
     /// <returns>The stream to read the image from.</returns>
     private Stream GetImageStream()
     {
-        if (HttpUrlStart.IsMatch(_fileName))
+        if (HttpUtils.LooksLikeUrl(_fileName))
         {
             HttpResponseMessage response = HttpUtils.Get(_fileName);
 

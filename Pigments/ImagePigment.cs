@@ -3,6 +3,7 @@ using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
+using RayTracer.Utils;
 
 namespace RayTracer.Pigments;
 
@@ -22,12 +23,23 @@ public class ImagePigment : Pigment
     public string ImageName { get; set; }
 
     /// <summary>
+    /// This property holds the directory that contains the file from which this image
+    /// pigment was parsed.
+    /// </summary>
+    public string SourceDirectory { get; set; }
+
+    /// <summary>
     /// This property notes whether repeating the pattern outside the unit cube should be
     /// turned off.
     /// This applies only when the map type is planar or cylindrical.
     /// </summary>
     public bool Once { get; set; }
-    
+
+    /// <summary>
+    /// This property notes whether the image we load should be cached or always loaded.
+    /// </summary>
+    public bool AlwaysLoad { get; set; }
+
     private Canvas _canvas;
 
     /// <summary>
@@ -50,10 +62,15 @@ public class ImagePigment : Pigment
             _ => throw new Exception("Cannot determine image map type for surface.")
         };
 
-        // Next, load the image.
-        ImageFile imageFile = new ImageFile(ImageName);
+        string location = ImageName;
 
-        _canvas = imageFile.Load()[0];
+        // If our image name looks like a file name, resolve it against the directory we
+        // came from.
+        if (!HttpUtils.LooksLikeUrl(location))
+            location = Path.GetFullPath(Path.Combine(SourceDirectory, location));
+
+        // Next, load the image.
+        _canvas = ImageCache.GetImage(location, AlwaysLoad);
     }
 
     /// <summary>

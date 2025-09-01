@@ -1,4 +1,3 @@
-using Lex.Parser;
 using RayTracer.General;
 using RayTracer.Pigments;
 using RayTracer.Terms;
@@ -16,6 +15,11 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     public Term ImageName { get; init; }
 
     /// <summary>
+    /// This property holds the resolver for our pigment's source directory property.
+    /// </summary>
+    public Resolver<string> SourceDirectoryResolver { get; init; }
+
+    /// <summary>
     /// This property holds the resolver for our pigment's map type property.
     /// </summary>
     public Resolver<ImageMapType?> MapTypeResolver { get; init; }
@@ -24,6 +28,11 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     /// This property holds the resolver for our pigment's once property.
     /// </summary>
     public Resolver<bool> OnceResolver { get; init; }
+
+    /// <summary>
+    /// This property holds the resolver for our pigment's always load property.
+    /// </summary>
+    public Resolver<bool> AlwaysLoadResolver { get; init; }
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value.
@@ -35,8 +44,10 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
         ImagePigment pigment = new ()
         {
             ImageName = ImageName.GetValue<string>(variables),
+            SourceDirectory = SourceDirectoryResolver.Resolve(context, variables),
             MapType = MapTypeResolver.Resolve(context, variables),
-            Once = OnceResolver.Resolve(context, variables)
+            Once = OnceResolver.Resolve(context, variables),
+            AlwaysLoad = AlwaysLoadResolver.Resolve(context, variables)
         };
 
         SetProperties(context, variables, pigment);

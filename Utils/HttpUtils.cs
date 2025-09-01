@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace RayTracer.Utils;
 
@@ -7,12 +8,25 @@ namespace RayTracer.Utils;
 /// </summary>
 public static class HttpUtils
 {
+    private static readonly Regex HttpUrlStart = new (@"^https?://");
     private static readonly HttpClientHandler Handler = new ()
     { 
         AutomaticDecompression = DecompressionMethods.All 
     };
 
     private static readonly HttpClient HttpClient = new (Handler);
+
+    /// <summary>
+    /// This method will return whether or not the given string looks like an HTTP URL.
+    /// </summary>
+    /// <param name="text">The text to test.</param>
+    /// <returns><code>true</code>, if the text begins with either <code>http</code> or
+    /// <code>https</code> protocol followed by the <code>://</code> string or
+    /// <code>false</code>, otherwise.</returns>
+    public static bool LooksLikeUrl(string text)
+    {
+        return HttpUrlStart.IsMatch(text);
+    }
 
     /// <summary>
     /// This method performs a simple <c>GET</c> request for the given URL and returns the
