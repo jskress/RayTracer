@@ -1,0 +1,67 @@
+// This example uses a spherical image pigment to render the inner planets.
+
+// All of the images used here for pigments belong to other people so I'm not including
+// them in the repo.  I got the ones I used from here:
+//
+//     https://www.solarsystemscope.com/textures/
+
+title = 'The Inner Planets'
+distance = -5
+height = 1
+
+include 'ss-setup.igl'
+
+sphere {
+    named 'The Earth'
+    material {
+        pigment image 'images/earth-satellite.png'
+        ambient 0.4
+    }
+    rotate Y 220
+    rotate Z -23.4
+    translate [-1, 1, -0.5]
+}
+
+sphere {
+    named 'The Earth's Moon
+    material {
+        pigment image 'images/moon.jpg'
+        ambient 0.4
+    }
+    scale 0.2727
+    rotate Y 175
+    rotate Z -1.54
+    translate [-1.4, 0.5, -2]
+}
+
+sphere {
+    named 'Mars'
+    material {
+        pigment image 'images/mars.jpg'
+        ambient 0.4
+    }
+    scale 0.5314
+    rotate Z -25.2
+    translate [2.2, 2, 0.5]
+}
+
+sphere {
+    named 'Venus'
+    material {
+        pigment image 'images/venus.jpg'
+        ambient 0.4
+    }
+    scale 0.9489
+    rotate Z -177.3 // rather than 3, to account for retrograde spin
+    translate [0.5, 2, 0.5]
+}
+
+sphere {
+    named 'Mercury'
+    material {
+        pigment image 'images/mercury.jpg'
+        ambient 0.4
+    }
+    scale 0.3825
+    translate [1, 1, -1]
+}
