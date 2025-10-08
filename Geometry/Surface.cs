@@ -22,7 +22,7 @@ public abstract class Surface : NamedThing
     /// <summary>
     /// This holds the material for the surface.
     /// </summary>
-    public Material Material { get; set; } = new ();
+    public Material Material { get; set; }
 
     /// <summary>
     /// This property suppresses shadow detection on this object.

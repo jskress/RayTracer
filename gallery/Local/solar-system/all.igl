@@ -1,0 +1,180 @@
+// This example uses a spherical image pigment to render the planets.
+
+// All of the images used here for pigments belong to other people so I'm not including
+// them in the repo.  I got the ones I used from here:
+//
+//     https://www.solarsystemscope.com/textures/
+
+title = 'The Planets'
+distance = -300
+height = 100
+
+include 'ss-setup.igl'
+
+// The sun
+sphere {
+    named 'The Sun'
+    material {
+        pigment image 'images/sun.jpg'
+        ambient 0.4
+    }
+    scale 109.1784
+    translate [-75, 110, 0]
+}
+
+sphere {
+    named 'Jupiter'
+    material {
+        pigment image 'images/jupiter.jpg'
+        ambient 0.4
+    }
+    scale 10.9612
+    rotate Y 220
+    rotate Z -3.1
+    translate [60, 175, 0]
+}
+
+group {
+    named 'Saturn'
+    sphere {
+        material {
+            pigment image 'images/saturn.jpg'
+            ambient 0.4
+        }
+    }
+    difference {
+        named 'C Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [1.5799, 1, 1.5799]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [1.2821, 1, 1.2821]
+        }
+        material {
+            pigment [0.380, 0.333, 0.275]
+            ambient 0.6
+        }
+    }
+    difference {
+        named 'B Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [2.0192, 1, 2.0192]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [1.5799, 1, 1.5799]
+        }
+        material {
+            pigment [0.867, 0.776, 0.596]
+            ambient 0.6
+        }
+    }
+    difference {
+        named 'A Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [2.3488, 1, 2.3488]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [2.0980, 1, 2.0980]
+        }
+        material {
+            pigment [0.510, 0.463, 0.365]
+            ambient 0.6
+        }
+    }
+    scale 9.1301
+    rotate Y 220
+    rotate Z -26.7
+    rotate X -20
+    translate [120, 175, 0]
+}
+
+sphere {
+    named 'Uranus'
+    material {
+        pigment image 'images/uranus.jpg'
+        ambient 0.4
+    }
+    scale 3.9764
+    rotate Y 220
+    rotate Z -97.8
+    translate [60, 140, 0]
+}
+
+sphere {
+    named 'Neptune'
+    material {
+        pigment image 'images/neptune.jpg'
+        ambient 0.4
+    }
+    scale 3.8605
+    rotate Y 220
+    rotate Z -28.3
+    translate [120, 140, 0]
+}
+
+sphere {
+    named 'The Earth'
+    material {
+        pigment image 'images/earth-satellite.png'
+        ambient 0.4
+    }
+    rotate Y 220
+    rotate Z -23.4
+    translate [60, 115, 0]
+}
+
+sphere {
+    named "The Earth's Moon"
+    material {
+        pigment image 'images/moon.jpg'
+        ambient 0.4
+    }
+    scale 0.2727
+    rotate Y 175
+    rotate Z -1.54
+    translate [65, 115, 0]
+}
+
+sphere {
+    named 'Venus'
+    material {
+        pigment image 'images/venus.jpg'
+        ambient 0.4
+    }
+    scale 0.9489
+    rotate Z -177.3 // rather than 3, to account for retrograde spin
+    translate [120, 115, 0]
+}
+
+sphere {
+    named 'Mars'
+    material {
+        pigment image 'images/mars.jpg'
+        ambient 0.4
+    }
+    scale 0.5314
+    rotate Z -25.2
+    translate [60, 90, 0]
+}
+
+sphere {
+    named 'Mercury'
+    material {
+        pigment image 'images/mercury.jpg'
+        ambient 0.4
+    }
+    scale 0.3825
+    translate [120, 90, 0]
+}

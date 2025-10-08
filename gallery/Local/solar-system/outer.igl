@@ -1,0 +1,114 @@
+// This example uses a spherical image pigment to render the outer planents.
+
+// All of the images used here for pigments belong to other people so I'm not including
+// them in the repo.  I got the ones I used from here:
+//
+//     https://www.solarsystemscope.com/textures/
+
+title = 'The Outer Planets'
+distance = -75
+height = 10
+
+include 'ss-setup.igl'
+
+sphere {
+    named 'Jupiter'
+    material {
+        pigment image 'images/jupiter.jpg'
+        ambient 0.4
+    }
+    scale 10.9612
+    rotate Y 220
+    rotate Z -3.1
+    translate [-16, 11, -20.5]
+}
+
+group {
+    named 'Saturn'
+    sphere {
+        material {
+            pigment image 'images/saturn.jpg'
+            ambient 0.4
+        }
+    }
+    difference {
+        named 'C Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [1.5799, 1, 1.5799]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [1.2821, 1, 1.2821]
+        }
+        material {
+            pigment [0.380, 0.333, 0.275]
+            ambient 0.6
+        }
+    }
+    difference {
+        named 'B Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [2.0192, 1, 2.0192]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [1.5799, 1, 1.5799]
+        }
+        material {
+            pigment [0.867, 0.776, 0.596]
+            ambient 0.6
+        }
+    }
+    difference {
+        named 'A Ring'
+        cylinder {
+            min Y -0.0001
+            max Y  0.0001
+            scale [2.3488, 1, 2.3488]
+        }
+        cylinder {
+            min Y -0.002
+            max Y  0.002
+            scale [2.0980, 1, 2.0980]
+        }
+        material {
+            pigment [0.510, 0.463, 0.365]
+            ambient 0.6
+        }
+    }
+    scale 9.1301
+    rotate Y 220
+    rotate Z -26.7
+    rotate X -20
+    translate [15, 15, -0.5]
+}
+
+sphere {
+    named 'Uranus'
+    material {
+        pigment image 'images/uranus.jpg'
+        ambient 0.4
+    }
+    scale 3.9764
+    rotate Y 220
+    rotate Z -97.8
+    translate [10, 6, -32.5]
+}
+
+sphere {
+    named 'Neptune'
+    material {
+        pigment image 'images/neptune.jpg'
+        ambient 0.4
+    }
+    scale 3.8605
+    rotate Y 220
+    rotate Z -28.3
+    translate [1, 8, -10.5]
+}

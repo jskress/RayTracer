@@ -120,7 +120,7 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause to parse.</param>
     /// <returns>The group interval.</returns>
-    private GroupInterval CreateGroupInterval(Clause clause)
+    private static GroupInterval CreateGroupInterval(Clause clause)
     {
         string variableName = clause.Text(1) == "="
             ? clause.Text()

@@ -237,27 +237,27 @@ thumbnail will show the full sized image.  Clicking the image title will show th
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/earth.png">
-      <img alt="Extrusion Test" height="120" src="Local/earth.png" width="160"/>
+    <td style="border: none;"><a href="Local/extrusions/extrusion.png">
+      <img alt="Extrusion Test" height="120" src="Local/extrusions/extrusion.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/earth.igl">Spherical Image Pigment Test</a>
+      <a href="Local/extrusions/extrusion.igl">Extrusion Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusion.png">
-      <img alt="Extrusion Test" height="120" src="Local/extrusion.png" width="160"/>
+    <td style="border: none;"><a href="Local/extrusions/extrusion2.png">
+      <img alt="Another Extrusion Test" height="120" src="Local/extrusions/extrusion2.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusion.igl">Extrusion Test</a>
+      <a href="Local/extrusions/extrusion2.igl">Another Extrusion Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusion2.png">
-      <img alt="Another Extrusion Test" height="120" src="Local/extrusion2.png" width="160"/>
+    <td style="border: none;"><a href="Local/image-map.png">
+      <img alt="'Spherical image pigment test" height="120" src="Local/image-map.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusion2.igl">Another Extrusion Test</a>
+      <a href="Local/image-map.igl">'Spherical image pigment test</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -306,6 +306,30 @@ thumbnail will show the full sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/noise.igl">Pigment Noise Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/solar-system/all.png">
+      <img alt="'The Planets" height="120" src="Local/solar-system/all.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/solar-system/all.igl">'The Planets</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/solar-system/inner.png">
+      <img alt="'The Inner Planets" height="120" src="Local/solar-system/inner.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/solar-system/inner.igl">'The Inner Planets</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/solar-system/outer.png">
+      <img alt="'The Outer Planets" height="120" src="Local/solar-system/outer.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/solar-system/outer.igl">'The Outer Planets</a>
     </td>
   </tr>
   <tr style="border: none;">
