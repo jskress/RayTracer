@@ -253,6 +253,14 @@ thumbnail will show the full sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/heightfield.png">
+      <img alt="Height Field Test" height="120" src="Local/heightfield.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/heightfield.igl">Height Field Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/image-map.png">
       <img alt="'Spherical image pigment test" height="120" src="Local/image-map.png" width="160"/>
     </a></td>

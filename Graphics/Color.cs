@@ -9,37 +9,6 @@ namespace RayTracer.Graphics;
 public class Color
 {
     /// <summary>
-    /// This method creates a color from integer channel values.
-    /// </summary>
-    /// <param name="red">The channel value for red.</param>
-    /// <param name="green">The channel value for green.</param>
-    /// <param name="blue">The channel value for blue.</param>
-    /// <param name="maxValue">The maximum value for a channel.</param>
-    /// <returns>The resulting color.</returns>
-    public static Color FromChannelValues(int red, int green, int blue, int maxValue)
-    {
-        double max = Convert.ToDouble(maxValue);
-
-        return new Color(red / max, green / max, blue / max);
-    }
-
-    /// <summary>
-    /// This method creates a color from integer channel values.
-    /// </summary>
-    /// <param name="red">The channel value for red.</param>
-    /// <param name="green">The channel value for green.</param>
-    /// <param name="blue">The channel value for blue.</param>
-    /// <param name="alpha">The channel value for alpha.</param>
-    /// <param name="maxValue">The maximum value for a channel.</param>
-    /// <returns>The resulting color.</returns>
-    public static Color FromChannelValues(int red, int green, int blue, int alpha, int maxValue)
-    {
-        double max = Convert.ToDouble(maxValue);
-
-        return new Color(red / max, green / max, blue / max, alpha / max);
-    }
-
-    /// <summary>
     /// This property returns the red component of the color.
     /// </summary>
     public double Red { get; }
@@ -84,6 +53,22 @@ public class Color
             ChannelToInt(Blue, maxValue, power, gammaCorrect),
             // Note: the alpha channel is linear, so we never gamma correct it.
             ChannelToInt(Alpha, maxValue));
+    }
+
+    /// <summary>
+    /// This method returns this color, converted if necessary, to a gray scale.
+    /// </summary>
+    /// <returns>This color, as a gray color.</returns>
+    public Color AsGray()
+    {
+        if (Red.Near(Blue) && Red.Near(Green) && Green.Near(Blue))
+            return this;
+
+        double gray = Math.Clamp(Red, 0, 1) * 0.299 +
+                      Math.Clamp(Green, 0, 1) * 0.587 +
+                      Math.Clamp(Blue, 0, 1) * 0.114;
+
+        return new Color(gray, gray, gray, Alpha);
     }
 
     /// <summary>

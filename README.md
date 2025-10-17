@@ -27,6 +27,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 ### To-Dos for Surfaces:
 - [X] Texture mapping.
 - [ ] Normal perturbation.
-- [ ] Other surfaces (Height fields, SORs, sweeps, etc.)
+- [X] Height fields.
+- [ ] Other surfaces (SORs, sweeps, etc.)
 
 More to come...

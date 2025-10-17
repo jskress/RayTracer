@@ -71,8 +71,7 @@ public class TextSolid : Group
                 Path = path.Reverse(),
                 MinimumY = 0,
                 MaximumY = 0.1,
-                Closed = Closed,
-                Material = null // <-- This is important.
+                Closed = Closed
             });
         }
 

@@ -61,6 +61,21 @@ public class Canvas
     }
 
     /// <summary>
+    /// This method is used to modify this image in place to a gray scale image.
+    /// </summary>
+    /// <returns>This image, for fluency.</returns>
+    public Canvas ToGrayScale()
+    {
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+                _pixels[y][x] = _pixels[y][x].AsGray();
+        }
+
+        return this;
+    }
+
+    /// <summary>
     /// This method scans our pixels to see if there are any that make use of the alpha
     /// channel.
     /// </summary>
