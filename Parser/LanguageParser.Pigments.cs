@@ -115,7 +115,6 @@ public partial class LanguageParser
     {
         List<string> texts = clause.Tokens.Select(t => t.Text).ToList();
         bool once = texts.Contains("once");
-        bool alwaysLoad = texts.Contains("uncached");
         ImageMapType? imageMapType = null;
 
         if (texts.Contains("planar"))
@@ -129,11 +128,9 @@ public partial class LanguageParser
 
         return new ImagePigmentResolver
         {
-            ImageName = clause.Term(),
-            SourceDirectoryResolver = new LiteralResolver<string> { Value = CurrentDirectory },
+            ImageReferenceResolver = ParseImageReference(clause),
             MapTypeResolver = new LiteralResolver<ImageMapType?> { Value = imageMapType },
-            OnceResolver = new LiteralResolver<bool> { Value = once },
-            AlwaysLoadResolver = new LiteralResolver<bool> { Value = alwaysLoad }
+            OnceResolver = new LiteralResolver<bool> { Value = once }
         };
     }
 

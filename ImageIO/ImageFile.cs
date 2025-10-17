@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using ImageMagick;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -37,19 +36,28 @@ public class ImageFile
             float[] values = pixel.ToArray();
             float red, green, blue, alpha = 0;
 
-            if (pixel.Channels == 1)
-                red = green = blue = values[0] / 65535;
-            else
+            switch (pixel.Channels)
             {
-                red = values[0] / 65535;
-                green = values[1] / 65535;
-                blue = values[2] / 65535;
+                case 1:
+                    red = green = blue = values[0] / 65535;
+                    break;
+                case 2:
+                    red = green = blue = values[0] / 65535;
+                    alpha = values[1] / 65535;
+                    break;
+                default:
+                {
+                    red = values[0] / 65535;
+                    green = values[1] / 65535;
+                    blue = values[2] / 65535;
 
-                if (pixel.Channels > 3)
-                    alpha = values[3] / 65535;
+                    if (pixel.Channels > 3)
+                        alpha = values[3] / 65535;
+                    break;
+                }
             }
-            
-            Color color = pixel.Channels > 3
+
+            Color color = pixel.Channels is 2 or > 3
                 ? new Color(red, green, blue, alpha)
                 : new Color(red, green, blue);
 
@@ -61,7 +69,7 @@ public class ImageFile
 
     /// <summary>
     /// This method is used to open our source as a stream.
-    /// If it looks like an HTTP URL, we'll open it by making an HHTO GET call.
+    /// If it looks like an HTTP URL, we'll open it by making an HTTP GET call.
     /// Otherwise, we'll try to open it as a local file.
     /// </summary>
     /// <returns>The stream to read the image from.</returns>

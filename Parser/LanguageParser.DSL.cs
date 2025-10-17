@@ -27,29 +27,30 @@ public partial class LanguageParser
         _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
             'black', 'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick',
-            'by', 'camera', 'center', 'channel', 'checker', 'close', 'color', 'commands',
-            'comment', 'completeBranch', 'conic', 'context', 'controls', 'copyright',
-            'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical', 'degrees', 'dents',
-            'description', 'diameter', 'difference', 'diffuse', 'disclaimer', 'drawLine',
-            'extrusion', 'factor', 'false', 'field', 'file', 'font', 'from', 'gamma',
-            'gap', 'generations', 'gradient', 'granite', 'grayscale', 'group', 'height',
-            'hexagon', 'horizontal', 'ignore', 'image', 'include', 'index', 'info',
-            'inherited', 'intersection', 'ior', 'italic', 'kern', 'kerning', 'layer',
-            'layout', 'left', 'length', 'leopard', 'light', 'line', 'linear', 'location',
-            'look', 'lsystem', 'material', 'matrix', 'max', 'maximum', 'medium', 'min',
-            'minimum', 'mortar', 'move', 'named', 'no', 'noisy', 'normals', 'null',
-            'object', 'of', 'once', 'open', 'parallel', 'parallelogram', 'path', 'phased',
-            'pigment', 'pipes', 'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane',
-            'point', 'points', 'position', 'productions', 'quad', 'radians', 'radii',
-            'reflective', 'refraction', 'regular', 'render', 'report', 'right', 'rollLeft',
-            'rollRight', 'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow',
-            'shadows', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software',
-            'source', 'specular', 'sphere', 'spherical', 'square', 'startBranch',
-            'stripes', 'svg', 'text', 'thin', 'title', 'to', 'top', 'toroidal', 'torus',
-            'toVertical', 'transform', 'translate', 'transparency', 'triangle',
-            'triangular', 'true', 'turbulence', 'turnAround', 'turnLeft', 'turnRight',
-            'uncached', 'union', 'up', 'vector', 'vertical', 'view', 'warning', 'width',
-            'with', 'wood', 'wrinkles', 'X', 'Y', 'Z'
+            'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
+            'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
+            'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
+            'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse',
+            'disclaimer', 'drawLine', 'extrusion', 'factor', 'false', 'field', 'file',
+            'font', 'from', 'gamma', 'gap', 'generations', 'gradient', 'granite',
+            'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'intersection',
+            'ior', 'italic', 'kern', 'kerning', 'layer', 'layout', 'left', 'length',
+            'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
+            'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
+            'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'once',
+            'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes',
+            'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
+            'position', 'productions', 'quad', 'radians', 'radii', 'reflective',
+            'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
+            'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
+            'specular', 'sphere', 'spherical', 'square', 'startBranch','stripes', 'svg',
+            'text', 'thin', 'title', 'to', 'top', 'toroidal', 'torus', 'toVertical',
+            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true',
+            'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up',
+            'vector', 'vertical', 'view', 'warning', 'width', 'with', 'wood', 'wrinkles',
+            'X', 'Y', 'Z'
 
         _expressions:
         {
@@ -87,7 +88,8 @@ public partial class LanguageParser
             { phased > _expression > { comma > _expression }{?} }{?} >
             withSeedClause{?}
         }
-
+        imageClause: { uncached{?} > image > _expression }
+        
         // Info clauses.
         startInfoClause:
         {
@@ -230,7 +232,7 @@ public partial class LanguageParser
         ]
         imagePigmentClause:
         {
-            uncached{?} > image > _expression > imageMapTypeClause{?}
+            imageClause > imageMapTypeClause{?}
         }
         patternPigmentClause:
         {
@@ -492,6 +494,19 @@ public partial class LanguageParser
             { diameter > _expression } | { factor > _expression }
         ]
 
+        // Height field clauses.
+        startHeightFieldClause:
+        {
+            heightfield > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "field" here.'
+        }
+        heightFieldEntryClause:
+        [
+            imageClause | { clip > _expression } | open | surfaceEntryClause
+        ]
+        
         // Triangle clauses.
         startTriangleClause:
         {
@@ -583,6 +598,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
+            startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -618,6 +634,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
+            startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -647,6 +664,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
+            startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
@@ -679,9 +697,9 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startTextClause |
-                startLsystemClause | startTriangleClause | startSmoothTriangleClause |
-                startParallelogramClause | startObjectFileClause | startObjectClause |
-                startCsgClause | startGroupClause
+                startLsystemClause | startHeightFieldClause | startTriangleClause |
+                startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
+                startObjectClause | startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -704,6 +722,7 @@ public partial class LanguageParser
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startTextClause           => 'HandleStartTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
+            startHeightFieldClause    => 'HandleStartHeightFieldClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
             startParallelogramClause  => 'HandleStartParallelogramClause' |

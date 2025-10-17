@@ -57,6 +57,15 @@ internal static class TypeConversions
         if (targetType == typeof(Pigment))
             return CoerceToPigment(value);
 
+        if (value is string text && targetType == typeof(Color))
+        {
+            Color color = Colors.FromString(text);
+
+            return color == null
+                ? (CoercionResult.CouldNotCoerce, null)
+                : (CoercionResult.OfProperType, color);
+        }
+
         if (targetType == typeof(int) && value is double doubleValue)
             return (CoercionResult.OfProperType, Convert.ToInt32(doubleValue));
 

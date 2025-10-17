@@ -1,6 +1,6 @@
 using RayTracer.General;
+using RayTracer.ImageIO;
 using RayTracer.Pigments;
-using RayTracer.Terms;
 
 namespace RayTracer.Instructions.Pigments;
 
@@ -10,14 +10,9 @@ namespace RayTracer.Instructions.Pigments;
 public class ImagePigmentResolver : PigmentResolver<ImagePigment>
 {
     /// <summary>
-    /// This property holds the resolver for our pigment's image name property.
+    /// This property holds the resolver for our pigment's image resolver property.
     /// </summary>
-    public Term ImageName { get; init; }
-
-    /// <summary>
-    /// This property holds the resolver for our pigment's source directory property.
-    /// </summary>
-    public Resolver<string> SourceDirectoryResolver { get; init; }
+    public Resolver<ImageReference> ImageReferenceResolver { get; init; }
 
     /// <summary>
     /// This property holds the resolver for our pigment's map type property.
@@ -30,11 +25,6 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     public Resolver<bool> OnceResolver { get; init; }
 
     /// <summary>
-    /// This property holds the resolver for our pigment's always load property.
-    /// </summary>
-    public Resolver<bool> AlwaysLoadResolver { get; init; }
-
-    /// <summary>
     /// This method is used to execute the resolver to produce a value.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -43,11 +33,9 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     {
         ImagePigment pigment = new ()
         {
-            ImageName = ImageName.GetValue<string>(variables),
-            SourceDirectory = SourceDirectoryResolver.Resolve(context, variables),
+            ImageReference = ImageReferenceResolver.Resolve(context, variables),
             MapType = MapTypeResolver.Resolve(context, variables),
-            Once = OnceResolver.Resolve(context, variables),
-            AlwaysLoad = AlwaysLoadResolver.Resolve(context, variables)
+            Once = OnceResolver.Resolve(context, variables)
         };
 
         SetProperties(context, variables, pigment);

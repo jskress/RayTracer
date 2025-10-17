@@ -3,7 +3,6 @@ using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
-using RayTracer.Utils;
 
 namespace RayTracer.Pigments;
 
@@ -13,20 +12,14 @@ namespace RayTracer.Pigments;
 public class ImagePigment : Pigment
 {
     /// <summary>
+    /// This property holds the information for the image to use.
+    /// </summary>
+    public ImageReference ImageReference { get; set; }
+
+    /// <summary>
     /// This property notes the type of map to use in applying the image to a surface.
     /// </summary>
     public ImageMapType? MapType { get; set; }
-
-    /// <summary>
-    /// This property holds the file name or URL of the image to use.
-    /// </summary>
-    public string ImageName { get; set; }
-
-    /// <summary>
-    /// This property holds the directory that contains the file from which this image
-    /// pigment was parsed.
-    /// </summary>
-    public string SourceDirectory { get; set; }
 
     /// <summary>
     /// This property notes whether repeating the pattern outside the unit cube should be
@@ -34,11 +27,6 @@ public class ImagePigment : Pigment
     /// This applies only when the map type is planar or cylindrical.
     /// </summary>
     public bool Once { get; set; }
-
-    /// <summary>
-    /// This property notes whether the image we load should be cached or always loaded.
-    /// </summary>
-    public bool AlwaysLoad { get; set; }
 
     private Canvas _canvas;
 
@@ -62,15 +50,8 @@ public class ImagePigment : Pigment
             _ => throw new Exception("Cannot determine image map type for surface.")
         };
 
-        string location = ImageName;
-
-        // If our image name looks like a file name, resolve it against the directory we
-        // came from.
-        if (!HttpUtils.LooksLikeUrl(location))
-            location = Path.GetFullPath(Path.Combine(SourceDirectory, location));
-
         // Next, load the image.
-        _canvas = ImageCache.GetImage(location, AlwaysLoad);
+        _canvas = ImageReference.Canvas;
     }
 
     /// <summary>
@@ -102,7 +83,7 @@ public class ImagePigment : Pigment
     {
         return other is ImagePigment pigmentation &&
                MapType == pigmentation.MapType &&
-               ImageName == pigmentation.ImageName &&
+               ImageReference.Matches(pigmentation.ImageReference) &&
                Once == pigmentation.Once;
     }
 }

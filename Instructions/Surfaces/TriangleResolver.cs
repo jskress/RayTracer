@@ -49,7 +49,7 @@ public class TriangleResolver<TValue> : SurfaceResolver<TValue>, IValidatable
     public virtual string Validate()
     {
         return Point1Resolver is null || Point2Resolver is null || Point3Resolver is null
-            ? "The \"points\" property is required."
+            ? "All point properties are required."
             : null;
     }
 }

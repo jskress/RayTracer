@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using RayTracer.General;
 
@@ -268,6 +269,59 @@ public static class Colors
 	{
 		foreach (KeyValuePair<string, Color> pair in LazyNamedColors.Value)
 			variables.SetValue(pair.Key, pair.Value);
+	}
+
+	/// <summary>
+	/// This method is used to try to convert a string to a color.  The process is as
+	/// follows:
+	/// <ul>
+	/// <li>Is it one of our predefined names?</li>
+	/// <li>Is it an HTML color name?</li>
+	/// <li>Is it an HTML color specification?</li>
+	/// </ul>
+	/// </summary>
+	/// <param name="text">The text to convert.</param>
+	/// <returns>The resulting color, or <c>null</c>.</returns>
+	public static Color FromString(string text)
+	{
+		text ??= string.Empty;
+
+		text = text.Trim();
+
+		if (string.IsNullOrEmpty(text))
+			return null;
+
+		return LazyNamedColors.Value.GetValueOrDefault(text) ?? Parse(text);
+	}
+
+	/// <summary>
+	/// This method is used to try to parse the given text as a hex coded color.
+	/// </summary>
+	/// <param name="text">The text to parse as a color.</param>
+	/// <returns>The parsed color, or <c>null</c>, if that fails.</returns>
+	private static Color Parse(string text)
+	{
+		if (text[0] == '#')
+			text = text[1..];
+
+		if (text.Length != 6 && text.Length != 8)
+			return null;
+
+		try
+		{
+			double red = int.Parse(text[..2], NumberStyles.HexNumber) / 255.0;
+			double green = int.Parse(text[2..4], NumberStyles.HexNumber) / 255.0;
+			double blue = int.Parse(text[4..6], NumberStyles.HexNumber) / 255.0;
+			double alpha = text.Length > 6
+				? int.Parse(text[6..8], NumberStyles.HexNumber) / 255.0
+				: 1;
+			
+			return new Color(red, green, blue, alpha);
+		}
+		catch (Exception)
+		{
+			return null;
+		}
 	}
 
 	/// <summary>

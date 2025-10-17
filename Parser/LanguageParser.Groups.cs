@@ -85,6 +85,9 @@ public partial class LanguageParser
                 case "lsystem":
                     resolver.SurfaceResolvers.Add(ParseLSystemClause(clause));
                     break;
+                case "heightField":
+                    resolver.SurfaceResolvers.Add(ParseHeightFieldClause(clause));
+                    break;
                 case "triangle":
                     resolver.SurfaceResolvers.Add(ParseTriangleClause(clause));
                     break;
