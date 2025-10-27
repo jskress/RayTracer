@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.Extensions;
 
 namespace RayTracer.Graphics;
@@ -7,19 +6,97 @@ namespace RayTracer.Graphics;
 /// This class provides a representation of a quadratic Bézier curve, providing the common
 /// math we need.
 /// </summary>
-internal class QuadCurve
+internal class QuadCurve : IPathSegment
 {
     private static readonly double[] Empty = [];
 
-    private readonly TwoDPoint _start;
-    private readonly TwoDPoint _control;
-    private readonly TwoDPoint _end;
+    /// <summary>
+    /// This property holds the control point of the curve.
+    /// </summary>
+    internal TwoDPoint Control { get; private set; }
+
+    private TwoDPoint _start;
+    private TwoDPoint _end;
+    private double _aX;
+    private double _aY;
+    private double _bX;
+    private double _bY;
 
     internal QuadCurve(TwoDPoint start, TwoDPoint control, TwoDPoint end)
     {
+        SetPoints(start, control, end);
+    }
+
+    /// <summary>
+    /// This method is used to set up our coefficients based on the given control points.
+    /// </summary>
+    /// <param name="start">The point at which the curve starts.</param>
+    /// <param name="control">The first control point for the curve.</param>
+    /// <param name="end">The point at which the curve ends.</param>
+    private void SetPoints(TwoDPoint start, TwoDPoint control, TwoDPoint end)
+    {
         _start = start;
-        _control = control;
+        Control = control;
         _end = end;
+
+        _aX = _start.X - 2 * control.X + end.X;
+        _aY = _start.Y - 2 * control.Y + end.Y;
+        _bX = _start.X - control.X;
+        _bY = _start.Y - control.Y;
+    }
+
+    /// <summary>
+    /// This method is used to reverse the direction of this path segment.
+    /// </summary>
+    public void Reverse()
+    {
+        SetPoints(_end, Control, _start);
+    }
+
+    /// <summary>
+    /// This method is used to locate the intersection points, if any, where the given ray
+    /// intersects this curve.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <returns>An array of the intersection data.
+    /// If the ray doesn't intersect the curve, the enumerable must be empty.</returns>
+    public IEnumerable<TwoDIntersection> GetIntersections(TwoDRay ray)
+    {
+        TwoDPoint point = ray.Origin + ray.Direction;
+        TwoDPoint lineA = new TwoDPoint(ray.Origin.X, ray.Origin.Y);
+        TwoDPoint lineB = new TwoDPoint(point.X, point.Y);
+        double a;
+        double b;
+        double c;
+
+        if (lineA.X.Near(lineB.X))
+        {
+            a = _aX;
+            b = -2 * _bX;
+            c = _start.X - lineA.X;
+        }
+        else if (lineA.Y.Near(lineB.Y))
+        {
+            a = _aY;
+            b = -2 * _bY;
+            c = _start.Y - lineA.Y;
+        }
+        else
+        {
+            double k = (lineA.Y - lineB.Y) / (lineB.X - lineA.X);
+
+            a = k * _aX + _aY;
+            b = -2 * (k * _bX + _bY);
+            c = k * (_start.X - lineA.X) + _start.Y - lineA.Y;
+        }
+
+        return Evaluate(a, b, c)
+            .Select(t => new TwoDIntersection
+            {
+                Distance = t,
+                Point = GetPoint(t),
+                TwoDNormal = NormalAt(t)
+            });
     }
 
     /// <summary>
@@ -28,14 +105,14 @@ internal class QuadCurve
     /// </summary>
     /// <param name="t">The distance along the curve to get the point for.</param>
     /// <returns>The point at the given distance.</returns>
-    internal TwoDPoint GetPoint(double t)
+    private TwoDPoint GetPoint(double t)
     {
         double iT = 1 - t;
         double iT2 = iT * iT;
         double iTt2 = 2 * iT * t;
         double t2 = t * t;
-        double x = iT2 * _start.X + iTt2 * _control.X + t2 * _end.X;
-        double y = iT2 * _start.Y + iTt2 * _control.Y + t2 * _end.Y;
+        double x = iT2 * _start.X + iTt2 * Control.X + t2 * _end.X;
+        double y = iT2 * _start.Y + iTt2 * Control.Y + t2 * _end.Y;
 
         return new TwoDPoint(x, y);
     }
@@ -46,7 +123,7 @@ internal class QuadCurve
     /// </summary>
     /// <param name="t">The distance along the curve where we want the normal.</param>
     /// <returns>The normal at the given distance.</returns>
-    internal Vector NormalAt(double t)
+    private TwoDVector NormalAt(double t)
     {
         TwoDPoint derivative = GetDerivative(t);
         double q = Math.Sqrt(derivative.X * derivative.X + derivative.Y * derivative.Y);
@@ -54,7 +131,7 @@ internal class QuadCurve
         double dx = derivative.Y / q;
         double dy = -derivative.X / q;
 
-        return new Vector(dx, 0, dy);
+        return new TwoDVector(dx, dy);
     }
 
     /// <summary>
@@ -65,10 +142,10 @@ internal class QuadCurve
     /// <returns>The derivative at that point.</returns>
     private TwoDPoint GetDerivative(double t)
     {
-        double d1X = 2 * (_control.X - _start.X);
-        double d1Y = 2 * (_control.Y - _start.Y);
-        double d2X = 2 * (_end.X - _control.X);
-        double d2Y = 2 * (_end.Y - _control.Y);
+        double d1X = 2 * (Control.X - _start.X);
+        double d1Y = 2 * (Control.Y - _start.Y);
+        double d2X = 2 * (_end.X - Control.X);
+        double d2Y = 2 * (_end.Y - Control.Y);
         double x = (1 - t) * d1X + t * d2X;
         double y = (1 - t) * d1Y + t * d2Y;
 
@@ -82,7 +159,7 @@ internal class QuadCurve
     /// <param name="b">The <c>a</c> coefficient to evaluate.</param>
     /// <param name="c">The <c>c</c> coefficient to evaluate.</param>
     /// <returns>The array of solutions to the given coefficients.</returns>
-    internal static double[] Evaluate(double a, double b, double c)
+    private static double[] Evaluate(double a, double b, double c)
     {
         double discriminant = b * b - 4 * a * c;
 

@@ -1,5 +1,5 @@
 using System.Reflection;
-using RayTracer.Basics;
+using RayTracer.Graphics;
 using Typography.OpenFont;
 
 namespace RayTracer.Fonts;

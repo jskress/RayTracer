@@ -5,7 +5,7 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class represents a parallelogram.  It is defined by one point, and two side vectors
-/// intiating from that point.
+/// emanating from that point.
 /// </summary>
 public class Parallelogram : Surface
 {
@@ -51,10 +51,14 @@ public class Parallelogram : Surface
         }
     }
 
+    /// <summary>
+    /// This property provides the normal for the parallelogram.
+    /// </summary>
+    public Vector Normal { get; private set; }
+
     private Point _point;
     private Vector _side1;
     private Vector _side2;
-    private Vector _normal;
     private double _constantD;
     private Vector _constantW;
 
@@ -72,8 +76,8 @@ public class Parallelogram : Surface
         {
             Vector cross = side2.Cross(side1);
 
-            _normal = cross.Unit;
-            _constantD = _normal.Dot(point);
+            Normal = cross.Unit;
+            _constantD = Normal.Dot(point);
             _constantW = cross / cross.Dot(cross);
         }
     }
@@ -100,12 +104,12 @@ public class Parallelogram : Surface
     /// <returns>The value of <c>t</c> along the ray where it intersects the parallelogram.</returns>
     public double GetIntersection(Ray ray)
     {
-        double denominator = _normal.Dot(ray.Direction);
+        double denominator = Normal.Dot(ray.Direction);
         
         if (denominator == 0)
             return double.NaN;
         
-        double t = (_constantD - _normal.Dot(ray.Origin)) / denominator;
+        double t = (_constantD - Normal.Dot(ray.Origin)) / denominator;
 
         if (t >= 0)
         {
@@ -131,6 +135,6 @@ public class Parallelogram : Surface
     /// <returns>The normal to the surface at the given point.</returns>
     public override Vector SurfaceNormaAt(Point point, Intersection intersection)
     {
-        return _normal;
+        return Normal;
     }
 }
