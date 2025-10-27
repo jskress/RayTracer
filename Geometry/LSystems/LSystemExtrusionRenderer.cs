@@ -45,8 +45,7 @@ public class LSystemExtrusionRenderer : LSystemShapeRenderer
         {
             Path = _path.Reverse(),
             MinimumY = 0,
-            MaximumY = 1,
-            Material = null // <-- This is important.
+            MaximumY = 1
         });
 
         // Note that since we hand the path to the extrusion, it will be disposed of at a

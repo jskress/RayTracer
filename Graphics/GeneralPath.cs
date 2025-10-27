@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using RayTracer.Basics;
 using SkiaSharp;
 
 namespace RayTracer.Graphics;
@@ -12,7 +11,7 @@ public class GeneralPath : IDisposable
     /// <summary>
     /// This property holds the current set of segments in the general path.
     /// </summary>
-    public List<PathSegment> Segments { get; } = [];
+    public List<IPathSegment> Segments { get; } = [];
 
     /// <summary>
     /// This property reports the minimum value for X that has been encountered during path
@@ -181,7 +180,7 @@ public class GeneralPath : IDisposable
     /// <returns>This object, for fluency.</returns>
     public GeneralPath LineTo(TwoDPoint point)
     {
-        Segments.Add(new LinearPathSegment(_cp, point));
+        Segments.Add(new Line(_cp, point));
         Add(point);
 
         _cp = point;
@@ -281,13 +280,15 @@ public class GeneralPath : IDisposable
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public GeneralPath SmoothQuadTo(TwoDPoint point)
     {
-        if (Segments.Last() is not QuadPathSegment)
-            throw new Exception("A smooth quad path must follow a previous quad path.");
+        if (Segments.Last() is QuadCurve previousCurve)
+        {
+            TwoDPoint previousControlPoint = previousCurve.Control;
+            TwoDPoint delta = _cp - previousControlPoint;
 
-        TwoDPoint previousControlPoint = Segments.Last().Points[1];
-        TwoDPoint delta = _cp - previousControlPoint;
+            return QuadTo(_cp + delta, point);
+        }
 
-        return QuadTo(_cp + delta, point);
+        throw new Exception("A smooth quad path must follow a previous quad path.");
     }
 
     /// <summary>
@@ -298,7 +299,7 @@ public class GeneralPath : IDisposable
     /// <returns>This object, for fluency.</returns>
     public GeneralPath QuadTo(TwoDPoint controlPoint, TwoDPoint point)
     {
-        Segments.Add(new QuadPathSegment(_cp, controlPoint, point));
+        Segments.Add(new QuadCurve(_cp, controlPoint, point));
         Add(controlPoint);
         Add(point);
 
@@ -430,13 +431,15 @@ public class GeneralPath : IDisposable
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public GeneralPath SmoothCubicTo(TwoDPoint controlPoint2, TwoDPoint point)
     {
-        if (Segments.Last() is not CubicPathSegment)
-            throw new Exception("A smooth cubic path must follow a previous cubic path.");
+        if (Segments.Last() is CubicCurve previousCurve)
+        {
+            TwoDPoint previousControlPoint = previousCurve.ControlPoint2;
+            TwoDPoint delta = _cp - previousControlPoint;
 
-        TwoDPoint previousControlPoint = Segments.Last().Points[1];
-        TwoDPoint delta = _cp - previousControlPoint;
+            return CubicTo(_cp + delta, controlPoint2, point);
+        }
 
-        return CubicTo(_cp + delta, controlPoint2, point);
+        throw new Exception("A smooth cubic path must follow a previous cubic path.");
     }
 
     /// <summary>
@@ -448,7 +451,7 @@ public class GeneralPath : IDisposable
     /// <returns>This object, for fluency.</returns>
     public GeneralPath CubicTo(TwoDPoint controlPoint1, TwoDPoint controlPoint2, TwoDPoint point)
     {
-        Segments.Add(new CubicPathSegment(_cp, controlPoint1, controlPoint2, point));
+        Segments.Add(new CubicCurve(_cp, controlPoint1, controlPoint2, point));
         Add(controlPoint1);
         Add(controlPoint2);
         Add(point);
@@ -508,7 +511,7 @@ public class GeneralPath : IDisposable
     {
         Segments.Reverse();
 
-        foreach (PathSegment segment in Segments)
+        foreach (IPathSegment segment in Segments)
             segment.Reverse();
 
         return this;

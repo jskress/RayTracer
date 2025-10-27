@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 
 namespace RayTracer.Graphics;
 
@@ -6,17 +5,41 @@ namespace RayTracer.Graphics;
 /// This class provides a representation of a quadratic Bézier curve, providing the common
 /// math we need.
 /// </summary>
-public class CubicCurve
+public class CubicCurve : IPathSegment
 {
     private const double OneThird = 1d / 3d;
 
     private static readonly double Sqrt3 = Math.Sqrt(3d);
 
-    private readonly double[] _xCoefficients;
-    private readonly double[] _yCoefficients;
+    /// <summary>
+    /// This property holds the second control point of the curve.
+    /// </summary>
+    public TwoDPoint ControlPoint2 { get; private set; }
+
+    private TwoDPoint _start;
+    private TwoDPoint _cp1;
+    private TwoDPoint _end;
+    private double[] _xCoefficients;
+    private double[] _yCoefficients;
 
     internal CubicCurve(TwoDPoint start, TwoDPoint cp1, TwoDPoint cp2, TwoDPoint end)
     {
+        SetPoints(start, cp1, cp2, end);
+    }
+
+    /// <summary>
+    /// This method is used to set up our coefficients based on the given control points.
+    /// </summary>
+    /// <param name="start">The point at which the curve starts.</param>
+    /// <param name="cp1">The first control point for the curve.</param>
+    /// <param name="cp2">The second control point for the curve.</param>
+    /// <param name="end">The point at which the curve ends.</param>
+    private void SetPoints(TwoDPoint start, TwoDPoint cp1, TwoDPoint cp2, TwoDPoint end)
+    {
+        _start = start;
+        _cp1 = cp1;
+        ControlPoint2 = cp2;
+        _end = end;
         _xCoefficients = [
             -start.X + 3 * cp1.X + -3 * cp2.X + end.X,
             3 * start.X - 6 * cp1.X + 3 * cp2.X,
@@ -29,6 +52,55 @@ public class CubicCurve
             -3 * start.Y + 3 * cp1.Y,
             start.Y
         ];
+    }
+
+    /// <summary>
+    /// This method is used to reverse the direction of this path segment.
+    /// </summary>
+    public void Reverse()
+    {
+        SetPoints(_end, ControlPoint2, _cp1, _start);
+    }
+
+    /// <summary>
+    /// This method is used to locate the intersection points, if any, where the given ray
+    /// intersects this curve.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <returns>An array of the intersection data.
+    /// If the ray doesn't intersect the curve, the enumerable must be empty.</returns>
+    public IEnumerable<TwoDIntersection> GetIntersections(TwoDRay ray)
+    {
+        TwoDPoint point = ray.Origin + ray.Direction;
+        TwoDPoint lineA = new TwoDPoint(ray.Origin.X, ray.Origin.Y);
+        TwoDPoint lineB = new TwoDPoint(point.X, point.Y);
+        double a = lineB.Y - lineA.Y;
+        double b = lineA.X - lineB.X;
+        double[] roots = GetRoots(lineA, lineB);
+
+        return roots
+            .Select(t =>
+            {
+                double t2 = t * t;
+                double t3 = t2 * t;
+                double x = _xCoefficients[0] * t3 + _xCoefficients[1] * t2 + _xCoefficients[2] * t + _xCoefficients[3];
+                double y = _yCoefficients[0] * t3 + _yCoefficients[1] * t2 + _yCoefficients[2] * t + _yCoefficients[3];
+                double s = a == 0 && b == 0
+                    ? 0
+                    : a != 0
+                        ? (y - lineA.Y) / a
+                        : (x - lineA.X) / -b;
+
+                return s >= 0
+                    ? new TwoDIntersection
+                    {
+                        Distance = t,
+                        Point = new TwoDPoint(x, y),
+                        TwoDNormal = NormalAt(t)
+                    }
+                    : null;
+            })
+            .Where(item => item != null);
     }
 
     /// <summary>
@@ -65,26 +137,6 @@ public class CubicCurve
     }
 
     /// <summary>
-    /// This method returns the X intersection coordinates along a horizontal line at the
-    /// given point that are on our curve.
-    /// </summary>
-    /// <param name="point">The point that identifies the horizontal line to check.</param>
-    /// <returns>The array of X intersection coordinates.</returns>
-    internal double[] GetXIntersectionsFor(TwoDPoint point)
-    {
-        double[] roots = GetRoots(point, point with { X = point.X + 0.1 });
-
-        return roots
-            .Select(t =>
-            {
-                double t2 = t * t;
-                double t3 = t2 * t;
-                return _xCoefficients[0] * t3 + _xCoefficients[1] * t2 + _xCoefficients[2] * t + _xCoefficients[3];
-            })
-            .ToArray();
-    }
-
-    /// <summary>
     /// This method returns the intersection information of our curve with the given line.
     /// Each entry returned contains both the intersection distance along the curve, in
     /// the [0, 1] interval, and the point of intersection.
@@ -112,7 +164,7 @@ public class CubicCurve
     /// </summary>
     /// <param name="t">The distance along the curve where we want the normal.</param>
     /// <returns>The normal at the given distance.</returns>
-    internal Vector NormalAt(double t)
+    private TwoDVector NormalAt(double t)
     {
         double t2 = t * t;
         // This gives us our tangent line...
@@ -120,7 +172,7 @@ public class CubicCurve
         double y = 3 * _yCoefficients[0] * t2 + 2 * _yCoefficients[1] * t + _yCoefficients[2];
 
         // And this makes a normal out of it.
-        return new Vector(y, 0, -x);
+        return new TwoDVector(y, -x);
     }
 
     /// <summary>

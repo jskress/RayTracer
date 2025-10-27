@@ -28,7 +28,11 @@ public class Extrusion : ExtrudedSurface, IDisposable
     protected override void PrepareSurfaceForRendering()
     {
         _surfaces.Clear();
-        _surfaces.AddRange(Path.Segments.Select(ToSurface));
+        _surfaces.AddRange(Path.Segments
+            .Select(segment => new PathSurface(segment, MinimumY, MaximumY)));
+
+        _top = null;
+        _bottom = null;
 
         if (Closed)
         {
@@ -59,22 +63,6 @@ public class Extrusion : ExtrudedSurface, IDisposable
     }
 
     /// <summary>
-    /// This method is used to convert a path segment into its representative surface.
-    /// </summary>
-    /// <param name="segment">The segment to convert.</param>
-    /// <returns>The segment as a surface.</returns>
-    private PathSurface ToSurface(PathSegment segment)
-    {
-        return segment switch
-        {
-            LinearPathSegment line => new LinearPathSurface(line, MinimumY, MaximumY),
-            QuadPathSegment quad => new QuadPathSurface(quad, MinimumY, MaximumY),
-            CubicPathSegment cubic => new CubicPathSurface(cubic, MinimumY, MaximumY),
-            _ => throw new NotSupportedException()
-        };
-    }
-
-    /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,
     /// if so, where.
     /// </summary>
@@ -87,12 +75,14 @@ public class Extrusion : ExtrudedSurface, IDisposable
             AddCapIntersections(ray, intersections, _top);
             AddCapIntersections(ray, intersections, _bottom);
         }
+        
+        TwoDRay projectedRay = TwoDRay.ProjectedToXz(ray);
 
-        intersections.AddRange(_surfaces.Select(surface => surface.GetIntersection(ray))
-            .Where(intersectionData => intersectionData != null)
+        intersections.AddRange(_surfaces
+            .Select(surface => surface.GetTwoDIntersections(ray, projectedRay))
             .SelectMany(intersectionData => intersectionData)
-            .Where(intersectionData => intersectionData != null)
-            .Select(data => data.AsIntersection(this)));
+            .Where(intersection => intersection != null)
+            .Select(intersection => intersection.FromXz(this)));
     }
 
     /// <summary>
@@ -109,7 +99,7 @@ public class Extrusion : ExtrudedSurface, IDisposable
         if (!double.IsNaN(intersection))
         {
             Point point = ray.At(intersection);
-            TwoDPoint twoDPoint = new TwoDPoint(point.X, point.Z);
+            TwoDPoint twoDPoint = TwoDPoint.ProjectedToXz(point);
 
             if (Path.Contains(twoDPoint))
                 intersections.Add(new Intersection(this, intersection));

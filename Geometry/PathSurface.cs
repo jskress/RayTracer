@@ -1,5 +1,5 @@
 using RayTracer.Basics;
-using RayTracer.Core;
+using RayTracer.Graphics;
 
 namespace RayTracer.Geometry;
 
@@ -7,32 +7,53 @@ namespace RayTracer.Geometry;
 /// This is the base class for a surface that is used to render a general path segment.
 /// It is assumed that the path segment is on the X/Z plane.
 /// </summary>
-public abstract class PathSurface
+public class PathSurface
 {
-    /// <summary>
-    /// This holds the low end of the surface
-    /// </summary>
-    protected double MinimumY { get; }
+    private readonly IPathSegment _segment;
+    private readonly double _minimumY;
+    private readonly double _maximumY;
 
-    /// <summary>
-    /// This holds the high end of the surface
-    /// </summary>
-    protected double MaximumY { get; }
-
-    protected PathSurface(double minimumY, double maximumY)
+    public PathSurface(IPathSegment segment, double minimumY, double maximumY)
     {
-        MinimumY = minimumY;
-        MaximumY = maximumY;
+        _segment = segment;
+        _minimumY = minimumY;
+        _maximumY = maximumY;
     }
 
     /// <summary>
-    /// This method is used to locate the intersection point, if any, where the given ray
+    /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this path surface.
     /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <returns>An array of the intersection distance and normal vector pairs.
-    /// If the ray doesn't intersect the surface, the array will be <c>null</c>.</returns>
-    public abstract SimpleIntersection[] GetIntersection(Ray ray);
+    /// <param name="ray">The 3D ray we started with.</param>
+    /// <param name="projectedRay">The 2D ray to test.</param>
+    /// <returns>An array of the intersection data.
+    /// If the ray doesn't intersect the surface, the enumerable must be empty.</returns>
+    internal IEnumerable<TwoDIntersection> GetTwoDIntersections(Ray ray, TwoDRay projectedRay)
+    {
+        return _segment.GetIntersections(projectedRay)
+            .Select(intersection => AdjustDistance(ray, intersection));
+    }
+
+    /// <summary>
+    /// This method is used to determine the 3D distance along the ray to the intersection
+    /// point.
+    /// If the resulting 3D intersection point misses the surface because its Y is too high
+    /// or too low, then <c>null</c> will be returned.
+    /// </summary>
+    /// <param name="ray">The ray currently in play.</param>
+    /// <param name="intersection">The 2D intersection to update the distance for.</param>
+    /// <returns>The updated intersection or <c>null</c>.</returns>
+    private TwoDIntersection AdjustDistance(Ray ray, TwoDIntersection intersection)
+    {
+        double t3d = GetRayDistance(ray, intersection.Point);
+
+        if (double.IsNaN(t3d))
+            return null;
+
+        intersection.Distance = t3d;
+
+        return intersection;
+    }
 
     /// <summary>
     /// This is a helper method that will take a point on the X/Z plane and projects it
@@ -46,11 +67,11 @@ public abstract class PathSurface
     /// intersects the surface.</param>
     /// <returns>The distance along the ray where the intersection happens, or <c>NaN</c>,
     /// if the intersection is too low or too high for this surface.</returns>
-    protected double GetRayDistance(Ray ray, TwoDPoint point)
+    private double GetRayDistance(Ray ray, TwoDPoint point)
     {
-         double distance = (point.X - ray.Origin.X) / ray.Direction.X;
-         double y = ray.Origin.Y + distance * ray.Direction.Y;
+        double distance = (point.X - ray.Origin.X) / ray.Direction.X;
+        double y = ray.Origin.Y + distance * ray.Direction.Y;
          
-         return y < MinimumY || y > MaximumY ? double.NaN : distance;
+        return y < _minimumY || y > _maximumY ? double.NaN : distance;
     }
 }
