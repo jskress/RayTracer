@@ -75,7 +75,7 @@ public class PigmentSet
         if (Banded || double.IsNaN(end))
             return firstColor;
 
-        double fraction = (end - start) * value;
+        double fraction = (value - start) / (end - start);
         Color secondColor = secondPigment.GetTransformedColorFor(point);
         double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 
@@ -95,7 +95,7 @@ public class PigmentSet
         for (int index = 0; index < _pigments.Count; index++)
         {
             (double ourBreakValue, Pigment ourPigment) = _pigments.GetByIndex(index);
-            (double theirBreakValue, Pigment theirPigment) = _pigments.GetByIndex(index);
+            (double theirBreakValue, Pigment theirPigment) = other._pigments.GetByIndex(index);
 
             if (!ourBreakValue.Near(theirBreakValue) ||
                 !ourPigment.Matches(theirPigment))

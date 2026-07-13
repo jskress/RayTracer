@@ -42,13 +42,6 @@ public partial class LanguageParser
     /// This method is used to handle an item clause of a plane block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    private void HandlePlaneEntryClause(Clause clause)
-    {
-        PlaneResolver resolver = (PlaneResolver) _context.CurrentTarget;
-
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
-            HandleSurfaceClause(clause, resolver, "plane");
-    }
+    private void HandlePlaneEntryClause(Clause clause) =>
+        HandleGenericSurfaceEntryClause((PlaneResolver) _context.CurrentTarget, clause, "plane");
 }

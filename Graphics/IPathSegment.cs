@@ -7,9 +7,21 @@ namespace RayTracer.Graphics;
 public interface IPathSegment
 {
     /// <summary>
+    /// This property exposes the points that define this segment.
+    /// </summary>
+    TwoDPoint[] Points { get; }
+
+    /// <summary>
     /// This method is used to reverse the direction of this path segment.
     /// </summary>
     void Reverse();
+
+    /// <summary>
+    /// This method is used to produce a copy of this path segment, but reversed, and with
+    /// points mirrored around the Y axis.
+    /// </summary>
+    /// <returns>A reversed copy of this segment.</returns>
+    IPathSegment ReversedMirrorCopy();
 
     /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray

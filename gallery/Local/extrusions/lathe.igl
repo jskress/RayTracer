@@ -1,0 +1,30 @@
+// A scene to test lathe objects.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Lathe Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the lathe primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2, 10, -10]
+    look at [0, 0, 0]
+    field of view 20
+}
+
+point light {
+    location [20, 20, -20]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}

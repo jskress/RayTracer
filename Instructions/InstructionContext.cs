@@ -99,7 +99,7 @@ public class InstructionContext
         Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
         Terminal.Out("Writing...");
 
-        outputFile.Save(renderInstruction.Canvas, context.ImageInformation);
+        outputFile.Save(renderInstruction.Canvas, context, context.ImageInformation);
 
         Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
     }

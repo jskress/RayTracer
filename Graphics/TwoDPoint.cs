@@ -11,6 +11,16 @@ public record TwoDPoint(double X, double Y)
     public static readonly TwoDPoint Zero = new (0, 0);
 
     /// <summary>
+    /// This method creates a copy of this point, with the X coordinate flipped around the
+    /// Y axis.
+    /// </summary>
+    /// <returns>A copy of this point, mirrored around the Y axis.</returns>
+    public TwoDPoint MirrorAroundX()
+    {
+        return new TwoDPoint(X == 0 ? 0 : -X, Y);
+    }
+
+    /// <summary>
     /// This method is used to create a 3D point from this one assuming we are in the X/Y
     /// plane.
     /// </summary>
@@ -28,6 +38,11 @@ public record TwoDPoint(double X, double Y)
     public Point FromXz()
     {
         return new Point(X, 0, Y);
+    }
+
+    public override string ToString()
+    {
+        return $"({X}, {Y})";
     }
 
     /// <summary>
@@ -93,9 +108,9 @@ public record TwoDPoint(double X, double Y)
     /// <param name="left">The point to subtract from.</param>
     /// <param name="right">The point to subtract.</param>
     /// <returns>The new point.</returns>
-    public static TwoDPoint operator -(TwoDPoint left, TwoDPoint right)
+    public static TwoDVector operator -(TwoDPoint left, TwoDPoint right)
     {
-        return new TwoDPoint(left.X - right.X, left.Y - right.Y);
+        return new TwoDVector(left.X - right.X, left.Y - right.Y);
     }
 
     /// <summary>

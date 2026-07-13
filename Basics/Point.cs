@@ -3,7 +3,7 @@ namespace RayTracer.Basics;
 /// <summary>
 /// This class represents a point.
 /// </summary>
-public class Point : NumberTuple
+public class Point : NumberTuple, IEquatable<Point>
 {
     public static readonly Point Zero = new (0, 0, 0);
 
@@ -55,5 +55,60 @@ public class Point : NumberTuple
     public static Point operator -(Point left, Vector right)
     {
         return new Point(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
+    }
+
+    /// <summary>
+    /// This method provides the equality operator for two points.
+    /// </summary>
+    /// <param name="left">The first point to compare.</param>
+    /// <param name="right">The second point to compare.</param>
+    /// <returns><c>true</c>, if the points are equal, or <c>false</c>, if not.</returns>
+    public static bool operator ==(Point left, Point right)
+    {
+        return ReferenceEquals(left, right) || (left is not null && left.Equals(right));
+    }
+
+    /// <summary>
+    /// This method provides the inequality operator for two points.
+    /// </summary>
+    /// <param name="left">The first point to compare.</param>
+    /// <param name="right">The second point to compare.</param>
+    /// <returns><c>true</c>, if the points are not equal, or <c>false</c>, if they are.</returns>
+    public static bool operator !=(Point left, Point right)
+    {
+        return !(left == right);
+    }
+
+    /// <summary>
+    /// This method tests whether the given point is the same as this one.
+    /// </summary>
+    /// <param name="other">The point to compare to.</param>
+    /// <returns><c>true</c>, if the points have the same coordinates, or<c>false</c>,
+    /// if not.</returns>
+    public bool Equals(Point other)
+    {
+        return other is not null &&
+               (ReferenceEquals(this, other) || base.Equals(other));
+    }
+
+    /// <summary>
+    /// This method tests whether the given object is the same as this one.
+    /// </summary>
+    /// <param name="other">The object to compare to.</param>
+    /// <returns><c>true</c>, if the given object it s a point, and it has the same coordinates
+    /// as this one, or<c>false</c>, if not.</returns>
+    public override bool Equals(object other)
+    {
+        return other is not null && (ReferenceEquals(this, other) ||
+               (other.GetType() == GetType() && Equals((Point) other)));
+    }
+
+    /// <summary>
+    /// This method returns the hash code for this object.
+    /// </summary>
+    /// <returns>This object's hash code.</returns>
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 }

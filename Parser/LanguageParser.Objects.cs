@@ -41,16 +41,14 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to handle an item clause of a torus block.
+    /// This method is used to handle an item clause of an object file block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     private void HandleObjectFileEntryClause(Clause clause)
     {
         ObjectFileResolver resolver = (ObjectFileResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -59,10 +57,10 @@ public partial class LanguageParser
                     resolver.FileNameResolver = new TermResolver<string> { Term = clause.Term() };
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "torus");
+                    HandleSurfaceClause(clause, resolver, "object file");
                     break;
             }
-        }
+        });
     }
 
     /// <summary>

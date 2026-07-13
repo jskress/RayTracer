@@ -12,12 +12,13 @@ public class CubicCurve : IPathSegment
     private static readonly double Sqrt3 = Math.Sqrt(3d);
 
     /// <summary>
-    /// This property holds the second control point of the curve.
+    /// This property exposes the points that define this segment.
     /// </summary>
-    public TwoDPoint ControlPoint2 { get; private set; }
+    public TwoDPoint[] Points => [_start, _cp1, _cp2, _end];
 
     private TwoDPoint _start;
     private TwoDPoint _cp1;
+    private TwoDPoint _cp2;
     private TwoDPoint _end;
     private double[] _xCoefficients;
     private double[] _yCoefficients;
@@ -38,7 +39,7 @@ public class CubicCurve : IPathSegment
     {
         _start = start;
         _cp1 = cp1;
-        ControlPoint2 = cp2;
+        _cp2 = cp2;
         _end = end;
         _xCoefficients = [
             -start.X + 3 * cp1.X + -3 * cp2.X + end.X,
@@ -59,7 +60,19 @@ public class CubicCurve : IPathSegment
     /// </summary>
     public void Reverse()
     {
-        SetPoints(_end, ControlPoint2, _cp1, _start);
+        SetPoints(_end, _cp2, _cp1, _start);
+    }
+
+    /// <summary>
+    /// This method is used to produce a copy of this path segment, but reversed, and with
+    /// points mirrored around the Y axis.
+    /// </summary>
+    /// <returns>A reversed copy of this segment.</returns>
+    public IPathSegment ReversedMirrorCopy()
+    {
+        return new CubicCurve(
+            _end.MirrorAroundX(), _cp2.MirrorAroundX(), _cp1.MirrorAroundX(),
+            _start.MirrorAroundX());
     }
 
     /// <summary>

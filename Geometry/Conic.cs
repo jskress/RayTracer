@@ -112,10 +112,10 @@ public class Conic : ExtrudedSurface
     {
         double distance = point.X * point.X + point.Z * point.Z;
 
-        if (distance < 1 && point.Y >= MaximumY - DoubleExtensions.Epsilon)
+        if (distance < Math.Abs(MaximumY) && point.Y >= MaximumY - DoubleExtensions.Epsilon)
             return Directions.Up;
 
-        if (distance < 1 && point.Y <= MinimumY + DoubleExtensions.Epsilon)
+        if (distance < Math.Abs(MinimumY) && point.Y <= MinimumY + DoubleExtensions.Epsilon)
             return Directions.Down;
 
         double y = Math.Sqrt(distance);

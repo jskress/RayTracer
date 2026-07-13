@@ -55,6 +55,8 @@ public class RenderInstruction : Instruction
         using Scene scene = GetScene(variables);
         Camera camera = GetCamera(scene, variables);
 
+        scene.Surfaces.Add(CreateTestSurface());
+
         // Give each surface a chance to do any precomputing needed.
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering();
@@ -62,6 +64,31 @@ public class RenderInstruction : Instruction
         FinalizeSurfaceData(context, scene.Surfaces);
  
         Canvas = camera.Render(context, scene);
+    }
+
+    private static Surface CreateTestSurface()
+    {
+        GeneralPath path = new GeneralPath();
+
+        path
+            .MoveTo(1, 0)
+            .LineTo(2, 0)
+            .LineTo(2, 1)
+            .LineTo(1, 1);
+
+        // path
+        //     .MoveTo(0, 0)
+        //     .QuadTo(1, 0, 1, 1)
+        //     .QuadTo(1, 2, 0, 2);
+
+        return new Lathe
+        {
+            Path = path,
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White)
+            }
+        };
     }
 
     /// <summary>

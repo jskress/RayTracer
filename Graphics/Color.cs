@@ -83,7 +83,7 @@ public class Color
         double power = gammaCorrect ? 1 / context.Gamma : 1;
         double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +
                       PrepareChannelValue(Green, power, gammaCorrect) * 0.587 +
-                      PrepareChannelValue(Green, power, gammaCorrect) * 0.114;
+                      PrepareChannelValue(Blue, power, gammaCorrect) * 0.114;
 
         return (ChannelToInt(gray, maxValue), ChannelToInt(Alpha, maxValue));
     }
@@ -115,13 +115,12 @@ public class Color
         double value, double power = 1, bool gammaCorrect = false)
     {
         if (gammaCorrect && Math.Abs(power - 1) > 0.0000001)
-        {
             value = Math.Pow(value, power);
 
-            // For colors, this should be ok.
-            if (double.IsNaN(value))
-                value = 0;
-        }
+        // Math.Clamp() passes NaN through unclamped, so guard against it explicitly,
+        // regardless of whether it came from gamma correction or was already NaN going in.
+        if (double.IsNaN(value))
+            return 0;
 
         return Math.Clamp(value, 0, 1);
     }

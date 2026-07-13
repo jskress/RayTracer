@@ -56,12 +56,12 @@ public class Group : Surface
         foreach (Surface surface in Surfaces)
         {
             if (surface.BoundingBox != null)
-                box.Add(surface.BoundingBox);
+                box.Add(surface.BoundingBox.TransformedBy(surface.Transform));
             else if (surface is Triangle triangle)
             {
-                box.Add(triangle.Point1);
-                box.Add(triangle.Point2);
-                box.Add(triangle.Point3);
+                box.Add(surface.Transform * triangle.Point1);
+                box.Add(surface.Transform * triangle.Point2);
+                box.Add(surface.Transform * triangle.Point3);
             }
         }
 

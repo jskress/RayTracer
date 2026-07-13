@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using RayTracer.Graphics;
 using RayTracer.Utils;
 
@@ -9,7 +10,7 @@ namespace RayTracer.ImageIO;
 /// </summary>
 public static class ImageCache
 {
-    private static readonly Dictionary<string, Canvas> Cache = [];
+    private static readonly ConcurrentDictionary<string, Canvas> Cache = new ();
 
     /// <summary>
     /// This method returns an image known by the given path/URL.  If we've loaded it

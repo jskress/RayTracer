@@ -68,9 +68,9 @@ public class TestColors
     {
         Color color = Colors.Transparent.LayerOnTopOf(Colors.Gray75);
         
-        Assert.AreEqual(color.Red, 0.75);
-        Assert.AreEqual(color.Green, 0.75);
-        Assert.AreEqual(color.Blue, 0.75);
-        Assert.AreEqual(color.Alpha, 1);
+        Assert.AreEqual(0.75, color.Red);
+        Assert.AreEqual(0.75, color.Green);
+        Assert.AreEqual(0.75, color.Blue);
+        Assert.AreEqual(1, color.Alpha);
     }
 }

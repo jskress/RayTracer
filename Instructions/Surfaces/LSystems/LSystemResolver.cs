@@ -23,7 +23,7 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     /// <summary>
     /// This property holds the list of command mapping overrides to use.
     /// </summary>
-    public List<LSystemRenderCommandMapping> CommandMappings { get; } = [];
+    public List<LSystemRenderCommandMapping> CommandMappings { get; private set; } = [];
 
     /// <summary>
     /// This property holds the resolver for the "generations" property of an L-system.
@@ -90,6 +90,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public override object Clone()
     {
         LSystemResolver resolver = (LSystemResolver) base.Clone();
+
+        // Force the list to be physically different, but with the same content.
+        resolver.CommandMappings = [..resolver.CommandMappings];
 
         if (resolver.RenderingControlsResolver is not null)
             resolver.RenderingControlsResolver = (LSystemRenderingControlsResolver) RenderingControlsResolver.Clone();

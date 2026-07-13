@@ -11,11 +11,12 @@ internal class QuadCurve : IPathSegment
     private static readonly double[] Empty = [];
 
     /// <summary>
-    /// This property holds the control point of the curve.
+    /// This property exposes the points that define this segment.
     /// </summary>
-    internal TwoDPoint Control { get; private set; }
+    public TwoDPoint[] Points => [_start, _control, _end];
 
     private TwoDPoint _start;
+    private TwoDPoint _control;
     private TwoDPoint _end;
     private double _aX;
     private double _aY;
@@ -36,7 +37,7 @@ internal class QuadCurve : IPathSegment
     private void SetPoints(TwoDPoint start, TwoDPoint control, TwoDPoint end)
     {
         _start = start;
-        Control = control;
+        _control = control;
         _end = end;
 
         _aX = _start.X - 2 * control.X + end.X;
@@ -50,7 +51,18 @@ internal class QuadCurve : IPathSegment
     /// </summary>
     public void Reverse()
     {
-        SetPoints(_end, Control, _start);
+        SetPoints(_end, _control, _start);
+    }
+
+    /// <summary>
+    /// This method is used to produce a copy of this path segment, but reversed, and with
+    /// points mirrored around the Y axis.
+    /// </summary>
+    /// <returns>A reversed copy of this segment.</returns>
+    public IPathSegment ReversedMirrorCopy()
+    {
+        return new QuadCurve(
+            _end.MirrorAroundX(), _control.MirrorAroundX(), _start.MirrorAroundX());
     }
 
     /// <summary>
@@ -111,8 +123,8 @@ internal class QuadCurve : IPathSegment
         double iT2 = iT * iT;
         double iTt2 = 2 * iT * t;
         double t2 = t * t;
-        double x = iT2 * _start.X + iTt2 * Control.X + t2 * _end.X;
-        double y = iT2 * _start.Y + iTt2 * Control.Y + t2 * _end.Y;
+        double x = iT2 * _start.X + iTt2 * _control.X + t2 * _end.X;
+        double y = iT2 * _start.Y + iTt2 * _control.Y + t2 * _end.Y;
 
         return new TwoDPoint(x, y);
     }
@@ -142,10 +154,10 @@ internal class QuadCurve : IPathSegment
     /// <returns>The derivative at that point.</returns>
     private TwoDPoint GetDerivative(double t)
     {
-        double d1X = 2 * (Control.X - _start.X);
-        double d1Y = 2 * (Control.Y - _start.Y);
-        double d2X = 2 * (_end.X - Control.X);
-        double d2Y = 2 * (_end.Y - Control.Y);
+        double d1X = 2 * (_control.X - _start.X);
+        double d1Y = 2 * (_control.Y - _start.Y);
+        double d2X = 2 * (_end.X - _control.X);
+        double d2Y = 2 * (_end.Y - _control.Y);
         double x = (1 - t) * d1X + t * d2X;
         double y = (1 - t) * d1Y + t * d2Y;
 

@@ -14,12 +14,12 @@ public class Parallelogram : Surface
     /// </summary>
     public Point Point
     {
-        get => _point;
+        get => field;
         set
         {
-            _point = value;
+            field = value;
 
-            DefinitionChanged(value, _side1, _side2);
+            DefinitionChanged(value, Side1, Side2);
         }
     }
 
@@ -28,12 +28,12 @@ public class Parallelogram : Surface
     /// </summary>
     public Vector Side1
     {
-        get => _side1;
+        get => field;
         set
         {
-            _side1 = value;
+            field = value;
 
-            DefinitionChanged(_point, value, _side2);
+            DefinitionChanged(Point, value, Side2);
         }
     }
 
@@ -42,12 +42,12 @@ public class Parallelogram : Surface
     /// </summary>
     public Vector Side2
     {
-        get => _side2;
+        get => field;
         set
         {
-            _side2 = value;
+            field = value;
 
-            DefinitionChanged(_point, _side1, value);
+            DefinitionChanged(Point, Side1, value);
         }
     }
 
@@ -56,9 +56,6 @@ public class Parallelogram : Surface
     /// </summary>
     public Vector Normal { get; private set; }
 
-    private Point _point;
-    private Vector _side1;
-    private Vector _side2;
     private double _constantD;
     private Vector _constantW;
 
@@ -114,9 +111,9 @@ public class Parallelogram : Surface
         if (t >= 0)
         {
             Point p = ray.At(t);
-            Vector vector = p - _point;
-            double alpha = _constantW.Dot(vector.Cross(_side1));
-            double beta = _constantW.Dot(_side2.Cross(vector));
+            Vector vector = p - Point;
+            double alpha = _constantW.Dot(vector.Cross(Side1));
+            double beta = _constantW.Dot(Side2.Cross(vector));
 
             if (alpha is >= 0 and <= 1 && beta is >= 0 and <= 1)
                 return t;

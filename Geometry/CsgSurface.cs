@@ -26,11 +26,11 @@ public class CsgSurface : Surface
     /// </summary>
     public Surface Left
     {
-        get => _left;
+        get => field;
         set
         {
             value.Parent = this;
-            _left = value;
+            field = value;
         }
     }
 
@@ -39,16 +39,13 @@ public class CsgSurface : Surface
     /// </summary>
     public Surface Right
     {
-        get => _right;
+        get => field;
         set
         {
             value.Parent = this;
-            _right = value;
+            field = value;
         }
     }
-
-    private Surface _left;
-    private Surface _right;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to

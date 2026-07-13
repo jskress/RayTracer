@@ -119,6 +119,10 @@ public class ProgressBar
     /// <returns>The time remaining estimate.</returns>
     private TimeSpan TimeRemaining(long ticks)
     {
+        // No progress has been recorded yet, so there's nothing to base an estimate on.
+        if (_current == 0)
+            return TimeSpan.Zero;
+
         double elapsed = ticks - _start;
         double todo = _total - _current;
         long ticksLeft = Convert.ToInt64(elapsed / _current * todo);

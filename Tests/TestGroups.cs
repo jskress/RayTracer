@@ -143,6 +143,35 @@ public class TestGroups
     }
 
     [TestMethod]
+    public void TestBoundingBoxAccountsForChildTransforms()
+    {
+        // The group itself has no transform, but its child triangle is translated well
+        // away from the origin.  The group's default bounding box must be built from each
+        // child's extent *as transformed by that child's own transform* -- otherwise it
+        // ends up centered on the origin instead of around the translated triangle, and a
+        // ray that should hit the triangle gets rejected by the (wrongly-placed) box before
+        // AddIntersections() ever runs.
+        Group group = new ();
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 0, 0),
+            Point2 = new Point(1, 0, 0),
+            Point3 = new Point(0, 1, 0),
+            Transform = Transforms.Translate(10, 0, 0)
+        };
+
+        group.Add(triangle);
+        group.PrepareForRendering();
+
+        Ray ray = new (new Point(10.25, 0.25, -5), Directions.In);
+        List<Intersection> intersections = [];
+
+        group.Intersect(ray, intersections);
+
+        Assert.AreEqual(1, intersections.Count);
+    }
+
+    [TestMethod]
     public void TestGroupNormalAt()
     {
         Group outer = new ()

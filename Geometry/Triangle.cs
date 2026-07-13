@@ -16,12 +16,12 @@ public class Triangle : Surface
     /// </summary>
     public Point Point1
     {
-        get => _point1;
+        get => field;
         set
         {
-            _point1 = value;
+            field = value;
 
-            PointChanged(value, _point2, _point3);
+            PointChanged(value, Point2, Point3);
         }
     }
 
@@ -30,12 +30,12 @@ public class Triangle : Surface
     /// </summary>
     public Point Point2
     {
-        get => _point2;
+        get => field;
         set
         {
-            _point2 = value;
+            field = value;
 
-            PointChanged(_point1, value, _point3);
+            PointChanged(Point1, value, Point3);
         }
     }
 
@@ -44,18 +44,15 @@ public class Triangle : Surface
     /// </summary>
     public Point Point3
     {
-        get => _point3;
+        get => field;
         set
         {
-            _point3 = value;
+            field = value;
 
-            PointChanged(_point1, _point2, value);
+            PointChanged(Point1, Point2, value);
         }
     }
 
-    private Point _point1;
-    private Point _point2;
-    private Point _point3;
     private Vector _e1;
     private Vector _e2;
     private Vector _normal;

@@ -57,9 +57,14 @@ public class Variables
         if (!_variables.TryGetValue(key, out Dictionary<RuntimeTypeHandle, object> values))
             _variables[key] = values = new Dictionary<RuntimeTypeHandle, object>();
 
-        if (value == null && values.Count == 1)
-            _variables.Remove(key);
+        if (value == null)
+        {
+            if (values.Count == 1)
+                _variables.Remove(key);
 
-        values[value!.GetType().TypeHandle] = value;
+            return;
+        }
+
+        values[value.GetType().TypeHandle] = value;
     }
 }

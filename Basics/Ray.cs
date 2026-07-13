@@ -1,3 +1,5 @@
+using RayTracer.Extensions;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -29,5 +31,23 @@ public class Ray
     public Point At(double distance)
     {
         return Origin + Direction * distance;
+    }
+
+    /// <summary>
+    /// This method is used to determine whether the given point lies on the ray.
+    /// </summary>
+    /// <param name="point">The point to test.</param>
+    /// <returns><c>true</c>, if the point is on the ray, or <c>false</c>, if not.</returns>
+    public bool Contains(Point point)
+    {
+        Vector vector = point - Origin;
+        double t = vector.Dot(Direction);
+
+        if (t < 0)
+            return false;
+        
+        double distance = (At(t) - point).Magnitude;
+
+        return distance < 0.15;
     }
 }

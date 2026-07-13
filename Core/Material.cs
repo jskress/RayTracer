@@ -11,6 +11,17 @@ namespace RayTracer.Core;
 public class Material
 {
     /// <summary>
+    /// This is the material to use for a surface that has no material of its own and
+    /// hasn't inherited one from a parent group or CSG surface either.  A surface's
+    /// <c>Material</c> property is deliberately left <c>null</c> until it is explicitly
+    /// set, inherited, or finalized for rendering (see <c>RenderInstruction</c>) so that
+    /// group/CSG material inheritance can tell "unset" apart from "explicitly set."  Code
+    /// that reads material properties directly off a surface without going through that
+    /// pipeline (e.g. isolated unit tests) should fall back to this default instead.
+    /// </summary>
+    public static readonly Material Default = new ();
+
+    /// <summary>
     /// This property holds the source of color for the material.
     /// </summary>
     public Pigment Pigment { get; set; } = SolidPigment.White;

@@ -29,6 +29,16 @@ public record TwoDVector(double X, double Y)
     }
 
     /// <summary>
+    /// This method produces the dot product of this vector with the given one.
+    /// </summary>
+    /// <param name="vector">The vector to compute the dot product with.</param>
+    /// <returns>The dot product of this vector with the given one.</returns>
+    public double Dot(TwoDVector vector)
+    {
+        return X * vector.X + Y * vector.Y;
+    }
+
+    /// <summary>
     /// This method is used to create a 3D vector from this one assuming we are in the X/Y
     /// plane.
     /// </summary>

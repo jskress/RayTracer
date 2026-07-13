@@ -46,9 +46,7 @@ public partial class LanguageParser
     {
         TriangleResolver resolver = (TriangleResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -61,7 +59,7 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "triangle");
                     break;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -102,9 +100,7 @@ public partial class LanguageParser
     {
         SmoothTriangleResolver resolver = (SmoothTriangleResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -122,6 +118,6 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "smooth triangle");
                     break;
             }
-        }
+        });
     }
 }

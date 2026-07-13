@@ -45,9 +45,7 @@ public partial class LanguageParser
     {
         HeightFieldResolver resolver = (HeightFieldResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -62,9 +60,9 @@ public partial class LanguageParser
                     resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "torus");
+                    HandleSurfaceClause(clause, resolver, "height field");
                     break;
             }
-        }
+        });
     }
 }

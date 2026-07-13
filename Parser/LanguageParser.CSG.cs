@@ -70,9 +70,7 @@ public partial class LanguageParser
     {
         CsgSurfaceResolver resolver = (CsgSurfaceResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Tag)
             {
@@ -134,6 +132,6 @@ public partial class LanguageParser
                 default:
                     throw new Exception($"Internal error: unknown {clause.Tag} property found on a CSG object.");
             }
-        }
+        });
     }
 }

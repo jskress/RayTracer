@@ -2,19 +2,19 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
-        <LangVersion>13</LangVersion>
+        <LangVersion>14</LangVersion>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="Lex" Version="1.1.4" />
-      <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="14.8.1" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="SkiaSharp" Version="2.88.8" />
+      <PackageReference Include="Lex" Version="1.2.0" />
+      <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="14.14.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+      <PackageReference Include="SkiaSharp" Version="4.150.0" />
       <PackageReference Include="Typography.OpenFont.NetCore" Version="1.0.0" />
     </ItemGroup>
 

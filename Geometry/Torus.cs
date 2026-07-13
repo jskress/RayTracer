@@ -14,10 +14,10 @@ public class Torus : Surface
     /// </summary>
     public double MajorRadius
     {
-        get => _majorRadius;
+        get => field;
         set
         {
-            _majorRadius = value;
+            field = value;
             _majorSquared = value * value;
         }
     }
@@ -27,16 +27,14 @@ public class Torus : Surface
     /// </summary>
     public double MinorRadius
     {
-        get => _minorRadius;
+        get => field;
         set
         {
-            _minorRadius = value;
+            field = value;
             _minorSquared = value * value;
         }
     }
 
-    private double _majorRadius;
-    private double _minorRadius;
     private double _majorSquared;
     private double _minorSquared;
 
@@ -49,12 +47,13 @@ public class Torus : Surface
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         double length = ray.Direction.Magnitude;
+        Vector direction = ray.Direction.Unit;
         double ox = ray.Origin.X;
         double oy = ray.Origin.Y;
         double oz = ray.Origin.Z;
-        double dx = ray.Direction.X;
-        double dy = ray.Direction.Y;
-        double dz = ray.Direction.Z;
+        double dx = direction.X;
+        double dy = direction.Y;
+        double dz = direction.Z;
         double oySquared = oy * oy;
         double dySquared = dy * dy;
         double crossY = oy * dy;
@@ -92,8 +91,8 @@ public class Torus : Surface
         Vector vector = distance.Near(0)
             ? new Vector(0, 0, 0)
             : new Vector(
-                _majorRadius * x / distance, 0,
-                _majorRadius * z / distance);
+                MajorRadius * x / distance, 0,
+                MajorRadius * z / distance);
 
         return new Vector(point) - vector;
     }

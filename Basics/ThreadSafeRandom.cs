@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace RayTracer.Basics;
 
 /// <summary>
@@ -5,7 +7,7 @@ namespace RayTracer.Basics;
 /// </summary>
 public class ThreadSafeRandom
 {
-    private static readonly Dictionary<int, ThreadSafeRandom> Generators = new ();
+    private static readonly ConcurrentDictionary<int, ThreadSafeRandom> Generators = new ();
     private static readonly ThreadSafeRandom Shared = new ();
 
     /// <summary>
@@ -18,17 +20,9 @@ public class ThreadSafeRandom
     /// <returns>The appropriate random number generator.</returns>
     public static ThreadSafeRandom GetGenerator(int? seed = null)
     {
-        ThreadSafeRandom rng = Shared;
-
-        if (seed.HasValue)
-        {
-            int value = seed.Value;
-
-            if (!Generators.TryGetValue(value, out rng))
-                Generators[value] = rng = new ThreadSafeRandom(value);
-        }
-
-        return rng; 
+        return seed.HasValue
+            ? Generators.GetOrAdd(seed.Value, value => new ThreadSafeRandom(value))
+            : Shared;
     }
 
     private readonly Random _random;

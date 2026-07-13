@@ -123,9 +123,18 @@ public class RenderContext
         Width = options.Width ?? Width;
         Height = options.Height ?? Height;
         Gamma = options.Gamma ?? Gamma;
-        ApplyGamma = !options.NoGamma ?? ApplyGamma;
-        ReportGamma = options.ReportGamma ?? ReportGamma;
-        SuppressAllShadows = options.NoShadows ?? SuppressAllShadows;
+
+        // These are one-directional CLI overrides: passing the flag forces the setting on;
+        // not passing it leaves whatever the scene's own `context { }` block configured.
+        if (options.NoGamma)
+            ApplyGamma = false;
+
+        if (options.ReportGamma)
+            ReportGamma = true;
+
+        if (options.NoShadows)
+            SuppressAllShadows = true;
+
         BitsPerChannel = options.BitsPerChannel;
         Grayscale = options.Grayscale;
         AntiAliasing = options.AntiAliasing;

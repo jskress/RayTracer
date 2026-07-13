@@ -49,10 +49,7 @@ public partial class LanguageParser
     {
         CylinderResolver resolver = (CylinderResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
-            HandleExtrudedSurfaceClause(clause, resolver, "cylinder");
+        HandleEntryClause(resolver, clause, clause => HandleExtrudedSurfaceClause(clause, resolver, "cylinder"));
     }
 
     /// <summary>
@@ -92,10 +89,7 @@ public partial class LanguageParser
     {
         ConicResolver resolver = (ConicResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
-            HandleExtrudedSurfaceClause(clause, resolver, "conic");
+        HandleEntryClause(resolver, clause, clause => HandleExtrudedSurfaceClause(clause, resolver, "conic"));
     }
 
     /// <summary>
