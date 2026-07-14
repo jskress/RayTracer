@@ -1,0 +1,64 @@
+// A scene to test a blob's negative-strength components.  A negative-strength component
+// carves into its neighbors instead of adding to them: here, two merged positive lobes have
+// a negative sphere pressed into the top of their join, leaving a visible dent/crater
+// rather than a third bulge.  The camera is swung about 30 degrees around the blob (rather
+// than shooting it flat-on) so the dent reads as a three-quarter view, with clear shading
+// across its depth, instead of a flat, symmetric silhouette.  The light is placed off to the
+// side (rather than near the camera) so it rakes across the crater instead of flattening
+// its shadows, and the carving component's strength is bumped up for a more visible dent.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Blob Negative Strength Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test a blob with a negative-strength component carving a dent.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-3.5, 3.2, -6.06]
+    look at [0, 1.3, 0]
+    field of view 40
+}
+
+point light {
+    location [6, 6, -3]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+blob {
+    threshold 0.3
+    sphere {
+        center [-1.1, 0, 0]
+        radius 1.3
+        strength 1
+    }
+    sphere {
+        center [1.1, 0, 0]
+        radius 1.3
+        strength 1
+    }
+    sphere {
+        center [0, 0.95, 0]
+        radius 1.1
+        strength -1.6
+    }
+    material {
+        pigment [0.85, 0.35, 0.25]
+        diffuse 0.7
+        specular 0.5
+        shininess 100
+        reflective 0.1
+    }
+    translate [0, 1.3, 0]
+}

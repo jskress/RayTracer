@@ -26,7 +26,7 @@ public partial class LanguageParser
 
         _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
-            'black', 'blend', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick',
+            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick',
             'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
@@ -41,12 +41,13 @@ public partial class LanguageParser
             'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
-            'position', 'productions', 'quad', 'radians', 'radii', 'reflective',
+            'position', 'productions', 'quad', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'square', 'startBranch','stripes', 'svg',
-            'text', 'thin', 'title', 'to', 'top', 'toroidal', 'torus', 'toVertical',
+            'specular', 'sphere', 'spherical', 'square', 'startBranch', 'strength', 'stripes',
+            'svg', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up',
             'vector', 'vertical', 'view', 'warning', 'width', 'with', 'wood', 'wrinkles',
@@ -410,6 +411,35 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Blob clauses.
+        blobSphereEntryClause:
+        [
+            { center > _expression } |
+            { radius > _expression } |
+            { strength > _expression }
+        ] ?? 'Expecting a sphere component property here.'
+        blobCylinderEntryClause:
+        [
+            { from > _expression } |
+            { to > _expression } |
+            { radius > _expression } |
+            { strength > _expression }
+        ] ?? 'Expecting a cylinder component property here.'
+        startBlobClause:
+        {
+            blob > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "blob" here.'
+        }
+        blobEntryClause:
+        [
+            { threshold > _expression } |
+            { sphere > openBrace ?? 'Expecting an open brace after "sphere" here.' } |
+            { cylinder > openBrace ?? 'Expecting an open brace after "cylinder" here.' } |
+            surfaceEntryClause
+        ]
+
         // Text clauses.
         fontWeightClause:
         [
@@ -611,6 +641,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
+            startBlobClause => 'blob' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -648,6 +679,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
+            startBlobClause => 'blob' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -679,6 +711,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
+            startBlobClause => 'blob' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -714,7 +747,7 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
-                startTextClause |
+                startBlobClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
@@ -739,6 +772,7 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
+            startBlobClause           => 'HandleStartBlobClause' |
             startTextClause           => 'HandleStartTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
             startHeightFieldClause    => 'HandleStartHeightFieldClause' |

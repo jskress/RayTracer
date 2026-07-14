@@ -24,6 +24,6 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 ### To-Dos for Surfaces:
 - [ ] Normal perturbation.
-- [ ] Other surfaces (blobs, sweeps, etc.)
+- [ ] Other surfaces (sweeps, etc.)
 
 More to come...

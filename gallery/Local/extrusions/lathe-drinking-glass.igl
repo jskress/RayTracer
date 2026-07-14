@@ -1,0 +1,55 @@
+// A scene to test a lathe shaped like a drinking glass: a genuinely hollow profile (outer
+// wall up, a rolled rim lip curving over the top, then an inner wall back down to a curved
+// interior floor) rather than a solid revolved lump, so you can see straight down into the
+// empty interior at the opening.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Lathe Drinking Glass Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test a hollow drinking-glass shaped lathe.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [3.2, 2.3, -4.3]
+    look at [0, 1.06, 0]
+    field of view 35
+}
+
+point light {
+    location [-6, 8, -8]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}
+
+lathe {
+    path {
+        move to 0, 0
+        line to 0.5, 0
+        line to 0.55, 2.0
+        curve 0.6, 2.05, 0.58, 2.1 to 0.5, 2.08
+        line to 0.44, 0.25
+        quad 0.2, 0.16 to 0, 0.15
+    }
+    material {
+        pigment [0.9, 0.95, 1.0]
+        diffuse 0.1
+        ambient 0.05
+        specular 0.9
+        shininess 300
+        reflective 0.1
+        transparency 0.9
+        ior Glass
+    }
+    translate [0, 0.02, 0]
+}
