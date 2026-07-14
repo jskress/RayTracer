@@ -261,6 +261,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/extrusions/lathe-drinking-glass.png">
+      <img alt="Lathe Drinking Glass Test" height="120" src="Local/extrusions/lathe-drinking-glass.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/extrusions/lathe-drinking-glass.igl">Lathe Drinking Glass Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/extrusions/lathe-trophy.png">
+      <img alt="Lathe Trophy Test" height="120" src="Local/extrusions/lathe-trophy.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/extrusions/lathe-trophy.igl">Lathe Trophy Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/heightfield.png">
       <img alt="Height Field Test" height="120" src="Local/heightfield.png" width="160"/>
     </a></td>
@@ -362,6 +378,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/torus.igl">Torus Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/blob.png">
+      <img alt="Blob Test" height="120" src="Local/blob.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/blob.igl">Blob Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/blob-negative-strength.png">
+      <img alt="Blob Negative Strength Test" height="120" src="Local/blob-negative-strength.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/blob-negative-strength.igl">Blob Negative Strength Test</a>
     </td>
   </tr>
 </table>

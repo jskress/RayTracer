@@ -70,6 +70,9 @@ public partial class LanguageParser
             case "lathe":
                 resolver.SurfaceResolvers.Add(ParseLatheClause(clause));
                 break;
+            case "blob":
+                resolver.SurfaceResolvers.Add(ParseBlobClause(clause));
+                break;
             case "text":
                 resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                 break;
