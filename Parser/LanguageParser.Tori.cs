@@ -45,9 +45,7 @@ public partial class LanguageParser
     {
         TorusResolver resolver = (TorusResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -59,6 +57,6 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "torus");
                     break;
             }
-        }
+        });
     }
 }

@@ -1,3 +1,5 @@
+using MathNet.Numerics;
+using RayTracer.Extensions;
 
 namespace RayTracer.Graphics;
 
@@ -7,17 +9,14 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class CubicCurve : IPathSegment
 {
-    private const double OneThird = 1d / 3d;
-
-    private static readonly double Sqrt3 = Math.Sqrt(3d);
-
     /// <summary>
-    /// This property holds the second control point of the curve.
+    /// This property exposes the points that define this segment.
     /// </summary>
-    public TwoDPoint ControlPoint2 { get; private set; }
+    public TwoDPoint[] Points => [_start, _cp1, _cp2, _end];
 
     private TwoDPoint _start;
     private TwoDPoint _cp1;
+    private TwoDPoint _cp2;
     private TwoDPoint _end;
     private double[] _xCoefficients;
     private double[] _yCoefficients;
@@ -38,7 +37,7 @@ public class CubicCurve : IPathSegment
     {
         _start = start;
         _cp1 = cp1;
-        ControlPoint2 = cp2;
+        _cp2 = cp2;
         _end = end;
         _xCoefficients = [
             -start.X + 3 * cp1.X + -3 * cp2.X + end.X,
@@ -59,7 +58,7 @@ public class CubicCurve : IPathSegment
     /// </summary>
     public void Reverse()
     {
-        SetPoints(_end, ControlPoint2, _cp1, _start);
+        SetPoints(_end, _cp2, _cp1, _start);
     }
 
     /// <summary>
@@ -179,64 +178,19 @@ public class CubicCurve : IPathSegment
     /// This method solves the cubic equation for the given set of coefficients.  The
     /// roots returned are guaranteed to be in the [0, 1] interval.
     /// </summary>
-    /// <param name="coefficients">The coefficients to use in determining the roots.</param>
+    /// <param name="coefficients">The coefficients to use in determining the roots, given
+    /// in descending order (the t^3 term first).</param>
     /// <returns>The roots of the equation solution.</returns>
     private static double[] CubicRoots(double[] coefficients)
     {
-        double a = coefficients[1] / coefficients[0];
-        double b = coefficients[2] / coefficients[0];
-        double c = coefficients[3] / coefficients[0];
-        double aThird = a / 3;
-        double q = (3 * b - Math.Pow(a, 2)) / 9;
-        double r = (9 * a * b - 27 * c - 2 * Math.Pow(a, 3)) / 54;
-        double discriminant = Math.Pow(q, 3) + Math.Pow(r, 2);
-        double t0;
-        double t1 = -1;
-        double t2 = -1;
+        // MathNet.Numerics.Polynomial expects coefficients in ascending order (the
+        // constant term first), the opposite of how we build them above.
+        Polynomial polynomial = new (coefficients.Reverse().ToArray());
 
-        if (discriminant >= 0)
-        {
-            double sqrtDiscriminant = Math.Sqrt(discriminant);
-            double plusR = r + sqrtDiscriminant;
-            double minusR = r - sqrtDiscriminant;
-            double s = Sign(plusR) * Math.Pow(Math.Abs(plusR), OneThird);
-            double t = Sign(minusR) * Math.Pow(Math.Abs(minusR), OneThird);
-            double negAThird = -aThird;
-            double sPlusT = s + t;
-            double imaginary = Math.Abs(Sqrt3 * (s - t) / 2);
-
-            t0 = negAThird + sPlusT;
-
-            if (imaginary == 0)
-                t1 = negAThird - sPlusT / 2;
-        }
-        else
-        {
-            double th = Math.Acos(r / Math.Sqrt(-Math.Pow(q, 3)));
-            double twiceSqrtNegQ = 2 * Math.Sqrt(-q);
-
-            t0 = twiceSqrtNegQ * Math.Cos(th / 3) - aThird;
-            t1 = twiceSqrtNegQ * Math.Cos((th + 2 * Math.PI) / 3) - aThird;
-            t2 = twiceSqrtNegQ * Math.Cos((th + 4 * Math.PI) / 3) - aThird;
-        }
-
-        return new [] { t0, t1, t2 }
+        return polynomial.Roots()
+            .Where(root => root.Imaginary.Near(0))
+            .Select(root => root.Real)
             .Where(t => t is >= 0 and <= 1)
             .ToArray();
-    }
-
-    /// <summary>
-    /// This method returns the sign of the given number, either <c>-1</c>, if <c>number</c>
-    /// is less than zero, or <c>1</c> if not.
-    /// </summary>
-    /// <remarks>
-    /// We have this because it behaves slightly differently than the equivalent <c>Math</c>
-    /// method.
-    /// </remarks>
-    /// <param name="number">The number to return the sign value for.</param>
-    /// <returns><c>-1</c> or <c>1</c>, based on the number.</returns>
-    private static double Sign(double number)
-    {
-        return number < 0 ? -1 : 1;
     }
 }

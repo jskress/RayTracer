@@ -17,11 +17,11 @@ public static class RenderCommand
     {
         Terminal.OutputLevel = options.OutputLevel;
 
-        LanguageParser parser = new LanguageParser(options.InputFileName);
-        ImageRenderer renderer = parser.Parse();
-
         try
         {
+            LanguageParser parser = new LanguageParser(options.InputFileName);
+            ImageRenderer renderer = parser.Parse();
+
             renderer?.Render(options);
         }
         catch (Exception exception)

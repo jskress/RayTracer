@@ -1,19 +1,20 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 using RayTracer.Graphics;
 
 namespace RayTracer.Geometry;
 
 /// <summary>
-/// This is the base class for a surface that is used to render a general path segment.
-/// It is assumed that the path segment is on the X/Z plane.
+/// This is the base class for a surface that is used to render a general path segment for
+/// an extrusion.
 /// </summary>
-public class PathSurface
+public class ExtrusionPathSurface
 {
     private readonly IPathSegment _segment;
     private readonly double _minimumY;
     private readonly double _maximumY;
 
-    public PathSurface(IPathSegment segment, double minimumY, double maximumY)
+    public ExtrusionPathSurface(IPathSegment segment, double minimumY, double maximumY)
     {
         _segment = segment;
         _minimumY = minimumY;
@@ -69,9 +70,17 @@ public class PathSurface
     /// if the intersection is too low or too high for this surface.</returns>
     private double GetRayDistance(Ray ray, TwoDPoint point)
     {
-        double distance = (point.X - ray.Origin.X) / ray.Direction.X;
+        bool xIsZero = ray.Direction.X.Near(0);
+        bool zIsZero = ray.Direction.Z.Near(0);
+
+        if (xIsZero && zIsZero)
+            return double.NaN;
+
+        double distance = !xIsZero
+            ? (point.X - ray.Origin.X) / ray.Direction.X
+            : (point.Y - ray.Origin.Z) / ray.Direction.Z;
         double y = ray.Origin.Y + distance * ray.Direction.Y;
-         
+
         return y < _minimumY || y > _maximumY ? double.NaN : distance;
     }
 }

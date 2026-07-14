@@ -48,9 +48,7 @@ public partial class LanguageParser
     {
         GroupResolver resolver = (GroupResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Tag)
             {
@@ -77,6 +75,9 @@ public partial class LanguageParser
                     break;
                 case "extrusion":
                     resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
+                    break;
+                case "lathe":
+                    resolver.SurfaceResolvers.Add(ParseLatheClause(clause));
                     break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
@@ -110,12 +111,12 @@ public partial class LanguageParser
                     resolver.SurfaceResolvers.Add(ParseGroupClause(clause));
                     break;
                 case "surface":
-                    HandleSurfaceClause(clause, resolver, "CSG object");
+                    HandleSurfaceClause(clause, resolver, "group");
                     break;
                 default:
                     throw new Exception($"Internal error: unknown {clause.Tag} property found on a group object.");
             }
-        }
+        });
     }
 
     /// <summary>
@@ -125,29 +126,33 @@ public partial class LanguageParser
     /// <returns>The group interval.</returns>
     private static GroupInterval CreateGroupInterval(Clause clause)
     {
-        string variableName = clause.Text(1) == "="
-            ? clause.Text()
-            : null;
+        ClauseReader reader = clause.Reader();
+        string variableName = null;
+        Token token = reader.PeekToken();
+
+        if (!BounderToken.LeftParen.Matches(token) && !BounderToken.OpenBracket.Matches(token))
+        {
+            variableName = reader.NextText();
+
+            reader.NextToken(); // The assignment operator.
+        }
+
+        Token startToken = reader.NextToken();
+        bool startIsOpen = BounderToken.LeftParen.Matches(startToken);
+        Term startTerm = (Term) reader.NextExpression();
+
+        reader.NextToken(); // The comma.
+
+        Term endTerm = (Term) reader.NextExpression();
+        Token endToken = reader.NextToken();
+        bool endIsOpen = BounderToken.RightParen.Matches(endToken);
         Term stepTerm = null;
 
-        if (variableName != null)
-            clause.Tokens.RemoveRange(0, 2);
-        
-        Token token = clause.Tokens.First();
-        Term startTerm = clause.Term();
-        Term endTerm = clause.Term(1);
-        bool startIsOpen = BounderToken.LeftParen.Matches(token);
-        bool endIsOpen = BounderToken.LeftParen.Matches(clause.Tokens[2]);
-
-        clause.Expressions.RemoveRange(0, 2);
-        clause.Tokens.RemoveRange(0, 3);
-
-        if (clause.Text() == "by")
+        if (reader.HasMoreTokens)
         {
-            stepTerm = clause.Term();
+            reader.NextToken(); // The "by" keyword.
 
-            clause.Expressions.RemoveFirst();
-            clause.Tokens.RemoveFirst();
+            stepTerm = (Term) reader.NextExpression();
         }
 
         return new GroupInterval(variableName, startTerm, endTerm, stepTerm, startIsOpen, endIsOpen);

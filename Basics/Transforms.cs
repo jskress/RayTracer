@@ -10,11 +10,11 @@ public static class Transforms
     /// <summary>
     /// This method creates a uniformly translating matrix based on the given factor.
     /// </summary>
-    /// <param name="distance">The desired scale in all directions.</param>
-    /// <returns>The appropriate scaling matrix.</returns>
+    /// <param name="distance">The desired distance in all directions.</param>
+    /// <returns>The appropriate translation matrix.</returns>
     public static Matrix Translate(double distance)
     {
-        return Scale(distance, distance, distance);
+        return Translate(distance, distance, distance);
     }
 
     /// <summary>

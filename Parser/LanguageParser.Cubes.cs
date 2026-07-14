@@ -41,13 +41,6 @@ public partial class LanguageParser
     /// This method is used to handle an item clause of a cube block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
-    private void HandleCubeEntryClause(Clause clause)
-    {
-        CubeResolver resolver = (CubeResolver) _context.CurrentTarget;
-
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
-            HandleSurfaceClause(clause, resolver, "cube");
-    }
+    private void HandleCubeEntryClause(Clause clause) =>
+        HandleGenericSurfaceEntryClause((CubeResolver) _context.CurrentTarget, clause, "cube");
 }

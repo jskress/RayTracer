@@ -1,4 +1,5 @@
 using ImageMagick;
+using ImageMagick.Formats;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Utils;
@@ -77,13 +78,16 @@ public class ImageFile
     {
         if (HttpUtils.LooksLikeUrl(_fileName))
         {
-            HttpResponseMessage response = HttpUtils.Get(_fileName);
+            using HttpResponseMessage response = HttpUtils.Get(_fileName);
 
             response.EnsureSuccessStatusCode();
 
-            return response.Content.ReadAsStreamAsync()
-                .GetAwaiter()
-                .GetResult();
+            MemoryStream memoryStream = new MemoryStream();
+
+            response.Content.ReadAsStream().CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            return memoryStream;
         }
 
         return File.OpenRead(_fileName);
@@ -94,27 +98,48 @@ public class ImageFile
     /// indicated by its extension.
     /// </summary>
     /// <param name="canvas">The image to save.</param>
+    /// <param name="context">The current render context, which carries the gamma
+    /// correction and color channel depth to render the colors with.</param>
     /// <param name="info">The information about the image.</param>
-    public void Save(Canvas canvas, ImageInformation info = null)
+    public void Save(Canvas canvas, RenderContext context, ImageInformation info = null)
     {
         using MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
         using IPixelCollection<float> pixels = image.GetPixels();
 
+        // Our channel values are quantized to the context's configured channel depth, so
+        // scale them back up to fill out the 16-bit range each Magick.NET pixel expects.
+        double scale = 65535.0 / context.MaxColorChannelValue;
+
         foreach (IPixel<float> pixel in pixels)
         {
             Color color = canvas.GetPixel(pixel.X, pixel.Y);
-            float red = (float) Math.Round(color.Red * 65535);
-            float green = (float) Math.Round(color.Green * 65535);
-            float blue = (float) Math.Round(color.Blue * 65535);
-            float alpha = (float) Math.Round(color.Alpha * 65535);
+            (int red, int green, int blue, int alpha) = color.ToChannelValues(context);
 
-            pixel.SetValues([red, green, blue, alpha]);
+            pixel.SetValues([
+                (float) (red * scale), (float) (green * scale),
+                (float) (blue * scale), (float) (alpha * scale)
+            ]);
         }
 
         if (info != null)
             AddInformation(image, info);
 
-        image.Write(_fileName);
+        // Left to its own heuristics, Magick.NET's PNG writer will opportunistically
+        // shrink low-color-variety, fully-opaque images down to a palette or gray+alpha
+        // encoding.  That's a fine size optimization in general, but ImageFile.Load()
+        // reads pixels back assuming a true RGB(A) layout, so those alternate encodings
+        // cause the alpha channel to come back corrupted (near zero) on the next load.
+        // Forcing true-color-with-alpha at full 16-bit depth keeps the round trip lossless.
+        if (MagickFormatInfo.Create(new FileInfo(_fileName))?.Format == MagickFormat.Png)
+        {
+            image.Write(_fileName, new PngWriteDefines
+            {
+                ColorType = ColorType.TrueColorAlpha,
+                BitDepth = 16
+            });
+        }
+        else
+            image.Write(_fileName);
     }
 
     /// <summary>

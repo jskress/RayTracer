@@ -7,72 +7,40 @@ namespace RayTracer.Parser;
 /// </summary>
 public partial class LanguageParser
 {
-    private readonly Dictionary<string, Action> _blockStartHandlers = new ();
-    private readonly Dictionary<string, Action<Clause>> _clauseHandlers = new ();
-
     /// <summary>
-    /// This method is used to fill up our dispatch tables.
+    /// This method is used to build the dispatcher that routes each top-level clause we
+    /// parse to whichever method knows how to handle it, based on its tag.
     /// </summary>
-    private void FillDispatchTables()
+    /// <returns>The clause dispatcher to use for top-level clauses.</returns>
+    private ClauseDispatcher CreateDispatcher()
     {
-        // Block starters.
-        _blockStartHandlers.Add(nameof(HandleStartContextClause), HandleStartContextClause);
-        _blockStartHandlers.Add(nameof(HandleStartSceneClause), HandleStartSceneClause);
-
-        // Clause handlers.
-        _clauseHandlers.Add(nameof(HandleStartCameraClause), HandleStartCameraClause);
-        _clauseHandlers.Add(nameof(HandleStartPointLightClause), HandleStartPointLightClause);
-        _clauseHandlers.Add(nameof(HandleStartPlaneClause), HandleStartPlaneClause);
-        _clauseHandlers.Add(nameof(HandleStartSphereClause), HandleStartSphereClause);
-        _clauseHandlers.Add(nameof(HandleStartCubeClause), HandleStartCubeClause);
-        _clauseHandlers.Add(nameof(HandleStartCylinderClause), HandleStartCylinderClause);
-        _clauseHandlers.Add(nameof(HandleStartConicClause), HandleStartConicClause);
-        _clauseHandlers.Add(nameof(HandleStartTorusClause), HandleStartTorusClause);
-        _clauseHandlers.Add(nameof(HandleStartExtrusionClause), HandleStartExtrusionClause);
-        _clauseHandlers.Add(nameof(HandleStartTextClause), HandleStartTextClause);
-        _clauseHandlers.Add(nameof(HandleStartLSystemClause), HandleStartLSystemClause);
-        _clauseHandlers.Add(nameof(HandleStartHeightFieldClause), HandleStartHeightFieldClause);
-        _clauseHandlers.Add(nameof(HandleStartTriangleClause), HandleStartTriangleClause);
-        _clauseHandlers.Add(nameof(HandleStartSmoothTriangleClause), HandleStartSmoothTriangleClause);
-        _clauseHandlers.Add(nameof(HandleStartParallelogramClause), HandleStartParallelogramClause);
-        _clauseHandlers.Add(nameof(HandleStartObjectFileClause), HandleStartObjectFileClause);
-        _clauseHandlers.Add(nameof(HandleStartObjectClause), HandleStartObjectClause);
-        _clauseHandlers.Add(nameof(HandleStartCsgClause), HandleStartCsgClause);
-        _clauseHandlers.Add(nameof(HandleStartGroupClause), HandleStartGroupClause);
-        _clauseHandlers.Add(nameof(HandleBackgroundClause), HandleBackgroundClause);
-        _clauseHandlers.Add(nameof(HandleSetThingToVariableClause), HandleSetThingToVariableClause);
-        _clauseHandlers.Add(nameof(HandleSetVariableClause), HandleSetVariableClause);
-    }
-
-    /// <summary>
-    /// This method is used to process the given top-level clause.
-    /// </summary>
-    /// <param name="clause">The clause to process.</param>
-    /// <param name="blockTag">The name, if any, of the owning block clause.</param>
-    private void ProcessClause(Clause clause, string blockTag)
-    {
-        string tag = DetermineTag(clause, blockTag);
-
-        if (tag.StartsWith("HandleStart") && _blockStartHandlers.TryGetValue(tag, out Action action))
-            action();
-        else if (_clauseHandlers.TryGetValue(tag, out Action<Clause> clauseAction))
-            clauseAction(clause);
-        else
-            throw new Exception($"No handler registered for the {tag} tag.");
-    }
-
-    /// <summary>
-    /// This is a helper method for ensuring we have a clause tag.
-    /// </summary>
-    /// <param name="clause">The clause to start with.</param>
-    /// <param name="blockTag">The name of the owning block clause.</param>
-    /// <returns></returns>
-    private static string DetermineTag(Clause clause, string blockTag)
-    {
-        string tag = clause.Tag;
-
-        return string.IsNullOrEmpty(tag)
-            ? $"Handle{blockTag[..1].ToUpperInvariant()}{blockTag[1..]}"
-            : tag;
+        return new ClauseDispatcher()
+            .On(nameof(HandleStartContextClause), _ => HandleStartContextClause())
+            .On(nameof(HandleStartSceneClause), _ => HandleStartSceneClause())
+            .On(nameof(HandleStartCameraClause), HandleStartCameraClause)
+            .On(nameof(HandleStartPointLightClause), HandleStartPointLightClause)
+            .On(nameof(HandleStartPlaneClause), HandleStartPlaneClause)
+            .On(nameof(HandleStartSphereClause), HandleStartSphereClause)
+            .On(nameof(HandleStartCubeClause), HandleStartCubeClause)
+            .On(nameof(HandleStartCylinderClause), HandleStartCylinderClause)
+            .On(nameof(HandleStartConicClause), HandleStartConicClause)
+            .On(nameof(HandleStartTorusClause), HandleStartTorusClause)
+            .On(nameof(HandleStartExtrusionClause), HandleStartExtrusionClause)
+            .On(nameof(HandleStartLatheClause), HandleStartLatheClause)
+            .On(nameof(HandleStartTextClause), HandleStartTextClause)
+            .On(nameof(HandleStartLSystemClause), HandleStartLSystemClause)
+            .On(nameof(HandleStartHeightFieldClause), HandleStartHeightFieldClause)
+            .On(nameof(HandleStartTriangleClause), HandleStartTriangleClause)
+            .On(nameof(HandleStartSmoothTriangleClause), HandleStartSmoothTriangleClause)
+            .On(nameof(HandleStartParallelogramClause), HandleStartParallelogramClause)
+            .On(nameof(HandleStartObjectFileClause), HandleStartObjectFileClause)
+            .On(nameof(HandleStartObjectClause), HandleStartObjectClause)
+            .On(nameof(HandleStartCsgClause), HandleStartCsgClause)
+            .On(nameof(HandleStartGroupClause), HandleStartGroupClause)
+            .On(nameof(HandleBackgroundClause), HandleBackgroundClause)
+            .On(nameof(HandleRenderClause), HandleRenderClause)
+            .On(nameof(HandleSetThingToVariableClause), HandleSetThingToVariableClause)
+            .On(nameof(HandleSetVariableClause), HandleSetVariableClause)
+            .OnUnhandled(clause => throw new Exception($"No handler registered for the {clause.Tag} tag."));
     }
 }

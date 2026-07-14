@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Extensions;
@@ -14,6 +15,65 @@ namespace RayTracer.Parser;
 /// </summary>
 public partial class LanguageParser
 {
+    /// <summary>
+    /// This is a helper method for the common case in a surface's entry-clause handler
+    /// where none of that surface's own properties matched, which leaves a transform
+    /// clause as the only other valid possibility.  If a transform clause doesn't match
+    /// either, the input is neither a valid property nor a valid transform, so we raise a
+    /// proper error here instead of silently consuming nothing — which would otherwise
+    /// leave the caller's block-parsing loop spinning forever on the same unconsumed
+    /// token.
+    /// </summary>
+    /// <param name="resolver">The resolver whose transform should be set.</param>
+    private void HandleTransformOnlyEntryClause<TObject>(SurfaceResolver<TObject> resolver)
+        where TObject : Surface, new()
+    {
+        Instructions.Transforms.TransformResolver transformResolver = ParseTransformClause();
+
+        // A `{*}` (zero-or-more) transform clause "succeeds" with an empty resolver even
+        // when nothing was actually consumed, so a null check alone isn't enough here.
+        if (transformResolver == null || transformResolver.TransformCreators.Count == 0)
+            throw CreateUnexpectedInputException("Expecting a valid property here.");
+
+        resolver.TransformResolver = transformResolver;
+    }
+
+    /// <summary>
+    /// This is a helper method for the common shape every surface's entry-clause handler
+    /// follows: if the clause is null, it must be a transform; otherwise, hand it to the
+    /// given handler for the surface's own properties.  Centralizing this means a new
+    /// surface type can't forget the null check the way several already did (see
+    /// <see cref="HandleTransformOnlyEntryClause{TObject}"/>).
+    /// </summary>
+    /// <param name="resolver">The resolver being built up.</param>
+    /// <param name="clause">The clause to process, or <c>null</c> if none of the surface's
+    /// own properties matched.</param>
+    /// <param name="handlePropertyClause">The action that handles a non-null clause.</param>
+    private void HandleEntryClause<TObject>(
+        SurfaceResolver<TObject> resolver, Clause clause, Action<Clause> handlePropertyClause)
+        where TObject : Surface, new()
+    {
+        if (clause == null) // We must have hit a transform property...
+            HandleTransformOnlyEntryClause(resolver);
+        else
+            handlePropertyClause(clause);
+    }
+
+    /// <summary>
+    /// This is a helper method for surface types that have no properties of their own
+    /// beyond the generic ones every surface supports (see <see cref="HandleSurfaceClause"/>).
+    /// </summary>
+    /// <param name="resolver">The resolver being built up.</param>
+    /// <param name="clause">The clause to process, or <c>null</c> if none of the surface's
+    /// own properties matched.</param>
+    /// <param name="noun">A noun to use for the object type in case of errors.</param>
+    private void HandleGenericSurfaceEntryClause<TObject>(
+        SurfaceResolver<TObject> resolver, Clause clause, string noun)
+        where TObject : Surface, new()
+    {
+        HandleEntryClause(resolver, clause, clause => HandleSurfaceClause(clause, resolver, noun));
+    }
+
     /// <summary>
     /// This method is used to handle a clause for general surface properties.
     /// </summary>

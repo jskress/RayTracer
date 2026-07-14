@@ -60,7 +60,7 @@ public class RenderInstruction : Instruction
             surface.PrepareForRendering();
 
         FinalizeSurfaceData(context, scene.Surfaces);
- 
+
         Canvas = camera.Render(context, scene);
     }
 

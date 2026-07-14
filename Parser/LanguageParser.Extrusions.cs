@@ -48,12 +48,13 @@ public partial class LanguageParser
     {
         ExtrusionResolver resolver = (ExtrusionResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else if (clause.Text() == "path")
-            resolver.GeneralPathResolver = ParseGeneralPathClause();
-        else
-            HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
+        HandleEntryClause(resolver, clause, clause =>
+        {
+            if (clause.Text() == "path")
+                resolver.GeneralPathResolver = ParseGeneralPathClause();
+            else
+                HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
+        });
     }
 
     /// <summary>

@@ -55,9 +55,7 @@ public partial class LanguageParser
     {
         LSystemResolver resolver = (LSystemResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             Term term = clause.Term();
 
@@ -85,7 +83,7 @@ public partial class LanguageParser
                     HandleSurfaceClause(clause, resolver, "l-system");
                     break;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -145,6 +143,9 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private void HandleLSystemRenderingControlsEntryClause(Clause clause)
     {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid rendering controls property here.");
+
         LSystemRenderingControlsResolver resolver = (LSystemRenderingControlsResolver) _context.CurrentTarget;
         Term term = clause.Term();
 
@@ -186,42 +187,41 @@ public partial class LanguageParser
     /// <param name="clause">The clause to process.</param>
     private static void ParseCommandMappingsClause(LSystemResolver resolver, Clause clause)
     {
-        int tokenIndex = 2;
+        ClauseReader reader = clause.Reader();
 
-        while (tokenIndex < clause.Tokens.Count && !BounderToken.CloseBrace.Matches(clause.Tokens[tokenIndex]))
+        reader.NextToken(); // The "commands" keyword.
+        reader.NextToken(); // The opening brace.
+
+        while (!reader.SkipIfNextTextIs("}"))
         {
-            Rune commandCharacter = ParseCommandCharacter(clause, tokenIndex);
+            Rune commandCharacter = ParseCommandCharacter(reader.NextToken());
 
-            tokenIndex += 2;
+            reader.NextToken(); // The arrow.
 
-            TurtleCommand command = Enum.Parse<TurtleCommand>(clause.Tokens[tokenIndex].Text, true);
+            TurtleCommand command = Enum.Parse<TurtleCommand>(reader.NextText(), true);
 
             resolver.CommandMappings.Add(new LSystemRenderCommandMapping
             {
                 CommandCharacter = commandCharacter,
                 TurtleCommand = command
             });
-
-            tokenIndex++;
         }
     }
 
     /// <summary>
     /// This method is used to parse the command character for a render command mapping.
     /// </summary>
-    /// <param name="clause">The clause to pull the variable from.</param>
-    /// <param name="tokenIndex">The index at which to expect the variable.</param>
-    /// <returns>The token index following the variable.</returns>
-    private static Rune ParseCommandCharacter(Clause clause, int tokenIndex)
+    /// <param name="token">The token to pull the command character from.</param>
+    /// <returns>The command character found in the token.</returns>
+    private static Rune ParseCommandCharacter(Token token)
     {
-        string command = clause.Tokens[tokenIndex].Text;
-        Rune[] runes = command.AsRunes();
+        Rune[] runes = token.Text.AsRunes();
 
         if (runes.IsNullOrEmpty() || runes.Length > 1)
         {
             throw new TokenException("The command character must contain exactly one Unicode character.")
             {
-                Token = clause.Tokens[tokenIndex]
+                Token = token
             };
         }
 
@@ -236,25 +236,26 @@ public partial class LanguageParser
     private static List<ProductionRuleSpecResolver> ParseProductionRulesClause(Clause clause)
     {
         List<ProductionRuleSpecResolver> rules = [];
+        ClauseReader reader = clause.Reader();
 
-        int tokenIndex = 2;
+        reader.NextToken(); // The "productions" keyword.
+        reader.NextToken(); // The opening brace.
 
-        while (tokenIndex < clause.Tokens.Count && !BounderToken.CloseBrace.Matches(clause.Tokens[tokenIndex]))
+        while (!reader.SkipIfNextTextIs("}"))
         {
             ProductionRuleSpecResolver resolver = new ProductionRuleSpecResolver();
 
-            tokenIndex = ParseProductionRuleSpecKeyInfo(
-                resolver, clause, tokenIndex);
-            tokenIndex = ParseProductionRuleProbability(resolver, clause, tokenIndex);
+            ParseProductionRuleSpecKeyInfo(resolver, reader);
+            ParseProductionRuleProbability(resolver, reader);
+
+            reader.NextToken(); // The arrow.
 
             resolver.ProductionResolver = new TermResolver<string>
             {
-                Term = (Term) clause.Expressions.RemoveFirst()
+                Term = (Term) reader.NextExpression()
             };
 
             rules.Add(resolver);
-
-            tokenIndex++;
         }
 
         return rules;
@@ -265,13 +266,12 @@ public partial class LanguageParser
     /// specification.
     /// </summary>
     /// <param name="resolver">The resolver to add the variable resolver to.</param>
-    /// <param name="clause">The clause to pull the variable from.</param>
-    /// <param name="tokenIndex">The index at which to expect the variable.</param>
-    /// <returns>The token index following the variable.</returns>
-    private static int ParseProductionRuleSpecKeyInfo(
-        ProductionRuleSpecResolver resolver, Clause clause, int tokenIndex)
+    /// <param name="reader">The reader to pull the variable from.</param>
+    private static void ParseProductionRuleSpecKeyInfo(
+        ProductionRuleSpecResolver resolver, ClauseReader reader)
     {
-        string key = clause.Tokens[tokenIndex].Text.RemoveAllWhitespace();
+        Token keyToken = reader.NextToken();
+        string key = keyToken.Text.RemoveAllWhitespace();
         Rune[] runes = key.AsRunes();
         int leftIndex = Array.IndexOf(runes, new Rune('<'));
         int rightIndex = Array.IndexOf(runes, new Rune('>'));
@@ -293,7 +293,7 @@ public partial class LanguageParser
         {
             throw new TokenException($"The production rule key is not valid. {message}")
             {
-                Token = clause.Tokens[tokenIndex]
+                Token = keyToken
             };
         }
 
@@ -307,35 +307,33 @@ public partial class LanguageParser
         {
             Value = right == null ? null : ProductionBranch.Parse(right)
         };
-
-        return tokenIndex + 1;
     }
 
     /// <summary>
     /// This method is used to parse the probability clause for a production rule.
     /// </summary>
     /// <param name="resolver">The resolver to add the probability resolver to.</param>
-    /// <param name="clause">The clause to pull the probability from.</param>
-    /// <param name="tokenIndex">The index at which to expect the probability.</param>
-    /// <returns>The token index following the probability clause.</returns>
-    private static int ParseProductionRuleProbability(
-        ProductionRuleSpecResolver resolver, Clause clause, int tokenIndex)
+    /// <param name="reader">The reader to pull the probability from.</param>
+    private static void ParseProductionRuleProbability(
+        ProductionRuleSpecResolver resolver, ClauseReader reader)
     {
-        if (tokenIndex >= clause.Tokens.Count || !BounderToken.LeftParen.Matches(clause.Tokens[tokenIndex]))
-            return tokenIndex;
+        if (!BounderToken.LeftParen.Matches(reader.PeekToken()))
+            return;
 
-        Term term = (Term) clause.Expressions.RemoveFirst();
-        bool isPercent = clause.Tokens[++tokenIndex] == OperatorToken.Modulo;
+        reader.NextToken(); // The opening parenthesis.
+
+        Term term = (Term) reader.NextExpression();
+        bool isPercent = OperatorToken.Modulo.Matches(reader.PeekToken());
 
         if (isPercent)
         {
             resolver.BreakValueResolver = new PercentResolver { Term = term };
 
-            tokenIndex++;
+            reader.NextToken(); // The percent sign.
         }
         else
             resolver.BreakValueResolver = new TermResolver<double> { Term = term };
 
-        return tokenIndex + 1;
+        reader.NextToken(); // The closing parenthesis.
     }
 }

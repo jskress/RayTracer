@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Core;
 
 namespace Tests;
 
@@ -27,5 +28,18 @@ public class TestRays
         Assert.IsTrue(new Point(3, 3, 4).Matches(ray.At(1)));
         Assert.IsTrue(new Point(1, 3, 4).Matches(ray.At(-1)));
         Assert.IsTrue(new Point(4.5, 3, 4).Matches(ray.At(2.5)));
+    }
+
+    [TestMethod]
+    public void TestContains()
+    {
+        Ray ray = new Ray(Point.Zero, Directions.Right);
+        
+        Assert.IsTrue(ray.Contains(new Point(3, 0, 0)));
+        Assert.IsFalse(ray.Contains(new Point(-2, 0, 0)));
+        Assert.IsFalse(ray.Contains(new Point(0, 1, 0)));
+        Assert.IsFalse(ray.Contains(new Point(0, 0, 1)));
+        Assert.IsFalse(ray.Contains(new Point(0, -1, 0)));
+        Assert.IsFalse(ray.Contains(new Point(0, 0, -1)));
     }
 }

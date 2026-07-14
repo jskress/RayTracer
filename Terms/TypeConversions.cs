@@ -69,6 +69,9 @@ internal static class TypeConversions
         if (targetType == typeof(int) && value is double doubleValue)
             return (CoercionResult.OfProperType, Convert.ToInt32(doubleValue));
 
+        if (targetType == typeof(short) && value is double shortValue)
+            return (CoercionResult.OfProperType, Convert.ToInt16(shortValue));
+
         return targetType == typeof(string)
             ? (CoercionResult.OfProperType, value.ToString())
             : (CoercionResult.CouldNotCoerce, value);

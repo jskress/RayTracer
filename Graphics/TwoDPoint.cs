@@ -30,6 +30,11 @@ public record TwoDPoint(double X, double Y)
         return new Point(X, 0, Y);
     }
 
+    public override string ToString()
+    {
+        return $"({X}, {Y})";
+    }
+
     /// <summary>
     /// This method is used to create a 2D point from one in 3D by projecting it to the
     /// X/Y plane.
@@ -93,9 +98,9 @@ public record TwoDPoint(double X, double Y)
     /// <param name="left">The point to subtract from.</param>
     /// <param name="right">The point to subtract.</param>
     /// <returns>The new point.</returns>
-    public static TwoDPoint operator -(TwoDPoint left, TwoDPoint right)
+    public static TwoDVector operator -(TwoDPoint left, TwoDPoint right)
     {
-        return new TwoDPoint(left.X - right.X, left.Y - right.Y);
+        return new TwoDVector(left.X - right.X, left.Y - right.Y);
     }
 
     /// <summary>

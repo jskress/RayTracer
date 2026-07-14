@@ -37,7 +37,7 @@ public static class HttpUtils
     public static HttpResponseMessage Get(string url)
     {
         Uri uri = new (url);
-        HttpRequestMessage request = new (HttpMethod.Get, uri);
+        using HttpRequestMessage request = new (HttpMethod.Get, uri);
 
         request.Headers.Add("Host", uri.Host);
         request.Headers.Add("User-Agent", "RayTracer/1.0.1");

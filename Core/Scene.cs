@@ -80,29 +80,30 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The color to use.</returns>
     public Color GetHitColor(Intersection intersection, int remaining)
     {
-        return Lights.Aggregate(Colors.Black, (color, light) =>
+        Color surfaceColor = Lights.Aggregate(Colors.Black, (color, light) =>
         {
             bool isInShadow = IsInShadow(light, intersection.OverPoint);
-            Color surfaceColor = light.ApplyPhong(
+
+            return color + light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal,
                 intersection.Surface, isInShadow);
-            Color reflectedColor = GetReflectionColor(intersection, remaining);
-            Color refractedColor = GetRefractedColor(intersection, remaining);
-            Material material = intersection.Surface.Material;
-            Color refColor;
-
-            if (material is {Reflective: > 0, Transparency: > 0})
-            {
-                double reflectance = intersection.Reflectance;
-
-                refColor = reflectedColor * reflectance +
-                           refractedColor * (1 - reflectance);
-            }
-            else
-                refColor = reflectedColor + refractedColor;
-
-            return surfaceColor + refColor + color;
         });
+        Color reflectedColor = GetReflectionColor(intersection, remaining);
+        Color refractedColor = GetRefractedColor(intersection, remaining);
+        Material material = intersection.Surface.Material ?? Material.Default;
+        Color refColor;
+
+        if (material is {Reflective: > 0, Transparency: > 0})
+        {
+            double reflectance = intersection.Reflectance;
+
+            refColor = reflectedColor * reflectance +
+                       refractedColor * (1 - reflectance);
+        }
+        else
+            refColor = reflectedColor + refractedColor;
+
+        return surfaceColor + refColor;
     }
 
     /// <summary>
@@ -134,7 +135,7 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetReflectionColor(Intersection intersection, int remaining)
     {
-        double reflective = intersection.Surface.Material.Reflective;
+        double reflective = (intersection.Surface.Material ?? Material.Default).Reflective;
 
         if (remaining < 1 || reflective == 0)
             return Colors.Black;
@@ -153,7 +154,7 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetRefractedColor(Intersection intersection, int remaining)
     {
-        double transparency = intersection.Surface.Material.Transparency;
+        double transparency = (intersection.Surface.Material ?? Material.Default).Transparency;
 
         if (remaining < 1 || transparency == 0)
             return Colors.Black;

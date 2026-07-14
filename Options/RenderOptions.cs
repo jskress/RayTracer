@@ -81,14 +81,14 @@ public class RenderOptions
         HelpText = "The width of the image to generate.")]
     public int? Width
     {
-        get => _width;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is < 1 or > 16384)
                 throw new ArgumentException("Width must be between 1 and 16,384.");
 
-            _width = value;
+            field = value;
         }
     }
 
@@ -96,14 +96,14 @@ public class RenderOptions
         HelpText = "The height of the image to generate.")]
     public int? Height
     {
-        get => _height;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is < 1 or > 16384)
                 throw new ArgumentException("Height must be between 1 and 16,384.");
 
-            _height = value;
+            field = value;
         }
     }
 
@@ -111,29 +111,29 @@ public class RenderOptions
         HelpText = "The rate, in frames per second, to use when generating a series of images.")]
     public int FrameRate
     {
-        get => _frameRate;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is < 1)
                 throw new ArgumentException("Frame rate must be at least 1.");
 
-            _frameRate = value;
+            field = value;
         }
-    }
+    } = 24;
 
     [Option('m', "frame", Required = false,
         HelpText = "The specific frame in an animation to render.")]
     public long? Frame
     {
-        get => _frame;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is < 0)
                 throw new ArgumentException("Frame must be at least 0.");
 
-            _frame = value;
+            field = value;
         }
     }
 
@@ -141,50 +141,55 @@ public class RenderOptions
         HelpText = "The number of bits to use for each channel in colors in the image output file.")]
     public int BitsPerChannel
     {
-        get => _bitsPerChannel;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is not 8 and not 16)
                 throw new ArgumentException("Bits per color channel must be either 8 or 16.");
 
-            _bitsPerChannel = value;
+            field = value;
         }
-    }
+    } = 8;
 
     [Option('g', "gamma", Required = false,
         HelpText = "The gamma correction to apply to colors in the image output file.")]
     public double? Gamma
     {
-        get => _gamma;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             if (value is < 0 or > 5)
                 throw new ArgumentException("Gamma correction must be between 0 and 5.");
 
-            _gamma = value;
+            field = value;
         }
     }
 
+    // Note: these are plain, non-nullable `bool` (rather than `bool?`) because
+    // CommandLineParser 2.9.1 doesn't support `bool?` as a zero-argument switch — it treats
+    // it as expecting an explicit value, consumes whatever token follows on the command line
+    // as that value, and fails with a "bad format" error (which also corrupts parsing of
+    // every option after it) as soon as that token isn't literally "true"/"false".  Each of
+    // these is a one-directional override (there's no CLI flag to force the opposite), so a
+    // plain `bool` works: `false` (the unset default) means "don't override whatever the
+    // scene's own `context { }` block configured," exactly like the `?? existing value`
+    // pattern these used to rely on.  See `RenderContext.ApplyOptions`.
     [Option("no-gamma", Required = false,
         HelpText = "If specified, gamma correction will not be applied to colors in the image output file.")]
-    public bool? NoGamma
-    {
-        get => !_applyGamma;
-        // ReSharper disable once UnusedMember.Global
-        set => _applyGamma = !value;
-    }
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public bool NoGamma { get; set; }
 
     [Option("report-gamma", Required = false,
         HelpText = "If specified, the gamma correction value will be included in the image output file, if supported.")]
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public bool? ReportGamma { get; set; }
+    public bool ReportGamma { get; set; }
 
     [Option("no-shadows", Required = false,
         HelpText = "Disable shadow rendering on all objects.")]
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public bool? NoShadows { get; set; }
+    public bool NoShadows { get; set; }
 
     [Option("grayscale", Required = false,
         HelpText = "Grayscale the image when written to image file.")]
@@ -225,13 +230,6 @@ public class RenderOptions
     private string _outputFileName;
     private string _outputFileExtension;
     private string _outputImageFormat = "png";
-    private int? _width;
-    private int? _height;
-    private int _frameRate = 24;
-    private long? _frame;
-    private int _bitsPerChannel = 8;
-    private double? _gamma;
-    private bool? _applyGamma;
 
     /// <summary>
     /// This is a helper method for properly deriving the right output file name based on
@@ -241,7 +239,7 @@ public class RenderOptions
     private string GetOutputFileName()
     {
         if (_outputFileName != null)
-            return _outputDirectory;
+            return _outputFileName;
 
         string dir = _outputDirectory ?? Path.GetDirectoryName(_inputFileName);
         string name = Path.GetFileNameWithoutExtension(_inputFileName)!;

@@ -30,8 +30,7 @@ public class WoodPattern : Pattern
     /// <param name="seed">The seed value to set.</param>
     public override void SetSeed(int seed)
     {
-        if (Turbulence is not null)
-            Turbulence.Seed ??= seed;
+        Turbulence?.Seed ??= seed;
     }
 
     /// <summary>

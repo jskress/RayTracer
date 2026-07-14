@@ -20,7 +20,7 @@ public class TupleTerm : Term
         _x = terms[0];
         _y = terms[1];
         _z = terms.Count > 2 ? terms[2] : null;
-        _w = terms.Count == 3 ? null : terms[3];
+        _w = terms.Count > 3 ? terms[3] : null;
     }
 
     /// <summary>

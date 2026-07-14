@@ -21,7 +21,7 @@ public class FontsOptions
         HelpText = "Shows information about all the glyphs in the indicated font face.")]
     public string ShowGlyphsFor
     {
-        get => _showGlyphsFor;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
@@ -29,7 +29,7 @@ public class FontsOptions
             // font face is known.
             ShowGlyphs = FontsCommand.ParseExistingFaceSpec(value);
 
-            _showGlyphsFor = value;
+            field = value;
         }
     }
 
@@ -42,7 +42,7 @@ public class FontsOptions
         HelpText = "Shows kerning information stored in the font catalog for the indicated font face.")]
     public string ShowKerningFor
     {
-        get => _showKerningFor;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
@@ -50,7 +50,7 @@ public class FontsOptions
             // font face is known.
             ShowKerning = FontsCommand.ParseExistingFaceSpec(value);
 
-            _showKerningFor = value;
+            field = value;
         }
     }
 
@@ -58,14 +58,14 @@ public class FontsOptions
         HelpText = "Fetches a font face from Google Fonts.")]
     public string FetchGoogleFontFace
     {
-        get => _fetchFontFace;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             // This will verify that the format spec is correct.
             FetchFontFace = FontsCommand.ParseFaceSpec(value);
 
-            _fetchFontFace = value;
+            field = value;
         }
     }
 
@@ -79,14 +79,14 @@ public class FontsOptions
         HelpText = "Imports a local true type file as a font face.")]
     public string ImportLocalFontFace
     {
-        get => _importFontFace;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             // This will verify that the format spec is correct.
             ImportFontFace = FontsCommand.ParseFaceSpec(value);
 
-            _importFontFace = value;
+            field = value;
         }
     }
 
@@ -113,7 +113,7 @@ public class FontsOptions
         HelpText = "Adds a kerning pair to the font catalog for the indicated font face.  Requires the --pair option.")]
     public string AddKerningFor
     {
-        get => _addKerningFor;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
@@ -121,7 +121,7 @@ public class FontsOptions
             // font face is known.
             AddKerningPair = FontsCommand.ParseExistingFaceSpec(value);
 
-            _addKerningFor = value;
+            field = value;
         }
     }
 
@@ -134,7 +134,7 @@ public class FontsOptions
         HelpText = "Removes a kerning pair from the font catalog for the indicated font face.  Requires the --pair option.")]
     public string RemoveKerningFor
     {
-        get => _removeKerningFor;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
@@ -142,7 +142,7 @@ public class FontsOptions
             // font face is known.
             RemoveKerningPair = FontsCommand.ParseExistingFaceSpec(value);
 
-            _removeKerningFor = value;
+            field = value;
         }
     }
 
@@ -155,14 +155,14 @@ public class FontsOptions
         HelpText = "Specifies the details of the kerning pair to add to, or remove from, the font catalog for the indicated font face.  Must be specified with the --add-kerning-for or --remove-kerning-pair option.")]
     public string KerningPairToAdd
     {
-        get => _kerningPair;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
             // This will verify that the format spec is correct.
             KerningPair = FontsCommand.ParseKernSpec(value);
 
-            _kerningPair = value;
+            field = value;
         }
     }
 
@@ -175,7 +175,7 @@ public class FontsOptions
         HelpText = "Remove a font face from the ray tracer's font catalog.")]
     public string RemoveFontFaceFromCatalog
     {
-        get => _removeFontFace;
+        get => field;
         // ReSharper disable once UnusedMember.Global
         set
         {
@@ -183,7 +183,7 @@ public class FontsOptions
             // font face is known.
             RemoveFontFace = FontsCommand.ParseExistingFaceSpec(value);
 
-            _removeFontFace = value;
+            field = value;
         }
     }
 
@@ -191,13 +191,4 @@ public class FontsOptions
     /// This property provides the font face identifier for the face to remove.
     /// </summary>
     public FaceIdentifier RemoveFontFace { get; private set; }
-
-    private string _showGlyphsFor;
-    private string _showKerningFor;
-    private string _fetchFontFace;
-    private string _importFontFace;
-    private string _addKerningFor;
-    private string _removeKerningFor;
-    private string _kerningPair;
-    private string _removeFontFace;
 }

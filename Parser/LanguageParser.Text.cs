@@ -49,9 +49,7 @@ public partial class LanguageParser
     {
         TextSolidResolver resolver = (TextSolidResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (ToCmd(clause))
             {
@@ -71,10 +69,10 @@ public partial class LanguageParser
                     resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "extrusion");
+                    HandleSurfaceClause(clause, resolver, "text");
                     break;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -206,7 +204,7 @@ public partial class LanguageParser
         KerningResolver resolver = new KerningResolver();
 
         // The terms will be in sets of three, each representing a single pair.
-        for (int index = 0; index < clause.Expressions.Count; index += 2)
+        for (int index = 0; index < clause.Expressions.Count; index += 3)
         {
             Term left = clause.Term(index);
             Term right = clause.Term(index + 1);

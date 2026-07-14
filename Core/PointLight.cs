@@ -34,7 +34,7 @@ public class PointLight : NamedThing
     /// <returns>The resulting color.</returns>
     public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, bool inShadow)
     {
-        Material material = surface.Material;
+        Material material = surface.Material ?? Material.Default;
         Color color = material.Pigment.GetColorFor(surface, point) * Color;
         Vector vector = (Location - point).Unit;
         Color ambientColor = color * material.Ambient;

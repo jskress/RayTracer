@@ -62,6 +62,26 @@ public class BoundingBox
     }
 
     /// <summary>
+    /// This method returns a new bounding box that encloses this one after being
+    /// transformed by the given matrix.  A transform (e.g. rotation) can turn an
+    /// axis-aligned box into one that is no longer axis-aligned, so the result is the
+    /// axis-aligned box that encloses all 8 of this box's corners once transformed.
+    /// </summary>
+    /// <param name="matrix">The matrix to transform this bounding box by.</param>
+    /// <returns>The transformed, axis-aligned bounding box.</returns>
+    internal BoundingBox TransformedBy(Matrix matrix)
+    {
+        BoundingBox box = new ();
+
+        foreach (double x in new[] { _xMin, _xMax })
+        foreach (double y in new[] { _yMin, _yMax })
+        foreach (double z in new[] { _zMin, _zMax })
+            box.Add(matrix * new Point(x, y, z));
+
+        return box;
+    }
+
+    /// <summary>
     /// This method adjusts the extents of the bounding box by some amount.  The defailt is
     /// a small fraction to help make sure we don't miss any intersections.
     /// </summary>

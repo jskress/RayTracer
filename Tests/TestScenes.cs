@@ -30,6 +30,7 @@ public class TestScenes
         };
         Sphere inner = new ()
         {
+            Material = new Material(),
             Transform = Transforms.Scale(0.5)
         };
         Scene scene = new ();
@@ -127,6 +128,79 @@ public class TestScenes
         Color expected = new (0.1, 0.1, 0.1);
 
         Assert.IsTrue(expected.Matches(color));
+    }
+
+    [TestMethod]
+    public void TestGetHitColorWithMultipleLightsIsAdditive()
+    {
+        // GetHitColor() aggregates each light's contribution independently, so lighting a
+        // surface with two lights together must equal the sum of lighting it with each
+        // light alone (ambient included, since it's applied per-light in ApplyPhong()).
+        Scene scene = DefaultScene();
+        PointLight secondLight = new () { Location = new Point(10, 10, -10) };
+        Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
+        Surface surface = scene.Surfaces[0];
+        Intersection intersectionForFirstLightOnly = new (surface, 4);
+
+        intersectionForFirstLightOnly.PrepareUsing(ray, [intersectionForFirstLightOnly]);
+
+        Color colorWithFirstLightOnly = scene.GetHitColor(intersectionForFirstLightOnly, 0);
+
+        Scene soloSecondLightScene = DefaultScene();
+
+        soloSecondLightScene.Lights[0] = secondLight;
+
+        Intersection intersectionForSecondLightOnly = new (soloSecondLightScene.Surfaces[0], 4);
+
+        intersectionForSecondLightOnly.PrepareUsing(ray, [intersectionForSecondLightOnly]);
+
+        Color colorWithSecondLightOnly = soloSecondLightScene.GetHitColor(intersectionForSecondLightOnly, 0);
+
+        scene.Lights.Add(secondLight);
+
+        Intersection intersectionForBothLights = new (surface, 4);
+
+        intersectionForBothLights.PrepareUsing(ray, [intersectionForBothLights]);
+
+        Color colorWithBothLights = scene.GetHitColor(intersectionForBothLights, 0);
+        Color expected = colorWithFirstLightOnly + colorWithSecondLightOnly;
+
+        Assert.IsTrue(expected.Matches(colorWithBothLights));
+    }
+
+    [TestMethod]
+    public void TestGetHitColorWithMultipleLightsRespectsPerLightShadows()
+    {
+        // A blocker sphere sits between the target point and one light, but not the other.
+        // GetHitColor() must apply each light's own shadow result to that light's own
+        // contribution, not mix them up or apply one light's shadow state to both.
+        PointLight blockedLight = new () { Location = new Point(0, 0, -20) };
+        PointLight visibleLight = new () { Location = new Point(3, 0, -10) };
+        Scene scene = new ();
+        Sphere target = new ();
+        Sphere blocker = new () { Transform = Transforms.Translate(0, 0, -10) };
+        Ray ray = new (new Point(0, 0, -5), new Vector(0, 0, 1));
+
+        scene.Lights.Add(blockedLight);
+        scene.Lights.Add(visibleLight);
+        scene.Surfaces.Add(blocker);
+        scene.Surfaces.Add(target);
+
+        Intersection intersection = new (target, 4);
+
+        intersection.PrepareUsing(ray, [intersection]);
+
+        Assert.IsTrue(scene.IsInShadow(blockedLight, intersection.OverPoint));
+        Assert.IsFalse(scene.IsInShadow(visibleLight, intersection.OverPoint));
+
+        Color actual = scene.GetHitColor(intersection, 0);
+        Color expected =
+            blockedLight.ApplyPhong(
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, true) +
+            visibleLight.ApplyPhong(
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, false);
+
+        Assert.IsTrue(expected.Matches(actual));
     }
 
     [TestMethod]

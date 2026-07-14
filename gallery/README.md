@@ -1,7 +1,7 @@
 ## Gallery of images
 
 All the images collected from the parts of the gallery are shown below.  Clicking on each
-thumbnail will show the full sized image.  Clicking the image title will show the source
+thumbnail will show the full-sized image.  Clicking the image title will show the source
 `.igl` file that generated it.
 
 ### Ray Tracer Challenge Book
@@ -250,6 +250,14 @@ thumbnail will show the full sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/extrusions/extrusion2.igl">Another Extrusion Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/extrusions/lathe.png">
+      <img alt="Lathe Test" height="120" src="Local/extrusions/lathe.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/extrusions/lathe.igl">Lathe Test</a>
     </td>
   </tr>
   <tr style="border: none;">

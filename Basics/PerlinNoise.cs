@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using RayTracer.Extensions;
 
 namespace RayTracer.Basics;
@@ -8,8 +9,8 @@ namespace RayTracer.Basics;
 public class PerlinNoise
 {
     private const int TableSize = 256;
-    
-    private static readonly Dictionary<int, PerlinNoise> NoiseGenerators = new ();
+
+    private static readonly ConcurrentDictionary<int, PerlinNoise> NoiseGenerators = new ();
 
     /// <summary>
     /// This method returns an appropriate noise generator.
@@ -21,20 +22,10 @@ public class PerlinNoise
     /// <returns>The appropriate noise generator.</returns>
     public static PerlinNoise GetNoise(int? seed = null)
     {
-        PerlinNoise noise = DefaultInstance;
-
-        if (seed.HasValue)
-        {
-            int value = seed.Value;
-
-            if (!NoiseGenerators.TryGetValue(value, out noise))
-            {
-                NoiseGenerators[value] = noise = new PerlinNoise(
-                    ThreadSafeRandom.GetGenerator(value));
-            }
-        }
-
-        return noise; 
+        return seed.HasValue
+            ? NoiseGenerators.GetOrAdd(
+                seed.Value, value => new PerlinNoise(ThreadSafeRandom.GetGenerator(value)))
+            : DefaultInstance;
     }
 
     private static readonly PerlinNoise DefaultInstance = new (ThreadSafeRandom.GetGenerator());

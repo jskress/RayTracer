@@ -8,6 +8,16 @@ namespace RayTracer.Graphics;
 /// </summary>
 public class Line : IPathSegment
 {
+    /// <summary>
+    /// This property exposes the points that define this segment.
+    /// </summary>
+    public TwoDPoint[] Points => [_start, _end];
+
+    /// <summary>
+    /// This property exposes this line's constant 2D normal vector.
+    /// </summary>
+    public TwoDVector Normal => _normal;
+
     private TwoDPoint _start;
     private TwoDPoint _end;
     private Parallelogram _parallelogram;

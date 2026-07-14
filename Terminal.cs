@@ -167,11 +167,17 @@ public static class Terminal
 
         if (exception is TokenException tokenException)
         {
-            int line = tokenException.Token.Line;
-            int column = tokenException.Token.Column;
+            int line = tokenException.Line;
+            int column = tokenException.Column;
 
             if (line > 0)
-                Console.WriteLine($"[{line}:{column}] -> {tokenException.Token}");
+            {
+                string location = tokenException.Token != null
+                    ? $"[{line}:{column}] -> {tokenException.Token}"
+                    : $"[{line}:{column}]";
+
+                Console.WriteLine(location);
+            }
         }
 
         if (OutputLevel is OutputLevel.Verbose)

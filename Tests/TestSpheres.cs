@@ -41,9 +41,9 @@ public class TestSpheres
     {
         Point origin = new (0, 0, -5);
         Vector direction = new (0, 0, 1);
-        Ray ray = new (origin, direction);
+        Ray ray = new (origin, Directions.In);
         Sphere sphere = new ();
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         sphere.Intersect(ray, intersections);
 
@@ -81,7 +81,7 @@ public class TestSpheres
         Vector direction = new (0, 0, 1);
         Ray ray = new (origin, direction);
         Sphere sphere = new ();
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         sphere.Intersect(ray, intersections);
 
@@ -99,7 +99,7 @@ public class TestSpheres
         Vector direction = new (0, 0, 1);
         Ray ray = new (origin, direction);
         Sphere sphere = new ();
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         sphere.Intersect(ray, intersections);
 
@@ -118,7 +118,7 @@ public class TestSpheres
         Ray ray = new (origin, direction);
         Matrix transform = Transforms.Scale(2);
         Sphere sphere = new () { Transform = transform };
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         sphere.Intersect(ray, intersections);
 
@@ -135,7 +135,7 @@ public class TestSpheres
         Ray ray = new (origin, direction);
         Matrix transform = Transforms.Translate(5, 0, 0);
         Sphere sphere = new () { Transform = transform };
-        List<Intersection> intersections = new ();
+        List<Intersection> intersections = [];
 
         sphere.Intersect(ray, intersections);
 
@@ -196,12 +196,10 @@ public class TestSpheres
     public void TestMaterial()
     {
         Sphere sphere = new ();
-        Material material = new ();
 
-        Assert.IsNotNull(sphere.Material);
-        Assert.IsTrue(material.Matches(sphere.Material));
+        Assert.IsNull(sphere.Material);
 
-        material = new Material { Ambient = 1 };
+        Material material = new Material { Ambient = 1 };
 
         sphere.Material = material;
 

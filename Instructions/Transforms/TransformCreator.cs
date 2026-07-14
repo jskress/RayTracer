@@ -19,16 +19,15 @@ public abstract class TransformCreator : Resolver<Matrix>
     /// </summary>
     public TransformAxis Axis
     {
-        get => _axis;
+        get => field;
         set
         {
-            _axis = value;
+            field = value;
 
             AxisChangedTo(value);
         }
     }
 
-    private TransformAxis _axis;
     private Type[] _expectedTypes;
 
     /// <summary>

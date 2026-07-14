@@ -39,7 +39,8 @@ public class GeneralPath : IDisposable
 
     private TwoDPoint _subPathStart = TwoDPoint.Zero;
     private TwoDPoint _cp = TwoDPoint.Zero;
-    private SKPath _skPath = new ();
+    private SKPathBuilder _pathBuilder = new ();
+    private SKPath _skPathSnapshot;
 
     /// <summary>
     /// This method is used to move the current point to a new location.
@@ -87,8 +88,9 @@ public class GeneralPath : IDisposable
         Add(point);
 
         _subPathStart = _cp = point;
- 
-        _skPath.MoveTo(point.ToSkPoint());
+
+        _pathBuilder.MoveTo(point.ToSkPoint());
+        InvalidateSnapshot();
 
         return this;
     }
@@ -170,7 +172,7 @@ public class GeneralPath : IDisposable
     /// <returns>This object, for fluency.</returns>
     public GeneralPath RelativeVerticalLineTo(double y)
     {
-        return LineTo(_cp with { X = _cp.Y + y });
+        return LineTo(_cp with { Y = _cp.Y + y });
     }
 
     /// <summary>
@@ -185,7 +187,8 @@ public class GeneralPath : IDisposable
 
         _cp = point;
 
-        _skPath.LineTo(point.ToSkPoint());
+        _pathBuilder.LineTo(point.ToSkPoint());
+        InvalidateSnapshot();
 
         return this;
     }
@@ -282,8 +285,8 @@ public class GeneralPath : IDisposable
     {
         if (Segments.Last() is QuadCurve previousCurve)
         {
-            TwoDPoint previousControlPoint = previousCurve.Control;
-            TwoDPoint delta = _cp - previousControlPoint;
+            TwoDPoint previousControlPoint = previousCurve.Points[1];
+            TwoDVector delta = _cp - previousControlPoint;
 
             return QuadTo(_cp + delta, point);
         }
@@ -305,7 +308,8 @@ public class GeneralPath : IDisposable
 
         _cp = point;
 
-        _skPath.QuadTo(controlPoint.ToSkPoint(), point.ToSkPoint());
+        _pathBuilder.QuadTo(controlPoint.ToSkPoint(), point.ToSkPoint());
+        InvalidateSnapshot();
 
         return this;
     }
@@ -433,8 +437,8 @@ public class GeneralPath : IDisposable
     {
         if (Segments.Last() is CubicCurve previousCurve)
         {
-            TwoDPoint previousControlPoint = previousCurve.ControlPoint2;
-            TwoDPoint delta = _cp - previousControlPoint;
+            TwoDPoint previousControlPoint = previousCurve.Points[2];
+            TwoDVector delta = _cp - previousControlPoint;
 
             return CubicTo(_cp + delta, controlPoint2, point);
         }
@@ -458,7 +462,8 @@ public class GeneralPath : IDisposable
 
         _cp = point;
 
-        _skPath.CubicTo(controlPoint1.ToSkPoint(), controlPoint2.ToSkPoint(), point.ToSkPoint());
+        _pathBuilder.CubicTo(controlPoint1.ToSkPoint(), controlPoint2.ToSkPoint(), point.ToSkPoint());
+        InvalidateSnapshot();
 
         return this;
     }
@@ -476,7 +481,8 @@ public class GeneralPath : IDisposable
             _subPathStart = _cp;
         }
 
-        _skPath.Close();
+        _pathBuilder.Close();
+        InvalidateSnapshot();
 
         return this;
     }
@@ -488,23 +494,40 @@ public class GeneralPath : IDisposable
     /// <returns><c>true</c>, if the path contains the point, or <c>false</c>, if not.</returns>
     public bool Contains(TwoDPoint point)
     {
-        return _skPath.Contains((float) point.X, (float) point.Y);
+        _skPathSnapshot ??= _pathBuilder.Snapshot();
+
+        return _skPathSnapshot.Contains((float) point.X, (float) point.Y);
     }
 
     /// <summary>
-    /// This method is used to add the given point to our 2D bounding box.
+    /// This is a helper method for dropping our cached snapshot of the path builder's
+    /// current state whenever the path is mutated; it is rebuilt lazily on next use by
+    /// <see cref="Contains"/>.
     /// </summary>
-    /// <param name="point">The point to add.</param>
-    private void Add(TwoDPoint point)
+    private void InvalidateSnapshot()
     {
-        MinX = Math.Min(MinX, point.X);
-        MinY = Math.Min(MinY, point.Y);
-        MaxX = Math.Max(MaxX, point.X);
-        MaxY = Math.Max(MaxY, point.Y);
+        _skPathSnapshot?.Dispose();
+        _skPathSnapshot = null;
+    }
+
+    /// <summary>
+    /// This method is used to add the given points to our 2D bounding box.
+    /// </summary>
+    /// <param name="points">The points to add.</param>
+    private void Add(params TwoDPoint[] points)
+    {
+        foreach (TwoDPoint point in points)
+        {
+            MinX = Math.Min(MinX, point.X);
+            MinY = Math.Min(MinY, point.Y);
+            MaxX = Math.Max(MaxX, point.X);
+            MaxY = Math.Max(MaxY, point.Y);
+        }
     }
 
     /// <summary>
     /// This method is used to reverse the order of the segments in this path.
+    /// Each segment is also reversed.
     /// </summary>
     /// <returns>This object, for fluency.</returns>
     internal GeneralPath Reverse()
@@ -518,12 +541,40 @@ public class GeneralPath : IDisposable
     }
 
     /// <summary>
+    /// This method is used to add a preconfigured segment to the path.
+    /// </summary>
+    /// <param name="segment">The segment to add.</param>
+    private void AddSegment(IPathSegment segment)
+    {
+        if (segment.Points[0] != _cp)
+            MoveTo(segment.Points[0]);
+
+        switch (segment)
+        {
+            case Line line:
+                LineTo(line.Points[1]);
+                break;
+
+            case QuadCurve quadCurve:
+                QuadTo(quadCurve.Points[1], quadCurve.Points[2]);
+                break;
+
+            case CubicCurve cubicCurve:
+                CubicTo(cubicCurve.Points[1], cubicCurve.Points[2], cubicCurve.Points[3]);
+                break;
+        }
+    }
+
+    /// <summary>
     /// This method is used to properly clean up our resources.
     /// </summary>
     public void Dispose()
     {
-        _skPath?.Dispose();
-        _skPath = null;
+        _skPathSnapshot?.Dispose();
+        _skPathSnapshot = null;
+
+        _pathBuilder?.Dispose();
+        _pathBuilder = null;
 
         GC.SuppressFinalize(this);
     }

@@ -16,7 +16,7 @@ public class Extrusion : ExtrudedSurface, IDisposable
     /// </summary>
     public GeneralPath Path { get; set; }
 
-    private readonly List<PathSurface> _surfaces = [];
+    private readonly List<ExtrusionPathSurface> _surfaces = [];
 
     private Parallelogram _top;
     private Parallelogram _bottom;
@@ -29,7 +29,7 @@ public class Extrusion : ExtrudedSurface, IDisposable
     {
         _surfaces.Clear();
         _surfaces.AddRange(Path.Segments
-            .Select(segment => new PathSurface(segment, MinimumY, MaximumY)));
+            .Select(segment => new ExtrusionPathSurface(segment, MinimumY, MaximumY)));
 
         _top = null;
         _bottom = null;
@@ -107,7 +107,7 @@ public class Extrusion : ExtrudedSurface, IDisposable
     }
 
     /// <summary>
-    /// This method returns the normal for the cube.  It is assumed that the point will
+    /// This method returns the normal for the extrusion.  It is assumed that the point will
     /// have been transformed to surface-space coordinates.  The vector returned will
     /// also be in surface-space coordinates.
     /// </summary>

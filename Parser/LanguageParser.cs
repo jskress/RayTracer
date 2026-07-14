@@ -39,15 +39,17 @@ public partial class LanguageParser
 
     private readonly ParsingContext _context;
     private readonly Stack<Entry> _entries;
+    private readonly FailureTracker _failureTracker;
+    private readonly ClauseDispatcher _dispatcher;
 
     private string _lastFileName;
 
     public LanguageParser(string fileName)
     {
-        FillDispatchTables();
-
+        _dispatcher = CreateDispatcher();
         _entries = new Stack<Entry>();
         _context = new ParsingContext();
+        _failureTracker = new FailureTracker();
         _lastFileName = fileName;
 
         PushEntry(fileName);
@@ -64,7 +66,7 @@ public partial class LanguageParser
             {
                 HandleIncludes();
                 HandleIncludeEnd();
-                ProcessClause(LanguageDsl.ParseNextClause(CurrentParser), string.Empty);
+                _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
                 HandleIncludeEnd();
             }
 
@@ -86,8 +88,8 @@ public partial class LanguageParser
     private void ShowError(TokenException exception)
     {
         string fileName = _entries.IsEmpty() ? _lastFileName : PopEntry();
-        int line = exception.Token.Line;
-        int column = exception.Token.Column;
+        int line = exception.Line;
+        int column = exception.Column;
 
         while (_entries.Count > 0)
             PopEntry();
@@ -98,13 +100,44 @@ public partial class LanguageParser
         {
             string source = File.ReadAllLines(fileName)[line - 1]
                 .Replace("\t", "    ");
+            string location = exception.Token != null
+                ? $"{Path.GetFileName(fileName)}: [{line}:{column}] -> {exception.Token}"
+                : $"{Path.GetFileName(fileName)}: [{line}:{column}]";
 
-            Console.WriteLine($"{Path.GetFileName(fileName)}: [{line}:{column}] -> {exception.Token}");
+            Console.WriteLine(location);
             Console.WriteLine(source);
 
             if (column > 0)
                 Console.WriteLine($"{new string('-', column - 1)}^");
         }
+    }
+
+    /// <summary>
+    /// This is a helper method for raising a good error for unexpected input: one built
+    /// from whatever our failure tracker recorded as the furthest, most specific match
+    /// attempts, falling back to a generic message pointing at the next token if the
+    /// tracker has nothing recorded.
+    /// </summary>
+    /// <param name="fallbackMessage">The message to use if the failure tracker has nothing
+    /// recorded.</param>
+    /// <returns>The exception to throw; this method never returns normally.</returns>
+    private TokenException CreateUnexpectedInputException(string fallbackMessage)
+    {
+        string message = _failureTracker.BuildMessage();
+
+        if (message == null)
+        {
+            return new TokenException(fallbackMessage)
+            {
+                Token = CurrentParser.GetNextToken()
+            };
+        }
+
+        return new TokenException(message)
+        {
+            Line = _failureTracker.Line,
+            Column = _failureTracker.Column
+        };
     }
 
     /// <summary>
@@ -273,6 +306,7 @@ public partial class LanguageParser
             .Replace("\t", "    ");
 
         parser.SetSource(text.AsReader());
+        parser.FailureTracker = _failureTracker;
 
         _entries.Push(new Entry(fileName, parser));
     }

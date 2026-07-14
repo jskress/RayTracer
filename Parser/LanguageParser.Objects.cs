@@ -2,6 +2,8 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Surfaces.Extrusions;
+using RayTracer.Instructions.Surfaces.LSystems;
 
 namespace RayTracer.Parser;
 
@@ -41,16 +43,14 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to handle an item clause of a torus block.
+    /// This method is used to handle an item clause of an object file block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     private void HandleObjectFileEntryClause(Clause clause)
     {
         ObjectFileResolver resolver = (ObjectFileResolver) _context.CurrentTarget;
 
-        if (clause == null) // We must have hit a transform property...
-            resolver.TransformResolver = ParseTransformClause();
-        else
+        HandleEntryClause(resolver, clause, clause =>
         {
             switch (clause.Text())
             {
@@ -59,10 +59,10 @@ public partial class LanguageParser
                     resolver.FileNameResolver = new TermResolver<string> { Term = clause.Term() };
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "torus");
+                    HandleSurfaceClause(clause, resolver, "object file");
                     break;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -105,6 +105,18 @@ public partial class LanguageParser
                 return ParseConicClause(clause);
             case TorusResolver:
                 return ParseTorusClause(clause);
+            case LatheResolver:
+                return ParseLatheClause(clause);
+            case ExtrusionResolver:
+                return ParseExtrusionClause(clause);
+            case TextSolidResolver:
+                return ParseTextClause(clause);
+            case LSystemResolver:
+                return ParseLSystemClause(clause);
+            case HeightFieldResolver:
+                return ParseHeightFieldClause(clause);
+            case ParallelogramResolver:
+                return ParseParallelogramClause(clause);
             case TriangleResolver:
                 return ParseTriangleClause(clause);
             case SmoothTriangleResolver:
@@ -113,6 +125,8 @@ public partial class LanguageParser
                 return ParseObjectFileClause(clause);
             case CsgSurfaceResolver:
                 return ParseCsgClause(clause);
+            case GroupResolver:
+                return ParseGroupClause(clause);
             default:
                 throw new Exception($"Internal error: unknown resolver type found in an object reference.");
         }
