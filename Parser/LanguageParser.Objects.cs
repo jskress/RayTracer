@@ -2,6 +2,8 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Surfaces.Extrusions;
+using RayTracer.Instructions.Surfaces.LSystems;
 
 namespace RayTracer.Parser;
 
@@ -103,6 +105,18 @@ public partial class LanguageParser
                 return ParseConicClause(clause);
             case TorusResolver:
                 return ParseTorusClause(clause);
+            case LatheResolver:
+                return ParseLatheClause(clause);
+            case ExtrusionResolver:
+                return ParseExtrusionClause(clause);
+            case TextSolidResolver:
+                return ParseTextClause(clause);
+            case LSystemResolver:
+                return ParseLSystemClause(clause);
+            case HeightFieldResolver:
+                return ParseHeightFieldClause(clause);
+            case ParallelogramResolver:
+                return ParseParallelogramClause(clause);
             case TriangleResolver:
                 return ParseTriangleClause(clause);
             case SmoothTriangleResolver:
@@ -111,6 +125,8 @@ public partial class LanguageParser
                 return ParseObjectFileClause(clause);
             case CsgSurfaceResolver:
                 return ParseCsgClause(clause);
+            case GroupResolver:
+                return ParseGroupClause(clause);
             default:
                 throw new Exception($"Internal error: unknown resolver type found in an object reference.");
         }

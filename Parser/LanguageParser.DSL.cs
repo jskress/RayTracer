@@ -35,7 +35,7 @@ public partial class LanguageParser
             'font', 'from', 'gamma', 'gap', 'generations', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'intersection',
-            'ior', 'italic', 'kern', 'kerning', 'layer', 'layout', 'left', 'length',
+            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'once',
@@ -396,6 +396,20 @@ public partial class LanguageParser
             extrudedSurfaceEntryClause
         ]
 
+        // Lathe clauses.
+        startLatheClause:
+        {
+            lathe > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "lathe" here.'
+        }
+        latheEntryClause:
+        [
+            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            surfaceEntryClause
+        ]
+
         // Text clauses.
         fontWeightClause:
         [
@@ -596,6 +610,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startLatheClause => 'lathe' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -632,6 +647,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startLatheClause => 'lathe' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -662,6 +678,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startExtrusionClause => 'extrusion' |
+            startLatheClause => 'lathe' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -696,7 +713,8 @@ public partial class LanguageParser
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
-                startConicClause | startTorusClause | startExtrusionClause | startTextClause |
+                startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
+                startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
@@ -720,6 +738,7 @@ public partial class LanguageParser
             startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
+            startLatheClause          => 'HandleStartLatheClause' |
             startTextClause           => 'HandleStartTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
             startHeightFieldClause    => 'HandleStartHeightFieldClause' |

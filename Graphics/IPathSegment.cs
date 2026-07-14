@@ -17,13 +17,6 @@ public interface IPathSegment
     void Reverse();
 
     /// <summary>
-    /// This method is used to produce a copy of this path segment, but reversed, and with
-    /// points mirrored around the Y axis.
-    /// </summary>
-    /// <returns>A reversed copy of this segment.</returns>
-    IPathSegment ReversedMirrorCopy();
-
-    /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this bit of geometry.
     /// </summary>

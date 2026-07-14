@@ -17,14 +17,10 @@ public class Lathe : Surface, IDisposable
     /// </summary>
     public GeneralPath Path { get; set; }
 
-    /// <summary>
-    /// This property controls whether the path defined is only half of the shape.
-    /// </summary>
-    public bool NeedsReflection { get; set; } = true;
-
     private readonly List<LathePathSurface> _surfaces = [];
 
     private Cylinder _bounds;
+    private double _radius;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -32,32 +28,33 @@ public class Lathe : Surface, IDisposable
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        if (NeedsReflection)
-            Path = Path.Reflect();
-
         _surfaces.Clear();
         _surfaces.AddRange(Path.Segments
             .Select(segment => new LathePathSurface(segment)));
 
-        double radius = Math.Max(Math.Abs(Path.MinX), Math.Abs(Path.MaxX)) + DoubleExtensions.Epsilon;
+        _radius = Math.Max(Math.Abs(Path.MinX), Math.Abs(Path.MaxX));
 
         _bounds = new Cylinder
         {
             MinimumY = Path.MinY - DoubleExtensions.Epsilon,
             MaximumY = Path.MaxY + DoubleExtensions.Epsilon,
-            Transform = Basics.Transforms.Scale(radius, 1, radius)
+            Transform = Basics.Transforms.Scale(
+                _radius + DoubleExtensions.Epsilon, 1, _radius + DoubleExtensions.Epsilon)
         };
     }
 
     /// <summary>
-    /// This method is used to produce a default bounding box for this shape.
+    /// This method is used to produce a default bounding box for this shape.  Since
+    /// revolving the profile around the Y axis sweeps its radius through every angle, the
+    /// box must span the full radius in both X and Z, not just the profile's own (possibly
+    /// one-sided) X extent.
     /// </summary>
     /// <returns>A default bounding box, if any, for the surface.</returns>
     protected override BoundingBox GetDefaultBoundingBox()
     {
         return new BoundingBox()
-            .Add(new Point(Path.MinX, Path.MinY, Path.MinX))
-            .Add(new Point(Path.MaxX, Path.MaxY, Path.MaxX));
+            .Add(new Point(-_radius, Path.MinY, -_radius))
+            .Add(new Point(_radius, Path.MaxY, _radius));
     }
 
     /// <summary>
@@ -68,17 +65,11 @@ public class Lathe : Surface, IDisposable
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        // if (Misses(ray))
-        //     return;
-
-        double theta = Math.Atan2(ray.Direction.Z, ray.Direction.X);
-        Ray rotatedRay = Transforms.RotateAroundY(theta, true).Transform(ray);
-        TwoDRay shapeRay = TwoDRay.ProjectedToXy(rotatedRay);
+        if (Misses(ray))
+            return;
 
         intersections.AddRange(_surfaces
-            .Select(surface => surface.GetIntersections(this, rotatedRay, theta, shapeRay))
-            .SelectMany(intersectionData => intersectionData)
-            .Where(intersection => intersection != null));
+            .SelectMany(surface => surface.GetIntersections(this, ray)));
     }
 
     private bool Misses(Ray ray)

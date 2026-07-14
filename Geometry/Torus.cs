@@ -1,3 +1,4 @@
+using MathNet.Numerics;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -59,20 +60,21 @@ public class Torus : Surface
         double crossY = oy * dy;
         double k1 = ox * ox + oz * oz + oySquared - _majorSquared - _minorSquared;
         double k2 = ox * dx + oz * dz + crossY;
-        double[] coefficients = [
-            1.0,
-            4.0 * k2,
-            2.0 * (k1 + 2.0 * (k2 * k2 + _majorSquared * dySquared)),
-            4.0 * (k2 * k1 + 2.0 * _majorSquared * crossY),
-            k1 * k1 + 4.0 * _majorSquared * (oySquared - _minorSquared)
-        ];
-        double[] distances = Polynomials.Solve(coefficients);
 
-        if (distances != null)
-        {
-            intersections.AddRange(distances.Reverse()
-                .Select(distance => new Intersection(this, distance / length)));
-        }
+        // Coefficients are given in ascending order (constant term first) to match the
+        // convention MathNet.Numerics.Polynomial expects.
+        double[] coefficients = [
+            k1 * k1 + 4.0 * _majorSquared * (oySquared - _minorSquared),
+            4.0 * (k2 * k1 + 2.0 * _majorSquared * crossY),
+            2.0 * (k1 + 2.0 * (k2 * k2 + _majorSquared * dySquared)),
+            4.0 * k2,
+            1.0
+        ];
+        Polynomial polynomial = new (coefficients);
+
+        intersections.AddRange(polynomial.Roots()
+            .Where(root => root.Imaginary.Near(0))
+            .Select(root => new Intersection(this, root.Real / length)));
     }
 
     /// <summary>

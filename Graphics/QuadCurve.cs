@@ -55,17 +55,6 @@ internal class QuadCurve : IPathSegment
     }
 
     /// <summary>
-    /// This method is used to produce a copy of this path segment, but reversed, and with
-    /// points mirrored around the Y axis.
-    /// </summary>
-    /// <returns>A reversed copy of this segment.</returns>
-    public IPathSegment ReversedMirrorCopy()
-    {
-        return new QuadCurve(
-            _end.MirrorAroundX(), _control.MirrorAroundX(), _start.MirrorAroundX());
-    }
-
-    /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this curve.
     /// </summary>

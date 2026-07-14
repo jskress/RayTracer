@@ -13,6 +13,11 @@ public class Line : IPathSegment
     /// </summary>
     public TwoDPoint[] Points => [_start, _end];
 
+    /// <summary>
+    /// This property exposes this line's constant 2D normal vector.
+    /// </summary>
+    public TwoDVector Normal => _normal;
+
     private TwoDPoint _start;
     private TwoDPoint _end;
     private Parallelogram _parallelogram;
@@ -52,16 +57,6 @@ public class Line : IPathSegment
     public void Reverse()
     {
         SetPoints(_end, _start);
-    }
-
-    /// <summary>
-    /// This method is used to produce a copy of this path segment, but reversed, and with
-    /// points mirrored around the Y axis.
-    /// </summary>
-    /// <returns>A reversed copy of this segment.</returns>
-    public IPathSegment ReversedMirrorCopy()
-    {
-        return new Line(_end.MirrorAroundX(), _start.MirrorAroundX());
     }
 
     /// <summary>

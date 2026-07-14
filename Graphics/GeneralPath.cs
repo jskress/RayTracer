@@ -541,24 +541,6 @@ public class GeneralPath : IDisposable
     }
 
     /// <summary>
-    /// This method is used to "reflect" the path by taking the current set of segments
-    /// and appending a list of new segments, in revered order and with each new segment
-    /// reversed from its source. 
-    /// </summary>
-    /// <returns>This object, for fluency.</returns>
-    internal GeneralPath Reflect()
-    {
-        List<IPathSegment> segments = [.. Segments];
-
-        segments.Reverse();
-
-        foreach (IPathSegment segment in segments)
-            AddSegment(segment.ReversedMirrorCopy());
-
-        return this;
-    }
-
-    /// <summary>
     /// This method is used to add a preconfigured segment to the path.
     /// </summary>
     /// <param name="segment">The segment to add.</param>
