@@ -37,8 +37,8 @@ plane {
 tube {
     radius 0.6 at [-3.5, 1.5, 0]
     radius 0.5 at [-1.8, 2.2, 0]
-    quad radius 0.45 at [-0.5, 2.6, 0.8] radius 0.35 at [1.0, 2.0, 1.6]
-    curve radius 0.28 at [2.0, 2.2, 1.9] radius 0.15 at [3.2, 0.3, 1.0] radius 0.06 at [3.8, 0.4, 1.2]
+    quad radius 0.45 at [-0.413, 2.771, 0] radius 0.35 at [1.0, 2.0, 1.6]
+    curve radius 0.28 at [1.623, 1.660, 2.305] radius 0.15 at [3.2, 0.3, 1.0] radius 0.06 at [3.8, 0.4, 1.2]
     material {
         pigment [0.75, 0.55, 0.2]
         ambient 0.15

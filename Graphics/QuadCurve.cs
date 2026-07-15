@@ -106,7 +106,7 @@ internal class QuadCurve : IPathSegment
     /// </summary>
     /// <param name="t">The distance along the curve to get the point for.</param>
     /// <returns>The point at the given distance.</returns>
-    private TwoDPoint GetPoint(double t)
+    public TwoDPoint GetPoint(double t)
     {
         double iT = 1 - t;
         double iT2 = iT * iT;

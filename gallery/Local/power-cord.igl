@@ -53,22 +53,30 @@ cube {
     }
 }
 
-// The cord itself: a short lead-in from the plug, then a three-turn inward spiral.
+// The cord itself: a short lead-in from the plug, then a three-turn inward spiral.  Every
+// quad's control point is chosen so its entry tangent exactly matches the previous
+// segment's exit tangent, keeping the whole coil (lead-in included) tangent-continuous.  The
+// lead-in's control point sits close to the coil end of the segment (rather than far out
+// along the required tangent direction) -- moving it further out keeps the same exact
+// tangent direction but sweeps the curve through a wider, tighter loop, which for a segment
+// this short and this thick relative to its own length makes the union of interpolated
+// spheres near the start pinch away from the lateral surface into what looks like a
+// separate, detached ball.
 tube {
     radius 0.09 at [2.55, 0.13, 0]
-    radius 0.09 at [2.300, 0.110, 0.000]
-    quad radius 0.09 at [2.227, 0.131, 2.227] radius 0.09 at [0.000, 0.153, 2.154]
-    quad radius 0.09 at [-2.081, 0.174, 2.081] radius 0.09 at [-2.008, 0.196, 0.000]
-    quad radius 0.09 at [-1.935, 0.217, -1.935] radius 0.09 at [-0.000, 0.238, -1.862]
-    quad radius 0.09 at [1.790, 0.260, -1.790] radius 0.09 at [1.717, 0.281, -0.000]
-    quad radius 0.09 at [1.644, 0.302, 1.644] radius 0.09 at [0.000, 0.324, 1.571]
-    quad radius 0.09 at [-1.498, 0.345, 1.498] radius 0.09 at [-1.425, 0.366, 0.000]
-    quad radius 0.09 at [-1.352, 0.388, -1.352] radius 0.09 at [-0.000, 0.409, -1.279]
-    quad radius 0.09 at [1.206, 0.431, -1.206] radius 0.09 at [1.133, 0.452, -0.000]
-    quad radius 0.09 at [1.060, 0.473, 1.060] radius 0.09 at [0.000, 0.495, 0.988]
-    quad radius 0.09 at [-0.915, 0.516, 0.915] radius 0.09 at [-0.842, 0.537, 0.000]
-    quad radius 0.09 at [-0.769, 0.559, -0.769] radius 0.09 at [-0.000, 0.580, -0.696]
-    quad radius 0.09 at [0.623, 0.602, -0.623] radius 0.09 at [0.550, 0.623, -0.000]
+    quad radius 0.09 at [2.387, 0.118, 0.049] radius 0.09 at [2.300, 0.110, 0.000]
+    quad radius 0.09 at [0.793, -0.021, -0.846] radius 0.09 at [0.000, 0.153, 2.154]
+    quad radius 0.09 at [-0.413, 0.244, 3.718] radius 0.09 at [-2.008, 0.196, 0.000]
+    quad radius 0.09 at [-2.602, 0.178, -1.384] radius 0.09 at [-0.000, 0.238, -1.862]
+    quad radius 0.09 at [1.370, 0.269, -2.114] radius 0.09 at [1.717, 0.281, -0.000]
+    quad radius 0.09 at [1.924, 0.288, 1.263] radius 0.09 at [0.000, 0.324, 1.571]
+    quad radius 0.09 at [-1.152, 0.346, 1.755] radius 0.09 at [-1.425, 0.366, 0.000]
+    quad radius 0.09 at [-1.587, 0.378, -1.041] radius 0.09 at [-0.000, 0.409, -1.279]
+    quad radius 0.09 at [0.929, 0.427, -1.419] radius 0.09 at [1.133, 0.452, -0.000]
+    quad radius 0.09 at [1.250, 0.466, 0.819] radius 0.09 at [0.000, 0.495, 0.988]
+    quad radius 0.09 at [-0.708, 0.511, 1.084] radius 0.09 at [-0.842, 0.537, 0.000]
+    quad radius 0.09 at [-0.916, 0.551, -0.597] radius 0.09 at [-0.000, 0.580, -0.696]
+    quad radius 0.09 at [0.485, 0.595, -0.749] radius 0.09 at [0.550, 0.623, -0.000]
     material {
         pigment [0.04, 0.04, 0.045]
         diffuse 0.6

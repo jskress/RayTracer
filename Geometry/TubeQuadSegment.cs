@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 
 namespace RayTracer.Geometry;
 
@@ -46,10 +47,27 @@ public class TubeQuadSegment : Surface
     // Center(u) = Start - 2u*B + u^2*A, Radius(u) = StartRadius - 2u*Rb + u^2*Ra -- the
     // power-basis form of a quadratic Bezier (A is its "acceleration" term, B its initial
     // "velocity" term), which keeps the resulting algebra close to the linear segment's.
+    // These unscaled versions are used only for the final geometric reconstruction (world
+    // points, normals); the resultant/root-finding math below uses scaled counterparts.
     private Vector _a;
     private Vector _b;
-    private double _ra;
-    private double _rb;
+
+    // A characteristic length for this segment (the largest of its radii and its own
+    // control-point spans), and every quantity the resultant computation needs, rescaled by
+    // it.  The curve parameter u is dimensionless and unaffected by this -- only lengths
+    // (positions, radii, the ray's own direction) are rescaled -- so u recovered from this
+    // scaled computation is used directly, unchanged, in the unscaled reconstruction above.
+    // Without this, a segment whose absolute size is small (a fraction of a unit, as with a
+    // thin cord or wire) drives the Sylvester-determinant coefficients down near the edge of
+    // double precision, and the root solver silently returns nothing -- which reads,
+    // visually, as a chunk of missing surface or a cap that looks detached from the rest of
+    // the segment.
+    private double _scale;
+    private Vector _aScaled;
+    private Vector _bScaled;
+    private double _raScaled;
+    private double _rbScaled;
+    private double _startRadiusScaled;
     private double _dotAA;
     private double _dotAB;
     private double _dotBB;
@@ -62,11 +80,23 @@ public class TubeQuadSegment : Surface
     {
         _b = Start - Control;
         _a = _b - (Control - End);
-        _rb = StartRadius - ControlRadius;
-        _ra = _rb - (ControlRadius - EndRadius);
-        _dotAA = _a.Dot(_a);
-        _dotAB = _a.Dot(_b);
-        _dotBB = _b.Dot(_b);
+
+        double rb = StartRadius - ControlRadius;
+        double ra = rb - (ControlRadius - EndRadius);
+
+        _scale = new[] { StartRadius, ControlRadius, EndRadius, _a.Magnitude, _b.Magnitude }.Max();
+
+        if (_scale.Near(0))
+            _scale = 1;
+
+        _aScaled = _a / _scale;
+        _bScaled = _b / _scale;
+        _raScaled = ra / _scale;
+        _rbScaled = rb / _scale;
+        _startRadiusScaled = StartRadius / _scale;
+        _dotAA = _aScaled.Dot(_aScaled);
+        _dotAB = _aScaled.Dot(_bScaled);
+        _dotBB = _bScaled.Dot(_bScaled);
     }
 
     /// <summary>
@@ -116,26 +146,27 @@ public class TubeQuadSegment : Surface
         if (!(tMax > tMin))
             return;
 
-        Vector q = ray.Origin - Start;
-        Vector d = ray.Direction;
+        Vector q = (ray.Origin - Start) / _scale;
+        Vector d = ray.Direction / _scale;
         double dotQQ = q.Dot(q);
         double dotQD = q.Dot(d);
         double dotDD = d.Dot(d);
-        double dotQB = q.Dot(_b);
-        double dotBD = _b.Dot(d);
-        double dotQA = q.Dot(_a);
-        double dotAD = _a.Dot(d);
+        double dotQB = q.Dot(_bScaled);
+        double dotBD = _bScaled.Dot(d);
+        double dotQA = q.Dot(_aScaled);
+        double dotAD = _aScaled.Dot(d);
 
         // g(u, t) coefficients: g[k] is the coefficient of u^k, itself a polynomial in t
         // (indices 0, 1, 2 are the t^0, t^1, t^2 coefficients).  Its resultant with dg/du
-        // is a fixed degree-6 polynomial in t, so 7 sample points pin it down exactly.
+        // is a fixed degree-6 polynomial in t, so 7 sample points pin it down exactly.  t
+        // itself is unaffected by the scaling (see the fields above), so it's used as-is.
         double[][] g =
         [
-            [dotQQ - StartRadius * StartRadius, 2 * dotQD, dotDD],
-            [4 * (StartRadius * _rb + dotQB), 4 * dotBD, 0],
-            [-2 * StartRadius * _ra - 4 * _rb * _rb + 4 * _dotBB - 2 * dotQA, -2 * dotAD, 0],
-            [4 * (_ra * _rb - _dotAB), 0, 0],
-            [_dotAA - _ra * _ra, 0, 0]
+            [dotQQ - _startRadiusScaled * _startRadiusScaled, 2 * dotQD, dotDD],
+            [4 * (_startRadiusScaled * _rbScaled + dotQB), 4 * dotBD, 0],
+            [-2 * _startRadiusScaled * _raScaled - 4 * _rbScaled * _rbScaled + 4 * _dotBB - 2 * dotQA, -2 * dotAD, 0],
+            [4 * (_raScaled * _rbScaled - _dotAB), 0, 0],
+            [_dotAA - _raScaled * _raScaled, 0, 0]
         ];
 
         foreach ((double t, double u) in TubeCurveMath.FindEnvelopeHits(g, 7, tMin, tMax))
@@ -167,18 +198,18 @@ public class TubeQuadSegment : Surface
         foreach (double t in TubeCurveMath.SolveQuadratic(a, b, c))
         {
             Point point = ray.At(t);
-            Vector qp = point - Start;
+            Vector qp = (point - Start) / _scale;
             double dotQpQp = qp.Dot(qp);
-            double dotQpB = qp.Dot(_b);
-            double dotQpA = qp.Dot(_a);
+            double dotQpB = qp.Dot(_bScaled);
+            double dotQpA = qp.Dot(_aScaled);
 
             double[] f =
             [
-                dotQpQp - StartRadius * StartRadius,
-                4 * (StartRadius * _rb + dotQpB),
-                -2 * StartRadius * _ra - 4 * _rb * _rb + 4 * _dotBB - 2 * dotQpA,
-                4 * (_ra * _rb - _dotAB),
-                _dotAA - _ra * _ra
+                dotQpQp - _startRadiusScaled * _startRadiusScaled,
+                4 * (_startRadiusScaled * _rbScaled + dotQpB),
+                -2 * _startRadiusScaled * _raScaled - 4 * _rbScaled * _rbScaled + 4 * _dotBB - 2 * dotQpA,
+                4 * (_raScaled * _rbScaled - _dotAB),
+                _dotAA - _raScaled * _raScaled
             ];
 
             if (TubeCurveMath.IsOnOuterBoundary(f))

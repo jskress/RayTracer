@@ -60,6 +60,17 @@ public class Line : IPathSegment
     }
 
     /// <summary>
+    /// This method returns the point on this line at the given parameter.
+    /// </summary>
+    /// <param name="t">The parameter to evaluate at, from 0 (the line's start) to 1 (its
+    /// end).</param>
+    /// <returns>The point at that parameter.</returns>
+    public TwoDPoint GetPoint(double t)
+    {
+        return _start + (_end - _start) * t;
+    }
+
+    /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this line.
     /// </summary>
