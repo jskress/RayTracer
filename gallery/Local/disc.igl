@@ -1,0 +1,58 @@
+// A scene to test disc objects: a flat circle (or, with a non-zero inner radius, a ring)
+// defined by a center, a normal, and a radius.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Disc Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the disc primitive, including its inner radius.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3, -6]
+    look at [0, 0.5, 0]
+    field of view 45
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// A plain disc, tilted to face the camera a bit.
+disc {
+    center [-1.6, 1.1, 0]
+    normal [0.3, 1, -0.4]
+    radius 1
+    material {
+        pigment [0.8, 0.2, 0.2]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A ring (non-zero inner radius), tilted the other way.
+disc {
+    center [1.6, 1.1, 0]
+    normal [-0.3, 1, -0.4]
+    radius 1
+    inner radius 0.5
+    material {
+        pigment [0.2, 0.5, 0.85]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}

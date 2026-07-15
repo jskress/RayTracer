@@ -436,4 +436,20 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/sweep-side.igl">Sweep Test (Side View)</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/disc.png">
+      <img alt="Disc Test" height="120" src="Local/disc.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/disc.igl">Disc Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/generic-shape.png">
+      <img alt="Generic Shape Test" height="120" src="Local/generic-shape.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/generic-shape.igl">Generic Shape Test</a>
+    </td>
+  </tr>
 </table>

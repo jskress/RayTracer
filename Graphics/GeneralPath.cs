@@ -1,12 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
-using SkiaSharp;
 
 namespace RayTracer.Graphics;
 
 /// <summary>
 /// This class represents a path made up of lines and curves.
 /// </summary>
-public class GeneralPath : IDisposable
+public class GeneralPath
 {
     /// <summary>
     /// This property holds the current set of segments in the general path.
@@ -39,8 +38,6 @@ public class GeneralPath : IDisposable
 
     private TwoDPoint _subPathStart = TwoDPoint.Zero;
     private TwoDPoint _cp = TwoDPoint.Zero;
-    private SKPathBuilder _pathBuilder = new ();
-    private SKPath _skPathSnapshot;
 
     /// <summary>
     /// This method is used to move the current point to a new location.
@@ -88,9 +85,6 @@ public class GeneralPath : IDisposable
         Add(point);
 
         _subPathStart = _cp = point;
-
-        _pathBuilder.MoveTo(point.ToSkPoint());
-        InvalidateSnapshot();
 
         return this;
     }
@@ -186,9 +180,6 @@ public class GeneralPath : IDisposable
         Add(point);
 
         _cp = point;
-
-        _pathBuilder.LineTo(point.ToSkPoint());
-        InvalidateSnapshot();
 
         return this;
     }
@@ -307,9 +298,6 @@ public class GeneralPath : IDisposable
         Add(point);
 
         _cp = point;
-
-        _pathBuilder.QuadTo(controlPoint.ToSkPoint(), point.ToSkPoint());
-        InvalidateSnapshot();
 
         return this;
     }
@@ -462,9 +450,6 @@ public class GeneralPath : IDisposable
 
         _cp = point;
 
-        _pathBuilder.CubicTo(controlPoint1.ToSkPoint(), controlPoint2.ToSkPoint(), point.ToSkPoint());
-        InvalidateSnapshot();
-
         return this;
     }
 
@@ -480,9 +465,6 @@ public class GeneralPath : IDisposable
 
             _subPathStart = _cp;
         }
-
-        _pathBuilder.Close();
-        InvalidateSnapshot();
 
         return this;
     }
@@ -512,26 +494,62 @@ public class GeneralPath : IDisposable
     }
 
     /// <summary>
-    /// This method is used to test whether the given point is inside the path.
+    /// This method is used to test whether the given point is inside the path, using the
+    /// standard even/odd (crossing-number) rule: cast a test line from the point off to the
+    /// right and count how many times the path's boundary crosses it, treating an odd count
+    /// as "inside".  Unlike tessellating the path into a polyline first, this asks each
+    /// segment directly (via its own <see cref="IPathSegment.GetIntersections"/>, the same
+    /// line-intersection math <see cref="ExtrusionPathSurface"/> already relies on for
+    /// lateral-surface hit testing) where a rightward horizontal line crosses it, so curved
+    /// segments are tested exactly rather than approximated.
+    /// <para>
+    /// A segment only gets asked for its crossings at all if its defining points -- for a
+    /// line, its two endpoints; for a curve, its endpoints *and* control points -- aren't
+    /// all on the same side of the test point's Y (comparing with strict "greater than" on
+    /// one side and "at or below" on the other, the usual even/odd tie-breaker).  A Bezier
+    /// curve never leaves the convex hull of its own defining points, so if every one of
+    /// them is on the same side, the curve provably can't cross the test line at all and is
+    /// safe to skip.  Using only the two endpoints for this check (rather than every defining
+    /// point) would be wrong for a curve: a segment whose endpoints happen to sit on the same
+    /// side can still bulge across the test line and back through its interior, contributing
+    /// crossings that must be counted, not skipped.  Skipping is still necessary in the cases
+    /// it does apply to, since two segments that merely touch the test line at a shared
+    /// vertex (without the path actually crossing from one side to the other there, e.g. a
+    /// flat-topped notch) would otherwise each report that shared point as its own crossing,
+    /// double-counting a single non-crossing touch as two.
+    /// </para>
     /// </summary>
     /// <param name="point">The point to test.</param>
     /// <returns><c>true</c>, if the path contains the point, or <c>false</c>, if not.</returns>
     public bool Contains(TwoDPoint point)
     {
-        _skPathSnapshot ??= _pathBuilder.Snapshot();
+        TwoDRay testRay = new () { Origin = point, Direction = new TwoDVector(1, 0) };
+        int crossingCount = 0;
 
-        return _skPathSnapshot.Contains((float) point.X, (float) point.Y);
-    }
+        foreach (IPathSegment segment in Segments)
+        {
+            bool anyAbove = false;
+            bool anyAtOrBelow = false;
 
-    /// <summary>
-    /// This is a helper method for dropping our cached snapshot of the path builder's
-    /// current state whenever the path is mutated; it is rebuilt lazily on next use by
-    /// <see cref="Contains"/>.
-    /// </summary>
-    private void InvalidateSnapshot()
-    {
-        _skPathSnapshot?.Dispose();
-        _skPathSnapshot = null;
+            foreach (TwoDPoint definingPoint in segment.Points)
+            {
+                if (definingPoint.Y > point.Y)
+                    anyAbove = true;
+                else
+                    anyAtOrBelow = true;
+            }
+
+            if (!anyAbove || !anyAtOrBelow)
+                continue;
+
+            foreach (TwoDIntersection intersection in segment.GetIntersections(testRay))
+            {
+                if (intersection.Point.X > point.X)
+                    crossingCount++;
+            }
+        }
+
+        return crossingCount % 2 == 1;
     }
 
     /// <summary>
@@ -589,17 +607,4 @@ public class GeneralPath : IDisposable
         }
     }
 
-    /// <summary>
-    /// This method is used to properly clean up our resources.
-    /// </summary>
-    public void Dispose()
-    {
-        _skPathSnapshot?.Dispose();
-        _skPathSnapshot = null;
-
-        _pathBuilder?.Dispose();
-        _pathBuilder = null;
-
-        GC.SuppressFinalize(this);
-    }
 }

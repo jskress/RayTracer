@@ -104,6 +104,9 @@ public class Triangle : Surface
 
         double t = f * _e2.Dot(originCrossE1);
 
+        if (t < 0)
+            return;
+
         intersections.Add(CreateIntersection(t, u, v));
     }
 
