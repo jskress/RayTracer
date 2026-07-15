@@ -51,6 +51,7 @@ public partial class LanguageParser
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
             "tube" => ParseTubeClause(clause),
+            "sweep" => ParseSweepClause(clause),
             "text" => ParseTextClause(clause),
             // ReSharper disable once StringLiteralTypo
             "lsystem" => ParseLSystemClause(clause),

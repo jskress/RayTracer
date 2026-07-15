@@ -117,7 +117,9 @@ public class TestTube
     /// <summary>
     /// A bent, two-segment chain (an "elbow") must still present a well-formed union
     /// boundary: a ray passing through the outside of the bend should cross it exactly
-    /// twice, not four times, even though it comes close to both segments.
+    /// twice, not four times, even though it comes close to both segments.  The bend here is
+    /// a deliberate sharp corner (not a smooth curve), so this tube must be marked
+    /// discontinuous to bypass the tangent-continuity check.
     /// </summary>
     [TestMethod]
     public void TestBentChainFormsWellFormedUnion()
@@ -129,7 +131,8 @@ public class TestTube
             {
                 new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 0, 0), Radius = 2 } },
                 new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 10, 0), Radius = 2 } }
-            }
+            },
+            Discontinuous = true
         };
         Ray ray = new (new Point(-5, -5, 0), new Vector(1, 1, 0).Unit);
         List<Intersection> intersections = [];
@@ -292,5 +295,48 @@ public class TestTube
         tube.Intersect(ray, intersections);
 
         Assert.AreEqual(0, intersections.Count);
+    }
+
+    /// <summary>
+    /// A tube whose two segments meet at a sharp corner (not flowing smoothly into each
+    /// other) must fail to prepare, by default, with a clear error -- since a rotation-
+    /// tracking loft can't absorb a real kink without a sudden, surprising twist right at
+    /// that seam.
+    /// </summary>
+    [TestMethod]
+    public void TestDiscontinuousTubeThrowsByDefault()
+    {
+        Tube tube = new ()
+        {
+            Start = new TubeControlPoint { Center = new Point(-10, 0, 0), Radius = 2 },
+            Segments =
+            {
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 0, 0), Radius = 2 } },
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 10, 0), Radius = 2 } }
+            }
+        };
+
+        Assert.ThrowsExactly<Exception>(tube.PrepareForRendering);
+    }
+
+    /// <summary>
+    /// Marking a kinked tube <see cref="Tube.Discontinuous"/> must suppress the
+    /// tangent-continuity check, since the kink is intentional there.
+    /// </summary>
+    [TestMethod]
+    public void TestDiscontinuousFlagSuppressesTheCheck()
+    {
+        Tube tube = new ()
+        {
+            Start = new TubeControlPoint { Center = new Point(-10, 0, 0), Radius = 2 },
+            Segments =
+            {
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 0, 0), Radius = 2 } },
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 10, 0), Radius = 2 } }
+            },
+            Discontinuous = true
+        };
+
+        tube.PrepareForRendering();
     }
 }

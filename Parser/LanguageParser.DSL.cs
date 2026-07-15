@@ -31,7 +31,7 @@ public partial class LanguageParser
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse',
-            'disclaimer', 'drawLine', 'extrusion', 'factor', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'drawLine', 'extrusion', 'factor', 'false', 'field', 'file',
             'font', 'from', 'gamma', 'gap', 'generations', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'intersection',
@@ -41,12 +41,12 @@ public partial class LanguageParser
             'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
-            'position', 'productions', 'quad', 'radians', 'radii', 'radius', 'reflective',
+            'position', 'productions', 'profile', 'quad', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'square', 'startBranch', 'strength', 'stripes',
-            'svg', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
+            'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up',
@@ -397,6 +397,41 @@ public partial class LanguageParser
             extrudedSurfaceEntryClause
         ]
 
+        // Spline clauses.  These mirror the path clauses above, except a spline's points
+        // are full 3D triples rather than 2D pairs.
+        xyzTripleClause:
+        {
+            _expression > comma ?? 'Expecting a comma here.' >
+            _expression > comma ?? 'Expecting a comma here.' >
+            _expression
+        }
+        splineControlPointsClause:
+        {
+            xyzTripleClause > comma ?? 'Expecting a comma here.' > xyzTripleClause
+        }
+        moveToSplineClause:
+        {
+            move > to ?? 'Expecting "to" to follow "move" here.' > xyzTripleClause
+        }
+        lineToSplineClause:
+        {
+            line > to ?? 'Expecting "to" to follow "line" here.' > xyzTripleClause
+        }
+        quadToSplineClause:
+        {
+            quad > xyzTripleClause >
+            to ?? 'Expecting "to" to follow "quad" control point here.' > xyzTripleClause
+        }
+        curveToSplineClause:
+        {
+            curve > splineControlPointsClause >
+            to ?? 'Expecting "to" to follow "curve" control point here.' > xyzTripleClause
+        }
+        splineEntryClause:
+        [
+            moveToSplineClause | lineToSplineClause | quadToSplineClause | curveToSplineClause
+        ] ?? 'Expecting a spline command here.'
+
         // Lathe clauses.
         startLatheClause:
         {
@@ -477,7 +512,26 @@ public partial class LanguageParser
             tubePointClause => 'point' |
             tubeQuadClause => 'quad' |
             tubeCubicClause => 'curve' |
-            surfaceEntryClause
+            discontinuous | surfaceEntryClause
+        ]
+
+        // Sweep clauses.
+        startSweepClause:
+        {
+            sweep > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "sweep" here.'
+        }
+        sweepEntryClause:
+        [
+            { profile > openBrace ?? 'Expecting an open brace after "profile" here.' } |
+            {
+                discontinuous{?} > spline >
+                openBrace ?? 'Expecting an open brace after "spline" here.'
+            } |
+            { steps > _expression } |
+            open | surfaceEntryClause
         ]
 
         // Text clauses.
@@ -683,6 +737,7 @@ public partial class LanguageParser
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startTubeClause => 'tube' |
+            startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -722,6 +777,7 @@ public partial class LanguageParser
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startTubeClause => 'tube' |
+            startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -755,6 +811,7 @@ public partial class LanguageParser
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startTubeClause => 'tube' |
+            startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -790,7 +847,7 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
-                startBlobClause | startTubeClause | startTextClause |
+                startBlobClause | startTubeClause | startSweepClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
@@ -817,6 +874,7 @@ public partial class LanguageParser
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |
             startTubeClause           => 'HandleStartTubeClause' |
+            startSweepClause          => 'HandleStartSweepClause' |
             startTextClause           => 'HandleStartTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
             startHeightFieldClause    => 'HandleStartHeightFieldClause' |

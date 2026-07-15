@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 
 namespace RayTracer.Geometry;
 
@@ -59,13 +60,28 @@ public class TubeCubicSegment : Surface
     public double EndRadius { get; set; }
 
     // Center(u) = Start + K1*u + K2*u^2 + K3*u^3, Radius(u) = StartRadius + K1r*u + K2r*u^2
-    // + K3r*u^3 -- the power-basis form of a cubic Bezier.
+    // + K3r*u^3 -- the power-basis form of a cubic Bezier.  These unscaled versions are used
+    // only for the final geometric reconstruction (world points, normals); the
+    // resultant/root-finding math below uses scaled counterparts.
     private Vector _k1;
     private Vector _k2;
     private Vector _k3;
-    private double _k1R;
-    private double _k2R;
-    private double _k3R;
+
+    // A characteristic length for this segment, and every quantity the resultant
+    // computation needs, rescaled by it -- see the identical fields on
+    // <see cref="TubeQuadSegment"/> for why this is necessary (short, thin segments
+    // otherwise drive the Sylvester-determinant coefficients down near the edge of double
+    // precision, silently losing real roots).  The curve parameter u is dimensionless and
+    // unaffected by this, so u recovered from this scaled computation is used directly,
+    // unchanged, in the unscaled reconstruction above.
+    private double _scale;
+    private Vector _k1Scaled;
+    private Vector _k2Scaled;
+    private Vector _k3Scaled;
+    private double _k1RScaled;
+    private double _k2RScaled;
+    private double _k3RScaled;
+    private double _startRadiusScaled;
     private double _dotK1K1;
     private double _dotK1K2;
     private double _dotK1K3;
@@ -83,16 +99,33 @@ public class TubeCubicSegment : Surface
         _k2 = 3 * ((Start - Control1) + (Control2 - Control1));
         _k3 = (End - Start) - 3 * (Control2 - Control1);
 
-        _k1R = 3 * (Control1Radius - StartRadius);
-        _k2R = 3 * (StartRadius - 2 * Control1Radius + Control2Radius);
-        _k3R = (EndRadius - StartRadius) - 3 * (Control2Radius - Control1Radius);
+        double k1R = 3 * (Control1Radius - StartRadius);
+        double k2R = 3 * (StartRadius - 2 * Control1Radius + Control2Radius);
+        double k3R = (EndRadius - StartRadius) - 3 * (Control2Radius - Control1Radius);
 
-        _dotK1K1 = _k1.Dot(_k1);
-        _dotK1K2 = _k1.Dot(_k2);
-        _dotK1K3 = _k1.Dot(_k3);
-        _dotK2K2 = _k2.Dot(_k2);
-        _dotK2K3 = _k2.Dot(_k3);
-        _dotK3K3 = _k3.Dot(_k3);
+        _scale = new[]
+        {
+            StartRadius, Control1Radius, Control2Radius, EndRadius,
+            _k1.Magnitude, _k2.Magnitude, _k3.Magnitude
+        }.Max();
+
+        if (_scale.Near(0))
+            _scale = 1;
+
+        _k1Scaled = _k1 / _scale;
+        _k2Scaled = _k2 / _scale;
+        _k3Scaled = _k3 / _scale;
+        _k1RScaled = k1R / _scale;
+        _k2RScaled = k2R / _scale;
+        _k3RScaled = k3R / _scale;
+        _startRadiusScaled = StartRadius / _scale;
+
+        _dotK1K1 = _k1Scaled.Dot(_k1Scaled);
+        _dotK1K2 = _k1Scaled.Dot(_k2Scaled);
+        _dotK1K3 = _k1Scaled.Dot(_k3Scaled);
+        _dotK2K2 = _k2Scaled.Dot(_k2Scaled);
+        _dotK2K3 = _k2Scaled.Dot(_k3Scaled);
+        _dotK3K3 = _k3Scaled.Dot(_k3Scaled);
     }
 
     /// <summary>
@@ -143,30 +176,31 @@ public class TubeCubicSegment : Surface
         if (!(tMax > tMin))
             return;
 
-        Vector q = ray.Origin - Start;
-        Vector d = ray.Direction;
+        Vector q = (ray.Origin - Start) / _scale;
+        Vector d = ray.Direction / _scale;
         double dotQQ = q.Dot(q);
         double dotQD = q.Dot(d);
         double dotDD = d.Dot(d);
-        double dotQK1 = q.Dot(_k1);
-        double dotDK1 = d.Dot(_k1);
-        double dotQK2 = q.Dot(_k2);
-        double dotDK2 = d.Dot(_k2);
-        double dotQK3 = q.Dot(_k3);
-        double dotDK3 = d.Dot(_k3);
+        double dotQK1 = q.Dot(_k1Scaled);
+        double dotDK1 = d.Dot(_k1Scaled);
+        double dotQK2 = q.Dot(_k2Scaled);
+        double dotDK2 = d.Dot(_k2Scaled);
+        double dotQK3 = q.Dot(_k3Scaled);
+        double dotDK3 = d.Dot(_k3Scaled);
 
         // g(u, t) coefficients: g[k] is the coefficient of u^k, itself a polynomial in t
         // (indices 0, 1, 2 are the t^0, t^1, t^2 coefficients).  Its resultant with dg/du
-        // is a fixed degree-10 polynomial in t, so 11 sample points pin it down exactly.
+        // is a fixed degree-10 polynomial in t, so 11 sample points pin it down exactly.  t
+        // itself is unaffected by the scaling (see the fields above), so it's used as-is.
         double[][] g =
         [
-            [dotQQ - StartRadius * StartRadius, 2 * dotQD, dotDD],
-            [-2 * _k1R * StartRadius - 2 * dotQK1, -2 * dotDK1, 0],
-            [-_k1R * _k1R - 2 * _k2R * StartRadius + _dotK1K1 - 2 * dotQK2, -2 * dotDK2, 0],
-            [-2 * _k1R * _k2R - 2 * _k3R * StartRadius + 2 * _dotK1K2 - 2 * dotQK3, -2 * dotDK3, 0],
-            [-2 * _k1R * _k3R - _k2R * _k2R + 2 * _dotK1K3 + _dotK2K2, 0, 0],
-            [-2 * _k2R * _k3R + 2 * _dotK2K3, 0, 0],
-            [-_k3R * _k3R + _dotK3K3, 0, 0]
+            [dotQQ - _startRadiusScaled * _startRadiusScaled, 2 * dotQD, dotDD],
+            [-2 * _k1RScaled * _startRadiusScaled - 2 * dotQK1, -2 * dotDK1, 0],
+            [-_k1RScaled * _k1RScaled - 2 * _k2RScaled * _startRadiusScaled + _dotK1K1 - 2 * dotQK2, -2 * dotDK2, 0],
+            [-2 * _k1RScaled * _k2RScaled - 2 * _k3RScaled * _startRadiusScaled + 2 * _dotK1K2 - 2 * dotQK3, -2 * dotDK3, 0],
+            [-2 * _k1RScaled * _k3RScaled - _k2RScaled * _k2RScaled + 2 * _dotK1K3 + _dotK2K2, 0, 0],
+            [-2 * _k2RScaled * _k3RScaled + 2 * _dotK2K3, 0, 0],
+            [-_k3RScaled * _k3RScaled + _dotK3K3, 0, 0]
         ];
 
         foreach ((double t, double u) in TubeCurveMath.FindEnvelopeHits(g, 11, tMin, tMax))
@@ -198,21 +232,21 @@ public class TubeCubicSegment : Surface
         foreach (double t in TubeCurveMath.SolveQuadratic(a, b, c))
         {
             Point point = ray.At(t);
-            Vector qp = point - Start;
+            Vector qp = (point - Start) / _scale;
             double dotQpQp = qp.Dot(qp);
-            double dotQpK1 = qp.Dot(_k1);
-            double dotQpK2 = qp.Dot(_k2);
-            double dotQpK3 = qp.Dot(_k3);
+            double dotQpK1 = qp.Dot(_k1Scaled);
+            double dotQpK2 = qp.Dot(_k2Scaled);
+            double dotQpK3 = qp.Dot(_k3Scaled);
 
             double[] f =
             [
-                dotQpQp - StartRadius * StartRadius,
-                -2 * _k1R * StartRadius - 2 * dotQpK1,
-                -_k1R * _k1R - 2 * _k2R * StartRadius + _dotK1K1 - 2 * dotQpK2,
-                -2 * _k1R * _k2R - 2 * _k3R * StartRadius + 2 * _dotK1K2 - 2 * dotQpK3,
-                -2 * _k1R * _k3R - _k2R * _k2R + 2 * _dotK1K3 + _dotK2K2,
-                -2 * _k2R * _k3R + 2 * _dotK2K3,
-                -_k3R * _k3R + _dotK3K3
+                dotQpQp - _startRadiusScaled * _startRadiusScaled,
+                -2 * _k1RScaled * _startRadiusScaled - 2 * dotQpK1,
+                -_k1RScaled * _k1RScaled - 2 * _k2RScaled * _startRadiusScaled + _dotK1K1 - 2 * dotQpK2,
+                -2 * _k1RScaled * _k2RScaled - 2 * _k3RScaled * _startRadiusScaled + 2 * _dotK1K2 - 2 * dotQpK3,
+                -2 * _k1RScaled * _k3RScaled - _k2RScaled * _k2RScaled + 2 * _dotK1K3 + _dotK2K2,
+                -2 * _k2RScaled * _k3RScaled + 2 * _dotK2K3,
+                -_k3RScaled * _k3RScaled + _dotK3K3
             ];
 
             if (TubeCurveMath.IsOnOuterBoundary(f))

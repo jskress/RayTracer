@@ -104,6 +104,9 @@ public partial class LanguageParser
                 case "tube":
                     resolver.SurfaceResolvers.Add(ParseTubeClause(clause));
                     break;
+                case "sweep":
+                    resolver.SurfaceResolvers.Add(ParseSweepClause(clause));
+                    break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;

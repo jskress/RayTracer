@@ -412,4 +412,28 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/power-cord.igl">Power Cord Test</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/sweep.png">
+      <img alt="Sweep Test" height="120" src="Local/sweep.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/sweep.igl">Sweep Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/sweep-conduit.png">
+      <img alt="Sweep Conduit Test" height="120" src="Local/sweep-conduit.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/sweep-conduit.igl">Sweep Conduit Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/sweep-side.png">
+      <img alt="Sweep Test (Side View)" height="120" src="Local/sweep-side.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/sweep-side.igl">Sweep Test (Side View)</a>
+    </td>
+  </tr>
 </table>

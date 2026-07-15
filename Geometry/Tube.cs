@@ -24,6 +24,12 @@ public class Tube : Surface
     public List<TubeSegmentSpec> Segments { get; } = [];
 
     /// <summary>
+    /// This property suppresses <see cref="SegmentContinuity"/>'s tangent-continuity check
+    /// for this tube, for the (uncommon) case where a sharp kink is actually wanted.
+    /// </summary>
+    public bool Discontinuous { get; set; }
+
+    /// <summary>
     /// This property exposes the root of the CSG tree built from our segments, once
     /// prepared, so that things like <see cref="SurfaceIterator"/> can walk into it (e.g.,
     /// to propagate our material down to the segments that actually get hit).
@@ -43,6 +49,14 @@ public class Tube : Surface
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
+        if (!Discontinuous)
+        {
+            SegmentContinuity.Validate(
+                Start.Center,
+                Segments.Select(spec => (spec.Control1?.Center, spec.Control2?.Center, spec.End.Center)),
+                "tube");
+        }
+
         _segments.Clear();
 
         TubeControlPoint current = Start;

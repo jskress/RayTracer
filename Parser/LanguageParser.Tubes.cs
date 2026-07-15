@@ -72,7 +72,10 @@ public partial class LanguageParser
                     });
                     break;
                 default:
-                    HandleSurfaceClause(clause, resolver, "tube");
+                    if (clause.Text() == "discontinuous")
+                        resolver.DiscontinuousResolver = new LiteralResolver<bool> { Value = true };
+                    else
+                        HandleSurfaceClause(clause, resolver, "tube");
                     break;
             }
         });

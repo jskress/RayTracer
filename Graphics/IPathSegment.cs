@@ -17,6 +17,14 @@ public interface IPathSegment
     void Reverse();
 
     /// <summary>
+    /// This method returns the point on this segment at the given parameter.
+    /// </summary>
+    /// <param name="t">The parameter to evaluate at, from 0 (the segment's start) to 1 (its
+    /// end).</param>
+    /// <returns>The point at that parameter.</returns>
+    TwoDPoint GetPoint(double t);
+
+    /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this bit of geometry.
     /// </summary>

@@ -1,0 +1,65 @@
+// A scene to test sweep objects: a tessellated surface formed by lofting an arbitrary 2D
+// profile along an arbitrary 3D spline, oriented by a rotation-minimizing frame so the loft
+// doesn't twist.  Unlike tube (which stays fully analytic by restricting itself to a
+// circular cross-section), a sweep's profile can be any shape -- here, a five-pointed star,
+// something no analytic surface in this ray tracer can represent.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Sweep Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the sweep primitive with a star-shaped profile.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-6.4, 2.0, -2.0]
+    look at [-1.0, 1.9, 0.6]
+    field of view 40
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+sweep {
+    profile {
+        move to 0.0000, 0.4000
+        line to -0.0940, 0.1294
+        line to -0.3804, 0.1236
+        line to -0.1522, -0.0494
+        line to -0.2351, -0.3236
+        line to -0.0000, -0.1600
+        line to 0.2351, -0.3236
+        line to 0.1522, -0.0494
+        line to 0.3804, 0.1236
+        line to 0.0940, 0.1294
+        close
+    }
+    spline {
+        move to -3.5, 1.5, 0
+        line to -1.8, 2.2, 0
+        quad -0.321, 2.809, 0 to 1.0, 2.2, 1.8
+        curve 1.742, 1.858, 2.811, 3.0, 2.6, 1.2 to 3.6, 1.6, 0.4
+    }
+    steps 48
+    material {
+        pigment [0.85, 0.7, 0.15]
+        ambient 0.15
+        diffuse 0.6
+        specular 0.6
+        shininess 150
+        reflective 0.15
+    }
+}

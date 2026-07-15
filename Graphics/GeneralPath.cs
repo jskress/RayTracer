@@ -488,6 +488,30 @@ public class GeneralPath : IDisposable
     }
 
     /// <summary>
+    /// This method tessellates this path into an ordered polyline of points, sampling each
+    /// segment at the given resolution.  Consecutive segments share their boundary point, so
+    /// only the first segment contributes its starting point; every other segment
+    /// contributes only its own interior and ending samples.
+    /// </summary>
+    /// <param name="stepsPerSegment">The number of samples to take across each segment.</param>
+    /// <returns>The tessellated points, in path order.</returns>
+    public List<TwoDPoint> Sample(int stepsPerSegment)
+    {
+        List<TwoDPoint> points = [];
+
+        for (int segmentIndex = 0; segmentIndex < Segments.Count; segmentIndex++)
+        {
+            IPathSegment segment = Segments[segmentIndex];
+            int startStep = segmentIndex == 0 ? 0 : 1;
+
+            for (int step = startStep; step <= stepsPerSegment; step++)
+                points.Add(segment.GetPoint((double) step / stepsPerSegment));
+        }
+
+        return points;
+    }
+
+    /// <summary>
     /// This method is used to test whether the given point is inside the path.
     /// </summary>
     /// <param name="point">The point to test.</param>

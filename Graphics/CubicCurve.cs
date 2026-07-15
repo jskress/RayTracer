@@ -62,6 +62,22 @@ public class CubicCurve : IPathSegment
     }
 
     /// <summary>
+    /// This method returns the point on this curve at the given parameter.
+    /// </summary>
+    /// <param name="t">The parameter to evaluate at, from 0 (the curve's start) to 1 (its
+    /// end).</param>
+    /// <returns>The point at that parameter.</returns>
+    public TwoDPoint GetPoint(double t)
+    {
+        double t2 = t * t;
+        double t3 = t2 * t;
+        double x = _xCoefficients[0] * t3 + _xCoefficients[1] * t2 + _xCoefficients[2] * t + _xCoefficients[3];
+        double y = _yCoefficients[0] * t3 + _yCoefficients[1] * t2 + _yCoefficients[2] * t + _yCoefficients[3];
+
+        return new TwoDPoint(x, y);
+    }
+
+    /// <summary>
     /// This method is used to locate the intersection points, if any, where the given ray
     /// intersects this curve.
     /// </summary>

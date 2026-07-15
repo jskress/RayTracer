@@ -20,6 +20,12 @@ public class TubeResolver : SurfaceResolver<Tube>, IValidatable
     public List<TubeSegmentSpecResolver> SegmentResolvers { get; private set; } = [];
 
     /// <summary>
+    /// This property holds the resolver for whether to suppress the tangent-continuity
+    /// check on this tube's control points.
+    /// </summary>
+    public Resolver<bool> DiscontinuousResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a tube.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -30,6 +36,8 @@ public class TubeResolver : SurfaceResolver<Tube>, IValidatable
         value.Start = StartResolver.Resolve(context, variables);
         value.Segments.AddRange(SegmentResolvers
             .Select(resolver => resolver.Resolve(context, variables)));
+
+        DiscontinuousResolver.AssignTo(value, target => target.Discontinuous, context, variables);
 
         base.SetProperties(context, variables, value);
     }
