@@ -396,4 +396,20 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/blob-negative-strength.igl">Blob Negative Strength Test</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/tube.png">
+      <img alt="Tube Test" height="120" src="Local/tube.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/tube.igl">Tube Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/power-cord.png">
+      <img alt="Power Cord Test" height="120" src="Local/power-cord.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/power-cord.igl">Power Cord Test</a>
+    </td>
+  </tr>
 </table>

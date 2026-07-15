@@ -109,6 +109,8 @@ public partial class LanguageParser
                 return ParseLatheClause(clause);
             case BlobResolver:
                 return ParseBlobClause(clause);
+            case TubeResolver:
+                return ParseTubeClause(clause);
             case ExtrusionResolver:
                 return ParseExtrusionClause(clause);
             case TextSolidResolver:

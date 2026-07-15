@@ -48,7 +48,7 @@ public partial class LanguageParser
             'specular', 'sphere', 'spherical', 'square', 'startBranch', 'strength', 'stripes',
             'svg', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true',
+            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up',
             'vector', 'vertical', 'view', 'warning', 'width', 'with', 'wood', 'wrinkles',
             'X', 'Y', 'Z'
@@ -440,6 +440,46 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Tube clauses.
+        tubePointClause:
+        {
+            radius > _expression >
+            at ?? 'Expecting "at" to follow a tube point radius here.' >
+            _expression
+        }
+        tubeQuadClause:
+        {
+            quad >
+            radius ?? 'Expecting "radius" to follow "quad" here.' > _expression >
+            at ?? 'Expecting "at" to follow a tube quad control radius here.' > _expression >
+            radius ?? 'Expecting "radius" to follow a tube quad control point here.' > _expression >
+            at ?? 'Expecting "at" to follow a tube quad end radius here.' > _expression
+        }
+        tubeCubicClause:
+        {
+            curve >
+            radius ?? 'Expecting "radius" to follow "curve" here.' > _expression >
+            at ?? 'Expecting "at" to follow a tube curve control radius here.' > _expression >
+            radius ?? 'Expecting "radius" to follow a tube curve first control point here.' > _expression >
+            at ?? 'Expecting "at" to follow a tube curve control radius here.' > _expression >
+            radius ?? 'Expecting "radius" to follow a tube curve second control point here.' > _expression >
+            at ?? 'Expecting "at" to follow a tube curve end radius here.' > _expression
+        }
+        startTubeClause:
+        {
+            tube > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "tube" here.'
+        }
+        tubeEntryClause:
+        [
+            tubePointClause => 'point' |
+            tubeQuadClause => 'quad' |
+            tubeCubicClause => 'curve' |
+            surfaceEntryClause
+        ]
+
         // Text clauses.
         fontWeightClause:
         [
@@ -642,6 +682,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startTubeClause => 'tube' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -680,6 +721,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startTubeClause => 'tube' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -712,6 +754,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startTubeClause => 'tube' |
             startTextClause => 'text' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
@@ -747,7 +790,7 @@ public partial class LanguageParser
                 { material > startThingClause } | { transform > startthingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
-                startBlobClause | startTextClause |
+                startBlobClause | startTubeClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
@@ -773,6 +816,7 @@ public partial class LanguageParser
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |
+            startTubeClause           => 'HandleStartTubeClause' |
             startTextClause           => 'HandleStartTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
             startHeightFieldClause    => 'HandleStartHeightFieldClause' |

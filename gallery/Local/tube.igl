@@ -1,0 +1,50 @@
+// A scene to test tube objects: an analytic, CSG-friendly surface swept along a chain of
+// control points, connected by straight lines, quadratic Bezier curves, or cubic Bezier
+// curves, with center and radius interpolated between them.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Tube Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the tube primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 4, -9]
+    look at [0, 1.7, 0.5]
+    field of view 45
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// A bent, tapering tube: sweeping from a wide start, through a straight bend, a smooth
+// quadratic curve drifting into Z, then a cubic curve that swoops up before curling back
+// down into a narrow, tapered tail.
+tube {
+    radius 0.6 at [-3.5, 1.5, 0]
+    radius 0.5 at [-1.8, 2.2, 0]
+    quad radius 0.45 at [-0.5, 2.6, 0.8] radius 0.35 at [1.0, 2.0, 1.6]
+    curve radius 0.28 at [2.0, 2.2, 1.9] radius 0.15 at [3.2, 0.3, 1.0] radius 0.06 at [3.8, 0.4, 1.2]
+    material {
+        pigment [0.75, 0.55, 0.2]
+        ambient 0.15
+        diffuse 0.7
+        specular 0.5
+        shininess 150
+        reflective 0.1
+    }
+}

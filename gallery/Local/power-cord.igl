@@ -1,0 +1,79 @@
+// A more elaborate tube example: a power cord, loosely coiled on the floor, with a simple
+// plug housing at one end.  The coil spirals inward across three turns (twelve quadratic
+// segments, one per quarter-turn), climbing slightly with each turn so later loops appear
+// to rest on top of earlier ones, the way a real cord settles when set down loosely.  A
+// short straight lead-in connects the coil to the plug.  This is a stepping stone toward a
+// full wall-outlet-with-plugged-in-cord scene.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Power Cord Test'
+        author 'J. Stephen Kress'
+        description 'A loosely coiled power cord, built from chained tube segments.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 5.5, -6.5]
+    look at [0.3, 0.4, 0]
+    field of view 45
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+point light {
+    location [4, 5, -3]
+    color [0.3, 0.3, 0.3]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { [0.55, 0.5, 0.45], [0.4, 0.36, 0.32] scale 1.5 }
+        specular 0.1
+    }
+}
+
+// The plug housing, sitting on the floor at the outer end of the coil.
+cube {
+    scale [0.32, 0.14, 0.22]
+    translate [2.85, 0.14, 0]
+    material {
+        pigment [0.1, 0.1, 0.11]
+        diffuse 0.5
+        specular 0.6
+        shininess 120
+        reflective 0.05
+    }
+}
+
+// The cord itself: a short lead-in from the plug, then a three-turn inward spiral.
+tube {
+    radius 0.09 at [2.55, 0.13, 0]
+    radius 0.09 at [2.300, 0.110, 0.000]
+    quad radius 0.09 at [2.227, 0.131, 2.227] radius 0.09 at [0.000, 0.153, 2.154]
+    quad radius 0.09 at [-2.081, 0.174, 2.081] radius 0.09 at [-2.008, 0.196, 0.000]
+    quad radius 0.09 at [-1.935, 0.217, -1.935] radius 0.09 at [-0.000, 0.238, -1.862]
+    quad radius 0.09 at [1.790, 0.260, -1.790] radius 0.09 at [1.717, 0.281, -0.000]
+    quad radius 0.09 at [1.644, 0.302, 1.644] radius 0.09 at [0.000, 0.324, 1.571]
+    quad radius 0.09 at [-1.498, 0.345, 1.498] radius 0.09 at [-1.425, 0.366, 0.000]
+    quad radius 0.09 at [-1.352, 0.388, -1.352] radius 0.09 at [-0.000, 0.409, -1.279]
+    quad radius 0.09 at [1.206, 0.431, -1.206] radius 0.09 at [1.133, 0.452, -0.000]
+    quad radius 0.09 at [1.060, 0.473, 1.060] radius 0.09 at [0.000, 0.495, 0.988]
+    quad radius 0.09 at [-0.915, 0.516, 0.915] radius 0.09 at [-0.842, 0.537, 0.000]
+    quad radius 0.09 at [-0.769, 0.559, -0.769] radius 0.09 at [-0.000, 0.580, -0.696]
+    quad radius 0.09 at [0.623, 0.602, -0.623] radius 0.09 at [0.550, 0.623, -0.000]
+    material {
+        pigment [0.04, 0.04, 0.045]
+        diffuse 0.6
+        specular 0.3
+        shininess 40
+        reflective 0.02
+    }
+}
