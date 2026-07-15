@@ -16,7 +16,7 @@ public class TestLathe
         Point lookAt = new Point(0, 1, 0);
         Vector direction = lookAt - origin;
         Ray ray = new Ray(origin, direction.Unit);
-        using GeneralPath cylinder = new GeneralPath()
+        GeneralPath cylinder = new GeneralPath()
             .MoveTo(0, 0)
             .LineTo(1, 0)
             .LineTo(1, 2)
@@ -102,7 +102,7 @@ public class TestLathe
     [TestMethod]
     public void TestFullLatheAgainstNonAxisCrossingRay()
     {
-        using GeneralPath profile = new GeneralPath()
+        GeneralPath profile = new GeneralPath()
             .MoveTo(0, 0)
             .LineTo(1, 0)
             .LineTo(1, 2)
@@ -195,7 +195,7 @@ public class TestLathe
     [TestMethod]
     public void TestBoundingBoxCoversFullRevolvedExtent()
     {
-        using GeneralPath profile = new GeneralPath()
+        GeneralPath profile = new GeneralPath()
             .MoveTo(1, 0)
             .LineTo(1, 2);
         Lathe lathe = new () { Path = profile };

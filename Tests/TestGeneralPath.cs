@@ -110,4 +110,66 @@ public class TestGeneralPath
 
         Assert.IsTrue(points[0].X.Near(points[^1].X) && points[0].Y.Near(points[^1].Y));
     }
+
+    /// <summary>
+    /// <c>Contains</c> on a plain convex, straight-edged square must accept interior points
+    /// and reject points outside its bounds -- the baseline case for the even/odd test.
+    /// </summary>
+    [TestMethod]
+    public void TestContainsOnAConvexSquare()
+    {
+        GeneralPath square = new GeneralPath()
+            .MoveTo(-1, -1).LineTo(1, -1).LineTo(1, 1).LineTo(-1, 1).ClosePath();
+
+        Assert.IsTrue(square.Contains(new TwoDPoint(0, 0)));
+        Assert.IsTrue(square.Contains(new TwoDPoint(0.9, 0.9)));
+        Assert.IsFalse(square.Contains(new TwoDPoint(1.1, 0)));
+        Assert.IsFalse(square.Contains(new TwoDPoint(0, -1.1)));
+    }
+
+    /// <summary>
+    /// <c>Contains</c> on a concave (L-shaped) profile must reject a point in its notch even
+    /// though that point sits well within the shape's overall bounding box -- this is also
+    /// the regression case for a real bug found during development: two edges that merely
+    /// touch the test line at a shared vertex, without the path actually crossing from one
+    /// side to the other there (a flat-topped notch, exactly like this L's inner corner),
+    /// were being double-counted as two separate crossings instead of recognized as zero.
+    /// </summary>
+    [TestMethod]
+    public void TestContainsRejectsThePointInAConcaveNotch()
+    {
+        GeneralPath lShape = new GeneralPath()
+            .MoveTo(0, 0).LineTo(2, 0).LineTo(2, 1).LineTo(1, 1).LineTo(1, 2).LineTo(0, 2)
+            .ClosePath();
+
+        Assert.IsTrue(lShape.Contains(new TwoDPoint(0.5, 0.5)));
+        Assert.IsFalse(lShape.Contains(new TwoDPoint(1.5, 1.5)));
+
+        // The notch's inner corner sits at (1,1); a test point directly out from it, at the
+        // same height as the flat-topped edge the notch cuts into, is exactly the
+        // regression case described above.
+        Assert.IsTrue(lShape.Contains(new TwoDPoint(0.3333333333333333, 1)));
+    }
+
+    /// <summary>
+    /// <c>Contains</c> must test curved edges exactly (not by approximating them as a
+    /// polyline first) -- a point that's only inside because of a curve's bulge past where a
+    /// straight edge would otherwise sit must be accepted, and a point just past that bulge
+    /// must be rejected.  This is also the regression case for a real bug found during
+    /// development: a quadratic segment whose Y coordinate happens to vary linearly in t
+    /// (an entirely ordinary curve shape, not a contrived one) made the root-solver's
+    /// leading coefficient exactly zero, which its quadratic-formula solve didn't handle.
+    /// </summary>
+    [TestMethod]
+    public void TestContainsTestsCurvedEdgesExactly()
+    {
+        // A shape whose right edge bulges from (1,-1) out to (1.4,0) and back to (1,1) --
+        // the curve's own midpoint (t=0.5) works out to exactly (1.2,0), so a straight edge
+        // here would sit at x=1, but the true boundary reaches out to x=1.2.
+        GeneralPath bulging = new GeneralPath()
+            .MoveTo(-1, -1).LineTo(1, -1).QuadTo(1.4, 0, 1, 1).LineTo(-1, 1).ClosePath();
+
+        Assert.IsTrue(bulging.Contains(new TwoDPoint(1.1, 0)));
+        Assert.IsFalse(bulging.Contains(new TwoDPoint(1.5, 0)));
+    }
 }

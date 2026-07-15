@@ -1,5 +1,4 @@
 using RayTracer.Basics;
-using SkiaSharp;
 
 namespace RayTracer.Graphics;
 
@@ -57,14 +56,6 @@ public record TwoDPoint(double X, double Y)
         return new TwoDPoint(point.X, point.Z);
     }
 
-    /// <summary>
-    /// This method creates a point for the SkiaSharp library from this point.
-    /// </summary>
-    /// <returns>This point, as a SkiaSharp point.</returns>
-    public SKPoint ToSkPoint()
-    {
-        return new SKPoint((float) X, (float) Y);
-    }
     // ---------
     // Operators
     // ---------

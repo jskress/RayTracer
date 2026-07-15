@@ -30,21 +30,21 @@ public partial class LanguageParser
             'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse',
+            'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
             'disclaimer', 'discontinuous', 'drawLine', 'extrusion', 'factor', 'false', 'field', 'file',
-            'font', 'from', 'gamma', 'gap', 'generations', 'gradient', 'granite',
+            'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'intersection',
+            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
-            'move', 'named', 'no', 'noisy', 'normals', 'null', 'object', 'of', 'once',
+            'move', 'named', 'no', 'noisy', 'normal', 'normals', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
             'position', 'productions', 'profile', 'quad', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
+            'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
@@ -534,6 +534,20 @@ public partial class LanguageParser
             open | surfaceEntryClause
         ]
 
+        // Generic shape clauses.
+        startGenericShapeClause:
+        {
+            generic > shape > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "shape" here.'
+        }
+        genericShapeEntryClause:
+        [
+            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            surfaceEntryClause
+        ]
+
         // Text clauses.
         fontWeightClause:
         [
@@ -691,7 +705,24 @@ public partial class LanguageParser
             { sides > _expression > comma ?? 'Expecting a comma here.' > _expression } |
             surfaceEntryClause
         ]
-        
+
+        // Disc clauses.
+        startDiscClause:
+        {
+            disc > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "disc" here.'
+        }
+        discEntryClause:
+        [
+            { center > _expression } |
+            { normal > _expression } |
+            { radius > _expression } |
+            { inner > radius ?? 'Expecting "radius" to follow "inner" here.' > _expression } |
+            surfaceEntryClause
+        ]
+
         // Object file clauses.
         startObjectFileClause:
         {
@@ -744,6 +775,8 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
+            startDiscClause => 'disc' |
+            startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -784,6 +817,8 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
+            startDiscClause => 'disc' |
+            startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -818,6 +853,8 @@ public partial class LanguageParser
             startTriangleClause => 'triangle' |
             startSmoothTriangleClause => 'smoothTriangle' |
             startParallelogramClause => 'parallelogram' |
+            startDiscClause => 'disc' |
+            startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
@@ -881,6 +918,8 @@ public partial class LanguageParser
             startTriangleClause       => 'HandleStartTriangleClause' |
             startSmoothTriangleClause => 'HandleStartSmoothTriangleClause' |
             startParallelogramClause  => 'HandleStartParallelogramClause' |
+            startDiscClause           => 'HandleStartDiscClause' |
+            startGenericShapeClause   => 'HandleStartGenericShapeClause' |
             startObjectFileClause     => 'HandleStartObjectFileClause' |
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |

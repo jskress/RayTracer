@@ -86,4 +86,20 @@ public class TestSmoothTriangles
 
         Assert.IsTrue(expected.Matches(intersection.Normal));
     }
+
+    /// <summary>
+    /// A smooth triangle shares <see cref="Triangle.AddIntersections"/> unchanged, so a ray
+    /// pointing away from it (see <see cref="TestTriangles.TestRayPointingAwayMisses"/>) must
+    /// be rejected here too.
+    /// </summary>
+    [TestMethod]
+    public void TestRayPointingAwayMisses()
+    {
+        Ray ray = new (new Point(-0.2, 0.3, 2), Directions.In);
+        List<Intersection> intersections = new ();
+
+        _smoothTriangle.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(0, intersections.Count);
+    }
 }

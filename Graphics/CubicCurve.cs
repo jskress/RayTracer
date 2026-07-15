@@ -170,6 +170,7 @@ public class CubicCurve : IPathSegment
             a * _xCoefficients[2] + b * _yCoefficients[2],
             a * _xCoefficients[3] + b * _yCoefficients[3] + c
         ];
+
         return CubicRoots(coefficients);
     }
 
@@ -199,9 +200,23 @@ public class CubicCurve : IPathSegment
     /// <returns>The roots of the equation solution.</returns>
     private static double[] CubicRoots(double[] coefficients)
     {
+        // Trim leading (highest-degree) coefficients that are negligible relative to the
+        // polynomial's overall scale.  Building these coefficients above involves
+        // subtracting near-equal quantities (e.g. -P0+3P1-3P2+P3), which for a curve whose
+        // Y coordinate happens to vary linearly or quadratically in t (an entirely ordinary
+        // curve shape, not a contrived one) leaves a tiny floating-point residual instead of
+        // an exact zero.  A general cubic root-finder doesn't know that residual is really
+        // zero, so it solves the wrong (numerically near-singular) cubic and returns
+        // garbage roots instead of recognizing the true, lower-degree equation.
+        double maxMagnitude = coefficients.Select(Math.Abs).Max();
+        int start = 0;
+
+        while (start < coefficients.Length - 1 && coefficients[start].Near(0, maxMagnitude * 1e-9))
+            start++;
+
         // MathNet.Numerics.Polynomial expects coefficients in ascending order (the
         // constant term first), the opposite of how we build them above.
-        Polynomial polynomial = new (coefficients.Reverse().ToArray());
+        Polynomial polynomial = new (coefficients[start..].Reverse().ToArray());
 
         return polynomial.Roots()
             .Where(root => root.Imaginary.Near(0))

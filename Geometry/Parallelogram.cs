@@ -7,7 +7,7 @@ namespace RayTracer.Geometry;
 /// This class represents a parallelogram.  It is defined by one point, and two side vectors
 /// emanating from that point.
 /// </summary>
-public class Parallelogram : Surface
+public class Parallelogram : FlatSurface
 {
     /// <summary>
     /// This property provides the "anchor" point of the parallelogram.
@@ -51,12 +51,6 @@ public class Parallelogram : Surface
         }
     }
 
-    /// <summary>
-    /// This property provides the normal for the parallelogram.
-    /// </summary>
-    public Vector Normal { get; private set; }
-
-    private double _constantD;
     private Vector _constantW;
 
     /// <summary>
@@ -74,23 +68,9 @@ public class Parallelogram : Surface
             Vector cross = side2.Cross(side1);
 
             Normal = cross.Unit;
-            _constantD = Normal.Dot(point);
+            PlaneConstant = Normal.Dot(point);
             _constantW = cross / cross.Dot(cross);
         }
-    }
-
-    /// <summary>
-    /// This method is used to determine whether the given ray intersects the parallelogram
-    /// and, if so, where.
-    /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    public override void AddIntersections(Ray ray, List<Intersection> intersections)
-    {
-        double intersection = GetIntersection(ray);
-
-        if (!double.IsNaN(intersection))
-            intersections.Add(new Intersection(this, intersection));
     }
 
     /// <summary>
@@ -101,37 +81,30 @@ public class Parallelogram : Surface
     /// <returns>The value of <c>t</c> along the ray where it intersects the parallelogram.</returns>
     public double GetIntersection(Ray ray)
     {
-        double denominator = Normal.Dot(ray.Direction);
-        
-        if (denominator == 0)
+        double? t = GetPlaneDistance(ray);
+
+        if (t is null)
             return double.NaN;
-        
-        double t = (_constantD - Normal.Dot(ray.Origin)) / denominator;
 
-        if (t >= 0)
-        {
-            Point p = ray.At(t);
-            Vector vector = p - Point;
-            double alpha = _constantW.Dot(vector.Cross(Side1));
-            double beta = _constantW.Dot(Side2.Cross(vector));
-
-            if (alpha is >= 0 and <= 1 && beta is >= 0 and <= 1)
-                return t;
-        }
-
-        return double.NaN;
+        return TryCreateIntersection(ray.At(t.Value), t.Value) is not null ? t.Value : double.NaN;
     }
 
     /// <summary>
-    /// This method returns the normal for the triangle.  It is assumed that the point will
-    /// have been transformed to surface-space coordinates.  The vector returned will
-    /// also be in surface-space coordinates.
+    /// This method is used to test whether the given point, already known to lie on the
+    /// parallelogram's plane, actually lies within its sides.
     /// </summary>
-    /// <param name="point">The point at which the normal should be determined.</param>
-    /// <param name="intersection">The intersection information.</param>
-    /// <returns>The normal to the surface at the given point.</returns>
-    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
+    /// <param name="point">The point, on the parallelogram's plane, to test.</param>
+    /// <param name="distance">The distance along the ray where the point lies.</param>
+    /// <returns>The appropriate intersection object, or <c>null</c> if the point is outside
+    /// the parallelogram's sides.</returns>
+    protected override Intersection TryCreateIntersection(Point point, double distance)
     {
-        return Normal;
+        Vector vector = point - Point;
+        double alpha = _constantW.Dot(vector.Cross(Side1));
+        double beta = _constantW.Dot(Side2.Cross(vector));
+
+        return alpha is >= 0 and <= 1 && beta is >= 0 and <= 1
+            ? new Intersection(this, distance)
+            : null;
     }
 }

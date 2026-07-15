@@ -9,7 +9,7 @@ namespace RayTracer.Geometry;
 /// This class represents a "lathe".  It is defined by one or more closed paths in 2D
 /// that are rotated around the Y axis.
 /// </summary>
-public class Lathe : Surface, IDisposable
+public class Lathe : Surface
 {
     /// <summary>
     /// This property holds the path that represents the outline of the shape in the
@@ -92,16 +92,5 @@ public class Lathe : Surface, IDisposable
     public override Vector SurfaceNormaAt(Point point, Intersection intersection)
     {
         return ((PrecomputedNormalIntersection) intersection).PrecomputedNormal;
-    }
-
-    /// <summary>
-    /// This method is used to properly clean up our resources.
-    /// </summary>
-    public void Dispose()
-    {
-        Path?.Dispose();
-        Path = null;
-
-        GC.SuppressFinalize(this);
     }
 }

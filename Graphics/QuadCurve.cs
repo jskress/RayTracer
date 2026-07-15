@@ -162,6 +162,21 @@ internal class QuadCurve : IPathSegment
     /// <returns>The array of solutions to the given coefficients.</returns>
     private static double[] Evaluate(double a, double b, double c)
     {
+        // When a is (near) zero, the "quadratic" a*t^2 + b*t + c = 0 is actually linear --
+        // an entirely ordinary case (e.g. a curve whose Y coordinate happens to vary
+        // linearly in t even though its X doesn't makes a=0 for the Y equation), not a
+        // contrived edge case, so it needs its own solve rather than being fed through the
+        // quadratic formula below, which would divide by zero.
+        if (a.Near(0))
+        {
+            if (b.Near(0))
+                return Empty;
+
+            double linearT = Clip(-c / b);
+
+            return double.IsNaN(linearT) ? Empty : [linearT];
+        }
+
         double discriminant = b * b - 4 * a * c;
 
         if (discriminant < 0)
