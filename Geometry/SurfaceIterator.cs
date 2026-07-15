@@ -51,6 +51,10 @@ public class SurfaceIterator
                     foreach (Surface child in GetSurfaces([csgSurface.Left, csgSurface.Right]))
                         yield return child;
                     break;
+                case Tube { Root: not null } tube:
+                    foreach (Surface child in GetSurfaces([tube.Root]))
+                        yield return child;
+                    break;
             }
 
             yield return surface;
