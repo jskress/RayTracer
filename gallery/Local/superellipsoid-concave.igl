@@ -1,0 +1,77 @@
+// A scene showing off the superellipsoid primitive's concave range: pushing either exponent
+// above 2 turns that axis pair's cross-section from convex (bulging outward) to concave
+// (pinched inward, star-shaped), since the implicit equation reduces to nested superellipse
+// constructions -- a superellipse is only convex when its own exponent is at least 1, and the
+// exponents used internally are 2/east (for the X/Y cross-section) and 2/north (for the blend
+// between the equator and the poles).
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Superellipsoid Concave Shapes Test'
+        author 'J. Stephen Kress'
+        description 'A scene showing off the concave range of the superellipsoid primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3, -9]
+    look at [0, 0.5, 0]
+    field of view 55
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// East above 2 makes the X/Y cross-section concave (a 4-pointed star); north well below 2
+// tapers that star sharply down to the poles.
+superellipsoid {
+    east 3
+    north 0.4
+    translate [-2.6, 1.05, 0]
+    material {
+        pigment [0.75, 0.35, 0.35]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// Both exponents well above 2: concave in every direction, producing a six-pointed starfish.
+superellipsoid {
+    east 4
+    north 4
+    translate [0, 1.05, 0]
+    material {
+        pigment [0.75, 0.55, 0.25]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// East of 1 keeps the X/Y cross-section a perfect circle; north just above 2 gives only a
+// subtle concave pinch as the surface tapers toward the poles.
+superellipsoid {
+    east 1
+    north 2.2
+    rotate Y 90
+    translate [2.6, 1.05, 0]
+    material {
+        pigment [0.35, 0.5, 0.75]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}

@@ -468,4 +468,12 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/superellipsoid.igl">Superellipsoid Test</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/superellipsoid-concave.png">
+      <img alt="Superellipsoid Concave Shapes Test" height="120" src="Local/superellipsoid-concave.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/superellipsoid-concave.igl">Superellipsoid Concave Shapes Test</a>
+    </td>
+  </tr>
 </table>
