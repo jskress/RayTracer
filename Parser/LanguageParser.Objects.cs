@@ -33,13 +33,10 @@ public partial class LanguageParser
     /// </summary>
     private ObjectFileResolver ParseObjectFileClause(Clause clause)
     {
-        // We do this to make the token count match for the common code to deal with.
-        clause.Tokens.RemoveFirst();
-
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<ObjectFileResolver>(
                 "objectFileEntryClause", HandleObjectFileEntryClause),
-            "objectFileEntryClause", HandleObjectFileEntryClause);
+            "objectFileEntryClause", HandleObjectFileEntryClause, tokenOffset: 1);
     }
 
     /// <summary>
@@ -105,6 +102,8 @@ public partial class LanguageParser
                 return ParseConicClause(clause);
             case TorusResolver:
                 return ParseTorusClause(clause);
+            case EggResolver:
+                return ParseEggClause(clause);
             case LatheResolver:
                 return ParseLatheClause(clause);
             case BlobResolver:
@@ -123,6 +122,10 @@ public partial class LanguageParser
                 return ParseHeightFieldClause(clause);
             case ParallelogramResolver:
                 return ParseParallelogramClause(clause);
+            case DiscResolver:
+                return ParseDiscClause(clause);
+            case GenericShapeResolver:
+                return ParseGenericShapeClause(clause);
             case TriangleResolver:
                 return ParseTriangleClause(clause);
             case SmoothTriangleResolver:

@@ -63,6 +63,16 @@ public class Group : Surface
                 box.Add(surface.Transform * triangle.Point2);
                 box.Add(surface.Transform * triangle.Point3);
             }
+            else
+            {
+                // This child has no way to report a bounding box of its own (e.g. a Disc,
+                // Parallelogram, or any other surface that's unbounded by default) -- since
+                // its region can't be safely excluded from ray testing, the group as a
+                // whole must be unbounded too, rather than silently building an aggregate
+                // box that's too small to include it (which would cull rays aimed at this
+                // child before Group.AddIntersections ever got a chance to test it).
+                return null;
+            }
         }
 
         return box.IsEmpty ? null : box;

@@ -31,13 +31,10 @@ public partial class LanguageParser
     /// </summary>
     private GenericShapeResolver ParseGenericShapeClause(Clause clause)
     {
-        // We do this to make the token count match for the common code to deal with.
-        clause.Tokens.RemoveFirst();
-
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<GenericShapeResolver>(
                 "genericShapeEntryClause", HandleGenericShapeEntryClause),
-            "genericShapeEntryClause", HandleGenericShapeEntryClause);
+            "genericShapeEntryClause", HandleGenericShapeEntryClause, tokenOffset: 1);
     }
 
     /// <summary>

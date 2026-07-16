@@ -31,7 +31,7 @@ public partial class LanguageParser
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
-            'disclaimer', 'discontinuous', 'drawLine', 'extrusion', 'factor', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'drawLine', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
             'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
@@ -349,6 +349,20 @@ public partial class LanguageParser
             ] ?? 'Expecting an identifier or open brace to follow "torus" here.'
         }
         torusEntryClause:
+        [
+            { radii > _expression > comma ?? 'Expecting a comma here.' > _expression } |
+            surfaceEntryClause
+        ]
+
+        // Egg clauses.
+        startEggClause:
+        {
+            egg > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "egg" here.'
+        }
+        eggEntryClause:
         [
             { radii > _expression > comma ?? 'Expecting a comma here.' > _expression } |
             surfaceEntryClause
@@ -764,6 +778,7 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startEggClause => 'egg' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -806,6 +821,7 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startEggClause => 'egg' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -842,6 +858,7 @@ public partial class LanguageParser
             startCylinderClause => 'cylinder' |
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
+            startEggClause => 'egg' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -886,7 +903,8 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
-                startSmoothTriangleClause | startParallelogramClause | startObjectFileClause |
+                startSmoothTriangleClause | startParallelogramClause | startDiscClause |
+                startGenericShapeClause | startEggClause | startObjectFileClause |
                 startObjectClause | startCsgClause | startGroupClause
             ]
         }
@@ -907,6 +925,7 @@ public partial class LanguageParser
             startCylinderClause       => 'HandleStartCylinderClause' |
             startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
+            startEggClause            => 'HandleStartEggClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |
