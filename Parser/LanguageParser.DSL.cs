@@ -31,14 +31,14 @@ public partial class LanguageParser
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
-            'disclaimer', 'discontinuous', 'drawLine', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
             'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
-            'move', 'named', 'no', 'noisy', 'normal', 'normals', 'null', 'object', 'of', 'once',
+            'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
             'position', 'productions', 'profile', 'quad', 'radians', 'radii', 'radius', 'reflective',
@@ -46,7 +46,7 @@ public partial class LanguageParser
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
-            'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up',
@@ -365,6 +365,21 @@ public partial class LanguageParser
         eggEntryClause:
         [
             { radii > _expression > comma ?? 'Expecting a comma here.' > _expression } |
+            surfaceEntryClause
+        ]
+
+        // Superellipsoid clauses.
+        startSuperellipsoidClause:
+        {
+            superellipsoid > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "superellipsoid" here.'
+        }
+        superellipsoidEntryClause:
+        [
+            { east > _expression } |
+            { north > _expression } |
             surfaceEntryClause
         ]
 
@@ -779,6 +794,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
+            startSuperellipsoidClause => 'superellipsoid' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -822,6 +838,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
+            startSuperellipsoidClause => 'superellipsoid' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -859,6 +876,7 @@ public partial class LanguageParser
             startConicClause => 'conic' |
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
+            startSuperellipsoidClause => 'superellipsoid' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
@@ -904,8 +922,8 @@ public partial class LanguageParser
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
-                startGenericShapeClause | startEggClause | startObjectFileClause |
-                startObjectClause | startCsgClause | startGroupClause
+                startGenericShapeClause | startEggClause | startSuperellipsoidClause |
+                startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
             ]
         }
         setVariableClause:
@@ -926,6 +944,7 @@ public partial class LanguageParser
             startConicClause          => 'HandleStartConicClause' |
             startTorusClause          => 'HandleStartTorusClause' |
             startEggClause            => 'HandleStartEggClause' |
+            startSuperellipsoidClause => 'HandleStartSuperellipsoidClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |

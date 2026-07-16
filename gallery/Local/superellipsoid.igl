@@ -1,0 +1,85 @@
+// A scene to test the superellipsoid primitive: an implicit "rounded box/pillow" shape whose
+// silhouette ranges continuously from a sphere to a rounded cube to a sharp cube to an
+// octahedron, depending on its east/west and north/south exponents.  Four superellipsoids,
+// in increasingly sharp-edged configurations, show off that range.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Superellipsoid Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the superellipsoid primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3, -10]
+    look at [0, 1, 0]
+    field of view 55
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// Exponents of 1 collapse the implicit equation exactly to a sphere.
+superellipsoid {
+    east 1
+    north 1
+    translate [-3.3, 1, 0]
+    material {
+        pigment [0.85, 0.35, 0.35]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A gently rounded box.
+superellipsoid {
+    east 0.4
+    north 0.4
+    translate [-1.1, 1, 0]
+    material {
+        pigment [0.85, 0.65, 0.3]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A much more sharply rounded box, closer to a true cube.
+superellipsoid {
+    east 0.15
+    north 0.15
+    translate [1.1, 1, 0]
+    material {
+        pigment [0.4, 0.7, 0.45]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// Exponents of 2 collapse the implicit equation exactly to an octahedron.
+superellipsoid {
+    east 2
+    north 2
+    translate [3.3, 1, 0]
+    material {
+        pigment [0.4, 0.55, 0.85]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
