@@ -1,0 +1,82 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+title = 'The Wood Pattern'
+
+include '../defaults.igl'
+
+// Floor.  Wood's rings circle the Z axis, so on the floor -- the XZ plane -- they read as long
+// grain lines running away from the camera, the way a laid plank does.
+plane {
+    material {
+        pigment wood {
+            turbulence 1
+            [0, SaddleBrown, 0.5, Peru, 1, SaddleBrown]
+            scale 0.4
+        }
+        specular 0
+    }
+}
+
+// Wall, left plain so the wood has nothing to compete with.
+plane {
+    material {
+        pigment Gray30
+        specular 0
+    }
+    rotate X -90
+    rotate Y 20
+    translate Z 4
+}
+
+// The bare pattern, with no turbulence at all: concentric rings about the Z axis, which the
+// camera looks straight down, so they read as the rings on a sawn log.
+sphere {
+    material {
+        pigment wood {
+            [0, SaddleBrown, 0.5, BurlyWood, 1, SaddleBrown]
+            scale 0.35
+        }
+        specular 0.3
+        shininess 50
+    }
+    scale 0.7
+    translate X -1.6
+    translate Y 1.2
+}
+
+// One octave of turbulence.  Note "turbulence 1" asks for a single octave, not for a gentle
+// amount of it -- this DSL's turbulence takes an octave count, where POV-Ray's takes a
+// strength -- and each octave displaces the grain by up to a full ring's width.  So even one
+// is enough to pull the rings apart into broad swirls.
+sphere {
+    material {
+        pigment wood {
+            turbulence 1
+            [0, SaddleBrown, 0.5, BurlyWood, 1, SaddleBrown]
+            scale 0.35
+        }
+        specular 0.3
+        shininess 50
+    }
+    scale 0.7
+    translate Y 1.2
+}
+
+// Three octaves.  The broad swirls of the first octave are still there underneath; what the
+// two extra ones add is finer detail on top of them, each at half the weight and twice the
+// frequency of the last, giving the knotted figure of a burl.
+sphere {
+    material {
+        pigment wood {
+            turbulence 3
+            [0, SaddleBrown, 0.5, BurlyWood, 1, SaddleBrown]
+            scale 0.35
+        }
+        specular 0.3
+        shininess 50
+    }
+    scale 0.7
+    translate X 1.6
+    translate Y 1.2
+}

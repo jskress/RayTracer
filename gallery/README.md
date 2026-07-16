@@ -88,6 +88,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="challenge-book/chapter-10/wood.png">
+      <img alt="'The Wood Pattern" height="120" src="challenge-book/chapter-10/wood.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="challenge-book/chapter-10/wood.igl">'The Wood Pattern</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/planet.png">
       <img alt="'A Planet" height="120" src="challenge-book/chapter-10/planet.png" width="160"/>
     </a></td>
