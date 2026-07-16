@@ -67,8 +67,12 @@ cube {
 torus {
     radii 0.75, 0.3
     material {
+        // Wrinkles sums ten octaves of noise, and averaging that many samples pulls the result
+        // tightly around the middle: 5% to 95% of its values land between 0.35 and 0.63.  A map
+        // spread over [0, 1] would only ever reach the few shades either side of centre, so
+        // these break values follow the band wrinkles actually occupies.
         pigment wrinkles {
-            [0, SkyBlue, 1, DeepSkyBlue]
+            [0.35, SkyBlue, 0.63, MidnightBlue]
             scale 0.1
         }
     }
