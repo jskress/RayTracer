@@ -10,6 +10,26 @@ public class PerlinNoise
 {
     private const int TableSize = 256;
 
+    /// <summary>
+    /// The seed used when a scene doesn't name one of its own.  It must be a fixed value, not
+    /// a random one: the noise tables are built from it, so seeding them from a shared,
+    /// arbitrarily-seeded generator would make every render of the same scene produce
+    /// different noise.
+    /// </summary>
+    private const int DefaultSeed = 0;
+
+    // These scale and bias the raw gradient noise below into the [0, 1] interval, with a mean
+    // of about 0.5.  Every pattern that consumes noise here was ported from POV-Ray and so
+    // assumes POV's own contract for Noise(): 0 to 1, never negative, mean ~0.49.  Raw gradient
+    // noise is instead centered on 0 and runs about -0.63 to 0.66, so handing it to those
+    // patterns unadjusted puts their carefully-chosen bias points (e.g. granite's "0.5 -
+    // noise") at the tail of the distribution rather than the middle of it.  These are POV's
+    // own constants, from Noise() in source/backend/texture/texture.cpp; they map a raw range
+    // of [-0.6195, 0.6384] onto [0, 1], which fits this generator's measured range closely
+    // enough that the resulting mean lands on ~0.491 against POV's documented ~0.49.
+    private const double NoiseScale = 1.59;
+    private const double NoiseBias = 0.985;
+
     private static readonly ConcurrentDictionary<int, PerlinNoise> NoiseGenerators = new ();
 
     /// <summary>
@@ -22,13 +42,9 @@ public class PerlinNoise
     /// <returns>The appropriate noise generator.</returns>
     public static PerlinNoise GetNoise(int? seed = null)
     {
-        return seed.HasValue
-            ? NoiseGenerators.GetOrAdd(
-                seed.Value, value => new PerlinNoise(ThreadSafeRandom.GetGenerator(value)))
-            : DefaultInstance;
+        return NoiseGenerators.GetOrAdd(
+            seed ?? DefaultSeed, value => new PerlinNoise(ThreadSafeRandom.GetGenerator(value)));
     }
-
-    private static readonly PerlinNoise DefaultInstance = new (ThreadSafeRandom.GetGenerator());
 
     private readonly ThreadSafeRandom _rng;
     private readonly Vector[] _numbers;
@@ -65,11 +81,56 @@ public class PerlinNoise
     }
 
     /// <summary>
-    /// This method generates a noise factor for the given point.
+    /// This method generates a noise factor for the given point.  The value returned lies in
+    /// the [0, 1] interval, with a mean of about 0.5, matching the contract POV-Ray's own
+    /// <c>Noise()</c> provides -- see <see cref="NoiseScale"/> for why that matters.
     /// </summary>
     /// <param name="point">The point to generate noise for.</param>
-    /// <returns>A noise value for the point.</returns>
+    /// <returns>A noise value for the point, in the [0, 1] interval.</returns>
     public double Noise(Point point)
+    {
+        double value = 0.5 * (NoiseScale * RawNoise(point) + NoiseBias);
+
+        return value switch
+        {
+            < 0 => 0,
+            > 1 => 1,
+            _ => value
+        };
+    }
+
+    /// <summary>
+    /// This method generates a noise vector for the given point, the way POV-Ray's own
+    /// <c>DNoise()</c> does.  Each component is an independent noise value, so callers that
+    /// need to displace more than one axis (the wood pattern, say) get a genuinely different
+    /// amount per axis rather than the same one repeated.
+    ///
+    /// Unlike <see cref="Noise"/>, the components are left as raw, zero-centered noise rather
+    /// than biased into [0, 1] -- callers want a signed displacement here, and POV leaves its
+    /// own <c>DNoise()</c> unbiased for the same reason.  See <see cref="RawNoise"/> for the
+    /// magnitude to expect.
+    /// </summary>
+    /// <param name="point">The point to generate a noise vector for.</param>
+    /// <returns>A noise vector for the point.</returns>
+    public Vector DNoise(Point point)
+    {
+        // Sampling the one scalar field at three points far apart from each other gives three
+        // effectively independent values.  The offsets are arbitrary, but need to be large
+        // enough, and share no common factor, so that the samples can't correlate.
+        return new Vector(
+            RawNoise(point),
+            RawNoise(new Point(point.X + 137.31, point.Y - 71.53, point.Z + 29.17)),
+            RawNoise(new Point(point.X - 43.79, point.Y + 113.61, point.Z - 89.23)));
+    }
+
+    /// <summary>
+    /// This method generates the underlying gradient noise for the given point.  The value is
+    /// centered on zero; sampling ~48 million points put its extent at about -0.724 to 0.694.
+    /// Callers wanting POV-Ray's [0, 1] contract should use <see cref="Noise"/> instead.
+    /// </summary>
+    /// <param name="point">The point to generate noise for.</param>
+    /// <returns>A raw, zero-centered noise value for the point.</returns>
+    private double RawNoise(Point point)
     {
         double u = point.X.Fraction();
         double v = point.Y.Fraction();

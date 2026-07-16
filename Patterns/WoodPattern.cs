@@ -46,13 +46,16 @@ public class WoodPattern : Pattern
 
         if (Turbulence is not null)
         {
-            double tx = Turbulence.Generate(point);
-            double ty = Turbulence.Generate(point);
+            // A vector's worth of turbulence, so X and Y are displaced by different amounts.
+            // This used to call the scalar Generate twice on the same point, which -- being a
+            // deterministic function of that point -- handed back the very same number both
+            // times, displacing X and Y identically and collapsing the grain onto a diagonal.
+            Vector turbulence = Turbulence.GenerateVector(point);
 
-            x += Cycloidal(x * tx);
-            y += Cycloidal(y * ty);
+            x += Cycloidal(x + turbulence.X);
+            y += Cycloidal(y + turbulence.Y);
         }
-        
+
         double value = new Vector(x, y, 0).Magnitude;
         bool isOdd = Math.Floor(value) % 2 != 0;
 

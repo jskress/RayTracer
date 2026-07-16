@@ -68,44 +68,54 @@ public class Spectrum<T> : IEnumerable<T>
     }
 
     /// <summary>
+    /// This method brings a number into the [0, 1) interval the break values live in.
+    /// </summary>
+    /// <param name="number">The number to normalize.</param>
+    /// <returns>The number, brought into the [0, 1) interval.</returns>
+    public static double Normalize(double number)
+    {
+        return number.Fraction();
+    }
+
+    /// <summary>
     /// This method returns a value from the spectrum based on a number.
     /// </summary>
     /// <param name="number">The numb to use in determining the desired value.</param>
     /// <returns>The value for the given number and its break value.</returns>
     public (double, T) GetByValue(double number)
     {
-        // First, let's make sure the number is in the [0, 1] range.
-        number = number.Fraction();
+        int index = GetIndexByValue(number);
 
-        if (number < 0)
-            number = 1 + number;
-
-        Entry entry = _entries.LastOrDefault(e => number >= e.BreakValue) ??
-                      _entries.FirstOrDefault();
-
-        return entry == null
-            ? (double.NaN, default)
-            : (entry.BreakValue, entry.Value);
+        return index < 0 ? (double.NaN, default) : GetByIndex(index);
     }
 
     /// <summary>
-    /// This method returns the value that follows the specified one.
+    /// This method returns the index of the entry that governs the given number: the last one
+    /// whose break value the number has reached, or the first entry if it has reached none of
+    /// them.
+    ///
+    /// Callers wanting the entry *after* this one should ask for the next index, rather than
+    /// searching back for this entry's value: nothing stops the same value appearing at several
+    /// break values (a colour map naming one pigment at every stop, say), and a search by value
+    /// can't tell those apart -- it would find the first of them every time, and so report a
+    /// break value belonging to some entirely different stop.
     /// </summary>
-    /// <param name="value">The value that precedes the desired value.</param>
-    /// <returns>The value for the given number and its break value.</returns>
-    public (double, T) GetValueFollowing(T value)
+    /// <param name="number">The number to find the governing entry for.</param>
+    /// <returns>The index of the governing entry, or -1 if we carry no entries at all.</returns>
+    public int GetIndexByValue(double number)
     {
-        for (int index = 0; index < _entries.Count - 1; index++)
-        {
-            if (_entries[index].Value.Equals(value))
-            {
-                Entry entry = _entries[index + 1];
+        if (_entries.IsEmpty())
+            return -1;
 
-                return (entry.BreakValue, entry.Value);
-            }
+        number = Normalize(number);
+
+        for (int index = _entries.Count - 1; index >= 0; index--)
+        {
+            if (number >= _entries[index].BreakValue)
+                return index;
         }
 
-        return (double.NaN, default);
+        return 0;
     }
 
     /// <summary>

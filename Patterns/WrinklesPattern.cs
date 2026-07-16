@@ -29,17 +29,24 @@ public class WrinklesPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        Vector vector = new Vector(point);
-        double value = PerlinNoise.GetNoise(Seed).Noise(point);
+        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+        Vector vector = new (point);
+        double value = generator.Noise(point);
         double lambda = 2;
         double omega = 0.5;
 
-        for (int _ = 0; _ < 10; _++)
+        // POV-Ray runs this from i = 1 while i < 10, so nine further octaves on top of the
+        // first sample above.
+        for (int i = 1; i < 10; i++)
         {
             Vector work = vector * lambda;
 
-            value += omega * PerlinNoise.GetNoise(Seed).Noise(new Point(work.X, work.Y, work.Z));
-            lambda += 2;
+            value += omega * generator.Noise(new Point(work.X, work.Y, work.Z));
+
+            // Each octave doubles the frequency: 2, 4, 8, 16...  This used to add 2 rather
+            // than multiply by it, which walked the octaves up arithmetically (2, 4, 6, 8...)
+            // and never reached the fine detail the halving weights below assume.
+            lambda *= 2;
             omega *= 0.5;
         }
 
