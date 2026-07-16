@@ -83,13 +83,10 @@ public partial class LanguageParser
     /// </summary>
     private SmoothTriangleResolver ParseSmoothTriangleClause(Clause clause)
     {
-        // We do this to make the token count match for the common code to deal with.
-        clause.Tokens.RemoveFirst();
-
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<SmoothTriangleResolver>(
                 "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause),
-            "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause);
+            "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause, tokenOffset: 1);
     }
 
     /// <summary>

@@ -125,18 +125,29 @@ public partial class LanguageParser
     /// <param name="entryBlockName">The name of the clause for parsing entries for what
     /// the resolver resolves.</param>
     /// <param name="handler">The action that will handle parsed entry clauses.</param>
+    /// <param name="tokenOffset">The number of leading tokens, beyond the first, to skip
+    /// before looking for the identifier-or-open-brace token -- used by multi-keyword start
+    /// clauses (e.g. "smooth triangle", "generic shape", "object file") whose keyword makes
+    /// this clause's tokens start one (or more) positions later than a single-keyword
+    /// clause's would.  Earlier versions of these callers physically removed their leading
+    /// token(s) from <see cref="Clause.Tokens"/> instead of passing an offset here, which
+    /// happened to work for top-level parsing but corrupted a repeating clause parser's own
+    /// bookkeeping (used for group/csg/scene children), silently dropping whatever sibling
+    /// clause came next -- this offset achieves the same index alignment without mutating a
+    /// list that outer parsing code may still depend on.</param>
     /// <returns>The proper resolver.</returns>
     private TResolver GetSurfaceResolver<TResolver>(
-        Clause clause, Func<TResolver> parser, string entryBlockName, Action<Clause> handler)
+        Clause clause, Func<TResolver> parser, string entryBlockName, Action<Clause> handler,
+        int tokenOffset = 0)
         where TResolver : class, ICloneable, IObjectResolver, new()
     {
-        Token token = clause.Tokens[1];
+        Token token = clause.Tokens[1 + tokenOffset];
 
         // Complete definition.
         if (BounderToken.OpenBrace.Matches(token))
             return parser();
 
-        bool extending = clause.Tokens.Count > 2;
+        bool extending = clause.Tokens.Count > 2 + tokenOffset;
         TResolver resolver = GetExtensibleItem<TResolver>(token, extending);
 
         if (extending)

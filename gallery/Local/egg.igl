@@ -1,0 +1,59 @@
+// A scene to test the egg primitive (POV-Ray calls this shape an "ovus"): two spheres --
+// a bigger one at the bottom, a smaller one at top -- smoothly joined by a connecting
+// collar.  Two eggs, with different bottom/top radius ratios, show off the shape's range.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Egg Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the egg primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2, -7]
+    look at [0, 1, 0]
+    field of view 50
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// A classic, gently tapered egg.
+egg {
+    radii 1.2, 0.8
+    translate [-1.6, 1.2, 0]
+    material {
+        pigment [0.95, 0.92, 0.85]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A more dramatically tapered egg, close to the 2x radius-ratio limit.  Where the bottom
+// sphere meets the connecting collar, the surface is tangent-continuous but not
+// curvature-continuous (the same is true of POV-Ray's own ovus), which a strong specular
+// highlight can make visible as a faint line -- a lower shininess keeps it subtle here.
+egg {
+    radii 1, 0.55
+    translate [1.6, 1, 0]
+    material {
+        pigment [0.75, 0.55, 0.2]
+        diffuse 0.7
+        specular 0.2
+        shininess 40
+    }
+}

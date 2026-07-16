@@ -73,6 +73,9 @@ public partial class LanguageParser
                 case "torus":
                     resolver.SurfaceResolvers.Add(ParseTorusClause(clause));
                     break;
+                case "egg":
+                    resolver.SurfaceResolvers.Add(ParseEggClause(clause));
+                    break;
                 case "extrusion":
                     resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
                     break;
@@ -106,6 +109,12 @@ public partial class LanguageParser
                     break;
                 case "parallelogram":
                     resolver.SurfaceResolvers.Add(ParseParallelogramClause(clause));
+                    break;
+                case "disc":
+                    resolver.SurfaceResolvers.Add(ParseDiscClause(clause));
+                    break;
+                case "genericShape":
+                    resolver.SurfaceResolvers.Add(ParseGenericShapeClause(clause));
                     break;
                 case "objectFile":
                     resolver.SurfaceResolvers.Add(ParseObjectFileClause(clause));
