@@ -106,6 +106,8 @@ public partial class LanguageParser
                 return ParseEggClause(clause);
             case SuperellipsoidResolver:
                 return ParseSuperellipsoidClause(clause);
+            case BicubicPatchResolver:
+                return ParsePatchClause(clause);
             case LatheResolver:
                 return ParseLatheClause(clause);
             case BlobResolver:

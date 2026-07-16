@@ -1,0 +1,96 @@
+// A scene to test the patch primitive: a bicubic Bezier surface defined by a 4x4 grid of
+// control points.  Unlike this project's other surfaces, a patch has no closed-form ray
+// intersection -- POV-Ray's own approach is ported instead of a simpler fixed tessellation:
+// the control-point grid is recursively subdivided (via De Casteljau midpoint splitting) into a
+// tree of bounding-sphere-culled nodes, stopping each branch once its subpatch is flat enough,
+// then refining the normal (not the position) to the true smooth surface at each hit.  A gentle
+// dome and a saddle show off the smooth curvature this produces.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Patch Test'
+        author 'J. Stephen Kress'
+        description 'A scene to test the patch primitive.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3.2, -9.5]
+    look at [0, 0.7, 0]
+    field of view 50
+}
+
+point light {
+    location [-6, 8, -6]
+}
+
+// Floor
+plane {
+    material {
+        pigment checker { White, [0.2, 0.2, 0.25] scale 2 }
+    }
+}
+
+// A gentle dome: the border stays flat at the floor while the inner 2x2 block of control
+// points is raised, bulging the surface upward in the middle.
+patch {
+    points
+        [-1.5, 0, -1.5], [-0.5, 0, -1.5], [0.5, 0, -1.5], [1.5, 0, -1.5],
+        [-1.5, 0, -0.5], [-0.5, 1.4, -0.5], [0.5, 1.4, -0.5], [1.5, 0, -0.5],
+        [-1.5, 0, 0.5], [-0.5, 1.4, 0.5], [0.5, 1.4, 0.5], [1.5, 0, 0.5],
+        [-1.5, 0, 1.5], [-0.5, 0, 1.5], [0.5, 0, 1.5], [1.5, 0, 1.5]
+    uSteps 4
+    vSteps 4
+    translate [-2.2, 0, 0]
+    material {
+        pigment [0.8, 0.35, 0.35]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A saddle: height set to a constant times X times Z at every control point, giving the
+// classic hyperbolic-paraboloid shape (curving up along one diagonal, down along the other).
+patch {
+    points
+        [-1.5, 0.675, -1.5], [-0.5, 0.225, -1.5], [0.5, -0.225, -1.5], [1.5, -0.675, -1.5],
+        [-1.5, 0.225, -0.5], [-0.5, 0.075, -0.5], [0.5, -0.075, -0.5], [1.5, -0.225, -0.5],
+        [-1.5, -0.225, 0.5], [-0.5, -0.075, 0.5], [0.5, 0.075, 0.5], [1.5, 0.225, 0.5],
+        [-1.5, -0.675, 1.5], [-0.5, -0.225, 1.5], [0.5, 0.225, 1.5], [1.5, 0.675, 1.5]
+    uSteps 4
+    vSteps 4
+    rotate Y 45
+    translate [2.2, 0.7, 0]
+    material {
+        pigment [0.35, 0.5, 0.8]
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
+
+// A wavy "egg carton": the control-point heights alternate in a checkerboard, so the surface
+// ripples up and down across both directions.  Sits in the middle, but set back behind the
+// other two.
+patch {
+    points
+        [-1.5, 0.9, -1.5], [-0.5, -0.9, -1.5], [0.5, 0.9, -1.5], [1.5, -0.9, -1.5],
+        [-1.5, -0.9, -0.5], [-0.5, 0.9, -0.5], [0.5, -0.9, -0.5], [1.5, 0.9, -0.5],
+        [-1.5, 0.9, 0.5], [-0.5, -0.9, 0.5], [0.5, 0.9, 0.5], [1.5, -0.9, 0.5],
+        [-1.5, -0.9, 1.5], [-0.5, 0.9, 1.5], [0.5, -0.9, 1.5], [1.5, 0.9, 1.5]
+    uSteps 5
+    vSteps 5
+    rotate X 75
+    translate [0, 1.9, 5]
+    material {
+        pigment checker { White, [0.3, 0.45, 0.85] scale 0.6 }
+        diffuse 0.6
+        specular 0.5
+        shininess 100
+    }
+}
