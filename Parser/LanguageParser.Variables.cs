@@ -48,6 +48,7 @@ public partial class LanguageParser
             "conic" => ParseConicClause(clause),
             "torus" => ParseTorusClause(clause),
             "egg" => ParseEggClause(clause),
+            "superellipsoid" => ParseSuperellipsoidClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),

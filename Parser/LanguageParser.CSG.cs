@@ -95,6 +95,9 @@ public partial class LanguageParser
                 case "egg":
                     resolver.SurfaceResolvers.Add(ParseEggClause(clause));
                     break;
+                case "superellipsoid":
+                    resolver.SurfaceResolvers.Add(ParseSuperellipsoidClause(clause));
+                    break;
                 case "extrusion":
                     resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
                     break;
