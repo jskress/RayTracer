@@ -74,7 +74,7 @@ seeding), and calls `camera.Render(...)`.
 `Torus`, `Triangle`/`SmoothTriangle`, `Parallelogram`, `Group`, `CsgSurface`, `HeightField`,
 `Extrusion`/`ExtrudedSurface`, `Lathe`, `TextSolid`, and L-system-driven shapes under
 `Geometry/LSystems/`). `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
-`Matrix`, `Ray`, `Interval`, `Transforms`, `PerlinNoise`, `Polynomials`). `Core/` has scene-
+`Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,
 `Line`, `QuadCurve`, `CubicCurve`, `TwoDPoint`/`TwoDVector`) used by extrusions, lathes and

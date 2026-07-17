@@ -1,7 +1,7 @@
 namespace RayTracer.Basics;
 
 /// <summary>
-/// This interface marks an object that makes use of Perlin noise
+/// This interface marks an object that makes use of a <see cref="NoiseGenerator"/>
 /// </summary>
 public interface INoiseConsumer
 {

@@ -36,7 +36,7 @@ public class GranitePattern : Pattern, INoiseConsumer
         for (int count = 0; count < 6; count++)
         {
             Vector vector2 = vector1 * frequency;
-            double number = Math.Abs(0.5 - PerlinNoise.GetNoise(Seed).Noise(
+            double number = Math.Abs(0.5 - NoiseGenerator.ForSeed(Seed).Noise(
                 new Point(vector2.X, vector2.Y, vector2.Z)));
 
             noise += number / frequency;

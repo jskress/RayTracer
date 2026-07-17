@@ -33,6 +33,6 @@ public class BozoPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        return PerlinNoise.GetNoise(Seed).Noise(point);
+        return NoiseGenerator.ForSeed(Seed).Noise(point);
     }
 }

@@ -27,7 +27,7 @@ public class TestNoise
         // gradient noise is centered on 0 and half negative instead, which silently moves each
         // pattern's chosen bias point (granite's "0.5 - noise", say) from the middle of the
         // distribution out to its tail.  This test pins the contract those patterns rely on.
-        PerlinNoise noise = PerlinNoise.GetNoise(12345);
+        NoiseGenerator noise = NoiseGenerator.ForSeed(12345);
         double min = double.MaxValue;
         double max = double.MinValue;
         double sum = 0;
@@ -57,7 +57,7 @@ public class TestNoise
     {
         // A guard against "fixing" the range by simply crushing everything toward the middle:
         // the noise still has to reach out near both ends to be worth anything.
-        PerlinNoise noise = PerlinNoise.GetNoise(12345);
+        NoiseGenerator noise = NoiseGenerator.ForSeed(12345);
         double min = double.MaxValue;
         double max = double.MinValue;
 
@@ -79,7 +79,7 @@ public class TestNoise
         // The default generator used to build its tables from a shared, arbitrarily seeded
         // random source, so a scene that named no seed of its own rendered differently every
         // run.  Asking for the default twice must give the very same generator.
-        Assert.AreSame(PerlinNoise.GetNoise(), PerlinNoise.GetNoise());
+        Assert.AreSame(NoiseGenerator.ForSeed(), NoiseGenerator.ForSeed());
     }
 
     [TestMethod]
@@ -96,8 +96,8 @@ public class TestNoise
         //
         // Racing threads can't be made to reproduce that on demand, so this pins the property
         // underneath it instead: build twice from one seed and insist the two agree.
-        PerlinNoise first = Build(4242);
-        PerlinNoise second = Build(4242);
+        NoiseGenerator first = Build(4242);
+        NoiseGenerator second = Build(4242);
 
         foreach (Point point in SamplePoints().Take(500))
             Assert.AreEqual(first.Noise(point), second.Noise(point));
@@ -107,10 +107,10 @@ public class TestNoise
     /// This builds a generator directly, sidestepping the per-seed cache, so that two of them
     /// for the same seed can be compared.
     /// </summary>
-    private static PerlinNoise Build(int seed)
+    private static NoiseGenerator Build(int seed)
     {
-        return (PerlinNoise) Activator.CreateInstance(
-            typeof(PerlinNoise), BindingFlags.NonPublic | BindingFlags.Instance,
+        return (NoiseGenerator) Activator.CreateInstance(
+            typeof(NoiseGenerator), BindingFlags.NonPublic | BindingFlags.Instance,
             null, [seed], null);
     }
 
@@ -120,8 +120,8 @@ public class TestNoise
         Point point = new (1.5, 2.5, 3.5);
 
         Assert.AreEqual(
-            PerlinNoise.GetNoise(77).Noise(point),
-            PerlinNoise.GetNoise(77).Noise(point));
+            NoiseGenerator.ForSeed(77).Noise(point),
+            NoiseGenerator.ForSeed(77).Noise(point));
     }
 
     [TestMethod]
@@ -130,8 +130,8 @@ public class TestNoise
         Point point = new (1.5, 2.5, 3.5);
 
         Assert.AreNotEqual(
-            PerlinNoise.GetNoise(77).Noise(point),
-            PerlinNoise.GetNoise(78).Noise(point));
+            NoiseGenerator.ForSeed(77).Noise(point),
+            NoiseGenerator.ForSeed(78).Noise(point));
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public class TestNoise
         // per axis, but got the same number three times over.  Noise is a deterministic
         // function of its point, so the only way to get genuinely different components is for
         // DNoise to sample somewhere different for each -- which is what this checks.
-        PerlinNoise noise = PerlinNoise.GetNoise(12345);
+        NoiseGenerator noise = NoiseGenerator.ForSeed(12345);
         int matches = 0;
         int count = 0;
 
@@ -167,7 +167,7 @@ public class TestNoise
         // rather than around 0.5 the way Noise's do.  A sweep of ~48 million points put the
         // underlying noise's extent at about -0.724 to 0.694, so allowing 0.8 here catches a
         // gross scaling mistake while leaving room for a sample worse than any of those.
-        PerlinNoise noise = PerlinNoise.GetNoise(12345);
+        NoiseGenerator noise = NoiseGenerator.ForSeed(12345);
         double sum = 0;
         int count = 0;
 

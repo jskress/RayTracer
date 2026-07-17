@@ -38,14 +38,14 @@ public class Turbulence : INoiseConsumer
     public double Scale { get; set; } = 1;
 
     /// <summary>
-    /// This method produces turbulence by accumulating multiple calls to the Perlin noise
-    /// generator we were constructed with.
+    /// This method produces turbulence by accumulating multiple calls to the noise generator for
+    /// our seed.
     /// </summary>
     /// <param name="point">The point to determine some noise for.</param>
     /// <returns></returns>
     public double Generate(Point point)
     {
-        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
 
         if (Depth == 0)
             return generator.Noise(point);
@@ -64,7 +64,7 @@ public class Turbulence : INoiseConsumer
         // Note there is deliberately no Math.Abs here: POV-Ray's own scalar Turbulence() has
         // none, and since Noise() never returns a negative value, the accumulated sum can't be
         // negative either.  (An Abs call used to live here, compensating for noise that was
-        // wrongly centered on zero -- see PerlinNoise.Noise.)
+        // wrongly centered on zero -- see NoiseGenerator.Noise.)
 
         if (Phased)
         {
@@ -78,7 +78,7 @@ public class Turbulence : INoiseConsumer
 
     /// <summary>
     /// This method produces turbulence as a vector rather than a single number, by
-    /// accumulating octaves of <see cref="PerlinNoise.DNoise"/>.  It is the counterpart to
+    /// accumulating octaves of <see cref="NoiseGenerator.DNoise"/>.  It is the counterpart to
     /// <see cref="Generate"/>, mirroring the way POV-Ray pairs its own <c>Turbulence()</c> with
     /// <c>DTurbulence()</c>, and exists for callers that need to displace more than one axis
     /// and so need a genuinely different amount for each.
@@ -91,7 +91,7 @@ public class Turbulence : INoiseConsumer
     /// <returns>The turbulence at that point, as a vector.</returns>
     public Vector GenerateVector(Point point)
     {
-        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
 
         if (Depth == 0)
             return generator.DNoise(point);
