@@ -1,0 +1,118 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+title = 'Bozo, Marble and the Angular Patterns'
+
+include '../defaults.igl'
+
+// Floor -- radial, which measures which way round a point lies rather than how far out, so it
+// wraps once per turn about the Y axis.  Banded rather than faded, to make wedges of it.  Note
+// the value runs 0.25 to 1.25 rather than 0 to 1, which is POV-Ray's own arrangement: a map wraps
+// whatever it is handed, so the extra quarter turn only decides where the seam falls.
+plane {
+    material {
+        pigment radial {
+            banded [0, Gray30, 0.125, Gray70, 0.25, Gray30, 0.375, Gray70,
+                    0.5, Gray30, 0.625, Gray70, 0.75, Gray30, 0.875, Gray70]
+        }
+        specular 0
+    }
+}
+
+// Wall, kept plain so the shapes have nothing to compete with.
+plane {
+    material {
+        pigment Gray30
+        specular 0
+    }
+    rotate X -90
+    rotate Y 20
+    translate Z 4
+}
+
+// Bozo -- noise, and nothing done to it.  Where dents cubes its noise to scatter it and granite
+// sums octaves of it, this one just hands it over, which is what makes it the one to reach for
+// when a surface wants gentle variation rather than a figure.  Its values cluster: a twentieth
+// fall below 0.25 and a twentieth above 0.73, so the map covers that band rather than [0, 1].
+sphere {
+    material {
+        pigment bozo with seed 3 {
+            [0.25, [0.30, 0.42, 0.65], 0.5, [0.62, 0.72, 0.88], 0.73, White]
+            scale 0.4
+        }
+        specular 0.2
+        shininess 40
+    }
+    scale 0.55
+    translate X -1.95
+    translate Y 1.4
+}
+
+// Marble -- which is only the X coordinate pushed sideways by turbulence.  Every vein comes from
+// the map, not the pattern: the value marches from -3.7 to 5.2 across this sphere, and the map
+// wraps each time it passes a whole number, so a map running dark at both ends draws a vein at
+// every crossing.  Without the turbulence they would be dead straight stripes.
+sphere {
+    material {
+        pigment marble {
+            turbulence 3 with seed 5
+            [0, [0.20, 0.20, 0.24], 0.12, [0.55, 0.55, 0.60],
+             0.5, [0.92, 0.92, 0.94], 0.88, [0.55, 0.55, 0.60], 1, [0.20, 0.20, 0.24]]
+            scale 0.9
+        }
+        specular 0.4
+        shininess 90
+    }
+    scale 0.55
+    translate X -0.65
+    translate Y 1.4
+}
+
+// The cylindrical falloff -- distance from the Y axis, clipped, so it is 1 on the axis and 0 by
+// the time it reaches a unit out.  A sphere suits it, since distance from the axis is exactly
+// what varies with latitude: the poles light up and the equator goes dark.  A *cylinder* would be
+// the worst possible host -- every point on one stands the same distance from its own axis, so
+// this would come out one flat colour.
+//
+// Banded, and for the same reason boxed is banded over in patterns4: this falls off just once
+// rather than repeating, so faded it is a single smooth wash that the eye reads as ordinary
+// shading and the pattern hides inside.  Hard steps draw the contours, and contours about an axis
+// are the whole point of it.
+sphere {
+    material {
+        pigment cylindrical {
+            banded [0, [0.10, 0.20, 0.35], 0.2, [0.15, 0.35, 0.55], 0.4, [0.20, 0.55, 0.70],
+                    0.6, [0.45, 0.75, 0.85], 0.8, [0.85, 0.95, 1.00]]
+        }
+        specular 0.2
+        shininess 40
+    }
+    scale 0.55
+    // Tilted to bring a pole into view.  The contours circle the Y axis, so they only read as
+    // circles when there is some view down that axis; edge-on they flatten into stripes.
+    rotate X -55
+    translate X 0.65
+    translate Y 1.4
+}
+
+// The spherical falloff -- the same idea measured from a point rather than an axis, and the
+// sibling of planar and boxed.  It needs a host that crosses its unit sphere, which is why it is
+// on a cube and scaled: a cube's own corners stand about 1.73 out against its faces' 1, so at
+// this scale the falloff sweeps from about 0.5 at each face to 0.13 at each corner, rounding the
+// cube's shading off against its flat sides.  A sphere would be the worst possible host -- every
+// point on one is equidistant from its centre, so the answer would never change.
+cube {
+    material {
+        pigment spherical {
+            [0.13, [0.35, 0.15, 0.10], 0.3, [0.75, 0.40, 0.15], 0.5, [0.98, 0.85, 0.45]]
+            scale 2
+        }
+        specular 0.2
+        shininess 40
+    }
+    scale 0.45
+    rotate Y 25
+    rotate X -15
+    translate X 1.95
+    translate Y 1.4
+}

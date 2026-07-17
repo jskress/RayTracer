@@ -1,0 +1,74 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+title = 'The Solid Shape Patterns'
+
+include '../defaults.igl'
+
+// These three patterns all measure a distance from the origin and colour by it, and each is
+// measured in its own surface's space, not the world's.  That makes the choice of what to put
+// them on matter more than usual: a shape whose surface sits at a constant distance from its own
+// centre gets one flat colour out of them, however the pattern is tuned.  A sphere is exactly
+// that shape, so the spherical patterns below are on a cube and a plane instead; a torus is
+// nearly that shape too, since the whole of its visible top ring is equidistant from its centre.
+
+// Floor -- spherical gradient, the fractional part of the distance from the origin.  A plane cuts
+// straight across those shells, so they ring out from underfoot like ripples.
+plane {
+    material {
+        pigment spherical gradient {
+            [0, DarkGreen, 0.5, PaleGreen, 1, DarkGreen]
+            scale 0.6
+        }
+        specular 0
+    }
+}
+
+// Wall, kept plain so the shapes have nothing to compete with.
+plane {
+    material {
+        pigment Gray30
+        specular 0
+    }
+    rotate X -90
+    rotate Y 20
+    translate Z 4
+}
+
+// Boxed -- alone among these it does not repeat.  It is 1 at the centre, falls off to 0 on the
+// faces of the unit box, and is flat 0 outside them, so on a unit sphere it runs from 0 where the
+// sphere touches each face to about 0.42 out towards the eight corners, which stand furthest from
+// any face.  The map is banded, and deliberately: as a smooth fade this reads as ordinary shading
+// and the shape hides in it, whereas hard steps draw the contours, and those contours are round
+// near each pole and turn square out towards the corners -- which is the pattern showing its work.
+sphere {
+    material {
+        pigment boxed {
+            banded [0, MidnightBlue, 0.1, RoyalBlue, 0.2, CornflowerBlue, 0.3, LightSkyBlue, 0.4, AliceBlue]
+        }
+        specular 0.3
+        shininess 50
+    }
+    translate X -1.15
+    translate Y 1.5
+}
+
+// Spherical stripes -- the stepped counterpart to the floor.  This one returns an index rather
+// than a number, choosing between two pigments outright, so its shells meet at hard edges.  A
+// cube is a good host: its flat faces cut the shells into circles, and its corners reach half
+// again as far from the centre as its faces do, so several shells cross it.
+cube {
+    material {
+        pigment spherical stripes {
+            Firebrick, Wheat
+            scale 0.33
+        }
+        specular 0.3
+        shininess 50
+    }
+    scale 0.55
+    rotate Y 30
+    rotate X -20
+    translate X 1.15
+    translate Y 1.5
+}

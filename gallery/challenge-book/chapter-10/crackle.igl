@@ -1,0 +1,74 @@
+// This holds the information for rendering some demo images of our patterns.
+
+chapter = 10
+title = 'The Crackle Pattern'
+
+include '../defaults.igl'
+
+// Crackle cuts space into cells, one feature point apiece, and asks how far each position lies
+// from the nearest of those points against the second nearest.  That difference falls to zero
+// exactly where two are equally close -- along the boundaries between cells -- so the cracks draw
+// themselves wherever the map runs dark at its low end.
+//
+// It is worth knowing how lopsided the values are before writing any map for it: half of them
+// fall below 0.157 and only one in twenty passes 0.51, since most of a cell is nearer its own
+// point than any other and only the seams between them come close.  So the interesting colours
+// belong at the bottom, and a map spread evenly over [0, 1] would spend most of itself on values
+// crackle almost never reaches.
+
+// Floor -- dried mud, which is crackle doing the thing it was made for.
+plane {
+    material {
+        pigment crackle with seed 3 {
+            [0, [0.12, 0.07, 0.04], 0.03, [0.30, 0.19, 0.10],
+             0.10, [0.62, 0.48, 0.32], 0.35, [0.74, 0.60, 0.42],
+             1, [0.78, 0.65, 0.47]]
+            scale 0.35
+        }
+        specular 0
+    }
+}
+
+// Wall, kept plain so the cells have nothing to compete with.
+plane {
+    material {
+        pigment Gray30
+        specular 0
+    }
+    rotate X -90
+    rotate Y 20
+    translate Z 4
+}
+
+// The same pattern read as stone: the cracks become the mortar between cobbles.  A tighter scale
+// puts more cells across the sphere.
+sphere {
+    material {
+        pigment crackle with seed 7 {
+            [0, [0.10, 0.10, 0.12], 0.04, [0.28, 0.28, 0.30],
+             0.12, [0.55, 0.55, 0.58], 0.4, [0.68, 0.68, 0.70],
+             1, [0.72, 0.72, 0.74]]
+            scale 0.22
+        }
+        specular 0.2
+        shininess 40
+    }
+    translate X -1.15
+    translate Y 1.5
+}
+
+// And read as cells rather than cracks, by handing the low end a bright colour instead of a dark
+// one -- the same boundaries, now lit up rather than drawn in.
+sphere {
+    material {
+        pigment crackle with seed 11 {
+            [0, [0.85, 0.95, 0.60], 0.05, [0.30, 0.55, 0.20],
+             0.2, [0.10, 0.30, 0.10], 1, [0.05, 0.20, 0.08]]
+            scale 0.3
+        }
+        specular 0.2
+        shininess 40
+    }
+    translate X 1.15
+    translate Y 1.5
+}
