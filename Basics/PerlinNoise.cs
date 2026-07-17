@@ -42,42 +42,49 @@ public class PerlinNoise
     /// <returns>The appropriate noise generator.</returns>
     public static PerlinNoise GetNoise(int? seed = null)
     {
-        return NoiseGenerators.GetOrAdd(
-            seed ?? DefaultSeed, value => new PerlinNoise(ThreadSafeRandom.GetGenerator(value)));
+        return NoiseGenerators.GetOrAdd(seed ?? DefaultSeed, value => new PerlinNoise(value));
     }
 
-    private readonly ThreadSafeRandom _rng;
     private readonly Vector[] _numbers;
     private readonly int[] _x;
     private readonly int[] _y;
     private readonly int[] _z;
 
-    private PerlinNoise(ThreadSafeRandom rng)
+    private PerlinNoise(int seed)
     {
-        _rng = rng;
+        // The generator here is deliberately private to this constructor, rather than one of
+        // the shared cached ones: those carry their position in their own sequence, so what a
+        // caller draws from one depends on who else has drawn from it and when.  Scanners run
+        // this constructor from several threads at once (GetOrAdd is free to invoke its factory
+        // more than once, and only keep one result), and threads sharing a generator would
+        // interleave their draws and build different tables from the same seed -- leaving the
+        // noise, and so the whole render, at the mercy of which thread happened to win.
+        Random rng = new (seed);
+
         _numbers = new Vector[TableSize];
         _x = new int[TableSize];
         _y = new int[TableSize];
         _z = new int[TableSize];
 
         for (int index = 0; index < TableSize; index++)
-            _numbers[index] = RandomVector();
+            _numbers[index] = RandomVector(rng);
 
-        GenerateAxis(_x);
-        GenerateAxis(_y);
-        GenerateAxis(_z);
+        GenerateAxis(rng, _x);
+        GenerateAxis(rng, _y);
+        GenerateAxis(rng, _z);
     }
 
     /// <summary>
     /// This method is used to generate the contents of one of our three axis tables.
     /// </summary>
+    /// <param name="rng">The random number generator to draw from.</param>
     /// <param name="data">the axis table to populate.</param>
-    private void GenerateAxis(int[] data)
+    private static void GenerateAxis(Random rng, int[] data)
     {
         for (int index = 0; index < data.Length; index++)
             data[index] = index;
 
-        _rng.Shuffle(data);
+        rng.Shuffle(data);
     }
 
     /// <summary>
@@ -206,11 +213,11 @@ public class PerlinNoise
     /// <param name="min">The minimum of the interval.</param>
     /// <param name="max">The maximum of the interval.</param>
     /// <returns>A random vector in the space.</returns>
-    private Vector RandomVector(double min = -1, double max = 1)
+    private static Vector RandomVector(Random rng, double min = -1, double max = 1)
     {
         return new Vector(
-            _rng.NextDouble(min, max),
-            _rng.NextDouble(min, max),
-            _rng.NextDouble(min, max)).Unit;
+            min + rng.NextDouble() * (max - min),
+            min + rng.NextDouble() * (max - min),
+            min + rng.NextDouble() * (max - min)).Unit;
     }
 }

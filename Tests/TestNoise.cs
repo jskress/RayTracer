@@ -1,3 +1,4 @@
+using System.Reflection;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 
@@ -79,6 +80,38 @@ public class TestNoise
         // random source, so a scene that named no seed of its own rendered differently every
         // run.  Asking for the default twice must give the very same generator.
         Assert.AreSame(PerlinNoise.GetNoise(), PerlinNoise.GetNoise());
+    }
+
+    [TestMethod]
+    public void TestBuildingAGeneratorTwiceFromOneSeedGivesTheSameNoise()
+    {
+        // Generators are cached per seed, but the cache is a ConcurrentDictionary, and its
+        // factory is free to run on several threads at once and keep only one of the results.
+        // Scanners render in parallel, so that is not hypothetical -- it is what happens on the
+        // first call of a render.  Every one of those runs therefore has to build identical
+        // tables, which means construction must not draw from anything shared and stateful: two
+        // threads drawing from one sequence interleave, take different numbers from the same
+        // seed, and leave the noise -- and so the whole image -- hostage to whichever thread
+        // won.  A shared generator here really did make renders differ run to run.
+        //
+        // Racing threads can't be made to reproduce that on demand, so this pins the property
+        // underneath it instead: build twice from one seed and insist the two agree.
+        PerlinNoise first = Build(4242);
+        PerlinNoise second = Build(4242);
+
+        foreach (Point point in SamplePoints().Take(500))
+            Assert.AreEqual(first.Noise(point), second.Noise(point));
+    }
+
+    /// <summary>
+    /// This builds a generator directly, sidestepping the per-seed cache, so that two of them
+    /// for the same seed can be compared.
+    /// </summary>
+    private static PerlinNoise Build(int seed)
+    {
+        return (PerlinNoise) Activator.CreateInstance(
+            typeof(PerlinNoise), BindingFlags.NonPublic | BindingFlags.Instance,
+            null, [seed], null);
     }
 
     [TestMethod]
