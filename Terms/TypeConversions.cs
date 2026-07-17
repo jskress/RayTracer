@@ -40,6 +40,24 @@ internal static class TypeConversions
     /// <returns>A result describing whether the value could be coerced and the value.</returns>
     private static (CoercionResult, object) CoerceToType(object value, Type targetType)
     {
+        // Whatever satisfies a type satisfies its nullable form too, since a boxed value of the
+        // one assigns straight to the other -- and a nullable is additionally satisfied by null.
+        // So unwrap and ask about the underlying type.
+        //
+        // This has to come first.  A Nullable<T> reports itself as a value type, so the null
+        // guard below would otherwise turn away the very value only a nullable can take; and
+        // nothing further down recognises one either, since the tests there are all for exact
+        // types -- Nullable<int> is not typeof(int), so a nullable int fell past every branch to
+        // the failure at the end.  That is what left every "seed" in the DSL unusable.
+        Type underlyingType = Nullable.GetUnderlyingType(targetType);
+
+        if (underlyingType is not null)
+        {
+            return value is null
+                ? (CoercionResult.OfProperType, null)
+                : CoerceToType(value, underlyingType);
+        }
+
         // Can't coerce null to a value type.
         if (targetType.IsValueType && value == null)
             return (CoercionResult.CouldNotCoerce, null);
