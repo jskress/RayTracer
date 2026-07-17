@@ -5,14 +5,39 @@ title = 'The Wood Pattern'
 
 include '../defaults.igl'
 
-// Floor.  Wood's rings circle the Z axis, so on the floor -- the XZ plane -- they read as long
-// grain lines running away from the camera, the way a laid plank does.
+// Floor, laid as flat-sawn oak planking.  Three things take the bare pattern there, and it is
+// worth saying which does what, because none of them is the obvious knob:
+//
+//   The scale is deliberately uneven.  Wood's rings circle its own Z axis, so the grain already
+//   runs in Z and needs no rotating; what a uniform scale can't do is separate how tightly the
+//   rings are spaced from how fast the grain wanders, since it stretches both together.  Tight
+//   across X and Y gives many fine rings; stretching Z leaves the turbulence nearly still along
+//   any one line, so the line holds together over its length instead of thrashing.  The wander
+//   that remains across the grain is wanted -- it is what spaces the lines unevenly.
+//
+//   The translate matters more than it looks.  Left alone, this plane runs straight through the
+//   axis the rings circle, which is a cut through the heart of the log: dead straight, evenly
+//   spaced, quarter-sawn.  Lifting the pattern clear of the floor slices those rings at a
+//   glance instead, the way a flat-sawn board takes them, and that is where the long cathedral
+//   arcs come from.
+//
+//   The map is narrow-dark then wide-light, which is how a growth ring actually reads: a thin
+//   band of dense latewood against the open earlywood grown before it.  An even fade between
+//   two browns can only ever give soft stripes, however well the geometry is set up.
+//
+// Real oak is finer in the grain than this, and 0.15 across gets there -- but a floor is seen
+// at a glancing angle, where rings that tight fall below a pixel and break into moire long
+// before the horizon.  Antialiasing is a command line option here rather than something a scene
+// can ask for, so the pattern itself has to stay coarse enough to survive without it.
 plane {
     material {
         pigment wood {
             turbulence 1
-            [0, SaddleBrown, 0.5, Peru, 1, SaddleBrown]
-            scale 0.4
+            [0, [0.45, 0.24, 0.09], 0.10, [0.52, 0.29, 0.12],
+             0.22, [0.83, 0.60, 0.32], 0.92, [0.86, 0.64, 0.35],
+             1, [0.45, 0.24, 0.09]]
+            scale [0.25, 0.25, 8]
+            translate Y 3
         }
         specular 0
     }
