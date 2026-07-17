@@ -3,9 +3,13 @@ using RayTracer.Basics;
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides a pattern of wrinkles.
+/// This class provides the bozo pattern: plain noise, handed straight to a colour map.  It is
+/// the simplest of the noise patterns -- where <see cref="DentsPattern"/> cubes its noise to
+/// scatter it and <see cref="GranitePattern"/> sums octaves of it, this one does nothing to it
+/// at all -- which makes it the natural choice for clouds, blotches, and the gentle variation
+/// that keeps a surface from looking manufactured.
 /// </summary>
-public class WrinklesPattern : Pattern, INoiseConsumer
+public class BozoPattern : Pattern, INoiseConsumer
 {
     /// <summary>
     /// This property holds the seed for the noise generator to use.
@@ -29,27 +33,6 @@ public class WrinklesPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
-        Vector vector = new (point);
-        double value = generator.Noise(point);
-        double lambda = 2;
-        double omega = 0.5;
-
-        // POV-Ray runs this from i = 1 while i < 10, so nine further octaves on top of the
-        // first sample above.
-        for (int i = 1; i < 10; i++)
-        {
-            Vector work = vector * lambda;
-
-            value += omega * generator.Noise(new Point(work.X, work.Y, work.Z));
-
-            // Each octave doubles the frequency: 2, 4, 8, 16...  This used to add 2 rather
-            // than multiply by it, which walked the octaves up arithmetically (2, 4, 6, 8...)
-            // and never reached the fine detail the halving weights below assume.
-            lambda *= 2;
-            omega *= 0.5;
-        }
-
-        return value / 2;
+        return PerlinNoise.GetNoise(Seed).Noise(point);
     }
 }

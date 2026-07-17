@@ -26,10 +26,10 @@ public partial class LanguageParser
 
         _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
-            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'brick',
+            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick',
             'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
-            'copyright', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
+            'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
             'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
             'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
@@ -37,11 +37,11 @@ public partial class LanguageParser
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
+            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
-            'position', 'productions', 'profile', 'quad', 'radians', 'radii', 'radius', 'reflective',
+            'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
@@ -198,14 +198,17 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            agate | boxed | brick | checker | cubic | hexagon | leopard | planar | square |
-            triangular |
+            agate | boxed | brick | checker | cubic | hexagon | leopard | planar | radial |
+            square | triangular |
             {
-                [ dents | granite | wrinkles ] > withSeedClause{?}
-            } | wood |
+                [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
+            } | marble | wood |
             {
-                [ { linear > [ X | Y | Z ]{?} } | cylindrical | spherical ] >
+                linear > [ X | Y | Z ]{?} >
                 [ stripes | { bouncing{?} > gradient } ] ?? 'Expecting "stripes" or "gradient" here.'
+            } |
+            {
+                [ cylindrical | spherical ] > [ stripes | { bouncing{?} > gradient } ]{?}
             }
         ]
         brickSizeClause:

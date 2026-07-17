@@ -67,15 +67,23 @@ public class PigmentSet
         if (_pigments.IsEmpty)
             return Colors.Black;
 
-        (double start, Pigment firstPigment) = _pigments.GetByValue(value);
-        (double end, Pigment secondPigment) = _pigments.GetValueFollowing(firstPigment);
+        // Note we track where we are by index rather than by pigment: the same pigment may
+        // legitimately appear at several break values, and looking the next one up by pigment
+        // instead would find the first of those every time, pairing our break value with one
+        // belonging to a different stop entirely.
+        int index = _pigments.GetIndexByValue(value);
+        (double start, Pigment firstPigment) = _pigments.GetByIndex(index);
         Color firstColor = firstPigment.GetTransformedColorFor(point);
 
         // If we're banded or on the last entry, then we have our color.
-        if (Banded || double.IsNaN(end))
+        if (Banded || index >= _pigments.Count - 1)
             return firstColor;
 
-        double fraction = (value - start) / (end - start);
+        (double end, Pigment secondPigment) = _pigments.GetByIndex(index + 1);
+
+        // The break values live in [0, 1), so the value has to be brought into that same
+        // interval before it's measured against them.
+        double fraction = (Spectrum<Pigment>.Normalize(value) - start) / (end - start);
         Color secondColor = secondPigment.GetTransformedColorFor(point);
         double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 

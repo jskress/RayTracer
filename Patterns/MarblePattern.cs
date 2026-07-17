@@ -1,13 +1,16 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
-using RayTracer.Extensions;
 
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides the wood pattern.
+/// This class provides the marble pattern.  There is less to it than the name suggests: it is
+/// the X coordinate, pushed sideways by turbulence, and nothing more.  All the veining comes
+/// from the colour map it is handed to, which wraps as X marches past each whole number -- so a
+/// map that runs dark at both ends draws a vein wherever X crosses one, and the turbulence is
+/// what stops those veins being straight.  Without turbulence it is simply stripes down X.
 /// </summary>
-public class WoodPattern : Pattern
+public class MarblePattern : Pattern
 {
     /// <summary>
     /// This property reports the number of discrete pigments this pattern supports.  In
@@ -18,7 +21,8 @@ public class WoodPattern : Pattern
     public override int DiscretePigmentsNeeded => 0;
 
     /// <summary>
-    /// This property controls the turbulence we will use.
+    /// This property controls the turbulence we will use.  It is optional; left unset, the
+    /// veins run dead straight.
     /// </summary>
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public Turbulence Turbulence { get; set; }
@@ -41,29 +45,11 @@ public class WoodPattern : Pattern
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        double x = point.X;
-        double y = point.Y;
-
-        if (Turbulence is not null)
-        {
-            // A vector's worth of turbulence, so X and Y are displaced by different amounts.
-            // This used to call the scalar Generate twice on the same point, which -- being a
-            // deterministic function of that point -- handed back the very same number both
-            // times, displacing X and Y identically and collapsing the grain onto a diagonal.
-            Vector turbulence = Turbulence.GenerateVector(point);
-
-            x += Cycloidal(x + turbulence.X);
-            y += Cycloidal(y + turbulence.Y);
-        }
-
-        double value = new Vector(x, y, 0).Magnitude;
-        bool isOdd = Math.Floor(value) % 2 != 0;
-
-        value = 1 - InvertedClip(value.Fraction());
-
-        if (isOdd)
-            value = 1 - value;
-
-        return value;
+        // Note this deliberately isn't held to the [0, 1] interval: the value is a coordinate,
+        // and the colour map wraps whatever it is given.  That wrapping is the whole point --
+        // it is what turns a marching X into repeated veins.
+        return Turbulence is null
+            ? point.X
+            : point.X + Turbulence.Generate(point);
     }
 }

@@ -53,8 +53,16 @@ public partial class LanguageParser
                 TurbulenceResolver = ParseTurbulenceClause()
             }, new AgatePattern().DiscretePigmentsNeeded),
             "boxed" => (new BoxedPatternResolver(), new BoxedPattern().DiscretePigmentsNeeded),
+            "bozo" => (new BozoPatternResolver
+            {
+                SeedResolver = seedResolver
+            }, new BozoPattern().DiscretePigmentsNeeded),
             "brick" => (ParseBrickPattern(), new BrickPattern().DiscretePigmentsNeeded),
             "checker" => (new CheckerPatternResolver(), new CheckerPattern().DiscretePigmentsNeeded),
+            "crackle" => (new CracklePatternResolver
+            {
+                SeedResolver = seedResolver
+            }, new CracklePattern().DiscretePigmentsNeeded),
             "cubic" => (new CubicPatternResolver(), new CubicPattern().DiscretePigmentsNeeded),
             "dents" => (new DentsPatternResolver
             {
@@ -66,7 +74,12 @@ public partial class LanguageParser
             }, new GranitePattern().DiscretePigmentsNeeded),
             "hexagon" => (new HexagonPatternResolver(), new HexagonPattern().DiscretePigmentsNeeded),
             "leopard" => (new LeopardPatternResolver(), new LeopardPattern().DiscretePigmentsNeeded),
+            "marble" => (new MarblePatternResolver
+            {
+                TurbulenceResolver = ParseOptionalTurbulence()
+            }, new MarblePattern().DiscretePigmentsNeeded),
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
+            "radial" => (new RadialPatternResolver(), new RadialPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
             "triangular" => (new TriangularPatternResolver(), new TriangularPattern().DiscretePigmentsNeeded),
             "wood" => (new WoodPatternResolver
@@ -77,6 +90,11 @@ public partial class LanguageParser
             {
                 SeedResolver = seedResolver
             }, new WrinklesPattern().DiscretePigmentsNeeded),
+            // The clipped falloffs.  Note these are distinct from the "spherical gradient" and
+            // "cylindrical gradient" below: those repeat, being the fractional part of the
+            // distance, while these fall off once and stop.
+            "spherical" => (new SphericalPatternResolver(), new SphericalPattern().DiscretePigmentsNeeded),
+            "cylindrical" => (new CylindricalPatternResolver(), new CylindricalPattern().DiscretePigmentsNeeded),
             // Stripes
             "linear.stripes" => (new StripedPatternResolver
             {

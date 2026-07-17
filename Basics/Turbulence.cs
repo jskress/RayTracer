@@ -45,24 +45,68 @@ public class Turbulence : INoiseConsumer
     /// <returns></returns>
     public double Generate(Point point)
     {
+        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+
         if (Depth == 0)
-            return PerlinNoise.GetNoise(Seed).Noise(point);
+            return generator.Noise(point);
 
         double noise = 0.0;
         double weight = 1.0;
+        Point sample = point;
 
         for (int i = 0; i < Depth; i++)
         {
-            noise += weight * PerlinNoise.GetNoise(Seed).Noise(point);
+            noise += weight * generator.Noise(sample);
             weight *= 0.5;
-            point = new Point(point.X * 2, point.Y * 2, point.Z * 2);
+            sample = new Point(sample.X * 2, sample.Y * 2, sample.Z * 2);
         }
 
-        noise = Math.Abs(noise);
+        // Note there is deliberately no Math.Abs here: POV-Ray's own scalar Turbulence() has
+        // none, and since Noise() never returns a negative value, the accumulated sum can't be
+        // negative either.  (An Abs call used to live here, compensating for noise that was
+        // wrongly centered on zero -- see PerlinNoise.Noise.)
 
         if (Phased)
+        {
+            // The original point, not the octave-scaled one the loop left behind: phasing is
+            // meant to ride along the surface's own Z, not Z multiplied by 2^Depth.
             noise = 1 + Math.Sin(Scale * point.Z + Tightness * noise);
+        }
 
         return noise;
+    }
+
+    /// <summary>
+    /// This method produces turbulence as a vector rather than a single number, by
+    /// accumulating octaves of <see cref="PerlinNoise.DNoise"/>.  It is the counterpart to
+    /// <see cref="Generate"/>, mirroring the way POV-Ray pairs its own <c>Turbulence()</c> with
+    /// <c>DTurbulence()</c>, and exists for callers that need to displace more than one axis
+    /// and so need a genuinely different amount for each.
+    ///
+    /// Phasing is deliberately not applied here: it has no counterpart in POV's
+    /// <c>DTurbulence()</c>, and it folds its result into a single number, which is exactly
+    /// what a caller asking for a vector doesn't want.
+    /// </summary>
+    /// <param name="point">The point to determine some turbulence for.</param>
+    /// <returns>The turbulence at that point, as a vector.</returns>
+    public Vector GenerateVector(Point point)
+    {
+        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+
+        if (Depth == 0)
+            return generator.DNoise(point);
+
+        Vector result = new (0, 0, 0);
+        double weight = 1.0;
+        Point sample = point;
+
+        for (int i = 0; i < Depth; i++)
+        {
+            result += generator.DNoise(sample) * weight;
+            weight *= 0.5;
+            sample = new Point(sample.X * 2, sample.Y * 2, sample.Z * 2);
+        }
+
+        return result;
     }
 }

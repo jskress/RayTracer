@@ -34,8 +34,12 @@ plane {
 
 sphere {
     material {
+        // Granite spends nearly all of its time low in the [0, 1] range -- 5% to 95% of its
+        // values fall between 0.09 and 0.41 -- so a map spread evenly over [0, 1] would leave
+        // most of these greys unreachable and render the speckle nearly flat.  The break
+        // values below match the range granite actually produces.
         pigment granite {
-            [0, Gray20, 1, Gray80]
+            [0.09, Gray20, 0.25, Gray50, 0.41, Gray90]
         }
         ambient 0.1
         reflective 0.25
@@ -48,7 +52,11 @@ sphere {
 
 cube {
     material {
-        pigment dents { [0, Blue, 1, White] scale 0.5 }
+        // Dents cubes its noise, which pushes most of its values down near zero and leaves a
+        // sparse few high -- that scattering is the whole point of the pattern.  Half its
+        // values sit below 0.12 and only the top 5% pass 0.40, so putting White at 0.4 lets
+        // exactly that sparse tail read as dents against the blue.
+        pigment dents { [0, Blue, 0.4, White] scale 0.5 }
         ambient 0.1
         reflective 0.25
         specular 1
