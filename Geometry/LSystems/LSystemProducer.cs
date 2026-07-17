@@ -1,5 +1,4 @@
 using System.Text;
-using RayTracer.Basics;
 using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
@@ -11,6 +10,14 @@ public class LSystemProducer
 {
     internal static readonly Rune LeftBracket = new ('[');
     internal static readonly Rune RightBracket = new (']');
+
+    /// <summary>
+    /// The seed used when a scene doesn't name one of its own.  It must be a fixed value, not a
+    /// random one: a stochastic L-system given no seed should still grow the same tree every
+    /// render, the way a scene that names nothing random should look the same twice.  A scene
+    /// wanting a different tree changes the seed; it does not get a different one by accident.
+    /// </summary>
+    private const int DefaultSeed = 0;
 
     /// <summary>
     /// This property holds the axiom, or starting point, for the L-system production.
@@ -35,7 +42,7 @@ public class LSystemProducer
     private readonly Dictionary<Rune, ProductionRuleSet> _ruleSets = new ();
 
     private Rune[] _axiom;
-    private ThreadSafeRandom _random;
+    private Random _random;
 
     /// <summary>
     /// This method is used to add a production rule to the L-system.
@@ -69,7 +76,13 @@ public class LSystemProducer
         if (_axiom.IsNullOrEmpty())
             throw new Exception("Axiom is required but was not provided or is of zero length.");
 
-        _random = ThreadSafeRandom.GetGenerator(Seed);
+        // A generator private to this run, rather than a shared cached one keyed by the seed.
+        // The rewriting below is sequential, so nothing here needs a thread-safe generator; and
+        // a shared one would carry its position between runs, so a second L-system on the same
+        // seed -- or a second render of this one in the same process -- would draw from where the
+        // first left off and grow a different tree.  (This is the same trap the noise generator
+        // was caught in; see NoiseGenerator.)
+        _random = new Random(Seed ?? DefaultSeed);
 
         Rune[] runes = _axiom;
 

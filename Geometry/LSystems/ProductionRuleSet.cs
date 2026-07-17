@@ -1,5 +1,4 @@
 using System.Text;
-using RayTracer.Basics;
 using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
@@ -11,7 +10,13 @@ namespace RayTracer.Geometry.LSystems;
 public class ProductionRuleSet
 {
     private readonly List<ProductionRule> _rules = [];
-    private readonly Dictionary<Rune, double> _bands = new ();
+
+    // The running probability total per rule, so a rule's stochastic productions can be laid out
+    // end to end across the [0, 1) interval as they are added.  This has to be keyed by the whole
+    // rule key, not just the variable: one variable may have several rules told apart by context,
+    // each its own independent set of stochastic productions summing to 1 on its own, and keying
+    // by the variable alone would run their totals together and push the later ones past 1.
+    private readonly Dictionary<string, double> _bands = new ();
 
     /// <summary>
     /// This property holds the collection of runes that should be ignored regarding
@@ -28,7 +33,7 @@ public class ProductionRuleSet
         string key = ruleSpec.Key.RemoveAllWhitespace();
         ProductionRule rule = _rules
             .FirstOrDefault(r => r.Key == key);
-        double band = _bands.GetValueOrDefault(ruleSpec.Variable);
+        double band = _bands.GetValueOrDefault(key);
 
         // Our first rule for the key.
         if (rule == null)
@@ -55,7 +60,7 @@ public class ProductionRuleSet
         if (band > 1)
             throw new Exception($"Probabilities for the {ruleSpec.Key} productions are larger than 100%.");
 
-        _bands[ruleSpec.Variable] = band;
+        _bands[key] = band;
     }
 
     /// <summary>
@@ -65,7 +70,7 @@ public class ProductionRuleSet
     /// <param name="index">The index of the current rune in the source.</param>
     /// <param name="random">The random number generator to use, when necessary.</param>
     /// <returns>The appropriate production.</returns>
-    public Rune[] GetProduction(Rune[] source, int index, ThreadSafeRandom random)
+    public Rune[] GetProduction(Rune[] source, int index, Random random)
     {
         ProductionRule rule = _rules.Count switch
         {
