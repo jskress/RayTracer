@@ -333,6 +333,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/berry-tree.png">
+      <img alt="L-System Test: Berry Tree" height="120" src="Local/l-systems/berry-tree.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/berry-tree.igl">L-System Test: Berry Tree</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/context-sensitive.png">
       <img alt="L-System Test: Context-Sensitive" height="120" src="Local/l-systems/context-sensitive.png" width="160"/>
     </a></td>
@@ -346,6 +354,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/l-systems/hilbert.igl">L-System Test: Hilbert Curve</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/leaf-tree.png">
+      <img alt="L-System Test: Leafy Tree" height="120" src="Local/l-systems/leaf-tree.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/leaf-tree.igl">L-System Test: Leafy Tree</a>
     </td>
   </tr>
   <tr style="border: none;">

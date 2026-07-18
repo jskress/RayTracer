@@ -105,6 +105,28 @@ public class Turtle
     }
 
     /// <summary>
+    /// This method builds the matrix that places a surface into the turtle's current frame:
+    /// a leaf authored in local space (growing along +Z, its width along X and its face
+    /// looking toward +Y) is carried to grow along the turtle's heading, with its face
+    /// following the turtle's roll and its base at the turtle's location.  The matrix columns
+    /// are the turtle's own orthonormal axes -- left, up and heading -- with the location as
+    /// the translation.  "Left" is <c>Up x Direction</c>, which makes the three a right-handed
+    /// basis (its determinant is +1), so the placed surface is oriented, never mirrored.
+    /// </summary>
+    /// <returns>The placement matrix for the turtle's current position and orientation.</returns>
+    internal Matrix GetPlacementMatrix()
+    {
+        Vector left = Up.Cross(Direction);
+
+        return new Matrix([
+            left.X, Up.X, Direction.X, Location.X,
+            left.Y, Up.Y, Direction.Y, Location.Y,
+            left.Z, Up.Z, Direction.Z, Location.Z,
+            0, 0, 0, 1
+        ]);
+    }
+
+    /// <summary>
     /// This method is used to rotate a vector around the given axis vector.
     /// </summary>
     /// <param name="vector">The vector to rotate.</param>

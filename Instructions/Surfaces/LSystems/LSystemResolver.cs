@@ -1,6 +1,7 @@
 using System.Text;
 using RayTracer.Extensions;
 using RayTracer.General;
+using RayTracer.Geometry;
 using RayTracer.Geometry.LSystems;
 
 namespace RayTracer.Instructions.Surfaces.LSystems;
@@ -47,6 +48,14 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public Resolver<Rune[]> SymbolsToIgnoreResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the surface to use as this L-system's leaf, when
+    /// the scene names one.  When it is left <c>null</c>, the L-system falls back to its built-in
+    /// default leaf.  It is a shared reference to a named surface's resolver, resolved afresh for
+    /// each leaf, so it is not deep-copied on <see cref="Clone"/>.
+    /// </summary>
+    public ISurfaceResolver LeafSurfaceResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// text solid surface.
     /// </summary>
@@ -64,6 +73,13 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers
             .Select(resolver => resolver.Resolve(context, variables)));
+
+        // Capture the leaf recipe here, where the render context and variables are in hand: the
+        // L-system itself has neither at render time, when it stamps each leaf down.  A named
+        // leaf surface is resolved fresh per leaf; with no name, the built-in default is used.
+        value.LeafFactory = LeafSurfaceResolver is null
+            ? DefaultLeaf.Create
+            : () => LeafSurfaceResolver.ResolveToSurface(context, variables);
 
         base.SetProperties(context, variables, value);
     }

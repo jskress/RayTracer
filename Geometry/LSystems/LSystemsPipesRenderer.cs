@@ -42,7 +42,9 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
             CreateCylinder(turtle);
             CreateSphere(turtle);
 
-            BoundingBox.Add(turtle.Location);
+            // The box is null-safe here because an earlier leaf that could not report an extent
+            // of its own drops it (see StampLeaf), leaving the whole L-system unbounded.
+            BoundingBox?.Add(turtle.Location);
         }
     }
 
@@ -90,7 +92,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     protected override void Complete(Turtle turtle)
     {
-        BoundingBox.Expand(_initialRadius);
+        BoundingBox?.Expand(_initialRadius);
     }
 
     /// <summary>

@@ -35,7 +35,7 @@ public partial class LanguageParser
             'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
-            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
+            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
@@ -691,6 +691,7 @@ public partial class LanguageParser
         [
             { axiom > _expression } | { generations > _expression } |
             { controls > openBrace ?? 'Expecting an open brace to follow "controls" here.' } |
+            { leaf > [ _identifier | _keyword ] ?? 'Expecting a surface name to follow "leaf" here.' } |
             lsystemCommandsClause | lsystemProductionsClause | lsystemIgnoreClause |
             surfaceEntryClause
         ]

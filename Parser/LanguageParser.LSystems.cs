@@ -6,6 +6,7 @@ using RayTracer.Extensions;
 using RayTracer.Geometry.LSystems;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
+using RayTracer.Instructions.Surfaces;
 using RayTracer.Instructions.Surfaces.LSystems;
 using RayTracer.Terms;
 
@@ -78,6 +79,10 @@ public partial class LanguageParser
                     break;
                 case "productions":
                     resolver.ProductionRuleResolvers = ParseProductionRulesClause(clause);
+                    break;
+                case "leaf":
+                    resolver.LeafSurfaceResolver =
+                        GetExtensibleItem<ISurfaceResolver>(clause.Tokens[1], false);
                     break;
                 default:
                     HandleSurfaceClause(clause, resolver, "l-system");

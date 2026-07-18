@@ -11,6 +11,7 @@ public abstract class LSystemShapeRenderer
 {
     private static readonly Rune Move = new('f');
     private static readonly Rune Draw = new('F');
+    private static readonly Rune Leaf = new('~');
 
     /// <summary>
     /// This field holds the standard rune (character) to turtle command mapping.
@@ -37,7 +38,7 @@ public abstract class LSystemShapeRenderer
         // 'G' - Move forward and draw a line; do not record a vertex.
         // '.' - Record a vertex in the current polygon.
         // '}' - Complete a polygon.
-        // '~' - Incorporate a predefined surface.
+        { Leaf, TurtleCommand.Leaf },
         { new Rune('!'), TurtleCommand.DecreaseDiameter }
         // "'" - Increment color index.
         // '%' - Cut off the remainder of the branch.
@@ -49,7 +50,7 @@ public abstract class LSystemShapeRenderer
     internal static HashSet<Rune> Commands => StandardCommandMapping.Keys
         .Where(cmd => cmd != LSystemProducer.LeftBracket &&
                       cmd != LSystemProducer.RightBracket &&
-                      cmd != Move && cmd != Draw)
+                      cmd != Move && cmd != Draw && cmd != Leaf)
         .ToHashSet();
 
     /// <summary>
@@ -72,6 +73,15 @@ public abstract class LSystemShapeRenderer
     /// This property may offer a bounding box the owning group should accept.
     /// </summary>
     internal BoundingBox BoundingBox { get; set; }
+
+    /// <summary>
+    /// This property holds the recipe for the leaf surface to stamp down wherever the
+    /// production calls for one (the <c>~</c> command).  It is a factory rather than a single
+    /// surface because every occurrence needs its own, independently transformed copy, and
+    /// because a named leaf surface has to be resolved with a render context this renderer
+    /// does not have -- so the resolution is captured at resolve time and simply invoked here.
+    /// </summary>
+    internal Func<Surface> LeafFactory { get; set; }
 
     private readonly string _production;
     private readonly Stack<Turtle> _stack;
@@ -103,7 +113,13 @@ public abstract class LSystemShapeRenderer
             .ForEach(command =>
             {
                 PreExecute(_stack.Peek(), command);
-                Execute(_stack.Peek(), command);
+
+                // A leaf is geometry common to every renderer, so it is stamped here rather
+                // than in a subclass's Execute; everything else is the subclass's to handle.
+                if (command == TurtleCommand.Leaf)
+                    StampLeaf(_stack.Peek());
+                else
+                    Execute(_stack.Peek(), command);
             });
 
         Complete(turtle);
@@ -185,6 +201,41 @@ public abstract class LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     /// <param name="command">The turtle command to handle.</param>
     protected abstract void Execute(Turtle turtle, TurtleCommand command);
+
+    /// <summary>
+    /// This method stamps a fresh leaf surface down at the turtle's current position and
+    /// orientation.  Unlike a drawn stem, a leaf keeps its own material, so a bare tree still
+    /// shows green leaves on its branches.  Because a leaf reaches out past the turtle's own
+    /// point, the owning group's bounding box must be widened to admit it: a box built only
+    /// from the turtle path would cull rays aimed at the leaf before it was ever tested.
+    /// </summary>
+    /// <param name="turtle">The current turtle.</param>
+    private void StampLeaf(Turtle turtle)
+    {
+        if (LeafFactory is null)
+            return;
+
+        Surface leaf = LeafFactory();
+
+        leaf.Transform = turtle.GetPlacementMatrix() * leaf.Transform;
+
+        Surfaces.Add(leaf);
+
+        if (BoundingBox is null)
+            return;
+
+        // Fold the leaf's own extent into the box the owning group will accept.  Preparing
+        // the leaf here is what lets it report that extent; the group prepares it once more
+        // later, which is harmless.  A leaf that is unbounded by nature has no box of its own,
+        // and no finite box can safely exclude it, so we drop ours -- matching the way a
+        // Group refuses to bound itself around an unbounded child.
+        leaf.PrepareForRendering();
+
+        if (leaf.BoundingBox is null)
+            BoundingBox = null;
+        else
+            BoundingBox.Add(leaf.BoundingBox.TransformedBy(leaf.Transform));
+    }
 
     /// <summary>
     /// This method is used to tell the subclass that the rendering to a surface is

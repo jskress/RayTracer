@@ -36,6 +36,15 @@ public class LSystem : Group
     public LSystemRenderingControls RenderingControls { get; set; } = new ();
 
     /// <summary>
+    /// This property holds the recipe for the leaf surface to stamp down for each <c>~</c>
+    /// command in the production.  It defaults to a small green patch; a scene may override
+    /// it with a named surface of its own.  It is a factory because every leaf needs its own
+    /// copy and a named leaf must be resolved with a render context this surface doesn't hold
+    /// at render time, so the resolver captures that resolution here at resolve time.
+    /// </summary>
+    public Func<Surface> LeafFactory { get; set; } = DefaultLeaf.Create;
+
+    /// <summary>
     /// This property notes whether turtle orientation commands should be ignored regarding
     /// context sensitive evaluation.
     /// </summary>
@@ -58,6 +67,8 @@ public class LSystem : Group
 
         foreach (LSystemRenderCommandMapping mapping in CommandMappings)
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
+
+        renderer.LeafFactory = LeafFactory;
 
         renderer.Render();
 

@@ -1,0 +1,74 @@
+// A scene to test naming the surface an L-system uses for its leaves.  Where leaf-tree.igl
+// lets each '~' grow the built-in green patch, this plant names its own surface with a "leaf"
+// clause, so every '~' stamps that surface instead -- keeping the material it was given rather
+// than inheriting the branches'.  The leaf may be any surface the ray tracer can make.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: Berry Tree'
+        author 'J. Stephen Kress'
+        description 'A scene to test naming the surface used for L-system leaves.'
+        copyright true
+        software __software__
+    }
+}
+
+// Deliberately the same camera leaf-tree.igl uses: the two scenes grow the same plant, so an
+// identical viewpoint leaves the leaf surface as the only thing that differs between them.
+camera {
+    location [0, 6, -20]
+    look at [0, 3.4, 0]
+    field of view 34
+}
+
+point light {
+    location [20, 20, -20]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}
+
+// The leaf surface: a flattened crimson sphere.  In the turtle's own frame, X spans the leaf's
+// width, Z runs along the branch, and Y is its face, so flattening Y lays the berry against the
+// branch rather than standing it on end.
+berry = sphere {
+    material {
+        pigment Crimson
+        specular 0
+    }
+    scale [0.35, 0.15, 0.35]
+}
+
+plant = lsystem {
+    // '$' first points the turtle up, so the plant grows toward the sky rather than sideways.
+    axiom '$A'
+    leaf berry
+    productions {
+        // Each apex grows a segment, then splits into four child apices pitched and rolled
+        // away from one another, each capped with a leaf.
+        'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
+    }
+    controls {
+        pipes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+    }
+}
+
+lsystem plant {
+    generations 4
+    material {
+        pigment SaddleBrown
+        specular 0
+    }
+    scale 0.7
+}
