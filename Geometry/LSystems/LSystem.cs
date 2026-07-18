@@ -45,6 +45,13 @@ public class LSystem : Group
     public Func<Surface> LeafFactory { get; set; } = DefaultLeaf.Create;
 
     /// <summary>
+    /// This property holds the recipe for each surface the production may name after a <c>~</c>,
+    /// keyed by the character that names it, so one plant may carry leaves, blossom and fruit.
+    /// A <c>~</c> naming nothing bound here falls back to <see cref="LeafFactory"/>.
+    /// </summary>
+    public Dictionary<Rune, Func<Surface>> SurfaceFactories { get; } = new ();
+
+    /// <summary>
     /// This property notes whether turtle orientation commands should be ignored regarding
     /// context sensitive evaluation.
     /// </summary>
@@ -69,6 +76,9 @@ public class LSystem : Group
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
 
         renderer.LeafFactory = LeafFactory;
+
+        foreach (KeyValuePair<Rune, Func<Surface>> pair in SurfaceFactories)
+            renderer.SurfaceFactories[pair.Key] = pair.Value;
 
         renderer.Render();
 

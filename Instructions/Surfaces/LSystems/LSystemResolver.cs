@@ -56,6 +56,13 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public ISurfaceResolver LeafSurfaceResolver { get; set; }
 
     /// <summary>
+    /// This property holds the surfaces this L-system's production may name after a <c>~</c>,
+    /// each tied to the character that names it.  These are the <c>~L</c>/<c>~K</c> bindings; a
+    /// <c>~</c> naming none of them falls back to <see cref="LeafSurfaceResolver"/>.
+    /// </summary>
+    public List<LSystemSurfaceBinding> SurfaceBindings { get; private set; } = [];
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// text solid surface.
     /// </summary>
@@ -80,6 +87,14 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         value.LeafFactory = LeafSurfaceResolver is null
             ? DefaultLeaf.Create
             : () => LeafSurfaceResolver.ResolveToSurface(context, variables);
+
+        foreach (LSystemSurfaceBinding binding in SurfaceBindings)
+        {
+            ISurfaceResolver resolver = binding.Resolver;
+
+            value.SurfaceFactories[binding.Character] =
+                () => resolver.ResolveToSurface(context, variables);
+        }
 
         base.SetProperties(context, variables, value);
     }
@@ -107,8 +122,9 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     {
         LSystemResolver resolver = (LSystemResolver) base.Clone();
 
-        // Force the list to be physically different, but with the same content.
+        // Force the lists to be physically different, but with the same content.
         resolver.CommandMappings = [..resolver.CommandMappings];
+        resolver.SurfaceBindings = [..resolver.SurfaceBindings];
 
         if (resolver.RenderingControlsResolver is not null)
             resolver.RenderingControlsResolver = (LSystemRenderingControlsResolver) RenderingControlsResolver.Clone();

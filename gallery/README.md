@@ -349,6 +349,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/fruit-tree.png">
+      <img alt="L-System Test: Leaves and Fruit" height="120" src="Local/l-systems/fruit-tree.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/fruit-tree.igl">L-System Test: Leaves and Fruit</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/hilbert.png">
       <img alt="L-System Test: Hilbert Curve" height="120" src="Local/l-systems/hilbert.png" width="160"/>
     </a></td>

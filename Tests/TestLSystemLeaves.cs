@@ -1,3 +1,4 @@
+using System.Text;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -21,6 +22,20 @@ public class TestLSystemLeaves
 
         if (leafFactory is not null)
             lsystem.LeafFactory = leafFactory;
+
+        lsystem.PrepareForRendering();
+
+        return lsystem;
+    }
+
+    // The same, but with surfaces bound to the characters a production may name after a '~'.
+    private static LSystem PrepareWithSurfaces(
+        string axiom, params (char Character, Func<Surface> Factory)[] bindings)
+    {
+        LSystem lsystem = new LSystem { Axiom = axiom, Generations = 0 };
+
+        foreach ((char character, Func<Surface> factory) in bindings)
+            lsystem.SurfaceFactories[new Rune(character)] = factory;
 
         lsystem.PrepareForRendering();
 
@@ -127,6 +142,62 @@ public class TestLSystemLeaves
         lsystem.Intersect(new Ray(new Point(1.7, 1, 0), new Vector(0, -1, 0)), intersections);
 
         Assert.IsTrue(intersections.Count > 0);
+    }
+
+    [TestMethod]
+    public void TestAProductionCanNameWhichSurfaceEachLeafStamps()
+    {
+        // '~L' grows one bound surface where '~K' grows another, so a single plant can carry
+        // both leaves and fruit.  Each occurrence gets its own copy to place independently.
+        LSystem lsystem = PrepareWithSurfaces("F~LF~KF~L",
+            ('L', () => new Cube()),
+            ('K', () => new Torus { MajorRadius = 1, MinorRadius = 0.25 }));
+        List<Cube> cubes = lsystem.Surfaces.OfType<Cube>().ToList();
+
+        Assert.AreEqual(2, cubes.Count);
+        Assert.AreEqual(1, lsystem.Surfaces.Count(surface => surface is Torus));
+        Assert.AreEqual(0, lsystem.Surfaces.Count(surface => surface is BicubicPatch));
+        Assert.AreNotSame(cubes[0], cubes[1]);
+    }
+
+    [TestMethod]
+    public void TestABareLeafCommandStillStampsTheDefault()
+    {
+        // Naming surfaces must not disturb a '~' that names none of them.
+        LSystem lsystem = PrepareWithSurfaces("F~", ('L', () => new Cube()));
+
+        Assert.AreEqual(1, lsystem.Surfaces.Count(surface => surface is BicubicPatch));
+        Assert.AreEqual(0, lsystem.Surfaces.Count(surface => surface is Cube));
+    }
+
+    [TestMethod]
+    public void TestARuneAfterALeafThatNamesNoSurfaceIsStillRunAsACommand()
+    {
+        // The committed scenes' productions read "...~]", so a '~' must leave a rune it does not
+        // recognise alone.  Here the ']' still has to close the branch: the last segment must
+        // resume from the branch point at x = 1, not carry on from inside the turned branch.
+        LSystem lsystem = PrepareWithSurfaces("F[+F~]F", ('L', () => new Cube()));
+        List<Cylinder> cylinders = lsystem.Surfaces.OfType<Cylinder>().ToList();
+        Point lastStart = cylinders[2].Transform * Point.Zero;
+
+        Assert.AreEqual(1, lsystem.Surfaces.Count(surface => surface is BicubicPatch));
+        Assert.AreEqual(3, cylinders.Count);
+        Assert.IsTrue(lastStart.Matches(new Point(1, 0, 0)), lastStart.ToString());
+    }
+
+    [TestMethod]
+    public void TestASurfaceCharacterClaimedByALeafIsNotAlsoRunAsACommand()
+    {
+        // Binding a character that is also a command means a '~' before it claims it: "~F" stamps
+        // the surface, and that F does not additionally draw.  This is the accepted cost of
+        // letting a bare '~' go on meaning "the default surface"; bind another character to
+        // avoid it.
+        LSystem plain = PrepareWithSurfaces("FF");
+        LSystem bound = PrepareWithSurfaces("F~F", ('F', () => new Cube()));
+
+        Assert.AreEqual(2, plain.Surfaces.Count(surface => surface is Cylinder));
+        Assert.AreEqual(1, bound.Surfaces.Count(surface => surface is Cylinder));
+        Assert.AreEqual(1, bound.Surfaces.Count(surface => surface is Cube));
     }
 
     [TestMethod]

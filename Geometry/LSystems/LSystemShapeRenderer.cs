@@ -83,6 +83,14 @@ public abstract class LSystemShapeRenderer
     /// </summary>
     internal Func<Surface> LeafFactory { get; set; }
 
+    /// <summary>
+    /// This property holds the recipe for each surface the production may name after a <c>~</c>,
+    /// keyed by the character that names it -- so <c>~L</c> may stamp a leaf where <c>~K</c>
+    /// stamps a fruit.  A <c>~</c> that names nothing bound here falls back to
+    /// <see cref="LeafFactory"/>.
+    /// </summary>
+    internal Dictionary<Rune, Func<Surface>> SurfaceFactories { get; } = new ();
+
     private readonly string _production;
     private readonly Stack<Turtle> _stack;
 
@@ -106,21 +114,27 @@ public abstract class LSystemShapeRenderer
 
         Begin(turtle);
 
-        _production.AsRunes()
-            .Select(ToTurtleCommand)
-            .Where(command => command != TurtleCommand.Unknown)
-            .ToList()
-            .ForEach(command =>
-            {
-                PreExecute(_stack.Peek(), command);
+        // We walk the runes by index rather than mapping them straight to commands, because a
+        // '~' may name the surface it wants in the rune that follows it, and that one has to be
+        // claimed before it is read as a command in its own right.
+        Rune[] runes = _production.AsRunes();
 
-                // A leaf is geometry common to every renderer, so it is stamped here rather
-                // than in a subclass's Execute; everything else is the subclass's to handle.
-                if (command == TurtleCommand.Leaf)
-                    StampLeaf(_stack.Peek());
-                else
-                    Execute(_stack.Peek(), command);
-            });
+        for (int index = 0; index < runes.Length; index++)
+        {
+            TurtleCommand command = ToTurtleCommand(runes[index]);
+
+            if (command == TurtleCommand.Unknown)
+                continue;
+
+            PreExecute(_stack.Peek(), command);
+
+            // A leaf is geometry common to every renderer, so it is stamped here rather than in
+            // a subclass's Execute; everything else is the subclass's to handle.
+            if (command == TurtleCommand.Leaf)
+                StampLeaf(_stack.Peek(), TakeSurfaceFactory(runes, ref index));
+            else
+                Execute(_stack.Peek(), command);
+        }
 
         Complete(turtle);
     }
@@ -141,6 +155,32 @@ public abstract class LSystemShapeRenderer
     private TurtleCommand ToTurtleCommand(Rune rune)
     {
         return CommandMapping.GetValueOrDefault(rune, TurtleCommand.Unknown);
+    }
+
+    /// <summary>
+    /// This method decides which surface a <c>~</c> should stamp, claiming the rune that names it
+    /// when there is one.  A <c>~</c> takes the rune that follows it only if that rune is actually
+    /// bound to a surface; otherwise it stamps the default and leaves the rune alone.  That rule
+    /// is what lets a bare <c>~</c> go on meaning "the default surface": a production reading
+    /// <c>...~]</c> needs its <c>]</c> left behind to close the branch, and a <c>~</c> that always
+    /// claimed the next rune would swallow it.  The cost is that binding a character which also
+    /// appears as a command right after a <c>~</c> lets the <c>~</c> claim it; the fix there is to
+    /// bind a different character.
+    /// </summary>
+    /// <param name="runes">The production being walked.</param>
+    /// <param name="index">The index of the <c>~</c>, advanced past the name when one is claimed.</param>
+    /// <returns>The factory for the surface to stamp.</returns>
+    private Func<Surface> TakeSurfaceFactory(Rune[] runes, ref int index)
+    {
+        if (index + 1 < runes.Length &&
+            SurfaceFactories.TryGetValue(runes[index + 1], out Func<Surface> factory))
+        {
+            index++;
+
+            return factory;
+        }
+
+        return LeafFactory;
     }
 
     /// <summary>
@@ -210,12 +250,13 @@ public abstract class LSystemShapeRenderer
     /// from the turtle path would cull rays aimed at the leaf before it was ever tested.
     /// </summary>
     /// <param name="turtle">The current turtle.</param>
-    private void StampLeaf(Turtle turtle)
+    /// <param name="factory">The recipe for the surface to stamp.</param>
+    private void StampLeaf(Turtle turtle, Func<Surface> factory)
     {
-        if (LeafFactory is null)
+        if (factory is null)
             return;
 
-        Surface leaf = LeafFactory();
+        Surface leaf = factory();
 
         leaf.Transform = turtle.GetPlacementMatrix() * leaf.Transform;
 

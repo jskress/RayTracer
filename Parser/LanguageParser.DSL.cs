@@ -46,7 +46,7 @@ public partial class LanguageParser
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
-            'superellipsoid', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
@@ -666,6 +666,16 @@ public partial class LanguageParser
             commands > openBrace ?? 'Expecting an open brace to follow "commands" here.' >
             lsystemCommandClause{*} > closeBrace ?? 'Expecting a close brace here.'
         }
+        lsystemSurfaceClause:
+        {
+            _string > arrow ?? 'Expecting an arrow to follow the surface character here.' >
+            [ _identifier | _keyword ] ?? 'Expecting a surface name to follow the arrow here.'
+        }
+        lsystemSurfacesClause:
+        {
+            surfaces > openBrace ?? 'Expecting an open brace to follow "surfaces" here.' >
+            lsystemSurfaceClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
         lsystemProductionProbabilityClause:
         {
             leftParen > _expression > modulo{?} >
@@ -693,7 +703,7 @@ public partial class LanguageParser
             { controls > openBrace ?? 'Expecting an open brace to follow "controls" here.' } |
             { leaf > [ _identifier | _keyword ] ?? 'Expecting a surface name to follow "leaf" here.' } |
             lsystemCommandsClause | lsystemProductionsClause | lsystemIgnoreClause |
-            surfaceEntryClause
+            lsystemSurfacesClause | surfaceEntryClause
         ]
         lsystemRenderingControlsEntryClause:
         [
