@@ -93,4 +93,37 @@ public class Line : IPathSegment
                 }
             ];
     }
+
+    /// <summary>
+    /// This method counts how many times this line crosses the horizontal line through the given
+    /// point, strictly to its right.  See <see cref="IPathSegment.CountCrossingsToTheRight"/> for
+    /// what the count is for and why the straddle test comes first.
+    /// <para>
+    /// This solves the crossing in plain 2D arithmetic rather than going through the parallelogram
+    /// <see cref="GetIntersections"/> uses.  That route asks a 3D surface where a 3D ray meets it,
+    /// which for a segment extruded into a vertical quad is a great deal of machinery -- and,
+    /// since points and vectors here are reference types, a great deal of allocation -- to answer
+    /// what is really "where does this segment cross a horizontal line".  The answer is the same:
+    /// the segment's own parameter must land within it, exactly as the parallelogram requires its
+    /// alpha to fall in [0, 1].
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point whose horizontal line is to be crossed.</param>
+    /// <returns>The number of crossings strictly to the right of the point.</returns>
+    public int CountCrossingsToTheRight(TwoDPoint point)
+    {
+        bool startAbove = _start.Y > point.Y;
+
+        // Both endpoints on the same side, so the line cannot reach the test line.
+        if (startAbove == _end.Y > point.Y)
+            return 0;
+
+        // The straddle above rules out a horizontal line, so this cannot divide by zero.
+        double alpha = (point.Y - _start.Y) / (_end.Y - _start.Y);
+
+        if (alpha is < 0 or > 1)
+            return 0;
+
+        return _start.X + alpha * (_end.X - _start.X) > point.X ? 1 : 0;
+    }
 }

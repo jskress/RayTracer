@@ -119,6 +119,54 @@ public class CubicCurve : IPathSegment
     }
 
     /// <summary>
+    /// This method counts how many times this curve crosses the horizontal line through the given
+    /// point, strictly to its right.  See <see cref="IPathSegment.CountCrossingsToTheRight"/> for
+    /// what the count is for and why the straddle test comes first.
+    /// <para>
+    /// The line handed to <see cref="GetRoots"/> is the one <see cref="GetIntersections"/> would
+    /// build for a rightward horizontal ray, so the roots are the same.  For that line
+    /// <c>GetIntersections</c>' own forward test reduces to "the crossing is at or right of the
+    /// point", which the strict comparison here subsumes, so no crossing is gained or lost by
+    /// leaving it out.  Only each root's X is worked out, rather than an intersection assembled
+    /// around it.
+    /// </para>
+    /// <para>
+    /// Unlike the other segments this one still allocates, because the roots come from
+    /// <c>MathNet</c>'s polynomial solver, which builds its own arrays.  Getting rid of that would
+    /// mean replacing the solver, which would change the roots it finds; the wrappers around it
+    /// are what is dropped here.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point whose horizontal line is to be crossed.</param>
+    /// <returns>The number of crossings strictly to the right of the point.</returns>
+    public int CountCrossingsToTheRight(TwoDPoint point)
+    {
+        bool startAbove = _start.Y > point.Y;
+
+        // The curve stays within the hull of its defining points, so if they all sit on one side
+        // of the test line, it cannot reach it.
+        if (startAbove == _cp1.Y > point.Y &&
+            startAbove == _cp2.Y > point.Y &&
+            startAbove == _end.Y > point.Y)
+            return 0;
+
+        int crossings = 0;
+
+        foreach (double t in GetRoots(point, new TwoDPoint(point.X + 1, point.Y)))
+        {
+            double t2 = t * t;
+            double t3 = t2 * t;
+            double x = _xCoefficients[0] * t3 + _xCoefficients[1] * t2 +
+                       _xCoefficients[2] * t + _xCoefficients[3];
+
+            if (x > point.X)
+                crossings++;
+        }
+
+        return crossings;
+    }
+
+    /// <summary>
     /// This method returns the intersection information of our curve with the given line.
     /// Each entry returned contains both the intersection distance along the curve, in
     /// the [0, 1] interval, and the point of intersection.

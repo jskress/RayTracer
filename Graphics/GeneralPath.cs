@@ -498,56 +498,27 @@ public class GeneralPath
     /// standard even/odd (crossing-number) rule: cast a test line from the point off to the
     /// right and count how many times the path's boundary crosses it, treating an odd count
     /// as "inside".  Unlike tessellating the path into a polyline first, this asks each
-    /// segment directly (via its own <see cref="IPathSegment.GetIntersections"/>, the same
-    /// line-intersection math <see cref="ExtrusionPathSurface"/> already relies on for
-    /// lateral-surface hit testing) where a rightward horizontal line crosses it, so curved
-    /// segments are tested exactly rather than approximated.
+    /// segment directly (via its own <see cref="IPathSegment.CountCrossingsToTheRight"/>) how
+    /// often a rightward horizontal line crosses it, so curved segments are tested exactly
+    /// rather than approximated.
     /// <para>
-    /// A segment only gets asked for its crossings at all if its defining points -- for a
-    /// line, its two endpoints; for a curve, its endpoints *and* control points -- aren't
-    /// all on the same side of the test point's Y (comparing with strict "greater than" on
-    /// one side and "at or below" on the other, the usual even/odd tie-breaker).  A Bezier
-    /// curve never leaves the convex hull of its own defining points, so if every one of
-    /// them is on the same side, the curve provably can't cross the test line at all and is
-    /// safe to skip.  Using only the two endpoints for this check (rather than every defining
-    /// point) would be wrong for a curve: a segment whose endpoints happen to sit on the same
-    /// side can still bulge across the test line and back through its interior, contributing
-    /// crossings that must be counted, not skipped.  Skipping is still necessary in the cases
-    /// it does apply to, since two segments that merely touch the test line at a shared
-    /// vertex (without the path actually crossing from one side to the other there, e.g. a
-    /// flat-topped notch) would otherwise each report that shared point as its own crossing,
-    /// double-counting a single non-crossing touch as two.
+    /// This method runs for every ray that reaches a flat surface's plane, so it is deliberately
+    /// allocation-free: each segment reports a count rather than handing back intersection
+    /// objects in a collection.  The convex-hull straddle rejection and the even/odd tie-breaking
+    /// that go with it live in the segments themselves for the same reason -- checking them here
+    /// would mean asking each segment for its defining points, and building that array is itself
+    /// an allocation.  <see cref="IPathSegment.CountCrossingsToTheRight"/> documents both rules
+    /// and why they matter.
     /// </para>
     /// </summary>
     /// <param name="point">The point to test.</param>
     /// <returns><c>true</c>, if the path contains the point, or <c>false</c>, if not.</returns>
     public bool Contains(TwoDPoint point)
     {
-        TwoDRay testRay = new () { Origin = point, Direction = new TwoDVector(1, 0) };
         int crossingCount = 0;
 
         foreach (IPathSegment segment in Segments)
-        {
-            bool anyAbove = false;
-            bool anyAtOrBelow = false;
-
-            foreach (TwoDPoint definingPoint in segment.Points)
-            {
-                if (definingPoint.Y > point.Y)
-                    anyAbove = true;
-                else
-                    anyAtOrBelow = true;
-            }
-
-            if (!anyAbove || !anyAtOrBelow)
-                continue;
-
-            foreach (TwoDIntersection intersection in segment.GetIntersections(testRay))
-            {
-                if (intersection.Point.X > point.X)
-                    crossingCount++;
-            }
-        }
+            crossingCount += segment.CountCrossingsToTheRight(point);
 
         return crossingCount % 2 == 1;
     }
