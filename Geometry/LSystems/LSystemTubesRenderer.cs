@@ -45,7 +45,10 @@ public class LSystemTubesRenderer : LSystemShapeRenderer
     {
         switch (command)
         {
+            // 'G' draws exactly as 'F' does; the two differ only in whether they leave a corner
+            // behind for a polygon being traced, which is the base renderer's business, not ours.
             case TurtleCommand.DrawLine:
+            case TurtleCommand.DrawLineWithoutVertex:
                 double radius = turtle.Diameter / 2;
 
                 // The segment we were holding now knows what to taper to: this one's radius.  The

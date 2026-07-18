@@ -37,7 +37,9 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
     /// <param name="command">The turtle command to handle.</param>
     protected override void Execute(Turtle turtle, TurtleCommand command)
     {
-        if (command == TurtleCommand.DrawLine)
+        // 'G' draws exactly as 'F' does; the two differ only in whether they leave a corner behind
+        // for a polygon being traced, which is the base renderer's business, not ours.
+        if (command is TurtleCommand.DrawLine or TurtleCommand.DrawLineWithoutVertex)
         {
             CreateCylinder(turtle);
             CreateSphere(turtle);

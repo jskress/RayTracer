@@ -1,5 +1,8 @@
 using System.Text;
+using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -12,6 +15,10 @@ public abstract class LSystemShapeRenderer
     private static readonly Rune Move = new('f');
     private static readonly Rune Draw = new('F');
     private static readonly Rune Leaf = new('~');
+    private static readonly Rune StartPolygon = new('{');
+    private static readonly Rune CompletePolygon = new('}');
+    private static readonly Rune RecordVertex = new('.');
+    private static readonly Rune DrawNoVertex = new('G');
 
     /// <summary>
     /// This field holds the standard rune (character) to turtle command mapping.
@@ -34,13 +41,17 @@ public abstract class LSystemShapeRenderer
         { new Rune('$'), TurtleCommand.ToVertical },
         { new Rune('['), TurtleCommand.StartBranch },
         { new Rune(']'), TurtleCommand.CompleteBranch },
-        // '{' - Start a polygon.
-        // 'G' - Move forward and draw a line; do not record a vertex.
-        // '.' - Record a vertex in the current polygon.
-        // '}' - Complete a polygon.
+        { StartPolygon, TurtleCommand.StartPolygon },
+        { DrawNoVertex, TurtleCommand.DrawLineWithoutVertex },
+        { RecordVertex, TurtleCommand.RecordVertex },
+        { CompletePolygon, TurtleCommand.CompletePolygon },
         { Leaf, TurtleCommand.Leaf },
         { new Rune('!'), TurtleCommand.DecreaseDiameter }
-        // "'" - Increment color index.
+        // "'" - Increment color index.  Deliberately not implemented, rather than merely missing:
+        // it steps an integer index into a colour *table*, and this ray tracer has no palette
+        // concept at all -- supporting it would mean inventing one purely to serve a legacy
+        // command, bolted onto a strictly more expressive material system.  Vary a plant's colour
+        // with a named surface after a '~' instead.
         // '%' - Cut off the remainder of the branch.
     };
 
@@ -50,7 +61,9 @@ public abstract class LSystemShapeRenderer
     internal static HashSet<Rune> Commands => StandardCommandMapping.Keys
         .Where(cmd => cmd != LSystemProducer.LeftBracket &&
                       cmd != LSystemProducer.RightBracket &&
-                      cmd != Move && cmd != Draw && cmd != Leaf)
+                      cmd != Move && cmd != Draw && cmd != Leaf &&
+                      cmd != StartPolygon && cmd != CompletePolygon &&
+                      cmd != RecordVertex && cmd != DrawNoVertex)
         .ToHashSet();
 
     /// <summary>
@@ -93,11 +106,13 @@ public abstract class LSystemShapeRenderer
 
     private readonly string _production;
     private readonly Stack<Turtle> _stack;
+    private readonly Stack<List<Point>> _polygons;
 
     protected LSystemShapeRenderer(string production)
     {
         _production = production;
         _stack = new Stack<Turtle>();
+        _polygons = new Stack<List<Point>>();
 
         Surfaces = [];
     }
@@ -128,12 +143,30 @@ public abstract class LSystemShapeRenderer
 
             PreExecute(_stack.Peek(), command);
 
-            // A leaf is geometry common to every renderer, so it is stamped here rather than in
-            // a subclass's Execute; everything else is the subclass's to handle.
-            if (command == TurtleCommand.Leaf)
-                StampLeaf(_stack.Peek(), TakeSurfaceFactory(runes, ref index));
-            else
-                Execute(_stack.Peek(), command);
+            // Vertices are gathered after PreExecute, so a move contributes where it arrived
+            // rather than where it set out from.
+            GatherVertex(_stack.Peek(), command);
+
+            // Leaves and polygons are geometry common to every renderer, so they are built here
+            // rather than in a subclass's Execute; everything else is the subclass's to handle.
+            switch (command)
+            {
+                case TurtleCommand.Leaf:
+                    StampLeaf(_stack.Peek(), TakeSurfaceFactory(runes, ref index));
+                    break;
+                case TurtleCommand.StartPolygon:
+                    _polygons.Push([]);
+                    break;
+                case TurtleCommand.CompletePolygon:
+                    if (_polygons.Count > 0)
+                        FillPolygon(_polygons.Pop());
+                    break;
+                case TurtleCommand.RecordVertex:
+                    break; // GatherVertex already did the work.
+                default:
+                    Execute(_stack.Peek(), command);
+                    break;
+            }
         }
 
         Complete(turtle);
@@ -194,6 +227,7 @@ public abstract class LSystemShapeRenderer
         {
             case TurtleCommand.Move:
             case TurtleCommand.DrawLine:
+            case TurtleCommand.DrawLineWithoutVertex:
                 turtle.Move();
                 break;
             case TurtleCommand.TurnLeft:
@@ -241,6 +275,104 @@ public abstract class LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     /// <param name="command">The turtle command to handle.</param>
     protected abstract void Execute(Turtle turtle, TurtleCommand command);
+
+    /// <summary>
+    /// This method records where the turtle stands as a corner of the polygon being traced, when
+    /// there is one open and the command is one that contributes a corner.  A move contributes the
+    /// point it arrived at; <c>.</c> contributes the point the turtle already stands on; and
+    /// <c>G</c> deliberately contributes nothing, which is the whole reason it exists alongside
+    /// <c>F</c>.
+    /// The corner widens the bounding box too.  Nothing else would: an outline traced with
+    /// <c>f</c> never reaches a renderer's own <c>Execute</c>, so a box built from drawn segments
+    /// alone would not reach far enough, and the filled blade would be culled before it was tested.
+    /// </summary>
+    /// <param name="turtle">The current turtle.</param>
+    /// <param name="command">The turtle command being handled.</param>
+    private void GatherVertex(Turtle turtle, TurtleCommand command)
+    {
+        if (_polygons.Count == 0)
+            return;
+
+        if (command is not (TurtleCommand.Move or TurtleCommand.DrawLine or TurtleCommand.RecordVertex))
+            return;
+
+        _polygons.Peek().Add(turtle.Location);
+
+        BoundingBox?.Add(turtle.Location);
+    }
+
+    /// <summary>
+    /// This method fills a closed outline the turtle has traced.  The outline is triangulated in
+    /// two dimensions, where "inside" is well defined, but the triangles are then built from the
+    /// original 3D corners: an outline that stayed in its plane comes out exact, and one that
+    /// wandered out of it comes out faceted rather than silently flattened.  Ear clipping (rather
+    /// than a fan from one corner) is what lets a concave blade come out right.
+    /// </summary>
+    /// <param name="vertices">The corners of the outline, in the order they were traced.</param>
+    private void FillPolygon(List<Point> vertices)
+    {
+        if (vertices.Count < 3)
+            return;
+
+        Vector normal = GetPolygonNormal(vertices);
+
+        if (normal is null)
+            return;
+
+        // Any two perpendicular directions lying in the outline's own plane will do to flatten it
+        // into; we start from whichever axis the normal leans on least, so the cross product that
+        // makes the first of them can never collapse.
+        Vector helper = Math.Abs(normal.X) <= Math.Abs(normal.Y) && Math.Abs(normal.X) <= Math.Abs(normal.Z)
+            ? Directions.Right
+            : Math.Abs(normal.Y) <= Math.Abs(normal.Z)
+                ? Directions.Up
+                : Directions.In;
+        Vector uAxis = normal.Cross(helper).Unit;
+        Vector vAxis = normal.Cross(uAxis);
+        Point origin = vertices[0];
+        List<TwoDPoint> flattened = vertices
+            .Select(vertex => vertex - origin)
+            .Select(offset => new TwoDPoint(uAxis.Dot(offset), vAxis.Dot(offset)))
+            .ToList();
+
+        foreach ((int a, int b, int c) in PolygonTriangulator.Triangulate(flattened))
+        {
+            Surfaces.Add(new Triangle
+            {
+                Point1 = vertices[a],
+                Point2 = vertices[b],
+                Point3 = vertices[c],
+                Material = null // <-- This is important.
+            });
+        }
+    }
+
+    /// <summary>
+    /// This method finds the plane a traced outline lies in, by Newell's method: summing the
+    /// cross products around the whole loop rather than taking any three corners, so a nearly-flat
+    /// outline still yields a sensible plane and no single awkward corner can throw it off.
+    /// </summary>
+    /// <param name="vertices">The corners of the outline.</param>
+    /// <returns>The unit normal of the outline's plane, or <c>null</c> if the corners are
+    /// collinear (or otherwise enclose no area), leaving no plane to speak of.</returns>
+    private static Vector GetPolygonNormal(List<Point> vertices)
+    {
+        double x = 0, y = 0, z = 0;
+
+        for (int index = 0; index < vertices.Count; index++)
+        {
+            Point current = vertices[index];
+            Point next = vertices[(index + 1) % vertices.Count];
+
+            x += (current.Y - next.Y) * (current.Z + next.Z);
+            y += (current.Z - next.Z) * (current.X + next.X);
+            z += (current.X - next.X) * (current.Y + next.Y);
+        }
+
+        Vector normal = new (x, y, z);
+
+        return normal.Magnitude.Near(0) ? null : normal.Unit;
+    }
 
     /// <summary>
     /// This method stamps a fresh leaf surface down at the turtle's current position and

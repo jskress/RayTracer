@@ -20,5 +20,9 @@ public enum TurtleCommand
     StartBranch,
     CompleteBranch,
     DecreaseDiameter,
-    Leaf
+    Leaf,
+    StartPolygon,
+    CompletePolygon,
+    RecordVertex,
+    DrawLineWithoutVertex
 }

@@ -341,6 +341,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/bush.png">
+      <img alt="L-System Test: ABOP Bush" height="120" src="Local/l-systems/bush.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/bush.igl">L-System Test: ABOP Bush</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/context-sensitive.png">
       <img alt="L-System Test: Context-Sensitive" height="120" src="Local/l-systems/context-sensitive.png" width="160"/>
     </a></td>
