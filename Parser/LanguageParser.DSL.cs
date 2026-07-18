@@ -48,7 +48,7 @@ public partial class LanguageParser
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube',
+            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'width', 'with', 'wood', 'wrinkles',
             'X', 'Y', 'Z'
@@ -697,7 +697,7 @@ public partial class LanguageParser
         ]
         lsystemRenderingControlsEntryClause:
         [
-            extrusion | pipes | { angle > _expression } | { length > _expression } |
+            extrusion | pipes | tubes | { angle > _expression } | { length > _expression } |
             { diameter > _expression } | { factor > _expression }
         ]
 

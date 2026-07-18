@@ -6,7 +6,8 @@ namespace RayTracer.Geometry.LSystems;
 public enum LSystemRendererType
 {
     Extrusion,
-    Pipes
+    Pipes,
+    Tubes
 }
 
 /// <summary>
@@ -21,6 +22,7 @@ public static class LSystemRendererTypeExtensions
         {
             LSystemRendererType.Extrusion => new LSystemExtrusionRenderer(production),
             LSystemRendererType.Pipes => new LSystemsPipesRenderer(production),
+            LSystemRendererType.Tubes => new LSystemTubesRenderer(production),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported renderer type.")
         };
     }

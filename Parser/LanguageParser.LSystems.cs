@@ -168,6 +168,12 @@ public partial class LanguageParser
                     Value = LSystemRendererType.Pipes
                 };
                 break;
+            case "tubes":
+                resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
+                {
+                    Value = LSystemRendererType.Tubes
+                };
+                break;
             case "angle":
                 resolver.AngleResolver = new AngleResolver { Term = term };
                 break;

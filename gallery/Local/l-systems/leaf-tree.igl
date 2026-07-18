@@ -2,6 +2,8 @@
 // production.  With no leaf named, each '~' grows the built-in green patch, so a plainly
 // coloured plant already reads as green foliage on brown branches.  The plant branches in
 // three dimensions (it pitches and rolls, not just yaws), so it is not confined to a plane.
+// The stems use "tubes" rather than "pipes": each segment tapers to meet the next, so the
+// shoulder that "!" would otherwise leave at every joint is gone, as is the cap-sphere bulge.
 
 context {
     parallel pixel scanner
@@ -42,7 +44,7 @@ plant = lsystem {
         'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
     }
     controls {
-        pipes
+        tubes
         angle 28
         diameter 0.4
         length 1.4

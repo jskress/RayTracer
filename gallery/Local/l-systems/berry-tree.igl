@@ -2,6 +2,7 @@
 // lets each '~' grow the built-in green patch, this plant names its own surface with a "leaf"
 // clause, so every '~' stamps that surface instead -- keeping the material it was given rather
 // than inheriting the branches'.  The leaf may be any surface the ray tracer can make.
+// As in leaf-tree.igl, the stems use "tubes", so the branches taper smoothly into one another.
 
 context {
     parallel pixel scanner
@@ -56,7 +57,7 @@ plant = lsystem {
         'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
     }
     controls {
-        pipes
+        tubes
         angle 28
         diameter 0.4
         length 1.4

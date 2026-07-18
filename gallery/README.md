@@ -365,6 +365,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/pipes-vs-tubes.png">
+      <img alt="L-System Test: Pipes vs. Tubes" height="120" src="Local/l-systems/pipes-vs-tubes.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/pipes-vs-tubes.igl">L-System Test: Pipes vs. Tubes</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/snowflake-2.png">
       <img alt="L-System Test: Snowflake Outline" height="120" src="Local/l-systems/snowflake-2.png" width="160"/>
     </a></td>
