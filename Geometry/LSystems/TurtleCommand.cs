@@ -24,5 +24,6 @@ public enum TurtleCommand
     StartPolygon,
     CompletePolygon,
     RecordVertex,
-    DrawLineWithoutVertex
+    DrawLineWithoutVertex,
+    CutOffBranch
 }

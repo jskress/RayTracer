@@ -19,6 +19,7 @@ public abstract class LSystemShapeRenderer
     private static readonly Rune CompletePolygon = new('}');
     private static readonly Rune RecordVertex = new('.');
     private static readonly Rune DrawNoVertex = new('G');
+    private static readonly Rune CutOff = new('%');
 
     /// <summary>
     /// This field holds the standard rune (character) to turtle command mapping.
@@ -46,6 +47,7 @@ public abstract class LSystemShapeRenderer
         { RecordVertex, TurtleCommand.RecordVertex },
         { CompletePolygon, TurtleCommand.CompletePolygon },
         { Leaf, TurtleCommand.Leaf },
+        { CutOff, TurtleCommand.CutOffBranch },
         { new Rune('!'), TurtleCommand.DecreaseDiameter }
         // "'" - Increment color index.  Deliberately not implemented, rather than merely missing:
         // it steps an integer index into a colour *table*, and this ray tracer has no palette
@@ -63,7 +65,7 @@ public abstract class LSystemShapeRenderer
                       cmd != LSystemProducer.RightBracket &&
                       cmd != Move && cmd != Draw && cmd != Leaf &&
                       cmd != StartPolygon && cmd != CompletePolygon &&
-                      cmd != RecordVertex && cmd != DrawNoVertex)
+                      cmd != RecordVertex && cmd != DrawNoVertex && cmd != CutOff)
         .ToHashSet();
 
     /// <summary>
@@ -163,6 +165,9 @@ public abstract class LSystemShapeRenderer
                     break;
                 case TurtleCommand.RecordVertex:
                     break; // GatherVertex already did the work.
+                case TurtleCommand.CutOffBranch:
+                    index = FindBranchEnd(runes, index);
+                    break;
                 default:
                     Execute(_stack.Peek(), command);
                     break;
@@ -275,6 +280,37 @@ public abstract class LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     /// <param name="command">The turtle command to handle.</param>
     protected abstract void Execute(Turtle turtle, TurtleCommand command);
+
+    /// <summary>
+    /// This method finds where a cut-off branch stops being read.  A <c>%</c> discards whatever is
+    /// left of the branch it stands in, so we scan forward for the <c>]</c> that closes that
+    /// branch, counting any branches opened along the way so that only the matching one ends the
+    /// skip.  The closing <c>]</c> itself is left to be handled normally -- the turtle still has to
+    /// be popped back to where the branch began.  A <c>%</c> that nothing encloses discards the
+    /// rest of the production.
+    /// </summary>
+    /// <param name="runes">The production being walked.</param>
+    /// <param name="index">The index of the <c>%</c>.</param>
+    /// <returns>The index to continue the walk from, being the rune before the closing bracket.</returns>
+    private static int FindBranchEnd(Rune[] runes, int index)
+    {
+        int depth = 0;
+
+        for (int scan = index + 1; scan < runes.Length; scan++)
+        {
+            if (runes[scan] == LSystemProducer.LeftBracket)
+                depth++;
+            else if (runes[scan] == LSystemProducer.RightBracket)
+            {
+                if (depth == 0)
+                    return scan - 1;
+
+                depth--;
+            }
+        }
+
+        return runes.Length;
+    }
 
     /// <summary>
     /// This method records where the turtle stands as a corner of the polygon being traced, when
