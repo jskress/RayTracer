@@ -1,5 +1,10 @@
 // This file defines a single, 6-sided die.
 
+// The pips are cut out of the die's body, and the hollows they leave are what the eye actually
+// sees, so they need a material of their own: a surface that names none inherits from the CSG
+// that contains it, which would paint every pip the same colour as the die it is cut into.
+pipMaterial = material { pigment White }
+
 rods = union {
 	cylinder {
 		material inherited
@@ -96,12 +101,14 @@ dieBody = union {
 }
 
 onePip = sphere {
+	material pipMaterial
 	scale [0.1, 0.1, 0.02]
 	translate [0, 0, -0.5]
 	rotate X 180
 }
 
 twoPips = union {
+	material pipMaterial
 	sphere {
 		scale [0.1, 0.1, 0.02]
 		translate [-0.27, 0.27, -0.5]
@@ -114,6 +121,7 @@ twoPips = union {
 }
 
 threePips = union {
+	material pipMaterial
 	sphere {
 		scale [0.1, 0.1, 0.02]
 		translate [0, 0, -0.5]
@@ -130,6 +138,7 @@ threePips = union {
 }
 
 fourPips = union {
+	material pipMaterial
 	sphere {
 		scale [0.1, 0.1, 0.02]
 		translate [-0.27, 0.27, -0.5]
@@ -150,6 +159,7 @@ fourPips = union {
 }
 
 fivePips = union {
+	material pipMaterial
 	sphere {
 		scale [0.1, 0.1, 0.02]
 		translate [0, 0, -0.5]
@@ -174,6 +184,7 @@ fivePips = union {
 }
 
 sixPips = union {
+	material pipMaterial
 	sphere {
 		scale [0.1, 0.1, 0.02]
 		translate [0, 0.27, -0.5]

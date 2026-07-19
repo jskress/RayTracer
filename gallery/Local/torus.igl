@@ -39,6 +39,7 @@ torus {
         reflective 0.25
         specular 1
         shininess 300
+        metallic 0.6
     }
     rotate X -15
     translate Y 1
