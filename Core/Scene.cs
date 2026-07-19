@@ -167,7 +167,8 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetRefractedColor(Intersection intersection, int remaining)
     {
-        double transparency = (intersection.Surface.Material ?? Material.Default).Transparency;
+        Material material = intersection.Surface.Material ?? Material.Default;
+        double transparency = material.Transparency;
 
         if (remaining < 1 || transparency == 0)
             return Colors.Black;
@@ -185,9 +186,22 @@ public class Scene : NamedThing, IDisposable
         Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
 
         Ray refractedRay = new(point, direction);
-        Color color = GetColorFor(refractedRay, remaining - 1);
+        Color color = GetColorFor(refractedRay, remaining - 1) * transparency;
+        double filter = material.Interior.Filter;
 
-        return color * transparency;
+        // Transparency says how much light gets through; the filter says what colour it comes out.
+        // Tinting toward the pigment's colour at this very point, rather than toward some single
+        // colour for the whole surface, is what lets patterned glass filter as a pattern.  Like
+        // the transparency it follows, this is charged once per surface crossed, so a solid tints
+        // what passes through it twice -- going in, and coming back out.
+        if (filter > 0)
+        {
+            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point);
+
+            color *= Colors.White + (pigmentColor - Colors.White) * filter;
+        }
+
+        return color;
     }
 
     /// <summary>

@@ -87,14 +87,50 @@ public partial class LanguageParser
             case "transparency":
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
                 break;
-            case "index":
-                resolver.IndexOfRefractionResolver = new TermResolver<double>() { Term = term };
-                break;
-            case "ior":
-                resolver.IndexOfRefractionResolver = new TermResolver<double>() { Term = term };
+            case "interior":
+                ParseInteriorClause(resolver);
                 break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to parse the interior block of a material: what the surface is made of,
+    /// rather than what its skin looks like.
+    /// </summary>
+    /// <param name="resolver">The material resolver to attach the interior to.</param>
+    private void ParseInteriorClause(MaterialResolver resolver)
+    {
+        resolver.InteriorResolver ??= new InteriorResolver();
+
+        _ = ParseObjectResolver(
+            "interiorEntryClause", HandleInteriorEntryClause, resolver.InteriorResolver);
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a material's interior block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleInteriorEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid interior property here.");
+
+        InteriorResolver resolver = (InteriorResolver) _context.CurrentTarget;
+        Term term = clause.Term();
+
+        switch (ToCmd(clause))
+        {
+            case "index":
+            case "ior":
+                resolver.IndexOfRefractionResolver = new TermResolver<double> { Term = term };
+                break;
+            case "filter":
+                resolver.FilterResolver = new TermResolver<double> { Term = term };
+                break;
+            default:
+                throw new NotSupportedException("Unknown interior property found.");
         }
     }
 }

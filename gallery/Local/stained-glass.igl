@@ -1,0 +1,87 @@
+// A scene to test filtered transparency.  Three panes of the same glass stand over a checkered
+// floor, differing only in how much they filter what passes through them.
+//
+// "transparency" says how much light gets through a surface; the interior's "filter" says what
+// colour it comes out.  At filter 0 -- the default, and the only behaviour available before the
+// interior existed -- coloured glass merely dims what is behind it, the way thin gauze or dust on
+// a window does.  Raising it toward 1 makes the glass colour what passes through, which is what
+// real glass does and what makes stained glass stain.
+//
+// Left to right: no filtering, half, and full.  Watch the checks behind each pane.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Filtered Transparency Test'
+        author 'J. Stephen Kress'
+        description 'Three panes of green glass, filtering what passes through them by 0, 0.5 and 1.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3.2, -8.5]
+    look at [0, 1.15, 0]
+    field of view 50
+}
+
+// Kept high and to the front, so the panes' shadows fall away behind them rather than across the
+// checks we are trying to look at through the glass.
+point light {
+    location [0, 12, -7]
+}
+
+// Floor: checkered, so what the glass does to it is legible.
+plane {
+    material {
+        pigment checker { White, [0.12, 0.12, 0.16] }
+        specular 0
+    }
+}
+
+// The three panes.  Each is a flattened cube standing on the floor, so the light crosses two
+// surfaces going through -- and so filters twice, which deepens the colour.
+paneGlass = material {
+    pigment ForestGreen
+    ambient 0
+    diffuse 0.05
+    specular 0.6
+    shininess 300
+    transparency 1
+}
+
+// LEFT: no filtering.  The glass dims the checks but leaves them grey.
+cube {
+    material paneGlass {
+        interior { ior Glass }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [-2.5, 1.15, 0]
+}
+
+// MIDDLE: half filtered.
+cube {
+    material paneGlass {
+        interior {
+            ior Glass
+            filter 0.5
+        }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [0, 1.15, 0]
+}
+
+// RIGHT: fully filtered.  The checks behind it come through green.
+cube {
+    material paneGlass {
+        interior {
+            ior Glass
+            filter 1
+        }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [2.5, 1.15, 0]
+}

@@ -18,6 +18,6 @@ public class TestMaterial
         Assert.AreEqual(200.0, material.Shininess);
         Assert.AreEqual(0, material.Reflective);
         Assert.AreEqual(0, material.Transparency);
-        Assert.AreEqual(1, material.IndexOfRefraction);
+        Assert.AreEqual(1, material.Interior.IndexOfRefraction);
     }
 }

@@ -75,9 +75,10 @@ public class Material
     public double Transparency { get; set; }
 
     /// <summary>
-    /// This property holds the material's index of refraction.
+    /// This property holds the substance inside the surface -- its index of refraction, and how
+    /// far it colours the light passing through it.  See <see cref="Core.Interior"/>.
     /// </summary>
-    public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
+    public Interior Interior { get; set; } = new ();
 
     /// <summary>
     /// This method returns the tint that <see cref="Metallic"/> puts on light this material

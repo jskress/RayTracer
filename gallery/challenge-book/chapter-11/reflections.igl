@@ -25,7 +25,9 @@ sphere {
         diffuse 0.2
         specular 1
         shininess 300
-        index of refraction Glass
+        interior {
+            index of refraction Glass
+        }
     }
     translate [-0.5, 1, 0.5]
 }

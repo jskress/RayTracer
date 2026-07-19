@@ -312,7 +312,7 @@ public class TestScenes
         Assert.IsTrue(Colors.Black.Matches(color));
 
         surface.Material.Transparency = 1;
-        surface.Material.IndexOfRefraction = 1.5;
+        surface.Material.Interior.IndexOfRefraction = 1.5;
         intersections =
         [
             new Intersection(surface, 4),
@@ -335,7 +335,7 @@ public class TestScenes
         Ray ray = new (new Point(0, 0, value), new Vector(0, 1, 0));
 
         surface.Material.Transparency = 1;
-        surface.Material.IndexOfRefraction = 1.5;
+        surface.Material.Interior.IndexOfRefraction = 1.5;
 
         List<Intersection> intersections =
         [
@@ -362,7 +362,7 @@ public class TestScenes
         a.Material.Ambient = 1;
         a.Material.Pigment = pigment;
         b.Material.Transparency = 1;
-        b.Material.IndexOfRefraction = 1.5;
+        b.Material.Interior.IndexOfRefraction = 1.5;
 
         List<Intersection> intersections =
         [
@@ -390,7 +390,7 @@ public class TestScenes
             Material = new Material
             {
                 Transparency = 0.5,
-                IndexOfRefraction = 1.5
+                Interior = new Interior { IndexOfRefraction = 1.5 }
             },
             Transform = Transforms.Translate(0, -1, 0)
         };
@@ -428,7 +428,7 @@ public class TestScenes
             {
                 Reflective = 0.5,
                 Transparency = 0.5,
-                IndexOfRefraction = 1.5
+                Interior = new Interior { IndexOfRefraction = 1.5 }
             },
             Transform = Transforms.Translate(0, -1, 0)
         };

@@ -69,7 +69,9 @@ plane {
         transparency 0.9
         diffuse 0.4
         shininess 300
-        index of refraction Water
+        interior {
+            index of refraction Water
+        }
     }
     no shadow
 }
