@@ -35,7 +35,10 @@ public class PointLight : NamedThing
     public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, bool inShadow)
     {
         Material material = surface.Material ?? Material.Default;
-        Color color = material.Pigment.GetColorFor(surface, point) * Color;
+        // The pigment's own colour is kept as well as the lit one, because a metallic highlight
+        // tints by the surface's colour alone -- using the lit colour would fold the light in twice.
+        Color pigmentColor = material.Pigment.GetColorFor(surface, point);
+        Color color = pigmentColor * Color;
         Vector vector = (Location - point).Unit;
         Color ambientColor = color * material.Ambient;
 
@@ -62,6 +65,13 @@ public class PointLight : NamedThing
                 double factor = Math.Pow(reflectDotEye, material.Shininess);
 
                 specularColor = Color * material.Specular * factor;
+
+                // A metal's highlight takes the colour of the metal rather than of the light.  The
+                // angle used is the light against the normal, which is the approximation POV-Ray
+                // makes here too: the halfway vector would be more correct, but Phong exists
+                // precisely to avoid computing it.
+                if (material.Metallic != 0)
+                    specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
             }
         }
 

@@ -405,6 +405,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/metallic.png">
+      <img alt="Metallic Material Test" height="120" src="Local/metallic.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/metallic.igl">Metallic Material Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/noise.png">
       <img alt="Pigment Noise Test" height="120" src="Local/noise.png" width="160"/>
     </a></td>

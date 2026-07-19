@@ -135,14 +135,27 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetReflectionColor(Intersection intersection, int remaining)
     {
-        double reflective = (intersection.Surface.Material ?? Material.Default).Reflective;
+        Material material = intersection.Surface.Material ?? Material.Default;
+        double reflective = material.Reflective;
 
         if (remaining < 1 || reflective == 0)
             return Colors.Black;
 
         Ray reflectedRay = new (intersection.OverPoint, intersection.Reflect);
+        Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
 
-        return GetColorFor(reflectedRay, remaining - 1) * reflective;
+        // A metal colours what it mirrors, not just its highlight -- it is what makes a gold
+        // surface throw back a gold scene rather than a plain one.  The angle here is the eye
+        // against the normal, the true angle of incidence, rather than the approximation the
+        // highlight has to settle for.
+        if (material.Metallic != 0)
+        {
+            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point);
+
+            color *= material.GetMetallicTint(pigmentColor, intersection.Eye.Dot(intersection.Normal));
+        }
+
+        return color;
     }
 
     /// <summary>

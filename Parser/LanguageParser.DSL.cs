@@ -37,7 +37,7 @@ public partial class LanguageParser
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
+            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
@@ -269,9 +269,13 @@ public partial class LanguageParser
                 refraction ?? 'Expecting "refraction" to follow "of" here.'
             } | ior ] > _expression
         }
+        materialMetallicClause:
+        {
+            metallic > _expression{?}
+        }
         materialEntryClause:
         [
-            pigment | materialValueClause | materialIorClause
+            pigment | materialValueClause | materialIorClause | materialMetallicClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.
