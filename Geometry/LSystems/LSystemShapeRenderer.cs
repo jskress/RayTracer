@@ -1,5 +1,8 @@
 using System.Text;
+using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -11,6 +14,12 @@ public abstract class LSystemShapeRenderer
 {
     private static readonly Rune Move = new('f');
     private static readonly Rune Draw = new('F');
+    private static readonly Rune Leaf = new('~');
+    private static readonly Rune StartPolygon = new('{');
+    private static readonly Rune CompletePolygon = new('}');
+    private static readonly Rune RecordVertex = new('.');
+    private static readonly Rune DrawNoVertex = new('G');
+    private static readonly Rune CutOff = new('%');
 
     /// <summary>
     /// This field holds the standard rune (character) to turtle command mapping.
@@ -33,13 +42,18 @@ public abstract class LSystemShapeRenderer
         { new Rune('$'), TurtleCommand.ToVertical },
         { new Rune('['), TurtleCommand.StartBranch },
         { new Rune(']'), TurtleCommand.CompleteBranch },
-        // '{' - Start a polygon.
-        // 'G' - Move forward and draw a line; do not record a vertex.
-        // '.' - Record a vertex in the current polygon.
-        // '}' - Complete a polygon.
-        // '~' - Incorporate a predefined surface.
+        { StartPolygon, TurtleCommand.StartPolygon },
+        { DrawNoVertex, TurtleCommand.DrawLineWithoutVertex },
+        { RecordVertex, TurtleCommand.RecordVertex },
+        { CompletePolygon, TurtleCommand.CompletePolygon },
+        { Leaf, TurtleCommand.Leaf },
+        { CutOff, TurtleCommand.CutOffBranch },
         { new Rune('!'), TurtleCommand.DecreaseDiameter }
-        // "'" - Increment color index.
+        // "'" - Increment color index.  Deliberately not implemented, rather than merely missing:
+        // it steps an integer index into a colour *table*, and this ray tracer has no palette
+        // concept at all -- supporting it would mean inventing one purely to serve a legacy
+        // command, bolted onto a strictly more expressive material system.  Vary a plant's colour
+        // with a named surface after a '~' instead.
         // '%' - Cut off the remainder of the branch.
     };
 
@@ -49,7 +63,9 @@ public abstract class LSystemShapeRenderer
     internal static HashSet<Rune> Commands => StandardCommandMapping.Keys
         .Where(cmd => cmd != LSystemProducer.LeftBracket &&
                       cmd != LSystemProducer.RightBracket &&
-                      cmd != Move && cmd != Draw)
+                      cmd != Move && cmd != Draw && cmd != Leaf &&
+                      cmd != StartPolygon && cmd != CompletePolygon &&
+                      cmd != RecordVertex && cmd != DrawNoVertex && cmd != CutOff)
         .ToHashSet();
 
     /// <summary>
@@ -73,13 +89,32 @@ public abstract class LSystemShapeRenderer
     /// </summary>
     internal BoundingBox BoundingBox { get; set; }
 
+    /// <summary>
+    /// This property holds the recipe for the leaf surface to stamp down wherever the
+    /// production calls for one (the <c>~</c> command).  It is a factory rather than a single
+    /// surface because every occurrence needs its own, independently transformed copy, and
+    /// because a named leaf surface has to be resolved with a render context this renderer
+    /// does not have -- so the resolution is captured at resolve time and simply invoked here.
+    /// </summary>
+    internal Func<Surface> LeafFactory { get; set; }
+
+    /// <summary>
+    /// This property holds the recipe for each surface the production may name after a <c>~</c>,
+    /// keyed by the character that names it -- so <c>~L</c> may stamp a leaf where <c>~K</c>
+    /// stamps a fruit.  A <c>~</c> that names nothing bound here falls back to
+    /// <see cref="LeafFactory"/>.
+    /// </summary>
+    internal Dictionary<Rune, Func<Surface>> SurfaceFactories { get; } = new ();
+
     private readonly string _production;
     private readonly Stack<Turtle> _stack;
+    private readonly Stack<List<Point>> _polygons;
 
     protected LSystemShapeRenderer(string production)
     {
         _production = production;
         _stack = new Stack<Turtle>();
+        _polygons = new Stack<List<Point>>();
 
         Surfaces = [];
     }
@@ -96,15 +131,48 @@ public abstract class LSystemShapeRenderer
 
         Begin(turtle);
 
-        _production.AsRunes()
-            .Select(ToTurtleCommand)
-            .Where(command => command != TurtleCommand.Unknown)
-            .ToList()
-            .ForEach(command =>
+        // We walk the runes by index rather than mapping them straight to commands, because a
+        // '~' may name the surface it wants in the rune that follows it, and that one has to be
+        // claimed before it is read as a command in its own right.
+        Rune[] runes = _production.AsRunes();
+
+        for (int index = 0; index < runes.Length; index++)
+        {
+            TurtleCommand command = ToTurtleCommand(runes[index]);
+
+            if (command == TurtleCommand.Unknown)
+                continue;
+
+            PreExecute(_stack.Peek(), command);
+
+            // Vertices are gathered after PreExecute, so a move contributes where it arrived
+            // rather than where it set out from.
+            GatherVertex(_stack.Peek(), command);
+
+            // Leaves and polygons are geometry common to every renderer, so they are built here
+            // rather than in a subclass's Execute; everything else is the subclass's to handle.
+            switch (command)
             {
-                PreExecute(_stack.Peek(), command);
-                Execute(_stack.Peek(), command);
-            });
+                case TurtleCommand.Leaf:
+                    StampLeaf(_stack.Peek(), TakeSurfaceFactory(runes, ref index));
+                    break;
+                case TurtleCommand.StartPolygon:
+                    _polygons.Push([]);
+                    break;
+                case TurtleCommand.CompletePolygon:
+                    if (_polygons.Count > 0)
+                        FillPolygon(_polygons.Pop());
+                    break;
+                case TurtleCommand.RecordVertex:
+                    break; // GatherVertex already did the work.
+                case TurtleCommand.CutOffBranch:
+                    index = FindBranchEnd(runes, index);
+                    break;
+                default:
+                    Execute(_stack.Peek(), command);
+                    break;
+            }
+        }
 
         Complete(turtle);
     }
@@ -128,6 +196,32 @@ public abstract class LSystemShapeRenderer
     }
 
     /// <summary>
+    /// This method decides which surface a <c>~</c> should stamp, claiming the rune that names it
+    /// when there is one.  A <c>~</c> takes the rune that follows it only if that rune is actually
+    /// bound to a surface; otherwise it stamps the default and leaves the rune alone.  That rule
+    /// is what lets a bare <c>~</c> go on meaning "the default surface": a production reading
+    /// <c>...~]</c> needs its <c>]</c> left behind to close the branch, and a <c>~</c> that always
+    /// claimed the next rune would swallow it.  The cost is that binding a character which also
+    /// appears as a command right after a <c>~</c> lets the <c>~</c> claim it; the fix there is to
+    /// bind a different character.
+    /// </summary>
+    /// <param name="runes">The production being walked.</param>
+    /// <param name="index">The index of the <c>~</c>, advanced past the name when one is claimed.</param>
+    /// <returns>The factory for the surface to stamp.</returns>
+    private Func<Surface> TakeSurfaceFactory(Rune[] runes, ref int index)
+    {
+        if (index + 1 < runes.Length &&
+            SurfaceFactories.TryGetValue(runes[index + 1], out Func<Surface> factory))
+        {
+            index++;
+
+            return factory;
+        }
+
+        return LeafFactory;
+    }
+
+    /// <summary>
     /// This method is used to provide default handling for some of the turtle commands.
     /// </summary>
     /// <param name="turtle">The current turtle.</param>
@@ -138,6 +232,7 @@ public abstract class LSystemShapeRenderer
         {
             case TurtleCommand.Move:
             case TurtleCommand.DrawLine:
+            case TurtleCommand.DrawLineWithoutVertex:
                 turtle.Move();
                 break;
             case TurtleCommand.TurnLeft:
@@ -185,6 +280,171 @@ public abstract class LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     /// <param name="command">The turtle command to handle.</param>
     protected abstract void Execute(Turtle turtle, TurtleCommand command);
+
+    /// <summary>
+    /// This method finds where a cut-off branch stops being read.  A <c>%</c> discards whatever is
+    /// left of the branch it stands in, so we scan forward for the <c>]</c> that closes that
+    /// branch, counting any branches opened along the way so that only the matching one ends the
+    /// skip.  The closing <c>]</c> itself is left to be handled normally -- the turtle still has to
+    /// be popped back to where the branch began.  A <c>%</c> that nothing encloses discards the
+    /// rest of the production.
+    /// </summary>
+    /// <param name="runes">The production being walked.</param>
+    /// <param name="index">The index of the <c>%</c>.</param>
+    /// <returns>The index to continue the walk from, being the rune before the closing bracket.</returns>
+    private static int FindBranchEnd(Rune[] runes, int index)
+    {
+        int depth = 0;
+
+        for (int scan = index + 1; scan < runes.Length; scan++)
+        {
+            if (runes[scan] == LSystemProducer.LeftBracket)
+                depth++;
+            else if (runes[scan] == LSystemProducer.RightBracket)
+            {
+                if (depth == 0)
+                    return scan - 1;
+
+                depth--;
+            }
+        }
+
+        return runes.Length;
+    }
+
+    /// <summary>
+    /// This method records where the turtle stands as a corner of the polygon being traced, when
+    /// there is one open and the command is one that contributes a corner.  A move contributes the
+    /// point it arrived at; <c>.</c> contributes the point the turtle already stands on; and
+    /// <c>G</c> deliberately contributes nothing, which is the whole reason it exists alongside
+    /// <c>F</c>.
+    /// The corner widens the bounding box too.  Nothing else would: an outline traced with
+    /// <c>f</c> never reaches a renderer's own <c>Execute</c>, so a box built from drawn segments
+    /// alone would not reach far enough, and the filled blade would be culled before it was tested.
+    /// </summary>
+    /// <param name="turtle">The current turtle.</param>
+    /// <param name="command">The turtle command being handled.</param>
+    private void GatherVertex(Turtle turtle, TurtleCommand command)
+    {
+        if (_polygons.Count == 0)
+            return;
+
+        if (command is not (TurtleCommand.Move or TurtleCommand.DrawLine or TurtleCommand.RecordVertex))
+            return;
+
+        _polygons.Peek().Add(turtle.Location);
+
+        BoundingBox?.Add(turtle.Location);
+    }
+
+    /// <summary>
+    /// This method fills a closed outline the turtle has traced.  The outline is triangulated in
+    /// two dimensions, where "inside" is well defined, but the triangles are then built from the
+    /// original 3D corners: an outline that stayed in its plane comes out exact, and one that
+    /// wandered out of it comes out faceted rather than silently flattened.  Ear clipping (rather
+    /// than a fan from one corner) is what lets a concave blade come out right.
+    /// </summary>
+    /// <param name="vertices">The corners of the outline, in the order they were traced.</param>
+    private void FillPolygon(List<Point> vertices)
+    {
+        if (vertices.Count < 3)
+            return;
+
+        Vector normal = GetPolygonNormal(vertices);
+
+        if (normal is null)
+            return;
+
+        // Any two perpendicular directions lying in the outline's own plane will do to flatten it
+        // into; we start from whichever axis the normal leans on least, so the cross product that
+        // makes the first of them can never collapse.
+        Vector helper = Math.Abs(normal.X) <= Math.Abs(normal.Y) && Math.Abs(normal.X) <= Math.Abs(normal.Z)
+            ? Directions.Right
+            : Math.Abs(normal.Y) <= Math.Abs(normal.Z)
+                ? Directions.Up
+                : Directions.In;
+        Vector uAxis = normal.Cross(helper).Unit;
+        Vector vAxis = normal.Cross(uAxis);
+        Point origin = vertices[0];
+        List<TwoDPoint> flattened = vertices
+            .Select(vertex => vertex - origin)
+            .Select(offset => new TwoDPoint(uAxis.Dot(offset), vAxis.Dot(offset)))
+            .ToList();
+
+        foreach ((int a, int b, int c) in PolygonTriangulator.Triangulate(flattened))
+        {
+            Surfaces.Add(new Triangle
+            {
+                Point1 = vertices[a],
+                Point2 = vertices[b],
+                Point3 = vertices[c],
+                Material = null // <-- This is important.
+            });
+        }
+    }
+
+    /// <summary>
+    /// This method finds the plane a traced outline lies in, by Newell's method: summing the
+    /// cross products around the whole loop rather than taking any three corners, so a nearly-flat
+    /// outline still yields a sensible plane and no single awkward corner can throw it off.
+    /// </summary>
+    /// <param name="vertices">The corners of the outline.</param>
+    /// <returns>The unit normal of the outline's plane, or <c>null</c> if the corners are
+    /// collinear (or otherwise enclose no area), leaving no plane to speak of.</returns>
+    private static Vector GetPolygonNormal(List<Point> vertices)
+    {
+        double x = 0, y = 0, z = 0;
+
+        for (int index = 0; index < vertices.Count; index++)
+        {
+            Point current = vertices[index];
+            Point next = vertices[(index + 1) % vertices.Count];
+
+            x += (current.Y - next.Y) * (current.Z + next.Z);
+            y += (current.Z - next.Z) * (current.X + next.X);
+            z += (current.X - next.X) * (current.Y + next.Y);
+        }
+
+        Vector normal = new (x, y, z);
+
+        return normal.Magnitude.Near(0) ? null : normal.Unit;
+    }
+
+    /// <summary>
+    /// This method stamps a fresh leaf surface down at the turtle's current position and
+    /// orientation.  Unlike a drawn stem, a leaf keeps its own material, so a bare tree still
+    /// shows green leaves on its branches.  Because a leaf reaches out past the turtle's own
+    /// point, the owning group's bounding box must be widened to admit it: a box built only
+    /// from the turtle path would cull rays aimed at the leaf before it was ever tested.
+    /// </summary>
+    /// <param name="turtle">The current turtle.</param>
+    /// <param name="factory">The recipe for the surface to stamp.</param>
+    private void StampLeaf(Turtle turtle, Func<Surface> factory)
+    {
+        if (factory is null)
+            return;
+
+        Surface leaf = factory();
+
+        leaf.Transform = turtle.GetPlacementMatrix() * leaf.Transform;
+
+        Surfaces.Add(leaf);
+
+        if (BoundingBox is null)
+            return;
+
+        // Fold the leaf's own extent into the box the owning group will accept.  Preparing
+        // the leaf here is what lets it report that extent; the group prepares it once more
+        // later, which is harmless.  A leaf that is unbounded by nature has no box of its own,
+        // and no finite box can safely exclude it, so we drop ours -- matching the way a
+        // Group refuses to bound itself around an unbounded child.
+        leaf.PrepareForRendering();
+
+        if (leaf.BoundingBox is null)
+            BoundingBox = null;
+        else
+            BoundingBox.Add(leaf.BoundingBox.TransformedBy(leaf.Transform));
+    }
 
     /// <summary>
     /// This method is used to tell the subclass that the rendering to a surface is

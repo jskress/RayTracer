@@ -1,0 +1,74 @@
+// The bush from "The Algorithmic Beauty of Plants" (figure 1.25), which exercises the polygon
+// commands: '{' opens an outline, 'f' and 'F' leave a corner behind wherever they arrive, '.'
+// leaves one where the turtle already stands, 'G' moves and draws without leaving one, and '}'
+// closes the outline and fills it.  Each leaf here is a filled outline traced by the L rule.
+//
+// The model is reproduced as ABOP gives it but for its colour-index commands ("'"), which this
+// ray tracer deliberately does not implement: that command steps an index into a colour table,
+// and there are no palettes here -- materials are pigments and patterns instead.  Since a filled
+// outline inherits the L-system's material just as the stems do, the whole bush takes one colour;
+// green suits a shrub well enough, and picking out the leaves separately is what binding
+// characters to materials will eventually be for.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: ABOP Bush'
+        author 'J. Stephen Kress'
+        description 'The bush from The Algorithmic Beauty of Plants, built from filled polygons.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.6, -7]
+    look at [0, 1.8, 0]
+    field of view 40
+}
+
+point light {
+    location [6, 9, -7]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}
+
+bush = lsystem {
+    // ABOP writes the axiom as just 'A'; the leading '$' points the turtle up, which is where
+    // cpfg starts it and where this ray tracer's turtle does not.
+    axiom '$A'
+    productions {
+        'A' -> '[&FL!A]/////[&FL!A]///////[&FL!A]'
+        'F' -> 'S/////F'
+        'S' -> 'FL'
+        'L' -> '[^^{-f+f+f-|-f+f+f}]'
+    }
+    controls {
+        tubes
+        angle 22.5
+        length 1
+        diameter 0.5
+        factor 0.9
+    }
+}
+
+lsystem bush {
+    generations 6
+    material {
+        pigment ForestGreen
+        specular 0
+        // The crown is dense enough to shadow most of itself, so it needs more ambient than
+        // usual for the blades in behind to read as leaves at all rather than as a black mass.
+        ambient 0.3
+    }
+    // The F rule roughly doubles the stem run each generation, so six generations of it stand
+    // tens of units tall before scaling.
+    scale 0.15
+}

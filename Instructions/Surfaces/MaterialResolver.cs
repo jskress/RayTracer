@@ -46,6 +46,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     public Resolver<double> ReflectiveResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the metallic property of the material.
+    /// </summary>
+    public Resolver<double> MetallicResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the transparency property of the material.
     /// </summary>
     public Resolver<double> TransparencyResolver { get; set; }
@@ -81,6 +86,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
         SpecularResolver.AssignTo(value, target => target.Specular, context, variables);
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
+        MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
         IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
     }

@@ -4,9 +4,14 @@ using RayTracer.Extensions;
 namespace RayTracer.Basics;
 
 /// <summary>
-/// This class provides the ability to introduce noise into things using Perlin noise.
+/// This class is the source of noise the patterns draw on.  The field underneath is lattice
+/// gradient noise -- a grid of random gradients, smoothly interpolated between -- of the kind
+/// often loosely called "Perlin", though it is not Ken Perlin's own algorithm and is not named
+/// for it here.  What actually defines this class is the shape of what it hands back rather than
+/// how it makes it: <see cref="Noise"/> honours POV-Ray's contract for its own <c>Noise()</c>,
+/// since every pattern here was ported assuming exactly that (see <see cref="NoiseScale"/>).
 /// </summary>
-public class PerlinNoise
+public class NoiseGenerator
 {
     private const int TableSize = 256;
 
@@ -30,19 +35,18 @@ public class PerlinNoise
     private const double NoiseScale = 1.59;
     private const double NoiseBias = 0.985;
 
-    private static readonly ConcurrentDictionary<int, PerlinNoise> NoiseGenerators = new ();
+    private static readonly ConcurrentDictionary<int, NoiseGenerator> NoiseGenerators = new ();
 
     /// <summary>
-    /// This method returns an appropriate noise generator.
-    /// If a specific random number generator seed is not provided, a default shared
-    /// instance is returned.
-    /// The same seed will always yield the same generator.
+    /// This method returns the noise generator for the given seed, building it on first use and
+    /// caching it thereafter, so the same seed always yields the very same generator.  With no
+    /// seed given, the shared default one is returned.
     /// </summary>
-    /// <param name="seed">The seed to the random number generator to use.</param>
-    /// <returns>The appropriate noise generator.</returns>
-    public static PerlinNoise GetNoise(int? seed = null)
+    /// <param name="seed">The seed whose generator is wanted, or nothing for the default.</param>
+    /// <returns>The generator for that seed.</returns>
+    public static NoiseGenerator ForSeed(int? seed = null)
     {
-        return NoiseGenerators.GetOrAdd(seed ?? DefaultSeed, value => new PerlinNoise(value));
+        return NoiseGenerators.GetOrAdd(seed ?? DefaultSeed, value => new NoiseGenerator(value));
     }
 
     private readonly Vector[] _numbers;
@@ -50,7 +54,7 @@ public class PerlinNoise
     private readonly int[] _y;
     private readonly int[] _z;
 
-    private PerlinNoise(int seed)
+    private NoiseGenerator(int seed)
     {
         // The generator here is deliberately private to this constructor, rather than one of
         // the shared cached ones: those carry their position in their own sequence, so what a
@@ -163,19 +167,20 @@ public class PerlinNoise
             }
         }
 
-        return PerlinInterpolation(buffer, u, v, w);
+        return GradientInterpolation(buffer, u, v, w);
     }
 
     /// <summary>
-    /// This method is used to calculate the Perlin interpolation over the array of vectors
-    /// provided.
+    /// This method smoothly interpolates the eight corner gradients around a point into a single
+    /// value, weighting each by a smoothstep (<c>3t² - 2t³</c>) of the point's offset into its
+    /// cell so the field eases between cells rather than creasing at their edges.
     /// </summary>
     /// <param name="buffer">The buffer of vectors to interpolate over.</param>
     /// <param name="u">The fractional part of the current point's X coordinate.</param>
     /// <param name="v">The fractional part of the current point's Y coordinate.</param>
     /// <param name="w">The fractional part of the current point's Z coordinate.</param>
     /// <returns>The resulting interpolated value.</returns>
-    private static double PerlinInterpolation(Vector[,,] buffer, double u, double v, double w)
+    private static double GradientInterpolation(Vector[,,] buffer, double u, double v, double w)
     {
         double uu = u * u * (3 - 2 * u);
         double vv = v * v * (3 - 2 * v);

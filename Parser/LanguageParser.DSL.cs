@@ -35,9 +35,9 @@ public partial class LanguageParser
             'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
-            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'left', 'length',
+            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'min', 'minimum', 'mortar',
+            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
@@ -46,9 +46,9 @@ public partial class LanguageParser
             'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
-            'superellipsoid', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube',
+            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'width', 'with', 'wood', 'wrinkles',
             'X', 'Y', 'Z'
@@ -269,9 +269,13 @@ public partial class LanguageParser
                 refraction ?? 'Expecting "refraction" to follow "of" here.'
             } | ior ] > _expression
         }
+        materialMetallicClause:
+        {
+            metallic > _expression{?}
+        }
         materialEntryClause:
         [
-            pigment | materialValueClause | materialIorClause
+            pigment | materialValueClause | materialIorClause | materialMetallicClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.
@@ -666,6 +670,16 @@ public partial class LanguageParser
             commands > openBrace ?? 'Expecting an open brace to follow "commands" here.' >
             lsystemCommandClause{*} > closeBrace ?? 'Expecting a close brace here.'
         }
+        lsystemSurfaceClause:
+        {
+            _string > arrow ?? 'Expecting an arrow to follow the surface character here.' >
+            [ _identifier | _keyword ] ?? 'Expecting a surface name to follow the arrow here.'
+        }
+        lsystemSurfacesClause:
+        {
+            surfaces > openBrace ?? 'Expecting an open brace to follow "surfaces" here.' >
+            lsystemSurfaceClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
         lsystemProductionProbabilityClause:
         {
             leftParen > _expression > modulo{?} >
@@ -691,12 +705,13 @@ public partial class LanguageParser
         [
             { axiom > _expression } | { generations > _expression } |
             { controls > openBrace ?? 'Expecting an open brace to follow "controls" here.' } |
+            { leaf > [ _identifier | _keyword ] ?? 'Expecting a surface name to follow "leaf" here.' } |
             lsystemCommandsClause | lsystemProductionsClause | lsystemIgnoreClause |
-            surfaceEntryClause
+            lsystemSurfacesClause | surfaceEntryClause
         ]
         lsystemRenderingControlsEntryClause:
         [
-            extrusion | pipes | { angle > _expression } | { length > _expression } |
+            extrusion | pipes | tubes | { angle > _expression } | { length > _expression } |
             { diameter > _expression } | { factor > _expression }
         ]
 

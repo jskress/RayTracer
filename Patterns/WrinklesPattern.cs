@@ -29,7 +29,7 @@ public class WrinklesPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        PerlinNoise generator = PerlinNoise.GetNoise(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
         Vector vector = new (point);
         double value = generator.Noise(point);
         double lambda = 2;

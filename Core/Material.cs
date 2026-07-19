@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 using RayTracer.Pigments;
 
 namespace RayTracer.Core;
@@ -53,6 +54,22 @@ public class Material
     public double Reflective { get; set; }
 
     /// <summary>
+    /// This property holds how metallic the material is, between 0 and 1, and governs the colour
+    /// of what it reflects -- both its specular highlight and, where it is reflective, the scene
+    /// mirrored in it.
+    /// <para>
+    /// At a dielectric surface -- plastic, glass, paint -- reflection happens before the pigment
+    /// absorbs anything, so what bounces off keeps the colour of the light: a white lamp makes a
+    /// white highlight on red plastic.  A metal is a conductor, and its reflectance is itself
+    /// wavelength-dependent, so what bounces off takes the colour of the metal: the same lamp
+    /// makes a gold highlight on gold.  Leaving this at 0 gives the dielectric behaviour; raising
+    /// it toward 1 tints reflections with the surface's own colour.  Without it, gold renders as
+    /// yellow plastic -- a yellow surface wearing an incongruous white glint.
+    /// </para>
+    /// </summary>
+    public double Metallic { get; set; }
+
+    /// <summary>
     /// This property holds the amount of transparency for the material.
     /// </summary>
     public double Transparency { get; set; }
@@ -61,6 +78,35 @@ public class Material
     /// This property holds the material's index of refraction.
     /// </summary>
     public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
+
+    /// <summary>
+    /// This method returns the tint that <see cref="Metallic"/> puts on light this material
+    /// reflects, to be multiplied into a highlight or a reflected colour.  It interpolates
+    /// between white -- leaving the light's own colour alone, as a dielectric would -- and the
+    /// surface's colour, which is what a conductor does.
+    /// <para>
+    /// The interpolation is not flat across the surface: it is weighted by an empirical stand-in
+    /// for Fresnel reflectivity, near 0 where the light meets the surface head on and rising to 1
+    /// at grazing angles.  So the tint is close to full over most of a surface and falls away at
+    /// its silhouette, which is the physical story -- at grazing incidence everything turns into a
+    /// colourless mirror, metal included.  Both the curve and its constants are POV-Ray's, from
+    /// <c>Trace::ComputeMetallic</c>; they are a fit rather than real Fresnel, as POV's own
+    /// comment says.
+    /// </para>
+    /// </summary>
+    /// <param name="surfaceColor">The material's own colour at the point being lit, which must be
+    /// the pigment's colour alone and not already multiplied by the light's.</param>
+    /// <param name="cosAngle">The cosine of the angle between the surface normal and the light.</param>
+    /// <returns>The tint to multiply the reflected colour by.</returns>
+    public Color GetMetallicTint(Color surfaceColor, double cosAngle)
+    {
+        double x = Math.Abs(Math.Acos(Math.Clamp(cosAngle, -1, 1))) / (Math.PI / 2);
+        double fresnel = Math.Clamp(
+            0.014567225 / ((x - 1.12) * (x - 1.12)) - 0.011612903, 0, 1);
+        double weight = Metallic * (1 - fresnel);
+
+        return Colors.White + (surfaceColor - Colors.White) * weight;
+    }
 
     /// <summary>
     /// This method returns whether this material matches the given one.  This will be

@@ -48,7 +48,7 @@ sphere {
     material {
         pigment purple
         diffuse 0.2
-        ambient 0
+        ambient 0.3
         specular 1
         reflective 0.7
         transparency 0.7

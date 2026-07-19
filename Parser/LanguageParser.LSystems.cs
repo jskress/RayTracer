@@ -6,6 +6,7 @@ using RayTracer.Extensions;
 using RayTracer.Geometry.LSystems;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
+using RayTracer.Instructions.Surfaces;
 using RayTracer.Instructions.Surfaces.LSystems;
 using RayTracer.Terms;
 
@@ -78,6 +79,13 @@ public partial class LanguageParser
                     break;
                 case "productions":
                     resolver.ProductionRuleResolvers = ParseProductionRulesClause(clause);
+                    break;
+                case "leaf":
+                    resolver.LeafSurfaceResolver =
+                        GetExtensibleItem<ISurfaceResolver>(clause.Tokens[1], false);
+                    break;
+                case "surfaces":
+                    ParseSurfaceBindingsClause(resolver, clause);
                     break;
                 default:
                     HandleSurfaceClause(clause, resolver, "l-system");
@@ -163,6 +171,12 @@ public partial class LanguageParser
                     Value = LSystemRendererType.Pipes
                 };
                 break;
+            case "tubes":
+                resolver.RenderTypeResolver = new LiteralResolver<LSystemRendererType>
+                {
+                    Value = LSystemRendererType.Tubes
+                };
+                break;
             case "angle":
                 resolver.AngleResolver = new AngleResolver { Term = term };
                 break;
@@ -204,6 +218,35 @@ public partial class LanguageParser
             {
                 CommandCharacter = commandCharacter,
                 TurtleCommand = command
+            });
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle a surfaces block: each entry ties a character to a named
+    /// surface, so that a production naming that character after a <c>~</c> stamps that surface.
+    /// It cannot be static, the way the commands block's parsing is, because it has to look each
+    /// named surface up among the extensible items.
+    /// </summary>
+    /// <param name="resolver">The resolver to add the surface bindings to.</param>
+    /// <param name="clause">The clause to process.</param>
+    private void ParseSurfaceBindingsClause(LSystemResolver resolver, Clause clause)
+    {
+        ClauseReader reader = clause.Reader();
+
+        reader.NextToken(); // The "surfaces" keyword.
+        reader.NextToken(); // The opening brace.
+
+        while (!reader.SkipIfNextTextIs("}"))
+        {
+            Rune character = ParseCommandCharacter(reader.NextToken());
+
+            reader.NextToken(); // The arrow.
+
+            resolver.SurfaceBindings.Add(new LSystemSurfaceBinding
+            {
+                Character = character,
+                Resolver = GetExtensibleItem<ISurfaceResolver>(reader.NextToken(), false)
             });
         }
     }

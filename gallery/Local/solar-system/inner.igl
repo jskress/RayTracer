@@ -23,7 +23,7 @@ sphere {
 }
 
 sphere {
-    named 'The Earth's Moon
+    named "The Earth's Moon"
     material {
         pigment image 'images/moon.jpg'
         ambient 0.4

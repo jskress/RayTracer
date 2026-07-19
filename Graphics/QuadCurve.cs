@@ -101,6 +101,58 @@ internal class QuadCurve : IPathSegment
     }
 
     /// <summary>
+    /// This method counts how many times this curve crosses the horizontal line through the given
+    /// point, strictly to its right.  See <see cref="IPathSegment.CountCrossingsToTheRight"/> for
+    /// what the count is for and why the straddle test comes first.
+    /// <para>
+    /// A horizontal test line is the case <see cref="GetIntersections"/> handles by solving the
+    /// curve's Y equation against the line's own Y, so that is what is solved here -- the same
+    /// coefficients, in the same order -- with the roots landing in a span rather than an array,
+    /// and only each root's X computed rather than a whole intersection assembled around it.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point whose horizontal line is to be crossed.</param>
+    /// <returns>The number of crossings strictly to the right of the point.</returns>
+    public int CountCrossingsToTheRight(TwoDPoint point)
+    {
+        bool startAbove = _start.Y > point.Y;
+
+        // The curve stays within the hull of its defining points, so if they all sit on one side
+        // of the test line, it cannot reach it.
+        if (startAbove == _control.Y > point.Y && startAbove == _end.Y > point.Y)
+            return 0;
+
+        Span<double> roots = stackalloc double[2];
+        int count = Solve(_aY, -2 * _bY, _start.Y - point.Y, roots);
+        int crossings = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            if (GetX(roots[index]) > point.X)
+                crossings++;
+        }
+
+        return crossings;
+    }
+
+    /// <summary>
+    /// This method determines just the X coordinate of the point at the given distance along the
+    /// curve, being <see cref="GetPoint"/>'s X worked out on its own so that a caller who wants
+    /// nothing else need not have a point built to carry it.
+    /// </summary>
+    /// <param name="t">The distance along the curve to get the X coordinate for.</param>
+    /// <returns>The X coordinate at the given distance.</returns>
+    private double GetX(double t)
+    {
+        double iT = 1 - t;
+        double iT2 = iT * iT;
+        double iTt2 = 2 * iT * t;
+        double t2 = t * t;
+
+        return iT2 * _start.X + iTt2 * _control.X + t2 * _end.X;
+    }
+
+    /// <summary>
     /// This method is used to determine the point for a given distance along our curve.
     /// It is assumed that <c>t</c> is in the [0, 1] interval.
     /// </summary>
@@ -162,6 +214,29 @@ internal class QuadCurve : IPathSegment
     /// <returns>The array of solutions to the given coefficients.</returns>
     private static double[] Evaluate(double a, double b, double c)
     {
+        Span<double> roots = stackalloc double[2];
+
+        return Solve(a, b, c, roots) switch
+        {
+            0 => Empty,
+            1 => [roots[0]],
+            _ => [roots[0], roots[1]]
+        };
+    }
+
+    /// <summary>
+    /// This method solves the curve's quadratic for the given coefficients, writing whatever
+    /// roots it finds into the span provided (which must hold at least two) and returning how
+    /// many there were.  It carries the actual solve, so that a caller wanting nothing but the
+    /// roots need not have an array built to hand them over in.
+    /// </summary>
+    /// <param name="a">The coefficient of the squared term.</param>
+    /// <param name="b">The coefficient of the linear term.</param>
+    /// <param name="c">The constant term.</param>
+    /// <param name="roots">The span to write the roots into.</param>
+    /// <returns>The number of roots written.</returns>
+    private static int Solve(double a, double b, double c, Span<double> roots)
+    {
         // When a is (near) zero, the "quadratic" a*t^2 + b*t + c = 0 is actually linear --
         // an entirely ordinary case (e.g. a curve whose Y coordinate happens to vary
         // linearly in t even though its X doesn't makes a=0 for the Y equation), not a
@@ -170,17 +245,22 @@ internal class QuadCurve : IPathSegment
         if (a.Near(0))
         {
             if (b.Near(0))
-                return Empty;
+                return 0;
 
             double linearT = Clip(-c / b);
 
-            return double.IsNaN(linearT) ? Empty : [linearT];
+            if (double.IsNaN(linearT))
+                return 0;
+
+            roots[0] = linearT;
+
+            return 1;
         }
 
         double discriminant = b * b - 4 * a * c;
 
         if (discriminant < 0)
-            return Empty;
+            return 0;
 
         double t0;
         double t1 = double.NaN;
@@ -196,15 +276,25 @@ internal class QuadCurve : IPathSegment
 
             t0 = Clip((b - discriminant) / a);
             t1 = Clip((b + discriminant) / a);
-            
+
             if (!double.IsNaN(t0) && !double.IsNaN(t1) && t0.Near(t1))
                 t1 = double.NaN;
-            
+
             if (double.IsNaN(t0) && !double.IsNaN(t1))
                 (t0, t1) = (t1, t0);
         }
 
-        return double.IsNaN(t0) ? Empty : double.IsNaN(t1) ? [t0] : [t0, t1];
+        if (double.IsNaN(t0))
+            return 0;
+
+        roots[0] = t0;
+
+        if (double.IsNaN(t1))
+            return 1;
+
+        roots[1] = t1;
+
+        return 2;
     }
 
     /// <summary>

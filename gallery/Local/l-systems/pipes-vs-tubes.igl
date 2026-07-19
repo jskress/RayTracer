@@ -1,0 +1,92 @@
+// A scene comparing the two 3D L-system renderers on identical geometry.  The same branching
+// structure is grown twice -- LEFT with "pipes", RIGHT with "tubes" -- so the only thing that
+// differs between them is how the stems are drawn.  There are deliberately no leaves, and the
+// material is matte, so nothing distracts from the stems themselves.
+//
+// "pipes" draws each segment as a cylinder of one fixed radius and caps it with a sphere.  Since
+// "!" shrinks the diameter between segments, each segment butts against a thinner neighbour: a
+// hard shoulder at every joint, with the cap sphere bulging out past the branch it sits on.
+//
+// "tubes" draws each segment as a tube segment that tapers from the radius at its start to the
+// radius at its end, chosen to match whatever follows.  The joints vanish, and so do the cap
+// bulges -- a tube segment is the union of the spheres interpolated between its ends, so it is
+// already round there, and the segments meeting at a fork blend into one another on their own.
+//
+// The branches are deliberately thick and the taper deliberately strong (factor 0.6, so every
+// "!" takes 40% off) to make the difference plain; at slender diameters it is far subtler.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: Pipes vs. Tubes'
+        author 'J. Stephen Kress'
+        description 'The same L-system drawn with the pipes renderer (left) and the tubes renderer (right).'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 4.2, -18]
+    look at [0, 3.6, 0]
+    field of view 46
+}
+
+point light {
+    location [20, 25, -20]
+}
+
+// A plain, matte floor: the concentric stripes the other L-system scenes use would only compete
+// with the stems for attention here.
+plane {
+    material {
+        pigment Gainsboro
+        specular 0
+    }
+}
+
+// The structure itself, defined once so both copies are provably the same shape.  Only the
+// renderer is overridden below; the angle, length, diameter and taper factor all carry over.
+shape = lsystem {
+    // '$' first points the turtle up, so the tree grows toward the sky rather than sideways.
+    axiom '$A'
+    productions {
+        'A' -> '!F[+A][-A]'
+    }
+    controls {
+        angle 32
+        length 1.6
+        diameter 0.9
+        factor 0.6
+    }
+}
+
+// LEFT: cylinders and cap spheres.
+lsystem shape {
+    generations 4
+    controls {
+        pipes
+    }
+    material {
+        pigment SaddleBrown
+        specular 0
+    }
+    rotate Y -90
+    translate [-3.2, 0, 0]
+}
+
+// RIGHT: tapering tube segments.
+lsystem shape {
+    generations 4
+    controls {
+        tubes
+    }
+    material {
+        pigment SaddleBrown
+        specular 0
+    }
+    rotate Y -90
+    translate [3.2, 0, 0]
+}

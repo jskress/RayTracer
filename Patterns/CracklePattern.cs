@@ -94,8 +94,9 @@ public class CracklePattern : Pattern, INoiseConsumer
     /// <summary>
     /// This method hashes four integers down to one.
     ///
-    /// The obvious move here would be to reach for the Perlin noise this project already carries,
-    /// and it is a trap: gradient noise is zero at every integer lattice point by construction, so
+    /// The obvious move here would be to reach for the gradient noise this project already
+    /// carries, and it is a trap: gradient noise is zero at every integer lattice point by
+    /// construction, so
     /// asking it about cell corners would hand back the same nothing for every cell, and every
     /// feature point would land dead centre.  Sampling cell centres instead dodges that, but
     /// leaves neighbouring samples a single unit apart, close enough to correlate -- and visible

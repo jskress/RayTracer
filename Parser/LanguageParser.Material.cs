@@ -77,6 +77,13 @@ public partial class LanguageParser
             case "reflective":
                 resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
                 break;
+            case "metallic":
+                // The amount may be left off, since fully metallic is what is nearly always
+                // wanted; naming nothing means naming 1.
+                resolver.MetallicResolver = term is null
+                    ? new LiteralResolver<double> { Value = 1 }
+                    : new TermResolver<double> { Term = term };
+                break;
             case "transparency":
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
                 break;

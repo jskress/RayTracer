@@ -1,0 +1,77 @@
+// A scene to test naming surfaces in a production.  ABOP's predefined-surface command is not a
+// bare '~' but '~X', where X names which surface to stamp -- so one plant can carry more than one
+// kind.  Here the bare '~' still grows the built-in green patch (the default leaf), while '~K'
+// grows the crimson fruit bound in the "surfaces" block below.  Any number of characters may be
+// bound that way; a '~' naming none of them falls back to the default.
+//
+// One branch in four ends in fruit rather than a leaf, so the crop is scattered through the
+// canopy rather than covering it.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: Leaves and Fruit'
+        author 'J. Stephen Kress'
+        description 'A scene to test naming which surface each ~ in a production stamps.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 6, -20]
+    look at [0, 3.4, 0]
+    field of view 34
+}
+
+point light {
+    location [20, 20, -20]
+}
+
+// Floor
+plane {
+    material {
+        pigment cylindrical stripes { [0, 0, 0.25], [0, 0, 0.75] }
+    }
+}
+
+// The fruit: a small crimson sphere.  Being a sphere it needs no care about which way the turtle
+// happens to be facing when it is stamped.
+cherry = sphere {
+    material {
+        pigment Crimson
+        specular 0.3
+        shininess 80
+    }
+    scale 0.3
+}
+
+plant = lsystem {
+    // '$' first points the turtle up, so the plant grows toward the sky rather than sideways.
+    axiom '$A'
+    surfaces {
+        'K' -> cherry
+    }
+    productions {
+        // Four child apices per node, three ending in a leaf and the fourth in fruit.
+        'A' -> '!F[&FA~]/[&FA~]/[&FA~K]/[&FA~]'
+    }
+    controls {
+        tubes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+    }
+}
+
+lsystem plant {
+    generations 4
+    material {
+        pigment SaddleBrown
+        specular 0
+    }
+    scale 0.7
+}

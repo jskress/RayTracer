@@ -10,7 +10,7 @@ public class TurbulenceResolver : ObjectResolver<Turbulence>
 {
     /// <summary>
     /// This is a default turbulence resolver instance that creates a turbulence instance
-    /// that is an effective no-op around a single call to our Perlin noise function.
+    /// that is an effective no-op around a single call to our noise function.
     /// </summary>
     public static readonly TurbulenceResolver NoiseWithNoTurbulenceResolver = new ()
     {
