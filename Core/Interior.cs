@@ -75,6 +75,46 @@ public class Interior
     }
 
     /// <summary>
+    /// This property reports whether light is bent as it crosses into this substance, and so is
+    /// partly mirrored away at the boundary rather than let through.  A substance no denser than
+    /// the vacuum around it presents no boundary worth the name and reflects nothing.
+    /// </summary>
+    public bool Refracts => IndexOfRefraction != IndicesOfRefraction.Vacuum;
+
+    /// <summary>
+    /// This method returns the fraction of light that is mirrored away at the surface rather than
+    /// let through, given the cosine of the angle at which it arrives.
+    /// <para>
+    /// Light striking glass head-on is almost entirely let through -- only about four percent
+    /// comes back -- but light arriving at a glancing angle is almost entirely mirrored away.  It
+    /// is why a window is a window when looked through and a mirror when looked along, and why the
+    /// shadow of a glass ball is faint in the middle and gathers to a dark ring at its rim.
+    /// </para>
+    /// <para>
+    /// This is Schlick's approximation, the same one <see cref="Intersection.Reflectance"/> uses to
+    /// balance a reflection against what shows through it.  Here the substance on the far side is
+    /// taken to be the vacuum, rather than tracked through whatever the ray may already be inside
+    /// of: a shadow ray is cast to find how much light arrives and not to be looked along, and
+    /// following it through nested solids would cost far more than the answer is worth.
+    /// </para>
+    /// </summary>
+    /// <param name="cosAngle">The cosine of the angle between the light's path and the surface
+    /// normal.  Its sign does not matter, since a boundary mirrors light the same either way.</param>
+    /// <returns>The fraction mirrored away, between 0 and 1.</returns>
+    public double GetReflectanceAt(double cosAngle)
+    {
+        if (!Refracts)
+            return 0;
+
+        double factor = (IndicesOfRefraction.Vacuum - IndexOfRefraction) /
+                        (IndicesOfRefraction.Vacuum + IndexOfRefraction);
+        double r0 = factor * factor;
+        double rest = 1 - Math.Abs(cosAngle);
+
+        return r0 + (1 - r0) * rest * rest * rest * rest * rest;
+    }
+
+    /// <summary>
     /// This method returns the amount by which light fades over the given distance travelled
     /// through the substance, as a factor to multiply the light by.
     /// </summary>

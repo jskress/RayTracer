@@ -419,8 +419,11 @@ public class TestScenes
         // light is charged for what it passes through rather than stopped by it, half of it
         // reaches the ball.  Only the red channel moves, to the last digit -- the ball is pure red,
         // so light newly arriving on it has nowhere else to go, which is the check that this is
-        // the shadow change and not drift from somewhere else.
-        Color expected = new (1.125466, 0.686425, 0.686425);
+        // the shadow change and not drift from somewhere else.  Some of that light is then turned
+        // away again at the floor's own surface, the floor having an index of refraction to bend
+        // it by, which is why the red does not climb quite as far as the transparency alone would
+        // put it.
+        Color expected = new (1.117368, 0.686425, 0.686425);
 
         Assert.IsTrue(expected.Matches(color), color.ToString());
     }
@@ -460,8 +463,9 @@ public class TestScenes
         Color color = scene.GetHitColor(intersections[0], 5);
 
         // As above, the book's (0.93391, 0.69643, 0.69243) assumed the translucent floor cast an
-        // opaque shadow on the ball below it.  Red alone moves.
-        Color expected = new (1.115003, 0.696434, 0.692431);
+        // opaque shadow on the ball below it, less what that floor turns away at its own surface.
+        // Red alone moves.
+        Color expected = new (1.107245, 0.696434, 0.692431);
 
         Assert.IsTrue(expected.Matches(color), color.ToString());
     }

@@ -405,6 +405,72 @@ public class TestTransparency
     }
 
     [TestMethod]
+    public void TestGlassWithNoIndexTurnsNoLightAway()
+    {
+        // Something no denser than the vacuum around it has no real boundary, so there is nothing
+        // to mirror light off.  This is what keeps the reflectance from quietly darkening every
+        // scene that sets a transparency without ever naming an index of refraction.
+        Interior interior = new ();
+
+        Assert.IsFalse(interior.Refracts);
+        Assert.AreEqual(0, interior.GetReflectanceAt(1), 1e-12);
+        Assert.AreEqual(0, interior.GetReflectanceAt(0), 1e-12);
+    }
+
+    [TestMethod]
+    public void TestGlassTurnsAwayLittleHeadOnAndNearlyAllAtAGlance()
+    {
+        // The whole point of charging reflectance rather than a flat fraction: it depends on the
+        // angle.  Glass struck square lets nearly everything through -- about four percent comes
+        // back, which is the familiar number for a window -- while light that merely grazes it is
+        // almost entirely turned away.
+        Interior glass = new () { IndexOfRefraction = IndicesOfRefraction.Glass };
+
+        double headOn = glass.GetReflectanceAt(1);
+        double slanted = glass.GetReflectanceAt(0.5);
+        double grazing = glass.GetReflectanceAt(0);
+
+        Assert.AreEqual(0.0426, headOn, 0.001, $"head-on reflectance was {headOn}");
+        Assert.AreEqual(1, grazing, 1e-12, $"grazing reflectance was {grazing}");
+        Assert.IsTrue(headOn < slanted && slanted < grazing,
+            $"expected {headOn} < {slanted} < {grazing}");
+    }
+
+    [TestMethod]
+    public void TestReflectanceDoesNotCareWhichWayLightCrosses()
+    {
+        // A boundary mirrors light the same going in as coming out, so the sign of the angle is
+        // irrelevant.  Worth stating, because the shadow walk hands over a raw dot product whose
+        // sign depends on which face of the surface the ray happens to meet.
+        Interior glass = new () { IndexOfRefraction = IndicesOfRefraction.Glass };
+
+        Assert.AreEqual(glass.GetReflectanceAt(0.6), glass.GetReflectanceAt(-0.6), 1e-12);
+    }
+
+    [TestMethod]
+    public void TestClearGlassNowCastsAFaintShadow()
+    {
+        // The defect this closes.  Perfectly clear glass used to be invisible to its own shadow,
+        // so a scene had to dial its transparency down below 1 to get any shadow at all.  Now the
+        // light it turns away at its surface is enough to show, while still leaving most through.
+        Material glass = PerfectlyClear(IndicesOfRefraction.Glass);
+        Color reaching = LightThrough(glass);
+
+        Assert.IsTrue(reaching.Red < 1, $"fully clear glass still cast no shadow: {reaching}");
+        Assert.IsTrue(reaching.Red > 0.9, $"fully clear glass shadowed far too much: {reaching}");
+    }
+
+    [TestMethod]
+    public void TestGlassWithNoIndexStillCastsNoShadow()
+    {
+        // The other side of the same coin, kept explicit: without an index of refraction there is
+        // no boundary to turn light away, so a fully transparent surface still shadows nothing.
+        Color reaching = LightThrough(PerfectlyClear());
+
+        Assert.IsTrue(Colors.White.Matches(reaching), reaching.ToString());
+    }
+
+    [TestMethod]
     public void TestClarityFadesLightWithDistanceTravelled()
     {
         // Where the filter is charged once per surface crossed, clarity is charged by the distance

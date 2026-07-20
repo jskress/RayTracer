@@ -159,15 +159,38 @@ public class Scene : NamedThing, IDisposable
 
             reaching *= material.Transparency;
 
-            // The pigment has to be sampled where the light crossed, so that patterned glass casts
-            // a patterned shadow.  Shadow rays never have their intersections prepared, that work
-            // being wasted on all but the nearest hit, so the point is worked out here.
-            if (material.Interior.Filter > 0)
-            {
-                Color surfaceColor = material.Pigment.GetColorFor(
-                    intersection.Surface, ray.At(intersection.Distance));
+            Interior interior = material.Interior;
 
-                reaching *= material.Interior.GetFilterTint(surfaceColor);
+            // Shadow rays never have their intersections prepared, since that work would be wasted
+            // on all but the nearest hit, so what is needed of the crossing is worked out here --
+            // and only when something actually asks for it.
+            if (interior.Filter > 0 || interior.Refracts)
+            {
+                Point where = ray.At(intersection.Distance);
+
+                // The pigment has to be sampled where the light crossed, so that patterned glass
+                // casts a patterned shadow.
+                if (interior.Filter > 0)
+                {
+                    Color surfaceColor = material.Pigment.GetColorFor(intersection.Surface, where);
+
+                    reaching *= interior.GetFilterTint(surfaceColor);
+                }
+
+                // Some of the light never gets in at all, being mirrored off the surface instead,
+                // and how much depends on how glancing its approach is.  This is what keeps clear
+                // glass from being invisible to its own shadow: struck head-on it lets nearly
+                // everything through, but around the rim, where the light only grazes it, most is
+                // turned away.  A glass ball therefore casts a faint shadow gathered into a dark
+                // ring, which is close to what one really does -- what is still missing is the
+                // bright spot in the middle, where refraction gathers the light it bent aside.
+                // That is a caustic, and finding it means tracing forward from the light.
+                if (interior.Refracts)
+                {
+                    Vector normal = intersection.Surface.NormaAt(where, intersection);
+
+                    reaching *= 1 - interior.GetReflectanceAt(ray.Direction.Dot(normal));
+                }
             }
         }
 
