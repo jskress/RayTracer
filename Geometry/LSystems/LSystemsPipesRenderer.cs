@@ -23,7 +23,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
         Surfaces.Add(new Sphere
         {
             Transform = Transforms.Scale(_initialRadius),
-            Material = null // <-- This is important.
+            Material = MaterialFor(turtle) // Null unless the production named one; see MaterialFor.
         });
 
         BoundingBox = new BoundingBox()
@@ -67,7 +67,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
             MinimumY = 0,
             MaximumY = RenderingControls.Length,
             Transform = matrix,
-            Material = null // <-- This is important.
+            Material = MaterialFor(turtle) // Null unless the production named one; see MaterialFor.
         });
     }
 
@@ -84,7 +84,7 @@ public class LSystemsPipesRenderer : LSystemShapeRenderer
         Surfaces.Add(new Sphere
         {
             Transform = matrix,
-            Material = null // <-- This is important.
+            Material = MaterialFor(turtle) // Null unless the production named one; see MaterialFor.
         });
     }
 

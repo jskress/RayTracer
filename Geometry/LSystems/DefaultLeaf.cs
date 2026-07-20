@@ -47,10 +47,25 @@ public static class DefaultLeaf
             }
         }
 
-        return new BicubicPatch
-        {
-            ControlPoints = controlPoints,
-            Material = new Material { Pigment = new SolidPigment(Colors.ForestGreen) }
-        };
+        // No material here.  The blade's green is a fallback rather than something it owns, and it
+        // is handed out separately (see CreateMaterial) so that a material the production names can
+        // displace it -- letting the leaves on a young shoot differ from those on old wood.
+        return new BicubicPatch { ControlPoints = controlPoints };
+    }
+
+    /// <summary>
+    /// This method builds the green a default leaf falls back on when nothing else has coloured it.
+    /// <para>
+    /// It exists so that a bare, unstyled tree still reads as green leaves on branches rather than
+    /// taking the colour of its own bark, while leaving that green last in line: a material the
+    /// production named, whether by character or by branching depth, is used in preference to it.
+    /// A fresh instance is returned per leaf rather than one being shared, because seeding a
+    /// pigment writes to it, and leaves sharing one would quietly share that too.
+    /// </para>
+    /// </summary>
+    /// <returns>A new default leaf material.</returns>
+    public static Material CreateMaterial()
+    {
+        return new Material { Pigment = new SolidPigment(Colors.ForestGreen) };
     }
 }

@@ -1,4 +1,5 @@
 using System.Text;
+using RayTracer.Core;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -45,11 +46,34 @@ public class LSystem : Group
     public Func<Surface> LeafFactory { get; set; } = DefaultLeaf.Create;
 
     /// <summary>
+    /// This property notes whether <see cref="LeafFactory"/> is still the built-in leaf rather than
+    /// one the scene named.  It matters only for colour: the built-in leaf carries a green to fall
+    /// back on, so that a bare tree reads as leaves rather than as bark, and that green is the last
+    /// thing consulted.  A leaf the scene named has no such fallback -- if the scene left it bare,
+    /// it meant it to inherit like anything else.
+    /// </summary>
+    public bool UsesBuiltInLeaf { get; set; } = true;
+
+    /// <summary>
     /// This property holds the recipe for each surface the production may name after a <c>~</c>,
     /// keyed by the character that names it, so one plant may carry leaves, blossom and fruit.
     /// A <c>~</c> naming nothing bound here falls back to <see cref="LeafFactory"/>.
     /// </summary>
     public Dictionary<Rune, Func<Surface>> SurfaceFactories { get; } = new ();
+
+    /// <summary>
+    /// This property holds the material each character in the production stands for.  Meeting one
+    /// changes what the turtle draws with from there on, and a branch gives the change back when
+    /// it closes, so a limb may be coloured without disturbing its neighbours.
+    /// </summary>
+    public Dictionary<Rune, Material> MaterialBindings { get; } = new ();
+
+    /// <summary>
+    /// This property holds the material to draw with at each branching depth, the first standing
+    /// for the trunk.  It is how a plant is coloured from root to tip without a production rule
+    /// per level; anything deeper than the list draws with the last of them.
+    /// </summary>
+    public List<Material> DepthMaterials { get; } = [];
 
     /// <summary>
     /// This property notes whether turtle orientation commands should be ignored regarding
@@ -76,9 +100,15 @@ public class LSystem : Group
             renderer.CommandMapping[mapping.CommandCharacter] = mapping.TurtleCommand;
 
         renderer.LeafFactory = LeafFactory;
+        renderer.DefaultLeafMaterialFactory = UsesBuiltInLeaf ? DefaultLeaf.CreateMaterial : null;
 
         foreach (KeyValuePair<Rune, Func<Surface>> pair in SurfaceFactories)
             renderer.SurfaceFactories[pair.Key] = pair.Value;
+
+        foreach (KeyValuePair<Rune, Material> pair in MaterialBindings)
+            renderer.MaterialBindings[pair.Key] = pair.Value;
+
+        renderer.DepthMaterials.AddRange(DepthMaterials);
 
         renderer.Render();
 

@@ -106,6 +106,29 @@ public abstract class LSystemShapeRenderer
     /// </summary>
     internal Dictionary<Rune, Func<Surface>> SurfaceFactories { get; } = new ();
 
+    /// <summary>
+    /// This property holds the material each character the production may carry stands for, so a
+    /// rune met in the walk sets what is drawn from there on.  This is the honest replacement for
+    /// ABOP's <c>'</c>, which stepped an index into a colour table: the idea was always "change
+    /// what I am drawing with", and a material says that far better than a palette entry.
+    /// </summary>
+    internal Dictionary<Rune, Material> MaterialBindings { get; } = new ();
+
+    /// <summary>
+    /// This property holds the recipe for the green the built-in leaf falls back on, or <c>null</c>
+    /// when the scene named a leaf of its own and so has no use for it.  It is consulted only after
+    /// every other way of colouring a leaf has come up empty.
+    /// </summary>
+    internal Func<Material> DefaultLeafMaterialFactory { get; set; }
+
+    /// <summary>
+    /// This property holds the material to draw with at each branching depth, the first standing
+    /// for the trunk.  A branch deeper than the list is long draws with the last of them, so a
+    /// plant of any height can be dressed by naming only as many materials as are worth telling
+    /// apart.  A material named by a rune outranks these, being the more deliberate of the two.
+    /// </summary>
+    internal List<Material> DepthMaterials { get; } = [];
+
     private readonly string _production;
     private readonly Stack<Turtle> _stack;
     private readonly Stack<List<Point>> _polygons;
@@ -138,6 +161,16 @@ public abstract class LSystemShapeRenderer
 
         for (int index = 0; index < runes.Length; index++)
         {
+            // A rune bound to a material is checked before it is read as a command, so that binding
+            // one has the last word over what it might otherwise have meant.  It draws nothing
+            // itself; it changes what everything after it is drawn with.
+            if (MaterialBindings.TryGetValue(runes[index], out Material material))
+            {
+                _stack.Peek().Material = material;
+
+                continue;
+            }
+
             TurtleCommand command = ToTurtleCommand(runes[index]);
 
             if (command == TurtleCommand.Unknown)
@@ -161,7 +194,7 @@ public abstract class LSystemShapeRenderer
                     break;
                 case TurtleCommand.CompletePolygon:
                     if (_polygons.Count > 0)
-                        FillPolygon(_polygons.Pop());
+                        FillPolygon(_polygons.Pop(), MaterialFor(_stack.Peek()));
                     break;
                 case TurtleCommand.RecordVertex:
                     break; // GatherVertex already did the work.
@@ -260,7 +293,7 @@ public abstract class LSystemShapeRenderer
                 turtle.PointUp();
                 break;
             case TurtleCommand.StartBranch:
-                _stack.Push(turtle.Copy());
+                _stack.Push(turtle.Branch());
                 break;
             case TurtleCommand.CompleteBranch:
                 _stack.Pop();
@@ -280,6 +313,32 @@ public abstract class LSystemShapeRenderer
     /// <param name="turtle">The current turtle.</param>
     /// <param name="command">The turtle command to handle.</param>
     protected abstract void Execute(Turtle turtle, TurtleCommand command);
+
+    /// <summary>
+    /// This method decides what material a piece of geometry the turtle draws should carry.  A
+    /// material the production named outright wins; failing that, the one standing for how deeply
+    /// branched the turtle is; and failing both, <c>null</c>.
+    /// <para>
+    /// That last is not an oversight but the whole reason any of this stays compatible: a surface
+    /// left with no material of its own inherits the L-system's, which is what every plant did
+    /// before there was anything else to have.  So a scene that names no materials draws exactly
+    /// what it always drew.
+    /// </para>
+    /// </summary>
+    /// <param name="turtle">The current turtle.</param>
+    /// <returns>The material to give what is being drawn, which may be <c>null</c>.</returns>
+    protected Material MaterialFor(Turtle turtle)
+    {
+        if (turtle.Material is not null)
+            return turtle.Material;
+
+        if (DepthMaterials.Count == 0)
+            return null;
+
+        // Anything deeper than the list was written for draws with the last of them, so a plant
+        // does not need a material named for every level it happens to reach.
+        return DepthMaterials[Math.Min(turtle.Depth, DepthMaterials.Count - 1)];
+    }
 
     /// <summary>
     /// This method finds where a cut-off branch stops being read.  A <c>%</c> discards whatever is
@@ -345,7 +404,8 @@ public abstract class LSystemShapeRenderer
     /// than a fan from one corner) is what lets a concave blade come out right.
     /// </summary>
     /// <param name="vertices">The corners of the outline, in the order they were traced.</param>
-    private void FillPolygon(List<Point> vertices)
+    /// <param name="material">The material the blade should carry, which may be <c>null</c>.</param>
+    private void FillPolygon(List<Point> vertices, Material material)
     {
         if (vertices.Count < 3)
             return;
@@ -378,7 +438,10 @@ public abstract class LSystemShapeRenderer
                 Point1 = vertices[a],
                 Point2 = vertices[b],
                 Point3 = vertices[c],
-                Material = null // <-- This is important.
+                // Null unless the production named a material, in which case a traced blade takes
+                // it just as a drawn stem would -- which is what lets one plant carry green leaves
+                // on a brown stalk without either being a stamped surface.
+                Material = material
             });
         }
     }
@@ -425,6 +488,26 @@ public abstract class LSystemShapeRenderer
             return;
 
         Surface leaf = factory();
+
+        // Only as a fallback: a stamped surface that brought a material of its own keeps it, since
+        // naming the surface is the more specific instruction of the two.  This only reaches a leaf
+        // that was left bare, which would otherwise have fallen through to the L-system's material.
+        //
+        // Note that this asks the turtle directly rather than going through MaterialFor, so that a
+        // material named by a character reaches a leaf but one bound to a branching depth does not.
+        // The two are saying different things.  "depth 3 -> twig" describes the wood out at the
+        // third fork; it would be a strange reading of it to paint the leaves growing from that
+        // wood the colour of the wood, and letting it do so turns a whole tree the colour of its
+        // own twigs.  A character, by contrast, is put at one chosen point in a production, and
+        // whatever is drawn or stamped after it is what the author meant it for.  So a shoot may
+        // carry a leaf greener than the one beside it by naming a material just before its '~'.
+        leaf.Material ??= turtle.Material;
+
+        // Last of all, the built-in leaf's green -- and only the built-in one's, which is what the
+        // factory check is for.  A surface the scene named and left bare should go on inheriting
+        // the L-system's material rather than suddenly turning green.
+        if (leaf.Material is null && ReferenceEquals(factory, LeafFactory))
+            leaf.Material = DefaultLeafMaterialFactory?.Invoke();
 
         leaf.Transform = turtle.GetPlacementMatrix() * leaf.Transform;
 

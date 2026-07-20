@@ -1,4 +1,5 @@
 using System.Text;
+using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -63,6 +64,12 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
     public List<LSystemSurfaceBinding> SurfaceBindings { get; private set; } = [];
 
     /// <summary>
+    /// This property holds the materials this L-system's production may name, each tied either to
+    /// the character that names it or to the branching depth it stands for.
+    /// </summary>
+    public List<LSystemMaterialBinding> MaterialBindings { get; private set; } = [];
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// text solid surface.
     /// </summary>
@@ -87,6 +94,7 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         value.LeafFactory = LeafSurfaceResolver is null
             ? DefaultLeaf.Create
             : () => LeafSurfaceResolver.ResolveToSurface(context, variables);
+        value.UsesBuiltInLeaf = LeafSurfaceResolver is null;
 
         foreach (LSystemSurfaceBinding binding in SurfaceBindings)
         {
@@ -94,6 +102,33 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
 
             value.SurfaceFactories[binding.Character] =
                 () => resolver.ResolveToSurface(context, variables);
+        }
+
+        // Materials are resolved here and now, rather than captured as a recipe the way surfaces
+        // are, because they are shared rather than owned: a stem does not need a material of its
+        // own any more than the hundred stems beside it do, and a Group already hands one instance
+        // to every child it covers.
+        foreach (LSystemMaterialBinding binding in MaterialBindings.Where(binding => !binding.IsByDepth))
+            value.MaterialBindings[binding.Character] = binding.Resolver.Resolve(context, variables);
+
+        // Taken in order of depth rather than in the order the scene happened to write them, so
+        // that filling a gap always means "carry on with the one above", whichever way round the
+        // block was typed.
+        foreach (LSystemMaterialBinding binding in MaterialBindings
+                     .Where(binding => binding.IsByDepth)
+                     .OrderBy(binding => binding.Depth))
+        {
+            // The depths a scene names need not be contiguous, so the list is grown to reach the
+            // one being set and any gap left behind takes the material above it -- which is what
+            // "everything from here down is bark" ought to mean.
+            while (value.DepthMaterials.Count <= binding.Depth)
+            {
+                value.DepthMaterials.Add(value.DepthMaterials.Count == 0
+                    ? null
+                    : value.DepthMaterials[^1]);
+            }
+
+            value.DepthMaterials[binding.Depth] = binding.Resolver.Resolve(context, variables);
         }
 
         base.SetProperties(context, variables, value);
@@ -125,6 +160,7 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         // Force the lists to be physically different, but with the same content.
         resolver.CommandMappings = [..resolver.CommandMappings];
         resolver.SurfaceBindings = [..resolver.SurfaceBindings];
+        resolver.MaterialBindings = [..resolver.MaterialBindings];
 
         if (resolver.RenderingControlsResolver is not null)
             resolver.RenderingControlsResolver = (LSystemRenderingControlsResolver) RenderingControlsResolver.Clone();

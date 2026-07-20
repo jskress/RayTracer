@@ -87,6 +87,9 @@ public partial class LanguageParser
                 case "surfaces":
                     ParseSurfaceBindingsClause(resolver, clause);
                     break;
+                case "materials":
+                    ParseMaterialBindingsClause(resolver, clause);
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "l-system");
                     break;
@@ -247,6 +250,53 @@ public partial class LanguageParser
             {
                 Character = character,
                 Resolver = GetExtensibleItem<ISurfaceResolver>(reader.NextToken(), false)
+            });
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle a materials block.  Each entry ties a named material either
+    /// to a character, so that reaching that character in a production changes what the turtle
+    /// draws with from there on, or to a branching depth, so that a plant may be coloured from
+    /// trunk to twig without a production rule for every level.
+    /// </summary>
+    /// <param name="resolver">The resolver to add the material bindings to.</param>
+    /// <param name="clause">The clause to process.</param>
+    private void ParseMaterialBindingsClause(LSystemResolver resolver, Clause clause)
+    {
+        ClauseReader reader = clause.Reader();
+
+        reader.NextToken(); // The "materials" keyword.
+        reader.NextToken(); // The opening brace.
+
+        while (!reader.SkipIfNextTextIs("}"))
+        {
+            bool byDepth = reader.SkipIfNextTextIs("depth");
+            int depth = -1;
+            Rune character = default;
+
+            if (byDepth)
+            {
+                Token token = reader.NextToken();
+
+                if (!int.TryParse(token.Text, out depth) || depth < 0)
+                {
+                    throw new TokenException("A depth must be a whole number, zero or greater.")
+                    {
+                        Token = token
+                    };
+                }
+            }
+            else
+                character = ParseCommandCharacter(reader.NextToken());
+
+            reader.NextToken(); // The arrow.
+
+            resolver.MaterialBindings.Add(new LSystemMaterialBinding
+            {
+                Character = character,
+                Depth = depth,
+                Resolver = GetExtensibleItem<MaterialResolver>(reader.NextToken(), false)
             });
         }
     }
