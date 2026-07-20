@@ -33,6 +33,27 @@ public class Turtle
     /// </summary>
     public double Diameter { get; private set; }
 
+    /// <summary>
+    /// This property holds the material the turtle is currently drawing with, or <c>null</c> if
+    /// nothing has named one, in which case whatever it draws inherits from the L-system as a
+    /// whole, as it always did.
+    /// <para>
+    /// This is state rather than a one-off, which is what sets it apart from the surface a
+    /// <c>~</c> stamps: naming a material changes everything drawn from there on, until something
+    /// names another.  It sits alongside <see cref="Diameter"/> for that reason, and gets the same
+    /// treatment at a branch -- a branch inherits the material in force where it forked, and gives
+    /// it back on the way out, so colouring a limb cannot leak into its neighbour.
+    /// </para>
+    /// </summary>
+    public Material Material { get; set; }
+
+    /// <summary>
+    /// This property holds how deeply branched the turtle currently is: zero along the trunk, one
+    /// inside a branch off it, and so on.  It is what lets a plant be coloured by how far out it
+    /// has grown without every level having to be spelled out as its own production rule.
+    /// </summary>
+    public int Depth { get; private set; }
+
     private readonly LSystemRenderingControls _controls;
 
     internal Turtle(LSystemRenderingControls controls)
@@ -152,10 +173,13 @@ public class Turtle
     }
 
     /// <summary>
-    /// This method creates a copy of the current turtle.
+    /// This method creates the turtle that carries on inside a branch: a copy of this one, standing
+    /// where it stands and carrying what it carries, but one level further out.  Everything the
+    /// branch then does to itself is discarded when it closes, since the turtle that resumes is
+    /// this one, untouched.
     /// </summary>
-    /// <returns>A copy of this turtle.</returns>
-    public Turtle Copy()
+    /// <returns>The turtle to draw the branch with.</returns>
+    public Turtle Branch()
     {
         return new Turtle(_controls)
         {
@@ -163,7 +187,9 @@ public class Turtle
             PreviousLocation = PreviousLocation,
             Up = Up,
             Direction = Direction,
-            Diameter = Diameter
+            Diameter = Diameter,
+            Material = Material,
+            Depth = Depth + 1
         };
     }
 }

@@ -4,11 +4,15 @@
 // closes the outline and fills it.  Each leaf here is a filled outline traced by the L rule.
 //
 // The model is reproduced as ABOP gives it but for its colour-index commands ("'"), which this
-// ray tracer deliberately does not implement: that command steps an index into a colour table,
-// and there are no palettes here -- materials are pigments and patterns instead.  Since a filled
-// outline inherits the L-system's material just as the stems do, the whole bush takes one colour;
-// green suits a shrub well enough, and picking out the leaves separately is what binding
-// characters to materials will eventually be for.
+// ray tracer deliberately does not implement: that command steps an index into a colour table, and
+// there are no palettes here -- materials are pigments and patterns instead.  What stands in for it
+// is binding a character to a material, which is what the 'C' added to the L rule below does: it
+// changes what the turtle draws with from that point on, so the blade traced after it comes out
+// green while the stems stay brown.
+//
+// The 'C' sits inside the L rule's own brackets, and that is what keeps it from colouring the whole
+// bush.  A branch inherits the material in force where it forked and hands it back when it closes,
+// so the green lives exactly as long as the leaf does.
 
 context {
     parallel pixel scanner
@@ -40,6 +44,20 @@ plane {
     }
 }
 
+// The crown is dense enough to shadow most of itself, so both of these need more ambient than
+// usual for the parts in behind to read as anything at all rather than as a black mass.
+stem = material {
+    pigment [0.36, 0.25, 0.15]
+    specular 0
+    ambient 0.3
+}
+
+blade = material {
+    pigment ForestGreen
+    specular 0
+    ambient 0.3
+}
+
 bush = lsystem {
     // ABOP writes the axiom as just 'A'; the leading '$' points the turtle up, which is where
     // cpfg starts it and where this ray tracer's turtle does not.
@@ -48,7 +66,13 @@ bush = lsystem {
         'A' -> '[&FL!A]/////[&FL!A]///////[&FL!A]'
         'F' -> 'S/////F'
         'S' -> 'FL'
-        'L' -> '[^^{-f+f+f-|-f+f+f}]'
+        // 'C' is not a turtle command and ABOP does not use it; it is simply the character this
+        // scene picked to stand for the leaf colour.  It has to come before the '{' that opens the
+        // outline, since a material colours what follows it.
+        'L' -> '[C^^{-f+f+f-|-f+f+f}]'
+    }
+    materials {
+        'C' -> blade
     }
     controls {
         tubes
@@ -61,13 +85,8 @@ bush = lsystem {
 
 lsystem bush {
     generations 6
-    material {
-        pigment ForestGreen
-        specular 0
-        // The crown is dense enough to shadow most of itself, so it needs more ambient than
-        // usual for the blades in behind to read as leaves at all rather than as a black mass.
-        ambient 0.3
-    }
+    // Everything the 'C' did not reach -- which is every stem -- falls through to this.
+    material stem
     // The F rule roughly doubles the stem run each generation, so six generations of it stand
     // tens of units tall before scaling.
     scale 0.15

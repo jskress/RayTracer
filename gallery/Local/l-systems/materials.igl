@@ -1,0 +1,146 @@
+// A scene to test giving an L-system more than one material.
+//
+// Two ways of doing it, and the tree here uses both at once.
+//
+// By depth: "depth 0 -> bark" says that anything drawn along the trunk is bark, "depth 1" that a
+// branch off it is heartwood, and so on.  Anything deeper than the last depth named keeps the last
+// one, so a tree of any height can be dressed by naming only the levels worth telling apart.  This
+// is what would otherwise need a separate production rule per level, which defeats the point of
+// writing a recursive grammar in the first place.
+//
+// By character: 'B' is bound to the new-growth material below, so reaching a 'B' in a production
+// changes what is drawn from there on.  This is the honest replacement for ABOP's colour-index
+// command, which stepped an integer into a palette this ray tracer has never had.  It is state
+// rather than a stamp -- unlike '~X', which puts one surface down and is done -- so it holds until
+// something changes it again, and a branch hands it back when it closes.  That last part is what
+// lets the 'B' inside a bracket colour only that shoot and not the whole rest of the tree.
+//
+// What the 'B' picks out here is new growth: a shoot that stopped growing this year, which on many
+// species really is a lighter, warmer colour than the wood behind it, and which of course still
+// carries a leaf.  The tempting thing to reach for instead is blossom, and blossom would be the
+// wrong tool.  A material only changes the colour of the stem the turtle draws; a flower is a
+// different *shape*, and shapes are what '~X' and the surfaces block are for.  Ask a material to
+// stand in for one and you get a coloured twig with a leaf sticking out of the end of it.
+//
+// A character binding outranks the depth it stands at, being the more deliberate of the two.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'L-System Test: Materials'
+        author 'J. Stephen Kress'
+        description 'A tree coloured by branching depth, with its new growth picked out by a bound character.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 4.5, -13]
+    look at [0, 4.2, 0]
+    field of view 50
+}
+
+point light {
+    location [-8, 14, -9]
+}
+
+point light {
+    location [7, 6, -4]
+    color [0.28, 0.28, 0.3]
+}
+
+plane {
+    material {
+        pigment checker { [0.32, 0.34, 0.3], [0.24, 0.26, 0.22] }
+        specular 0
+    }
+}
+
+bark = material {
+    pigment [0.32, 0.22, 0.15]
+    specular 0
+}
+
+heartwood = material {
+    pigment [0.45, 0.31, 0.19]
+    specular 0
+}
+
+youngWood = material {
+    pigment [0.52, 0.45, 0.22]
+    specular 0
+}
+
+twig = material {
+    pigment [0.42, 0.55, 0.22]
+    specular 0
+}
+
+youngLeaf = material {
+    // A yellower, lighter green than the built-in leaf, which is what this year's leaves look
+    // like against last year's.
+    pigment [0.62, 0.76, 0.28]
+    specular 0
+}
+
+newGrowth = material {
+    // Warm and light against the olive of the twigs it springs from, which is roughly what a
+    // year's new wood looks like on a good many trees.
+    pigment [0.78, 0.42, 0.26]
+    specular 0.15
+    shininess 60
+    ambient 0.12
+}
+
+tree = lsystem {
+    axiom '$A'
+    productions {
+        // Every apex grows a segment and splits into four.  Three carry an 'A' and so go on
+        // growing; the fourth carries a 'B' and no apex, making it a short shoot that stops there
+        // and so is the newest wood on that limb.
+        //
+        // The 'B' is deliberately on a shoot that does not recurse, and that is worth dwelling on,
+        // because it is the difference between the two mechanisms.  A material is state: it holds
+        // until something changes it.  Put the 'B' on a shoot that carries an apex and every
+        // descendant of that shoot inherits the new growth too, so a quarter of the tree turns at each
+        // generation and by the fourth almost none of it is left unturned.  That is correct -- it
+        // is what "changes what I draw with from here on" has to mean -- but it swamps everything
+        // else in the picture.  On a spur that ends, the change dies with the spur.
+        //
+        // Note where the 'B' sits: before the 'F' it is meant to colour, not after.  A material
+        // rune changes what is drawn from that point on, so a 'B' written after the segment would
+        // colour nothing at all -- the segment would already be down by then.
+        //
+        // The shoot then names a second material, 'C', before its '~'.  That is worth seeing: the
+        // turtle carries one material at a time, so a shoot whose wood and leaf should differ has
+        // to say so twice.  'B' colours the stem, 'C' colours the leaf that caps it, and the three
+        // shoots that never name either keep the built-in green.  The result is this year's leaves
+        // coming in lighter than last year's, on wood that is lighter too.
+        'A' -> '!F[&FA~]/[&BFC~]/[&FA~]/[&FA~]'
+    }
+    materials {
+        depth 0 -> bark
+        depth 1 -> heartwood
+        depth 2 -> youngWood
+        depth 3 -> twig
+        'B' -> newGrowth
+        'C' -> youngLeaf
+    }
+    controls {
+        tubes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+    }
+}
+
+lsystem tree {
+    generations 4
+    // No material of its own.  There is nothing left for it to colour: the depth bindings cover
+    // every stem, and anything they missed would fall through to here.
+    scale 0.7
+}

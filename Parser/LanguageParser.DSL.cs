@@ -30,14 +30,14 @@ public partial class LanguageParser
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
+            'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'disc',
             'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
             'filter', 'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
+            'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
             'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phased', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
@@ -688,6 +688,23 @@ public partial class LanguageParser
             surfaces > openBrace ?? 'Expecting an open brace to follow "surfaces" here.' >
             lsystemSurfaceClause{*} > closeBrace ?? 'Expecting a close brace here.'
         }
+        lsystemMaterialClause:
+        [
+            {
+                depth > _number ?? 'Expecting a branching depth to follow "depth" here.' >
+                arrow ?? 'Expecting an arrow to follow the depth here.' >
+                [ _identifier | _keyword ] ?? 'Expecting a material name to follow the arrow here.'
+            } |
+            {
+                _string > arrow ?? 'Expecting an arrow to follow the material character here.' >
+                [ _identifier | _keyword ] ?? 'Expecting a material name to follow the arrow here.'
+            }
+        ]
+        lsystemMaterialsClause:
+        {
+            materials > openBrace ?? 'Expecting an open brace to follow "materials" here.' >
+            lsystemMaterialClause{*} > closeBrace ?? 'Expecting a close brace here.'
+        }
         lsystemProductionProbabilityClause:
         {
             leftParen > _expression > modulo{?} >
@@ -715,7 +732,7 @@ public partial class LanguageParser
             { controls > openBrace ?? 'Expecting an open brace to follow "controls" here.' } |
             { leaf > [ _identifier | _keyword ] ?? 'Expecting a surface name to follow "leaf" here.' } |
             lsystemCommandsClause | lsystemProductionsClause | lsystemIgnoreClause |
-            lsystemSurfacesClause | surfaceEntryClause
+            lsystemSurfacesClause | lsystemMaterialsClause | surfaceEntryClause
         ]
         lsystemRenderingControlsEntryClause:
         [

@@ -59,7 +59,10 @@ public class LSystemTubesRenderer : LSystemShapeRenderer
                 {
                     Start = turtle.PreviousLocation, StartRadius = radius,
                     End = turtle.Location, EndRadius = radius,
-                    Material = null // <-- This is important.
+                    // Null unless the production named one; see MaterialFor.  It is settled when
+                    // the segment is created rather than when it is emitted, since emission is
+                    // deferred and the turtle may have moved on to another material by then.
+                    Material = MaterialFor(turtle)
                 };
 
                 // The box is null-safe throughout because a leaf that cannot report an extent of
