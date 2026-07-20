@@ -73,8 +73,8 @@ public class TestMetallic
         Vector eye = new (0, 0, -1);
         Vector normal = new (0, 0, -1);
 
-        Color plainColor = light.ApplyPhong(point, eye, normal, plain, false);
-        Color metalColor = light.ApplyPhong(point, eye, normal, metal, false);
+        Color plainColor = light.ApplyPhong(point, eye, normal, plain, Colors.White);
+        Color metalColor = light.ApplyPhong(point, eye, normal, metal, Colors.White);
 
         // Both are lit the same; only the highlight differs, and it drags the blue channel down
         // toward the gold's own small blue component.
@@ -101,8 +101,8 @@ public class TestMetallic
         Vector eye = new (0, 0, -1);
         Vector normal = new (0, 0, -1);
 
-        Color plainColor = light.ApplyPhong(point, eye, normal, plainSphere, false);
-        Color metalColor = light.ApplyPhong(point, eye, normal, metalSphere, false);
+        Color plainColor = light.ApplyPhong(point, eye, normal, plainSphere, Colors.White);
+        Color metalColor = light.ApplyPhong(point, eye, normal, metalSphere, Colors.White);
 
         Assert.IsTrue(plainColor.Matches(metalColor), $"{plainColor} vs {metalColor}");
     }

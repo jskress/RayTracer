@@ -56,9 +56,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     public Resolver<double> TransparencyResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the index of refraction property of the material.
+    /// This property holds the resolver for the interior of the material.
     /// </summary>
-    public Resolver<double> IndexOfRefractionResolver { get; set; }
+    public InteriorResolver InteriorResolver { get; set; }
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value.
@@ -88,7 +88,8 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
-        IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
+        if (InteriorResolver != null)
+            value.Interior = InteriorResolver.Resolve(context, variables);
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ public class TestPointLights
         };
         Color expected = new (1.9, 1.9, 1.9);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.White)));
     }
 
     [TestMethod]
@@ -46,7 +46,7 @@ public class TestPointLights
         };
         Color expected = new (1.0, 1.0, 1.0);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.White)));
     }
 
     [TestMethod]
@@ -61,7 +61,7 @@ public class TestPointLights
         };
         Color expected = new (0.736396, 0.736396, 0.736396);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.White)));
     }
 
     [TestMethod]
@@ -77,7 +77,7 @@ public class TestPointLights
         };
         Color expected = new (1.636396, 1.636396, 1.636396);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.White)));
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public class TestPointLights
         };
         Color expected = new (0.1, 0.1, 0.1);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, false)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.White)));
     }
 
     [TestMethod]
@@ -107,7 +107,7 @@ public class TestPointLights
         };
         Color expected = new (0.1, 0.1, 0.1);
 
-        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, true)));
+        Assert.IsTrue(expected.Matches(light.ApplyPhong(Point.Zero, eye, normal, sphere, Colors.Black)));
     }
 
     [TestMethod]
@@ -131,10 +131,10 @@ public class TestPointLights
             Location = new Point(0, 0, -10)
         };
         Color c1 = light.ApplyPhong(
-            new Point(0.9, 0, 0), eye, normal, sphere, false
+            new Point(0.9, 0, 0), eye, normal, sphere, Colors.White
         );
         Color c2 = light.ApplyPhong(
-            new Point(1.1, 0, 0), eye, normal, sphere, false
+            new Point(1.1, 0, 0), eye, normal, sphere, Colors.White
         );
 
         Assert.IsTrue(Colors.White.Matches(c1));

@@ -48,11 +48,13 @@ sphere {
     material {
         pigment purple
         diffuse 0.2
-        ambient 0.3
+        ambient 0
         specular 1
         reflective 0.7
-        transparency 0.7
-        ior Glass
+        transparency 1
+        interior {
+            ior Glass
+        }
     }
     translate [1, -1, 1]
     scale 0.5

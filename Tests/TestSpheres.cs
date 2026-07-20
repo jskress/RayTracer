@@ -18,7 +18,7 @@ public class TestSpheres
             Material = new Material
             {
                 Transparency = 1,
-                IndexOfRefraction = 1.5
+                Interior = new Interior { IndexOfRefraction = 1.5 }
             }
         };
     }
@@ -213,7 +213,7 @@ public class TestSpheres
 
         Assert.AreSame(Matrix.Identity, glass.Transform);
         Assert.AreEqual(1, glass.Material.Transparency);
-        Assert.AreEqual(1.5, glass.Material.IndexOfRefraction);
+        Assert.AreEqual(1.5, glass.Material.Interior.IndexOfRefraction);
     }
 
     private record N1N2(double N1, double N2);
@@ -238,11 +238,11 @@ public class TestSpheres
         ];
 
         a.Transform = Transforms.Scale(2);
-        a.Material.IndexOfRefraction = 1.5;
+        a.Material.Interior.IndexOfRefraction = 1.5;
         b.Transform = Transforms.Translate(0, 0, -0.25);
-        b.Material.IndexOfRefraction = 2.0;
+        b.Material.Interior.IndexOfRefraction = 2.0;
         c.Transform = Transforms.Translate(0, 0, 0.25);
-        c.Material.IndexOfRefraction = 2.5;
+        c.Material.Interior.IndexOfRefraction = 2.5;
 
         N1N2[] expected =
         [

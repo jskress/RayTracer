@@ -37,7 +37,7 @@ public static class IntersectionExtensions
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit)
-                n1 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).IndexOfRefraction;
+                n1 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
 
             if (containers.Contains(intersection.Surface))
                 containers.Remove(intersection.Surface);
@@ -46,7 +46,7 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                n2 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).IndexOfRefraction;
+                n2 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
 
                 break;
             }

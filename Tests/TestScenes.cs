@@ -196,9 +196,9 @@ public class TestScenes
         Color actual = scene.GetHitColor(intersection, 0);
         Color expected =
             blockedLight.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, target, true) +
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, Colors.Black) +
             visibleLight.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, target, false);
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, Colors.White);
 
         Assert.IsTrue(expected.Matches(actual));
     }
@@ -312,7 +312,7 @@ public class TestScenes
         Assert.IsTrue(Colors.Black.Matches(color));
 
         surface.Material.Transparency = 1;
-        surface.Material.IndexOfRefraction = 1.5;
+        surface.Material.Interior.IndexOfRefraction = 1.5;
         intersections =
         [
             new Intersection(surface, 4),
@@ -335,7 +335,7 @@ public class TestScenes
         Ray ray = new (new Point(0, 0, value), new Vector(0, 1, 0));
 
         surface.Material.Transparency = 1;
-        surface.Material.IndexOfRefraction = 1.5;
+        surface.Material.Interior.IndexOfRefraction = 1.5;
 
         List<Intersection> intersections =
         [
@@ -362,7 +362,7 @@ public class TestScenes
         a.Material.Ambient = 1;
         a.Material.Pigment = pigment;
         b.Material.Transparency = 1;
-        b.Material.IndexOfRefraction = 1.5;
+        b.Material.Interior.IndexOfRefraction = 1.5;
 
         List<Intersection> intersections =
         [
@@ -390,7 +390,7 @@ public class TestScenes
             Material = new Material
             {
                 Transparency = 0.5,
-                IndexOfRefraction = 1.5
+                Interior = new Interior { IndexOfRefraction = 1.5 }
             },
             Transform = Transforms.Translate(0, -1, 0)
         };
@@ -412,9 +412,20 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.936425, 0.686425, 0.686425);
 
-        Assert.IsTrue(expected.Matches(color));
+        // The book's number here is (0.93642, 0.68642, 0.68642), and it no longer holds, because
+        // the book's shadows are opaque no matter what casts them: its half-transparent floor
+        // still leaves the ball beneath it in full shadow, lit only by its own ambient.  Now that
+        // light is charged for what it passes through rather than stopped by it, half of it
+        // reaches the ball.  Only the red channel moves, to the last digit -- the ball is pure red,
+        // so light newly arriving on it has nowhere else to go, which is the check that this is
+        // the shadow change and not drift from somewhere else.  Some of that light is then turned
+        // away again at the floor's own surface, the floor having an index of refraction to bend
+        // it by, which is why the red does not climb quite as far as the transparency alone would
+        // put it.
+        Color expected = new (1.117368, 0.686425, 0.686425);
+
+        Assert.IsTrue(expected.Matches(color), color.ToString());
     }
 
     [TestMethod]
@@ -428,7 +439,7 @@ public class TestScenes
             {
                 Reflective = 0.5,
                 Transparency = 0.5,
-                IndexOfRefraction = 1.5
+                Interior = new Interior { IndexOfRefraction = 1.5 }
             },
             Transform = Transforms.Translate(0, -1, 0)
         };
@@ -450,9 +461,13 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.933915, 0.696434, 0.692430);
 
-        Assert.IsTrue(expected.Matches(color));
+        // As above, the book's (0.93391, 0.69643, 0.69243) assumed the translucent floor cast an
+        // opaque shadow on the ball below it, less what that floor turns away at its own surface.
+        // Red alone moves.
+        Color expected = new (1.107245, 0.696434, 0.692431);
+
+        Assert.IsTrue(expected.Matches(color), color.ToString());
     }
 
     [TestMethod]

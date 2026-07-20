@@ -27,14 +27,14 @@ public partial class LanguageParser
         _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
             'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick',
-            'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
+            'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
             'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
-            'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'filter', 'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'intersection',
+            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
@@ -273,9 +273,17 @@ public partial class LanguageParser
         {
             metallic > _expression{?}
         }
+        startInteriorClause:
+        {
+            interior > openBrace ?? 'Expecting an open brace to follow "interior" here.'
+        }
+        interiorEntryClause:
+        [
+            materialIorClause | { filter > _expression } | { clarity > _expression }
+        ] ?? 'Expecting an interior property here.'
         materialEntryClause:
         [
-            pigment | materialValueClause | materialIorClause | materialMetallicClause
+            pigment | materialValueClause | materialMetallicClause | startInteriorClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

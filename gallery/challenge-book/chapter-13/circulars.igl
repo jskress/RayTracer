@@ -17,11 +17,13 @@ sphere {
     material {
         pigment Black
         reflective 0.9
-        transparency 1
+        transparency 0.7
         diffuse 0.2
         specular 1
         shininess 300
-        index of refraction Glass
+        interior {
+            index of refraction Glass
+        }
     }
     translate [-0.5, 1, 0.5]
 }

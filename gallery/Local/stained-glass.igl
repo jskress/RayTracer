@@ -1,0 +1,127 @@
+// A scene to test filtered transparency.  Three framed panes of the same glass stand over a
+// checkered floor, differing only in how much they filter what passes through them.
+//
+// "transparency" says how much light gets through a surface; the interior's "filter" says what
+// colour it comes out.  At filter 0 -- the default, and the only behaviour available before the
+// interior existed -- coloured glass merely dims what is behind it, the way thin gauze or dust on
+// a window does.  Raising it toward 1 makes the glass colour what passes through, which is what
+// real glass does and what makes stained glass stain.
+//
+// Left to right: no filtering, half, and full.  Two things to watch, and they are the same effect
+// seen from two directions: the checks *behind* each pane, and the light each pane throws *in
+// front of* it.  The panes are lit from behind so that both are in view at once.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Filtered Transparency Test'
+        author 'J. Stephen Kress'
+        description 'Three panes of green glass, filtering what passes through them by 0, 0.5 and 1.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3.2, -8.5]
+    look at [0, 1.15, 0]
+    field of view 50
+}
+
+// Behind and above, so each pane casts its light forward onto the floor where the camera can see
+// it.  Glass that filters throws a coloured shadow, which is the other half of what makes stained
+// glass look like stained glass, and it only shows if the light is on the far side.
+point light {
+    location [0, 9, 5]
+}
+
+// A dim fill from the camera's side, purely so the frames and the glass surfaces catch enough of a
+// highlight to read as solid objects rather than as holes.
+point light {
+    location [-7, 6, -8]
+    color [0.35, 0.35, 0.35]
+}
+
+// Floor: checkered, so what the glass does to it is legible.  The dark squares are kept well off
+// black; a green shadow falling on a near-black check would have nothing to tint.
+plane {
+    material {
+        pigment checker { White, [0.34, 0.34, 0.38] }
+        specular 0
+    }
+}
+
+// The three panes.  Each is a flattened cube standing on the floor, so the light crosses two
+// surfaces going through -- and so filters twice, which deepens the colour.
+paneGlass = material {
+    pigment ForestGreen
+    ambient 0
+    diffuse 0.05
+    specular 0.6
+    shininess 300
+    transparency 1
+}
+
+// Lead came, and the reason it is here: the leftmost pane does not filter and barely tints, so
+// without a frame around it the honest result -- very nearly invisible glass -- reads as an empty
+// slot rather than as the control it is.
+frameMaterial = material {
+    pigment [0.16, 0.16, 0.18]
+    diffuse 0.5
+    specular 0.4
+    shininess 100
+}
+
+// LEFT: no filtering.  The glass dims the checks but leaves them grey, and its shadow is grey too.
+cube {
+    material paneGlass {
+        interior { ior Glass }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [-2.5, 1.15, 0]
+}
+difference {
+    cube { scale [1.25, 1.25, 0.07] }
+    cube { scale [1.1, 1.1, 0.3] }
+    material frameMaterial
+    translate [-2.5, 1.15, 0]
+}
+
+// MIDDLE: half filtered.
+cube {
+    material paneGlass {
+        interior {
+            ior Glass
+            filter 0.5
+        }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [0, 1.15, 0]
+}
+difference {
+    cube { scale [1.25, 1.25, 0.07] }
+    cube { scale [1.1, 1.1, 0.3] }
+    material frameMaterial
+    translate [0, 1.15, 0]
+}
+
+// RIGHT: fully filtered.  The checks behind it come through green, and so does the light it throws
+// on the floor in front of it.
+cube {
+    material paneGlass {
+        interior {
+            ior Glass
+            filter 1
+        }
+    }
+    scale [1.1, 1.1, 0.05]
+    translate [2.5, 1.15, 0]
+}
+difference {
+    cube { scale [1.25, 1.25, 0.07] }
+    cube { scale [1.1, 1.1, 0.3] }
+    material frameMaterial
+    translate [2.5, 1.15, 0]
+}

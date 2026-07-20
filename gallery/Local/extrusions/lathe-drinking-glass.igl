@@ -49,7 +49,9 @@ lathe {
         shininess 300
         reflective 0.1
         transparency 0.9
-        ior Glass
+        interior {
+            ior Glass
+        }
     }
     translate [0, 0.02, 0]
 }
