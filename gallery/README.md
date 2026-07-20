@@ -501,6 +501,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/clarity.png">
+      <img alt="Clarity Test" height="120" src="Local/clarity.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/clarity.igl">Clarity Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/sweep.png">
       <img alt="Sweep Test" height="120" src="Local/sweep.png" width="160"/>
     </a></td>

@@ -27,7 +27,7 @@ public partial class LanguageParser
         _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
             'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick',
-            'by', 'camera', 'center', 'channel', 'checker', 'clip', 'close', 'color',
+            'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'description', 'diameter', 'difference', 'diffuse', 'disc',
@@ -279,7 +279,7 @@ public partial class LanguageParser
         }
         interiorEntryClause:
         [
-            materialIorClause | { filter > _expression }
+            materialIorClause | { filter > _expression } | { clarity > _expression }
         ] ?? 'Expecting an interior property here.'
         materialEntryClause:
         [

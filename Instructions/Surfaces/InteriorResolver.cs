@@ -19,6 +19,11 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
     public Resolver<double> FilterResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the clarity property of the interior.
+    /// </summary>
+    public Resolver<double> ClarityResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an interior.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -28,6 +33,7 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
     {
         IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
         FilterResolver.AssignTo(value, target => target.Filter, context, variables);
+        ClarityResolver.AssignTo(value, target => target.Clarity, context, variables);
     }
 
     /// <summary>

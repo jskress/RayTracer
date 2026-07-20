@@ -1,0 +1,97 @@
+// A scene to test distance attenuation inside a surface.  Four slabs of the very same glass stand
+// in a row, differing only in how thick they are.
+//
+// The interior's "filter" is charged once at each surface a ray crosses, so it cannot tell a thick
+// piece of glass from a thin one -- every slab here crosses exactly two surfaces and so takes
+// exactly the same tint.  "clarity" is charged by the distance travelled between those surfaces
+// instead, following Beer's law, which is what makes the far slab deeper than the near one.  It is
+// the difference between coloured glass and *deep* coloured glass, and the reason a swimming pool
+// is pale at the steps and dark at the far end.
+//
+// A clarity of 1 means light has faded to about a third of itself after travelling 1 unit.  The
+// default is infinite -- light crosses any distance untouched -- so nothing written before this
+// existed changes.
+//
+// The slabs are deliberately identical in every other way and are viewed close to head-on, so that
+// what is seen through them is the same view at four depths rather than four different views.
+// Watch the checks behind them, and the pools of light they throw in front.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Clarity Test'
+        author 'J. Stephen Kress'
+        description 'Four slabs of one glass, showing light fading with the distance it travels through them.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3.5, -12]
+    look at [0, 1.1, 0]
+    field of view 52
+}
+
+// Mostly from behind, so that what the camera sees has come *through* the glass rather than
+// bounced off its front.  Fading is about what survives the crossing, so it wants to be looked
+// through rather than looked at.
+point light {
+    location [-1.5, 8, 7]
+}
+
+point light {
+    location [-7, 5, -8]
+    color [0.3, 0.3, 0.3]
+}
+
+plane {
+    material {
+        pigment checker { White, [0.38, 0.38, 0.42] }
+        specular 0
+    }
+}
+
+// One glass, used by all four.  It filters fully, so each slab is tinted by the same amount no
+// matter how thick it is; the clarity is the only thing separating them.
+poolGlass = material {
+    pigment [0.5, 0.88, 0.92]
+    ambient 0
+    diffuse 0.05
+    specular 0.7
+    shininess 300
+    transparency 1
+    interior {
+        ior Water
+        filter 1
+        clarity 1
+    }
+}
+
+// Thicknesses run 0.1, 0.5, 1.1 and 1.9 units through.  At a clarity of 1 that is a fade of about
+// 0.90, 0.61, 0.33 and 0.15 -- a spread wide enough to read without the far end going black.
+cube {
+    material poolGlass
+    scale [0.95, 1.1, 0.05]
+    translate [-3.3, 1.13, 0]
+}
+
+cube {
+    material poolGlass
+    scale [0.95, 1.1, 0.25]
+    translate [-1.1, 1.13, 0]
+}
+
+cube {
+    material poolGlass
+    scale [0.95, 1.1, 0.55]
+    translate [1.1, 1.13, 0]
+}
+
+cube {
+    material poolGlass
+    scale [0.95, 1.1, 0.95]
+    translate [3.3, 1.13, 0]
+}

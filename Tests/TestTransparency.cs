@@ -282,6 +282,196 @@ public class TestTransparency
         Assert.IsTrue(throughThin.Matches(throughThick), $"{throughThin} vs {throughThick}");
     }
 
+    /// <summary>
+    /// Puts a pane of the given glass between a light and a point, and reports how much of the
+    /// light survives the trip.
+    /// </summary>
+    private static Color LightThrough(Material glass)
+    {
+        Scene scene = new ();
+        PointLight light = new () { Location = new Point(0, 5, 0) };
+        Plane pane = new () { Material = glass, Transform = Transforms.Translate(0, 2, 0) };
+
+        pane.PrepareForRendering();
+
+        scene.Lights.Add(light);
+        scene.Surfaces.Add(pane);
+
+        return scene.GetLightReaching(light, Point.Zero);
+    }
+
+    [TestMethod]
+    public void TestNothingInTheWayLetsAllTheLightThrough()
+    {
+        Scene scene = new ();
+        PointLight light = new () { Location = new Point(0, 5, 0) };
+
+        scene.Lights.Add(light);
+
+        Assert.IsTrue(Colors.White.Matches(scene.GetLightReaching(light, Point.Zero)));
+    }
+
+    [TestMethod]
+    public void TestAnOpaqueThingInTheWayBlocksAllOfIt()
+    {
+        Material opaque = PerfectlyClear();
+
+        opaque.Transparency = 0;
+
+        Assert.IsTrue(Colors.Black.Matches(LightThrough(opaque)));
+    }
+
+    [TestMethod]
+    public void TestTransparentThingsCastPartialShadows()
+    {
+        // The defect this fixes: before, any surface in the way shadowed completely, however clear
+        // it was, so a sheet of glass and a sheet of lead cast the same shadow.
+        Material glass = PerfectlyClear();
+
+        glass.Transparency = 0.6;
+
+        Color reaching = LightThrough(glass);
+
+        Assert.AreEqual(0.6, reaching.Red, 1e-9, reaching.ToString());
+        Assert.IsFalse(Colors.Black.Matches(reaching), "clear glass still cast a solid shadow");
+    }
+
+    [TestMethod]
+    public void TestFilteringGlassCastsAColouredShadow()
+    {
+        // The other half of what makes stained glass look like stained glass: it does not merely
+        // let light past, it stains what it lets past, so the shadow is coloured rather than grey.
+        Material glass = PerfectlyClear();
+
+        glass.Pigment = new SolidPigment(Colors.Red);
+        glass.Interior.Filter = 1;
+
+        Color reaching = LightThrough(glass);
+
+        Assert.AreEqual(1, reaching.Red, 1e-9, reaching.ToString());
+        Assert.AreEqual(0, reaching.Green, 1e-9, reaching.ToString());
+        Assert.AreEqual(0, reaching.Blue, 1e-9, reaching.ToString());
+    }
+
+    [TestMethod]
+    public void TestEverythingInTheWayIsCharged()
+    {
+        // Light has to survive all of them to arrive, not just the nearest one, so two panes
+        // shadow more than one does.  Stopping at the first hit is what the old code did.
+        Scene scene = new ();
+        PointLight light = new () { Location = new Point(0, 5, 0) };
+
+        foreach (double height in new[] { 1.0, 2.0, 3.0 })
+        {
+            Material glass = PerfectlyClear();
+
+            glass.Transparency = 0.5;
+
+            Plane pane = new () { Material = glass, Transform = Transforms.Translate(0, height, 0) };
+
+            pane.PrepareForRendering();
+            scene.Surfaces.Add(pane);
+        }
+
+        scene.Lights.Add(light);
+
+        Color reaching = scene.GetLightReaching(light, Point.Zero);
+
+        Assert.AreEqual(0.125, reaching.Red, 1e-9, reaching.ToString());
+    }
+
+    [TestMethod]
+    public void TestThingsBehindTheLightDoNotShadow()
+    {
+        // Only what stands between the point and the light can shade it.  A pane beyond the light,
+        // or behind the eye, must not count -- the shadow ray is a segment, not a line.
+        Scene scene = new ();
+        PointLight light = new () { Location = new Point(0, 5, 0) };
+        Material glass = PerfectlyClear();
+
+        glass.Transparency = 0;
+
+        Plane beyond = new () { Material = glass, Transform = Transforms.Translate(0, 8, 0) };
+        Plane behind = new () { Material = glass, Transform = Transforms.Translate(0, -3, 0) };
+
+        beyond.PrepareForRendering();
+        behind.PrepareForRendering();
+
+        scene.Lights.Add(light);
+        scene.Surfaces.Add(beyond);
+        scene.Surfaces.Add(behind);
+
+        Assert.IsTrue(Colors.White.Matches(scene.GetLightReaching(light, Point.Zero)));
+    }
+
+    [TestMethod]
+    public void TestClarityFadesLightWithDistanceTravelled()
+    {
+        // Where the filter is charged once per surface crossed, clarity is charged by the distance
+        // between them, so the same glass is darker when there is more of it to cross.  This is
+        // the thing transparency alone could never express.
+        Color throughThin = ThroughAClearBallOf(0.5, clarity: 1);
+        Color throughThick = ThroughAClearBallOf(2.0, clarity: 1);
+
+        Assert.IsTrue(throughThick.Red < throughThin.Red,
+            $"thicker glass was not darker: {throughThick} vs {throughThin}");
+    }
+
+    [TestMethod]
+    public void TestPerfectClarityLeavesLightAlone()
+    {
+        // The default has to be invisible, or every scene written before clarity existed would
+        // quietly darken.  Infinite clarity is the identity here.
+        Interior interior = new ();
+
+        Assert.IsTrue(double.IsPositiveInfinity(interior.Clarity));
+        Assert.AreEqual(1, interior.GetFadeOver(0), 1e-12);
+        Assert.AreEqual(1, interior.GetFadeOver(1000), 1e-12);
+    }
+
+    [TestMethod]
+    public void TestClarityFollowsBeersLaw()
+    {
+        // A clarity of L means light has faded to 1/e of itself after travelling L, and squaring
+        // that after 2L.  Stating it outright pins the curve down, not just its direction.
+        Interior interior = new () { Clarity = 2 };
+
+        Assert.AreEqual(Math.Exp(-1), interior.GetFadeOver(2), 1e-12);
+        Assert.AreEqual(Math.Exp(-2), interior.GetFadeOver(4), 1e-12);
+        Assert.AreEqual(1, interior.GetFadeOver(0), 1e-12);
+    }
+
+    [TestMethod]
+    public void TestZeroClarityLetsNothingThrough()
+    {
+        // The far end of the scale, and it falls out of the same arithmetic rather than needing a
+        // case of its own.
+        Interior interior = new () { Clarity = 0 };
+
+        Assert.AreEqual(0, interior.GetFadeOver(1), 1e-12);
+    }
+
+    /// <summary>
+    /// Looks through a clear ball of the given radius and clarity at a white background.
+    /// </summary>
+    private static Color ThroughAClearBallOf(double radius, double clarity)
+    {
+        Scene scene = new () { Background = new SolidPigment(Colors.White) };
+
+        scene.Lights.Add(new PointLight { Location = new Point(0, 0, -10) });
+
+        Material glass = PerfectlyClear();
+
+        glass.Interior.Clarity = clarity;
+
+        Sphere ball = new () { Material = glass, Transform = Transforms.Scale(radius) };
+
+        ball.PrepareForRendering();
+        scene.Surfaces.Add(ball);
+
+        return scene.GetColorFor(new Ray(new Point(0, 0, -10), new Vector(0, 0, 1)), 8);
+    }
+
     [TestMethod]
     public void TestClearGlassWithARealIndexStillPassesLightThrough()
     {

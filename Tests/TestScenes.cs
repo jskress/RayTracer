@@ -196,9 +196,9 @@ public class TestScenes
         Color actual = scene.GetHitColor(intersection, 0);
         Color expected =
             blockedLight.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, target, true) +
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, Colors.Black) +
             visibleLight.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, target, false);
+                intersection.OverPoint, intersection.Eye, intersection.Normal, target, Colors.White);
 
         Assert.IsTrue(expected.Matches(actual));
     }
@@ -412,9 +412,17 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.936425, 0.686425, 0.686425);
 
-        Assert.IsTrue(expected.Matches(color));
+        // The book's number here is (0.93642, 0.68642, 0.68642), and it no longer holds, because
+        // the book's shadows are opaque no matter what casts them: its half-transparent floor
+        // still leaves the ball beneath it in full shadow, lit only by its own ambient.  Now that
+        // light is charged for what it passes through rather than stopped by it, half of it
+        // reaches the ball.  Only the red channel moves, to the last digit -- the ball is pure red,
+        // so light newly arriving on it has nowhere else to go, which is the check that this is
+        // the shadow change and not drift from somewhere else.
+        Color expected = new (1.125466, 0.686425, 0.686425);
+
+        Assert.IsTrue(expected.Matches(color), color.ToString());
     }
 
     [TestMethod]
@@ -450,9 +458,12 @@ public class TestScenes
         intersections[0].PrepareUsing(ray, intersections);
 
         Color color = scene.GetHitColor(intersections[0], 5);
-        Color expected = new (0.933915, 0.696434, 0.692430);
 
-        Assert.IsTrue(expected.Matches(color));
+        // As above, the book's (0.93391, 0.69643, 0.69243) assumed the translucent floor cast an
+        // opaque shadow on the ball below it.  Red alone moves.
+        Color expected = new (1.115003, 0.696434, 0.692431);
+
+        Assert.IsTrue(expected.Matches(color), color.ToString());
     }
 
     [TestMethod]

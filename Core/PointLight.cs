@@ -29,10 +29,13 @@ public class PointLight : NamedThing
     /// <param name="point">The point being illuminated.</param>
     /// <param name="eye">The eye vector.</param>
     /// <param name="normal">The surface normal vector.</param>
-    /// <param name="surface"></param>
-    /// <param name="inShadow"></param>
+    /// <param name="surface">The surface being illuminated.</param>
+    /// <param name="lightReaching">How much of this light arrives at the point: white, if it is
+    /// in full view of the light, black, if something opaque stands in the way, and something in
+    /// between if what stands in the way lets light through.</param>
     /// <returns>The resulting color.</returns>
-    public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, bool inShadow)
+    public Color ApplyPhong(
+        Point point, Vector eye, Vector normal, Surface surface, Color lightReaching)
     {
         Material material = surface.Material ?? Material.Default;
         // The pigment's own colour is kept as well as the lit one, because a metallic highlight
@@ -40,9 +43,12 @@ public class PointLight : NamedThing
         Color pigmentColor = material.Pigment.GetColorFor(surface, point);
         Color color = pigmentColor * Color;
         Vector vector = (Location - point).Unit;
+
+        // Ambient light stands in for light that has bounced around the scene rather than come
+        // straight from this source, so it is the one term a shadow does not take away.
         Color ambientColor = color * material.Ambient;
 
-        if (inShadow)
+        if (lightReaching.Matches(Colors.Black))
             return ambientColor;
 
         Color diffuseColor;
@@ -75,6 +81,15 @@ public class PointLight : NamedThing
             }
         }
 
-        return ambientColor + diffuseColor + specularColor;
+        // Whatever the light lost on its way here is charged against both terms that depend on it
+        // arriving.  Since it is a colour rather than a fraction, light that came through coloured
+        // glass lights this surface in that colour.
+        //
+        // The two terms are charged separately rather than added and charged together, which looks
+        // like the long way round and is done on purpose: it keeps the additions grouped exactly as
+        // they were before any of this existed.  Floating point addition does not associate, so
+        // regrouping them shifts the odd pixel by one level even when nothing has been lost -- and
+        // a scene with nothing transparent in it should come out bit for bit unchanged.
+        return ambientColor + diffuseColor * lightReaching + specularColor * lightReaching;
     }
 }

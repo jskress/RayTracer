@@ -129,6 +129,9 @@ public partial class LanguageParser
             case "filter":
                 resolver.FilterResolver = new TermResolver<double> { Term = term };
                 break;
+            case "clarity":
+                resolver.ClarityResolver = new TermResolver<double> { Term = term };
+                break;
             default:
                 throw new NotSupportedException("Unknown interior property found.");
         }
