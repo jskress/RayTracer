@@ -517,6 +517,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/finish.png">
+      <img alt="Surface Finish Test" height="120" src="Local/finish.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/finish.igl">Surface Finish Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/sweep.png">
       <img alt="Sweep Test" height="120" src="Local/sweep.png" width="160"/>
     </a></td>

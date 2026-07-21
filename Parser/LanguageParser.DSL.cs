@@ -26,14 +26,14 @@ public partial class LanguageParser
 
         _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
-            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick',
+            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'disc',
             'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
-            'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
@@ -282,7 +282,8 @@ public partial class LanguageParser
         }
         materialValueClause:
         {
-            [ ambient | diffuse | specular | shininess | reflective | transparency ] >
+            [ ambient | diffuse | specular | shininess | reflective | transparency |
+              brilliance | grain ] >
             _expression
         }
         materialIorClause:

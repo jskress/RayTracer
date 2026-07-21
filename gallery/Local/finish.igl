@@ -1,0 +1,79 @@
+// A scene to test the two knobs that shape how a surface takes diffuse light.
+//
+// Brilliance bends the falloff.  At 1 -- the default -- brightness follows the cosine of the angle
+// between the surface and the light, which is Lambert's law and right for something matte like
+// chalk or paper.  Raising it makes a surface hold its brightness near the light and then lose it
+// abruptly as it turns away, which is how burnished metal reads; POV-Ray's own metal textures run
+// between 2 and 6.  It only ever darkens, since the cosine it shapes is never above one.
+//
+// Grain takes fine flecks of light back out, giving the look of sand, unglazed clay or rough
+// concrete.  It is POV-Ray's "crand", with one deliberate difference: POV draws each fleck from a
+// random number generator, so the speckle belongs to the ray rather than the surface and crawls
+// whenever the camera moves -- a liability POV's own documentation warns about.  Here each fleck is
+// hashed from the point being lit, so it stays where it is put.
+//
+// Grain is also not the same thing as a mottled pigment, and the bottom row shows why: mottling is
+// built from coherent noise and so varies in smooth blotches, where this varies from one point to
+// the next, which is what makes it read as grit rather than as cloud.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Surface Finish Test'
+        author 'J. Stephen Kress'
+        description 'Brilliance shaping the diffuse falloff, and grain speckling it.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 0.6, -11]
+    look at [0, 0.1, 0]
+    field of view 42
+}
+
+point light {
+    location [-7, 6, -7]
+}
+
+plane {
+    material {
+        pigment checker { [0.30, 0.30, 0.32], [0.22, 0.22, 0.24] }
+        specular 0
+    }
+    translate Y -2.1
+}
+
+brass = color [0.78, 0.62, 0.28]
+clay = color [0.72, 0.70, 0.66]
+
+// TOP: brilliance, rising left to right.  Watch the lit region draw in toward the light.
+sphere {
+    material { pigment brass  brilliance 1  specular 0 }
+    translate [-2.6, 1.15, 0]
+}
+sphere {
+    material { pigment brass  brilliance 3  specular 0 }
+    translate [0, 1.15, 0]
+}
+sphere {
+    material { pigment brass  brilliance 8  specular 0 }
+    translate [2.6, 1.15, 0]
+}
+
+// BOTTOM: grain, rising left to right.  Smooth, then finely speckled, then coarse.
+sphere {
+    material { pigment clay  grain 0  specular 0 }
+    translate [-2.6, -1.05, 0]
+}
+sphere {
+    material { pigment clay  grain 0.15  specular 0 }
+    translate [0, -1.05, 0]
+}
+sphere {
+    material { pigment clay  grain 0.35  specular 0 }
+    translate [2.6, -1.05, 0]
+}
