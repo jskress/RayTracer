@@ -4,7 +4,6 @@ using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
-using RayTracer.Terms;
 
 namespace RayTracer.Parser;
 
@@ -14,7 +13,9 @@ namespace RayTracer.Parser;
 public partial class LanguageParser
 {
     /// <summary>
-    /// This method is used to parse a clause of one required turbulence.
+    /// This method is used to parse a turbulence clause.  It may be written either as a bare
+    /// amount, which is the common case and names the amplitude alone, or as a block when there is
+    /// more to say than that.
     /// </summary>
     private TurbulenceResolver ParseTurbulenceClause()
     {
@@ -23,35 +24,55 @@ public partial class LanguageParser
         if (clause == null)
             return TurbulenceResolver.NoiseWithNoTurbulenceResolver;
 
-        Resolver<int?> seedResolver = null;
-        Resolver<int> depthResolver = new TermResolver<int> { Term = clause.Term() };
-        Resolver<int> tightnessResolver = null;
-        Resolver<double> scaleResolver = null;
-        bool phased = clause.Text(1) == "phased";
-
-        if (phased)
+        // The shorthand: everything but the amplitude keeps its default.
+        if (!BounderToken.OpenBrace.Matches(clause.Tokens[^1]))
         {
-            tightnessResolver = new TermResolver<int> { Term = clause.Term(1) };
-
-            if (clause.Tokens.Count > 2)
-                scaleResolver = new TermResolver<double> { Term = clause.Term(2) };
+            return new TurbulenceResolver
+            {
+                AmplitudeResolver = new TermResolver<object> { Term = clause.Term() }
+            };
         }
 
-        if (clause.Tokens.Select(token => token.Text).Any(text => text == "seed"))
-        {
-            Term seedTerm = (Term) clause.Expressions.Last();
-            
-            seedResolver = new TermResolver<int?> { Term = seedTerm };
-        }
+        TurbulenceResolver resolver = new ();
 
-        return new TurbulenceResolver
+        _ = ParseObjectResolver("turbulenceEntryClause", HandleTurbulenceEntryClause, resolver);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to handle one property of a turbulence block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleTurbulenceEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid turbulence property here.");
+
+        TurbulenceResolver resolver = (TurbulenceResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
         {
-            SeedResolver = seedResolver,
-            DepthResolver = depthResolver,
-            PhasedResolver = new LiteralResolver<bool> { Value = phased },
-            TightnessResolver = tightnessResolver,
-            ScaleResolver = scaleResolver
-        };
+            case "amplitude":
+                // Deliberately typed loosely: this may be one number, meaning the same push on
+                // every axis, or a triple giving each its own.
+                resolver.AmplitudeResolver = new TermResolver<object> { Term = clause.Term() };
+                break;
+            case "octaves":
+                resolver.OctavesResolver = new TermResolver<int> { Term = clause.Term() };
+                break;
+            case "finer":
+                resolver.FinerResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "fainter":
+                resolver.FainterResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "with.seed":
+                resolver.SeedResolver = new TermResolver<int?> { Term = clause.Term() };
+                break;
+            default:
+                throw new NotSupportedException("Unknown turbulence property found.");
+        }
     }
 
     /// <summary>
@@ -61,9 +82,57 @@ public partial class LanguageParser
     private Resolver<Turbulence> ParseOptionalTurbulence()
     {
         Token token = CurrentParser.PeekNextToken();
-        
+
         return token is KeywordToken && token.Text == "turbulence"
             ? ParseTurbulenceClause()
             : new LiteralResolver<Turbulence> { Value = null };
+    }
+
+    /// <summary>
+    /// This method is used to parse the noise clause a mottled pigment carries.  It takes the
+    /// layers and nothing else: an amplitude says how far to push a point, and mottling pushes no
+    /// points.
+    /// </summary>
+    private Resolver<LayeredNoise> ParseNoiseClause()
+    {
+        // Consume the "noise {" that opens the block before reading what is inside it.
+        _ = LanguageDsl.ParseClause(CurrentParser, "noiseClause");
+
+        LayeredNoiseResolver<LayeredNoise> resolver = new ();
+
+        _ = ParseObjectResolver("noiseEntryClause", HandleNoiseEntryClause, resolver);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to handle one property of a noise block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleNoiseEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid noise property here.");
+
+        LayeredNoiseResolver<LayeredNoise> resolver =
+            (LayeredNoiseResolver<LayeredNoise>) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "octaves":
+                resolver.OctavesResolver = new TermResolver<int> { Term = clause.Term() };
+                break;
+            case "finer":
+                resolver.FinerResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "fainter":
+                resolver.FainterResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "with.seed":
+                resolver.SeedResolver = new TermResolver<int?> { Term = clause.Term() };
+                break;
+            default:
+                throw new NotSupportedException("Unknown noise property found.");
+        }
     }
 }

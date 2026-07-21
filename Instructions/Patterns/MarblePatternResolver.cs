@@ -9,10 +9,6 @@ namespace RayTracer.Instructions.Patterns;
 /// </summary>
 public class MarblePatternResolver : PatternResolver<MarblePattern>
 {
-    /// <summary>
-    /// This property holds the resolver for our pattern's turbulence property.
-    /// </summary>
-    public Resolver<Turbulence> TurbulenceResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a marble
@@ -23,8 +19,6 @@ public class MarblePatternResolver : PatternResolver<MarblePattern>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, MarblePattern value)
     {
-        TurbulenceResolver.AssignTo(value, target => target.Turbulence, context, variables);
-
         base.SetProperties(context, variables, value);
     }
 }

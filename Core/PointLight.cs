@@ -59,7 +59,16 @@ public class PointLight : NamedThing
             diffuseColor = specularColor = Colors.Black;
         else
         {
-            diffuseColor = color * material.Diffuse * lightDotNormal;
+            // How much of the light the surface takes, before its colour is applied.  Brilliance
+            // shapes how the falloff runs as the surface turns away, and the grain then takes fine
+            // flecks back out of it -- both in that order, and both POV-Ray's.
+            double intensity = material.Brilliance == 1
+                ? lightDotNormal
+                : Math.Pow(lightDotNormal, material.Brilliance);
+
+            intensity = Math.Max(0, intensity * material.Diffuse - material.GrainAt(point));
+
+            diffuseColor = color * intensity;
 
             Vector reflect = (-vector).Reflect(normal);
             double reflectDotEye = reflect.Dot(eye);

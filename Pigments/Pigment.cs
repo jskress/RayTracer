@@ -121,6 +121,19 @@ public abstract class Pigment
     public abstract Color GetColorFor(Point point);
 
     /// <summary>
+    /// This property reports whether this pigment might hand back a colour that lets light through
+    /// -- one whose alpha is less than fully opaque.
+    /// <para>
+    /// It exists to be asked before the pigment is sampled rather than after.  A surface's
+    /// transparency has to be known on every shadow ray that crosses it, and sampling a pigment to
+    /// discover it is far from free; almost every pigment in almost every scene is wholly opaque,
+    /// and this lets those keep the cheap answer.  Saying "yes" wrongly costs only speed, so
+    /// anything unsure should say yes.
+    /// </para>
+    /// </summary>
+    public virtual bool MayTransmit => false;
+
+    /// <summary>
     /// This method returns whether the given pigmentation matches this one.
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>

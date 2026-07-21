@@ -46,6 +46,16 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     public Resolver<double> ReflectiveResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how sharply diffuse lighting falls away.
+    /// </summary>
+    public Resolver<double> BrillianceResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how much fine speckle is taken out of the lighting.
+    /// </summary>
+    public Resolver<double> GrainResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the metallic property of the material.
     /// </summary>
     public Resolver<double> MetallicResolver { get; set; }
@@ -86,6 +96,8 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
         SpecularResolver.AssignTo(value, target => target.Specular, context, variables);
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
+        BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
+        GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
         if (InteriorResolver != null)

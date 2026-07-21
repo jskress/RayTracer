@@ -27,8 +27,8 @@ point light {
 plane {
     material {
         pigment checker {
-            noisy {
-                turbulence 3 phased 5
+            mottled {
+                noise { octaves 3 }
                 Yellow
             },
             Green
@@ -39,8 +39,8 @@ plane {
 // focal point
 sphere {
     material {
-        pigment noisy {
-            turbulence 7 phased 20
+        pigment mottled {
+            noise { octaves 7 }
             Gray50
             scale 0.5
         }

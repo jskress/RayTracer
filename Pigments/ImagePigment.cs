@@ -60,6 +60,11 @@ public class ImagePigment : Pigment
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
+    /// <summary>
+    /// An image may carry an alpha channel of its own, and finding out would mean reading it, so this answers yes and pays for the sample.
+    /// </summary>
+    public override bool MayTransmit => true;
+
     public override Color GetColorFor(Point point)
     {
         (double u, double v) = MapType.GetImageLocationFor(

@@ -8,8 +8,8 @@ include '../defaults.igl'
 // Floor
 plane {
     material {
-        pigment noisy {
-            turbulence 3 phased 20
+        pigment mottled {
+            noise { octaves 3 }
             leopard {
                 [0, Orange, 1, Brown]
                 scale 0.5
@@ -34,14 +34,12 @@ plane {
 
 sphere {
     material {
-        // The scale here used to be 100, which only made sense while phased turbulence was
-        // reading the point after the octave loop had scaled it -- that multiplied Z by
-        // 2^Depth, and at "turbulence 7" that meant 128, so the pattern was really running 128
-        // times faster than asked and needed an enormous scale to be visible at all.  With the
-        // phasing now riding the point it was given, that same 100 stretches one band of agate
-        // across ~31 units, leaving this sphere a single flat shade of grey.
+        // The scale here was once 100, back when turbulence could be "phased" -- a bespoke sine
+        // folded into the noise, since dropped in favour of the frequency, phase and wave that
+        // POV-Ray shapes a pattern's value with.  At that scale the agate banding stretched so far
+        // that the sphere came out one flat grey, so it was brought down to something that shows.
         pigment agate {
-            turbulence 7 phased 20
+            turbulence { amplitude 1 octaves 7 }
             [0, Gray20, 1, Gray80]
             rotate X -45
             scale 2

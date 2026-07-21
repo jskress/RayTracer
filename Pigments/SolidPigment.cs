@@ -22,6 +22,11 @@ public class SolidPigment : Pigment
     }
 
     /// <summary>
+    /// This pigment is one colour, so it knows for certain whether it lets light through.
+    /// </summary>
+    public override bool MayTransmit => _color.Alpha < 1;
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  We always return
     /// the same color, no matter the point.
     /// </summary>

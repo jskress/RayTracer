@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
@@ -70,6 +71,39 @@ public class Material
     public double Metallic { get; set; }
 
     /// <summary>
+    /// This property holds how sharply the material's diffuse lighting falls away as a surface
+    /// turns from the light.
+    /// <para>
+    /// At 1 -- the default, and what every surface did before this existed -- brightness falls off
+    /// with the cosine of the angle, which is Lambert's law and the right answer for a matte
+    /// surface.  Raising it makes the lit face hold its brightness longer and then fall away
+    /// abruptly at the edge, which is how a burnished metal reads; POV-Ray's own metal textures run
+    /// between 2 and 6.  It is a shaping of the falloff rather than a physical quantity, and it
+    /// only ever darkens: at nothing but a graze, every value gives the same nothing.
+    /// </para>
+    /// </summary>
+    public double Brilliance { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds how much fine speckle is taken out of the material's diffuse lighting,
+    /// giving it the look of sand, unglazed clay or rough concrete.
+    /// <para>
+    /// This is POV-Ray's <c>crand</c>, and it only ever darkens -- it takes light away in flecks
+    /// and never adds any.  Where it differs from POV is what the flecks are keyed on: POV draws
+    /// from a random number generator, so the speckle belongs to the ray rather than to the
+    /// surface, which makes it crawl when the camera moves and wash out as sampling rises, a
+    /// liability POV's own documentation warns about.  Here it is keyed on the point being lit, so
+    /// it stays where it is put.
+    /// </para>
+    /// <para>
+    /// It is deliberately not the same thing as a mottled pigment.  That varies smoothly, in
+    /// blotches, because it is built from coherent noise; this varies from point to neighbouring
+    /// point, which is what makes it read as grain rather than as cloud.
+    /// </para>
+    /// </summary>
+    public double Grain { get; set; }
+
+    /// <summary>
     /// This property holds the amount of transparency for the material.
     /// </summary>
     public double Transparency { get; set; }
@@ -79,6 +113,74 @@ public class Material
     /// far it colours the light passing through it.  See <see cref="Core.Interior"/>.
     /// </summary>
     public Interior Interior { get; set; } = new ();
+
+    /// <summary>
+    /// This method returns how much light the grain takes away at one particular point, between
+    /// nothing and <see cref="Grain"/>.
+    /// <para>
+    /// The value is hashed from the point rather than drawn from a random number generator, which
+    /// is what makes the speckle stay put: the same point gives the same fleck however many rays
+    /// find it, from wherever they come.  Hashing the bits of the coordinates rather than
+    /// smoothing between them is equally deliberate -- neighbouring points must land on unrelated
+    /// values, or the result reads as cloud rather than as grit.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point being lit.</param>
+    /// <returns>How much to take out of the diffuse light there.</returns>
+    public double GrainAt(Point point)
+    {
+        if (Grain <= 0)
+            return 0;
+
+        ulong hash = 14695981039346656037;
+
+        foreach (double coordinate in new[] { point.X, point.Y, point.Z })
+        {
+            ulong bits = (ulong) BitConverter.DoubleToInt64Bits(coordinate);
+
+            // Fowler-Noll-Vo, a byte at a time: cheap, and it scatters neighbouring inputs across
+            // the whole range rather than leaving them near one another, which is the property that
+            // matters here.
+            for (int shift = 0; shift < 64; shift += 8)
+            {
+                hash ^= (bits >> shift) & 0xFF;
+                hash *= 1099511628211;
+            }
+        }
+
+        // The top bits are the best mixed, so the fraction is taken from those.
+        return Grain * ((hash >> 11) / (double) (1UL << 53));
+    }
+
+    /// <summary>
+    /// This property reports whether this material's pigment might let light through of its own
+    /// accord, and so whether it is worth sampling to find out.  See
+    /// <see cref="Pigments.Pigment.MayTransmit"/>.
+    /// </summary>
+    public bool PigmentMayTransmit => Pigment?.MayTransmit ?? false;
+
+    /// <summary>
+    /// This method returns how transparent this material is at one particular point, which may
+    /// differ from point to point where the pigment says it should.
+    /// <para>
+    /// <see cref="Transparency"/> is a property of the whole surface: it makes a thing uniformly
+    /// see-through.  A pigment may additionally say, colour by colour, how much light gets past it,
+    /// which is what POV-Ray's fourth colour channel does and what lets one pattern be a window in
+    /// some places and a wall in others -- a stencil, or the clear panes of a stained-glass design.
+    /// </para>
+    /// <para>
+    /// The two compose as two things blocking light in series: what stops light is the product of
+    /// what each lets by.  A pigment that stops nothing therefore leaves the material's own
+    /// transparency exactly as it was, which is what keeps every scene written before this
+    /// unchanged.
+    /// </para>
+    /// </summary>
+    /// <param name="surfaceColor">The colour the pigment gave at the point in question.</param>
+    /// <returns>How transparent the material is there, between 0 and 1.</returns>
+    public double TransparencyFor(Color surfaceColor)
+    {
+        return 1 - (1 - Transparency) * surfaceColor.Alpha;
+    }
 
     /// <summary>
     /// This method returns the tint that <see cref="Metallic"/> puts on light this material

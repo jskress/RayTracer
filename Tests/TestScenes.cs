@@ -421,9 +421,13 @@ public class TestScenes
         // so light newly arriving on it has nowhere else to go, which is the check that this is
         // the shadow change and not drift from somewhere else.  Some of that light is then turned
         // away again at the floor's own surface, the floor having an index of refraction to bend
-        // it by, which is why the red does not climb quite as far as the transparency alone would
-        // put it.
-        Color expected = new (1.117368, 0.686425, 0.686425);
+        // it by.
+        //
+        // The floor then stops showing half of its own colour, being half transparent, and that is
+        // the larger part of the difference from the book's figure: green and blue come out at
+        // exactly half what they were, since nothing else in the scene contributes to them.  A
+        // surface can only show as much of itself as it stops.
+        Color expected = new (0.774155, 0.343213, 0.343213);
 
         Assert.IsTrue(expected.Matches(color), color.ToString());
     }
@@ -463,9 +467,9 @@ public class TestScenes
         Color color = scene.GetHitColor(intersections[0], 5);
 
         // As above, the book's (0.93391, 0.69643, 0.69243) assumed the translucent floor cast an
-        // opaque shadow on the ball below it, less what that floor turns away at its own surface.
-        // Red alone moves.
-        Color expected = new (1.107245, 0.696434, 0.692431);
+        // opaque shadow on the ball below it, less what that floor turns away at its own surface --
+        // and less again the half of its own colour that a half-transparent floor no longer shows.
+        Color expected = new (0.764033, 0.353222, 0.349218);
 
         Assert.IsTrue(expected.Matches(color), color.ToString());
     }

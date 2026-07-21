@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
@@ -43,8 +44,8 @@ public partial class LanguageParser
             case "blend" or "layer":
                 resolver = ParseBlendedPigmentClause(seedResolver, text is "layer");
                 break;
-            case "noisy":
-                resolver = ParseNoisyPigmentClause(seedResolver);
+            case "mottled":
+                resolver = ParseMottledPigmentClause(seedResolver);
                 break;
             case "image":
                 return ParseImagePigmentClause(clause);
@@ -88,20 +89,20 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to parse the definition of a noisy pigment.
+    /// This method is used to parse the definition of a mottled pigment.
     /// </summary>
     /// <param name="seedResolver">The resolver, if any, for the pigment seed.</param>
-    /// <returns>The noisy pigment resolver.</returns>
-    private NoisyPigmentResolver ParseNoisyPigmentClause(Resolver<int?> seedResolver)
+    /// <returns>The mottled pigment resolver.</returns>
+    private MottledPigmentResolver ParseMottledPigmentClause(Resolver<int?> seedResolver)
     {
-        // We want the turbulence specification before the pigment.
-        TurbulenceResolver turbulenceResolver = ParseTurbulenceClause();
+        // We want the noise specification before the pigment it dims.
+        Resolver<LayeredNoise> noiseResolver = ParseNoiseClause();
 
-        return new NoisyPigmentResolver
+        return new MottledPigmentResolver
         {
             SeedResolver = seedResolver,
             PigmentResolver = ParsePigmentClause(),
-            TurbulenceResolver = turbulenceResolver,
+            NoiseResolver = noiseResolver,
             TransformResolver = ParseTransformClause()
         };
     }

@@ -24,33 +24,33 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
 
-        _keywords: 'agate', 'alignment', 'ambient', 'and', 'angle', 'angles', 'apply',
+        _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles', 'apply',
             'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
-            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick',
+            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'disc',
-            'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'false', 'field', 'file',
-            'filter', 'flatness', 'font', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
-            'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'false', 'field', 'file',
+            'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
-            'move', 'named', 'no', 'noisy', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
-            'open', 'parallel', 'parallelogram', 'patch', 'path', 'phased', 'pigment', 'pipes',
-            'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points',
+            'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
+            'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
+            'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
-            'rotate', 'scale', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'sides', 'size', 'smooth', 'software', 'source',
+            'ramp', 'rotate', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'shape', 'shear', 'shininess', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'width', 'with', 'wood', 'wrinkles',
+            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'width', 'with', 'wood', 'wrinkles',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -83,12 +83,35 @@ public partial class LanguageParser
         {
             with > seed ?? 'Expecting "seed" to follow "with" here.' > _expression
         }
-        turbulenceClause:
+        // Turbulence is written either as a bare amount, which is by far the common case and means
+        // the amplitude alone, or as a block when there is more to say.
+        turbulenceClause: { turbulence > [ openBrace | _expression ] }
+        turbulenceEntryClause:
+        [
+            { amplitude > _expression } | { octaves > _expression } |
+            { finer > _expression } | { fainter > _expression } | withSeedClause
+        ] ?? 'Expecting a turbulence property here.'
+        // Mottling dims a colour by noise rather than pushing points about, so it takes the layers
+        // and nothing else -- an amplitude would have nothing here to move.
+        noiseClause: { noise > openBrace ?? 'Expecting an open brace to follow "noise" here.' }
+        noiseEntryClause:
+        [
+            { octaves > _expression } | { finer > _expression } |
+            { fainter > _expression } | withSeedClause
+        ] ?? 'Expecting a noise property here.'
+        // How a pattern's value is shaped once the pattern has produced it: scaled and slid by the
+        // frequency and phase, then bent by a wave.  Offered to every pattern, since none of it
+        // belongs to any pattern in particular.
+        waveClause:
         {
-            turbulence > _expression >
-            { phased > _expression > { comma > _expression }{?} }{?} >
-            withSeedClause{?}
+            [ ramp | sine | triangle | scallop | cubic |
+              { poly > _expression } ] >
+            wave ?? 'Expecting "wave" to follow the wave name here.'
         }
+        patternShapingClause:
+        [
+            { frequency > _expression } | { phase > _expression } | waveClause
+        ]
         imageClause: { uncached{?} > image > _expression }
         
         // Info clauses.
@@ -225,9 +248,9 @@ public partial class LanguageParser
         {
             [ blend | layer ] > openBrace ?? 'Expecting an open brace to follow "blend" or "layer" here.'
         }
-        noisyPigmentClause:
+        mottledPigmentClause:
         {
-            noisy > openBrace ?? 'Expecting an open brace to follow "noisy" here.'
+            mottled > openBrace ?? 'Expecting an open brace to follow "mottled" here.'
         }
         imageMapTypeClause:
         [
@@ -240,11 +263,11 @@ public partial class LanguageParser
         }
         patternPigmentClause:
         {
-            patternClause > openBrace ?? 'Expecting an open brace to follow "noisy" here.'
+            patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
         }
         pigmentClause:
         [
-            blendPigmentClause | noisyPigmentClause | patternPigmentClause |
+            blendPigmentClause | mottledPigmentClause | patternPigmentClause |
             imagePigmentClause | { color > _expression } |
             _expression
         ] ?? 'Expecting a pigment definition here.'
@@ -259,7 +282,8 @@ public partial class LanguageParser
         }
         materialValueClause:
         {
-            [ ambient | diffuse | specular | shininess | reflective | transparency ] >
+            [ ambient | diffuse | specular | shininess | reflective | transparency |
+              brilliance | grain ] >
             _expression
         }
         materialIorClause:

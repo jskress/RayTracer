@@ -74,6 +74,12 @@ public partial class LanguageParser
             case "shininess":
                 resolver.ShininessResolver = new TermResolver<double>() { Term = term };
                 break;
+            case "brilliance":
+                resolver.BrillianceResolver = new TermResolver<double>() { Term = term };
+                break;
+            case "grain":
+                resolver.GrainResolver = new TermResolver<double>() { Term = term };
+                break;
             case "reflective":
                 resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
                 break;
