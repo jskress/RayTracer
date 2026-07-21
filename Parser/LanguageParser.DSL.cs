@@ -34,7 +34,7 @@ public partial class LanguageParser
             'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'ignore', 'image', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
+            'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
@@ -72,6 +72,16 @@ public partial class LanguageParser
         }
 
         includeClause: { include > _string ?? 'Expecting a string to follow "include" here.' }
+        // An import reads a library the way an include reads a file, but only the definitions it
+        // names are left in scope afterward.
+        importClause:
+        {
+            import > _string ?? 'Expecting a file name to follow "import" here.' >
+            openBrace ?? 'Expecting an open brace to follow the file name here.' >
+            [ _identifier | _keyword ] ?? 'Expecting the name of something to import here.' >
+            { comma > [ _identifier | _keyword ] ?? 'Expecting a name to follow the comma here.' }{*} >
+            closeBrace ?? 'Expecting a close brace here.'
+        }
         namedClause: { named > _expression }
         intervalClause:
         {

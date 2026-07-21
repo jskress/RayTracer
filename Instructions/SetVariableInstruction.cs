@@ -8,13 +8,19 @@ namespace RayTracer.Instructions;
 /// </summary>
 public class SetVariableInstruction : Instruction
 {
-    private readonly string _variableName;
+    /// <summary>
+    /// This property holds the name of the variable this instruction sets.  An import needs it to
+    /// tell what a library brought with it.
+    /// </summary>
+    public string VariableName { get; }
+
+
     private readonly Term _term;
     private readonly IObjectResolver _objectResolver;
 
     public SetVariableInstruction(string variableName, Term term = null, IObjectResolver objectResolver = null)
     {
-        _variableName = variableName;
+        VariableName = variableName;
         _term = term;
         _objectResolver = objectResolver;
     }
@@ -30,6 +36,6 @@ public class SetVariableInstruction : Instruction
             ? _objectResolver.ResolveToObject(context, variables)
             : _term.GetValue(variables);
 
-        variables.SetValue(_variableName, value);
+        variables.SetValue(VariableName, value);
     }
 }

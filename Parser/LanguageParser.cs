@@ -65,6 +65,7 @@ public partial class LanguageParser
             while (!IsAtEnd())
             {
                 HandleIncludes();
+                HandleImports();
                 HandleIncludeEnd();
                 _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
                 HandleIncludeEnd();
