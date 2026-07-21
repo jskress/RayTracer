@@ -21,6 +21,15 @@ public class InstructionContext
     /// This method is used to add a new instruction to the set.
     /// </summary>
     /// <param name="instruction">The instruction to add.</param>
+    /// <summary>
+    /// This property reports the names of the variables set so far, in the order the instructions
+    /// setting them were added.  An import uses it to tell which names a library brought.
+    /// </summary>
+    internal IReadOnlyList<string> VariableNames => _instructions
+        .OfType<SetVariableInstruction>()
+        .Select(instruction => instruction.VariableName)
+        .ToList();
+
     public void AddInstruction(Instruction instruction)
     {
         ArgumentNullException.ThrowIfNull(instruction);
