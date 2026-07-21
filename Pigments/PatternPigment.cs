@@ -37,9 +37,14 @@ public class PatternPigment : Pigment
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
+    /// <summary>
+    /// A pattern is only as transmitting as the colours it chooses between.
+    /// </summary>
+    public override bool MayTransmit => PigmentSet?.MayTransmit ?? false;
+
     public override Color GetColorFor(Point point)
     {
-        double value = Pattern.Evaluate(point);
+        double value = Pattern.ValueFor(point);
 
         return Pattern.DiscretePigmentsNeeded > 0
             ? PigmentSet.GetColorFor(point, (int) value)

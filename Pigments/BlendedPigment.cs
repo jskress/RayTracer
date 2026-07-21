@@ -36,6 +36,11 @@ public class BlendedPigment : Pigment
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
+    /// <summary>
+    /// A blend lets light through if any of the pigments it blends does.
+    /// </summary>
+    public override bool MayTransmit => Pigments.Any(pigment => pigment.MayTransmit);
+
     public override Color GetColorFor(Point point)
     {
         List<Color> colors = Pigments

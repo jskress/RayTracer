@@ -81,6 +81,36 @@ public class Material
     public Interior Interior { get; set; } = new ();
 
     /// <summary>
+    /// This property reports whether this material's pigment might let light through of its own
+    /// accord, and so whether it is worth sampling to find out.  See
+    /// <see cref="Pigments.Pigment.MayTransmit"/>.
+    /// </summary>
+    public bool PigmentMayTransmit => Pigment?.MayTransmit ?? false;
+
+    /// <summary>
+    /// This method returns how transparent this material is at one particular point, which may
+    /// differ from point to point where the pigment says it should.
+    /// <para>
+    /// <see cref="Transparency"/> is a property of the whole surface: it makes a thing uniformly
+    /// see-through.  A pigment may additionally say, colour by colour, how much light gets past it,
+    /// which is what POV-Ray's fourth colour channel does and what lets one pattern be a window in
+    /// some places and a wall in others -- a stencil, or the clear panes of a stained-glass design.
+    /// </para>
+    /// <para>
+    /// The two compose as two things blocking light in series: what stops light is the product of
+    /// what each lets by.  A pigment that stops nothing therefore leaves the material's own
+    /// transparency exactly as it was, which is what keeps every scene written before this
+    /// unchanged.
+    /// </para>
+    /// </summary>
+    /// <param name="surfaceColor">The colour the pigment gave at the point in question.</param>
+    /// <returns>How transparent the material is there, between 0 and 1.</returns>
+    public double TransparencyFor(Color surfaceColor)
+    {
+        return 1 - (1 - Transparency) * surfaceColor.Alpha;
+    }
+
+    /// <summary>
     /// This method returns the tint that <see cref="Metallic"/> puts on light this material
     /// reflects, to be multiplied into a highlight or a reflected colour.  It interpolates
     /// between white -- leaving the light's own colour alone, as a dielectric would -- and the

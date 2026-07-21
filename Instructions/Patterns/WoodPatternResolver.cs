@@ -9,10 +9,6 @@ namespace RayTracer.Instructions.Patterns;
 /// </summary>
 public class WoodPatternResolver : PatternResolver<WoodPattern>
 {
-    /// <summary>
-    /// This property holds the resolver for our pattern's turbulence property.
-    /// </summary>
-    public Resolver<Turbulence> TurbulenceResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a wood

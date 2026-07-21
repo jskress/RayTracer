@@ -21,11 +21,10 @@ public class MarblePattern : Pattern
     public override int DiscretePigmentsNeeded => 0;
 
     /// <summary>
-    /// This property controls the turbulence we will use.  It is optional; left unset, the
-    /// veins run dead straight.
+    /// This pattern folds turbulence into its own arithmetic, so its points are left alone.
     /// </summary>
-    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public Turbulence Turbulence { get; set; }
+    protected override bool StirsItsOwnPoints => true;
+
 
     /// <summary>
     /// This method is used to push any random number generator seeds throughout the pigment

@@ -208,6 +208,30 @@ public class Color
     /// <summary>
     /// Add two colors.
     /// </summary>
+    /// <remarks>
+    /// Every operator here works on the three visible channels and leaves the result's alpha at the
+    /// default, and that is a decision rather than an oversight.  Addition is the reason.  The sums
+    /// this ray tracer actually performs are of light arriving at one surface -- its ambient, its
+    /// diffuse and its specular -- and all three carry the same alpha, so adding it would count the
+    /// same opacity three times over.  Nor is there a defensible alternative: taking the larger, or
+    /// the left operand's, is arbitrary.  Adding light simply is not an operation that composes
+    /// opacity, and the arithmetic that does compose it (Porter and Duff's) is defined over
+    /// premultiplied colours, which these are not.
+    /// <para>
+    /// Scaling by a number does have a sound answer -- dimming a colour plainly should not make it
+    /// any more transparent -- and so does multiplying two colours, if the channel is read as how
+    /// much light passes rather than how much is stopped.  They are left alone anyway, for
+    /// consistency with addition and because nothing yet needs otherwise: the one thing that reads
+    /// alpha in the render path is <c>Canvas</c>, deciding whether the image being written needs an
+    /// alpha channel at all, and it reads the finished pixel.  Propagating alpha through the
+    /// arithmetic would change that answer for every scene with a transparent background.
+    /// </para>
+    /// <para>
+    /// Anything that wants a fourth channel to mean something -- POV-Ray's <c>rgbt</c>, say -- should
+    /// therefore read it from the pigment where it was written, and use it there and then, rather
+    /// than expecting it to survive its way through a sum.
+    /// </para>
+    /// </remarks>
     /// <param name="left">The left color to add.</param>
     /// <param name="right">The right color to add.</param>
     /// <returns>The sum of the colors.</returns>

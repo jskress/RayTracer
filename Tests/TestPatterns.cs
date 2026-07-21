@@ -202,7 +202,7 @@ public class TestPatterns
     {
         Point point = new (0.25, 0.5, 0.75);
         MarblePattern plain = new ();
-        MarblePattern turbulent = new () { Turbulence = new Turbulence { Seed = 3, Depth = 2 } };
+        MarblePattern turbulent = new () { Turbulence = new Turbulence { Seed = 3, Octaves = 2 } };
 
         Assert.AreNotEqual(plain.Evaluate(point), turbulent.Evaluate(point));
     }

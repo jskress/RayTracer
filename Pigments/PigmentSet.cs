@@ -18,6 +18,11 @@ public class PigmentSet
     /// </summary>
     public bool Banded { get; set; }
 
+    /// <summary>
+    /// This property reports whether any pigment in this set might let light through.
+    /// </summary>
+    public bool MayTransmit => _pigments.Any(pigment => pigment.MayTransmit);
+
     private readonly Spectrum<Pigment> _pigments = new (); 
 
     /// <summary>

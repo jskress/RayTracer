@@ -45,13 +45,10 @@ public partial class LanguageParser
             text = text.Replace(".with.seed", "");
         }
 
-        return text switch
+        (IPatternResolver Resolver, int Count) result = text switch
         {
             // Simple ones.
-            "agate" => (new AgatePatternResolver
-            {
-                TurbulenceResolver = ParseTurbulenceClause()
-            }, new AgatePattern().DiscretePigmentsNeeded),
+            "agate" => (new AgatePatternResolver(), new AgatePattern().DiscretePigmentsNeeded),
             "boxed" => (new BoxedPatternResolver(), new BoxedPattern().DiscretePigmentsNeeded),
             "bozo" => (new BozoPatternResolver
             {
@@ -74,18 +71,12 @@ public partial class LanguageParser
             }, new GranitePattern().DiscretePigmentsNeeded),
             "hexagon" => (new HexagonPatternResolver(), new HexagonPattern().DiscretePigmentsNeeded),
             "leopard" => (new LeopardPatternResolver(), new LeopardPattern().DiscretePigmentsNeeded),
-            "marble" => (new MarblePatternResolver
-            {
-                TurbulenceResolver = ParseOptionalTurbulence()
-            }, new MarblePattern().DiscretePigmentsNeeded),
+            "marble" => (new MarblePatternResolver(), new MarblePattern().DiscretePigmentsNeeded),
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
             "radial" => (new RadialPatternResolver(), new RadialPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
             "triangular" => (new TriangularPatternResolver(), new TriangularPattern().DiscretePigmentsNeeded),
-            "wood" => (new WoodPatternResolver
-            {
-                TurbulenceResolver = ParseOptionalTurbulence()
-            }, new WoodPattern().DiscretePigmentsNeeded),
+            "wood" => (new WoodPatternResolver(), new WoodPattern().DiscretePigmentsNeeded),
             "wrinkles" => (new WrinklesPatternResolver
             {
                 SeedResolver = seedResolver
@@ -156,6 +147,16 @@ public partial class LanguageParser
                 Token = clause.Tokens[0]
             }
         };
+
+        // Turbulence is offered to every pattern, not to the handful that once knew how to ask for
+        // it.  It belongs to no pattern in particular: it stirs the points a pattern is asked
+        // about, and a pattern goes on computing exactly what it always did.  Parsing it here
+        // rather than in each case above is what makes that true of all of them at once.
+        result.Resolver.TurbulenceResolver = ParseOptionalTurbulence();
+
+        ParsePatternShaping(result.Resolver);
+
+        return result;
     }
 
     /// <summary>
@@ -178,5 +179,59 @@ public partial class LanguageParser
         }
 
         return resolver;
+    }
+
+    /// <summary>
+    /// This method reads whatever the scene has to say about how a pattern's value should be
+    /// shaped once the pattern has produced it.  Any of the properties may appear, in any order,
+    /// and any of them may be left out.
+    /// <para>
+    /// Like turbulence, this is offered to every pattern rather than to a chosen few, because none
+    /// of it belongs to any pattern in particular: a pattern says how far through its range a point
+    /// lies, and this decides what that number does on its way to the colour map.
+    /// </para>
+    /// </summary>
+    /// <param name="resolver">The pattern resolver to attach the shaping to.</param>
+    private void ParsePatternShaping(IPatternResolver resolver)
+    {
+        while (true)
+        {
+            Clause clause = LanguageDsl.ParseClause(CurrentParser, "patternShapingClause");
+
+            if (clause is null)
+                return;
+
+            switch (clause.Text())
+            {
+                case "frequency":
+                    resolver.FrequencyResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                case "phase":
+                    resolver.PhaseResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                default:
+                    // Everything else is a wave, named by the token that opens the clause.
+                    WaveType wave = clause.Text() switch
+                    {
+                        "ramp" => WaveType.Ramp,
+                        "sine" => WaveType.Sine,
+                        "triangle" => WaveType.Triangle,
+                        "scallop" => WaveType.Scallop,
+                        "cubic" => WaveType.Cubic,
+                        "poly" => WaveType.Poly,
+                        _ => throw new TokenException($"Unknown wave type, {clause.Text()}, found.")
+                        {
+                            Token = clause.Tokens[0]
+                        }
+                    };
+
+                    resolver.WaveResolver = new LiteralResolver<WaveType> { Value = wave };
+
+                    if (wave == WaveType.Poly)
+                        resolver.ExponentResolver = new TermResolver<double> { Term = clause.Term() };
+
+                    break;
+            }
+        }
     }
 }

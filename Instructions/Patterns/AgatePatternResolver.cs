@@ -9,10 +9,6 @@ namespace RayTracer.Instructions.Patterns;
 /// </summary>
 public class AgatePatternResolver : PatternResolver<AgatePattern>
 {
-    /// <summary>
-    /// This property holds the resolver for our pattern's turbulence property.
-    /// </summary>
-    public Resolver<Turbulence> TurbulenceResolver { get; init; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an agate

@@ -195,7 +195,7 @@ public class TestNoise
         // it sums positively weighted samples of a function that never goes below zero.  An
         // Abs call used to sit here compensating for noise that was wrongly centered on zero;
         // this pins the property that made it unnecessary.
-        Turbulence turbulence = new () { Seed = 12345, Depth = 3 };
+        Turbulence turbulence = new () { Seed = 12345, Octaves = 3 };
 
         foreach (Point point in SamplePoints())
             Assert.IsTrue(turbulence.Generate(point) >= 0);
@@ -204,7 +204,7 @@ public class TestNoise
     [TestMethod]
     public void TestTurbulenceVectorDisplacesEachAxisDifferently()
     {
-        Turbulence turbulence = new () { Seed = 12345, Depth = 3 };
+        Turbulence turbulence = new () { Seed = 12345, Octaves = 3 };
         int matches = 0;
         int count = 0;
 
@@ -221,22 +221,4 @@ public class TestNoise
         Assert.IsTrue(matches < count / 100, $"{matches} of {count} turbulence vectors had X == Y");
     }
 
-    [TestMethod]
-    public void TestPhasedTurbulenceRidesTheOriginalPoint()
-    {
-        // Phasing mixes the point's own Z into the result.  The octave loop walks a scaled
-        // copy of the point, and phasing must not accidentally pick that copy up -- doing so
-        // would silently multiply Z by 2^Depth and shift the phase.  Two points differing only
-        // in Z must therefore phase differently, and a deeper turbulence must not change how
-        // much a given Z shift moves the phase.
-        Turbulence shallow = new () { Seed = 12345, Depth = 1, Phased = true, Scale = 1, Tightness = 0 };
-        Turbulence deep = new () { Seed = 12345, Depth = 5, Phased = true, Scale = 1, Tightness = 0 };
-
-        // With Tightness at 0 the noise term drops out, leaving only the phase: 1 + sin(Z).
-        Point point = new (0.5, 0.5, 1.0);
-        double expected = 1 + Math.Sin(1.0);
-
-        Assert.IsTrue(expected.Near(shallow.Generate(point)));
-        Assert.IsTrue(expected.Near(deep.Generate(point)));
-    }
 }

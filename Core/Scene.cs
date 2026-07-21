@@ -93,7 +93,15 @@ public class Scene : NamedThing, IDisposable
         Material material = intersection.Surface.Material ?? Material.Default;
         Color refColor;
 
-        if (material is {Reflective: > 0, Transparency: > 0})
+        // What a surface lets past, it cannot also show.  The pigment may say so colour by colour,
+        // which is what lets one pattern be a window in some places and a wall in others, so the
+        // question is asked at this point rather than of the material as a whole.
+        double transparency = material.PigmentMayTransmit
+            ? material.TransparencyFor(
+                material.Pigment.GetColorFor(intersection.Surface, intersection.Point))
+            : material.Transparency;
+
+        if (material.Reflective > 0 && (material.Transparency > 0 || material.PigmentMayTransmit))
         {
             double reflectance = intersection.Reflectance;
 
@@ -103,7 +111,10 @@ public class Scene : NamedThing, IDisposable
         else
             refColor = reflectedColor + refractedColor;
 
-        Color color = surfaceColor + refColor;
+        // A surface shows only as much of itself as it stops.  Perfectly clear glass therefore
+        // contributes nothing of its own and is seen entirely through, which is what makes a
+        // transmitting pigment a window rather than merely a dimmer wall.
+        Color color = surfaceColor * (1 - transparency) + refColor;
 
         // If this hit is on the far side of a surface, the ray reached it by travelling through
         // whatever the surface is made of, and a substance that fades light charges for the trip.
@@ -153,29 +164,33 @@ public class Scene : NamedThing, IDisposable
                 continue;
 
             Material material = intersection.Surface.Material ?? Material.Default;
-
-            if (material.Transparency <= 0)
-                return Colors.Black;
-
-            reaching *= material.Transparency;
-
             Interior interior = material.Interior;
 
             // Shadow rays never have their intersections prepared, since that work would be wasted
             // on all but the nearest hit, so what is needed of the crossing is worked out here --
-            // and only when something actually asks for it.
+            // and only when something actually asks for it.  The pigment is sampled where the light
+            // crossed, so that patterned glass shadows as a pattern, and once sampled it serves for
+            // both how much light gets past and what colour it comes out.
+            bool needsPigment = interior.Filter > 0 || material.PigmentMayTransmit;
+            Point where = needsPigment || interior.Refracts
+                ? ray.At(intersection.Distance)
+                : null;
+            Color surfaceColor = needsPigment
+                ? material.Pigment.GetColorFor(intersection.Surface, where)
+                : null;
+            double transparency = surfaceColor is null
+                ? material.Transparency
+                : material.TransparencyFor(surfaceColor);
+
+            if (transparency <= 0)
+                return Colors.Black;
+
+            reaching *= transparency;
+
             if (interior.Filter > 0 || interior.Refracts)
             {
-                Point where = ray.At(intersection.Distance);
-
-                // The pigment has to be sampled where the light crossed, so that patterned glass
-                // casts a patterned shadow.
                 if (interior.Filter > 0)
-                {
-                    Color surfaceColor = material.Pigment.GetColorFor(intersection.Surface, where);
-
                     reaching *= interior.GetFilterTint(surfaceColor);
-                }
 
                 // Some of the light never gets in at all, being mirrored off the surface instead,
                 // and how much depends on how glancing its approach is.  This is what keeps clear
@@ -251,7 +266,16 @@ public class Scene : NamedThing, IDisposable
     public Color GetRefractedColor(Intersection intersection, int remaining)
     {
         Material material = intersection.Surface.Material ?? Material.Default;
-        double transparency = material.Transparency;
+
+        // The pigment may say, colour by colour, how much light gets past it, so where it might,
+        // it is sampled and has its say.  Sampled once here and reused for the filter below, since
+        // both want the surface's colour at the very same point.
+        Color pigmentColor = material.PigmentMayTransmit || material.Interior.Filter > 0
+            ? material.Pigment.GetColorFor(intersection.Surface, intersection.Point)
+            : null;
+        double transparency = pigmentColor is null
+            ? material.Transparency
+            : material.TransparencyFor(pigmentColor);
 
         if (remaining < 1 || transparency == 0)
             return Colors.Black;
@@ -277,11 +301,7 @@ public class Scene : NamedThing, IDisposable
         // the transparency it follows, this is charged once per surface crossed, so a solid tints
         // what passes through it twice -- going in, and coming back out.
         if (material.Interior.Filter > 0)
-        {
-            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point);
-
             color *= material.Interior.GetFilterTint(pigmentColor);
-        }
 
         return color;
     }
