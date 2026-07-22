@@ -40,6 +40,7 @@ public partial class LanguageParser
         {
             "pigment" => ParsePigmentClause(),
             "material" => GetMaterialResolver(clause),
+            "interior" => GetInteriorResolver(clause),
             "transform" => GetTransformResolver(clause),
             "plane" => ParsePlaneClause(clause),
             "sphere" => ParseSphereClause(clause),
