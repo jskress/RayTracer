@@ -1,3 +1,5 @@
+using RayTracer.Options;
+using RayTracer.Renderer;
 using RayTracer.Parser;
 
 namespace Tests;
@@ -119,19 +121,58 @@ public class TestImports
             """));
     }
 
+    /// <summary>
+    /// Parses the given scene and then runs it, which is what a parse alone cannot do: a name that
+    /// was never defined is only discovered when something goes looking for it, and that happens
+    /// while the image is being made rather than while it is being read.
+    /// </summary>
+    private void Render(string scene)
+    {
+        Write("scene.igl",
+            "context { width 8 height 8 no gamma }\n" +
+            "camera { location [0, 0, -5] look at [0, 0, 0] }\n" +
+            "light { location [0, 0, -5] }\n" +
+            scene);
+
+        string path = Path.Combine(_directory, "scene.igl");
+        StringWriter output = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(output);
+
+        try
+        {
+            LanguageParser parser = new (path);
+            ImageRenderer renderer = parser.Parse();
+
+            Assert.IsNotNull(renderer, $"the scene did not parse: {output}");
+
+            // Running it is the point.  A name that was never defined is only discovered when
+            // something goes looking for it, and nothing does until the instructions are executed.
+            renderer.Render(new RenderOptions { InputFileName = path });
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+    }
+
     [TestMethod]
     public void TestAnImportedThingKeepsTheValuesItNames()
     {
         // The other kind of dependency, and the reason values are not filtered: T_Base names
         // LibraryRed, and that name is looked up when the image is rendered rather than when the
-        // file is parsed, so discarding it would leave the material pointing at nothing.  What is
-        // checked here is that the name survives the filtering; that the lookup then finds it is
-        // shown by the gallery scene, which renders the imported material and comes out the right
-        // colour.
-        Assert.IsNull(ErrorFrom("""
-            import 'library' { T_Wanted, LibraryRed }
+        // file is parsed, so discarding it would leave the material pointing at nothing.
+        //
+        // This one has to be rendered rather than merely parsed, and that is the whole point of it:
+        // an undefined name is not a parsing failure at all.  Nothing goes looking for LibraryRed
+        // until the instructions run, so a version of this that stopped at parsing would pass
+        // whether the name survived or not -- which is worse than no test, since it reads like
+        // cover.
+        Render("""
+            import 'library' { T_Wanted }
             sphere { material T_Wanted }
-            """));
+            """);
     }
 
     [TestMethod]

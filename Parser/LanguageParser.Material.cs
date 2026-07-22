@@ -94,7 +94,7 @@ public partial class LanguageParser
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
                 break;
             case "interior":
-                ParseInteriorClause(resolver);
+                ParseInteriorClause(resolver, clause);
                 break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
@@ -106,12 +106,50 @@ public partial class LanguageParser
     /// rather than what its skin looks like.
     /// </summary>
     /// <param name="resolver">The material resolver to attach the interior to.</param>
-    private void ParseInteriorClause(MaterialResolver resolver)
+    /// <param name="clause">The clause that tells us how to get the interior resolver.</param>
+    private void ParseInteriorClause(MaterialResolver resolver, Clause clause)
     {
+        // Naming an interior replaces whatever the material had, since the name brings a whole
+        // interior with it; writing one out adds to what is there, since a material may open its
+        // interior block more than once.
+        if (clause.Tokens.Count > 1 && !BounderToken.OpenBrace.Matches(clause.Tokens[1]))
+        {
+            resolver.InteriorResolver = GetInteriorResolver(clause);
+
+            return;
+        }
+
         resolver.InteriorResolver ??= new InteriorResolver();
 
         _ = ParseObjectResolver(
             "interiorEntryClause", HandleInteriorEntryClause, resolver.InteriorResolver);
+    }
+
+    /// <summary>
+    /// This is a helper method for creating the right interior resolver, either by parsing an
+    /// in-place definition or a variable reference.  It works much as the material one does, an
+    /// interior being the same sort of thing: something worth declaring once and naming later.
+    /// </summary>
+    /// <param name="clause">The clause that tells us how to get the interior resolver.</param>
+    /// <returns>The proper resolver.</returns>
+    private InteriorResolver GetInteriorResolver(Clause clause)
+    {
+        Token token = clause.Tokens[1];
+
+        // Complete definition.
+        if (BounderToken.OpenBrace.Matches(token))
+        {
+            return ParseObjectResolver<InteriorResolver>(
+                "interiorEntryClause", HandleInteriorEntryClause);
+        }
+
+        bool extending = clause.Tokens.Count > 2;
+        InteriorResolver resolver = GetExtensibleItem<InteriorResolver>(token, extending);
+
+        if (extending)
+            ParseObjectResolver("interiorEntryClause", HandleInteriorEntryClause, resolver);
+
+        return resolver;
     }
 
     /// <summary>

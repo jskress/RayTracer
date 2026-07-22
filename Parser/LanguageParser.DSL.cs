@@ -307,9 +307,18 @@ public partial class LanguageParser
         {
             metallic > _expression{?}
         }
+        // An interior may be written out in full, named, or named and then added to, much as a
+        // material may.  What a surface is made of is worth keeping and reusing on its own terms:
+        // POV-Ray's glass library, for one, declares its interiors apart from its textures and
+        // pairs them up afterward.  There is no "inherited" here as there is for a material,
+        // since that word is about handing a material down to the pieces of a surface that named
+        // none of their own, and interiors are not handed down that way.
         startInteriorClause:
         {
-            interior > openBrace ?? 'Expecting an open brace to follow "interior" here.'
+            interior > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "interior" here.'
         }
         interiorEntryClause:
         [
@@ -1019,6 +1028,7 @@ public partial class LanguageParser
             [
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
+                { interior > startThingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
