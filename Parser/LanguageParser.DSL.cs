@@ -42,7 +42,7 @@ public partial class LanguageParser
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
-            'refraction', 'regular', 'render', 'report', 'right', 'rollLeft', 'rollRight',
+            'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rotate', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
@@ -50,7 +50,8 @@ public partial class LanguageParser
             'toVertical',
             'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'width', 'with', 'wood', 'wrinkles',
+            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
+            'wrinkles',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -232,7 +233,7 @@ public partial class LanguageParser
         patternClause:
         [
             agate | boxed | brick | checker | cubic | hexagon | leopard | planar | radial |
-            square | triangular |
+            ripples | square | triangular | waves |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
             } | marble | wood |
@@ -324,9 +325,22 @@ public partial class LanguageParser
         [
             materialIorClause | { filter > _expression } | { clarity > _expression }
         ] ?? 'Expecting an interior property here.'
+        // How a surface's skin is roughened: a pattern whose slope tilts the normal from point to
+        // point.  It is written as the pigment's sibling because that is what it is -- another
+        // pattern over the same surface -- and it is kept apart from the pigment because the two
+        // are rarely the same field.  A marble's veins and the roughness of its surface have
+        // nothing to do with one another, and each wants its own scale and its own footing.
+        startNormalClause:
+        {
+            patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
+        }
+        normalEntryClause:
+        {
+            depth > _expression
+        }
         materialEntryClause:
         [
-            pigment | materialValueClause | materialMetallicClause | startInteriorClause
+            pigment | normal | materialValueClause | materialMetallicClause | startInteriorClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

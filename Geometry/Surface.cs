@@ -153,7 +153,15 @@ public abstract class Surface : NamedThing
     /// <returns>The normal to the surface at the given point.</returns>
     public Vector NormaAt(Point point, Intersection intersection)
     {
-        Vector normal = SurfaceNormaAt(WorldToSurface(point), intersection);
+        Point surfacePoint = WorldToSurface(point);
+        Vector normal = SurfaceNormaAt(surfacePoint, intersection);
+
+        // Any roughening happens here, in surface space, which is the same footing the pigment is
+        // evaluated on.  Doing it before the normal is carried out to the world means a surface
+        // that has been scaled or turned takes its bumps along with it, exactly as it takes its
+        // colouring along with it.
+        if (Material?.SurfaceNormal is not null)
+            normal = Material.SurfaceNormal.PerturbAt(normal, surfacePoint);
 
         return NormalToWorld(normal);
     }

@@ -1,0 +1,135 @@
+// Roughening a surface by tilting its normal.
+//
+// Nothing here has any more geometry than a sphere or a plane.  Every bump, ripple and pit is a
+// pattern's slope tilting the normal as the surface is shaded, which is why the silhouettes stay
+// perfectly smooth however rough the surfaces read -- look along the edge of any of them and the
+// lie shows at once.  That is the bargain, and it is nearly always worth taking.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Normal Perturbation'
+        author 'J. Stephen Kress'
+        description 'Surfaces roughened by tilting their normals, with no change to their geometry.'
+    }
+}
+
+background [0.05, 0.05, 0.07]
+
+camera {
+    location [0, 3.9, -10.5]
+    look at [0, 0.9, -0.4]
+}
+
+light { location [-7, 9, -9] }
+light {
+    location [8, 4, -4]
+    color [0.3, 0.3, 0.36]
+}
+
+// The floor keeps its own gentle roughening, so that the spheres are not the only thing in the
+// picture doing it.  Wide and shallow, which reads as unpolished stone rather than as texture.
+plane {
+    material {
+        pigment color [0.30, 0.30, 0.34]
+        normal bozo {
+            depth 0.35
+            scale 0.5
+        }
+        specular 0.2
+        shininess 20
+    }
+}
+
+// The four in the back row are lifted clear of the floor so that the pair in front, which is
+// where the interesting cases are, does not hide them.
+//
+// Granite, which is a sum of noise at every scale, so its slope is dominated by the finest of
+// them.  That is what makes it read as grit rather than as bumps, and it is what POV-Ray's own
+// granite normal does too.
+sphere {
+    material {
+        pigment color [0.72, 0.70, 0.66]
+        normal granite { depth 0.5 scale 0.4 }
+        specular 0.5
+        shininess 40
+    }
+    translate [-4.1, 1.55, 1.6]
+}
+
+// Bozo is the same noise with nothing done to it, so its slopes are broad and smooth: dents and
+// swells rather than grit.
+sphere {
+    material {
+        pigment color [0.75, 0.55, 0.35]
+        normal bozo { depth 0.8 scale 0.35 }
+        specular 0.5
+        shininess 40
+    }
+    translate [-1.35, 1.55, 1.6]
+}
+
+// Ripples: rings spreading from a handful of scattered sources, all ringing at the same rate, so
+// they interfere into something regular.
+sphere {
+    material {
+        pigment color [0.45, 0.55, 0.75]
+        normal ripples { frequency 7 depth 1.2 }
+        specular 0.7
+        shininess 90
+    }
+    translate [1.35, 1.55, 1.6]
+}
+
+// Waves: the same sources, each ringing at its own rate, which is the difference between a pond
+// and open water.
+sphere {
+    material {
+        pigment color [0.45, 0.55, 0.75]
+        normal waves { frequency 7 depth 1.2 }
+        specular 0.7
+        shininess 90
+    }
+    translate [4.1, 1.55, 1.6]
+}
+
+// A pattern squashed along one axis, which is how a brushed metal is made: the slopes all point
+// across the grain, so the highlight draws out into a line along it.
+sphere {
+    material {
+        pigment color [0.66, 0.66, 0.68]
+        normal bozo {
+            depth 1
+            scale [1, 0.03, 0.03]
+        }
+        specular 0.8
+        shininess 120
+        metallic 1
+        reflective 0.1
+    }
+    scale 1.15
+    translate [-2.75, 1.15, -2.6]
+}
+
+// And the same pattern driving the colour and the roughening at once, each with its own scale --
+// which is the reason the two are kept apart rather than sharing one pattern.
+sphere {
+    material {
+        pigment marble {
+            turbulence { amplitude 0.9 octaves 4 }
+            [0, [0.22, 0.20, 0.24], 0.35, [0.62, 0.60, 0.58], 1, [0.88, 0.87, 0.84]]
+            scale 0.7
+        }
+        normal marble {
+            turbulence { amplitude 0.9 octaves 4 }
+            depth 0.3
+            scale 0.7
+        }
+        specular 0.4
+        shininess 60
+    }
+    scale 1.15
+    translate [2.75, 1.15, -2.6]
+}

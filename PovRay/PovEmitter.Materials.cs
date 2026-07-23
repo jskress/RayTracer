@@ -50,6 +50,8 @@ public partial class PovEmitter
         public Dictionary<string, string> Interior { get; } = new();
         public List<PovProperty> Transforms { get; } = [];
         public double FilterShare { get; set; }
+        public PigmentParts Normal { get; set; }
+        public double NormalDepth { get; set; } = 1;
     }
 
     /// <summary>
@@ -126,6 +128,23 @@ public partial class PovEmitter
 
         writer.Close();
 
+        // A roughening belongs to the surface rather than to any one layer of its colouring, and
+        // the ray tracer has one of them where POV-Ray has one per layer.  The lowest layer that
+        // asks for one wins, on the same reasoning as the finish.
+        TextureParts roughened = layers.FirstOrDefault(layer => layer.Normal?.Pattern is not null);
+
+        if (roughened is not null)
+        {
+            WriteNormal(writer, roughened, declaration.Line);
+
+            if (layers.Count(layer => layer.Normal?.Pattern is not null) > 1)
+            {
+                Report(declaration, declaration.Line,
+                    "Only one layer's roughening came across; the ray tracer has one for a surface " +
+                    "where POV-Ray has one for each layer.");
+            }
+        }
+
         WriteFinish(writer, layers[0]);
         writer.Close();
         writer.Line();
@@ -180,11 +199,7 @@ public partial class PovEmitter
                 break;
 
             case PovBlock block when block.Kind == "normal":
-                // The ray tracer has no way to disturb a surface normal yet, so a texture's bumps
-                // are left behind rather than costing us the rest of it.
-                Report(declaration, block.Line,
-                    "The surface roughening did not come across; the ray tracer cannot disturb a " +
-                    "normal yet.");
+                CollectNormal(block, parts, declaration);
 
                 break;
 
@@ -213,6 +228,45 @@ public partial class PovEmitter
                 parts.Pigment.SolidColor = color;
 
                 break;
+        }
+    }
+
+    /// <summary>
+    /// This method reads a normal block: the pattern a surface is roughened by, and how deeply.
+    /// <para>
+    /// POV-Ray writes the depth as a bare number after the pattern's name, where everything else
+    /// in the block is named -- <c>normal { granite 0.75 scale 0.075 }</c> -- so the number
+    /// following the pattern is what the depth comes from.  Left off, POV-Ray takes it as one, and
+    /// so do we.  The rest of the block is a pattern's own business and is read as one, which is
+    /// what gets the turbulence and the transforms for nothing.
+    /// </para>
+    /// </summary>
+    /// <param name="value">The normal block, or a name standing for one.</param>
+    /// <param name="parts">The pile to add to.</param>
+    /// <param name="declaration">The declaration being written, for reporting.</param>
+    private void CollectNormal(PovValue value, TextureParts parts, PovDeclaration declaration)
+    {
+        if (Resolve(value) is not PovBlock block)
+            throw new PovEmitException("A normal is not something we can read.", declaration.Line);
+
+        parts.Normal ??= new PigmentParts();
+
+        foreach (IPovItem item in block.Items)
+        {
+            // A pattern's name carrying a number is the one thing here that a pigment would not
+            // have said, so it is picked out and the name passed on without it.
+            if (item is PovProperty property && Patterns.ContainsKey(property.Name) &&
+                property.Value is PovNumber depth)
+            {
+                parts.NormalDepth = depth.Value;
+
+                CollectPigmentItem(
+                    new PovProperty { Name = property.Name, Line = property.Line }, parts.Normal);
+
+                continue;
+            }
+
+            CollectPigmentItem(item, parts.Normal);
         }
     }
 
@@ -463,10 +517,34 @@ public partial class PovEmitter
         writer.Open($"{name} = material");
 
         WritePigment(writer, "pigment ", string.Empty, parts.Pigment, line);
+        WriteNormal(writer, parts, line);
         WriteFinish(writer, parts);
 
         writer.Close();
         writer.Line();
+    }
+
+    /// <summary>
+    /// This method writes out how the material's surface is roughened, if it is.
+    /// </summary>
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="parts">Everything the material is made of.</param>
+    /// <param name="line">The line it came from, for reporting.</param>
+    private static void WriteNormal(IglWriter writer, TextureParts parts, int line)
+    {
+        if (parts.Normal?.Pattern is null)
+            return;
+
+        writer.Open($"normal {parts.Normal.Pattern}");
+
+        WriteTurbulence(writer, parts.Normal.Turbulence);
+        WriteShaping(writer, parts.Normal.Shaping);
+
+        writer.Line($"depth {IglWriter.Number(parts.NormalDepth)}");
+
+        WriteTransforms(writer, parts.Normal.Transforms);
+
+        writer.Close();
     }
 
     /// <summary>

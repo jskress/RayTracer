@@ -74,8 +74,10 @@ public partial class LanguageParser
             "marble" => (new MarblePatternResolver(), new MarblePattern().DiscretePigmentsNeeded),
             "planar" => (new PlanarPatternResolver(), new PlanarPattern().DiscretePigmentsNeeded),
             "radial" => (new RadialPatternResolver(), new RadialPattern().DiscretePigmentsNeeded),
+            "ripples" => (new RipplesPatternResolver(), new RipplesPattern().DiscretePigmentsNeeded),
             "square" => (new SquarePatternResolver(), new SquarePattern().DiscretePigmentsNeeded),
             "triangular" => (new TriangularPatternResolver(), new TriangularPattern().DiscretePigmentsNeeded),
+            "waves" => (new WavesPatternResolver(), new WavesPattern().DiscretePigmentsNeeded),
             "wood" => (new WoodPatternResolver(), new WoodPattern().DiscretePigmentsNeeded),
             "wrinkles" => (new WrinklesPatternResolver
             {
