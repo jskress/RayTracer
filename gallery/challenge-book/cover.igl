@@ -19,11 +19,11 @@ camera {
     field of view 45
 }
 
-light {
+point light {
     location [50, 100, -50]
 }
 
-light {
+point light {
     location [-400, 50, -10]
     color [0.2, 0.2, 0.2]
 }

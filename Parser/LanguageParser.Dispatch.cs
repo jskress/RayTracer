@@ -18,7 +18,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartContextClause), _ => HandleStartContextClause())
             .On(nameof(HandleStartSceneClause), _ => HandleStartSceneClause())
             .On(nameof(HandleStartCameraClause), HandleStartCameraClause)
-            .On(nameof(HandleStartPointLightClause), HandleStartPointLightClause)
+            .On(nameof(HandleStartLightClause), HandleStartLightClause)
             .On(nameof(HandleStartPlaneClause), HandleStartPlaneClause)
             .On(nameof(HandleStartSphereClause), HandleStartSphereClause)
             .On(nameof(HandleStartCubeClause), HandleStartCubeClause)
