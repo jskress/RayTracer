@@ -16,14 +16,14 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [ ] Motion blur.
 
 ### To-Dos for Lights:
-- [ ] Area lights/soft shadows.
-- [ ] Spotlights.
+- [x] Area lights/soft shadows.
+- [x] Spotlights.
 
 ### To-Dos for Cameras:
 - [ ] Focal blur.
 
 ### To-Dos for Surfaces:
-- [ ] Normal perturbation.
+- [x] Normal perturbation.
 - [ ] Other surfaces
 
 More to come...
