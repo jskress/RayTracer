@@ -152,4 +152,134 @@ public class TestLightClauses
 
         Assert.IsNotNull(error, "\"point\" without \"at\" should be an error");
     }
+
+    /// <summary>
+    /// Renders a small ball hanging over a floor, lit by the given light from one side and viewed
+    /// from straight above, then reads the row of brightnesses that runs through the middle of the
+    /// ball's shadow.  A hard light gives a row that jumps from lit to dark and back; a soft one
+    /// eases through greys at the edges of the shadow.
+    /// </summary>
+    private double[] ShadowProfile(string lightBody, out string error)
+    {
+        string path = Path.Combine(_directory, "shadow.igl");
+        string output = Path.Combine(_directory, "shadow.png");
+
+        // Straight down, so the image's middle row runs along the world's X, the way the light is
+        // offset -- the shadow the ball throws lands along that row where it can be read across.
+        File.WriteAllText(path,
+            "camera { location [0, 12, 0] look at [0, 0, 0] up [0, 0, 1] }\n" +
+            lightBody + "\n" +
+            "plane { material { pigment color [1, 1, 1] ambient 0 diffuse 1 specular 0 } }\n" +
+            "sphere { material { pigment color [1, 1, 1] ambient 0 diffuse 1 } translate Y 2 }");
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            if (renderer is null)
+            {
+                error = captured.ToString();
+
+                return null;
+            }
+
+            renderer.Render(new RenderOptions { OutputFileName = output, Width = 120, Height = 120 });
+
+            error = captured.ToString().Contains("Error") ? captured.ToString() : null;
+
+            if (error is not null)
+                return null;
+
+            Canvas image = new ImageFile(output).Load()[0];
+            int row = image.Height / 2;
+
+            return Enumerable.Range(0, image.Width)
+                .Select(x =>
+                {
+                    Color pixel = image.GetPixel(x, row);
+
+                    return (pixel.Red + pixel.Green + pixel.Blue) / 3;
+                })
+                .ToArray();
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+    }
+
+    /// <summary>
+    /// Counts how many samples in the row fall in the grey middle, neither nearly dark nor nearly
+    /// lit.  A soft shadow has many such; a hard one has almost none.
+    /// </summary>
+    private static int GreyCount(double[] profile) =>
+        profile.Count(value => value is > 0.15 and < 0.75);
+
+    [TestMethod]
+    public void TestAPointLightCastsAShadowWithABodyToIt()
+    {
+        double[] profile = ShadowProfile(
+            "point light { location [-6, 8, 0] color White }", out string error);
+
+        Assert.IsNull(error);
+        Assert.IsTrue(profile.Any(value => value < 0.1), "there should be a dark shadow");
+        Assert.IsTrue(profile.Any(value => value > 0.8), "there should be lit floor");
+    }
+
+    [TestMethod]
+    public void TestAnAreaLightSoftensTheShadow()
+    {
+        // The test is the softening itself, told by comparing the same scene under a point light
+        // and under an area light centred at the same place.  Both throw the ball's shadow across
+        // the same row and light the ball the same way, so what more grey the area light shows is
+        // the penumbra it adds and nothing else -- which sidesteps the ball's own curved shading,
+        // that both share and neither should be judged by.
+        double[] hard = ShadowProfile(
+            "point light { location [-6, 8, 0] color White }", out string hardError);
+        double[] soft = ShadowProfile(
+            "area light { location [-6, 8, 0] axisU [3, 0, 0] axisV [0, 0, 3] steps 6 color White }",
+            out string softError);
+
+        Assert.IsNull(hardError);
+        Assert.IsNull(softError);
+        Assert.IsTrue(soft.Any(value => value < 0.1), "the soft shadow should still have a dark core");
+        Assert.IsTrue(GreyCount(soft) > GreyCount(hard) + 6,
+            $"the area light should widen the shadow's edge into a penumbra, but the point light " +
+            $"showed {GreyCount(hard)} grey pixels and the area light {GreyCount(soft)}");
+    }
+
+    [TestMethod]
+    public void TestAnAreaLightIsDeterministic()
+    {
+        // The jitter is fixed, so the same scene renders the same twice over.
+        double[] first = ShadowProfile(
+            "area light { location [-6, 8, 0] axisU [3, 0, 0] axisV [0, 0, 3] steps 5 color White }",
+            out _);
+        double[] second = ShadowProfile(
+            "area light { location [-6, 8, 0] axisU [3, 0, 0] axisV [0, 0, 3] steps 5 color White }",
+            out _);
+
+        CollectionAssert.AreEqual(first, second);
+    }
+
+    [TestMethod]
+    public void TestAnAreaLightMayTurnOffItsJitterAndSetItsSteps()
+    {
+        ShadowProfile("""
+            area light {
+                location [-6, 8, 0]
+                axisU [3, 0, 0]  axisV [0, 0, 3]
+                uSteps 4  vSteps 2
+                no jitter
+                color White
+            }
+            """, out string error);
+
+        Assert.IsNull(error, "an area light with its steps set and its jitter off should render");
+    }
 }

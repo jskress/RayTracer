@@ -81,13 +81,7 @@ public class Scene : NamedThing, IDisposable
     public Color GetHitColor(Intersection intersection, int remaining)
     {
         Color surfaceColor = Lights.Aggregate(Colors.Black, (color, light) =>
-        {
-            Color lightReaching = GetLightReaching(light, intersection.OverPoint);
-
-            return color + light.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal,
-                intersection.Surface, lightReaching);
-        });
+            color + Illuminate(light, intersection));
         Color reflectedColor = GetReflectionColor(intersection, remaining);
         Color refractedColor = GetRefractedColor(intersection, remaining);
         Material material = intersection.Surface.Material ?? Material.Default;
@@ -129,6 +123,47 @@ public class Scene : NamedThing, IDisposable
     }
 
     /// <summary>
+    /// This method works out the colour one light lends the given surface point, shading it once
+    /// from each place the light is looked at and averaging.
+    /// <para>
+    /// Every light but an area light is looked at from a single place, and that case is kept apart
+    /// and left exactly as it always was: no averaging, no extra arithmetic, so a scene lit by
+    /// lamps and suns comes out bit for bit as it did before area lights existed.  An area light is
+    /// looked at from several places across its face; where some are blocked and some are not, the
+    /// average is a grey rather than a black or a white, which is the soft edge of its shadow.
+    /// </para>
+    /// </summary>
+    /// <param name="light">The light lending its colour.</param>
+    /// <param name="intersection">The surface point being lit.</param>
+    /// <returns>The colour the light lends the point.</returns>
+    private Color Illuminate(Light light, Intersection intersection)
+    {
+        int count = light.SampleCount;
+
+        if (count == 1)
+        {
+            LightSample only = light.SampleToward(intersection.OverPoint, 0);
+
+            return light.ApplyPhong(
+                intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
+                only, GetLightReaching(intersection.OverPoint, only.Direction, only.Distance));
+        }
+
+        Color sum = Colors.Black;
+
+        for (int index = 0; index < count; index++)
+        {
+            LightSample sample = light.SampleToward(intersection.OverPoint, index);
+
+            sum += light.ApplyPhong(
+                intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
+                sample, GetLightReaching(intersection.OverPoint, sample.Direction, sample.Distance));
+        }
+
+        return sum * (1.0 / count);
+    }
+
+    /// <summary>
     /// This method returns how much of the given light reaches the given point: white, if the
     /// light is in full view of it, black, if something opaque stands in the way, and something
     /// in between if what stands in the way lets light through.
@@ -142,12 +177,28 @@ public class Scene : NamedThing, IDisposable
     /// algorithm entirely -- POV-Ray needs its photon mapping for the same reason.
     /// </para>
     /// </summary>
-    /// <param name="light">The light source in question.</param>
+    /// <param name="light">The light source in question, looked at from where it lies.</param>
     /// <param name="point">The point to test.</param>
     /// <returns>The fraction of the light's colour that arrives at the point.</returns>
     public Color GetLightReaching(Light light, Point point)
     {
-        (Vector direction, double distance) = light.TowardFrom(point);
+        LightSample sample = light.SampleToward(point, 0);
+
+        return GetLightReaching(point, sample.Direction, sample.Distance);
+    }
+
+    /// <summary>
+    /// This method returns how much light arrives at the given point from the given direction, up
+    /// to the given distance.  It is the same reckoning as the light-wide form, told the way in
+    /// terms of a bare direction so that an area light may ask it once per sample across its face.
+    /// </summary>
+    /// <param name="point">The point to test.</param>
+    /// <param name="direction">The unit direction from the point toward the light or sample.</param>
+    /// <param name="distance">How far off the light or sample is, past which nothing can shade
+    /// the point; infinite for a distant light.</param>
+    /// <returns>The fraction of the light's colour that arrives at the point.</returns>
+    public Color GetLightReaching(Point point, Vector direction, double distance)
+    {
         Ray ray = new (point, direction);
         Color reaching = Colors.White;
 
@@ -220,7 +271,13 @@ public class Scene : NamedThing, IDisposable
     /// <returns><c>true</c>, if the point is in shadow, or <c>false</c>, if not.</returns>
     public bool IsInShadow(Light light, Point point)
     {
-        return GetLightReaching(light, point).Matches(Colors.Black);
+        // Asked of the light as a whole, this looks at it from its first sample -- its one place
+        // for a lamp or a sun, the centre of its face for an area light.  A point in the soft half
+        // of an area light's shadow is not wholly in shadow, so this reports the plain fact of
+        // whether any light reaches at all.
+        LightSample sample = light.SampleToward(point, 0);
+
+        return GetLightReaching(point, sample.Direction, sample.Distance).Matches(Colors.Black);
     }
 
     /// <summary>

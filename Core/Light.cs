@@ -42,6 +42,45 @@ public abstract class Light : NamedThing
     public virtual double IntensityToward(Point point) => 1;
 
     /// <summary>
+    /// This property notes how many places this light is looked at from when a point is shaded.
+    /// It is one for every light with no width to it -- a lamp, the sun, a spotlight -- and more
+    /// only for an area light, which is looked at across its face so that its shadow may soften.
+    /// </summary>
+    public virtual int SampleCount => 1;
+
+    /// <summary>
+    /// This method works out one of the places this light is looked at from, of the
+    /// <see cref="SampleCount"/> there are.  A light with no width is the whole of itself from its
+    /// one place, so it ignores the index and answers as it lies; an area light spreads its
+    /// samples across its face.
+    /// </summary>
+    /// <param name="point">The point being lit.</param>
+    /// <param name="index">Which sample, from zero up to <see cref="SampleCount"/>.</param>
+    /// <returns>The sample: which way it lies, how far off, and how much of the light it carries.</returns>
+    public virtual LightSample SampleToward(Point point, int index)
+    {
+        (Vector direction, double distance) = TowardFrom(point);
+
+        return new LightSample(direction, distance, IntensityToward(point));
+    }
+
+    /// <summary>
+    /// This method shades a point under this light looked at from where it lies, which is the
+    /// whole of it for every light but an area one.  It is the convenient form for a caller that
+    /// has no sample of its own in hand.
+    /// </summary>
+    /// <param name="point">The point being illuminated.</param>
+    /// <param name="eye">The eye vector.</param>
+    /// <param name="normal">The surface normal vector.</param>
+    /// <param name="surface">The surface being illuminated.</param>
+    /// <param name="lightReaching">How much of this light arrives at the point.</param>
+    /// <returns>The resulting color.</returns>
+    public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, Color lightReaching)
+    {
+        return ApplyPhong(point, eye, normal, surface, SampleToward(point, 0), lightReaching);
+    }
+
+    /// <summary>
     /// This method works out the colour a surface takes on under this light, by Phong's reckoning:
     /// an ambient term that a shadow does not touch, a diffuse term for how squarely the surface
     /// faces the light, and a specular highlight for how nearly it mirrors the light into the eye.
@@ -50,19 +89,23 @@ public abstract class Light : NamedThing
     /// <param name="eye">The eye vector.</param>
     /// <param name="normal">The surface normal vector.</param>
     /// <param name="surface">The surface being illuminated.</param>
+    /// <param name="sample">The place on the light this shading looks at it from -- which way it
+    /// lies, and how much of it is aimed this way.  For every light but an area light there is one
+    /// such place; an area light is shaded once per sample and the results averaged.</param>
     /// <param name="lightReaching">How much of this light arrives at the point: white, if it is
     /// in full view of the light, black, if something opaque stands in the way, and something in
     /// between if what stands in the way lets light through.</param>
     /// <returns>The resulting color.</returns>
     public Color ApplyPhong(
-        Point point, Vector eye, Vector normal, Surface surface, Color lightReaching)
+        Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
+        Color lightReaching)
     {
         Material material = surface.Material ?? Material.Default;
         // The pigment's own colour is kept as well as the lit one, because a metallic highlight
         // tints by the surface's colour alone -- using the lit colour would fold the light in twice.
         Color pigmentColor = material.Pigment.GetColorFor(surface, point);
         Color color = pigmentColor * Color;
-        Vector vector = TowardFrom(point).Direction;
+        Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come
         // straight from this source, so it is the one term a shadow does not take away.
@@ -74,7 +117,7 @@ public abstract class Light : NamedThing
         // bounced light the ambient stands for.  A plain light aims all of itself everywhere, so
         // the reaching colour is passed straight through untouched, which keeps such a light's
         // shading exactly what it was before any of this existed.
-        double intensity = IntensityToward(point);
+        double intensity = sample.Cone;
         Color reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
 
         if (reaching.Matches(Colors.Black))
