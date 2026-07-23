@@ -30,8 +30,8 @@ public partial class LanguageParser
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'disc',
-            'disclaimer', 'discontinuous', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'false', 'field', 'file',
+            'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'disclaimer', 'discontinuous', 'distant', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -45,10 +45,10 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rotate', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'spline', 'square', 'startBranch', 'steps', 'strength', 'stripes',
+            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
+            'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
             'wrinkles',
@@ -195,16 +195,32 @@ public partial class LanguageParser
             namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause
         ] ?? 'Expecting a camera property here.'
 
-        // Point light clauses.
-        startPointLightClause:
+        // Light clauses.  One opener serves all three sorts, told apart by the word before
+        // "light": nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone.
+        startLightClause:
         {
-            [ { point > light } | light ] > openBrace ?? 'Expecting an open brace to follow "light" here.'
+            [ { [ point | distant | spot ] > light } | light ] >
+            openBrace ?? 'Expecting an open brace to follow "light" here.'
         }
         lightColorClause: { color > _expression }
+        directionClause: { direction > _expression }
+        pointAtClause:
+        {
+            point > at ?? 'Expecting "at" to follow "point" here.' > _expression
+        }
         pointLightEntryClause:
         [
             namedClause | locationClause | lightColorClause
         ] ?? 'Expecting a point light property here.'
+        distantLightEntryClause:
+        [
+            namedClause | directionClause | lightColorClause
+        ] ?? 'Expecting a distant light property here.'
+        spotLightEntryClause:
+        [
+            namedClause | locationClause | pointAtClause | lightColorClause |
+            { radius > _expression } | { falloff > _expression } | { tightness > _expression }
+        ] ?? 'Expecting a spotlight property here.'
 
         // Transform clauses.
         axisClause: { [ X | Y | Z ] > _expression }
@@ -992,7 +1008,7 @@ public partial class LanguageParser
         [
             namedClause => 'name' |
             startCameraClause => 'camera' |
-            startPointLightClause => 'pointLight' |
+            startLightClause => 'light' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
@@ -1062,7 +1078,7 @@ public partial class LanguageParser
             startContextClause        => 'HandleStartContextClause' |
             startSceneClause          => 'HandleStartSceneClause' |
             startCameraClause         => 'HandleStartCameraClause' |
-            startPointLightClause     => 'HandleStartPointLightClause' |
+            startLightClause          => 'HandleStartLightClause' |
             startPlaneClause          => 'HandleStartPlaneClause' |
             startSphereClause         => 'HandleStartSphereClause' |
             startCubeClause           => 'HandleStartCubeClause' |

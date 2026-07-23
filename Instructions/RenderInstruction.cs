@@ -117,8 +117,8 @@ public class RenderInstruction : Instruction
                 case Camera camera:
                     scene.Cameras.Add(camera);
                     break;
-                case PointLight pointLight:
-                    scene.Lights.Add(pointLight);
+                case Light light:
+                    scene.Lights.Add(light);
                     break;
                 case Surface surface:
                     scene.Surfaces.Add(surface);

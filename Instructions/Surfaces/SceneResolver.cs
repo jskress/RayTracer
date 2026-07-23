@@ -20,7 +20,7 @@ public class SceneResolver : NamedObjectResolver<Scene>
     /// This property holds the list of resolvers that will evaluate to the list of point
     /// lights for our scene.
     /// </summary>
-    public List<PointLightResolver> PointLightResolvers { get; } = [];
+    public List<IObjectResolver> LightResolvers { get; } = [];
 
     /// <summary>
     /// This property holds the list of resolvers that will evaluate to the list of surfaces
@@ -45,8 +45,8 @@ public class SceneResolver : NamedObjectResolver<Scene>
     {
         value.Cameras.AddRange(CameraResolvers
             .Select(resolver => resolver.Resolve(context, variables)));
-        value.Lights.AddRange(PointLightResolvers
-            .Select(resolver => resolver.Resolve(context, variables)));
+        value.Lights.AddRange(LightResolvers
+            .Select(resolver => (Light) resolver.ResolveToObject(context, variables)));
         value.Surfaces.AddRange(SurfaceResolvers
             .Select(resolver => resolver.ResolveToSurface(context, variables)));
 

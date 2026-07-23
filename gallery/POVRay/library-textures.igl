@@ -28,8 +28,8 @@ camera {
 
 // Two lights: one doing the work from the front left, and a dimmer one behind and to the right to
 // put an edge on the metals and give the glass something to gather.
-light { location [-6, 7, -9] }
-light {
+point light { location [-6, 7, -9] }
+point light {
     location [7, 5, 6]
     color [0.35, 0.35, 0.4]
 }

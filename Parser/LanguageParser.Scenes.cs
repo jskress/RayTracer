@@ -43,8 +43,8 @@ public partial class LanguageParser
             case "camera":
                 resolver.CameraResolvers.Add(ParseCameraClause());
                 break;
-            case "pointLight":
-                resolver.PointLightResolvers.Add(ParsePointLightClause());
+            case "light":
+                resolver.LightResolvers.Add(ParseLightClause(clause));
                 break;
             case "plane":
                 resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));

@@ -14,41 +14,50 @@ namespace RayTracer.Parser;
 public partial class LanguageParser
 {
     /// <summary>
-    /// This method is used to handle the beginning of a point light block.
+    /// This method is used to handle the beginning of a light block, of whatever sort.
     /// </summary>
-    private void HandleStartPointLightClause(Clause clause)
+    /// <param name="clause">The clause that opened the block.</param>
+    private void HandleStartLightClause(Clause clause)
     {
-        VerifyDefaultSceneUsage(clause, "Point light");
-
-        PointLightResolver resolver = ParsePointLightClause();
+        VerifyDefaultSceneUsage(clause, "Light");
 
         _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
         {
             Context = _context.InstructionContext,
-            Resolver = resolver
+            Resolver = ParseLightClause(clause)
         });
     }
 
     /// <summary>
-    /// This method is used to create the resolver from a point light block.
+    /// This method reads a light block and returns the resolver for whichever sort it turned out
+    /// to be.  Which sort is decided by the word before "light": "distant" for the sun, "spot" for
+    /// a cone, and nothing or "point" for a plain lamp.
     /// </summary>
-    private PointLightResolver ParsePointLightClause()
+    /// <param name="clause">The clause that opened the block.</param>
+    /// <returns>The resolver for the light.</returns>
+    private IObjectResolver ParseLightClause(Clause clause)
     {
-        return ParseObjectResolver<PointLightResolver>(
-            "pointLightEntryClause", HandlePointLightEntryClause);
+        return clause.Tokens[0].Text switch
+        {
+            "distant" => ParseObjectResolver<DistantLightResolver>(
+                "distantLightEntryClause", HandleDistantLightEntryClause),
+            "spot" => ParseObjectResolver<SpotlightResolver>(
+                "spotLightEntryClause", HandleSpotlightEntryClause),
+            _ => ParseObjectResolver<PointLightResolver>(
+                "pointLightEntryClause", HandlePointLightEntryClause)
+        };
     }
 
     /// <summary>
-    /// This method is used to handle an item clause of a light block.
+    /// This method is used to handle an item clause of a point light block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     private void HandlePointLightEntryClause(Clause clause)
     {
         PointLightResolver resolver = (PointLightResolver) _context.CurrentTarget;
-        string field = clause.Text();
         Term term = clause.Term();
-    
-        switch (field)
+
+        switch (clause.Text())
         {
             case "named":
                 resolver.NameResolver = new TermResolver<string> { Term = term };
@@ -60,7 +69,70 @@ public partial class LanguageParser
                 resolver.ColorResolver = new TermResolver<Color> { Term = term };
                 break;
             default:
-                throw new Exception($"Internal error: unknown light property found: {field}.");
+                throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a distant light block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleDistantLightEntryClause(Clause clause)
+    {
+        DistantLightResolver resolver = (DistantLightResolver) _context.CurrentTarget;
+        Term term = clause.Term();
+
+        switch (clause.Text())
+        {
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "direction":
+                resolver.DirectionResolver = new TermResolver<Vector> { Term = term };
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a spotlight block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSpotlightEntryClause(Clause clause)
+    {
+        SpotlightResolver resolver = (SpotlightResolver) _context.CurrentTarget;
+        Term term = clause.Term();
+
+        switch (clause.Text())
+        {
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "location":
+                resolver.LocationResolver = new TermResolver<Point> { Term = term };
+                break;
+            // The "point at" clause opens with "point", so that is the tag it comes in under.
+            case "point":
+                resolver.PointAtResolver = new TermResolver<Point> { Term = term };
+                break;
+            case "radius":
+                resolver.RadiusResolver = new TermResolver<double> { Term = term };
+                break;
+            case "falloff":
+                resolver.FalloffResolver = new TermResolver<double> { Term = term };
+                break;
+            case "tightness":
+                resolver.TightnessResolver = new TermResolver<double> { Term = term };
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
         }
     }
 }

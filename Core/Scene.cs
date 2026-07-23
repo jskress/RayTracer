@@ -19,7 +19,7 @@ public class Scene : NamedThing, IDisposable
     /// <summary>
     /// This list holds the collection of lights in the scene.
     /// </summary>
-    public List<PointLight> Lights { get; } = [];
+    public List<Light> Lights { get; } = [];
 
     /// <summary>
     /// This list holds the collection of surfaces (shapes) in the scene.
@@ -145,11 +145,10 @@ public class Scene : NamedThing, IDisposable
     /// <param name="light">The light source in question.</param>
     /// <param name="point">The point to test.</param>
     /// <returns>The fraction of the light's colour that arrives at the point.</returns>
-    public Color GetLightReaching(PointLight light, Point point)
+    public Color GetLightReaching(Light light, Point point)
     {
-        Vector vector = light.Location - point;
-        double distance = vector.Magnitude;
-        Ray ray = new (point, vector.Unit);
+        (Vector direction, double distance) = light.TowardFrom(point);
+        Ray ray = new (point, direction);
         Color reaching = Colors.White;
 
         foreach (Intersection intersection in Intersect(ray))
@@ -219,7 +218,7 @@ public class Scene : NamedThing, IDisposable
     /// <param name="light">The light source in question.</param>
     /// <param name="point">The point to test.</param>
     /// <returns><c>true</c>, if the point is in shadow, or <c>false</c>, if not.</returns>
-    public bool IsInShadow(PointLight light, Point point)
+    public bool IsInShadow(Light light, Point point)
     {
         return GetLightReaching(light, point).Matches(Colors.Black);
     }

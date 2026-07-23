@@ -1,0 +1,91 @@
+// The two new sorts of light: the distant light, whose rays are parallel like the sun's, and the
+// spotlight, which shines only within a cone.
+//
+// The scene is built to show what tells each apart from a plain lamp.  A row of posts catches the
+// distant light and throws a rank of shadows that are all the same length and all lean the same
+// way -- the signature of parallel rays, where a lamp's shadows would fan out from a point.  A
+// spotlight overhead lays a pool of light on the floor with a soft, round rim, bright in the
+// middle and dark beyond, which no lamp does.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Distant and Spot Lights'
+        author 'J. Stephen Kress'
+        description 'A distant light throwing parallel shadows, and a spotlight laying a pool of light.'
+    }
+}
+
+background [0.02, 0.02, 0.03]
+
+camera {
+    location [-0.3, 2.6, -5.6]
+    look at [-0.3, 0.5, 0.3]
+}
+
+// The distant light, low in the sky and off to the left, so its shadows rake across the floor
+// where they can be compared.  Pointed down and to the right.
+distant light {
+    direction [1.4, -1, 0.55]
+    color [1, 0.96, 0.85]
+}
+
+// A spotlight straight down over the right of the scene, laying a pool on the floor.  A tight
+// inner cone and a wider falloff give it a soft edge; a little tightness brightens the middle.
+spot light {
+    location [3, 6.5, 1.5]
+    point at [3, 0, 1.5]
+    radius 8
+    falloff 20
+    tightness 6
+    color [0.85, 0.9, 1]
+}
+
+// A dim fill so that nothing outside either light falls to pure black, which reads as murk rather
+// than as night.
+point light {
+    location [-6, 5, -8]
+    color [0.12, 0.12, 0.16]
+}
+
+// The floor.
+plane {
+    material {
+        pigment color [0.45, 0.45, 0.48]
+        specular 0.1
+        shininess 20
+    }
+}
+
+// A rank of posts for the distant light to throw shadows from.  They stand at stepped depths
+// rather than in a straight line, so their shadows start at different places and fall clear of one
+// another -- and, falling clear, show that they are all the same length and all lean the same way,
+// which is the mark of parallel light.
+cube {
+    material { pigment color [0.7, 0.5, 0.35] }
+    scale [0.22, 1.1, 0.22]
+    translate [-3.6, 1.1, -0.8]
+}
+cube {
+    material { pigment color [0.7, 0.5, 0.35] }
+    scale [0.22, 1.1, 0.22]
+    translate [-2.2, 1.1, -1.4]
+}
+cube {
+    material { pigment color [0.7, 0.5, 0.35] }
+    scale [0.22, 1.1, 0.22]
+    translate [-0.8, 1.1, -2.0]
+}
+
+// A sphere sitting in the spotlight's pool, lit from straight above and casting its own round
+// shadow into the ring of light.
+sphere {
+    material {
+        pigment color [0.85, 0.82, 0.78]
+        specular 0.5
+        shininess 60
+    }
+    translate [3, 1, 1.5]
+}
