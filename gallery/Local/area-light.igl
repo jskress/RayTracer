@@ -1,0 +1,91 @@
+// An area light, and the soft-edged shadow that only a light with width can cast.
+//
+// A point light is a place, seen or not seen, so the shadow it throws turns from lit to dark in
+// the span of a pixel -- a hardness nothing in the world has.  An area light is a lit rectangle,
+// and along the edge of its shadow a point on the floor sees part of that rectangle past the
+// blocker and the rest of it hidden, so the shadow fades through a soft grey band, the penumbra,
+// instead of snapping.  The nearer a blocker sits to the floor the tighter that band; the taller
+// posts here throw a shadow that is crisp at the foot and blurred at the tip, which is exactly how
+// a real soft shadow reads.
+//
+// The light is looked at from a grid of places across its face and the results averaged, so it
+// costs that grid's worth of shadow rays -- the price of a soft shadow, and the reason a scene
+// asks for one only where it wants one.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Area Light'
+        author 'J. Stephen Kress'
+        description 'A broad, soft light, and the penumbra it lays along the edge of a shadow.'
+    }
+}
+
+background [0.03, 0.03, 0.04]
+
+// The posts and the ball sit off to the right of where the light stands, so the camera is aimed
+// there rather than at the origin, and given a narrower view than the default so the group fills
+// the frame instead of floating in the middle of it.
+camera {
+    location [1.1, 4.5, -8.5]
+    look at [1.1, 1.8, 1.5]
+    field of view 60
+}
+
+// The area light: a lit square a good size across, up and to the left, aimed by where it is at
+// what lies below.  A generous grid, so the penumbra is smooth rather than stepped; the fixed
+// jitter keeps it so without the render wandering from one run to the next.
+area light {
+    location [-3, 8, 6]
+    axisU [3.5, 0, 0]
+    axisV [0, 0, 3.5]
+    steps 8
+    color [1, 0.97, 0.9]
+}
+
+// A dim fill from the other side, so the shadowed floor is night rather than pitch, and the far
+// sides of the posts are not lost.
+point light {
+    location [2, 4, -9]
+    color [0.24, 0.24, 0.28]
+}
+
+// The floor.
+plane {
+    material {
+        pigment color [0.5, 0.5, 0.55]
+        specular 0.15
+        shininess 25
+    }
+}
+
+// Three posts of different heights.  The soft edge of a shadow widens the further it is thrown, so
+// the tall post's shadow blurs to a soft tip while the short one's stays crisp -- the whole tale
+// of the penumbra in a single picture.
+cube {
+    material { pigment color [0.75, 0.55, 0.4] }
+    scale [0.28, 0.7, 0.28]
+    translate [-2.6, 0.7, 1.5]
+}
+cube {
+    material { pigment color [0.7, 0.6, 0.45] }
+    scale [0.28, 1.5, 0.28]
+    translate [-0.4, 1.5, 1.5]
+}
+cube {
+    material { pigment color [0.72, 0.5, 0.42] }
+    scale [0.28, 2.4, 0.28]
+    translate [1.8, 2.4, 1.5]
+}
+
+// A sphere for a rounder shadow, sitting where its soft edge shows against the lit floor.
+sphere {
+    material {
+        pigment color [0.8, 0.8, 0.85]
+        specular 0.4
+        shininess 50
+    }
+    translate [3.7, 1, 0.2]
+}

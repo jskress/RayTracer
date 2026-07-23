@@ -43,6 +43,8 @@ public partial class LanguageParser
                 "distantLightEntryClause", HandleDistantLightEntryClause),
             "spot" => ParseObjectResolver<SpotlightResolver>(
                 "spotLightEntryClause", HandleSpotlightEntryClause),
+            "area" => ParseObjectResolver<AreaLightResolver>(
+                "areaLightEntryClause", HandleAreaLightEntryClause),
             _ => ParseObjectResolver<PointLightResolver>(
                 "pointLightEntryClause", HandlePointLightEntryClause)
         };
@@ -127,6 +129,57 @@ public partial class LanguageParser
                 break;
             case "tightness":
                 resolver.TightnessResolver = new TermResolver<double> { Term = term };
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of an area light block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleAreaLightEntryClause(Clause clause)
+    {
+        AreaLightResolver resolver = (AreaLightResolver) _context.CurrentTarget;
+        Term term = clause.Term();
+
+        // "no jitter" comes in as two words joined with a dot, the way "no shadow" does on a
+        // surface; everything else here is a single word, which ToCmd leaves alone.
+        switch (ToCmd(clause))
+        {
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "location":
+                resolver.LocationResolver = new TermResolver<Point> { Term = term };
+                break;
+            case "axisU":
+                resolver.Axis1Resolver = new TermResolver<Vector> { Term = term };
+                break;
+            case "axisV":
+                resolver.Axis2Resolver = new TermResolver<Vector> { Term = term };
+                break;
+            // "steps" sets both directions at once, which is what a square grid wants.
+            case "steps":
+                resolver.UStepsResolver = new TermResolver<int> { Term = term };
+                resolver.VStepsResolver = new TermResolver<int> { Term = term };
+                break;
+            case "uSteps":
+                resolver.UStepsResolver = new TermResolver<int> { Term = term };
+                break;
+            case "vSteps":
+                resolver.VStepsResolver = new TermResolver<int> { Term = term };
+                break;
+            case "seed":
+                resolver.SeedResolver = new TermResolver<int?> { Term = term };
+                break;
+            // "no jitter" arrives as a two-word tag, and turns the jitter off.
+            case "no.jitter":
+                resolver.Jitter = false;
                 break;
             case "color":
                 resolver.ColorResolver = new TermResolver<Color> { Term = term };

@@ -25,8 +25,9 @@ public partial class LanguageParser
         cubed: _operator("\u00b3")
 
         _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles', 'apply',
-            'are', 'at', 'author', 'axiom', 'background', 'banded', 'baseline', 'bits',
-            'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing', 'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
+            'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
+            'baseline', 'bits', 'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing',
+            'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
@@ -35,7 +36,7 @@ public partial class LanguageParser
             'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'ior', 'italic', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
+            'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
             'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
@@ -199,7 +200,7 @@ public partial class LanguageParser
         // "light": nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone.
         startLightClause:
         {
-            [ { [ point | distant | spot ] > light } | light ] >
+            [ { [ point | distant | spot | area ] > light } | light ] >
             openBrace ?? 'Expecting an open brace to follow "light" here.'
         }
         lightColorClause: { color > _expression }
@@ -221,6 +222,14 @@ public partial class LanguageParser
             namedClause | locationClause | pointAtClause | lightColorClause |
             { radius > _expression } | { falloff > _expression } | { tightness > _expression }
         ] ?? 'Expecting a spotlight property here.'
+        areaLightEntryClause:
+        [
+            namedClause | locationClause | lightColorClause |
+            { axisU > _expression } | { axisV > _expression } |
+            { steps > _expression } | { uSteps > _expression } | { vSteps > _expression } |
+            { seed > _expression } |
+            { no > jitter ?? 'Expecting "jitter" to follow "no" here.' }
+        ] ?? 'Expecting an area light property here.'
 
         // Transform clauses.
         axisClause: { [ X | Y | Z ] > _expression }
