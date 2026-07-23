@@ -115,6 +115,19 @@ public class Material
     public Interior Interior { get; set; } = new ();
 
     /// <summary>
+    /// This property holds how the surface's skin is roughened, if it is: a pattern whose slope
+    /// tilts the normal from point to point, so that a wall reads as stucco without gaining a
+    /// single triangle.  See <see cref="Core.SurfaceNormal"/>.
+    /// <para>
+    /// It is kept apart from <see cref="Pigment"/>, as POV-Ray keeps its own two apart, because
+    /// they are rarely the same field: a marble's veins and the roughness of its surface have
+    /// nothing to do with one another, and a scene wants to scale and turn each without disturbing
+    /// the other.
+    /// </para>
+    /// </summary>
+    public SurfaceNormal SurfaceNormal { get; set; }
+
+    /// <summary>
     /// This method returns how much light the grain takes away at one particular point, between
     /// nothing and <see cref="Grain"/>.
     /// <para>

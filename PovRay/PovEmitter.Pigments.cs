@@ -15,6 +15,10 @@ public partial class PovEmitter
         ["agate"] = "agate",
         ["boxed"] = "boxed",
         ["bozo"] = "bozo",
+        // POV-Ray's "bumps" is the very same function as its "bozo" -- rendering the two over the
+        // same points gives pixel-for-pixel the same picture -- so it comes across as bozo rather
+        // than as a pattern of its own saying the same thing twice.
+        ["bumps"] = "bozo",
         ["brick"] = "brick",
         ["checker"] = "checker",
         ["crackle"] = "crackle",
@@ -26,6 +30,8 @@ public partial class PovEmitter
         ["marble"] = "marble",
         ["planar"] = "planar",
         ["radial"] = "radial",
+        ["ripples"] = "ripples",
+        ["waves"] = "waves",
         ["wood"] = "wood",
         ["wrinkles"] = "wrinkles"
     };

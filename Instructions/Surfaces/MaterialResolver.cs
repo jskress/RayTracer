@@ -71,6 +71,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     public InteriorResolver InteriorResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how the material's surface is roughened.
+    /// </summary>
+    public SurfaceNormalResolver SurfaceNormalResolver { get; set; }
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -102,6 +107,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
         if (InteriorResolver != null)
             value.Interior = InteriorResolver.Resolve(context, variables);
+
+        if (SurfaceNormalResolver != null)
+            value.SurfaceNormal = SurfaceNormalResolver.Resolve(context, variables);
     }
 
     /// <summary>

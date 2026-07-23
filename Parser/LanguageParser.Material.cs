@@ -93,6 +93,9 @@ public partial class LanguageParser
             case "transparency":
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
                 break;
+            case "normal":
+                resolver.SurfaceNormalResolver = ParseNormalClause();
+                break;
             case "interior":
                 ParseInteriorClause(resolver, clause);
                 break;
