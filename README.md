@@ -20,7 +20,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 - [x] Spotlights.
 
 ### To-Dos for Cameras:
-- [ ] Focal blur.
+- [x] Focal blur.
 
 ### To-Dos for Surfaces:
 - [x] Normal perturbation.

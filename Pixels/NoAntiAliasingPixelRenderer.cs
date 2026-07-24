@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Graphics;
 
@@ -23,8 +22,6 @@ public class NoAntiAliasingPixelRenderer : PixelRenderer
     /// <returns>The color for the indicated pixel.</returns>
     public override Color Render(Scene scene, int x, int y)
     {
-        Ray ray = Converter.GetRayForPixel(x, y);
-
-        return scene.GetColorFor(ray);
+        return Trace(scene, x, y);
     }
 }

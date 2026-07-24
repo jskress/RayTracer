@@ -1,0 +1,127 @@
+// Focal blur, and the depth of field it lays through a scene.
+//
+// A ray tracer's camera is a pinhole by nature: every ray leaves the one point, so everything it
+// sees is in focus at every distance, near and far alike.  No lens behaves that way.  A real one
+// gathers light across a disc, and only what lies at the distance it is focused on lands as a
+// point again; everything nearer or further lands as a small circle instead, and the further off
+// it is the wider that circle grows.  That is why a photograph has a plane of sharpness with
+// softness falling away on both sides of it.
+//
+// Here the row of pillars marches away from the camera and the focus is set on the third of them.
+// The ones in front of it and the ones behind soften in proportion to how far off that mark they
+// stand, which is the whole of the effect.  It is paid for in rays: each one is fired from several
+// places across the lens and the results averaged, so the wider the lens and the more samples, the
+// longer the render.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Focal Blur'
+        author 'J. Stephen Kress'
+        description 'A row of pillars running away from the camera, with the focus set on the third.'
+    }
+}
+
+background [0.02, 0.02, 0.03]
+
+// The lens.  A quarter-unit radius is a wide one for a scene on this scale, which is what makes
+// the falloff plain to see; the focus is set on the third pillar by naming where it stands, rather
+// than by working out how far ahead of the camera that is.
+camera {
+    location [1.6, 3.4, -7.5]
+    look at [-0.97, 0.09, 1.5]
+    field of view 39.6
+    aperture 0.25
+    focal point [-0.2, 0.9, 1.5]
+    blur samples 32
+}
+
+point light {
+    location [-5, 7, -4]
+    color [1, 0.96, 0.9]
+}
+
+point light {
+    location [6, 3, -2]
+    color [0.25, 0.27, 0.32]
+}
+
+// The floor, checkered so that the blur has fine detail to work on -- a plain surface would hide
+// the effect everywhere but at the pillars' edges.
+plane {
+    material {
+        pigment checker { color [0.62, 0.62, 0.66], color [0.16, 0.16, 0.2] scale 0.9 }
+        specular 0.1
+        shininess 20
+    }
+}
+
+// Six pillars running away from the camera, evenly spaced, each with a ball on top to give the
+// blur a curved edge as well as a straight one.  The third is the one in focus.
+cube {
+    material { pigment color [0.82, 0.42, 0.35] }
+    scale [0.22, 0.55, 0.22]
+    translate [-1.5, 0.55, -2.5]
+}
+sphere {
+    material { pigment color [0.9, 0.55, 0.45]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [-1.5, 1.4, -2.5]
+}
+
+cube {
+    material { pigment color [0.75, 0.62, 0.35] }
+    scale [0.22, 0.55, 0.22]
+    translate [-0.85, 0.55, -0.5]
+}
+sphere {
+    material { pigment color [0.88, 0.78, 0.45]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [-0.85, 1.4, -0.5]
+}
+
+cube {
+    material { pigment color [0.45, 0.72, 0.45] }
+    scale [0.22, 0.55, 0.22]
+    translate [-0.2, 0.55, 1.5]
+}
+sphere {
+    material { pigment color [0.55, 0.88, 0.6]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [-0.2, 1.4, 1.5]
+}
+
+cube {
+    material { pigment color [0.4, 0.6, 0.8] }
+    scale [0.22, 0.55, 0.22]
+    translate [0.45, 0.55, 3.5]
+}
+sphere {
+    material { pigment color [0.5, 0.72, 0.92]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [0.45, 1.4, 3.5]
+}
+
+cube {
+    material { pigment color [0.55, 0.45, 0.75] }
+    scale [0.22, 0.55, 0.22]
+    translate [1.1, 0.55, 5.5]
+}
+sphere {
+    material { pigment color [0.68, 0.58, 0.88]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [1.1, 1.4, 5.5]
+}
+
+cube {
+    material { pigment color [0.7, 0.4, 0.6] }
+    scale [0.22, 0.55, 0.22]
+    translate [1.75, 0.55, 7.5]
+}
+sphere {
+    material { pigment color [0.85, 0.52, 0.72]  specular 0.5  shininess 60 }
+    scale 0.3
+    translate [1.75, 1.4, 7.5]
+}

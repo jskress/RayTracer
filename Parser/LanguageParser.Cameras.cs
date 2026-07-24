@@ -64,6 +64,24 @@ public partial class LanguageParser
             case "field":
                 resolver.FieldOfViewResolver = new AngleResolver { Term = term };
                 break;
+            case "aperture":
+                resolver.ApertureResolver = new TermResolver<double> { Term = term };
+                break;
+            // "focal" opens both ways of saying where the focus lies, so which was meant is told
+            // by the word that follows it.
+            case "focal":
+                if (clause.Tokens[1].Text == "point")
+                    resolver.FocalPointResolver = new TermResolver<Point> { Term = term };
+                else
+                    resolver.FocalDistanceResolver = new TermResolver<double?> { Term = term };
+                break;
+            // The "blur samples" clause opens with "blur", so that is the tag it comes in under.
+            case "blur":
+                resolver.BlurSamplesResolver = new TermResolver<int> { Term = term };
+                break;
+            case "seed":
+                resolver.SeedResolver = new TermResolver<int?> { Term = term };
+                break;
             default:
                 throw new Exception($"Internal error: unknown camera property found: {field}.");
         }

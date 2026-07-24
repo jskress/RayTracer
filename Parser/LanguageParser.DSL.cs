@@ -24,16 +24,17 @@ public partial class LanguageParser
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
 
-        _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles', 'apply',
+        _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
+            'aperture', 'apply',
             'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
-            'baseline', 'bits', 'black', 'blend', 'blob', 'bold', 'bottom', 'bouncing',
+            'baseline', 'bits', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distant', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'flatness', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'fainter', 'filter', 'finer', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
@@ -44,7 +45,7 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'ramp', 'rotate', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'ramp', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
@@ -191,9 +192,23 @@ public partial class LanguageParser
             view ?? 'Expecting "view" to follow "of" here.' >
             _expression
         }
+        // The focus may be given either as how far ahead it lies or as a point to bring into
+        // focus; they say the same thing, and which is the easier depends on the scene.
+        focalClause:
+        {
+            focal >
+            [ point | distance ] ?? 'Expecting "point" or "distance" to follow "focal" here.' >
+            _expression
+        }
+        blurSamplesClause:
+        {
+            blur > samples ?? 'Expecting "samples" to follow "blur" here.' > _expression
+        }
         cameraEntryClause:
         [
-            namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause
+            namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause |
+            { aperture > _expression } | focalClause | blurSamplesClause |
+            { seed > _expression }
         ] ?? 'Expecting a camera property here.'
 
         // Light clauses.  One opener serves all three sorts, told apart by the word before

@@ -20,7 +20,7 @@ background [0.05, 0.05, 0.07]
 
 camera {
     location [0, 2.85, -6.9]
-    look at [0, 0.9, -0.4]
+    look at [0, 0.62, -0.4]
 }
 
 point light { location [-7, 9, -9] }
