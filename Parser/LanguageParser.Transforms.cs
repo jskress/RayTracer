@@ -79,13 +79,11 @@ public partial class LanguageParser
                     break;
                 case TransformType.Shear:
                     creator = new ShearCreator();
-                    transformTerms = terms[..6].ToArray();
-                    terms.RemoveRange(0, 6);
+                    transformTerms = TakeBracketedTerms(clause, terms, 6);
                     break;
                 case TransformType.Matrix:
                     creator = new MatrixCreator();
-                    transformTerms = terms[..16].ToArray();
-                    terms.RemoveRange(0, 16);
+                    transformTerms = TakeBracketedTerms(clause, terms, 16);
                     break;
                 default:
                     throw new Exception("Unknown transform type");
@@ -98,6 +96,29 @@ public partial class LanguageParser
         }
 
         return resolver;
+    }
+
+    /// <summary>
+    /// This is a helper method for pulling the terms of a bracketed, comma-separated list
+    /// of values, such as the one a shear or matrix carries, out of the given list of
+    /// terms.  The grammar leaves the brackets and separating commas in the clause's list
+    /// of tokens, so we discard those here as well; if we didn't, the next trip around the
+    /// parsing loop would try to read one of them as the name of a transform.
+    /// </summary>
+    /// <param name="clause">The clause to remove the punctuation tokens from.</param>
+    /// <param name="terms">The list of terms to pull from.</param>
+    /// <param name="count">The number of values in the list.</param>
+    /// <returns>The terms for the values in the list.</returns>
+    private static Term[] TakeBracketedTerms(Clause clause, List<Term> terms, int count)
+    {
+        Term[] result = terms[..count].ToArray();
+
+        terms.RemoveRange(0, count);
+
+        // The open bracket, the commas that separate the values, and the close bracket.
+        clause.Tokens.RemoveRange(0, count + 1);
+
+        return result;
     }
 
     /// <summary>
