@@ -95,7 +95,7 @@ public class BicubicPatch : Surface
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         double length = ray.Direction.Magnitude;
-        Ray localRay = new (ray.Origin, ray.Direction.Unit);
+        Ray localRay = new (ray.Origin, ray.Direction.Unit, ray.TimeIndex);
 
         WalkNode(_root, localRay, length, intersections);
     }

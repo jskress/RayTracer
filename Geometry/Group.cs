@@ -36,7 +36,7 @@ public class Group : Surface
     protected override void PrepareSurfaceForRendering()
     {
         foreach (Surface surface in Surfaces)
-            surface.PrepareForRendering();
+            surface.PrepareForRendering(SampleTimes);
 
         if (Material is not null)
         {
@@ -55,15 +55,7 @@ public class Group : Surface
 
         foreach (Surface surface in Surfaces)
         {
-            if (surface.BoundingBox != null)
-                box.Add(surface.BoundingBox.TransformedBy(surface.Transform));
-            else if (surface is Triangle triangle)
-            {
-                box.Add(surface.Transform * triangle.Point1);
-                box.Add(surface.Transform * triangle.Point2);
-                box.Add(surface.Transform * triangle.Point3);
-            }
-            else
+            if (surface.BoundingBox == null && surface is not Triangle)
             {
                 // This child has no way to report a bounding box of its own (e.g. a Disc,
                 // Parallelogram, or any other surface that's unbounded by default) -- since
@@ -72,6 +64,24 @@ public class Group : Surface
                 // box that's too small to include it (which would cull rays aimed at this
                 // child before Group.AddIntersections ever got a chance to test it).
                 return null;
+            }
+
+            // A child that moves is taken in every place it stands while the shutter is open, not
+            // merely where it starts.  A box drawn around its first position alone would have this
+            // group turn away rays that ought to have found it further along its travels, and the
+            // thing would be cut off part way through its own blur.  Since a ray only ever sees one
+            // of the instants sampled, gathering exactly those is no approximation of the path
+            // swept -- it is the whole of what any ray can find.
+            foreach (Matrix transform in surface.TransformsThroughShutter)
+            {
+                if (surface.BoundingBox != null)
+                    box.Add(surface.BoundingBox.TransformedBy(transform));
+                else if (surface is Triangle triangle)
+                {
+                    box.Add(transform * triangle.Point1);
+                    box.Add(transform * triangle.Point2);
+                    box.Add(transform * triangle.Point3);
+                }
             }
         }
 

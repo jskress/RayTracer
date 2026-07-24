@@ -198,7 +198,9 @@ public class Matrix
     /// <returns>The transformed ray.</returns>
     public Ray Transform(Ray ray)
     {
-        return new Ray(ray.Origin * this, ray.Direction * this);
+        // Moving the ray into a surface's own space says nothing about when it was fired, so the
+        // instant it sees the scene at rides along untouched.
+        return new Ray(ray.Origin * this, ray.Direction * this, ray.TimeIndex);
     }
 
     /// <summary>

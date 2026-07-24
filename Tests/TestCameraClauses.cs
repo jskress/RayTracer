@@ -41,7 +41,13 @@ public class TestCameraClauses
     /// between the two, which is what makes the edge worth measuring.
     /// </para>
     /// </summary>
-    private double[] EdgeProfile(string cameraBody, out string error)
+    private double[] EdgeProfile(string cameraBody, out string error) =>
+        EdgeProfile(cameraBody, "", out error);
+
+    /// <summary>
+    /// The same, with the given extra properties given to the ball -- a motion, most usefully.
+    /// </summary>
+    private double[] EdgeProfile(string cameraBody, string ballBody, out string error)
     {
         string path = Path.Combine(_directory, "scene.igl");
         string output = Path.Combine(_directory, "out.png");
@@ -54,7 +60,8 @@ public class TestCameraClauses
             // surface to come out lit at all.  Where it stands does not matter here, since the
             // ball takes its colour from the ambient term alone.
             "point light { location [0, 0, -5]  color White }\n" +
-            "sphere { material { pigment color [1, 1, 1] ambient 1 diffuse 0 specular 0 } }");
+            "sphere { material { pigment color [1, 1, 1] ambient 1 diffuse 0 specular 0 }\n" +
+            ballBody + " }");
 
         StringWriter captured = new ();
         TextWriter was = Console.Out;
@@ -202,5 +209,89 @@ public class TestCameraClauses
             out string error);
 
         Assert.IsNotNull(error, "\"blur\" without \"samples\" should be an error");
+    }
+
+    /// <summary>
+    /// A camera whose shutter stays open, with everything else left plain, so that a smear can only
+    /// have come from something moving.
+    /// </summary>
+    private const string OpenShutter =
+        "camera { location [0, 0, -5]  look at [0, 0, 0]  shutter 1  blur samples 16 }";
+
+    [TestMethod]
+    public void TestAMovingBallSmearsWhileAStillOneDoesNot()
+    {
+        double[] still = EdgeProfile(OpenShutter, "", out string stillError);
+        double[] moving = EdgeProfile(
+            OpenShutter, "motion { translate [1.5, 0, 0] }", out string movingError);
+
+        Assert.IsNull(stillError);
+        Assert.IsNull(movingError);
+        Assert.IsTrue(SoftCount(moving) > SoftCount(still) + 3,
+            $"a moving ball should smear, but the still one showed {SoftCount(still)} part-lit " +
+            $"pixels and the moving one {SoftCount(moving)}");
+    }
+
+    [TestMethod]
+    public void TestNothingSmearsWhileTheShutterDoesNotLinger()
+    {
+        // The motion is there, but the shutter never opens on it, so the ball is caught in one
+        // place -- the place it starts.
+        double[] plain = EdgeProfile(
+            "camera { location [0, 0, -5]  look at [0, 0, 0] }", "", out _);
+        double[] moving = EdgeProfile(
+            "camera { location [0, 0, -5]  look at [0, 0, 0] }",
+            "motion { translate [1.5, 0, 0] }", out string error);
+
+        Assert.IsNull(error);
+        CollectionAssert.AreEqual(plain, moving,
+            "with the shutter shut, a motion should make no difference at all");
+    }
+
+    [TestMethod]
+    public void TestASmearRepeatsExactly()
+    {
+        double[] first = EdgeProfile(
+            OpenShutter, "motion { translate [1, 0, 0] }", out _);
+        double[] second = EdgeProfile(
+            OpenShutter, "motion { translate [1, 0, 0] }", out _);
+
+        CollectionAssert.AreEqual(first, second);
+    }
+
+    [TestMethod]
+    public void TestAGrowingBallIsNeverSmallerThanItStarted()
+    {
+        // Scaling by nothing means scaling by one, so a ball told to grow to twice its size runs
+        // from its own size up to double it.  Were the scale measured from zero instead it would
+        // start as a speck, and the middle of the picture -- solidly covered at every instant here
+        // -- would come out a washed-out grey instead of white.
+        double[] profile = EdgeProfile(
+            OpenShutter, "motion { scale 2 }", out string error);
+
+        Assert.IsNull(error);
+        Assert.IsTrue(profile.Any(value => value > 0.99),
+            "the middle should be solid, since the ball covers it the whole time it is watched");
+    }
+
+    [TestMethod]
+    public void TestAMotionNeedsATransform()
+    {
+        EdgeProfile(OpenShutter, "motion { }", out string error);
+
+        Assert.IsNotNull(error, "an empty motion should be an error");
+    }
+
+    [TestMethod]
+    public void TestARotationSmearsAPatternedBallWithoutMovingIt()
+    {
+        // A spin is the other motion worth having, and it is the one that shows a turn is measured
+        // by its angle rather than by interpolating the matrix it comes to: the ball stays put, so
+        // its outline is as sharp as ever, while what is painted on it smears.
+        double[] profile = EdgeProfile(
+            OpenShutter, "motion { rotate Y 60 }", out string error);
+
+        Assert.IsNull(error, "a ball should be able to spin where it stands");
+        Assert.IsTrue(profile.Any(value => value > 0.9), "the ball should still be there");
     }
 }

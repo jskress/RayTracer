@@ -146,7 +146,8 @@ public class Scene : NamedThing, IDisposable
 
             return light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                only, GetLightReaching(intersection.OverPoint, only.Direction, only.Distance));
+                only, GetLightReaching(
+                    intersection.OverPoint, only.Direction, only.Distance, intersection.TimeIndex));
         }
 
         Color sum = Colors.Black;
@@ -157,7 +158,8 @@ public class Scene : NamedThing, IDisposable
 
             sum += light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                sample, GetLightReaching(intersection.OverPoint, sample.Direction, sample.Distance));
+                sample, GetLightReaching(
+                    intersection.OverPoint, sample.Direction, sample.Distance, intersection.TimeIndex));
         }
 
         return sum * (1.0 / count);
@@ -196,10 +198,13 @@ public class Scene : NamedThing, IDisposable
     /// <param name="direction">The unit direction from the point toward the light or sample.</param>
     /// <param name="distance">How far off the light or sample is, past which nothing can shade
     /// the point; infinite for a distant light.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at, so
+    /// that a moving thing casts its shadow from where it stands at that instant.</param>
     /// <returns>The fraction of the light's colour that arrives at the point.</returns>
-    public Color GetLightReaching(Point point, Vector direction, double distance)
+    public Color GetLightReaching(
+        Point point, Vector direction, double distance, int timeIndex = 0)
     {
-        Ray ray = new (point, direction);
+        Ray ray = new (point, direction, timeIndex);
         Color reaching = Colors.White;
 
         foreach (Intersection intersection in Intersect(ray))
@@ -295,7 +300,8 @@ public class Scene : NamedThing, IDisposable
         if (remaining < 1 || reflective == 0)
             return Colors.Black;
 
-        Ray reflectedRay = new (intersection.OverPoint, intersection.Reflect);
+        Ray reflectedRay = new (
+            intersection.OverPoint, intersection.Reflect, intersection.TimeIndex);
         Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
 
         // A metal colours what it mirrors, not just its highlight -- it is what makes a gold
@@ -348,7 +354,7 @@ public class Scene : NamedThing, IDisposable
                            intersection.Eye * ratio;
         Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
 
-        Ray refractedRay = new(point, direction);
+        Ray refractedRay = new (point, direction, intersection.TimeIndex);
         Color color = GetColorFor(refractedRay, remaining - 1) * transparency;
 
         // Transparency says how much light gets through; the filter says what colour it comes out.

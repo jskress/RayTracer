@@ -1,0 +1,118 @@
+// Motion blur, and what a shutter that stays open makes of a thing that will not hold still.
+//
+// A ray tracer's camera catches the world frozen: every ray is fired at the same instant, so a
+// thing crossing the frame is drawn as sharply as one standing still.  No camera behaves that way.
+// A shutter is open for a while, and whatever moves while it is open lands on the film in every
+// place it passed through, each for a fraction of the exposure -- so it comes out smeared along its
+// path and, having spread its light over all that ground, fainter than the things beside it.
+//
+// The four balls here all cross the frame; each is given a longer run than the last, and blurs in
+// proportion.  The leftmost holds still, for the sake of the comparison, and the posts stay
+// sharp for the same reason: a shutter left open blurs only what actually moves under it.
+//
+// It is worked out by sampling, as the soft shadows and the depth of field are: the shutter's
+// opening is cut into as many slices as there are samples, each ray is fired at one of them and
+// finds the scene arranged as it stood then, and the results are averaged.  The lens and the
+// shutter draw on one set of samples between them, so a scene asking for both pays for neither
+// twice.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Motion Blur'
+        author 'J. Stephen Kress'
+        description 'Four balls crossing the frame, each given a longer run than the last.'
+    }
+}
+
+background [0.02, 0.02, 0.03]
+
+// The shutter is open for the whole of the motions below, so each ball runs its full course while
+// it is watched.  Thirty-two samples, since a smear wants more of them than a soft shadow does:
+// too few and the blur reads as a row of ghosts rather than a streak.
+camera {
+    location [-0.15, 2.9, -8.6]
+    look at [-0.15, 0.55, 0.4]
+    field of view 50
+    shutter 1
+    blur samples 32
+}
+
+point light {
+    location [-6, 9, -7]
+    color [1, 0.97, 0.92]
+}
+
+point light {
+    location [7, 4, -3]
+    color [0.22, 0.24, 0.3]
+}
+
+// The floor, checkered so there is fine detail for the smears to pass over.
+plane {
+    material {
+        pigment checker { color [0.6, 0.6, 0.64], color [0.14, 0.14, 0.18] scale 1.1 }
+        specular 0.12
+        shininess 22
+    }
+}
+
+// A row of posts well behind, standing still.  They are the measure of the thing: sharp where the
+// balls are not, so it is plain the softness belongs to what moves and not to the picture.
+cube {
+    material { pigment color [0.72, 0.6, 0.45] }
+    scale [0.13, 1.1, 0.13]
+    translate [-3.6, 1.1, 4.5]
+}
+cube {
+    material { pigment color [0.72, 0.6, 0.45] }
+    scale [0.13, 1.1, 0.13]
+    translate [-1.2, 1.1, 4.5]
+}
+cube {
+    material { pigment color [0.72, 0.6, 0.45] }
+    scale [0.13, 1.1, 0.13]
+    translate [1.2, 1.1, 4.5]
+}
+cube {
+    material { pigment color [0.72, 0.6, 0.45] }
+    scale [0.13, 1.1, 0.13]
+    translate [3.6, 1.1, 4.5]
+}
+
+// The four balls, side by side and all the same size, so that the only difference between them is
+// how far each runs while the shutter is open.
+
+// Still, for the comparison: as the camera draws any of them that stops.
+sphere {
+    material { pigment color [0.55, 0.75, 0.95]  specular 0.5  shininess 70 }
+    scale 0.5
+    translate [-3.4, 0.5, 0]
+}
+
+// A short run, so it is plainly a ball yet, only drawn out along the way it goes.
+sphere {
+    material { pigment color [0.9, 0.75, 0.35]  specular 0.5  shininess 70 }
+    scale 0.5
+    translate [-2.4, 0.5, 0]
+    motion { translate [0.55, 0, 0] }
+}
+
+// Twice as far, and it is losing its edges.
+sphere {
+    material { pigment color [0.85, 0.5, 0.3]  specular 0.5  shininess 70 }
+    scale 0.5
+    translate [-0.8, 0.5, 0]
+    motion { translate [1.1, 0, 0] }
+}
+
+// Far enough to be a streak rather than a ball, and fainter with it -- the same light spread over
+// three times the ground.
+sphere {
+    material { pigment color [0.85, 0.35, 0.45]  specular 0.5  shininess 70 }
+    scale 0.5
+    translate [1.3, 0.5, 0]
+    motion { translate [1.8, 0, 0] }
+}

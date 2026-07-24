@@ -29,6 +29,18 @@ public class TransformResolver : ObjectResolver<Matrix>, ICloneable
     /// <param name="variables">The current set of scoped variables.</param>
     public override Matrix Resolve(RenderContext context, Variables variables)
     {
+        return ResolveAt(context, variables, 1);
+    }
+
+    /// <summary>
+    /// This method builds the combined transform as it stands some fraction of the way through
+    /// being applied, which is what a motion asks for at each instant the shutter is open.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="fraction">How much of the transform to apply, from zero to one.</param>
+    public Matrix ResolveAt(RenderContext context, Variables variables, double fraction)
+    {
         if (!_reversed)
         {
             TransformCreators.Reverse();
@@ -37,7 +49,7 @@ public class TransformResolver : ObjectResolver<Matrix>, ICloneable
         }
 
         List<Matrix> transforms = TransformCreators
-            .Select(creator => creator.Resolve(context, variables))
+            .Select(creator => creator.ResolveAt(context, variables, fraction))
             .ToList();
 
         return transforms.IsEmpty()

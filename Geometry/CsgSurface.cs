@@ -53,8 +53,8 @@ public class CsgSurface : Surface
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        Left.PrepareForRendering();
-        Right.PrepareForRendering();
+        Left.PrepareForRendering(SampleTimes);
+        Right.PrepareForRendering(SampleTimes);
 
         if (Material is not null)
         {

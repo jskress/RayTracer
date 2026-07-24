@@ -55,9 +55,13 @@ public class RenderInstruction : Instruction
         using Scene scene = GetScene(variables);
         Camera camera = GetCamera(scene, variables);
 
-        // Give each surface a chance to do any precomputing needed.
+        // Give each surface a chance to do any precomputing needed, telling it the instants the
+        // camera will look at so that anything set moving can work out where it stands at each of
+        // them before the first ray is fired.
+        double[] sampleTimes = camera.SampleTimes;
+
         foreach (Surface surface in scene.Surfaces)
-            surface.PrepareForRendering();
+            surface.PrepareForRendering(sampleTimes);
 
         FinalizeSurfaceData(context, scene.Surfaces);
 

@@ -108,7 +108,7 @@ public class Tube : Surface
                     segment.Material ??= Material;
             }
 
-            _root.PrepareForRendering();
+            _root.PrepareForRendering(SampleTimes);
         }
     }
 

@@ -38,6 +38,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public TransformResolver TransformResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how our surface moves while the shutter is open.
+    /// </summary>
+    public TransformResolver MotionResolver { get; set; }
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value as a surface.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -60,6 +65,12 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
+
+        // A motion is handed over as a recipe rather than a matrix, since how far through it to go
+        // cannot be known until the camera says how many instants it will look at, which is settled
+        // well after this.
+        if (MotionResolver is not null)
+            value.MotionAt = fraction => MotionResolver.ResolveAt(context, variables, fraction);
 
         value.NoShadow |= context.SuppressAllShadows;
 

@@ -12,6 +12,12 @@ public class ScaleCreator : TransformCreator
     /// This method is used to create the appropriate scale matrix, based on the given
     /// values.
     /// </summary>
+    /// <summary>
+    /// Scaling by nothing means scaling by one, so a scale given part way is measured from there
+    /// rather than from zero, which would shrink the thing away to nothing at the outset.
+    /// </summary>
+    protected override double IdentityValue => 1;
+
     /// <param name="context"></param>
     /// <param name="doubles">The array of doubles, if any, our terms resolved to.</param>
     /// <param name="tuples">The array of tuples, if any, our terms resolved to.</param>

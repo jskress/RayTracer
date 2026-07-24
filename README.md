@@ -13,7 +13,7 @@ I want to add.  Once an item is checked, you can assume it's done.
 
 ### General To-Dos:
 
-- [ ] Motion blur.
+- [x] Motion blur.
 
 ### To-Dos for Lights:
 - [x] Area lights/soft shadows.
