@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Graphics;
 
@@ -50,16 +49,11 @@ public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
     /// <returns>The color for the given point within the pixel.</returns>
     private Color Evaluate(Scene scene, int x, int y, double cx, double cy, double shift, int depth)
     {
-        Color center = scene.GetColorFor(
-            Converter.GetRayForPixel(x, y, cx, cy));
-        Color topLeft = scene.GetColorFor(
-            Converter.GetRayForPixel(x, y, cx, cy, -shift, -shift));
-        Color topRight = scene.GetColorFor(
-            Converter.GetRayForPixel(x, y, cx, cy, shift, -shift));
-        Color bottomLeft = scene.GetColorFor(
-            Converter.GetRayForPixel(x, y, cx, cy, -shift, shift));
-        Color bottomRight = scene.GetColorFor(
-            Converter.GetRayForPixel(x, y, cx, cy, shift, shift));
+        Color center = Trace(scene, x, y, cx, cy);
+        Color topLeft = Trace(scene, x, y, cx, cy, -shift, -shift);
+        Color topRight = Trace(scene, x, y, cx, cy, shift, -shift);
+        Color bottomLeft = Trace(scene, x, y, cx, cy, -shift, shift);
+        Color bottomRight = Trace(scene, x, y, cx, cy, shift, shift);
 
         if (depth > 0)
         {

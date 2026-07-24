@@ -30,8 +30,8 @@ background [0.03, 0.03, 0.04]
 // the frame instead of floating in the middle of it.
 camera {
     location [1.1, 4.5, -8.5]
-    look at [1.1, 1.8, 1.5]
-    field of view 60
+    look at [1.11, 1.96, 1.5]
+    field of view 49.8
 }
 
 // The area light: a lit square a good size across, up and to the left, aimed by where it is at
