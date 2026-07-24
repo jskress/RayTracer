@@ -50,10 +50,14 @@ public abstract class TransformCreator : Resolver<Matrix>
     protected virtual double IdentityValue => 0;
 
     /// <summary>
-    /// This property notes whether this transform can be given part way.  All of them can but a
-    /// bare matrix, whose numbers mean nothing on their own.
+    /// This method holds the same thing for transforms whose idea of doing nothing is not one
+    /// number repeated.  A matrix is the only such: its numbers are a grid rather than a list, and
+    /// doing nothing means ones down the diagonal and zeros everywhere else, so which number is
+    /// being measured decides what it is measured from.
     /// </summary>
-    protected virtual bool CanBeGivenInPart => true;
+    /// <param name="index">Which of this transform's numbers is being measured.</param>
+    /// <returns>The value that number takes when the transform does nothing at all.</returns>
+    protected virtual double IdentityValueAt(int index) => IdentityValue;
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value.
@@ -98,22 +102,20 @@ public abstract class TransformCreator : Resolver<Matrix>
         // it always did.
         if (fraction != 1)
         {
-            if (!CanBeGivenInPart)
-            {
-                throw new Exception(
-                    "A matrix cannot be given part way, so it cannot be used as a motion.");
-            }
-
-            doubles = doubles.Select(PartWay).ToArray();
+            doubles = doubles.Select(PartWayAt).ToArray();
             tuples = tuples
                 .Select(tuple => new NumberTuple(
-                    PartWay(tuple.X), PartWay(tuple.Y), PartWay(tuple.Z), tuple.W))
+                    PartWay(tuple.X, IdentityValue), PartWay(tuple.Y, IdentityValue),
+                    PartWay(tuple.Z, IdentityValue), tuple.W))
                 .ToArray();
         }
 
         return CreateTransform(context, doubles, tuples);
 
-        double PartWay(double value) => IdentityValue + (value - IdentityValue) * fraction;
+        double PartWayAt(double value, int index) => PartWay(value, IdentityValueAt(index));
+
+        double PartWay(double value, double identity) =>
+            identity + (value - identity) * fraction;
     }
 
     /// <summary>
