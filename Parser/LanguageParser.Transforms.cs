@@ -12,6 +12,37 @@ namespace RayTracer.Parser;
 public partial class LanguageParser
 {
     /// <summary>
+    /// This method reads the body of a motion block: the transforms that carry a surface from
+    /// where it starts to where it ends up, which are the same transforms it could be placed with
+    /// in the first place.
+    /// </summary>
+    /// <returns>The resolver for the motion.</returns>
+    private TransformResolver ParseMotionClause()
+    {
+        TransformResolver resolver = new ();
+
+        while (!CurrentParser.IsNext(BounderToken.CloseBrace))
+        {
+            int before = resolver.TransformCreators.Count;
+
+            ParseTransformClause(resolver);
+
+            // A zero-or-more clause reports success having read nothing at all, so without this
+            // anything that is not a transform would spin here rather than be complained about.
+            if (resolver.TransformCreators.Count == before)
+                throw CreateUnexpectedInputException("Expecting a transform here.");
+        }
+
+        // Make sure we eat the closing brace.
+        CurrentParser.GetNextToken();
+
+        if (resolver.TransformCreators.Count == 0)
+            throw CreateUnexpectedInputException("A motion needs at least one transform.");
+
+        return resolver;
+    }
+
+    /// <summary>
     /// This method is used to parse a clause of zero or more transformations.
     /// </summary>
     private TransformResolver ParseTransformClause(TransformResolver resolver = null)

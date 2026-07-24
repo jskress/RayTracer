@@ -48,7 +48,7 @@ public abstract class PixelRenderer
         Scene scene, int x, int y, double centerX = 0.5, double centerY = 0.5,
         double shiftX = 0, double shiftY = 0)
     {
-        int count = Converter.Lens.SampleCount;
+        int count = Converter.Sampler.SampleCount;
 
         if (count == 1)
             return scene.GetColorFor(Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY));

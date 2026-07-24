@@ -111,6 +111,9 @@ public partial class LanguageParser
             case "transform":
                 resolver.TransformResolver = GetTransformResolver(clause);
                 break;
+            case "motion":
+                resolver.MotionResolver = ParseMotionClause();
+                break;
             default:
                 throw new Exception($"Internal error: unknown {noun} property found: {field}.");
         }

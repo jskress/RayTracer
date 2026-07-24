@@ -40,13 +40,13 @@ public partial class LanguageParser
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
-            'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
+            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
+            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
@@ -208,7 +208,7 @@ public partial class LanguageParser
         [
             namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause |
             { aperture > _expression } | focalClause | blurSamplesClause |
-            { seed > _expression }
+            { shutter > _expression } | { seed > _expression }
         ] ?? 'Expecting a camera property here.'
 
         // Light clauses.  One opener serves all three sorts, told apart by the word before
@@ -398,10 +398,14 @@ public partial class LanguageParser
             bounded > by ?? 'Expecting "by" to follow "bounded" here.' > _expression >
             comma ?? 'Expecting a comma here.' > _expression
         }
+        startMotionClause:
+        {
+            motion > openBrace ?? 'Expecting an open brace to follow "motion" here.'
+        }
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
-            boundedByClause | withSeedClause
+            boundedByClause | withSeedClause | startMotionClause
         ]
         
         // Plane clause.

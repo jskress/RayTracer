@@ -96,7 +96,7 @@ public class Superellipsoid : Surface
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         double length = ray.Direction.Magnitude;
-        Ray localRay = new (ray.Origin, ray.Direction.Unit);
+        Ray localRay = new (ray.Origin, ray.Direction.Unit, ray.TimeIndex);
         (double tMin, double tMax) = _localBox.GetIntersections(localRay);
 
         if (tMin > tMax || tMax < DepthTolerance)

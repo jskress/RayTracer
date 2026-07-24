@@ -79,6 +79,9 @@ public partial class LanguageParser
             case "blur":
                 resolver.BlurSamplesResolver = new TermResolver<int> { Term = term };
                 break;
+            case "shutter":
+                resolver.ShutterResolver = new TermResolver<double> { Term = term };
+                break;
             case "seed":
                 resolver.SeedResolver = new TermResolver<int?> { Term = term };
                 break;

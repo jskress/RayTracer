@@ -59,8 +59,17 @@ public class Camera : NamedThing
     public Point FocalPoint { get; set; }
 
     /// <summary>
-    /// This property holds how many places across the lens each ray is taken from.  It costs a ray
-    /// apiece, and too few show as grain in the blurred parts rather than as smooth softness.
+    /// This property holds how long the shutter stays open, against the motions the scene gives its
+    /// surfaces: at one, a moving thing runs the whole of its motion while the shutter is open, and
+    /// at a half it gets half way.  It is zero by default, a shutter that does not linger, so
+    /// nothing smears however it is set moving.
+    /// </summary>
+    public double Shutter { get; set; }
+
+    /// <summary>
+    /// This property holds how many samples the camera takes.  It costs a ray apiece, and too few
+    /// show as grain in the blurred parts rather than as smooth softness.  The lens and the shutter
+    /// share the one set of them, so asking for both costs no more rays than asking for either.
     /// </summary>
     public int BlurSamples { get; set; } = 16;
 
@@ -74,6 +83,25 @@ public class Camera : NamedThing
     /// This property provides the view transformation that the camera represents.
     /// </summary>
     public Matrix Transform => GetTransform();
+
+    /// <summary>
+    /// This property provides the places this camera looks from and the instants it looks at.  It
+    /// is made once and shared, since the surfaces are told where to stand at each of those
+    /// instants before the render begins, and must be told about the very same ones the rays will
+    /// go on to ask for.
+    /// </summary>
+    public CameraSampler Sampler => _sampler ??= new CameraSampler(
+        Aperture, GetFocalDistance(), Shutter, BlurSamples, Seed);
+
+    /// <summary>
+    /// This property provides how far through the shutter's opening each sample looks.
+    /// </summary>
+    public double[] SampleTimes => Enumerable
+        .Range(0, Sampler.SampleCount)
+        .Select(Sampler.TimeFractionFor)
+        .ToArray();
+
+    private CameraSampler _sampler;
 
     /// <summary>
     /// This method works out how far ahead of the camera the plane of sharp focus lies.  A scene
@@ -103,8 +131,7 @@ public class Camera : NamedThing
     {
         Canvas canvas = context.NewCanvas;
         PixelToRayConverter converter = new (
-            context, FieldOfView, GetTransform(), new Lens(Aperture, GetFocalDistance(),
-                BlurSamples, Seed));
+            context, FieldOfView, GetTransform(), Sampler);
         PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
         context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);

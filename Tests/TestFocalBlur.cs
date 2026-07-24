@@ -18,7 +18,7 @@ public class TestFocalBlur
     [TestMethod]
     public void TestAPinholeTakesOneSampleAtTheCentre()
     {
-        Lens pinhole = new (0, 5);
+        CameraSampler pinhole = new (0, 5);
 
         Assert.AreEqual(1, pinhole.SampleCount, "no aperture means no lens to spread across");
         Assert.AreEqual((0.0, 0.0), pinhole.OffsetFor(0));
@@ -29,7 +29,7 @@ public class TestFocalBlur
     {
         // Blur samples alone do not open the lens; without a width there is nothing to gather
         // across, and the camera must stay on the single-ray path.
-        Lens lens = new (0, 5, 64);
+        CameraSampler lens = new (0, 5, 0, 64);
 
         Assert.AreEqual(1, lens.SampleCount);
     }
@@ -37,10 +37,10 @@ public class TestFocalBlur
     [TestMethod]
     public void TestAWideLensTakesTheSamplesItWasAskedFor()
     {
-        Assert.AreEqual(16, new Lens(0.5, 5).SampleCount);
-        Assert.AreEqual(32, new Lens(0.5, 5, 32).SampleCount);
+        Assert.AreEqual(16, new CameraSampler(0.5, 5).SampleCount);
+        Assert.AreEqual(32, new CameraSampler(0.5, 5, 0, 32).SampleCount);
         // Even asked for none, a ray has to come from somewhere.
-        Assert.AreEqual(1, new Lens(0.5, 5, 0).SampleCount);
+        Assert.AreEqual(1, new CameraSampler(0.5, 5, 0, 0).SampleCount);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class TestFocalBlur
     {
         // The offsets are given on the unit disc and scaled by the aperture when a ray is built,
         // so every one of them must lie within a unit of the centre.
-        Lens lens = new (0.5, 5, 64);
+        CameraSampler lens = new (0.5, 5, 0, 64);
 
         for (int index = 0; index < lens.SampleCount; index++)
         {
@@ -64,7 +64,7 @@ public class TestFocalBlur
     {
         // A pattern that clumped in the middle would blur unevenly, so check the samples reach out
         // toward the rim and land on all four sides of the centre.
-        Lens lens = new (1, 5, 64);
+        CameraSampler lens = new (1, 5, 0, 64);
         double furthest = 0;
         bool left = false, right = false, below = false, above = false;
 
@@ -86,9 +86,9 @@ public class TestFocalBlur
     [TestMethod]
     public void TestTheSameSeedGivesTheSameLens()
     {
-        Lens first = new (0.5, 5, 32, 7);
-        Lens second = new (0.5, 5, 32, 7);
-        Lens other = new (0.5, 5, 32, 8);
+        CameraSampler first = new (0.5, 5, 0, 32, 7);
+        CameraSampler second = new (0.5, 5, 0, 32, 7);
+        CameraSampler other = new (0.5, 5, 0, 32, 8);
         bool anyDiffer = false;
 
         for (int index = 0; index < 32; index++)
@@ -112,12 +112,12 @@ public class TestFocalBlur
         const double focalDistance = 4;
 
         PixelToRayConverter mechanics = new (
-            Context(), Math.PI / 2, Matrix.Identity, new Lens(0.4, focalDistance, 16));
+            Context(), Math.PI / 2, Matrix.Identity, new CameraSampler(0.4, focalDistance, 0, 16));
         Point meeting = null;
 
-        for (int index = 0; index < mechanics.Lens.SampleCount; index++)
+        for (int index = 0; index < mechanics.Sampler.SampleCount; index++)
         {
-            Ray ray = mechanics.GetRayForPixel(60, 30, lensIndex: index);
+            Ray ray = mechanics.GetRayForPixel(60, 30, sampleIndex: index);
             // Walk each ray out to the focal plane, which lies square across the way the camera
             // looks, and see where it lands.
             double t = focalDistance / -ray.Direction.Z;
@@ -137,13 +137,13 @@ public class TestFocalBlur
     public void TestTheRaysLeaveFromDifferentPlacesAcrossTheLens()
     {
         PixelToRayConverter mechanics = new (
-            Context(), Math.PI / 2, Matrix.Identity, new Lens(0.4, 4, 16));
-        Point first = mechanics.GetRayForPixel(60, 30, lensIndex: 0).Origin;
+            Context(), Math.PI / 2, Matrix.Identity, new CameraSampler(0.4, 4, 0, 16));
+        Point first = mechanics.GetRayForPixel(60, 30, sampleIndex: 0).Origin;
         bool anyMoved = false;
 
-        for (int index = 1; index < mechanics.Lens.SampleCount; index++)
+        for (int index = 1; index < mechanics.Sampler.SampleCount; index++)
         {
-            Point origin = mechanics.GetRayForPixel(60, 30, lensIndex: index).Origin;
+            Point origin = mechanics.GetRayForPixel(60, 30, sampleIndex: index).Origin;
 
             // The lens is a disc facing the way the camera looks, so no sample may sit off it.
             Assert.AreEqual(0, origin.Z, 1e-9, "a lens sample left the plane of the lens");

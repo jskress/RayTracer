@@ -47,7 +47,12 @@ public class CameraResolver : NamedObjectResolver<Camera>
     public Resolver<Point> FocalPointResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for how many places across the lens each ray is taken from.
+    /// This property holds the resolver for how long our camera's shutter stays open.
+    /// </summary>
+    public Resolver<double> ShutterResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many samples our camera takes.
     /// </summary>
     public Resolver<int> BlurSamplesResolver { get; set; }
 
@@ -71,6 +76,7 @@ public class CameraResolver : NamedObjectResolver<Camera>
         ApertureResolver.AssignTo(value, target => target.Aperture, context, variables);
         FocalDistanceResolver.AssignTo(value, target => target.FocalDistance, context, variables);
         FocalPointResolver.AssignTo(value, target => target.FocalPoint, context, variables);
+        ShutterResolver.AssignTo(value, target => target.Shutter, context, variables);
         BlurSamplesResolver.AssignTo(value, target => target.BlurSamples, context, variables);
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
 
