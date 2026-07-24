@@ -167,8 +167,14 @@ public class RenderInstruction : Instruction
 
         if (name == null)
         {
-            if (items.Count != 1)
-                throw new Exception($"No {noun} name specified to render and multiple {noun}as exist.");
+            if (items.Count == 0)
+                throw new Exception($"No {noun} was defined to render.");
+
+            if (items.Count > 1)
+            {
+                throw new Exception(
+                    $"No {noun} name specified to render, and more than one {noun} is defined.");
+            }
 
             return items.First();
         }

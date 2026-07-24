@@ -1,0 +1,20 @@
+// The stage the light examples share: a checkered floor, a ball and a post to catch shadows.
+// Included by the examples rather than repeated in each of them.
+plane {
+    material {
+        pigment checker { color [0.62, 0.62, 0.66], color [0.16, 0.16, 0.2] scale 1.2 }
+        specular 0.1
+        shininess 20
+    }
+}
+
+sphere {
+    material { pigment color [0.8, 0.8, 0.85]  specular 0.4  shininess 50 }
+    translate [1.4, 1, 0]
+}
+
+cube {
+    material { pigment color [0.75, 0.55, 0.4] }
+    scale [0.2, 1.2, 0.2]
+    translate [-1.5, 1.2, 0.6]
+}

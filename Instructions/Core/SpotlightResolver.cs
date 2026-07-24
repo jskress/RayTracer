@@ -36,7 +36,7 @@ public class SpotlightResolver : NamedObjectResolver<Spotlight>
     public Resolver<double> TightnessResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the light's colour.
+    /// This property holds the resolver for the light's color.
     /// </summary>
     public Resolver<Color> ColorResolver { get; set; }
 

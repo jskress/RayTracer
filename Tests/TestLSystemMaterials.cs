@@ -73,7 +73,7 @@ public class TestLSystemMaterials
     }
 
     [TestMethod]
-    public void TestABoundCharacterColoursWhatFollowsIt()
+    public void TestABoundCharacterColorsWhatFollowsIt()
     {
         // The heart of it.  'B' draws nothing itself; it changes what the segments after it are
         // drawn with, and leaves the ones before it alone.
@@ -87,10 +87,10 @@ public class TestLSystemMaterials
     }
 
     [TestMethod]
-    public void TestAMaterialNamedAfterASegmentDoesNotColourIt()
+    public void TestAMaterialNamedAfterASegmentDoesNotColorIt()
     {
         // The mistake that is easy to make, and worth pinning down because the plant simply comes
-        // out the wrong colour rather than failing: a material rune colours what follows it, so one
+        // out the wrong color rather than failing: a material rune colors what follows it, so one
         // written after the segment it was meant for is too late.
         Material blossom = MaterialOf("blossom");
         LSystem lsystem = Prepare("FB", [('B', blossom)]);
@@ -101,7 +101,7 @@ public class TestLSystemMaterials
     [TestMethod]
     public void TestAMaterialSetInsideABranchDoesNotEscapeIt()
     {
-        // What makes this usable at all: colouring one limb must not colour its neighbours.  The
+        // What makes this usable at all: coloring one limb must not color its neighbors.  The
         // branch inherits what was in force where it forked and hands it back when it closes, so
         // the segment after the bracket is drawn with what came before it.
         Material blossom = MaterialOf("blossom");
@@ -127,7 +127,7 @@ public class TestLSystemMaterials
     }
 
     [TestMethod]
-    public void TestDepthMaterialsColourByHowFarBranchedTheTurtleIs()
+    public void TestDepthMaterialsColorByHowFarBranchedTheTurtleIs()
     {
         // The trunk draws with the first, a branch off it with the second.  This is the thing that
         // would otherwise need a production rule written per level.
@@ -185,7 +185,7 @@ public class TestLSystemMaterials
     {
         // Binding a character has the last word over whatever else it might have meant, so that a
         // scene is never told it may not use some letter because the turtle had claimed it.  'F'
-        // bound to a material stops drawing and starts colouring.
+        // bound to a material stops drawing and starts coloring.
         Material blossom = MaterialOf("blossom");
         LSystem lsystem = Prepare("FF", [('F', blossom)]);
 
@@ -231,8 +231,8 @@ public class TestLSystemMaterials
     public void TestADepthMaterialDoesNotReachTheLeaves()
     {
         // The counterpart, and the one that matters more in practice: a depth binding describes the
-        // wood out at that fork, so painting the leaves growing from it the colour of that wood
-        // would be a strange reading -- and in a real tree it turns the whole crown the colour of
+        // wood out at that fork, so painting the leaves growing from it the color of that wood
+        // would be a strange reading -- and in a real tree it turns the whole crown the color of
         // its own twigs.  Only a material named outright reaches a leaf.
         Material twig = MaterialOf("bark");
         LSystem lsystem = Prepare("F[F~]", depthMaterials: [twig, twig]);
@@ -261,7 +261,7 @@ public class TestLSystemMaterials
     [TestMethod]
     public void TestTheDefaultLeafIsStillGreenWhenNoMaterialIsNamed()
     {
-        // ...and the fallback has to survive, or every bare tree would go the colour of its own
+        // ...and the fallback has to survive, or every bare tree would go the color of its own
         // bark the moment this changed.
         LSystem lsystem = Prepare("~");
         Surface stamped = lsystem.Surfaces.Last();
@@ -274,7 +274,7 @@ public class TestLSystemMaterials
     public void TestAStampedSurfaceKeepsItsOwnMaterial()
     {
         // A surface named after a '~' brought a material with it, and that is the more specific
-        // instruction, so the turtle's does not overwrite it.  Otherwise colouring a stem would
+        // instruction, so the turtle's does not overwrite it.  Otherwise coloring a stem would
         // silently repaint every leaf hanging off it.
         Material blossom = MaterialOf("blossom");
         Material leafOwn = MaterialOf("leaf");

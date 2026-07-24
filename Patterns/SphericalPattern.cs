@@ -4,7 +4,7 @@ namespace RayTracer.Patterns;
 
 /// <summary>
 /// This class provides the spherical pattern: a single falloff from the origin out to the unit
-/// sphere, 1 at the centre and 0 at that surface and beyond.  It is the sibling of
+/// sphere, 1 at the center and 0 at that surface and beyond.  It is the sibling of
 /// <see cref="PlanarPattern"/> and <see cref="BoxedPattern"/>, measuring the same clipped
 /// distance about a different shape.
 ///

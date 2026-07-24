@@ -9,6 +9,7 @@ background Cyan
 camera {
 	location [0, 2, -3]
 	look at [0, 1, 2]
+	field of view 90
 }
 
 point light {

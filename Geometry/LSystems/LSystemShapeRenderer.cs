@@ -50,9 +50,9 @@ public abstract class LSystemShapeRenderer
         { CutOff, TurtleCommand.CutOffBranch },
         { new Rune('!'), TurtleCommand.DecreaseDiameter }
         // "'" - Increment color index.  Deliberately not implemented, rather than merely missing:
-        // it steps an integer index into a colour *table*, and this ray tracer has no palette
+        // it steps an integer index into a color *table*, and this ray tracer has no palette
         // concept at all -- supporting it would mean inventing one purely to serve a legacy
-        // command, bolted onto a strictly more expressive material system.  Vary a plant's colour
+        // command, bolted onto a strictly more expressive material system.  Vary a plant's color
         // with a named surface after a '~' instead.
         // '%' - Cut off the remainder of the branch.
     };
@@ -109,7 +109,7 @@ public abstract class LSystemShapeRenderer
     /// <summary>
     /// This property holds the material each character the production may carry stands for, so a
     /// rune met in the walk sets what is drawn from there on.  This is the honest replacement for
-    /// ABOP's <c>'</c>, which stepped an index into a colour table: the idea was always "change
+    /// ABOP's <c>'</c>, which stepped an index into a color table: the idea was always "change
     /// what I am drawing with", and a material says that far better than a palette entry.
     /// </summary>
     internal Dictionary<Rune, Material> MaterialBindings { get; } = new ();
@@ -117,7 +117,7 @@ public abstract class LSystemShapeRenderer
     /// <summary>
     /// This property holds the recipe for the green the built-in leaf falls back on, or <c>null</c>
     /// when the scene named a leaf of its own and so has no use for it.  It is consulted only after
-    /// every other way of colouring a leaf has come up empty.
+    /// every other way of coloring a leaf has come up empty.
     /// </summary>
     internal Func<Material> DefaultLeafMaterialFactory { get; set; }
 
@@ -497,7 +497,7 @@ public abstract class LSystemShapeRenderer
         // material named by a character reaches a leaf but one bound to a branching depth does not.
         // The two are saying different things.  "depth 3 -> twig" describes the wood out at the
         // third fork; it would be a strange reading of it to paint the leaves growing from that
-        // wood the colour of the wood, and letting it do so turns a whole tree the colour of its
+        // wood the color of the wood, and letting it do so turns a whole tree the color of its
         // own twigs.  A character, by contrast, is put at one chosen point in a production, and
         // whatever is drawn or stamped after it is what the author meant it for.  So a shoot may
         // carry a leaf greener than the one beside it by naming a material just before its '~'.

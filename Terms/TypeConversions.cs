@@ -46,7 +46,7 @@ internal static class TypeConversions
         //
         // This has to come first.  A Nullable<T> reports itself as a value type, so the null
         // guard below would otherwise turn away the very value only a nullable can take; and
-        // nothing further down recognises one either, since the tests there are all for exact
+        // nothing further down recognizes one either, since the tests there are all for exact
         // types -- Nullable<int> is not typeof(int), so a nullable int fell past every branch to
         // the failure at the end.  That is what left every "seed" in the DSL unusable.
         Type underlyingType = Nullable.GetUnderlyingType(targetType);

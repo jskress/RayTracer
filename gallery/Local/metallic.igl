@@ -2,14 +2,14 @@
 // the left one is left at the default (0) and the right one is fully metallic.
 //
 // At a dielectric surface -- plastic, glass, paint -- light reflects before the pigment absorbs
-// anything, so what bounces off keeps the colour of the light: a white lamp leaves a white
+// anything, so what bounces off keeps the color of the light: a white lamp leaves a white
 // highlight, and a mirror finish throws back the scene unchanged.  A metal is a conductor, and its
-// reflectance is itself wavelength-dependent, so what bounces off takes the colour of the metal.
+// reflectance is itself wavelength-dependent, so what bounces off takes the color of the metal.
 // Without "metallic", gold renders as yellow plastic: a yellow surface wearing a white glint and
 // mirroring a scene it has not tinted at all.
 //
 // Both spheres are reflective and the floor is checkered, so there is something legible for them
-// to mirror: "metallic" governs the colour of the reflection as much as of the highlight, and the
+// to mirror: "metallic" governs the color of the reflection as much as of the highlight, and the
 // mirrored checks tell that story more plainly than the highlight does.  Compare the reflected
 // squares -- white on the left, gold on the right.
 
@@ -57,7 +57,7 @@ sphere {
     translate [-1.3, 1.1, 0]
 }
 
-// RIGHT: fully metallic.  The highlight and the mirrored scene both take the gold's own colour.
+// RIGHT: fully metallic.  The highlight and the mirrored scene both take the gold's own color.
 sphere {
     material {
         pigment Gold

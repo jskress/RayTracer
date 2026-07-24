@@ -17,7 +17,7 @@ public class FontsOptions
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool ListFonts { get; set; }
 
-    [Option('g', "--show-glyphs-for", Required = false, SetName = "glyphs",
+    [Option('g', "show-glyphs-for", Required = false, SetName = "glyphs",
         HelpText = "Shows information about all the glyphs in the indicated font face.")]
     public string ShowGlyphsFor
     {
@@ -38,7 +38,7 @@ public class FontsOptions
     /// </summary>
     public FaceIdentifier ShowGlyphs { get; private set; }
 
-    [Option('k', "--show-kerning-for", Required = false, SetName = "kerning",
+    [Option('k', "show-kerning-for", Required = false, SetName = "kerning",
         HelpText = "Shows kerning information stored in the font catalog for the indicated font face.")]
     public string ShowKerningFor
     {
@@ -54,7 +54,7 @@ public class FontsOptions
         }
     }
 
-    [Option('f', "--fetch", Required = false, SetName = "fetch",
+    [Option('f', "fetch", Required = false, SetName = "fetch",
         HelpText = "Fetches a font face from Google Fonts.")]
     public string FetchGoogleFontFace
     {
@@ -75,7 +75,7 @@ public class FontsOptions
     /// </summary>
     public FaceIdentifier FetchFontFace { get; private set; }
 
-    [Option('i', "--import", Required = false, SetName = "import",
+    [Option('i', "import", Required = false, SetName = "import",
         HelpText = "Imports a local true type file as a font face.")]
     public string ImportLocalFontFace
     {
@@ -109,7 +109,7 @@ public class FontsOptions
     /// </summary>
     public FaceIdentifier ShowKerning { get; private set; }
 
-    [Option('a', "--add-kerning-for", Required = false, SetName = "add-kerning",
+    [Option('a', "add-kerning-for", Required = false, SetName = "add-kerning",
         HelpText = "Adds a kerning pair to the font catalog for the indicated font face.  Requires the --pair option.")]
     public string AddKerningFor
     {
@@ -130,7 +130,7 @@ public class FontsOptions
     /// </summary>
     public FaceIdentifier AddKerningPair { get; private set; }
 
-    [Option('d', "--remove-kerning-for", Required = false, SetName = "remove-kerning",
+    [Option('d', "remove-kerning-for", Required = false, SetName = "remove-kerning",
         HelpText = "Removes a kerning pair from the font catalog for the indicated font face.  Requires the --pair option.")]
     public string RemoveKerningFor
     {
@@ -151,7 +151,7 @@ public class FontsOptions
     /// </summary>
     public FaceIdentifier RemoveKerningPair { get; private set; }
 
-    [Option('p', "--pair", Required = false,
+    [Option('p', "pair", Required = false,
         HelpText = "Specifies the details of the kerning pair to add to, or remove from, the font catalog for the indicated font face.  Must be specified with the --add-kerning-for or --remove-kerning-pair option.")]
     public string KerningPairToAdd
     {
@@ -171,7 +171,7 @@ public class FontsOptions
     /// </summary>
     public KerningPair KerningPair { get; private set; }
 
-    [Option('r', "--remove", Required = false,
+    [Option('r', "remove", Required = false,
         HelpText = "Remove a font face from the ray tracer's font catalog.")]
     public string RemoveFontFaceFromCatalog
     {

@@ -20,13 +20,13 @@ public class Interior
 
     /// <summary>
     /// This property holds how much of the light passing through takes on the surface's own
-    /// colour, between 0 and 1.
+    /// color, between 0 and 1.
     /// <para>
-    /// At 0 -- the default, and the only behaviour available before this existed -- light passes
-    /// through unaltered, however the surface is coloured: a red pane merely dims what is behind
+    /// At 0 -- the default, and the only behavior available before this existed -- light passes
+    /// through unaltered, however the surface is colored: a red pane merely dims what is behind
     /// it rather than reddening it.  That is a real effect, and it is what thin gauze or dust on
     /// glass does, but it is not what glass does.  Raising this toward 1 filters what passes
-    /// through by the surface's colour, so that a red pane makes what is behind it red.  It is the
+    /// through by the surface's color, so that a red pane makes what is behind it red.  It is the
     /// difference between POV-Ray's <c>transmit</c> and its <c>filter</c>, and the reason stained
     /// glass stains.
     /// </para>
@@ -38,19 +38,19 @@ public class Interior
     /// measured in the scene's own units.
     /// <para>
     /// Where <see cref="Filter"/> is charged once at each surface crossed, this is charged by the
-    /// distance travelled between them, following Beer's law, so that thick glass is darker than
+    /// distance traveled between them, following Beer's law, so that thick glass is darker than
     /// thin glass of the very same stuff.  A clarity of 2 means light has faded to about a third of
     /// itself after travelling 2 units, and to a ninth after 4.  The default is infinite: light
     /// crosses any distance untouched, which is what every scene written before this existed
     /// assumes.  A clarity of 0 is the other extreme and lets nothing through at all.
     /// </para>
     /// <para>
-    /// This is deliberately colourless, unlike POV-Ray's <c>fade_colour</c>: what colour deep
+    /// This is deliberately colorless, unlike POV-Ray's <c>fade_color</c>: what color deep
     /// substance takes on is <see cref="Filter"/>'s business, and keeping the two apart means the
     /// tint can be set once and the depth tuned without disturbing it.
     /// </para>
     /// <para>
-    /// The distance travelled is taken to be the distance between the surface a ray entered by and
+    /// The distance traveled is taken to be the distance between the surface a ray entered by and
     /// the one it leaves by, which is true of a closed solid and is what this is for.  Setting it
     /// on something with no inside -- a plane, a disc, a lone triangle -- has nothing sensible to
     /// measure, and on solids that overlap or nest it measures only the nearest one.
@@ -60,15 +60,15 @@ public class Interior
 
     /// <summary>
     /// This method returns the amount by which light passing through a surface is tinted by that
-    /// surface's own colour, as a factor to multiply the light by.
+    /// surface's own color, as a factor to multiply the light by.
     /// </summary>
-    /// <param name="surfaceColor">The colour of the surface at the point light crossed it.</param>
+    /// <param name="surfaceColor">The color of the surface at the point light crossed it.</param>
     /// <returns>The tint to apply, which is white when no filtering is called for.</returns>
     public Color GetFilterTint(Color surfaceColor)
     {
-        // A lerp from white -- light through untouched -- toward the surface's colour.  This is
+        // A lerp from white -- light through untouched -- toward the surface's color.  This is
         // the same shape as Material.GetMetallicTint() on purpose, so that the two properties that
-        // tint by a surface's own colour read alike.
+        // tint by a surface's own color read alike.
         return Filter <= 0
             ? Colors.White
             : Colors.White + (surfaceColor - Colors.White) * Filter;
@@ -115,10 +115,10 @@ public class Interior
     }
 
     /// <summary>
-    /// This method returns the amount by which light fades over the given distance travelled
+    /// This method returns the amount by which light fades over the given distance traveled
     /// through the substance, as a factor to multiply the light by.
     /// </summary>
-    /// <param name="distance">How far the light travelled through the substance.</param>
+    /// <param name="distance">How far the light traveled through the substance.</param>
     /// <returns>The fade to apply, which is 1 when the substance does not fade light at all.</returns>
     public double GetFadeOver(double distance)
     {

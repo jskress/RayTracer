@@ -21,6 +21,7 @@ background [0.05, 0.05, 0.07]
 camera {
     location [0, 2.85, -6.9]
     look at [0, 0.62, -0.4]
+    field of view 90
 }
 
 point light { location [-7, 9, -9] }
@@ -113,7 +114,7 @@ sphere {
     translate [-2.75, 1.15, -2.6]
 }
 
-// And the same pattern driving the colour and the roughening at once, each with its own scale --
+// And the same pattern driving the color and the roughening at once, each with its own scale --
 // which is the reason the two are kept apart rather than sharing one pattern.
 sphere {
     material {

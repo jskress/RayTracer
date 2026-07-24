@@ -90,12 +90,12 @@ public class TestLightClauses
     [TestMethod]
     public void TestAPlainLightLightsTheWholeFloor()
     {
-        // A lamp overhead lights the floor from the centre right out to the edge, since nothing
+        // A lamp overhead lights the floor from the center right out to the edge, since nothing
         // bounds where its light may fall.
         Canvas image = Render("light { location [0, 12, 0] color White }", out string error);
 
         Assert.IsNull(error);
-        Assert.IsTrue(BrightnessAcross(image, 0.5) > 0.5, "the centre should be lit");
+        Assert.IsTrue(BrightnessAcross(image, 0.5) > 0.5, "the center should be lit");
         Assert.IsTrue(BrightnessAcross(image, 0.08) > 0.3, "the edge should be lit too");
     }
 
@@ -109,7 +109,7 @@ public class TestLightClauses
             out string error);
 
         Assert.IsNull(error);
-        Assert.IsTrue(BrightnessAcross(image, 0.5) > 0.5, "the centre of the pool should be lit");
+        Assert.IsTrue(BrightnessAcross(image, 0.5) > 0.5, "the center of the pool should be lit");
         Assert.IsTrue(BrightnessAcross(image, 0.08) < 0.05, "outside the cone should be dark");
     }
 
@@ -123,12 +123,12 @@ public class TestLightClauses
 
         Assert.IsNull(error);
 
-        double centre = BrightnessAcross(image, 0.5);
+        double center = BrightnessAcross(image, 0.5);
         double edge = BrightnessAcross(image, 0.12);
 
-        Assert.IsTrue(centre > 0.5, "the floor should be lit");
-        Assert.IsTrue(Math.Abs(centre - edge) < 0.05,
-            $"a parallel light should light a flat floor evenly, but centre {centre:F2} vs edge {edge:F2}");
+        Assert.IsTrue(center > 0.5, "the floor should be lit");
+        Assert.IsTrue(Math.Abs(center - edge) < 0.05,
+            $"a parallel light should light a flat floor evenly, but center {center:F2} vs edge {edge:F2}");
     }
 
     [TestMethod]
@@ -157,7 +157,7 @@ public class TestLightClauses
     /// Renders a small ball hanging over a floor, lit by the given light from one side and viewed
     /// from straight above, then reads the row of brightnesses that runs through the middle of the
     /// ball's shadow.  A hard light gives a row that jumps from lit to dark and back; a soft one
-    /// eases through greys at the edges of the shadow.
+    /// eases through grays at the edges of the shadow.
     /// </summary>
     private double[] ShadowProfile(string lightBody, out string error)
     {
@@ -214,10 +214,10 @@ public class TestLightClauses
     }
 
     /// <summary>
-    /// Counts how many samples in the row fall in the grey middle, neither nearly dark nor nearly
+    /// Counts how many samples in the row fall in the gray middle, neither nearly dark nor nearly
     /// lit.  A soft shadow has many such; a hard one has almost none.
     /// </summary>
-    private static int GreyCount(double[] profile) =>
+    private static int GrayCount(double[] profile) =>
         profile.Count(value => value is > 0.15 and < 0.75);
 
     [TestMethod]
@@ -235,8 +235,8 @@ public class TestLightClauses
     public void TestAnAreaLightSoftensTheShadow()
     {
         // The test is the softening itself, told by comparing the same scene under a point light
-        // and under an area light centred at the same place.  Both throw the ball's shadow across
-        // the same row and light the ball the same way, so what more grey the area light shows is
+        // and under an area light centerd at the same place.  Both throw the ball's shadow across
+        // the same row and light the ball the same way, so what more gray the area light shows is
         // the penumbra it adds and nothing else -- which sidesteps the ball's own curved shading,
         // that both share and neither should be judged by.
         double[] hard = ShadowProfile(
@@ -248,9 +248,9 @@ public class TestLightClauses
         Assert.IsNull(hardError);
         Assert.IsNull(softError);
         Assert.IsTrue(soft.Any(value => value < 0.1), "the soft shadow should still have a dark core");
-        Assert.IsTrue(GreyCount(soft) > GreyCount(hard) + 6,
+        Assert.IsTrue(GrayCount(soft) > GrayCount(hard) + 6,
             $"the area light should widen the shadow's edge into a penumbra, but the point light " +
-            $"showed {GreyCount(hard)} grey pixels and the area light {GreyCount(soft)}");
+            $"showed {GrayCount(hard)} gray pixels and the area light {GrayCount(soft)}");
     }
 
     [TestMethod]

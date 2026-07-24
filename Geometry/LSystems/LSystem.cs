@@ -47,7 +47,7 @@ public class LSystem : Group
 
     /// <summary>
     /// This property notes whether <see cref="LeafFactory"/> is still the built-in leaf rather than
-    /// one the scene named.  It matters only for colour: the built-in leaf carries a green to fall
+    /// one the scene named.  It matters only for color: the built-in leaf carries a green to fall
     /// back on, so that a bare tree reads as leaves rather than as bark, and that green is the last
     /// thing consulted.  A leaf the scene named has no such fallback -- if the scene left it bare,
     /// it meant it to inherit like anything else.
@@ -64,13 +64,13 @@ public class LSystem : Group
     /// <summary>
     /// This property holds the material each character in the production stands for.  Meeting one
     /// changes what the turtle draws with from there on, and a branch gives the change back when
-    /// it closes, so a limb may be coloured without disturbing its neighbours.
+    /// it closes, so a limb may be colored without disturbing its neighbors.
     /// </summary>
     public Dictionary<Rune, Material> MaterialBindings { get; } = new ();
 
     /// <summary>
     /// This property holds the material to draw with at each branching depth, the first standing
-    /// for the trunk.  It is how a plant is coloured from root to tip without a production rule
+    /// for the trunk.  It is how a plant is colored from root to tip without a production rule
     /// per level; anything deeper than the list draws with the last of them.
     /// </summary>
     public List<Material> DepthMaterials { get; } = [];

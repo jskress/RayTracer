@@ -42,14 +42,14 @@ public class Turtle
     /// <c>~</c> stamps: naming a material changes everything drawn from there on, until something
     /// names another.  It sits alongside <see cref="Diameter"/> for that reason, and gets the same
     /// treatment at a branch -- a branch inherits the material in force where it forked, and gives
-    /// it back on the way out, so colouring a limb cannot leak into its neighbour.
+    /// it back on the way out, so coloring a limb cannot leak into its neighbor.
     /// </para>
     /// </summary>
     public Material Material { get; set; }
 
     /// <summary>
     /// This property holds how deeply branched the turtle currently is: zero along the trunk, one
-    /// inside a branch off it, and so on.  It is what lets a plant be coloured by how far out it
+    /// inside a branch off it, and so on.  It is what lets a plant be colored by how far out it
     /// has grown without every level having to be spelled out as its own production rule.
     /// </summary>
     public int Depth { get; private set; }

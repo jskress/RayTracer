@@ -190,7 +190,7 @@ public partial class LanguageParser
     /// <para>
     /// Like turbulence, this is offered to every pattern rather than to a chosen few, because none
     /// of it belongs to any pattern in particular: a pattern says how far through its range a point
-    /// lies, and this decides what that number does on its way to the colour map.
+    /// lies, and this decides what that number does on its way to the color map.
     /// </para>
     /// </summary>
     /// <param name="resolver">The pattern resolver to attach the shaping to.</param>

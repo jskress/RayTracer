@@ -33,12 +33,6 @@ public class ContextUpdater : Instruction
     public Resolver<bool> SuppressAllShadowsResolver { get; set; }
 
     /// <summary>
-    /// This property provides the resolver, if any, for updating the gamma reporting
-    /// property in the rendering context.
-    /// </summary>
-    public Resolver<bool> ReportGammaResolver { get; set; }
-
-    /// <summary>
     /// This property provides the resolver, if any, for setting the image width property
     /// in the rendering context.
     /// </summary>
@@ -72,7 +66,6 @@ public class ContextUpdater : Instruction
         AnglesAreRadiansResolver.AssignTo(context, target => target.AnglesAreRadians, context, variables);
         ApplyGammaResolver.AssignTo(context, target => target.ApplyGamma, context, variables);
         SuppressAllShadowsResolver.AssignTo(context, target => target.SuppressAllShadows, context, variables);
-        ReportGammaResolver.AssignTo(context, target => target.ReportGamma, context, variables);
         WidthResolver.AssignTo(context, target => target.Width, context, variables);
         HeightResolver.AssignTo(context, target => target.Height, context, variables);
         GammaResolver.AssignTo(context, target => target.Gamma, context, variables);

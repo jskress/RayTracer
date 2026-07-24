@@ -3,14 +3,14 @@
 // leaves one where the turtle already stands, 'G' moves and draws without leaving one, and '}'
 // closes the outline and fills it.  Each leaf here is a filled outline traced by the L rule.
 //
-// The model is reproduced as ABOP gives it but for its colour-index commands ("'"), which this
-// ray tracer deliberately does not implement: that command steps an index into a colour table, and
+// The model is reproduced as ABOP gives it but for its color-index commands ("'"), which this
+// ray tracer deliberately does not implement: that command steps an index into a color table, and
 // there are no palettes here -- materials are pigments and patterns instead.  What stands in for it
 // is binding a character to a material, which is what the 'C' added to the L rule below does: it
 // changes what the turtle draws with from that point on, so the blade traced after it comes out
 // green while the stems stay brown.
 //
-// The 'C' sits inside the L rule's own brackets, and that is what keeps it from colouring the whole
+// The 'C' sits inside the L rule's own brackets, and that is what keeps it from coloring the whole
 // bush.  A branch inherits the material in force where it forked and hands it back when it closes,
 // so the green lives exactly as long as the leaf does.
 
@@ -67,8 +67,8 @@ bush = lsystem {
         'F' -> 'S/////F'
         'S' -> 'FL'
         // 'C' is not a turtle command and ABOP does not use it; it is simply the character this
-        // scene picked to stand for the leaf colour.  It has to come before the '{' that opens the
-        // outline, since a material colours what follows it.
+        // scene picked to stand for the leaf color.  It has to come before the '{' that opens the
+        // outline, since a material colors what follows it.
         'L' -> '[C^^{-f+f+f-|-f+f+f}]'
     }
     materials {

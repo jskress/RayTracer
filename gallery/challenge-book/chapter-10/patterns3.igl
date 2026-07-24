@@ -35,9 +35,9 @@ plane {
 sphere {
     material {
         // The scale here was once 100, back when turbulence could be "phased" -- a bespoke sine
-        // folded into the noise, since dropped in favour of the frequency, phase and wave that
+        // folded into the noise, since dropped in favor of the frequency, phase and wave that
         // POV-Ray shapes a pattern's value with.  At that scale the agate banding stretched so far
-        // that the sphere came out one flat grey, so it was brought down to something that shows.
+        // that the sphere came out one flat gray, so it was brought down to something that shows.
         pigment agate {
             turbulence { amplitude 1 octaves 7 }
             [0, Gray20, 1, Gray80]
@@ -73,7 +73,7 @@ torus {
     material {
         // Wrinkles sums ten octaves of noise, and averaging that many samples pulls the result
         // tightly around the middle: 5% to 95% of its values land between 0.35 and 0.63.  A map
-        // spread over [0, 1] would only ever reach the few shades either side of centre, so
+        // spread over [0, 1] would only ever reach the few shades either side of center, so
         // these break values follow the band wrinkles actually occupies.
         pigment wrinkles {
             [0.35, SkyBlue, 0.63, MidnightBlue]

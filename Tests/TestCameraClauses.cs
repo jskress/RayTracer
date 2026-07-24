@@ -58,7 +58,7 @@ public class TestCameraClauses
             "background [0, 0, 0]\n" +
             // The shading sums over the lights, so there has to be one for even a wholly ambient
             // surface to come out lit at all.  Where it stands does not matter here, since the
-            // ball takes its colour from the ambient term alone.
+            // ball takes its color from the ambient term alone.
             "point light { location [0, 0, -5]  color White }\n" +
             "sphere { material { pigment color [1, 1, 1] ambient 1 diffuse 0 specular 0 }\n" +
             ballBody + " }");
@@ -265,7 +265,7 @@ public class TestCameraClauses
         // Scaling by nothing means scaling by one, so a ball told to grow to twice its size runs
         // from its own size up to double it.  Were the scale measured from zero instead it would
         // start as a speck, and the middle of the picture -- solidly covered at every instant here
-        // -- would come out a washed-out grey instead of white.
+        // -- would come out a washed-out gray instead of white.
         double[] profile = EdgeProfile(
             OpenShutter, "motion { scale 2 }", out string error);
 

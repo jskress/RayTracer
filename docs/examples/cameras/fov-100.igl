@@ -1,0 +1,28 @@
+context { angles are degrees  no gamma }
+
+// The same scene at three fields of view.  The camera does not move; only how much of the
+// world it takes in changes.
+camera {
+    location [0, 2.5, -7]
+    look at [0, 1, 0]
+    field of view 100
+}
+
+point light { location [-5, 8, -7]  color White }
+
+plane { material { pigment checker { color [0.62,0.62,0.66], color [0.16,0.16,0.2] scale 1.2 } } }
+
+sphere {
+    material { pigment color [0.85, 0.4, 0.35]  specular 0.6  shininess 80 }
+    translate [0, 1, 0]
+}
+cube {
+    material { pigment color [0.4, 0.6, 0.8] }
+    scale [0.6, 0.6, 0.6]
+    translate [-2.4, 0.6, 1.5]
+}
+cube {
+    material { pigment color [0.5, 0.75, 0.5] }
+    scale [0.6, 0.6, 0.6]
+    translate [2.4, 0.6, 1.5]
+}

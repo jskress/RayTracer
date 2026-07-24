@@ -65,9 +65,6 @@ public partial class LanguageParser
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
-            case "report":
-                updater.ReportGammaResolver = new LiteralResolver<bool> { Value = true };
-                break;
             case "width":
                 updater.WidthResolver = new TermResolver<int>
                 {

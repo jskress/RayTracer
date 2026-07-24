@@ -44,7 +44,7 @@ public partial class LanguageParser
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
-            'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
+            'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
@@ -104,7 +104,7 @@ public partial class LanguageParser
             { amplitude > _expression } | { octaves > _expression } |
             { finer > _expression } | { fainter > _expression } | withSeedClause
         ] ?? 'Expecting a turbulence property here.'
-        // Mottling dims a colour by noise rather than pushing points about, so it takes the layers
+        // Mottling dims a color by noise rather than pushing points about, so it takes the layers
         // and nothing else -- an amplitude would have nothing here to move.
         noiseClause: { noise > openBrace ?? 'Expecting an open brace to follow "noise" here.' }
         noiseEntryClause:
@@ -166,7 +166,6 @@ public partial class LanguageParser
         {
             no > [ gamma | shadows ] ?? 'Expecting "gamma" or "shadows" to follow "no" here.'
         }
-        reportGammaClause: { report > gamma ?? 'Expecting "gamma" to follow "report" here.' }
         contextPropertyClause:
         {
             [ width | height | gamma ] ?? 'Expecting a context block item here.' >

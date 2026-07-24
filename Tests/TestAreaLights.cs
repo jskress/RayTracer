@@ -12,7 +12,7 @@ namespace Tests;
 public class TestAreaLights
 {
     /// <summary>
-    /// An area light two units wide each way, centred at the origin, with the jitter turned off so
+    /// An area light two units wide each way, centerd at the origin, with the jitter turned off so
     /// the samples land on an exact grid the arithmetic can be checked against.
     /// </summary>
     private static AreaLight PlainGrid(int uSteps, int vSteps) => new ()
@@ -34,16 +34,16 @@ public class TestAreaLights
     }
 
     [TestMethod]
-    public void TestASingleSampleSitsAtTheCentre()
+    public void TestASingleSampleSitsAtTheCenter()
     {
-        // A one-by-one area light is a point light at its centre, so from anywhere it is looked at
+        // A one-by-one area light is a point light at its center, so from anywhere it is looked at
         // just as a lamp there would be.
         AreaLight light = PlainGrid(1, 1);
         Point from = new (0, -10, 0);
 
         LightSample sample = light.SampleToward(from, 0);
 
-        Assert.IsTrue(sample.Direction.Matches(new Vector(0, 1, 0)), "toward the centre from below is up");
+        Assert.IsTrue(sample.Direction.Matches(new Vector(0, 1, 0)), "toward the center from below is up");
         Assert.AreEqual(10, sample.Distance, 1e-9);
         Assert.AreEqual(1, sample.Cone, 1e-9);
     }
@@ -52,7 +52,7 @@ public class TestAreaLights
     public void TestTheSamplesSpanTheWholeFace()
     {
         // A two-wide grid along each axis puts its samples at the four corners of the face, half a
-        // full axis either way of the centre.  The face is two units across each way, so the
+        // full axis either way of the center.  The face is two units across each way, so the
         // corners sit at ±1.
         AreaLight light = PlainGrid(2, 2);
         List<Point> corners = [];

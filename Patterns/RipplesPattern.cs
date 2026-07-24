@@ -6,7 +6,7 @@ namespace RayTracer.Patterns;
 /// This class provides the ripples pattern: concentric rings spreading from a handful of scattered
 /// sources, averaged together so that they interfere the way ripples on water do.
 /// <para>
-/// It exists chiefly to roughen a surface rather than to colour one.  Every source rings at the
+/// It exists chiefly to roughen a surface rather than to color one.  Every source rings at the
 /// same rate, which is what sets it apart from <see cref="WavesPattern"/>, and what makes it read
 /// as a still surface disturbed at a few points rather than as open water.
 /// </para>

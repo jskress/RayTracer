@@ -6,7 +6,7 @@ namespace RayTracer.Patterns;
 /// <summary>
 /// This class provides the marble pattern.  There is less to it than the name suggests: it is
 /// the X coordinate, pushed sideways by turbulence, and nothing more.  All the veining comes
-/// from the colour map it is handed to, which wraps as X marches past each whole number -- so a
+/// from the color map it is handed to, which wraps as X marches past each whole number -- so a
 /// map that runs dark at both ends draws a vein wherever X crosses one, and the turbulence is
 /// what stops those veins being straight.  Without turbulence it is simply stripes down X.
 /// </summary>
@@ -45,7 +45,7 @@ public class MarblePattern : Pattern
     public override double Evaluate(Point point)
     {
         // Note this deliberately isn't held to the [0, 1] interval: the value is a coordinate,
-        // and the colour map wraps whatever it is given.  That wrapping is the whole point --
+        // and the color map wraps whatever it is given.  That wrapping is the whole point --
         // it is what turns a marching X into repeated veins.
         return Turbulence is null
             ? point.X

@@ -257,7 +257,7 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to handle a materials block.  Each entry ties a named material either
     /// to a character, so that reaching that character in a production changes what the turtle
-    /// draws with from there on, or to a branching depth, so that a plant may be coloured from
+    /// draws with from there on, or to a branching depth, so that a plant may be colored from
     /// trunk to twig without a production rule for every level.
     /// </summary>
     /// <param name="resolver">The resolver to add the material bindings to.</param>

@@ -55,16 +55,16 @@ public class Material
     public double Reflective { get; set; }
 
     /// <summary>
-    /// This property holds how metallic the material is, between 0 and 1, and governs the colour
+    /// This property holds how metallic the material is, between 0 and 1, and governs the color
     /// of what it reflects -- both its specular highlight and, where it is reflective, the scene
     /// mirrored in it.
     /// <para>
     /// At a dielectric surface -- plastic, glass, paint -- reflection happens before the pigment
-    /// absorbs anything, so what bounces off keeps the colour of the light: a white lamp makes a
+    /// absorbs anything, so what bounces off keeps the color of the light: a white lamp makes a
     /// white highlight on red plastic.  A metal is a conductor, and its reflectance is itself
-    /// wavelength-dependent, so what bounces off takes the colour of the metal: the same lamp
-    /// makes a gold highlight on gold.  Leaving this at 0 gives the dielectric behaviour; raising
-    /// it toward 1 tints reflections with the surface's own colour.  Without it, gold renders as
+    /// wavelength-dependent, so what bounces off takes the color of the metal: the same lamp
+    /// makes a gold highlight on gold.  Leaving this at 0 gives the dielectric behavior; raising
+    /// it toward 1 tints reflections with the surface's own color.  Without it, gold renders as
     /// yellow plastic -- a yellow surface wearing an incongruous white glint.
     /// </para>
     /// </summary>
@@ -97,7 +97,7 @@ public class Material
     /// </para>
     /// <para>
     /// It is deliberately not the same thing as a mottled pigment.  That varies smoothly, in
-    /// blotches, because it is built from coherent noise; this varies from point to neighbouring
+    /// blotches, because it is built from coherent noise; this varies from point to neighboring
     /// point, which is what makes it read as grain rather than as cloud.
     /// </para>
     /// </summary>
@@ -110,7 +110,7 @@ public class Material
 
     /// <summary>
     /// This property holds the substance inside the surface -- its index of refraction, and how
-    /// far it colours the light passing through it.  See <see cref="Core.Interior"/>.
+    /// far it colors the light passing through it.  See <see cref="Core.Interior"/>.
     /// </summary>
     public Interior Interior { get; set; } = new ();
 
@@ -134,7 +134,7 @@ public class Material
     /// The value is hashed from the point rather than drawn from a random number generator, which
     /// is what makes the speckle stay put: the same point gives the same fleck however many rays
     /// find it, from wherever they come.  Hashing the bits of the coordinates rather than
-    /// smoothing between them is equally deliberate -- neighbouring points must land on unrelated
+    /// smoothing between them is equally deliberate -- neighboring points must land on unrelated
     /// values, or the result reads as cloud rather than as grit.
     /// </para>
     /// </summary>
@@ -151,7 +151,7 @@ public class Material
         {
             ulong bits = (ulong) BitConverter.DoubleToInt64Bits(coordinate);
 
-            // Fowler-Noll-Vo, a byte at a time: cheap, and it scatters neighbouring inputs across
+            // Fowler-Noll-Vo, a byte at a time: cheap, and it scatters neighboring inputs across
             // the whole range rather than leaving them near one another, which is the property that
             // matters here.
             for (int shift = 0; shift < 64; shift += 8)
@@ -177,8 +177,8 @@ public class Material
     /// differ from point to point where the pigment says it should.
     /// <para>
     /// <see cref="Transparency"/> is a property of the whole surface: it makes a thing uniformly
-    /// see-through.  A pigment may additionally say, colour by colour, how much light gets past it,
-    /// which is what POV-Ray's fourth colour channel does and what lets one pattern be a window in
+    /// see-through.  A pigment may additionally say, color by color, how much light gets past it,
+    /// which is what POV-Ray's fourth color channel does and what lets one pattern be a window in
     /// some places and a wall in others -- a stencil, or the clear panes of a stained-glass design.
     /// </para>
     /// <para>
@@ -188,7 +188,7 @@ public class Material
     /// unchanged.
     /// </para>
     /// </summary>
-    /// <param name="surfaceColor">The colour the pigment gave at the point in question.</param>
+    /// <param name="surfaceColor">The color the pigment gave at the point in question.</param>
     /// <returns>How transparent the material is there, between 0 and 1.</returns>
     public double TransparencyFor(Color surfaceColor)
     {
@@ -197,23 +197,23 @@ public class Material
 
     /// <summary>
     /// This method returns the tint that <see cref="Metallic"/> puts on light this material
-    /// reflects, to be multiplied into a highlight or a reflected colour.  It interpolates
-    /// between white -- leaving the light's own colour alone, as a dielectric would -- and the
-    /// surface's colour, which is what a conductor does.
+    /// reflects, to be multiplied into a highlight or a reflected color.  It interpolates
+    /// between white -- leaving the light's own color alone, as a dielectric would -- and the
+    /// surface's color, which is what a conductor does.
     /// <para>
     /// The interpolation is not flat across the surface: it is weighted by an empirical stand-in
     /// for Fresnel reflectivity, near 0 where the light meets the surface head on and rising to 1
     /// at grazing angles.  So the tint is close to full over most of a surface and falls away at
     /// its silhouette, which is the physical story -- at grazing incidence everything turns into a
-    /// colourless mirror, metal included.  Both the curve and its constants are POV-Ray's, from
+    /// colorless mirror, metal included.  Both the curve and its constants are POV-Ray's, from
     /// <c>Trace::ComputeMetallic</c>; they are a fit rather than real Fresnel, as POV's own
     /// comment says.
     /// </para>
     /// </summary>
-    /// <param name="surfaceColor">The material's own colour at the point being lit, which must be
-    /// the pigment's colour alone and not already multiplied by the light's.</param>
+    /// <param name="surfaceColor">The material's own color at the point being lit, which must be
+    /// the pigment's color alone and not already multiplied by the light's.</param>
     /// <param name="cosAngle">The cosine of the angle between the surface normal and the light.</param>
-    /// <returns>The tint to multiply the reflected colour by.</returns>
+    /// <returns>The tint to multiply the reflected color by.</returns>
     public Color GetMetallicTint(Color surfaceColor, double cosAngle)
     {
         double x = Math.Abs(Math.Acos(Math.Clamp(cosAngle, -1, 1))) / (Math.PI / 2);

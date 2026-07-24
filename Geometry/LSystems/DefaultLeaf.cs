@@ -11,7 +11,7 @@ namespace RayTracer.Geometry.LSystems;
 /// authored in the turtle's own local frame so it grows along +Z (the branch heading), spreads
 /// its width along X, cups gently upward toward +Y, and tapers to a point at both its base and
 /// its tip.  It carries a green material of its own so that a bare, unstyled tree already reads
-/// as green leaves on branches, rather than inheriting the branch colour.
+/// as green leaves on branches, rather than inheriting the branch color.
 /// </summary>
 public static class DefaultLeaf
 {
@@ -54,10 +54,10 @@ public static class DefaultLeaf
     }
 
     /// <summary>
-    /// This method builds the green a default leaf falls back on when nothing else has coloured it.
+    /// This method builds the green a default leaf falls back on when nothing else has colored it.
     /// <para>
     /// It exists so that a bare, unstyled tree still reads as green leaves on branches rather than
-    /// taking the colour of its own bark, while leaving that green last in line: a material the
+    /// taking the color of its own bark, while leaving that green last in line: a material the
     /// production named, whether by character or by branching depth, is used in preference to it.
     /// A fresh instance is returned per leaf rather than one being shared, because seeding a
     /// pigment writes to it, and leaves sharing one would quietly share that too.

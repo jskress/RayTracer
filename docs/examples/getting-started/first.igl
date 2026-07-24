@@ -1,0 +1,29 @@
+// Where we are looking from, and at.
+camera {
+    location [0, 1.5, -5]
+    look at [0, 1, 0]
+}
+
+// A lamp, up and to the left.  Leave this out and the picture comes back black.
+point light {
+    location [-10, 10, -10]
+    color White
+}
+
+// The ground.  A plane with no transform lies flat at the origin.
+plane {
+    material {
+        pigment checker { White, Gray30 }
+    }
+}
+
+// And something to look at.  A sphere is written as though it sat at the origin with a
+// radius of one, then moved where it is wanted.
+sphere {
+    material {
+        pigment color Red
+        specular 0.9
+        shininess 200
+    }
+    translate [0, 1, 0]
+}

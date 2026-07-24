@@ -20,19 +20,19 @@ public class TestMetallic
     }
 
     [TestMethod]
-    public void TestNoMetallicLeavesTheLightsColourAlone()
+    public void TestNoMetallicLeavesTheLightsColorAlone()
     {
-        // A dielectric reflects the light's own colour, so the tint has to be a no-op.
+        // A dielectric reflects the light's own color, so the tint has to be a no-op.
         Color tint = Gold(0).GetMetallicTint(new Color(1, 0.8, 0.2), 1);
 
         Assert.IsTrue(tint.Matches(Colors.White), tint.ToString());
     }
 
     [TestMethod]
-    public void TestFullMetallicTakesTheSurfaceColourHeadOn()
+    public void TestFullMetallicTakesTheSurfaceColorHeadOn()
     {
         // Meeting the surface head on, the empirical Fresnel term is ~0, so a fully metallic
-        // surface tints all the way to its own colour.
+        // surface tints all the way to its own color.
         Color surface = new (1, 0.8, 0.2);
         Color tint = Gold(1).GetMetallicTint(surface, 1);
 
@@ -42,7 +42,7 @@ public class TestMetallic
     [TestMethod]
     public void TestTheTintFallsAwayAtGrazingAngles()
     {
-        // At grazing incidence everything becomes a colourless mirror, metal included, so the
+        // At grazing incidence everything becomes a colorless mirror, metal included, so the
         // tint has to return to white however metallic the surface is.
         Color tint = Gold(1).GetMetallicTint(new Color(1, 0.8, 0.2), 0);
 
@@ -54,7 +54,7 @@ public class TestMetallic
     {
         // The falloff is not linear in angle: the fitted curve stays close to zero across most of
         // the surface and only climbs near the silhouette.  At 45 degrees the tint should still be
-        // most of the way to the surface's colour, not halfway.
+        // most of the way to the surface's color, not halfway.
         Color surface = new (1, 0, 0);
         Color tint = Gold(1).GetMetallicTint(surface, Math.Cos(Math.PI / 4));
 
@@ -62,7 +62,7 @@ public class TestMetallic
     }
 
     [TestMethod]
-    public void TestAMetallicHighlightTakesTheSurfaceColour()
+    public void TestAMetallicHighlightTakesTheSurfaceColor()
     {
         // The visible payoff: a white light on a gold sphere makes a gold highlight, where the
         // same light on a dielectric makes a white one.

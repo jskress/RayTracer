@@ -40,10 +40,28 @@ public class Variables
         if (type == null && values.Count == 1)
             return values.Values.First();
 
-        if (type == null || !values.TryGetValue(type.TypeHandle, out object value))
+        if (type == null)
             return _parent?.GetValue(key, type);
 
-        return value;
+        if (values.TryGetValue(type.TypeHandle, out object value))
+            return value;
+
+        // Nothing was stored under exactly that type, but something more particular still
+        // answers the question: a point is a tuple of numbers, so a name holding a point
+        // satisfies a request for a tuple.  The values here are filed under the exact type each
+        // was created as, which is what lets one name hold a color and an index of refraction
+        // at once, but that exactness would otherwise hide a subclass from a request for its
+        // base -- and that is precisely what left a named point unusable as a translation.
+        //
+        // Sorted by type name so that a name holding several things that all answer -- a point
+        // and a vector, say, both being tuples -- resolves the same way every time rather than
+        // by whatever order the dictionary happens to hand them back.
+        object closest = values.Values
+            .Where(type.IsInstanceOfType)
+            .OrderBy(candidate => candidate.GetType().FullName, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+        return closest ?? _parent?.GetValue(key, type);
     }
 
     /// <summary>

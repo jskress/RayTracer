@@ -5,12 +5,12 @@ title = 'The Solid Shape Patterns'
 
 include '../defaults.igl'
 
-// These three patterns all measure a distance from the origin and colour by it, and each is
+// These three patterns all measure a distance from the origin and color by it, and each is
 // measured in its own surface's space, not the world's.  That makes the choice of what to put
 // them on matter more than usual: a shape whose surface sits at a constant distance from its own
-// centre gets one flat colour out of them, however the pattern is tuned.  A sphere is exactly
+// center gets one flat color out of them, however the pattern is tuned.  A sphere is exactly
 // that shape, so the spherical patterns below are on a cube and a plane instead; a torus is
-// nearly that shape too, since the whole of its visible top ring is equidistant from its centre.
+// nearly that shape too, since the whole of its visible top ring is equidistant from its center.
 
 // Floor -- spherical gradient, the fractional part of the distance from the origin.  A plane cuts
 // straight across those shells, so they ring out from underfoot like ripples.
@@ -35,7 +35,7 @@ plane {
     translate Z 4
 }
 
-// Boxed -- alone among these it does not repeat.  It is 1 at the centre, falls off to 0 on the
+// Boxed -- alone among these it does not repeat.  It is 1 at the center, falls off to 0 on the
 // faces of the unit box, and is flat 0 outside them, so on a unit sphere it runs from 0 where the
 // sphere touches each face to about 0.42 out towards the eight corners, which stand furthest from
 // any face.  The map is banded, and deliberately: as a smooth fade this reads as ordinary shading
@@ -56,7 +56,7 @@ sphere {
 // Spherical stripes -- the stepped counterpart to the floor.  This one returns an index rather
 // than a number, choosing between two pigments outright, so its shells meet at hard edges.  A
 // cube is a good host: its flat faces cut the shells into circles, and its corners reach half
-// again as far from the centre as its faces do, so several shells cross it.
+// again as far from the center as its faces do, so several shells cross it.
 cube {
     material {
         pigment spherical stripes {

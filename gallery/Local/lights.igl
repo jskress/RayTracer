@@ -23,6 +23,7 @@ background [0.02, 0.02, 0.03]
 camera {
     location [-0.3, 2.6, -5.6]
     look at [-0.3, 0.5, 0.3]
+    field of view 90
 }
 
 // The distant light, low in the sky and off to the left, so its shadows rake across the floor

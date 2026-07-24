@@ -16,7 +16,7 @@ public class TestFocalBlur
     private static RenderContext Context() => new () { Width = 201, Height = 101 };
 
     [TestMethod]
-    public void TestAPinholeTakesOneSampleAtTheCentre()
+    public void TestAPinholeTakesOneSampleAtTheCenter()
     {
         CameraSampler pinhole = new (0, 5);
 
@@ -47,7 +47,7 @@ public class TestFocalBlur
     public void TestTheSamplesStayWithinTheLens()
     {
         // The offsets are given on the unit disc and scaled by the aperture when a ray is built,
-        // so every one of them must lie within a unit of the centre.
+        // so every one of them must lie within a unit of the center.
         CameraSampler lens = new (0.5, 5, 0, 64);
 
         for (int index = 0; index < lens.SampleCount; index++)
@@ -63,7 +63,7 @@ public class TestFocalBlur
     public void TestTheSamplesSpreadAcrossTheWholeLens()
     {
         // A pattern that clumped in the middle would blur unevenly, so check the samples reach out
-        // toward the rim and land on all four sides of the centre.
+        // toward the rim and land on all four sides of the center.
         CameraSampler lens = new (1, 5, 0, 64);
         double furthest = 0;
         bool left = false, right = false, below = false, above = false;

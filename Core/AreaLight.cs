@@ -17,7 +17,7 @@ namespace RayTracer.Core;
 /// <para>
 /// It is a point light in all else -- it stands somewhere and its light falls off with the cone of
 /// nothing -- so it inherits where it lies from.  The one care is that the grid, left plain, bands:
-/// evenly spaced samples turn the penumbra into a staircase of a few grey steps.  Nudging each
+/// evenly spaced samples turn the penumbra into a staircase of a few gray steps.  Nudging each
 /// sample off its square by a fixed, seeded jitter breaks the steps into a smooth fall while
 /// keeping the render the same from one run to the next, which is the same bargain the noise and
 /// the L-systems strike.
@@ -33,7 +33,7 @@ public class AreaLight : PointLight
 
     /// <summary>
     /// This property holds one full edge of the lit rectangle, as a vector from side to side.  The
-    /// light reaches half of it either way of its location, so the location is the centre of the
+    /// light reaches half of it either way of its location, so the location is the center of the
     /// face rather than a corner.
     /// </summary>
     public Vector Axis1 { get; set; } = new (1, 0, 0);
@@ -56,7 +56,7 @@ public class AreaLight : PointLight
     /// <summary>
     /// This property notes whether the samples are nudged off their grid to smooth the penumbra.
     /// It is on by default, since a plain grid bands; turning it off gives the bare grid, which is
-    /// what a scene wanting POV-Ray's un-jittered behaviour would ask for.
+    /// what a scene wanting POV-Ray's un-jittered behavior would ask for.
     /// </summary>
     public bool Jitter { get; set; } = true;
 
@@ -82,7 +82,7 @@ public class AreaLight : PointLight
     /// <summary>
     /// This method works out one of the places on the face the light is looked at from, following
     /// POV-Ray: the grid square is turned into an offset running from half the face one way to half
-    /// the other, nudged off its square by the jitter, and added to the centre.
+    /// the other, nudged off its square by the jitter, and added to the center.
     /// </summary>
     /// <param name="point">The point being lit.</param>
     /// <param name="index">Which sample, counted across <see cref="Axis1"/> first.</param>
@@ -95,7 +95,7 @@ public class AreaLight : PointLight
         (double[] jitterU, double[] jitterV) = _jitter.Value;
 
         // A single step along an axis has no spread to place a sample within, so it sits at the
-        // centre; POV-Ray guards the division by the step count less one the same way.
+        // center; POV-Ray guards the division by the step count less one the same way.
         double alongU = USteps > 1 ? (u + jitterU[index]) / (USteps - 1) - 0.5 : 0;
         double alongV = VSteps > 1 ? (v + jitterV[index]) / (VSteps - 1) - 0.5 : 0;
 

@@ -1,0 +1,16 @@
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -7]
+    look at [0, 1, 0]
+    field of view 45
+}
+
+include 'stage.igl'
+
+// The sun: infinitely far off, so its rays arrive parallel and its shadows never splay.
+// It is aimed by a direction rather than placed at a location.
+distant light {
+    direction [1, -1.2, 0.5]
+    color White
+}

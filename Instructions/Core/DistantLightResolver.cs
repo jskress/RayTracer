@@ -16,7 +16,7 @@ public class DistantLightResolver : NamedObjectResolver<DistantLight>
     public Resolver<Vector> DirectionResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the light's colour.
+    /// This property holds the resolver for the light's color.
     /// </summary>
     public Resolver<Color> ColorResolver { get; set; }
 

@@ -96,7 +96,7 @@ public class Spectrum<T> : IEnumerable<T>
     ///
     /// Callers wanting the entry *after* this one should ask for the next index, rather than
     /// searching back for this entry's value: nothing stops the same value appearing at several
-    /// break values (a colour map naming one pigment at every stop, say), and a search by value
+    /// break values (a color map naming one pigment at every stop, say), and a search by value
     /// can't tell those apart -- it would find the first of them every time, and so report a
     /// break value belonging to some entirely different stop.
     /// </summary>

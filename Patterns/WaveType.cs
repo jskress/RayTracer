@@ -3,7 +3,7 @@ namespace RayTracer.Patterns;
 /// <summary>
 /// This enumeration names the ways a pattern's value may be shaped once the pattern has produced
 /// it.  A pattern says how far through its range a point lies; the wave decides what that number
-/// then does on its way to the colour map, and so decides whether a boundary arrives as a hard
+/// then does on its way to the color map, and so decides whether a boundary arrives as a hard
 /// edge, a gentle swell, or something that rises and falls twice over.
 /// </summary>
 public enum WaveType
@@ -22,7 +22,7 @@ public enum WaveType
     Sine,
 
     /// <summary>
-    /// The value climbs to the middle and falls back evenly, so a band and its neighbour mirror one
+    /// The value climbs to the middle and falls back evenly, so a band and its neighbor mirror one
     /// another rather than repeating.
     /// </summary>
     Triangle,

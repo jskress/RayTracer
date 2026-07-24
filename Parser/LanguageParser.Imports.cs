@@ -70,7 +70,7 @@ public partial class LanguageParser
     /// oversight: a material holds a copy of any material it was built from, taken when it was
     /// parsed, so discarding what it was built from cannot hurt it; but it holds only a
     /// *reference* to any value it names, looked up when the image is rendered, so discarding
-    /// those would leave it pointing at nothing.  A library's colours and numbers therefore come
+    /// those would leave it pointing at nothing.  A library's colors and numbers therefore come
     /// along.  They are also far the smaller half of the problem, being a handful where the
     /// textures are a hundred.
     /// </para>
@@ -108,7 +108,7 @@ public partial class LanguageParser
             .ToList();
         // Values are counted as having arrived too, even though they are not filtered.  Naming one
         // is then simply a way of saying out loud that the scene means to use it, which is what
-        // anyone reading a library full of named colours will expect to be able to do.
+        // anyone reading a library full of named colors will expect to be able to do.
         HashSet<string> valuesArrived = _context.InstructionContext.VariableNames
             .Where(name => !valuesBefore.Contains(name))
             .ToHashSet();

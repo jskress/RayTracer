@@ -57,13 +57,6 @@ public class RenderContext
     public bool ApplyGamma { get; set; } = true;
 
     /// <summary>
-    /// This property notes whether gamma correction information should be noted in the
-    /// output image, if the image format supports this.
-    /// </summary>
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-    public bool ReportGamma { get; set; }
-
-    /// <summary>
     /// This property is used to suppress all shadow rendering.
     /// </summary>
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
@@ -128,9 +121,6 @@ public class RenderContext
         // not passing it leaves whatever the scene's own `context { }` block configured.
         if (options.NoGamma)
             ApplyGamma = false;
-
-        if (options.ReportGamma)
-            ReportGamma = true;
 
         if (options.NoShadows)
             SuppressAllShadows = true;

@@ -101,7 +101,7 @@ public class TestSurfaceFinish
     [TestMethod]
     public void TestGrainIsGritRatherThanCloud()
     {
-        // What separates this from a mottled pigment: neighbouring points must land on unrelated
+        // What separates this from a mottled pigment: neighboring points must land on unrelated
         // values.  Coherent noise would give smooth blotches, which is a different effect entirely
         // and one we already have.
         Material material = Matte(grain: 1);
@@ -160,7 +160,7 @@ public class TestSurfaceFinish
     public void TestGrainCannotDriveASurfaceBelowBlack()
     {
         // Subtracting more than there is to take must floor at nothing rather than going negative,
-        // which would light the surface with a colour the light never had.
+        // which would light the surface with a color the light never had.
         Material material = Matte(grain: 5);
 
         foreach (double angle in new[] { 0.0, 45.0, 85.0 })

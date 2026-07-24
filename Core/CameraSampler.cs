@@ -69,10 +69,10 @@ public class CameraSampler
 
     /// <summary>
     /// This method returns where across the lens the given sample is taken from, as an offset from
-    /// the lens's centre in the camera's own left/up directions.
+    /// the lens's center in the camera's own left/up directions.
     /// </summary>
     /// <param name="index">Which sample, from zero up to <see cref="SampleCount"/>.</param>
-    /// <returns>The offset across the lens, which is the centre itself for a pinhole.</returns>
+    /// <returns>The offset across the lens, which is the center itself for a pinhole.</returns>
     public (double X, double Y) OffsetFor(int index) =>
         SampleCount == 1 ? (0, 0) : _offsets.Value[index];
 

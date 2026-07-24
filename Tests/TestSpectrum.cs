@@ -23,7 +23,7 @@ public class TestSpectrum
     [TestMethod]
     public void TestRepeatedValuesResolveToTheirOwnEntry()
     {
-        // Nothing stops one value being named at several break values -- a colour map that
+        // Nothing stops one value being named at several break values -- a color map that
         // names the same pigment at every stop, say.  Entries used to be located by searching
         // for their value, which in that case found the first stop holding it no matter which
         // stop was actually meant, and so reported a break value from somewhere else entirely.

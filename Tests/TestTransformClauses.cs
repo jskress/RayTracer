@@ -112,10 +112,10 @@ public class TestTransformClauses
     }
 
     /// <summary>
-    /// Returns the centre of the lit pixels in the given image, in pixels across and down.  This
+    /// Returns the center of the lit pixels in the given image, in pixels across and down.  This
     /// is where the ball ended up, which is what a transform clause is judged on.
     /// </summary>
-    private static (double X, double Y) CentreOfLight(Canvas image)
+    private static (double X, double Y) CenterOfLight(Canvas image)
     {
         double totalX = 0, totalY = 0, weight = 0;
 
@@ -190,8 +190,8 @@ public class TestTransformClauses
 
         // ...and check the pair actually went somewhere, so that two identically broken renders
         // could not pass the comparison above.
-        (double movedX, double movedY) = CentreOfLight(viaMatrix);
-        (double restingX, double restingY) = CentreOfLight(untouched);
+        (double movedX, double movedY) = CenterOfLight(viaMatrix);
+        (double restingX, double restingY) = CenterOfLight(untouched);
 
         Assert.IsTrue(Math.Abs(movedX - restingX) > 5,
             $"the ball should have moved across the image, but sat at {movedX:F1} vs {restingX:F1}");
@@ -322,7 +322,7 @@ public class TestTransformClauses
         Assert.IsNotNull(moved);
 
         // The ball is somewhere sensible rather than collapsed to a point or lost entirely.
-        (double x, double y) = CentreOfLight(moved);
+        (double x, double y) = CenterOfLight(moved);
 
         Assert.IsTrue(x is > 0 and < 80 && y is > 0 and < 80,
             $"the ball should still be in the picture, but its middle was at ({x:F1}, {y:F1})");

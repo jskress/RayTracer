@@ -77,8 +77,14 @@ public class RenderOptions
         set => _outputFileExtension = value.StartsWith('.') ? value : $".{value}";
     }
 
-    [Option('w', "width", Required = false, Default = 800,
-        HelpText = "The width of the image to generate.")]
+    // Note: no Default here, and none on Height below, deliberately.  `RenderContext.ApplyOptions`
+    // merges these with `options.Width ?? Width`, so that a size the scene's own `context { }`
+    // block asked for survives when the command line says nothing -- exactly as Gamma does.  A
+    // Default would defeat that: CommandLineParser fills the property in whether or not the flag
+    // was passed, so the value would never be null and the scene's size was silently overwritten
+    // every time.  The fallback when neither says anything is `RenderContext`'s own 800 by 600.
+    [Option('w', "width", Required = false,
+        HelpText = "The width of the image to generate.  Defaults to 800, or whatever the scene's context block asks for.")]
     public int? Width
     {
         get => field;
@@ -92,8 +98,8 @@ public class RenderOptions
         }
     }
 
-    [Option('h', "height", Required = false, Default = 600,
-        HelpText = "The height of the image to generate.")]
+    [Option('h', "height", Required = false,
+        HelpText = "The height of the image to generate.  Defaults to 600, or whatever the scene's context block asks for.")]
     public int? Height
     {
         get => field;
@@ -180,11 +186,6 @@ public class RenderOptions
         HelpText = "If specified, gamma correction will not be applied to colors in the image output file.")]
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool NoGamma { get; set; }
-
-    [Option("report-gamma", Required = false,
-        HelpText = "If specified, the gamma correction value will be included in the image output file, if supported.")]
-    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public bool ReportGamma { get; set; }
 
     [Option("no-shadows", Required = false,
         HelpText = "Disable shadow rendering on all objects.")]

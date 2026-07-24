@@ -7,7 +7,7 @@ namespace RayTracer.Basics;
 /// both turbulence and mottling are built from.
 /// <para>
 /// It exists on its own because those two want genuinely different halves of it.  Mottling wants a
-/// single number to dim a colour by; turbulence wants a direction to push a point in, and how far
+/// single number to dim a color by; turbulence wants a direction to push a point in, and how far
 /// to push is its own business rather than this one's.  Keeping the summing here and the pushing in
 /// <see cref="Turbulence"/> is what stops an amplitude from turning up where it can have no
 /// meaning.

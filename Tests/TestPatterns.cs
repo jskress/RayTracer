@@ -100,8 +100,8 @@ public class TestPatterns
     // The tests below read a pattern's value straight off Evaluate rather than going through a
     // pigment the way the ones above do.  What is being pinned here is the value itself -- where
     // a falloff reaches zero, which quadrant an angle lands in -- and saying so directly beats
-    // saying it as "black", especially since InvertedClip means the darker colour sits at the
-    // *centre* of a falloff, which is easy to get backwards.
+    // saying it as "black", especially since InvertedClip means the darker color sits at the
+    // *center* of a falloff, which is easy to get backwards.
 
     [TestMethod]
     public void TestSphericalPatternFallsOffToTheUnitSphere()
@@ -141,7 +141,7 @@ public class TestPatterns
         RadialPattern pattern = new ();
 
         // A full turn, a quarter at a time.  Note the value runs 0.25 to 1.25 rather than 0 to 1
-        // -- POV-Ray's own arrangement, and deliberate: colour maps wrap what they are handed, so
+        // -- POV-Ray's own arrangement, and deliberate: color maps wrap what they are handed, so
         // the extra quarter turn only decides where the seam falls, which is +X below.
         Assert.IsTrue(0.75.Near(pattern.Evaluate(new Point(0, 0, 1))));
         Assert.IsTrue(1.00.Near(pattern.Evaluate(new Point(1, 0, 0))));
@@ -156,7 +156,7 @@ public class TestPatterns
     public void TestRadialPatternCoversExactlyOneTurn()
     {
         // Whatever the seam's placement, going right round must cover the map exactly once and
-        // no more: the span has to be one whole unit, or the colours would either repeat within
+        // no more: the span has to be one whole unit, or the colors would either repeat within
         // a single turn or fail to close up over it.
         RadialPattern pattern = new ();
         double min = double.MaxValue;
@@ -189,7 +189,7 @@ public class TestPatterns
     public void TestMarbleIsPlainXWithoutTurbulence()
     {
         // Turbulence is optional, and a null one must not throw -- without it marble is just the
-        // X coordinate, which the colour map wraps into stripes.
+        // X coordinate, which the color map wraps into stripes.
         MarblePattern pattern = new ();
 
         Assert.AreEqual(0, pattern.Evaluate(Point.Zero));
@@ -272,7 +272,7 @@ public class TestPatterns
     [TestMethod]
     public void TestCrackleCellsHoldStillAcrossTheirBoundaries()
     {
-        // Each cell's feature point has to be a pure function of that cell, because neighbouring
+        // Each cell's feature point has to be a pure function of that cell, because neighboring
         // positions in different cells ask about the same ones.  If it drifted, the cells would
         // shift underfoot and the pattern would tear at every boundary.  Stepping either side of
         // the boundary at x = 1 must therefore give near-equal values, since the feature points
