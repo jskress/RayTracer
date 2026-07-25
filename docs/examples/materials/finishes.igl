@@ -1,0 +1,73 @@
+// Five spheres of the same color, differing only in how they take the light.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.6, -16]
+    look at [0, 0.1, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -5]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material {
+        pigment checker { color [0.55, 0.55, 0.6], color [0.2, 0.2, 0.25] scale 1.6 }
+        specular 0.1
+    }
+    translate [0, -1, 0]
+}
+
+// Matte: no highlight at all, so it reads as chalk or unglazed clay.
+sphere {
+    material {
+        pigment color [0.75, 0.35, 0.3]
+        specular 0
+    }
+    translate [-4.4, 0, 0]
+}
+
+// Glossy: a small, bright highlight -- the default, and what most things want.
+sphere {
+    material {
+        pigment color [0.75, 0.35, 0.3]
+        specular 0.9
+        shininess 200
+    }
+    translate [-2.2, 0, 0]
+}
+
+// Reflective: it shows the world around it as well as its own color.
+sphere {
+    material {
+        pigment color [0.75, 0.35, 0.3]
+        specular 0.9
+        shininess 200
+        reflective 0.5
+    }
+}
+
+// Metallic: the highlight takes the surface's own color rather than the light's.
+sphere {
+    material {
+        pigment color [0.75, 0.35, 0.3]
+        specular 0.9
+        shininess 60
+        metallic 1
+        reflective 0.4
+    }
+    translate [2.2, 0, 0]
+}
+
+// Transparent: seen through, and bending what is behind it.
+sphere {
+    material {
+        pigment color [1, 1, 1]
+        specular 0.9
+        shininess 300
+        transparency 0.95
+        reflective 0.1
+        interior { ior 1.5 }
+    }
+    translate [4.4, 0, 0]
+}

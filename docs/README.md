@@ -101,6 +101,28 @@ it branches, any one of the branches will do.
   - [Distant Lights](lights.md#distant-lights)
   - [Spotlights](lights.md#spotlights)
   - [Area Lights](lights.md#area-lights)
+- [Surfaces](surfaces.md)
+  - [What Every Surface Has](surfaces.md#what-every-surface-has)
+  - [The Primitives](surfaces.md#the-primitives)
+  - [Groups](surfaces.md#groups)
+  - [Combining Surfaces](surfaces.md#combining-surfaces)
+  - [Bounding](surfaces.md#bounding)
+- [Transforms](transforms.md)
+  - [Order Matters](transforms.md#order-matters)
+  - [Translate](transforms.md#translate)
+  - [Scale](transforms.md#scale)
+  - [Rotate](transforms.md#rotate)
+  - [Shear](transforms.md#shear)
+  - [Naming a Transform](transforms.md#naming-a-transform)
+  - [Transforming a Group](transforms.md#transforming-a-group)
+  - [Setting a Surface Moving](transforms.md#setting-a-surface-moving)
+- [Materials](materials.md)
+  - [The Color](materials.md#the-color)
+  - [The Finish](materials.md#the-finish)
+  - [Transparency and Interiors](materials.md#transparency-and-interiors)
+  - [Roughening the Surface](materials.md#roughening-the-surface)
+  - [Naming and Reusing](materials.md#naming-and-reusing)
+  - [Materials on a Group](materials.md#materials-on-a-group)
 - [Managing Fonts](fonts.md)
   - [The Font Catalog](fonts.md#the-font-catalog)
   - [Adding Font Faces](fonts.md#adding-font-faces)
@@ -109,10 +131,7 @@ it branches, any one of the branches will do.
 
 The chapters below are still to be written.
 
-- Surfaces — the primitives, CSG, groups and bounding
 - Advanced Surfaces — extrusions, lathes, sweeps, text, height fields and L-systems
-- Transforms — placing surfaces, and setting them moving
-- Materials — finishes, interiors and indices of refraction
 - Pigments and Patterns — where a surface gets its color
 - Importing from POV-Ray — the `libraries` verb and what it brings across
 - Reference — the keyword index and the whole grammar
