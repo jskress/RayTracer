@@ -1,34 +1,39 @@
 ## Scene Files
 
 A scene file is a plain text file, conventionally given the extension `.igl`.  It is read
-from top to bottom, and what it contains is a series of *items* — a camera, some lights, the
-surfaces of the world, and whatever settings you care to fix.
+from top to bottom, and what it contains is a series of *items* — cameras, some lights, the
+surfaces of the world, whole scenes, and whatever settings you care to fix.
 
 ### The Shape of a File
 
-Order mostly does not matter.  The file is not a program being executed in sequence; it is a
-description being gathered up, and the renderer waits until it has read the whole thing
+Order mostly doesn't matter.  The file is not a program being executed in sequence; it is a
+specification of what to render.  The renderer waits until it has read the whole thing
 before it draws anything.  A light written after the surfaces lights them just the same as
 one written before.
 
-There are two exceptions, and both are the same exception really: a name has to be set
-before it is used.  A variable must be assigned above the place it is read, and a file must
-be included above the point where you rely on what is in it.  This is the one way in which a
-file reads from top to bottom.
+Everything in a scene file can carry a name.  For cameras and scenes, this is important
+since you'll have to tell the renderer which camera in which scene to use (but only if you
+have more than one of either).  The names of things must not be confused with *variables*,
+which are also supported.  Variables do need to be assigned a value before they can be
+referenced.  So, they must appear in the file before they are used.  The value can be as
+complex an expression as you need, but it won't actually be *evaluated* until render time.
+Similarly, a file must be included above the point where you rely on what is in it.  This
+is the one way order matters.
 
-Everything else — cameras, lights, surfaces — may appear in any order.  A file with no lights
-renders black, which is almost never what was wanted.
+Everything else — cameras, lights, surfaces — may appear in any order.  Just remember that
+a file with no lights renders black, which is probably not what you want.
 
 ### Scenes and Cameras
 
 Most of the time a file describes a single picture, and everything in it — the camera, the
 lights, the surfaces — simply sits at the top level, as in every example so far.  That is a
-convenience.  What is really being described is a *scene*, and a file may hold more than one.
+convenience.  What is really being described is a *scene*, and a file may hold more than one
+of those.
 
 #### More than one camera
 
 A scene may hold as many cameras as you like.  With just one, it is used without your having
-to say so.  With more than one, the renderer cannot guess which you meant, so two things
+to say so.  With more than one, the renderer cannot guess which you mean, so two things
 become necessary: each camera must be given a name, and the file must end with a `render`
 command naming the camera to use.
 
@@ -162,7 +167,7 @@ and hundreds more — and they may be used anywhere a color tuple can.
 
 ### Variables
 
-Any value may be given a name, and used afterwards wherever that value would go:
+Any value may be given a name, and used afterward wherever that value would go:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/setVariableClause-dark.svg">
@@ -223,6 +228,22 @@ sphere { translate [(count - 1) * spacing / 2, 1, 0] }
 Two conveniences are worth knowing: `²` and `³` square and cube what precedes them, and
 variables are read *late* — an expression is evaluated when the scene is rendered, not when
 the line is parsed.
+
+Strings are also supported and may be delimited by either a single or double quote.  Standard
+character escaping is supported.  If you want to interpolate values into a string, precede
+the first delimiter with the `$` operator and use the `${_name_}` style of variable notation.
+When the expression is evaluated, the current value of the named variable will be substituted
+into the string.  Here's an example:
+
+```
+context {
+    info {
+        title $'Chapter ${chapter}, ${title}'
+    }
+}
+```
+
+The Challenge book gallery scenes show how that is all wired together.
 
 #### Arithmetic on tuples needs a type first
 
@@ -299,8 +320,8 @@ import 'golds'   { Gold3CMaterial }
 
 Where an include brings in everything a file has, an import brings in only the names you
 list, and leaves the rest of the library out of scope.  That matters because the libraries
-are large — they are converted from POV-Ray's own texture includes — and you rarely want all
-of a file.
+may be quite large.  Libraries converted from POVRay are large because of all the definitions
+that POVRay ships with.  One scene will almost never want everything in a library file.
 
 The libraries themselves are managed with the `libraries` verb, which is covered in
-*Importing from POV-Ray*.
+*Using Libraries*.

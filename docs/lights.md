@@ -14,10 +14,12 @@ shading is the same for all of them.
   <img alt="Lights" src="images/lights/lightClause.svg">
 </picture>
 
-A bare `light` means the same thing as `point light`.  Both are accepted, and the shipped
+A bare `light` means the same thing as `point light`.  Both are accepted.  The shipped
 examples all write `point light` so that they say which sort they mean.
 
-Any number of lights may share a scene, of any sorts, and their contributions add.
+Any number of lights, of any sort, may share a scene and their contributions add.
+
+All light types carry a color.  If you don't specify one, `White` is the default.
 
 ### Point Lights
 
@@ -39,16 +41,17 @@ point light {
 
 ![A point light](images/figures/light-point.png)
 
-Note the shadows: they turn from lit to dark within a pixel.  A point has no width, so a spot
-on the floor either sees it or it does not, with nothing in between.  Nothing in the world
-casts a shadow that hard, which is what the [area light](#area-lights) is for.
+Note the shadows: point lights cast very sharp shadows.  If you want softer, more realistic
+shadows, given that nothing in the world casts a shadow that hard, you'll want the
+[area light](#area-lights).
 
 The complete example is [`docs/examples/lights/point-light.igl`](examples/lights/point-light.igl).
 
 ### Distant Lights
 
-The sun.  It lies infinitely far away, so its rays arrive parallel rather than splaying out
-from a point, and it is aimed with a direction instead of being placed at a location.
+When the source of light is far enough away, like the sun, the light rays become essentially
+parallel, rather than splaying out from a point.  Such distant lights are aimed with a direction
+instead of being placed at a location.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/lights/distantLight-dark.svg">
@@ -65,13 +68,13 @@ distant light {
 
 ![A distant light](images/figures/light-distant.png)
 
-The direction is the way the light *travels*, so a sun overhead is written `[0, -1, 0]` —
-pointing down, the way its rays go.
+The direction notes the way the light *travels*, so a sun overhead is written `[0, -1, 0]`
+(or `Down`) — pointing down, the way its rays go.
 
 Two things follow from the rays being parallel.  Shadows are all cast in the same direction
-and stay the same width however far they are thrown, and a flat surface facing the light is
-lit evenly across the whole of itself, since every part of it faces the light at the same
-angle.  Distance from a distant light means nothing at all.
+and stay the same width however far they are thrown.  Also, a flat surface facing the light
+is lit evenly across the whole of itself, since every part of it faces the light at the same
+angle.
 
 The complete example is [`docs/examples/lights/distant-light.igl`](examples/lights/distant-light.igl).
 
@@ -110,10 +113,9 @@ spot light {
 `radius` and `falloff` are angles, so whether you write them in degrees or radians depends on
 what the [context block](context.md#angles) says.  These examples set `angles are degrees`.
 
-Between `radius` and `falloff` the light eases off along a cubic curve, which is POV-Ray's own
-reckoning — a spotlight written here and the same one written there agree to within a level or
-two the whole way from the bright center to the dark beyond.  Setting `falloff` equal to
-`radius` gives a hard-edged pool; leaving a wide gap between them gives a very gradual one.
+Between `radius` and `falloff` the light eases off along a cubic curve.  Setting `falloff`
+equal to `radius` gives a hard-edged pool; leaving a wide gap between them gives a very
+gradual one.
 
 Note in the picture that the post and the far floor are almost black.  Outside the cone
 nothing arrives, so what you see there is the ambient term alone.  A dim second light is the
@@ -123,8 +125,9 @@ The complete example is [`docs/examples/lights/spot-light.igl`](examples/lights/
 
 ### Area Lights
 
-A lit rectangle rather than a place.  This is the light that casts a shadow with a soft edge,
-and it is the only one of the four that costs more than a single shadow ray.
+A lit rectangle rather than a point or direction.  This is the light that casts a shadow
+with a soft edge, and it is the only one of the four that costs more than a single shadow
+ray.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/lights/areaLight-dark.svg">

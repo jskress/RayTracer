@@ -1,0 +1,53 @@
+// The flat shapes, each standing up and facing the camera so its outline can be seen.  Unlike
+// the solids, none of these encloses a volume; they are surfaces with no inside.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 0.4, -13]
+    look at [0, 0.2, 0]
+    field of view 44
+}
+
+point light { location [-5, 7, -9]  color [1, 0.97, 0.93] }
+point light { location [6, 3, -7]   color [0.35, 0.36, 0.4] }
+
+// A disc, with an inner radius, so it is a washer rather than a solid circle.
+disc {
+    material { pigment color [0.85, 0.45, 0.35]  specular 0.4  shininess 50 }
+    center [0, 0, 0]
+    normal [0, 0, -1]
+    radius 1
+    inner radius 0.4
+    translate [-4.2, 0, 0]
+}
+
+// A parallelogram: a corner and the two edges that leave it.  The edges are not perpendicular,
+// which is what makes it lean.
+parallelogram {
+    material { pigment color [0.9, 0.75, 0.35]  specular 0.4  shininess 50 }
+    at [-0.9, -1, 0]
+    sides [1.4, 0.5, 0], [0.4, 1.6, 0]
+    translate [-1.4, 0, 0]
+}
+
+// A plain triangle: three points, and flat between them.
+triangle {
+    material { pigment color [0.45, 0.72, 0.45]  specular 0.4  shininess 50 }
+    points [0, 1.1, 0], [-1.1, -1, 0], [1.1, -1, 0]
+    translate [1.4, 0, 0]
+}
+
+// A bicubic patch: a curved quadrilateral pulled about by a four-by-four grid of control
+// points.  The middle four are lifted, so it bulges toward the camera.
+patch {
+    material { pigment color [0.5, 0.6, 0.85]  specular 0.4  shininess 50 }
+    points
+        [-1, -1, 0], [-0.33, -1, 0], [0.33, -1, 0], [1, -1, 0],
+        [-1, -0.33, 0], [-0.33, -0.33, -0.9], [0.33, -0.33, -0.9], [1, -0.33, 0],
+        [-1, 0.33, 0], [-0.33, 0.33, -0.9], [0.33, 0.33, -0.9], [1, 0.33, 0],
+        [-1, 1, 0], [-0.33, 1, 0], [0.33, 1, 0], [1, 1, 0]
+    uSteps 4
+    vSteps 4
+    rotate Y -30
+    translate [4.4, 0, 0]
+}

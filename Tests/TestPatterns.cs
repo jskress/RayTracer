@@ -12,6 +12,25 @@ namespace Tests;
 public class TestPatterns
 {
     [TestMethod]
+    public void TestTurbulenceMayBeLeftOffAnyPatternThatUsesIt()
+    {
+        // Turbulence is optional everywhere, and a pattern that uses it has to cope with its
+        // absence rather than reach straight through.  Agate did not, and took the whole render
+        // down with a null reference the moment a scene wrote one without turbulence -- which
+        // marble and wood, doing the same job, had always handled.
+        foreach (Pattern pattern in new Pattern[]
+                 { new AgatePattern(), new MarblePattern(), new WoodPattern() })
+        {
+            pattern.SetSeed(5);
+
+            double value = pattern.ValueFor(new Point(0.3, 0.4, 0.5));
+
+            Assert.IsFalse(double.IsNaN(value),
+                $"{pattern.GetType().Name} gave no value without turbulence");
+        }
+    }
+
+    [TestMethod]
     public void TestStripedPattern()
     {
         PatternPigment pigment = CreateStripedPigment(BandType.LinearX);

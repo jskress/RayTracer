@@ -25,7 +25,7 @@ camera {
 ```
 
 `location` is where the camera stands and `look at` is the point it is aimed at.  Between
-them they settle everything about the view except which way is up and how wide it is.
+them, they settle everything about the view except which way is up and how wide it is.
 
 `up` gives the direction the top of the image should point, and defaults to `[0, 1, 0]`.  It
 does not have to be perpendicular to the way the camera looks; only the part of it that is
@@ -42,7 +42,9 @@ camera {
 There is one arrangement to avoid: an `up` that points along the direction of view.  With
 nothing left over after the parallel part is removed, there is no "up" to be had and the view
 comes out degenerate.  Looking straight down, give an `up` of `[0, 0, 1]` rather than
-`[0, 1, 0]` — the light tests in this repository do exactly that.
+`[0, 1, 0]` — the light tests in this repository do exactly that.  The tracer defines some
+useful vectors of `Up`, `Down`, `Left`, `Right`, `In` and `Out` that give you the usual
+things you might want to choose from.
 
 ### Field of View
 
@@ -52,8 +54,8 @@ How much of the world the camera takes in, as an angle.
 <img alt="A middling field of view" src="images/figures/camera-fov-60.png" width="300">
 <img alt="A wide field of view" src="images/figures/camera-fov-100.png" width="300">
 
-Those three are the same scene from the same place — 30°, 60° and 100°.  The camera has not
-moved; only how much it takes in has changed.
+Those three are the same scene from the same place but with different fields of view — 30°,
+60° and 100°.  The camera has not moved; only how much it takes in has changed.
 
 ```
 camera {
@@ -63,24 +65,23 @@ camera {
 }
 ```
 
-The angle is read in whatever unit the [context block](context.md#angles) names, and degrees
-are the default.  Said nothing, the field of view is 50°, which sits in the range — roughly
+The angle is read in whatever unit the [context block](context.md#angles) names, degrees by default.  If
+you don't specify it, the field of view defaults to 50°, which sits in the range — roughly
 40° to 60° — that usually looks most natural; a fair bit wider than that starts to exaggerate
 the scene, and a fair bit narrower starts to flatten it.
 
 A narrow angle does more than crop.  It flattens the picture — near and far things come out
-closer in size — while a wide one exaggerates depth and bows straight lines near the edges.
-Moving the camera closer and narrowing the angle are therefore *not* interchangeable, even
-though both make the subject bigger.
+closer in apparent size — while a wide one exaggerates depth and bows straight lines near the
+edges.  Moving the camera closer and narrowing the angle are therefore *not* interchangeable,
+even though both make the subject bigger.
 
 The angle is measured across the wider of the image's two dimensions.
 
-The three examples are in
-[`docs/examples/cameras/`](examples/cameras/).
+The three examples are in [`docs/examples/cameras/`](examples/cameras/).
 
 ### Depth of Field
 
-By default the camera is a pinhole: every ray leaves a single point, so everything is in
+By default, the camera is a pinhole: every ray leaves a single point, so everything is in
 focus at every distance.  No real lens behaves that way.  Giving the camera an `aperture`
 makes it gather light across a disc instead, so only what lies at the focal distance stays
 sharp.
@@ -103,36 +104,35 @@ camera {
 | `blur samples` | How many places across the lens each ray is taken from. |
 | `seed` | The seed the lens's scatter is drawn from. |
 
-The aperture is a real radius rather than an uncalibrated knob, so how much a thing blurs
-follows from where it stands.  Wider means shallower depth of field.
+The aperture models a real lens, so how much a thing blurs follows from where it stands.
+Wider means shallower depth of field.
 
-Say where the focus lies either way round.  `focal point` is exactly that — a point in space,
-written as coordinates, where focus should be sharpest:
+Specify where the focus lies with either `focal point` or 'focal distance`.  `focal point`
+is exactly that — a point in space, written as coordinates, where focus should be sharpest:
 
 ```
 focal point [-0.2, 0.9, 1.5]
 ```
 
-It is a coordinate and not the name of a surface, but the coordinate of a surface is usually
-just what you want: give the focal point the same position you placed something at, and that
-thing comes out sharp.  The camera then works out for itself how far ahead the point lies, so
-the focus stays on it even if the camera later moves.  `focal distance` instead states that
-distance outright — a single number — for when nothing sits at the plane of focus to borrow a
-position from.  Said neither way, the camera focuses on whatever it was aimed at.
+The point doesn't need to lie on a surface, but you'll want it near, or even in the middle
+of, the surface you want to be in the sharpest focus.  The camera then works out for itself how
+far ahead the point lies, so the focus stays on it even if the camera later moves.  `focal
+ distance` instead states that distance outright — a single number — for when that's the
+easier way.  Said neither way, the camera focuses on whatever it was aimed at.
 
 Two things worth knowing.  **Blur samples alone do nothing without an aperture** — there is
 no width to gather across, so such a camera stays on the single-ray path rather than firing
 the same ray many times over.  And the cost is real: 32 samples means at least 32 rays per
-pixel, more with anti-aliasing on top.
+pixel, more with antialiasing on top.
 
 `gallery/Local/focal-blur.igl` is a scene built around this.
 
 ### Motion Blur
 
-The shutter is the other half of the same idea.  By default it does not linger: every ray is
-fired at the same instant, so a thing crossing the frame is drawn as sharply as one standing
-still.  Let it stay open and whatever moves while it is open comes out smeared along its
-path.
+The shutter is the other half of the same idea.  By default, every ray is fired at the same
+(logical) instant in time, so a thing crossing the frame is drawn as sharply as one standing
+still.  Let the shutter stay open and whatever moves while it is open comes out smeared along
+its path.
 
 ```
 camera {

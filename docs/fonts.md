@@ -3,7 +3,7 @@
 The `text` surface turns letters into real geometry: each glyph's outline becomes a path,
 and the path is extruded into a solid you can light, color and reflect like anything else.
 To do that the renderer needs the font's outlines, so fonts are kept in a catalog of the ray
-tracer's own rather than read from wherever the operating system keeps its.
+tracer's own rather than read from wherever the operating system might keep them.
 
 A scene names a font by family:
 
@@ -15,9 +15,9 @@ text {
 ```
 
 You may not have to do anything else at all.  If a named font is not already in the catalog,
-the renderer tries to fetch it from [Google Fonts](https://fonts.google.com) the first time a
-scene asks for it, and keeps what it finds — so a scene that names a font Google carries just
-works, and the font is there for next time.  The catalog fills itself as you go.
+the renderer tries to fetch it from [Google Fonts](https://fonts.google.com) the first time a scene asks for it.
+It keeps what it finds, so a scene that names a font Google carries just works, and the font
+is locally available for next time.  The catalog fills itself as you go.
 
 The `fonts` verb is for the times that is not enough, or not what you want: to add a font that
 Google does not have, to pull one down ahead of time rather than mid-render, to look at what a
@@ -64,8 +64,9 @@ Merriweather:Bold:italic     the bold italic face
 Merriweather::italic         the regular italic face
 ```
 
-The weights are `Thin`, `Light`, `Regular`, `Medium`, `Bold` and `Black`.  The third part
-need only begin with `i` — `:i` will do.
+The weights are `Thin`, `Light`, `Regular`, `Medium`, `Bold` and `Black`.  Numbers may also be
+specified, but they must match the standard weight numbering used in fonts, like `700` for bold.
+The third part need only begin with `i` — `:i` will do.
 
 ### Adding Font Faces
 
@@ -81,10 +82,9 @@ RayTracer fonts --fetch 'Merriweather:Bold:italic'
 ```
 
 This fetches the face from Google Fonts and stores it, exactly as a render would, but on
-demand.  Doing it ahead of time is worth it when you would rather the fetch not happen in the
-middle of a render — the first render of a scene that names an uncataloged font pauses to go
-and get it, and needs the network to be there when it does.  Fetching first turns that into a
-step of its own that you can see succeed or fail.
+demand.  Doing this ahead of time is worth it when you would rather the fetch not happen in
+the middle of a render.  The first render of a scene that names a font not in the catalog
+pauses to go and get it, and needs the network to be there when it does.
 
 #### From a file you already have
 

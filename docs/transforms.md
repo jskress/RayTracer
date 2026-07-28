@@ -25,8 +25,8 @@ cylinder {
 ### Order Matters
 
 Transforms take effect **in the order you write them**, top to bottom.  This is the single
-thing worth understanding about them, because writing the same two the other way round is a
-genuinely different instruction — not a stylistic choice.
+thing worth understanding about them, because writing the same two in the opposite order is a
+genuinely different instruction.
 
 ![The same two transforms, both ways round](images/figures/transform-order.png)
 
@@ -49,17 +49,17 @@ cube {
 }
 ```
 
-The red bar ends up where you would expect: out along X, turned a quarter.  The blue one is
-turned by the same quarter — you can see both bars lie the same way — but it is nowhere near
-where the `translate X 4` put it, because the rotation afterwards swung the whole arrangement
-about the origin and carried it round to −Z.
+The red bar ends up where you would expect: out along X, turned a quarter turn.  The blue
+one is turned by the same quarter — you can see both bars lie the same way — but it is
+nowhere near where the `translate X 4` put it.  That's because the rotation afterward swung
+the whole arrangement about the origin and carried it round to −Z.
 
 The rule to carry away: **a rotation turns things about the origin, not about themselves.**  A
 surface still sitting at the origin has no distinction between the two, which is why turning
-first and moving afterwards does what you usually mean.  Move first and the rotation becomes
+first and moving afterward does what you usually mean.  Move first and the rotation becomes
 an orbit.
 
-The same applies to scaling, which also works from the origin: scale after translating and
+The same applies to scaling, which also works from the origin.  If you scale after translating,
 you scale the *distance* as well as the thing.
 
 The scene is [`docs/examples/transforms/order.igl`](examples/transforms/order.igl); change one
@@ -85,9 +85,9 @@ scale [1, 3, 1]         // each axis separately
 scale Y 3               // one axis, leaving the others alone
 ```
 
-A uniform scale is the safe one.  Scaling unevenly is how you get an ellipsoid out of a
-sphere or a slab out of a cube, and it is also how a pattern gets stretched — a
-[pigment](pigments-and-patterns.md) is evaluated in the surface's own space, so squashing the
+A uniform scale is usually what you want.  That said, scaling unevenly is how you get other
+shapes; an ellipsoid out of a sphere or a slab out of a cube.  It's also how a pattern gets
+stretched; a [pigment](pigments-and-patterns.md) is evaluated in the surface's own space, so squashing the
 surface squashes what is painted on it.
 
 ### Rotate
@@ -108,11 +108,10 @@ rotate X 30
 rotate Y 45
 ```
 
-The angle is read in whatever unit the [context block](context.md#angles) names, and degrees
-are the default.
+The angle is read in whatever unit the [context block](context.md#angles) names; degrees are the default.
 
 Which way a positive angle turns follows the left hand: point your left thumb along the
-positive axis, and your fingers curl the way a positive angle goes.  In practice it is quicker
+positive axis, and your fingers curl the way a positive angle goes.  In practice, it is quicker
 to write one, look, and flip the sign if it went the wrong way.
 
 ### Shear
@@ -139,11 +138,11 @@ matrix [1, 0, 0, 0,
 ```
 
 Almost nothing needs this.  It is here for transforms brought in from elsewhere, and for the
-rare case that none of the others can express.
+rare cases that none of the others can express.
 
 ### Naming a Transform
 
-A transform may be given a name and used as often as you like, which is worth doing whenever
+A transform may be assigned to a variable and used as often as you like, which is worth doing whenever
 the same placement recurs:
 
 ```
@@ -159,8 +158,8 @@ cylinder { transform onEdge  translate [ 3, 1, 0] }
 
 Three discs stood on edge in a row, each written once and placed three times.
 
-A named transform is a value like any other, so it obeys the same ordering rule: everything
-inside it happens where you write the `transform`, before anything written after.
+A variable holding a transform is a value like any other, so it obeys the same ordering rule:
+everything inside it happens where you write the `transform`, before anything written after.
 
 ### Transforming a Group
 
@@ -184,8 +183,8 @@ scenes become impossible to adjust.
 
 ### Setting a Surface Moving
 
-A `motion` block takes the same transforms and means something different by them: not where
-the surface is, but where it *goes* while the camera's shutter is open.
+A `motion` block takes the same transforms but means something different by them: not where
+the surface is, but where it *goes* (or, *how it moves*) while the camera's shutter is open.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/transforms/motionClause-dark.svg">
@@ -214,6 +213,6 @@ its own reckoning of doing nothing, and for `scale` that is **one**, not zero:
 motion { scale 2 }      // grows from its own size to twice it
 ```
 
-Half way through the exposure that sphere is one and a half times its size — not half of it,
+Halfway through the exposure that sphere is one and a half times its size — not half of it,
 which is what measuring from zero would give and would have the thing begin the exposure as a
 speck.

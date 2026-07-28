@@ -22,17 +22,19 @@ context {
 }
 ```
 
-Anything this block settles can still be overridden from the command line, but never the
-other way about — see
-[How a setting is decided](getting-started.md#how-a-setting-is-decided).
+Several of the settings this block may contain can still be overridden from the command line,
+but never the other way about — see [How a setting is decided](getting-started.md#how-a-setting-is-decided).
 
-A scene may have only one context block, and it should come before whatever it affects.
+If a scene contains more than one context block, they are treated as if there was only one.
+The values accumulate so if a setting is specified more than once, either in the same block
+or across multiple blocks, the last one wins.
 
 ### Image Information
 
-The `info` block records who made the picture and what it is.  What it holds is written into
-the image file's own metadata, so it travels with the picture rather than living only in the
-scene file.
+The `info` block records who made the picture and what its title is and other types of
+metadata for the image.  What it holds is written into the image file's own metadata (if
+the image file format supports it), so it travels with the picture rather than living only
+in the scene file.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/context/infoClause-dark.svg">
@@ -54,7 +56,9 @@ context {
 The fields are `title`, `author`, `description`, `copyright`, `software`, `disclaimer`,
 `warning`, `source` and `comment`.  Each takes a string.  How they are stored depends on the
 image format — PNG keeps them as text chunks, which is why the example above comes back out
-of the file with its title and author intact.
+of the file with its title and author intact.  The renderer defines a variable called,
+`__software__` that provides a suitable value for the `software` metadata field.  You can see
+examples of its use in the Challenge book gallery pictures.
 
 The complete example is
 [`docs/examples/context/settings.igl`](examples/context/settings.igl).
@@ -72,9 +76,8 @@ angles are radians
 Degrees are the default, so `angles are degrees` says out loud what was already true.  Rather
 more than half the gallery scenes write it anyway, and that is a reasonable habit: a scene
 that turns things is easier to trust when it states which unit it means.  Write
-`angles are radians` only if you would rather work in radians throughout.
-
-The setting applies to the whole scene, so put it before anything that turns.
+`angles are radians` only if you would rather work in radians throughout your scene since
+the setting applies to the whole scene.
 
 ### Gamma
 
@@ -118,7 +121,7 @@ to happen in a predictable order.
 
 ### Anti-Aliasing
 
-Anti-aliasing is set from the command line rather than from the context block, with
+Antialiasing is set from the command line rather than from the context block, with
 `-a`/`--antialias`; see
 [Command Line Options](getting-started.md#how-big-and-how-good).
 

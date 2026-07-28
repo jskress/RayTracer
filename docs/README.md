@@ -10,9 +10,9 @@ The engine began as a working-through of Jamis Buck's *The Ray Tracer Challenge*
 carried on well past the end of that book.  Much of what it has grown since — the surface
 types, the pattern library, the finish model, the camera's lens and shutter — follows
 POV-Ray's lead, so anyone who has written a POV-Ray scene will find a good deal here
-familiar, including the names things go by.
+familiar.  You'll also find some new things along the way.
 
-Here is the whole of a scene:
+Here is the whole of a minimal scene:
 
 ```
 // Where we are looking from, and at.
@@ -34,8 +34,8 @@ plane {
     }
 }
 
-// And something to look at.  A sphere is written as though it sat at the origin with a
-// radius of one, then moved where it is wanted.
+// And something to look at since an empty floor is boring.  A sphere is written as though
+// it sat at the origin with a radius of one, then moved where it is wanted.
 sphere {
     material {
         pigment color Red
@@ -46,29 +46,29 @@ sphere {
 }
 ```
 
-Render it with:
+Render it with this in a terminal or command prompt:
 
 ```bash
 RayTracer -i first.igl
 ```
 
-And that is the picture:
+And you get this:
 
 ![The first scene](images/figures/first-scene.png)
 
-That is the whole path, from what you wrote to what you got.  The scene is
-[`docs/examples/getting-started/first.igl`](examples/getting-started/first.igl), so you can
-render it yourself and start changing things.
+That's the whole path, from what you wrote to what you got.  This scene is
+[`docs/examples/getting-started/first.igl`](examples/getting-started/first.igl), so you can render it yourself and
+start changing things.
 
 ### Reading this documentation
 
 The chapters below are meant to be read in order the first time through; each assumes what
-came before it.  Afterwards they stand well enough on their own to be dipped into.
+came before it.  After that, they stand well enough on their own to be used as a reference.
 
-Throughout, the syntax of the language is given in railroad diagrams that you follow from
-left to right: any path you can trace through one is something you are allowed to write.
-Where a diagram loops back on itself, whatever the loop encloses may be repeated, and where
-it branches, any one of the branches will do.
+Throughout, the syntax of the language is given in diagrams that you follow from left to
+right: any path you can trace through one is something you are allowed to write.  Where a
+diagram loops back on itself, whatever the loop encloses may be repeated, and where it
+branches, any one of the branches will do.
 
 - [Getting Started](getting-started.md)
   - [Installing and Building](getting-started.md#installing-and-building)
@@ -122,7 +122,16 @@ it branches, any one of the branches will do.
   - [Transparency and Interiors](materials.md#transparency-and-interiors)
   - [Roughening the Surface](materials.md#roughening-the-surface)
   - [Naming and Reusing](materials.md#naming-and-reusing)
-  - [Materials on a Group](materials.md#materials-on-a-group)
+  - [Materials on a Group](materials.md#materials-on-a-group-or-csg)
+- [Pigments and Patterns](pigments-and-patterns.md)
+  - [Solid Color](pigments-and-patterns.md#solid-color)
+  - [Patterns](pigments-and-patterns.md#patterns)
+  - [Turbulence](pigments-and-patterns.md#turbulence)
+  - [Shaping the Value](pigments-and-patterns.md#shaping-the-value)
+  - [Patterns Live in the Surface's Space](pigments-and-patterns.md#patterns-live-in-the-surfaces-space)
+  - [Image Pigments](pigments-and-patterns.md#image-pigments)
+  - [Blending and Layering](pigments-and-patterns.md#blending-and-layering)
+  - [Mottling](pigments-and-patterns.md#mottling)
 - [Managing Fonts](fonts.md)
   - [The Font Catalog](fonts.md#the-font-catalog)
   - [Adding Font Faces](fonts.md#adding-font-faces)
@@ -132,16 +141,16 @@ it branches, any one of the branches will do.
 The chapters below are still to be written.
 
 - Advanced Surfaces — extrusions, lathes, sweeps, text, height fields and L-systems
-- Pigments and Patterns — where a surface gets its color
-- Importing from POV-Ray — the `libraries` verb and what it brings across
+- Using Libraries — the `libraries` verb and what it brings across
 - Reference — the keyword index and the whole grammar
 
 ### Regenerating the syntax diagrams
 
-The diagrams are generated from the EBNF under `docs/diagrams/` and written to
-`docs/images/`, a light and a dark copy of each.  Node.js is needed, but nothing is
-installed globally:
+The diagrams are generated from a EBNF under `docs/diagrams/` and written to `docs/images/`,
+a light and a dark version of each.  You'll need `node.js` for this to work:
 
 ```bash
 docs/generate-diagrams.sh
 ```
+You can follow [this link](generate-diagrams.sh) if you just want to see what's in the
+script.

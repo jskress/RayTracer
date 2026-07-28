@@ -1,0 +1,48 @@
+// The same marble at three turbulence amplitudes.  Nothing else differs between the three.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.2, -13]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-7, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.28, 0.29, 0.34] }
+
+// No turbulence: the veins are straight bands, which is what marble is before it is stirred.
+sphere {
+    material {
+        pigment marble {
+            [0, [0.2, 0.2, 0.24], 0.4, [0.6, 0.6, 0.58], 1, [0.92, 0.92, 0.9]]
+            scale 0.5
+        }
+        specular 0.4  shininess 60
+    }
+    translate [-2.6, 0, 0]
+}
+
+// A little: the bands begin to wander.
+sphere {
+    material {
+        pigment marble {
+            turbulence 0.4
+            [0, [0.2, 0.2, 0.24], 0.4, [0.6, 0.6, 0.58], 1, [0.92, 0.92, 0.9]]
+            scale 0.5
+        }
+        specular 0.4  shininess 60
+    }
+}
+
+// A lot: they break up into something much more like real stone.
+sphere {
+    material {
+        pigment marble {
+            turbulence { amplitude 1  octaves 5 }
+            [0, [0.2, 0.2, 0.24], 0.4, [0.6, 0.6, 0.58], 1, [0.92, 0.92, 0.9]]
+            scale 0.5
+        }
+        specular 0.4  shininess 60
+    }
+    translate [2.6, 0, 0]
+}

@@ -37,7 +37,8 @@ Anywhere those appear below as "the usual properties," this is what is meant.
 
 #### Reusing a surface
 
-Give a surface a name and it becomes a value you can place as often as you like:
+If you assign a surface to a variable, it becomes a value you can place as often as you
+like:
 
 ```
 pillar = cylinder {
@@ -52,8 +53,8 @@ object pillar { translate [ 0, 0, 0] }
 object pillar { translate [ 4, 0, 0] }
 ```
 
-Each `object` is the same description placed somewhere new, and may add transforms and
-properties of its own.
+Each `object` is the same description placed somewhere new, and may add transforms and any
+other properties of its own.
 
 #### `no shadow`
 
@@ -63,16 +64,28 @@ a light's own visible bulb that should not shade what it lights.
 
 #### `bounded by`
 
-Most surfaces work out a bounding box for themselves, and you can leave this alone.  It is
-there for the surfaces that cannot — see [Bounding](#bounding) below.
+Most surfaces work out a bounding box for themselves, so you can leave this alone.  It is
+there for the surfaces that cannot or when you can provide a better one than the default
+for a surface — see [Bounding](#bounding) below.
 
 ### The Primitives
 
+The primitives fall into two groups.  **Solids** enclose a volume, so they have an inside and
+an outside, and they are what you combine with
+[union, difference and intersection](#combining-surfaces).  **Shapes** are flat: they have a
+front and a back but no inside at all, and a difference cannot carve anything out of one.
+
 Most of these need nothing at all beyond the usual properties — a `sphere { }` is a complete,
-valid surface.  A few describe shapes that have no sensible default and so insist on being
-told: a torus and an egg need their `radii`, a superellipsoid its `east` and `north`, a disc
-its `center`, `normal` and `radius`, a parallelogram its `at` and `sides`, and a triangle its
-three `points`.  Leave one out and the render stops and says which.
+valid surface.  A few describe shapes with properties that have no sensible default.  So,
+such properties must be explicit.  For example, a torus and an egg both need `radii`, a
+superellipsoid needs its `east` and `north`, a disc its `center`, `normal` and `radius`,
+a parallelogram its `at` and `sides`, and a triangle its three `points`.  Without these,
+those surfaces could not be rendered. 
+
+### Solids
+
+These enclose a volume.  Six of them are in the picture at the top of this chapter; the plane
+is the seventh, and it appears as the ground in almost every other picture here.
 
 #### Plane
 
@@ -99,7 +112,7 @@ sphere {
 }
 ```
 
-Scaling it unevenly gives an ellipsoid, which is how you get one.
+Scaling it unevenly produces an ellipsoid.
 
 #### Cube
 
@@ -140,7 +153,7 @@ capped; add `open` and they are not, which matters when you are going to see ins
 
 #### Torus
 
-A ring about the Y axis.  It needs its two radii: how far the ring's center is from the
+A ring about the Y axis.  It needs two radii: how far the ring's center is from the
 origin, and how thick the ring itself is.
 
 ```
@@ -151,8 +164,7 @@ torus {
 
 #### Egg
 
-An ovoid, which needs the same two numbers a torus does but means something else by them:
-the radius across, and the radius along the axis.
+An ovoid, which also needs two radii: the radius across, and the radius along the axis.
 
 ```
 egg {
@@ -184,6 +196,57 @@ a sphere, and anything much above one pinches the shape inward into a star.  The
 match: a low `east` with a high `north` gives a square cross-section drawn to points at the
 poles.  The scene is
 [`docs/examples/surfaces/superellipsoids.igl`](examples/surfaces/superellipsoids.igl).
+
+#### Blob
+
+A set of spheres and cylinders that melt into one another rather than merely overlapping.
+Each contributes a field that falls off with distance, and the surface is drawn where the
+total crosses a `threshold`.
+
+```
+blob {
+    threshold 0.6
+    sphere { center [-0.7, 0, 0]  radius 1  strength 1 }
+    sphere { center [ 0.7, 0, 0]  radius 1  strength 1 }
+}
+```
+
+A component may be a cylinder instead, given `from` and `to` rather than a `center`:
+
+```
+blob {
+    threshold 0.6
+    cylinder { from [-1, 0, 0]  to [1, 0, 0]  radius 0.6  strength 1 }
+    sphere   { center [1, 0, 0]  radius 0.9  strength 1 }
+}
+```
+
+![Two blob spheres at three separations](images/figures/blobs.png)
+
+The same two components three times over, moved closer together each time.  Far apart they are
+simply two balls; brought within reach of one another their fields overlap and a smooth neck
+grows between them; closer still and they are one rounded mass.  Nothing but the distance
+changes.  That joining is what no amount of CSG will give you — a union of two spheres meets in
+a crease, not a neck.  The scene is
+[`docs/examples/surfaces/blobs.igl`](examples/surfaces/blobs.igl).
+
+`threshold` is the other half of it: it is the value the total field must reach for the surface
+to be drawn there, so lowering it grows everything and makes components reach further, and
+raising it shrinks them apart again.
+
+A negative `strength` works the other way, pressing a dent into its neighbors rather than
+adding to them — see `gallery/Local/blob-negative-strength.igl`.
+
+### Shapes
+
+These are flat.  They have a front and a back but no inside, so a
+[difference](#combining-surfaces) has nothing to carve out of one and a
+[blob](#blob) cannot be built from them.
+
+![The flat shapes](images/figures/surface-shapes.png)
+
+A disc with an inner radius, a parallelogram, a triangle and a bicubic patch.  The scene is
+[`docs/examples/surfaces/shapes.igl`](examples/surfaces/shapes.igl).
 
 #### Disc
 
@@ -228,34 +291,6 @@ triangle {
 }
 ```
 
-#### Blob
-
-A set of spheres and cylinders that melt into one another rather than merely overlapping.
-Each contributes a field that falls off with distance, and the surface is drawn where the
-total crosses a `threshold`.
-
-```
-blob {
-    threshold 0.6
-    sphere { center [-0.7, 0, 0]  radius 1  strength 1 }
-    sphere { center [ 0.7, 0, 0]  radius 1  strength 1 }
-}
-```
-
-A component may be a cylinder instead, given `from` and `to` rather than a `center`:
-
-```
-blob {
-    threshold 0.6
-    cylinder { from [-1, 0, 0]  to [1, 0, 0]  radius 0.6  strength 1 }
-    sphere   { center [1, 0, 0]  radius 0.9  strength 1 }
-}
-```
-
-Two components near each other join with a smooth neck, which no amount of CSG will give you.
-A negative `strength` works the other way, pressing a dent into its neighbours rather than
-adding to them — see `gallery/Local/blob-negative-strength.igl`.
-
 #### Patch
 
 A bicubic patch: a curved quadrilateral pulled into shape by a four-by-four grid of control
@@ -263,7 +298,8 @@ points.  `gallery/Local/patch.igl` is the example to read.
 
 ### Groups
 
-A group gathers surfaces so they can be moved, materialed and reasoned about as one.
+A group contains surfaces so they may be transformed and, if desired, have a material applied
+as a whole.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/groupClause-dark.svg">
@@ -286,9 +322,8 @@ group {
 
 Two things a group does for you.  A transform on the group applies to everything inside it,
 after whatever transforms the children have of their own — so the table above is built at the
-origin and then turned and moved as a piece.  And a material on the group is handed down to
-any child that does not have one, which saves repeating it; a child that names its own
-material keeps it.
+origin and then turned and moved as a piece.  A material on the group is handed down to
+any child that does not have one; a child that names its own material keeps it.
 
 A group is also what makes a big scene tractable.  It works out a box around its children and
 tests that first, so a ray that misses the group skips every surface in it at once.
@@ -296,7 +331,8 @@ tests that first, so a ray that misses the group skips every surface in it at on
 ### Combining Surfaces
 
 Where a group merely holds surfaces side by side, a CSG operation makes a genuinely new solid
-out of them.
+out of them.  A CSG logically treats each of its children as a *set* of points, on which you
+can perform *set operations*.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/csgClause-dark.svg">
@@ -328,16 +364,24 @@ difference {
 }
 ```
 
-Order matters for `difference` and not for the other two: the first surface is the one kept,
-and everything after it is removed from it.  Swap those two and you get the sphere with a cube
-bitten out of it instead.
+Order matters for `difference`, though not for the other two.  The first surface is the one
+kept, and everything after it is removed from it.  Swap the two children and you get something
+else entirely:
+
+<img alt="the sphere taken out of the cube" src="images/figures/csg-difference.png" width="260">
+<img alt="the cube taken out of the sphere" src="images/figures/csg-difference-swapped.png" width="260">
+
+The same two surfaces both times.  On the left the cube is written first, so the sphere is
+carved out of it; on the right the sphere is written first, so the cube is carved out of that
+instead.
 
 Notice in the pictures that each piece keeps its own material — the blue you can see is the
 sphere's surface, exposed where it cut into the cube.  That is worth remembering: a difference
-does not paint the hole it makes, it reveals the cutter.
+does not paint the hole it makes, it reveals the cutter.  As with groups, any children that
+don't specify their own material will inherit the CSG's.
 
-The three complete scenes are in [`docs/examples/surfaces/`](examples/surfaces/), and
-`gallery/challenge-book/chapter-16/csg.igl` builds something more interesting from all three.
+The four complete scenes are in [`docs/examples/surfaces/`](examples/surfaces/), and
+`gallery/challenge-book/chapter-16/csg.igl` builds something more interesting.
 
 CSG nests, and that is where its power is: a difference whose first surface is itself a union,
 and so on down.
@@ -345,7 +389,7 @@ and so on down.
 ### Bounding
 
 Testing a ray against every surface in a large scene is what makes rendering slow, so the
-renderer draws a box around what it can and tests the box first — a ray that misses the box
+renderer wraps a box around what it can and tests the box first.  A ray that misses the box
 cannot have hit anything inside it.
 
 Most surfaces do this for themselves and you need not think about it.  Two cases are worth
@@ -368,4 +412,4 @@ lsystem {
 This is a promise the renderer trusts and does not check.  Give a box that is too small and
 the surface will be quietly clipped — rays that should have hit it are turned away at the box.
 That failure looks like geometry mysteriously missing, and it is worth suspecting whenever a
-scene with a hand-written bound loses part of something.
+scene with a handwritten bound loses part of something.

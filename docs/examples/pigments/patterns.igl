@@ -1,0 +1,69 @@
+// A sampling of patterns, all on the same ball under the same light, so that what differs
+// between them is the pattern and nothing else.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.4, -17]
+    look at [0, 0.1, 0]
+    field of view 42
+}
+
+point light { location [-7, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.28, 0.29, 0.34] }
+
+// Discrete: a fixed number of plain colors.
+sphere {
+    material { pigment checker { White, Gray30  scale 0.5 }  specular 0.3 }
+    translate [-5, 0, 0]
+}
+
+sphere {
+    material { pigment brick {
+            brick size [0.5, 0.25, 0.25]
+            mortar size 0.04
+            color [0.7, 0.3, 0.25], Gray70
+            scale 0.55
+        }  specular 0.3 }
+    translate [-3, 0, 0]
+}
+
+sphere {
+    material { pigment hexagon { Red, Green, Blue  scale 0.5 }  specular 0.3 }
+    translate [-1, 0, 0]
+}
+
+// Continuous: a color map, and a value between its ends.
+sphere {
+    material {
+        pigment marble {
+            turbulence { amplitude 0.6  octaves 4 }
+            [0, [0.2, 0.2, 0.24], 0.4, [0.6, 0.6, 0.58], 1, [0.9, 0.9, 0.88]]
+            scale 0.8
+        }
+        specular 0.4
+    }
+    translate [1, 0, 0]
+}
+
+sphere {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.15  octaves 3 }
+            [0, [0.45, 0.28, 0.13], 0.7, [0.65, 0.44, 0.22], 1, [0.78, 0.58, 0.32]]
+            scale 0.25
+        }
+        specular 0.3
+    }
+    translate [3, 0, 0]
+}
+
+sphere {
+    material {
+        pigment granite {
+            [0, [0.25, 0.25, 0.28], 1, [0.85, 0.85, 0.82]]
+            scale 0.5
+        }
+        specular 0.3
+    }
+    translate [5, 0, 0]
+}

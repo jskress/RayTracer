@@ -17,8 +17,8 @@ plane {
     }
 }
 
-// And something to look at.  A sphere is written as though it sat at the origin with a
-// radius of one, then moved where it is wanted.
+// And something to look at since an empty floor is boring.  A sphere is written as though
+// it sat at the origin with a radius of one, then moved where it is wanted.
 sphere {
     material {
         pigment color Red

@@ -46,7 +46,7 @@ The rest of the material describes how light behaves when it arrives.
 
 #### Ambient, diffuse and specular
 
-These three are the heart of it, and they add up to what you see.
+These three are the heart of how light is determined, and they add up to what you see.
 
 **`ambient`** stands in for light that has bounced around the scene rather than arriving
 straight from a lamp.  This renderer does not trace those bounces, so the ambient term is the
@@ -113,8 +113,7 @@ nothing looks like painted plastic.
 Two adjustments to how the diffuse term falls off.  `brilliance` above 1 makes a surface hold
 its brightness further round toward its edge before falling away, which is how a polished
 metal reads; `grain` roughens that falloff, for a surface that is not perfectly smooth.  Both
-are POV-Ray's, and both are worth leaving alone until a surface looks not quite right in a way
-you can name.
+are worth leaving alone until a surface does not look quite right in a way you can name.
 
 ### Transparency and Interiors
 
@@ -132,7 +131,7 @@ material {
 }
 ```
 
-`transparency` is the how-much, from 0 to 1.  The `interior` block is the what:
+`transparency` is the *how-much*, from 0 to 1.  The `interior` block is the *what-it's-made-of*:
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/materials/interiorClause-dark.svg">
@@ -149,8 +148,8 @@ material {
 `ior` may also be written out as `index of refraction`, which reads better in a scene meant to
 be shown to someone else.
 
-Glass is about 1.5, water about 1.33, diamond about 2.4 — and you need not remember any of
-them, because they have names:
+Glass is about 1.5, water about 1.33, diamond about 2.4.  But you need not remember any of
+them, because they already have names:
 
 ```
 interior { ior Glass }
@@ -186,8 +185,8 @@ material {
 ```
 
 It takes any of the [patterns](pigments-and-patterns.md), with `depth` saying how strongly to
-tilt.  It is written beside the pigment rather than inside it because the two are usually
-different fields: a marble's veins and the roughness of its surface have nothing to do with
+tilt.  It is written beside the pigment rather than inside it because the two are different
+concepts: a marble's veins and the roughness of its surface have nothing to do with
 one another, and each wants its own scale.
 
 Because it only tilts the normal, the surface's *outline* stays perfectly smooth.  A rough
@@ -198,7 +197,7 @@ geometry.
 
 ### Naming and Reusing
 
-A material may be named and reused like any other value:
+A material may be assigned to a variable and reused like any other value:
 
 ```
 brass = material {
@@ -213,9 +212,9 @@ sphere { material brass  translate [-2, 1, 0] }
 cube   { material brass  translate [ 2, 1, 0] }
 ```
 
-A named material may also be taken and adjusted, which is what makes the
-[POV-Ray libraries](povray-import.md) useful — you can import a texture and change just its
-color:
+A material variable may also be referenced and adjusted, which is what makes the
+[libraries](libraries.md) useful — you can import a texture and change just its
+reflectance:
 
 ```
 import 'golds' { Gold3CMaterial }
@@ -227,10 +226,10 @@ sphere {
 }
 ```
 
-### Materials on a Group
+### Materials on a Group or CSG
 
-A material given to a [group](surfaces.md#groups) is handed down to every child that does not
-have one of its own:
+A material given to a [group](surfaces.md#groups) or [csg](surfaces.md#combining-surfaces)
+is handed down to every child that does not have one of its own:
 
 ```
 group {

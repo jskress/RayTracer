@@ -1,0 +1,64 @@
+// The same gradient bent by four different waves.  The pattern, the map and the frequency are
+// identical in all four; only the wave differs.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.2, -16]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-7, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.28, 0.29, 0.34] }
+
+// Ramp: the plain sawtooth, and what you get if you ask for no wave at all.
+sphere {
+    material {
+        pigment linear X gradient {
+            ramp wave
+            frequency 3
+            [0, [0.85, 0.35, 0.3], 1, [0.95, 0.93, 0.85]]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [-3.9, 0, 0]
+}
+
+// Sine: eases in and out, so the bands have no hard edge anywhere.
+sphere {
+    material {
+        pigment linear X gradient {
+            sine wave
+            frequency 3
+            [0, [0.85, 0.35, 0.3], 1, [0.95, 0.93, 0.85]]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [-1.3, 0, 0]
+}
+
+// Triangle: runs up and straight back down, so the map is mirrored rather than repeated.
+sphere {
+    material {
+        pigment linear X gradient {
+            triangle wave
+            frequency 3
+            [0, [0.85, 0.35, 0.3], 1, [0.95, 0.93, 0.85]]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [1.3, 0, 0]
+}
+
+// Scallop: a rounded rise and fall.
+sphere {
+    material {
+        pigment linear X gradient {
+            scallop wave
+            frequency 3
+            [0, [0.85, 0.35, 0.3], 1, [0.95, 0.93, 0.85]]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [3.9, 0, 0]
+}

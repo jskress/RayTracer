@@ -1,0 +1,377 @@
+## Pigments and Patterns
+
+A pigment is where a surface gets its color.  The simplest is one color everywhere, but a
+pigment can just as easily be a checkerboard, a slab of marble, a photograph, or several of
+those combined together.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/pigmentClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/pigmentClause.svg">
+  <img alt="A pigment" src="images/pigments/pigmentClause.svg">
+</picture>
+
+A pigment lives inside a [material](materials.md), and every material has one whether you
+write it or not; the default is plain white.
+
+![A sampling of patterns](images/figures/pattern-sampler.png)
+
+Six patterns on the same ball under the same light: checker, brick, hexagon, marble, wood and
+granite.  The scene is
+[`docs/examples/pigments/patterns.igl`](examples/pigments/patterns.igl).
+
+### Solid Color
+
+The everyday case:
+
+```
+pigment color Red
+pigment color [0.8, 0.3, 0.25]
+```
+
+The word `color` may be left off when what follows is unambiguous, so `pigment Red` means the
+same thing.  Writing it is the clearer habit.
+
+### Patterns
+
+A pattern is a function of position.  For each intersection point the renderer finds, the
+surface's pattern hands back either a number or a choice among colors, and the pigment
+turns that into the color at that point.
+
+That "either" is the important division, and it decides how you write a pattern.
+
+#### Discrete patterns
+
+These pick among a fixed number of sub-patterns (yes, patterns can be nexted).  You give
+exactly as many as the pattern needs, separated by commas:
+
+| Pattern | Colors |
+| --- | --- |
+| `checker` | 2 |
+| `linear stripes`, `cylindrical stripes`, `spherical stripes` | 2 |
+| `brick` | 2 |
+| `hexagon` | 3 |
+| `square` | 4 |
+| `cubic` | 6 |
+| `triangular` | 6 |
+
+```
+pigment checker { White, Gray30 }
+pigment hexagon { Red, Green, Blue }
+pigment linear X stripes { Red, Blue }
+```
+
+Give the wrong number and the render stops and says so.
+
+A plain color is simply the simplest sub-pattern there is, so anywhere one of these entries may
+take a color, it may take a whole pattern instead:
+
+```
+pigment checker {
+    color [0.85, 0.4, 0.35],
+    marble {
+        turbulence 0.5
+        [0, [0.35, 0.35, 0.4], 1, [0.95, 0.95, 0.92]]
+        scale 0.7
+    }
+    scale 0.45
+}
+```
+
+![Nesting a pattern inside a checker](images/figures/pattern-nested.png)
+
+A checker of two plain colors, a checker with marble in one of its squares, and a checker with
+a pattern in both.  Each nested pattern keeps its own scale and turbulence, so the two need
+have nothing to do with one another.  The scene is
+[`docs/examples/pigments/nested.igl`](examples/pigments/nested.igl).
+
+`brick` takes two extra settings, and they must be written **before** the colors:
+
+```
+pigment brick {
+    brick size [0.5, 0.25, 0.25]
+    mortar size 0.04
+    color [0.7, 0.3, 0.25], Gray70
+}
+```
+
+#### Continuous patterns
+
+These produce a number rather than a choice, so instead of a list of colors you give a *color
+map*: pairs of a position and the color at that position, in square brackets.
+
+| Pattern | What it looks like |
+| --- | --- |
+| `linear gradient`, `cylindrical gradient`, `spherical gradient` | A smooth ramp. |
+| `marble` | Veins running through stone. |
+| `wood` | Growth rings. |
+| `granite` | Fine speckle, noise at every scale. |
+| `agate` | Wandering bands. |
+| `bozo` | Broad, smooth noise. |
+| `crackle` | A web of cracks between cells. |
+| `dents`, `wrinkles` | Noise meant chiefly for roughening. |
+| `leopard` | Spots. |
+| `ripples`, `waves` | Rings spreading from scattered sources. |
+| `radial` | The angle about the Y axis. |
+| `planar`, `spherical`, `cylindrical`, `boxed` | Distance from a plane, point, axis or box. |
+
+```
+pigment marble {
+    [0, [0.2, 0.2, 0.24], 0.4, [0.6, 0.6, 0.58], 1, [0.9, 0.9, 0.88]]
+}
+```
+
+The map reads as position, color, position, color, and so on.  Positions run from 0 to 1, and
+the color between two entries is blended from them.  A map need not stop at 1; whatever the
+pattern hands back is wrapped, which is exactly what turns a marching value into repeated
+veins.
+
+Adding `banded` before the opening bracket turns the blending off, so each entry holds until
+the next rather than fading into it.
+
+#### Adding a bounce
+
+`gradient` may be written `bouncing`, which makes it run up and back down again rather than
+snapping from the end of the map to its start:
+
+```
+pigment linear bouncing gradient { [0, Red, 1, Blue] }
+```
+
+![Three ways of reading one map](images/figures/pattern-maps.png)
+
+The same three-color map read three ways: blended, which is the default; `banded`, which holds
+each color until the next; and `bouncing`, which runs the map up and back down so there is no
+seam where it would otherwise wrap.  The scene is
+[`docs/examples/pigments/maps.igl`](examples/pigments/maps.igl).
+
+### Turbulence
+
+Most of the interesting patterns are dull without turbulence.  It stirs the points before the
+pattern sees them, so straight bands become wandering ones:
+
+```
+pigment marble {
+    turbulence { amplitude 0.6  octaves 4 }
+    [0, [0.2, 0.2, 0.24], 1, [0.9, 0.9, 0.88]]
+}
+```
+
+| Setting | What it does |
+| --- | --- |
+| `amplitude` | How far points are pushed about. |
+| `octaves` | How many scales of detail to pile up. |
+| `finer` | How much smaller each successive octave is. |
+| `fainter` | How much weaker each successive octave is. |
+| `with seed` | Fixes the randomness, so the result repeats. |
+
+A bare number is shorthand for the amplitude alone, which is the common case:
+
+```
+pigment marble { turbulence 0.6  [0, Red, 1, Blue] }
+```
+
+![Marble at three turbulence amplitudes](images/figures/pattern-turbulence.png)
+
+The same marble three times: no turbulence, a little, and a lot.  Without it the veins are
+straight bands; with a little they wander; with a lot they break up into something much closer
+to real stone.  The scene is
+[`docs/examples/pigments/turbulence.igl`](examples/pigments/turbulence.igl).
+
+Turbulence goes **before** the color map.  It belongs only to continuous patterns; a checker
+has no value to stir.
+
+### Shaping the Value
+
+Between the pattern and the color map, the number a pattern produces can be reshaped:
+
+| Setting | What it does |
+| --- | --- |
+| `frequency` | Multiplies the value, so the map repeats more often. |
+| `phase` | Slides the value along, so the map starts somewhere else. |
+| `<name> wave` | Bends the value along a curve. |
+
+The waves are `ramp`, `sine`, `triangle`, `scallop`, `cubic` and `poly`.  A ramp is the plain
+sawtooth you get by default; a sine eases in and out; a triangle runs up and back down.
+
+```
+pigment bozo {
+    sine wave
+    frequency 2
+    [0, Red, 1, Blue]
+}
+```
+
+![Four waves on one gradient](images/figures/pattern-waves.png)
+
+One gradient bent four ways: `ramp`, `sine`, `triangle` and `scallop`.  The pattern, the map
+and the frequency are the same in all four.  A ramp snaps back at the end of each repeat; a
+sine eases in and out of it; a triangle mirrors the map rather than repeating it, so there is
+no snap at all.  The scene is
+[`docs/examples/pigments/waves.igl`](examples/pigments/waves.igl).
+
+Like turbulence, these are written **before** the map.
+
+### Seeding
+
+Any pattern that draws on randomness — `bozo`, `crackle`, `dents`, `granite`, `wrinkles` —
+may be given a seed, so that the same scene renders the same way every time.  The seed goes
+on the pattern name, **before** the opening brace:
+
+```
+pigment granite with seed 5 {
+    [0, [0.25, 0.25, 0.28], 1, [0.85, 0.85, 0.82]]
+}
+```
+
+A seed may also be put on the pigment as a whole, in which case it reaches everything inside
+that has not been given one of its own.
+
+### Patterns Live in the Surface's Space
+
+A pattern is evaluated in the surface's own coordinates, which has two consequences worth
+knowing.
+
+**A pattern may be transformed on its own.**  Write transforms inside the pattern, after the
+colors, and they move the pattern rather than the surface:
+
+```
+pigment checker {
+    White, Gray30
+    scale 0.4
+    rotate Y 30
+}
+```
+
+**Transforming the surface transforms the pattern with it.**  Squash a sphere and whatever is
+painted on it squashes too.  That is usually what you want, and occasionally a nuisance — a
+brushed-metal look is made exactly this way, by squashing a pattern along two axes so its
+slopes all run one direction.
+
+### Image Pigments
+
+A pigment may be a picture.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/imageClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/imageClause.svg">
+  <img alt="An image pigment" src="images/pigments/imageClause.svg">
+</picture>
+
+```
+pigment image 'earth.png' spherical
+```
+
+The mapping says how the flat picture is wrapped onto the surface:
+
+| Mapping | Wraps the image…                                  |
+| --- |---------------------------------------------------|
+| `planar` | Flat, along one plane.                            |
+| `spherical` | Around a ball, the way a world map wraps a globe. |
+| `cylindrical` | Around an axis, like a label on a can.            |
+| `toroidal` | Around a ring.                                    |
+
+![One picture, four mappings](images/figures/image-maps.png)
+
+The same picture wrapped four ways, each onto the surface its mapping suits.  The scene is
+[`docs/examples/pigments/image-maps.igl`](examples/pigments/image-maps.igl).
+
+`planar` and `cylindrical` may be followed by `once`, which draws the image a single time
+rather than repeating it.  Without it the image tiles, so a surface larger than one unit gets
+the picture over and over.
+
+Worth knowing about `planar`: it maps the surface's **X and Z**, so it belongs on something
+lying flat.  Put it on an upright face — where Z barely changes — and you get a single row of
+the image smeared into stripes.  The panel in the picture above is the unit square in X and Z,
+stood upright afterward, so the mapping still lands on it square.
+
+The file name may be a **web address** rather than a path:
+
+```
+pigment image 'https://example.com/texture.jpg' spherical
+```
+
+A downloaded image is held in memory for the run that needs it, but it is not saved anywhere,
+so it is fetched again the next time you render.  See
+[Installing and Building](getting-started.md#installing-and-building).
+
+`uncached` before `image` skips the in-memory cache as well, so the file is re-read for every
+surface that names it.  You want this only when the file may change under you.
+
+`gallery/Local/solar-system/` is built almost entirely from image pigments.
+
+### Blending and Layering
+
+Two or more pigments may be combined:
+
+```
+pigment blend { checker { Red, Blue }, color Green }
+pigment layer { color Red, checker { White, Black } }
+```
+
+`blend` averages them: every point is the mean of what each pigment would give.
+
+`layer` stacks them instead, and **the first one written is the topmost**.  Where the upper
+pigment is transparent the one beneath shows through, which is how you put a decal or a stain
+over something patterned.  A fully opaque pigment written first hides everything after it, so
+the transparency has to be in the upper one:
+
+```
+pigment layer {
+    checker { color [0.85, 0.35, 0.3], color [1, 1, 1, 0]  scale 0.45 },
+    color [0.25, 0.4, 0.8]
+}
+```
+
+The checker's second color has an alpha of zero, so those squares are holes.
+
+![Blending, layering and mottling](images/figures/pattern-combining.png)
+
+A plain checker; the same checker blended with a solid blue, which pulls every square halfway
+toward it; the same checker layered over that blue, where the transparent squares let it
+through untouched; and a solid color mottled.  The scene is
+[`docs/examples/pigments/combining.igl`](examples/pigments/combining.igl).
+
+### Mottling
+
+`mottled` takes another pigment and dims it by noise, so a flat color gains an uneven,
+weathered look:
+
+```
+pigment mottled {
+    noise { octaves 3 }
+    leopard {
+        [0, Orange, 1, Brown]
+        scale 0.5
+    }
+}
+```
+
+The `noise` block takes `octaves`, `finer`, `fainter` and `with seed` — the same settings
+turbulence takes, minus the amplitude, since mottling dims a color rather than pushing points
+about.
+
+The rightmost ball in the picture above is a single flat color mottled, which is all it takes
+to keep a large plain surface from looking painted on.
+
+This is not the same thing as the material's `grain`, which roughens how light falls on a
+surface.  Mottling varies the color itself.
+
+### Naming and Reusing
+
+If you Assign a pigment to a variable, it may be used as often as you like:
+
+```
+stone = pigment granite with seed 3 {
+    [0, [0.25, 0.25, 0.28], 1, [0.8, 0.8, 0.78]]
+    scale 0.5
+}
+
+sphere { material { pigment stone } }
+cube   { material { pigment stone }  translate [3, 0, 0] }
+```
+
+### Patterns Elsewhere
+
+The same patterns are used by a material's [`normal` block](materials.md#roughening-the-surface),
+where the pattern's value tilts the surface normal instead of choosing a color.  Everything
+here about turbulence, shaping, seeding and transforms applies there too.
