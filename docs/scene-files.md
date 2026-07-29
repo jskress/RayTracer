@@ -324,4 +324,4 @@ may be quite large.  Libraries converted from POVRay are large because of all th
 that POVRay ships with.  One scene will almost never want everything in a library file.
 
 The libraries themselves are managed with the `libraries` verb, which is covered in
-*Using Libraries*.
+[Using Libraries](libraries.md).

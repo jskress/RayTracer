@@ -148,10 +148,15 @@ branches, any one of the branches will do.
   - [Adding Font Faces](fonts.md#adding-font-faces)
   - [Inspecting a Face](fonts.md#inspecting-a-face)
   - [Kerning](fonts.md#kerning)
+- [Using Libraries](libraries.md)
+  - [Where Libraries Live](libraries.md#where-libraries-live)
+  - [Seeing What You Have](libraries.md#seeing-what-you-have)
+  - [Bringing POV-Ray's Textures Across](libraries.md#bringing-pov-rays-textures-across)
+  - [Using an Imported Definition](libraries.md#using-an-imported-definition)
+  - [Removing a Library](libraries.md#removing-a-library)
 
 The chapters below are still to be written.
 
-- Using Libraries — the `libraries` verb and what it brings across
 - Reference — the keyword index and the whole grammar
 
 ### Regenerating the syntax diagrams
