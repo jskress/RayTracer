@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "A 2D path"
+
+path = "path" "{" { command } "}" ;
+
+command = "move" "to" x "," y | "line" "to" x "," y
+        | "quad" cx "," cy "to" x "," y
+        | "curve" ax "," ay "," bx "," by "to" x "," y
+        | "close" | "svg" string ;

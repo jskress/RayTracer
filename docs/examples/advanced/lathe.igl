@@ -1,0 +1,30 @@
+// A lathe: a profile drawn in 2D and spun about the Y axis.  The profile is the silhouette of
+// the right-hand half of the finished object.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.6, -7]
+    look at [0, 1.1, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+}
+
+lathe {
+    material { pigment color [0.75, 0.6, 0.3]  specular 0.6  shininess 120  reflective 0.15 }
+
+    path {
+        move to 0, 0                                    // the foot, on the axis
+        line to 0.75, 0
+        line to 0.75, 0.1
+        curve 0.3, 0.25, 0.2, 0.5 to 0.22, 0.9          // the stem, drawn in
+        curve 0.28, 1.35, 0.8, 1.5 to 0.85, 2.1         // flaring back out into the bowl
+        quad 0.86, 2.3 to 0.8, 2.45
+        line to 0, 2.45                                 // and back to the axis
+    }
+}

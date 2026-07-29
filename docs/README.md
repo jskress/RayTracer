@@ -123,6 +123,17 @@ branches, any one of the branches will do.
   - [Roughening the Surface](materials.md#roughening-the-surface)
   - [Naming and Reusing](materials.md#naming-and-reusing)
   - [Materials on a Group](materials.md#materials-on-a-group-or-csg)
+- [Advanced Surfaces](advanced-surfaces.md)
+  - [Paths](advanced-surfaces.md#paths)
+  - [Extrusion](advanced-surfaces.md#extrusion)
+  - [Lathe](advanced-surfaces.md#lathe)
+  - [Sweep](advanced-surfaces.md#sweep)
+  - [Tube](advanced-surfaces.md#tube)
+  - [Generic Shape](advanced-surfaces.md#generic-shape)
+  - [Text](advanced-surfaces.md#text)
+  - [Height Field](advanced-surfaces.md#height-field)
+  - [Object Files](advanced-surfaces.md#object-files)
+  - [L-Systems](advanced-surfaces.md#l-systems)
 - [Pigments and Patterns](pigments-and-patterns.md)
   - [Solid Color](pigments-and-patterns.md#solid-color)
   - [Patterns](pigments-and-patterns.md#patterns)
@@ -140,7 +151,6 @@ branches, any one of the branches will do.
 
 The chapters below are still to be written.
 
-- Advanced Surfaces — extrusions, lathes, sweeps, text, height fields and L-systems
 - Using Libraries — the `libraries` verb and what it brings across
 - Reference — the keyword index and the whole grammar
 
