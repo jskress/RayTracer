@@ -118,6 +118,19 @@ to say you want gamma support.
 or the other and not both.  If you don't specify `--output-dir`, it will default to the
 directory where the input file sits.
 
+#### Which scene, and which camera
+
+| Option | What it does |
+| --- | --- |
+| `--scene` | The scene to render, when the file defines more than one. |
+| `--camera` | The camera to render with, when the scene defines more than one. |
+
+A file that defines several scenes or cameras normally ends with a [`render`
+command](scene-files.md#the-render-command) saying which to use.  These two options say the same
+thing from the command line, and take precedence over the file — so one file can be rendered
+from any of its cameras, or as any of its scenes, without editing it.  A camera name is looked
+for within the chosen scene, so two scenes may each have a camera of the same name.
+
 #### How big, and how good
 
 | Option | Default | What it does |

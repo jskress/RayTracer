@@ -98,7 +98,19 @@ public class RenderContext
     /// This property holds the statistics collector being used.
     /// </summary>
     public Statistics Statistics { get; set; }
-    
+
+    /// <summary>
+    /// This property holds the name of the scene to render, when the command line names one.  It
+    /// takes precedence over any scene the file's <c>render</c> command names.
+    /// </summary>
+    public string SceneName { get; set; }
+
+    /// <summary>
+    /// This property holds the name of the camera to render with, when the command line names one.
+    /// It takes precedence over any camera the file's <c>render</c> command names.
+    /// </summary>
+    public string CameraName { get; set; }
+
     /// <summary>
     /// This method is used to apply any options the user specified on the command line to
     /// the context.
@@ -129,5 +141,7 @@ public class RenderContext
         Grayscale = options.Grayscale;
         AntiAliasing = options.AntiAliasing;
         Ticks = seconds * 1_000 + fraction;
+        SceneName = options.SceneName;
+        CameraName = options.CameraName;
     }
 }

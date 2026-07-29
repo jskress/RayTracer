@@ -729,6 +729,8 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `-o`, `--output-file` | Name the output image file. |
 | `-d`, `--output-dir` | The directory to write the output in. |
 | `-e`, `--output-extension` | Choose the output format by giving its extension. |
+| `--scene` | The [scene](scene-files.md#scenes-and-cameras) to render, when the file has more than one. |
+| `--camera` | The [camera](cameras.md#placing-a-camera) to render with, when the scene has more than one. |
 | `-w`, `--width` | Image width; otherwise the scene's, otherwise 800. |
 | `-h`, `--height` | Image height; otherwise the scene's, otherwise 600. |
 | `-a`, `--antialias` | The [anti-aliasing](context.md#anti-aliasing) to apply. |
@@ -761,7 +763,8 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | Option | What it does |
 | --- | --- |
 | `-l`, `--list` | List the libraries the ray tracer knows about. |
-| `-p`, `--import-povray` | Convert POV-Ray's include files into libraries. |
+| `-i`, `--import` | Import a library: an `.igl` file of definitions, or (with `--povray`) a POV-Ray include directory. |
+| `-p`, `--povray` | With `--import`, convert a POV-Ray distribution's include files rather than copy one `.igl`. |
 | `-r`, `--remove` | Remove a library. |
 | `-o`, `--overwrite` | Allow an import to replace libraries already there. |
 | `-d`, `--details` | List every definition that could not be converted. |
