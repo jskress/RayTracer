@@ -37,6 +37,17 @@ public class ImageRenderer
     }
 
     /// <summary>
+    /// This property reports whether the parsed source holds only definitions, as a file offered
+    /// as a library must.  See <see cref="Commands.LibrariesCommand"/>.
+    /// </summary>
+    public bool HoldsOnlyDefinitions => _instructionContext.HoldsOnlyDefinitions;
+
+    /// <summary>
+    /// This property reports how many definitions the parsed source holds.
+    /// </summary>
+    public int DefinitionCount => _instructionContext.DefinitionCount;
+
+    /// <summary>
     /// This method is used to render all images called for in our input files.
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>

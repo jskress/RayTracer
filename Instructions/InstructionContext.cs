@@ -30,6 +30,19 @@ public class InstructionContext
         .Select(instruction => instruction.VariableName)
         .ToList();
 
+    /// <summary>
+    /// This property reports whether every instruction is a plain definition -- a name bound to a
+    /// value or a thing.  A file offered as a library must be, since anything else (a surface, a
+    /// camera, a render command) would be dragged into every scene that imported it.
+    /// </summary>
+    internal bool HoldsOnlyDefinitions => _instructions
+        .All(instruction => instruction is SetVariableInstruction);
+
+    /// <summary>
+    /// This property reports how many definitions the source held.
+    /// </summary>
+    internal int DefinitionCount => _instructions.OfType<SetVariableInstruction>().Count();
+
     public void AddInstruction(Instruction instruction)
     {
         ArgumentNullException.ThrowIfNull(instruction);

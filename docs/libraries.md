@@ -85,18 +85,38 @@ The first column is the name a scene imports by, the second is how much the libr
 the third is where a converted library came from — a library of your own has nothing there to
 say.
 
+### Adding a Library of Your Own
+
+A library of your own — a file like `mine.igl` above — can be installed for every scene to
+share, rather than kept beside one scene, by importing it:
+
+```bash
+RayTracer libraries --import mine.igl
+```
+
+This copies the file into the library directory under its own name, so `mine.igl` becomes the
+library `mine`.  Before it copies anything it reads the file through, so a file that will not
+parse is turned away here rather than the first time a scene reaches for it.
+
+A library may hold **only definitions** — `Name = …` assignments.  A file that also carries a
+surface, a camera, a light or a `render` command is refused, since an import is meant to bring
+across named definitions and nothing else; anything else would be dragged into every scene that
+imported it.  Use `--dry-run` to check a file and see what it would bring without writing
+anything, and `--overwrite` to replace a library of the same name that is already there.
+
 ### Bringing POV-Ray's Textures Across
 
 POV-Ray ships a large collection of finishes, metals, glasses, stones and woods in its
-`include` directory, and the `libraries` verb can convert them:
+`include` directory, and `--import` can convert them all at once when you add `--povray`:
 
 ```bash
-RayTracer libraries --import-povray /path/to/povray/include
+RayTracer libraries --import /path/to/povray/include --povray
 ```
 
-Point it at the `include` directory of a POV-Ray distribution — the one holding `glass.inc`,
-`metals.inc` and the rest.  From a stock distribution it writes ten libraries holding a little
-over six hundred definitions, and reports what each became:
+`--povray` says the thing being imported is a whole POV-Ray distribution to convert rather than
+one `.igl` file to copy, so `--import` is pointed at the `include` directory of a distribution —
+the one holding `glass.inc`, `metals.inc` and the rest.  From a stock distribution it writes ten
+libraries holding a little over six hundred definitions, and reports what each became:
 
 ```
   Library    Materials  Pigments  Interiors  Values
@@ -164,14 +184,14 @@ it gets whichever was read last.
 before any of it lands on disk:
 
 ```bash
-RayTracer libraries --import-povray /path/to/povray/include --dry-run
+RayTracer libraries --import /path/to/povray/include --povray --dry-run
 ```
 
 Importing will not quietly replace libraries already there; pass `--overwrite` when replacing
 them is what you mean:
 
 ```bash
-RayTracer libraries --import-povray /path/to/povray/include --overwrite
+RayTracer libraries --import /path/to/povray/include --povray --overwrite
 ```
 
 One thing to know: a fresh import does not remove libraries it no longer produces.  If a later
@@ -212,9 +232,10 @@ that still imports from it will fail to find it the next time it is rendered.
 
 ### A note on the command names
 
-Every one of these has a short form as well — `-l`, `-p`, `-r`, `-o`, `-d`, `-n` — so a
-first import is often written:
+Every one of these has a short form as well — `-i` for `--import`, `-p` for `--povray`, and
+`-l`, `-r`, `-o`, `-d`, `-n` for the rest — so converting a POV-Ray distribution is often
+written:
 
 ```bash
-RayTracer libraries -p /path/to/povray/include
+RayTracer libraries -i /path/to/povray/include -p
 ```

@@ -118,6 +118,12 @@ A file needs a `render` command only when there is a genuine choice to make.  Wi
 scene and a single camera — which is most files — you may leave it off, and that is why none
 of the examples so far have needed one.
 
+The choice can also be made from the command line, with `--scene` and `--camera`, which take
+precedence over anything the file says.  That lets one file be rendered from any of its cameras,
+or as any of its scenes, without editing it — and lets a file with several of either be
+rendered without a `render` command at all.  See
+[Command Line Options](getting-started.md#command-line-options).
+
 ### Background
 
 A ray that strikes nothing still has to come back with *some* color.  By default that color is

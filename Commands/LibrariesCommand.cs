@@ -2,6 +2,7 @@ using RayTracer.Fonts;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.PovRay;
+using RayTracer.Renderer;
 
 namespace RayTracer.Commands;
 
@@ -33,12 +34,88 @@ public static class LibrariesCommand
     {
         if (options.ListLibraries)
             ShowExistingLibraries();
-        else if (options.ImportPovRayFrom != null)
-            ImportPovRayLibraries(options);
+        else if (options.ImportFrom != null)
+            ImportLibrary(options);
         else if (options.RemoveLibrary != null)
             RemoveLibrary(options.RemoveLibrary);
+        else if (options.Povray)
+            Terminal.ShowError("--povray only makes sense together with --import.");
         else
             Console.WriteLine("No action was specified.  Use '--help' for a list of options.");
+    }
+
+    /// <summary>
+    /// This method imports a library, either by converting a POV-Ray distribution or by copying
+    /// an .igl file of definitions, depending on whether --povray was given.
+    /// </summary>
+    /// <param name="options">The options specified by the user on the command line.</param>
+    private static void ImportLibrary(LibrariesOptions options)
+    {
+        if (options.Povray)
+            ImportPovRayLibraries(options);
+        else
+            ImportIglLibrary(options);
+    }
+
+    /// <summary>
+    /// This method imports a single .igl file as a library, after making sure it holds nothing
+    /// but definitions.
+    /// </summary>
+    /// <param name="options">The options specified by the user on the command line.</param>
+    private static void ImportIglLibrary(LibrariesOptions options)
+    {
+        string source = Path.GetFullPath(
+            Path.Combine(Directory.GetCurrentDirectory(), options.ImportFrom));
+
+        if (!File.Exists(source))
+            Terminal.ShowError($"The file, '{source}', does not exist.");
+
+        // A library is imported by name, and one is better named for what it holds than for how it
+        // is stored, so the extension is dropped from the name it lands under.
+        string name = Path.GetFileNameWithoutExtension(source);
+
+        // Read it, so a file that will not parse is turned away here rather than when a scene first
+        // tries to import from it, and so we can be sure it is only definitions.  A library that
+        // carried a surface, a camera or a render command would drag that into every scene that
+        // imported it, which is exactly what an import is meant to avoid.
+        ImageRenderer renderer = new LanguageParser(source).Parse();
+
+        if (renderer is null)
+            return;
+
+        if (!renderer.HoldsOnlyDefinitions)
+        {
+            Terminal.ShowError(
+                $"'{Path.GetFileName(source)}' cannot be a library: a library may hold only " +
+                "definitions (name = ...), but this holds other things as well.");
+        }
+
+        if (renderer.DefinitionCount == 0)
+            Terminal.ShowError($"'{Path.GetFileName(source)}' defines nothing to import.");
+
+        string target = Path.Combine(LibraryLocator.LibrariesDirectory, $"{name}.igl");
+
+        if (File.Exists(target) && !options.Replace)
+        {
+            Terminal.ShowError(
+                $"A library named '{name}' already exists.  Specify --overwrite to replace it.");
+        }
+
+        if (options.DryRun)
+        {
+            Terminal.Out(
+                $"'{name}' holds {renderer.DefinitionCount:n0} definitions and would be imported.  " +
+                "Nothing was written, since --dry-run was given.");
+
+            return;
+        }
+
+        Directory.CreateDirectory(LibraryLocator.LibrariesDirectory);
+        File.Copy(source, target, overwrite: true);
+
+        Terminal.Out(
+            $"The library '{name}', holding {renderer.DefinitionCount:n0} definitions, was " +
+            $"imported into {LibraryLocator.LibrariesDirectory}.");
     }
 
     /// <summary>
@@ -111,7 +188,7 @@ public static class LibrariesCommand
     private static void ImportPovRayLibraries(LibrariesOptions options)
     {
         string source = Path.GetFullPath(
-            Path.Combine(Directory.GetCurrentDirectory(), options.ImportPovRayFrom));
+            Path.Combine(Directory.GetCurrentDirectory(), options.ImportFrom));
 
         if (!Directory.Exists(source))
             Terminal.ShowError($"The directory, '{source}', does not exist.");

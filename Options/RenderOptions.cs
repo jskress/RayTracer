@@ -77,6 +77,16 @@ public class RenderOptions
         set => _outputFileExtension = value.StartsWith('.') ? value : $".{value}";
     }
 
+    [Option("scene", Required = false,
+        HelpText = "The name of the scene to render, for a file that defines more than one.  This takes precedence over any scene named by a 'render' command in the file.")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public string SceneName { get; set; }
+
+    [Option("camera", Required = false,
+        HelpText = "The name of the camera to render with, for a scene that defines more than one.  This takes precedence over any camera named by a 'render' command in the file.")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public string CameraName { get; set; }
+
     // Note: no Default here, and none on Height below, deliberately.  `RenderContext.ApplyOptions`
     // merges these with `options.Width ?? Width`, so that a size the scene's own `context { }`
     // block asked for survives when the command line says nothing -- exactly as Gamma does.  A

@@ -15,10 +15,15 @@ public class LibrariesOptions
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool ListLibraries { get; set; }
 
-    [Option('p', "import-povray", Required = false, SetName = "import-povray",
-        HelpText = "Converts POV-Ray's texture include files into libraries.  The value is the directory those files live in, which is usually the 'include' directory of a POV-Ray distribution.")]
+    [Option('i', "import", Required = false, SetName = "import",
+        HelpText = "Imports a library.  Normally the value is an .igl file of definitions, which is copied into the library directory.  With --povray, it is instead the 'include' directory of a POV-Ray distribution, whose texture files are converted into libraries.")]
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
-    public string ImportPovRayFrom { get; set; }
+    public string ImportFrom { get; set; }
+
+    [Option('p', "povray", Required = false,
+        HelpText = "Used with --import to say the source is a POV-Ray distribution's 'include' directory to convert, rather than a single .igl file to copy.")]
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
+    public bool Povray { get; set; }
 
     [Option('r', "remove", Required = false, SetName = "remove",
         HelpText = "Removes a library from the ray tracer's library directory.")]

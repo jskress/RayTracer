@@ -52,8 +52,8 @@ public class RenderInstruction : Instruction
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        using Scene scene = GetScene(variables);
-        Camera camera = GetCamera(scene, variables);
+        using Scene scene = GetScene(context, variables);
+        Camera camera = GetCamera(context, scene, variables);
 
         // Give each surface a chance to do any precomputing needed, telling it the instants the
         // camera will look at so that anything set moving can work out where it stands at each of
@@ -91,9 +91,10 @@ public class RenderInstruction : Instruction
     /// <summary>
     /// This method is used to get the scene to render.
     /// </summary>
+    /// <param name="context">The current render context, which carries any command line name.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <returns>The scene to render.</returns>
-    private Scene GetScene(Variables variables)
+    private Scene GetScene(RenderContext context, Variables variables)
     {
         List<Scene> scenes = HasExplicitScene
             ? Objects
@@ -102,7 +103,7 @@ public class RenderInstruction : Instruction
                 .ToList()
             : [CreateImplicitScene()];
 
-        return IsolateObject(variables, scenes, _sceneName, "scene");
+        return IsolateObject(variables, scenes, context.SceneName, _sceneName, "scene");
     }
 
     /// <summary>
@@ -141,12 +142,13 @@ public class RenderInstruction : Instruction
     /// <summary>
     /// This method is used to find the proper camera to use.
     /// </summary>
+    /// <param name="context">The current render context, which carries any command line name.</param>
     /// <param name="scene">The scene to look for the camera.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <returns>The camera to use.</returns>
-    private Camera GetCamera(Scene scene, Variables variables)
+    private Camera GetCamera(RenderContext context, Scene scene, Variables variables)
     {
-        return IsolateObject(variables, scene.Cameras, _cameraName, "camera");
+        return IsolateObject(variables, scene.Cameras, context.CameraName, _cameraName, "camera");
     }
 
     /// <summary>
@@ -155,15 +157,17 @@ public class RenderInstruction : Instruction
     /// </summary>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="items">The list of items to search.</param>
+    /// <param name="overrideName">A name from the command line, which wins over the term when
+    /// given.</param>
     /// <param name="nameTerm">The term to evaluate to derive the name of the desired item
     /// if there is a name.</param>
     /// <param name="noun">A noun to use for errors.</param>
     /// <returns>The desired item.</returns>
     private static TItem IsolateObject<TItem>(
-        Variables variables, List<TItem> items, Term nameTerm, string noun)
+        Variables variables, List<TItem> items, string overrideName, Term nameTerm, string noun)
         where TItem : NamedThing
     {
-        string name = nameTerm?.GetValue<string>(variables, false);
+        string name = overrideName ?? nameTerm?.GetValue<string>(variables, false);
 
         if (name == null)
         {

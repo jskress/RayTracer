@@ -3,7 +3,7 @@
 // The libraries this leans on are made by the "libraries" command, which reads POV-Ray's own
 // include files and writes the converted libraries into ~/.rayTracer/Libraries:
 //
-//     dotnet run -- libraries --import-povray <povray>/distribution/include
+//     dotnet run -- libraries --import <povray>/distribution/include --povray
 //
 // POV-Ray marks what a thing is with a prefix and we say it in a word at the end, so its
 // T_Gold_3C is imported here as Gold3CMaterial.  Each generated library carries POV-Ray's own
