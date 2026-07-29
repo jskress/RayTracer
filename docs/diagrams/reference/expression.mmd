@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "An expression"
+
+expression = operand { ( "+" | "-" | "*" | "/" | "%" ) operand } ;
+operand = [ "-" ] primary [ "²" | "³" ] ;
+primary = number | [ "$" ] string | "true" | "false" | "null" | tuple | name
+        | ( "color" | "point" | "vector" ) primary | "(" expression ")" ;

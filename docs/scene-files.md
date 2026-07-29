@@ -118,6 +118,35 @@ A file needs a `render` command only when there is a genuine choice to make.  Wi
 scene and a single camera — which is most files — you may leave it off, and that is why none
 of the examples so far have needed one.
 
+### Background
+
+A ray that strikes nothing still has to come back with *some* color.  By default that color is
+transparent, so the pixels a scene does not fill come out with no color and no opacity — which
+is handy when the image is to be laid over something else later.  `background` sets what is
+returned there instead:
+
+```
+background Black
+background [0.05, 0.06, 0.09]
+```
+
+It takes a color — a pigment, strictly, though for an ordinary camera that reads as a single
+flat backdrop.  A background is not a surface: nothing lights it and it casts nothing.  But it
+is what *any* ray returns on striking nothing, not just those from the camera, so a mirror
+aimed at empty sky shows it too.
+
+`background` may sit at the top level, or inside a `scene { }` block, so that two scenes may
+carry skies of their own:
+
+```
+scene {
+    named 'day'
+    background [0.5, 0.7, 0.95]
+    camera { location [0, 2, -6]  look at [0, 1, 0] }
+    // ... lights and surfaces ...
+}
+```
+
 ### Comments
 
 Comments are written as they are in C, C# or Java:

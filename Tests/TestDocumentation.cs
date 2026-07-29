@@ -1,4 +1,8 @@
+using System.Reflection;
 using System.Text.RegularExpressions;
+using RayTracer.Basics;
+using RayTracer.Core;
+using RayTracer.Graphics;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Renderer;
@@ -229,5 +233,123 @@ public class TestDocumentation
         return Regex.Matches(list, "'([A-Za-z]+)'")
             .Select(match => match.Groups[1].Value)
             .ToList();
+    }
+
+    // -------- The reference chapter's tables must match the thing they list. --------
+
+    private static string ReferencePath => Path.Combine(DocsDirectory, "reference.md");
+
+    /// <summary>
+    /// Pulls the back-ticked names out of the table rows (lines beginning with "|") that sit under
+    /// the given heading, up to the next heading of any level.  When <paramref name="firstCellOnly"/>
+    /// is set, only the first cell of each row is read -- the name column of a table whose other
+    /// columns also hold back-ticked words.
+    /// </summary>
+    private static HashSet<string> BacktickedNamesUnder(string heading, bool firstCellOnly)
+    {
+        HashSet<string> names = [];
+        bool inSection = false;
+
+        foreach (string raw in File.ReadAllLines(ReferencePath))
+        {
+            string line = raw.Trim();
+
+            if (line.StartsWith('#'))
+            {
+                inSection = line.TrimStart('#', ' ') == heading;
+
+                continue;
+            }
+
+            if (!inSection || !line.StartsWith('|'))
+                continue;
+
+            string scan = firstCellOnly
+                ? line.Split('|').ElementAtOrDefault(1) ?? string.Empty
+                : line;
+
+            foreach (Match match in Regex.Matches(scan, "`([^`]+)`"))
+                names.Add(match.Groups[1].Value);
+        }
+
+        return names;
+    }
+
+    private static void AssertSameNames(HashSet<string> expected, HashSet<string> documented, string what)
+    {
+        List<string> missing = expected.Except(documented).Order().ToList();
+        List<string> extra = documented.Except(expected).Order().ToList();
+
+        Assert.IsTrue(missing.Count == 0 && extra.Count == 0,
+            $"the reference's {what} table is out of step with the source.\n" +
+            $"  in the source but not the table: {string.Join(", ", missing)}\n" +
+            $"  in the table but not the source: {string.Join(", ", extra)}");
+    }
+
+    /// <summary>
+    /// The names of the public static fields of the given type whose value is of type
+    /// <typeparamref name="T"/> -- the same reflection the renderer uses to publish them.
+    /// </summary>
+    private static HashSet<string> PublicStaticNamesOfType<T>(Type type) => type
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(field => field.FieldType == typeof(T))
+        .Select(field => field.Name)
+        .ToHashSet();
+
+    [TestMethod]
+    public void TestTheKeywordIndexListsExactlyTheGrammarsKeywords()
+    {
+        AssertSameNames(
+            GrammarKeywords().ToHashSet(),
+            BacktickedNamesUnder("Keyword index", firstCellOnly: true),
+            "keyword index");
+    }
+
+    [TestMethod]
+    public void TestTheColorTableListsExactlyTheNamedColors()
+    {
+        AssertSameNames(
+            PublicStaticNamesOfType<Color>(typeof(Colors)),
+            BacktickedNamesUnder("Colors", firstCellOnly: false),
+            "color");
+    }
+
+    [TestMethod]
+    public void TestTheIndexOfRefractionTableListsExactlyTheNamedValues()
+    {
+        AssertSameNames(
+            typeof(IndicesOfRefraction)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(field => field.IsLiteral && field.FieldType == typeof(double))
+                .Select(field => field.Name)
+                .ToHashSet(),
+            BacktickedNamesUnder("Indices of refraction", firstCellOnly: false),
+            "index of refraction");
+    }
+
+    [TestMethod]
+    public void TestTheDirectionTableListsExactlyTheNamedVectors()
+    {
+        AssertSameNames(
+            PublicStaticNamesOfType<Vector>(typeof(Directions)),
+            BacktickedNamesUnder("Direction vectors", firstCellOnly: false),
+            "direction vector");
+    }
+
+    [TestMethod]
+    public void TestTheGlobalConstantsTableListsExactlyThoseTheRendererSets()
+    {
+        // The renderer sets these one by one in its constructor; read them from that source the
+        // way the keyword list is read from the grammar, rather than reaching into a private pool.
+        string source = File.ReadAllText(
+            Path.Combine(RepositoryRoot, "Renderer", "ImageRenderer.cs"));
+        HashSet<string> set = Regex.Matches(source, @"_globals\.SetValue\(""([^""]+)""")
+            .Select(match => match.Groups[1].Value)
+            .ToHashSet();
+
+        Assert.IsTrue(set.Count > 0, "could not find the global SetValue calls in ImageRenderer");
+
+        AssertSameNames(set, BacktickedNamesUnder("Global constants", firstCellOnly: true),
+            "global constants");
     }
 }

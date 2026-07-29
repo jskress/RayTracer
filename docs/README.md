@@ -79,6 +79,7 @@ branches, any one of the branches will do.
   - [The Shape of a File](scene-files.md#the-shape-of-a-file)
   - [Scenes and Cameras](scene-files.md#scenes-and-cameras)
   - [The `render` Command](scene-files.md#the-render-command)
+  - [Background](scene-files.md#background)
   - [Comments](scene-files.md#comments)
   - [Numbers, Points, Vectors and Colors](scene-files.md#numbers-points-vectors-and-colors)
   - [Variables](scene-files.md#variables)
@@ -154,10 +155,12 @@ branches, any one of the branches will do.
   - [Bringing POV-Ray's Textures Across](libraries.md#bringing-pov-rays-textures-across)
   - [Using an Imported Definition](libraries.md#using-an-imported-definition)
   - [Removing a Library](libraries.md#removing-a-library)
-
-The chapters below are still to be written.
-
-- Reference — the keyword index and the whole grammar
+- [Reference](reference.md)
+  - [The Shape of a Scene File](reference.md#the-shape-of-a-scene-file)
+  - [Keyword Index](reference.md#keyword-index)
+  - [The Grammar](reference.md#the-grammar)
+  - [Built-in Names](reference.md#built-in-names)
+  - [The Command Line](reference.md#the-command-line)
 
 ### Regenerating the syntax diagrams
 
@@ -169,3 +172,13 @@ docs/generate-diagrams.sh
 ```
 You can follow [this link](generate-diagrams.sh) if you just want to see what's in the
 script.
+
+Two smaller generators produce the hand-drawn figures rather than the railroad diagrams: the
+[path diagrams](generate-path-diagrams.py) beside the extrusion and lathe examples, and the
+[color swatches](generate-color-swatches.py) in the reference.  Both are Python, and each reads
+the values it draws straight from the source so it cannot drift:
+
+```bash
+python3 docs/generate-path-diagrams.py
+python3 docs/generate-color-swatches.py
+```
