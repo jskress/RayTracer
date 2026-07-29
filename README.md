@@ -7,6 +7,12 @@ by Jamis Buck.
 This is complete up through the end of the book.  The rest will be stuff I want to add
 (see the to-do lists below).
 
+## Documentation
+
+The scene language and everything the renderer can do are documented in full under
+[`docs/`](docs/README.md).  Start there to learn how to write a scene, render it, and use
+every surface, material, pattern, light and camera the engine offers.
+
 The following are improvements I want to make.  Most of the ones relating to patterns come
 from the "Putting It Together" section of chapter 10, plus some things that POVRay has that
 I want to add.  Once an item is checked, you can assume it's done.
