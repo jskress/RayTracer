@@ -87,7 +87,7 @@ public class Scene : NamedThing, IDisposable
         Material material = intersection.Surface.Material ?? Material.Default;
         Color refColor;
 
-        // What a surface lets past, it cannot also show.  The pigment may say so colour by colour,
+        // What a surface lets past, it cannot also show.  The pigment may say so color by color,
         // which is what lets one pattern be a window in some places and a wall in others, so the
         // question is asked at this point rather than of the material as a whole.
         double transparency = material.PigmentMayTransmit
@@ -123,19 +123,19 @@ public class Scene : NamedThing, IDisposable
     }
 
     /// <summary>
-    /// This method works out the colour one light lends the given surface point, shading it once
+    /// This method works out the color one light lends the given surface point, shading it once
     /// from each place the light is looked at and averaging.
     /// <para>
     /// Every light but an area light is looked at from a single place, and that case is kept apart
     /// and left exactly as it always was: no averaging, no extra arithmetic, so a scene lit by
     /// lamps and suns comes out bit for bit as it did before area lights existed.  An area light is
     /// looked at from several places across its face; where some are blocked and some are not, the
-    /// average is a grey rather than a black or a white, which is the soft edge of its shadow.
+    /// average is a gray rather than a black or a white, which is the soft edge of its shadow.
     /// </para>
     /// </summary>
-    /// <param name="light">The light lending its colour.</param>
+    /// <param name="light">The light lending its color.</param>
     /// <param name="intersection">The surface point being lit.</param>
-    /// <returns>The colour the light lends the point.</returns>
+    /// <returns>The color the light lends the point.</returns>
     private Color Illuminate(Light light, Intersection intersection)
     {
         int count = light.SampleCount;
@@ -172,7 +172,7 @@ public class Scene : NamedThing, IDisposable
     /// <para>
     /// Every surface between the point and the light is charged, rather than only the nearest one,
     /// since light has to survive all of them to arrive.  A surface that lets light through also
-    /// gets to colour it, which is what casts a green shadow under green glass.  What this
+    /// gets to color it, which is what casts a green shadow under green glass.  What this
     /// deliberately does not do is bend the shadow ray on its way through: light really is
     /// refracted into the bright and dark bands of a caustic, but finding them means tracing
     /// forward from the light rather than backward from the surface, which is a different
@@ -181,7 +181,7 @@ public class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="light">The light source in question, looked at from where it lies.</param>
     /// <param name="point">The point to test.</param>
-    /// <returns>The fraction of the light's colour that arrives at the point.</returns>
+    /// <returns>The fraction of the light's color that arrives at the point.</returns>
     public Color GetLightReaching(Light light, Point point)
     {
         LightSample sample = light.SampleToward(point, 0);
@@ -200,7 +200,7 @@ public class Scene : NamedThing, IDisposable
     /// the point; infinite for a distant light.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at, so
     /// that a moving thing casts its shadow from where it stands at that instant.</param>
-    /// <returns>The fraction of the light's colour that arrives at the point.</returns>
+    /// <returns>The fraction of the light's color that arrives at the point.</returns>
     public Color GetLightReaching(
         Point point, Vector direction, double distance, int timeIndex = 0)
     {
@@ -225,7 +225,7 @@ public class Scene : NamedThing, IDisposable
             // on all but the nearest hit, so what is needed of the crossing is worked out here --
             // and only when something actually asks for it.  The pigment is sampled where the light
             // crossed, so that patterned glass shadows as a pattern, and once sampled it serves for
-            // both how much light gets past and what colour it comes out.
+            // both how much light gets past and what color it comes out.
             bool needsPigment = interior.Filter > 0 || material.PigmentMayTransmit;
             Point where = needsPigment || interior.Refracts
                 ? ray.At(intersection.Distance)
@@ -277,7 +277,7 @@ public class Scene : NamedThing, IDisposable
     public bool IsInShadow(Light light, Point point)
     {
         // Asked of the light as a whole, this looks at it from its first sample -- its one place
-        // for a lamp or a sun, the centre of its face for an area light.  A point in the soft half
+        // for a lamp or a sun, the center of its face for an area light.  A point in the soft half
         // of an area light's shadow is not wholly in shadow, so this reports the plain fact of
         // whether any light reaches at all.
         LightSample sample = light.SampleToward(point, 0);
@@ -304,7 +304,7 @@ public class Scene : NamedThing, IDisposable
             intersection.OverPoint, intersection.Reflect, intersection.TimeIndex);
         Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
 
-        // A metal colours what it mirrors, not just its highlight -- it is what makes a gold
+        // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
         // surface throw back a gold scene rather than a plain one.  The angle here is the eye
         // against the normal, the true angle of incidence, rather than the approximation the
         // highlight has to settle for.
@@ -329,9 +329,9 @@ public class Scene : NamedThing, IDisposable
     {
         Material material = intersection.Surface.Material ?? Material.Default;
 
-        // The pigment may say, colour by colour, how much light gets past it, so where it might,
+        // The pigment may say, color by color, how much light gets past it, so where it might,
         // it is sampled and has its say.  Sampled once here and reused for the filter below, since
-        // both want the surface's colour at the very same point.
+        // both want the surface's color at the very same point.
         Color pigmentColor = material.PigmentMayTransmit || material.Interior.Filter > 0
             ? material.Pigment.GetColorFor(intersection.Surface, intersection.Point)
             : null;
@@ -357,9 +357,9 @@ public class Scene : NamedThing, IDisposable
         Ray refractedRay = new (point, direction, intersection.TimeIndex);
         Color color = GetColorFor(refractedRay, remaining - 1) * transparency;
 
-        // Transparency says how much light gets through; the filter says what colour it comes out.
-        // Tinting toward the pigment's colour at this very point, rather than toward some single
-        // colour for the whole surface, is what lets patterned glass filter as a pattern.  Like
+        // Transparency says how much light gets through; the filter says what color it comes out.
+        // Tinting toward the pigment's color at this very point, rather than toward some single
+        // color for the whole surface, is what lets patterned glass filter as a pattern.  Like
         // the transparency it follows, this is charged once per surface crossed, so a solid tints
         // what passes through it twice -- going in, and coming back out.
         if (material.Interior.Filter > 0)

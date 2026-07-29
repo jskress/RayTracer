@@ -1,0 +1,40 @@
+// A sweep: a 2D profile carried along a 3D spline.  The profile says what the cross-section
+// is; the spline says where it goes.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -9]
+    look at [0, 1.2, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+}
+
+sweep {
+    material { pigment color [0.4, 0.65, 0.8]  specular 0.5  shininess 90  reflective 0.1 }
+
+    // A square cross-section, so the twist of the path is easy to follow.
+    profile {
+        move to -0.22, -0.22
+        line to  0.22, -0.22
+        line to  0.22,  0.22
+        line to -0.22,  0.22
+        close
+    }
+
+    // The path it is carried along, in 3D.  Its segments meet at angles rather than flowing
+    // smoothly together, so the kinks are declared rather than left to be complained about.
+    discontinuous spline {
+        move to -2.6, 0.4, 0.6
+        line to -1.4, 0.9, 0
+        quad 0, 1.9, -0.6 to 1.4, 1.4, 0
+        curve 2.1, 1.2, 0.3, 2.6, 2.2, 0.6 to 2.4, 2.6, 0.8
+    }
+
+    steps 40
+}

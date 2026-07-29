@@ -85,7 +85,7 @@ public class TestPovParser
     [TestMethod]
     public void TestVectorArithmeticIsWorkedOut()
     {
-        // golds.inc derives every colour it has this way, so this is the arithmetic that matters.
+        // golds.inc derives every color it has this way, so this is the arithmetic that matters.
         PovFile file = Read("""
             #declare Base = <1.0, 0.8, 0.6>;
             #declare Shifted = Base - <0.0, 0.2, 0.4>;
@@ -124,7 +124,7 @@ public class TestPovParser
     [TestMethod]
     public void TestFilterAndTransmitGoInDifferentSlots()
     {
-        // The whole point of keeping the colour keywords apart: "rgbf" and "rgbt" are written the
+        // The whole point of keeping the color keywords apart: "rgbf" and "rgbt" are written the
         // same way and mean different things.
         PovFile file = Read("""
             #declare Filtered = color rgbf <0.1, 0.2, 0.3, 0.4>;

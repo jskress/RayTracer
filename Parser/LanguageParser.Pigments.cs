@@ -47,7 +47,10 @@ public partial class LanguageParser
             case "mottled":
                 resolver = ParseMottledPigmentClause(seedResolver);
                 break;
-            case "image":
+            // An image pigment may be written "uncached image ...", in which case "uncached" is
+            // the first word and so is what Text() hands back.  Both spellings land here, and
+            // ParseImageReference picks the flag back out of the clause for itself.
+            case "image" or "uncached":
                 return ParseImagePigmentClause(clause);
             default:
                 resolver = ParsePatternPigmentClause(seedResolver, clause);

@@ -1,0 +1,19 @@
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -7]
+    look at [0, 1, 0]
+    field of view 45
+}
+
+include 'stage.igl'
+
+// A lit rectangle rather than a place.  Along the edge of a shadow, a point on the floor
+// sees part of the rectangle and not the rest, so the shadow fades through a soft band.
+area light {
+    location [-4, 6, -5]
+    axisU [2.5, 0, 0]
+    axisV [0, 0, 2.5]
+    steps 8
+    color White
+}

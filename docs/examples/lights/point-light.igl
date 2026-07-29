@@ -1,0 +1,16 @@
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -7]
+    look at [0, 1, 0]
+    field of view 45
+}
+
+include 'stage.igl'
+
+// A lamp at a place, shining the same in every direction.  Its shadows have hard edges,
+// because a point is either in view of it or it is not.
+point light {
+    location [-4, 6, -5]
+    color White
+}

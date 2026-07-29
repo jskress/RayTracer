@@ -30,9 +30,9 @@ public class WavesPattern : Pattern
     /// The five and the two and a half are POV-Ray's, and they are there because the sum being
     /// brought into range is not the tidy one the ripples pattern has: dividing each source's sine
     /// by its own rate lets the slow ones count for much more than the fast, and these are the
-    /// numbers that put the result back into the neighbourhood of zero and one.  They do not
+    /// numbers that put the result back into the neighborhood of zero and one.  They do not
     /// promise it: a point where the slow sources happen to agree can still overshoot, and the
-    /// colour map wraps it when it does.
+    /// color map wraps it when it does.
     /// </para>
     /// </summary>
     /// <param name="point">The point from which the pattern value is to be derived.</param>

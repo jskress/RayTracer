@@ -1,0 +1,57 @@
+// A discrete pattern chooses among sub-patterns, not merely among colors.  A plain color is
+// simply the simplest sub-pattern there is, so anywhere one may go, a whole pattern may go.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.2, -13]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-7, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.28, 0.29, 0.34] }
+
+// The everyday case: a checker of two plain colors.
+sphere {
+    material {
+        pigment checker {
+            color [0.85, 0.4, 0.35], color [0.95, 0.93, 0.88]
+            scale 0.45
+        }
+        specular 0.4  shininess 60
+    }
+    translate [-2.6, 0, 0]
+}
+
+// One square left plain, the other filled with marble.
+sphere {
+    material {
+        pigment checker {
+            color [0.85, 0.4, 0.35],
+            marble {
+                turbulence 0.5
+                [0, [0.35, 0.35, 0.4], 1, [0.95, 0.95, 0.92]]
+                scale 0.7
+            }
+            scale 0.45
+        }
+        specular 0.4  shininess 60
+    }
+}
+
+// Both squares filled, each with a pattern of its own.
+sphere {
+    material {
+        pigment checker {
+            granite { [0, [0.5, 0.2, 0.18], 1, [0.9, 0.6, 0.5]]  scale 0.4 },
+            marble {
+                turbulence 0.5
+                [0, [0.2, 0.3, 0.45], 1, [0.85, 0.9, 0.95]]
+                scale 0.7
+            }
+            scale 0.45
+        }
+        specular 0.4  shininess 60
+    }
+    translate [2.6, 0, 0]
+}

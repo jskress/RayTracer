@@ -10,8 +10,8 @@ namespace RayTracer.Pigments;
 /// It is worth being clear how this differs from the turbulence a pattern may carry, since the two
 /// are easily confused and the old name for this ("noisy") invited exactly that.  Turbulence stirs
 /// the *point* a pattern is asked about, so a straight boundary comes out ragged; this multiplies
-/// the *colour* that came back, so a flat pigment comes out blotchy.  Neither can stand in for the
-/// other, and this one is the only way to make a plain, patternless colour vary at all.
+/// the *color* that came back, so a flat pigment comes out blotchy.  Neither can stand in for the
+/// other, and this one is the only way to make a plain, patternless color vary at all.
 /// </para>
 /// </summary>
 public class MottledPigment : Pigment
@@ -40,13 +40,13 @@ public class MottledPigment : Pigment
     }
 
     /// <summary>
-    /// This method accepts a point and produces a color for that point.  We return the colour our
+    /// This method accepts a point and produces a color for that point.  We return the color our
     /// wrapped pigment gives, dimmed by the noise at that point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
     /// <summary>
-    /// Dimming a colour cannot make it let light through, so this is wholly the wrapped pigment's answer.
+    /// Dimming a color cannot make it let light through, so this is wholly the wrapped pigment's answer.
     /// </summary>
     public override bool MayTransmit => Pigment.MayTransmit;
 

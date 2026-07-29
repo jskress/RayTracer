@@ -127,7 +127,7 @@ public class TestTurbulence
     {
         // This has to be exact rather than merely close, and it matters more than it looks: several
         // patterns deliberately hand back values outside [0, 1] -- marble's is a coordinate the
-        // colour map is meant to wrap for itself -- so shaping that wrapped unbidden would quietly
+        // color map is meant to wrap for itself -- so shaping that wrapped unbidden would quietly
         // break them.  POV-Ray wraps whenever its frequency is non-zero; we wrap only when asked.
         PassThroughPattern pattern = new ();
 
@@ -164,7 +164,7 @@ public class TestTurbulence
     public void TestTheWrapKeepsNegativesInRange()
     {
         // A negative frequency runs the pattern backwards, which can leave the value below zero;
-        // it has to come back into range or the colour map has nothing to look up.
+        // it has to come back into range or the color map has nothing to look up.
         PassThroughPattern pattern = new () { Frequency = -1 };
 
         foreach (double x in new[] { 0.25, 0.5, 0.75, 1.5, 3.3 })

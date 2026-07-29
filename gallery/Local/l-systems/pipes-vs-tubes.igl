@@ -4,7 +4,7 @@
 // material is matte, so nothing distracts from the stems themselves.
 //
 // "pipes" draws each segment as a cylinder of one fixed radius and caps it with a sphere.  Since
-// "!" shrinks the diameter between segments, each segment butts against a thinner neighbour: a
+// "!" shrinks the diameter between segments, each segment butts against a thinner neighbor: a
 // hard shoulder at every joint, with the cap sphere bulging out past the branch it sits on.
 //
 // "tubes" draws each segment as a tube segment that tapers from the radius at its start to the

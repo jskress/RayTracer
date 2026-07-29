@@ -1,0 +1,8 @@
+railroad-ebnf-beta
+title "A 3D spline"
+
+spline = [ "discontinuous" ] "spline" "{" { command } "}" ;
+
+command = "move" "to" triple | "line" "to" triple
+        | "quad" triple "to" triple
+        | "curve" triple "," triple "to" triple ;

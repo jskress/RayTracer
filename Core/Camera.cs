@@ -33,7 +33,7 @@ public class Camera : NamedThing
     /// This property reports the field of view (in degrees) for the camera.
     /// </summary>
     [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
-    public double FieldOfView { get; set; } = 90.0.ToRadians();
+    public double FieldOfView { get; set; } = 50.0.ToRadians();
 
     /// <summary>
     /// This property holds the radius of the camera's lens, in the scene's own units.  It is zero

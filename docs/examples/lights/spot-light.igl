@@ -1,0 +1,20 @@
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -7]
+    look at [0, 1, 0]
+    field of view 45
+}
+
+include 'stage.igl'
+
+// A cone of light, laying a pool with a soft rim.  Everything outside the falloff angle is
+// left to the ambient term alone.
+spot light {
+    location [0, 7, -1]
+    point at [0.6, 0, 0]
+    radius 14
+    falloff 26
+    tightness 8
+    color White
+}

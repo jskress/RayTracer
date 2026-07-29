@@ -59,7 +59,7 @@ public class SurfaceNormal
     /// <summary>
     /// This property holds the transform applied to a point before the pattern is asked about it,
     /// which is how a scene scales and turns the roughening without disturbing the shape or the
-    /// colouring.  It is the pigment's arrangement exactly, and deliberately so: the two are
+    /// coloring.  It is the pigment's arrangement exactly, and deliberately so: the two are
     /// separate patterns over the same surface and each wants its own footing.
     /// </summary>
     public Matrix Transform
@@ -119,7 +119,7 @@ public class SurfaceNormal
         // growing deeper: scale says how fine and depth says how deep, each leaving the other
         // alone.  Squash it along one axis and they no longer cancel, so the slopes across the
         // squashed axis really do steepen -- which is what draws the brush marks on POV-Ray's
-        // brushed aluminium, whose pattern is squashed a thousandfold along two axes to make them.
+        // brushed aluminum, whose pattern is squashed a thousandfold along two axes to make them.
         //
         // Both were measured against POV-Ray rather than assumed: its roughening holds steady from
         // a scale of 1 down to 0.075 when the squashing is even, and grows some thirteenfold over

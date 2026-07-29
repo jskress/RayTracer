@@ -1,0 +1,52 @@
+// Six primitives, each written with nothing but a material and a translation, so that what you
+// see is each one's natural size and shape.  None of them has been scaled.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.2, -15]
+    look at [0, -0.5, 0]
+    field of view 50
+}
+
+point light { location [-6, 8, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.25, 0.26, 0.3] }
+
+plane {
+    material {
+        pigment checker { color [0.62, 0.62, 0.66], color [0.18, 0.18, 0.22] scale 1.4 }
+        specular 0.1
+    }
+    translate [0, -1.2, 0]
+}
+
+sphere {
+    material { pigment color [0.85, 0.35, 0.32]  specular 0.5  shininess 60 }
+    translate [-6, 0, 0]
+}
+
+cube {
+    material { pigment color [0.9, 0.72, 0.3]  specular 0.5  shininess 60 }
+    translate [-3.6, 0, 0]
+}
+
+cylinder {
+    material { pigment color [0.45, 0.72, 0.45]  specular 0.5  shininess 60 }
+    translate [-1.2, 0, 0]
+}
+
+conic {
+    material { pigment color [0.4, 0.6, 0.85]  specular 0.5  shininess 60 }
+    translate [1.2, 0, 0]
+}
+
+torus {
+    material { pigment color [0.65, 0.5, 0.8]  specular 0.5  shininess 60 }
+    radii 0.7, 0.25
+    translate [3.6, 0, 0]
+}
+
+egg {
+    material { pigment color [0.85, 0.5, 0.65]  specular 0.5  shininess 60 }
+    radii 0.55, 0.85
+    translate [6, 0, 0]
+}

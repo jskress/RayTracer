@@ -96,7 +96,7 @@ public abstract class Pattern
     }
 
     /// <summary>
-    /// This method takes the number a pattern produced and shapes it on its way to the colour map:
+    /// This method takes the number a pattern produced and shapes it on its way to the color map:
     /// scaled and slid by the frequency and phase, wrapped back into range, and then bent by
     /// whichever wave was asked for.
     /// <para>
@@ -112,7 +112,7 @@ public abstract class Pattern
         // Left strictly alone when nothing has been asked for, which matters more than it looks:
         // POV-Ray wraps whenever its frequency is non-zero, and wrapping unbidden would break every
         // pattern that deliberately hands back a value outside [0, 1] -- marble most of all, whose
-        // value is a coordinate that the colour map is meant to wrap for itself.
+        // value is a coordinate that the color map is meant to wrap for itself.
         if (Frequency != 1 || Phase != 0)
         {
             // The wrap is what turns a raised frequency into repetition rather than a stretch.  A

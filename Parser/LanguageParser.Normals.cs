@@ -19,7 +19,7 @@ public partial class LanguageParser
     /// <para>
     /// It is written as the pigment's sibling and read much as one, since it is the same thing
     /// pointed at a different property: a pattern, placed over the surface, whose slope tilts the
-    /// normal rather than choosing a colour.  Everything the pattern grammar offers -- turbulence,
+    /// normal rather than choosing a color.  Everything the pattern grammar offers -- turbulence,
     /// the waves, the transforms -- therefore comes along for nothing.
     /// </para>
     /// </summary>

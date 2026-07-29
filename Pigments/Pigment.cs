@@ -121,7 +121,7 @@ public abstract class Pigment
     public abstract Color GetColorFor(Point point);
 
     /// <summary>
-    /// This property reports whether this pigment might hand back a colour that lets light through
+    /// This property reports whether this pigment might hand back a color that lets light through
     /// -- one whose alpha is less than fully opaque.
     /// <para>
     /// It exists to be asked before the pigment is sampled rather than after.  A surface's

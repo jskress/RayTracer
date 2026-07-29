@@ -1,0 +1,51 @@
+// An extrusion: a flat path given thickness along Y.  The path is drawn in its own 2D plane,
+// and a second, inner path becomes a hole rather than a second solid.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 4.5, -9]
+    look at [0, 0.3, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+    translate [0, -1.2, 0]
+}
+
+extrusion {
+    material { pigment color [0.85, 0.55, 0.3]  specular 0.5  shininess 70 }
+
+    path {
+        // The outline: a five-pointed star, drawn counter-clockwise so its side walls face
+        // outward.  (Reverse this and the walls face inward, and the sides toward the light
+        // come out shaded as though they were the back of the surface.)
+        move to 0, 1
+        line to -0.23, 0.31
+        line to -0.95, 0.31
+        line to -0.37, -0.12
+        line to -0.59, -0.81
+        line to 0, -0.38
+        line to 0.59, -0.81
+        line to 0.37, -0.12
+        line to 0.95, 0.31
+        line to 0.23, 0.31
+        close
+
+        // A second path inside the first is cut out of it.  It runs clockwise -- opposite the
+        // outline -- so that its walls, too, face out of the solid and into the hole.
+        move to 0, 0.42
+        line to 0.25, -0.16
+        line to -0.25, -0.16
+        close
+    }
+
+    min Y -0.18
+    max Y 0.18
+    scale 1.6
+    rotate X -90
+    rotate Y -20
+}

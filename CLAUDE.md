@@ -25,8 +25,8 @@ Example scenes live under `gallery/` (`gallery/challenge-book`, `gallery/POVRay`
 `dotnet run -- -i gallery/challenge-book/chapter-16/csg.igl`.
 
 The `RayTracer.csproj` excludes `Tests/**` from its own compile/resource items; the `Tests`
-project references `RayTracer.csproj` directly. Target framework is `net9.0`, `LangVersion`
-13, nullable reference types disabled.
+project references `RayTracer.csproj` directly. Both projects target `net10.0` with
+`LangVersion` 14, implicit usings enabled and nullable reference types disabled.
 
 ## Architecture
 

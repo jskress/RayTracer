@@ -3,13 +3,13 @@ using RayTracer.Basics;
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides the radial pattern: the angle about the Y axis, so a colour map wraps once
+/// This class provides the radial pattern: the angle about the Y axis, so a color map wraps once
 /// per turn.  Where the other band patterns measure how far out a point lies, this one measures
 /// which way round it lies -- which is what spokes, wedges, dials and barber poles are made of.
 ///
 /// Note the value runs from 0.25 to 1.25 rather than 0 to 1, which is POV-Ray's own doing and is
-/// deliberate: colour maps wrap what they are given, so the quarter turn added on simply moves
-/// the seam -- the one place round the turn where the map jumps from its last colour back to its
+/// deliberate: color maps wrap what they are given, so the quarter turn added on simply moves
+/// the seam -- the one place round the turn where the map jumps from its last color back to its
 /// first -- off the -Z axis and onto +X.
 /// </summary>
 public class RadialPattern : Pattern

@@ -1,0 +1,41 @@
+// Why the order of transforms matters.  Two identical cubes, given the same two transforms in
+// opposite orders, seen from directly above.  The small white ball marks the origin.
+context { angles are degrees  no gamma }
+
+camera {
+    location [1.6, 16, -1.6]
+    look at [1.6, 0, -1.6]
+    up [0, 0, 1]
+    field of view 45
+}
+
+point light { location [-4, 12, -6]  color [1, 0.97, 0.93] }
+point light { location [6, 8, 4]     color [0.3, 0.3, 0.35] }
+
+plane {
+    material { pigment color [0.5, 0.5, 0.55]  specular 0 }
+    translate [0, -1, 0]
+}
+
+// The origin, for reference.
+sphere {
+    material { pigment color White  ambient 0.6 }
+    scale 0.25
+}
+
+// Turned first, then moved: the cube spins where it stands and is then carried out along X.
+cube {
+    material { pigment color [0.85, 0.4, 0.35]  specular 0.4  shininess 50 }
+    scale [1.1, 0.5, 0.4]
+    rotate Y 90
+    translate X 4
+}
+
+// Moved first, then turned: the cube is carried out along X and the turn then swings the whole
+// arrangement about the origin, so it ends up somewhere else entirely.
+cube {
+    material { pigment color [0.4, 0.65, 0.85]  specular 0.4  shininess 50 }
+    scale [1.1, 0.5, 0.4]
+    translate X 4
+    rotate Y 90
+}

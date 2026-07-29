@@ -2,7 +2,7 @@
 
 // The pips are cut out of the die's body, and the hollows they leave are what the eye actually
 // sees, so they need a material of their own: a surface that names none inherits from the CSG
-// that contains it, which would paint every pip the same colour as the die it is cut into.
+// that contains it, which would paint every pip the same color as the die it is cut into.
 pipMaterial = material { pigment White }
 
 rods = union {

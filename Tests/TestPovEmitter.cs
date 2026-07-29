@@ -6,8 +6,8 @@ namespace Tests;
 /// These tests cover turning what was read from POV-Ray into the ray tracer's own language.
 /// <para>
 /// A good deal of this is about what cannot come across rather than what can.  POV-Ray declares
-/// things that have no counterpart here -- a colour map on its own, a pigment left to be given its
-/// colours later -- and the rule throughout is that such a declaration is left out and reported,
+/// things that have no counterpart here -- a color map on its own, a pigment left to be given its
+/// colors later -- and the rule throughout is that such a declaration is left out and reported,
 /// never half-written, since half a block would stop the whole library reading.
 /// </para>
 /// </summary>
@@ -65,7 +65,7 @@ public class TestPovEmitter
     [TestMethod]
     public void TestAVectorStaysAVector()
     {
-        // POV-Ray does not tell colours and vectors apart, but it writes them differently, and
+        // POV-Ray does not tell colors and vectors apart, but it writes them differently, and
         // what a thing was written as is what it was meant as.  A scene can scale by a vector.
         StringAssert.Contains(
             Convert("#declare GoldBase = <1.0, 0.875, 0.575>;"),
@@ -151,7 +151,7 @@ public class TestPovEmitter
         string library = Convert("#declare Dull = finish { specular 0.5 roughness 0.15 }");
 
         StringAssert.Contains(library, "DullFinish = material {");
-        Assert.IsFalse(library.Contains("pigment"), "a finish should say nothing about colour");
+        Assert.IsFalse(library.Contains("pigment"), "a finish should say nothing about color");
     }
 
     [TestMethod]
@@ -205,8 +205,8 @@ public class TestPovEmitter
     [TestMethod]
     public void TestABandedMapIsFlattenedWithoutRepeatingItsJoins()
     {
-        // POV-Ray's older map form gives a band and the colour at each end of it, and the bands
-        // run into one another, so the colour ending one starts the next.
+        // POV-Ray's older map form gives a band and the color at each end of it, and the bands
+        // run into one another, so the color ending one starts the next.
         StringAssert.Contains(
             Convert("""
                 #declare P_Band = pigment {
@@ -287,7 +287,7 @@ public class TestPovEmitter
     [TestMethod]
     public void TestAColorMapOnItsOwnIsLeftOutAndExplained()
     {
-        // POV-Ray declares maps apart from the patterns they colour; there is no such thing here.
+        // POV-Ray declares maps apart from the patterns they color; there is no such thing here.
         string library = Convert(
             "#declare M_Wood = color_map { [0.0 color rgb 0][1.0 color rgb 1] }",
             out List<PovIssue> issues);

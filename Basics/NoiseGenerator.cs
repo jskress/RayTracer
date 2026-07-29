@@ -8,7 +8,7 @@ namespace RayTracer.Basics;
 /// gradient noise -- a grid of random gradients, smoothly interpolated between -- of the kind
 /// often loosely called "Perlin", though it is not Ken Perlin's own algorithm and is not named
 /// for it here.  What actually defines this class is the shape of what it hands back rather than
-/// how it makes it: <see cref="Noise"/> honours POV-Ray's contract for its own <c>Noise()</c>,
+/// how it makes it: <see cref="Noise"/> honors POV-Ray's contract for its own <c>Noise()</c>,
 /// since every pattern here was ported assuming exactly that (see <see cref="NoiseScale"/>).
 /// </summary>
 public class NoiseGenerator

@@ -1,0 +1,29 @@
+// A context block fixing how this scene renders, so that it comes out the same however it is
+// invoked.
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+
+    info {
+        title 'A Documented Scene'
+        author 'A. Scene Author'
+        description 'Showing what the context block can fix.'
+        copyright 'Public domain'
+    }
+}
+
+camera {
+    location [0, 2.5, -6]
+    look at [0, 1, 0]
+    field of view 45
+}
+
+point light { location [-5, 7, -6]  color White }
+
+plane { material { pigment checker { White, Gray30 scale 1.2 } } }
+
+sphere {
+    material { pigment color [0.85, 0.4, 0.35]  specular 0.6  shininess 80 }
+    translate [0, 1, 0]
+}

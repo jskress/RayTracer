@@ -36,7 +36,7 @@ sphere {
     material {
         // Granite spends nearly all of its time low in the [0, 1] range -- 5% to 95% of its
         // values fall between 0.09 and 0.41 -- so a map spread evenly over [0, 1] would leave
-        // most of these greys unreachable and render the speckle nearly flat.  The break
+        // most of these grays unreachable and render the speckle nearly flat.  The break
         // values below match the range granite actually produces.
         pigment granite {
             [0.09, Gray20, 0.25, Gray50, 0.41, Gray90]

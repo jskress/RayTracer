@@ -1,0 +1,49 @@
+// One picture wrapped four ways, each onto the surface its mapping is meant for.  The image is
+// the Earth texture the solar-system gallery scene uses; the path is relative to this file.
+context { angles are degrees  no gamma }
+
+earth = '../../../gallery/Local/solar-system/images/earth-satellite.png'
+
+camera {
+    location [0, 1.6, -15]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.3, 0.31, 0.36] }
+
+// Planar: laid flat across X and Z, which is why it belongs on a floor or a flat panel.  This
+// is the unit square the mapping expects, stood upright so the picture can be seen.
+parallelogram {
+    material { pigment image earth planar once  specular 0.15 }
+    at [0, 0, 0]
+    sides [1, 0, 0], [0, 0, 1]
+    rotate X -90
+    scale 2
+    translate [-4.6, -1, 0]
+}
+
+// Spherical: wrapped round a ball, the way a world map wraps a globe.
+sphere {
+    material { pigment image earth spherical  specular 0.2  shininess 40 }
+    translate [-1.35, 0, 0]
+}
+
+// Cylindrical: wrapped round an axis, like a label on a can.  "once" makes it wrap a single
+// time over one unit of height rather than repeating up the surface.
+cylinder {
+    material { pigment image earth cylindrical once  specular 0.2  shininess 40 }
+    min Y 0
+    max Y 1
+    scale [0.85, 2, 0.85]
+    translate [1.35, -1, 0]
+}
+
+// Toroidal: wrapped round a ring.
+torus {
+    material { pigment image earth toroidal  specular 0.2  shininess 40 }
+    radii 0.8, 0.32
+    rotate X 62
+    translate [4.1, 0, 0]
+}

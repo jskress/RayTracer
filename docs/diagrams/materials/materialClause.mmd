@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "A material"
+
+material = "material" "{" { pigment | normal | finish | metallic | interior } "}" ;
+
+finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
+         | "transparency" | "brilliance" | "grain" ) number ;
+
+metallic = "metallic" [ number ] ;

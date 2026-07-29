@@ -3,7 +3,7 @@
 // A point light is a place, seen or not seen, so the shadow it throws turns from lit to dark in
 // the span of a pixel -- a hardness nothing in the world has.  An area light is a lit rectangle,
 // and along the edge of its shadow a point on the floor sees part of that rectangle past the
-// blocker and the rest of it hidden, so the shadow fades through a soft grey band, the penumbra,
+// blocker and the rest of it hidden, so the shadow fades through a soft gray band, the penumbra,
 // instead of snapping.  The nearer a blocker sits to the floor the tighter that band; the taller
 // posts here throw a shadow that is crisp at the foot and blurred at the tip, which is exactly how
 // a real soft shadow reads.

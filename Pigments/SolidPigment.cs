@@ -22,7 +22,7 @@ public class SolidPigment : Pigment
     }
 
     /// <summary>
-    /// This pigment is one colour, so it knows for certain whether it lets light through.
+    /// This pigment is one color, so it knows for certain whether it lets light through.
     /// </summary>
     public override bool MayTransmit => _color.Alpha < 1;
 

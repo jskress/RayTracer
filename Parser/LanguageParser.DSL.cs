@@ -27,24 +27,24 @@ public partial class LanguageParser
         _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
             'aperture', 'apply',
             'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
-            'baseline', 'bits', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
+            'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
-            'by', 'camera', 'center', 'channel', 'checker', 'clarity', 'clip', 'close', 'color',
+            'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'exponent', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
-            'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'marble', 'material', 'materials', 'matrix', 'max', 'maximum', 'medium', 'metallic', 'min', 'minimum', 'mortar',
+            'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
             'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
-            'refraction', 'regular', 'render', 'report', 'right', 'ripples', 'rollLeft', 'rollRight',
+            'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
@@ -104,7 +104,7 @@ public partial class LanguageParser
             { amplitude > _expression } | { octaves > _expression } |
             { finer > _expression } | { fainter > _expression } | withSeedClause
         ] ?? 'Expecting a turbulence property here.'
-        // Mottling dims a colour by noise rather than pushing points about, so it takes the layers
+        // Mottling dims a color by noise rather than pushing points about, so it takes the layers
         // and nothing else -- an amplitude would have nothing here to move.
         noiseClause: { noise > openBrace ?? 'Expecting an open brace to follow "noise" here.' }
         noiseEntryClause:
@@ -166,7 +166,6 @@ public partial class LanguageParser
         {
             no > [ gamma | shadows ] ?? 'Expecting "gamma" or "shadows" to follow "no" here.'
         }
-        reportGammaClause: { report > gamma ?? 'Expecting "gamma" to follow "report" here.' }
         contextPropertyClause:
         {
             [ width | height | gamma ] ?? 'Expecting a context block item here.' >

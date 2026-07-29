@@ -1,6 +1,6 @@
 // A scene to test L-system leaves: the '~' command stamps a surface (a leaf) into the
 // production.  With no leaf named, each '~' grows the built-in green patch, so a plainly
-// coloured plant already reads as green foliage on brown branches.  The plant branches in
+// colored plant already reads as green foliage on brown branches.  The plant branches in
 // three dimensions (it pitches and rolls, not just yaws), so it is not confined to a plane.
 // The stems use "tubes" rather than "pipes": each segment tapers to meet the next, so the
 // shoulder that "!" would otherwise leave at every joint is gone, as is the cap-sphere bulge.

@@ -2,9 +2,9 @@
 // checkered floor, differing only in how much they filter what passes through them.
 //
 // "transparency" says how much light gets through a surface; the interior's "filter" says what
-// colour it comes out.  At filter 0 -- the default, and the only behaviour available before the
-// interior existed -- coloured glass merely dims what is behind it, the way thin gauze or dust on
-// a window does.  Raising it toward 1 makes the glass colour what passes through, which is what
+// color it comes out.  At filter 0 -- the default, and the only behavior available before the
+// interior existed -- colored glass merely dims what is behind it, the way thin gauze or dust on
+// a window does.  Raising it toward 1 makes the glass color what passes through, which is what
 // real glass does and what makes stained glass stain.
 //
 // Left to right: no filtering, half, and full.  Two things to watch, and they are the same effect
@@ -31,7 +31,7 @@ camera {
 }
 
 // Behind and above, so each pane casts its light forward onto the floor where the camera can see
-// it.  Glass that filters throws a coloured shadow, which is the other half of what makes stained
+// it.  Glass that filters throws a colored shadow, which is the other half of what makes stained
 // glass look like stained glass, and it only shows if the light is on the far side.
 point light {
     location [0, 9, 5]
@@ -54,7 +54,7 @@ plane {
 }
 
 // The three panes.  Each is a flattened cube standing on the floor, so the light crosses two
-// surfaces going through -- and so filters twice, which deepens the colour.
+// surfaces going through -- and so filters twice, which deepens the color.
 paneGlass = material {
     pigment ForestGreen
     ambient 0
@@ -74,7 +74,7 @@ frameMaterial = material {
     shininess 100
 }
 
-// LEFT: no filtering.  The glass dims the checks but leaves them grey, and its shadow is grey too.
+// LEFT: no filtering.  The glass dims the checks but leaves them gray, and its shadow is gray too.
 cube {
     material paneGlass {
         interior { ior Glass }

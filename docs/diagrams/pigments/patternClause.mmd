@@ -1,0 +1,8 @@
+railroad-ebnf-beta
+title "A pattern pigment"
+
+pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] colors { transform } "}" ;
+
+colors = color { "," color } | "[" position "," color { "," position "," color } "]" ;
+
+shaping = "frequency" number | "phase" number | wave "wave" ;

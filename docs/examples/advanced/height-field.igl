@@ -1,0 +1,29 @@
+// A height field: an image read as terrain, where how bright a pixel is says how high the
+// ground stands at that point.  The map here was itself rendered by this ray tracer, so the
+// example needs nothing from outside.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.4, -6.5]
+    look at [0, 0.2, 0.4]
+    field of view 44
+}
+
+point light { location [-6, 8, -7]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -3]   color [0.3, 0.31, 0.36] }
+
+heightfield {
+    image 'terrain.png'
+
+    material {
+        pigment linear Y gradient {
+            [0, [0.25, 0.4, 0.2], 0.45, [0.5, 0.45, 0.3], 1, [0.9, 0.9, 0.92]]
+        }
+        specular 0.15
+        shininess 20
+    }
+
+    // The field is built over the unit square, so centre it and then give it its extent.
+    translate [-0.5, 0, -0.5]
+    scale [7, 1.6, 7]
+}

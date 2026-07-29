@@ -216,10 +216,10 @@ public class Color
     /// same opacity three times over.  Nor is there a defensible alternative: taking the larger, or
     /// the left operand's, is arbitrary.  Adding light simply is not an operation that composes
     /// opacity, and the arithmetic that does compose it (Porter and Duff's) is defined over
-    /// premultiplied colours, which these are not.
+    /// premultiplied colors, which these are not.
     /// <para>
-    /// Scaling by a number does have a sound answer -- dimming a colour plainly should not make it
-    /// any more transparent -- and so does multiplying two colours, if the channel is read as how
+    /// Scaling by a number does have a sound answer -- dimming a color plainly should not make it
+    /// any more transparent -- and so does multiplying two colors, if the channel is read as how
     /// much light passes rather than how much is stopped.  They are left alone anyway, for
     /// consistency with addition and because nothing yet needs otherwise: the one thing that reads
     /// alpha in the render path is <c>Canvas</c>, deciding whether the image being written needs an

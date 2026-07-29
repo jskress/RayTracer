@@ -174,7 +174,7 @@ public class TestLSystemLeaves
     public void TestARuneAfterALeafThatNamesNoSurfaceIsStillRunAsACommand()
     {
         // The committed scenes' productions read "...~]", so a '~' must leave a rune it does not
-        // recognise alone.  Here the ']' still has to close the branch: the last segment must
+        // recognize alone.  Here the ']' still has to close the branch: the last segment must
         // resume from the branch point at x = 1, not carry on from inside the turned branch.
         LSystem lsystem = PrepareWithSurfaces("F[+F~]F", ('L', () => new Cube()));
         List<Cylinder> cylinders = lsystem.Surfaces.OfType<Cylinder>().ToList();

@@ -72,7 +72,7 @@ sphere {
 // the time it reaches a unit out.  A sphere suits it, since distance from the axis is exactly
 // what varies with latitude: the poles light up and the equator goes dark.  A *cylinder* would be
 // the worst possible host -- every point on one stands the same distance from its own axis, so
-// this would come out one flat colour.
+// this would come out one flat color.
 //
 // Banded, and for the same reason boxed is banded over in patterns4: this falls off just once
 // rather than repeating, so faded it is a single smooth wash that the eye reads as ordinary
@@ -100,7 +100,7 @@ sphere {
 // on a cube and scaled: a cube's own corners stand about 1.73 out against its faces' 1, so at
 // this scale the falloff sweeps from about 0.5 at each face to 0.13 at each corner, rounding the
 // cube's shading off against its flat sides.  A sphere would be the worst possible host -- every
-// point on one is equidistant from its centre, so the answer would never change.
+// point on one is equidistant from its center, so the answer would never change.
 cube {
     material {
         pigment spherical {

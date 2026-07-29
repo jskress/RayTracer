@@ -19,7 +19,7 @@ namespace RayTracer.Core;
 public abstract class Light : NamedThing
 {
     /// <summary>
-    /// This property notes the colour of the light.
+    /// This property notes the color of the light.
     /// </summary>
     public Color Color { get; set; } = Colors.White;
 
@@ -81,7 +81,7 @@ public abstract class Light : NamedThing
     }
 
     /// <summary>
-    /// This method works out the colour a surface takes on under this light, by Phong's reckoning:
+    /// This method works out the color a surface takes on under this light, by Phong's reckoning:
     /// an ambient term that a shadow does not touch, a diffuse term for how squarely the surface
     /// faces the light, and a specular highlight for how nearly it mirrors the light into the eye.
     /// </summary>
@@ -101,8 +101,8 @@ public abstract class Light : NamedThing
         Color lightReaching)
     {
         Material material = surface.Material ?? Material.Default;
-        // The pigment's own colour is kept as well as the lit one, because a metallic highlight
-        // tints by the surface's colour alone -- using the lit colour would fold the light in twice.
+        // The pigment's own color is kept as well as the lit one, because a metallic highlight
+        // tints by the surface's color alone -- using the lit color would fold the light in twice.
         Color pigmentColor = material.Pigment.GetColorFor(surface, point);
         Color color = pigmentColor * Color;
         Vector vector = sample.Direction;
@@ -115,7 +115,7 @@ public abstract class Light : NamedThing
         // in.  It scales everything that depends on the light arriving, and leaves the ambient term
         // alone -- a point outside the cone is as good as one in shadow, but still catches whatever
         // bounced light the ambient stands for.  A plain light aims all of itself everywhere, so
-        // the reaching colour is passed straight through untouched, which keeps such a light's
+        // the reaching color is passed straight through untouched, which keeps such a light's
         // shading exactly what it was before any of this existed.
         double intensity = sample.Cone;
         Color reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
@@ -131,7 +131,7 @@ public abstract class Light : NamedThing
             diffuseColor = specularColor = Colors.Black;
         else
         {
-            // How much of the light the surface takes, before its colour is applied.  Brilliance
+            // How much of the light the surface takes, before its color is applied.  Brilliance
             // shapes how the falloff runs as the surface turns away, and the grain then takes fine
             // flecks back out of it -- both in that order, and both POV-Ray's.
             double surfaceIntensity = material.Brilliance == 1
@@ -153,7 +153,7 @@ public abstract class Light : NamedThing
 
                 specularColor = Color * material.Specular * factor;
 
-                // A metal's highlight takes the colour of the metal rather than of the light.  The
+                // A metal's highlight takes the color of the metal rather than of the light.  The
                 // angle used is the light against the normal, which is the approximation POV-Ray
                 // makes here too: the halfway vector would be more correct, but Phong exists
                 // precisely to avoid computing it.
@@ -163,8 +163,8 @@ public abstract class Light : NamedThing
         }
 
         // Whatever the light lost on its way here is charged against both terms that depend on it
-        // arriving.  Since it is a colour rather than a fraction, light that came through coloured
-        // glass lights this surface in that colour.
+        // arriving.  Since it is a color rather than a fraction, light that came through colored
+        // glass lights this surface in that color.
         //
         // The two terms are charged separately rather than added and charged together, which looks
         // like the long way round and is done on purpose: it keeps the additions grouped exactly as

@@ -1,0 +1,40 @@
+// A text solid: letters turned into real geometry.  Each glyph's outline becomes a path and the
+// path is extruded, so the result is a solid you can light and reflect like any other.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.5, -15]
+    look at [0, 0.55, 0]
+    field of view 33
+}
+
+point light { location [-6, 8, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+    translate [0, -1.9, 0]
+}
+
+text {
+    // '\n' starts a new line; the layout block centers all three and sets the gap between them.
+    text 'Ray Tracing\nis\nFun!'
+    font 'Merriweather'
+
+    layout {
+        text alignment center
+        horizontal position center
+        vertical position center
+    }
+
+    material {
+        pigment color [0.85, 0.7, 0.25]
+        specular 0.6
+        shininess 200
+        reflective 0.15
+    }
+
+    // A text solid is built lying flat, so stand it up before placing it.
+    scale [1, 1, 0.35]
+    rotate X -90
+}

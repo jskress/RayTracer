@@ -11,7 +11,7 @@ namespace RayTracer.Instructions.Core;
 public class AreaLightResolver : NamedObjectResolver<AreaLight>
 {
     /// <summary>
-    /// This property holds the resolver for where the centre of the lit face stands.
+    /// This property holds the resolver for where the center of the lit face stands.
     /// </summary>
     public Resolver<Point> LocationResolver { get; set; }
 
@@ -47,7 +47,7 @@ public class AreaLightResolver : NamedObjectResolver<AreaLight>
     public bool? Jitter { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the light's colour.
+    /// This property holds the resolver for the light's color.
     /// </summary>
     public Resolver<Color> ColorResolver { get; set; }
 

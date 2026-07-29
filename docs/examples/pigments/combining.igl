@@ -1,0 +1,58 @@
+// Blending, layering and mottling, each beside the plain pigment it is built from.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.2, -17]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-7, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [8, 4, -5]   color [0.28, 0.29, 0.34] }
+
+// A checker on its own, for comparison with the two beside it.
+sphere {
+    material {
+        pigment checker { color [0.85, 0.35, 0.3], color [0.95, 0.93, 0.88]  scale 0.45 }
+        specular 0.4  shininess 60
+    }
+    translate [-4.2, 0, 0]
+}
+
+// Blended with a solid blue: every point is the average of the two, so the checker survives
+// but is pulled halfway toward the blue.
+sphere {
+    material {
+        pigment blend {
+            checker { color [0.85, 0.35, 0.3], color [0.95, 0.93, 0.88]  scale 0.45 },
+            color [0.25, 0.4, 0.8]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [-1.4, 0, 0]
+}
+
+// Layered instead: the checker is written first, so it lies on top, and its second color is
+// given an alpha of zero -- those squares are holes the blue beneath shows through.
+sphere {
+    material {
+        pigment layer {
+            checker { color [0.85, 0.35, 0.3], color [1, 1, 1, 0]  scale 0.45 },
+            color [0.25, 0.4, 0.8]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [1.4, 0, 0]
+}
+
+// Mottled: a solid color dimmed by noise, so it comes out uneven and weathered rather than flat.
+sphere {
+    material {
+        pigment mottled {
+            noise { octaves 4 }
+            color [0.85, 0.55, 0.3]
+        }
+        specular 0.4  shininess 60
+    }
+    translate [4.2, 0, 0]
+}

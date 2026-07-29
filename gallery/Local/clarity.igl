@@ -3,9 +3,9 @@
 //
 // The interior's "filter" is charged once at each surface a ray crosses, so it cannot tell a thick
 // piece of glass from a thin one -- every slab here crosses exactly two surfaces and so takes
-// exactly the same tint.  "clarity" is charged by the distance travelled between those surfaces
+// exactly the same tint.  "clarity" is charged by the distance traveled between those surfaces
 // instead, following Beer's law, which is what makes the far slab deeper than the near one.  It is
-// the difference between coloured glass and *deep* coloured glass, and the reason a swimming pool
+// the difference between colored glass and *deep* colored glass, and the reason a swimming pool
 // is pale at the steps and dark at the far end.
 //
 // A clarity of 1 means light has faded to about a third of itself after travelling 1 unit.  The

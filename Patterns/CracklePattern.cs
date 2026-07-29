@@ -7,7 +7,7 @@ namespace RayTracer.Patterns;
 /// unit cells, each holding one feature point, and every position takes its value from how far it
 /// lies from the nearest of those points relative to the second nearest.  That difference falls to
 /// zero exactly where two feature points are equally close, which is to say along the boundaries
-/// between cells, so a colour map running dark at its low end draws a web of cracks through an
+/// between cells, so a color map running dark at its low end draws a web of cracks through an
 /// otherwise smooth surface.
 ///
 /// It is the pattern for anything that dried, cooled or grew into cells: cracked mud, stone,
@@ -65,7 +65,7 @@ public class CracklePattern : Pattern, INoiseConsumer
 
         // The gap between the two closest, which is zero on a cell boundary and widest deep
         // inside a cell.  It cannot exceed 1 for feature points scattered one to a unit cell, but
-        // clamp anyway rather than hand a colour map something it would quietly wrap.
+        // clamp anyway rather than hand a color map something it would quietly wrap.
         double value = secondNearest - nearest;
 
         return value > 1 ? 1 : value;
@@ -73,7 +73,7 @@ public class CracklePattern : Pattern, INoiseConsumer
 
     /// <summary>
     /// This method returns the feature point belonging to the given cell.  It has to be a pure
-    /// function of the cell's coordinates: neighbouring positions ask about the same cell and
+    /// function of the cell's coordinates: neighboring positions ask about the same cell and
     /// must be told the same thing, or the cells would shift underfoot and the boundaries between
     /// them dissolve.
     /// </summary>
@@ -98,8 +98,8 @@ public class CracklePattern : Pattern, INoiseConsumer
     /// carries, and it is a trap: gradient noise is zero at every integer lattice point by
     /// construction, so
     /// asking it about cell corners would hand back the same nothing for every cell, and every
-    /// feature point would land dead centre.  Sampling cell centres instead dodges that, but
-    /// leaves neighbouring samples a single unit apart, close enough to correlate -- and visible
+    /// feature point would land dead center.  Sampling cell centers instead dodges that, but
+    /// leaves neighboring samples a single unit apart, close enough to correlate -- and visible
     /// regularity is precisely the flaw a cellular pattern cannot afford.  Hence integer hashing,
     /// which has no lattice to be caught on.
     /// </summary>

@@ -72,13 +72,24 @@ public static class ImageMapTypeExtensions
     private static (double, double) GetPlanarImageLocationFor(
         Point point, double width, double height, bool once)
     {
-        if (once && point.X is < 0 or > 1 || point.Z is < 0 or > 1)
+        // Note the parentheses: "&&" binds tighter than "||", so without them the Z test applied
+        // whether or not "once" was asked for, and half the plane came back transparent for no
+        // stated reason.
+        if (once && (point.X is < 0 or > 1 || point.Z is < 0 or > 1))
             return (double.NaN, double.NaN);
 
-        double x = point.X * width % width;
-        double y = point.Z * height % height;
+        return (Wrap(point.X, width), Wrap(point.Z, height));
 
-        return (x, y);
+        // Left to repeat, the image tiles, so a coordinate outside [0, 1) wraps back into it.
+        // C#'s remainder keeps the sign of its left operand, so a negative coordinate -- which
+        // any surface reaching to the left of the origin has -- produced a negative index and
+        // took the render down with it.
+        static double Wrap(double value, double size)
+        {
+            double result = value * size % size;
+
+            return result < 0 ? result + size : result;
+        }
     }
 
     /// <summary>

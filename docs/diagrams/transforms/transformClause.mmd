@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "Transforms"
+
+transform = "translate" by | "scale" by | "rotate" axis angle
+          | "shear" "[" six numbers "]" | "matrix" "[" sixteen numbers "]" ;
+
+by = axis number | tuple | number ;
+
+axis = "X" | "Y" | "Z" ;

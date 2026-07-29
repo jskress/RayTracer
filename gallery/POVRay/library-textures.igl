@@ -24,6 +24,7 @@ background [0.05, 0.06, 0.09]
 camera {
     location [0, 2.2, -7.2]
     look at [0, 1.2, 1.3]
+    field of view 90
 }
 
 // Two lights: one doing the work from the front left, and a dimmer one behind and to the right to
@@ -50,7 +51,7 @@ plane {
 }
 
 // A row of metals: brass, gold, chrome and silver, in that order, so the two yellows sit together
-// and the two greys after them.
+// and the two grays after them.
 //
 // They are lifted clear of the floor rather than stood on it.  Resting on the floor puts most of
 // each of them behind the glass in front, and the two on the ends nearly vanish; at this height

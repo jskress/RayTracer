@@ -1,0 +1,38 @@
+// The same two blob spheres at three separations, to show them melting together.  Nothing but
+// the distance between the two components changes from one to the next.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1.2, -14]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-6, 8, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 3, -4]   color [0.28, 0.29, 0.34] }
+
+// Far enough apart that neither reaches the other: two separate balls.
+blob {
+    material { pigment color [0.85, 0.5, 0.35]  specular 0.5  shininess 60 }
+    threshold 0.6
+    sphere { center [-0.85, 0, 0]  radius 1  strength 1 }
+    sphere { center [ 0.85, 0, 0]  radius 1  strength 1 }
+    translate [-3.4, 0, 0]
+}
+
+// Close enough that their fields overlap: a smooth neck forms between them.
+blob {
+    material { pigment color [0.5, 0.72, 0.5]  specular 0.5  shininess 60 }
+    threshold 0.6
+    sphere { center [-0.55, 0, 0]  radius 1  strength 1 }
+    sphere { center [ 0.55, 0, 0]  radius 1  strength 1 }
+}
+
+// Closer still, and the two have become one rounded mass.
+blob {
+    material { pigment color [0.5, 0.6, 0.85]  specular 0.5  shininess 60 }
+    threshold 0.6
+    sphere { center [-0.25, 0, 0]  radius 1  strength 1 }
+    sphere { center [ 0.25, 0, 0]  radius 1  strength 1 }
+    translate [3.4, 0, 0]
+}

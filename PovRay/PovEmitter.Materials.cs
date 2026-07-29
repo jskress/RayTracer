@@ -36,7 +36,7 @@ public partial class PovEmitter
     private static readonly HashSet<string> IgnorableProperties =
     [
         "irid", "conserve_energy", "fresnel", "reflection_exponent", "subsurface", "iridescence",
-        "caustics", "dispersion", "dispersion_samples", "fade_power", "fade_color", "fade_colour",
+        "caustics", "dispersion", "dispersion_samples", "fade_power", "fade_color", "fade_color",
         "phong_albedo", "specular_albedo", "diffuse_albedo", "use_alpha", "no_radiosity"
     ];
 
@@ -128,7 +128,7 @@ public partial class PovEmitter
 
         writer.Close();
 
-        // A roughening belongs to the surface rather than to any one layer of its colouring, and
+        // A roughening belongs to the surface rather than to any one layer of its coloring, and
         // the ray tracer has one of them where POV-Ray has one per layer.  The lowest layer that
         // asks for one wins, on the same reasoning as the finish.
         TextureParts roughened = layers.FirstOrDefault(layer => layer.Normal?.Pattern is not null);

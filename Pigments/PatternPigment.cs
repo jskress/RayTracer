@@ -38,7 +38,7 @@ public class PatternPigment : Pigment
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
     /// <summary>
-    /// A pattern is only as transmitting as the colours it chooses between.
+    /// A pattern is only as transmitting as the colors it chooses between.
     /// </summary>
     public override bool MayTransmit => PigmentSet?.MayTransmit ?? false;
 

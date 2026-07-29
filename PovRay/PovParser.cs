@@ -501,7 +501,7 @@ public partial class PovParser
         if (Next.IsPunctuation("{"))
             return false;
 
-        return token.Text is "color" or "colour" or "version" ||
+        return token.Text is "color" or "color" or "version" ||
                ColorKeywords.ContainsKey(token.Text) ||
                AxisConstants.ContainsKey(token.Text) ||
                (FunctionNames.Contains(token.Text) && Next.IsPunctuation("(")) ||

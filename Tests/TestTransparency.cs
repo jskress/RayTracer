@@ -76,7 +76,7 @@ public class TestTransparency
     public void TestClearGlassDoesNotDarkenWhatIsBehindIt()
     {
         // Stated as the failure we actually care about, so a regression reads plainly: whatever
-        // else may drift, the colour must not lose brightness.
+        // else may drift, the color must not lose brightness.
         Color throughGlass = LookAlongZ(SceneShowing(new Sphere { Material = PerfectlyClear() }));
 
         Assert.IsTrue(throughGlass.Red >= Colors.Red.Red - 1e-9,
@@ -130,10 +130,10 @@ public class TestTransparency
     }
 
     /// <summary>
-    /// Looks through a single pane of glass of the given colour and filtering at a white
+    /// Looks through a single pane of glass of the given color and filtering at a white
     /// background, which is the plainest way to see what a filter does to the light.
     /// </summary>
-    private static Color ThroughAPaneOf(Color colour, double filter)
+    private static Color ThroughAPaneOf(Color color, double filter)
     {
         Scene scene = new () { Background = new SolidPigment(Colors.White) };
 
@@ -141,7 +141,7 @@ public class TestTransparency
 
         Material glass = PerfectlyClear();
 
-        glass.Pigment = new SolidPigment(colour);
+        glass.Pigment = new SolidPigment(color);
         glass.Interior.Filter = filter;
 
         Plane pane = new () { Material = glass, Transform = Transforms.RotateAroundX(90) };
@@ -156,7 +156,7 @@ public class TestTransparency
     public void TestFilteringTintsWhatPassesThrough()
     {
         // The capability this whole change exists for: red glass makes what is behind it red.
-        // Before the interior existed, transparency could only dim, never colour, so a red pane
+        // Before the interior existed, transparency could only dim, never color, so a red pane
         // over white left the white stubbornly white.
         Color seen = ThroughAPaneOf(Colors.Red, 1);
 
@@ -164,9 +164,9 @@ public class TestTransparency
     }
 
     [TestMethod]
-    public void TestNoFilteringStillPassesColourThroughUntouched()
+    public void TestNoFilteringStillPassesColorThroughUntouched()
     {
-        // The old behaviour is still the default, so nothing already written changes meaning:
+        // The old behavior is still the default, so nothing already written changes meaning:
         // without filtering, a red pane dims but does not redden.
         Color seen = ThroughAPaneOf(Colors.Red, 0);
 
@@ -189,7 +189,7 @@ public class TestTransparency
     public void TestFilteringIsChargedPerSurfaceCrossed()
     {
         // Filtering follows transparency's rule: it is charged at each boundary, so a solid tints
-        // twice -- going in and coming out -- and its colour deepens accordingly.  That is also
+        // twice -- going in and coming out -- and its color deepens accordingly.  That is also
         // what keeps thicker-looking glass from looking identical to a pane.
         Scene scene = new () { Background = new SolidPigment(Colors.White) };
 
@@ -229,7 +229,7 @@ public class TestTransparency
     [TestMethod]
     public void TestFilteringFollowsAPatternedPigment()
     {
-        // The tint is taken from the pigment where the ray actually crossed, not from one colour
+        // The tint is taken from the pigment where the ray actually crossed, not from one color
         // averaged over the whole surface, so patterned glass filters as a pattern -- which is
         // what stained glass is.
         PatternPigment checks = new ()
@@ -255,7 +255,7 @@ public class TestTransparency
         pane.PrepareForRendering();
         scene.Surfaces.Add(pane);
 
-        // Two rays a full check apart cross the pane on differently coloured squares.
+        // Two rays a full check apart cross the pane on differently colored squares.
         Color first = scene.GetColorFor(new Ray(new Point(0.5, 0, -5), new Vector(0, 0, 1)), 8);
         Color second = scene.GetColorFor(new Ray(new Point(1.5, 0, -5), new Vector(0, 0, 1)), 8);
 
@@ -267,8 +267,8 @@ public class TestTransparency
     {
         // Absorption does not accumulate with distance: a ten-fold thicker piece of the same
         // glass takes out exactly as much light, because transparency is charged per surface
-        // crossed rather than per unit travelled.  POV-Ray's interior fade_distance/fade_power
-        // is what models the other behaviour, and has no equivalent here.
+        // crossed rather than per unit traveled.  POV-Ray's interior fade_distance/fade_power
+        // is what models the other behavior, and has no equivalent here.
         Material thin = PerfectlyClear();
         Material thick = PerfectlyClear();
 
@@ -337,10 +337,10 @@ public class TestTransparency
     }
 
     [TestMethod]
-    public void TestFilteringGlassCastsAColouredShadow()
+    public void TestFilteringGlassCastsAColoredShadow()
     {
         // The other half of what makes stained glass look like stained glass: it does not merely
-        // let light past, it stains what it lets past, so the shadow is coloured rather than grey.
+        // let light past, it stains what it lets past, so the shadow is colored rather than gray.
         Material glass = PerfectlyClear();
 
         glass.Pigment = new SolidPigment(Colors.Red);
@@ -471,7 +471,7 @@ public class TestTransparency
     }
 
     [TestMethod]
-    public void TestClarityFadesLightWithDistanceTravelled()
+    public void TestClarityFadesLightWithDistanceTraveled()
     {
         // Where the filter is charged once per surface crossed, clarity is charged by the distance
         // between them, so the same glass is darker when there is more of it to cross.  This is
@@ -542,7 +542,7 @@ public class TestTransparency
     public void TestClearGlassWithARealIndexStillPassesLightThrough()
     {
         // Glass that actually refracts bends the path, so what is seen through it may come from
-        // somewhere else -- but against a background of one flat colour there is nowhere else to
+        // somewhere else -- but against a background of one flat color there is nowhere else to
         // look, and it must still come through undimmed.
         Color throughGlass = LookAlongZ(SceneShowing(new Sphere { Material = PerfectlyClear(1.5) }), 8);
 

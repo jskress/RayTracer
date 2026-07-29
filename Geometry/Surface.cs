@@ -255,7 +255,7 @@ public abstract class Surface : NamedThing
         // Any roughening happens here, in surface space, which is the same footing the pigment is
         // evaluated on.  Doing it before the normal is carried out to the world means a surface
         // that has been scaled or turned takes its bumps along with it, exactly as it takes its
-        // colouring along with it.
+        // coloring along with it.
         if (Material?.SurfaceNormal is not null)
             normal = Material.SurfaceNormal.PerturbAt(normal, surfacePoint);
 

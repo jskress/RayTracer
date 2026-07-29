@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "The context block"
+
+context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians" )
+        | "apply" "gamma" | "no" ( "gamma" | "shadows" )
+        | ( "width" | "height" | "gamma" ) number } "}" ;

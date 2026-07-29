@@ -423,7 +423,7 @@ public class TestScenes
         // away again at the floor's own surface, the floor having an index of refraction to bend
         // it by.
         //
-        // The floor then stops showing half of its own colour, being half transparent, and that is
+        // The floor then stops showing half of its own color, being half transparent, and that is
         // the larger part of the difference from the book's figure: green and blue come out at
         // exactly half what they were, since nothing else in the scene contributes to them.  A
         // surface can only show as much of itself as it stops.
@@ -468,7 +468,7 @@ public class TestScenes
 
         // As above, the book's (0.93391, 0.69643, 0.69243) assumed the translucent floor cast an
         // opaque shadow on the ball below it, less what that floor turns away at its own surface --
-        // and less again the half of its own colour that a half-transparent floor no longer shows.
+        // and less again the half of its own color that a half-transparent floor no longer shows.
         Color expected = new (0.764033, 0.353222, 0.349218);
 
         Assert.IsTrue(expected.Matches(color), color.ToString());

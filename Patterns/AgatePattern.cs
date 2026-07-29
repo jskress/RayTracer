@@ -29,7 +29,7 @@ public class AgatePattern : Pattern
     /// <param name="seed">The seed value to set.</param>
     public override void SetSeed(int seed)
     {
-        Turbulence.Seed ??= seed;
+        Turbulence?.Seed ??= seed;
     }
 
     /// <summary>
@@ -40,7 +40,11 @@ public class AgatePattern : Pattern
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
-        double turbulence = Turbulence.Generate(point);
+        // Turbulence is what gives agate its wandering bands, so a scene will nearly always ask
+        // for some -- but it is not required, and without it the pattern is simply the clean
+        // banding the turbulence would otherwise have stirred.  Marble and wood degrade the same
+        // way; this used to reach straight through and take the whole render down with it.
+        double turbulence = Turbulence?.Generate(point) ?? 0;
         double noise = 0.5 * (Cycloidal(1.3 * turbulence + 1.1 * point.Z) + 1.0);
 
         return noise < 0.0 ? 0.0 : Math.Pow(Math.Min(1.0, noise), 0.77);

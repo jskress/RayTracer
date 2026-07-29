@@ -3,7 +3,7 @@ using RayTracer.Basics;
 namespace RayTracer.Patterns;
 
 /// <summary>
-/// This class provides the bozo pattern: plain noise, handed straight to a colour map.  It is
+/// This class provides the bozo pattern: plain noise, handed straight to a color map.  It is
 /// the simplest of the noise patterns -- where <see cref="DentsPattern"/> cubes its noise to
 /// scatter it and <see cref="GranitePattern"/> sums octaves of it, this one does nothing to it
 /// at all -- which makes it the natural choice for clouds, blotches, and the gentle variation

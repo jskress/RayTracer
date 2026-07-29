@@ -12,7 +12,7 @@ include '../defaults.igl'
 //
 // It is worth knowing how lopsided the values are before writing any map for it: half of them
 // fall below 0.157 and only one in twenty passes 0.51, since most of a cell is nearer its own
-// point than any other and only the seams between them come close.  So the interesting colours
+// point than any other and only the seams between them come close.  So the interesting colors
 // belong at the bottom, and a map spread evenly over [0, 1] would spend most of itself on values
 // crackle almost never reaches.
 
@@ -57,7 +57,7 @@ sphere {
     translate Y 1.5
 }
 
-// And read as cells rather than cracks, by handing the low end a bright colour instead of a dark
+// And read as cells rather than cracks, by handing the low end a bright color instead of a dark
 // one -- the same boundaries, now lit up rather than drawn in.
 sphere {
     material {

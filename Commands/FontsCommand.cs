@@ -279,7 +279,7 @@ public static class FontsCommand
         KerningPair pair = options.KerningPair;
 
         if (pair == null)
-            Terminal.ShowError("No kerbing pair was specified.  Use the --pair option to provide one.");
+            Terminal.ShowError("No kerning pair was specified.  Use the --pair option to provide one.");
 
         FontManager.Instance.AddKerningPair(id, pair);
         Terminal.Out("The kerning pair was successfully added.");

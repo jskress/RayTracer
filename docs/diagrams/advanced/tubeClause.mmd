@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A tube"
+
+tube = "tube" "{" [ "discontinuous" ] { point } { property } "}" ;
+
+point = [ "quad" | "curve" ] "radius" number "at" point3 { "radius" number "at" point3 } ;

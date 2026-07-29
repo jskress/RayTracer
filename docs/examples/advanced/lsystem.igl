@@ -1,0 +1,64 @@
+// An L-system: a short string rewritten over and over by a set of rules, then read as
+// instructions for a turtle that draws in 3D.  This is the bush from *The Algorithmic Beauty
+// of Plants*, and every leaf and stem below comes from the five rules written here.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.6, -7]
+    look at [0, 1.8, 0]
+    field of view 40
+}
+
+point light { location [6, 9, -7]   color [1, 0.97, 0.93] }
+point light { location [-7, 4, -6]  color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment color [0.3, 0.34, 0.4]  specular 0 }
+}
+
+stem = material {
+    pigment color [0.36, 0.25, 0.15]
+    specular 0
+    ambient 0.3
+}
+
+blade = material {
+    pigment ForestGreen
+    specular 0
+    ambient 0.3
+}
+
+bush = lsystem {
+    // The string the rewriting starts from.
+    axiom '$A'
+
+    // Each rule replaces one character with a longer run of characters.  Letters draw or stand
+    // for something; "[" and "]" remember and restore where the turtle is, which is what makes
+    // a branch a branch; "/" and "&" turn it; "{" and "}" fill a polygon, which is a leaf.
+    productions {
+        'A' -> '[&FL!A]/////[&FL!A]///////[&FL!A]'
+        'F' -> 'S/////F'
+        'S' -> 'FL'
+        'L' -> '[C^^{-f+f+f-|-f+f+f}]'
+    }
+
+    // A character may be bound to a material, so the leaves come out green and the rest woody.
+    materials {
+        'C' -> blade
+    }
+
+    controls {
+        tubes           // draw the stems as tapering tubes rather than plain pipes
+        angle 22.5
+        length 1
+        diameter 0.5
+        factor 0.9      // each generation is drawn a little smaller than the last
+    }
+}
+
+// Rewriting six times, then drawing what comes out.
+lsystem bush {
+    generations 6
+    material stem
+    scale 0.15
+}

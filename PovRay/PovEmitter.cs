@@ -21,7 +21,7 @@ public partial class PovEmitter
     /// </summary>
     private static readonly HashSet<string> IngredientBlocks =
     [
-        "color_map", "colour_map", "pigment_map", "texture_map", "normal_map", "density_map",
+        "color_map", "color_map", "pigment_map", "texture_map", "normal_map", "density_map",
         "slope_map"
     ];
 

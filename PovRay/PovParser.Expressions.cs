@@ -271,7 +271,7 @@ public partial class PovParser
 
         // A bare "color" adds nothing of its own; it may be followed by a keyword that does, or by
         // a plain vector, so let whatever comes next decide.
-        if (name is "color" or "colour")
+        if (name is "color" or "color")
         {
             _index++;
 
@@ -425,7 +425,7 @@ public partial class PovParser
 
     /// <summary>
     /// This method reads what follows a color keyword and puts it in the slots that keyword names.
-    /// A single number stands for a grey, which is POV-Ray's own rule.
+    /// A single number stands for a gray, which is POV-Ray's own rule.
     /// </summary>
     /// <param name="slots">The slots the keyword fills, in the order it fills them.</param>
     /// <param name="line">The line the keyword was on, for reporting.</param>
