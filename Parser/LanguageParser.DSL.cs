@@ -36,7 +36,7 @@ public partial class LanguageParser
             'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
+            'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
@@ -555,7 +555,7 @@ public partial class LanguageParser
         extrusionPathClause:
         [
             moveToClause | lineToClause | quadToClause | curveToClause | close |
-            { svg > _expression }
+            { svg > _expression } | { icon > _expression }
         ] ?? 'Expecting a path command here.'
         startExtrusionClause:
         {

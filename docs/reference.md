@@ -132,6 +132,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `heightfield` | Surface: an image read as terrain. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
@@ -771,6 +772,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `-i`, `--import` | Import a library: an `.igl` file of definitions, or (with `--povray`) a POV-Ray include directory. |
 | `-p`, `--povray` | With `--import`, convert a POV-Ray distribution's include files rather than copy one `.igl`. |
 | `-r`, `--remove` | Remove a library. |
+| `--fa-zip` | Install a FontAwesome zip, so scenes can use its icons as [2D paths](advanced-surfaces.md#icons). |
 | `-o`, `--overwrite` | Allow an import to replace libraries already there. |
 | `-d`, `--details` | List every definition that could not be converted. |
 | `-n`, `--dry-run` | Convert and report, but write nothing. |

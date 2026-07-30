@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Terms;
@@ -26,10 +25,18 @@ public class PathCommand
     /// <param name="path">The path to apply the command to.</param>
     internal void Apply(Variables variables, GeneralPath path)
     {
-        if (_commandType == PathCommandType.Svg)
-            ApplySvgSpec(variables, path);
-        else
-            ApplyCommand(variables, path);
+        switch (_commandType)
+        {
+            case PathCommandType.Svg:
+                ApplySvgSpec(variables, path);
+                break;
+            case PathCommandType.Icon:
+                ApplyIconSpec(variables, path);
+                break;
+            default:
+                ApplyCommand(variables, path);
+                break;
+        }
     }
 
     /// <summary>
@@ -95,5 +102,19 @@ public class PathCommand
         string spec = _terms[0].GetValue<string>(variables);
 
         new SvgPathFactory(spec).ParseInto(path);
+    }
+
+    /// <summary>
+    /// This method is used to apply a FontAwesome icon to the given path.  The icon's outline is
+    /// read from the installed FontAwesome zip and handed to the same factory the raw SVG command
+    /// uses.
+    /// </summary>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="path">The path to apply the command to.</param>
+    private void ApplyIconSpec(Variables variables, GeneralPath path)
+    {
+        string spec = _terms[0].GetValue<string>(variables);
+
+        new SvgPathFactory(FontAwesomeIcons.ReadPathData(spec)).ParseInto(path);
     }
 }

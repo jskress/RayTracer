@@ -1,4 +1,6 @@
+using System.IO.Compression;
 using RayTracer.Fonts;
+using RayTracer.Graphics;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.PovRay;
@@ -38,10 +40,81 @@ public static class LibrariesCommand
             ImportLibrary(options);
         else if (options.RemoveLibrary != null)
             RemoveLibrary(options.RemoveLibrary);
+        else if (options.FontAwesomeZip != null)
+            InstallFontAwesomeZip(options.FontAwesomeZip);
         else if (options.Povray)
             Terminal.ShowError("--povray only makes sense together with --import.");
         else
             Console.WriteLine("No action was specified.  Use '--help' for a list of options.");
+    }
+
+    /// <summary>
+    /// This method installs a FontAwesome zip file, copying it in as the ray tracer's own so that
+    /// scenes may use its icons as 2D paths.  The file must look like a FontAwesome zip -- a zip
+    /// holding an <c>svgs</c> folder of icons.
+    /// </summary>
+    /// <param name="path">The path of the zip file to install.</param>
+    private static void InstallFontAwesomeZip(string path)
+    {
+        string source = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), path));
+
+        if (!File.Exists(source))
+            Terminal.ShowError($"The file, '{source}', does not exist.");
+
+        if (!LooksLikeFontAwesomeZip(source))
+        {
+            Terminal.ShowError(
+                $"'{Path.GetFileName(source)}' does not look like a FontAwesome zip; it has no " +
+                "'svgs' folder of icons.");
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(FontAwesomeIcons.ZipPath)!);
+        File.Copy(source, FontAwesomeIcons.ZipPath, overwrite: true);
+
+        Terminal.Out($"The FontAwesome zip was installed at {FontAwesomeIcons.ZipPath}.");
+    }
+
+    /// <summary>
+    /// This method reports whether the given file looks like a FontAwesome zip: a readable zip that
+    /// holds a folder of SVG icons.
+    /// </summary>
+    /// <param name="path">The path of the file to check.</param>
+    /// <returns><c>true</c>, if the file looks like a FontAwesome zip.</returns>
+    private static bool LooksLikeFontAwesomeZip(string path)
+    {
+        try
+        {
+            using ZipArchive archive = ZipFile.OpenRead(path);
+
+            // The download nests its icons under a version-named folder, and carries them as "svgs"
+            // (both downloads) and "svgs-full" (the desktop one), so accept either folder wherever
+            // it sits rather than only at the very root.
+            return archive.Entries.Any(entry => HasIconFolder(entry.FullName));
+        }
+        catch (InvalidDataException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// This method reports whether the given entry name lies within a FontAwesome icon folder --
+    /// <c>svgs</c> or <c>svgs-full</c> -- wherever that folder sits in the zip.
+    /// </summary>
+    /// <param name="entryName">The full name of a zip entry.</param>
+    /// <returns><c>true</c>, if the entry lies within an icon folder.</returns>
+    private static bool HasIconFolder(string entryName)
+    {
+        foreach (string folder in new[] { "svgs/", "svgs-full/" })
+        {
+            if (entryName.StartsWith(folder, StringComparison.Ordinal) ||
+                entryName.Contains("/" + folder, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
