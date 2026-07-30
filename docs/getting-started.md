@@ -138,7 +138,7 @@ for within the chosen scene, so two scenes may each have a camera of the same na
 | `-w`, `--width` | 800 | The image width, in pixels. |
 | `-h`, `--height` | 600 | The image height, in pixels. |
 | `-a`, `--antialias` | off | Anti-aliasing; see below. |
-| `-c`, `--bits-per-channel` | | How many bits each color channel gets in the output file. |
+| `-c`, `--bits-per-channel` | 8 | How many bits each color channel gets in the file; `8` or `16`. |
 
 Antialiasing is written either as `off`, or as `adaptive` with a depth: `adaptive:5`, or
 just `5`, which means the same.  Bare `-a` with nothing after it means `adaptive:5`.

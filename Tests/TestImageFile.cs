@@ -1,3 +1,4 @@
+using ImageMagick;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
@@ -128,6 +129,46 @@ public class TestImageFile
         AssertColorsClose(new Color(0, 0, 0), loaded[0].GetPixel(0, 0));
         AssertColorsClose(new Color(1, 1, 1), loaded[0].GetPixel(1, 0));
         AssertColorsClose(new Color(1, 0, 0), loaded[0].GetPixel(2, 0));
+    }
+
+    [TestMethod]
+    public void TestThePngIsWrittenAtTheConfiguredChannelDepth()
+    {
+        // The image carries exactly the precision it was rendered with: an 8-bit render writes an
+        // 8-bit PNG, not 8-bit data padded into a 16-bit container.  A wider container was once
+        // forced to keep the round trip lossless; the pixels round-trip cleanly at either depth
+        // now, which the tests above cover at the default 8 bits.
+        Assert.AreEqual(8u, SavedPngDepth(8), "eight bits per channel should write an 8-bit PNG");
+        Assert.AreEqual(16u, SavedPngDepth(16), "sixteen bits per channel should write a 16-bit PNG");
+    }
+
+    /// <summary>
+    /// Saves a small image at the given channel depth and reports the bit depth the PNG was
+    /// actually written at.
+    /// </summary>
+    private static uint SavedPngDepth(int bitsPerChannel)
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"raytracer-depth-{Guid.NewGuid():N}.png");
+
+        try
+        {
+            Canvas canvas = new (2, 1);
+
+            canvas.SetColor(new Color(0.3, 0.6, 0.9), 0, 0);
+            canvas.SetColor(new Color(1, 1, 1, 0.5), 1, 0);
+
+            new ImageFile(path).Save(canvas,
+                new RenderContext { BitsPerChannel = bitsPerChannel, ApplyGamma = false });
+
+            using MagickImage image = new (path);
+
+            return image.Depth;
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
     }
 
     [TestMethod]

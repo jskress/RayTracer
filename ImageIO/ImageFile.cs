@@ -124,18 +124,23 @@ public class ImageFile
         if (info != null)
             AddInformation(image, info);
 
-        // Left to its own heuristics, Magick.NET's PNG writer will opportunistically
-        // shrink low-color-variety, fully-opaque images down to a palette or gray+alpha
-        // encoding.  That's a fine size optimization in general, but ImageFile.Load()
-        // reads pixels back assuming a true RGB(A) layout, so those alternate encodings
-        // cause the alpha channel to come back corrupted (near zero) on the next load.
-        // Forcing true-color-with-alpha at full 16-bit depth keeps the round trip lossless.
+        // The PNG is written at the channel depth the image was rendered with -- 8 bits by
+        // default, 16 when asked for -- so it carries exactly the precision it holds rather than
+        // padding 8-bit data into a 16-bit container.  The scaling above fills Magick's 16-bit
+        // pixels either way; writing at 8 bits then folds each channel back down losslessly,
+        // since the values are already quantized to 8 bits.
+        //
+        // TrueColorAlpha is forced regardless of depth: left to its own heuristics, Magick.NET's
+        // PNG writer will opportunistically shrink low-color-variety, fully-opaque images down to
+        // a palette or gray+alpha encoding.  That is a fine size optimization in general, but
+        // ImageFile.Load() reads pixels back assuming a true RGB(A) layout, so those alternate
+        // encodings cause the alpha channel to come back corrupted (near zero) on the next load.
         if (MagickFormatInfo.Create(new FileInfo(_fileName))?.Format == MagickFormat.Png)
         {
             image.Write(_fileName, new PngWriteDefines
             {
                 ColorType = ColorType.TrueColorAlpha,
-                BitDepth = 16
+                BitDepth = (uint) context.BitsPerChannel
             });
         }
         else
