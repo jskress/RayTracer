@@ -160,8 +160,63 @@ than asking for either.  `blur samples` sets the count for both.
 
 `gallery/Local/motion-blur.igl` is a scene built around this.
 
-### What is still to come
+### Projections
 
-Every camera here is a perspective camera — the ordinary sort, which is what a pinhole gives
-you.  Other kinds of projection, such as orthographic and fisheye, are planned but not yet
-implemented.
+Every camera so far has been a **perspective** camera — the ordinary sort, the one a pinhole
+gives, where the world shrinks with distance.  It is what a camera is unless a scene asks for
+another kind, which it does with a word before `camera`, the way a light's sort is named by the
+word before `light`:
+
+```
+fisheye camera {
+    location [0, 3, 0]
+    look at [0, 1, 8]
+    field of view 180
+}
+```
+
+![A fisheye view of a wide scene](images/figures/cam-fisheye.png)
+
+| Projection | What it is |
+| --- | --- |
+| *(none)* or `perspective` | The ordinary view, where the world shrinks with distance. |
+| `orthographic` | A parallel view: nothing shrinks with distance, as a technical drawing. |
+| `fisheye` | A circular, very wide view, up to and past a half-circle across. |
+| `ultraWide` | A rectangular wide-angle view, with less corner stretch than a wide perspective. |
+| `panoramic` | A cylindrical view, for a wide horizontal sweep, keeping uprights upright. |
+| `spherical` | The whole sphere at once — every direction — for an environment map. |
+
+**Orthographic** throws perspective away: two things of a size come out the same size however
+far apart they lie, which is what makes it right for technical and isometric looks.  It has no
+field of view of its own, so it borrows the perspective one — the view is made as wide as a
+perspective camera of that field of view would see at the distance the camera is focused on,
+usually what it looks at — so a scene may switch between the two and keep its subject the same
+size.
+
+**Fisheye** maps how far a pixel lies from the middle to the angle its ray leaves at, so straight
+lines bow and the world curves away to the edges.  Its `field of view` is the angle across the
+whole circle, and may be `180` or more.  The circle is fitted to the shorter side of the image,
+and the corners outside it are left to the background.
+
+**Ultra-wide** is the rectangular cousin of the fisheye: it fills the whole frame rather than a
+circle, with less of the corner stretch a very wide perspective has.  Its `field of view` is the
+angle across the width.
+
+**Panoramic** is a cylinder: the width wraps around as a wide horizontal sweep — its `field of
+view` is how far around, and may be well past what a perspective camera could show — while the
+height stays a straight, upright projection, so the world's uprights do not lean the way a very
+wide perspective makes them.
+
+**Spherical** shows the whole sphere unrolled onto the rectangle: the width a complete
+360-degree turn, the height a 180-degree half turn from straight down to straight up.  It is
+what an environment map wants, so it always shows everything and takes no field of view.  It
+reads best in an image twice as wide as it is tall.
+
+Only the perspective and orthographic cameras have a flat lens to gather across, so only they can
+be given an [aperture](#depth-of-field) for depth of field.  A curved camera — fisheye,
+ultra-wide, panoramic or spherical — warns that its aperture does nothing and renders as a
+pinhole.  The [shutter](#motion-blur) works on every projection, so any of them may be set
+moving.
+
+The scene in the picture above is `gallery/Local/fisheye.igl`; changing the word before
+`camera` in it is the quickest way to see one world through each of the projections.

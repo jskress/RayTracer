@@ -111,7 +111,7 @@ public class TestFocalBlur
         // them and stays sharp.
         const double focalDistance = 4;
 
-        PixelToRayConverter mechanics = new (
+        PixelToRayConverter mechanics = new PerspectiveRayConverter(
             Context(), Math.PI / 2, Matrix.Identity, new CameraSampler(0.4, focalDistance, 0, 16));
         Point meeting = null;
 
@@ -136,7 +136,7 @@ public class TestFocalBlur
     [TestMethod]
     public void TestTheRaysLeaveFromDifferentPlacesAcrossTheLens()
     {
-        PixelToRayConverter mechanics = new (
+        PixelToRayConverter mechanics = new PerspectiveRayConverter(
             Context(), Math.PI / 2, Matrix.Identity, new CameraSampler(0.4, 4, 0, 16));
         Point first = mechanics.GetRayForPixel(60, 30, sampleIndex: 0).Origin;
         bool anyMoved = false;
@@ -162,7 +162,7 @@ public class TestFocalBlur
     {
         // The pinhole path is kept apart precisely so that it stays identical, so this pins the
         // ray a camera with no aperture gives against the one it always gave.
-        PixelToRayConverter mechanics = new (Context(), Math.PI / 2);
+        PixelToRayConverter mechanics = new PerspectiveRayConverter(Context(), Math.PI / 2);
         Ray ray = mechanics.GetRayForPixel(100, 50);
 
         Assert.IsTrue(Point.Zero.Matches(ray.Origin));

@@ -1,7 +1,8 @@
 railroad-ebnf-beta
 title "Camera"
 
-camera = "camera" "{" { "named" name | "location" point | "look" "at" point | "up" vector
+camera = [ "perspective" | "orthographic" | "fisheye" | "ultraWide" | "panoramic" | "spherical" ]
+         "camera" "{" { "named" name | "location" point | "look" "at" point | "up" vector
        | "field" "of" "view" angle | "aperture" number
        | "focal" ( "point" point | "distance" number )
        | "blur" "samples" number | "shutter" number | "seed" number } "}" ;

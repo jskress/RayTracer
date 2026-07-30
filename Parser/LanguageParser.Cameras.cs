@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
@@ -20,6 +21,19 @@ public partial class LanguageParser
         VerifyDefaultSceneUsage(clause, "Camera");
 
         CameraResolver resolver = ParseCameraClause();
+
+        // The word that opened the block names the projection: "camera" on its own is the ordinary
+        // perspective sort, and any other word before it names one of the others.
+        resolver.ProjectionType = clause.Tokens[0].Text switch
+        {
+            "perspective" => CameraProjectionType.Perspective,
+            "orthographic" => CameraProjectionType.Orthographic,
+            "fisheye" => CameraProjectionType.Fisheye,
+            "ultraWide" => CameraProjectionType.UltraWide,
+            "panoramic" => CameraProjectionType.Panoramic,
+            "spherical" => CameraProjectionType.Spherical,
+            _ => CameraProjectionType.Perspective
+        };
 
         _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
         {

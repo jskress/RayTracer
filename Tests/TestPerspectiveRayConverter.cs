@@ -5,7 +5,7 @@ using RayTracer.General;
 namespace Tests;
 
 [TestClass]
-public class TestPixelToRayConverter
+public class TestPerspectiveRayConverter
 {
     private const double PiOver2 = Math.PI / 2;
     private const double PiOver4 = Math.PI / 4;
@@ -14,7 +14,7 @@ public class TestPixelToRayConverter
     public void TestConstruction()
     {
         RenderContext context = new () { Width = 160, Height = 120 };
-        PixelToRayConverter mechanics = new PixelToRayConverter(context, PiOver2);
+        PerspectiveRayConverter mechanics = new (context, PiOver2);
 
         Assert.AreSame(Matrix.Identity, mechanics.Transform);
     }
@@ -23,7 +23,7 @@ public class TestPixelToRayConverter
     public void TestPixelSize()
     {
         RenderContext context = new () { Width = 200, Height = 125 };
-        PixelToRayConverter mechanics = new (context, PiOver2);
+        PerspectiveRayConverter mechanics = new (context, PiOver2);
 
         // Round to our expected value.
         double actual = Math.Round(mechanics.PixelSize * 100) / 100;
@@ -31,7 +31,7 @@ public class TestPixelToRayConverter
         Assert.AreEqual(0.01, actual);
 
         context = new RenderContext { Width = 125, Height = 200 };
-        mechanics = new PixelToRayConverter(context, PiOver2);
+        mechanics = new PerspectiveRayConverter(context, PiOver2);
 
         // Round to our expected value.
         actual = Math.Round(mechanics.PixelSize * 100) / 100;
@@ -43,7 +43,7 @@ public class TestPixelToRayConverter
     public void TestGetRayFor()
     {
         RenderContext context = new () { Width = 201, Height = 101 };
-        PixelToRayConverter mechanics = new (context, PiOver2);
+        PerspectiveRayConverter mechanics = new (context, PiOver2);
         Ray ray = mechanics.GetRayForPixel(100, 50);
         Vector direction = new (0, 0, -1);
 
