@@ -98,6 +98,7 @@ public partial class LanguageParser
             "curve" => PathCommandType.CurveTo,
             "close" => PathCommandType.Close,
             "svg" => PathCommandType.Svg,
+            "icon" => PathCommandType.Icon,
             _ => throw new Exception($"Unknown path command: {clause.Text()}")
         };
     }

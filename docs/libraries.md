@@ -230,6 +230,22 @@ RayTracer libraries --remove golds
 The name may be given with or without the `.igl`.  This only removes the library file; a scene
 that still imports from it will fail to find it the next time it is rendered.
 
+### FontAwesome Icons
+
+The `libraries` verb also keeps the [FontAwesome](https://fontawesome.com) icons a scene can use
+as [2D paths](advanced-surfaces.md#icons).  Download a FontAwesome zip and install it once:
+
+```bash
+RayTracer libraries --fa-zip fontawesome-free.zip
+```
+
+This copies the zip in beside the libraries, as the ray tracer's own, so every scene can read its
+icons.  Install it exactly as downloaded — there is no need to unpack it, and the folder the
+download wraps everything in does not matter.  The file must be a FontAwesome zip — one holding an
+`svgs` folder of icon outlines — and installing a new one replaces the one before it.  A path then
+names an icon as `style:name`, or just `name` for the `regular` style; see
+[Icons](advanced-surfaces.md#icons).
+
 ### A note on the command names
 
 Every one of these has a short form as well — `-i` for `--import`, `-p` for `--povray`, and

@@ -27,6 +27,7 @@ Four of these surfaces are built from a **path**: a 2D outline drawn in its own 
 | `curve ax, ay, bx, by to x, y` | A cubic curve, with two control points. |
 | `close` | Join back to where this run of the path started. |
 | `svg '…'` | The whole path as an SVG path string. |
+| `icon '…'` | The outline of a [FontAwesome icon](#icons). |
 
 A path may hold more than one **run** — each starts with a `move to` and usually ends with a
 `close`.  Whether any given spot ends up solid is decided by the **even-odd rule**: draw a
@@ -58,6 +59,31 @@ dark on its lit side, a run drawn the wrong way round is the first thing to chec
 
 The `svg` form is worth knowing about: it takes the `d` attribute out of an SVG file, so an
 outline drawn in a vector editor can be pasted straight in.
+
+#### Icons
+
+A path may also be a [FontAwesome](https://fontawesome.com) icon, so any of its thousands of
+symbols can be given thickness, spun or laid flat like any other outline:
+
+```
+extrusion {
+    path { icon 'solid:star' }
+    min Y 0  max Y 40
+}
+```
+
+![A FontAwesome star, extruded](images/figures/path-icon.png)
+
+An icon is named as `style:name` — `solid:star`, `brands:github` — or as just `name`, in which
+case the style is taken to be `regular`.  The name picks out the zip's `svgs/{style}/{name}.svg`
+file, whose `d` outline is then handled exactly as an `svg` string is.
+
+Icons are not built in: you install a FontAwesome zip once with the
+[`libraries --fa-zip`](libraries.md#fontawesome-icons) command, and every scene draws its icons
+from there.  An icon arrives at the scale and orientation SVG uses — a box some hundreds of units
+across, with Y running *downward* — so, like a pasted `svg` outline, it usually wants scaling down
+and flipping to sit the right way up.  `gallery/Local/icons.igl` extrudes two of them, named both
+ways.
 
 ### Extrusion
 

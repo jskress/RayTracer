@@ -10,5 +10,6 @@ public enum PathCommandType
     QuadTo,
     CurveTo,
     Close,
-    Svg
+    Svg,
+    Icon
 }

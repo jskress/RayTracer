@@ -30,6 +30,11 @@ public class LibrariesOptions
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public string RemoveLibrary { get; set; }
 
+    [Option("fa-zip", Required = false, SetName = "fa-zip",
+        HelpText = "Installs a FontAwesome zip file, so that scenes may use its icons as 2D paths.  The value is the path to the zip; it is copied in as the ray tracer's own.")]
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
+    public string FontAwesomeZip { get; set; }
+
     [Option('o', "overwrite", Required = false,
         HelpText = "Specifying this will allow existing libraries to be replaced when importing.")]
     // ReSharper disable once UnusedAutoPropertyAccessor.Global

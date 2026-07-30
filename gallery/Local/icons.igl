@@ -1,0 +1,39 @@
+// Two FontAwesome icons given thickness.  The Old Republic emblem is named 'brands:old-republic'
+// -- the style:name form -- and the chess knight is named just 'chess-knight', letting the style
+// default to regular.  Install a FontAwesome zip with "libraries --fa-zip" first.
+//
+// Icons arrive at SVG scale (a 640 box here) lying flat in the ground plane, so they are looked
+// at from above; the Y range gives them their thickness.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 1150, 240]
+    look at [0, 0, -10]
+    up [0, 0, -1]
+    field of view 56
+}
+
+point light { location [-320, 800, -220]  color [1, 0.97, 0.93] }
+point light { location [520, 520, 460]     color [0.4, 0.4, 0.46] }
+
+plane {
+    material { pigment checker { color [0.55, 0.55, 0.6], color [0.14, 0.14, 0.2] scale 110 } }
+}
+
+// The Old Republic emblem -- a brands icon, named style:name.
+extrusion {
+    material { pigment color [0.86, 0.7, 0.24]  specular 0.6  shininess 90  reflective 0.12 }
+    path { icon 'brands:old-republic' }
+    min Y 0  max Y 55
+    translate [-320, 0, -320]
+    translate [230, 0, 0]
+}
+
+// A chess knight -- a regular icon, named by name alone.
+extrusion {
+    material { pigment color [0.42, 0.6, 0.9]  specular 0.55  shininess 75  reflective 0.1 }
+    path { icon 'chess-knight' }
+    min Y 0  max Y 55
+    translate [-320, 0, -320]
+    translate [-230, 0, 0]
+}
