@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using RayTracer;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.General;
@@ -28,6 +29,12 @@ public class Camera : NamedThing
     /// camera.
     /// </summary>
     public Vector Up { get; set; } = Directions.Up;
+
+    /// <summary>
+    /// This property holds the sort of projection the camera uses.  It is perspective -- the
+    /// ordinary sort -- unless a scene names another with a word before <c>camera</c>.
+    /// </summary>
+    public CameraProjectionType ProjectionType { get; set; } = CameraProjectionType.Perspective;
 
     /// <summary>
     /// This property reports the field of view (in degrees) for the camera.
@@ -130,8 +137,7 @@ public class Camera : NamedThing
     public Canvas Render(RenderContext context, Scene scene)
     {
         Canvas canvas = context.NewCanvas;
-        PixelToRayConverter converter = new (
-            context, FieldOfView, GetTransform(), Sampler);
+        PixelToRayConverter converter = CreateConverter(context);
         PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
         context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);
@@ -147,6 +153,53 @@ public class Camera : NamedThing
         context.ProgressBar?.Done();
 
         return canvas;
+    }
+
+    /// <summary>
+    /// This method builds the pixel-to-ray converter for the camera's projection.
+    /// </summary>
+    /// <param name="context">The current rendering context.</param>
+    /// <returns>The converter that turns each pixel into a ray.</returns>
+    private PixelToRayConverter CreateConverter(RenderContext context)
+    {
+        Matrix transform = GetTransform();
+
+        return ProjectionType switch
+        {
+            CameraProjectionType.Perspective => new PerspectiveRayConverter(
+                context, FieldOfView, transform, Sampler),
+            CameraProjectionType.Orthographic => new OrthographicRayConverter(
+                context, FieldOfView, transform, Sampler),
+            CameraProjectionType.Fisheye => Curved(new FisheyeRayConverter(
+                context, FieldOfView, transform, Sampler)),
+            CameraProjectionType.UltraWide => Curved(new UltraWideRayConverter(
+                context, FieldOfView, transform, Sampler)),
+            CameraProjectionType.Panoramic => Curved(new PanoramicRayConverter(
+                context, FieldOfView, transform, Sampler)),
+            CameraProjectionType.Spherical => Curved(new SphericalRayConverter(
+                context, transform, Sampler)),
+            _ => throw new NotImplementedException(
+                $"The {ProjectionType} camera projection is not yet implemented.")
+        };
+    }
+
+    /// <summary>
+    /// This method notes the one thing the curved projections share: they have no flat lens, so a
+    /// scene that gave one an aperture is warned that it does nothing here.  The shutter is left
+    /// alone, since motion blur works whatever the projection.
+    /// </summary>
+    /// <param name="converter">The converter to hand back.</param>
+    /// <returns>The converter it was given.</returns>
+    private PixelToRayConverter Curved(PixelToRayConverter converter)
+    {
+        if (Aperture > 0)
+        {
+            Terminal.Out(
+                $"Warning: a {ProjectionType.ToString().ToLowerInvariant()} camera has no lens, " +
+                "so its aperture is ignored and the render is done as a pinhole.");
+        }
+
+        return converter;
     }
 
     /// <summary>

@@ -34,14 +34,14 @@ public partial class LanguageParser
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
-            'open', 'parallel', 'parallelogram', 'patch', 'path', 'phase', 'pigment', 'pipes',
+            'open', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -51,7 +51,7 @@ public partial class LanguageParser
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
-            'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'uncached', 'union', 'up', 'uSteps',
+            'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
@@ -178,9 +178,16 @@ public partial class LanguageParser
         ] ?? 'Expecting a context property here.'
 
         // Camera clauses.
+        // The word before "camera", if any, names the projection: nothing for the ordinary
+        // perspective sort, or one of these for another.  This mirrors how the word before "light"
+        // names the sort of light.
         startCameraClause:
         {
-            camera > openBrace ?? 'Expecting an open brace to follow "camera" here.'
+            [
+                { [ perspective | orthographic | fisheye | ultraWide | panoramic | spherical ] > camera } |
+                camera
+            ] >
+            openBrace ?? 'Expecting an open brace to follow "camera" here.'
         }
         locationClause: { location > _expression }
         lookAtClause: { look > at ?? 'Expecting "at" to follow "look" here.' > _expression }

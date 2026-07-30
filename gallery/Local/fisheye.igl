@@ -1,0 +1,32 @@
+// A wide scene, built to show off the camera projections.  As written it is a fisheye; change
+// the word before "camera" to orthographic, ultraWide, panoramic or spherical -- or drop it for
+// an ordinary perspective view -- to see the same world another way.  A spherical camera reads
+// best rendered twice as wide as it is tall, e.g. -w 800 -h 400.
+context { angles are degrees  no gamma }
+
+fisheye camera {
+    location [0, 3, 0]
+    look at [0, 1.2, 8]
+    field of view 180
+}
+
+point light { location [-6, 12, -2]  color [1, 0.97, 0.93] }
+point light { location [8, 8, 6]     color [0.4, 0.4, 0.45] }
+
+plane {
+    material { pigment checker { color [0.62, 0.62, 0.68], color [0.16, 0.16, 0.22] scale 2 } }
+}
+
+// A ring of colored spheres all the way around the camera, so a wide enough view catches them
+// front, side and behind.
+sphere { material { pigment color Red     specular 0.6 shininess 120 } translate [0, 1.2, 9] }
+sphere { material { pigment color Orange  specular 0.6 shininess 120 } translate [7, 1.2, 6] }
+sphere { material { pigment color Yellow  specular 0.6 shininess 120 } translate [9, 1.2, -1] }
+sphere { material { pigment color Green   specular 0.6 shininess 120 } translate [-7, 1.2, 6] }
+sphere { material { pigment color Blue    specular 0.6 shininess 120 } translate [-9, 1.2, -1] }
+sphere { material { pigment color White   specular 0.6 shininess 120 } translate [0, 1.2, -9] }
+
+// Two upright pillars, which lean under a wide perspective or ultra-wide camera but stand
+// straight under a panoramic one.
+cube { material { pigment color [0.8, 0.5, 0.3] } scale [0.6, 3, 0.6]  translate [3, 3, 8] }
+cube { material { pigment color [0.3, 0.5, 0.8] } scale [0.6, 3, 0.6]  translate [-3, 3, 8] }

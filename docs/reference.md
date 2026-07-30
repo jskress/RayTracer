@@ -114,6 +114,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `file` | The second word of `object file`. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `filter` | Interior: how much the substance colors light passing through. | [Materials](materials.md#transparency-and-interiors) |
 | `finer` | Turbulence/noise: shrinks each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
+| `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -183,10 +184,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
 | `once` | Image map: show the image once rather than tiling it. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
+| `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
+| `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
 | `patch` | Shape: a bicubic (16-point) surface patch. | [Surfaces](surfaces.md#patch) |
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Shaping: slides a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `pigment` | Material: what colors the surface. | [Materials](materials.md#the-color) |
 | `pipes` | L-system control: draw edges as pipes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -237,7 +241,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere) |
-| `spherical` | Pattern/image map: value over a sphere; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `spot` | A `spot light` (a cone). | [Lights](lights.md#spotlights) |
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -271,6 +275,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |
 | `uSteps` | Area light: samples across U. | [Lights](lights.md#area-lights) |
 | `uncached` | Image pigment: re-read the image rather than share a cached copy. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `union` | CSG: everything in any child. | [Surfaces](surfaces.md#combining-surfaces) |

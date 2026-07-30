@@ -10,6 +10,13 @@ namespace RayTracer.Instructions.Core;
 public class CameraResolver : NamedObjectResolver<Camera>
 {
     /// <summary>
+    /// This property holds the sort of projection the camera uses.  It is decided by the word
+    /// before <c>camera</c> at parse time rather than by a late-bound expression, so it is a plain
+    /// value rather than a resolver.
+    /// </summary>
+    public CameraProjectionType ProjectionType { get; set; } = CameraProjectionType.Perspective;
+
+    /// <summary>
     /// This property holds the resolver for our camera's location property.
     /// </summary>
     public Resolver<Point> LocationResolver { get; set; }
@@ -69,6 +76,8 @@ public class CameraResolver : NamedObjectResolver<Camera>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Camera value)
     {
+        value.ProjectionType = ProjectionType;
+
         LocationResolver.AssignTo(value, target => target.Location, context, variables);
         LookAtResolver.AssignTo(value, target => target.LookAt, context, variables);
         UpResolver.AssignTo(value, target => target.Up, context, variables);
