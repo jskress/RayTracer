@@ -80,12 +80,12 @@ public class Sweep : Group
         }
 
         List<ISplineCurve> curves = Spline.GetCurves();
-        (List<Point> positions, List<Vector> tangents) = SampleSpline(curves);
+        (List<Point> positions, List<Vector> tangents, List<double> scales) = SampleSpline(curves);
         List<SweepFrame> frames = RotationMinimizingFrame.Compute(positions, tangents);
         List<TwoDPoint> profilePoints = Profile.Sample(ProfileSteps);
         List<List<Point>> rings = frames
-            .Select(frame => profilePoints
-                .Select(point => LoftPoint(frame, point))
+            .Select((frame, index) => profilePoints
+                .Select(point => LoftPoint(frame, point, scales[index]))
                 .ToList())
             .ToList();
 
@@ -159,34 +159,49 @@ public class Sweep : Group
     }
 
     /// <summary>
-    /// This method lifts one 2D profile point into world space at the given frame.
+    /// This method lifts one 2D profile point into world space at the given frame, scaling
+    /// the profile uniformly about the frame's own origin by the given factor.  A scale of 1
+    /// leaves the point exactly where it would otherwise land, so a sweep with no scales set
+    /// is unchanged.
     /// </summary>
     /// <param name="frame">The frame to loft the point into.</param>
     /// <param name="point">The 2D profile point to loft.</param>
+    /// <param name="scale">The uniform scale to apply to the profile at this frame.</param>
     /// <returns>The corresponding 3D point.</returns>
-    private static Point LoftPoint(SweepFrame frame, TwoDPoint point)
+    private static Point LoftPoint(SweepFrame frame, TwoDPoint point, double scale)
     {
-        return frame.Position + frame.Normal * point.X + frame.Binormal * point.Y;
+        return frame.Position + frame.Normal * point.X * scale + frame.Binormal * point.Y * scale;
     }
 
     /// <summary>
     /// This method samples every curve making up our spline at <see cref="Steps"/>
-    /// increments, returning the sampled positions and the (unit) tangent at each one.
-    /// Consecutive curves share their boundary point, so only the first curve contributes
-    /// its starting sample; every other curve contributes only its own interior and ending
-    /// samples.
+    /// increments, returning the sampled positions, the (unit) tangent at each one, and the
+    /// profile scale at each one.  Consecutive curves share their boundary point, so only the
+    /// first curve contributes its starting sample; every other curve contributes only its
+    /// own interior and ending samples.  The scale is carried at each spline point (its start
+    /// point and every segment's end point) and interpolated linearly along each curve, just
+    /// as a <see cref="Tube"/>'s radius is.
     /// </summary>
     /// <param name="curves">The curves making up our spline.</param>
-    /// <returns>The sampled positions and tangents, in spline order.</returns>
-    private (List<Point> Positions, List<Vector> Tangents) SampleSpline(List<ISplineCurve> curves)
+    /// <returns>The sampled positions, tangents and scales, in spline order.</returns>
+    private (List<Point> Positions, List<Vector> Tangents, List<double> Scales) SampleSpline(
+        List<ISplineCurve> curves)
     {
         List<Point> positions = [];
         List<Vector> tangents = [];
+        List<double> scales = [];
+
+        // The scale at each spline point, in order: the start point's, then each segment's
+        // end point's.  There is one more of these than there are curves, so each curve reads
+        // its own bracketing pair.
+        List<double> pointScales = [Spline.StartScale, .. Spline.Segments.Select(spec => spec.Scale)];
 
         for (int curveIndex = 0; curveIndex < curves.Count; curveIndex++)
         {
             ISplineCurve curve = curves[curveIndex];
             int startStep = curveIndex == 0 ? 0 : 1;
+            double startScale = pointScales[curveIndex];
+            double endScale = pointScales[curveIndex + 1];
 
             for (int step = startStep; step <= Steps; step++)
             {
@@ -194,9 +209,10 @@ public class Sweep : Group
 
                 positions.Add(curve.GetPoint(u));
                 tangents.Add(curve.GetTangent(u));
+                scales.Add(startScale + (endScale - startScale) * u);
             }
         }
 
-        return (positions, tangents);
+        return (positions, tangents, scales);
     }
 }

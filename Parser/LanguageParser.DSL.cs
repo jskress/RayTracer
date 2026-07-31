@@ -582,23 +582,31 @@ public partial class LanguageParser
         {
             xyzTripleClause > comma ?? 'Expecting a comma here.' > xyzTripleClause
         }
+        splineScaleClause:
+        {
+            scale > _expression ?? 'Expecting a scale value to follow "scale" here.'
+        }
         moveToSplineClause:
         {
-            move > to ?? 'Expecting "to" to follow "move" here.' > xyzTripleClause
+            move > to ?? 'Expecting "to" to follow "move" here.' >
+            xyzTripleClause > splineScaleClause{?}
         }
         lineToSplineClause:
         {
-            line > to ?? 'Expecting "to" to follow "line" here.' > xyzTripleClause
+            line > to ?? 'Expecting "to" to follow "line" here.' >
+            xyzTripleClause > splineScaleClause{?}
         }
         quadToSplineClause:
         {
             quad > xyzTripleClause >
-            to ?? 'Expecting "to" to follow "quad" control point here.' > xyzTripleClause
+            to ?? 'Expecting "to" to follow "quad" control point here.' >
+            xyzTripleClause > splineScaleClause{?}
         }
         curveToSplineClause:
         {
             curve > splineControlPointsClause >
-            to ?? 'Expecting "to" to follow "curve" control point here.' > xyzTripleClause
+            to ?? 'Expecting "to" to follow "curve" control point here.' >
+            xyzTripleClause > splineScaleClause{?}
         }
         splineEntryClause:
         [

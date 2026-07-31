@@ -198,6 +198,22 @@ Y pair.  `steps` is how finely the profile is carried along it.  If there are to
 result is visibly faceted.  If there are too many, it costs more time to render than it
 needs to.
 
+**A changing cross-section.**  Any spline point may carry a `scale`, and the profile grows or
+shrinks to match as it passes through — the sweep's answer to a [tube](#tube)'s varying radius,
+but applied to whatever shape the profile is rather than to a radius.  It is interpolated
+between the points that set it, so the profile eases from one size to the next rather than
+jumping, and a point with no `scale` keeps the profile at its natural size (`scale 1`):
+
+```
+sweep {
+    profile { ... }
+    spline {
+        move to 0, 0, 0  scale 1
+        line to 0, 5, 0  scale 2.5     // two and a half times as big by the top
+    }
+}
+```
+
 **Tangent continuity.**  A sweep expects its spline to flow smoothly from one segment into the
 next, and refuses if it does not, telling you which control point is at fault and by how many
 degrees it bends:

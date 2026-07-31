@@ -221,7 +221,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis. | [Transforms](transforms.md#rotate) |
 | `samples` | Camera: `blur samples` count. | [Cameras](cameras.md#depth-of-field) |
-| `scale` | Transform: resize. | [Transforms](transforms.md#scale) |
+| `scale` | Transform: resize; also a sweep spline point's cross-section size. | [Transforms](transforms.md#scale) |
 | `scallop` | Wave shape: the absolute-value cusp. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `scanner` | Context: which scanning strategy renders the image. | [Context](context.md#scanners) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |

@@ -549,6 +549,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/sweep-scale.png">
+      <img alt="Sweep Scale Test" height="120" src="Local/sweep-scale.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/sweep-scale.igl">Sweep Scale Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/disc.png">
       <img alt="Disc Test" height="120" src="Local/disc.png" width="160"/>
     </a></td>
