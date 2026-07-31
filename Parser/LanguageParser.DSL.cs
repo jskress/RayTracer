@@ -712,6 +712,7 @@ public partial class LanguageParser
                 openBrace ?? 'Expecting an open brace after "spline" here.'
             } |
             { steps > _expression } |
+            { no > center ?? 'Expecting "center" to follow "no" here.' } |
             open | surfaceEntryClause
         ]
 

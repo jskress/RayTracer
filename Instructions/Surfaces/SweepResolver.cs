@@ -32,6 +32,13 @@ public class SweepResolver : SurfaceResolver<Sweep>, IValidatable
     public Resolver<bool> OpenResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether the profile should be recentered about
+    /// the 2D origin before it is lofted.  It is left null unless the scene says "no center",
+    /// so that the sweep's own default (on) stands otherwise.
+    /// </summary>
+    public Resolver<bool> CenterResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// sweep.
     /// </summary>
@@ -45,6 +52,7 @@ public class SweepResolver : SurfaceResolver<Sweep>, IValidatable
 
         StepsResolver.AssignTo(value, target => target.Steps, context, variables);
         OpenResolver.AssignTo(value, target => target.Open, context, variables);
+        CenterResolver.AssignTo(value, target => target.Center, context, variables);
 
         base.SetProperties(context, variables, value);
     }

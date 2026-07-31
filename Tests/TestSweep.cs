@@ -343,6 +343,74 @@ public class TestSweep
     }
 
     /// <summary>
+    /// By default a sweep recenters its profile about the 2D origin, so the spline threads the
+    /// middle of the profile.  A square drawn off in the first quadrant (corners (0,0)..(2,2),
+    /// centered on (1,1)) carried up a straight spline on the Y axis must therefore come out
+    /// straddling that axis -- the lofted ring's X extent centered on 0, not on the +1 the
+    /// profile was drawn around.
+    /// </summary>
+    [TestMethod]
+    public void TestProfileIsCenteredAboutTheSplineByDefault()
+    {
+        Sweep sweep = new () // Center defaults to true.
+        {
+            Profile = BuildOffCenterSquareProfile(),
+            Spline = new Spline
+            {
+                Start = new Point(0, 0, 0),
+                Segments = { new SplineSegmentSpec { End = new Point(0, 10, 0) } }
+            },
+            Steps = 4
+        };
+
+        sweep.PrepareForRendering();
+
+        List<double> xs = SweepVertices(sweep).Select(vertex => vertex.X).ToList();
+        double xCenter = (xs.Min() + xs.Max()) / 2;
+
+        Assert.IsTrue(xCenter.Near(0, 1e-9), $"a centered profile should straddle the spline (xCenter={xCenter})");
+    }
+
+    /// <summary>
+    /// "no center" keeps the profile's own placement, so the same off-center square is lofted
+    /// where it was drawn: its X runs 0..2, straddling +1 rather than the spline on the axis.
+    /// This is the difference the flag is there to make.
+    /// </summary>
+    [TestMethod]
+    public void TestNoCenterKeepsTheProfilesOwnPlacement()
+    {
+        Sweep sweep = new ()
+        {
+            Profile = BuildOffCenterSquareProfile(),
+            Spline = new Spline
+            {
+                Start = new Point(0, 0, 0),
+                Segments = { new SplineSegmentSpec { End = new Point(0, 10, 0) } }
+            },
+            Steps = 4,
+            Center = false
+        };
+
+        sweep.PrepareForRendering();
+
+        List<double> xs = SweepVertices(sweep).Select(vertex => vertex.X).ToList();
+        double xCenter = (xs.Min() + xs.Max()) / 2;
+
+        Assert.IsTrue(xCenter.Near(1, 1e-9), $"an uncentered profile should keep its own placement (xCenter={xCenter})");
+    }
+
+    /// <summary>
+    /// Collects every triangle vertex of a prepared sweep.
+    /// </summary>
+    private static List<Point> SweepVertices(Sweep sweep)
+    {
+        return new SurfaceIterator(sweep).Surfaces
+            .OfType<Triangle>()
+            .SelectMany(triangle => new[] { triangle.Point1, triangle.Point2, triangle.Point3 })
+            .ToList();
+    }
+
+    /// <summary>
     /// Builds a simple closed, axis-aligned square profile, corners at (+-1, +-1).
     /// </summary>
     private static GeneralPath BuildSquareProfile()
@@ -352,6 +420,20 @@ public class TestSweep
             .LineTo(-1, 1)
             .LineTo(-1, -1)
             .LineTo(1, -1)
+            .ClosePath();
+    }
+
+    /// <summary>
+    /// Builds a closed square drawn off in the first quadrant, corners (0,0)..(2,2), so its
+    /// center sits at (1, 1) rather than the origin -- the case centering exists to handle.
+    /// </summary>
+    private static GeneralPath BuildOffCenterSquareProfile()
+    {
+        return new GeneralPath()
+            .MoveTo(0, 0)
+            .LineTo(2, 0)
+            .LineTo(2, 2)
+            .LineTo(0, 2)
             .ClosePath();
     }
 }
