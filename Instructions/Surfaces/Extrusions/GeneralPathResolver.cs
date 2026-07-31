@@ -24,6 +24,6 @@ public class GeneralPathResolver : ObjectResolver<GeneralPath>
     protected override void SetProperties(RenderContext context, Variables variables, GeneralPath value)
     {
         foreach (PathCommand command in PathCommands)
-            command.Apply(variables, value);
+            command.Apply(context, variables, value);
     }
 }

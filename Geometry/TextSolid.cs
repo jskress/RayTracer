@@ -1,6 +1,5 @@
 using RayTracer.Fonts;
 using RayTracer.Graphics;
-using Typography.OpenFont;
 
 namespace RayTracer.Geometry;
 
@@ -53,18 +52,10 @@ public class TextSolid : Group
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        FaceIdentifier id = new FaceIdentifier
-        {
-            FamilyName = FontFamilyName,
-            Weight = (int) FontWeight,
-            Italic = IsItalic
-        };
-        Typeface typeface = FontManager.Instance.GetTypeFace(id);
-        GlyphLayout layout = new GlyphLayout(typeface, LayoutSettings, Text);
+        List<GeneralPath> glyphs = TextOutline.Glyphs(
+            FontFamilyName, FontWeight, IsItalic, LayoutSettings, KerningOverrides, Text);
 
-        layout.Arrange(KerningOverrides);
-
-        foreach (GeneralPath path in layout)
+        foreach (GeneralPath path in glyphs)
         {
             Add(new Extrusion
             {

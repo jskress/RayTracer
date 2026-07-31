@@ -76,6 +76,16 @@ public partial class LanguageParser
     private void HandlePathEntryClause(Clause clause)
     {
         GeneralPathResolver resolver = (GeneralPathResolver) _context.CurrentTarget;
+
+        // A "text" block is a run of laid-out glyphs folded into the path, so it parses as its
+        // own sub-block rather than as a flat command with a list of terms.
+        if (clause.Text() == "text")
+        {
+            resolver.PathCommands.Add(new PathCommand(ParseTextPathClause()));
+
+            return;
+        }
+
         PathCommandType type = GetPathCommandType(clause);
         Term[] terms = clause.Expressions.Cast<Term>().ToArray();
         PathCommand command = new PathCommand(type, terms);

@@ -28,6 +28,7 @@ Four of these surfaces are built from a **path**: a 2D outline drawn in its own 
 | `close` | Join back to where this run of the path started. |
 | `svg '…'` | The whole path as an SVG path string. |
 | `icon '…'` | The outline of a [FontAwesome icon](#icons). |
+| `text { … }` | The outline of a run of [text](#text-as-a-path). |
 
 A path may hold more than one **run** — each starts with a `move to` and usually ends with a
 `close`.  Whether any given spot ends up solid is decided by the **even-odd rule**: draw a
@@ -84,6 +85,34 @@ from there.  An icon arrives at the scale and orientation SVG uses — a box som
 across, with Y running *downward* — so, like a pasted `svg` outline, it usually wants scaling down
 and flipping to sit the right way up.  `gallery/Local/icons.igl` extrudes two of them, named both
 ways.
+
+#### Text as a path
+
+A path may also be a run of **text**.  Where the [text surface](#text) turns a string into
+finished, extruded letters in one step, `text` inside a `path` gives you the letters' *outline*
+instead — the glyphs laid out and folded into the path — which you can then extrude, spin on the
+lathe, sweep along a spline, or carve out of another shape with a [CSG](surfaces.md#combining-surfaces):
+
+```
+extrusion {
+    path {
+        text {
+            text 'Ray'
+            font 'Merriweather'
+            layout { horizontal position center }
+        }
+    }
+    min Y 0  max Y 0.25
+    rotate X -90
+}
+```
+
+The block is written exactly like the [text surface](#text) — the same `text`, `font`, `layout`
+and `kerning` — with one difference: because a path is not a surface, it takes *only* those, not a
+surface's own grammar.  There is no `material`, no `translate` or `rotate`, no `open` inside the
+`text` block here; those belong to the shape the path feeds, as in the extrusion above.  Text
+comes at the font's own scale, where a line is about one unit tall — small enough to use as it is,
+unlike an icon.
 
 ### Extrusion
 

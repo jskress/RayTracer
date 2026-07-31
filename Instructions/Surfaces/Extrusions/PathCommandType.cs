@@ -11,5 +11,6 @@ public enum PathCommandType
     CurveTo,
     Close,
     Svg,
-    Icon
+    Icon,
+    Text
 }

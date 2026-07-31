@@ -254,7 +254,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
-| `text` | Surface: letters turned into geometry; also text layout and info. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |

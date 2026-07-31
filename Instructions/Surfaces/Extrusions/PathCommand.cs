@@ -11,6 +11,7 @@ public class PathCommand
 {
     private readonly PathCommandType _commandType;
     private readonly Term[] _terms;
+    private readonly TextPathResolver _textResolver;
 
     public PathCommand(PathCommandType commandType, params Term[] terms)
     {
@@ -18,12 +19,19 @@ public class PathCommand
         _terms = terms;
     }
 
+    public PathCommand(TextPathResolver textResolver)
+    {
+        _commandType = PathCommandType.Text;
+        _textResolver = textResolver;
+    }
+
     /// <summary>
     /// This method is used to apply this command to the given path.
     /// </summary>
+    /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="path">The path to apply the command to.</param>
-    internal void Apply(Variables variables, GeneralPath path)
+    internal void Apply(RenderContext context, Variables variables, GeneralPath path)
     {
         switch (_commandType)
         {
@@ -32,6 +40,9 @@ public class PathCommand
                 break;
             case PathCommandType.Icon:
                 ApplyIconSpec(variables, path);
+                break;
+            case PathCommandType.Text:
+                ApplyTextSpec(context, variables, path);
                 break;
             default:
                 ApplyCommand(variables, path);
@@ -116,5 +127,20 @@ public class PathCommand
         string spec = _terms[0].GetValue<string>(variables);
 
         new SvgPathFactory(FontAwesomeIcons.ReadPathData(spec)).ParseInto(path);
+    }
+
+    /// <summary>
+    /// This method is used to lay a run of text out and fold its glyph outlines into the given
+    /// path.  The text resolver does the laying out; here we simply add the glyphs it produced
+    /// to the path we are building, so text sits among any other runs the path already has.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="path">The path to apply the command to.</param>
+    private void ApplyTextSpec(RenderContext context, Variables variables, GeneralPath path)
+    {
+        GeneralPath glyphs = _textResolver.Resolve(context, variables);
+
+        path.Append(glyphs);
     }
 }

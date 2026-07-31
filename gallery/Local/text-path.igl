@@ -1,0 +1,57 @@
+// A scene to test text as a 2D path source.  Where the text surface turns a string straight
+// into finished letters, "text" inside a "path" gives the letters' outline instead -- here fed
+// to an extrusion, so the word is given real depth and stood up to face the camera.  The same
+// outline could just as well be swept, spun on the lathe, or carved out of another shape.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Text Path Test'
+        author 'J. Stephen Kress'
+        description 'A word extruded from a text path, standing on a reflective floor.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.5, -5.7]
+    look at [0, 0.85, 0]
+    field of view 42
+}
+
+point light { location [-6, 8, -6]  color [1, 0.97, 0.9] }
+point light { location [6, 4, -5]   color [0.30, 0.32, 0.38] }
+
+// A dark, gently reflective floor, so the gold letters have something to stand on and cast
+// a little of themselves back.
+plane {
+    material {
+        pigment color [0.12, 0.12, 0.14]
+        specular 0.3  shininess 200  reflective 0.35
+    }
+}
+
+extrusion {
+    // The path is a run of text: its glyph outlines, laid out and folded into the path, then
+    // given depth by the extrusion around it.
+    path {
+        text {
+            text 'Ray\nTracer'
+            font 'Merriweather'
+            layout { horizontal position center  vertical position center  text alignment center }
+        }
+    }
+
+    min Y 0
+    max Y 0.3
+    rotate X -90         // a path lies down; stand it up to face the camera.
+    scale 0.82           // bring the two lines up to a good size.
+    translate [0, 1.02, 0] // sit it just above the floor, so its reflection has room to show.
+
+    material {
+        pigment color [0.85, 0.6, 0.2]
+        ambient 0.12  specular 0.6  shininess 120  reflective 0.15
+    }
+}

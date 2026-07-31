@@ -539,6 +539,31 @@ public class GeneralPath
     }
 
     /// <summary>
+    /// This method folds another path's segments into this one, run for run, and grows this
+    /// path's 2D bounding box to take in the other's.  It is how several separate outlines --
+    /// the glyphs of a run of text, say -- become one path.  Growing the bounding box is the
+    /// point of having this rather than adding the segments directly: the flat end caps of an
+    /// extrusion are sized from that box, so a path whose box was left untouched would extrude
+    /// with no caps at all.
+    /// </summary>
+    /// <param name="other">The path whose segments to fold in.</param>
+    /// <returns>This object, for fluency.</returns>
+    internal GeneralPath Append(GeneralPath other)
+    {
+        if (other.Segments.Count == 0)
+            return this;
+
+        Segments.AddRange(other.Segments);
+
+        MinX = Math.Min(MinX, other.MinX);
+        MinY = Math.Min(MinY, other.MinY);
+        MaxX = Math.Max(MaxX, other.MaxX);
+        MaxY = Math.Max(MaxY, other.MaxY);
+
+        return this;
+    }
+
+    /// <summary>
     /// This method is used to reverse the order of the segments in this path.
     /// Each segment is also reversed.
     /// </summary>

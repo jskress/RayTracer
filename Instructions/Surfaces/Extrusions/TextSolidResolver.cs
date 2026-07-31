@@ -7,7 +7,7 @@ namespace RayTracer.Instructions.Surfaces.Extrusions;
 /// <summary>
 /// This class is used to resolve a text solid value.
 /// </summary>
-public class TextSolidResolver : SurfaceResolver<TextSolid>, IValidatable
+public class TextSolidResolver : SurfaceResolver<TextSolid>, ITextContentResolver, IValidatable
 {
     /// <summary>
     /// This property holds the resolver for the text property on a text solid.
