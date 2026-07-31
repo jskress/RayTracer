@@ -69,7 +69,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, and a group's `interval … by`. | [Surfaces](surfaces.md#bounding) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
-| `center` | Text layout: center the block or a line. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `center` | Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
@@ -174,7 +174,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `mottled` | Pigment: a base color mottled by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `move` | Path/spline: lift the pen to a new point; also an L-system turtle move. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
-| `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`. | [Surfaces](surfaces.md#no-shadow) |
+| `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`, `no center`. | [Surfaces](surfaces.md#no-shadow) |
 | `noise` | Mottling: dims a color by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `normal` | Roughens a surface: a pattern that tilts the normal. | [Materials](materials.md#roughening-the-surface) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |

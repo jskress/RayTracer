@@ -53,6 +53,16 @@ public class Sweep : Group
     public bool Open { get; set; }
 
     /// <summary>
+    /// This property controls whether the profile is recentered about the 2D origin before
+    /// it is lofted, so the spline threads the middle of the profile rather than whatever
+    /// point the profile happens to be drawn around.  Given a sweep's nature -- the spline is
+    /// the path the profile rides along -- centering is almost always what is wanted, so it
+    /// is on by default; a sweep that means to keep the profile's own placement (the spline
+    /// running through the profile's 2D origin) turns it off.
+    /// </summary>
+    public bool Center { get; set; } = true;
+
+    /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
@@ -83,6 +93,10 @@ public class Sweep : Group
         (List<Point> positions, List<Vector> tangents, List<double> scales) = SampleSpline(curves);
         List<SweepFrame> frames = RotationMinimizingFrame.Compute(positions, tangents);
         List<TwoDPoint> profilePoints = Profile.Sample(ProfileSteps);
+
+        if (Center)
+            profilePoints = CenterProfile(profilePoints);
+
         List<List<Point>> rings = frames
             .Select((frame, index) => profilePoints
                 .Select(point => LoftPoint(frame, point, scales[index]))
@@ -156,6 +170,26 @@ public class Sweep : Group
 
         Add(startCap);
         Add(endCap);
+    }
+
+    /// <summary>
+    /// This method recenters the sampled profile so the middle of its bounding box sits at
+    /// the 2D origin -- the point the spline threads through.  A profile drawn well off to one
+    /// side (as an imported outline, whose coordinates often live in a box with a corner at
+    /// the origin, tends to be) would otherwise be lofted with the spline running along its
+    /// edge rather than down its middle.  Since this is a uniform translation of every point,
+    /// it leaves a closed profile closed and does not disturb the scale applied afterward.
+    /// </summary>
+    /// <param name="points">The sampled profile points.</param>
+    /// <returns>The same points, translated so their bounding box is centered on the origin.</returns>
+    private static List<TwoDPoint> CenterProfile(List<TwoDPoint> points)
+    {
+        double centerX = (points.Min(point => point.X) + points.Max(point => point.X)) / 2;
+        double centerY = (points.Min(point => point.Y) + points.Max(point => point.Y)) / 2;
+
+        return points
+            .Select(point => new TwoDPoint(point.X - centerX, point.Y - centerY))
+            .ToList();
     }
 
     /// <summary>

@@ -240,6 +240,15 @@ sweep {
 }
 ```
 
+**Where the spline runs through the profile.**  Because the spline is the path the profile
+rides along, a sweep **centers** the profile about the 2D origin before carrying it — so the
+spline threads the middle of the profile, wherever in its own plane the profile was actually
+drawn.  This matters most for an outline that lives off to one side, as a pasted `svg` or an
+`icon` tends to (its coordinates often fill a box with a corner at the origin); without
+centering the spline would run along the profile's edge rather than down its middle.  A sweep
+that means to keep the profile's own placement — to aim the spline at the profile's 2D
+origin — says `no center`.
+
 **Tangent continuity.**  A sweep expects its spline to flow smoothly from one segment into the
 next, and refuses if it does not, telling you which control point is at fault and by how many
 degrees it bends:

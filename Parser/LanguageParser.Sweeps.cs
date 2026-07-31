@@ -68,6 +68,11 @@ public partial class LanguageParser
                 case "open":
                     resolver.OpenResolver = new LiteralResolver<bool> { Value = true };
                     break;
+                case "no":
+                    // The only "no" clause a sweep has is "no center", so seeing "no" is
+                    // enough to know the profile should not be recentered.
+                    resolver.CenterResolver = new LiteralResolver<bool> { Value = false };
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "sweep");
                     break;

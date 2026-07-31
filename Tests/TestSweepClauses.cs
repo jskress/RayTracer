@@ -133,10 +133,49 @@ public class TestSweepClauses
     }
 
     /// <summary>
+    /// The average column of the lit pixels -- where, left to right, the swept shape sits in
+    /// the frame.
+    /// </summary>
+    private static double LitCentroidX(Canvas image)
+    {
+        double sum = 0;
+        int count = 0;
+
+        for (int y = 0; y < image.Height; y++)
+        {
+            for (int x = 0; x < image.Width; x++)
+            {
+                Color pixel = image.GetPixel(x, y);
+
+                if ((pixel.Red + pixel.Green + pixel.Blue) / 3 > 0.5)
+                {
+                    sum += x;
+                    count++;
+                }
+            }
+        }
+
+        return count == 0 ? -1 : sum / count;
+    }
+
+    /// <summary>
     /// A closed square profile, so the bar has a definite width to measure.
     /// </summary>
     private const string BarProfile =
         "profile { move to -0.3, -0.3  line to 0.3, -0.3  line to 0.3, 0.3  line to -0.3, 0.3  close }";
+
+    /// <summary>
+    /// A flat-white sweep of the given profile, carried straight up the Y axis, with one extra
+    /// line (a clause such as "no center", or empty) dropped in.
+    /// </summary>
+    private static string VerticalSweep(string profile, string extra) =>
+        "sweep {\n" +
+        "    material { pigment color White  ambient 1  diffuse 0  specular 0 }\n" +
+        "    " + profile + "\n" +
+        "    " + extra + "\n" +
+        "    spline { move to 0, -2.5, 0  line to 0, 2.5, 0 }\n" +
+        "    steps 4\n" +
+        "}";
 
     /// <summary>
     /// Wraps the given spline in a flat-white bar sweep with the square profile above.
@@ -198,6 +237,37 @@ public class TestSweepClauses
 
         Assert.IsTrue(bottom > 0, "the foot of the scaled bar should still be visible");
         Assert.IsTrue(top > bottom, $"the scaled bar should taper toward the foot (top={top}, bottom={bottom})");
+    }
+
+    /// <summary>
+    /// By default a sweep centers its profile about the spline, so an off-center square drawn
+    /// up in the first quadrant, carried up the Y axis and viewed head-on, sits in the middle
+    /// of the frame.  Adding "no center" keeps the profile's own placement, pushing it off to
+    /// one side -- the flag reaching the geometry through the DSL.
+    /// </summary>
+    [TestMethod]
+    public void TestNoCenterShiftsTheProfileOffTheSpline()
+    {
+        // A square drawn from the origin out to (2, 2), so its center is at (1, 1), not (0, 0).
+        const string offCenter =
+            "profile { move to 0, 0  line to 2, 0  line to 2, 2  line to 0, 2  close }";
+
+        Canvas centered = Render(VerticalSweep(offCenter, ""), out string centeredError);
+        Canvas offset = Render(VerticalSweep(offCenter, "no center"), out string offsetError);
+
+        Assert.IsNull(centeredError);
+        Assert.IsNull(offsetError);
+
+        double middle = centered.Width / 2.0;
+        double centeredX = LitCentroidX(centered);
+        double offsetX = LitCentroidX(offset);
+
+        Assert.IsTrue(
+            Math.Abs(centeredX - middle) < 10,
+            $"a centered profile should sit near the middle (centeredX={centeredX}, middle={middle})");
+        Assert.IsTrue(
+            offsetX - centeredX > 15,
+            $"\"no center\" should push the profile off to one side (centeredX={centeredX}, offsetX={offsetX})");
     }
 
     /// <summary>
