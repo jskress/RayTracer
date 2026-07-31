@@ -106,6 +106,99 @@ public class TestSweep
     }
 
     /// <summary>
+    /// A per-point scale grows (or shrinks) the profile uniformly as it travels the spline,
+    /// interpolated linearly between the points that carry it.  For the same straight,
+    /// axis-aligned spline as <see cref="TestStraightSplineLoftsProfileAtExpectedPositions"/>
+    /// -- normal = world X, binormal = world -Z, so a profile point (px, py) at ring height y
+    /// and scale s lands at (px*s, y, -py*s) -- a scale of 1 at the foot growing to 2 at the
+    /// top must put the (1, 1) corner at (1, 0, -1) at the start, (2, 10, -2) at the end, and,
+    /// halfway up at y = 5 (scale 1.5), at (1.5, 5, -1.5).
+    /// </summary>
+    [TestMethod]
+    public void TestScaleGrowsProfileAlongSpline()
+    {
+        Sweep sweep = new ()
+        {
+            Profile = BuildSquareProfile(),
+            Spline = new Spline
+            {
+                Start = new Point(0, 0, 0), // StartScale defaults to 1.
+                Segments = { new SplineSegmentSpec { End = new Point(0, 10, 0), Scale = 2 } }
+            },
+            Steps = 4
+        };
+
+        sweep.PrepareForRendering();
+
+        List<Point> vertices = new SurfaceIterator(sweep).Surfaces
+            .OfType<Triangle>()
+            .SelectMany(triangle => new[] { triangle.Point1, triangle.Point2, triangle.Point3 })
+            .ToList();
+
+        Point[] expected =
+        [
+            new Point(1, 0, -1),      // the (1, 1) corner at the foot, scale 1.
+            new Point(1.5, 5, -1.5),  // halfway up, scale interpolated to 1.5.
+            new Point(2, 10, -2)      // at the top, scale 2.
+        ];
+
+        foreach (Point point in expected)
+            Assert.IsTrue(vertices.Any(vertex => vertex.Matches(point)), $"Missing vertex near {point}");
+    }
+
+    /// <summary>
+    /// The scale is a genuine uniform scale about each ring's own spline point, holding true
+    /// on a curved, non-planar spline just as it does on a straight one.  This is the growing
+    /// counterpart of <see cref="TestCurvedSplineKeepsProfileRigidAtEveryRing"/>: with a scale
+    /// of 1 at the start growing to 2 at the end, every ring's lofted corner must sit exactly
+    /// <c>sqrt(2) * (1 + u)</c> from its ring's spline point -- the profile's natural corner
+    /// distance times this ring's interpolated scale -- rather than the fixed sqrt(2) it would
+    /// keep with no scaling.
+    /// </summary>
+    [TestMethod]
+    public void TestScaleIsUniformAboutRingCenterOnCurvedSpline()
+    {
+        Sweep sweep = new ()
+        {
+            Profile = BuildSquareProfile(),
+            Spline = new Spline
+            {
+                Start = new Point(0, 0, 0), // StartScale defaults to 1.
+                Segments =
+                {
+                    new SplineSegmentSpec
+                    {
+                        Control1 = new Point(2, 3, 1), Control2 = new Point(4, -1, 3),
+                        End = new Point(6, 2, 0), Scale = 2
+                    }
+                }
+            },
+            Steps = 16
+        };
+        double cornerDistance = Math.Sqrt(2); // corner (1, 1) of the square is sqrt(2) from center.
+
+        sweep.PrepareForRendering();
+
+        List<ISplineCurve> curves = sweep.Spline.GetCurves();
+        ISplineCurve curve = curves[0];
+
+        for (int step = 0; step <= sweep.Steps; step++)
+        {
+            double u = (double) step / sweep.Steps;
+            Point ringCenter = curve.GetPoint(u);
+            double expectedDistance = cornerDistance * (1 + u); // scale grows 1 -> 2 across the segment.
+
+            List<Point> vertices = new SurfaceIterator(sweep).Surfaces
+                .OfType<Triangle>()
+                .SelectMany(triangle => new[] { triangle.Point1, triangle.Point2, triangle.Point3 })
+                .Where(vertex => (vertex - ringCenter).Magnitude.Near(expectedDistance, 0.01))
+                .ToList();
+
+            Assert.IsTrue(vertices.Count > 0, $"No corner at the scaled distance found near ring at u={u}");
+        }
+    }
+
+    /// <summary>
     /// A sweep with N spline steps and an M-point (already-sampled) profile must produce
     /// exactly <c>2 * N * (M - 1)</c> lateral triangles -- two triangles per quad band, one
     /// band per pair of consecutive rings, one pair of consecutive profile points per band

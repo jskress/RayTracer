@@ -1,0 +1,66 @@
+// A scene to test a sweep with a variable scale along its spline.  A round profile (an
+// octagon) is carried along a single smooth cubic spline, but its size is eased from almost
+// nothing at the tip to full size at the mouth -- the sweep's answer to a tube's varying
+// radius, applied to the whole profile rather than to a radius.  The result is a horn: a
+// shape the profile alone, carried at one fixed size, could never make.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Sweep Scale Test'
+        author 'J. Stephen Kress'
+        description 'A sweep whose round profile grows from a point to a wide mouth along its spline.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.2, -7.5]
+    look at [0, 1.4, 0]
+    field of view 42
+}
+
+point light { location [-5, 8, -6]  color [1, 0.97, 0.9] }
+point light { location [6, 4, -5]   color [0.28, 0.30, 0.36] }
+
+// Floor
+plane {
+    material {
+        pigment checker { color [0.55, 0.55, 0.6], color [0.2, 0.2, 0.26] scale 1.5 }
+    }
+}
+
+sweep {
+    // A rough circle (an octagon), sized entirely by the spline's scale below.
+    profile {
+        move to  1.000,  0.000
+        line to  0.707,  0.707
+        line to  0.000,  1.000
+        line to -0.707,  0.707
+        line to -1.000,  0.000
+        line to -0.707, -0.707
+        line to  0.000, -1.000
+        line to  0.707, -0.707
+        close
+    }
+
+    // One smooth cubic, so there is no kink to declare.  The scale eases from a fine point at
+    // the tip to a full-sized mouth at the far end.
+    spline {
+        move to -2.6, 0.5, 0.4   scale 0.06
+        curve -0.8, 0.5, 0, 0.6, 1.6, -0.3 to 1.9, 2.9, 0.2   scale 1.0
+    }
+
+    steps 60
+
+    material {
+        pigment color [0.85, 0.6, 0.2]
+        ambient 0.15
+        diffuse 0.6
+        specular 0.6
+        shininess 120
+        reflective 0.15
+    }
+}

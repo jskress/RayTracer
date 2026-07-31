@@ -27,4 +27,12 @@ public class SplineSegmentSpec
     /// This property holds the point this segment ends at.
     /// </summary>
     public Point End { get; set; }
+
+    /// <summary>
+    /// This property holds the uniform scale applied to a swept profile at this segment's
+    /// end point, interpolated linearly from the previous point's scale across the segment.
+    /// It defaults to 1 (the profile at its natural size).  See
+    /// <see cref="Spline.StartScale"/>.
+    /// </summary>
+    public double Scale { get; set; } = 1;
 }

@@ -12,11 +12,22 @@ public class SplineCommand
 {
     private readonly SplineCommandType _commandType;
     private readonly Term[] _terms;
+    private readonly Term _scaleTerm;
 
     public SplineCommand(SplineCommandType commandType, params Term[] terms)
     {
         _commandType = commandType;
-        _terms = terms;
+
+        // Each spline point is three terms (its X, Y and Z), so a command's point terms
+        // always come in threes.  A single extra term beyond that is the optional per-point
+        // scale, which we pull off here so the point extraction below stays clean.
+        if (terms.Length % 3 == 1)
+        {
+            _scaleTerm = terms[^1];
+            _terms = terms[..^1];
+        }
+        else
+            _terms = terms;
     }
 
     /// <summary>
@@ -27,22 +38,27 @@ public class SplineCommand
     internal void Apply(Variables variables, Spline spline)
     {
         Point[] points = GetPoints(variables);
+        double scale = _scaleTerm?.GetValue<double>(variables) ?? 1;
 
         switch (_commandType)
         {
             case SplineCommandType.MoveTo:
                 spline.Start = points[0];
+                spline.StartScale = scale;
                 break;
             case SplineCommandType.LineTo:
-                spline.Segments.Add(new SplineSegmentSpec { End = points[0] });
+                spline.Segments.Add(new SplineSegmentSpec { End = points[0], Scale = scale });
                 break;
             case SplineCommandType.QuadTo:
-                spline.Segments.Add(new SplineSegmentSpec { Control1 = points[0], End = points[1] });
+                spline.Segments.Add(new SplineSegmentSpec
+                {
+                    Control1 = points[0], End = points[1], Scale = scale
+                });
                 break;
             case SplineCommandType.CurveTo:
                 spline.Segments.Add(new SplineSegmentSpec
                 {
-                    Control1 = points[0], Control2 = points[1], End = points[2]
+                    Control1 = points[0], Control2 = points[1], End = points[2], Scale = scale
                 });
                 break;
             default:

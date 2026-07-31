@@ -17,6 +17,17 @@ public class Spline
     public Point Start { get; set; }
 
     /// <summary>
+    /// This property holds the uniform scale applied to a swept profile at the spline's
+    /// start point.  It defaults to 1 (the profile at its natural size) and, together with
+    /// each segment's own <see cref="SplineSegmentSpec.Scale"/>, is interpolated along the
+    /// spline so a sweep can grow or shrink its cross-section as it travels -- the moral
+    /// equivalent of a <see cref="Tube"/>'s varying radius, but as an all-over scale of an
+    /// arbitrary profile rather than a circle's radius.  A consumer that doesn't vary its
+    /// cross-section (this spline used as a bare curve) simply ignores it.
+    /// </summary>
+    public double StartScale { get; set; } = 1;
+
+    /// <summary>
     /// This property holds the ordered list of segments -- each either a straight line, a
     /// quadratic curve or a cubic curve -- that carry the spline from its start point to its
     /// end.
