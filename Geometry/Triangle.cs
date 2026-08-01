@@ -104,9 +104,11 @@ public class Triangle : Surface
 
         double t = f * _e2.Dot(originCrossE1);
 
-        if (t < 0)
-            return;
-
+        // A hit behind the ray's origin is reported, not dropped: a CSG operation needs every
+        // crossing of a triangle mesh, in front and behind, to tell inside from outside for a ray
+        // that starts within the solid (as a shadow or reflection ray, cast from a surface the
+        // mesh rests on, does).  The shading code discards the negative ones itself, so a lone
+        // triangle or an open mesh is unaffected.  This mirrors the analytic surfaces.
         intersections.Add(CreateIntersection(t, u, v));
     }
 

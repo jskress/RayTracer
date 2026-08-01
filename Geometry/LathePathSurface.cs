@@ -98,9 +98,11 @@ public class LathePathSurface
 
             double distance = t.Evaluate(u);
 
-            if (distance < 0)
-                continue;
-
+            // Hits behind the ray's origin are kept, not dropped: a CSG operation needs every
+            // crossing, in front and behind, to tell inside from outside for a ray that starts
+            // within the solid -- which a shadow or reflection ray, cast from a surface the lathe
+            // sits on, does.  The shading code discards the negative ones itself, so keeping them
+            // costs standalone lathes nothing.  This mirrors the analytic sphere, cube and torus.
             yield return CreateIntersection(surface, distance, u, ray.At(distance));
         }
     }
@@ -134,12 +136,8 @@ public class LathePathSurface
             double c = ox * ox + oz * oz - radius * radius;
 
             foreach (double t in SolveQuadratic(a, b, c))
-            {
-                if (t < 0)
-                    continue;
-
+                // Hits behind the origin are kept for CSG's sake, as in the general-ray case above.
                 yield return CreateIntersection(surface, t, u, ray.At(t));
-            }
         }
     }
 

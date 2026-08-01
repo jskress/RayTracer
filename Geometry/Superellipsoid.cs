@@ -102,17 +102,15 @@ public class Superellipsoid : Surface
         if (tMin > tMax || tMax < DepthTolerance)
             return;
 
-        // A ray whose origin already lies inside the local search box -- always true for
-        // shadow/reflection/refraction rays, which start right on the surface itself -- would
-        // otherwise get its first sample pushed forward by a whole DepthTolerance along the
-        // ray's own direction.  For a ray that isn't aligned with the surface's outward normal
-        // there (a very ordinary thing for a shadow ray heading off toward a light), that push
-        // can walk straight back across the surface, undoing the tiny escape epsilon the
-        // renderer already applied (Intersection.OverPoint) and manufacturing a false
-        // self-intersection.  Starting at the ray's own origin instead (t=0) trusts that
-        // epsilon rather than fighting it; the DepthTolerance clamp is still exactly right for
-        // a ray genuinely arriving from outside the box, where tMin is meaningfully positive.
-        if (tMin < 0)
+        // The part of the box behind the origin (tMin < 0) is searched only when the origin lies
+        // genuinely inside the solid -- the implicit function is negative there -- as it does for
+        // a CSG or refraction ray cast from within.  Such a ray needs the crossing behind it, so
+        // a CSG can tell inside from outside and the refractive-index bookkeeping knows the ray
+        // began inside.  A shadow or reflection ray cast from the surface itself starts just
+        // outside it (the renderer's Intersection.OverPoint nudge), where the function is not
+        // negative, so it keeps the original forward-only search from the origin and cannot walk
+        // back across the surface to manufacture a self-intersection.
+        if (tMin < 0 && EvaluateSuperellipsoid(localRay.Origin) >= 0)
             tMin = 0;
 
         List<double> samples = CollectSamplePoints(localRay, tMin, tMax);

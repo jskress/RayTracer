@@ -86,13 +86,15 @@ public class CubicCurve : IPathSegment
     /// If the ray doesn't intersect the curve, the enumerable must be empty.</returns>
     public IEnumerable<TwoDIntersection> GetIntersections(TwoDRay ray)
     {
-        TwoDPoint point = ray.Origin + ray.Direction;
         TwoDPoint lineA = new TwoDPoint(ray.Origin.X, ray.Origin.Y);
-        TwoDPoint lineB = new TwoDPoint(point.X, point.Y);
-        double a = lineB.Y - lineA.Y;
-        double b = lineA.X - lineB.X;
+        TwoDPoint lineB = lineA + ray.Direction;
         double[] roots = GetRoots(lineA, lineB);
 
+        // Every crossing of the curve with the ray's line is reported, on both sides of the
+        // origin.  The extrusion this feeds recomputes each hit's 3D distance from its point, and
+        // a CSG built from that extrusion needs the crossings behind the origin to tell inside
+        // from outside for a ray that starts within it; the shading code discards the negative
+        // distances itself.  This matches the other path segments and the analytic surfaces.
         return roots
             .Select(t =>
             {
@@ -100,22 +102,14 @@ public class CubicCurve : IPathSegment
                 double t3 = t2 * t;
                 double x = _xCoefficients[0] * t3 + _xCoefficients[1] * t2 + _xCoefficients[2] * t + _xCoefficients[3];
                 double y = _yCoefficients[0] * t3 + _yCoefficients[1] * t2 + _yCoefficients[2] * t + _yCoefficients[3];
-                double s = a == 0 && b == 0
-                    ? 0
-                    : a != 0
-                        ? (y - lineA.Y) / a
-                        : (x - lineA.X) / -b;
 
-                return s >= 0
-                    ? new TwoDIntersection
-                    {
-                        Distance = t,
-                        Point = new TwoDPoint(x, y),
-                        TwoDNormal = NormalAt(t)
-                    }
-                    : null;
-            })
-            .Where(item => item != null);
+                return new TwoDIntersection
+                {
+                    Distance = t,
+                    Point = new TwoDPoint(x, y),
+                    TwoDNormal = NormalAt(t)
+                };
+            });
     }
 
     /// <summary>
@@ -124,11 +118,11 @@ public class CubicCurve : IPathSegment
     /// what the count is for and why the straddle test comes first.
     /// <para>
     /// The line handed to <see cref="GetRoots"/> is the one <see cref="GetIntersections"/> would
-    /// build for a rightward horizontal ray, so the roots are the same.  For that line
-    /// <c>GetIntersections</c>' own forward test reduces to "the crossing is at or right of the
-    /// point", which the strict comparison here subsumes, so no crossing is gained or lost by
-    /// leaving it out.  Only each root's X is worked out, rather than an intersection assembled
-    /// around it.
+    /// build for a rightward horizontal ray, so the roots are the same.  Where
+    /// <c>GetIntersections</c> reports every crossing along that line and lets its caller sort
+    /// out which are wanted, this method keeps only those at or to the right of the point -- the
+    /// strict comparison below -- and works out just each root's X rather than assembling a whole
+    /// intersection around it.
     /// </para>
     /// <para>
     /// Unlike the other segments this one still allocates, because the roots come from

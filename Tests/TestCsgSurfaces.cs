@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
 
 namespace Tests;
 
@@ -149,5 +150,48 @@ public class TestCsgSurfaces
         Assert.AreSame(s1, intersections[0].Surface);
         Assert.AreEqual(6.5, intersections[1].Distance);
         Assert.AreSame(s2, intersections[1].Surface);
+    }
+
+    /// <summary>
+    /// An extrusion built from flat pieces -- its end caps and its walls -- must, like the
+    /// analytic solids, report crossings behind a ray's origin so a CSG can tell inside from
+    /// outside for a ray that starts within it.  A square profile is extruded into a box
+    /// (x, z in [-1, 1], y in [0, 2]) and another box keeps only the x &gt;= 0 half.  A ray that
+    /// starts inside the extrusion in the cut-away half and rises toward the kept half -- the
+    /// path a shadow ray takes to an overhead light -- must not be occluded by the removed part.
+    /// </summary>
+    [TestMethod]
+    public void TestExtrusionInCsgIsNotOccludedByItsRemovedPart()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(-1, -1)
+            .LineTo(1, -1)
+            .LineTo(1, 1)
+            .LineTo(-1, 1)
+            .ClosePath();
+        Extrusion extrusion = new () { Path = profile, MinimumY = 0, MaximumY = 2, Closed = true };
+        Cube cube = new ()
+        {
+            Transform = Transforms.Translate(10, 0, 0) * Transforms.Scale(10, 10, 10)
+        };
+        CsgSurface csg = new ()
+        {
+            Operation = CsgOperation.Intersection, Left = extrusion, Right = cube
+        };
+
+        csg.PrepareForRendering();
+
+        Point from = new (-0.5, 1, 0);   // inside the box, in the removed x < 0 half.
+        Point toward = new (0.5, 10, 0);  // up and over the kept half, as toward a lamp.
+        Vector direction = toward - from;
+        double distance = direction.Magnitude;
+        Ray ray = new (from, direction.Unit);
+        List<Intersection> hits = [];
+
+        csg.AddIntersections(ray, hits);
+
+        Assert.IsFalse(
+            hits.Any(hit => hit.Distance > 0.0001 && hit.Distance < distance),
+            "nothing the CSG keeps should stand between a point in the removed half and the lamp");
     }
 }

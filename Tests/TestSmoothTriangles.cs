@@ -100,6 +100,10 @@ public class TestSmoothTriangles
 
         _smoothTriangle.AddIntersections(ray, intersections);
 
-        Assert.AreEqual(0, intersections.Count);
+        // The crossing behind the origin is reported now (a CSG needs it), so a ray pointing
+        // away "misses" in the sense that matters: nothing in front of it.
+        Assert.IsFalse(
+            intersections.Any(intersection => intersection.Distance >= 0),
+            "a ray pointing away should have no hit in front of it");
     }
 }

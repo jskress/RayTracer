@@ -46,6 +46,29 @@ public class TestBicubicPatch
         return patch;
     }
 
+    /// <summary>
+    /// A patch must report a crossing that lies behind the ray's origin, not drop it, so a CSG
+    /// built from a closed shell of patches can tell inside from outside for a ray that starts
+    /// within it -- as a shadow, reflection or refraction ray, cast from within the shell, does.
+    /// The flat patch here lies a unit behind the origin, in the Z = 0 plane, and the ray is fired
+    /// away from it; the hit at distance -1 must still be reported.  Neither the bounding-sphere
+    /// walk (which must not prune the node behind the origin) nor the leaf test (which must not
+    /// drop the negative distance) may throw it away.
+    /// </summary>
+    [TestMethod]
+    public void TestHitBehindTheOriginIsReported()
+    {
+        BicubicPatch patch = CreateFlatPatch();
+        Ray ray = new (new Point(1.5, 1.5, 1), new Vector(0, 0, 1));
+        List<Intersection> intersections = [];
+
+        patch.AddIntersections(ray, intersections);
+
+        Assert.IsTrue(
+            intersections.Any(intersection => intersection.Distance.Near(-1, 0.001)),
+            "the crossing behind the origin must be reported");
+    }
+
     [TestMethod]
     public void TestFlatPatchMatchesParallelogram()
     {
