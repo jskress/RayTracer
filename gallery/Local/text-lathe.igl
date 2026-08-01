@@ -1,0 +1,54 @@
+// A scene to test 2D transforms on a path, together with a lathe and a CSG cut.  A text path of
+// the letter "i" is moved out from the Y axis with a 2D "translate", then spun about that axis by
+// the lathe into a full ring.  A CSG intersection with a box filling one quadrant keeps only a
+// quarter turn of that ring, so the letter's cross-section shows at each cut end.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Text Lathe Test'
+        author 'J. Stephen Kress'
+        description 'A text path spun into a ring by a lathe and cut to a quarter turn with CSG.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [3.9, 3.1, -1.1]
+    look at [0.75, 0.52, 0.7]
+    field of view 40
+}
+
+point light { location [-5, 9, -6]  color [1, 0.97, 0.9] }
+point light { location [6, 7, -3]   color [0.30, 0.32, 0.38] }
+
+// A dark, gently reflective floor.
+plane {
+    material {
+        pigment color [0.12, 0.12, 0.14]
+        specular 0.3  shininess 200  reflective 0.28
+    }
+}
+
+intersection {
+    // The ring: a text "i" carried out to a radius of 1.5, then spun about the Y axis.
+    lathe {
+        path {
+            text { text 'i'  font 'Merriweather' }
+            translate [1.5, 0]
+        }
+    }
+
+    // A box filling the +X, +Z quadrant, so the intersection keeps just a quarter of the ring.
+    cube { scale [10, 10, 10]  translate [10, 0, 10] }
+
+    material {
+        pigment color [0.85, 0.6, 0.2]
+        ambient 0.12  specular 0.6  shininess 120  reflective 0.15
+    }
+    
+    rotate Y -30
+    translate X -0.75
+}

@@ -76,15 +76,21 @@ public class TestCubicCurve
         CubicCurve curve = (CubicCurve) path.Segments[0];
         TwoDRay ray = new () { Origin = new TwoDPoint(0, 0.9), Direction = new TwoDVector(1, 0) };
 
-        TwoDIntersection[] intersections = curve.GetIntersections(ray).ToArray();
+        TwoDIntersection[] intersections = curve.GetIntersections(ray)
+            .OrderBy(intersection => intersection.Distance)
+            .ToArray();
 
         // The curve's Y coordinate, as a function of t, is the quadratic
         // -2.1t^2 + 2.1t + 0.6, which crosses Y = 0.9 at t ~= 0.1727 and t ~= 0.8273 -- both
-        // within [0, 1], so both are genuine points on the curve.  Only the second (whose X
-        // is positive) lies ahead of this rightward ray from the origin.
-        Assert.AreEqual(1, intersections.Length);
-        Assert.IsTrue(0.8273.Near(intersections[0].Distance, 0.0001));
+        // within [0, 1], so both are genuine points on the curve.  Both are reported now (the
+        // one behind the origin as well, since a CSG needs it); the first is to the left of the
+        // ray's origin, the second to its right.
+        Assert.AreEqual(2, intersections.Length);
+        Assert.IsTrue(0.1727.Near(intersections[0].Distance, 0.0001));
+        Assert.IsTrue(0.8273.Near(intersections[1].Distance, 0.0001));
         Assert.IsTrue(0.9.Near(intersections[0].Point.Y, 0.0001));
-        Assert.IsTrue(intersections[0].Point.X > 0);
+        Assert.IsTrue(0.9.Near(intersections[1].Point.Y, 0.0001));
+        Assert.IsTrue(intersections[0].Point.X < 0);
+        Assert.IsTrue(intersections[1].Point.X > 0);
     }
 }

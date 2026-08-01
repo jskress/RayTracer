@@ -80,7 +80,7 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="resolver">The resolver to update.</param>
     /// <param name="clause">The font specification clause to parse.</param>
-    private static void ParseTextFontClause(TextSolidResolver resolver, Clause clause)
+    private static void ParseTextFontClause(ITextContentResolver resolver, Clause clause)
     {
         string text = clause.Text(1);
 
@@ -98,6 +98,49 @@ public partial class LanguageParser
 
         if (text == "italic")
             resolver.IsItalicResolver = new LiteralResolver<bool> { Value = true };
+    }
+
+    /// <summary>
+    /// This method is used to create the resolver for a text block used as a path source.  It
+    /// is the caller's job to have already matched the "text" keyword and its open brace, just
+    /// as with a spline; the grammar it parses against carries only the text's own content, so
+    /// a surface clause inside it is turned away as unexpected input.
+    /// </summary>
+    /// <returns>The resolver for the text path.</returns>
+    private TextPathResolver ParseTextPathClause()
+    {
+        TextPathResolver resolver = new TextPathResolver();
+
+        ParseObjectResolver("pathTextEntryClause", HandlePathTextEntryClause, resolver);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a text path block.  It accepts only the
+    /// clauses a run of text owns -- its string, font, layout and kerning -- since a path has
+    /// no surface properties of its own.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandlePathTextEntryClause(Clause clause)
+    {
+        TextPathResolver resolver = (TextPathResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "text":
+                resolver.TextResolver = new TermResolver<string> { Term = clause.Term() };
+                break;
+            case "font":
+                ParseTextFontClause(resolver, clause);
+                break;
+            case "layout":
+                resolver.LayoutSettingsResolver = ParseTextLayoutSettingsClause();
+                break;
+            case "kerning":
+                resolver.KerningResolver = ParseKerningClause(clause);
+                break;
+        }
     }
 
     /// <summary>

@@ -21,6 +21,30 @@ public class TestSuperellipsoid
         return superellipsoid;
     }
 
+    /// <summary>
+    /// A ray that starts inside the superellipsoid must report the crossing behind its origin as
+    /// well as the one ahead, so a CSG built from it can tell inside from outside, and refraction
+    /// knows the ray began inside.  Fired from the center outward, both the far wall (ahead) and
+    /// the near wall (behind) must show up.  A ray starting on the surface keeps looking only
+    /// ahead, which the self-intersection tests below check.
+    /// </summary>
+    [TestMethod]
+    public void TestRayStartingInsideReportsTheCrossingBehindIt()
+    {
+        Superellipsoid superellipsoid = Create(2, 2);
+        Ray ray = new (new Point(0, 0, 0), new Vector(1, 0, 0));
+        List<Intersection> intersections = [];
+
+        superellipsoid.AddIntersections(ray, intersections);
+
+        Assert.IsTrue(
+            intersections.Any(intersection => intersection.Distance < 0),
+            "the crossing behind the origin must be reported for a ray starting inside");
+        Assert.IsTrue(
+            intersections.Any(intersection => intersection.Distance > 0),
+            "the crossing ahead of the origin must be reported");
+    }
+
     [TestMethod]
     public void TestRayMissesSuperellipsoid()
     {

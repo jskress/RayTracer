@@ -164,7 +164,12 @@ public class BicubicPatch : Surface
         if (!TryIntersectTriangle(localRay, p0, p1, p2, out double t, out double a, out double b))
             return;
 
-        if (t < MinimumDepth)
+        // Only a crossing right at the ray's origin is dropped -- the surface the ray was cast
+        // from, which would otherwise shade itself.  A crossing meaningfully behind the origin is
+        // kept, so a CSG built from a closed shell of patches can tell inside from outside for a
+        // ray that starts within it (and refraction knows the same); the shading code discards the
+        // negative distances itself.
+        if (Math.Abs(t) < MinimumDepth)
             return;
 
         double r = 1 - a - b;
@@ -428,9 +433,12 @@ public class BicubicPatch : Surface
     }
 
     /// <summary>
-    /// This method tests whether the given ray passes through the given bounding sphere, using
-    /// a cheap "distance from ray to sphere center vs. radius" check rather than a full
-    /// ray/sphere quadratic solve.
+    /// This method tests whether the given ray's line passes through the given bounding sphere,
+    /// using a cheap "distance from line to sphere center vs. radius" check rather than a full
+    /// ray/sphere quadratic solve.  The whole line is tested, in both directions, not just the
+    /// half in front of the origin: a node behind the origin must still be walked so that a ray
+    /// starting within a closed shell of patches finds the crossings behind it, which a CSG (and
+    /// refraction) needs to tell inside from outside.
     /// </summary>
     private static bool SphereIsHitBy(Ray localRay, Point center, double radiusSquared)
     {
@@ -443,10 +451,6 @@ public class BicubicPatch : Surface
             return true;
 
         double alongRay = x * localRay.Direction.X + y * localRay.Direction.Y + z * localRay.Direction.Z;
-
-        if (alongRay <= 0)
-            return false;
-
         double closestApproachSquared = distanceSquared - alongRay * alongRay;
 
         return closestApproachSquared <= radiusSquared + PlaneEpsilon;

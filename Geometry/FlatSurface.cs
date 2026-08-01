@@ -7,8 +7,7 @@ namespace RayTracer.Geometry;
 /// <summary>
 /// This is the base class for surfaces that are flat: a single plane, with some 2D test
 /// deciding which points of that plane are actually part of the surface.  It owns the
-/// ray/plane intersection math (including rejecting hits behind the ray's origin, which
-/// every flat shape agrees on), leaving subclasses to decide only whether a given point on
+/// ray/plane intersection math, leaving subclasses to decide only whether a given point on
 /// the plane is actually inside their shape.
 /// </summary>
 public abstract class FlatSurface : Surface
@@ -53,7 +52,7 @@ public abstract class FlatSurface : Surface
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <returns>The distance to the plane, or <c>null</c> if the ray is parallel to the
-    /// plane or the plane is behind the ray's origin.</returns>
+    /// plane.  The distance may be negative -- behind the ray's origin.</returns>
     protected double? GetPlaneDistance(Ray ray)
     {
         double denominator = Normal.Dot(ray.Direction);
@@ -61,9 +60,13 @@ public abstract class FlatSurface : Surface
         if (denominator.Near(0))
             return null;
 
-        double t = (PlaneConstant - Normal.Dot(ray.Origin)) / denominator;
-
-        return t < 0 ? null : t;
+        // The distance is returned even when it is negative, putting the hit behind the ray's
+        // origin.  A CSG operation needs crossings on both sides of the origin to tell inside
+        // from outside for a ray that starts within a solid built from flat pieces -- an
+        // extrusion's end caps and straight walls -- and the shading code discards the negative
+        // ones itself.  This keeps flat shapes consistent with the analytic surfaces and the
+        // triangle.
+        return (PlaneConstant - Normal.Dot(ray.Origin)) / denominator;
     }
 
     /// <summary>

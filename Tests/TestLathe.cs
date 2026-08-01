@@ -268,4 +268,50 @@ public class TestLathe
 
         Assert.AreEqual(1, intersections.Count);
     }
+
+    /// <summary>
+    /// A lathe used in a CSG must report crossings behind the ray's origin as well as in front,
+    /// so the operation can tell inside from outside for a ray that starts within the lathe --
+    /// which a shadow or reflection ray, cast from a surface the lathe sits on, does.  Here a
+    /// square profile is revolved into an annular tube (1 &lt;= radius &lt;= 2, 0 &lt;= y &lt;= 1)
+    /// and a box keeps only the +X, +Z quarter.  A ray that starts inside the tube in the cut-away
+    /// quarter and rises toward the kept quarter -- the path a shadow ray takes to an overhead
+    /// light -- must not be occluded by the part that was removed.  Dropping the behind-the-origin
+    /// crossings inverts the tube's inside/outside tracking and makes the box's far faces read as
+    /// occluders, which showed up as a full-ring shadow (and reflection) under a quarter-ring.
+    /// </summary>
+    [TestMethod]
+    public void TestLatheInCsgIsNotOccludedByItsRemovedPart()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(1, 0)
+            .LineTo(2, 0)
+            .LineTo(2, 1)
+            .LineTo(1, 1)
+            .ClosePath();
+        Lathe lathe = new () { Path = profile };
+        Cube cube = new ()
+        {
+            Transform = Transforms.Translate(10, 0, 10) * Transforms.Scale(10, 10, 10)
+        };
+        CsgSurface csg = new ()
+        {
+            Operation = CsgOperation.Intersection, Left = lathe, Right = cube
+        };
+
+        csg.PrepareForRendering();
+
+        Point from = new (-1.5, 0.5, -0.2);   // inside the tube, in the removed -X,-Z quarter.
+        Point toward = new (0.5, 10, 0.5);     // up and over the kept quarter, as toward a lamp.
+        Vector direction = toward - from;
+        double distance = direction.Magnitude;
+        Ray ray = new (from, direction.Unit);
+        List<Intersection> hits = [];
+
+        csg.AddIntersections(ray, hits);
+
+        Assert.IsFalse(
+            hits.Any(hit => hit.Distance > 0.0001 && hit.Distance < distance),
+            "nothing the CSG keeps should stand between a point in the removed quarter and the lamp");
+    }
 }

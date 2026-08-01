@@ -28,6 +28,7 @@ Four of these surfaces are built from a **path**: a 2D outline drawn in its own 
 | `close` | Join back to where this run of the path started. |
 | `svg '…'` | The whole path as an SVG path string. |
 | `icon '…'` | The outline of a [FontAwesome icon](#icons). |
+| `text { … }` | The outline of a run of [text](#text-as-a-path). |
 
 A path may hold more than one **run** — each starts with a `move to` and usually ends with a
 `close`.  Whether any given spot ends up solid is decided by the **even-odd rule**: draw a
@@ -84,6 +85,65 @@ from there.  An icon arrives at the scale and orientation SVG uses — a box som
 across, with Y running *downward* — so, like a pasted `svg` outline, it usually wants scaling down
 and flipping to sit the right way up.  `gallery/Local/icons.igl` extrudes two of them, named both
 ways.
+
+#### Text as a path
+
+A path may also be a run of **text**.  Where the [text surface](#text) turns a string into
+finished, extruded letters in one step, `text` inside a `path` gives you the letters' *outline*
+instead — the glyphs laid out and folded into the path — which you can then extrude, spin on the
+lathe, sweep along a spline, or carve out of another shape with a [CSG](surfaces.md#combining-surfaces):
+
+```
+extrusion {
+    path {
+        text {
+            text 'Ray'
+            font 'Merriweather'
+            layout { horizontal position center }
+        }
+    }
+    min Y 0  max Y 0.25
+    rotate X -90
+}
+```
+
+The block is written exactly like the [text surface](#text) — the same `text`, `font`, `layout`
+and `kerning` — with one difference: because a path is not a surface, it takes *only* those, not a
+surface's own grammar.  There is no `material`, no `translate` or `rotate`, no `open` inside the
+`text` block here; those belong to the shape the path feeds, as in the extrusion above.  Text
+comes at the font's own scale, where a line is about one unit tall — small enough to use as it is,
+unlike an icon.
+
+#### Moving a path
+
+A path may carry **2D transforms** of its own — `translate`, `scale` and `rotate` — applied to the
+whole outline once it is drawn, before it is given depth.  They are the flat, two-dimensional
+counterpart of the [transforms a surface carries](transforms.md), and they read the same way, with
+two-number points and a single-angle turn instead of three-number points and an axis:
+
+| Transform | What it does |
+| --- | --- |
+| `translate [dx, dy]` | Move the outline.  `translate X dx` and `translate Y dy` move along one axis. |
+| `scale [sx, sy]` | Resize it.  `scale s` resizes it evenly; `scale X sx` scales along one axis. |
+| `rotate a` | Turn it about the origin, within its own plane (no axis — a path is flat). |
+
+Several compose in the order written, exactly as a surface's do — the first acts on the raw
+outline, the next on its result.  This is what lets an outline be placed relative to the shape that
+carries it.  A [lathe](#lathe), for instance, spins a path about the Y axis and reads each point's
+X as its distance from that axis, so a [text path](#text-as-a-path) — whose letters sit near the
+origin — has to be moved out before it will spin into a ring rather than a blob:
+
+```
+lathe {
+    path {
+        text { text 'i'  font 'Merriweather' }
+        translate [1.5, 0]      // out to a radius of 1.5 before it is spun
+    }
+}
+```
+
+`gallery/Local/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
+quarter turn with a [CSG](surfaces.md#combining-surfaces) intersection.
 
 ### Extrusion
 

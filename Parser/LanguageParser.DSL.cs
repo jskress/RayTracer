@@ -552,10 +552,20 @@ public partial class LanguageParser
         {
             curve > controlPointsClause > to ?? 'Expecting "to" to follow "curve" control point here.' > xyPairClause
         }
+        // 2D transforms applied to a path as a whole -- the 2D counterpart of a surface's
+        // transforms.  Translate and scale take a 2D point or an X/Y axis and an amount; rotate
+        // takes a single angle, turning the outline in its own plane.
+        twoDAxisClause: { [ X | Y ] > _expression }
+        twoDTransformByClause: [ twoDAxisClause | _expression ]
+        pathTranslateClause: { translate > twoDTransformByClause }
+        pathScaleClause: { scale > twoDTransformByClause }
+        pathRotateClause: { rotate > _expression }
         extrusionPathClause:
         [
             moveToClause | lineToClause | quadToClause | curveToClause | close |
-            { svg > _expression } | { icon > _expression }
+            { svg > _expression } | { icon > _expression } |
+            { text > openBrace ?? 'Expecting an open brace to follow "text" here.' } |
+            pathTranslateClause | pathScaleClause | pathRotateClause
         ] ?? 'Expecting a path command here.'
         startExtrusionClause:
         {
@@ -772,6 +782,15 @@ public partial class LanguageParser
             { layout > openBrace ?? 'Expecting an open brace after "layout" here.' } |
             kerningClause | open | surfaceEntryClause
         ]
+        // A text block used as a path source takes only its own content -- the string, the
+        // font and the layout -- and none of a surface's grammar (transforms, material, "open"
+        // and such); the shape that carries the path owns all of that.
+        pathTextEntryClause:
+        [
+            { text > _expression } | fontClause |
+            { layout > openBrace ?? 'Expecting an open brace after "layout" here.' } |
+            kerningClause
+        ] ?? 'Expecting a text path property here.'
 
         // L-system clauses.
         startLsystemClause:

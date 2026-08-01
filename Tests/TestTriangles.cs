@@ -42,6 +42,31 @@ public class TestTriangles
         Assert.AreEqual(0, intersections.Count);
     }
 
+    /// <summary>
+    /// A triangle used in a CSG must report a crossing that lies behind the ray's origin, not
+    /// drop it, so the operation can tell inside from outside for a ray that starts within a mesh
+    /// -- which a shadow or reflection ray, cast from a surface the mesh rests on, does.  Here the
+    /// triangle sits a unit behind the origin and the ray is fired away from it; the hit at
+    /// distance -1 must still be reported.
+    /// </summary>
+    [TestMethod]
+    public void TestHitBehindTheOriginIsReported()
+    {
+        Triangle triangle = new ()
+        {
+            Point1 = new Point(0, 1, 0),
+            Point2 = new Point(-1, 0, 0),
+            Point3 = new Point(1, 0, 0)
+        };
+        Ray ray = new Ray(new Point(0, 0.3, 1), new Vector(0, 0, 1));
+        List<Intersection> intersections = new ();
+
+        triangle.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(1, intersections.Count);
+        Assert.AreEqual(-1.0, intersections[0].Distance, 0.0001);
+    }
+
     [TestMethod]
     public void TestRayMissesOverP1P3()
     {
@@ -132,6 +157,10 @@ public class TestTriangles
 
         triangle.AddIntersections(ray, intersections);
 
-        Assert.AreEqual(0, intersections.Count);
+        // The triangle now reports the crossing behind the origin too (a CSG needs it), so a
+        // ray pointing away "misses" in the sense that matters: nothing in front of it.
+        Assert.IsFalse(
+            intersections.Any(intersection => intersection.Distance >= 0),
+            "a ray pointing away should have no hit in front of it");
     }
 }
