@@ -220,9 +220,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `rotate` | Transform: turn about an axis. | [Transforms](transforms.md#rotate) |
+| `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
 | `samples` | Camera: `blur samples` count. | [Cameras](cameras.md#depth-of-field) |
-| `scale` | Transform: resize; also a sweep spline point's cross-section size. | [Transforms](transforms.md#scale) |
+| `scale` | Transform: resize (a surface or a 2D path); also a sweep spline point's cross-section size. | [Transforms](transforms.md#scale) |
 | `scallop` | Wave shape: the absolute-value cusp. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `scanner` | Context: which scanning strategy renders the image. | [Context](context.md#scanners) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |
@@ -265,7 +265,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `toroidal` | Image map: wrap the image around a torus. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `transform` | Applies a named transform to a surface. | [Transforms](transforms.md#naming-a-transform) |
-| `translate` | Transform: move. | [Transforms](transforms.md#translate) |
+| `translate` | Transform: move a surface or a 2D path. | [Transforms](transforms.md#translate) |
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a three-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

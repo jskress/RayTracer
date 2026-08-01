@@ -469,6 +469,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/text-lathe.png">
+      <img alt="Text Lathe Test" height="120" src="Local/text-lathe.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/text-lathe.igl">Text Lathe Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/torus.png">
       <img alt="Torus Test" height="120" src="Local/torus.png" width="160"/>
     </a></td>

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using RayTracer.Basics;
 
 namespace RayTracer.Graphics;
 
@@ -561,6 +562,72 @@ public class GeneralPath
         MaxY = Math.Max(MaxY, other.MaxY);
 
         return this;
+    }
+
+    /// <summary>
+    /// This method applies a 2D transform to every point of the path, in place, and rebuilds
+    /// its bounding box to match.  The path's points live in the X/Y plane, so the transform is
+    /// applied to each as <c>(x, y, 0)</c> and the resulting X and Y kept.  This is the 2D
+    /// counterpart of transforming a surface in 3D: build the outline, then move, turn or resize
+    /// it as a whole before it is given depth.  Each run is rebuilt through the same drawing
+    /// methods that built it, so the bounding box the flat end caps rely on stays correct.
+    /// </summary>
+    /// <param name="matrix">The transform to apply.</param>
+    /// <returns>This object, for fluency.</returns>
+    internal GeneralPath Transform(Matrix matrix)
+    {
+        List<IPathSegment> original = [.. Segments];
+
+        Segments.Clear();
+
+        MinX = double.MaxValue;
+        MinY = double.MaxValue;
+        MaxX = double.MinValue;
+        MaxY = double.MinValue;
+
+        TwoDPoint current = null;
+
+        foreach (IPathSegment segment in original)
+        {
+            TwoDPoint[] points = segment.Points;
+            TwoDPoint start = Apply(matrix, points[0]);
+
+            // Consecutive segments share their boundary point, so a fresh "move to" is needed
+            // only where one run ends and the next begins.
+            if (current is null || current != start)
+                MoveTo(start);
+
+            switch (points.Length)
+            {
+                case 2:
+                    LineTo(Apply(matrix, points[1]));
+                    break;
+                case 3:
+                    QuadTo(Apply(matrix, points[1]), Apply(matrix, points[2]));
+                    break;
+                case 4:
+                    CubicTo(Apply(matrix, points[1]), Apply(matrix, points[2]), Apply(matrix, points[3]));
+                    break;
+            }
+
+            current = Apply(matrix, points[^1]);
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// This method applies a transform to a single 2D point, treating it as lying in the X/Y
+    /// plane at Z = 0.
+    /// </summary>
+    /// <param name="matrix">The transform to apply.</param>
+    /// <param name="point">The 2D point to transform.</param>
+    /// <returns>The transformed 2D point.</returns>
+    private static TwoDPoint Apply(Matrix matrix, TwoDPoint point)
+    {
+        Point transformed = matrix * new Point(point.X, point.Y, 0);
+
+        return new TwoDPoint(transformed.X, transformed.Y);
     }
 
     /// <summary>

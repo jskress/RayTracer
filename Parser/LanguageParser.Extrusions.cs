@@ -2,6 +2,7 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces.Extrusions;
+using RayTracer.Instructions.Transforms;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -77,13 +78,24 @@ public partial class LanguageParser
     {
         GeneralPathResolver resolver = (GeneralPathResolver) _context.CurrentTarget;
 
-        // A "text" block is a run of laid-out glyphs folded into the path, so it parses as its
-        // own sub-block rather than as a flat command with a list of terms.
-        if (clause.Text() == "text")
+        switch (clause.Text())
         {
-            resolver.PathCommands.Add(new PathCommand(ParseTextPathClause()));
-
-            return;
+            // A "text" block is a run of laid-out glyphs folded into the path, so it parses as
+            // its own sub-block rather than as a flat command with a list of terms.
+            case "text":
+                resolver.PathCommands.Add(new PathCommand(ParseTextPathClause()));
+                return;
+            // The 2D transforms apply to the finished path rather than adding to it, so they go
+            // to the path's transform list, not its command list.
+            case "translate":
+                AddPathTransform(resolver, TransformType.Translate, clause);
+                return;
+            case "scale":
+                AddPathTransform(resolver, TransformType.Scale, clause);
+                return;
+            case "rotate":
+                AddPathTransform(resolver, TransformType.Rotate, clause);
+                return;
         }
 
         PathCommandType type = GetPathCommandType(clause);
@@ -91,6 +103,28 @@ public partial class LanguageParser
         PathCommand command = new PathCommand(type, terms);
 
         resolver.PathCommands.Add(command);
+    }
+
+    /// <summary>
+    /// This method adds one 2D transform to a path's transform list.  Translate and scale may
+    /// name an X or Y axis; a rotate is always in the path's own plane (about Z), and the rest
+    /// take a 2D point or a single number.
+    /// </summary>
+    /// <param name="resolver">The path resolver to add the transform to.</param>
+    /// <param name="type">The sort of transform this is.</param>
+    /// <param name="clause">The clause carrying the transform.</param>
+    private static void AddPathTransform(GeneralPathResolver resolver, TransformType type, Clause clause)
+    {
+        TransformAxis axis = type == TransformType.Rotate
+            ? TransformAxis.Z
+            : clause.Text(1) switch
+            {
+                "X" => TransformAxis.X,
+                "Y" => TransformAxis.Y,
+                _ => TransformAxis.All
+            };
+
+        resolver.TransformResolver.Add(type, axis, clause.Term());
     }
 
     /// <summary>

@@ -114,6 +114,37 @@ surface's own grammar.  There is no `material`, no `translate` or `rotate`, no `
 comes at the font's own scale, where a line is about one unit tall — small enough to use as it is,
 unlike an icon.
 
+#### Moving a path
+
+A path may carry **2D transforms** of its own — `translate`, `scale` and `rotate` — applied to the
+whole outline once it is drawn, before it is given depth.  They are the flat, two-dimensional
+counterpart of the [transforms a surface carries](transforms.md), and they read the same way, with
+two-number points and a single-angle turn instead of three-number points and an axis:
+
+| Transform | What it does |
+| --- | --- |
+| `translate [dx, dy]` | Move the outline.  `translate X dx` and `translate Y dy` move along one axis. |
+| `scale [sx, sy]` | Resize it.  `scale s` resizes it evenly; `scale X sx` scales along one axis. |
+| `rotate a` | Turn it about the origin, within its own plane (no axis — a path is flat). |
+
+Several compose in the order written, exactly as a surface's do — the first acts on the raw
+outline, the next on its result.  This is what lets an outline be placed relative to the shape that
+carries it.  A [lathe](#lathe), for instance, spins a path about the Y axis and reads each point's
+X as its distance from that axis, so a [text path](#text-as-a-path) — whose letters sit near the
+origin — has to be moved out before it will spin into a ring rather than a blob:
+
+```
+lathe {
+    path {
+        text { text 'i'  font 'Merriweather' }
+        translate [1.5, 0]      // out to a radius of 1.5 before it is spun
+    }
+}
+```
+
+`gallery/Local/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
+quarter turn with a [CSG](surfaces.md#combining-surfaces) intersection.
+
 ### Extrusion
 
 A path given thickness along Y.  Here is the star's path on the left — the outer run drawn
