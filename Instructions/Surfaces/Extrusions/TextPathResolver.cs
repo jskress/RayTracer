@@ -63,7 +63,7 @@ public class TextPathResolver : ObjectResolver<GeneralPath>, ITextContentResolve
         Kerning kerning = KerningResolver?.Resolve(context, variables);
 
         foreach (GeneralPath glyph in TextOutline.Glyphs(family, weight, italic, settings, kerning, text))
-            value.Append(glyph.Reverse());
+            value.Append(glyph.NormalizeFor3D());
     }
 
     /// <summary>

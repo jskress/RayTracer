@@ -43,7 +43,7 @@ public class LSystemExtrusionRenderer : LSystemShapeRenderer
 
         Surfaces.Add(new Extrusion
         {
-            Path = _path.Reverse(),
+            Path = _path,
             MinimumY = 0,
             MaximumY = 1
         });

@@ -28,7 +28,7 @@ public class Extrusion : ExtrudedSurface
     protected override void PrepareSurfaceForRendering()
     {
         _surfaces.Clear();
-        _surfaces.AddRange(Path.Segments
+        _surfaces.AddRange(Path.NormalizeFor3D().Segments
             .Select(segment => new ExtrusionPathSurface(segment, MinimumY, MaximumY)));
 
         _top = null;

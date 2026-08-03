@@ -59,7 +59,7 @@ public class TextSolid : Group
         {
             Add(new Extrusion
             {
-                Path = path.Reverse(),
+                Path = path,
                 MinimumY = 0,
                 MaximumY = 0.1,
                 Closed = Closed
