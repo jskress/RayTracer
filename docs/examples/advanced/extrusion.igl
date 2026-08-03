@@ -20,9 +20,9 @@ extrusion {
     material { pigment color [0.85, 0.55, 0.3]  specular 0.5  shininess 70 }
 
     path {
-        // The outline: a five-pointed star, drawn counter-clockwise so its side walls face
-        // outward.  (Reverse this and the walls face inward, and the sides toward the light
-        // come out shaded as though they were the back of the surface.)
+        // The outline: a five-pointed star, drawn counter-clockwise.  That is the direction an
+        // extrusion wants a run in, so that its side walls face outward, but it turns round any
+        // run drawn the other way itself; either direction renders the same.
         move to 0, 1
         line to -0.23, 0.31
         line to -0.95, 0.31
@@ -36,7 +36,8 @@ extrusion {
         close
 
         // A second path inside the first is cut out of it.  It runs clockwise -- opposite the
-        // outline -- so that its walls, too, face out of the solid and into the hole.
+        // outline -- which is the direction that puts its walls, too, facing out of the solid
+        // and into the hole.
         move to 0, 0.42
         line to 0.25, -0.16
         line to -0.25, -0.16

@@ -29,7 +29,7 @@ public class Lathe : Surface
     protected override void PrepareSurfaceForRendering()
     {
         _surfaces.Clear();
-        _surfaces.AddRange(Path.Segments
+        _surfaces.AddRange(Path.NormalizeFor3D().Segments
             .Select(segment => new LathePathSurface(segment)));
 
         _radius = Math.Max(Math.Abs(Path.MinX), Math.Abs(Path.MaxX));

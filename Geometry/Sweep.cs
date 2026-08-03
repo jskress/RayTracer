@@ -92,7 +92,7 @@ public class Sweep : Group
         List<ISplineCurve> curves = Spline.GetCurves();
         (List<Point> positions, List<Vector> tangents, List<double> scales) = SampleSpline(curves);
         List<SweepFrame> frames = RotationMinimizingFrame.Compute(positions, tangents);
-        List<TwoDPoint> profilePoints = Profile.Sample(ProfileSteps);
+        List<TwoDPoint> profilePoints = Profile.NormalizeFor3D().Sample(ProfileSteps);
 
         if (Center)
             profilePoints = CenterProfile(profilePoints);

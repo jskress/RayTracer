@@ -171,7 +171,8 @@ class Diagram:
 
 def star_points():
     """The ten points of the star in the extrusion example, drawn counter-clockwise (starting
-    at the top and heading left) so the extruded side walls face outward."""
+    at the top and heading left), which is the direction an extrusion wants a run in -- though
+    it turns round any run drawn the other way itself."""
     return [(0, 1), (-0.23, 0.31), (-0.95, 0.31), (-0.37, -0.12), (-0.59, -0.81),
             (0, -0.38), (0.59, -0.81), (0.37, -0.12), (0.95, 0.31), (0.23, 0.31)]
 
@@ -198,8 +199,8 @@ def extrusion_diagram(c):
         body += [f'<circle cx="{d.px(x):.1f}" cy="{d.py(y):.1f}" r="3.6" fill="{c["hole"]}"/>']
 
     body += d.legend([
-        ("outer run — counter-clockwise, so its walls face out", "outline", "line"),
-        ("inner run — clockwise, cutting the hole", "hole", "line"),
+        ("outer run — drawn counter-clockwise", "outline", "line"),
+        ("inner run — drawn clockwise, cutting the hole", "hole", "line"),
     ], c)
     return d.wrap(body)
 

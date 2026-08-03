@@ -49,14 +49,16 @@ SVG's default non-zero winding: a pasted `svg` outline that leaned on winding di
 keep a hole open will come out filled here, so make sure the hole's run is genuinely nested
 inside the outer one rather than trying to reverse its direction.
 
-Direction is not entirely free, though.  When a path is given thickness — extruded, spun on
-the lathe, swept along a spline — each of its segments also becomes a **wall**, and which way
-that wall faces is fixed by the direction the segment was drawn.  The flat caps do not care
-about winding, but the sides do.  For an outline with a hole the rule is simple: draw the
-outer run **counter-clockwise** and any hole **clockwise**, and every wall faces outward, as
-it should.  Reverse the outer run and its walls face inward, so the sides toward the light
-come back shaded as though they were the back of the surface.  If a path solid looks oddly
-dark on its lit side, a run drawn the wrong way round is the first thing to check.
+The direction a run is drawn in does matter to one thing, but it is not something a scene has
+to get right.  When a path is given thickness — extruded, spun on the lathe, swept along a
+spline — each of its segments also becomes a **wall**, and which way that wall faces follows
+the direction the segment was drawn: a run has to go **counter-clockwise** for its walls to
+face outward, and a hole inside it has to go **clockwise** so that *its* walls face out of the
+material too, one way round per level of nesting.  Rather than ask that of the outline, each of
+these surfaces sorts its runs out for itself before it builds any geometry, turning round the
+ones that run the wrong way.  So a path may be drawn in whichever direction suits, pasted in
+from an SVG file, or taken from a font or an icon, and its walls come out facing the light
+either way.
 
 The `svg` form is worth knowing about: it takes the `d` attribute out of an SVG file, so an
 outline drawn in a vector editor can be pasted straight in.
@@ -147,9 +149,11 @@ quarter turn with a [CSG](surfaces.md#combining-surfaces) intersection.
 
 ### Extrusion
 
-A path given thickness along Y.  Here is the star's path on the left — the outer run drawn
-counter-clockwise and the nested run that cuts the hole drawn clockwise, so that every side
-wall faces outward — beside the solid it extrudes into.
+A path given thickness along Y.  Here is the star's path on the left — an outer run with a
+second run nested inside it, which the even-odd rule turns into a hole — beside the solid it
+extrudes into.  The arrows show which way each run happens to be drawn; as
+[noted above](#paths), an extrusion sorts that out for itself, so neither direction is a
+requirement.
 
 <table>
 <tr>
