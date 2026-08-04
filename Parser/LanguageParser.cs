@@ -24,8 +24,14 @@ public partial class LanguageParser
 
     /// <summary>
     /// This is a helper property for accessing the current file name.
+    /// <para>
+    /// The stack empties the moment the last file runs out of tokens, which happens while a clause at
+    /// the very end of a file is still being handled, so the file we have just finished stands in for
+    /// the file we are in.  Without that, anything asked of the file after its last token -- what
+    /// directory to resolve an image name against, most of all -- came back as nothing.
+    /// </para>
     /// </summary>
-    private string CurrentFileName => _entries.IsEmpty() ? null : _entries.Peek().FileName;
+    private string CurrentFileName => _entries.IsEmpty() ? _lastFileName : _entries.Peek().FileName;
 
     /// <summary>
     /// This is a helper property for accessing the current file's directory.

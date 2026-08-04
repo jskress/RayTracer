@@ -23,7 +23,7 @@ A scene file is any number of *items*, in almost any order (the exceptions are i
 - a **camera** — where the scene is viewed from ([Cameras](cameras.md#placing-a-camera))
 - a **light** — a point, distant, spot or area light ([Lights](lights.md#lights))
 - a **surface** — anything solid or flat the world contains ([Surfaces](surfaces.md#the-primitives))
-- a **background** — the color seen where nothing is hit ([Background](scene-files.md#background))
+- a **background** — the sky seen where nothing is hit ([Background](scene-files.md#background))
 - a **scene** — a camera, lights and surfaces wrapped up and named ([Scenes and Cameras](scene-files.md#scenes-and-cameras))
 - a **render** command — which scene and camera to draw ([The `render` Command](scene-files.md#the-render-command))
 
@@ -53,7 +53,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `axiom` | L-system: the starting string. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
 | `axisV` | Area light: the other edge of the panel. | [Lights](lights.md#area-lights) |
-| `background` | Sets the color seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
+| `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `black` | Font weight; also the color black. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -106,6 +106,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
+| `environment` | `environment ior` (or `index of refraction`): the index of refraction of the space between a scene's objects. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |

@@ -1,3 +1,6 @@
+using RayTracer.General;
+using RayTracer.Graphics;
+using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Renderer;
@@ -34,41 +37,98 @@ public class TestPigmentClauses
     /// </summary>
     private string ErrorFrom(string pigment)
     {
+        return BallWearing(pigment).Error;
+    }
+
+    /// <summary>
+    /// Renders a ball wearing the given pigment and hands back the picture, or the error that
+    /// stopped it.  The ball is lit by its own pigment alone -- all ambient, no diffuse or specular
+    /// -- when a size is asked for, so that a color read off the picture is the color the pigment
+    /// gave rather than that color shaded.
+    /// </summary>
+    private (Canvas Image, string Error) BallWearing(string pigment, int size = 8)
+    {
         string path = Path.Combine(_directory, "scene.igl");
+        string output = Path.Combine(_directory, "out.png");
+        string finish = size > 8 ? "  ambient 1  diffuse 0  specular 0" : "";
 
         File.WriteAllText(path,
             "context { no gamma }\n" +
             "camera { location [0, 0, -5]  look at [0, 0, 0] }\n" +
             "point light { location [-4, 6, -8] }\n" +
-            $"sphere {{ material {{ {pigment} }} }}");
+            $"sphere {{ material {{ {pigment}{finish} }} }}");
 
-        StringWriter output = new ();
+        StringWriter captured = new ();
         TextWriter was = Console.Out;
 
-        Console.SetOut(output);
+        Console.SetOut(captured);
 
         try
         {
             ImageRenderer renderer = new LanguageParser(path).Parse();
 
             if (renderer is null)
-                return output.ToString();
+                return (null, captured.ToString());
 
             renderer.Render(new RenderOptions
             {
-                OutputFileName = Path.Combine(_directory, "out.png"), Width = 8, Height = 8
+                OutputFileName = output, Width = size, Height = size
             });
 
-            return output.ToString().Contains("Error") ? output.ToString() : null;
+            return captured.ToString().Contains("Error")
+                ? (null, captured.ToString())
+                : (new ImageFile(output).Load()[0], null);
         }
         catch (Exception exception)
         {
-            return exception.Message;
+            return (null, exception.Message);
         }
         finally
         {
             Console.SetOut(was);
         }
+    }
+
+    /// <summary>
+    /// Writes a two-color image to the working directory and hands back its name.  The two colors sit
+    /// one above the other, since a spherical map runs the image's height from pole to pole: a ball
+    /// wearing it is the first color on top and the second below, whichever way it is turned.
+    /// </summary>
+    private string TwoColorImage(Color above, Color below)
+    {
+        string name = Path.Combine(_directory, "two-color.png");
+        Canvas canvas = new (2, 2);
+
+        canvas.SetColor(above, 0, 0);
+        canvas.SetColor(above, 1, 0);
+        canvas.SetColor(below, 0, 1);
+        canvas.SetColor(below, 1, 1);
+
+        new ImageFile(name).Save(canvas, new RenderContext { ApplyGamma = false });
+
+        return name;
+    }
+
+    /// <summary>
+    /// Counts how many pixels of the given picture carry the given color, loosely enough to absorb
+    /// being written to a file and read back.
+    /// </summary>
+    private static int PixelsCarrying(Canvas image, Color color)
+    {
+        int count = 0;
+
+        for (int x = 0; x < image.Width; x++)
+        for (int y = 0; y < image.Height; y++)
+        {
+            Color pixel = image.GetPixel(x, y);
+
+            if (Math.Abs(pixel.Red - color.Red) < 0.02 &&
+                Math.Abs(pixel.Green - color.Green) < 0.02 &&
+                Math.Abs(pixel.Blue - color.Blue) < 0.02)
+                count++;
+        }
+
+        return count;
     }
 
     [TestMethod]
@@ -123,6 +183,101 @@ public class TestPigmentClauses
         Assert.IsNull(ErrorFrom($"pigment image '{image}' planar"),
             "a tiling planar map must cope with negative coordinates");
         Assert.IsNull(ErrorFrom($"pigment image '{image}' planar once"));
+    }
+
+    [TestMethod]
+    public void TestAnImagePigmentInsideAnotherPigmentStillLoadsItsImage()
+    {
+        // A pigment gets its chance to get ready for rendering just before the first ray is fired,
+        // and reading an image is what an image pigment does with that chance.  A pigment that holds
+        // other pigments used to keep the chance to itself -- unlike a seed, which it passes down --
+        // so a nested image pigment never loaded, and the first ray to ask it for a color took the
+        // render down with a null reference.  Every kind of pigment that holds another had it.
+        Color above = new (0, 1, 0);
+        Color below = new (0, 0, 1);
+        string image = TwoColorImage(above, below);
+
+        string[] nestings =
+        [
+            $"pigment checker {{ image '{image}' spherical, color Red }}",
+            $"pigment blend {{ image '{image}' spherical, image '{image}' spherical }}",
+            $"pigment layer {{ image '{image}' spherical, color Red }}",
+            $"pigment mottled {{ noise {{ octaves 1 }} image '{image}' spherical }}"
+        ];
+
+        foreach (string nesting in nestings)
+        {
+            (Canvas picture, string error) = BallWearing(nesting, 60);
+
+            Assert.IsNull(error, $"{nesting}\n{error}");
+
+            // The picture must actually carry what the image says, not merely have been drawn: the
+            // colors are the image's own, and the ball is lit by nothing but its pigment, so they
+            // arrive unshaded.  "mottled" is the exception -- dimming by noise is the whole point of
+            // it -- so there it is enough that the two halves came out differently at all.
+            if (nesting.Contains("mottled"))
+            {
+                HashSet<string> colors = [];
+
+                for (int x = 0; x < picture.Width; x++)
+                for (int y = 0; y < picture.Height; y++)
+                    colors.Add(picture.GetPixel(x, y).ToString());
+
+                Assert.IsTrue(colors.Count > 2,
+                    $"the mottled ball came out in {colors.Count} colors, so the image never showed");
+
+                continue;
+            }
+
+            Assert.IsTrue(PixelsCarrying(picture, above) > 0,
+                $"{nesting} never showed the top half of its image");
+            Assert.IsTrue(PixelsCarrying(picture, below) > 0,
+                $"{nesting} never showed the bottom half of its image");
+        }
+    }
+
+    [TestMethod]
+    public void TestASeedInsideAnotherPigmentTakesEffect()
+    {
+        // The other half of handing a child pigment its chance to get ready: a seed written on the
+        // child is applied when it takes that chance.  A pigment does pass its own seed down to its
+        // children, but a child that names a seed of its own is saying something nearer, and nothing
+        // used to act on it -- two scenes differing only in a nested seed drew the very same picture.
+        const string map = "bozo { [0, Red, 1, Blue] }";
+        Canvas third = BallWearing($"pigment blend {{ with seed 3 {map}, color Green }}", 60).Image;
+        Canvas ninth = BallWearing($"pigment blend {{ with seed 9 {map}, color Green }}", 60).Image;
+        int differences = 0;
+
+        Assert.IsNotNull(third);
+        Assert.IsNotNull(ninth);
+
+        for (int x = 0; x < third.Width; x++)
+        for (int y = 0; y < third.Height; y++)
+        {
+            if (!third.GetPixel(x, y).Matches(ninth.GetPixel(x, y)))
+                differences++;
+        }
+
+        Assert.IsTrue(differences > 100,
+            $"two seeds should not draw the same picture, and differed in {differences} pixels");
+
+        // And the nearer seed is the one that counts, which is what the guide has always said a seed
+        // on a pigment as a whole means: it reaches everything inside that has not been given one of
+        // its own.  So what the outer seed says makes no difference here at all.
+        Canvas under7 = BallWearing($"pigment with seed 7 blend {{ with seed 3 {map}, color Green }}", 60).Image;
+        Canvas under11 = BallWearing($"pigment with seed 11 blend {{ with seed 3 {map}, color Green }}", 60).Image;
+
+        Assert.IsNotNull(under7);
+        Assert.IsNotNull(under11);
+
+        for (int x = 0; x < under7.Width; x++)
+        for (int y = 0; y < under7.Height; y++)
+        {
+            Assert.IsTrue(under7.GetPixel(x, y).Matches(under11.GetPixel(x, y)),
+                $"the outer seed reached past a seed of its own at {x}, {y}");
+            Assert.IsTrue(under7.GetPixel(x, y).Matches(third.GetPixel(x, y)),
+                $"an outer seed changed what the inner seed drew at {x}, {y}");
+        }
     }
 
     [TestMethod]

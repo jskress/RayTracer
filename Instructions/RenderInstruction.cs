@@ -65,6 +65,11 @@ public class RenderInstruction : Instruction
 
         FinalizeSurfaceData(context, scene.Surfaces);
 
+        // The sky is a pigment as much as any surface's is, and no surface owns it, so nothing else
+        // would hand it its chance to get ready.  Without this, a sky read from an image never loads
+        // the image.
+        scene.Background.RenderingIsAboutToStart(context, null);
+
         Canvas = camera.Render(context, scene);
     }
 
@@ -130,6 +135,9 @@ public class RenderInstruction : Instruction
                     break;
                 case Pigment pigment:
                     scene.Background = pigment;
+                    break;
+                case SceneEnvironment environment:
+                    scene.Environment = environment;
                     break;
                 default:
                     throw new Exception($"Internal error: unknown object type: {thing.GetType().Name}");

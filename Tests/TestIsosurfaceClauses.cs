@@ -367,4 +367,39 @@ public class TestIsosurfaceClauses
             }
             """));
     }
+
+    /// <summary>
+    /// This tests that an isosurface may be nested inside the things that hold other surfaces.  The
+    /// grammar allowed this from the start but nothing behind it did, since every test above places its
+    /// surface at the top level, and so a grouped isosurface failed outright.
+    /// </summary>
+    [TestMethod]
+    public void TestAnIsosurfaceMayBeNestedInOtherSurfaces()
+    {
+        Assert.IsTrue(SomethingIsInTheMiddleOf("""
+            group {
+                isosurface {
+                    function { x² + y² + z² - 1 }
+                    bounded by [-1.1, -1.1, -1.1], [1.1, 1.1, 1.1]
+                    material { pigment White }
+                }
+            }
+            """));
+
+        // A sphere with a bite taken out of one side, so what is left still covers the middle.
+        Assert.IsTrue(SomethingIsInTheMiddleOf("""
+            difference {
+                isosurface {
+                    function { x² + y² + z² - 1 }
+                    bounded by [-1.1, -1.1, -1.1], [1.1, 1.1, 1.1]
+                    material { pigment White }
+                }
+                sphere {
+                    material { pigment White }
+                    scale 0.5
+                    translate [1, 0, 0]
+                }
+            }
+            """));
+    }
 }

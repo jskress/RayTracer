@@ -1,5 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Extensions;
+using RayTracer.General;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 
 namespace RayTracer.Pigments;
@@ -43,8 +45,20 @@ public class PigmentSet
     /// <param name="seed">The seed value to set.</param>
     public void SetSeed(int seed)
     {
-        foreach (Pigment pigment in _pigments)
+        foreach (Pigment pigment in _pigments.Where(pigment => !pigment.Seed.HasValue))
             pigment.SetSeed(seed);
+    }
+
+    /// <summary>
+    /// This method gives every pigment in the set its chance to get ready for rendering, which is
+    /// where a pigment that reads an image loads it.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface the pigment holding this set is set on.</param>
+    public void PrepareForRendering(RenderContext context, Surface surface)
+    {
+        foreach (Pigment pigment in _pigments)
+            pigment.RenderingIsAboutToStart(context, surface);
     }
 
     /// <summary>

@@ -29,8 +29,28 @@ public class Scene : NamedThing, IDisposable
     /// <summary>
     /// This property holds the pigment to use for a pixel when rays do not intersect with
     /// anything in the scene.
+    /// <para>
+    /// A ray that strikes nothing is asked of the background by the way it was <i>heading</i>, not by
+    /// where it started: the pigment is sampled on a sphere of radius one, which is to say a sky
+    /// infinitely far off.  That is what makes a patterned background mean anything.  Asked
+    /// by position, as it once was, every ray from a camera would ask about the one point the camera
+    /// stands at and the whole sky would come back a single flat color, while reflected rays -- which
+    /// start all over the place -- would show a pattern the sky itself did not have.
+    /// </para>
+    /// <para>
+    /// Being a function of direction alone is also what makes a mirror agree with the sky above it, and
+    /// it means a pattern's own scale is in units of that unit sphere rather than of the world: the
+    /// coordinates it is handed never leave the range -1 to 1, so a sky wanting finer detail scales the
+    /// pigment down rather than up.
+    /// </para>
     /// </summary>
     public Pigment Background { get; set; } = new SolidPigment(Colors.Transparent);
+
+    /// <summary>
+    /// This property holds what is true of the space between this scene's objects, which for now is
+    /// what its index of refraction is.
+    /// </summary>
+    public SceneEnvironment Environment { get; set; } = new ();
 
     /// <summary>
     /// This method determines the color for the given ray.
@@ -42,16 +62,27 @@ public class Scene : NamedThing, IDisposable
     {
         List<Intersection> hits = Intersect(ray);
         Intersection hit = hits.Hit();
-        Color color = Background.GetTransformedColorFor(ray.Origin);
 
-        if (hit != null)
-        {
-            hit.PrepareUsing(ray, hits);
+        // Now that the sky costs a pattern lookup to ask about, only rays that saw nothing ask it.
+        if (hit == null)
+            return Background.GetTransformedColorFor(HeadingOf(ray));
 
-            color = GetHitColor(hit, remaining);
-        }
+        hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
 
-        return color;
+        return GetHitColor(hit, remaining);
+    }
+
+    /// <summary>
+    /// This method returns the point on the unit sphere the given ray is heading toward, which is the
+    /// point the background is asked about.
+    /// </summary>
+    /// <param name="ray">The ray whose heading is wanted.</param>
+    /// <returns>The point it is heading toward.</returns>
+    private static Point HeadingOf(Ray ray)
+    {
+        Vector heading = ray.Direction.Unit;
+
+        return new Point(heading.X, heading.Y, heading.Z);
     }
 
     /// <summary>
@@ -259,7 +290,8 @@ public class Scene : NamedThing, IDisposable
                 {
                     Vector normal = intersection.Surface.NormaAt(where, intersection);
 
-                    reaching *= 1 - interior.GetReflectanceAt(ray.Direction.Dot(normal));
+                    reaching *= 1 - interior.GetReflectanceAt(
+                        ray.Direction.Dot(normal), Environment.IndexOfRefraction);
                 }
             }
         }

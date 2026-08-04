@@ -77,7 +77,13 @@ public class Interior
     /// <summary>
     /// This property reports whether light is bent as it crosses into this substance, and so is
     /// partly mirrored away at the boundary rather than let through.  A substance no denser than
-    /// the vacuum around it presents no boundary worth the name and reflects nothing.
+    /// the vacuum presents no boundary worth the name and reflects nothing.
+    /// <para>
+    /// Measured against the vacuum, not against whatever a scene says surrounds its objects: this is a
+    /// property of the substance, asked before there is a scene to ask about.  A scene set in water
+    /// therefore treats an object of index one as it always has, which is the one corner this
+    /// simplification can be seen in.
+    /// </para>
     /// </summary>
     public bool Refracts => IndexOfRefraction != IndicesOfRefraction.Vacuum;
 
@@ -92,22 +98,27 @@ public class Interior
     /// </para>
     /// <para>
     /// This is Schlick's approximation, the same one <see cref="Intersection.Reflectance"/> uses to
-    /// balance a reflection against what shows through it.  Here the substance on the far side is
-    /// taken to be the vacuum, rather than tracked through whatever the ray may already be inside
-    /// of: a shadow ray is cast to find how much light arrives and not to be looked along, and
-    /// following it through nested solids would cost far more than the answer is worth.
+    /// balance a reflection against what shows through it.  The substance on the far side is taken to
+    /// be whatever the scene says surrounds its objects, rather than tracked through whatever the ray
+    /// may already be inside of: a shadow ray is cast to find how much light arrives and not to be
+    /// looked along, and following it through nested solids would cost far more than the answer is
+    /// worth.
     /// </para>
     /// </summary>
     /// <param name="cosAngle">The cosine of the angle between the light's path and the surface
     /// normal.  Its sign does not matter, since a boundary mirrors light the same either way.</param>
+    /// <param name="surroundingIndexOfRefraction">The index of refraction of the space the light
+    /// crossed to get here.  A vacuum by default, which is what a caller with no scene to ask should
+    /// leave it as.</param>
     /// <returns>The fraction mirrored away, between 0 and 1.</returns>
-    public double GetReflectanceAt(double cosAngle)
+    public double GetReflectanceAt(
+        double cosAngle, double surroundingIndexOfRefraction = IndicesOfRefraction.Vacuum)
     {
-        if (!Refracts)
+        if (IndexOfRefraction == surroundingIndexOfRefraction)
             return 0;
 
-        double factor = (IndicesOfRefraction.Vacuum - IndexOfRefraction) /
-                        (IndicesOfRefraction.Vacuum + IndexOfRefraction);
+        double factor = (surroundingIndexOfRefraction - IndexOfRefraction) /
+                        (surroundingIndexOfRefraction + IndexOfRefraction);
         double r0 = factor * factor;
         double rest = 1 - Math.Abs(cosAngle);
 

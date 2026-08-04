@@ -1,4 +1,6 @@
 using RayTracer.Basics;
+using RayTracer.General;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Patterns;
 
@@ -29,6 +31,17 @@ public class PatternPigment : Pigment
     {
         Pattern.SetSeed(seed);
         PigmentSet.SetSeed(seed);
+    }
+
+    /// <summary>
+    /// This method passes the chance to get ready along to the pigments we choose between.  A pattern
+    /// itself has nothing to prepare; it is the colors it chooses between that may.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface that this pigment is set on.</param>
+    protected override void PrepareForRendering(RenderContext context, Surface surface)
+    {
+        PigmentSet.PrepareForRendering(context, surface);
     }
 
     /// <summary>

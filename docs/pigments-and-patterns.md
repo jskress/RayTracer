@@ -375,3 +375,8 @@ cube   { material { pigment stone }  translate [3, 0, 0] }
 The same patterns are used by a material's [`normal` block](materials.md#roughening-the-surface),
 where the pattern's value tilts the surface normal instead of choosing a color.  Everything
 here about turbulence, shaping, seeding and transforms applies there too.
+
+A scene's [`background`](scene-files.md#background) is a pigment as well, so any of these may be
+a sky.  One thing is different there: a background is asked about the direction a ray was
+heading rather than a point it struck, so a pattern used as a sky works in units of a sphere of
+radius one — a scale of ten, which spreads a pattern over a wide floor, all but flattens a sky.

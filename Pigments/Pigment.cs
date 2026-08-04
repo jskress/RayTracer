@@ -75,6 +75,12 @@ public abstract class Pigment
     /// <summary>
     /// This method is used to push any random number generator seeds throughout the pigment
     /// tree.
+    /// <para>
+    /// A pigment that holds other pigments passes the seed to each of them, but skips any child that
+    /// carries a seed of its own -- the nearer word wins.  A child's own seed is applied when it is
+    /// handed its chance to get ready, which is after this, so a seed pushed into it here would be the
+    /// one that stuck.
+    /// </para>
     /// </summary>
     /// <param name="seed">The seed value to set.</param>
     public virtual void SetSeed(int seed) {}
@@ -84,6 +90,13 @@ public abstract class Pigment
     /// For example, a pigment that uses an image would use this as the opportunity to load
     /// the required image before rendering actually begins.
     /// This will be invoked after the seed has been set.
+    /// <para>
+    /// A pigment that holds other pigments <b>must</b> hand each of them their own chance to get
+    /// ready, by calling <c>RenderingIsAboutToStart</c> on each, exactly as it passes a seed down
+    /// through <c>SetSeed</c>.  A composite that forgets leaves its children unprepared, which for an
+    /// image pigment means the image is never loaded and the first ray to reach it takes the render
+    /// down.
+    /// </para>
     /// </summary>
     /// <param name="context">The current render context.</param>
     /// <param name="surface">The surface that this pigment is set on.</param>

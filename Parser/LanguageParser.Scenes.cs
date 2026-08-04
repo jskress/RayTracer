@@ -70,6 +70,9 @@ public partial class LanguageParser
             case "superellipsoid":
                 resolver.SurfaceResolvers.Add(ParseSuperellipsoidClause(clause));
                 break;
+            case "isosurface":
+                resolver.SurfaceResolvers.Add(ParseIsosurfaceClause(clause));
+                break;
             case "patch":
                 resolver.SurfaceResolvers.Add(ParsePatchClause(clause));
                 break;
@@ -127,6 +130,9 @@ public partial class LanguageParser
                 break;
             case "background":
                 resolver.BackgroundResolver = ParsePigmentClause();
+                break;
+            case "environment":
+                resolver.EnvironmentResolver = ParseEnvironmentClause(clause);
                 break;
             default:
                 throw new Exception($"Internal error: unknown {clause.Tag} property found on a scene.");
