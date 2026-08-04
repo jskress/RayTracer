@@ -1,5 +1,7 @@
 using Lex.Tokens;
 using RayTracer.General;
+using RayTracer.Fields;
+using Lex.Parser;
 
 namespace RayTracer.Terms;
 
@@ -68,5 +70,22 @@ public class LiteralTerm : Term
     protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
         return _value;
+    }
+
+    /// <summary>
+    /// This method is used to lower this literal into a field expression.  Only a number can mean
+    /// anything in a field; text and true or false cannot.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        if (_value is double number)
+            return new FieldConstant(number);
+
+        throw new TokenException($"A function's arithmetic is over numbers, and {_value ?? "null"} is not one.")
+        {
+            Token = ErrorToken
+        };
     }
 }

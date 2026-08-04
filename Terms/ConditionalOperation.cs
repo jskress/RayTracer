@@ -20,7 +20,7 @@ public class ConditionalOperation : Term
     private readonly Term _whenTrue;
     private readonly Term _whenFalse;
 
-    internal ConditionalOperation(Token errorToken, Term test, Term whenTrue, Term whenFalse)
+    public ConditionalOperation(Token errorToken, Term test, Term whenTrue, Term whenFalse)
         : base(errorToken)
     {
         _test = test;

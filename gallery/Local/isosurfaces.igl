@@ -1,0 +1,77 @@
+// Three isosurfaces: shapes described by writing down arithmetic rather than by naming a primitive.
+// None of the three could be had any other way here -- the first is a minimal surface, the second is
+// a solid that turns as it rises, and the third is two different shapes flowing into one another.
+//
+// Each is a function of x, y and z, and the surface is everywhere that function comes out at nought.
+// The "bounded by" box is not the usual hint to the renderer here but the region the surface is
+// looked for in, so an isosurface must always be given one.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Isosurfaces'
+        author 'J. Stephen Kress'
+        description 'A gyroid, a twisted column and a blended solid, each written as a function.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.4, -7]
+    look at [0, 0.25, 0]
+    field of view 44
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -3]   color [0.32, 0.33, 0.4] }
+
+plane {
+    material { pigment checker { color [0.55, 0.55, 0.6], color [0.16, 0.16, 0.22] scale 1.1 } }
+    translate [0, -1.1, 0]
+}
+
+// How sharply the blend of the third shape rounds the joint; larger is tighter.
+blend = 9
+
+// The gyroid, a minimal surface that divides space into two interlocking labyrinths, clipped to a
+// ball.  Taking the larger of the two functions is what does the clipping: a point is inside this
+// only where it is inside both, which is the same as an intersection.
+isosurface {
+    function {
+        max(sin(6 * x) ⋅ cos(6 * y) + sin(6 * y) ⋅ cos(6 * z) + sin(6 * z) ⋅ cos(6 * x),
+            x² + y² + z² - 0.85)
+    }
+    bounded by [-1, -1, -1], [1, 1, 1]
+    material { pigment color [0.45, 0.62, 0.86]  specular 0.5  shininess 90 }
+    translate [-2.1, 0.1, 0]
+}
+
+// A column with a square section, turned steadily as it goes up: the x and z of each point are
+// rotated by an angle that depends on its height before the section is worked out.  The fourth
+// powers are what make the section a rounded square rather than a circle, and the second half of
+// the "max" caps the column off, so that the ends are the shape's own rather than where the box
+// happened to cut it.
+isosurface {
+    function {
+        max((x ⋅ cos(2 * y) - z ⋅ sin(2 * y))⁴ + (x ⋅ sin(2 * y) + z ⋅ cos(2 * y))⁴ - 0.06,
+            y² - 0.81)
+    }
+    bounded by [-0.8, -1, -0.8], [0.8, 1, 0.8]
+    material { pigment color [0.86, 0.7, 0.26]  specular 0.6  shininess 120 }
+}
+
+// A ball and a capped cylinder, blended into one another rather than merely joined.  Where the
+// smaller of two functions would give a hard crease along the joint, this is a smooth version of
+// taking the smaller -- the logarithm of a sum of exponentials -- so the two flow together.
+isosurface {
+    function {
+        -log(exp(-blend ⋅ (x² + y² + z² - 0.3)) +
+             exp(-blend ⋅ max(x² + z² - 0.06, y² - 0.81))) / blend
+    }
+    bounded by [-1, -1, -1], [1, 1, 1]
+    material { pigment color [0.8, 0.4, 0.35]  specular 0.6  shininess 120 }
+    translate [2.1, 0.1, 0]
+}

@@ -130,6 +130,7 @@ branches, any one of the branches will do.
   - [Lathe](advanced-surfaces.md#lathe)
   - [Sweep](advanced-surfaces.md#sweep)
   - [Tube](advanced-surfaces.md#tube)
+  - [Isosurface](advanced-surfaces.md#isosurface)
   - [Generic Shape](advanced-surfaces.md#generic-shape)
   - [Text](advanced-surfaces.md#text)
   - [Height Field](advanced-surfaces.md#height-field)

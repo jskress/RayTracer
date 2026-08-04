@@ -1,5 +1,6 @@
 using Lex.Parser;
 using RayTracer.General;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -29,6 +30,27 @@ public class BinaryModuloOperation : BinaryOperation
             {
                 Token = ErrorToken
             }
+        };
+    }
+
+    /// <summary>
+    /// This method is used to lower this operation into a field expression, which it cannot be.
+    /// <para>
+    /// The remainder operator is not the same thing as the <c>mod</c> function -- its sign follows the
+    /// number being divided, so it mirrors about the origin where <c>mod</c> repeats -- and a field can
+    /// have the one whose slope and range are known.  Since a field is very often written to tile
+    /// something, saying which to reach for is more use than refusing in general terms.
+    /// </para>
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>Nothing; this always reports the problem.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        throw new TokenException(
+            "A function cannot use the % operator; write mod(value, divisor) instead, which repeats " +
+            "either side of the origin rather than mirroring about it.")
+        {
+            Token = ErrorToken
         };
     }
 }

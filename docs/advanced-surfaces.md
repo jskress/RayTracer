@@ -366,6 +366,93 @@ tool for cables, pipes, handles and stems, and it is what the
 [`docs/examples/advanced/tube.igl`](examples/advanced/tube.igl), and
 `gallery/Local/power-cord.igl` is a longer one.
 
+### Isosurface
+
+A shape described by writing down arithmetic.  Where every other surface here is a shape you name
+and then adjust, an isosurface is a **function** of `x`, `y` and `z`, and the surface is everywhere
+that function comes out at nought:
+
+![An isosurface](images/figures/adv-isosurface.png)
+
+```
+isosurface {
+    function { (√(x² + z²) - 1)² + y² - 0.16 }
+    bounded by [-1.5, -0.5, -1.5], [1.5, 0.5, 1.5]
+}
+```
+
+That one is a torus.  Change what is written and you change the shape rather than which sort of
+surface you are using, which is the point of it: the shapes an isosurface is *for* are the ones
+nothing else here will give you.
+
+Inside is wherever the function comes out **below** nought and outside is wherever it comes out
+above, so the sign matters — `x² + y² + z² - 1` is a solid ball of radius one, and negating it
+would turn the whole of space inside out.
+
+#### `bounded by` is required here
+
+Every other surface treats [`bounded by`](surfaces.md#bounding) as a hint the renderer may use to
+skip it cheaply.  For an isosurface it is **the region the surface is looked for in**, because a
+function has no size of its own — `x² + y² + z² - 1` says nothing about where to start looking.
+Leave it out and the scene is refused rather than rendered empty.
+
+Draw the box a little larger than the shape you expect.  Anything outside it simply is not there,
+so a box drawn too tight slices the shape off rather than failing in any way that announces itself.
+
+#### The other two properties
+
+| Property | What it does |
+| --- | --- |
+| `threshold` | The value of the function that makes the surface.  Nought by default. |
+| `accuracy` | How closely a crossing is pinned down, in the surface's own units.  A ten-thousandth by default. |
+
+`threshold` is where the "iso" of the name comes from: one function can make a whole family of
+shells, since `x² + y² + z²` at a threshold of 4 is a sphere of radius 2 and at 9 one of radius 3.
+
+Nothing here asks how steep the function is allowed to get.  If you have used POV-Ray's
+isosurfaces you will know `max_gradient`, and the advice to raise it until the speckles go away;
+that number exists because the renderer cannot otherwise tell whether it has stepped over the
+surface.  This one works the bound out from the function itself, so there is nothing to tune and no
+speckles to tune it away.
+
+#### What a function may hold
+
+The arithmetic and the [functions](scene-files.md#functions) that take numbers and give numbers
+back, together with `x`, `y` and `z` — which mean the point being asked about, whatever else the
+scene may have named `x`.  Any name the scene has given a *number* to may be used as well, and is
+read once, when the scene is prepared:
+
+```
+twist = 2
+
+isosurface {
+    // A square column that turns as it rises, capped top and bottom by taking the larger of two
+    // functions -- which is an intersection, since a point is inside only if it is inside both.
+    function {
+        max((x ⋅ cos(twist * y) - z ⋅ sin(twist * y))⁴ +
+            (x ⋅ sin(twist * y) + z ⋅ cos(twist * y))⁴ - 0.06, y² - 0.81)
+    }
+    bounded by [-0.8, -1, -0.8], [0.8, 1, 0.8]
+}
+```
+
+Two things a function may not hold, both of which say so plainly if you write them:
+
+- **Vectors and tuples.**  A function works on one number at a time, so `length([x, y, z]) - 1`
+  will not do; write `√(x² + y² + z²) - 1` instead.
+- **`%`.**  Use `mod(value, divisor)`, which repeats either side of the origin where the operator
+  mirrors about it — repeating is what a function that tiles something wants.
+
+`smoothstep` is a third, in a smaller way: it may be *evaluated* perfectly well, but a surface
+needs the slope of its function to know which way it faces, and that one has no slope written down
+here.  A function using it is refused for that reason rather than for being unusable.
+
+`gallery/Local/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
+twisted column above, and a ball blended smoothly into a cylinder.
+
+The complete scene is
+[`docs/examples/advanced/isosurface.igl`](examples/advanced/isosurface.igl).
+
 ### Generic Shape
 
 An arbitrary closed 2D path, left flat rather than given thickness.  Where an extrusion makes a

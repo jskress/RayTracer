@@ -1,0 +1,36 @@
+// An isosurface: a shape described by writing down arithmetic instead of naming a primitive.  The
+// surface is everywhere the function comes out at nought, so this one is a torus -- and changing
+// what is written changes the shape, rather than which sort of surface is being used.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3, -5]
+    look at [0, 0, 0]
+    field of view 40
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+    translate [0, -1.1, 0]
+}
+
+isosurface {
+    // The distance from the ring of radius 1, squared, less the tube's radius squared.  Written with
+    // a root and a square, exactly as it would be on paper.
+    function { (√(x² + z²) - 1)² + y² - 0.16 }
+
+    // Required: this is the region the surface is looked for in, not merely a hint to the renderer.
+    bounded by [-1.5, -0.5, -1.5], [1.5, 0.5, 1.5]
+
+    material {
+        pigment color [0.85, 0.6, 0.25]
+        specular 0.6
+        shininess 120
+        reflective 0.1
+    }
+
+    rotate X -20
+}

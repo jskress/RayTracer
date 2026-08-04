@@ -2,6 +2,7 @@ using Lex.Parser;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -35,5 +36,16 @@ public class BinaryMinusOperation : BinaryOperation
                 Token = ErrorToken
             }
         };
+    }
+
+    /// <summary>
+    /// This method is used to lower this operation into a field expression.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        return FieldArithmetic.Of(
+            FieldOperator.Subtract, Left.ToField(variables), Right.ToField(variables));
     }
 }
