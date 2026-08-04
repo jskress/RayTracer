@@ -1,6 +1,7 @@
 using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -20,7 +21,7 @@ public class FunctionCallTerm : Term
     private readonly string _name;
     private readonly List<Term> _arguments;
 
-    internal FunctionCallTerm(Token token, List<Term> arguments) : this(token, token.Text, arguments) {}
+    public FunctionCallTerm(Token token, List<Term> arguments) : this(token, token.Text, arguments) {}
 
     /// <summary>
     /// This constructor is for a call a scene did not spell out as one: an operator that stands for
@@ -31,7 +32,7 @@ public class FunctionCallTerm : Term
     /// <param name="token">The token to report errors against.</param>
     /// <param name="name">The name of the function being called.</param>
     /// <param name="arguments">The values the call supplies.</param>
-    internal FunctionCallTerm(Token token, string name, List<Term> arguments) : base(token)
+    public FunctionCallTerm(Token token, string name, List<Term> arguments) : base(token)
     {
         _name = name;
         _arguments = arguments;
@@ -72,5 +73,37 @@ public class FunctionCallTerm : Term
             throw new TokenException(match.Error) { Token = ErrorToken };
 
         return match.Invoke();
+    }
+
+    /// <summary>
+    /// This method is used to lower this call into a field expression.  A field deals in numbers
+    /// throughout, so which form of the function is meant is settled here and for good -- and a form
+    /// that wants anything else is turned down with the same message a scene would have seen, which
+    /// is how a scene asking for length(vector) inside a function is told what is wrong.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        FieldExpression[] arguments = _arguments
+            .Select(argument => argument.ToField(variables))
+            .ToArray();
+        (FunctionSignature signature, string error) = FunctionCatalog.Instance.ResolveForTypes(
+            _name, arguments.Select(_ => typeof(double)).ToArray());
+
+        if (signature is null)
+            throw new TokenException(error) { Token = ErrorToken };
+
+        if (signature.ReturnType != typeof(double))
+        {
+            throw new TokenException(
+                $"In a function, '{_name}' must give back a number; this form gives back a " +
+                $"{FunctionSignature.DslNameFor(signature.ReturnType)}.")
+            {
+                Token = ErrorToken
+            };
+        }
+
+        return FieldCall.Of(signature, arguments, ErrorToken);
     }
 }

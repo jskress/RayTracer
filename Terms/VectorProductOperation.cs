@@ -1,4 +1,5 @@
 using RayTracer.General;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -17,7 +18,7 @@ public class VectorProductOperation : BinaryOperation
 {
     private readonly bool _isCrossProduct;
 
-    internal VectorProductOperation(Term left, Term right, bool isCrossProduct) : base(left, right)
+    public VectorProductOperation(Term left, Term right, bool isCrossProduct) : base(left, right)
     {
         _isCrossProduct = isCrossProduct;
     }
@@ -42,5 +43,20 @@ public class VectorProductOperation : BinaryOperation
         return match.IsMatch
             ? match.Invoke()
             : BinaryMultiplyOperation.Multiply(left, right, ErrorToken);
+    }
+
+    /// <summary>
+    /// This method is used to lower this operation into a field expression, where it can only mean
+    /// multiplication: a field holds one number at a time and so has no vectors for either product to
+    /// be of.  That is not a fallback but the common case -- printed mathematics uses both symbols for
+    /// multiplying far more often than for either vector product, and a formula pasted into a function
+    /// is exactly where that shows.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        return FieldArithmetic.Of(
+            FieldOperator.Multiply, Left.ToField(variables), Right.ToField(variables));
     }
 }

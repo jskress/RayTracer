@@ -1,6 +1,7 @@
 using Lex.Expressions;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Fields;
 using RayTracer.General;
 
 namespace RayTracer.Terms;
@@ -73,10 +74,34 @@ public abstract class Term : IExpressionTerm
     /// <summary>
     /// This method must be provided by subclasses to evaluate this term to produce a
     /// value.  If the type of value returned does not match the given target type, an
-    /// attempt will be made to coerce the returned value to that type. 
+    /// attempt will be made to coerce the returned value to that type.
     /// </summary>
     /// <param name="variables">The variables that are currently in scope.</param>
     /// <param name="targetTypes">The expected type of the evaluated value, if known.</param>
     /// <returns>The current value of this term.</returns>
     protected abstract object Evaluate(Variables variables, params Type[] targetTypes);
+
+    /// <summary>
+    /// This method is used to lower this term into a <see cref="FieldExpression"/>: the arithmetic of
+    /// one number, in the three variables a field function is a function of.  A term that cannot mean
+    /// anything there says so, against the text that wrote it.
+    /// <para>
+    /// Most of what a scene may write is not arithmetic on numbers -- text, colors, tuples, the casts
+    /// -- and a field has no use for any of it, so the answer here is "no" by default and each term
+    /// that <i>can</i> be lowered says as much for itself.  Anything the scene already knows the value
+    /// of becomes a number on the way through, since a field is compiled once and then asked millions
+    /// of questions, and none of those need to look a variable up again.
+    /// </para>
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public virtual FieldExpression ToField(Variables variables)
+    {
+        throw new TokenException(
+            "A function may hold only arithmetic on numbers, the variables x, y and z, and calls to " +
+            "the functions that take and give back numbers.  This is none of those.")
+        {
+            Token = ErrorToken
+        };
+    }
 }

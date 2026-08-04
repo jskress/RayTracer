@@ -2,6 +2,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.General;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -23,7 +24,7 @@ public class AngleOperation : UnaryOperation
 {
     private readonly bool _isInDegrees;
 
-    internal AngleOperation(Term operand, bool isInDegrees) : base(operand)
+    public AngleOperation(Term operand, bool isInDegrees) : base(operand)
     {
         _isInDegrees = isInDegrees;
     }
@@ -50,5 +51,20 @@ public class AngleOperation : UnaryOperation
         }
 
         return _isInDegrees ? angle.ToRadians() : angle;
+    }
+
+    /// <summary>
+    /// This method is used to lower this operation into a field expression.  Degrees become radians by
+    /// a multiplication, done once here if the angle is a constant; radians are already radians.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        FieldExpression operand = Operand.ToField(variables);
+
+        return _isInDegrees
+            ? FieldArithmetic.Of(FieldOperator.Multiply, operand, new FieldConstant(Math.PI / 180))
+            : operand;
     }
 }

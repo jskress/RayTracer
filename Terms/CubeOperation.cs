@@ -3,6 +3,7 @@ using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -36,5 +37,21 @@ public class CubeOperation : UnaryOperation
                 Token = ErrorToken
             }
         };
+    }
+
+    /// <summary>
+    /// This method is used to lower this operation into a field expression: a multiplication rather
+    /// than a call to <c>pow</c>, since multiplying is the quicker of the two and <c>x²</c> is about
+    /// the most common thing a field function says.  The operand is emitted more than once to do it,
+    /// which costs something when the operand is itself expensive; the superscripts above three are
+    /// already calls to <c>pow</c> and so pay nothing twice.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        FieldExpression operand = Operand.ToField(variables);
+
+        return FieldArithmetic.Of(FieldOperator.Multiply, FieldArithmetic.Of(FieldOperator.Multiply, operand, operand), operand);
     }
 }

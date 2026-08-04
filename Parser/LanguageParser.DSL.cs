@@ -69,7 +69,7 @@ public partial class LanguageParser
         logicalOr: _operator("||")
         logicalNot: _operator("!")
 
-        _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
+        _keywords: 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
             'aperture', 'apply',
             'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
@@ -79,10 +79,10 @@ public partial class LanguageParser
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
+            'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
@@ -579,6 +579,29 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Isosurface clauses.  The function is wrapped in braces even though it is a single
+        // expression: it is the whole shape of the surface, often the longest thing in the block, and
+        // it reads better fenced off than trailing after a keyword.
+        startIsosurfaceClause:
+        {
+            isosurface > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "isosurface" here.'
+        }
+        isosurfaceFunctionClause:
+        {
+            function > openBrace ?? 'Expecting an open brace to follow "function" here.' >
+            _expression > closeBrace ?? 'Expecting a close brace to end the function here.'
+        }
+        isosurfaceEntryClause:
+        [
+            isosurfaceFunctionClause |
+            { threshold > _expression } |
+            { accuracy > _expression } |
+            surfaceEntryClause
+        ]
+
         // Patch clauses.
         startPatchClause:
         {
@@ -1069,6 +1092,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startIsosurfaceClause     => 'isosurface' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1114,6 +1138,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startIsosurfaceClause     => 'isosurface' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1153,6 +1178,7 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startIsosurfaceClause     => 'isosurface' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1223,6 +1249,7 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startEggClause            => 'HandleStartEggClause' |
             startSuperellipsoidClause => 'HandleStartSuperellipsoidClause' |
+            startIsosurfaceClause     => 'HandleStartIsosurfaceClause' |
             startPatchClause          => 'HandleStartPatchClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |

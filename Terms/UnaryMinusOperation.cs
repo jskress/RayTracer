@@ -1,6 +1,7 @@
 using Lex.Parser;
 using RayTracer.Basics;
 using RayTracer.General;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -31,5 +32,15 @@ public class UnaryMinusOperation : UnaryOperation
                 Token = ErrorToken
             }
         };
+    }
+
+    /// <summary>
+    /// This method is used to lower this negation into a field expression.
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>This term, as a field expression.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        return FieldNegation.Of(Operand.ToField(variables));
     }
 }

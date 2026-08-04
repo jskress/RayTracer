@@ -2,6 +2,8 @@ using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
+using Lex.Parser;
+using RayTracer.Fields;
 
 namespace RayTracer.Terms;
 
@@ -39,5 +41,28 @@ public class TupleTerm : Term
         return z.HasValue
             ? new NumberTuple(x, y, z.Value, w ?? double.NaN)
             : new TwoDPoint(x, y);
+    }
+
+    /// <summary>
+    /// This method is used to lower this tuple into a field expression, which it cannot be: a field is
+    /// arithmetic on one number at a time.
+    /// <para>
+    /// This is worth a message of its own rather than the general refusal, because writing a distance
+    /// as <c>length([x, y, z])</c> is the first thing anyone who has met signed distance functions will
+    /// reach for, and being told that a tuple is not arithmetic would leave them none the wiser about
+    /// what to write instead.
+    /// </para>
+    /// </summary>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <returns>Nothing; this always reports the problem.</returns>
+    public override FieldExpression ToField(Variables variables)
+    {
+        throw new TokenException(
+            "A function works on one number at a time, so a tuple cannot appear in one, and neither " +
+            "can the functions that take vectors.  Write the arithmetic out in x, y and z instead: " +
+            "for a distance from the origin, that is sqrt(x\u00b2 + y\u00b2 + z\u00b2).")
+        {
+            Token = ErrorToken
+        };
     }
 }

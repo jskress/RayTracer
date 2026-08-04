@@ -36,6 +36,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
+| `accuracy` | Isosurface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ambient` | Finish: color shown with no light on it. | [Materials](materials.md#ambient-diffuse-and-specular) |
@@ -120,6 +121,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import). | [Surfaces](surfaces.md#blob) |
+| `function` | Isosurface: the arithmetic whose value makes the surface. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `gamma` | Context: the display gamma to correct for. | [Context](context.md#gamma) |
 | `gap` | Text layout: `line gap`, the space between lines. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -144,6 +146,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `interior` | What a surface is made of: its index of refraction and clarity. | [Materials](materials.md#transparency-and-interiors) |
 | `intersection` | CSG: only where all children overlap. | [Surfaces](surfaces.md#combining-surfaces) |
 | `ior` | Interior: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors) |
+| `isosurface` | A surface made by a function of x, y and z rather than by a shape. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `italic` | Font style: slanted. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `jitter` | Area light: `no jitter` turns off sample dithering. | [Lights](lights.md#area-lights) |
 | `kern` | Text: one kerning pair. | [Advanced Surfaces](advanced-surfaces.md#text) |

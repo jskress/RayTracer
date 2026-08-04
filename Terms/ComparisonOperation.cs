@@ -38,7 +38,7 @@ public class ComparisonOperation : BinaryOperation
 {
     private readonly Comparison _comparison;
 
-    internal ComparisonOperation(Term left, Term right, Comparison comparison) : base(left, right)
+    public ComparisonOperation(Term left, Term right, Comparison comparison) : base(left, right)
     {
         _comparison = comparison;
     }

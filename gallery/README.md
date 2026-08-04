@@ -684,6 +684,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/icons-complex.igl">FontAwesome Icons, the Intricate Ones</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/isosurfaces.png">
+      <img alt="Isosurfaces" height="120" src="Local/isosurfaces.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/isosurfaces.igl">Isosurfaces</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

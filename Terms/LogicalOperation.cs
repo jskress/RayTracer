@@ -17,7 +17,7 @@ public class LogicalOperation : BinaryOperation
 {
     private readonly bool _isAnd;
 
-    internal LogicalOperation(Term left, Term right, bool isAnd) : base(left, right)
+    public LogicalOperation(Term left, Term right, bool isAnd) : base(left, right)
     {
         _isAnd = isAnd;
     }

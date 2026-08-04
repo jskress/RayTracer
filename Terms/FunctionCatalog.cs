@@ -103,6 +103,41 @@ public class FunctionCatalog
     }
 
     /// <summary>
+    /// This method is used to settle which form of a function a call means from the <i>types</i> of
+    /// what it is given rather than from the values themselves.  This is the third place a call is
+    /// resolved, and the only one where the answer can be settled for good: a field function deals in
+    /// numbers throughout and is compiled before it is ever asked anything, so there is nothing left
+    /// to wait for.
+    /// </summary>
+    /// <param name="name">The name of the function called.</param>
+    /// <param name="argumentTypes">The types of the values the call supplies.</param>
+    /// <returns>The form of the function to call, or <c>null</c> along with what is wrong.</returns>
+    public (FunctionSignature Signature, string Error) ResolveForTypes(
+        string name, params Type[] argumentTypes)
+    {
+        string problem = CheckCall(name, argumentTypes.Length);
+
+        if (problem != null)
+            return (null, problem);
+
+        List<FunctionSignature> fits = _signatures[name]
+            .Where(form => form.ParameterCount == argumentTypes.Length &&
+                           form.ParameterTypes.Zip(argumentTypes)
+                               .All(pair => pair.First == pair.Second))
+            .ToList();
+
+        return fits.Count switch
+        {
+            1 => (fits[0], null),
+            0 => (null, $"No form of the function '{name}' takes " +
+                        $"({string.Join(", ", argumentTypes.Select(FunctionSignature.DslNameFor))}). " +
+                        $"It takes {string.Join(" or ", SignaturesFor(name).Select(form => form.ToString()))}."),
+            _ => (null, $"The call to '{name}' is ambiguous; it fits " +
+                        $"{string.Join(" and ", fits.Select(form => form.ToString()))}.")
+        };
+    }
+
+    /// <summary>
     /// This method returns every form of the named function, or an empty list if there is no such
     /// function.
     /// </summary>
