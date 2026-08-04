@@ -1,7 +1,14 @@
 railroad-ebnf-beta
 title "An expression"
 
-expression = operand { ( "+" | "-" | "*" | "/" | "%" ) operand } ;
-operand = [ "-" ] primary [ "²" | "³" ] ;
+expression = choice [ "?" expression ":" expression ] ;
+choice = conjunction { ( "or" | "||" | "∨" ) conjunction } ;
+conjunction = comparison { ( "and" | "&&" | "∧" ) comparison } ;
+comparison = sum { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ) sum } ;
+sum = product { ( "+" | "-" ) product } ;
+product = operand { ( "*" | "/" | "%" | "⋅" | "×" | "÷" ) operand } ;
+operand = [ "-" | "!" | "not" | "√" | "∛" ] primary
+        [ "²" | "³" | "⁴" | "°" | "degrees" | "radians" ] ;
 primary = number | [ "$" ] string | "true" | "false" | "null" | tuple | name
+        | name "(" [ expression { "," expression } ] ")"
         | ( "color" | "point" | "vector" ) primary | "(" expression ")" ;

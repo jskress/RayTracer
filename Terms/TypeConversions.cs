@@ -66,9 +66,12 @@ internal static class TypeConversions
         if (value == null || value.GetType() == targetType || value.GetType().IsSubclassOf(targetType))
             return (CoercionResult.OfProperType, value);
 
-        // Handle going to some form of tuple.
-        if (targetType == typeof(Point) || targetType == typeof(Vector) ||
-            targetType == typeof(Color))
+        // Handle going to some form of tuple.  Only a tuple can become one, and it matters that
+        // anything else falls past this rather than being turned away here: the conversion of a
+        // color's name to the color itself sits below, and a string that stopped at this test could
+        // never reach it.
+        if (value is NumberTuple && (targetType == typeof(Point) || targetType == typeof(Vector) ||
+                                     targetType == typeof(Color)))
             return CoerceTuples(value, targetType);
         
         // Handle going to a pigment.

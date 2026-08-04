@@ -8,7 +8,10 @@ namespace RayTracer.Terms;
 /// </summary>
 public class StringSubstitutionOperation : UnaryOperation
 {
-    private static readonly Regex VariablePattern = new Regex(@"\${(.*)}");
+    // The name is whatever is not a closing brace, rather than anything at all: a greedy match runs
+    // from the first "${" all the way to the last "}", so a string naming two variables was read as
+    // naming one impossibly-named thing, and neither was substituted.
+    private static readonly Regex VariablePattern = new Regex(@"\${([^}]*)}");
 
     public StringSubstitutionOperation(Term term) : base(term) {}
 

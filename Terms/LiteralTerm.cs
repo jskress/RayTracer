@@ -39,6 +39,19 @@ public class LiteralTerm : Term
         return new LiteralTerm(token, value);
     }
 
+    /// <summary>
+    /// This method is used to create a literal holding a value that no token spells out.  An
+    /// operator that stands for a function call needs this: the exponent of <c>x⁴</c> is a real
+    /// argument to <c>pow</c>, but the only token behind it is the operator itself.
+    /// </summary>
+    /// <param name="errorToken">The token to report errors against.</param>
+    /// <param name="value">The value the literal holds.</param>
+    /// <returns>A literal term holding that value.</returns>
+    internal static LiteralTerm Of(Token errorToken, object value)
+    {
+        return new LiteralTerm(errorToken, value);
+    }
+
     private readonly object _value;
 
     private LiteralTerm(Token errorToken, object value) : base(errorToken)

@@ -40,7 +40,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ambient` | Finish: color shown with no light on it. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `amplitude` | Turbulence: how far it stirs. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
-| `and` | Joins `ignore commands and '…'` in an L-system. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
 | `angle` | L-system control: the turn angle. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `angles` | `angles are degrees`/`radians`. | [Context](context.md#angles) |
 | `aperture` | Camera: lens radius; larger blurs more. | [Cameras](cameras.md#depth-of-field) |
@@ -179,12 +179,14 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `normal` | Roughens a surface: a pattern that tilts the normal. | [Materials](materials.md#roughening-the-surface) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
+| `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
 | `null` | The empty value. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `object` | `object file` (loads a mesh), or `object` (reuse by name). | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `octaves` | Turbulence/noise: how many layers of it. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
 | `once` | Image map: show the image once rather than tiling it. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
+| `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
@@ -580,6 +582,23 @@ then three families of names: the colors, the indices of refraction, and the dir
 | `PositiveInfinity` | the largest double | Positive infinity. |
 | `NegativeInfinity` | the smallest double | Negative infinity. |
 | `__software__` | this ray tracer's name and version | The default an image's software field is stamped with. |
+
+#### Functions
+
+Every function an [expression](scene-files.md#functions) may call.  Several take either numbers
+or vectors; ask for a form that does not exist and the error names the ones that do.
+
+| | | | |
+| --- | --- | --- | --- |
+| `abs` | `dot` | `magnitude` | `sign` |
+| `acos` | `exp` | `max` | `sin` |
+| `asin` | `floor` | `min` | `sinh` |
+| `atan` | `length` | `mod` | `smoothstep` |
+| `atan2` | `lerp` | `noise` | `sqrt` |
+| `cbrt` | `log` | `normalize` | `tan` |
+| `ceil` | `log10` | `pow` | `tanh` |
+| `clamp` | `cos` | `round` | `toDegrees` |
+| `cosh` | `cross` | `distance` | `trunc` |
 
 #### Colors
 

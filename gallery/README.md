@@ -9,250 +9,250 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-6/black.png">
-      <img alt="'Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>
+      <img alt="Basic Sphere, Black Background" height="120" src="challenge-book/chapter-6/black.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-6/black.igl">'Basic Sphere, Black Background</a>
+      <a href="challenge-book/chapter-6/black.igl">Basic Sphere, Black Background</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-6/transparent.png">
-      <img alt="'Basic Sphere, Transparent Background" height="120" src="challenge-book/chapter-6/transparent.png" width="160"/>
+      <img alt="Basic Sphere, Transparent Background" height="120" src="challenge-book/chapter-6/transparent.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-6/transparent.igl">'Basic Sphere, Transparent Background</a>
+      <a href="challenge-book/chapter-6/transparent.igl">Basic Sphere, Transparent Background</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-7/no-shadows.png">
-      <img alt="'Spheres in a Box, No Shadows" height="120" src="challenge-book/chapter-7/no-shadows.png" width="160"/>
+      <img alt="Spheres in a Box, No Shadows" height="120" src="challenge-book/chapter-7/no-shadows.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-7/no-shadows.igl">'Spheres in a Box, No Shadows</a>
+      <a href="challenge-book/chapter-7/no-shadows.igl">Spheres in a Box, No Shadows</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-8/shadows.png">
-      <img alt="'Spheres in a Box, Shadows" height="120" src="challenge-book/chapter-8/shadows.png" width="160"/>
+      <img alt="Spheres in a Box, Shadows" height="120" src="challenge-book/chapter-8/shadows.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-8/shadows.igl">'Spheres in a Box, Shadows</a>
+      <a href="challenge-book/chapter-8/shadows.igl">Spheres in a Box, Shadows</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-9/floor.png">
-      <img alt="'Spheres on the Floor" height="120" src="challenge-book/chapter-9/floor.png" width="160"/>
+      <img alt="Spheres on the Floor" height="120" src="challenge-book/chapter-9/floor.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-9/floor.igl">'Spheres on the Floor</a>
+      <a href="challenge-book/chapter-9/floor.igl">Spheres on the Floor</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/blend.png">
-      <img alt="'Blended Patterns" height="120" src="challenge-book/chapter-10/blend.png" width="160"/>
+      <img alt="Blended Patterns" height="120" src="challenge-book/chapter-10/blend.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/blend.igl">'Blended Patterns</a>
+      <a href="challenge-book/chapter-10/blend.igl">Blended Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/gradients.png">
-      <img alt="'Things with Gradients" height="120" src="challenge-book/chapter-10/gradients.png" width="160"/>
+      <img alt="Things with Gradients" height="120" src="challenge-book/chapter-10/gradients.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/gradients.igl">'Things with Gradients</a>
+      <a href="challenge-book/chapter-10/gradients.igl">Things with Gradients</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/patterns.png">
-      <img alt="'Things with Basic Patterns" height="120" src="challenge-book/chapter-10/patterns.png" width="160"/>
+      <img alt="Things with Basic Patterns" height="120" src="challenge-book/chapter-10/patterns.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/patterns.igl">'Things with Basic Patterns</a>
+      <a href="challenge-book/chapter-10/patterns.igl">Things with Basic Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/patterns2.png">
-      <img alt="'Showing More Patterns" height="120" src="challenge-book/chapter-10/patterns2.png" width="160"/>
+      <img alt="Showing More Patterns" height="120" src="challenge-book/chapter-10/patterns2.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/patterns2.igl">'Showing More Patterns</a>
+      <a href="challenge-book/chapter-10/patterns2.igl">Showing More Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/patterns3.png">
-      <img alt="'Showing Even More Patterns" height="120" src="challenge-book/chapter-10/patterns3.png" width="160"/>
+      <img alt="Showing Even More Patterns" height="120" src="challenge-book/chapter-10/patterns3.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/patterns3.igl">'Showing Even More Patterns</a>
+      <a href="challenge-book/chapter-10/patterns3.igl">Showing Even More Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/patterns4.png">
-      <img alt="'The Solid Shape Patterns" height="120" src="challenge-book/chapter-10/patterns4.png" width="160"/>
+      <img alt="The Solid Shape Patterns" height="120" src="challenge-book/chapter-10/patterns4.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/patterns4.igl">'The Solid Shape Patterns</a>
+      <a href="challenge-book/chapter-10/patterns4.igl">The Solid Shape Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/patterns5.png">
-      <img alt="'Bozo, Marble and the Angular Patterns" height="120" src="challenge-book/chapter-10/patterns5.png" width="160"/>
+      <img alt="Bozo, Marble and the Angular Patterns" height="120" src="challenge-book/chapter-10/patterns5.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/patterns5.igl">'Bozo, Marble and the Angular Patterns</a>
+      <a href="challenge-book/chapter-10/patterns5.igl">Bozo, Marble and the Angular Patterns</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/crackle.png">
-      <img alt="'The Crackle Pattern" height="120" src="challenge-book/chapter-10/crackle.png" width="160"/>
+      <img alt="The Crackle Pattern" height="120" src="challenge-book/chapter-10/crackle.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/crackle.igl">'The Crackle Pattern</a>
+      <a href="challenge-book/chapter-10/crackle.igl">The Crackle Pattern</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/wood.png">
-      <img alt="'The Wood Pattern" height="120" src="challenge-book/chapter-10/wood.png" width="160"/>
+      <img alt="The Wood Pattern" height="120" src="challenge-book/chapter-10/wood.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/wood.igl">'The Wood Pattern</a>
+      <a href="challenge-book/chapter-10/wood.igl">The Wood Pattern</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/planet.png">
-      <img alt="'A Planet" height="120" src="challenge-book/chapter-10/planet.png" width="160"/>
+      <img alt="A Planet" height="120" src="challenge-book/chapter-10/planet.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/planet.igl">'A Planet</a>
+      <a href="challenge-book/chapter-10/planet.igl">A Planet</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-10/stripes.png">
-      <img alt="'A Floor with Nested Striping" height="120" src="challenge-book/chapter-10/stripes.png" width="160"/>
+      <img alt="A Floor with Nested Striping" height="120" src="challenge-book/chapter-10/stripes.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-10/stripes.igl">'A Floor with Nested Striping</a>
+      <a href="challenge-book/chapter-10/stripes.igl">A Floor with Nested Striping</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-11/lake.png">
-      <img alt="'A Lake, Kind of" height="120" src="challenge-book/chapter-11/lake.png" width="160"/>
+      <img alt="A Lake, Kind of" height="120" src="challenge-book/chapter-11/lake.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-11/lake.igl">'A Lake, Kind of</a>
+      <a href="challenge-book/chapter-11/lake.igl">A Lake, Kind of</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-11/reflections.png">
-      <img alt="'Glassy Reflections" height="120" src="challenge-book/chapter-11/reflections.png" width="160"/>
+      <img alt="Glassy Reflections" height="120" src="challenge-book/chapter-11/reflections.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-11/reflections.igl">'Glassy Reflections</a>
+      <a href="challenge-book/chapter-11/reflections.igl">Glassy Reflections</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-12/cube.png">
-      <img alt="'Rectangular Solids" height="120" src="challenge-book/chapter-12/cube.png" width="160"/>
+      <img alt="Rectangular Solids" height="120" src="challenge-book/chapter-12/cube.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-12/cube.igl">'Rectangular Solids</a>
+      <a href="challenge-book/chapter-12/cube.igl">Rectangular Solids</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-12/room.png">
-      <img alt="'A Room with a Mirror, All Rectangular Solids" height="120" src="challenge-book/chapter-12/room.png" width="160"/>
+      <img alt="A Room with a Mirror, All Rectangular Solids" height="120" src="challenge-book/chapter-12/room.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-12/room.igl">'A Room with a Mirror, All Rectangular Solids</a>
+      <a href="challenge-book/chapter-12/room.igl">A Room with a Mirror, All Rectangular Solids</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-13/circulars.png">
-      <img alt="'Cylinders and Conics" height="120" src="challenge-book/chapter-13/circulars.png" width="160"/>
+      <img alt="Cylinders and Conics" height="120" src="challenge-book/chapter-13/circulars.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-13/circulars.igl">'Cylinders and Conics</a>
+      <a href="challenge-book/chapter-13/circulars.igl">Cylinders and Conics</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-14/hex.png">
-      <img alt="'Hexagon from a Repeating Group" height="120" src="challenge-book/chapter-14/hex.png" width="160"/>
+      <img alt="Hexagon from a Repeating Group" height="120" src="challenge-book/chapter-14/hex.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-14/hex.igl">'Hexagon from a Repeating Group</a>
+      <a href="challenge-book/chapter-14/hex.igl">Hexagon from a Repeating Group</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-14/pointy-thing.png">
-      <img alt="'A Pointy Thing" height="120" src="challenge-book/chapter-14/pointy-thing.png" width="160"/>
+      <img alt="A Pointy Thing" height="120" src="challenge-book/chapter-14/pointy-thing.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-14/pointy-thing.igl">'A Pointy Thing</a>
+      <a href="challenge-book/chapter-14/pointy-thing.igl">A Pointy Thing</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-15/object-file-no-normals.png">
-      <img alt="'A Simple Teddy Bear" height="120" src="challenge-book/chapter-15/object-file-no-normals.png" width="160"/>
+      <img alt="A Simple Teddy Bear" height="120" src="challenge-book/chapter-15/object-file-no-normals.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-15/object-file-no-normals.igl">'A Simple Teddy Bear</a>
+      <a href="challenge-book/chapter-15/object-file-no-normals.igl">A Simple Teddy Bear</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-15/object-file-with-normals.png">
-      <img alt="'A Christmas Tree Ornament" height="120" src="challenge-book/chapter-15/object-file-with-normals.png" width="160"/>
+      <img alt="A Christmas Tree Ornament" height="120" src="challenge-book/chapter-15/object-file-with-normals.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-15/object-file-with-normals.igl">'A Christmas Tree Ornament</a>
+      <a href="challenge-book/chapter-15/object-file-with-normals.igl">A Christmas Tree Ornament</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-15/parallelogram.png">
-      <img alt="'2D in 3d: Parallelograms" height="120" src="challenge-book/chapter-15/parallelogram.png" width="160"/>
+      <img alt="2D in 3d: Parallelograms" height="120" src="challenge-book/chapter-15/parallelogram.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-15/parallelogram.igl">'2D in 3d: Parallelograms</a>
+      <a href="challenge-book/chapter-15/parallelogram.igl">2D in 3d: Parallelograms</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-15/smooth-triangle.png">
-      <img alt="'2D in 3d: Smooth Triangles" height="120" src="challenge-book/chapter-15/smooth-triangle.png" width="160"/>
+      <img alt="2D in 3d: Smooth Triangles" height="120" src="challenge-book/chapter-15/smooth-triangle.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-15/smooth-triangle.igl">'2D in 3d: Smooth Triangles</a>
+      <a href="challenge-book/chapter-15/smooth-triangle.igl">2D in 3d: Smooth Triangles</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-15/triangle.png">
-      <img alt="'2D in 3d: Triangles" height="120" src="challenge-book/chapter-15/triangle.png" width="160"/>
+      <img alt="2D in 3d: Triangles" height="120" src="challenge-book/chapter-15/triangle.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-15/triangle.igl">'2D in 3d: Triangles</a>
+      <a href="challenge-book/chapter-15/triangle.igl">2D in 3d: Triangles</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-16/csg.png">
-      <img alt="'Basic CSG Examples" height="120" src="challenge-book/chapter-16/csg.png" width="160"/>
+      <img alt="Basic CSG Examples" height="120" src="challenge-book/chapter-16/csg.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-16/csg.igl">'Basic CSG Examples</a>
+      <a href="challenge-book/chapter-16/csg.igl">Basic CSG Examples</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-16/csg2.png">
-      <img alt="'More CSF: A Picture from the Book" height="120" src="challenge-book/chapter-16/csg2.png" width="160"/>
+      <img alt="More CSF: A Picture from the Book" height="120" src="challenge-book/chapter-16/csg2.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-16/csg2.igl">'More CSF: A Picture from the Book</a>
+      <a href="challenge-book/chapter-16/csg2.igl">More CSF: A Picture from the Book</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="challenge-book/chapter-16/dice.png">
-      <img alt="'Three Dice: Another Picture from the Book" height="120" src="challenge-book/chapter-16/dice.png" width="160"/>
+      <img alt="Three Dice: Another Picture from the Book" height="120" src="challenge-book/chapter-16/dice.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="challenge-book/chapter-16/dice.igl">'Three Dice: Another Picture from the Book</a>
+      <a href="challenge-book/chapter-16/dice.igl">Three Dice: Another Picture from the Book</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -318,10 +318,10 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/image-map.png">
-      <img alt="'Spherical image pigment test" height="120" src="Local/image-map.png" width="160"/>
+      <img alt="Spherical image pigment test" height="120" src="Local/image-map.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/image-map.igl">'Spherical image pigment test</a>
+      <a href="Local/image-map.igl">Spherical image pigment test</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -430,26 +430,26 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/solar-system/all.png">
-      <img alt="'The Planets" height="120" src="Local/solar-system/all.png" width="160"/>
+      <img alt="The Planets" height="120" src="Local/solar-system/all.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/solar-system/all.igl">'The Planets</a>
+      <a href="Local/solar-system/all.igl">The Planets</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/solar-system/inner.png">
-      <img alt="'The Inner Planets" height="120" src="Local/solar-system/inner.png" width="160"/>
+      <img alt="The Inner Planets" height="120" src="Local/solar-system/inner.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/solar-system/inner.igl">'The Inner Planets</a>
+      <a href="Local/solar-system/inner.igl">The Inner Planets</a>
     </td>
   </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/solar-system/outer.png">
-      <img alt="'The Outer Planets" height="120" src="Local/solar-system/outer.png" width="160"/>
+      <img alt="The Outer Planets" height="120" src="Local/solar-system/outer.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/solar-system/outer.igl">'The Outer Planets</a>
+      <a href="Local/solar-system/outer.igl">The Outer Planets</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -618,6 +618,91 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/patch.igl">Patch Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/normals.png">
+      <img alt="Normal Perturbation" height="120" src="Local/normals.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/normals.igl">Normal Perturbation</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights.png">
+      <img alt="Distant and Spot Lights" height="120" src="Local/lights.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights.igl">Distant and Spot Lights</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/area-light.png">
+      <img alt="Area Light" height="120" src="Local/area-light.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/area-light.igl">Area Light</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/focal-blur.png">
+      <img alt="Focal Blur" height="120" src="Local/focal-blur.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/focal-blur.igl">Focal Blur</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/motion-blur.png">
+      <img alt="Motion Blur" height="120" src="Local/motion-blur.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/motion-blur.igl">Motion Blur</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/fisheye.png">
+      <img alt="Fisheye Camera" height="120" src="Local/fisheye.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/fisheye.igl">Fisheye Camera</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/icons.png">
+      <img alt="FontAwesome Icons" height="120" src="Local/icons.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/icons.igl">FontAwesome Icons</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/icons-complex.png">
+      <img alt="FontAwesome Icons, the Intricate Ones" height="120" src="Local/icons-complex.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/icons-complex.igl">FontAwesome Icons, the Intricate Ones</a>
+    </td>
+  </tr>
+</table>
+
+### Ported from POV-Ray
+
+<table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="POVRay/first.png">
+      <img alt="The First Image" height="120" src="POVRay/first.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="POVRay/first.igl">The First Image</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="POVRay/library-textures.png">
+      <img alt="POV-Ray Library Textures" height="120" src="POVRay/library-textures.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="POVRay/library-textures.igl">POV-Ray Library Textures</a>
     </td>
   </tr>
 </table>

@@ -264,6 +264,126 @@ Two conveniences are worth knowing: `²` and `³` square and cube what precedes 
 variables are read *late* — an expression is evaluated when the scene is rendered, not when
 the line is parsed.
 
+#### Functions
+
+An expression may call a function, and the arguments are expressions in their own right, so
+calls nest and compose with the arithmetic around them:
+
+```
+extrusion {
+    path { … }
+    min Y 0  max Y sqrt(depth² + 1)
+}
+```
+
+| | |
+| --- | --- |
+| **Powers and roots** | `sqrt` `cbrt` `pow` `exp` `log` `log10` |
+| **Whole numbers** | `floor` `ceil` `round` `trunc` `sign` `abs` `mod` |
+| **Ranges and blends** | `min` `max` `clamp` `lerp` `smoothstep` |
+| **Angles** | `sin` `cos` `tan` `asin` `acos` `atan` `atan2` `sinh` `cosh` `tanh` `toDegrees` |
+| **Vectors** | `length` (or `magnitude`) `dot` `cross` `normalize` `distance` |
+| **Noise** | `noise` |
+
+Several take either numbers or vectors, and which they mean follows from what you hand them:
+`abs`, `min`, `max`, `clamp` and `lerp` all work on both, and `min` and `max` given a *single*
+vector return its smallest or largest component.  Ask for something that does not exist and
+the answer says what does — `dot(1, 2)` reports that `dot` takes `(vector, vector)`.
+
+Two of them are worth a note.  `mod` is not the `%` operator: `%` takes its sign from the
+number being divided, so `-1 % 4` is -1, while `mod(-1, 4)` is 3.  That is the one that tiles,
+since a pattern repeating along an axis wants the same thing either side of the origin.  And
+`noise` is a single layer of the same smooth, repeatable field the patterns draw on, between 0
+and 1; layering it is something you can now write for yourself, which is the point of having
+it as a function:
+
+```
+grain = noise(p) + noise(p * 2) / 2 + noise(p * 4) / 4
+```
+
+#### Angles are radians
+
+The trigonometric functions work in radians, whichever way `angles are` has been set — that
+setting turns the numbers written in *clauses*, and degrees are its default, so `sin(90)` is
+emphatically not 1.  Say which you mean with the postfix `degrees` and `°` operators, or reach
+for `π`, which is always defined:
+
+```
+sin(90°)          // 1
+sin(90 degrees)   // the same thing
+sin(π / 2)        // and again
+1.5 radians       // says out loud what was already true
+toDegrees(π)      // 180, for going back the other way
+```
+
+Take care not to write `rotate Y 45 degrees`.  A `rotate` clause already reads its angle in
+whatever unit `angles are` says, so that would convert to radians and then be read as degrees
+all over again.  The postfix operators belong where radians are wanted, which is inside the
+functions above.
+
+#### Mathematical symbols
+
+So that a formula can be pasted in as it was written rather than translated first, the
+mathematical symbols work as operators:
+
+| Symbol | Means | Also accepted as |
+| --- | --- | --- |
+| `√` `∛` | Square and cube roots — `√(x² + y²)` | |
+| `⁰` `¹` `⁴`…`⁹` | Raises to that power, as `²` and `³` do | |
+| `⋅` | Dot product of two vectors, otherwise multiplication | `·` `∙` `•` |
+| `×` | Cross product of two vectors, otherwise multiplication | `⨯` |
+| `÷` | Division | `∕` `⁄` |
+| `−` | Subtraction, or a negative sign | `–` |
+| `∗` | Multiplication | `⋆` |
+| `°` | The number before it is in degrees | |
+| `≤` `≥` `≠` | Comparisons | `<=` `>=` `!=` |
+| `∧` `∨` `¬` | And, or, not | `&&` `\|\|` `!`, or `and` `or` `not` |
+
+The right-hand column is not a list of near-misses to be avoided: those spellings mean exactly
+the same thing.  One operation reaches a page as several different characters depending on
+where the page came from, and telling them apart by eye is hopeless, so they are all accepted.
+
+A root takes only what immediately follows it, so `√4 * 40` is `(√4) * 40`; write `√(4 * 40)`
+if you meant the other.  A power written straight against another — `x¹⁰` — is refused rather
+than quietly read as `x` to the first and then to the zeroth; use `pow(x, 10)`, or parentheses
+if you really did mean a power of a power, as in `(x²)³`.
+
+#### Choosing between values
+
+Comparisons produce true or false, `and`, `or` and `not` combine them, and a conditional picks
+between two values:
+
+```
+sides = 6
+angle = sides > 4 ? 360 / sides : 90
+```
+
+The comparisons are `<`, `<=`, `>`, `>=`, `==` and `!=`.  Numbers and text may be compared any
+of the six ways; anything else may only be asked whether it is equal, since there is no order
+to put two colors in.  Two numbers count as equal when they are near enough to each other,
+which is how the rest of the ray tracer treats them — so `0.1 + 0.2 == 0.3` is true here, as it
+ought to be and as plain floating point would not have it.
+
+`and` binds tighter than `or`, comparisons bind tighter than either, and only the side that is
+needed is evaluated: in `size != 0 && 10 / size < 1` the division is never reached when `size`
+is zero.  The same is true of a conditional, which evaluates only the side it chose.
+
+#### What binds tightest
+
+From tightest to loosest:
+
+1. `²` `³` and the other powers, `°`, `degrees`, `radians`
+2. `√` `∛`, a negative sign, `not`
+3. `*` `/` `%` `⋅` `×`
+4. `+` `-`
+5. `<` `<=` `>` `>=` `==` `!=`
+6. `and`
+7. `or`
+8. `? :`
+
+Powers binding tighter than a negative sign is what makes `-x²` mean `-(x²)`, as it does in
+print, and `√x²` mean `√(x²)`.  Parentheses override all of it.
+
 Strings are also supported and may be delimited by either a single or double quote.  Standard
 character escaping is supported.  If you want to interpolate values into a string, precede
 the first delimiter with the `$` operator and use the `${_name_}` style of variable notation.

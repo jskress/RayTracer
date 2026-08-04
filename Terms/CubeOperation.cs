@@ -1,4 +1,5 @@
 using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -11,6 +12,8 @@ namespace RayTracer.Terms;
 public class CubeOperation : UnaryOperation
 {
     public CubeOperation(Term operand) : base(operand) {}
+
+    internal CubeOperation(Term operand, Token errorToken) : base(operand, errorToken) {}
 
     /// <summary>
     /// This method is used to evaluate this term to produce the cube of a value. 
