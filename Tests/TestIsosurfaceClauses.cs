@@ -131,6 +131,48 @@ public class TestIsosurfaceClauses
     }
 
     /// <summary>
+    /// This tests that a function may call noise, which is the thing that makes a surface genuinely
+    /// rough rather than merely shaded as though it were.  Noise takes its three coordinates separately
+    /// here, since a field works in numbers throughout.
+    /// </summary>
+    [TestMethod]
+    public void TestAFunctionMayCallNoise()
+    {
+        Assert.IsTrue(SomethingIsInTheMiddleOf("""
+            isosurface {
+                function { sqrt(x² + y² + z²) - 0.8 + 0.3 ⋅ (noise(3 * x, 3 * y, 3 * z) - 0.5) }
+                bounded by [-1.3, -1.3, -1.3], [1.3, 1.3, 1.3]
+                material { pigment White }
+            }
+            """));
+
+        // Noise is repeatable, so the same scene twice is the same picture -- which is what lets a
+        // rough surface be rendered again tomorrow and match.
+        (Canvas first, string error) = Render("""
+            isosurface {
+                function { sqrt(x² + y² + z²) - 0.8 + 0.3 ⋅ (noise(4 * x, 4 * y, 4 * z) - 0.5) }
+                bounded by [-1.3, -1.3, -1.3], [1.3, 1.3, 1.3]
+                material { pigment White }
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        (Canvas second, string _) = Render("""
+            isosurface {
+                function { sqrt(x² + y² + z²) - 0.8 + 0.3 ⋅ (noise(4 * x, 4 * y, 4 * z) - 0.5) }
+                bounded by [-1.3, -1.3, -1.3], [1.3, 1.3, 1.3]
+                material { pigment White }
+            }
+            """);
+
+        for (int x = 0; x < 40; x += 7)
+        for (int y = 0; y < 40; y += 7)
+            Assert.IsTrue(first.GetPixel(x, y).Matches(second.GetPixel(x, y)),
+                $"the same rough surface rendered twice differs at ({x}, {y})");
+    }
+
+    /// <summary>
     /// This tests that the value the surface is drawn at is honoured: the same function at a threshold
     /// too small to reach the middle of the image leaves it empty.
     /// </summary>

@@ -28,8 +28,15 @@ public static class FieldDerivatives
     /// </summary>
     public static readonly IReadOnlySet<string> WithoutRules = new HashSet<string>
     {
-        "smoothstep", "noise"
+        "smoothstep"
     };
+
+    /// <summary>
+    /// How far either side of a point noise is sampled to measure its slope.  Noise varies over a
+    /// lattice of unit cells, so a thousandth of a cell is small enough to be a fair measure of the
+    /// slope and large enough that the subtraction is not swamped by rounding.
+    /// </summary>
+    private const double NoiseStep = 0.001;
 
     private static readonly Dictionary<string, Func<FieldExpression[], FieldExpression[]>> Rules = new ()
     {
@@ -108,6 +115,19 @@ public static class FieldDerivatives
             ]
         },
 
+        // Noise is the one function here with no derivative to write down: it is a field of random
+        // gradients, smoothly interpolated, and while that is differentiable there is no expression for
+        // its slope in the way there is for a sine.  So its slope is measured rather than derived --
+        // sampled a little either side along each axis and divided by the distance between.  A gradient
+        // therefore costs six noise samples, which is paid once per hit rather than per step of a ray.
+        { "noise", u =>
+            [
+                Differences(u, 0),
+                Differences(u, 1),
+                Differences(u, 2)
+            ]
+        },
+
         { "sinh", u => [Call("cosh", u[0])] },
         { "cosh", u => [Call("sinh", u[0])] },
         { "tanh", u => [Subtract(Number(1), Square(Call("tanh", u[0])))] }
@@ -138,6 +158,26 @@ public static class FieldDerivatives
     public static bool HasRuleFor(string name)
     {
         return Rules.ContainsKey(name);
+    }
+
+    /// <summary>
+    /// This method builds the measured slope of noise along one of its three arguments: the noise a
+    /// little further along, less the noise a little back, over the distance between the two.
+    /// </summary>
+    /// <param name="arguments">The three expressions noise is being asked at.</param>
+    /// <param name="axis">Which of the three to measure along.</param>
+    /// <returns>The measured slope along that axis.</returns>
+    private static FieldExpression Differences(FieldExpression[] arguments, int axis)
+    {
+        FieldExpression[] ahead = [..arguments];
+        FieldExpression[] behind = [..arguments];
+
+        ahead[axis] = Add(arguments[axis], Number(NoiseStep));
+        behind[axis] = Subtract(arguments[axis], Number(NoiseStep));
+
+        return Divide(
+            Subtract(Call("noise", ahead), Call("noise", behind)),
+            Number(2 * NoiseStep));
     }
 
     /// <summary>

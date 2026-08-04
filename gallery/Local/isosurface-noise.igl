@@ -1,0 +1,67 @@
+// Three isosurfaces whose functions call on noise, which is what makes a surface rough rather than
+// merely painted or shaded as though it were.
+//
+// The difference from a "normal" block in a material is the outline.  Perturbing the normal tilts the
+// light without moving the surface, so a bump-mapped ball still has the silhouette of a ball; pushing
+// the function itself in and out moves the surface, so the edge is as rough as the middle.  The cost
+// is that it is real geometry and has to be marched, which is why the two techniques both have their
+// place rather than one replacing the other.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Isosurfaces Made Rough With Noise'
+        author 'J. Stephen Kress'
+        description 'A rock, a length of bark and a piece of terrain, each shaped by noise.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.1, -6.2]
+    look at [0, 0.15, 0]
+    field of view 44
+}
+
+point light { location [-6, 8, -7]  color [1, 0.97, 0.93] }
+point light { location [6, 3, -3]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.55, 0.55, 0.6], color [0.16, 0.16, 0.22] scale 1.1 } }
+    translate [0, -1, 0]
+}
+
+// A rock: the distance from the middle, less a radius, pushed in and out by noise.  Noise runs from
+// nought to one, so taking a half off it first is what makes the displacement go both ways rather
+// than only outward.
+isosurface {
+    function { sqrt(x² + y² + z²) - 0.7 + 0.32 ⋅ (noise(3 * x, 3 * y, 3 * z) - 0.5) }
+    bounded by [-1.2, -1.2, -1.2], [1.2, 1.2, 1.2]
+    material { pigment color [0.62, 0.55, 0.48]  specular 0.25  shininess 30 }
+    translate [-2, -0.1, 0]
+}
+
+// Bark: the same idea on a cylinder, but with the noise asked for at a much finer scale across the
+// trunk than along it -- eighteen against a little over two -- so its ridges run up the length of the
+// wood the way real ones do.  Sampling noise at different rates per axis is the whole trick, and it is
+// only possible because the three coordinates are handed over separately.
+isosurface {
+    function {
+        max(sqrt(x² + z²) - 0.32 + 0.12 ⋅ (noise(18 * x, 2.2 * y, 18 * z) - 0.5), y² - 0.9)
+    }
+    bounded by [-0.55, -1, -0.55], [0.55, 1, 0.55]
+    material { pigment color [0.42, 0.31, 0.22]  specular 0.2  shininess 20 }
+}
+
+// Terrain: a ground plane displaced by noise that varies with height as well as across the ground, so
+// the surface can lean out over itself.  A height field cannot do this -- it has one height per place,
+// by definition -- and the overhang on the near left is the proof of the difference.
+isosurface {
+    function { y + 0.1 - 0.95 ⋅ (noise(2.2 * x, 1.3 * y, 2.2 * z) - 0.5) }
+    bounded by [-1.2, -0.75, -1.2], [1.2, 0.75, 1.2]
+    material { pigment color [0.45, 0.5, 0.4]  specular 0.15  shininess 20 }
+    translate [2, -0.2, 0]
+}

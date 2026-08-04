@@ -692,6 +692,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/isosurfaces.igl">Isosurfaces</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/isosurface-noise.png">
+      <img alt="Isosurfaces Made Rough With Noise" height="120" src="Local/isosurface-noise.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/isosurface-noise.igl">Isosurfaces Made Rough With Noise</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

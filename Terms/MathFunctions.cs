@@ -558,4 +558,19 @@ public static class MathFunctions
     {
         return NoiseGenerator.ForSeed().Noise(point);
     }
+
+    /// <summary>
+    /// This method returns the noise at a point given as three numbers, which is the same field
+    /// <see cref="Noise(Point)"/> draws on and the form a function inside an isosurface uses -- a field
+    /// works in numbers throughout, and asking this way builds no point to ask with.
+    /// </summary>
+    /// <param name="x">The X of the point to take the noise at.</param>
+    /// <param name="y">Its Y.</param>
+    /// <param name="z">Its Z.</param>
+    /// <returns>The noise at that point, between 0 and 1.</returns>
+    [Function("noise")]
+    public static double Noise(double x, double y, double z)
+    {
+        return NoiseGenerator.ForSeed().Noise(x, y, z);
+    }
 }

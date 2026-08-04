@@ -294,8 +294,10 @@ Two of them are worth a note.  `mod` is not the `%` operator: `%` takes its sign
 number being divided, so `-1 % 4` is -1, while `mod(-1, 4)` is 3.  That is the one that tiles,
 since a pattern repeating along an axis wants the same thing either side of the origin.  And
 `noise` is a single layer of the same smooth, repeatable field the patterns draw on, between 0
-and 1; layering it is something you can now write for yourself, which is the point of having
-it as a function:
+and 1.  It takes either a point or three separate numbers, the latter being the form an
+[isosurface](advanced-surfaces.md#rough-surfaces-with-noise) function uses, since a function works in
+numbers throughout.  Layering it is something you can now write for yourself, which is the point of
+having it as a function:
 
 ```
 grain = noise(p) + noise(p * 2) / 2 + noise(p * 4) / 4
