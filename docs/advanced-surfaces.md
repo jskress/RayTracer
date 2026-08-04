@@ -450,6 +450,54 @@ here.  A function using it is refused for that reason rather than for being unus
 `gallery/Local/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
 twisted column above, and a ball blended smoothly into a cylinder.
 
+#### Rough surfaces, with `noise`
+
+A function may call [`noise`](scene-files.md#functions), which is what makes a surface genuinely
+rough.  Inside a function it takes the three coordinates separately — `noise(x, y, z)` — and gives
+back a number between 0 and 1, from the same field every pattern in the library draws on:
+
+```
+isosurface {
+    // A rock: the distance from the middle, less a radius, pushed in and out by noise.
+    function { √(x² + y² + z²) - 0.7 + 0.32 ⋅ (noise(3 * x, 3 * y, 3 * z) - 0.5) }
+    bounded by [-1.2, -1.2, -1.2], [1.2, 1.2, 1.2]
+}
+```
+
+Taking a half off the noise first is what makes the displacement go both ways rather than only
+outward, and multiplying the coordinates before handing them over is how the roughness is scaled —
+larger numbers, finer detail.
+
+This is worth comparing with a [`normal` block](materials.md#roughening-the-surface), which does
+something that looks similar and is not the same thing at all.  Perturbing the normal tilts the
+light without moving the surface, so a bump-mapped ball still has the silhouette of a ball.  Moving
+the function moves the surface, so **the outline is as rough as the middle** — and casts a rough
+shadow to match.  The price is that it is real geometry and has to be marched, so the two techniques
+each have their place rather than one replacing the other.
+
+Because the three coordinates are handed over separately, they may be scaled differently, which is
+how a surface gets a grain that runs one way:
+
+```
+// Bark: noise sampled much more finely across the trunk than along it, so the ridges run upward.
+function {
+    max(√(x² + z²) - 0.32 + 0.12 ⋅ (noise(18 * x, 2.2 * y, 18 * z) - 0.5), y² - 0.9)
+}
+```
+
+And because the noise varies with height as well as across the ground, a landscape made this way can
+lean out over itself — which a [height field](#height-field) cannot do, having one height per place
+by definition:
+
+```
+// Terrain with overhangs.
+function { y + 0.1 - 0.95 ⋅ (noise(2.2 * x, 1.3 * y, 2.2 * z) - 0.5) }
+```
+
+`gallery/Local/isosurface-noise.igl` renders all three.  One layer of noise is smooth and rolling; for
+the finer detail of real stone or bark, add layers of it, each finer and fainter than the last, which
+a function can now say for itself — `noise(p) + noise(2p) / 2 + noise(4p) / 4`.
+
 The complete scene is
 [`docs/examples/advanced/isosurface.igl`](examples/advanced/isosurface.igl).
 

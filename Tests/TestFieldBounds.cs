@@ -259,6 +259,52 @@ public class TestFieldBounds
     }
 
     /// <summary>
+    /// This tests the one bound rule here arrived at by measurement rather than by reasoning.  Noise is
+    /// bounded by what it is in the middle of a box, give or take how much it could change across it, and
+    /// the slope that allows for was measured rather than derived -- so it is worth leaning on hard.
+    /// <para>
+    /// Boxes are drawn from the tiny to the wide, and each is sampled far more densely than the general
+    /// test samples, since what would go wrong here is a bound too tight by a little in a small box.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestTheBoundOfNoiseHolds()
+    {
+        FieldExpression expression = Call("noise", Named("x"), Named("y"), Named("z"))
+            .ToField(_variables);
+        FieldFunction function = FieldFunction.Compile(expression);
+        Random random = new (20260804);
+
+        for (int box = 0; box < 600; box++)
+        {
+            double width = Math.Pow(10, random.NextDouble() * 3 - 3);
+            double x = random.NextDouble() * 20 - 10;
+            double y = random.NextDouble() * 20 - 10;
+            double z = random.NextDouble() * 20 - 10;
+            FieldRange alongX = new (x, x + width);
+            FieldRange alongY = new (y, y + width);
+            FieldRange alongZ = new (z, z + width);
+            FieldRange bound = expression.Bound(alongX, alongY, alongZ);
+
+            const int steps = 6;
+
+            for (int i = 0; i <= steps; i++)
+            for (int j = 0; j <= steps; j++)
+            for (int k = 0; k <= steps; k++)
+            {
+                double sampleX = alongX.Low + alongX.Width * i / steps;
+                double sampleY = alongY.Low + alongY.Width * j / steps;
+                double sampleZ = alongZ.Low + alongZ.Width * k / steps;
+                double value = function.Evaluate(sampleX, sampleY, sampleZ);
+
+                Assert.IsTrue(bound.Contains(value, 1e-9),
+                    $"noise over a box of {width:G4} at ({x:F3}, {y:F3}, {z:F3}) was bounded to " +
+                    $"{bound}, but at ({sampleX:F5}, {sampleY:F5}, {sampleZ:F5}) it is {value}");
+            }
+        }
+    }
+
+    /// <summary>
     /// This holds the bound rules to the catalog, the way the slopes are held to it.  A function with
     /// neither a rule nor a mention here would silently make every field that used it unboundable, and
     /// so every surface built from one slow rather than wrong -- which is the sort of thing that goes
@@ -267,7 +313,8 @@ public class TestFieldBounds
     [TestMethod]
     public void TestEveryFunctionHasABoundRuleOrIsNamedAsHavingNone()
     {
-        IReadOnlySet<string> withoutRules = new HashSet<string> { "noise" };
+        // Nothing is exempt: every function a field may call has a range rule.
+        IReadOnlySet<string> withoutRules = new HashSet<string>();
         List<string> unaccounted = [];
 
         foreach (string name in FunctionCatalog.Instance.Names)

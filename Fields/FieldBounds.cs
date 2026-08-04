@@ -1,3 +1,5 @@
+using RayTracer.Basics;
+
 namespace RayTracer.Fields;
 
 /// <summary>
@@ -71,6 +73,8 @@ public static class FieldBounds
         // Whatever it is given, a smooth step cannot leave nought and one.
         { "smoothstep", _ => new FieldRange(0, 1) },
 
+        { "noise", Noise },
+
         // An angle is an angle.
         { "atan2", _ => new FieldRange(-Math.PI, Math.PI) },
 
@@ -98,6 +102,46 @@ public static class FieldBounds
         return Rules.TryGetValue(name, out Func<FieldRange[], FieldRange> rule)
             ? rule(arguments)
             : FieldRange.Anywhere;
+    }
+
+    /// <summary>
+    /// The steepest the noise field is taken to get anywhere, in noise per unit of distance.  Measured
+    /// at 1.41 over four hundred thousand points, and set well above that on purpose.
+    /// <para>
+    /// This is the one rule here arrived at by measurement rather than by reasoning, because a bound
+    /// reasoned out from the interpolation is hopelessly loose -- eight corner gradients, each able to
+    /// point any way, give something above twenty, which would rule nothing out and defeat the purpose.
+    /// The margin is what makes the measurement safe to lean on, and <c>TestTheBoundOfNoiseHolds</c>
+    /// leans on it hard.  Being too generous here costs only time; being too mean would lose patches of
+    /// a surface, so if in doubt, raise it.
+    /// </para>
+    /// </summary>
+    private const double NoiseSlope = 2.5;
+
+    /// <summary>
+    /// The range noise could take over a box: what it is in the middle, give or take as much as it could
+    /// possibly change across the box, and never outside the nought to one it is defined to keep to.
+    /// <para>
+    /// Bounding it by nought and one alone would be perfectly safe and nearly useless.  It would never
+    /// tighten as a box shrank, so a marcher narrowing in on a surface would keep every span alive to the
+    /// finest step it was allowed rather than ruling any of them out -- which in a scene of a rock came to
+    /// two and a half minutes against two seconds.  Sampling the middle once and allowing for the slope
+    /// costs one noise value per box and tightens as it should.
+    /// </para>
+    /// </summary>
+    /// <param name="arguments">The ranges of the three coordinates noise is being asked at.</param>
+    /// <returns>The range noise could take over that box.</returns>
+    private static FieldRange Noise(FieldRange[] arguments)
+    {
+        double radius = 0.5 * Math.Sqrt(
+            arguments[0].Width * arguments[0].Width +
+            arguments[1].Width * arguments[1].Width +
+            arguments[2].Width * arguments[2].Width);
+        double middle = NoiseGenerator.ForSeed().Noise(
+            arguments[0].Middle, arguments[1].Middle, arguments[2].Middle);
+        double slack = NoiseSlope * radius;
+
+        return new FieldRange(Math.Max(0, middle - slack), Math.Min(1, middle + slack));
     }
 
     /// <summary>
