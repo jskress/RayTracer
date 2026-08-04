@@ -6,6 +6,7 @@ using RayTracer.Graphics;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Renderer;
+using RayTracer.Terms;
 
 namespace Tests;
 
@@ -303,6 +304,17 @@ public class TestDocumentation
             GrammarKeywords().ToHashSet(),
             BacktickedNamesUnder("Keyword index", firstCellOnly: true),
             "keyword index");
+    }
+
+    [TestMethod]
+    public void TestTheFunctionTableListsExactlyTheCatalogsFunctions()
+    {
+        // The catalog is about to grow, and a function nobody can find is as good as one that was
+        // never added -- so the table is held to what the catalog actually holds.
+        AssertSameNames(
+            FunctionCatalog.Instance.Names.ToHashSet(),
+            BacktickedNamesUnder("Functions", firstCellOnly: false),
+            "function");
     }
 
     [TestMethod]

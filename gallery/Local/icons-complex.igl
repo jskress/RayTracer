@@ -1,0 +1,69 @@
+// The two most intricate outlines FontAwesome has, given thickness side by side: the Old Republic
+// emblem and the ReactEurope crest.  Between them they are around 24,000 characters of SVG path
+// data across some fifty runs, many of those runs nested inside others -- so this is the scene that
+// leans hardest on the icon path source, on the even-odd fill rule that decides which of those runs
+// are holes, and on the winding normalization that turns each run the right way round so that every
+// wall of every hole faces out of the material rather than into it.
+//
+// Icons arrive at SVG scale (a 640 box) lying flat in the ground plane, so they are looked at from
+// above; the Y range gives them their thickness.  Install a FontAwesome zip with
+// "libraries --fa-zip" first.
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'FontAwesome Icons, the Intricate Ones'
+        author 'J. Stephen Kress'
+        description 'The Old Republic emblem and the ReactEurope crest, extruded side by side.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1150, 240]
+    look at [0, 0, -10]
+    up [0, 0, -1]
+    field of view 56
+}
+
+// The key light throws the icons' relief across the floor; the fill keeps the walls inside the
+// deeper holes from going to black, since it is those walls that show the winding is right.
+point light { location [-320, 800, -220]  color [1, 0.97, 0.93] }
+point light { location [520, 520, 460]    color [0.4, 0.4, 0.46] }
+
+plane {
+    material { pigment checker { color [0.55, 0.55, 0.6], color [0.14, 0.14, 0.2] scale 110 } }
+}
+
+// The Old Republic emblem -- the most complicated icon in the library, at nine runs and close to
+// four hundred segments.
+extrusion {
+    material { pigment color [0.86, 0.7, 0.24]  specular 0.6  shininess 90  reflective 0.12 }
+    path { icon 'brands:old-republic' }
+    min Y 0  max Y 55
+    translate [-320, 0, -320]
+    translate [230, 0, 0]
+}
+
+// The ReactEurope crest -- second only to it, and the one with lettering in it.
+//
+// Looking straight down at the ground plane shows the outline mirrored, which nobody notices on a
+// symmetrical emblem and everybody notices on a word.  The 2D "scale [-1, 1]" flips the outline
+// back, in its own plane, before it is given depth; the translate that follows slides it out of the
+// negative X it was flipped into, since the icon is drawn in a 640 box with its corner at the
+// origin.  Note that mirroring an outline reverses the direction every one of its runs is drawn in
+// -- which used to mean every wall faced the wrong way -- and that the extrusion now sorts that out
+// for itself.
+extrusion {
+    material { pigment color [0.45, 0.62, 0.86]  specular 0.55  shininess 75  reflective 0.1 }
+    path {
+        icon 'brands:reacteurope'
+        scale [-1, 1]
+        translate [640, 0]
+    }
+    min Y 0  max Y 55
+    translate [-320, 0, -320]
+    translate [-230, 0, 0]
+}

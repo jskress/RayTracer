@@ -1,5 +1,6 @@
 using System.Text;
 using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -21,9 +22,21 @@ public class BinaryMultiplyOperation : BinaryOperation
     /// <returns>The current value of this term.</returns>
     protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
-        object left = Left.GetValue(variables);
-        object right = Right.GetValue(variables);
+        return Multiply(Left.GetValue(variables), Right.GetValue(variables), ErrorToken);
+    }
 
+    /// <summary>
+    /// This method is used to multiply two values, whatever they turn out to be.  It is here rather
+    /// than inline above because the <c>⋅</c> and <c>×</c> operators fall back on it: each means a
+    /// product of vectors when given two vectors and plain multiplication otherwise, which is what a
+    /// pasted formula using them for scalars expects.
+    /// </summary>
+    /// <param name="left">The left value.</param>
+    /// <param name="right">The right value.</param>
+    /// <param name="errorToken">The token to report a type error against.</param>
+    /// <returns>The product of the two values.</returns>
+    internal static object Multiply(object left, object right, Token errorToken)
+    {
         return left switch
         {
             Vector vectorLeft when right is double doubleRight => vectorLeft * doubleRight,
@@ -43,7 +56,7 @@ public class BinaryMultiplyOperation : BinaryOperation
                     .ToString(),
             _ => throw new TokenException(GetTypeError("multiply", left, right))
             {
-                Token = ErrorToken
+                Token = errorToken
             }
         };
     }

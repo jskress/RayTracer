@@ -1,4 +1,5 @@
 using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -11,6 +12,8 @@ namespace RayTracer.Terms;
 public class SquareOperation : UnaryOperation
 {
     public SquareOperation(Term operand) : base(operand) {}
+
+    internal SquareOperation(Term operand, Token errorToken) : base(operand, errorToken) {}
 
     /// <summary>
     /// This method is used to evaluate this term to produce the square of a value. 

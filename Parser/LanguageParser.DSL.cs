@@ -21,8 +21,53 @@ public partial class LanguageParser
             whitespace
             """
         _operators: predefined
+        // The mathematical symbols.  These exist so that a formula may be pasted in as it was
+        // written rather than translated into function calls first; each is sugar for a function
+        // the catalog already holds, so there is one implementation per operation.  Several
+        // operations arrive as more than one code point, depending on where the formula was copied
+        // from, so the confusable spellings are declared alongside the canonical one and mean
+        // exactly the same thing.
         squared: _operator("\u00b2")
         cubed: _operator("\u00b3")
+        toZeroPower: _operator("\u2070")
+        toFirstPower: _operator("\u00b9")
+        toFourthPower: _operator("\u2074")
+        toFifthPower: _operator("\u2075")
+        toSixthPower: _operator("\u2076")
+        toSeventhPower: _operator("\u2077")
+        toEighthPower: _operator("\u2078")
+        toNinthPower: _operator("\u2079")
+        squareRoot: _operator("\u221a")
+        cubeRoot: _operator("\u221b")
+        degreeSign: _operator("\u00b0")
+        dotProduct: _operator("\u22c5")
+        middleDot: _operator("\u00b7")
+        bulletOperator: _operator("\u2219")
+        bullet: _operator("\u2022")
+        crossProduct: _operator("\u00d7")
+        vectorProduct: _operator("\u2a2f")
+        divisionSign: _operator("\u00f7")
+        divisionSlash: _operator("\u2215")
+        fractionSlash: _operator("\u2044")
+        minusSign: _operator("\u2212")
+        enDash: _operator("\u2013")
+        asteriskOperator: _operator("\u2217")
+        starOperator: _operator("\u22c6")
+        lessOrEqual: _operator("\u2264")
+        greaterOrEqual: _operator("\u2265")
+        notEqualTo: _operator("\u2260")
+        conjunction: _operator("\u2227")
+        disjunction: _operator("\u2228")
+        negation: _operator("\u00ac")
+        // Each of the three logical operations may be written as a word or as a symbol, and the two
+        // are the same operator rather than two that behave alike.  That means "and", "or" and "not"
+        // are keywords of ours, and a keyword takes over its name in this specification from the
+        // predefined operator that had it -- so the symbols have to be reached for under names of
+        // their own.  Naming them here rather than relying on the predefined names is what keeps
+        // both spellings working.
+        logicalAnd: _operator("&&")
+        logicalOr: _operator("||")
+        logicalNot: _operator("!")
 
         _keywords: 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
             'aperture', 'apply',
@@ -40,8 +85,8 @@ public partial class LanguageParser
             'ior', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
-            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'null', 'object', 'of', 'once',
-            'open', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'pigment', 'pipes',
+            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
+            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -63,14 +108,43 @@ public partial class LanguageParser
                 openBracket _expression(2..4, comma) /closeBracket => 'tuple',
                 _number => 'number',
                 _string => 'string',
+                _identifier leftParen _expression(*, comma) /rightParen => 'call',
+                _keyword leftParen _expression(*, comma) /rightParen => 'call',
                 _identifier => 'variable',
                 _keyword => 'variable'
             ]
             unary: [
-                not*, minus*, *squared, *cubed, dollar*, color*, point*, vector*
+                // Postfix binds tighter than prefix, so that -x² is -(x²) and √x² is √(x²), which
+                // is what both mean when they are read aloud and what they mean in print.
+                : postfixFirst,
+                logicalNot*, not*, negation*, minus*, minusSign*, enDash*, dollar*, color*, point*, vector*,
+                squareRoot*, cubeRoot*,
+                *squared, *cubed, *toZeroPower, *toFirstPower, *toFourthPower, *toFifthPower,
+                *toSixthPower, *toSeventhPower, *toEighthPower, *toNinthPower,
+                *degreeSign, *degrees, *radians
             ]
             binary: [
-                plus, minus, multiply, divide, modulo
+                plus, minus, multiply, divide, modulo,
+                // The mathematical symbols take the precedence of the plain operators they stand
+                // beside, since that is what a reader of the formula will assume of them.
+                minusSign: additive, enDash: additive,
+                dotProduct: multiplicative, middleDot: multiplicative,
+                bulletOperator: multiplicative, bullet: multiplicative,
+                crossProduct: multiplicative, vectorProduct: multiplicative,
+                asteriskOperator: multiplicative, starOperator: multiplicative,
+                divisionSign: multiplicative, divisionSlash: multiplicative,
+                fractionSlash: multiplicative,
+                // The comparisons and the logic.  The predefined ones carry their own precedence;
+                // the symbols standing in for them are given the same.  "&&" is set a step above
+                // "||" rather than left level with it, so that a && b || c groups the way anyone
+                // who has written C# will read it.
+                lessthan, lessthanorequal, greaterthan, greaterthanorequal, equal, notequal,
+                logicalAnd: 250, conjunction: 250, and: 250,
+                logicalOr: boolean, disjunction: boolean, or: boolean,
+                lessOrEqual: comparison, greaterOrEqual: comparison, notEqualTo: equality
+            ]
+            trinary: [
+                (if, colon)
             ]
         }
 
