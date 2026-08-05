@@ -65,6 +65,15 @@ public partial class LanguageParser
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "medium":
+                updater.MediumSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A medium must be sampled in at least one place."
+                        : null
+                };
+                break;
             case "width":
                 updater.WidthResolver = new TermResolver<int>
                 {

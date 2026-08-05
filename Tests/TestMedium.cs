@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -178,6 +179,217 @@ public class TestMedium
         // And with nothing in the way at all, the lamp arrives whole.
         Assert.IsTrue(Colors.White.Matches(
             new Scene().GetLightReaching(Point.Zero, new Vector(0, 0, 1), 4)));
+    }
+
+    /// <summary>
+    /// Averages a phase function over the whole sphere, which is what says whether it is measured
+    /// against an even spread: one that is must average to one, however lopsided it may be.
+    /// </summary>
+    private static double AverageOverTheSphere(Medium medium, int steps = 20_000)
+    {
+        double total = 0;
+
+        // Even steps in the cosine are even steps in solid angle, which is what makes this a plain
+        // average rather than one that needs weighting.
+        for (int index = 0; index < steps; index++)
+            total += medium.PhaseFor(-1 + 2 * (index + 0.5) / steps);
+
+        return total / steps;
+    }
+
+    [TestMethod]
+    public void TestAnEvenSpreadIsEvenAndAveragesToOne()
+    {
+        Medium medium = new () { Scattering = new Color(1, 1, 1) };
+
+        Assert.AreEqual(1, medium.PhaseFor(1), 1e-12);
+        Assert.AreEqual(1, medium.PhaseFor(0), 1e-12);
+        Assert.AreEqual(1, medium.PhaseFor(-1), 1e-12);
+        Assert.AreEqual(1, AverageOverTheSphere(medium), 1e-6);
+    }
+
+    [TestMethod]
+    public void TestALopsidedSpreadStillAveragesToOne()
+    {
+        // Anisotropy moves light from one side to the other and must invent none on the way, or a
+        // medium would brighten or dim purely for preferring a direction.
+        Medium medium = new () { Scattering = new Color(1, 1, 1) };
+
+        foreach (double anisotropy in new[] { 0.3, 0.7, -0.4, -0.85 })
+        {
+            medium.Anisotropy = anisotropy;
+
+            Assert.AreEqual(1, AverageOverTheSphere(medium), 1e-3,
+                $"an anisotropy of {anisotropy} did not conserve what it spread");
+        }
+
+        medium.Anisotropy = 0;
+        medium.PhaseFunction = PhaseFunction.Rayleigh;
+
+        Assert.AreEqual(1, AverageOverTheSphere(medium), 1e-6, "Rayleigh's did not either");
+    }
+
+    [TestMethod]
+    public void TestForwardScatteringFavorsTheWayTheLightWasGoing()
+    {
+        Medium forward = new () { Scattering = new Color(1, 1, 1), Anisotropy = 0.6 };
+        Medium backward = new () { Scattering = new Color(1, 1, 1), Anisotropy = -0.6 };
+
+        Assert.IsTrue(forward.PhaseFor(1) > forward.PhaseFor(0),
+            "forward scattering should favor straight on over sideways");
+        Assert.IsTrue(forward.PhaseFor(0) > forward.PhaseFor(-1),
+            "and sideways over straight back");
+
+        // And the other way about is the mirror of it, exactly.
+        Assert.AreEqual(forward.PhaseFor(1), backward.PhaseFor(-1), 1e-12);
+        Assert.AreEqual(forward.PhaseFor(-1), backward.PhaseFor(1), 1e-12);
+
+        // Rayleigh's sends as much back as on, and least to the sides.
+        Medium rayleigh = new ()
+        {
+            Scattering = new Color(1, 1, 1), PhaseFunction = PhaseFunction.Rayleigh
+        };
+
+        Assert.AreEqual(rayleigh.PhaseFor(1), rayleigh.PhaseFor(-1), 1e-12);
+        Assert.IsTrue(rayleigh.PhaseFor(0) < rayleigh.PhaseFor(1));
+    }
+
+    [TestMethod]
+    public void TestTurningLightAsideAlsoTakesItOutOfTheRay()
+    {
+        // Light turned aside no longer travels along the ray, so a medium that only scatters must dim
+        // what lies beyond it exactly as one that only absorbs does.
+        Medium scattering = new () { Scattering = new Color(0.3, 0.3, 0.3) };
+        Medium absorbing = new () { Absorption = new Color(0.3, 0.3, 0.3) };
+
+        Assert.AreEqual(
+            absorbing.GetTransmittanceOver(4).Red, scattering.GetTransmittanceOver(4).Red, 1e-12);
+
+        // And the two together stop light at the sum of their rates.
+        Medium both = new ()
+        {
+            Absorption = new Color(0.1, 0.1, 0.1), Scattering = new Color(0.2, 0.2, 0.2)
+        };
+
+        Assert.AreEqual(Math.Exp(-0.3 * 4), both.GetTransmittanceOver(4).Red, 1e-12);
+        Assert.AreEqual(0.3, both.MeanExtinction, 1e-12);
+    }
+
+    [TestMethod]
+    public void TestScatteringSettlesTheMediumsOwnLightToo()
+    {
+        // What a medium's own light settles at is decided by everything that stops light coming this
+        // way, so a medium that turns its glow aside is as limited by that as by swallowing it -- and
+        // having a way to be stopped is what lets it fill the endless surroundings at all.
+        Medium medium = new ()
+        {
+            Scattering = new Color(0.4, 0.4, 0.4), Emission = new Color(0.2, 0.2, 0.2)
+        };
+
+        Assert.IsFalse(medium.MustBeBounded);
+        Assert.AreEqual(0.5, medium.ApplyOver(Colors.Black, double.PositiveInfinity).Red, 1e-12);
+    }
+
+    [TestMethod]
+    public void TestTheGatheredLightMatchesTheIntegralItStandsFor()
+    {
+        // The one term with no answer to be written down, held to the sum it stands for.  A lamp sits
+        // in an endless fog and the eye looks straight through the lamp's own place: what the eye gets
+        // is everything the fog turns toward it along the way, each scrap dimmed twice over -- once on
+        // its way from the lamp to where it turned, and again on its way from there to the eye.
+        const double scattering = 0.2;
+
+        Scene scene = new ()
+        {
+            Background = new SolidPigment(Colors.Black),
+            Environment = new SceneEnvironment
+            {
+                Medium = new Medium
+                {
+                    Scattering = new Color(scattering, scattering, scattering),
+                    Samples = 4_000
+                }
+            }
+        };
+
+        scene.Lights.Add(new PointLight { Location = Point.Zero, Color = Colors.White });
+
+        Color seen = scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 1);
+
+        // The same thing summed the slow and obvious way.  An even spread hands back one in every
+        // direction, so the shape drops out and what is left is the two trips through the fog.
+        double expected = 0;
+        const double step = 0.0005;
+
+        for (double along = step / 2; along < 400; along += step)
+        {
+            double toTheLamp = Math.Abs(along - 5);
+
+            expected += Math.Exp(-scattering * along) * scattering *
+                        Math.Exp(-scattering * toTheLamp) * step;
+        }
+
+        Assert.AreEqual(expected, seen.Red, 5e-4,
+            $"the gathered light came to {seen.Red}, where the sum says {expected}");
+    }
+
+    [TestMethod]
+    public void TestMoreSamplesFindTheSameAnswer()
+    {
+        // The estimate leans on none of its own arrangements: asking in sixteen places and asking in
+        // five hundred must find the same light, or the count would be a knob that changes the picture
+        // rather than one that settles it.
+        Color few = GatheredWith(16);
+        Color many = GatheredWith(500);
+
+        Assert.AreEqual(many.Red, few.Red, many.Red * 0.1,
+            $"sixteen places gave {few.Red} where five hundred gave {many.Red}");
+
+        // And asking twice gives the same answer twice, however the work was divided up.
+        Assert.IsTrue(GatheredWith(16).Matches(few));
+    }
+
+    /// <summary>
+    /// Looks through a lit fog with the given number of sampling places, and hands back what the eye
+    /// gets.
+    /// </summary>
+    private static Color GatheredWith(int samples)
+    {
+        Scene scene = new ()
+        {
+            Background = new SolidPigment(Colors.Black),
+            Environment = new SceneEnvironment
+            {
+                Medium = new Medium
+                {
+                    Scattering = new Color(0.25, 0.25, 0.25),
+                    Anisotropy = 0.4,
+                    Samples = samples
+                }
+            }
+        };
+
+        scene.Lights.Add(new PointLight { Location = new Point(2, 1, 0), Color = Colors.White });
+
+        return scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 1);
+    }
+
+    [TestMethod]
+    public void TestAFogWithNoLampGathersNothing()
+    {
+        // Scattering only ever hands on light that came from somewhere, so with nothing shining there
+        // is nothing to hand on -- and the medium is then exactly as cheap as one that cannot scatter.
+        Scene scene = new ()
+        {
+            Background = new SolidPigment(Colors.Black),
+            Environment = new SceneEnvironment
+            {
+                Medium = new Medium { Scattering = new Color(0.5, 0.5, 0.5) }
+            }
+        };
+
+        Assert.IsTrue(Colors.Black.Matches(
+            scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 1)));
     }
 
     [TestMethod]

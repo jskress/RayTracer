@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
@@ -156,6 +157,38 @@ public partial class LanguageParser
                 resolver.EmissionResolver = new CoefficientResolver
                 {
                     Term = term, Validator = ValidateCoefficient("emit")
+                };
+                break;
+            case "scattering":
+                resolver.ScatteringResolver = new CoefficientResolver
+                {
+                    Term = term, Validator = ValidateCoefficient("turn aside")
+                };
+                break;
+            case "anisotropy":
+                resolver.AnisotropyResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    // At one exactly, every scrap of light would go straight on and the shape has no
+                    // value at all to give in any other direction.
+                    Validator = anisotropy => Math.Abs(anisotropy) < 1
+                        ? null
+                        : "An anisotropy must lie between minus one and one, and reach neither."
+                };
+                break;
+            case "phase":
+                resolver.PhaseFunctionResolver = new LiteralResolver<PhaseFunction>
+                {
+                    Value = PhaseFunction.Rayleigh
+                };
+                break;
+            case "samples":
+                resolver.SamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = samples => samples < 1
+                        ? "A medium must be sampled in at least one place."
+                        : null
                 };
                 break;
             case "density":

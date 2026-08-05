@@ -69,7 +69,7 @@ public class Scene : NamedThing, IDisposable
         if (hit == null)
         {
             return ThroughTheSurroundings(
-                Background.GetTransformedColorFor(HeadingOf(ray)), double.PositiveInfinity);
+                Background.GetTransformedColorFor(HeadingOf(ray)), ray, double.PositiveInfinity);
         }
 
         hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
@@ -79,7 +79,7 @@ public class Scene : NamedThing, IDisposable
         // What the ray crossed to get here was the surroundings, unless it was on its way out of
         // something, in which case it crossed that thing's insides and has been charged for it
         // already.  This is the same division the fade through a substance has always drawn.
-        return hit.Inside ? color : ThroughTheSurroundings(color, hit.Distance);
+        return hit.Inside ? color : ThroughTheSurroundings(color, ray, hit.Distance);
     }
 
     /// <summary>
@@ -87,13 +87,192 @@ public class Scene : NamedThing, IDisposable
     /// to be dimmed and added to over the span the ray crossed to bring it.
     /// </summary>
     /// <param name="color">The color the ray carried.</param>
+    /// <param name="ray">The ray that carried it.</param>
     /// <param name="distance">How far the ray crossed the surroundings.</param>
     /// <returns>The color once the surroundings have had their say.</returns>
-    private Color ThroughTheSurroundings(Color color, double distance)
+    private Color ThroughTheSurroundings(Color color, Ray ray, double distance)
     {
         return Environment.Medium is null
             ? color
-            : Environment.Medium.ApplyOver(color, distance);
+            : ThroughMedium(Environment.Medium, color, ray, distance);
+    }
+
+    /// <summary>
+    /// This method hands the given color to a medium the ray crossed, for everything the medium does
+    /// to it: what it takes out, what it gives off, and what it gathers in from the scene's lamps.
+    /// </summary>
+    /// <param name="medium">The medium that was crossed.</param>
+    /// <param name="color">The color arriving from beyond it.</param>
+    /// <param name="ray">The ray that crossed it.</param>
+    /// <param name="distance">How far the ray crossed it; may be endless.</param>
+    /// <returns>The color once the medium has had its say.</returns>
+    private Color ThroughMedium(Medium medium, Color color, Ray ray, double distance)
+    {
+        Color through = medium.ApplyOver(color, distance);
+
+        // Everything above was written down rather than worked out.  What follows is the one term
+        // that has to be gone and looked for, and only a medium that turns light aside has it -- so a
+        // scene whose fog merely swallows light costs exactly what it did before any of this existed.
+        if (!medium.Scatters || Lights.Count == 0)
+            return through;
+
+        Color gathered = GatheredFromTheLights(medium, ray, distance);
+
+        // The gathered light adds to what came through without covering the pixel any further: how
+        // much of the pixel the medium stands in front of was settled by what it took out, and
+        // turning light aside is one of the ways it took it.
+        return new Color(
+            through.Red + gathered.Red,
+            through.Green + gathered.Green,
+            through.Blue + gathered.Blue,
+            through.Alpha);
+    }
+
+    /// <summary>
+    /// This method works out how much of the scene's light the medium turns toward the eye along a
+    /// ray's crossing of it -- the shaft of light through a window, the cone below a spotlight, the
+    /// halo around a lamp in fog.
+    /// <para>
+    /// The crossing is cut into equal lengths and asked once within each, at a place nudged off the
+    /// middle so that a bank of samples does not lay its own pattern over the picture.  The nudge is
+    /// the same for every ray, being a plain function of which sample it is, so two renders of one
+    /// scene agree to the last bit.  What each place is asked is what every lamp delivers to it,
+    /// dimmed by whatever stands in the way, which is the very question a surface asks when it is lit.
+    /// </para>
+    /// </summary>
+    /// <param name="medium">The medium being crossed.</param>
+    /// <param name="ray">The ray crossing it.</param>
+    /// <param name="distance">How far the ray crosses it; may be endless.</param>
+    /// <returns>The light the medium sends along the ray.</returns>
+    private Color GatheredFromTheLights(Medium medium, Ray ray, double distance)
+    {
+        int count = medium.Samples;
+        double extinction = medium.MeanExtinction;
+
+        // A medium that turns light aside stops it by doing so, so this cannot be nothing here; the
+        // guard is for the arithmetic's sake rather than for any scene's.
+        if (extinction <= 0 || distance <= 0)
+            return Colors.Black;
+
+        // Places along the crossing are not spread evenly over it.  They are spread by how much of
+        // what is there could still reach the eye, which falls away exponentially -- so most of them
+        // land near this end, where the light that scatters actually shows, and hardly any land far
+        // off, where almost none of it would survive the trip back.  Two things follow.  The
+        // transmittance the weighing would apply is very nearly the transmittance the choosing already
+        // applied, so it cancels and what is left carries no great spread of size; and a crossing with
+        // no end needs no arbitrary stopping point, since the exponential ends it.  Sampled evenly
+        // instead, a ray that saw nothing marched a hundred units in the same handful of steps as its
+        // neighbour that struck the floor at ten, and one long step landing in a lamp's cone showed up
+        // as a bright speck.  Those specks lay in a line along the horizon, which is where that
+        // difference between neighbours falls.
+        double reach = Medium.FractionStopped(extinction * distance);
+        Vector heading = ray.Direction.Unit;
+        double shift = ShiftFor(ray);
+        Color gathered = Colors.Black;
+
+        for (int index = 0; index < count; index++)
+        {
+            double fraction = (index + JitterFor(index, shift)) / count;
+            double along = -Math.Log(1 - fraction * reach) / extinction;
+            double chance = extinction * Math.Exp(-extinction * along) / reach;
+            Point where = ray.Origin + heading * along;
+            Color arriving = Colors.Black;
+
+            foreach (Light light in Lights)
+            {
+                // One place on the lamp per sample, walking around it as the samples go.  An area
+                // light's softness is then spread across the crossing for nothing, rather than each
+                // sample paying for the whole face of it.
+                LightSample sample = light.SampleToward(where, index % light.SampleCount);
+                Color reaching = GetLightReaching(
+                    where, sample.Direction, sample.Distance, ray.TimeIndex);
+
+                if (reaching.Matches(Colors.Black))
+                    continue;
+
+                // The angle between the way the light was travelling and the way it leaves toward the
+                // eye.  Both are read as the directions light moves in, and negating both leaves
+                // their dot product alone, so this is simply the one direction against the other.
+                double phase = medium.PhaseFor(sample.Direction.Dot(heading));
+
+                arriving += light.Color * reaching * (sample.Cone * phase);
+            }
+
+            if (arriving.Matches(Colors.Black))
+                continue;
+
+            // What this place turns aside, of what reached it, dimmed by the trip back to the eye and
+            // divided by how likely the place was to have been asked at all.
+            Color scattered = arriving * medium.Scattering * (medium.Density / (chance * count));
+
+            gathered += scattered * medium.GetTransmittanceOver(along);
+        }
+
+        return gathered;
+    }
+
+    /// <summary>
+    /// This method rebuilds the ray that arrived at the given crossing, which is what a medium filling
+    /// a surface needs before it can be asked what light reaches along the way.  A crossing keeps no
+    /// ray, but it keeps everything needed of one: the eye vector is the ray's own direction turned
+    /// about, and the distance is how far along it the crossing lies -- so for a ray leaving a solid,
+    /// this is the ray that entered it, and the distance is its whole passage through.
+    /// </summary>
+    /// <param name="intersection">The crossing to rebuild the ray for.</param>
+    /// <returns>The ray that reached it.</returns>
+    private static Ray RayThatReached(Intersection intersection)
+    {
+        Vector direction = -intersection.Eye;
+
+        return new Ray(
+            intersection.Point - direction * intersection.Distance, direction,
+            intersection.TimeIndex);
+    }
+
+    /// <summary>
+    /// This method returns where within its own length a sample sits, as a fraction.  Samples laid at
+    /// dead centre make a bank of even steps that the eye reads as banding, so each is nudged off it.
+    /// <para>
+    /// The nudge walks by the golden ratio, which spreads any number of samples about as evenly as
+    /// they can be spread and needs nothing remembered between them: no table, no seed, and the same
+    /// answer on every thread and in every run.  The whole walk is then shifted by an amount belonging
+    /// to the ray, because a nudge that is the same for every ray is no help at all -- every ray then
+    /// samples in the same places, its error is the error of the ray beside it, and the picture shows
+    /// the pattern of the sampling rather than the pattern of the light.
+    /// </para>
+    /// </summary>
+    /// <param name="index">Which sample along the crossing this is.</param>
+    /// <param name="shift">The whole walk's shift, belonging to the ray being sampled.</param>
+    /// <returns>Where in its own length it sits, from nothing up to one.</returns>
+    private static double JitterFor(int index, double shift)
+    {
+        const double golden = 0.618033988749895;
+
+        double walked = shift + index * golden;
+
+        return walked - Math.Floor(walked);
+    }
+
+    /// <summary>
+    /// This method returns the shift to give one ray's sampling, so that neighboring rays do not all
+    /// sample in the same places.  It is drawn from the ray's own direction, which makes it scattered
+    /// from one ray to the next and yet fixed for any given ray -- so two renders of a scene agree to
+    /// the last bit, however the work was divided between threads.
+    /// </summary>
+    /// <param name="ray">The ray to shift the sampling of.</param>
+    /// <returns>The shift, from nothing up to one.</returns>
+    private static double ShiftFor(Ray ray)
+    {
+        ulong bits = (ulong) (
+            BitConverter.DoubleToInt64Bits(ray.Direction.X) * 73_856_093 ^
+            BitConverter.DoubleToInt64Bits(ray.Direction.Y) * 19_349_663 ^
+            BitConverter.DoubleToInt64Bits(ray.Direction.Z) * 83_492_791);
+
+        // Two rounds of mixing, so that directions a hair apart come out nowhere near each other.
+        bits = (bits ^ bits >> 30) * 0xbf58476d1ce4e5b9;
+        bits = (bits ^ bits >> 27) * 0x94d049bb133111eb;
+
+        return (bits >> 11) * (1.0 / (1UL << 53));
     }
 
     /// <summary>
@@ -177,7 +356,11 @@ public class Scene : NamedThing, IDisposable
 
             // And whatever fills the surface has its say over the same span, for the same reason.
             if (material.Interior.Medium is not null)
-                color = material.Interior.Medium.ApplyOver(color, intersection.Distance);
+            {
+                color = ThroughMedium(
+                    material.Interior.Medium, color, RayThatReached(intersection),
+                    intersection.Distance);
+            }
         }
 
         return color;

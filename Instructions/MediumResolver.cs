@@ -22,6 +22,28 @@ public class MediumResolver : ObjectResolver<Medium>
     public Resolver<Color> EmissionResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how much light the medium turns aside per unit of
+    /// distance.
+    /// </summary>
+    public Resolver<Color> ScatteringResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for which way the medium prefers to turn light.
+    /// </summary>
+    public Resolver<double> AnisotropyResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for which shape of scattering the medium follows.
+    /// </summary>
+    public Resolver<PhaseFunction> PhaseFunctionResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many places along a crossing the medium is asked what
+    /// light reaches it, when the medium names a count of its own.
+    /// </summary>
+    public Resolver<int> SamplesResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how much of the medium there is.
     /// </summary>
     public Resolver<double> DensityResolver { get; set; }
@@ -62,6 +84,15 @@ public class MediumResolver : ObjectResolver<Medium>
     {
         AbsorptionResolver.AssignTo(value, target => target.Absorption, context, variables);
         EmissionResolver.AssignTo(value, target => target.Emission, context, variables);
+        ScatteringResolver.AssignTo(value, target => target.Scattering, context, variables);
+        AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
+        PhaseFunctionResolver.AssignTo(value, target => target.PhaseFunction, context, variables);
         DensityResolver.AssignTo(value, target => target.Density, context, variables);
+
+        // How hard to work is the context's business, and the medium's only when it says so: a scene
+        // with one dense plume among thin haze can spend its samples where they are wanted.
+        value.Samples = SamplesResolver is null
+            ? context.MediumSamples
+            : SamplesResolver.Resolve(context, variables);
     }
 }

@@ -71,7 +71,7 @@ public partial class LanguageParser
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
-            'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
+            'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
@@ -90,7 +90,7 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'ramp', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'ramp', 'rayleigh', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
@@ -245,10 +245,16 @@ public partial class LanguageParser
             [ width | height | gamma ] ?? 'Expecting a context block item here.' >
             _expression
         }
+        // How hard to work at a scattering medium, which belongs with the scanner and the
+        // anti-aliasing rather than with the description of what the medium is made of.
+        mediumSamplesClause:
+        {
+            medium > samples ?? 'Expecting "samples" to follow "medium" here.' > _expression
+        }
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | contextPropertyClause
+            settingOffClause | mediumSamplesClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // Camera clauses.
@@ -1222,7 +1228,10 @@ public partial class LanguageParser
         }
         mediumEntryClause:
         [
-            { absorption > _expression } | { emission > _expression } | { density > _expression }
+            { absorption > _expression } | { emission > _expression } |
+            { scattering > _expression } | { anisotropy > _expression } |
+            { density > _expression } | { samples > _expression } |
+            { phase > rayleigh ?? 'Expecting "rayleigh" to follow "phase" here.' }
         ] ?? 'Expecting a medium property here.'
 
         environmentClause:

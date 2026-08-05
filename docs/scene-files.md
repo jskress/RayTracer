@@ -264,9 +264,66 @@ Note where that leads for a `distant light`, whose light comes from infinitely f
 absorbing medium extinguishes it utterly.  That is the right answer to the question as asked — real
 fog has a far side, and the way to describe one is a medium inside a surface.
 
-None of this is sampled or stepped along.  With the density even throughout, both what survives a
-crossing and what the medium adds have exact answers, so a span costs one exponential per color and
-a foggy scene renders at very nearly the speed of a clear one.
+Neither of those is sampled or stepped along.  With the density even throughout, both what survives
+a crossing and what the medium adds have exact answers, so a span costs one exponential per color and
+a fog of that sort renders at very nearly the speed of a clear scene.
+
+#### Scattering
+
+The third thing a medium may do is turn light aside: take light that arrived from somewhere else and
+send it on in a new direction.  Some of what it turns aside goes toward the eye, and that is what a
+shaft of light through a window is, or the cone under a street lamp, or the halo around headlights in
+fog.
+
+```
+environment {
+    medium {
+        scattering 0.06
+        anisotropy 0.3
+    }
+}
+```
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `scattering` | none | How much light the medium turns aside for each unit of distance. |
+| `anisotropy` | 0 | Which way it prefers to turn light, from -1 to 1.  Above nothing favors carrying light on the way it was going; below nothing favors sending it back. |
+| `phase rayleigh` | — | Uses Rayleigh's shape instead, for particles far smaller than the light's own wavelength — what makes a clear sky blue. |
+| `samples` | from the context | How many places along a crossing are asked about, for this medium alone. |
+
+**Turning light aside also takes it out of the ray**, so `scattering` dims what lies beyond it exactly
+as `absorption` does — a purely scattering fog still hides a distant hillside.  The difference is
+where the light goes: absorbed light is gone, while light turned aside went somewhere, and some of
+that somewhere is toward you.
+
+**Anisotropy is the one knob for the shape.**  Nearly everything real prefers to carry light on the
+way it was already going, which is why fog glows brightest around a lamp you are looking *toward*, and
+why a cloud's edge lights up against the sun.  At `0` the medium has no preference at all.  Values are
+measured against that even spread: a medium at `0.7` sends about nineteen times as much light straight
+on as an even spread would, and about a tenth as much straight back.
+
+**This is the one term with no exact answer.**  The angle to each lamp, how far off it is, and whether
+anything stands in the way all change along a ray, so it has to be gone and looked for: the crossing
+is sampled in a number of places, and each place asks every lamp what it delivers there.  That is
+where the cost of a scattering medium lies — roughly *samples × lamps* shadow rays for every pixel
+looking through it.
+
+The places are not spread evenly along the crossing.  They are spread by how much of what is there
+could still reach the eye, so most of them land near your end of it, where scattered light actually
+shows.  That is also why a crossing with no end needs no arbitrary stopping point.
+
+How many places is a question of how hard to work rather than of what the medium is made of, so it
+lives with the scanner and the anti-aliasing:
+
+```
+context { medium samples 48 }
+```
+
+Sixteen is the default, which is plenty for an even haze.  A crisp shaft wants more — a spotlight's
+cone is a small bright region in a long crossing, and too few places leave it speckled rather than
+smooth.  A single medium may name its own count when one volume in a scene needs more care than the
+rest.  Note that the speckle is the same in every render of a scene rather than shifting about, so it
+will not average away over the frames of an animation; the cure is more places, not more frames.
 
 ### Comments
 

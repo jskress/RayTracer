@@ -60,10 +60,48 @@ public class Medium
     public Color Emission { get; set; } = Colors.Black;
 
     /// <summary>
-    /// This property holds a plain multiplier on both of the above, so that how much of the stuff
-    /// there is may be said separately from what the stuff does.  Thinning a fog is then one number
-    /// rather than several, and it is the number that will be allowed to vary from place to place
-    /// when a medium may be given a shape.
+    /// This property holds how much light the medium turns aside for each unit of distance, color by
+    /// color -- light that came from somewhere else and leaves in a new direction.
+    /// <para>
+    /// It costs a ray twice over, and the two are worth keeping apart.  Light turned aside is light
+    /// that no longer continues along the ray, so scattering dims what lies beyond exactly as
+    /// absorption does; that is why <see cref="ExtinctionOf"/> counts both.  But unlike absorbed
+    /// light, it has not gone anywhere -- it went somewhere else, and where some of it goes is toward
+    /// the eye, gathered from every lamp along the way.  That second half is what a shaft of light
+    /// through a window is, and it is the one term here with no exact answer to be written down.
+    /// </para>
+    /// </summary>
+    public Color Scattering { get; set; } = Colors.Black;
+
+    /// <summary>
+    /// This property holds which way the medium prefers to turn light, from minus one to one.  At
+    /// nothing it has no preference and spreads light evenly.  Above nothing it favors carrying light
+    /// on the way it was already going, which is what nearly everything real does -- it is why fog
+    /// glows brightest around a lamp you are looking toward, and why cloud edges light up against the
+    /// sun.  Below nothing it favors sending light back the way it came.
+    /// </summary>
+    public double Anisotropy { get; set; }
+
+    /// <summary>
+    /// This property holds which shape of scattering the medium follows.  The default covers both an
+    /// even spread and the whole forward-and-back family, by way of <see cref="Anisotropy"/>; the
+    /// other is for the particular case of particles far smaller than the wavelength of the light,
+    /// which is what makes the sky blue.
+    /// </summary>
+    public PhaseFunction PhaseFunction { get; set; } = PhaseFunction.HenyeyGreenstein;
+
+    /// <summary>
+    /// This property holds how many places along a ray's crossing the medium is asked what light
+    /// reaches it.  Only scattering needs this; what a medium absorbs and gives off is answered
+    /// exactly, at no cost per sample at all.
+    /// </summary>
+    public int Samples { get; set; } = 16;
+
+    /// <summary>
+    /// This property holds a plain multiplier on all three coefficients, so that how much of the
+    /// stuff there is may be said separately from what the stuff does.  Thinning a fog is then one
+    /// number rather than several, and it is the number that will be allowed to vary from place to
+    /// place when a medium may be given a shape.
     /// </summary>
     public double Density { get; set; } = 1;
 
@@ -71,21 +109,127 @@ public class Medium
     /// This property reports whether this medium does anything at all, so that a scene which names
     /// one but leaves it empty pays nothing for it.
     /// </summary>
-    public bool Affects => Density > 0 && (Absorbs || Emits);
+    public bool Affects => Density > 0 && (Absorbs || Emits || Scatters);
+
+    /// <summary>
+    /// This property reports whether the medium turns light aside at all, and so whether the one
+    /// term that has to be sampled needs to be worked out.  A medium that does not is exactly as
+    /// cheap as it was before scattering existed.
+    /// </summary>
+    public bool Scatters =>
+        Density > 0 && (Scattering.Red > 0 || Scattering.Green > 0 || Scattering.Blue > 0);
 
     /// <summary>
     /// This property reports whether the medium's own light would pile up without limit if the
-    /// space it filled had no end.  It emits somewhere that it does not absorb, so there is nothing
-    /// to settle it at any value: over an endless span, such a medium is infinitely bright.  It is
-    /// a perfectly good description of a bounded thing and no description at all of the sky.
+    /// space it filled had no end.  It emits somewhere that nothing takes light back out, so there is
+    /// nothing to settle it at any value: over an endless span, such a medium is infinitely bright.
+    /// It is a perfectly good description of a bounded thing and no description at all of the sky.
+    /// Note that turning light aside settles it just as absorbing it does, both being ways for light
+    /// to stop coming this way.
     /// </summary>
     public bool MustBeBounded =>
-        Emission.Red > 0 && Absorption.Red <= 0 ||
-        Emission.Green > 0 && Absorption.Green <= 0 ||
-        Emission.Blue > 0 && Absorption.Blue <= 0;
+        Emission.Red > 0 && ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
+        Emission.Green > 0 && ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
+        Emission.Blue > 0 && ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
 
     private bool Absorbs => Absorption.Red > 0 || Absorption.Green > 0 || Absorption.Blue > 0;
     private bool Emits => Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;
+
+    /// <summary>
+    /// This method returns how much light of one color stops coming this way per unit of distance,
+    /// which is everything absorbed plus everything turned aside.
+    /// </summary>
+    /// <param name="absorption">How much of this color the medium absorbs per unit of distance.</param>
+    /// <param name="scattering">How much of this color it turns aside per unit of distance.</param>
+    /// <returns>The rate at which this color leaves the ray.</returns>
+    private double ExtinctionOf(double absorption, double scattering)
+    {
+        return (absorption + scattering) * Density;
+    }
+
+    /// <summary>
+    /// This method returns how much of the light arriving at a point from one direction leaves it in
+    /// another, for the angle between the two.  It is measured against an even spread, which is to say
+    /// an even spread hands back one in every direction and anything else hands back more one way and
+    /// less another, averaging to one over the whole sphere.
+    /// <para>
+    /// A density over directions would hand back a four pi'th of that -- and it is worth saying why it
+    /// does not.  Nothing else about the way this renderer lights a scene is normalized that way: a
+    /// lamp's brightness does not fall off with distance, and a matte surface facing a lamp returns
+    /// the lamp's color rather than a pi'th of it.  Dropping a properly normalized phase function into
+    /// the middle of that buys no physical truth; it only makes a scene write a scattering of three
+    /// where it means a third, and a lamp of three where it means one.  What carries the physics here
+    /// is the <i>shape</i> -- which way light prefers to go, and by how much -- and that is the same
+    /// either way.  An integrator that gathers light over the whole sphere rather than from a handful
+    /// of lamps, as multiple scattering will, must divide by four pi to use these.
+    /// </para>
+    /// </summary>
+    /// <param name="cosine">The cosine of the angle between the way the light was going and the way
+    /// the scattered light goes.  One is straight on, minus one is straight back.</param>
+    /// <returns>How much of the light goes that way.</returns>
+    public double PhaseFor(double cosine)
+    {
+        return PhaseFunction switch
+        {
+            // Rayleigh's, for particles far smaller than the light's own wavelength.  It is gently
+            // two-lobed -- as much goes back as goes on, and least goes out to the sides.
+            PhaseFunction.Rayleigh => 3 * (1 + cosine * cosine) / 4,
+            _ => HenyeyGreensteinFor(cosine)
+        };
+    }
+
+    /// <summary>
+    /// This method returns the Henyey-Greenstein value for the given angle.  It is the standard
+    /// one-parameter family, and the reason a single number covers both an even spread and every
+    /// degree of forward or backward preference: at an anisotropy of nothing it reduces exactly to
+    /// the even spread.
+    /// </summary>
+    /// <param name="cosine">The cosine of the scattering angle.</param>
+    /// <returns>How much of the light goes that way.</returns>
+    private double HenyeyGreensteinFor(double cosine)
+    {
+        if (Anisotropy == 0)
+            return 1;
+
+        double squared = Anisotropy * Anisotropy;
+        double denominator = 1 + squared - 2 * Anisotropy * cosine;
+
+        return (1 - squared) / (denominator * Math.Sqrt(denominator));
+    }
+
+    /// <summary>
+    /// This property holds one rate standing for all three colors, which is what the places to ask
+    /// about scattering are chosen by.  Choosing them once rather than three times over is what keeps
+    /// a crossing to one set of shadow rays; each color is then weighed for its own extinction, so
+    /// nothing is lost by having chosen with the average.
+    /// </summary>
+    public double MeanExtinction =>
+        (ExtinctionOf(Absorption.Red, Scattering.Red) +
+         ExtinctionOf(Absorption.Green, Scattering.Green) +
+         ExtinctionOf(Absorption.Blue, Scattering.Blue)) / 3;
+
+    /// <summary>
+    /// This method returns what fraction of light fails to survive the given number of crossings'
+    /// worth of medium -- one less the exponential of minus it.
+    /// <para>
+    /// Written plainly that loses nearly all its precision when the exponent is small: the exponential
+    /// is a whisker under one, and subtracting it from one throws away the digits that carried the
+    /// answer.  Whatever it is then divided by makes noise of what is left.  (.NET's ExpM1 is no help;
+    /// measured, it hands back the very same value the subtraction does.)  Below the crossover the
+    /// series is used instead, which is the same quantity written so that nothing has to cancel.
+    /// </para>
+    /// </summary>
+    /// <param name="crossings">How many times over the light might have been stopped.</param>
+    /// <returns>The fraction stopped, from nothing up to one.</returns>
+    public static double FractionStopped(double crossings)
+    {
+        if (double.IsPositiveInfinity(crossings))
+            return 1;
+
+        return crossings < 1e-4
+            ? crossings * (1 - crossings / 2 + crossings * crossings / 6)
+            : 1 - Math.Exp(-crossings);
+    }
 
     /// <summary>
     /// This method returns the fraction of light that survives a crossing of the given length, color
@@ -101,9 +245,9 @@ public class Medium
             return Colors.White;
 
         return new Color(
-            SurvivingFraction(Absorption.Red, distance),
-            SurvivingFraction(Absorption.Green, distance),
-            SurvivingFraction(Absorption.Blue, distance));
+            SurvivingFraction(Absorption.Red, Scattering.Red, distance),
+            SurvivingFraction(Absorption.Green, Scattering.Green, distance),
+            SurvivingFraction(Absorption.Blue, Scattering.Blue, distance));
     }
 
     /// <summary>
@@ -120,14 +264,14 @@ public class Medium
         if (!Affects || distance <= 0)
             return behind;
 
-        double red = SurvivingFraction(Absorption.Red, distance);
-        double green = SurvivingFraction(Absorption.Green, distance);
-        double blue = SurvivingFraction(Absorption.Blue, distance);
+        double red = SurvivingFraction(Absorption.Red, Scattering.Red, distance);
+        double green = SurvivingFraction(Absorption.Green, Scattering.Green, distance);
+        double blue = SurvivingFraction(Absorption.Blue, Scattering.Blue, distance);
 
         return new Color(
-            behind.Red * red + AddedAlong(Absorption.Red, Emission.Red, distance),
-            behind.Green * green + AddedAlong(Absorption.Green, Emission.Green, distance),
-            behind.Blue * blue + AddedAlong(Absorption.Blue, Emission.Blue, distance),
+            behind.Red * red + AddedAlong(Absorption.Red, Scattering.Red, Emission.Red, distance),
+            behind.Green * green + AddedAlong(Absorption.Green, Scattering.Green, Emission.Green, distance),
+            behind.Blue * blue + AddedAlong(Absorption.Blue, Scattering.Blue, Emission.Blue, distance),
             Covering(behind.Alpha, (red + green + blue) / 3));
     }
 
@@ -135,11 +279,12 @@ public class Medium
     /// This method returns how much of one color survives a crossing of the given length.
     /// </summary>
     /// <param name="absorption">How much of this color the medium absorbs per unit of distance.</param>
+    /// <param name="scattering">How much of this color it turns aside per unit of distance.</param>
     /// <param name="distance">How far the light travels through the medium.</param>
     /// <returns>The fraction of this color that gets through.</returns>
-    private double SurvivingFraction(double absorption, double distance)
+    private double SurvivingFraction(double absorption, double scattering, double distance)
     {
-        double sigma = absorption * Density;
+        double sigma = ExtinctionOf(absorption, scattering);
 
         // An endless span needs no case of its own here: the exponential of minus infinity is
         // nothing, which is exactly what gets through an endless absorbing fog.
@@ -152,12 +297,17 @@ public class Medium
     /// end of the span.
     /// </summary>
     /// <param name="absorption">How much of this color the medium absorbs per unit of distance.</param>
+    /// <param name="scattering">How much of this color it turns aside per unit of distance.</param>
     /// <param name="emission">How much of this color the medium emits per unit of distance.</param>
     /// <param name="distance">How far the ray travels through the medium.</param>
     /// <returns>The light of this color the medium adds.</returns>
-    private double AddedAlong(double absorption, double emission, double distance)
+    private double AddedAlong(
+        double absorption, double scattering, double emission, double distance)
     {
-        double sigma = absorption * Density;
+        // What settles the medium's own light is everything that stops light coming this way, not
+        // absorption alone: a medium that turns its own glow aside is as dimmed by that as by
+        // swallowing it.
+        double sigma = ExtinctionOf(absorption, scattering);
         double epsilon = emission * Density;
 
         if (epsilon <= 0)
@@ -169,19 +319,8 @@ public class Medium
         if (sigma <= 0)
             return epsilon * distance;
 
-        double crossings = sigma * distance;
-
-        // What is wanted is (ε/σ)(1 - exp(-σd)), which serves once the exponent is of any size but
-        // falls apart when it is small: the exponential is then a whisker under one, subtracting it
-        // from one throws away the very digits that carried the answer, and multiplying what little
-        // is left by the large ε/σ makes noise of it.  (.NET's ExpM1 is no help here; it hands back
-        // the same value the subtraction does.)  Below the crossover the series is used instead,
-        // which is the same quantity written so that nothing has to cancel.  The two agree to a dozen
-        // digits where they meet, and between them a scene may tune its absorption down toward
-        // nothing and watch the picture change smoothly rather than break up.
-        return crossings < 1e-4
-            ? epsilon * distance * (1 - crossings / 2 + crossings * crossings / 6)
-            : epsilon / sigma * (1 - Math.Exp(-crossings));
+        // (ε/σ)(1 - exp(-σd)), with the awkward part of it kept in one place.
+        return epsilon / sigma * FractionStopped(sigma * distance);
     }
 
     /// <summary>

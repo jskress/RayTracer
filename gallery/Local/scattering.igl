@@ -1,0 +1,105 @@
+// A scene about light you can see without it landing on anything.
+//
+// A medium that only absorbs can hide things and can glow of itself, but it cannot show you a lamp's
+// light in mid-air: light either reaches the eye or it does not.  Scattering is the other thing a
+// medium does with light -- it takes light that arrived from somewhere else and sends it off in a new
+// direction -- and some of what it sends goes toward the eye.  That is the whole of why a shaft of
+// light through a window is visible at all.  Nothing here is lit but the floor; everything else you
+// can see in the air is light on its way somewhere else, turned aside toward you.
+//
+// Three things are worth reading in this picture.
+//
+// The cones are the plain effect: the haze inside each beam is lit and the haze outside it is not, so
+// the beam has a shape.  Their rims are soft because the spotlights' own rims are.
+//
+// The dark band cut across the left beam is the part worth the effort.  The slab standing in the beam
+// takes the light out of the haze behind it, so the beam has a shadow *in mid-air* -- a hole in
+// something that is not a surface at all.  That can only come of asking, at each place along the ray,
+// whether the lamp can be seen from there, which is exactly what makes this the expensive term.
+//
+// Both beams are tipped back toward the camera, which is what makes them bright.  The haze prefers to
+// carry light on the way it was already going -- the anisotropy below -- so a beam pointed at you
+// shows several times what a beam thrown across you would.  Set the anisotropy to nothing and the
+// picture flattens and dims.
+//
+// The cost is real and worth stating: what a medium absorbs and gives off is written down, but what it
+// turns aside has to be gone and looked for, at some number of places along every ray that crosses it,
+// each asking every lamp what it delivers there.  This scene asks in a hundred and sixty places, which
+// is a great many more than the sixteen a plain haze needs: a crisp beam is a small bright region in a
+// long crossing, so too few places leave it speckled rather than smooth.  Sixty-four takes this picture
+// in thirteen seconds and shows the speckle plainly; a hundred and sixty takes thirty and does not.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    medium samples 160
+    info {
+        title 'Scattering'
+        author 'J. Stephen Kress'
+        description 'Spotlights made visible by the haze they cross, one of them casting a shadow in mid-air.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.6, -8]
+    look at [0, 2.3, 0]
+    field of view 50
+}
+
+background Black
+
+// The haze.  It turns light aside far more than it swallows it, which is what smoke and mist do; a
+// little absorption keeps the far end of the room from going on forever.
+environment {
+    medium {
+        scattering 0.13
+        absorption 0.008
+        anisotropy 0.5
+    }
+}
+
+// Both beams are aimed down and back toward the camera rather than straight down, and that is
+// deliberate: the haze prefers to carry light on the way it was already going, so a beam tipped toward
+// the eye hands it several times what a beam thrown across the view would.  Aim them straight down and
+// the picture dims to a murk.
+spot light {
+    location [-2.6, 7.6, 5]
+    point at [-0.6, 0, -3]
+    radius 7
+    falloff 11
+    tightness 4
+    color [3.8, 3.7, 3.5]
+}
+
+spot light {
+    location [3.4, 7.2, 6]
+    point at [1.6, 0, -1]
+    radius 5.5
+    falloff 9
+    tightness 4
+    color [4.0, 3.4, 2.7]
+}
+
+plane {
+    material {
+        pigment checker { [0.3, 0.29, 0.27], [0.4, 0.39, 0.36] }
+        ambient 0.02
+        specular 0.1
+        shininess 40
+    }
+}
+
+// The slab whose shadow is thrown through the middle beam rather than onto the floor alone.
+cube {
+    material {
+        pigment [0.55, 0.5, 0.45]
+        ambient 0.03
+        specular 0.15
+    }
+    scale [1.0, 0.09, 0.5]
+    rotate Z 8
+    translate [-0.9, 3.6, 1.2]
+}

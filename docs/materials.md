@@ -207,6 +207,10 @@ Two things follow from a medium being *inside* something.  The surface has to le
 a ray that cannot get in never crosses what is in there, exactly as with `clarity`.  And being
 bounded, such a medium may emit without absorbing; its light stops at the far wall.
 
+A medium inside a surface may [scatter](scene-files.md#scattering) as well, in which case it gathers
+light from the scene's lamps just as one filling the surroundings does — so a glass globe of smoke
+lights up where a lamp shines into it.
+
 `clarity` and a medium overlap on purpose rather than one replacing the other.  Clarity is the
 one-number form of the same idea, and stays the easier thing to reach for when fading with depth is
 all a surface needs.  A medium is the richer form: it fades color by color, and it can glow.  A

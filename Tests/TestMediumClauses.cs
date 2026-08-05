@@ -230,6 +230,161 @@ public class TestMediumClauses
     }
 
     [TestMethod]
+    public void TestAMediumMayTurnLightTowardTheEye()
+    {
+        // The lamp stands in the fog and nothing else does, so every scrap of what is seen was turned
+        // toward the eye by the fog itself.  Without scattering the same scene is empty and black.
+        const string fog = """
+            camera { location [0, 0, -5]  look at [0, 0, 1]  field of view 60 }
+            point light { location [0, 0, 0]  color White }
+            background Black
+            """;
+        (Canvas lit, string error) = Render("""
+            environment { medium { scattering 0.2 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+
+        Assert.IsNull(error, error);
+        Assert.IsTrue(lit.GetPixel(20, 20).Red > 0.2,
+            $"the fog should be plainly lit, and came out {lit.GetPixel(20, 20)}");
+
+        (Canvas unlit, string second) = Render("""
+            environment { medium { absorption 0.2 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+
+        Assert.IsNull(second, second);
+        Assert.IsTrue(unlit.GetPixel(20, 20).Red < 0.001,
+            "a fog that only swallows light should show nothing of a lamp inside it");
+    }
+
+    [TestMethod]
+    public void TestWhichWayAMediumTurnsLightShows()
+    {
+        // The lamp is behind the eye, so along the whole of what the eye looks down, the light arrives
+        // travelling the way the eye is looking and has to be turned right around to be seen -- the
+        // headlights-in-fog case.  A medium favoring the way light came from must then show far more
+        // than one favoring the way it was already going.
+        //
+        // Note that the lamp has to be behind rather than beyond: a lamp ahead of the eye still has
+        // ray past it, and every place out there sees the lamp behind itself, so the two halves mix
+        // and neither preference wins cleanly.  What each shape is worth at a given angle is pinned
+        // exactly in the unit tests, where no geometry can get in the way.
+        const string fog = """
+            camera { location [0, 0, -5]  look at [0, 0, 1]  field of view 60 }
+            point light { location [0, 0, -9]  color White }
+            background Black
+            """;
+        double carriedOn = Lit(fog, "anisotropy 0.7");
+        double sentBack = Lit(fog, "anisotropy -0.7");
+        double spreadEvenly = Lit(fog, "anisotropy 0");
+        double rayleigh = Lit(fog, "phase rayleigh");
+
+        Assert.IsTrue(sentBack > spreadEvenly,
+            $"a medium favoring the way light came from should show more than an even spread: " +
+            $"{sentBack} against {spreadEvenly}");
+        Assert.IsTrue(carriedOn < spreadEvenly,
+            $"and one favoring the way it was going should show less: {carriedOn} against " +
+            $"{spreadEvenly}");
+
+        // Rayleigh's sends as much back as on and least to the sides, so looked straight back down it
+        // shows more than an even spread but nothing like a medium bent on sending light back.
+        Assert.IsTrue(rayleigh > spreadEvenly && rayleigh < sentBack,
+            $"Rayleigh's should sit between the even spread and the backward one, and gave {rayleigh}");
+    }
+
+    /// <summary>
+    /// Renders the given fog with the given scattering shape and hands back how lit the middle of it
+    /// came out.
+    /// </summary>
+    private double Lit(string fog, string shape)
+    {
+        (Canvas image, string error) = Render("""
+            environment { medium { scattering 0.15  {{shape}} } }
+            {{fog}}
+            """.Replace("{{shape}}", shape).Replace("{{fog}}", fog));
+
+        Assert.IsNull(error, error);
+
+        return image.GetPixel(20, 20).Red;
+    }
+
+    [TestMethod]
+    public void TestHowHardToWorkIsTheContextsBusinessAndTheMediumsChoice()
+    {
+        // Asking in one place is a poor estimate and asking in sixty-four is a good one, so the two
+        // must differ -- otherwise the setting does nothing at all.
+        const string fog = """
+            camera { location [0, 0, -5]  look at [0, 0, 1]  field of view 60 }
+            point light { location [1, 1, 2]  color White }
+            background Black
+            """;
+        (Canvas crude, string first) = Render("""
+            context { medium samples 1 }
+            environment { medium { scattering 0.3  anisotropy 0.5 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+        (Canvas careful, string second) = Render("""
+            context { medium samples 64 }
+            environment { medium { scattering 0.3  anisotropy 0.5 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+        Assert.IsFalse(crude.GetPixel(20, 20).Matches(careful.GetPixel(20, 20)),
+            "the number of places asked about made no difference at all");
+
+        // And a medium may name its own count, which then stands whatever the context says -- so this
+        // must match the careful one exactly rather than the crude one it was told to be.
+        (Canvas overridden, string third) = Render("""
+            context { medium samples 1 }
+            environment { medium { scattering 0.3  anisotropy 0.5  samples 64 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+
+        Assert.IsNull(third, third);
+
+        for (int x = 0; x < overridden.Width; x++)
+        for (int y = 0; y < overridden.Height; y++)
+        {
+            Assert.IsTrue(overridden.GetPixel(x, y).Matches(careful.GetPixel(x, y)),
+                $"the medium's own count did not stand at {x}, {y}");
+        }
+    }
+
+    [TestMethod]
+    public void TestASpotlightLaysAVisibleConeInAFog()
+    {
+        // The effect the whole effort is for.  A spotlight aimed down through a fog is seen as a cone,
+        // because the fog inside it is lit and the fog outside it is not -- and nothing but the fog
+        // makes it visible, there being nothing above the floor to catch the light.
+        (Canvas image, string error) = Render("""
+            context { medium samples 48 }
+            camera { location [0, 2.5, -8]  look at [0, 2, 0]  field of view 45 }
+            background Black
+            environment { medium { scattering 0.06  anisotropy 0.3 } }
+            spot light {
+                location [0, 7, 0]
+                point at [0, 0, 0]
+                radius 8
+                falloff 12
+                color White
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        // The middle of the frame looks along the cone; the edge looks past it.
+        double insideTheCone = image.GetPixel(20, 12).Red;
+        double outsideTheCone = image.GetPixel(3, 12).Red;
+
+        Assert.IsTrue(insideTheCone > outsideTheCone * 5,
+            $"the cone should stand out plainly: {insideTheCone} inside against {outsideTheCone} " +
+            "outside");
+    }
+
+    [TestMethod]
     public void TestAMediumCannotWorkBackward()
     {
         (Canvas image, string error) = Render("""
@@ -255,6 +410,32 @@ public class TestMediumClauses
 
         Assert.IsNull(image);
         Assert.Contains("density cannot be less than nothing", error);
+
+        (image, error) = Render("""
+            environment { medium { scattering [0, -0.3, 0] } }
+            {{Viewpoint}}
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(image);
+        Assert.Contains("cannot turn aside light at less than no rate", error);
+
+        // At one exactly, every scrap would go straight on and the shape would have nothing left to
+        // say about any other direction.
+        (image, error) = Render("""
+            environment { medium { scattering 0.1  anisotropy 1 } }
+            {{Viewpoint}}
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(image);
+        Assert.Contains("between minus one and one", error);
+
+        (image, error) = Render("""
+            environment { medium { scattering 0.1  samples 0 } }
+            {{Viewpoint}}
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(image);
+        Assert.Contains("at least one place", error);
     }
 
     /// <summary>
