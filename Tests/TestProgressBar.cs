@@ -19,6 +19,49 @@ public class TestProgressBar
     }
 
     [TestMethod]
+    public void TestTheBarIsOnlyDrawnWhenItMoves()
+    {
+        // The bar is fifty characters wide, so two hundred bumps can move it fifty times at the very
+        // most.  Bumping used to ask for the line to be rewritten regardless of whether anything had
+        // changed, which for a real image meant a rewrite per pixel -- measured at 450,000 rewrites
+        // and 54MB of terminal writes for one 1400x1050 render, all of it serialized through the one
+        // lock that draws, and so through every thread doing the rendering.  That render took 13.2
+        // seconds; once the drawing was asked for only when the bar had actually moved, it took 3.5.
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+        ProgressBar bar = new ();
+
+        Console.SetOut(captured);
+
+        try
+        {
+            bar.SetTotal(200);
+
+            // Nothing is drawn until the bar has waited out its threshold, so watching it draw means
+            // waiting too.
+            Thread.Sleep(2_100);
+
+            for (int index = 0; index < 200; index++)
+                bar.Bump();
+
+            bar.Done();
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        string drawn = captured.ToString();
+        int redraws = drawn.Count(character => character == ']');
+
+        Assert.IsTrue(redraws is > 0 and <= 60,
+            $"the bar was drawn {redraws} times for 200 bumps");
+
+        // And it finished full, which is what Done() is for.
+        Assert.Contains(new string('=', 50), drawn, "the bar did not end up full");
+    }
+
+    [TestMethod]
     public void TestZeroTotalDoneDoesNotThrow()
     {
         // Done() unconditionally sets _current = _total and _used = 50, so it must not

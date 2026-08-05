@@ -16,6 +16,9 @@ public class ProgressBar
     private long _total;
     private int _used;
     private int _lastUsed;
+    private bool _cursorHidden;
+    private bool _interrupted;
+    private ConsoleCancelEventHandler _onInterrupt;
 
     /// <summary>
     /// This method is used to set the total count the progress bar should expect.  This
@@ -33,6 +36,7 @@ public class ProgressBar
         _total = total;
         _used = 0;
         _lastUsed = 0;
+        _interrupted = false;
 
         ClearLine();
     }
@@ -48,7 +52,13 @@ public class ProgressBar
             _used = (int) (_current * 50 / _total);
         }
 
-        Show(true);
+        // A pixel finishing is only worth drawing if it moved the bar, which one pixel in tens of
+        // thousands does.  Asking for the drawing to happen regardless -- as this used to -- rewrote
+        // the whole line once per pixel: a million times over for a large image, tens of megabytes of
+        // terminal writes, all of it serialized through this one lock and so through every thread
+        // doing the rendering.  The clock still asks unconditionally once a second, which is what
+        // keeps the estimate moving while the bar itself stands still.
+        Show(false);
     }
 
     /// <summary>
@@ -66,6 +76,8 @@ public class ProgressBar
 
         if (Console.CursorLeft > 0)
             Console.WriteLine();
+
+        ShowCursor();
     }
 
     /// <summary>
@@ -80,6 +92,14 @@ public class ProgressBar
             // Only show the progress bar if, we've past our time threshold.
             if (now > _threshold && (_used != _lastUsed || fromClock))
             {
+                // The bar is drawn by walking back to the start of the line and writing over it in
+                // several pieces, once for each color it uses.  The terminal draws its cursor
+                // wherever each piece leaves it, so with the cursor showing, the line appears to
+                // flicker as it is rewritten.  It is put away before the first piece and left away
+                // for as long as the bar owns the line, rather than being restored between passes,
+                // which would only trade a flicker for a blink.
+                HideCursor();
+
                 ConsoleColor hold = Console.ForegroundColor;
 
                 Console.CursorLeft = 0;
@@ -128,6 +148,55 @@ public class ProgressBar
         long ticksLeft = Convert.ToInt64(elapsed / _current * todo);
 
         return TimeSpan.FromTicks(ticksLeft).Add(TimeSpan.FromSeconds(1));
+    }
+
+    /// <summary>
+    /// This method puts the cursor away while the progress bar has the line, and arranges to put it
+    /// back if the user gives up on the render.
+    /// <para>
+    /// That last part is not a nicety.  The runtime does not restore the cursor when a program ends
+    /// -- it writes the sequence that hides one and nothing more -- so a render stopped with a
+    /// keystroke would otherwise leave the terminal with no cursor at all, long after the render that
+    /// took it away is gone.
+    /// </para>
+    /// <para>
+    /// Note that the cursor is only ever set, never asked about: reading
+    /// <c>Console.CursorVisible</c> throws on everything but Windows.  Setting it is safe everywhere,
+    /// and writes nothing at all when the output is not a terminal.
+    /// </para>
+    /// </summary>
+    private void HideCursor()
+    {
+        if (_cursorHidden || _interrupted)
+            return;
+
+        // Marking the render given up on before handing the cursor back is what keeps a draw that
+        // races the keystroke from taking it away again a moment later.
+        _onInterrupt = (_, _) =>
+        {
+            _interrupted = true;
+
+            ShowCursor();
+        };
+
+        Console.CancelKeyPress += _onInterrupt;
+        Console.CursorVisible = false;
+
+        _cursorHidden = true;
+    }
+
+    /// <summary>
+    /// This method gives the cursor back, once the progress bar is finished with the line.
+    /// </summary>
+    private void ShowCursor()
+    {
+        if (!_cursorHidden)
+            return;
+
+        _cursorHidden = false;
+
+        Console.CancelKeyPress -= _onInterrupt;
+        Console.CursorVisible = true;
     }
 
     /// <summary>
