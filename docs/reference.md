@@ -36,6 +36,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
+| `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -91,6 +92,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
+| `density` | Medium: how much of the stuff there is. | [Scene Files](scene-files.md#filling-that-space) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth. | [Materials](materials.md#roughening-the-surface) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
@@ -106,7 +108,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
-| `environment` | `environment ior` (or `index of refraction`): the index of refraction of the space between a scene's objects. | [Scene Files](scene-files.md#the-space-between-things) |
+| `emission` | Medium: how much light it gives off per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
+| `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
@@ -170,7 +173,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `materials` | L-system: maps characters or depths to materials. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
 | `max` | Extrusion: the high Y of the solid (`max Y`). | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
-| `medium` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `medium` | What fills a piece of space; also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
 | `metallic` | Finish: tints the highlight with the surface color. | [Materials](materials.md#metallic) |
 | `min` | Extrusion: the low Y of the solid (`min Y`). | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

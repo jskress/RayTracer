@@ -131,6 +131,9 @@ public partial class LanguageParser
             case "background":
                 resolver.BackgroundResolver = ParsePigmentClause();
                 break;
+            case "environmentBlock":
+                resolver.EnvironmentResolver = ParseEnvironmentBlock();
+                break;
             case "environment":
                 resolver.EnvironmentResolver = ParseEnvironmentClause(clause);
                 break;

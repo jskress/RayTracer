@@ -211,6 +211,63 @@ environment index of refraction 1.333
 Like `background`, this may sit at the top level or inside a `scene { }` block, so two scenes in one
 file may sit in different surroundings.
 
+#### Filling that space
+
+The surroundings can be more than empty space with an index.  When there is more than one thing to
+say about them, `environment` takes a block, and what fills the space is a `medium`:
+
+```
+environment {
+    ior Air
+    medium {
+        absorption [0.058, 0.05, 0.042]
+        emission [0.035, 0.04, 0.052]
+    }
+}
+```
+
+A medium is something a ray passes *through* rather than strikes.  Two things happen to a ray
+crossing it: light is taken out, so what lies beyond arrives dimmer; and the medium's own light is
+added all along the way, each bit of it dimmed in turn by however much medium still lies between it
+and the eye.  Together those are haze, fog, smoke, and the glow of a gas.
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `absorption` | none | How much light the medium takes out for each unit of distance. |
+| `emission` | none | How much light it gives off for each unit of distance. |
+| `density` | 1 | A plain multiplier on both, so how *much* of the stuff there is can be said apart from what the stuff does. |
+
+The first two are colors, because a haze that dims red more than blue is the whole reason far hills
+are blue rather than gray.  Either may be written as a single number when all three colors are the
+same, exactly as `clarity` is:
+
+```
+medium { absorption 0.04 }
+```
+
+**The sky comes out of this.**  A ray that strikes nothing crosses the surroundings forever, so
+what lies beyond cannot matter at all — and what comes back settles at the emission divided by the
+absorption.  An endless haze therefore both swallows the sky and *becomes* it.  In the example
+above nothing paints a sky, and yet the scene has one, and its color is not a choice but a
+consequence: `[0.035, 0.04, 0.052]` over `[0.058, 0.05, 0.042]` is a pale blue.  Change either line
+and the sky changes with it.  A medium that absorbs without emitting turns the sky black, which is
+the honest answer for a fog that has no light of its own.
+
+Because of that, a medium filling the surroundings has to absorb wherever it emits.  One that gives
+off light it never takes back has nothing to settle it over an endless span — it is infinitely
+bright — so the render stops and says so.  Said of something bounded the very same medium is
+perfectly reasonable; see [below](materials.md#filling-a-surface).
+
+**A lamp is charged for its trip too.**  Fog stands between a light and what it lights just as it
+stands between the eye and what it looks at, so objects deep in fog are lit dimly rather than fully.
+Note where that leads for a `distant light`, whose light comes from infinitely far off: an endless
+absorbing medium extinguishes it utterly.  That is the right answer to the question as asked — real
+fog has a far side, and the way to describe one is a medium inside a surface.
+
+None of this is sampled or stepped along.  With the density even throughout, both what survives a
+crossing and what the medium adds have exact answers, so a span costs one exponential per color and
+a foggy scene renders at very nearly the speed of a clear one.
+
 ### Comments
 
 Comments are written as they are in C, C# or Java:

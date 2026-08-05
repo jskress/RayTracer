@@ -69,16 +69,16 @@ public partial class LanguageParser
         logicalOr: _operator("||")
         logicalNot: _operator("!")
 
-        _keywords: 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and', 'angle', 'angles',
-            'aperture', 'apply',
+        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
+            'angle', 'angles', 'aperture', 'apply',
             'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -443,7 +443,8 @@ public partial class LanguageParser
         }
         interiorEntryClause:
         [
-            materialIorClause | { filter > _expression } | { clarity > _expression }
+            materialIorClause | { filter > _expression } | { clarity > _expression } |
+            startMediumClause
         ] ?? 'Expecting an interior property here.'
         // How a surface's skin is roughened: a pattern whose slope tilts the normal from point to
         // point.  It is written as the pigment's sibling because that is what it is -- another
@@ -1198,10 +1199,32 @@ public partial class LanguageParser
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
             background => 'background' |
+            startEnvironmentClause => 'environmentBlock' |
             environmentClause => 'environment'
         ] ?? 'Unsupported scene property found.'
 
-        // What is true of the space between a scene's objects rather than of any object.
+        // What is true of the space between a scene's objects rather than of any object.  It is
+        // written either as a block, which is what anything with more than one thing to say needs,
+        // or as the single line the index of refraction arrived as and is kept as a shorthand for.
+        startEnvironmentClause:
+        {
+            environment > openBrace
+        }
+        environmentEntryClause:
+        [
+            materialIorClause | startMediumClause
+        ] ?? 'Expecting an environment property here.'
+
+        // What fills a piece of space: something a ray passes through rather than strikes.
+        startMediumClause:
+        {
+            medium > openBrace
+        }
+        mediumEntryClause:
+        [
+            { absorption > _expression } | { emission > _expression } | { density > _expression }
+        ] ?? 'Expecting a medium property here.'
+
         environmentClause:
         {
             environment > [ {
@@ -1280,6 +1303,7 @@ public partial class LanguageParser
             startCsgClause            => 'HandleStartCsgClause' |
             startGroupClause          => 'HandleStartGroupClause' |
             background                => 'HandleBackgroundClause' |
+            startEnvironmentClause    => 'HandleStartEnvironmentClause' |
             environmentClause         => 'HandleEnvironmentClause' |
             renderClause              => 'HandleRenderClause' |
             setThingToVariable        => 'HandleSetThingToVariableClause' |

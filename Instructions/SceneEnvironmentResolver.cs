@@ -14,6 +14,11 @@ public class SceneEnvironmentResolver : ObjectResolver<SceneEnvironment>
     public Resolver<double> IndexOfRefractionResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for what fills that space, if anything does.
+    /// </summary>
+    public MediumResolver MediumResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an environment.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -23,5 +28,8 @@ public class SceneEnvironmentResolver : ObjectResolver<SceneEnvironment>
         RenderContext context, Variables variables, SceneEnvironment value)
     {
         IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
+
+        if (MediumResolver is not null)
+            value.Medium = MediumResolver.Resolve(context, variables);
     }
 }

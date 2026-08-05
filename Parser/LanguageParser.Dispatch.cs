@@ -47,6 +47,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartCsgClause), HandleStartCsgClause)
             .On(nameof(HandleStartGroupClause), HandleStartGroupClause)
             .On(nameof(HandleBackgroundClause), HandleBackgroundClause)
+            .On(nameof(HandleStartEnvironmentClause), HandleStartEnvironmentClause)
             .On(nameof(HandleEnvironmentClause), HandleEnvironmentClause)
             .On(nameof(HandleRenderClause), HandleRenderClause)
             .On(nameof(HandleSetThingToVariableClause), HandleSetThingToVariableClause)

@@ -64,12 +64,36 @@ public class Scene : NamedThing, IDisposable
         Intersection hit = hits.Hit();
 
         // Now that the sky costs a pattern lookup to ask about, only rays that saw nothing ask it.
+        // A ray that saw nothing also crossed the surroundings forever, which is a span an endless
+        // medium is entitled to have the whole of its say over.
         if (hit == null)
-            return Background.GetTransformedColorFor(HeadingOf(ray));
+        {
+            return ThroughTheSurroundings(
+                Background.GetTransformedColorFor(HeadingOf(ray)), double.PositiveInfinity);
+        }
 
         hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
 
-        return GetHitColor(hit, remaining);
+        Color color = GetHitColor(hit, remaining);
+
+        // What the ray crossed to get here was the surroundings, unless it was on its way out of
+        // something, in which case it crossed that thing's insides and has been charged for it
+        // already.  This is the same division the fade through a substance has always drawn.
+        return hit.Inside ? color : ThroughTheSurroundings(color, hit.Distance);
+    }
+
+    /// <summary>
+    /// This method hands the given color to whatever fills the space between this scene's objects,
+    /// to be dimmed and added to over the span the ray crossed to bring it.
+    /// </summary>
+    /// <param name="color">The color the ray carried.</param>
+    /// <param name="distance">How far the ray crossed the surroundings.</param>
+    /// <returns>The color once the surroundings have had their say.</returns>
+    private Color ThroughTheSurroundings(Color color, double distance)
+    {
+        return Environment.Medium is null
+            ? color
+            : Environment.Medium.ApplyOver(color, distance);
     }
 
     /// <summary>
@@ -148,7 +172,13 @@ public class Scene : NamedThing, IDisposable
         // the ray's own, which is exactly the path through the substance because the ray began
         // where the light entered it.
         if (intersection.Inside)
+        {
             color *= material.Interior.GetFadeOver(intersection.Distance);
+
+            // And whatever fills the surface has its say over the same span, for the same reason.
+            if (material.Interior.Medium is not null)
+                color = material.Interior.Medium.ApplyOver(color, intersection.Distance);
+        }
 
         return color;
     }
@@ -296,7 +326,14 @@ public class Scene : NamedThing, IDisposable
             }
         }
 
-        return reaching;
+        // Fog dims a lamp as surely as it dims a hillside, so the light is charged for its own trip
+        // through the surroundings.  Only what the medium takes out counts here; what it gives off
+        // is its own light and not this lamp's.  Note what this means for a distant light, whose
+        // trip is endless: an endless absorbing medium extinguishes it utterly, which is the honest
+        // answer for a fog described as having no far side.  A fog with one is a bounded surface.
+        return Environment.Medium is null
+            ? reaching
+            : reaching * Environment.Medium.GetTransmittanceOver(distance);
     }
 
     /// <summary>
