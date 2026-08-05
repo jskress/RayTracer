@@ -59,6 +59,14 @@ public class TestProgressBar
 
         // And it finished full, which is what Done() is for.
         Assert.Contains(new string('=', 50), drawn, "the bar did not end up full");
+
+        // A finished bar has no time left to report.  The estimate rounds up by a second so that a
+        // render still working never claims to be done, which used to leave the finished bar sitting
+        // there promising one more second of a render that had already ended.
+        string finished = drawn[drawn.LastIndexOf(']')..];
+
+        Assert.Contains("00:00:00", finished,
+            $"the finished bar still had time to go: {finished.Trim()}");
     }
 
     [TestMethod]

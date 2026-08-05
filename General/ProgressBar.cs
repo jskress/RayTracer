@@ -145,6 +145,14 @@ public class ProgressBar
 
         double elapsed = ticks - _start;
         double todo = _total - _current;
+
+        // Nothing left to do is no time left to wait, and saying so is the whole of what makes the
+        // finished bar read as finished.  The rounded-up second below exists so that a render with
+        // work still in it never claims to be done -- a fraction of a second left shows as one
+        // second, not as none -- and it has no business here, where there really is none left.
+        if (todo <= 0)
+            return TimeSpan.Zero;
+
         long ticksLeft = Convert.ToInt64(elapsed / _current * todo);
 
         return TimeSpan.FromTicks(ticksLeft).Add(TimeSpan.FromSeconds(1));
