@@ -79,6 +79,9 @@ public partial class LanguageParser
                 case "superellipsoid":
                     resolver.SurfaceResolvers.Add(ParseSuperellipsoidClause(clause));
                     break;
+                case "isosurface":
+                    resolver.SurfaceResolvers.Add(ParseIsosurfaceClause(clause));
+                    break;
                 case "patch":
                     resolver.SurfaceResolvers.Add(ParsePatchClause(clause));
                     break;

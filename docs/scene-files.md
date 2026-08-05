@@ -136,10 +136,35 @@ background Black
 background [0.05, 0.06, 0.09]
 ```
 
-It takes a color — a pigment, strictly, though for an ordinary camera that reads as a single
-flat backdrop.  A background is not a surface: nothing lights it and it casts nothing.  But it
-is what *any* ray returns on striking nothing, not just those from the camera, so a mirror
-aimed at empty sky shows it too.
+It takes a *pigment*, not merely a color, so a sky may be patterned:
+
+```
+background linear Y bouncing gradient {
+    [0, LightSkyBlue, 1, DeepSkyBlue]
+}
+```
+
+A pigment must be asked about a point, and a ray that hit nothing has no point of intersection to
+offer, so it is asked about the direction the ray was *heading*: the pigment is painted on a sphere
+of radius one, infinitely far off.  Two things follow from that, both worth knowing.  The sky looks
+the same from everywhere in the scene, which is what a sky ought to do.  And a pattern's own scale
+is in units of that sphere rather than of the world — the coordinates it is handed never leave the
+range -1 to 1 — so a sky wanting finer detail scales its pigment *down*, and one wanting broader
+sweeps scales it up.  The gradient above needs no scaling at all: one unit of it carries you from
+the horizon, where `Y` is zero, to straight overhead, where it is one.
+
+It is also what lets a photograph serve as the sky, which is what an environment map is:
+
+```
+background image 'sky.jpg'
+```
+
+An [image pigment](pigments-and-patterns.md#image-pigments) used as a background maps
+`spherical` unless told otherwise, since the sky it is being painted on is a sphere.
+
+A background is not a surface: nothing lights it and it casts nothing.  But it is what *any* ray
+returns on striking nothing, not just those from the camera, so a mirror aimed at empty sky shows
+the same sky that stands over it.
 
 `background` may sit at the top level, or inside a `scene { }` block, so that two scenes may
 carry skies of their own:
@@ -152,6 +177,39 @@ scene {
     // ... lights and surfaces ...
 }
 ```
+
+### The Space Between Things
+
+Light travels differently through different stuff, and a scene says how a *solid* bends it with
+[`interior { ior … }`](materials.md#transparency-and-interiors).  What surrounds those solids has an
+index of its own, and `environment ior` is how a scene says what it is:
+
+```
+environment ior Air
+```
+
+The default is 1, a vacuum, which is what every scene has silently assumed until now.  `Air` is
+1.000293 — a whisper of a difference, and it will not change a picture much.  It matters because it
+is *right*, and because the difference stops being a whisper as soon as the surroundings are anything
+but thin: a glass marble in water bends light far less than the same marble in air does, since what
+counts at a surface is the ratio between the two sides rather than either on its own.  That ratio is
+charged wherever it belongs — it bends what is seen through a solid, and it sets how much light a
+boundary mirrors away rather than letting through — so the surroundings show in the shadow a glass
+ball casts as much as in the view through it.
+
+```
+environment ior Water     // for a scene set beneath the surface
+```
+
+Any of the [named indices](reference.md#indices-of-refraction) may be used, or a number.  As in an
+`interior` block, `ior` may be spelled out in full:
+
+```
+environment index of refraction 1.333
+```
+
+Like `background`, this may sit at the top level or inside a `scene { }` block, so two scenes in one
+file may sit in different surroundings.
 
 ### Comments
 

@@ -26,9 +26,11 @@ public static class IntersectionExtensions
     /// </summary>
     /// <param name="intersections">The list of intersections to work with.</param>
     /// <param name="hit">The current "hit" intersection.</param>
+    /// <param name="environment">The index of refraction of the space outside every object, which is
+    /// what a ray is travelling through whenever it is inside none of them.</param>
     /// <returns>The entrance and exit indices of refraction.</returns>
     public static (double N1, double N2) FindIndicesOfRefraction(
-        this List<Intersection> intersections, Intersection hit)
+        this List<Intersection> intersections, Intersection hit, double environment = 1)
     {
         List<Surface> containers = [];
         double n1 = 0;
@@ -37,7 +39,9 @@ public static class IntersectionExtensions
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit)
-                n1 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
+                n1 = containers.IsEmpty()
+                    ? environment
+                    : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
 
             if (containers.Contains(intersection.Surface))
                 containers.Remove(intersection.Surface);
@@ -46,7 +50,9 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                n2 = containers.IsEmpty() ? 1 : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
+                n2 = containers.IsEmpty()
+                    ? environment
+                    : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
 
                 break;
             }

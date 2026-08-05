@@ -1,4 +1,6 @@
 using RayTracer.Basics;
+using RayTracer.General;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 
 namespace RayTracer.Pigments;
@@ -35,8 +37,20 @@ public class MottledPigment : Pigment
     /// <param name="seed">The seed value to set.</param>
     public override void SetSeed(int seed)
     {
-        Pigment.SetSeed(seed);
+        if (!Pigment.Seed.HasValue)
+            Pigment.SetSeed(seed);
+
         Noise.Seed ??= seed;
+    }
+
+    /// <summary>
+    /// This method passes the chance to get ready along to the pigment we dim.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface that this pigment is set on.</param>
+    protected override void PrepareForRendering(RenderContext context, Surface surface)
+    {
+        Pigment.RenderingIsAboutToStart(context, surface);
     }
 
     /// <summary>

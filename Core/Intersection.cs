@@ -101,7 +101,11 @@ public class Intersection : IComparable<Intersection>
     /// </summary>
     /// <param name="ray">The ray to use in computing things.</param>
     /// <param name="intersections">The full list of intersections involved.</param>
-    public void PrepareUsing(Ray ray, List<Intersection> intersections)
+    /// <param name="environmentIndexOfRefraction">The index of refraction of the space between the
+    /// scene's objects, which a ray is in whenever it is inside none of them.  One -- a vacuum -- is
+    /// the default, and is what a caller with no scene to ask should leave it as.</param>
+    public void PrepareUsing(
+        Ray ray, List<Intersection> intersections, double environmentIndexOfRefraction = 1)
     {
         Point = ray.At(Distance);
         Eye = -ray.Direction;
@@ -121,7 +125,7 @@ public class Intersection : IComparable<Intersection>
         UnderPoint = Point - adjustment;
         Reflect = ray.Direction.Reflect(Normal);
 
-        (N1, N2) = intersections.FindIndicesOfRefraction(this);
+        (N1, N2) = intersections.FindIndicesOfRefraction(this, environmentIndexOfRefraction);
 
         if (Inside)
             Normal = -Normal;

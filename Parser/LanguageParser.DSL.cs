@@ -78,7 +78,7 @@ public partial class LanguageParser
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -1197,8 +1197,19 @@ public partial class LanguageParser
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
-            background => 'background'
+            background => 'background' |
+            environmentClause => 'environment'
         ] ?? 'Unsupported scene property found.'
+
+        // What is true of the space between a scene's objects rather than of any object.
+        environmentClause:
+        {
+            environment > [ {
+                index > of ?? 'Expecting "of" to follow "index" here.' >
+                refraction ?? 'Expecting "refraction" to follow "of" here.'
+            } | ior ] ?? 'Expecting "ior" or "index of refraction" to follow "environment" here.' >
+            _expression
+        }
 
         renderClause:
         {
@@ -1269,6 +1280,7 @@ public partial class LanguageParser
             startCsgClause            => 'HandleStartCsgClause' |
             startGroupClause          => 'HandleStartGroupClause' |
             background                => 'HandleBackgroundClause' |
+            environmentClause         => 'HandleEnvironmentClause' |
             renderClause              => 'HandleRenderClause' |
             setThingToVariable        => 'HandleSetThingToVariableClause' |
             setVariableClause         => 'HandleSetVariableClause'

@@ -81,6 +81,77 @@ public class TestDocumentation
     }
 
     [TestMethod]
+    public void TestEveryLinkBetweenTheDocsLandsSomewhere()
+    {
+        // The pages cross-reference each other constantly, and a link to a section that has been
+        // renamed -- or was never named that in the first place -- looks perfectly ordinary on the
+        // page and simply drops the reader at the top of the file.  A heading's anchor is its text,
+        // lower-cased, with the spaces turned to dashes and the punctuation dropped.
+        List<string> broken = [];
+        Regex links = new (@"\[[^\]]*\]\(([^)]+)\)");
+        Dictionary<string, HashSet<string>> anchors = [];
+
+        foreach (string file in MarkdownFiles)
+        {
+            string directory = Path.GetDirectoryName(file)!;
+
+            foreach (Match match in links.Matches(File.ReadAllText(file)))
+            {
+                string reference = match.Groups[1].Value;
+
+                // Only links between our own pages are ours to check.
+                if (reference.StartsWith("http") || reference.StartsWith("mailto:"))
+                    continue;
+
+                string[] parts = reference.Split('#');
+                string path = parts[0].Length == 0
+                    ? file
+                    : Path.GetFullPath(Path.Combine(directory, parts[0]));
+
+                // A link may name a folder rather than a page -- the examples are pointed at that way.
+                if (!File.Exists(path) && !Directory.Exists(path))
+                {
+                    broken.Add($"{Path.GetFileName(file)} -> {reference} (no such file)");
+
+                    continue;
+                }
+
+                if (parts.Length < 2 || !path.EndsWith(".md"))
+                    continue;
+
+                if (!anchors.TryGetValue(path, out HashSet<string> headings))
+                    anchors[path] = headings = HeadingAnchorsIn(path);
+
+                if (!headings.Contains(parts[1]))
+                    broken.Add($"{Path.GetFileName(file)} -> {reference} (no such section)");
+            }
+        }
+
+        Assert.AreEqual(0, broken.Count,
+            $"the docs link to sections that are not there:\n  {string.Join("\n  ", broken)}");
+    }
+
+    /// <summary>
+    /// Collects the anchor GitHub gives every heading in the given markdown file.
+    /// </summary>
+    private static HashSet<string> HeadingAnchorsIn(string file)
+    {
+        HashSet<string> anchors = [];
+
+        foreach (string line in File.ReadLines(file).Where(line => line.StartsWith('#')))
+        {
+            string text = line.TrimStart('#').Trim().ToLowerInvariant();
+
+            anchors.Add(new string(text
+                .Where(character => char.IsLetterOrDigit(character) || character is ' ' or '-')
+                .Select(character => character == ' ' ? '-' : character)
+                .ToArray()));
+        }
+
+        return anchors;
+    }
+
+    [TestMethod]
     public void TestEveryDiagramSourceHasBeenGenerated()
     {
         // A diagram that was written but never run through generate-diagrams.sh leaves a hole in

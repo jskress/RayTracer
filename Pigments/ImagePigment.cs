@@ -47,6 +47,9 @@ public class ImagePigment : Pigment
             Sphere => ImageMapType.Spherical,
             Cylinder => ImageMapType.Cylindrical,
             Torus => ImageMapType.Toroidal,
+            // No surface at all means we are a scene's background, and the sky a background is asked
+            // about is a sphere of radius one, infinitely far off.
+            null => ImageMapType.Spherical,
             _ => throw new Exception("Cannot determine image map type for surface.")
         };
 

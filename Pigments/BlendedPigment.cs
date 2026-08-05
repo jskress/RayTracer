@@ -1,4 +1,6 @@
 using RayTracer.Basics;
+using RayTracer.General;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 
 namespace RayTracer.Pigments;
@@ -26,8 +28,19 @@ public class BlendedPigment : Pigment
     /// <param name="seed">The seed value to set.</param>
     public override void SetSeed(int seed)
     {
-        foreach (Pigment pigment in Pigments)
+        foreach (Pigment pigment in Pigments.Where(pigment => !pigment.Seed.HasValue))
             pigment.SetSeed(seed);
+    }
+
+    /// <summary>
+    /// This method passes the chance to get ready along to each pigment we blend.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="surface">The surface that this pigment is set on.</param>
+    protected override void PrepareForRendering(RenderContext context, Surface surface)
+    {
+        foreach (Pigment pigment in Pigments)
+            pigment.RenderingIsAboutToStart(context, surface);
     }
 
     /// <summary>

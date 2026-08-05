@@ -1,8 +1,9 @@
 // This holds the information for how to render our image for chapter 11 (new language).
 
-// The "lake" here ends up looking like fog.  The horizontal banding you can see is
-// actually a reflection of the background gradient.  You also get an interesting effect
-// if you remove the "no shadow" from the water.
+// The "lake" here ends up looking like fog.  The background is asked about by direction, so
+// its gradient runs up the Y axis and one unit of it carries you from the horizon to straight
+// overhead; that is why it needs no scaling.  The water reflects the sky and so agrees with
+// it.  You also get an interesting effect if you remove the "no shadow" from the water.
 
 chapter = 11
 title = 'A Lake, Kind of'
@@ -13,10 +14,8 @@ context {
     apply gamma
 }
 
-background linear bouncing gradient {
-    [0, DeepSkyBlue, 1, LightSkyBlue]
-    scale 10
-    rotate Y 90
+background linear Y bouncing gradient {
+    [0, LightSkyBlue, 1, DeepSkyBlue]
 }
 
 // Floor

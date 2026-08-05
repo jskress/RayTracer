@@ -161,6 +161,12 @@ Those names live alongside the color names, and a few are both.  `Turquoise` is 
 an index of refraction, and which one is meant is settled by where you write it — see
 [Variables](scene-files.md#a-name-holds-one-value-per-type).
 
+An index on its own does not bend anything, though: what bends a ray is the *ratio* between the
+two sides of the surface it crosses.  The other side is the space the scene sits in, which is a
+vacuum unless the scene says otherwise with
+[`environment ior`](scene-files.md#the-space-between-things).  So a glass marble in water bends
+light far less than the same marble in air, the glass being unchanged.
+
 **`clarity`** is how far light gets through the substance before it is absorbed.  Left alone
 it is infinite, so a thick piece of glass is as clear as a thin one — which is not how glass
 behaves.  Set it and thickness starts to matter, which is what makes a solid glass object look

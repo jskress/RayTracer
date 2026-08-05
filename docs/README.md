@@ -80,6 +80,7 @@ branches, any one of the branches will do.
   - [Scenes and Cameras](scene-files.md#scenes-and-cameras)
   - [The `render` Command](scene-files.md#the-render-command)
   - [Background](scene-files.md#background)
+  - [The Space Between Things](scene-files.md#the-space-between-things)
   - [Comments](scene-files.md#comments)
   - [Numbers, Points, Vectors and Colors](scene-files.md#numbers-points-vectors-and-colors)
   - [Variables](scene-files.md#variables)

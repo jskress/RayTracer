@@ -35,6 +35,12 @@ public class SceneResolver : NamedObjectResolver<Scene>
     public IPigmentResolver BackgroundResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver that will evaluate to what is true of the space between our
+    /// scene's objects.
+    /// </summary>
+    public SceneEnvironmentResolver EnvironmentResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a CSG
     /// surface.
     /// </summary>
@@ -52,6 +58,9 @@ public class SceneResolver : NamedObjectResolver<Scene>
 
         if (BackgroundResolver != null)
             value.Background = BackgroundResolver.ResolveToPigment(context, variables);
+
+        if (EnvironmentResolver != null)
+            value.Environment = EnvironmentResolver.Resolve(context, variables);
 
         base.SetProperties(context, variables, value);
     }
