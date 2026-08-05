@@ -1,3 +1,5 @@
+using RayTracer.Basics;
+using RayTracer.Fields;
 using RayTracer.Graphics;
 
 namespace RayTracer.Core;
@@ -100,10 +102,59 @@ public class Medium
     /// <summary>
     /// This property holds a plain multiplier on all three coefficients, so that how much of the
     /// stuff there is may be said separately from what the stuff does.  Thinning a fog is then one
-    /// number rather than several, and it is the number that will be allowed to vary from place to
-    /// place when a medium may be given a shape.
+    /// number rather than several.  Where the medium has a shape, this scales the whole of it.
     /// </summary>
     public double Density { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds how much of the stuff there is from place to place, if it is not the same
+    /// throughout: a compiled function of where you are, in the space of whatever surface the medium
+    /// fills.  It is nothing by default, which is an even density everywhere.
+    /// <para>
+    /// This is the one property that changes how the rest are worked out.  With the density even, what
+    /// survives a crossing and what the medium gives off along it both have exact answers that can be
+    /// written down.  Let it vary and neither does: what survives becomes the exponential of an
+    /// integral along the ray, and the light given off is weighed by that at every point.  So a medium
+    /// with a shape is marched -- walked along in steps -- and one without is not, which is both
+    /// quicker and what keeps every scene written before shapes existed rendering exactly as it did.
+    /// </para>
+    /// </summary>
+    public FieldFunction DensityField { get; set; }
+
+    /// <summary>
+    /// This property reports whether the medium's density varies from place to place, and so whether a
+    /// crossing of it has to be marched rather than answered.
+    /// </summary>
+    public bool HasShape => DensityField is not null;
+
+    /// <summary>
+    /// This method returns how much of the stuff there is at the given place.  A shape that would go
+    /// negative is taken as empty: a density below nothing has no meaning, and left alone it would
+    /// have a ray gaining light for crossing the stuff rather than losing it.
+    /// </summary>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <returns>The density there.</returns>
+    public double DensityAt(Point point)
+    {
+        if (DensityField is null)
+            return Density;
+
+        return Density * Math.Max(0, DensityField.Evaluate(point.X, point.Y, point.Z));
+    }
+
+    /// <summary>
+    /// This method returns how much light stops coming this way per unit of distance at a place of the
+    /// given density, color by color.
+    /// </summary>
+    /// <param name="density">How much of the stuff there is at the place in question.</param>
+    /// <returns>The rate at which each color leaves the ray.</returns>
+    public Color ExtinctionAt(double density)
+    {
+        return new Color(
+            (Absorption.Red + Scattering.Red) * density,
+            (Absorption.Green + Scattering.Green) * density,
+            (Absorption.Blue + Scattering.Blue) * density);
+    }
 
     /// <summary>
     /// This property reports whether this medium does anything at all, so that a scene which names

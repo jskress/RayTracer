@@ -1,5 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Fields;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
 
@@ -390,6 +392,105 @@ public class TestMedium
 
         Assert.IsTrue(Colors.Black.Matches(
             scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 1)));
+    }
+
+    [TestMethod]
+    public void TestAShapeSaysHowMuchOfTheStuffIsWhere()
+    {
+        Medium even = new () { Absorption = new Color(1, 1, 1) };
+
+        Assert.IsFalse(even.HasShape);
+        Assert.AreEqual(1, even.DensityAt(Point.Zero));
+
+        // The plain density scales whatever the shape says, so one number thins the whole of it.
+        Medium shaped = new ()
+        {
+            Absorption = new Color(1, 1, 1),
+            Density = 0.5,
+            DensityField = FieldFunction.Compile(new FieldConstant(3))
+        };
+
+        Assert.IsTrue(shaped.HasShape);
+        Assert.AreEqual(1.5, shaped.DensityAt(Point.Zero), 1e-12);
+
+        // A shape that would go negative is empty there rather than negative: a density below nothing
+        // would have a ray gaining light for crossing the stuff.
+        Medium negative = new ()
+        {
+            Absorption = new Color(1, 1, 1),
+            DensityField = FieldFunction.Compile(new FieldConstant(-2))
+        };
+
+        Assert.AreEqual(0, negative.DensityAt(Point.Zero));
+    }
+
+    [TestMethod]
+    public void TestWalkingAnEvenShapeFindsWhatTheExactAnswerSays()
+    {
+        // The one test that holds the walk to something known.  A shape that is the same everywhere is
+        // still walked -- the renderer cannot know the function is constant -- so it must arrive at
+        // what the closed form gives for that same even density.  If the walk is wrong in its
+        // bookkeeping, this is where it shows, because the right answer is available in one line.
+        Color exact = LookedThroughABallOf(null);
+        Color walked = LookedThroughABallOf(FieldFunction.Compile(FieldConstant.One));
+
+        Assert.AreEqual(exact.Red, walked.Red, exact.Red * 0.02,
+            $"the walk gave {walked.Red} where the exact answer is {exact.Red}");
+        Assert.AreEqual(exact.Green, walked.Green, exact.Green * 0.02);
+        Assert.AreEqual(exact.Blue, walked.Blue, exact.Blue * 0.02);
+    }
+
+    [TestMethod]
+    public void TestFinerStepsFindTheAnswerMoreNearly()
+    {
+        // The walk is first order in its step, so it approaches the exact answer as the steps get
+        // finer rather than being right at any particular count.  Its error must therefore fall.
+        Color exact = LookedThroughABallOf(null);
+        double coarse = Math.Abs(LookedThroughABallOf(
+            FieldFunction.Compile(FieldConstant.One), 8).Red - exact.Red);
+        double fine = Math.Abs(LookedThroughABallOf(
+            FieldFunction.Compile(FieldConstant.One), 256).Red - exact.Red);
+
+        Assert.IsTrue(fine < coarse,
+            $"finer steps were no better: {fine} against {coarse}");
+    }
+
+    /// <summary>
+    /// Looks through a glass ball filled with a lit, glowing medium of the given shape, and hands back
+    /// what the eye gets.  A shape of <c>null</c> is an even density, which is answered exactly rather
+    /// than walked.
+    /// </summary>
+    private static Color LookedThroughABallOf(FieldFunction shape, int samples = 64)
+    {
+        Sphere ball = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White),
+                Ambient = 0,
+                Diffuse = 0,
+                Specular = 0,
+                Transparency = 1,
+                Interior = new Interior
+                {
+                    Medium = new Medium
+                    {
+                        Absorption = new Color(0.3, 0.4, 0.5),
+                        Emission = new Color(0.2, 0.15, 0.1),
+                        Scattering = new Color(0.4, 0.4, 0.4),
+                        DensityField = shape,
+                        Samples = samples
+                    }
+                }
+            }
+        };
+        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+
+        ball.PrepareForRendering();
+        scene.Surfaces.Add(ball);
+        scene.Lights.Add(new PointLight { Location = new Point(3, 3, -3), Color = Colors.White });
+
+        return scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 5);
     }
 
     [TestMethod]

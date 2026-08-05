@@ -312,6 +312,59 @@ The places are not spread evenly along the crossing.  They are spread by how muc
 could still reach the eye, so most of them land near your end of it, where scattered light actually
 shows.  That is also why a crossing with no end needs no arbitrary stopping point.
 
+#### Giving a medium a shape
+
+Everything so far has been the same everywhere it went, which is fine for air and useless for anything
+that looks like something.  A medium's density may instead be a *function of where you are*:
+
+```
+interior {
+    medium {
+        scattering 2.2
+        density function {
+            max(0, 1 - √(x² + y² + z²)) * max(0, 2.2 * noise(3.1*x, 3.1*y, 3.1*z) - 0.6)
+        }
+    }
+}
+```
+
+That is a cloud: the ball's own falloff, times noise with its foot taken off so the density reaches
+*nothing* between the billows rather than merely thinning.  Reaching nothing is what makes it read as
+billows with gaps rather than as a fuzzy ball.
+
+The function is written in the [same language](#expressions) an
+[isosurface](advanced-surfaces.md#isosurface)'s is, with the same `noise`, and compiled to a real
+delegate before the first ray is fired.  It is held to *less* than an isosurface's, though: an
+isosurface has to be differentiated to be given a normal and refuses anything whose slope cannot be
+written down, while a density is only ever asked for a value.  So `smoothstep`, which an isosurface
+turns away, is welcome here.  A density that would go negative counts as empty, since a density below
+nothing has no meaning.
+
+It is read in the **container's own space**, so scaling or rotating the surface carries the shape with
+it, exactly as a pattern's coordinates do.  `density` written as a plain number alongside a shape
+scales the whole of it, which is how a shaped medium is thinned with one number.
+
+**A shaped medium must fill a surface.**  Saying it of the surroundings is refused, and the reason is
+arithmetic rather than taste: a crossing with no end can only be walked at all because there is a
+distance past which nothing could still reach the eye, and that rests on a floor under how much stuff
+is there.  A shape free to thin toward nothing takes the floor away.  A ground fog is therefore a very
+large flattened box.
+
+**Two things stop being exact.**  With the density varying, neither what survives a crossing nor what
+the medium gives off has an answer that can be written down — both become integrals along the ray — so
+a shaped medium is *walked*, in the same number of steps the scattering is sampled in.  A medium
+without a shape is not walked, and is answered exactly as before.
+
+**And a shape stands in its own light.**  A cloud's underside is dark because its top was in the way,
+and nothing but the medium shadowing itself gives that.  So each place the walk asks about asks every
+lamp what reaches it, and each of *those* answers walks the shape again — coarsely, at a quarter of the
+steps, since all that is wanted is how much stuff is in the way rather than where it is.  This is the
+expensive part of a shaped medium, and it is what tells a cloud from a glowing blob.
+
+One thing worth knowing before tuning a cloud by eye: **thicker is not brighter**.  Past a point,
+adding density makes a medium darker, because more of what it scatters is swallowed again on the way
+out and more of it stands in its own light.
+
 How many places is a question of how hard to work rather than of what the medium is made of, so it
 lives with the scanner and the anti-aliasing:
 

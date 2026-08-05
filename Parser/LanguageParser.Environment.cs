@@ -75,16 +75,40 @@ public partial class LanguageParser
                 // absorbs none has no such answer: with nothing to settle it, its own light piles up
                 // without limit.  Said of something bounded that is a perfectly good description, so
                 // it is only refused here.
-                resolver.MediumResolver = ParseMediumClause(
-                    medium => medium.MustBeBounded
-                        ? "A medium filling the surroundings must absorb wherever it emits, since " +
-                          "the surroundings have no far side for its light to stop at.  Give it " +
-                          "some absorption, or give the medium a surface to fill instead."
-                        : null);
+                resolver.MediumResolver = ParseMediumClause(ForTheSurroundings);
                 break;
             default:
                 throw new NotSupportedException("Unknown environment property found.");
         }
+    }
+
+    /// <summary>
+    /// This method checks a medium against what filling the endless surroundings asks of one.  Both
+    /// things refused here are refused for the same underlying reason: the surroundings have no far
+    /// side, and each would need one.
+    /// </summary>
+    /// <param name="medium">The medium to check.</param>
+    /// <returns>What is wrong with it, or <c>null</c> if nothing is.</returns>
+    private static string ForTheSurroundings(Core.Medium medium)
+    {
+        // Light given off where nothing takes light back out has nothing to settle it, so over an
+        // endless span such a medium is infinitely bright.
+        if (medium.MustBeBounded)
+        {
+            return "A medium filling the surroundings must absorb or scatter wherever it emits, " +
+                   "since the surroundings have no far side for its light to stop at.  Give it some " +
+                   "of either, or give the medium a surface to fill instead.";
+        }
+
+        // A crossing with no end can only be sampled at all because there is a distance past which
+        // nothing could still reach the eye, and that rests on a floor under how much stuff there is.
+        // A shape free to thin toward nothing takes the floor away, and with it any honest stopping
+        // point -- so rather than invent one, this asks for a shape to be given an end of its own.
+        return medium.HasShape
+            ? "A medium whose density varies must fill a surface rather than the surroundings, " +
+              "since a crossing with no end has nowhere to stop when the stuff in it may thin away " +
+              "to nothing.  Put the medium in a surface -- a large flattened box, for a ground fog."
+            : null;
     }
 
     /// <summary>
@@ -192,6 +216,13 @@ public partial class LanguageParser
                 };
                 break;
             case "density":
+                if (clause.Text(1) == "function")
+                {
+                    resolver.DensityFieldResolver = new FieldExpressionResolver { Term = term };
+
+                    break;
+                }
+
                 resolver.DensityResolver = new TermResolver<double>
                 {
                     Term = term,

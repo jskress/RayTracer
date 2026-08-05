@@ -213,7 +213,7 @@ public class TestMediumClauses
             """.Replace("{{Viewpoint}}", Viewpoint));
 
         Assert.IsNull(image);
-        Assert.Contains("must absorb wherever it emits", error);
+        Assert.Contains("must absorb or scatter wherever it emits", error);
 
         (Canvas bounded, string allowed) = Render("""
             {{Viewpoint}}
@@ -382,6 +382,160 @@ public class TestMediumClauses
         Assert.IsTrue(insideTheCone > outsideTheCone * 5,
             $"the cone should stand out plainly: {insideTheCone} inside against {outsideTheCone} " +
             "outside");
+    }
+
+    [TestMethod]
+    public void TestAMediumMayBeGivenAShape()
+    {
+        // A ball whose density is thickest at its heart and reaches nothing at its rim, against the
+        // same ball filled evenly.  The two cannot look alike: one has an edge and the other does not.
+        const string ball = """
+            camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 40 }
+            point light { location [-4, 3, -4]  color [0.55, 0.55, 0.55] }
+            background Black
+            """;
+        (Canvas shaped, string first) = Render("""
+            {{ball}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior {
+                        medium {
+                            scattering 1.6
+                            density function { max(0, 1 - √(x² + y² + z²)) }
+                        }
+                    }
+                }
+                scale 1.4
+            }
+            """.Replace("{{ball}}", ball));
+        (Canvas even, string second) = Render("""
+            {{ball}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { medium { scattering 1.6 } }
+                }
+                scale 1.4
+            }
+            """.Replace("{{ball}}", ball));
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+
+        Assert.IsTrue(shaped.GetPixel(20, 20).Red > 0.05,
+            $"the shaped medium should be lit, and came out {shaped.GetPixel(20, 20)}");
+
+        // Near the rim the shaped one has run out of stuff altogether while the even one has not, and
+        // that is what gives a shaped medium an edge of its own rather than its container's.
+        Assert.IsTrue(shaped.GetPixel(6, 20).Red < even.GetPixel(6, 20).Red * 0.5,
+            $"the rim should be far thinner: {shaped.GetPixel(6, 20).Red} against " +
+            $"{even.GetPixel(6, 20).Red}");
+
+        // Note which way round the middle comes out: the shaped ball is *brighter* there, though it
+        // holds less stuff.  The even ball is thicker throughout, so more of what it scatters is
+        // swallowed again on the way out and more of it stands in its own light.  Thicker is not
+        // brighter, which is worth knowing before tuning a cloud by eye.
+        Assert.IsTrue(shaped.GetPixel(20, 20).Red > even.GetPixel(20, 20).Red,
+            $"{shaped.GetPixel(20, 20).Red} against {even.GetPixel(20, 20).Red}");
+    }
+
+    [TestMethod]
+    public void TestAShapeStandsInItsOwnLight()
+    {
+        // What tells a cloud from a glowing blob.  The lamp is off to the left, so the left of the ball
+        // is lit through less of its own stuff than the right is, and must come out brighter -- and
+        // nothing but the medium shadowing itself gives that, the container being perfectly clear.
+        (Canvas image, string error) = Render("""
+            context { medium samples 40 }
+            camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 40 }
+            point light { location [-9, 0, -1]  color [2.5, 2.5, 2.5] }
+            background Black
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior {
+                        medium {
+                            scattering 3.5
+                            density function { max(0, 1 - √(x² + y² + z²)) }
+                        }
+                    }
+                }
+                scale 1.4
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        double towardTheLamp = image.GetPixel(11, 20).Red;
+        double awayFromIt = image.GetPixel(29, 20).Red;
+
+        Assert.IsTrue(towardTheLamp > awayFromIt * 1.5,
+            $"the lit side should be plainly brighter: {towardTheLamp} against {awayFromIt}");
+    }
+
+    [TestMethod]
+    public void TestAShapeMustHaveSomewhereToEnd()
+    {
+        // A crossing with no end can only be walked at all because there is a distance past which
+        // nothing could still show, and that rests on there being a floor under how much stuff is
+        // there.  A shape free to thin away removes the floor, so it is asked for a surface instead.
+        (Canvas image, string error) = Render("""
+            environment { medium { scattering 0.2  density function { 1 - y } } }
+            {{Viewpoint}}
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(image);
+        Assert.Contains("must fill a surface", error);
+
+        // The very same medium is welcome inside one.
+        (Canvas bounded, string allowed) = Render("""
+            {{Viewpoint}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  transparency 1
+                    interior { medium { scattering 0.2  density function { 1 - y } } }
+                }
+            }
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(allowed, allowed);
+        Assert.IsNotNull(bounded);
+    }
+
+    [TestMethod]
+    public void TestAShapeMayUseMoreThanAnIsosurfaceMay()
+    {
+        // The density is written in the language an isosurface's function is written in, but it is held
+        // to less: an isosurface has to be differentiated to be given a normal, and refuses anything
+        // whose slope it cannot write down.  A density is only ever asked for a value, so smoothstep --
+        // which an isosurface turns away for exactly that reason -- is welcome here.
+        (Canvas image, string error) = Render("""
+            {{Viewpoint}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  transparency 1
+                    interior { medium { scattering 0.2  density function { smoothstep(0, 1, x) } } }
+                }
+            }
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+
+        // A name the catalog does not know at all is still refused rather than quietly ignored.
+        (image, error) = Render("""
+            {{Viewpoint}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  transparency 1
+                    interior { medium { scattering 0.2  density function { wibble(x) } } }
+                }
+            }
+            """.Replace("{{Viewpoint}}", Viewpoint));
+
+        Assert.IsNull(image);
+        Assert.Contains("no function named", error);
     }
 
     [TestMethod]

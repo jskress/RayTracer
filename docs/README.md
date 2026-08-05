@@ -83,6 +83,7 @@ branches, any one of the branches will do.
   - [The Space Between Things](scene-files.md#the-space-between-things)
     - [Filling that space](scene-files.md#filling-that-space)
     - [Scattering](scene-files.md#scattering)
+    - [Giving a medium a shape](scene-files.md#giving-a-medium-a-shape)
   - [Comments](scene-files.md#comments)
   - [Numbers, Points, Vectors and Colors](scene-files.md#numbers-points-vectors-and-colors)
   - [Variables](scene-files.md#variables)

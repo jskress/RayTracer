@@ -1,0 +1,119 @@
+// A scene about a medium with a shape.
+//
+// The haze of the last two efforts was the same everywhere it went, which is fine for air and useless
+// for anything that looks like something.  A medium may now be given a density that varies from place
+// to place, written as a function of where you are -- the same expression language an isosurface's
+// function is written in, with the same noise available to it, compiled to a real delegate before the
+// first ray is fired.
+//
+// The cloud on the left is a ball of noise with the ball's own falloff multiplied through it, and the
+// noise thresholded so that the density reaches nothing in places rather than merely thinning.  That
+// last part is what makes it read as billows with gaps between them instead of a fuzzy ball.
+//
+// Two things about it are worth more than the shape.  Its underside is dark because its top stood in
+// the way -- the shape shadows itself, which no amount of shaped density alone would give you, and
+// which is most of what tells a cloud from a glowing blob.  And its edges are brightest where they are
+// thinnest, because the lamp is behind it and the medium prefers to carry light on the way it was
+// already going; that is the silver lining of a real cloud, and it comes out of the anisotropy rather
+// than out of anything drawn.
+//
+// The plume on the right is the same machinery asked a different question: a column that widens and
+// thins as it rises, leaned over by a sine of the height, roughened by noise that gets finer toward
+// the top.  It is not a shape any pattern in the library could give, which is the argument for
+// functions.
+//
+// Both media fill a surface, and must: the walk along a ray has to end somewhere, and a density free
+// to thin toward nothing gives no honest place to stop if the space it fills has no far side.  A
+// ground fog would be a very large flattened box for the same reason.
+//
+// The cost of a shape is the walk, and the walk is the whole of the arithmetic now: with the density
+// varying, neither what survives a crossing nor what the medium gives off has an answer that can be
+// written down.  Each place along the ray also asks every lamp what reaches it, and each of those
+// questions walks the shape again to see how much of it stands in the way.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    medium samples 48
+    info {
+        title 'A Shaped Density'
+        author 'J. Stephen Kress'
+        description 'A cloud and a smoke plume, both media whose density is a function of where you are.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 0.9, -7.5]
+    look at [0, 0.25, 0]
+    field of view 46
+}
+
+background [0.035, 0.05, 0.09]
+
+// Behind and above the cloud, so that its thin edges are lit through rather than lit on.
+point light {
+    location [-5.5, 3.6, 5.5]
+    color [0.52, 0.51, 0.49]
+}
+
+// From the front and to the right, which fills the cloud's near side and is the plume's main light.
+point light {
+    location [5.5, 2.6, -5]
+    color [1.6, 1.55, 1.45]
+}
+
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 2.2
+                absorption 0.05
+                anisotropy 0.4
+                // The ball's own falloff, times noise with its foot taken off so the density reaches
+                // nothing between the billows.
+                density function {
+                    max(0, 1 - √(x² + y² + z²)) *
+                    max(0, 2.2 * noise(3.1*x, 3.1*y, 3.1*z) - 0.6)
+                }
+            }
+        }
+    }
+    scale 1.6
+    translate [-1.7, 0.55, 0]
+}
+
+// The plume, in a box just big enough to hold it.  Its space runs from -1 to 1 in each direction, so
+// the function reads the height as y and the ground as y = -1.
+cube {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 1.9
+                absorption 0.12
+                anisotropy 0.3
+                // A column that widens and thins as it rises, leaning as it goes, and roughened more
+                // finely the higher it gets.
+                density function {
+                    max(0, 1 - √((x - 0.42 * sin(1.6 * y + 1)) ² + z ²) / (0.14 + 0.34 * (y + 1))) *
+                    max(0, 1 - (y + 1) / 2) *
+                    max(0, 1.7 * noise(2.6*x, 1.5*y - 0.8, 2.6*z) - 0.35)
+                }
+            }
+        }
+    }
+    scale [1.15, 1.45, 1.15]
+    translate [2.05, 0.9, 0.3]
+}

@@ -106,8 +106,15 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray that crossed it.</param>
     /// <param name="distance">How far the ray crossed it; may be endless.</param>
     /// <returns>The color once the medium has had its say.</returns>
-    private Color ThroughMedium(Medium medium, Color color, Ray ray, double distance)
+    private Color ThroughMedium(
+        Medium medium, Color color, Ray ray, double distance, Surface container = null)
     {
+        // A medium with a shape has no answer to be written down and must be walked along instead.
+        // Only a medium filling a surface may have one, which is why the container is wanted here: it
+        // says both what space the shape is described in and where the shape ends.
+        if (medium.HasShape && container is not null)
+            return MarchedThrough(medium, color, ray, distance, container);
+
         Color through = medium.ApplyOver(color, distance);
 
         // Everything above was written down rather than worked out.  What follows is the one term
@@ -116,7 +123,7 @@ public class Scene : NamedThing, IDisposable
         if (!medium.Scatters || Lights.Count == 0)
             return through;
 
-        Color gathered = GatheredFromTheLights(medium, ray, distance);
+        Color gathered = GatheredFromTheLights(medium, ray, distance, container);
 
         // The gathered light adds to what came through without covering the pixel any further: how
         // much of the pixel the medium stands in front of was settled by what it took out, and
@@ -144,7 +151,8 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray crossing it.</param>
     /// <param name="distance">How far the ray crosses it; may be endless.</param>
     /// <returns>The light the medium sends along the ray.</returns>
-    private Color GatheredFromTheLights(Medium medium, Ray ray, double distance)
+    private Color GatheredFromTheLights(
+        Medium medium, Ray ray, double distance, Surface container)
     {
         int count = medium.Samples;
         double extinction = medium.MeanExtinction;
@@ -169,6 +177,7 @@ public class Scene : NamedThing, IDisposable
         Vector heading = ray.Direction.Unit;
         double shift = ShiftFor(ray);
         Color gathered = Colors.Black;
+        List<Intersection> crossings = container is null ? null : [];
 
         for (int index = 0; index < count; index++)
         {
@@ -176,27 +185,8 @@ public class Scene : NamedThing, IDisposable
             double along = -Math.Log(1 - fraction * reach) / extinction;
             double chance = extinction * Math.Exp(-extinction * along) / reach;
             Point where = ray.Origin + heading * along;
-            Color arriving = Colors.Black;
-
-            foreach (Light light in Lights)
-            {
-                // One place on the lamp per sample, walking around it as the samples go.  An area
-                // light's softness is then spread across the crossing for nothing, rather than each
-                // sample paying for the whole face of it.
-                LightSample sample = light.SampleToward(where, index % light.SampleCount);
-                Color reaching = GetLightReaching(
-                    where, sample.Direction, sample.Distance, ray.TimeIndex);
-
-                if (reaching.Matches(Colors.Black))
-                    continue;
-
-                // The angle between the way the light was travelling and the way it leaves toward the
-                // eye.  Both are read as the directions light moves in, and negating both leaves
-                // their dot product alone, so this is simply the one direction against the other.
-                double phase = medium.PhaseFor(sample.Direction.Dot(heading));
-
-                arriving += light.Color * reaching * (sample.Cone * phase);
-            }
+            Color arriving = GatheredAt(
+                medium, container, where, heading, ray.TimeIndex, index, crossings);
 
             if (arriving.Matches(Colors.Black))
                 continue;
@@ -209,6 +199,211 @@ public class Scene : NamedThing, IDisposable
         }
 
         return gathered;
+    }
+
+    /// <summary>
+    /// This method walks a ray along its crossing of a medium whose density varies from place to
+    /// place, gathering as it goes what the medium takes out of the ray, what it gives off, and what it
+    /// turns toward the eye.
+    /// <para>
+    /// All three have to be gathered together rather than one after another, because each depends on
+    /// how much medium lies between it and the eye -- and with the density varying, that is only known
+    /// by having walked the part already passed.  So the walk carries a running transmittance: at each
+    /// step the medium's own light and the light it turns aside are weighed by what has accumulated so
+    /// far, and then the step's own share is added to it.
+    /// </para>
+    /// <para>
+    /// The walk is first order in the step, so its answer approaches the truth as the steps grow finer
+    /// rather than being exact at any count -- which is the price of a density that varies at all.  The
+    /// steps are nudged off their even spacing as the sampling elsewhere is, and by the same
+    /// ray-dependent shift, so neither a banded picture nor a shifting one comes of it.
+    /// </para>
+    /// </summary>
+    /// <param name="medium">The medium being crossed.</param>
+    /// <param name="behind">The color arriving from beyond it.</param>
+    /// <param name="ray">The ray crossing it.</param>
+    /// <param name="distance">How far the ray crosses it.</param>
+    /// <param name="container">The surface the medium fills.</param>
+    /// <returns>The color once the medium has had its say.</returns>
+    private Color MarchedThrough(
+        Medium medium, Color behind, Ray ray, double distance, Surface container)
+    {
+        int count = medium.Samples;
+        double step = distance / count;
+        Vector heading = ray.Direction.Unit;
+        double shift = ShiftFor(ray);
+        bool gathers = medium.Scatters && Lights.Count > 0;
+        double surviving = 1;
+        Color transmittance = Colors.White;
+        Color added = Colors.Black;
+        List<Intersection> crossings = gathers ? [] : null;
+
+        for (int index = 0; index < count; index++)
+        {
+            double along = (index + JitterFor(index, shift)) * step;
+            Point where = ray.Origin + heading * along;
+            double density = medium.DensityAt(container.WorldToSurface(where, ray.TimeIndex));
+
+            if (density <= 0)
+                continue;
+
+            Color source = medium.Emission * density;
+
+            if (gathers)
+            {
+                source += medium.Scattering * density * GatheredAt(
+                    medium, container, where, heading, ray.TimeIndex, index, crossings);
+            }
+
+            // What this step's worth gives up to the eye, dimmed by everything nearer than it, and then
+            // the step's own share of the dimming added on for whatever lies further.
+            added += source * transmittance * step;
+            transmittance *= Transmitted(medium.ExtinctionAt(density), step);
+            surviving = (transmittance.Red + transmittance.Green + transmittance.Blue) / 3;
+
+            // Nothing beyond this can show, so there is no sense in walking further.
+            if (surviving < 0.001)
+                break;
+        }
+
+        return new Color(
+            behind.Red * transmittance.Red + added.Red,
+            behind.Green * transmittance.Green + added.Green,
+            behind.Blue * transmittance.Blue + added.Blue,
+            behind.Alpha + (1 - behind.Alpha) * (1 - surviving));
+    }
+
+    /// <summary>
+    /// This method returns what fraction of each color survives the given rate of stopping over the
+    /// given length.
+    /// </summary>
+    /// <param name="extinction">The rate at which each color stops coming this way.</param>
+    /// <param name="distance">The length crossed at that rate.</param>
+    /// <returns>The fraction of each color that gets through.</returns>
+    private static Color Transmitted(Color extinction, double distance)
+    {
+        return new Color(
+            Math.Exp(-extinction.Red * distance),
+            Math.Exp(-extinction.Green * distance),
+            Math.Exp(-extinction.Blue * distance));
+    }
+
+    /// <summary>
+    /// This method works out how much of the scene's light one place inside a shaped medium turns
+    /// toward the eye.  It is the same question a place in an even medium is asked, with one thing
+    /// added: the light has to get through the rest of the shape to arrive at all.
+    /// <para>
+    /// That last part is what makes a cloud look like a cloud rather than a fog in a ball.  A cloud's
+    /// far side is dark because its near side stood in the way, and nothing but the shape shadowing
+    /// itself produces that.
+    /// </para>
+    /// </summary>
+    /// <param name="medium">The medium being crossed.</param>
+    /// <param name="container">The surface it fills.</param>
+    /// <param name="where">The place being asked about.</param>
+    /// <param name="heading">The way the ray was travelling.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
+    /// <param name="crossings">A list to find the shape's far side with, reused between places so that
+    /// a walk does not allocate one per step.</param>
+    /// <returns>The light the place sends along the ray.</returns>
+    private Color GatheredAt(
+        Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
+        List<Intersection> crossings)
+    {
+        Color arriving = Colors.Black;
+
+        foreach (Light light in Lights)
+        {
+            // One place on the lamp per sample, walking around it as the samples go.  An area light's
+            // softness is then spread across the crossing for nothing, rather than each sample paying
+            // for the whole face of it.
+            LightSample sample = light.SampleToward(where, index % light.SampleCount);
+            Color reaching = GetLightReaching(where, sample.Direction, sample.Distance, timeIndex);
+
+            if (reaching.Matches(Colors.Black))
+                continue;
+
+            // A medium filling a surface stands in its own light's way, and nothing else accounts for
+            // that: the walk above looks at surfaces and at the surroundings, neither of which this is.
+            // A medium filling the surroundings needs no such thing, having been charged for its trip
+            // there already.
+            if (container is not null)
+                reaching *= SurvivingTheMedium(medium, container, where, sample, timeIndex, crossings);
+
+            if (reaching.Matches(Colors.Black))
+                continue;
+
+            // The angle between the way the light was travelling and the way it leaves toward the eye.
+            // Both are read as the directions light moves in, and negating both leaves their dot
+            // product alone, so this is simply the one direction against the other.
+            double phase = medium.PhaseFor(sample.Direction.Dot(heading));
+
+            arriving += light.Color * reaching * (sample.Cone * phase);
+        }
+
+        return arriving;
+    }
+
+    /// <summary>
+    /// This method returns how much of a lamp's light survives the rest of the shape on its way to one
+    /// place inside it.
+    /// <para>
+    /// Where the density is even this is a closed form, being a rate times a length.  Where it has a
+    /// shape it is walked, and coarsely -- a quarter of the steps the eye's walk takes -- because all
+    /// that is wanted of it is how much stuff stands in the way, not where any of it is.  Either way it
+    /// stops at the surface's own edge, since past that the medium is not there to shade anything.
+    /// </para>
+    /// </summary>
+    /// <param name="medium">The medium doing the shading.</param>
+    /// <param name="container">The surface it fills.</param>
+    /// <param name="where">The place the light is heading for.</param>
+    /// <param name="sample">Which way the light lies, and how far off.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
+    /// <param name="crossings">A list to find the shape's far side with.</param>
+    /// <returns>The fraction of each color that arrives.</returns>
+    private static Color SurvivingTheMedium(
+        Medium medium, Surface container, Point where, LightSample sample, int timeIndex,
+        List<Intersection> crossings)
+    {
+        Ray toward = new (where, sample.Direction, timeIndex);
+
+        crossings.Clear();
+        container.Intersect(toward, crossings);
+
+        double edge = double.PositiveInfinity;
+
+        foreach (Intersection crossing in crossings)
+        {
+            // The nearest crossing ahead of us is where the shape ends.  Ones behind belong to the
+            // stuff already passed through, and are none of this walk's business.
+            if (crossing.Distance > 0 && crossing.Distance < edge)
+                edge = crossing.Distance;
+        }
+
+        if (double.IsPositiveInfinity(edge))
+            return Colors.White;
+
+        edge = Math.Min(edge, sample.Distance);
+
+        // An even density needs no walking: how much stands in the way is the rate times the length,
+        // which is the very thing the closed form is for.
+        if (!medium.HasShape)
+            return Transmitted(medium.ExtinctionAt(medium.Density), edge);
+
+        int count = Math.Max(2, medium.Samples / 4);
+        double step = edge / count;
+        Color depth = Colors.Black;
+
+        for (int index = 0; index < count; index++)
+        {
+            Point at = where + sample.Direction * ((index + 0.5) * step);
+            double density = medium.DensityAt(container.WorldToSurface(at, timeIndex));
+
+            if (density > 0)
+                depth += medium.ExtinctionAt(density) * step;
+        }
+
+        return Transmitted(depth, 1);
     }
 
     /// <summary>
@@ -359,7 +554,7 @@ public class Scene : NamedThing, IDisposable
             {
                 color = ThroughMedium(
                     material.Interior.Medium, color, RayThatReached(intersection),
-                    intersection.Distance);
+                    intersection.Distance, intersection.Surface);
             }
         }
 

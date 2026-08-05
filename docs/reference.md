@@ -93,7 +93,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
-| `density` | Medium: how much of the stuff there is. | [Scene Files](scene-files.md#filling-that-space) |
+| `density` | Medium: how much of the stuff there is, evenly or as a `density function`. | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth. | [Materials](materials.md#roughening-the-surface) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
@@ -126,7 +126,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import). | [Surfaces](surfaces.md#blob) |
-| `function` | Isosurface: the arithmetic whose value makes the surface. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
+| `function` | Isosurface: the arithmetic whose value makes the surface.  Also a medium's `density function`. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `gamma` | Context: the display gamma to correct for. | [Context](context.md#gamma) |
 | `gap` | Text layout: `line gap`, the space between lines. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |

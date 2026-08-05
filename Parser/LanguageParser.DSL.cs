@@ -1230,6 +1230,10 @@ public partial class LanguageParser
         [
             { absorption > _expression } | { emission > _expression } |
             { scattering > _expression } | { anisotropy > _expression } |
+            {
+                density > function > openBrace ?? 'Expecting an open brace to follow "function" here.' >
+                _expression > closeBrace ?? 'Expecting a close brace to end the function here.'
+            } |
             { density > _expression } | { samples > _expression } |
             { phase > rayleigh ?? 'Expecting "rayleigh" to follow "phase" here.' }
         ] ?? 'Expecting a medium property here.'

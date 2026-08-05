@@ -1,5 +1,6 @@
 using Lex.Parser;
 using RayTracer.Core;
+using RayTracer.Fields;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -49,6 +50,12 @@ public class MediumResolver : ObjectResolver<Medium>
     public Resolver<double> DensityResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how much of it there is from place to place, when the
+    /// medium has a shape rather than an even density.
+    /// </summary>
+    public Resolver<FieldExpression> DensityFieldResolver { get; set; }
+
+    /// <summary>
     /// This property holds the check, if any, to make of the medium once it is built.  Where a medium
     /// may go decides what it may say -- the surroundings have no far side, and a medium filling them
     /// must be one that has an answer over an endless span -- so the check belongs to the place the
@@ -88,6 +95,14 @@ public class MediumResolver : ObjectResolver<Medium>
         AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
         PhaseFunctionResolver.AssignTo(value, target => target.PhaseFunction, context, variables);
         DensityResolver.AssignTo(value, target => target.Density, context, variables);
+
+        // Compiled here rather than at render time: a shape is a real delegate over three numbers, and
+        // making one is the same work whether it is done now or on the first ray to want it.
+        if (DensityFieldResolver is not null)
+        {
+            value.DensityField = FieldFunction.Compile(
+                DensityFieldResolver.Resolve(context, variables));
+        }
 
         // How hard to work is the context's business, and the medium's only when it says so: a scene
         // with one dense plume among thin haze can spend its samples where they are wanted.
