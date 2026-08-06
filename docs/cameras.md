@@ -125,7 +125,7 @@ no width to gather across, so such a camera stays on the single-ray path rather 
 the same ray many times over.  And the cost is real: 32 samples means at least 32 rays per
 pixel, more with antialiasing on top.
 
-`gallery/Local/focal-blur.igl` is a scene built around this.
+`gallery/Local/cameras/focal-blur.igl` is a scene built around this.
 
 ### Motion Blur
 
@@ -158,7 +158,7 @@ still picture out.
 The lens and the shutter **share one set of samples**, so asking for both costs no more rays
 than asking for either.  `blur samples` sets the count for both.
 
-`gallery/Local/motion-blur.igl` is a scene built around this.
+`gallery/Local/cameras/motion-blur.igl` is a scene built around this.
 
 ### Projections
 
@@ -218,5 +218,5 @@ ultra-wide, panoramic or spherical — warns that its aperture does nothing and 
 pinhole.  The [shutter](#motion-blur) works on every projection, so any of them may be set
 moving.
 
-The scene in the picture above is `gallery/Local/fisheye.igl`; changing the word before
+The scene in the picture above is `gallery/Local/cameras/fisheye.igl`; changing the word before
 `camera` in it is the quickest way to see one world through each of the projections.

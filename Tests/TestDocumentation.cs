@@ -152,6 +152,60 @@ public class TestDocumentation
     }
 
     [TestMethod]
+    public void TestEveryGallerySceneNamedInProseIsThere()
+    {
+        // The guide points at gallery scenes by name, in prose rather than as links, so nothing about
+        // a chapter looks wrong when one is renamed or moved -- the sentence still reads perfectly and
+        // simply sends the reader nowhere.  This is the one check that catches that.
+        Regex named = new (@"gallery/[A-Za-z0-9._/-]+");
+        List<string> missing = [];
+
+        foreach (string file in MarkdownFiles)
+        {
+            foreach (Match match in named.Matches(File.ReadAllText(file)))
+            {
+                // A trailing dot belongs to the sentence rather than to the path.
+                string path = match.Value.TrimEnd('.', ',');
+
+                if (!File.Exists(Path.Combine(RepositoryRoot, path)) &&
+                    !Directory.Exists(Path.Combine(RepositoryRoot, path)))
+                    missing.Add($"{Path.GetFileName(file)} -> {path}");
+            }
+        }
+
+        Assert.AreEqual(0, missing.Count,
+            $"the guide names gallery scenes that are not there:\n  {string.Join("\n  ", missing)}");
+    }
+
+    [TestMethod]
+    public void TestTheGalleryIndexPointsAtRealFiles()
+    {
+        // The gallery's own index is a hand-written table of a couple of hundred links, with no
+        // generator behind it and nothing else watching it.  Moving a scene without minding it leaves
+        // broken thumbnails, which is the sort of thing nobody notices for a year.
+        string index = Path.Combine(RepositoryRoot, "gallery", "README.md");
+
+        Assert.IsTrue(File.Exists(index), "the gallery has no index at all");
+
+        Regex pointed = new (@"(?:href|src)=""([^""]+)""");
+        List<string> missing = [];
+
+        foreach (Match match in pointed.Matches(File.ReadAllText(index)))
+        {
+            string pointedAt = match.Groups[1].Value;
+
+            if (pointedAt.StartsWith("http"))
+                continue;
+
+            if (!File.Exists(Path.Combine(RepositoryRoot, "gallery", pointedAt)))
+                missing.Add(pointedAt);
+        }
+
+        Assert.AreEqual(0, missing.Count,
+            $"the gallery index points at files that are not there:\n  {string.Join("\n  ", missing)}");
+    }
+
+    [TestMethod]
     public void TestEveryDiagramSourceHasBeenGenerated()
     {
         // A diagram that was written but never run through generate-diagrams.sh leaves a hole in

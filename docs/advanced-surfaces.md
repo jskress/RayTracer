@@ -85,7 +85,7 @@ Icons are not built in: you install a FontAwesome zip once with the
 [`libraries --fa-zip`](libraries.md#fontawesome-icons) command, and every scene draws its icons
 from there.  An icon arrives at the scale and orientation SVG uses — a box some hundreds of units
 across, with Y running *downward* — so, like a pasted `svg` outline, it usually wants scaling down
-and flipping to sit the right way up.  `gallery/Local/icons.igl` extrudes two of them, named both
+and flipping to sit the right way up.  `gallery/Local/paths/icons.igl` extrudes two of them, named both
 ways.
 
 #### Text as a path
@@ -144,7 +144,7 @@ lathe {
 }
 ```
 
-`gallery/Local/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
+`gallery/Local/paths/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
 quarter turn with a [CSG](surfaces.md#combining-surfaces) intersection.
 
 ### Extrusion
@@ -247,7 +247,7 @@ high up it sits.  Anything round and symmetrical — a glass, a vase, a bottle, 
 piece — is quicker to write this way than any other.
 
 The complete scene is [`docs/examples/advanced/lathe.igl`](examples/advanced/lathe.igl), and
-`gallery/Local/extrusions/` has several more.
+`gallery/Local/paths/extrusions/` has several more.
 
 ### Sweep
 
@@ -364,7 +364,7 @@ Where a sweep carries an arbitrary profile, a tube is always round — which mak
 tool for cables, pipes, handles and stems, and it is what the
 [L-system](#l-systems) renderer uses to draw branches.  The complete scene is
 [`docs/examples/advanced/tube.igl`](examples/advanced/tube.igl), and
-`gallery/Local/power-cord.igl` is a longer one.
+`gallery/Local/paths/power-cord.igl` is a longer one.
 
 ### Isosurface
 
@@ -447,7 +447,7 @@ Two things a function may not hold, both of which say so plainly if you write th
 needs the slope of its function to know which way it faces, and that one has no slope written down
 here.  A function using it is refused for that reason rather than for being unusable.
 
-`gallery/Local/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
+`gallery/Local/surfaces/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
 twisted column above, and a ball blended smoothly into a cylinder.
 
 #### Rough surfaces, with `noise`
@@ -494,7 +494,7 @@ by definition:
 function { y + 0.1 - 0.95 ⋅ (noise(2.2 * x, 1.3 * y, 2.2 * z) - 0.5) }
 ```
 
-`gallery/Local/isosurface-noise.igl` renders all three.  One layer of noise is smooth and rolling; for
+`gallery/Local/surfaces/isosurface-noise.igl` renders all three.  One layer of noise is smooth and rolling; for
 the finer detail of real stone or bark, add layers of it, each finer and fainter than the last, which
 a function can now say for itself — `noise(p) + noise(2p) / 2 + noise(4p) / 4`.
 

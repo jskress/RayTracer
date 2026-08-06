@@ -235,7 +235,7 @@ to be drawn there, so lowering it grows everything and makes components reach fu
 raising it shrinks them apart again.
 
 A negative `strength` works the other way, pressing a dent into its neighbors rather than
-adding to them — see `gallery/Local/blob-negative-strength.igl`.
+adding to them — see `gallery/Local/surfaces/blob-negative-strength.igl`.
 
 ### Shapes
 
@@ -294,7 +294,7 @@ triangle {
 #### Patch
 
 A bicubic patch: a curved quadrilateral pulled into shape by a four-by-four grid of control
-points.  `gallery/Local/patch.igl` is the example to read.
+points.  `gallery/Local/surfaces/patch.igl` is the example to read.
 
 ### Groups
 

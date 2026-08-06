@@ -240,7 +240,7 @@ Because it only tilts the normal, the surface's *outline* stays perfectly smooth
 sphere still has a circular silhouette.  For roughness that shows on the edge you need real
 geometry.
 
-`gallery/Local/normals.igl` shows the range of it.
+`gallery/Local/materials/normals.igl` shows the range of it.
 
 ### Naming and Reusing
 

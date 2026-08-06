@@ -4,7 +4,7 @@ title = 'Spherical image pigment test'
 distance = -5
 height = 1
 
-include 'solar-system/ss-setup.igl'
+include '../solar-system/ss-setup.igl'
 
 background Transparent
 

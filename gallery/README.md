@@ -269,59 +269,59 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusions/extrusion.png">
-      <img alt="Extrusion Test" height="120" src="Local/extrusions/extrusion.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/extrusions/extrusion.png">
+      <img alt="Extrusion Test" height="120" src="Local/paths/extrusions/extrusion.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusions/extrusion.igl">Extrusion Test</a>
+      <a href="Local/paths/extrusions/extrusion.igl">Extrusion Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusions/extrusion2.png">
-      <img alt="Another Extrusion Test" height="120" src="Local/extrusions/extrusion2.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/extrusions/extrusion2.png">
+      <img alt="Another Extrusion Test" height="120" src="Local/paths/extrusions/extrusion2.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusions/extrusion2.igl">Another Extrusion Test</a>
+      <a href="Local/paths/extrusions/extrusion2.igl">Another Extrusion Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusions/lathe.png">
-      <img alt="Lathe Test" height="120" src="Local/extrusions/lathe.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/extrusions/lathe.png">
+      <img alt="Lathe Test" height="120" src="Local/paths/extrusions/lathe.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusions/lathe.igl">Lathe Test</a>
+      <a href="Local/paths/extrusions/lathe.igl">Lathe Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusions/lathe-drinking-glass.png">
-      <img alt="Lathe Drinking Glass Test" height="120" src="Local/extrusions/lathe-drinking-glass.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/extrusions/lathe-drinking-glass.png">
+      <img alt="Lathe Drinking Glass Test" height="120" src="Local/paths/extrusions/lathe-drinking-glass.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusions/lathe-drinking-glass.igl">Lathe Drinking Glass Test</a>
+      <a href="Local/paths/extrusions/lathe-drinking-glass.igl">Lathe Drinking Glass Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/extrusions/lathe-trophy.png">
-      <img alt="Lathe Trophy Test" height="120" src="Local/extrusions/lathe-trophy.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/extrusions/lathe-trophy.png">
+      <img alt="Lathe Trophy Test" height="120" src="Local/paths/extrusions/lathe-trophy.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/extrusions/lathe-trophy.igl">Lathe Trophy Test</a>
+      <a href="Local/paths/extrusions/lathe-trophy.igl">Lathe Trophy Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/heightfield.png">
-      <img alt="Height Field Test" height="120" src="Local/heightfield.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/heightfield.png">
+      <img alt="Height Field Test" height="120" src="Local/surfaces/heightfield.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/heightfield.igl">Height Field Test</a>
+      <a href="Local/surfaces/heightfield.igl">Height Field Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/image-map.png">
-      <img alt="Spherical image pigment test" height="120" src="Local/image-map.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/image-map.png">
+      <img alt="Spherical image pigment test" height="120" src="Local/materials/image-map.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/image-map.igl">Spherical image pigment test</a>
+      <a href="Local/materials/image-map.igl">Spherical image pigment test</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -413,19 +413,19 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/metallic.png">
-      <img alt="Metallic Material Test" height="120" src="Local/metallic.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/metallic.png">
+      <img alt="Metallic Material Test" height="120" src="Local/materials/metallic.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/metallic.igl">Metallic Material Test</a>
+      <a href="Local/materials/metallic.igl">Metallic Material Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/noise.png">
-      <img alt="Pigment Noise Test" height="120" src="Local/noise.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/noise.png">
+      <img alt="Pigment Noise Test" height="120" src="Local/materials/noise.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/noise.igl">Pigment Noise Test</a>
+      <a href="Local/materials/noise.igl">Pigment Noise Test</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -453,251 +453,251 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/text.png">
-      <img alt="Text Solid Test" height="120" src="Local/text.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/text.png">
+      <img alt="Text Solid Test" height="120" src="Local/paths/text.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/text.igl">Text Solid Test</a>
+      <a href="Local/paths/text.igl">Text Solid Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/text-path.png">
-      <img alt="Text Path Test" height="120" src="Local/text-path.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/text-path.png">
+      <img alt="Text Path Test" height="120" src="Local/paths/text-path.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/text-path.igl">Text Path Test</a>
+      <a href="Local/paths/text-path.igl">Text Path Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/text-lathe.png">
-      <img alt="Text Lathe Test" height="120" src="Local/text-lathe.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/text-lathe.png">
+      <img alt="Text Lathe Test" height="120" src="Local/paths/text-lathe.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/text-lathe.igl">Text Lathe Test</a>
+      <a href="Local/paths/text-lathe.igl">Text Lathe Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/torus.png">
-      <img alt="Torus Test" height="120" src="Local/torus.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/torus.png">
+      <img alt="Torus Test" height="120" src="Local/surfaces/torus.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/torus.igl">Torus Test</a>
+      <a href="Local/surfaces/torus.igl">Torus Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/blob.png">
-      <img alt="Blob Test" height="120" src="Local/blob.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/blob.png">
+      <img alt="Blob Test" height="120" src="Local/surfaces/blob.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/blob.igl">Blob Test</a>
+      <a href="Local/surfaces/blob.igl">Blob Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/blob-negative-strength.png">
-      <img alt="Blob Negative Strength Test" height="120" src="Local/blob-negative-strength.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/blob-negative-strength.png">
+      <img alt="Blob Negative Strength Test" height="120" src="Local/surfaces/blob-negative-strength.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/blob-negative-strength.igl">Blob Negative Strength Test</a>
+      <a href="Local/surfaces/blob-negative-strength.igl">Blob Negative Strength Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/tube.png">
-      <img alt="Tube Test" height="120" src="Local/tube.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/tube.png">
+      <img alt="Tube Test" height="120" src="Local/surfaces/tube.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/tube.igl">Tube Test</a>
+      <a href="Local/surfaces/tube.igl">Tube Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/power-cord.png">
-      <img alt="Power Cord Test" height="120" src="Local/power-cord.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/power-cord.png">
+      <img alt="Power Cord Test" height="120" src="Local/paths/power-cord.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/power-cord.igl">Power Cord Test</a>
+      <a href="Local/paths/power-cord.igl">Power Cord Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/stained-glass.png">
-      <img alt="Filtered Transparency Test" height="120" src="Local/stained-glass.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/stained-glass.png">
+      <img alt="Filtered Transparency Test" height="120" src="Local/materials/stained-glass.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/stained-glass.igl">Filtered Transparency Test</a>
+      <a href="Local/materials/stained-glass.igl">Filtered Transparency Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/clarity.png">
-      <img alt="Clarity Test" height="120" src="Local/clarity.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/clarity.png">
+      <img alt="Clarity Test" height="120" src="Local/materials/clarity.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/clarity.igl">Clarity Test</a>
+      <a href="Local/materials/clarity.igl">Clarity Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/finish.png">
-      <img alt="Surface Finish Test" height="120" src="Local/finish.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/finish.png">
+      <img alt="Surface Finish Test" height="120" src="Local/materials/finish.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/finish.igl">Surface Finish Test</a>
+      <a href="Local/materials/finish.igl">Surface Finish Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/sweep.png">
-      <img alt="Sweep Test" height="120" src="Local/sweep.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/sweep.png">
+      <img alt="Sweep Test" height="120" src="Local/paths/sweep.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/sweep.igl">Sweep Test</a>
+      <a href="Local/paths/sweep.igl">Sweep Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/sweep-conduit.png">
-      <img alt="Sweep Conduit Test" height="120" src="Local/sweep-conduit.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/sweep-conduit.png">
+      <img alt="Sweep Conduit Test" height="120" src="Local/paths/sweep-conduit.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/sweep-conduit.igl">Sweep Conduit Test</a>
+      <a href="Local/paths/sweep-conduit.igl">Sweep Conduit Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/sweep-side.png">
-      <img alt="Sweep Test (Side View)" height="120" src="Local/sweep-side.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/sweep-side.png">
+      <img alt="Sweep Test (Side View)" height="120" src="Local/paths/sweep-side.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/sweep-side.igl">Sweep Test (Side View)</a>
+      <a href="Local/paths/sweep-side.igl">Sweep Test (Side View)</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/sweep-scale.png">
-      <img alt="Sweep Scale Test" height="120" src="Local/sweep-scale.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/sweep-scale.png">
+      <img alt="Sweep Scale Test" height="120" src="Local/paths/sweep-scale.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/sweep-scale.igl">Sweep Scale Test</a>
+      <a href="Local/paths/sweep-scale.igl">Sweep Scale Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/disc.png">
-      <img alt="Disc Test" height="120" src="Local/disc.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/disc.png">
+      <img alt="Disc Test" height="120" src="Local/surfaces/disc.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/disc.igl">Disc Test</a>
+      <a href="Local/surfaces/disc.igl">Disc Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/generic-shape.png">
-      <img alt="Generic Shape Test" height="120" src="Local/generic-shape.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/generic-shape.png">
+      <img alt="Generic Shape Test" height="120" src="Local/surfaces/generic-shape.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/generic-shape.igl">Generic Shape Test</a>
+      <a href="Local/surfaces/generic-shape.igl">Generic Shape Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/egg.png">
-      <img alt="Egg Test" height="120" src="Local/egg.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/egg.png">
+      <img alt="Egg Test" height="120" src="Local/surfaces/egg.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/egg.igl">Egg Test</a>
+      <a href="Local/surfaces/egg.igl">Egg Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/superellipsoid.png">
-      <img alt="Superellipsoid Test" height="120" src="Local/superellipsoid.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/superellipsoid.png">
+      <img alt="Superellipsoid Test" height="120" src="Local/surfaces/superellipsoid.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/superellipsoid.igl">Superellipsoid Test</a>
+      <a href="Local/surfaces/superellipsoid.igl">Superellipsoid Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/superellipsoid-concave.png">
-      <img alt="Superellipsoid Concave Shapes Test" height="120" src="Local/superellipsoid-concave.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/superellipsoid-concave.png">
+      <img alt="Superellipsoid Concave Shapes Test" height="120" src="Local/surfaces/superellipsoid-concave.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/superellipsoid-concave.igl">Superellipsoid Concave Shapes Test</a>
+      <a href="Local/surfaces/superellipsoid-concave.igl">Superellipsoid Concave Shapes Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/patch.png">
-      <img alt="Patch Test" height="120" src="Local/patch.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/patch.png">
+      <img alt="Patch Test" height="120" src="Local/surfaces/patch.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/patch.igl">Patch Test</a>
+      <a href="Local/surfaces/patch.igl">Patch Test</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/normals.png">
-      <img alt="Normal Perturbation" height="120" src="Local/normals.png" width="160"/>
+    <td style="border: none;"><a href="Local/materials/normals.png">
+      <img alt="Normal Perturbation" height="120" src="Local/materials/normals.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/normals.igl">Normal Perturbation</a>
+      <a href="Local/materials/normals.igl">Normal Perturbation</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/lights.png">
-      <img alt="Distant and Spot Lights" height="120" src="Local/lights.png" width="160"/>
+    <td style="border: none;"><a href="Local/lights/lights.png">
+      <img alt="Distant and Spot Lights" height="120" src="Local/lights/lights.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/lights.igl">Distant and Spot Lights</a>
+      <a href="Local/lights/lights.igl">Distant and Spot Lights</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/area-light.png">
-      <img alt="Area Light" height="120" src="Local/area-light.png" width="160"/>
+    <td style="border: none;"><a href="Local/lights/area-light.png">
+      <img alt="Area Light" height="120" src="Local/lights/area-light.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/area-light.igl">Area Light</a>
+      <a href="Local/lights/area-light.igl">Area Light</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/focal-blur.png">
-      <img alt="Focal Blur" height="120" src="Local/focal-blur.png" width="160"/>
+    <td style="border: none;"><a href="Local/cameras/focal-blur.png">
+      <img alt="Focal Blur" height="120" src="Local/cameras/focal-blur.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/focal-blur.igl">Focal Blur</a>
+      <a href="Local/cameras/focal-blur.igl">Focal Blur</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/motion-blur.png">
-      <img alt="Motion Blur" height="120" src="Local/motion-blur.png" width="160"/>
+    <td style="border: none;"><a href="Local/cameras/motion-blur.png">
+      <img alt="Motion Blur" height="120" src="Local/cameras/motion-blur.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/motion-blur.igl">Motion Blur</a>
+      <a href="Local/cameras/motion-blur.igl">Motion Blur</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/fisheye.png">
-      <img alt="Fisheye Camera" height="120" src="Local/fisheye.png" width="160"/>
+    <td style="border: none;"><a href="Local/cameras/fisheye.png">
+      <img alt="Fisheye Camera" height="120" src="Local/cameras/fisheye.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/fisheye.igl">Fisheye Camera</a>
+      <a href="Local/cameras/fisheye.igl">Fisheye Camera</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/icons.png">
-      <img alt="FontAwesome Icons" height="120" src="Local/icons.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/icons.png">
+      <img alt="FontAwesome Icons" height="120" src="Local/paths/icons.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/icons.igl">FontAwesome Icons</a>
+      <a href="Local/paths/icons.igl">FontAwesome Icons</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/icons-complex.png">
-      <img alt="FontAwesome Icons, the Intricate Ones" height="120" src="Local/icons-complex.png" width="160"/>
+    <td style="border: none;"><a href="Local/paths/icons-complex.png">
+      <img alt="FontAwesome Icons, the Intricate Ones" height="120" src="Local/paths/icons-complex.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/icons-complex.igl">FontAwesome Icons, the Intricate Ones</a>
+      <a href="Local/paths/icons-complex.igl">FontAwesome Icons, the Intricate Ones</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/isosurfaces.png">
-      <img alt="Isosurfaces" height="120" src="Local/isosurfaces.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/isosurfaces.png">
+      <img alt="Isosurfaces" height="120" src="Local/surfaces/isosurfaces.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/isosurfaces.igl">Isosurfaces</a>
+      <a href="Local/surfaces/isosurfaces.igl">Isosurfaces</a>
     </td>
   </tr>
   <tr style="border: none;">
-    <td style="border: none;"><a href="Local/isosurface-noise.png">
-      <img alt="Isosurfaces Made Rough With Noise" height="120" src="Local/isosurface-noise.png" width="160"/>
+    <td style="border: none;"><a href="Local/surfaces/isosurface-noise.png">
+      <img alt="Isosurfaces Made Rough With Noise" height="120" src="Local/surfaces/isosurface-noise.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/isosurface-noise.igl">Isosurfaces Made Rough With Noise</a>
+      <a href="Local/surfaces/isosurface-noise.igl">Isosurfaces Made Rough With Noise</a>
     </td>
   </tr>
 </table>
