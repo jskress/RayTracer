@@ -85,6 +85,23 @@ public class RenderContext
     public AliasingOption AntiAliasing { get; set; }
 
     /// <summary>
+    /// This property holds how many places along a ray's crossing of a medium the scene's lamps are
+    /// asked what they deliver there, for a medium that turns light aside.  It belongs here, beside
+    /// the scanner and the anti-aliasing, because it says how hard to work rather than what anything
+    /// is made of; a medium may name its own count when one volume in a scene needs more care than
+    /// the rest.
+    /// </summary>
+    public int MediumSamples { get; set; } = 16;
+
+    /// <summary>
+    /// This property holds how many further turns of a light's path through a medium are followed past
+    /// the first.  It is nothing by default, so that a scene says when it wants the cost: what a thick
+    /// medium does to light it has already turned once is most of what it does, but it is also most of
+    /// the work.
+    /// </summary>
+    public int MediumBounces { get; set; }
+
+    /// <summary>
     /// This property holds the time value (in ticks) for the frame currently being rendered.
     /// </summary>
     public long Ticks { get; set; }

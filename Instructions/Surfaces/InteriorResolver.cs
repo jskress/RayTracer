@@ -24,6 +24,11 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
     public Resolver<double> ClarityResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for what fills the surface, if anything does.
+    /// </summary>
+    public MediumResolver MediumResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an interior.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -34,6 +39,9 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
         IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
         FilterResolver.AssignTo(value, target => target.Filter, context, variables);
         ClarityResolver.AssignTo(value, target => target.Clarity, context, variables);
+
+        if (MediumResolver is not null)
+            value.Medium = MediumResolver.Resolve(context, variables);
     }
 
     /// <summary>

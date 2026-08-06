@@ -19,4 +19,17 @@ public class SceneEnvironment
     /// would want more again.
     /// </summary>
     public double IndexOfRefraction { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds what fills the space between a scene's objects, if anything does.  It is
+    /// nothing by default, which is to say the space is empty and a ray crosses it untouched.
+    /// <para>
+    /// A medium named here fills exactly the space this index of refraction governs -- everywhere a
+    /// ray is inside none of the scene's objects -- which is the same rule read twice rather than two
+    /// rules.  Being the space that has no end, it is also the one place a medium may be asked to act
+    /// over an endless span, and the one place it matters that a medium which emits without absorbing
+    /// has no answer over such a span.
+    /// </para>
+    /// </summary>
+    public Medium Medium { get; set; }
 }

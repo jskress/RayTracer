@@ -1,0 +1,93 @@
+// A scene about the light a medium has already turned once.
+//
+// Everything up to here stopped at the first turn: light went from a lamp, was turned aside once, and
+// arrived at the eye.  In anything thick that is a small share of what there is.  Nearly all the light
+// leaving a real cloud has been turned a dozen times or more on the way out, bouncing from one part of
+// it to another, and that is why a cloud is white rather than gray and why the side away from the sun
+// glows instead of going black.
+//
+// This is the same ball of noise the shaped-density scene uses, made thicker and given almost nothing
+// to absorb with, so that the light it stops is nearly all passed on rather than swallowed.  Such a
+// medium is exactly the case single scattering gets most wrong: with `medium bounces 0` it comes out a
+// dull gray lump with a dead black underside, because every one of those onward journeys is thrown
+// away.  Set the bounces below to nothing and look, then set them back; it is the same cloud, and the
+// difference is all light that was there to be found.
+//
+// What each turn is worth is the share of stopped light the medium passes on rather than swallowing --
+// its albedo, which here is above ninety-five hundredths in every color.  That is why so many turns
+// are worth following: at each one, almost nothing is lost, so the eighth turn still carries most of
+// what the first did.  Give the same cloud a heavy absorption and three turns would be plenty, the
+// rest having been swallowed long before.
+//
+// The cost is one more path for every turn, since each place followed picks a single direction to have
+// come from rather than trying all of them, and many of those paths wander out of the cloud and end.
+// Measured on this scene, six turns cost about two and a half times what none do.
+//
+// The grain in the shaded part is honest and worth understanding.  Where the cloud is lit directly the
+// answer is well settled, but in the shade every scrap of light arrived by wandering, and each place
+// along a ray sends one path off to find it.  Most of those paths find the lamp hidden and come back
+// with nothing; now and again one reaches the lit crown and comes back with a great deal.  The average
+// is right and settles as the square root of the sample count, which is to say slowly -- so a thicker,
+// less absorbing cloud than this one grains up badly, and the cure is more places rather than more
+// turns.  Note also that the grain is the same in every render rather than crawling, so it will not
+// average away over the frames of an animation.
+//
+// What is still missing, and would matter more than any of this for a daylight cloud: nothing in this
+// renderer but a lamp gives off light.  The background is a color the eye sees, not something that
+// lights the scene, so a path that wanders out of the cloud ends with nothing.  Real clouds are lit
+// mostly by sky.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    medium samples 144
+    medium bounces 6
+    info {
+        title 'Multiple Scattering'
+        author 'J. Stephen Kress'
+        description 'A cloud lit by the light it has already turned, which is most of the light there is.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 0.4, -6.5]
+    look at [0, 0.1, 0]
+    field of view 44
+}
+
+background [0.03, 0.045, 0.08]
+
+// One lamp, above and a little behind, so that the underside of the cloud is lit by nothing directly.
+// Whatever light reaches it got there through the cloud itself.
+point light {
+    location [-3.5, 5.5, 2.5]
+    color [2.1, 2.05, 1.95]
+}
+
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                // Thick enough that light must wander to get out, and swallowing almost none of what
+                // it stops -- the two together are what make the turns worth following.  Drop the
+                // scattering to a tenth of this and the first turn is nearly the whole story.
+                scattering 2.4
+                absorption 0.06
+                anisotropy 0.35
+                density function {
+                    max(0, 1 - √(x² + y² + z²)) *
+                    max(0, 2.1 * noise(2.7*x, 2.7*y, 2.7*z) - 0.5)
+                }
+            }
+        }
+    }
+    scale 1.8
+}

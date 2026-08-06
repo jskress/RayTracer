@@ -176,6 +176,47 @@ solid rather than like a soap bubble.
 beneath it.  Note that transparency and filter are different questions: transparency is *how
 much* gets through, filter is *what color* it comes out.
 
+### Filling a Surface
+
+An interior may also hold a `medium`: not what the boundary is made of, but what fills the space
+inside it.  It is the same thing that can fill a scene's
+[surroundings](scene-files.md#filling-that-space), bounded by the surface rather than running on
+forever, and it takes the same three properties.
+
+```
+sphere {
+    material {
+        pigment White
+        ambient 0  diffuse 0  transparency 1
+        interior {
+            medium {
+                emission [1.35, 0.72, 0.2]
+                absorption [0.55, 0.85, 1.4]
+            }
+        }
+    }
+}
+```
+
+That is a ball of glowing gas.  It is brighter through the middle, where a ray crosses more of it,
+and oranger there too, since the longer path absorbs proportionally more blue.  Nothing about the
+sphere itself is visible: the pigment shows nothing, being fully transmitting, so every bit of what
+is seen came from what is inside.
+
+Two things follow from a medium being *inside* something.  The surface has to let light through —
+a ray that cannot get in never crosses what is in there, exactly as with `clarity`.  And being
+bounded, such a medium may emit without absorbing; its light stops at the far wall.
+
+A medium inside a surface may [scatter](scene-files.md#scattering) as well, in which case it gathers
+light from the scene's lamps just as one filling the surroundings does — so a glass globe of smoke
+lights up where a lamp shines into it.
+
+`clarity` and a medium overlap on purpose rather than one replacing the other.  Clarity is the
+one-number form of the same idea, and stays the easier thing to reach for when fading with depth is
+all a surface needs.  A medium is the richer form: it fades color by color, and it can glow.  A
+surface may carry both, in which case both are charged, there being nothing odd about two things
+absorbing light in the same place.
+
 ### Roughening the Surface
 
 A `normal` block tilts the surface normal from point to point, so a smooth surface catches the

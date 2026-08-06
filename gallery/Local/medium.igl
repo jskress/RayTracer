@@ -1,0 +1,130 @@
+// A scene about what fills space rather than what stands in it.
+//
+// Everything until now has treated the space between surfaces as empty: a ray crossed it untouched,
+// so a thing a hundred units off arrived exactly as bright as the same thing at arm's length, and
+// only its size on the screen said which was which.  A medium fills that space with something.  It
+// absorbs, so what lies beyond arrives dimmer -- color by color, which is why haze is blue rather
+// than gray -- and it gives off light of its own all along the way.  Together those two are what
+// painters call aerial perspective and what makes distance legible.
+//
+// The pillars are identical and evenly spaced.  Nothing about them changes with depth except how
+// much haze the eye had to look through to reach them, and that alone is enough to sort them.  Read
+// the far end of the row against the near end.
+//
+// The sky is the same arithmetic taken to its limit.  A ray that strikes nothing runs on through the
+// haze forever, so what comes back cannot depend on anything beyond it at all: it settles at what
+// the haze gives off divided by what it takes out.  Nothing here paints a sky -- the background is
+// the default, which is nothing whatever -- and yet there is one, and its color is not a choice but
+// a consequence.  Change the emission or the absorption below and the sky changes with it.
+//
+// The lantern is the other place a medium may live: inside a surface, where it is bounded by the
+// glass rather than running on forever.  Its glass lets light through and has nothing of its own to
+// show, so what is seen is the gas within, thicker through the middle of the ball than at its rim.
+// It absorbs blue most strongly, so the long way through comes out oranger than the short way.
+//
+// Nothing here is sampled or stepped along: with the density even throughout, both what survives a
+// crossing and what the medium adds have exact answers, so a span costs one exponential per color.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'A Medium'
+        author 'J. Stephen Kress'
+        description 'Haze filling the space between things, and a glowing gas bounded by glass.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.4, -15]
+    look at [0, 0.7, 22]
+    field of view 50
+}
+
+// Lamps rather than a distant light, deliberately.  A light is charged for its own trip through the
+// haze exactly as the eye is, and a distant light's trip is an endless one -- an unbounded haze
+// swallows it utterly, which is the honest answer for a fog described as having no far side.
+point light {
+    location [-7, 10, -11]
+}
+
+point light {
+    location [7, 6, 10]
+    color [0.35, 0.35, 0.4]
+}
+
+// The haze.  Absorption a little stronger in blue than in red would redden the distance, as smoke
+// does; the other way about, as here, is what air does, and is why far hills are blue.
+environment {
+    ior Air
+    medium {
+        absorption [0.058, 0.05, 0.042]
+        emission [0.035, 0.04, 0.052]
+    }
+}
+
+plane {
+    material {
+        pigment checker { [0.34, 0.33, 0.3], [0.46, 0.45, 0.42] }
+        specular 0
+    }
+}
+
+pillarStone = material {
+    pigment [0.78, 0.76, 0.72]
+    ambient 0.05
+    diffuse 0.9
+    specular 0.15
+    shininess 60
+}
+
+// Seven pairs, marching off to the far end.  They are identical in every way; the haze does the
+// rest.
+pillar = cube {
+    material pillarStone
+    scale [0.4, 1.6, 0.4]
+}
+
+object pillar { translate [-3, 1.6, -9] }
+object pillar { translate [3, 1.6, -9] }
+object pillar { translate [-3, 1.6, -3] }
+object pillar { translate [3, 1.6, -3] }
+object pillar { translate [-3, 1.6, 3] }
+object pillar { translate [3, 1.6, 3] }
+object pillar { translate [-3, 1.6, 10] }
+object pillar { translate [3, 1.6, 10] }
+object pillar { translate [-3, 1.6, 17] }
+object pillar { translate [3, 1.6, 17] }
+object pillar { translate [-3, 1.6, 24] }
+object pillar { translate [3, 1.6, 24] }
+object pillar { translate [-3, 1.6, 34] }
+object pillar { translate [3, 1.6, 34] }
+object pillar { translate [-3, 1.6, 45] }
+object pillar { translate [3, 1.6, 45] }
+object pillar { translate [-3, 1.6, 57] }
+object pillar { translate [3, 1.6, 57] }
+
+// The lantern: glass with a glowing gas inside it.  The glass shows nothing of itself -- no ambient,
+// no diffuse, and fully transmitting -- so every bit of what is seen came from the medium it holds.
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0.4
+        shininess 300
+        transparency 1
+        interior {
+            ior 1.02
+            medium {
+                emission [1.35, 0.72, 0.2]
+                absorption [0.55, 0.85, 1.4]
+            }
+        }
+    }
+    scale 0.62
+    translate [1.5, 1.25, -1.5]
+}

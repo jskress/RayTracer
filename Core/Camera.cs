@@ -142,15 +142,23 @@ public class Camera : NamedThing
 
         context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);
 
-        context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
+        // The progress bar takes the cursor away while it has the line, so it must be given the
+        // chance to hand it back however the render ends.  A scene that fails part way through would
+        // otherwise leave the terminal with no cursor at all.
+        try
         {
-            Color color = renderer.Render(scene, x, y);
+            context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
+            {
+                Color color = renderer.Render(scene, x, y);
 
-            canvas.SetColor(color, x, y);
-            context.ProgressBar?.Bump();
-        });
-
-        context.ProgressBar?.Done();
+                canvas.SetColor(color, x, y);
+                context.ProgressBar?.Bump();
+            });
+        }
+        finally
+        {
+            context.ProgressBar?.Done();
+        }
 
         return canvas;
     }

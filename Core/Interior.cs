@@ -59,6 +59,25 @@ public class Interior
     public double Clarity { get; set; } = double.PositiveInfinity;
 
     /// <summary>
+    /// This property holds what fills the surface, if anything does: a medium, which absorbs light
+    /// color by color and may give off light of its own.  It is nothing by default.
+    /// <para>
+    /// It overlaps with <see cref="Clarity"/> deliberately rather than replacing it.  Clarity is the
+    /// one-number form of the same idea -- how far light gets before fading -- and remains the
+    /// easier thing to reach for when that is all a surface needs.  A medium is the richer form: it
+    /// fades color by color, and it can glow.  A surface may carry both, in which case both are
+    /// charged, there being nothing odd about two things absorbing light in the same place.
+    /// </para>
+    /// <para>
+    /// A medium here fills the same space this interior's index of refraction governs, and is
+    /// measured over the same distance clarity is: from the surface a ray entered by to the one it
+    /// leaves by.  The caveats are clarity's caveats -- something with no inside has nothing to
+    /// measure, and nesting is not resolved.
+    /// </para>
+    /// </summary>
+    public Medium Medium { get; set; }
+
+    /// <summary>
     /// This method returns the amount by which light passing through a surface is tinted by that
     /// surface's own color, as a factor to multiply the light by.
     /// </summary>

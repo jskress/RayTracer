@@ -211,6 +211,218 @@ environment index of refraction 1.333
 Like `background`, this may sit at the top level or inside a `scene { }` block, so two scenes in one
 file may sit in different surroundings.
 
+#### Filling that space
+
+The surroundings can be more than empty space with an index.  When there is more than one thing to
+say about them, `environment` takes a block, and what fills the space is a `medium`:
+
+```
+environment {
+    ior Air
+    medium {
+        absorption [0.058, 0.05, 0.042]
+        emission [0.035, 0.04, 0.052]
+    }
+}
+```
+
+A medium is something a ray passes *through* rather than strikes.  Two things happen to a ray
+crossing it: light is taken out, so what lies beyond arrives dimmer; and the medium's own light is
+added all along the way, each bit of it dimmed in turn by however much medium still lies between it
+and the eye.  Together those are haze, fog, smoke, and the glow of a gas.
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `absorption` | none | How much light the medium takes out for each unit of distance. |
+| `emission` | none | How much light it gives off for each unit of distance. |
+| `density` | 1 | A plain multiplier on both, so how *much* of the stuff there is can be said apart from what the stuff does. |
+
+The first two are colors, because a haze that dims red more than blue is the whole reason far hills
+are blue rather than gray.  Either may be written as a single number when all three colors are the
+same, exactly as `clarity` is:
+
+```
+medium { absorption 0.04 }
+```
+
+**The sky comes out of this.**  A ray that strikes nothing crosses the surroundings forever, so
+what lies beyond cannot matter at all — and what comes back settles at the emission divided by the
+absorption.  An endless haze therefore both swallows the sky and *becomes* it.  In the example
+above nothing paints a sky, and yet the scene has one, and its color is not a choice but a
+consequence: `[0.035, 0.04, 0.052]` over `[0.058, 0.05, 0.042]` is a pale blue.  Change either line
+and the sky changes with it.  A medium that absorbs without emitting turns the sky black, which is
+the honest answer for a fog that has no light of its own.
+
+Because of that, a medium filling the surroundings has to absorb wherever it emits.  One that gives
+off light it never takes back has nothing to settle it over an endless span — it is infinitely
+bright — so the render stops and says so.  Said of something bounded the very same medium is
+perfectly reasonable; see [below](materials.md#filling-a-surface).
+
+**A lamp is charged for its trip too.**  Fog stands between a light and what it lights just as it
+stands between the eye and what it looks at, so objects deep in fog are lit dimly rather than fully.
+Note where that leads for a `distant light`, whose light comes from infinitely far off: an endless
+absorbing medium extinguishes it utterly.  That is the right answer to the question as asked — real
+fog has a far side, and the way to describe one is a medium inside a surface.
+
+Neither of those is sampled or stepped along.  With the density even throughout, both what survives
+a crossing and what the medium adds have exact answers, so a span costs one exponential per color and
+a fog of that sort renders at very nearly the speed of a clear scene.
+
+#### Scattering
+
+The third thing a medium may do is turn light aside: take light that arrived from somewhere else and
+send it on in a new direction.  Some of what it turns aside goes toward the eye, and that is what a
+shaft of light through a window is, or the cone under a street lamp, or the halo around headlights in
+fog.
+
+```
+environment {
+    medium {
+        scattering 0.06
+        anisotropy 0.3
+    }
+}
+```
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `scattering` | none | How much light the medium turns aside for each unit of distance. |
+| `anisotropy` | 0 | Which way it prefers to turn light, from -1 to 1.  Above nothing favors carrying light on the way it was going; below nothing favors sending it back. |
+| `phase rayleigh` | — | Uses Rayleigh's shape instead, for particles far smaller than the light's own wavelength — what makes a clear sky blue. |
+| `samples` | from the context | How many places along a crossing are asked about, for this medium alone. |
+
+**Turning light aside also takes it out of the ray**, so `scattering` dims what lies beyond it exactly
+as `absorption` does — a purely scattering fog still hides a distant hillside.  The difference is
+where the light goes: absorbed light is gone, while light turned aside went somewhere, and some of
+that somewhere is toward you.
+
+**Anisotropy is the one knob for the shape.**  Nearly everything real prefers to carry light on the
+way it was already going, which is why fog glows brightest around a lamp you are looking *toward*, and
+why a cloud's edge lights up against the sun.  At `0` the medium has no preference at all.  Values are
+measured against that even spread: a medium at `0.7` sends about nineteen times as much light straight
+on as an even spread would, and about a tenth as much straight back.
+
+**This is the one term with no exact answer.**  The angle to each lamp, how far off it is, and whether
+anything stands in the way all change along a ray, so it has to be gone and looked for: the crossing
+is sampled in a number of places, and each place asks every lamp what it delivers there.  That is
+where the cost of a scattering medium lies — roughly *samples × lamps* shadow rays for every pixel
+looking through it.
+
+The places are not spread evenly along the crossing.  They are spread by how much of what is there
+could still reach the eye, so most of them land near your end of it, where scattered light actually
+shows.  That is also why a crossing with no end needs no arbitrary stopping point.
+
+#### Giving a medium a shape
+
+Everything so far has been the same everywhere it went, which is fine for air and useless for anything
+that looks like something.  A medium's density may instead be a *function of where you are*:
+
+```
+interior {
+    medium {
+        scattering 2.2
+        density function {
+            max(0, 1 - √(x² + y² + z²)) * max(0, 2.2 * noise(3.1*x, 3.1*y, 3.1*z) - 0.6)
+        }
+    }
+}
+```
+
+That is a cloud: the ball's own falloff, times noise with its foot taken off so the density reaches
+*nothing* between the billows rather than merely thinning.  Reaching nothing is what makes it read as
+billows with gaps rather than as a fuzzy ball.
+
+The function is written in the [same language](#expressions) an
+[isosurface](advanced-surfaces.md#isosurface)'s is, with the same `noise`, and compiled to a real
+delegate before the first ray is fired.  It is held to *less* than an isosurface's, though: an
+isosurface has to be differentiated to be given a normal and refuses anything whose slope cannot be
+written down, while a density is only ever asked for a value.  So `smoothstep`, which an isosurface
+turns away, is welcome here.  A density that would go negative counts as empty, since a density below
+nothing has no meaning.
+
+It is read in the **container's own space**, so scaling or rotating the surface carries the shape with
+it, exactly as a pattern's coordinates do.  `density` written as a plain number alongside a shape
+scales the whole of it, which is how a shaped medium is thinned with one number.
+
+**A shaped medium must fill a surface.**  Saying it of the surroundings is refused, and the reason is
+arithmetic rather than taste: a crossing with no end can only be walked at all because there is a
+distance past which nothing could still reach the eye, and that rests on a floor under how much stuff
+is there.  A shape free to thin toward nothing takes the floor away.  A ground fog is therefore a very
+large flattened box.
+
+**Two things stop being exact.**  With the density varying, neither what survives a crossing nor what
+the medium gives off has an answer that can be written down — both become integrals along the ray — so
+a shaped medium is *walked*, in the same number of steps the scattering is sampled in.  A medium
+without a shape is not walked, and is answered exactly as before.
+
+**And a shape stands in its own light.**  A cloud's underside is dark because its top was in the way,
+and nothing but the medium shadowing itself gives that.  So each place the walk asks about asks every
+lamp what reaches it, and each of *those* answers walks the shape again — coarsely, at a quarter of the
+steps, since all that is wanted is how much stuff is in the way rather than where it is.  This is the
+expensive part of a shaped medium, and it is what tells a cloud from a glowing blob.
+
+One thing worth knowing before tuning a cloud by eye: **thicker is not brighter**.  Past a point,
+adding density makes a medium darker, because more of what it scatters is swallowed again on the way
+out and more of it stands in its own light.
+
+#### Multiple scattering
+
+Everything above stops at the first turn: light goes lamp → one scattering → eye, and no further.  In
+anything thick that is a small share of the light.  Most of what leaves a cloud has been turned a
+dozen times or more on the way out, which is why a real cloud is white rather than grey and why its
+shadowed side glows rather than going black.
+
+```
+context { medium bounces 3 }
+```
+
+That follows the light back a further three turns.  At each place along a ray, as well as asking the
+lamps what reaches it, the renderer picks one direction the light might have come from — in proportion
+to how much the medium favours that direction — finds where it would have been turned, asks the lamps
+*there*, and carries on.
+
+| | |
+| --- | --- |
+| `context { medium bounces N }` | The default for every medium in the scene. |
+| `medium { bounces N }` | For one medium, whatever the context says. |
+
+**Nothing is zero by default**, so no scene changes unless it asks.  That is deliberate: the cost is
+real, roughly proportional to one plus the number of turns, and a thin haze gains almost nothing from
+it — the light that has been turned twice in a light mist is a rounding error.  Thick media are where
+it matters, and thick media are exactly where it costs most.
+
+Each turn is worth the medium's **albedo**: the share of stopped light that carried on rather than
+being swallowed, which is `scattering / (scattering + absorption)`.  A medium that absorbs nothing
+passes all of it on and can be turned any number of times without loss; one that absorbs half of what
+it stops is down to a sixteenth after four turns.  So the useful number of bounces follows from the
+absorption — there is no sense asking for eight turns of a medium that has lost 99% of the light by the
+third.
+
+**One path per place, not many.**  A place could be asked about every direction at once, but each of
+those would have to ask again, and the work would multiply by itself at every turn.  Following a
+single direction costs one more path per turn instead of a tree of them, and since every place along
+every ray does it, the picture as a whole still averages over a great many directions.  The price is
+noise: the added light is an estimate, and a thin one at low sample counts.
+
+**What this still does not give you.**  In this renderer nothing but a lamp gives off light — a
+`background` is a color the eye sees, not something that illuminates.  A path that wanders out of the
+medium therefore ends with nothing.  Real clouds are lit mostly by *sky*, so a cloud here is lit by
+its lamps alone however many turns you follow.  Making the background light the scene is a separate
+thing, and for a daylight cloud it would matter more than this does.
+
+How many places is a question of how hard to work rather than of what the medium is made of, so it
+lives with the scanner and the anti-aliasing:
+
+```
+context { medium samples 48 }
+```
+
+Sixteen is the default, which is plenty for an even haze.  A crisp shaft wants more — a spotlight's
+cone is a small bright region in a long crossing, and too few places leave it speckled rather than
+smooth.  A single medium may name its own count when one volume in a scene needs more care than the
+rest.  Note that the speckle is the same in every render of a scene rather than shifting about, so it
+will not average away over the frames of an animation; the cure is more places, not more frames.
+
 ### Comments
 
 Comments are written as they are in C, C# or Java:
