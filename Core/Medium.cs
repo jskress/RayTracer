@@ -151,10 +151,22 @@ public class Medium
     public FieldFunction DensityField { get; set; }
 
     /// <summary>
+    /// This property holds how much of the stuff there is from place to place when the shape is written
+    /// as one of the pattern library's patterns rather than as a function.
+    /// <para>
+    /// It is the same job as <see cref="DensityField"/> and the two are alternatives, never both: a
+    /// function is the way to say a shape exactly, and a pattern is the way to say one that would be
+    /// tedious to write down but that the library already knows -- a granite's grain, a marble's veins,
+    /// the cells of a crackle.  Which one a scene reaches for is a matter of what it is trying to say.
+    /// </para>
+    /// </summary>
+    public DensityShape DensityPattern { get; set; }
+
+    /// <summary>
     /// This property reports whether the medium's density varies from place to place, and so whether a
     /// crossing of it has to be marched rather than answered.
     /// </summary>
-    public bool HasShape => DensityField is not null;
+    public bool HasShape => DensityField is not null || DensityPattern is not null;
 
     /// <summary>
     /// This method returns how much of the stuff there is at the given place.  A shape that would go
@@ -165,10 +177,13 @@ public class Medium
     /// <returns>The density there.</returns>
     public double DensityAt(Point point)
     {
-        if (DensityField is null)
-            return Density;
+        if (DensityField is not null)
+            return Density * Math.Max(0, DensityField.Evaluate(point.X, point.Y, point.Z));
 
-        return Density * Math.Max(0, DensityField.Evaluate(point.X, point.Y, point.Z));
+        if (DensityPattern is not null)
+            return Density * Math.Max(0, DensityPattern.ValueAt(point));
+
+        return Density;
     }
 
     /// <summary>

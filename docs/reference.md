@@ -94,7 +94,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
-| `density` | Medium: how much of the stuff there is, evenly or as a `density function`. | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
+| `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern). | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth. | [Materials](materials.md#roughening-the-surface) |
 | `description` | Info: a description. | [Context](context.md#image-information) |

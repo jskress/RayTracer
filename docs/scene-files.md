@@ -365,6 +365,56 @@ One thing worth knowing before tuning a cloud by eye: **thicker is not brighter*
 adding density makes a medium darker, because more of what it scatters is swallowed again on the way
 out and more of it stands in its own light.
 
+#### Shaping a medium with a pattern
+
+A shape may also be *named* rather than written out, using any pattern from the
+[pattern library](pigments-and-patterns.md#patterns):
+
+```
+interior {
+    medium {
+        scattering 2.4
+        density granite { scale 0.4 }
+    }
+}
+```
+
+This is the same job as a `density function`, and the two are alternatives — a medium has one shape or
+the other, never both.  Which to reach for is a question of what you are trying to say.  A function is
+the way to state a shape *exactly*: a ball that fades at its rim, a slab that thins with height, a
+billow with its foot taken off.  A pattern is the way to get one you would find tedious to write down
+but that the library already knows — a granite's grain, a marble's veins, the cells of a `crackle`,
+alternating blocks of `checker`.
+
+**Everything the patterns offer comes along**, because it is the same pattern machinery a pigment uses:
+
+```
+density marble {
+    turbulence 0.6
+    frequency 3
+    sine wave
+    scale [0.5, 2, 0.5]
+}
+```
+
+The transform is doing more work here than it looks, and leaving it out is the usual first mistake.  A
+pattern is written at the scale of the space it sits in, and the things media fill are typically a
+couple of units across, so most of the library at its own footing gives one blob and nothing more.
+Scale it to the size of the detail you want.
+
+Patterns built to *choose between* pigments rather than to give a fraction — `checker`, `hexagon`,
+`brick`, `cubic` and the rest — hand back a whole number naming which pigment.  Those are spread back
+across `0` to `1` here, so a `checker` gives nothing or all (a medium in alternating blocks) and a
+`hexagon` gives nothing, a half, or all.  Without that a six-way pattern would quietly mean six times
+the density.
+
+**The pattern supplies texture; the container supplies shape.**  This is the real difference between
+the two forms, and it decides which one a scene wants.  A pattern does not know where the medium ends,
+so it fills its container right up to the edge — which is exactly right for smoke in a box or fog in a
+room, and wrong for a cloud, whose whole character is that it fades into the air around it.  For
+something that has to have an outline of its own, either write a function that reaches nothing at the
+rim, or give the medium a container already shaped like the thing.
+
 #### Multiple scattering
 
 Everything above stops at the first turn: light goes lamp → one scattering → eye, and no further.  In

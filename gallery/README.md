@@ -303,6 +303,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/media/sunlit-cloud.igl">A Sunlit Cloud</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/pattern-density.png">
+      <img alt="Densities From Patterns" height="120" src="Local/media/pattern-density.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/pattern-density.igl">Densities From Patterns</a>
+    </td>
+  </tr>
 </table>
 
 ### Stuff Invented Here

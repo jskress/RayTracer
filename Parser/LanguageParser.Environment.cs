@@ -1,8 +1,10 @@
 using Lex.Clauses;
+using Lex.Tokens;
 using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Patterns;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -232,6 +234,15 @@ public partial class LanguageParser
                     break;
                 }
 
+                // A bare density is a number and nothing else, so anything past the word itself means
+                // the shape was named as a pattern rather than given as an amount.
+                if (clause.Tokens.Count > 1)
+                {
+                    resolver.DensityPatternResolver = ParseDensityShapeClause(clause);
+
+                    break;
+                }
+
                 resolver.DensityResolver = new TermResolver<double>
                 {
                     Term = term,
@@ -243,6 +254,34 @@ public partial class LanguageParser
             default:
                 throw new NotSupportedException("Unknown medium property found.");
         }
+    }
+
+    /// <summary>
+    /// This method is used to parse the shaping of a medium's density by a pattern.
+    /// <para>
+    /// The whole of the pattern grammar is read by the same method a pigment and a roughening read it
+    /// with, so turbulence, the waves, the frequency and phase and a noise pattern's seed all work here
+    /// without this knowing anything about them.  What follows inside the brace is the placing: a
+    /// pattern sits at the scale of the space it is written in, and a cloud is a couple of units
+    /// across, so without a scale most of the library would give one blob and no more.
+    /// </para>
+    /// </summary>
+    /// <param name="clause">The clause that names the pattern, opening with "density".</param>
+    /// <returns>The resolver for the shaping.</returns>
+    private DensityShapeResolver ParseDensityShapeClause(Clause clause)
+    {
+        // Past the word "density", which the pattern grammar knows nothing about.
+        (IPatternResolver patternResolver, _) = ParsePatternClause(clause, 1);
+        DensityShapeResolver resolver = new ()
+        {
+            PatternResolver = patternResolver,
+            TransformResolver = ParseTransformClause()
+        };
+
+        CurrentParser.MatchToken(
+            true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
+
+        return resolver;
     }
 
     /// <summary>
