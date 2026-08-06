@@ -96,7 +96,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
         if (PigmentResolver != null)
             value.Pigment = PigmentResolver.ResolveToPigment(context, variables);
         
-        AmbientResolver.AssignTo(value, target => target.Ambient, context, variables);
+        // Left alone when the scene said nothing, so that the scene as a whole may settle it later.
+        if (AmbientResolver is not null)
+            value.Ambient = AmbientResolver.Resolve(context, variables);
         DiffuseResolver.AssignTo(value, target => target.Diffuse, context, variables);
         SpecularResolver.AssignTo(value, target => target.Specular, context, variables);
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);

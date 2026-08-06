@@ -370,7 +370,7 @@ public class Scene : NamedThing, IDisposable
             // product alone, so this is simply the one direction against the other.
             double phase = medium.PhaseFor(sample.Direction.Dot(heading));
 
-            arriving += light.Color * reaching * (sample.Cone * phase);
+            arriving += light.ColorFor(sample) * reaching * (sample.Cone * phase);
         }
 
         return arriving;
@@ -799,7 +799,7 @@ public class Scene : NamedThing, IDisposable
 
         if (count == 1)
         {
-            LightSample only = light.SampleToward(intersection.OverPoint, 0);
+            LightSample only = light.SampleToward(intersection.OverPoint, 0, intersection.Normal);
 
             return light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
@@ -811,7 +811,8 @@ public class Scene : NamedThing, IDisposable
 
         for (int index = 0; index < count; index++)
         {
-            LightSample sample = light.SampleToward(intersection.OverPoint, index);
+            LightSample sample = light.SampleToward(
+                intersection.OverPoint, index, intersection.Normal);
 
             sum += light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,

@@ -57,12 +57,26 @@ public abstract class Light : NamedThing
     /// <param name="point">The point being lit.</param>
     /// <param name="index">Which sample, from zero up to <see cref="SampleCount"/>.</param>
     /// <returns>The sample: which way it lies, how far off, and how much of the light it carries.</returns>
-    public virtual LightSample SampleToward(Point point, int index)
+    /// <param name="normal">The surface normal at the point, where there is a surface; <c>null</c> when
+    /// the point being lit is in the middle of a medium and so faces no particular way.  Only a light
+    /// spread over directions has any use for it -- it lets the samples be spent on the half of the
+    /// sky the point can actually see.</param>
+    public virtual LightSample SampleToward(Point point, int index, Vector normal = null)
     {
         (Vector direction, double distance) = TowardFrom(point);
 
         return new LightSample(direction, distance, IntensityToward(point));
     }
+
+    /// <summary>
+    /// This method returns the color this light carries along one of its samples.  For every light with
+    /// a color of its own that is simply that color, the same in every direction.  A light spread over
+    /// the sky is different: it is a different color whichever way you look, so it answers by the
+    /// direction the sample lies in.
+    /// </summary>
+    /// <param name="sample">The sample being asked about.</param>
+    /// <returns>The color the light carries along it.</returns>
+    public virtual Color ColorFor(LightSample sample) => Color;
 
     /// <summary>
     /// This method shades a point under this light looked at from where it lies, which is the
@@ -104,12 +118,12 @@ public abstract class Light : NamedThing
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
         Color pigmentColor = material.Pigment.GetColorFor(surface, point);
-        Color color = pigmentColor * Color;
+        Color color = pigmentColor * ColorFor(sample);
         Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come
         // straight from this source, so it is the one term a shadow does not take away.
-        Color ambientColor = color * material.Ambient;
+        Color ambientColor = color * material.EffectiveAmbient;
 
         // How much of the light is pointed this way at all, which is where a spotlight's cone comes
         // in.  It scales everything that depends on the light arriving, and leaves the ambient term

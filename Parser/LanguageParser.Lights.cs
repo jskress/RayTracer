@@ -45,9 +45,44 @@ public partial class LanguageParser
                 "spotLightEntryClause", HandleSpotlightEntryClause),
             "area" => ParseObjectResolver<AreaLightResolver>(
                 "areaLightEntryClause", HandleAreaLightEntryClause),
+            "sky" => ParseObjectResolver<SkyLightResolver>(
+                "skyLightEntryClause", HandleSkyLightEntryClause),
             _ => ParseObjectResolver<PointLightResolver>(
                 "pointLightEntryClause", HandlePointLightEntryClause)
         };
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a sky light block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSkyLightEntryClause(Clause clause)
+    {
+        SkyLightResolver resolver = (SkyLightResolver) _context.CurrentTarget;
+
+        switch (clause.Text())
+        {
+            case "named":
+                resolver.NameResolver = new TermResolver<string> { Term = clause.Term() };
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = clause.Term() };
+                break;
+            case "pigment":
+                resolver.PigmentResolver = ParsePigmentClause();
+                break;
+            case "samples":
+                resolver.SamplesResolver = new TermResolver<int>
+                {
+                    Term = clause.Term(),
+                    Validator = samples => samples < 1
+                        ? "A sky must be looked at from at least one direction."
+                        : null
+                };
+                break;
+            default:
+                throw new NotSupportedException("Unknown sky light property found.");
+        }
     }
 
     /// <summary>

@@ -63,7 +63,10 @@ public class RenderInstruction : Instruction
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering(sampleTimes);
 
-        FinalizeSurfaceData(context, scene.Surfaces);
+        // Two things can only be settled once the scene is whole, since each depends on the company it
+        // keeps rather than on anything written beside it.
+        SettleTheSky(context, scene);
+        FinalizeSurfaceData(context, scene, scene.Surfaces);
 
         // The sky is a pigment as much as any surface's is, and no surface owns it, so nothing else
         // would hand it its chance to get ready.  Without this, a sky read from an image never loads
@@ -74,16 +77,43 @@ public class RenderInstruction : Instruction
     }
 
     /// <summary>
+    /// This method hands any sky light the sky it is to carry, which is the scene's own background
+    /// unless it was given one of its own -- so that what lights the scene is what the scene shows.
+    /// A pigment of its own needs its chance to get ready just as the background does.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="scene">The scene being readied.</param>
+    private static void SettleTheSky(RenderContext context, Scene scene)
+    {
+        foreach (SkyLight sky in scene.Lights.OfType<SkyLight>())
+        {
+            if (sky.Pigment is null)
+                sky.Pigment = scene.Background;
+            else
+                sky.Pigment.RenderingIsAboutToStart(context, null);
+        }
+    }
+
+    /// <summary>
     /// This method ensures that all given surfaces have all relevant data finalized.
     /// This includes making sure a material is attached to all surfaces.
     /// </summary>
     /// <param name="context">The current render context.</param>
+    /// <param name="scene">The scene the surfaces belong to.</param>
     /// <param name="surfaces">The list of surfaces to examine.</param>
-    private static void FinalizeSurfaceData(RenderContext context, List<Surface> surfaces)
+    private static void FinalizeSurfaceData(
+        RenderContext context, Scene scene, List<Surface> surfaces)
     {
+        // Ambient stands in for light that has bounced about the scene, which this renderer does not
+        // trace.  A sky light is the real thing that fudge was imitating, so a scene that has one wants
+        // none of the fudge; one without it wants the tenth it has always had.  A material that named
+        // its own ambient keeps it either way.
+        double whenUnsaid = scene.Lights.OfType<SkyLight>().Any() ? 0 : 0.1;
+
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
             surface.Material ??= OrphanMaterial;
+            surface.Material.Ambient ??= whenUnsaid;
 
             Pigment pigment = surface.Material.Pigment;
 

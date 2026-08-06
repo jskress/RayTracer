@@ -263,6 +263,46 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="challenge-book/cover.igl">The Ray Tracer Challenge Cover Art</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/medium.png">
+      <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/medium.igl">A Medium</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/scattering.png">
+      <img alt="Scattering" height="120" src="Local/media/scattering.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/scattering.igl">Scattering</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/density.png">
+      <img alt="A Shaped Density" height="120" src="Local/media/density.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/density.igl">A Shaped Density</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/multiple-scattering.png">
+      <img alt="Multiple Scattering" height="120" src="Local/media/multiple-scattering.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/multiple-scattering.igl">Multiple Scattering</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/sunlit-cloud.png">
+      <img alt="A Sunlit Cloud" height="120" src="Local/media/sunlit-cloud.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/sunlit-cloud.igl">A Sunlit Cloud</a>
+    </td>
+  </tr>
 </table>
 
 ### Stuff Invented Here
@@ -642,6 +682,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/area-light.igl">Area Light</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/sky-light.png">
+      <img alt="A Sky Light" height="120" src="Local/lights/sky-light.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/sky-light.igl">A Sky Light</a>
     </td>
   </tr>
   <tr style="border: none;">

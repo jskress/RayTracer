@@ -91,7 +91,7 @@ public partial class LanguageParser
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rayleigh', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'smooth', 'software', 'source',
+            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
@@ -302,7 +302,7 @@ public partial class LanguageParser
         // "light": nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone.
         startLightClause:
         {
-            [ { [ point | distant | spot | area ] > light } | light ] >
+            [ { [ point | distant | spot | area | sky ] > light } | light ] >
             openBrace ?? 'Expecting an open brace to follow "light" here.'
         }
         lightColorClause: { color > _expression }
@@ -324,6 +324,12 @@ public partial class LanguageParser
             namedClause | locationClause | pointAtClause | lightColorClause |
             { radius > _expression } | { falloff > _expression } | { tightness > _expression }
         ] ?? 'Expecting a spotlight property here.'
+        // Light from every direction at once, as the sky gives it.  With no pigment of its own it
+        // carries the scene's background, so that what lights the scene is what the scene shows.
+        skyLightEntryClause:
+        [
+            namedClause | lightColorClause | pigment | { samples > _expression }
+        ] ?? 'Expecting a sky light property here.'
         areaLightEntryClause:
         [
             namedClause | locationClause | lightColorClause |
