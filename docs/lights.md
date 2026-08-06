@@ -174,7 +174,7 @@ the bare grid.
 
 A useful thing to know: the nearer a blocker sits to the surface it shadows, the tighter its
 penumbra.  A tall post's shadow is therefore crisp at the foot and blurred at the tip, which
-is exactly how a real soft shadow reads — see `gallery/Local/area-light.igl` for a scene built
+is exactly how a real soft shadow reads — see `gallery/Local/lights/area-light.igl` for a scene built
 around that.
 
 The complete example is [`docs/examples/lights/area-light.igl`](examples/lights/area-light.igl).
