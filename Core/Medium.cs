@@ -93,6 +93,35 @@ public class Medium
     public PhaseFunction PhaseFunction { get; set; } = PhaseFunction.HenyeyGreenstein;
 
     /// <summary>
+    /// This property holds how many further turns of a light's path through the medium are followed
+    /// past the first.  It is nothing by default, which is to say only light that reached a place
+    /// straight from a lamp is counted.
+    /// <para>
+    /// That is the whole of why a thick medium comes out too dark and too gray.  Nearly all the light
+    /// leaving a cloud has been turned a dozen times or more on its way out, and none of that is here
+    /// until this is raised: what a cloud does to light is mostly what it does to light it has already
+    /// turned once.
+    /// </para>
+    /// </summary>
+    public int Bounces { get; set; }
+
+    /// <summary>
+    /// This property holds the share of stopped light that carried on rather than being swallowed,
+    /// color by color.  It is what a turn of the path is worth: a medium that absorbs nothing passes
+    /// all of it on and can be turned any number of times without loss, while one that absorbs half of
+    /// what it stops is down to a sixteenth after four turns.
+    /// <para>
+    /// Note that the density falls out of it entirely, both parts of the fraction being in proportion
+    /// to how much stuff is there, so this is a property of what the stuff <i>is</i> and not of how
+    /// much of it there happens to be at one place or another.
+    /// </para>
+    /// </summary>
+    public Color Albedo => new (
+        ShareCarriedOn(Absorption.Red, Scattering.Red),
+        ShareCarriedOn(Absorption.Green, Scattering.Green),
+        ShareCarriedOn(Absorption.Blue, Scattering.Blue));
+
+    /// <summary>
     /// This property holds how many places along a ray's crossing the medium is asked what light
     /// reaches it.  Only scattering needs this; what a medium absorbs and gives off is answered
     /// exactly, at no cost per sample at all.
@@ -182,6 +211,85 @@ public class Medium
         Emission.Red > 0 && ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
         Emission.Green > 0 && ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
         Emission.Blue > 0 && ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
+
+    /// <summary>
+    /// This method returns what share of the light stopped in one color carried on rather than being
+    /// swallowed.
+    /// </summary>
+    /// <param name="absorption">How much of this color the medium absorbs per unit of distance.</param>
+    /// <param name="scattering">How much of this color it turns aside per unit of distance.</param>
+    /// <returns>The share that carried on, from nothing up to one.</returns>
+    private static double ShareCarriedOn(double absorption, double scattering)
+    {
+        double stopped = absorption + scattering;
+
+        return stopped > 0 ? scattering / stopped : 0;
+    }
+
+    /// <summary>
+    /// This method picks a direction for light to have arrived from, in proportion to how much of it
+    /// the medium would turn from there toward the way the ray is going.  Drawing from the shape
+    /// itself is what makes a single direction stand for all of them: the directions that matter most
+    /// are picked most often, and each one picked may then be counted at its face value.
+    /// </summary>
+    /// <param name="heading">The way the light being followed is travelling.</param>
+    /// <param name="alongTheCone">A number from nothing up to one, which picks the angle.</param>
+    /// <param name="aroundIt">A number from nothing up to one, which picks the way round.</param>
+    /// <returns>The direction the light came from.</returns>
+    public Vector SampleDirectionAround(Vector heading, double alongTheCone, double aroundIt)
+    {
+        double cosine = PhaseFunction == Core.PhaseFunction.Rayleigh
+            ? RayleighCosine(alongTheCone)
+            : HenyeyGreensteinCosine(alongTheCone);
+        double sine = Math.Sqrt(Math.Max(0, 1 - cosine * cosine));
+        double around = 2 * Math.PI * aroundIt;
+
+        // A pair of directions square to the heading and to each other, to swing the picked angle
+        // about.  Which pair hardly matters; what matters is that they are square, and that the one
+        // chosen to start from is not itself nearly the heading, or squaring it against it would be
+        // all rounding error.
+        Vector aside = Math.Abs(heading.X) < 0.9
+            ? new Vector(1, 0, 0)
+            : new Vector(0, 1, 0);
+        Vector first = heading.Cross(aside).Unit;
+        Vector second = heading.Cross(first);
+
+        return (first * (sine * Math.Cos(around)) +
+                second * (sine * Math.Sin(around)) +
+                heading * cosine).Unit;
+    }
+
+    /// <summary>
+    /// This method returns the cosine of a Henyey-Greenstein turn, picked in proportion to the shape.
+    /// It is the shape's own sum, read backward: the standard inversion of it.
+    /// </summary>
+    /// <param name="fraction">A number from nothing up to one.</param>
+    /// <returns>The cosine of the angle turned through.</returns>
+    private double HenyeyGreensteinCosine(double fraction)
+    {
+        if (Anisotropy == 0)
+            return 1 - 2 * fraction;
+
+        double squared = Anisotropy * Anisotropy;
+        double inner = (1 - squared) / (1 - Anisotropy + 2 * Anisotropy * fraction);
+
+        return (1 + squared - inner * inner) / (2 * Anisotropy);
+    }
+
+    /// <summary>
+    /// This method returns the cosine of a Rayleigh turn, picked in proportion to the shape.  Its sum
+    /// read backward is a cubic, and this is Cardano's answer to it, tidied by the fact that the two
+    /// cube roots multiply to minus one.
+    /// </summary>
+    /// <param name="fraction">A number from nothing up to one.</param>
+    /// <returns>The cosine of the angle turned through.</returns>
+    private static double RayleighCosine(double fraction)
+    {
+        double shifted = 4 * fraction - 2;
+        double root = Math.Cbrt(shifted + Math.Sqrt(shifted * shifted + 1));
+
+        return root - 1 / root;
+    }
 
     private bool Absorbs => Absorption.Red > 0 || Absorption.Green > 0 || Absorption.Blue > 0;
     private bool Emits => Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;

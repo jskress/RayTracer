@@ -206,6 +206,15 @@ public partial class LanguageParser
                     Value = PhaseFunction.Rayleigh
                 };
                 break;
+            case "bounces":
+                resolver.BouncesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = bounces => bounces < 0
+                        ? "A path cannot be turned fewer than no times."
+                        : null
+                };
+                break;
             case "samples":
                 resolver.SamplesResolver = new TermResolver<int>
                 {

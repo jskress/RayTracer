@@ -45,6 +45,12 @@ public class MediumResolver : ObjectResolver<Medium>
     public Resolver<int> SamplesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many turns of a path are followed, when the medium
+    /// names a count of its own.
+    /// </summary>
+    public Resolver<int> BouncesResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how much of the medium there is.
     /// </summary>
     public Resolver<double> DensityResolver { get; set; }
@@ -109,5 +115,8 @@ public class MediumResolver : ObjectResolver<Medium>
         value.Samples = SamplesResolver is null
             ? context.MediumSamples
             : SamplesResolver.Resolve(context, variables);
+        value.Bounces = BouncesResolver is null
+            ? context.MediumBounces
+            : BouncesResolver.Resolve(context, variables);
     }
 }

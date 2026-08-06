@@ -365,6 +365,51 @@ One thing worth knowing before tuning a cloud by eye: **thicker is not brighter*
 adding density makes a medium darker, because more of what it scatters is swallowed again on the way
 out and more of it stands in its own light.
 
+#### Multiple scattering
+
+Everything above stops at the first turn: light goes lamp → one scattering → eye, and no further.  In
+anything thick that is a small share of the light.  Most of what leaves a cloud has been turned a
+dozen times or more on the way out, which is why a real cloud is white rather than grey and why its
+shadowed side glows rather than going black.
+
+```
+context { medium bounces 3 }
+```
+
+That follows the light back a further three turns.  At each place along a ray, as well as asking the
+lamps what reaches it, the renderer picks one direction the light might have come from — in proportion
+to how much the medium favours that direction — finds where it would have been turned, asks the lamps
+*there*, and carries on.
+
+| | |
+| --- | --- |
+| `context { medium bounces N }` | The default for every medium in the scene. |
+| `medium { bounces N }` | For one medium, whatever the context says. |
+
+**Nothing is zero by default**, so no scene changes unless it asks.  That is deliberate: the cost is
+real, roughly proportional to one plus the number of turns, and a thin haze gains almost nothing from
+it — the light that has been turned twice in a light mist is a rounding error.  Thick media are where
+it matters, and thick media are exactly where it costs most.
+
+Each turn is worth the medium's **albedo**: the share of stopped light that carried on rather than
+being swallowed, which is `scattering / (scattering + absorption)`.  A medium that absorbs nothing
+passes all of it on and can be turned any number of times without loss; one that absorbs half of what
+it stops is down to a sixteenth after four turns.  So the useful number of bounces follows from the
+absorption — there is no sense asking for eight turns of a medium that has lost 99% of the light by the
+third.
+
+**One path per place, not many.**  A place could be asked about every direction at once, but each of
+those would have to ask again, and the work would multiply by itself at every turn.  Following a
+single direction costs one more path per turn instead of a tree of them, and since every place along
+every ray does it, the picture as a whole still averages over a great many directions.  The price is
+noise: the added light is an estimate, and a thin one at low sample counts.
+
+**What this still does not give you.**  In this renderer nothing but a lamp gives off light — a
+`background` is a color the eye sees, not something that illuminates.  A path that wanders out of the
+medium therefore ends with nothing.  Real clouds are lit mostly by *sky*, so a cloud here is lit by
+its lamps alone however many turns you follow.  Making the background light the scene is a separate
+thing, and for a daylight cloud it would matter more than this does.
+
 How many places is a question of how hard to work rather than of what the medium is made of, so it
 lives with the scanner and the anti-aliasing:
 

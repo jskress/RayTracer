@@ -94,6 +94,14 @@ public class RenderContext
     public int MediumSamples { get; set; } = 16;
 
     /// <summary>
+    /// This property holds how many further turns of a light's path through a medium are followed past
+    /// the first.  It is nothing by default, so that a scene says when it wants the cost: what a thick
+    /// medium does to light it has already turned once is most of what it does, but it is also most of
+    /// the work.
+    /// </summary>
+    public int MediumBounces { get; set; }
+
+    /// <summary>
     /// This property holds the time value (in ticks) for the frame currently being rendered.
     /// </summary>
     public long Ticks { get; set; }

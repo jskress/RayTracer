@@ -494,6 +494,147 @@ public class TestMedium
     }
 
     [TestMethod]
+    public void TestNoBouncesIsExactlyWhatItAlwaysWas()
+    {
+        // The anchor for the whole of this.  Following no further turns must leave the arithmetic
+        // untouched rather than nearly untouched: it is what lets every picture drawn before multiple
+        // scattering existed stand unchanged, and what makes the added light plainly the added light.
+        Color without = InsideALitCloud(0);
+
+        Assert.IsTrue(without.Matches(InsideALitCloud(0)), "and it must not wander between renders");
+
+        Color with = InsideALitCloud(3);
+
+        Assert.IsFalse(with.Matches(without), "three turns should plainly add light");
+    }
+
+    [TestMethod]
+    public void TestFollowingThePathFurtherFindsMoreLight()
+    {
+        // Each turn can only add: light that was turned twice is light that was previously thrown away
+        // rather than light taken from somewhere else.  And each turn adds less than the one before,
+        // by the share the medium swallows, so the total settles rather than running away.
+        double[] found =
+        [
+            InsideALitCloud(0).Red, InsideALitCloud(1).Red, InsideALitCloud(2).Red,
+            InsideALitCloud(4).Red, InsideALitCloud(8).Red
+        ];
+
+        for (int index = 1; index < found.Length; index++)
+        {
+            Assert.IsTrue(found[index] > found[index - 1],
+                $"{found[index]} after more turns, against {found[index - 1]} before");
+        }
+
+        // What the last four turns added, against what the first one did.  A medium that swallows some
+        // of what it stops cannot keep adding at the same rate, so the tail must be the smaller.
+        double first = found[1] - found[0];
+        double tail = found[4] - found[3];
+
+        Assert.IsTrue(tail < first,
+            $"the tail of it added {tail}, where the first turn added {first}");
+    }
+
+    [TestMethod]
+    public void TestWhatEachTurnIsWorthIsWhatTheMediumPassesOn()
+    {
+        // The share of stopped light that carried on rather than being swallowed.  It falls out of the
+        // coefficients alone: how much stuff is there scales what is stopped and what is passed on
+        // alike, so it cancels, and a place in a thin part of a cloud passes on the same share as a
+        // place in a thick part.
+        Medium medium = new ()
+        {
+            Absorption = new Color(0.25, 0, 1), Scattering = new Color(0.75, 1, 1)
+        };
+
+        Assert.AreEqual(0.75, medium.Albedo.Red, 1e-12);
+        Assert.AreEqual(1, medium.Albedo.Green, 1e-12, "nothing absorbed means nothing lost");
+        Assert.AreEqual(0.5, medium.Albedo.Blue, 1e-12);
+
+        // A medium that stops nothing at all passes nothing on, rather than dividing by nothing.
+        Assert.AreEqual(0, new Medium().Albedo.Red);
+    }
+
+    [TestMethod]
+    public void TestThePickedDirectionsFollowTheShape()
+    {
+        // The directions a path is followed back along are picked in proportion to the shape, which is
+        // what lets each one be counted at its face value.  Drawn many times, then, they must pile up
+        // the way the shape says: mostly forward for a medium that carries light on, mostly backward
+        // for one that sends it back.
+        Vector heading = new (0, 0, 1);
+        Medium forward = new () { Scattering = new Color(1, 1, 1), Anisotropy = 0.7 };
+        Medium backward = new () { Scattering = new Color(1, 1, 1), Anisotropy = -0.7 };
+        Medium evenly = new () { Scattering = new Color(1, 1, 1) };
+
+        Assert.AreEqual(0.7, AverageCosineOf(forward, heading), 0.02);
+        Assert.AreEqual(-0.7, AverageCosineOf(backward, heading), 0.02);
+        Assert.AreEqual(0, AverageCosineOf(evenly, heading), 0.02);
+
+        // Rayleigh's is even-handed between forward and back, however lopsided it is toward both.
+        Assert.AreEqual(0, AverageCosineOf(
+            new Medium { Scattering = new Color(1, 1, 1), PhaseFunction = PhaseFunction.Rayleigh },
+            heading), 0.02);
+    }
+
+    /// <summary>
+    /// Averages the cosine of the angle turned through over many picked directions, which for a shape
+    /// picked in proportion to itself is the anisotropy it was built with.
+    /// </summary>
+    private static double AverageCosineOf(Medium medium, Vector heading, int draws = 20_000)
+    {
+        double total = 0;
+
+        for (int index = 0; index < draws; index++)
+        {
+            // Evenly spread draws rather than random ones, since what is being checked is the shape
+            // rather than any particular run of numbers.
+            Vector picked = medium.SampleDirectionAround(
+                heading, (index + 0.5) / draws, index * 0.618033988749895 % 1);
+
+            total += picked.Dot(heading);
+        }
+
+        return total / draws;
+    }
+
+    /// <summary>
+    /// Looks into a lit ball of scattering stuff, following the given number of further turns, and
+    /// hands back what the eye gets.
+    /// </summary>
+    private static Color InsideALitCloud(int bounces)
+    {
+        Sphere ball = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White),
+                Ambient = 0,
+                Diffuse = 0,
+                Specular = 0,
+                Transparency = 1,
+                Interior = new Interior
+                {
+                    Medium = new Medium
+                    {
+                        Scattering = new Color(2.5, 2.5, 2.5),
+                        Absorption = new Color(0.1, 0.1, 0.1),
+                        Samples = 24,
+                        Bounces = bounces
+                    }
+                }
+            }
+        };
+        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+
+        ball.PrepareForRendering();
+        scene.Surfaces.Add(ball);
+        scene.Lights.Add(new PointLight { Location = new Point(-4, 2, -3), Color = Colors.White });
+
+        return scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 5);
+    }
+
+    [TestMethod]
     public void TestAMediumWithNothingToSayChangesNothing()
     {
         Color color = new (0.3, 0.6, 0.9, 0.5);

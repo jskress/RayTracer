@@ -65,6 +65,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `bottom` | Text layout: align the block by its bottom. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `bouncing` | Pattern qualifier: a gradient that ramps up then back down. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `bounces` | Medium: how many further turns of a light's path are followed. | [Scene Files](scene-files.md#multiple-scattering) |
 | `bounded` | `bounded by`: a box the renderer may use to skip the surface. | [Surfaces](surfaces.md#bounding) |
 | `boxed` | Pattern: nested square boxes. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bozo` | Pattern: smooth value noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -174,7 +175,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `materials` | L-system: maps characters or depths to materials. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
 | `max` | Extrusion: the high Y of the solid (`max Y`). | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
-| `medium` | What fills a piece of space; in a context block, `medium samples`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
+| `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
 | `metallic` | Finish: tints the highlight with the surface color. | [Materials](materials.md#metallic) |
 | `min` | Extrusion: the low Y of the solid (`min Y`). | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

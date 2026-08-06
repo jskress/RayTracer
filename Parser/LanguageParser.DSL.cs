@@ -73,7 +73,7 @@ public partial class LanguageParser
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
-            'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
+            'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
             'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
@@ -249,7 +249,8 @@ public partial class LanguageParser
         // anti-aliasing rather than with the description of what the medium is made of.
         mediumSamplesClause:
         {
-            medium > samples ?? 'Expecting "samples" to follow "medium" here.' > _expression
+            medium > [ samples | bounces ] ?? 'Expecting "samples" or "bounces" to follow "medium" here.' >
+            _expression
         }
         contextEntryClause:
         [
@@ -1234,7 +1235,7 @@ public partial class LanguageParser
                 density > function > openBrace ?? 'Expecting an open brace to follow "function" here.' >
                 _expression > closeBrace ?? 'Expecting a close brace to end the function here.'
             } |
-            { density > _expression } | { samples > _expression } |
+            { density > _expression } | { samples > _expression } | { bounces > _expression } |
             { phase > rayleigh ?? 'Expecting "rayleigh" to follow "phase" here.' }
         ] ?? 'Expecting a medium property here.'
 

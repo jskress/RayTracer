@@ -310,6 +310,38 @@ public class Scene : NamedThing, IDisposable
         Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
         List<Intersection> crossings)
     {
+        Color arriving = GatheredDirectlyAt(
+            medium, container, where, heading, timeIndex, index, crossings);
+
+        // Everything above is light that reached this place straight from a lamp.  What follows is
+        // light that got here by being turned somewhere else first, which in anything thick is most of
+        // it -- and all of which was simply missing until now.
+        if (medium.Bounces > 0)
+        {
+            arriving += CarriedOnFrom(
+                medium, container, where, heading, medium.Bounces, ShiftFor(where, index), timeIndex,
+                crossings);
+        }
+
+        return arriving;
+    }
+
+    /// <summary>
+    /// This method works out how much light one place is sent straight from the scene's lamps, and how
+    /// much of that the medium would turn toward the way the ray is going.
+    /// </summary>
+    /// <param name="medium">The medium being crossed.</param>
+    /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="where">The place being asked about.</param>
+    /// <param name="heading">The way the ray was travelling.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
+    /// <param name="index">Which sample along the crossing this is.</param>
+    /// <param name="crossings">A list to find the shape's far side with.</param>
+    /// <returns>The light the lamps send this way.</returns>
+    private Color GatheredDirectlyAt(
+        Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
+        List<Intersection> crossings)
+    {
         Color arriving = Colors.Black;
 
         foreach (Light light in Lights)
@@ -342,6 +374,186 @@ public class Scene : NamedThing, IDisposable
         }
 
         return arriving;
+    }
+
+    /// <summary>
+    /// This method follows one path of light back through the medium: where did the light turned
+    /// toward the eye here come from, if it did not come straight from a lamp?
+    /// <para>
+    /// One path rather than many.  A place could be asked about every direction at once, but each of
+    /// those would have to ask again, and the work would multiply by itself at every turn.  Following
+    /// a single direction, picked in proportion to how much the medium favors it, costs one more path
+    /// per turn rather than a tree of them -- and since every place along the ray is doing it, the
+    /// picture as a whole still averages over a great many directions.
+    /// </para>
+    /// <para>
+    /// Each turn is worth the share of stopped light that carried on rather than being swallowed, and
+    /// nothing else: the direction having been picked in proportion to the shape, the shape itself
+    /// cancels out of the weighing.  A path that wanders out of the medium is done, since in this
+    /// renderer nothing but a lamp gives off light -- which for a cloud lit by a sky rather than by
+    /// lamps is the honest limit of what this can show.
+    /// </para>
+    /// </summary>
+    /// <param name="medium">The medium the light is wandering in.</param>
+    /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="from">The place the path is being followed back from.</param>
+    /// <param name="heading">The way the light being followed is travelling.</param>
+    /// <param name="left">How many more turns may be followed.</param>
+    /// <param name="seed">Where in the run of numbers this path's choices are drawn from.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
+    /// <param name="crossings">A list to find the shape's edge with.</param>
+    /// <returns>The light that arrived here by way of somewhere else.</returns>
+    private Color CarriedOnFrom(
+        Medium medium, Surface container, Point from, Vector heading, int left, double seed,
+        int timeIndex, List<Intersection> crossings)
+    {
+        Color carried = Colors.Black;
+        Color throughput = Colors.White;
+        Vector going = heading;
+        Point at = from;
+
+        for (int turn = 0; turn < left; turn++)
+        {
+            Vector came = medium.SampleDirectionAround(
+                going, Fraction(seed, turn * 3), Fraction(seed, turn * 3 + 1));
+            double howFar = TurnedAgainAfter(
+                medium, container, at, came, Fraction(seed, turn * 3 + 2), crossings);
+
+            // The path left the medium without being turned again, and there is nothing out there to
+            // have sent it on its way.
+            if (double.IsNaN(howFar))
+                break;
+
+            at += came * howFar;
+            going = came;
+            throughput *= medium.Albedo;
+
+            if (throughput.Red + throughput.Green + throughput.Blue < 0.003)
+                break;
+
+            carried += throughput * GatheredDirectlyAt(
+                medium, container, at, going, timeIndex, turn, crossings);
+        }
+
+        return carried;
+    }
+
+    /// <summary>
+    /// This method returns how far along a direction the medium turns a path again, or <c>NaN</c> if
+    /// the path leaves the medium first.  The distance is drawn in proportion to how much light would
+    /// still be travelling at each point along the way, which is what makes a single distance stand
+    /// for all of them.
+    /// </summary>
+    /// <param name="medium">The medium the path is in.</param>
+    /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="from">Where the path starts.</param>
+    /// <param name="going">Which way it goes.</param>
+    /// <param name="fraction">A number from nothing up to one, which picks the distance.</param>
+    /// <param name="crossings">A list to find the shape's edge with.</param>
+    /// <returns>How far it goes before being turned, or <c>NaN</c> if it gets out.</returns>
+    private static double TurnedAgainAfter(
+        Medium medium, Surface container, Point from, Vector going, double fraction,
+        List<Intersection> crossings)
+    {
+        double edge = EdgeOfTheMedium(container, new Ray(from, going, 0), crossings);
+        double wanted = -Math.Log(1 - fraction);
+
+        if (!medium.HasShape)
+        {
+            double extinction = medium.MeanExtinction;
+            double howFar = extinction > 0 ? wanted / extinction : double.PositiveInfinity;
+
+            return howFar < edge ? howFar : double.NaN;
+        }
+
+        // With the density varying, how much stuff has been passed through is only known by walking,
+        // so the walk goes on until it has passed through as much as was asked for.
+        //
+        // A fixed number of steps rather than a share of the crossing's own: this is one path's own
+        // question, and how finely it is answered has nothing to do with how many paths there are.
+        // Tying the two together would have the work grow as the square of the sample count, which
+        // makes a quality knob that quadruples the render for twice the quality.
+        const int count = 24;
+        double step = (double.IsPositiveInfinity(edge) ? 1 : edge) / count;
+        double passed = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            double along = (index + 0.5) * step;
+            double density = medium.DensityAt(container.WorldToSurface(from + going * along));
+
+            passed += medium.MeanExtinction / medium.Density * density * step;
+
+            if (passed >= wanted)
+                return along;
+        }
+
+        return double.NaN;
+    }
+
+    /// <summary>
+    /// This method returns how far off the near edge of a medium's surface lies along a ray, or
+    /// infinity where the medium fills the surroundings and so has no edge.
+    /// </summary>
+    /// <param name="container">The surface the medium fills, or <c>null</c>.</param>
+    /// <param name="ray">The ray to look along.</param>
+    /// <param name="crossings">A list to find the crossings with.</param>
+    /// <returns>How far off the edge is.</returns>
+    private static double EdgeOfTheMedium(
+        Surface container, Ray ray, List<Intersection> crossings)
+    {
+        if (container is null)
+            return double.PositiveInfinity;
+
+        crossings.Clear();
+        container.Intersect(ray, crossings);
+
+        double edge = double.PositiveInfinity;
+
+        foreach (Intersection crossing in crossings)
+        {
+            if (crossing.Distance > 1e-9 && crossing.Distance < edge)
+                edge = crossing.Distance;
+        }
+
+        return edge;
+    }
+
+    /// <summary>
+    /// This method returns a number from nothing up to one, drawn from a run belonging to one path.
+    /// It is a plain function of where the path started and which choice is being made, so the same
+    /// picture comes out of every render however the work was divided between threads.
+    /// </summary>
+    /// <param name="seed">Where in the run this path's choices are drawn from.</param>
+    /// <param name="index">Which choice along the path is being made.</param>
+    /// <returns>The number picked.</returns>
+    private static double Fraction(double seed, int index)
+    {
+        // Two irrationals, so that walking one choice to the next never falls into step with itself.
+        double walked = seed + (index + 1) * 0.7548776662466927 + index * index * 0.5698402909980532;
+
+        return walked - Math.Floor(walked);
+    }
+
+    /// <summary>
+    /// This method returns a starting place in the run of numbers for a path leaving one sample, so
+    /// that two samples do not follow the same wandering.
+    /// </summary>
+    /// <param name="where">The place the path leaves from.</param>
+    /// <param name="index">Which sample along the crossing it leaves from.</param>
+    /// <returns>The starting place.</returns>
+    private static double ShiftFor(Point where, int index)
+    {
+        ulong bits = (ulong) (
+            BitConverter.DoubleToInt64Bits(where.X) * 73_856_093 ^
+            BitConverter.DoubleToInt64Bits(where.Y) * 19_349_663 ^
+            BitConverter.DoubleToInt64Bits(where.Z) * 83_492_791 ^
+            (long) index * 26_699_363);
+
+        bits = (bits ^ bits >> 30) * 0xbf58476d1ce4e5b9;
+        bits = (bits ^ bits >> 27) * 0x94d049bb133111eb;
+
+        return (bits >> 11) * (1.0 / (1UL << 53));
     }
 
     /// <summary>
@@ -390,7 +602,13 @@ public class Scene : NamedThing, IDisposable
         if (!medium.HasShape)
             return Transmitted(medium.ExtinctionAt(medium.Density), edge);
 
-        int count = Math.Max(2, medium.Samples / 4);
+        // A fixed number of steps rather than a share of the crossing's own.  How finely this one
+        // shadow is answered is its own question, and tying it to how many places the eye's ray asks
+        // about made the work grow as the square of that count -- twice the quality for four times the
+        // render, which is not a knob anyone can use.  It also never settled: this is a bias rather
+        // than a noise, so more places along the eye's ray never averaged it away.
+        const int count = 16;
+
         double step = edge / count;
         Color depth = Colors.Black;
 

@@ -66,6 +66,19 @@ public partial class LanguageParser
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
             case "medium":
+                if (clause.Text(1) == "bounces")
+                {
+                    updater.MediumBouncesResolver = new TermResolver<int>
+                    {
+                        Term = term,
+                        Validator = value => value < 0
+                            ? "A path cannot be turned fewer than no times."
+                            : null
+                    };
+
+                    break;
+                }
+
                 updater.MediumSamplesResolver = new TermResolver<int>
                 {
                     Term = term,
