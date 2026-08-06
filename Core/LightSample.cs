@@ -16,6 +16,8 @@ namespace RayTracer.Core;
 /// <param name="Direction">The unit direction from the shaded point toward the sample.</param>
 /// <param name="Distance">The distance to the sample, which bounds how far a shadow ray need
 /// travel before it has passed the light; infinite for a light with no place, such as the sun.</param>
-/// <param name="Cone">How much of the light is aimed this way, between zero and one, which is one
-/// for every light but a spotlight.</param>
+/// <param name="Cone">What this sample is worth: one for a light looked at from one place, less for a
+/// spotlight as the point falls toward the edge of its cone, and more than one where a light was sampled
+/// over part of itself rather than the whole -- a sky looked at over the half a surface faces counts each
+/// of those samples double, the cosine weighing they are about to be given averaging a half.</param>
 public readonly record struct LightSample(Vector Direction, double Distance, double Cone);

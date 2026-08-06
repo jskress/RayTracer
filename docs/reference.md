@@ -250,6 +250,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `size` | Brick pattern: `brick size`/`mortar size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |

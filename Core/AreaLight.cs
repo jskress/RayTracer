@@ -88,7 +88,7 @@ public class AreaLight : PointLight
     /// <param name="index">Which sample, counted across <see cref="Axis1"/> first.</param>
     /// <returns>The sample: which way it lies from the point, how far off, and -- being no
     /// spotlight -- all of the light aimed that way.</returns>
-    public override LightSample SampleToward(Point point, int index)
+    public override LightSample SampleToward(Point point, int index, Vector normal = null)
     {
         int u = index % USteps;
         int v = index / USteps;

@@ -1,0 +1,134 @@
+// A cloud under a sky, with a sun on it.
+//
+// This is the scene the atmospherics work was for, and it takes two lights doing quite different jobs.
+//
+// The sun is a distant light: one direction, concentrated, and strong.  It comes in low from the left,
+// almost level, and that is deliberate.  A sun over the camera's shoulder puts the far side of the cloud
+// in shadow where the cloud itself hides it, and the picture loses the very thing it is about; a sun off
+// to the side lays the line between lit and shaded straight across the face in view.
+//
+// The sky is a sky light, and it is doing the work that used to be impossible.  It arrives from every
+// direction at once, so it reaches into the side of the cloud the sun cannot see -- and it takes nothing
+// but the background to do it, the sky that lights the cloud being the sky the picture shows.
+//
+// How much each thing is worth was measured on the shaded flank of this very cloud, and the numbers are
+// worth knowing before tuning one of these.  Lit by the sun alone that flank reads 0.24.  Following four
+// further turns of the light's own path through the cloud -- the multiple scattering of the effort before
+// this one -- lifts it to 0.35.  Adding the sky instead of those turns lifts it to 0.43, so the sky is
+// worth rather more than the turns are.  Both together give 0.71, nearly three times what the sun alone
+// could do.  The sky is not a finishing touch here; it is the larger part of what lights the side of a
+// cloud the sun cannot reach.
+//
+// The color says where that light came from even more plainly than the brightness does.  Measured on the
+// same flank, blue stands over red by -1 part in 255 with the sun alone -- no blue at all, a colorless
+// shadow, which is what a shadow lit by nothing is -- and by 83 with the sky present.  That blue was not
+// painted on and no one chose it; it is the background read in the directions that flank can see.  The
+// two compound, as well: the sky without the extra turns gets blue only to 38, and following the light
+// further into the cloud takes it to 83, the bounces carrying the sky's color deeper in than one
+// scattering event ever reaches.
+//
+// It is worth knowing why the sun is needed at all, because the answer is not obvious.  A cloud lit by
+// nothing but an even sky comes out exactly as bright as that sky -- no brighter -- and so vanishes
+// against it.  That is not a failing of the renderer; it is what happens, and it has a name.  A medium
+// sitting in light of the same strength from every side settles at that strength, having nowhere
+// brighter to borrow from; on an overcast day, when the sky is all there is, cloud and sky really do
+// become one white sheet and the horizon disappears.  What makes a cloud stand out on a fine day is that
+// some of its light comes from a small, fierce thing in one direction.  A sky can fill; only a sun can
+// key.
+//
+// Two things learned tuning this one, both of which cost renders to find out.  The sun is much weaker
+// than the first draft's, because a fierce sun on a cloud this thick does not look bright -- it looks
+// blank.  A quarter of that draft's frame was pure white, with the shading and the density detail alike
+// clipped away inside it, and the fix was to dim the sun rather than thin the cloud: thinning it takes
+// away the very depth that makes a cloud shade itself.  And the sun is not behind the cloud, tempting as
+// that is, because the haze prefers to carry light on the way it was already going: a back-lit cloud of
+// this depth forward-scatters the sun straight down the camera's throat and goes white across nearly half
+// the frame.  Rim-lighting wants a thinner cloud than this, and would be its own scene.
+//
+// Interior detail is another thing not to chase here.  The density is one turn of noise rather than a
+// stack of finer ones, because past an optical depth of about two the middle of a cloud stops caring how
+// much of it there is -- more density cannot make an already-white place whiter, so the fine structure
+// only ever shows near the thin edges where the light still gets through.  A stack of octaves was tried
+// and measurably changed nothing but the render time.
+//
+// What does pay, and pays more than any of the tuning above, is the shape.  A ball of haze reads as a
+// ball of haze however well it is lit; a cloud is known by its flat base and its billowing top, so the
+// density is cut off below and the whole is spread wider than it is tall.  It is worth doing in that
+// order -- shape first, then light -- since it was the one change that made the picture recognizable.
+//
+// The cost of it: the cloud is walked along every ray that crosses it, each place asking both lights what
+// reaches it, and each of those answers walking the cloud again to see how much of it stands in the way.
+// Four further turns of the light's own path are followed past the first, which is what keeps the shaded
+// side from being merely dim.  The grain is honest -- the light in the shade is an estimate, and estimates
+// want samples -- and it is the same in every render rather than crawling, so more places is the cure
+// rather than more frames.
+//
+// This one is walked in 288 places, twice its neighbours here and about eight minutes of work, which is
+// deliberate: it is the picture the whole of the atmospherics stands behind, so it is worth the wait.
+// The cure works exactly as the arithmetic says it should, which is worth knowing when deciding what to
+// spend.  Going from 144 places to 288 measured 1.38 times smoother against a theoretical 1.41, so grain
+// falls with the square root of the samples and no faster: halving it again would cost four times this.
+// Somebody wanting a quick look should drop this to 96 and lose nothing but the smoothness.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    medium samples 288
+    medium bounces 4
+    info {
+        title 'A Sunlit Cloud'
+        author 'J. Stephen Kress'
+        description 'A cloud keyed by a sun and filled by the sky, which is what it takes to look like one.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [1.1, 0.45, -7.2]
+    look at [0, 0.25, 0]
+    field of view 40
+}
+
+// Both the sky the camera sees and, by way of the sky light below, the fill on the cloud's shaded side.
+background linear Y bouncing gradient {
+    [0, [0.44, 0.48, 0.56], 1, [0.26, 0.44, 0.86]]
+}
+
+sky light {
+    samples 24
+}
+
+// The sun.  Warm against the sky's blue, as one is, and dimmer than instinct says a sun should be --
+// see the note above about what a fierce one does to a cloud this deep.
+distant light {
+    direction [0.92, -0.20, 0.14]
+    color [1.00, 0.96, 0.88]
+}
+
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 2.4
+                absorption 0.06
+                anisotropy 0.35
+                // Round, eaten into by noise, and then cut off below: the last term is what gives the
+                // cloud a flat base to sit on rather than a bottom that trails away like a ball's.
+                density function {
+                    max(0, 1 - √(x² + y² + z²)) *
+                    max(0, 2.1 * noise(2.7*x, 2.7*y, 2.7*z) - 0.5) *
+                    min(1, max(0, (y + 0.42) * 3.5))
+                }
+            }
+        }
+    }
+    // Wider than it is tall, which is the other half of looking like a cloud.
+    scale [2.5, 1.55, 2.0]
+}

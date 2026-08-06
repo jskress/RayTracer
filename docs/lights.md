@@ -178,3 +178,58 @@ is exactly how a real soft shadow reads — see `gallery/Local/lights/area-light
 around that.
 
 The complete example is [`docs/examples/lights/area-light.igl`](examples/lights/area-light.igl).
+
+### Sky Lights
+
+Light arriving from every direction at once, which is what the outdoors is.
+
+Every other light here is *somewhere* — a lamp at a point, the sun in one direction, a panel with a
+face. A sky light is nowhere in particular and everywhere at once:
+
+```
+sky light { }
+```
+
+That is the whole of it in the ordinary case. With no pigment of its own it carries the scene's
+[`background`](scene-files.md#background), so **the sky you look at is the sky that lights you** — which
+is what an environment map means, and what the background already is, being painted on a sphere of
+radius one infinitely far off.
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `pigment` | the scene's `background` | The sky it carries, read by direction. |
+| `color` | White | Multiplies the sky rather than replacing it, so it may be dimmed or tinted whole. |
+| `samples` | 32 | How many directions the sky is looked at from. |
+
+**A surface facing an open sky reads as bright as the sky, times its `diffuse`.** That is the rule to
+hold on to when choosing a sky: a white sky over a white floor of diffuse 0.9 gives 0.9, and a sky of
+`[0.3, 0.4, 0.6]` lights things about a third as strongly.
+
+**It shadows itself, and that is the point.** A sky light is sampled over directions, and a direction
+with something in the way delivers nothing — so a point that can only see a sliver of sky gets a sliver
+of light. A niche is darker than an open field, and a sphere resting on a floor has a soft darkening
+where the two meet, for the same reason real ones do. No other light in this renderer produces that,
+because no other one comes from everywhere.
+
+**It replaces `ambient`, and takes ambient's default with it.** The [ambient
+term](materials.md#ambient-diffuse-and-specular) is a fudge: a flat amount added everywhere, shadow or
+no shadow, standing in for the bounced light this renderer does not trace. A sky light is the real
+thing that fudge was imitating. So **a scene with a sky light gives every material an ambient of 0
+rather than the usual 0.1**, unless the material names its own — which it still may, since a sky light
+is not bounced light off the walls and there are scenes that want a little of both.
+
+**It lights media too**, without being asked. A cloud or a haze gathers from every light in the scene,
+so a sky light illuminates them — and for a cloud that matters more than anything else here, real ones
+being lit mostly by sky. A place inside a medium faces no particular way, so it takes its sky samples
+over the whole sphere rather than a half.
+
+On cost: one shadow ray per sample per surface hit, like an area light. Unlike the light gathered by
+[multiple scattering](scene-files.md#multiple-scattering), though, this is the *kind* case for sampling
+— a sky is large and smooth, so there is no needle to find and tens of samples settle it rather than
+thousands.
+
+One thing to know if a scene has both a sky light and an unbounded
+[medium](scene-files.md#filling-that-space): the sky is infinitely far off, so an endless absorbing
+medium extinguishes it completely, exactly as it does a `distant light`. That is the right answer to the
+question as asked — an infinitely deep fog really does hide the sky — and the remedy is the same, which
+is to give the fog a surface to fill.

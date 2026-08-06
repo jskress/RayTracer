@@ -31,7 +31,23 @@ public class Material
     /// <summary>
     /// The amount of ambient light for the material.
     /// </summary>
-    public double Ambient { get; set; } = 0.1;
+    /// <summary>
+    /// How lit the surface is regardless of any light reaching it.  It is <c>null</c> until the scene is
+    /// whole, because what it ought to default to depends on the company it keeps: a scene with no sky
+    /// light gets the tenth it has always had, standing in for the bounced light this renderer does not
+    /// trace, while a scene that has one gets nothing, the sky being the real thing that fudge was
+    /// imitating.  A material naming its own keeps it either way, which is the point of the distinction:
+    /// without it there would be no telling "said nothing" from "said a tenth".
+    /// </summary>
+    public double? Ambient { get; set; }
+
+    /// <summary>
+    /// This property holds the ambient actually to be used.  Where nothing has settled it, it is the
+    /// tenth it has always been -- so a material built in code and never shown to a scene behaves
+    /// exactly as it did before any of this, and only a scene that has a sky light to put in ambient's
+    /// place ever settles it to nothing.
+    /// </summary>
+    public double EffectiveAmbient => Ambient ?? 0.1;
 
     /// <summary>
     /// The diffuse factor for the material.
@@ -233,7 +249,7 @@ public class Material
     public bool Matches(Material other)
     {
         return Pigment.Matches(other.Pigment) &&
-               Ambient.Near(other.Ambient) &&
+               EffectiveAmbient.Near(other.EffectiveAmbient) &&
                Diffuse.Near(other.Diffuse) &&
                Specular.Near(other.Specular) &&
                Shininess.Near(other.Shininess);

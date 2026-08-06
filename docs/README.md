@@ -107,6 +107,7 @@ branches, any one of the branches will do.
   - [Distant Lights](lights.md#distant-lights)
   - [Spotlights](lights.md#spotlights)
   - [Area Lights](lights.md#area-lights)
+  - [Sky Lights](lights.md#sky-lights)
 - [Surfaces](surfaces.md)
   - [What Every Surface Has](surfaces.md#what-every-surface-has)
   - [The Primitives](surfaces.md#the-primitives)

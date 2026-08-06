@@ -1,0 +1,97 @@
+// A scene lit by nothing but the sky.
+//
+// There is no lamp here.  Every other light in this renderer is somewhere -- a lamp at a point, the sun
+// in one direction, a panel with a face -- and a sky light is nowhere in particular and everywhere at
+// once, which is what the outdoors is.  It takes the scene's own background and reads it by direction,
+// so the sky you are looking at is the sky doing the lighting.
+//
+// Two things in the picture are worth more than the general softness.
+//
+// Look where each thing meets the floor.  There is a darkening that tightens as the gap closes, and
+// nothing drew it: a point tucked under a sphere can only see a sliver of sky, so it only gets a sliver
+// of light.  That is the whole difference between this and the `ambient` term it replaces.  Ambient is a
+// flat amount added everywhere alike, shadow or no shadow, standing in for the bounced light this
+// renderer does not trace; this arrives from real directions and is stopped by real things.  It is also
+// why a scene with a sky light gets no ambient by default -- the fudge has been replaced by the thing it
+// was imitating.
+//
+// Look also at the colors.  The tops of things are lit by the blue overhead while their sides catch the
+// pale warmth near the horizon, which no single light could do, the sky being a different color whichever
+// way you look.  It is also why the shading under each sphere is blue rather than gray: the little sky
+// still visible from down there is the high blue part.
+//
+// A surface facing an open sky comes back as bright as the sky, times its own diffuse.  That is the rule
+// to tune against, and it is exact rather than a matter of taste -- so if a scene looks dim, the sky is
+// dim, and the sky is the thing to brighten.
+//
+// The cost is one shadow ray per sample per surface, as an area light's is.  Unlike the light gathered
+// inside a cloud, though, this is the kind case for sampling: a sky is large and smooth, so there is no
+// needle to find and a few dozen directions settle it.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'A Sky Light'
+        author 'J. Stephen Kress'
+        description 'A scene with no lamp in it at all, lit only by the sky it is standing under.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.3, -7]
+    look at [0, 0.85, 0]
+    field of view 46
+}
+
+// The sky, which is both what the camera sees and what lights everything.  Pale and warm at the horizon,
+// deeper blue overhead, as a real one is.
+background linear Y bouncing gradient {
+    [0, [0.78, 0.80, 0.82], 1, [0.35, 0.52, 0.92]]
+}
+
+sky light {
+    samples 64
+}
+
+plane {
+    material {
+        pigment checker { [0.72, 0.70, 0.66], [0.46, 0.45, 0.43] }
+        specular 0.1
+        shininess 40
+    }
+}
+
+// Resting on the floor, so the darkening where they meet it has nowhere to hide.
+sphere {
+    material {
+        pigment [0.80, 0.30, 0.26]
+        specular 0.25
+        shininess 90
+    }
+    translate [-1.85, 1, 0.2]
+}
+
+sphere {
+    material {
+        pigment [0.86, 0.84, 0.80]
+        specular 0.45
+        shininess 250
+    }
+    scale 0.7
+    translate [-0.15, 0.7, -0.9]
+}
+
+torus {
+    material {
+        pigment [0.35, 0.52, 0.38]
+        specular 0.3
+        shininess 120
+    }
+    radii 0.62, 0.24
+    rotate X 74
+    translate [1.2, 0.62, 0.1]
+}
