@@ -1241,6 +1241,10 @@ public partial class LanguageParser
                 density > function > openBrace ?? 'Expecting an open brace to follow "function" here.' >
                 _expression > closeBrace ?? 'Expecting a close brace to end the function here.'
             } |
+            {
+                density > patternClause >
+                openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            } |
             { density > _expression } | { samples > _expression } | { bounces > _expression } |
             { phase > rayleigh ?? 'Expecting "rayleigh" to follow "phase" here.' }
         ] ?? 'Expecting a medium property here.'

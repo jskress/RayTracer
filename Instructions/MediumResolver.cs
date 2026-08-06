@@ -62,6 +62,12 @@ public class MediumResolver : ObjectResolver<Medium>
     public Resolver<FieldExpression> DensityFieldResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the shaping of the density by a pattern, which is the
+    /// alternative to writing that shape out as a function.
+    /// </summary>
+    public DensityShapeResolver DensityPatternResolver { get; set; }
+
+    /// <summary>
     /// This property holds the check, if any, to make of the medium once it is built.  Where a medium
     /// may go decides what it may say -- the surroundings have no far side, and a medium filling them
     /// must be one that has an answer over an endless span -- so the check belongs to the place the
@@ -109,6 +115,9 @@ public class MediumResolver : ObjectResolver<Medium>
             value.DensityField = FieldFunction.Compile(
                 DensityFieldResolver.Resolve(context, variables));
         }
+
+        if (DensityPatternResolver is not null)
+            value.DensityPattern = DensityPatternResolver.Resolve(context, variables);
 
         // How hard to work is the context's business, and the medium's only when it says so: a scene
         // with one dense plume among thin haze can spend its samples where they are wanted.

@@ -23,10 +23,10 @@ public partial class LanguageParser
     /// <param name="clause">The clause to interpret.</param>
     /// <returns>A tuple carrying the pattern resolver and the number of discrete pigments
     /// needed.</returns>
-    private (IPatternResolver, int) ParsePatternClause(Clause clause)
+    private (IPatternResolver, int) ParsePatternClause(Clause clause, int tokenOffset = 0)
     {
         Resolver<int?> seedResolver = null;
-        string text = string.Join('.', clause.Tokens[..^1]
+        string text = string.Join('.', clause.Tokens[tokenOffset..^1]
             .Select(token => token.Text));
         bool bouncing = false;
 

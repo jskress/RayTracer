@@ -1,0 +1,137 @@
+// Three boxes of smoke, shaped by three patterns.
+//
+// A medium's density may be written out as a function, which is how the cloud in this directory's
+// other scenes was made.  This is the other way: name a pattern from the library instead, and let it
+// say how much of the stuff is where.  Nothing new is being computed -- these are the same patterns
+// that color a marble floor or roughen a stucco wall, pointed at a third thing.  A pattern says how
+// far through its range a point lies, and what that number is taken to mean is the caller's business:
+// a pigment reads it as a place in a color map, a normal reads it as a slope, and a medium reads it
+// as how much of itself is there.
+//
+// Left to right: crackle, whose cells make the smoke curdle into lumps with clear air between them;
+// marble, whose veins are drawn out and stirred into sheets; and checker, which is here for the
+// bluntest possible demonstration that the density really is following the pattern -- there is no
+// mistaking alternating blocks for anything the renderer might have done on its own.
+//
+// The boxes are the point of the composition, not just something to put the smoke in.  A pattern
+// does not know where the medium ends -- it fills whatever holds it, right up to the edge -- so what
+// this form gives you is texture, and the shape has to come from the container.  That is exactly
+// right for smoke in a box or fog in a room, and it is why the cloud scenes use a function instead:
+// a cloud's whole character is that it fades into the air around it, and no pattern will do that.
+// The two forms are alternatives for that reason rather than rivals.
+//
+// The transform on each is doing more work than it looks, and leaving it out is the usual first
+// mistake.  A pattern is written at the scale of the space it sits in, and these boxes are two units
+// across, so every one of these at its own footing would give a single lump and nothing else.  The
+// scale is what picks the size of the detail.
+//
+// The checker earns one more note.  Patterns built to choose *between* pigments hand back a whole
+// number naming which one, rather than a fraction, so they are spread back across nothing-to-all
+// here: a checker gives nothing or all, and a six-way pattern gives sixths.  Without that a
+// six-way pattern would quietly mean six times the density.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    medium samples 80
+    info {
+        title 'Densities From Patterns'
+        author 'J. Stephen Kress'
+        description 'Three boxes of smoke whose density is shaped by a pattern rather than a function.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.4, -8.5]
+    look at [0, 0.1, 0]
+    field of view 44
+}
+
+background [0.03, 0.04, 0.07]
+
+// Behind and above, so the smoke is lit through rather than from the front: what shows the shape of a
+// medium is light coming the other way through it.
+point light {
+    location [-3.5, 4.5, 4.5]
+    color [1.5, 1.45, 1.35]
+}
+
+// A little fill from the near side, or the faces toward us would go to nothing.
+point light {
+    location [4, 1.5, -6]
+    color [0.35, 0.36, 0.42]
+}
+
+// Crackle: cells with walls between them, which reads as smoke curdling into lumps.
+cube {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 2.6
+                absorption 0.05
+                anisotropy 0.3
+                density crackle { scale 0.42 }
+            }
+        }
+    }
+    scale 0.95
+    translate [-2.3, 0, 0]
+}
+
+// Marble: veins, drawn thin across one axis and stirred so they wander rather than run straight.
+cube {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 2.6
+                absorption 0.05
+                anisotropy 0.3
+                // The wave is not decoration.  A marble's value is a coordinate meant to be wrapped
+                // by the color map it usually feeds, so read straight it is a smooth ramp across the
+                // box and no veins at all.  The frequency wraps it and the wave folds it, which is
+                // what the color map would have done.
+                density marble {
+                    turbulence 0.55
+                    frequency 2
+                    triangle wave
+                    scale [0.3, 1, 1]
+                }
+            }
+        }
+    }
+    scale 0.95
+}
+
+// Checker: nothing or all, in blocks.  The one whose answer can be checked by eye.
+cube {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            medium {
+                scattering 2.6
+                absorption 0.05
+                anisotropy 0.3
+                density checker { scale 0.5 }
+            }
+        }
+    }
+    scale 0.95
+    translate [2.3, 0, 0]
+}

@@ -3,6 +3,7 @@ using RayTracer.Core;
 using RayTracer.Fields;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.Patterns;
 using RayTracer.Pigments;
 
 namespace Tests;
@@ -422,6 +423,83 @@ public class TestMedium
         };
 
         Assert.AreEqual(0, negative.DensityAt(Point.Zero));
+    }
+
+    [TestMethod]
+    public void TestAPatternMayShapeTheDensityToo()
+    {
+        // The same job as a function, said the other way.  A checker is the plainest thing to hold it
+        // to, since where it is on and where it is off can be worked out by hand.
+        Medium blocks = new ()
+        {
+            Absorption = new Color(1, 1, 1),
+            Density = 0.5,
+            DensityPattern = new DensityShape { Pattern = new CheckerPattern() }
+        };
+
+        Assert.IsTrue(blocks.HasShape, "a pattern is a shape, so the crossing must be marched");
+        Assert.AreEqual(0, blocks.DensityAt(Point.Zero), "the checker is off at the origin");
+        Assert.AreEqual(0.5, blocks.DensityAt(new Point(1.5, 0.5, 0.5)), 1e-12,
+            "and on in the next block along, with the medium's own density scaling it");
+    }
+
+    [TestMethod]
+    public void TestTheTransformPlacesThePattern()
+    {
+        // Without this the feature would be nearly useless: a pattern sits at the scale of the space
+        // it is written in, and the things media fill are a couple of units across, so most of the
+        // library would give one block and no more.  The same point, the same pattern, a different
+        // footing, and so a different answer.
+        Point point = new (1.5, 0.5, 0.5);
+        Medium asWritten = new ()
+        {
+            Absorption = new Color(1, 1, 1),
+            DensityPattern = new DensityShape { Pattern = new CheckerPattern() }
+        };
+        Medium spreadWider = new ()
+        {
+            Absorption = new Color(1, 1, 1),
+            DensityPattern = new DensityShape
+            {
+                Pattern = new CheckerPattern(), Transform = Transforms.Scale(2)
+            }
+        };
+
+        Assert.AreEqual(1, asWritten.DensityAt(point));
+        Assert.AreEqual(0, spreadWider.DensityAt(point),
+            "spread to twice its size, that point falls in the block before");
+    }
+
+    [TestMethod]
+    public void TestAPatternBuiltForAColorMapIsSpreadBackAcrossTheRange()
+    {
+        // A pattern built to choose between six pigments hands back a whole number naming which one,
+        // not a fraction, so read straight it would quietly mean six times the density.  Every pattern
+        // in the library has to land inside the same range to be usable here.
+        DensityShape sixWays = new () { Pattern = new TriangularPattern() };
+        List<double> seen = [];
+
+        for (int x = 0; x < 12; x++)
+        {
+            for (int z = 0; z < 12; z++)
+            {
+                double value = sixWays.ValueAt(new Point(x * 0.31, 0, z * 0.29));
+
+                Assert.IsTrue(value is >= 0 and <= 1,
+                    $"a six-way pattern gave {value}, which is outside the range");
+
+                seen.Add(value);
+            }
+        }
+
+        Assert.IsTrue(seen.Distinct().Count() > 2,
+            "the bands should still be told apart after being spread");
+
+        // A two-way pattern is spread by one, so its "on" stays all the way on rather than being
+        // halved -- the spreading must not cost a checker its contrast.
+        DensityShape twoWays = new () { Pattern = new CheckerPattern() };
+
+        Assert.AreEqual(1, twoWays.ValueAt(new Point(1.5, 0.5, 0.5)));
     }
 
     [TestMethod]

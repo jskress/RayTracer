@@ -441,6 +441,97 @@ public class TestMediumClauses
     }
 
     [TestMethod]
+    public void TestAShapeMayBeNamedAsAPatternInstead()
+    {
+        // The other way to say a shape: not written out as a function, but named from the pattern
+        // library.  A checker is the one to hold it to, since it fills alternating blocks and leaves
+        // the rest empty, so a ball filled with it cannot come out as the same ball filled evenly.
+        //
+        // What this checks is the difference from the even ball rather than how blotchy the picture
+        // looks, and that is worth knowing before writing another of these: a ray crosses many blocks
+        // and adds up what it finds all the way along, so the blocks average out and a checkered
+        // medium is only about a quarter blotchier than an even one.  The difference between the two
+        // pictures is far plainer than the texture of either.
+        const string ball = """
+            context { medium samples 40 }
+            camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 40 }
+            point light { location [-4, 3, -4]  color [0.9, 0.9, 0.9] }
+            background Black
+            """;
+        string scene = """
+            {{ball}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { medium { scattering 1.6 {{density}} } }
+                }
+                scale 1.4
+            }
+            """.Replace("{{ball}}", ball);
+        (Canvas blocks, string first) = Render(
+            scene.Replace("{{density}}", "density checker { scale 1.2 }"));
+        (Canvas even, string second) = Render(scene.Replace("{{density}}", ""));
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+
+        double most = 0;
+
+        for (int x = 8; x < 32; x++)
+        {
+            for (int y = 6; y < 34; y++)
+            {
+                most = Math.Max(most,
+                    Math.Abs(blocks.GetPixel(x, y).Red - even.GetPixel(x, y).Red));
+            }
+        }
+
+        Assert.IsTrue(most > 0.1,
+            $"a checkered medium should be plainly unlike an even one, and differed by only {most}");
+    }
+
+    [TestMethod]
+    public void TestThePatternIsPlacedByItsTransform()
+    {
+        // Without a footing of its own a pattern would be stuck at the scale of the space it sits in,
+        // and most of the library would give one block over a ball this size.  The same pattern at two
+        // scales has to give two different pictures, or the transform is being dropped.
+        const string ball = """
+            context { medium samples 40 }
+            camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 40 }
+            point light { location [-4, 3, -4]  color [0.9, 0.9, 0.9] }
+            background Black
+            """;
+        string scene = """
+            {{ball}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { medium { scattering 1.6  density checker { scale {{scale}} } } }
+                }
+                scale 1.4
+            }
+            """;
+        (Canvas fine, string first) = Render(
+            scene.Replace("{{ball}}", ball).Replace("{{scale}}", "0.3"));
+        (Canvas coarse, string second) = Render(
+            scene.Replace("{{ball}}", ball).Replace("{{scale}}", "1.2"));
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+
+        bool differs = false;
+
+        for (int x = 4; x < 36 && !differs; x++)
+        {
+            for (int y = 4; y < 36 && !differs; y++)
+                differs = Math.Abs(fine.GetPixel(x, y).Red - coarse.GetPixel(x, y).Red) > 0.02;
+        }
+
+        Assert.IsTrue(differs, "the two scales gave the same picture, so the transform was dropped");
+    }
+
+    [TestMethod]
     public void TestAShapeStandsInItsOwnLight()
     {
         // What tells a cloud from a glowing blob.  The lamp is off to the left, so the left of the ball
