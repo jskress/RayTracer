@@ -1,0 +1,175 @@
+// A candle on a desk, and everything in the picture owed to one number.
+//
+// The number is `fade distance`.  Light spreads as it travels -- a lamp scatters what it gives off
+// over a sphere that grows as it goes -- so what falls on a patch at twice the distance is a quarter
+// as much.  Every light in this renderer used to ignore that, delivering the same amount a foot away
+// as a hundred feet away, which is fine for a sun and hopeless for a candle.  A candle is nothing
+// *but* falloff: the pool of light on the desk, the books going dim at the edge of it, the darkness
+// past them.  None of that is a shadow.  It is one flame's light thinning as it spreads.
+//
+// The flame itself is a medium that gives off light of its own -- a small volume of glowing gas
+// bounded by an invisible shell, warm and orange in what it emits and swallowing its own blue on the
+// way out, which is why its heart is pale and its edges deepen.  It casts no shadow, being fire.
+//
+// The air in the room is a medium too, faintly hazy, and that is what draws the soft halo around the
+// flame.
+//
+// The light is an area light rather than a lamp at a point, and the ring of shadow around the
+// candle's foot is why.  A flame sits just above a fat candle, so the candle's own body blocks the
+// light going down and outward and lays a broad disc of shadow on the desk around itself -- that is
+// simply the geometry and a real candle does it too.  From a point of light that disc came out with a
+// hard black edge and swallowed the whole foreground.  Given the flame its real size, the edge goes
+// soft and the disc reads as shading rather than as a hole.
+//
+// Three things to know if adapting this, all of them found the hard way.
+//
+// The fading distance is small -- a bit over half a unit, where the desk is some six across --
+// because it names where the light is worth its stated color rather than where it stops.  Push it out
+// and the whole desk floods.  For the same reason the color is well over one: a light that fades has
+// to set out bright enough to still be worth something at the far side of the pool.
+//
+// The ambient is tiny but not nothing, and getting that wrong wastes an afternoon.  Left at its
+// default of a tenth it drowns the whole effect -- ambient is deliberately exempt from shadowing and
+// from fading, being a stand-in for light that has bounced, so a tenth of it lays an even floor right
+// across the picture that no falloff can dig through.  At zero the other way, everything the flame
+// cannot see goes absolutely black, which no real room does.  Fourteen thousandths is what a room's
+// bounced light is worth here, and it is what keeps the far corners dark rather than dead.
+//
+// And the air had to wait for the falloff.  Haze is lit by lamps like anything else, so before lights
+// could fade, the whole room's air was lit equally and this scene came back as an even orange fog
+// with no glow anywhere in it.  A fading lamp lights the air near it and leaves the air across the
+// room dark, and that is what a halo is.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    medium samples 120
+    info {
+        title 'A Candle'
+        author 'J. Stephen Kress'
+        description 'A candle on a desk, lit by one flame whose light thins as it spreads.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-1.6, 2.1, -6.4]
+    look at [0.2, 0.8, 0.1]
+    field of view 46
+}
+
+background Black
+
+// The air of the room: faint, and lit only where the flame still reaches it.
+environment {
+    ior Air
+    medium {
+        absorption [0.020, 0.024, 0.031]
+        scattering [0.034, 0.027, 0.020]
+    }
+}
+
+// The desk.
+plane {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.6  octaves 2 }
+            [0, [0.24, 0.13, 0.06], 0.12, [0.30, 0.17, 0.08],
+             0.30, [0.46, 0.28, 0.13], 0.92, [0.50, 0.31, 0.15],
+             1, [0.24, 0.13, 0.06]]
+            scale [0.22, 0.22, 7]
+            rotate Y 12
+        }
+        ambient 0.014
+        specular 0.2
+        shininess 45
+    }
+}
+
+// The candle, and the wick it burns at.
+cylinder {
+    min Y 0  max Y 1.15
+    material { pigment [0.90, 0.86, 0.74]  ambient 0.014  specular 0.25  shininess 60 }
+    scale [0.20, 1, 0.20]
+}
+
+cylinder {
+    min Y 0  max Y 0.10
+    material { pigment [0.16, 0.13, 0.11]  ambient 0.014 }
+    scale [0.011, 1, 0.011]
+    rotate Z 7
+    translate Y 1.15
+}
+
+// The flame: glowing gas in an invisible shell, swallowing its own blue as it leaves.
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            ior 1.0
+            medium {
+                emission [3.4, 1.55, 0.42]
+                absorption [0.5, 0.9, 1.6]
+            }
+        }
+    }
+    no shadow
+    scale [0.115, 0.235, 0.115]
+    translate Y 1.37
+}
+
+// The one light in the scene: the size of the flame, standing in it, and thinning as it spreads.
+area light {
+    location [-0.055, 1.66, -0.055]
+    axisU [0.11, 0, 0]
+    axisV [0, 0.16, 0.11]
+    steps 3
+    color [1.6, 1.02, 0.52]
+    fade distance 0.7
+}
+
+// Two books, the upper one set askew as a read book is.
+cube {
+    material { pigment [0.42, 0.16, 0.14]  ambient 0.014  specular 0.1 }
+    scale [0.85, 0.10, 0.62]
+    translate [1.65, 0.10, 0.45]
+}
+
+cube {
+    material { pigment [0.19, 0.27, 0.35]  ambient 0.014  specular 0.1 }
+    scale [0.78, 0.08, 0.56]
+    rotate Y 9
+    translate [1.62, 0.28, 0.38]
+}
+
+// A pen, lying where it was put down.
+cylinder {
+    min Y 0  max Y 1.4
+    material { pigment [0.13, 0.14, 0.17]  ambient 0.014  specular 0.55  shininess 140 }
+    scale [0.034, 1, 0.034]
+    rotate Z 90
+    rotate Y 28
+    translate [-1.35, 0.034, -0.55]
+}
+
+// A cup, to catch the light on something round and near.
+cylinder {
+    min Y 0  max Y 0.42
+    open
+    material { pigment [0.62, 0.60, 0.55]  ambient 0.014  specular 0.35  shininess 90 }
+    scale [0.24, 1, 0.24]
+    translate [-0.95, 0, 0.85]
+}
+
+// A sheet of paper, half in the pool of light and half out of it.
+cube {
+    material { pigment [0.82, 0.79, 0.72]  ambient 0.014  specular 0.05 }
+    scale [0.62, 0.004, 0.44]
+    rotate Y -14
+    translate [0.55, 0.004, -1.05]
+}

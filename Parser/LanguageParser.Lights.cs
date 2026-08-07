@@ -105,6 +105,31 @@ public partial class LanguageParser
             case "color":
                 resolver.ColorResolver = new TermResolver<Color> { Term = term };
                 break;
+            case "fade":
+                if (clause.Text(1) == "distance")
+                {
+                    resolver.FadeDistanceResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = distance => distance > 0
+                            ? null
+                            : "A light must be worth what it says at some real distance, so a " +
+                              "fading distance of nothing or less has no meaning."
+                    };
+                }
+                else
+                {
+                    resolver.FadePowerResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = power => power >= 0
+                            ? null
+                            : "A light cannot grow brighter with distance, so a fading power below " +
+                              "nothing has no meaning."
+                    };
+                }
+
+                break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
         }
@@ -168,6 +193,31 @@ public partial class LanguageParser
             case "color":
                 resolver.ColorResolver = new TermResolver<Color> { Term = term };
                 break;
+            case "fade":
+                if (clause.Text(1) == "distance")
+                {
+                    resolver.FadeDistanceResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = distance => distance > 0
+                            ? null
+                            : "A light must be worth what it says at some real distance, so a " +
+                              "fading distance of nothing or less has no meaning."
+                    };
+                }
+                else
+                {
+                    resolver.FadePowerResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = power => power >= 0
+                            ? null
+                            : "A light cannot grow brighter with distance, so a fading power below " +
+                              "nothing has no meaning."
+                    };
+                }
+
+                break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
         }
@@ -218,6 +268,31 @@ public partial class LanguageParser
                 break;
             case "color":
                 resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            case "fade":
+                if (clause.Text(1) == "distance")
+                {
+                    resolver.FadeDistanceResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = distance => distance > 0
+                            ? null
+                            : "A light must be worth what it says at some real distance, so a " +
+                              "fading distance of nothing or less has no meaning."
+                    };
+                }
+                else
+                {
+                    resolver.FadePowerResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = power => power >= 0
+                            ? null
+                            : "A light cannot grow brighter with distance, so a fading power below " +
+                              "nothing has no meaning."
+                    };
+                }
+
                 break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");

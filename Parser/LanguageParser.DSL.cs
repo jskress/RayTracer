@@ -78,7 +78,7 @@ public partial class LanguageParser
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -88,7 +88,7 @@ public partial class LanguageParser
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
             'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
+            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
@@ -311,9 +311,17 @@ public partial class LanguageParser
         {
             point > at ?? 'Expecting "at" to follow "point" here.' > _expression
         }
+        // How a light thins with the distance it has travelled.  Offered only to lights that stand
+        // somewhere: a sun and a sky are infinitely far off, so nothing in a scene is nearer to them
+        // than anything else and there is nothing for a distance to mean.
+        fadeClause:
+        {
+            fade > [ distance | power ] ?? 'Expecting "distance" or "power" to follow "fade" here.' >
+            _expression
+        }
         pointLightEntryClause:
         [
-            namedClause | locationClause | lightColorClause
+            namedClause | locationClause | lightColorClause | fadeClause
         ] ?? 'Expecting a point light property here.'
         distantLightEntryClause:
         [
@@ -322,7 +330,8 @@ public partial class LanguageParser
         spotLightEntryClause:
         [
             namedClause | locationClause | pointAtClause | lightColorClause |
-            { radius > _expression } | { falloff > _expression } | { tightness > _expression }
+            { radius > _expression } | { falloff > _expression } | { tightness > _expression } |
+            fadeClause
         ] ?? 'Expecting a spotlight property here.'
         // Light from every direction at once, as the sky gives it.  With no pigment of its own it
         // carries the scene's background, so that what lights the scene is what the scene shows.
@@ -336,7 +345,7 @@ public partial class LanguageParser
             { axisU > _expression } | { axisV > _expression } |
             { steps > _expression } | { uSteps > _expression } | { vSteps > _expression } |
             { seed > _expression } |
-            { no > jitter ?? 'Expecting "jitter" to follow "no" here.' }
+            { no > jitter ?? 'Expecting "jitter" to follow "no" here.' } | fadeClause
         ] ?? 'Expecting an area light property here.'
 
         // Transform clauses.

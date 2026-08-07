@@ -179,6 +179,44 @@ around that.
 
 The complete example is [`docs/examples/lights/area-light.igl`](examples/lights/area-light.igl).
 
+### Fading With Distance
+
+Light spreads.  A lamp throwing out a certain amount of it scatters that over a sphere which grows as
+it goes, so what falls on a square inch at ten feet is a **quarter** of what falls on one at five.
+That is why a candle lights the book held near it and leaves the far wall dark.
+
+By default no light here does that: a light of `1` makes a white surface come back at `1` whether it
+stands a foot away or a hundred.  That is perfectly good for a sun, and quite wrong for a candle.
+
+```
+point light {
+    location [0, 1.74, 0]
+    color [1.35, 0.86, 0.44]
+    fade distance 0.7
+}
+```
+
+`fade distance` names **where the light is worth what its colour says**.  At that distance it delivers
+its colour exactly; twice as far it delivers a quarter as much, three times as far a ninth.  Nearer
+than that it is simply left alone rather than allowed to grow without bound — the true law runs to
+infinity at no distance at all, and a real flame is not a point in any case.
+
+`fade power` changes how quickly it thins past that distance.  Two is the default and is what light
+actually does; `1` dims more gently than the world does and `0` not at all, both being there for when
+a scene wants a look rather than the truth.
+
+**Only lights that stand somewhere may fade** — point, spot and area.  A distant light and a sky light
+are infinitely far off, so nothing in a scene is meaningfully nearer to them than anything else and
+there would be nothing for a distance to measure against.
+
+Two things worth knowing when using it:
+
+- **A medium fades with it.** Haze lit by a fading lamp glows near the lamp and goes dark away from
+  it, which is what makes a visible glow around a flame rather than an even fog through the whole
+  room.  Without fading, a medium is lit equally at every distance and simply tints everything.
+- **Say nothing and nothing changes.** A scene that never writes `fade distance` renders exactly as it
+  did before this existed, bit for bit.
+
 ### Sky Lights
 
 Light arriving from every direction at once, which is what the outdoors is.

@@ -8,7 +8,7 @@ namespace RayTracer.Instructions.Core;
 /// <summary>
 /// This class is used to resolve a point light value.
 /// </summary>
-public class PointLightResolver : NamedObjectResolver<PointLight>
+public class PointLightResolver : FadingLightResolver<PointLight>
 {
     /// <summary>
     /// This property holds the resolver for our camera's location property.

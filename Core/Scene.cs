@@ -370,7 +370,8 @@ public class Scene : NamedThing, IDisposable
             // product alone, so this is simply the one direction against the other.
             double phase = medium.PhaseFor(sample.Direction.Dot(heading));
 
-            arriving += light.ColorFor(sample) * reaching * (sample.Cone * phase);
+            arriving += light.ColorFor(sample) * reaching *
+                (sample.Cone * phase * light.FadingOver(sample.Distance));
         }
 
         return arriving;
