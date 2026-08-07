@@ -1,0 +1,104 @@
+// One shape, built from a handful of named ones.
+//
+// An isosurface is arithmetic: a sum over a place in space, negative inside the thing and positive
+// outside it, and the surface is wherever it crosses zero.  Written out in full, a shape like this one
+// is a single expression a dozen lines long that nobody can read and nobody dares edit.
+//
+// Written this way it is four small functions and one line that puts them together.  Read the last
+// line of the isosurface below and the shape is plain: four balls round the middle, joined to a ball
+// on top and a stem below.  That is the whole point.  The arithmetic did not get simpler -- it is the
+// same sum, and the renderer sees exactly the same thing -- but it acquired names, and names are what
+// a person reads.
+//
+// Three of the functions are shapes and one is a way of joining shapes:
+//
+//   ball    is a distance out from a point, less a radius.  Negative inside.
+//   rod     is the same about a line rather than a point, and then cut off top and bottom, which is
+//           what `max` does: taking the larger of two sums keeps only where *both* are inside.
+//   merged  runs two shapes together with a soft join, the softness being the one thing that says how
+//           gently.  Left alone it is gentle; the joins here are set tighter, so the parts still read
+//           as parts.
+//
+// Note that none of them works anything out on the way to its answer, and that is not a stylistic
+// choice.  The first draft of `rod` named its distance-about-the-line before cutting it off, and the
+// renderer refused it by name -- which is the rule below, met in the wild.
+//
+// **These fold bodily into the field.**  There is no calling going on when the picture is drawn: each
+// function's body is folded in where it was called, values and all, and what the renderer compiles is
+// the one big expression a person would otherwise have had to write.  That is why it costs nothing,
+// and it is also the reason a function used here must be a single answer -- something with workings
+// before it has no expression to fold, and an isosurface must be able to differentiate what it gets
+// in order to know which way its surface faces.
+//
+// One thing worth noticing, since it is what makes any of this useful: `merged` is handed the *result*
+// of other calls.  A value a folded function receives may itself be a piece of arithmetic rather than
+// a settled number, so shapes can be built out of shapes.  Without that, a vocabulary could only ever
+// be given plain numbers, and there would be little reason to name anything.
+//
+// Change `softness` in one place and every join in the picture softens together.  Change `ball` and
+// every ball follows.  That is the difference between a shape that was written and a shape that was
+// described.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Shape Vocabulary'
+        author 'J. Stephen Kress'
+        description 'An isosurface built by folding a handful of named shape functions into one another.'
+        copyright true
+        software __software__
+    }
+}
+
+// A ball: how far out from a point, less how big it is.  Negative inside.
+function ball(cx, cy, cz, radius) -> number {
+    return √((x - cx)² + (y - cy)² + (z - cz)²) - radius
+}
+
+// A rod: the same about a line, then cut off above and below.  Taking the larger of two sums keeps
+// only where both are inside, which is how one shape is cut against another.
+function rod(cx, cz, radius, reach) -> number {
+    return max(√((x - cx)² + (z - cz)²) - radius, abs(y) - reach)
+}
+
+// Two shapes run together.  The softness is the only thing that says how gently they join, and it has
+// a fallback so the common case need not mention it.
+function merged(first, second, softness = 0.12) -> number {
+    return -log(exp(-first / softness) + exp(-second / softness)) * softness
+}
+
+camera {
+    location [0, 2.0, -6.2]
+    look at [0, 0.1, 0]
+    field of view 42
+}
+
+background [0.05, 0.06, 0.09]
+
+point light { location [-6, 8, -7]  color [1, 0.97, 0.92] }
+point light { location [6, 3, -3]   color [0.30, 0.32, 0.40] }
+
+plane {
+    material {
+        pigment checker { [0.30, 0.30, 0.34], [0.20, 0.20, 0.24]  scale 1.1 }
+        specular 0.1
+    }
+    translate Y -1.15
+}
+
+isosurface {
+    // The shape, said once: four round the middle, joined to one on top and a stem below.
+    function {
+        merged(
+            merged(merged(ball(-0.62, -0.1, 0, 0.42), ball(0.62, -0.1, 0, 0.42)),
+                   merged(ball(0, -0.1, -0.62, 0.42), ball(0, -0.1, 0.62, 0.42))),
+            merged(ball(0, 0.62, 0, 0.46), rod(0, 0, 0.16, 0.95)))
+    }
+    bounded by [-1.4, -1.4, -1.4], [1.4, 1.4, 1.4]
+    material {
+        pigment [0.48, 0.64, 0.86]
+        specular 0.55
+        shininess 110
+    }
+}

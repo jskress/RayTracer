@@ -64,6 +64,14 @@ public class VariableTerm : Term
         if (variables.GetValue(_name, typeof(double)) is double number)
             return new FieldConstant(number);
 
+        // A value a folded function was handed may itself be a piece of field arithmetic rather than
+        // a settled number -- which is exactly what happens when one shape function is handed to
+        // another.  Without this, a vocabulary of shapes could only ever be given constants, and
+        // building one shape out of others, which is the whole reason to name them, would be
+        // impossible.
+        if (variables.GetValue(_name, typeof(FieldExpression)) is FieldExpression already)
+            return already;
+
         throw new TokenException(
             $"A function knows the variables x, y and z; '{_name}' is neither one of those nor a " +
             $"name the scene has given a number to.")

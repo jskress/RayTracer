@@ -21,6 +21,7 @@ public class FunctionBodyStep
 
     private readonly Term _value;
     private readonly UserFunction _function;
+    private readonly UserPrimitive _primitive;
 
     /// <summary>
     /// This constructor makes a step that works something out and names it.
@@ -45,6 +46,17 @@ public class FunctionBodyStep
     }
 
     /// <summary>
+    /// This constructor makes a step that declares a smaller primitive.
+    /// </summary>
+    /// <param name="name">The name to bind.</param>
+    /// <param name="primitive">The primitive, as yet belonging to no scope.</param>
+    public FunctionBodyStep(string name, UserPrimitive primitive)
+    {
+        Name = name;
+        _primitive = primitive;
+    }
+
+    /// <summary>
     /// This method carries the step out, binding whatever it names into the given scope.
     /// <para>
     /// A function declared here is bound to <i>this</i> scope, which is the call's own -- so a
@@ -55,6 +67,12 @@ public class FunctionBodyStep
     /// <param name="scope">The scope being built up.</param>
     public void CarryOut(Variables scope)
     {
-        scope.SetValue(Name, _function is null ? _value.GetValue(scope) : _function.BoundTo(scope));
+        object bound = _primitive is not null
+            ? _primitive.BoundTo(scope)
+            : _function is not null
+                ? _function.BoundTo(scope)
+                : _value.GetValue(scope);
+
+        scope.SetValue(Name, bound);
     }
 }

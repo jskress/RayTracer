@@ -1,0 +1,139 @@
+// A spiral stair, and not one line of it says where anything goes.
+//
+// Every tread, every baluster and every rail knob in this picture is placed by asking one of four
+// functions.  There are sixty-six things standing here and four numbers that decide them all: how far
+// round each step turns, how far it rises, how far out it reaches, and how high a rail stands above
+// the tread it guards.  Change `perStep` from 24 to 18 and the whole stair becomes a gentler helix,
+// treads and balusters and knobs together, because none of them was ever told a position -- they were
+// told a rule.
+//
+// That is the whole point of a scene being able to write functions.  Before, this stair would have
+// been sixty-six hand-computed transforms, and making it climb a little faster would have meant
+// editing sixty-six of them and getting one wrong.
+//
+// Look at what the four functions are doing, because between them they cover most of what a function
+// is for:
+//
+//   turnOf   is plain arithmetic on the step number.
+//   riseOf   is the same, and is used by two other things besides the treads.
+//   reachOf  works something out on the way -- the growth so far -- and then uses it.  That is what a
+//            body's workings are for: naming a piece of the sum so the reader can see what it means.
+//   railAt   calls riseOf.  A function may lean on another, so the rail follows the stair without
+//            anybody having to keep two rules in step by hand.
+//
+// The last of those is worth dwelling on.  The rail is not at "a height that happens to match the
+// treads"; it is at *the tread's height plus a bit*, said once.  Alter the rise and the rail comes
+// along, because it was never a separate fact.
+//
+// Every one of them has a fallback, so a call says only what it is changing.  `reachOf(step)` is the
+// common case and reads as one thing; `reachOf(step, 1.4)` is the same stair, wider.  That division --
+// a rich declaration and a short call -- is deliberate: the person writing the function and the person
+// writing the scene are usually not the same person, and the second one should not have to know how
+// the first one works.
+//
+// The light is the physical sky, which needs saying only where the sun stands; see the sky scene in
+// the lights directory for what that does.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Spiral Stair'
+        author 'J. Stephen Kress'
+        description 'Sixty-six pieces placed by four functions, none of them ever told a position.'
+        copyright true
+        software __software__
+    }
+}
+
+// How far round the stair has turned by a given step.
+function turnOf(step, perStep = 24) -> number {
+    return step * perStep
+}
+
+// And how far it has climbed.
+function riseOf(step, perStep = 0.30) -> number {
+    return step * perStep
+}
+
+// How far out the middle of a tread sits.  The stair opens as it climbs, so this grows -- and the
+// growing is named rather than buried in the sum, which is what workings are for.
+function reachOf(step, inner = 1.05, flare = 0.035) -> number {
+    grown = step * flare
+    return inner + grown
+}
+
+// A rail stands a fixed height above the tread it guards, wherever that tread happens to be.  It
+// leans on riseOf rather than repeating it, so the two can never fall out of step.
+function railAt(step, above = 0.92) -> number {
+    return riseOf(step) + above
+}
+
+camera {
+    location [8.0, 3.2, -11.0]
+    look at [0, 3.6, 0]
+    field of view 46
+}
+
+background physical sky {
+    sun elevation 34
+    sun azimuth 128
+    turbidity 2.4
+    brightness 3
+}
+
+sky light {
+    samples 40
+}
+
+plane {
+    material {
+        pigment [0.28, 0.27, 0.25]
+        specular 0.08
+    }
+}
+
+// The newel the whole stair turns about.
+cylinder {
+    min Y 0  max Y 7.2
+    material { pigment [0.38, 0.27, 0.18]  specular 0.3  shininess 80 }
+    scale [0.34, 1, 0.34]
+}
+
+// The treads.
+group {
+    step = [0, 21]
+    cube {
+        material { pigment [0.60, 0.44, 0.28]  specular 0.25  shininess 60 }
+        scale [0.95, 0.06, 0.30]
+        translate X reachOf(step)
+        rotate Y turnOf(step)
+        translate Y riseOf(step)
+    }
+}
+
+// The balusters, each standing from its own tread up to its own rail.  Their height is the difference
+// between two of the functions, which is why nothing here repeats a number.
+group {
+    step = [0, 21]
+    cylinder {
+        min Y 0  max Y 0.92
+        material { pigment [0.70, 0.68, 0.62]  specular 0.45  shininess 140 }
+        scale [0.028, 1, 0.028]
+        translate X reachOf(step) + 0.78
+        rotate Y turnOf(step)
+        translate Y riseOf(step)
+    }
+}
+
+// And the knob each baluster carries.
+group {
+    step = [0, 21]
+    sphere {
+        material { pigment [0.74, 0.72, 0.66]  specular 0.55  shininess 160 }
+        scale 0.085
+        translate X reachOf(step) + 0.78
+        rotate Y turnOf(step)
+        translate Y railAt(step)
+    }
+}

@@ -136,8 +136,11 @@ public class FunctionCallTerm : Term
                 };
             }
 
+            // Lowered rather than worked out, since an argument may be a whole piece of field
+            // arithmetic -- one shape function handed to another -- and there is no number to be had
+            // from that until the field is actually asked about a place.
             object[] given = _arguments
-                .Select(argument => (object) argument.GetValue(variables))
+                .Select(argument => (object) argument.ToField(variables))
                 .ToArray();
 
             return own.Body.ToField(own.ScopeForFolding(given));

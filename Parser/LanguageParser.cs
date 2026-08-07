@@ -274,7 +274,8 @@ public partial class LanguageParser
     /// <param name="resolver">The resolver to use if we don't need a new one.</param>
     /// <returns>The created resolver.</returns>
     private TResolver ParseObjectResolver<TResolver>(
-        string blockName, Action<Clause> handleClause, TResolver resolver = null)
+        string blockName, Action<Clause> handleClause, TResolver resolver = null,
+        bool validate = true)
         where TResolver : class, IObjectResolver, new()
     {
         resolver ??= new TResolver();
@@ -285,7 +286,12 @@ public partial class LanguageParser
 
         _context.PopTarget();
 
-        if (resolver is IValidatable validatable)
+        // Not everything read this way is describing a whole thing.  The block after a call of a
+        // scene's own primitive is laid *over* something already made, so it holds only what that
+        // call wished to change -- and asking it for the properties a whole one must have would
+        // refuse every such block that did not repeat them.  What must be there was seen to when the
+        // primitive itself was read.
+        if (validate && resolver is IValidatable validatable)
         {
             string errorMessage = validatable.Validate();
 

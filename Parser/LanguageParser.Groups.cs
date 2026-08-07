@@ -128,6 +128,9 @@ public partial class LanguageParser
                 case "objectFile":
                     resolver.SurfaceResolvers.Add(ParseObjectFileClause(clause));
                     break;
+                case "call":
+                    resolver.SurfaceResolvers.Add(ParseCall(clause));
+                    break;
                 case "object":
                     resolver.SurfaceResolvers.Add(GetSurfaceResolver(clause));
                     break;

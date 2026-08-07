@@ -87,7 +87,7 @@ public partial class LanguageParser
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
-            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes',
+            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1152,6 +1152,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1198,6 +1199,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1238,6 +1240,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1315,7 +1318,8 @@ public partial class LanguageParser
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
-                startPatchClause | startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
+                startPatchClause | startIsosurfaceClause | startObjectFileClause | startObjectClause |
+                startCsgClause | startGroupClause
             ]
         }
         // A function a scene writes for itself.  What follows the parenthesis is read in hand rather
@@ -1328,6 +1332,40 @@ public partial class LanguageParser
         functionParameterClause:
         {
             [ _identifier | _keyword ] > { assignment > _expression }{?} > comma{?}
+        }
+        // A primitive a scene writes for itself.  The kind it gives back is named exactly, rather than
+        // merely "a surface", because the block after a call takes that kind's own clauses -- so the
+        // parser has to know which those are before it reads them.
+        startPrimitiveClause:
+        {
+            primitive > [ _identifier | _keyword ] ?? 'Expecting a name to follow "primitive" here.' >
+            leftParen ?? 'Expecting a parameter list to follow the name here.'
+        }
+        primitiveKindClause:
+        {
+            arrow ?? 'Expecting "->" and the kind of thing this gives back here.' >
+            [
+                group | union | difference | intersection |
+                plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
+                isosurface | patch | lathe | blob | tube | sweep | extrusion | text | lsystem |
+                heightfield | parallelogram | disc | triangle |
+                { smooth > triangle } | { generic > shape } | { object > file }
+            ] ?? 'Expecting the kind of surface this gives back here.' >
+            openBrace ?? 'Expecting an open brace to follow the kind here.'
+        }
+        primitiveReturnClause:
+        {
+            return ?? 'Expecting "return" here.'
+        }
+        // A call of one, which may carry values and may be followed by a block of that kind's clauses.
+        startCallClause:
+        {
+            object > [ _identifier | _keyword ] ?? 'Expecting a name to follow "object" here.' >
+            leftParen
+        }
+        argumentClause:
+        {
+            _expression > comma{?}
         }
         functionKindClause:
         {
@@ -1350,6 +1388,8 @@ public partial class LanguageParser
 
         // Top-level clause.
         [
+            startPrimitiveClause      => 'HandleStartPrimitiveClause' |
+            startCallClause           => 'HandleStartCallClause' |
             startFunctionClause       => 'HandleStartFunctionClause' |
             startContextClause        => 'HandleStartContextClause' |
             startSceneClause          => 'HandleStartSceneClause' |

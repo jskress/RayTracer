@@ -821,6 +821,73 @@ worked out along the way**.  Those compile their arithmetic down and, for an iso
 it to find surface normals — which can be done by folding a plain expression in, and cannot be done at
 all once there are workings to fold in first.  You will be told plainly if you cross that line.
 
+### Things of Your Own
+
+A `function` gives back a number.  A **`primitive`** gives back a *thing* — something to put in a
+scene:
+
+```
+primitive lamp(height, shade = 0.55) -> group {
+    reach = shade * 1.4
+    return group {
+        cylinder { min Y 0  max Y height  scale [0.06, 1, 0.06] }
+        conic { min Y 0  max Y 1  scale [reach, 0.5, reach]  translate Y height }
+    }
+}
+```
+
+Call it with `object`, the same word that reuses a [named surface](#variables):
+
+```
+object lamp(1.5) { translate X -2.2 }
+object lamp(2.1)
+object lamp(1.2, 0.8) { translate X 2.4 }
+```
+
+Everything a function has, this has: values with fallbacks, workings on the way, `return`, and the
+same rule that a body sees where it was **written** rather than where it was called.
+
+**The kind it gives back must be named exactly** — `-> group`, not merely "a surface".  That is what
+lets the block after a call take *that kind's own clauses*, exactly as reusing a named surface does.  A
+call giving back a cylinder accepts `max Y`; one giving back a group accepts group clauses.  The parser
+reads a call long before anything is built, so it can only know what to accept because you said.
+
+Saying one kind and giving back another is caught while reading, not left to be discovered when a
+picture looks wrong.
+
+**What one call adds belongs to that call.**  Each call takes its own copy of the recipe, so the block
+on one cannot reach another — three calls with three different `translate`s stand in three places, and
+the recipe everybody else uses is left as it was written.
+
+**A primitive may hold smaller ones**, and functions too — a fence knows how to make a post, and
+nobody else needs to:
+
+```
+primitive fence(count, spacing = 0.8) -> group {
+    primitive post(lean) -> group {
+        return group { cube { scale [0.07, 0.7, 0.07]  rotate Z lean } }
+    }
+    return group {
+        step = [0, 4]
+        object post(step * 1.5) { translate X step * spacing }
+    }
+}
+```
+
+A `function` may hold functions but never a primitive, which would not mean anything — a function
+gives back a number, and there is nowhere in a number for a thing to go.
+
+**A call's block belongs to the caller.**  It is read among the names where the call was *written*,
+not among the primitive's — which is what lets a loop place a row of them with `translate X step`.
+The primitive's body, meanwhile, is still read among its own.  Two sets of names, each where it
+belongs.
+
+**Every kind of surface may be given back** — `group`, the three CSG words, and each of the shapes,
+including the two-word ones (`smooth triangle`, `generic shape`, `object file`).
+
+A call's block need not repeat what the body already said.  It is laid *over* what the primitive made,
+so it holds only what that call wished to change.
+
 ### Including Other Files
 
 A scene may be split across files, and one file pulled into another:
