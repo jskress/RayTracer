@@ -71,14 +71,14 @@ public partial class LanguageParser
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
-            'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'background', 'banded',
+            'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
-            'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brilliance',
+            'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
-            'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
+            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -86,17 +86,17 @@ public partial class LanguageParser
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
-            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'pigment', 'pipes',
+            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'ramp', 'rayleigh', 'rotate', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes',
+            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
-            'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
+            'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
@@ -409,10 +409,30 @@ public partial class LanguageParser
         {
             patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
         }
+        // A sky worked out from what the air actually does, rather than painted.  It is a pigment
+        // because a background is one: the camera, a reflection and a sky light all read it by
+        // direction, so being a pigment is what makes one thing serve all three.
+        startPhysicalSkyClause:
+        {
+            physical > sky ?? 'Expecting "sky" to follow "physical" here.' >
+            openBrace ?? 'Expecting an open brace to follow "physical sky" here.'
+        }
+        physicalSkyEntryClause:
+        [
+            {
+                sun >
+                [ elevation | azimuth ] ?? 'Expecting "elevation" or "azimuth" to follow "sun" here.' >
+                _expression
+            } |
+            { turbidity > _expression } | { height > _expression } |
+            { brightness > _expression } |
+            { rows > _expression } | { columns > _expression } |
+            { no > light ?? 'Expecting "light" to follow "no" here.' }
+        ]
         pigmentClause:
         [
             blendPigmentClause | mottledPigmentClause | patternPigmentClause |
-            imagePigmentClause | { color > _expression } |
+            startPhysicalSkyClause | imagePigmentClause | { color > _expression } |
             _expression
         ] ?? 'Expecting a pigment definition here.'
 

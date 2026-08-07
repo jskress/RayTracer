@@ -356,6 +356,74 @@ to keep a large plain surface from looking painted on.
 This is not the same thing as the material's `grain`, which roughens how light falls on a
 surface.  Mottling varies the color itself.
 
+### A Physical Sky
+
+Every pigment above says what color something *is*.  This one works out what color the sky
+**actually comes out**, from what the air does to sunlight:
+
+```
+background physical sky {
+    sun elevation 22
+    sun azimuth 35
+    turbidity 2.6
+    brightness 8
+}
+```
+
+You say where the sun stands.  Everything else follows and none of it is a setting: the blue overhead,
+the pale band at the horizon, the ring of glare around the sun, the reddening as it sets.  Those are
+what falls out of air scattering short wavelengths some six times more readily than long ones, of haze
+throwing light forward, and of the two thinning with height at quite different rates.
+
+| Property | Means |
+| --- | --- |
+| `sun elevation` | How high the sun stands above the horizon, in degrees.  90 is overhead, 0 is on the horizon. |
+| `sun azimuth` | Which way round it lies, in degrees, measured from -Z and turning toward +X. |
+| `turbidity` | How hazy the air is.  1 is perfectly clean air, which happens nowhere; 2-3 is a clear day; 6 and beyond loses the horizon in white. |
+| `height` | How far above sea level the scene stands, in metres.  Mostly it changes the haze, nearly all of which sits in the lowest kilometre or two -- which is why a mountain sky is a deeper, cleaner blue. |
+| `brightness` | What the whole sky is multiplied by.  See below. |
+| `rows`, `columns` | How finely the sky is worked out and kept.  Rarely worth touching. |
+
+**It is a pigment, and that is the point.**  A `background` is a pigment asked about a *direction*, so
+writing one thing gives you three: the camera sees the sky, a mirror reflects it, and a
+[`sky light`](lights.md#sky-lights) gathers its light from it -- that last one for free, since a sky
+light with no pigment of its own borrows the background.  A scene lit entirely and correctly by a real
+sky is therefore two lines.
+
+**The sun's disc is not in it.**  The sun subtends about half a degree, so a sky light sampling a sky
+containing it would strike it perhaps once in fifty thousand samples, and that sample would be tens of
+thousands of times brighter than its neighbours -- speckle that gets *worse* as you add samples.  If
+you want a visible sun, place one: a sphere of the right size in the right direction, or a `disc`.
+
+**The sun comes with it.**  A physical sky adds its own `distant light`, pointed the way the sun
+lies and coloured by what is left of the sunlight after the air it has just crossed -- which is why a
+low sun arrives orange without anyone saying so.  You say *where* the sun is; what colour it is
+follows.  A scene wanting the sky without its sun writes `no light` inside the block:
+
+```
+background physical sky { sun elevation 30  no light }
+```
+
+You do not need that merely to add a lamp of your own -- a scene may hold as many lights as it likes,
+and the sun will simply stand among them.
+
+**About `brightness`.**  It is an exposure and deliberately a single knob, because the proportions
+*within* a sky, and between a sky and its sun, are what the physics settles and nothing should be able
+to disturb them.  Turning it up brightens the sun by exactly as much as it brightens the sky.
+
+At `1` the sky and its sun stand in the proportion the air actually puts them in.  Whether that is the
+right *exposure* for a picture is a separate question, and this renderer has no other exposure control,
+so something between `2` and `4` is usually what makes a frame read without blowing the highlights.
+
+**What it does not follow.**  Light is followed round every turn it takes, not merely the first, which
+is what keeps the shaded side of things lit and what leaves a glow in the sky after the sun is down.
+The turns after the second are treated as arriving evenly from all directions, which is a real
+approximation and tells most near the horizon and near the sun.  Measured against daylight as it has
+actually been recorded, the diffuse share of light falling on a level surface comes out at about 7%
+with the sun high and 18% with it low, against measurements in the range of 8-20%.  Ground reflection
+is not followed at all, which is the largest thing still missing: a scene over snow or pale sand has a
+brighter sky than this will give.
+
 ### Naming and Reusing
 
 If you Assign a pigment to a variable, it may be used as often as you like:
