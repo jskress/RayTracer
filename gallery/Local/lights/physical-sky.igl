@@ -1,0 +1,137 @@
+// A sky worked out from the air itself, and everything in the picture lit by it.
+//
+// There is no lamp written in this scene.  There is no gradient either, and no color anywhere in it
+// chosen to look like a sunset.  What is written is where the sun stands -- thirteen degrees up and
+// somewhat behind the far horizon -- and how clear the air is.  Everything else in the sky is what
+// falls out of that.
+//
+// What falls out is worth naming, because none of it was asked for.  The deep blue overhead and the
+// pale warm band along the horizon: air turns short wavelengths aside some six times more readily than
+// long ones, so looking up through a little air you see mostly the blue that was turned toward you,
+// and looking along the horizon through a great deal of it you see light that has had its blue taken
+// out several times over.  The glare spreading around where the sun is: haze is made of droplets large
+// compared with the light, and large scatterers throw it hard forward.  The color of the sunlight
+// itself, which lights these spheres: it is what is left after the same air took the blue out on the
+// way in, which is why a low sun is orange and why the shadows here are not gray.
+//
+// The two lines that do all of it:
+//
+//     background physical sky { sun elevation 13  sun azimuth 196  turbidity 2.6  brightness 4 }
+//     sky light { samples 48 }
+//
+// The first is a pigment, and that is what makes the rest cheap.  A background in this renderer is a
+// pigment asked about a *direction*, so one thing written serves three: the camera sees the sky, the
+// mirrored sphere reflects it, and the sky light gathers its light from it -- that last for nothing,
+// since a sky light with no pigment of its own borrows the background.
+//
+// The sun is not written either.  A physical sky knows where the sun stands and knows what color it
+// has become by the time it arrives, that being the very thing the sky was worked out from.  So it
+// supplies its own distant light, correctly aimed and correctly colored.  Saying both in a scene file
+// is saying the same thing twice, and the second saying is where they part company: a white sun
+// hanging in a red sky is the commonest way to get one of these wrong.  A scene that wants the sky
+// without its sun writes `no light`; a scene that merely wants a lamp of its own just writes one, as
+// many lights being allowed as one likes.
+//
+// The whole of it can be read off this very picture as a column of numbers.  Going straight down the
+// sky above the sun, blue stands over red by +23 parts in 255 at the top of the frame, then +19, +9,
+// -5, -23, -41 and -48 as the horizon is neared -- one smooth turn from blue to warm, with no stop
+// anywhere in it because nobody placed one.  A gradient would have to be told to do that; this was
+// told only where the sun is.
+//
+// Look at the fronts of the spheres, which the sun cannot reach at all.  They are blue -- measured on
+// the pale one, blue stands over red by +19 -- and no ambient term put that there.  Ambient is
+// switched off by default wherever a sky light stands, because the fudge has been replaced by the
+// thing it was imitating.  What lights them is the sky overhead, sampled in real directions and
+// stopped by real things: lower down the same sphere reads +8 rather than +19 and darker with it,
+// because from there the ground has crowded most of the sky out of view.
+//
+// There is no disc where the sun is, and that is deliberate rather than missing.  The sun subtends
+// about half a degree, so a sky light sampling a sky that contained it would strike it perhaps once
+// in fifty thousand tries -- and that one sample, tens of thousands of times brighter than its
+// neighbours, would speckle the picture in a way that gets *worse* the more samples are taken.  It
+// would also be counted twice, the sun already arriving as a light.  A scene wanting one visible
+// should place it: a sphere of the right size in the right direction, or simply a disc.
+//
+// One thing this does *not* do, in case the far ground looks too crisp: a physical sky is a sky and
+// not an atmosphere between things.  Distant objects do not pale here.  For that, put a medium in the
+// scene's `environment` -- the same machinery the media scenes in this gallery use.
+//
+// `brightness` is an exposure and nothing else.  At one, the sky and its sun stand in the proportion
+// the air actually puts them in; four is simply what suits this frame, and it moves both together so
+// the proportion is never disturbed.  Some three percent of the frame, all of it in the glare around
+// the sun, has a channel at full -- which is what a photograph exposed for this scene would also do,
+// there being no exposure that holds both the light beside the sun and the shadowed side of a sphere.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Physical Sky'
+        author 'J. Stephen Kress'
+        description 'A scene with no lamp and no gradient in it, lit entirely by a sky derived from what air does to sunlight.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.4, -12]
+    look at [-0.8, 4.4, 0]
+    field of view 70
+}
+
+// Where the sun is and how clear the air is.  Everything the sky does follows from these.
+background physical sky {
+    sun elevation 13
+    sun azimuth 196
+    turbidity 2.6
+    brightness 4
+}
+
+// Which borrows the background above, so that what lights the scene is what the scene shows.
+sky light {
+    samples 48
+}
+
+plane {
+    material {
+        pigment granite {
+            [0, [0.26, 0.24, 0.21], 1, [0.34, 0.31, 0.27]]
+            scale 2.5
+        }
+    }
+}
+
+// The mirror is here to make the point that the sky is one thing used three ways: what it reflects is
+// the same sky the camera sees and the same sky that lights the rest.
+sphere {
+    material {
+        pigment [0.52, 0.52, 0.54]
+        specular 0.9
+        shininess 300
+        reflective 0.9
+    }
+    scale 1.5
+    translate [0.4, 1.5, 0]
+}
+
+// Pale pigment and matte, so that what the sky does to a shaded side has nothing to hide behind.  It
+// reads dark all the same, and should: nothing but sky is reaching it.
+sphere {
+    material {
+        pigment [0.88, 0.87, 0.84]
+        specular 0.25
+        shininess 110
+    }
+    scale 0.9
+    translate [-2.7, 0.9, -1.5]
+}
+
+sphere {
+    material {
+        pigment [0.60, 0.26, 0.21]
+        specular 0.3
+    }
+    scale 0.55
+    translate [2.6, 0.55, -2.6]
+}

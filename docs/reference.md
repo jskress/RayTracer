@@ -55,6 +55,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `axiom` | L-system: the starting string. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
 | `axisV` | Area light: the other edge of the panel. | [Lights](lights.md#area-lights) |
+| `azimuth` | `physical sky`: which way round the sun lies, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -70,6 +71,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `boxed` | Pattern: nested square boxes. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bozo` | Pattern: smooth value noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `brightness` | `physical sky`: what the whole sky and its sun are multiplied by. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, and a group's `interval … by`. | [Surfaces](surfaces.md#bounding) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
@@ -79,6 +81,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `close` | Path: join back to where the run began. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `color` | A solid pigment, or a light's color. | [Materials](materials.md#the-color) |
+| `columns` | `physical sky`: how many ways round the sky is worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `commands` | L-system: maps characters to turtle moves. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `comment` | Info: a free-form comment. | [Context](context.md#image-information) |
 | `completeBranch` | L-system turtle: pop back to it. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -110,6 +113,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
+| `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `emission` | Medium: how much light it gives off per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
@@ -204,6 +208,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Medium: `phase rayleigh`, which shape of scattering it follows.  Also shaping: slides a pattern's value before the wave. | [Scene Files](scene-files.md#scattering) |
+| `physical` | `physical sky`: a sky derived from what the air does to sunlight. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `pigment` | Material: what colors the surface. | [Materials](materials.md#the-color) |
 | `pipes` | L-system control: draw edges as pipes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pitchDown` | L-system turtle: pitch down. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -233,6 +238,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
+| `rows` | `physical sky`: how many heights in the sky are worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count. | [Scene Files](scene-files.md#scattering) |
 | `scale` | Transform: resize (a surface or a 2D path); also a sweep spline point's cross-section size. | [Transforms](transforms.md#scale) |
 | `scallop` | Wave shape: the absolute-value cusp. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
@@ -264,6 +270,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `steps` | Sweep/area light: how finely it is sampled. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -286,6 +293,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `tube` | Surface: a round tube of varying radius along a path. | [Advanced Surfaces](advanced-surfaces.md#tube) |
 | `tubes` | L-system control: draw edges as tapering tubes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |

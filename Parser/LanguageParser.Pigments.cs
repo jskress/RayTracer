@@ -52,6 +52,9 @@ public partial class LanguageParser
             // ParseImageReference picks the flag back out of the clause for itself.
             case "image" or "uncached":
                 return ParseImagePigmentClause(clause);
+            case "physical":
+                resolver = ParsePhysicalSkyClause();
+                break;
             default:
                 resolver = ParsePatternPigmentClause(seedResolver, clause);
                 break;
@@ -59,6 +62,62 @@ public partial class LanguageParser
 
         CurrentParser.MatchToken(
             true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to parse the definition of a sky worked out from the air itself.
+    /// </summary>
+    /// <returns>The physical sky resolver.</returns>
+    private PhysicalSkyPigmentResolver ParsePhysicalSkyClause()
+    {
+        PhysicalSkyPigmentResolver resolver = new ();
+
+        while (true)
+        {
+            Clause clause = ParseClause("physicalSkyEntryClause");
+
+            if (clause is null)
+                break;
+
+            Term term = clause.Term();
+
+            switch (clause.Text())
+            {
+                case "sun" when clause.Text(1) == "elevation":
+                    resolver.SunElevationResolver = new TermResolver<double> { Term = term };
+                    break;
+                case "sun":
+                    resolver.SunAzimuthResolver = new TermResolver<double> { Term = term };
+                    break;
+                case "turbidity":
+                    resolver.TurbidityResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = turbidity => turbidity >= 1
+                            ? null
+                            : "Air cannot be clearer than having nothing in it, so a turbidity " +
+                              "below one has no meaning."
+                    };
+                    break;
+                case "height":
+                    resolver.HeightResolver = new TermResolver<double> { Term = term };
+                    break;
+                case "brightness":
+                    resolver.BrightnessResolver = new TermResolver<double> { Term = term };
+                    break;
+                case "rows":
+                    resolver.RowsResolver = new TermResolver<int> { Term = term };
+                    break;
+                case "no":
+                    resolver.MakesItsOwnLightResolver = new LiteralResolver<bool> { Value = false };
+                    break;
+                default:
+                    resolver.ColumnsResolver = new TermResolver<int> { Term = term };
+                    break;
+            }
+        }
 
         return resolver;
     }

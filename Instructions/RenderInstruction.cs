@@ -73,6 +73,8 @@ public class RenderInstruction : Instruction
         // the image.
         scene.Background.RenderingIsAboutToStart(context, null);
 
+        HangTheSun(scene);
+
         Canvas = camera.Render(context, scene);
     }
 
@@ -92,6 +94,27 @@ public class RenderInstruction : Instruction
             else
                 sky.Pigment.RenderingIsAboutToStart(context, null);
         }
+    }
+
+    /// <summary>
+    /// This method gives the scene the sun that goes with a sky worked out from the air.
+    /// <para>
+    /// A physical sky knows where the sun stands, and knows what color it is by the time it reaches
+    /// the ground, that being what the sky was worked out from.  Saying both of those in a scene file
+    /// is saying the same thing twice, and the second saying is where they part company -- a white sun
+    /// under a red sky being the commonest way to get one of these wrong.  So the sky supplies it,
+    /// unless the scene wrote <c>no light</c>.
+    /// </para>
+    /// <para>
+    /// It is added rather than substituted: a scene may have as many lights beside this one as it
+    /// likes, so wanting a lamp of one's own is no reason to refuse this one.
+    /// </para>
+    /// </summary>
+    /// <param name="scene">The scene being readied.</param>
+    private static void HangTheSun(Scene scene)
+    {
+        if (scene.Background is PhysicalSkyPigment sky && sky.SunAsALight() is { } sun)
+            scene.Lights.Add(sun);
     }
 
     /// <summary>
