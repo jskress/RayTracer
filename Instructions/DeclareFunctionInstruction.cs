@@ -16,34 +16,9 @@ namespace RayTracer.Instructions;
 public class DeclareFunctionInstruction : Instruction
 {
     /// <summary>
-    /// This property holds what the function is called.
+    /// This property holds the function, as yet belonging to no scope.
     /// </summary>
-    public string Name { get; init; }
-
-    /// <summary>
-    /// This property holds the names of the values the function takes.
-    /// </summary>
-    public IReadOnlyList<string> ParameterNames { get; init; }
-
-    /// <summary>
-    /// This property holds what each value falls back to when a call leaves it out.
-    /// </summary>
-    public IReadOnlyList<Term> Defaults { get; init; }
-
-    /// <summary>
-    /// This property holds the kind of thing the function was declared to hand back.
-    /// </summary>
-    public string Kind { get; init; }
-
-    /// <summary>
-    /// This property holds the things the body works out on its way to its answer.
-    /// </summary>
-    public List<(string Name, Term Value)> Locals { get; init; }
-
-    /// <summary>
-    /// This property holds the expression the function comes back with.
-    /// </summary>
-    public Term Body { get; init; }
+    public UserFunction Function { get; init; }
 
     /// <summary>
     /// This method binds the function into the scope it was written in.
@@ -52,7 +27,6 @@ public class DeclareFunctionInstruction : Instruction
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        variables.SetValue(Name, new UserFunction(
-            Name, ParameterNames, Defaults, Kind, Locals, Body, variables));
+        variables.SetValue(Function.Name, Function.BoundTo(variables));
     }
 }

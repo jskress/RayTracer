@@ -52,13 +52,13 @@ public class UserFunction
     /// </summary>
     public int RequiredCount { get; }
 
-    private readonly List<(string Name, Term Value)> _locals;
+    private readonly List<FunctionBodyStep> _steps;
     private readonly Term _body;
     private readonly Variables _declaredIn;
 
     public UserFunction(
         string name, IReadOnlyList<string> parameterNames, IReadOnlyList<Term> defaults,
-        string kind, List<(string, Term)> locals, Term body, Variables declaredIn)
+        string kind, List<FunctionBodyStep> steps, Term body, Variables declaredIn = null)
     {
         Name = name;
         ParameterNames = parameterNames;
@@ -66,9 +66,25 @@ public class UserFunction
         Kind = kind;
         RequiredCount = defaults.Count(fallback => fallback is null);
 
-        _locals = locals;
+        _steps = steps;
         _body = body;
         _declaredIn = declaredIn;
+    }
+
+    /// <summary>
+    /// This method returns the same function belonging to the given scope.
+    /// <para>
+    /// A function is parsed once and may then be declared many times over -- once for each call of
+    /// whatever surrounds it, in the case of one written inside another.  What differs between those
+    /// is only which scope its body is worked out against, so that is the one thing handed over here;
+    /// everything else is shared, having been settled while parsing.
+    /// </para>
+    /// </summary>
+    /// <param name="scope">The scope the function is to belong to.</param>
+    /// <returns>The function, belonging to that scope.</returns>
+    public UserFunction BoundTo(Variables scope)
+    {
+        return new UserFunction(Name, ParameterNames, Defaults, Kind, _steps, _body, scope);
     }
 
     /// <summary>
@@ -83,7 +99,7 @@ public class UserFunction
     /// fold, only a small procedure, and a procedure cannot be differentiated.
     /// </para>
     /// </summary>
-    public bool MayBeFoldedIntoAField => _locals.Count == 0;
+    public bool MayBeFoldedIntoAField => _steps.Count == 0;
 
     /// <summary>
     /// This method returns the function's body with the call's values put in place of its parameter
@@ -162,11 +178,11 @@ public class UserFunction
             scope.SetValue(ParameterNames[index], value);
         }
 
-        // Worked out in order and each into the same scope, so that a later one may lean on an
+        // Carried out in order and each into the same scope, so that a later one may lean on an
         // earlier -- which is most of what they are for, a thing worked out once and then used
-        // several times over.
-        foreach ((string name, Term value) in _locals)
-            scope.SetValue(name, value.GetValue(scope));
+        // several times over, or a smaller function used twice in the answer.
+        foreach (FunctionBodyStep step in _steps)
+            step.CarryOut(scope);
 
         return _body.GetValue(scope);
     }

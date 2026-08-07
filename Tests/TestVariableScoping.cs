@@ -212,6 +212,71 @@ public class TestVariableScoping
     }
 
     [TestMethod]
+    public void TestAFunctionMayHaveASmallerOneOfItsOwn()
+    {
+        // A helper used only by one function has no business being visible to the whole scene, which
+        // is the point of allowing this: a library may export the one name it means to.  The inner one
+        // is bound to the *call's* scope, so it sees the values the outer one was handed -- which is
+        // what makes it a helper rather than a separate function that must be passed everything.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function spiral(step) -> number {
+                function easedBy(amount) -> number { return step * amount }
+                stretch = easedBy(0.45)
+                return 1 + stretch
+            }
+            group {
+                index = [0, 2]
+                sphere { material { pigment Red }  scale 0.35  translate X spiral(index) }
+            }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+    }
+
+    [TestMethod]
+    public void TestASmallerFunctionIsNotVisibleOutside()
+    {
+        // The other half of it, and the reason a library can be trusted not to litter.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function spiral(step) -> number {
+                function easedBy(amount) -> number { return step * amount }
+                return easedBy(0.45)
+            }
+            sphere { scale easedBy(2) }
+            """);
+
+        Assert.IsNull(image, "the helper should not be reachable from outside");
+        Assert.IsTrue(error.Contains("easedBy"), $"and should be named in the complaint: {error}");
+    }
+
+    [TestMethod]
+    public void TestAFunctionHoldingAnotherCannotBeFoldedIntoAField()
+    {
+        // Following from the same rule as workings: what a field can fold in is an expression, and a
+        // function that first declares another is a small procedure rather than an expression.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function ball(radius) -> number {
+                function shrunk(by) -> number { return radius * by }
+                return max(0, shrunk(0.9) - √(x² + y² + z²))
+            }
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { medium { scattering 1.6  density function { ball(0.9) } } }
+                }
+                scale 1.4
+            }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("ball"), $"the complaint should name it: {error}");
+    }
+
+    [TestMethod]
     public void TestACallIsCheckedAgainstWhatTheFunctionTakes()
     {
         (Canvas image, string error) = Render($$"""

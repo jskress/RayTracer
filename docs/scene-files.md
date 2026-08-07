@@ -795,6 +795,21 @@ apart.
 **Things worked out along the way earn their place.**  A figure the body needs in three places should
 be arrived at once, or the three copies drift apart the first time one is edited.
 
+**A function may hold a smaller one of its own.**  A helper used by one function has no business
+being visible to the whole scene, and a library should be able to export only the name it means to:
+
+```
+function spiral(step) -> number {
+    function easedBy(amount) -> number { return step * amount }
+    return 1 + easedBy(0.45)
+}
+```
+
+The inner one is bound to the *call's* scope, so it sees the values the outer one was handed — which is
+what makes it a helper rather than a second function that must be passed everything over again.  It is
+not reachable from outside, and a function that holds one cannot be folded into a field, for the same
+reason workings cannot.
+
 **A function sees where it was written, not where it was called.**  One written in an
 [included file](#including-other-files) sees what that file set up, and cannot be quietly changed by
 whatever names the calling scene happens to have lying about.  That is what makes a library of them

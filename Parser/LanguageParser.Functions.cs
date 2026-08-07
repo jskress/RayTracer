@@ -26,6 +26,20 @@ public partial class LanguageParser
     /// <param name="clause">The clause that opens the declaration.</param>
     private void HandleStartFunctionClause(Clause clause)
     {
+        _context.InstructionContext.AddInstruction(new DeclareFunctionInstruction
+        {
+            Function = ParseFunctionDeclaration(clause)
+        });
+    }
+
+    /// <summary>
+    /// This method reads a whole function declaration, which is the same work whether it stands at the
+    /// top of a file or inside another function.
+    /// </summary>
+    /// <param name="clause">The clause that opens the declaration.</param>
+    /// <returns>The function, as yet belonging to no scope.</returns>
+    private UserFunction ParseFunctionDeclaration(Clause clause)
+    {
         string name = clause.Tokens[1].Text;
         (List<string> parameterNames, List<Term> defaults) = ParseFunctionParameters();
         Clause kind = ParseClause("functionKindClause");
@@ -33,17 +47,9 @@ public partial class LanguageParser
         if (kind is null)
             throw CreateUnexpectedInputException("Expecting \"->\" and a kind here.");
 
-        (List<(string, Term)> locals, Term body) = ParseFunctionBody(name);
+        (List<FunctionBodyStep> steps, Term body) = ParseFunctionBody(name);
 
-        _context.InstructionContext.AddInstruction(new DeclareFunctionInstruction
-        {
-            Name = name,
-            ParameterNames = parameterNames,
-            Defaults = defaults,
-            Kind = kind.Tokens[1].Text,
-            Locals = locals,
-            Body = body
-        });
+        return new UserFunction(name, parameterNames, defaults, kind.Tokens[1].Text, steps, body);
     }
 
     /// <summary>
@@ -109,19 +115,32 @@ public partial class LanguageParser
     /// </para>
     /// </summary>
     /// <param name="name">The function's name, for complaining with.</param>
-    /// <returns>The things worked out along the way, and the answer.</returns>
-    private (List<(string, Term)>, Term) ParseFunctionBody(string name)
+    /// <returns>The steps on the way, and the answer.</returns>
+    private (List<FunctionBodyStep>, Term) ParseFunctionBody(string name)
     {
-        List<(string, Term)> locals = [];
+        List<FunctionBodyStep> steps = [];
 
         while (true)
         {
+            // A smaller function of its own is looked for first, since both begin with a name and
+            // only this one begins with the word.
+            Clause nested = ParseClause("startFunctionClause");
+
+            if (nested != null)
+            {
+                UserFunction inner = ParseFunctionDeclaration(nested);
+
+                steps.Add(new FunctionBodyStep(inner.Name, inner));
+
+                continue;
+            }
+
             Clause local = ParseClause("functionLocalClause");
 
             if (local is null)
                 break;
 
-            locals.Add((local.Tokens[0].Text, local.Term()));
+            steps.Add(new FunctionBodyStep(local.Tokens[0].Text, local.Term()));
         }
 
         Clause answer = ParseClause("functionReturnClause");
@@ -138,6 +157,6 @@ public partial class LanguageParser
             true, () => $"Expecting a close brace to end the function '{name}'; nothing may follow " +
                         "its \"return\".", BounderToken.CloseBrace);
 
-        return (locals, body);
+        return (steps, body);
     }
 }
