@@ -118,6 +118,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there. | [Lights](lights.md#fading-with-distance) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `falloff` | Spotlight: the outer cone where light fades out. | [Lights](lights.md#spotlights) |
 | `false` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
@@ -220,6 +221,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `points` | Patch/triangle: the control or corner points. | [Surfaces](surfaces.md#patch) |
 | `poly` | Wave shape: a polynomial of a given power. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `position` | Text layout: `horizontal`/`vertical position`. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
 | `productions` | L-system: the rewrite rules. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `profile` | Sweep: the 2D cross-section carried along. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `quad` | Path/spline/tube: a quadratic (one control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |

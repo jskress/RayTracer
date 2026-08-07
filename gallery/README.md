@@ -709,6 +709,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/candle.png">
+      <img alt="A Candle" height="120" src="Local/lights/candle.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/candle.igl">A Candle</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/cameras/focal-blur.png">
       <img alt="Focal Blur" height="120" src="Local/cameras/focal-blur.png" width="160"/>
     </a></td>

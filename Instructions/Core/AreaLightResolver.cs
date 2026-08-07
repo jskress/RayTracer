@@ -8,7 +8,7 @@ namespace RayTracer.Instructions.Core;
 /// <summary>
 /// This class is used to resolve an area light value.
 /// </summary>
-public class AreaLightResolver : NamedObjectResolver<AreaLight>
+public class AreaLightResolver : FadingLightResolver<AreaLight>
 {
     /// <summary>
     /// This property holds the resolver for where the center of the lit face stands.

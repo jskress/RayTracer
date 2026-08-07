@@ -8,7 +8,7 @@ namespace RayTracer.Instructions.Core;
 /// <summary>
 /// This class is used to resolve a spotlight value.
 /// </summary>
-public class SpotlightResolver : NamedObjectResolver<Spotlight>
+public class SpotlightResolver : FadingLightResolver<Spotlight>
 {
     /// <summary>
     /// This property holds the resolver for where the spotlight stands.

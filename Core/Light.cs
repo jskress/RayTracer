@@ -89,6 +89,54 @@ public abstract class Light : NamedThing
     /// <param name="surface">The surface being illuminated.</param>
     /// <param name="lightReaching">How much of this light arrives at the point.</param>
     /// <returns>The resulting color.</returns>
+    /// <summary>
+    /// This property holds the distance at which the light's color means what it says, or
+    /// <c>null</c> for a light that does not dim with distance at all.
+    /// <para>
+    /// Real light spreads.  A lamp throwing a certain amount of light scatters it over a sphere that
+    /// grows as it goes, so what falls on a square inch at ten feet is a quarter of what falls on one
+    /// at five -- which is why a candle lights a book held near it and leaves the far wall dark.
+    /// Nothing here did that until now: a light of one made a white surface come back at one whether
+    /// it stood a foot away or a hundred.  That is fine for a sun, which is so far off that nothing in
+    /// a scene is meaningfully nearer to it than anything else, and quite wrong for a candle.
+    /// </para>
+    /// <para>
+    /// Left unsaid it stays unsaid, and every scene written before this renders exactly as it did.
+    /// </para>
+    /// </summary>
+    public double? FadeDistance { get; set; }
+
+    /// <summary>
+    /// This property holds how quickly the light dims once past that distance.  Two is what light
+    /// actually does and is the default; one dims more gently than the world does, and nothing at all
+    /// leaves it undimmed, both being there for when a scene wants a look rather than the truth.
+    /// </summary>
+    public double FadePower { get; set; } = 2;
+
+    /// <summary>
+    /// This method returns how much of the light survives being spread over the distance it travelled.
+    /// <para>
+    /// Within the stated distance it is left alone rather than allowed to grow without bound, since
+    /// the true law runs to infinity at no distance at all and a lamp is not a point in any case.  So
+    /// the distance names where the light is worth what it claims, and past there it thins as it
+    /// really does.
+    /// </para>
+    /// </summary>
+    /// <param name="distance">How far the light travelled.</param>
+    /// <returns>The share of it that arrives.</returns>
+    public double FadingOver(double distance)
+    {
+        // A light at infinity cannot be nearer to one thing than another, so a sun and a sky never
+        // dim however this is set.
+        if (FadeDistance is not { } reference || reference <= 0 ||
+            double.IsInfinity(distance) || distance <= reference)
+            return 1;
+
+        return FadePower == 2
+            ? reference * reference / (distance * distance)
+            : Math.Pow(reference / distance, FadePower);
+    }
+
     public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, Color lightReaching)
     {
         return ApplyPhong(point, eye, normal, surface, SampleToward(point, 0), lightReaching);
@@ -131,7 +179,7 @@ public abstract class Light : NamedThing
         // bounced light the ambient stands for.  A plain light aims all of itself everywhere, so
         // the reaching color is passed straight through untouched, which keeps such a light's
         // shading exactly what it was before any of this existed.
-        double intensity = sample.Cone;
+        double intensity = sample.Cone * FadingOver(sample.Distance);
         Color reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
 
         if (reaching.Matches(Colors.Black))
