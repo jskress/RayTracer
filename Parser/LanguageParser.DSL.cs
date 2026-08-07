@@ -65,6 +65,7 @@ public partial class LanguageParser
         // predefined operator that had it -- so the symbols have to be reached for under names of
         // their own.  Naming them here rather than relying on the predefined names is what keeps
         // both spellings working.
+        arrow: _operator("->")
         logicalAnd: _operator("&&")
         logicalOr: _operator("||")
         logicalNot: _operator("!")
@@ -85,15 +86,15 @@ public partial class LanguageParser
             'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
-            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
+            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
             'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
+            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
@@ -1317,6 +1318,31 @@ public partial class LanguageParser
                 startPatchClause | startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
             ]
         }
+        // A function a scene writes for itself.  What follows the parenthesis is read in hand rather
+        // than spelled out here, parameters with defaults not being a shape this grammar says well.
+        startFunctionClause:
+        {
+            function > [ _identifier | _keyword ] ?? 'Expecting a name to follow "function" here.' >
+            leftParen ?? 'Expecting a parameter list to follow the function name here.'
+        }
+        functionParameterClause:
+        {
+            [ _identifier | _keyword ] > { assignment > _expression }{?} > comma{?}
+        }
+        functionKindClause:
+        {
+            arrow ?? 'Expecting "->" and the kind of thing the function gives back here.' >
+            [ number | color | vector ] ?? 'A function gives back a number, a color or a vector.' >
+            openBrace ?? 'Expecting an open brace to follow the function kind here.'
+        }
+        functionLocalClause:
+        {
+            [ _identifier | _keyword ] > assignment > _expression
+        }
+        functionReturnClause:
+        {
+            return ?? 'Expecting "return" here.' > _expression
+        }
         setVariableClause:
         {
             [ _identifier | _keyword ] > assignment > _expression
@@ -1324,6 +1350,7 @@ public partial class LanguageParser
 
         // Top-level clause.
         [
+            startFunctionClause       => 'HandleStartFunctionClause' |
             startContextClause        => 'HandleStartContextClause' |
             startSceneClause          => 'HandleStartSceneClause' |
             startCameraClause         => 'HandleStartCameraClause' |

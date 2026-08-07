@@ -25,6 +25,20 @@ public class VariableTerm : Term
     /// <returns>The current value of this term.</returns>
     protected override object Evaluate(Variables variables, params Type[] targetTypes)
     {
+        // A name nobody ever set is worth saying so about, plainly and with the name in hand.  Left to
+        // itself it comes back as nothing, and nothing then fails further along where all that can be
+        // reported is that some empty value would not convert -- which does not tell a scene's author
+        // the one thing they need, which is what they mistyped.  This matters more than it used to now
+        // that a loop's counter belongs to its loop: reaching for a name that has gone out of scope is
+        // an ordinary mistake rather than an exotic one.
+        if (!variables.ContainsKey(_name))
+        {
+            throw new TokenException($"Nothing named '{_name}' has been set here.")
+            {
+                Token = ErrorToken
+            };
+        }
+
         return targetTypes.Length == 0
             ? variables.GetValue(_name)
             : targetTypes

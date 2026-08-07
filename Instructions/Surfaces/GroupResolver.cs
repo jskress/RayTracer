@@ -33,16 +33,26 @@ public class GroupResolver : SurfaceResolver<Group>
         Interval interval = GroupInterval?.GetInterval(variables) ?? Interval.Once;
         string variableName = GroupInterval?.VariableName;
 
+        // The counter belongs to the loop and to nothing outside it, so it is set in a scope of the
+        // loop's own.  Names from further out are still seen, a scope handing on what it does not hold
+        // itself, but the counter is not left lying about after the group is finished with -- and two
+        // loops nested one inside the other may use the same name without treading on each other.
+        //
+        // This is what a scope is for, and until now the class could do it and never did: the only one
+        // ever built was a single scope for a whole render.
+        Variables scope = variableName is null ? variables : new Variables(variables);
+
         while (!interval.IsAtEnd)
         {
             double index = interval.Next();
 
             if (variableName != null)
-                variables.SetValue(variableName, index);
+                scope.SetValue(variableName, index);
 
-            CreateChildSurfaces(context, variables, value);
+            CreateChildSurfaces(context, scope, value);
         }
 
+        // The group's own properties are settled outside the loop, and outside its scope with it.
         base.SetProperties(context, variables, value);
     }
 

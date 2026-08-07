@@ -195,6 +195,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
 | `null` | The empty value. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
+| `number` | The kind a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `object` | `object file` (loads a mesh), or `object` (reuse by name). | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `octaves` | Turbulence/noise: how many layers of it. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
@@ -235,6 +236,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `refraction` | Interior: the second word of `index of refraction`. | [Materials](materials.md#transparency-and-interiors) |
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
+| `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `right` | Text layout: right-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -274,6 +276,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
+| `surface` | The kind a `primitive` of your own gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |

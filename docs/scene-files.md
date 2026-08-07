@@ -761,6 +761,51 @@ sphere { translate c }
 So the rule of thumb is simply to say what you mean when it helps — when you need arithmetic,
 or when the reader would otherwise have to guess.
 
+### Functions of Your Own
+
+Beyond the [built-in functions](#expressions), a scene may write its own:
+
+```
+function ringRadius(index, spacing = 1.1) -> number {
+    reach = 1 + index * 0.35
+    return reach * spacing
+}
+```
+
+Call it wherever an expression may stand:
+
+```
+sphere { translate X ringRadius(2) }
+sphere { translate X ringRadius(2, 0.8) }
+```
+
+**Two things are called functions here and they are different.** The one an
+[isosurface](advanced-surfaces.md#isosurface) or a `density` is handed is arithmetic over a point in
+space, compiled down so it can be asked about a place millions of times over.  This one is a scene's
+own: named, taking values, worked out wherever an expression may stand.  The leading word tells them
+apart.
+
+| Part | Means |
+| --- | --- |
+| `(a, b = 2)` | The values it takes.  Anything with a fallback may be left out of a call, and those must come last, since a call leaves values off the end. |
+| `-> number` | The kind of thing it gives back: `number`, `color` or `vector`.  Required, so that a call can be checked where it is written rather than when it runs. |
+| `name = ...` | Worked out on the way to the answer.  Later ones may lean on earlier ones. |
+| `return ...` | The answer.  A function must have one, and nothing may follow it. |
+
+**Things worked out along the way earn their place.**  A figure the body needs in three places should
+be arrived at once, or the three copies drift apart the first time one is edited.
+
+**A function sees where it was written, not where it was called.**  One written in an
+[included file](#including-other-files) sees what that file set up, and cannot be quietly changed by
+whatever names the calling scene happens to have lying about.  That is what makes a library of them
+safe to rely on.
+
+**One restriction.**  A function may be used inside a `density function { }` or an
+[isosurface](advanced-surfaces.md#isosurface) **only if its body is a single `return` with nothing
+worked out along the way**.  Those compile their arithmetic down and, for an isosurface, differentiate
+it to find surface normals — which can be done by folding a plain expression in, and cannot be done at
+all once there are workings to fold in first.  You will be told plainly if you cross that line.
+
 ### Including Other Files
 
 A scene may be split across files, and one file pulled into another:
