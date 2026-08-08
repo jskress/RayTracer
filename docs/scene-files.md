@@ -162,9 +162,11 @@ background image 'sky.jpg'
 An [image pigment](pigments-and-patterns.md#image-pigments) used as a background maps
 `spherical` unless told otherwise, since the sky it is being painted on is a sphere.
 
-A background is not a surface: nothing lights it and it casts nothing.  But it is what *any* ray
-returns on striking nothing, not just those from the camera, so a mirror aimed at empty sky shows
-the same sky that stands over it.
+A background is not a surface: nothing lights it, it casts nothing, and on its own it lights nothing
+either — for the sky you look at to be the sky that lights you, add a
+[sky light](lights.md#sky-lights), which carries the background unless given a pigment of its own.  But
+it is what *any* ray returns on striking nothing, not just those from the camera, so a mirror aimed at
+empty sky shows the same sky that stands over it.
 
 `background` may sit at the top level, or inside a `scene { }` block, so that two scenes may
 carry skies of their own:
@@ -419,7 +421,7 @@ rim, or give the medium a container already shaped like the thing.
 
 Everything above stops at the first turn: light goes lamp → one scattering → eye, and no further.  In
 anything thick that is a small share of the light.  Most of what leaves a cloud has been turned a
-dozen times or more on the way out, which is why a real cloud is white rather than grey and why its
+dozen times or more on the way out, which is why a real cloud is white rather than gray and why its
 shadowed side glows rather than going black.
 
 ```
@@ -454,11 +456,21 @@ single direction costs one more path per turn instead of a tree of them, and sin
 every ray does it, the picture as a whole still averages over a great many directions.  The price is
 noise: the added light is an estimate, and a thin one at low sample counts.
 
-**What this still does not give you.**  In this renderer nothing but a lamp gives off light — a
-`background` is a color the eye sees, not something that illuminates.  A path that wanders out of the
-medium therefore ends with nothing.  Real clouds are lit mostly by *sky*, so a cloud here is lit by
-its lamps alone however many turns you follow.  Making the background light the scene is a separate
-thing, and for a daylight cloud it would matter more than this does.
+**What lights it, and what still does not.**  A [sky light](lights.md#sky-lights) is a light like any
+other here, so it is asked at every place along a ray and again at every turn of a followed path — and
+for a cloud that matters more than anything else on this page, real ones being lit mostly by *sky*.  It
+does have to be asked for: a `background` on its own is a color the eye sees and lights nothing.  Put a
+`sky light { }` over a medium and it comes out bright with no lamp in the scene at all; take the sky
+light away and the same medium is all but black.
+
+A path that wanders out of the medium still ends there, and that is not a hole.  The sky it would have
+met on its way out has already been counted where it last turned — every turn asks the lights, and the
+sky is one of them — so following it out as well would count the same light twice and leave the medium
+brighter than it is.
+
+What is genuinely still missing is light off the *surfaces*.  Only lights light a medium — that, and
+whatever it gives off itself — so a cloud is not warmed from beneath by the sunlit field it floats over,
+and smoke is not tinted by the red wall it drifts past.
 
 How many places is a question of how hard to work rather than of what the medium is made of, so it
 lives with the scanner and the anti-aliasing:

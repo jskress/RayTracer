@@ -390,9 +390,9 @@ public class Scene : NamedThing, IDisposable
     /// <para>
     /// Each turn is worth the share of stopped light that carried on rather than being swallowed, and
     /// nothing else: the direction having been picked in proportion to the shape, the shape itself
-    /// cancels out of the weighing.  A path that wanders out of the medium is done, since in this
-    /// renderer nothing but a lamp gives off light -- which for a cloud lit by a sky rather than by
-    /// lamps is the honest limit of what this can show.
+    /// cancels out of the weighing.  A path that wanders out of the medium is done, and that is not a
+    /// gap: every turn asks the scene's lights, a sky light among them, so whatever the path would
+    /// have met out there has already been counted where it last turned.
     /// </para>
     /// </summary>
     /// <param name="medium">The medium the light is wandering in.</param>
@@ -420,8 +420,9 @@ public class Scene : NamedThing, IDisposable
             double howFar = TurnedAgainAfter(
                 medium, container, at, came, Fraction(seed, turn * 3 + 2), crossings);
 
-            // The path left the medium without being turned again, and there is nothing out there to
-            // have sent it on its way.
+            // The path left the medium without being turned again.  Whatever lies out that way was
+            // counted at the last turn, by asking the lights there; following it out as well would
+            // count the same light a second time.
             if (double.IsNaN(howFar))
                 break;
 

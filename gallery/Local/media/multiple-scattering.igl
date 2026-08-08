@@ -32,10 +32,11 @@
 // turns.  Note also that the grain is the same in every render rather than crawling, so it will not
 // average away over the frames of an animation.
 //
-// What is still missing, and would matter more than any of this for a daylight cloud: nothing in this
-// renderer but a lamp gives off light.  The background is a color the eye sees, not something that
-// lights the scene, so a path that wanders out of the cloud ends with nothing.  Real clouds are lit
-// mostly by sky.
+// What this scene leaves out, and what matters more than any of this for a daylight cloud: a sky.
+// There is one lamp here and nothing else, so every scrap of light in the picture came from that one
+// direction.  A `sky light` is gathered at every place along a ray and again at every turn of a
+// followed path, and for a real cloud it is the larger part of the light there is -- `sunlit-cloud.igl`
+// in this same directory is this idea with a sky over it, and the difference is not subtle.
 
 context {
     parallel pixel scanner
