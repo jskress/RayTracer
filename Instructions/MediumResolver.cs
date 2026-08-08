@@ -9,7 +9,7 @@ namespace RayTracer.Instructions;
 /// <summary>
 /// This class is used to resolve what fills a piece of space.
 /// </summary>
-public class MediumResolver : ObjectResolver<Medium>
+public class MediumResolver : ObjectResolver<Medium>, ICloneable
 {
     /// <summary>
     /// This property holds the resolver for how much light the medium absorbs per unit of distance.
@@ -127,5 +127,15 @@ public class MediumResolver : ObjectResolver<Medium>
         value.Bounces = BouncesResolver is null
             ? context.MediumBounces
             : BouncesResolver.Resolve(context, variables);
+    }
+
+    /// <summary>
+    /// This method returns a copy of this resolver, which is what naming one and then adding to it
+    /// where it is used requires: the addition must belong to that use and not to the name.
+    /// </summary>
+    /// <returns>A copy of this resolver.</returns>
+    public object Clone()
+    {
+        return MemberwiseClone();
     }
 }

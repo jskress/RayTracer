@@ -77,7 +77,7 @@ public partial class LanguageParser
                 // absorbs none has no such answer: with nothing to settle it, its own light piles up
                 // without limit.  Said of something bounded that is a perfectly good description, so
                 // it is only refused here.
-                resolver.MediumResolver = ParseMediumClause(ForTheSurroundings);
+                resolver.MediumResolver = GetMediumResolver(clause, ForTheSurroundings);
                 break;
             default:
                 throw new NotSupportedException("Unknown environment property found.");
@@ -154,6 +154,53 @@ public partial class LanguageParser
         MediumResolver resolver = ParseObjectResolver<MediumResolver>(
             "mediumEntryClause", HandleMediumEntryClause);
 
+        resolver.Validator = validator;
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This is a helper for getting the right medium resolver: one written out here, one named
+    /// earlier, or a call of one the scene knows how to make.  It works as the material and interior
+    /// helpers do, a medium being the same sort of thing -- something worth describing once and using
+    /// in several places.
+    /// </summary>
+    /// <param name="clause">The clause that says which of those it is.</param>
+    /// <param name="validator">The check to make of the medium once it is built, if any.</param>
+    /// <returns>The proper resolver.</returns>
+    private MediumResolver GetMediumResolver(Clause clause, Func<Core.Medium, string> validator = null)
+    {
+        Token token = clause.Tokens[1];
+
+        // Written out here.
+        if (BounderToken.OpenBrace.Matches(token))
+            return ParseMediumClause(validator);
+
+        if (CallArgumentsIfAny(token, "medium") is { } given)
+        {
+            MediumCallResolver call = new ()
+            {
+                Name = token.Text, Arguments = given, ErrorToken = token, Validator = validator
+            };
+
+            if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
+            {
+                CurrentParser.GetNextToken();
+
+                ParseObjectResolver("mediumEntryClause", HandleMediumEntryClause, call, false);
+            }
+
+            return call;
+        }
+
+        bool extending = clause.Tokens.Count > 2;
+        MediumResolver resolver = GetExtensibleItem<MediumResolver>(token, extending);
+
+        if (extending)
+            ParseObjectResolver("mediumEntryClause", HandleMediumEntryClause, resolver);
+
+        // The check belongs to where the medium is used rather than to the medium: the surroundings
+        // have no far side, so what may fill them is not what may fill a bottle.
         resolver.Validator = validator;
 
         return resolver;

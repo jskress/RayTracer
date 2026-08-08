@@ -83,7 +83,7 @@ public class TestParserConsistency
 
         // A primitive gives back more than surfaces.  These are the others, and they are listed here
         // rather than found, so that adding one is a deliberate act with a test to update.
-        HashSet<string> everything = [..surfaces, "pigment", "material", "interior"];
+        HashSet<string> everything = [..surfaces, "pigment", "material", "interior", "medium"];
 
         AssertSame(everything, Normalize(GrammarList("primitiveKindClause", asWords: true)),
             "what a primitive may say it gives back and what it may give back");
@@ -92,7 +92,7 @@ public class TestParserConsistency
         // so it is not among the arms that table wears.
         HashSet<string> readable = Normalize(KindsIn(primitives, "ParseThingOfKind"));
 
-        readable.UnionWith(new[] { "pigment", "material", "interior" });
+        readable.UnionWith(new[] { "pigment", "material", "interior", "medium" });
 
         AssertSame(everything, readable, "what a primitive may give back and what can be read back");
 
@@ -101,7 +101,7 @@ public class TestParserConsistency
         HashSet<string> blocks = Normalize(KindsIn(primitives, "ParseCallBlock"));
 
         // That table names the others only to turn them away, having no block to read for them.
-        blocks.ExceptWith(new[] { "pigment", "material", "interior" });
+        blocks.ExceptWith(new[] { "pigment", "material", "interior", "medium" });
 
         AssertSame(surfaces, blocks,
             "the surfaces a primitive may give back and what a call's block understands");
@@ -141,7 +141,7 @@ public class TestParserConsistency
             Read("Parser/LanguageParser.Variables.cs"), "HandleSetThingToVariableClause"));
 
         // That switch also names things that are not surfaces at all.
-        handled.ExceptWith(new[] { "pigment", "material", "interior", "transform" });
+        handled.ExceptWith(new[] { "pigment", "material", "interior", "transform", "medium" });
 
         // Its two-word kinds are written as a first word and a guard on the second, so both halves
         // turn up separately and neither is the kind.

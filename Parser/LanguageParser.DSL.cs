@@ -1264,7 +1264,10 @@ public partial class LanguageParser
         // What fills a piece of space: something a ray passes through rather than strikes.
         startMediumClause:
         {
-            medium > openBrace
+            medium > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "medium" here.'
         }
         mediumEntryClause:
         [
@@ -1311,7 +1314,7 @@ public partial class LanguageParser
             [
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
-                { interior > startThingClause } |
+                { interior > startThingClause } | { medium > startThingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
@@ -1350,7 +1353,7 @@ public partial class LanguageParser
                 isosurface | patch | lathe | blob | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { generic > shape } | { object > file } |
-                pigment | material | interior
+                pigment | material | interior | medium
             ] ?? 'Expecting the kind of surface this gives back here.' >
             openBrace ?? 'Expecting an open brace to follow the kind here.'
         }

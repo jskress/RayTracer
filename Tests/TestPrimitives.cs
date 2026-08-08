@@ -368,6 +368,49 @@ public class TestPrimitives
     }
 
     [TestMethod]
+    public void TestAMediumMayBeNamedAndMadeToOrder()
+    {
+        // A medium could not be given a name at all before this, so there was nothing a call of one
+        // could have looked like.  Both halves are checked here: one named and used, and one made to
+        // order with a block laid over it.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            haze = medium { absorption [0.05, 0.06, 0.08] }
+            primitive smoke(thickness) -> medium {
+                return medium { scattering thickness  absorption thickness * 0.1 }
+            }
+            environment { ior Air  medium haze }
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { medium smoke(1.2) { anisotropy 0.4 } }
+                }
+            }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+    }
+
+    [TestMethod]
+    public void TestWhatAMediumMayBeDependsOnWhereItIsUsed()
+    {
+        // The check belongs to the use rather than to the medium: the surroundings have no far side,
+        // so a medium that gives off light without swallowing any has no answer there, though it is
+        // perfectly good inside something bounded.  A named medium therefore has to be checked where
+        // it is used, not where it was written.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            glow = medium { emission [0.4, 0.3, 0.1] }
+            environment { ior Air  medium glow }
+            sphere { material { pigment Red } }
+            """);
+
+        Assert.IsNull(image, "an endless span of that has no answer");
+        Assert.IsNotNull(error);
+    }
+
+    [TestMethod]
     public void TestACallIsCheckedAgainstWhatItTakes()
     {
         (Canvas image, string error) = Render($$"""

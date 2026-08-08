@@ -217,6 +217,8 @@ public partial class LanguageParser
                 return GetMaterialResolver(OpenedBy("startMaterialClause", kind, name));
             case "interior":
                 return GetInteriorResolver(OpenedBy("startInteriorClause", kind, name));
+            case "medium":
+                return GetMediumResolver(OpenedBy("startMediumClause", kind, name));
         }
 
         Clause clause = ParseClause(StartClauseFor(kind));
@@ -304,7 +306,7 @@ public partial class LanguageParser
         // A pigment has no clauses that could be laid over one already made, so a call of one takes
         // no block at all.  A material and an interior do have such clauses, but a call of either is
         // read where that kind of thing is named rather than here.
-        if (kind is "pigment" or "material" or "interior")
+        if (kind is "pigment" or "material" or "interior" or "medium")
             return null;
 
         Token next = CurrentParser.PeekNextToken();

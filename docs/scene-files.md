@@ -889,8 +889,25 @@ Both are named the way a surface is — the word, then the name — so a call is
 follows it: a parenthesis.  Both take a block afterward, laid over what the recipe made, so a call may
 be adjusted where it stands without touching the recipe.
 
-A medium cannot yet be given back, for a plainer reason than it sounds: a medium cannot be *named* at
-all in this language, so there is nothing for a call of one to look like.
+**A medium too**, which until now could not even be given a name:
+
+```
+haze = medium { absorption [0.05, 0.06, 0.08]  scattering [0.03, 0.028, 0.02] }
+
+environment { ior Air  medium haze }
+
+primitive smoke(thickness) -> medium {
+    return medium { scattering thickness  absorption thickness * 0.1 }
+}
+
+sphere { material { interior { medium smoke(1.6) { anisotropy 0.4 } } } }
+```
+
+One thing about a named medium is worth knowing, because it is not obvious: **what a medium is allowed
+to be depends on where it is used, not on the medium itself.**  The surroundings have no far side, so
+a medium filling them must be one that has an answer over an endless span; a medium inside a bottle
+need not.  The check therefore travels with the *use*, so the same named medium may be refused in one
+place and accepted in another.
 
 **A primitive may hold smaller ones**, and functions too — a fence knows how to make a post, and
 nobody else needs to:

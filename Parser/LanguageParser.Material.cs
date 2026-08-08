@@ -217,7 +217,7 @@ public partial class LanguageParser
                 break;
             case "medium":
                 // A surface is a far side, so anything a medium may say is allowed here.
-                resolver.MediumResolver = ParseMediumClause();
+                resolver.MediumResolver = GetMediumResolver(clause);
                 break;
             default:
                 throw new NotSupportedException("Unknown interior property found.");
