@@ -621,15 +621,16 @@ or vectors; ask for a form that does not exist and the error names the ones that
 
 | | | | |
 | --- | --- | --- | --- |
-| `abs` | `dot` | `magnitude` | `sign` |
-| `acos` | `exp` | `max` | `sin` |
-| `asin` | `floor` | `min` | `sinh` |
-| `atan` | `length` | `mod` | `smoothstep` |
-| `atan2` | `lerp` | `noise` | `sqrt` |
-| `cbrt` | `log` | `normalize` | `tan` |
-| `ceil` | `log10` | `pow` | `tanh` |
-| `clamp` | `cos` | `round` | `toDegrees` |
-| `cosh` | `cross` | `distance` | `trunc` |
+| `abs` | `cross` | `max` | `sinh` |
+| `acos` | `distance` | `min` | `smoothstep` |
+| `asin` | `dot` | `mod` | `sqrt` |
+| `atan` | `exp` | `noise` | `tan` |
+| `atan2` | `floor` | `normalize` | `tanh` |
+| `cbrt` | `length` | `pow` | `toDegrees` |
+| `ceil` | `lerp` | `random` | `trunc` |
+| `clamp` | `log` | `round` |  |
+| `cos` | `log10` | `sign` |  |
+| `cosh` | `magnitude` | `sin` |  |
 
 #### Colors
 

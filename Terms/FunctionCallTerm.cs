@@ -206,6 +206,17 @@ public class FunctionCallTerm : Term
             };
         }
 
+        if (signature.NotInAField)
+        {
+            throw new TokenException(
+                $"'{_name}' has no place in a density or an isosurface: it gives neighboring places " +
+                "values with nothing to do with each other, and a surface cannot be found in that. " +
+                "Use \"noise\", which varies smoothly.")
+            {
+                Token = ErrorToken
+            };
+        }
+
         return FieldCall.Of(signature, arguments, ErrorToken);
     }
 }

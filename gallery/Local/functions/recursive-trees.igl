@@ -23,12 +23,22 @@
 // top-heavy or spindly.  The trees were never described -- a rule for growing one was, and the rule
 // was applied.
 //
-// The three trees differ only in what they were told: how deep to go, how long the first limb is, and
-// which way the first fork faces.  That last one is doing a lot of work for one number.  Since every
-// generation turns by a fixed amount from its parent, a different starting twist rotates the whole
-// crown, and the three trees read as three trees rather than one tree stamped three times.  It is a
-// poor substitute for genuine variation -- what these want is a seeded random, so that no two limbs
-// are quite alike -- but it is enough to show what the shape of the thing buys.
+// **No two limbs are alike, and that is what makes them read as trees.**  A rule applied faithfully
+// gives a diagram: every fork the same angle, every limb the same fraction of its parent, the whole
+// thing as regular as a snowflake and about as convincing.  So every limb departs a little from the
+// rule -- a bit longer or shorter, leaning a bit more or less, turned a bit further round -- and the
+// departure comes from `random`, which hands back a number between 0 and 1 for whatever key it is
+// given.  `vary` says how far a limb may stray; set it to 0 and the diagram comes back.
+//
+// The key is what makes this reproducible rather than merely irregular.  Every limb carries a number
+// of its own -- `id`, which is its parent's number times three plus which child it is, so no two limbs
+// anywhere in the file share one -- and asks for its wobbles by that number.  So the same file always
+// grows the same three trees, down to the last leaf; adding a fourth tree cannot disturb the first
+// three; and were these to be animated, nothing would crawl.  Change `variant` at the top and the
+// same three trees grow again, differently, which is the one knob a person actually wants.
+//
+// The three trees themselves differ in what they were told: how deep to go, how long the first limb
+// is, which way the first fork faces, and which number they start from.
 //
 // Two smaller points worth noticing, since both are what make the recursion read as plainly as it
 // does:
@@ -41,6 +51,10 @@
 //   Only the arm taken is carried out.  The leaf arm never asks for more limbs, so the recursion ends
 //   where it is told to and not one call later.
 //
+//   `wilt` and `sway` are ordinary functions of the scene's own.  A limb needs several wobbles that
+//   have nothing to do with each other, so each asks `random` with the limb's number *and* a second
+//   key saying which wobble is wanted -- which is what a second key is for.
+//
 // The light is the physical sky, low and to the side, which is what puts the long shadows across the
 // grass and lets the crowns be lit from above and filled from the blue overhead.
 
@@ -50,7 +64,7 @@ context {
     info {
         title 'Recursive Trees'
         author 'J. Stephen Kress'
-        description 'Some six hundred pieces of geometry from one primitive that calls itself.'
+        description 'Some six hundred pieces of geometry from one primitive that calls itself, no two alike.'
         copyright true
         software __software__
     }
@@ -62,6 +76,8 @@ shrink = 0.74      // how much shorter each generation is than the one below it
 taper = 0.62       // and how much thinner
 lean = 34          // how far a limb turns away from the one it grew from
 turn = 118         // and how far round, from one of its siblings to the next
+vary = 0.28        // and how far any one limb is allowed to depart from all of that
+variant = 1        // change this and the same three trees grow again, differently
 
 duller = color [0.23, 0.29, 0.14]
 greener = color [0.31, 0.37, 0.19]
@@ -78,11 +94,19 @@ leaves = material {
     shininess 30
 }
 
+// Two small functions that turn a limb's number into a wobble.  `wilt` gives something near one, so a
+// limb comes out a little shorter or a little longer than the rule says; `sway` gives something near
+// zero, so it turns a little further round or a little less.  Both take the limb's own number and a
+// second key saying which wobble is wanted, since one limb needs several that have nothing to do with
+// each other.
+function wilt(id, which) -> number { return 1 - vary + random(id, which, variant) * vary * 2 }
+function sway(id, which) -> number { return (random(id, which, variant) - 0.5) * lean }
+
 // One limb: a length of wood, and then either leaves or three more limbs.
 //
 // The choice is the base case.  With `depth` spent, the limb ends in a cluster of leaves and asks for
 // nothing further; while it has depth left, it carries three more limbs, each one generation smaller.
-primitive limb(depth, length, thickness, twist) -> group {
+primitive limb(depth, length, thickness, twist, id) -> group {
     if (depth < 1) {
         return group {
             sphere { material leaves  scale [0.20, 0.13, 0.20] }
@@ -97,20 +121,20 @@ primitive limb(depth, length, thickness, twist) -> group {
                 material bark
                 scale [thickness, 1, thickness]
             }
-            object limb(depth - 1, length * shrink, thickness * taper, twist + turn) {
-                rotate Z lean
-                rotate Y twist
+            object limb(depth - 1, length * wilt(id, 1), thickness * taper, twist + turn, id * 3 + 1) {
+                rotate Z lean * wilt(id, 2)
+                rotate Y twist + sway(id, 3)
                 translate Y length
             }
-            object limb(depth - 1, length * shrink, thickness * taper, twist + turn) {
-                rotate Z lean
-                rotate Y twist + turn
+            object limb(depth - 1, length * wilt(id, 4), thickness * taper, twist + turn, id * 3 + 2) {
+                rotate Z lean * wilt(id, 5)
+                rotate Y twist + turn + sway(id, 6)
                 translate Y length
             }
             // The third leans less, so a crown does not come out as a flat fan.
-            object limb(depth - 1, length * shrink * 0.88, thickness * taper, twist + turn) {
-                rotate Z lean * 0.45
-                rotate Y twist + turn * 2
+            object limb(depth - 1, length * wilt(id, 7) * 0.88, thickness * taper, twist + turn, id * 3 + 3) {
+                rotate Z lean * 0.45 * wilt(id, 8)
+                rotate Y twist + turn * 2 + sway(id, 9)
                 translate Y length * 0.94
             }
         }
@@ -118,8 +142,8 @@ primitive limb(depth, length, thickness, twist) -> group {
 }
 
 camera {
-    location [5.6, 2.5, -10.4]
-    look at [-0.3, 2.7, 0.4]
+    location [6.6, 2.7, -13.0]
+    look at [-0.4, 3.6, 0.4]
     field of view 50
 }
 
@@ -147,6 +171,6 @@ plane {
 }
 
 // Three trees, differing only in what they were told.
-object limb(4, 1.9, 0.17, 0) { }
-object limb(4, 1.5, 0.14, 55) { translate [-4.2, 0, 2.2] }
-object limb(3, 1.3, 0.11, 200) { translate [3.2, 0, 5.4] }
+object limb(4, 1.9, 0.17, 0, 1) { }
+object limb(4, 1.5, 0.14, 55, 2) { translate [-4.2, 0, 2.2] }
+object limb(3, 1.3, 0.11, 200, 3) { translate [3.2, 0, 5.4] }

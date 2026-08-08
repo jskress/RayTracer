@@ -539,6 +539,57 @@ public static class MathFunctions
     }
 
     /// <summary>
+    /// This method returns a scattered value: a number between 0 and 1 belonging to the keys it was
+    /// given, the same every time it is asked and unrelated to what its neighbors get.
+    /// <para>
+    /// This is <c>noise</c>'s opposite number and the two are easy to confuse, being asked much the
+    /// same question.  Noise is smooth, so nearby points give nearby values, and that is what makes it
+    /// good for the grain of a stone.  This is scattered, so 3 and 4 give values with nothing to do
+    /// with each other, and that is what makes it good for a stand of trees where no two are alike.
+    /// </para>
+    /// <para>
+    /// It takes a key rather than counting its own calls, and that is the point of it rather than an
+    /// inconvenience: what a scene gets depends on what it asked for and not on how many other things
+    /// asked first, so adding one tree cannot rearrange the rest, and every frame of an animation
+    /// agrees with the one before it.
+    /// </para>
+    /// </summary>
+    /// <param name="key">The key to scatter at.</param>
+    /// <returns>A value between 0 and 1.</returns>
+    [Function("random", NotInAField = true)]
+    public static double Random(double key)
+    {
+        return ScatterGenerator.At(key);
+    }
+
+    /// <summary>
+    /// This method returns the scattered value belonging to two keys, which is how one thing may have
+    /// several unrelated numbers of its own: the first key says which thing and the second says which
+    /// of its numbers.
+    /// </summary>
+    /// <param name="key">The first key.</param>
+    /// <param name="second">The second.</param>
+    /// <returns>A value between 0 and 1.</returns>
+    [Function("random", NotInAField = true)]
+    public static double Random(double key, double second)
+    {
+        return ScatterGenerator.At(key, second);
+    }
+
+    /// <summary>
+    /// This method returns the scattered value belonging to three keys.
+    /// </summary>
+    /// <param name="key">The first key.</param>
+    /// <param name="second">The second.</param>
+    /// <param name="third">The third.</param>
+    /// <returns>A value between 0 and 1.</returns>
+    [Function("random", NotInAField = true)]
+    public static double Random(double key, double second, double third)
+    {
+        return ScatterGenerator.At(key, second, third);
+    }
+
+    /// <summary>
     /// This method returns the noise at a point: a smooth, repeatable value between 0 and 1,
     /// averaging about a half, which is the same field every pattern in the library draws on and the
     /// same contract POV-Ray's own <c>Noise()</c> honors.  The same point always gives the same

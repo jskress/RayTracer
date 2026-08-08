@@ -19,6 +19,13 @@ public class FunctionAttribute : Attribute
     /// </summary>
     public string Name { get; }
 
+    /// <summary>
+    /// This property notes that the function may not be lowered into a field at all -- not that it
+    /// merely lacks a rule for its slope, but that it has no business being asked about a place in
+    /// space in the first place.
+    /// </summary>
+    public bool NotInAField { get; init; }
+
     public FunctionAttribute(string name)
     {
         Name = name;

@@ -341,6 +341,71 @@ public class TestLoops
     }
 
     [TestMethod]
+    public void TestALoopsTurnsMayDifferByMoreThanTheirCount()
+    {
+        // What "over" was waiting for, and the point of scattering by the count: five things placed by
+        // a number that has nothing to do with where the last one went.
+        Assert.AreEqual(5, ThingsInARow("""
+            group {
+                for i in [0, 4] {
+                    sphere {
+                        material { pigment Red }
+                        scale 0.2 + random(i) * 0.2
+                        translate X i * 1.4 - 2.8
+                    }
+                }
+            }
+            """));
+    }
+
+    [TestMethod]
+    public void TestScatteringDoesNotDependOnWhatCameBefore()
+    {
+        // The property a running stream could not have, and the reason this takes a key.  The same
+        // loop, with three more spheres made before it, must place its things in exactly the same
+        // spots -- otherwise adding one tree to a scene would rearrange the forest.
+        const string loop = """
+            group {
+                for i in [0, 3] {
+                    sphere {
+                        material { pigment Red }
+                        scale 0.3
+                        translate [i * 1.4 - 2.1, random(i, 1) * 2 - 1, 0]
+                    }
+                }
+            }
+            """;
+
+        (Canvas alone, string first) = Render(loop);
+        (Canvas after, string second) = Render($$"""
+            group {
+                over [0, 2] { sphere { material { pigment Blue }  scale 0.1  translate Y 4 } }
+            }
+            {{loop}}
+            """);
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+
+        int moved = 0;
+
+        for (int x = 0; x < Wide; x++)
+        {
+            for (int y = 0; y < High; y++)
+            {
+                Color was = alone.GetPixel(x, y);
+                Color now = after.GetPixel(x, y);
+
+                // The blue ones are up out of the frame, so anything red must be exactly where it was.
+                if (was.Red > 0.25 != now.Red > 0.25)
+                    moved++;
+            }
+        }
+
+        Assert.AreEqual(0, moved, "the scattered things should not have moved");
+    }
+
+    [TestMethod]
     public void TestOnlySurfacesMayStandInALoop()
     {
         // A loop is a way of writing rather than a thing in the scene, so there is nothing for a

@@ -319,9 +319,12 @@ public class TestFieldBounds
 
         foreach (string name in FunctionCatalog.Instance.Names)
         {
+            // A function that cannot appear in a field at all needs no range: it is turned away when
+            // the field is built, long before anything asks what it might do over a box.
             bool couldAppear = FunctionCatalog.Instance
                 .SignaturesFor(name)
                 .Any(signature => signature.ReturnType == typeof(double) &&
+                                  !signature.NotInAField &&
                                   signature.ParameterTypes.All(type => type == typeof(double)));
 
             if (!couldAppear || FieldBounds.HasRuleFor(name) || withoutRules.Contains(name))

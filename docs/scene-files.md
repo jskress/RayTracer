@@ -615,7 +615,7 @@ extrusion {
 | **Ranges and blends** | `min` `max` `clamp` `lerp` `smoothstep` |
 | **Angles** | `sin` `cos` `tan` `asin` `acos` `atan` `atan2` `sinh` `cosh` `tanh` `toDegrees` |
 | **Vectors** | `length` (or `magnitude`) `dot` `cross` `normalize` `distance` |
-| **Noise** | `noise` |
+| **Noise** | `noise` `random` |
 
 Several take either numbers or vectors, and which they mean follows from what you hand them:
 `abs`, `min`, `max`, `clamp` and `lerp` all work on both, and `min` and `max` given a *single*
@@ -634,6 +634,56 @@ having it as a function:
 ```
 grain = noise(p) + noise(p * 2) / 2 + noise(p * 4) / 4
 ```
+
+#### Making things differ from one another
+
+`random` is `noise`'s opposite number, and the two are easy to confuse since they answer much the same
+question.  **Noise is smooth**: two nearby points give two nearby values, which is what makes it good
+for the grain of a stone.  **`random` is scattered**: two neighboring keys give values with nothing to
+do with each other, which is what makes it good for a stand of trees where no two are alike.
+
+```
+for tree in [0, 11] {
+    object elm(2 + random(tree) * 1.5) {
+        translate [random(tree, 1) * 40 - 20, 0, random(tree, 2) * 40 - 20]
+    }
+}
+```
+
+It gives a number between 0 and 1, and it takes a **key** — one, two or three of them — rather than
+counting its own calls.  That is the whole design, and it is worth understanding rather than working
+around, because everything useful about it follows:
+
+- **The same key always gives the same number**, in this render and in every render after it.  A scene
+  that scatters things is as reproducible as one that places them by hand.
+- **Nothing else can disturb it.**  What one call gets does not depend on how many calls came first, so
+  adding a tree at the top of a file cannot rearrange the trees below it.
+- **A frame of an animation agrees with the one before it**, so scattered things sit still instead of
+  crawling.
+
+The second and third keys are how one thing gets several numbers of its own: the first says *which
+thing* and the rest say *which of its numbers*.  `random(tree, 1)` and `random(tree, 2)` are as
+unrelated as any two values, so one loop counter is enough for a size, a place, a lean and a color.
+
+**To get a different arrangement, change a key rather than looking for a seed.**  There is no global
+seed to set — that would be a hidden thing that quietly changes every picture in a file — so a scene
+that wants to try several arrangements names its own:
+
+```
+variant = 3
+
+for tree in [0, 11] {
+    object elm(2 + random(tree, variant) * 1.5) { … }
+}
+```
+
+**`random` may not be used in a `density function { }` or an [isosurface](advanced-surfaces.md#isosurface).**
+Those find a surface by looking for where a function crosses zero, and a function whose neighboring
+values are unrelated crosses zero everywhere and nowhere.  `noise` is the one to reach for there, and
+you will be told so if you reach for the wrong one.
+
+To scale a value into a range, multiply and add — `0.8 + random(k) * 0.4` runs from 0.8 to 1.2, which
+is the usual shape of "about this size, give or take".
 
 #### Angles are radians
 
