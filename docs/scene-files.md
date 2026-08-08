@@ -854,6 +854,7 @@ apart.
 | `name = ...` | Worked out on the way to the answer.  Later ones may lean on earlier ones. |
 | `return ...` | The answer.  A function must have one, and nothing may follow it. |
 | `if (...) { } else { }` | Two ways out, each giving an answer of its own.  See [Choosing Inside a Body](#choosing-inside-a-body). |
+| `switch (...) { case … default … }` | Any number of ways out, picked by a value.  Same section. |
 
 **Things worked out along the way earn their place.**  A figure the body needs in three places should
 be arrived at once, or the three copies drift apart the first time one is edited.
@@ -1085,6 +1086,44 @@ object limb(6, 1.9, 0.17)
 That is a tree: sixty-three limbs and sixty-four clusters of leaves, none of them written down.  Mind
 the depth, though — each generation multiplies what the last one made, so a small number is a large
 scene.
+
+**When there are more than two answers, select on a value.**  A run of `else if`s that all ask about
+the same thing says that thing over and over, and saying it once is both shorter and harder to get
+wrong:
+
+```
+primitive tree(height, season = 'summer') -> group {
+    switch (season) {
+        case 'summer' { return group { … } }
+        case 'autumn', 'fall' { return group { … } }
+        case 'winter' {
+            bare = height * 0.9
+            return group { … }
+        }
+        default { return group { … } }
+    }
+}
+```
+
+| Part | Means |
+| --- | --- |
+| `switch (season)` | The value every case is held against. |
+| `case 'autumn', 'fall'` | One arm answering to several values.  A case may be any expression, not only something written out. |
+| `default { … }` | What catches whatever no case did.  **Required**, for the same reason `else` is. |
+
+**Each arm is a body**, so it may work things out, hold a smaller function of its own, and end in a
+choice or a selection of its own — which is the one thing a switch of the sort most languages offer
+cannot do, and the reason this is written the way it is.  Anything an arm needs, it may work out where
+it is used rather than being pushed out into a function somewhere else.
+
+**A selection is the run of choices it looks like.**  The value is compared with each case in turn and
+the first that matches wins, so two cases that both match are not a contradiction — the first one
+written is the one taken.  It is built as that chain of choices, so nothing new happens when the
+picture is drawn, and everything true of a choice is true of this.
+
+`default` is required rather than worked out because it cannot be worked out: there is no way to know
+that a run of cases covers every number or every piece of text there might be.  Requiring it is what
+keeps "every path gives an answer" a matter of how the thing is written.
 
 **When a choice is the wrong tool.**  A value that merely *differs* by some condition — a size, a
 color — wants the [conditional](#choosing-between-values) rather than a choice, since a choice would

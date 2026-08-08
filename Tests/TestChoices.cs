@@ -7,8 +7,8 @@ using RayTracer.Renderer;
 namespace Tests;
 
 /// <summary>
-/// These tests cover a choice inside a function or a primitive: an <c>if</c> that picks which of two
-/// answers the body gives back.
+/// These tests cover choosing inside a function or a primitive: an <c>if</c> that picks which of two
+/// answers the body gives back, and a <c>switch</c> that picks among any number of them.
 /// <para>
 /// A choice here is deliberately not a statement.  It always ends the body it appears in, and both
 /// ways out have to give an answer.  That makes "exactly one answer, on every path" a matter of the
@@ -17,6 +17,12 @@ namespace Tests;
 /// shape holding: that a body may branch, that a branch may work things out of its own, that only the
 /// side taken is carried out, and that the ways of writing it wrongly are refused while it is being
 /// read.
+/// </para>
+/// <para>
+/// A selection is the run of choices it looks like -- it is built as one -- so the tests for it are
+/// about what it says rather than about what it does: that the first matching case wins, that an arm
+/// may carry its own workings, and that the default is required, since that is what makes every path
+/// answer once a value can be matched rather than merely asked about.
 /// </para>
 /// </summary>
 [TestClass]
@@ -522,6 +528,245 @@ public class TestChoices
             {{Staging}}
             function shape(n) -> number {
                 if (n > 2) { return n } else { return 0 - n }
+            }
+            isosurface {
+                function { shape(x) + y² + z² - 1 }
+                bounded by [-2, -2, -2], [2, 2, 2]
+            }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("single expression"), $"the complaint should say why: {error}");
+    }
+
+    [TestMethod]
+    public void TestASelectionPicksByValue()
+    {
+        const string scene = """
+            function widthFor(season) -> number {
+                switch (season) {
+                    case 'summer' { return 80 }
+                    case 'autumn', 'fall' { return 40 }
+                    case 'winter' { return 60 }
+                    default { return 100 }
+                }
+            }
+            context { width widthFor(WHICH)  height 30 }
+            camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+            point light { location [-10, 10, -10] }
+            sphere { translate [0, 1, 0] }
+            """;
+
+        Assert.AreEqual(80, Width(scene.Replace("WHICH", "'summer'")));
+        Assert.AreEqual(60, Width(scene.Replace("WHICH", "'winter'")));
+
+        // One arm may answer to more than one value, which is most of why a selection is worth having
+        // over a run of choices.
+        Assert.AreEqual(40, Width(scene.Replace("WHICH", "'autumn'")));
+        Assert.AreEqual(40, Width(scene.Replace("WHICH", "'fall'")));
+
+        // And the default catches what nothing else did.
+        Assert.AreEqual(100, Width(scene.Replace("WHICH", "'spring'")));
+    }
+
+    [TestMethod]
+    public void TestAnArmMayCarryItsOwnWorkings()
+    {
+        // The thing a switch of the C# sort cannot do, and the reason this is a body per arm rather
+        // than an expression per arm: what an arm needs, it may work out where it is used.
+        Assert.AreEqual(80, Width("""
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case 1 {
+                        doubled = kind * 2
+                        return doubled * 40
+                    }
+                    default { return 20 }
+                }
+            }
+            context { width widthFor(1)  height 30 }
+            camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+            point light { location [-10, 10, -10] }
+            sphere { translate [0, 1, 0] }
+            """));
+    }
+
+    [TestMethod]
+    public void TestCasesAreAskedInTheOrderTheyAreWritten()
+    {
+        // A selection is a run of choices, so two cases that both match are not a contradiction: the
+        // first one written wins.  A case may be any expression, not only something written out.
+        Assert.AreEqual(80, Width("""
+            limit = 5
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case limit { return 80 }
+                    case 5 { return 40 }
+                    default { return 20 }
+                }
+            }
+            context { width widthFor(5)  height 30 }
+            camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+            point light { location [-10, 10, -10] }
+            sphere { translate [0, 1, 0] }
+            """));
+    }
+
+    [TestMethod]
+    public void TestAnArmMayEndInAChoiceOrASelectionOfItsOwn()
+    {
+        const string scene = """
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case 1 {
+                        if (kind > 9) { return 20 }
+                        else { return 80 }
+                    }
+                    default {
+                        switch (kind) {
+                            case 2 { return 40 }
+                            default { return 60 }
+                        }
+                    }
+                }
+            }
+            context { width widthFor(WHICH)  height 30 }
+            camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+            point light { location [-10, 10, -10] }
+            sphere { translate [0, 1, 0] }
+            """;
+
+        Assert.AreEqual(80, Width(scene.Replace("WHICH", "1")));
+        Assert.AreEqual(40, Width(scene.Replace("WHICH", "2")));
+        Assert.AreEqual(60, Width(scene.Replace("WHICH", "7")));
+    }
+
+    [TestMethod]
+    public void TestAPrimitiveMaySelectWhatItMakes()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            primitive marker(kind) -> sphere {
+                switch (kind) {
+                    case 1 {
+                        big = 1.2
+                        return sphere { material { pigment Red }  scale big }
+                    }
+                    case 2, 3 { return sphere { material { pigment Green }  scale 0.7 } }
+                    default { return sphere { material { pigment Blue }  scale 0.5 } }
+                }
+            }
+            object marker(1) { translate X -4 }
+            object marker(3) { translate X 0 }
+            object marker(9) { translate X 4 }
+            """);
+
+        Assert.IsNull(error, error);
+
+        bool red = false;
+        bool green = false;
+        bool blue = false;
+
+        for (int x = 0; x < 40; x++)
+        {
+            for (int y = 0; y < 30; y++)
+            {
+                Color pixel = image.GetPixel(x, y);
+
+                red |= pixel.Red > 0.25 && pixel.Green < 0.15 && pixel.Blue < 0.15;
+                green |= pixel.Green > 0.25 && pixel.Red < 0.15 && pixel.Blue < 0.15;
+                blue |= pixel.Blue > 0.25 && pixel.Red < 0.15 && pixel.Green < 0.15;
+            }
+        }
+
+        Assert.IsTrue(red && green && blue,
+            $"all three arms should have been taken, and got red {red}, green {green}, blue {blue}");
+    }
+
+    [TestMethod]
+    public void TestASelectionMustHaveADefault()
+    {
+        // What makes every path answer.  There is no way to know that a run of cases covers every
+        // number or every piece of text, so the last way out is required rather than worked out.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case 1 { return 10 }
+                    case 2 { return 20 }
+                }
+            }
+            sphere { scale widthFor(1) }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("default"), $"the complaint should ask for it: {error}");
+    }
+
+    [TestMethod]
+    public void TestASelectionNeedsSomethingToSelect()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    default { return 20 }
+                }
+            }
+            sphere { scale widthFor(1) }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("case"), $"the complaint should say so: {error}");
+    }
+
+    [TestMethod]
+    public void TestNothingMayFollowASelection()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case 1 { return 10 }
+                    default { return 20 }
+                }
+                extra = 3
+            }
+            sphere { scale widthFor(1) }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("close brace"), $"the complaint should say why: {error}");
+    }
+
+    [TestMethod]
+    public void TestAnArmOfASelectionMustGiveAnAnswer()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function widthFor(kind) -> number {
+                switch (kind) {
+                    case 1 { m = 2 }
+                    default { return 20 }
+                }
+            }
+            sphere { scale widthFor(1) }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("return"), $"the complaint should ask for one: {error}");
+    }
+
+    [TestMethod]
+    public void TestAFunctionThatSelectsCannotBeUsedAsAField()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function shape(n) -> number {
+                switch (n) {
+                    case 1 { return n }
+                    default { return 0 - n }
+                }
             }
             isosurface {
                 function { shape(x) + y² + z² - 1 }

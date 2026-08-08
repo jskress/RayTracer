@@ -92,19 +92,15 @@ public partial class LanguageParser
     /// <returns>The body, as far as its answer.</returns>
     private FunctionBody ParsePrimitiveBody(string name, string kind)
     {
-        List<FunctionBodyStep> steps = ParseBodySteps();
-        Clause choice = ParseClause("startIfClause");
-        FunctionBody body;
+        FunctionBody body = EndingOf(
+            ParseBodySteps(), () => ParsePrimitiveBody(name, kind),
+            steps =>
+            {
+                // Insisted on by the clause itself, so there is nothing to test for here.
+                ParseClause("primitiveReturnClause");
 
-        if (choice != null)
-            body = ChoiceOf(choice, steps, () => ParsePrimitiveBody(name, kind));
-        else
-        {
-            // Insisted on by the clause itself, so there is nothing to test for here.
-            ParseClause("primitiveReturnClause");
-
-            body = new FunctionBody { Steps = steps, Answer = ParseThingOfKind(kind, name) };
-        }
+                return new FunctionBody { Steps = steps, Answer = ParseThingOfKind(kind, name) };
+            });
 
         CloseTheBody($"the primitive '{name}'");
 

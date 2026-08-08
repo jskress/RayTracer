@@ -78,10 +78,10 @@ public partial class LanguageParser
             'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
+            'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
@@ -97,7 +97,7 @@ public partial class LanguageParser
             'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
@@ -1381,7 +1381,7 @@ public partial class LanguageParser
         }
         primitiveReturnClause:
         {
-            return ?? 'Expecting "return" or "if" here; a body must say what it gives back.'
+            return ?? 'Expecting "return", "if" or "switch" here; a body must say what it gives back.'
         }
         // A call of one, which may carry values and may be followed by a block of that kind's clauses.
         startCallClause:
@@ -1416,9 +1416,29 @@ public partial class LanguageParser
         {
             else ?? 'Expecting "else" here; both ways out of a choice must give an answer.'
         }
+        // A selection: one value held against a run of cases, the first that matches giving the answer.
+        // It ends a body exactly as a choice does and for the same reasons, and the "default" is what
+        // makes every path answer, which is why it is demanded rather than merely allowed.
+        startSwitchClause:
+        {
+            switch > leftParen ?? 'Expecting a value in parentheses to follow "switch" here.' >
+            _expression >
+            rightParen ?? 'Expecting a close parenthesis after the value here.' >
+            openBrace ?? 'Expecting an open brace to follow the value here.'
+        }
+        startCaseClause:
+        {
+            case > _expression > { comma > _expression }{*} >
+            openBrace ?? 'Expecting an open brace to follow the case here.'
+        }
+        startDefaultClause:
+        {
+            default ?? 'Expecting "case" or "default" here; a selection must have a last way out.' >
+            openBrace ?? 'Expecting an open brace to follow "default" here.'
+        }
         functionReturnClause:
         {
-            return ?? 'Expecting "return" or "if" here; a body must say what it gives back.' >
+            return ?? 'Expecting "return", "if" or "switch" here; a body must say what it gives back.' >
             _expression
         }
         setVariableClause:

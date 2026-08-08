@@ -75,6 +75,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
+| `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `center` | Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
@@ -96,6 +97,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern). | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -286,6 +288,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `switch` | Picks among any number of answers by a value. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |

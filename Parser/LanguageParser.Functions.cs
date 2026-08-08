@@ -118,18 +118,12 @@ public partial class LanguageParser
     /// <returns>The body, as far as its answer.</returns>
     private FunctionBody ParseFunctionBody(string name)
     {
-        List<FunctionBodyStep> steps = ParseBodySteps();
-        Clause choice = ParseClause("startIfClause");
-        FunctionBody body;
-
-        if (choice != null)
-            body = ChoiceOf(choice, steps, () => ParseFunctionBody(name));
-        else
-        {
-            Term answer = ParseClause("functionReturnClause").Term();
-
-            body = new FunctionBody { Steps = steps, Answer = answer };
-        }
+        FunctionBody body = EndingOf(
+            ParseBodySteps(), () => ParseFunctionBody(name),
+            steps => new FunctionBody
+            {
+                Steps = steps, Answer = ParseClause("functionReturnClause").Term()
+            });
 
         CloseTheBody($"'{name}'");
 
@@ -184,6 +178,27 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method reads however a body ends: a choice, a selection, or the plain answer the caller
+    /// knows how to read.
+    /// </summary>
+    /// <param name="steps">What was worked out before the ending.</param>
+    /// <param name="readBody">How to read a body of the kind being read.</param>
+    /// <param name="readAnswer">How to read a plain answer of the kind being read.</param>
+    /// <returns>The body, as far as its answer.</returns>
+    private FunctionBody EndingOf(
+        List<FunctionBodyStep> steps, Func<FunctionBody> readBody,
+        Func<List<FunctionBodyStep>, FunctionBody> readAnswer)
+    {
+        if (ParseClause("startIfClause") is { } choice)
+            return ChoiceOf(choice, steps, readBody);
+
+        if (ParseClause("startSwitchClause") is { } selection)
+            return SelectionOf(selection, steps, readBody);
+
+        return readAnswer(steps);
+    }
+
+    /// <summary>
     /// This method reads the two ways out of a choice, each being a body in its own right.
     /// <para>
     /// An <c>else</c> followed by another <c>if</c> is read as a choice standing where the second body
@@ -232,6 +247,96 @@ public partial class LanguageParser
             WhenTrue = whenTrue,
             WhenFalse = whenFalse
         };
+    }
+
+    /// <summary>
+    /// This method reads a selection: a value, a run of cases held against it, and the default that
+    /// catches whatever none of them did.
+    /// <para>
+    /// What comes back is the run of choices the selection stands for, folded up from the bottom.  A
+    /// selection really is the <c>else if</c> chain it looks like -- the value is compared with each
+    /// case in turn and the first that matches wins -- so building it that way means nothing new
+    /// happens when a scene is rendered, and everything already true of a choice is true of this.
+    /// What it buys the writer is that the value is named once instead of once per case, which is both
+    /// shorter to write and harder to get wrong.
+    /// </para>
+    /// </summary>
+    /// <param name="selection">The clause that opened the selection.</param>
+    /// <param name="steps">What was worked out before it.</param>
+    /// <param name="readBody">How to read a body of the kind being read.</param>
+    /// <returns>The body, ending in that selection.</returns>
+    private FunctionBody SelectionOf(
+        Clause selection, List<FunctionBodyStep> steps, Func<FunctionBody> readBody)
+    {
+        Term subject = selection.Term();
+        List<(Term Matches, Token Token, FunctionBody Body)> arms = [];
+
+        while (ParseClause("startCaseClause") is { } arm)
+        {
+            arms.Add((MatchOf(subject, arm), arm.Tokens[0], readBody()));
+
+            HandleIncludeEnd();
+        }
+
+        if (arms.Count == 0)
+        {
+            throw new TokenException(
+                "A selection needs at least one \"case\"; with only a default there is nothing being " +
+                "selected, and the body may simply say what it gives back.")
+            {
+                Token = selection.Tokens[0]
+            };
+        }
+
+        // Insisted on by the clause itself, so there is nothing to test for here.
+        ParseClause("startDefaultClause");
+
+        FunctionBody body = readBody();
+
+        CurrentParser.MatchToken(
+            true, () => "Expecting a close brace to end the selection; nothing may follow its " +
+                        "\"default\".", BounderToken.CloseBrace);
+
+        // Folded from the bottom up, so that the first case written is the first one asked.
+        for (int index = arms.Count - 1; index > 0; index--)
+        {
+            body = new FunctionBody
+            {
+                Condition = arms[index].Matches,
+                ErrorToken = arms[index].Token,
+                WhenTrue = arms[index].Body,
+                WhenFalse = body
+            };
+        }
+
+        return new FunctionBody
+        {
+            Steps = steps,
+            Condition = arms[0].Matches,
+            ErrorToken = arms[0].Token,
+            WhenTrue = arms[0].Body,
+            WhenFalse = body
+        };
+    }
+
+    /// <summary>
+    /// This method builds what one case asks: whether the value equals this, or that, or the other.
+    /// </summary>
+    /// <param name="subject">The value being selected on.</param>
+    /// <param name="arm">The clause that opened the case.</param>
+    /// <returns>The question the case asks.</returns>
+    private static Term MatchOf(Term subject, Clause arm)
+    {
+        Term matches = null;
+
+        for (int index = 0; index < arm.Expressions.Count; index++)
+        {
+            Term one = new ComparisonOperation(subject, arm.Term(index), Comparison.Equal);
+
+            matches = matches is null ? one : new LogicalOperation(matches, one, false);
+        }
+
+        return matches;
     }
 
     /// <summary>
