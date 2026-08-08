@@ -47,9 +47,9 @@ public partial class LanguageParser
         if (kind is null)
             throw CreateUnexpectedInputException("Expecting \"->\" and a kind here.");
 
-        (List<FunctionBodyStep> steps, Term body) = ParseFunctionBody(name);
+        FunctionBody body = ParseFunctionBody(name);
 
-        return new UserFunction(name, parameterNames, defaults, kind.Tokens[1].Text, steps, body);
+        return new UserFunction(name, parameterNames, defaults, kind.Tokens[1].Text, body);
     }
 
     /// <summary>
@@ -115,22 +115,61 @@ public partial class LanguageParser
     /// </para>
     /// </summary>
     /// <param name="name">The function's name, for complaining with.</param>
-    /// <returns>The steps on the way, and the answer.</returns>
-    private (List<FunctionBodyStep>, Term) ParseFunctionBody(string name)
+    /// <returns>The body, as far as its answer.</returns>
+    private FunctionBody ParseFunctionBody(string name)
+    {
+        List<FunctionBodyStep> steps = ParseBodySteps();
+        Clause choice = ParseClause("startIfClause");
+        FunctionBody body;
+
+        if (choice != null)
+            body = ChoiceOf(choice, steps, () => ParseFunctionBody(name));
+        else
+        {
+            Term answer = ParseClause("functionReturnClause").Term();
+
+            body = new FunctionBody { Steps = steps, Answer = answer };
+        }
+
+        CloseTheBody($"'{name}'");
+
+        return body;
+    }
+
+    /// <summary>
+    /// This method reads the things a body works out on its way to its answer: values it names, and
+    /// smaller functions or primitives of its own.
+    /// </summary>
+    /// <returns>The steps, in the order they were written.</returns>
+    private List<FunctionBodyStep> ParseBodySteps()
     {
         List<FunctionBodyStep> steps = [];
 
         while (true)
         {
-            // A smaller function of its own is looked for first, since both begin with a name and
-            // only this one begins with the word.
+            // A smaller primitive of its own, which is how a complicated thing is made out of simpler
+            // ones without the simpler ones becoming everybody's business.
+            Clause inner = ParseClause("startPrimitiveClause");
+
+            if (inner != null)
+            {
+                UserPrimitive smaller = ParsePrimitiveDeclaration(inner);
+
+                // Known for the rest of this body, and dropped again with it.
+                _primitives[smaller.Name] = smaller;
+
+                steps.Add(new FunctionBodyStep(smaller.Name, smaller));
+
+                continue;
+            }
+
             Clause nested = ParseClause("startFunctionClause");
 
             if (nested != null)
             {
-                UserFunction inner = ParseFunctionDeclaration(nested);
+                UserFunction function = ParseFunctionDeclaration(nested);
 
-                steps.Add(new FunctionBodyStep(inner.Name, inner));
+                steps.Add(new FunctionBodyStep(function.Name, function));
 
                 continue;
             }
@@ -138,25 +177,71 @@ public partial class LanguageParser
             Clause local = ParseClause("functionLocalClause");
 
             if (local is null)
-                break;
+                return steps;
 
             steps.Add(new FunctionBodyStep(local.Tokens[0].Text, local.Term()));
         }
+    }
 
-        Clause answer = ParseClause("functionReturnClause");
+    /// <summary>
+    /// This method reads the two ways out of a choice, each being a body in its own right.
+    /// <para>
+    /// An <c>else</c> followed by another <c>if</c> is read as a choice standing where the second body
+    /// would have been, rather than as a body containing one.  The two mean the same thing and the
+    /// tree that comes out is the same either way; what it saves the writer is a pair of braces and a
+    /// step of indenting per case, which is the difference between a run of cases that can be read
+    /// down the page and one that walks off the right of it.
+    /// </para>
+    /// </summary>
+    /// <param name="choice">The clause that opened the choice.</param>
+    /// <param name="steps">What was worked out before it.</param>
+    /// <param name="readBody">How to read a body of the kind being read.</param>
+    /// <returns>The body, ending in that choice.</returns>
+    private FunctionBody ChoiceOf(
+        Clause choice, List<FunctionBodyStep> steps, Func<FunctionBody> readBody)
+    {
+        FunctionBody whenTrue = readBody();
 
-        if (answer is null)
+        // Insisted on by the clause itself, which is what gives the complaint its wording; there is
+        // nothing to test here, since it never comes back without having matched.
+        ParseClause("startElseClause");
+
+        Clause chained = ParseClause("startIfClause");
+        FunctionBody whenFalse;
+
+        if (chained is null)
         {
-            throw CreateUnexpectedInputException(
-                $"The function '{name}' never says what it gives back; it needs a \"return\".");
+            CurrentParser.MatchToken(
+                true, () => "Expecting an open brace, or another \"if\", to follow \"else\" here.",
+                BounderToken.OpenBrace);
+
+            whenFalse = readBody();
+        }
+        else
+        {
+            // The chained one opened its own brace and will close it, so nothing is owed here: this
+            // choice stands where a body would, and has no braces to call its own.
+            whenFalse = ChoiceOf(chained, [], readBody);
         }
 
-        Term body = answer.Term();
+        return new FunctionBody
+        {
+            Steps = steps,
+            Condition = choice.Term(),
+            ErrorToken = choice.Tokens[0],
+            WhenTrue = whenTrue,
+            WhenFalse = whenFalse
+        };
+    }
 
+    /// <summary>
+    /// This method matches the brace that ends a body.
+    /// </summary>
+    /// <param name="what">What is being read, for complaining with.</param>
+    private void CloseTheBody(string what)
+    {
         CurrentParser.MatchToken(
-            true, () => $"Expecting a close brace to end the function '{name}'; nothing may follow " +
-                        "its \"return\".", BounderToken.CloseBrace);
-
-        return (steps, body);
+            true, () => $"Expecting a close brace to end {what}; nothing may follow the answer it " +
+                        "gives.", BounderToken.CloseBrace);
     }
 }

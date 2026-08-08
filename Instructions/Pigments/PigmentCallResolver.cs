@@ -46,8 +46,9 @@ public class PigmentCallResolver : IPigmentResolver
     /// <returns>The pigment this call makes.</returns>
     public Pigment ResolveToPigment(RenderContext context, Variables variables)
     {
-        return (Pigment) ((IObjectResolver) Primitive.Body)
-            .ResolveToObject(context, Primitive.ScopeFor(Arguments, ErrorToken));
+        (IObjectResolver recipe, Variables scope) = Primitive.ChooseFor(Arguments, ErrorToken);
+
+        return (Pigment) recipe.ResolveToObject(context, scope);
     }
 
     /// <summary>

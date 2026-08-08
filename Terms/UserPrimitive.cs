@@ -49,19 +49,18 @@ public class UserPrimitive
     /// This property holds the recipe for what it gives back, as written.  A call takes a copy of
     /// this so that whatever the call adds in its own block belongs to that call alone.
     /// </summary>
-    public IObjectResolver Body { get; }
+    public FunctionBody Body { get; }
 
     /// <summary>
     /// This property holds how many values a call must supply.
     /// </summary>
     public int RequiredCount { get; }
 
-    private readonly List<FunctionBodyStep> _steps;
     private readonly Variables _declaredIn;
 
     public UserPrimitive(
         string name, IReadOnlyList<string> parameterNames, IReadOnlyList<Term> defaults,
-        string kind, List<FunctionBodyStep> steps, IObjectResolver body, Variables declaredIn = null)
+        string kind, FunctionBody body, Variables declaredIn = null)
     {
         Name = name;
         ParameterNames = parameterNames;
@@ -70,7 +69,6 @@ public class UserPrimitive
         Body = body;
         RequiredCount = defaults.Count(fallback => fallback is null);
 
-        _steps = steps;
         _declaredIn = declaredIn;
     }
 
@@ -81,8 +79,7 @@ public class UserPrimitive
     /// <returns>The primitive, belonging to that scope.</returns>
     public UserPrimitive BoundTo(Variables scope)
     {
-        return new UserPrimitive(
-            Name, ParameterNames, Defaults, Kind, _steps, Body, scope);
+        return new UserPrimitive(Name, ParameterNames, Defaults, Kind, Body, scope);
     }
 
     /// <summary>
@@ -112,8 +109,9 @@ public class UserPrimitive
     /// </summary>
     /// <param name="arguments">The values the call supplies, already worked out.</param>
     /// <param name="errorToken">The token to hang any complaint on.</param>
-    /// <returns>The scope to resolve the call in.</returns>
-    public Variables ScopeFor(IReadOnlyList<object> arguments, Token errorToken)
+    /// <returns>The recipe the body arrived at, and the scope to resolve it in.</returns>
+    public (IObjectResolver Recipe, Variables Scope) ChooseFor(
+        IReadOnlyList<object> arguments, Token errorToken)
     {
         Variables scope = new (_declaredIn);
 
@@ -134,10 +132,9 @@ public class UserPrimitive
             scope.SetValue(ParameterNames[index], value);
         }
 
-        foreach (FunctionBodyStep step in _steps)
-            step.CarryOut(scope);
+        (object answer, Variables reached) = Body.Follow(scope);
 
-        return scope;
+        return ((IObjectResolver) answer, reached);
     }
 
     /// <summary>

@@ -40,8 +40,8 @@ public class InteriorCallResolver : InteriorResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Interior made = (Interior) primitive.Body
-            .ResolveToObject(context, primitive.ScopeFor(given, ErrorToken));
+        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
+        Interior made = (Interior) recipe.ResolveToObject(context, scope);
 
         ApplyTo(context, variables, made);
 

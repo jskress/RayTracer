@@ -64,16 +64,17 @@ public partial class LanguageParser
         Dictionary<string, UserPrimitive> before = new (_primitives);
 
         // Known by its own name while its body is read, so that a body may stand on itself.
-        _primitives[name] = new UserPrimitive(name, parameterNames, defaults, kindName, [], null);
+        _primitives[name] = new UserPrimitive(
+            name, parameterNames, defaults, kindName, new FunctionBody(), null);
 
-        (List<FunctionBodyStep> steps, IObjectResolver body) = ParsePrimitiveBody(name, kindName);
+        FunctionBody body = ParsePrimitiveBody(name, kindName);
 
         _primitives.Clear();
 
         foreach ((string had, UserPrimitive was) in before)
             _primitives[had] = was;
 
-        return new UserPrimitive(name, parameterNames, defaults, kindName, steps, body);
+        return new UserPrimitive(name, parameterNames, defaults, kindName, body);
     }
 
     /// <summary>
@@ -81,66 +82,33 @@ public partial class LanguageParser
     /// <para>
     /// The answer is a surface rather than a sum, so what follows the <c>return</c> is read as one --
     /// and read as the very kind that was declared, so that saying one thing and giving back another
-    /// is caught here rather than left to be discovered when something looks wrong in a picture.
+    /// is caught here rather than left to be discovered when something looks wrong in a picture.  A
+    /// body that chooses is read the same way in each arm, which is what keeps that promise good when
+    /// there is more than one way out.
     /// </para>
     /// </summary>
     /// <param name="name">The primitive's name, for complaining with.</param>
     /// <param name="kind">The kind of surface it says it gives back.</param>
-    /// <returns>The steps on the way, and the recipe for the answer.</returns>
-    private (List<FunctionBodyStep>, IObjectResolver) ParsePrimitiveBody(string name, string kind)
+    /// <returns>The body, as far as its answer.</returns>
+    private FunctionBody ParsePrimitiveBody(string name, string kind)
     {
-        List<FunctionBodyStep> steps = [];
+        List<FunctionBodyStep> steps = ParseBodySteps();
+        Clause choice = ParseClause("startIfClause");
+        FunctionBody body;
 
-        while (true)
+        if (choice != null)
+            body = ChoiceOf(choice, steps, () => ParsePrimitiveBody(name, kind));
+        else
         {
-            // A smaller primitive of its own, which is how a complicated thing is made out of simpler
-            // ones without the simpler ones becoming everybody's business.
-            Clause inner = ParseClause("startPrimitiveClause");
+            // Insisted on by the clause itself, so there is nothing to test for here.
+            ParseClause("primitiveReturnClause");
 
-            if (inner != null)
-            {
-                UserPrimitive smaller = ParsePrimitiveDeclaration(inner);
-
-                // Known for the rest of this body, and dropped again with it.
-                _primitives[smaller.Name] = smaller;
-
-                steps.Add(new FunctionBodyStep(smaller.Name, smaller));
-
-                continue;
-            }
-
-            Clause nested = ParseClause("startFunctionClause");
-
-            if (nested != null)
-            {
-                UserFunction function = ParseFunctionDeclaration(nested);
-
-                steps.Add(new FunctionBodyStep(function.Name, function));
-
-                continue;
-            }
-
-            Clause local = ParseClause("functionLocalClause");
-
-            if (local is null)
-                break;
-
-            steps.Add(new FunctionBodyStep(local.Tokens[0].Text, local.Term()));
+            body = new FunctionBody { Steps = steps, Answer = ParseThingOfKind(kind, name) };
         }
 
-        if (ParseClause("primitiveReturnClause") is null)
-        {
-            throw CreateUnexpectedInputException(
-                $"The primitive '{name}' never says what it gives back; it needs a \"return\".");
-        }
+        CloseTheBody($"the primitive '{name}'");
 
-        IObjectResolver body = ParseThingOfKind(kind, name);
-
-        CurrentParser.MatchToken(
-            true, () => $"Expecting a close brace to end the primitive '{name}'; nothing may follow " +
-                        "its \"return\".", BounderToken.CloseBrace);
-
-        return (steps, body);
+        return body;
     }
 
     /// <summary>
@@ -193,7 +161,6 @@ public partial class LanguageParser
         {
             Name = name,
             Arguments = arguments,
-            Body = primitive.Body,
             Extras = ParseCallBlock(primitive.Kind),
             ErrorToken = nameToken
         };

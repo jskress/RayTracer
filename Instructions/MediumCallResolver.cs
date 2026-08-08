@@ -40,8 +40,8 @@ public class MediumCallResolver : MediumResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Medium made = (Medium) primitive.Body
-            .ResolveToObject(context, primitive.ScopeFor(given, ErrorToken));
+        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
+        Medium made = (Medium) recipe.ResolveToObject(context, scope);
 
         ApplyTo(context, variables, made);
 

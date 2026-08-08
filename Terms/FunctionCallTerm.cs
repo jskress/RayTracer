@@ -169,9 +169,9 @@ public class FunctionCallTerm : Term
             if (!own.MayBeFoldedIntoAField)
             {
                 throw new TokenException(
-                    $"The function '{_name}' works things out before its answer, so it cannot be " +
-                    "used in a density or an isosurface; those need a single expression to fold in " +
-                    "and to differentiate.")
+                    $"The function '{_name}' is more than a single expression -- it works things " +
+                    "out, or chooses, on its way to its answer -- so it cannot be used in a density " +
+                    "or an isosurface; those need one expression to fold in and to differentiate.")
                 {
                     Token = ErrorToken
                 };
@@ -184,7 +184,7 @@ public class FunctionCallTerm : Term
                 .Select(argument => (object) argument.ToField(variables))
                 .ToArray();
 
-            return own.Body.ToField(own.ScopeForFolding(given));
+            return own.FoldableBody.ToField(own.ScopeForFolding(given));
         }
 
         FieldExpression[] arguments = _arguments

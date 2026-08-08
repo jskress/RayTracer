@@ -45,8 +45,8 @@ public class MaterialCallResolver : MaterialResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Material made = (Material) primitive.Body
-            .ResolveToObject(context, primitive.ScopeFor(given, ErrorToken));
+        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
+        Material made = (Material) recipe.ResolveToObject(context, scope);
 
         // And now whatever the call itself said, among the names the call was written in.
         ApplyTo(context, variables, made);

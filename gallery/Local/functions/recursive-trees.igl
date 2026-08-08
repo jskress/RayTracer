@@ -1,0 +1,152 @@
+// Three trees, and the whole of what makes them is one primitive that calls itself.
+//
+// `limb` is thirty lines.  It makes one length of wood and then asks for three more limbs at the top
+// of it, each shorter, thinner and turned away from the last.  Those ask for three more, and so on --
+// until `depth` runs out, at which point it stops asking and puts out leaves instead.
+//
+// **That stopping is the whole reason this scene exists.**  A thing that calls itself needs somewhere
+// to stop, and until a body could choose between two answers there was no way to write one.  With a
+// choice there is: the first arm is the end of a limb and the second is a limb that carries three
+// more.  Everything else here follows from that one sentence.  Take the choice away and this is not a
+// scene that gets harder to write -- it is a scene that cannot be written at all, at any length,
+// because the recursion has no floor.
+//
+// Count what is standing here.  The two nearer trees are four generations of three, which is forty
+// limbs and eighty-one clusters of leaves apiece; with the smaller one behind them that is some six
+// hundred and sixty pieces of geometry, and not one of them is mentioned by name anywhere in this
+// file.  Written out by hand it would be an unreadable thousand lines, and no one would ever alter it,
+// because altering how a tree branches would mean editing every branch.
+//
+// Here it means editing one number.  `shrink` decides how much shorter each generation is; `lean` how
+// far a limb turns away from its parent; `taper` how much thinner it gets.  Change `lean` from 34 to
+// 20 and all three trees become narrow and upright together.  Change `shrink` and they become
+// top-heavy or spindly.  The trees were never described -- a rule for growing one was, and the rule
+// was applied.
+//
+// The three trees differ only in what they were told: how deep to go, how long the first limb is, and
+// which way the first fork faces.  That last one is doing a lot of work for one number.  Since every
+// generation turns by a fixed amount from its parent, a different starting twist rotates the whole
+// crown, and the three trees read as three trees rather than one tree stamped three times.  It is a
+// poor substitute for genuine variation -- what these want is a seeded random, so that no two limbs
+// are quite alike -- but it is enough to show what the shape of the thing buys.
+//
+// Two smaller points worth noticing, since both are what make the recursion read as plainly as it
+// does:
+//
+//   The body uses `shrink`, `taper` and `lean` without being handed them.  A body sees the names of
+//   the file it was **written** in, so the three numbers that decide the whole habit of the tree sit
+//   at the top of the file where a reader will find them, rather than being threaded through every
+//   recursive call as three more values.
+//
+//   Only the arm taken is carried out.  The leaf arm never asks for more limbs, so the recursion ends
+//   where it is told to and not one call later.
+//
+// The light is the physical sky, low and to the side, which is what puts the long shadows across the
+// grass and lets the crowns be lit from above and filled from the blue overhead.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Recursive Trees'
+        author 'J. Stephen Kress'
+        description 'Eight hundred pieces of geometry from one primitive that calls itself.'
+        copyright true
+        software __software__
+    }
+}
+
+// The habit of the tree, said once.  Every limb of every tree reads these, and nothing else decides
+// how any of them grows.
+shrink = 0.74      // how much shorter each generation is than the one below it
+taper = 0.62       // and how much thinner
+lean = 34          // how far a limb turns away from the one it grew from
+turn = 118         // and how far round, from one of its siblings to the next
+
+duller = color [0.23, 0.29, 0.14]
+greener = color [0.31, 0.37, 0.19]
+
+bark = material {
+    pigment [0.52, 0.36, 0.24]
+    specular 0.12
+    shininess 20
+}
+
+leaves = material {
+    pigment [0.29, 0.47, 0.20]
+    specular 0.18
+    shininess 30
+}
+
+// One limb: a length of wood, and then either leaves or three more limbs.
+//
+// The choice is the base case.  With `depth` spent, the limb ends in a cluster of leaves and asks for
+// nothing further; while it has depth left, it carries three more limbs, each one generation smaller.
+primitive limb(depth, length, thickness, twist) -> group {
+    if (depth < 1) {
+        return group {
+            sphere { material leaves  scale [0.20, 0.13, 0.20] }
+            sphere { material leaves  scale [0.15, 0.10, 0.15]  translate [0.15, 0.07, 0.09] }
+            sphere { material leaves  scale [0.13, 0.09, 0.13]  translate [-0.12, 0.05, -0.11] }
+        }
+    }
+    else {
+        return group {
+            cylinder {
+                min Y 0  max Y length
+                material bark
+                scale [thickness, 1, thickness]
+            }
+            object limb(depth - 1, length * shrink, thickness * taper, twist + turn) {
+                rotate Z lean
+                rotate Y twist
+                translate Y length
+            }
+            object limb(depth - 1, length * shrink, thickness * taper, twist + turn) {
+                rotate Z lean
+                rotate Y twist + turn
+                translate Y length
+            }
+            // The third leans less, so a crown does not come out as a flat fan.
+            object limb(depth - 1, length * shrink * 0.88, thickness * taper, twist + turn) {
+                rotate Z lean * 0.45
+                rotate Y twist + turn * 2
+                translate Y length * 0.94
+            }
+        }
+    }
+}
+
+camera {
+    location [5.6, 2.5, -10.4]
+    look at [-0.3, 2.7, 0.4]
+    field of view 50
+}
+
+background physical sky {
+    sun elevation 27
+    sun azimuth 142
+    turbidity 2.6
+    brightness 3
+}
+
+sky light {
+    samples 28
+}
+
+// The ground, mottled a little so that a flat sheet of green does not give the trees away.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.4
+            [0, duller, 1, greener]
+            scale 1.8
+        }
+        specular 0.03
+    }
+}
+
+// Three trees, differing only in what they were told.
+object limb(4, 1.9, 0.17, 0) { }
+object limb(4, 1.5, 0.14, 55) { translate [-4.2, 0, 2.2] }
+object limb(3, 1.3, 0.11, 200) { translate [3.2, 0, 5.4] }

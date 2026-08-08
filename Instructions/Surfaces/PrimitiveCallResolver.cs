@@ -8,10 +8,10 @@ namespace RayTracer.Instructions.Surfaces;
 /// <summary>
 /// This class resolves one call of a primitive a scene wrote for itself.
 /// <para>
-/// What it holds is a copy of the primitive's recipe, taken where the call was written, so that
-/// anything the call added in its own block belongs to that call and to no other.  What it looks up
-/// when the time comes is the primitive itself, and only for the scope it was written in -- which is
-/// the one thing a call cannot know for itself, scopes not existing until a render is under way.
+/// What it holds is whatever the call itself added, which belongs to that call and to no other.  What
+/// it looks up when the time comes is the primitive, since only then is it known what the primitive's
+/// body arrives at: a body may choose its answer from what it was given, so the recipe is not a thing
+/// a call can be handed when it is read.
 /// </para>
 /// </summary>
 public class PrimitiveCallResolver : ISurfaceResolver
@@ -25,12 +25,6 @@ public class PrimitiveCallResolver : ISurfaceResolver
     /// This property holds the values the call supplies.
     /// </summary>
     public List<Term> Arguments { get; init; }
-
-    /// <summary>
-    /// This property holds the primitive's recipe, as written.  It is shared rather than copied,
-    /// since resolving it makes a new thing every time in any case.
-    /// </summary>
-    public IObjectResolver Body { get; init; }
 
     /// <summary>
     /// This property holds whatever this call added in a block of its own, or <c>null</c> if it added
@@ -59,8 +53,8 @@ public class PrimitiveCallResolver : ISurfaceResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Surface made = ((ISurfaceResolver) Body)
-            .ResolveToSurface(context, primitive.ScopeFor(given, ErrorToken));
+        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
+        Surface made = ((ISurfaceResolver) recipe).ResolveToSurface(context, scope);
 
         // And now whatever the call itself said, in the names the call was written among -- which is
         // how a loop may place a row of these by saying `translate X step` after the call.
@@ -90,8 +84,7 @@ public class PrimitiveCallResolver : ISurfaceResolver
     {
         return new PrimitiveCallResolver
         {
-            Name = Name, Arguments = Arguments, Body = Body, Extras = Extras,
-            ErrorToken = ErrorToken
+            Name = Name, Arguments = Arguments, Extras = Extras, ErrorToken = ErrorToken
         };
     }
 

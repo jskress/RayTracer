@@ -64,11 +64,14 @@ public partial class LanguageParser
         // are keywords of ours, and a keyword takes over its name in this specification from the
         // predefined operator that had it -- so the symbols have to be reached for under names of
         // their own.  Naming them here rather than relying on the predefined names is what keeps
-        // both spellings working.
+        // both spellings working.  The conditional is here for the same reason and is worth calling
+        // out, since the collision is not one anybody would foresee: the predefined name for "?" is
+        // "if", so making "if" a keyword of ours takes that name away from it.
         arrow: _operator("->")
         logicalAnd: _operator("&&")
         logicalOr: _operator("||")
         logicalNot: _operator("!")
+        conditional: _operator("?")
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
@@ -79,10 +82,10 @@ public partial class LanguageParser
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
+            'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
@@ -145,7 +148,7 @@ public partial class LanguageParser
                 lessOrEqual: comparison, greaterOrEqual: comparison, notEqualTo: equality
             ]
             trinary: [
-                (if, colon)
+                (conditional, colon)
             ]
         }
 
@@ -1359,7 +1362,7 @@ public partial class LanguageParser
         }
         primitiveReturnClause:
         {
-            return ?? 'Expecting "return" here.'
+            return ?? 'Expecting "return" or "if" here; a body must say what it gives back.'
         }
         // A call of one, which may carry values and may be followed by a block of that kind's clauses.
         startCallClause:
@@ -1381,9 +1384,23 @@ public partial class LanguageParser
         {
             [ _identifier | _keyword ] > assignment > _expression
         }
+        // A choice, which always ends a body: both ways out give an answer, so there is nowhere for a
+        // second one to go and nowhere for a missing one to hide.
+        startIfClause:
+        {
+            if > leftParen ?? 'Expecting a condition in parentheses to follow "if" here.' >
+            _expression >
+            rightParen ?? 'Expecting a close parenthesis after the condition here.' >
+            openBrace ?? 'Expecting an open brace to follow the condition here.'
+        }
+        startElseClause:
+        {
+            else ?? 'Expecting "else" here; both ways out of a choice must give an answer.'
+        }
         functionReturnClause:
         {
-            return ?? 'Expecting "return" here.' > _expression
+            return ?? 'Expecting "return" or "if" here; a body must say what it gives back.' >
+            _expression
         }
         setVariableClause:
         {

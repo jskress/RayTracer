@@ -791,6 +791,7 @@ apart.
 | `-> number` | The kind of thing it gives back: `number`, `color` or `vector`.  Required, so that a call can be checked where it is written rather than when it runs. |
 | `name = ...` | Worked out on the way to the answer.  Later ones may lean on earlier ones. |
 | `return ...` | The answer.  A function must have one, and nothing may follow it. |
+| `if (...) { } else { }` | Two ways out, each giving an answer of its own.  See [Choosing Inside a Body](#choosing-inside-a-body). |
 
 **Things worked out along the way earn their place.**  A figure the body needs in three places should
 be arrived at once, or the three copies drift apart the first time one is edited.
@@ -816,10 +817,11 @@ whatever names the calling scene happens to have lying about.  That is what make
 safe to rely on.
 
 **One restriction.**  A function may be used inside a `density function { }` or an
-[isosurface](advanced-surfaces.md#isosurface) **only if its body is a single `return` with nothing
-worked out along the way**.  Those compile their arithmetic down and, for an isosurface, differentiate
-it to find surface normals — which can be done by folding a plain expression in, and cannot be done at
-all once there are workings to fold in first.  You will be told plainly if you cross that line.
+[isosurface](advanced-surfaces.md#isosurface) **only if its body is a single `return`** — nothing
+worked out along the way, and no [choice](#choosing-inside-a-body).  Those compile their arithmetic
+down and, for an isosurface, differentiate it to find surface normals — which can be done by folding a
+plain expression in, and cannot be done at all once there is a small procedure to fold in instead.  You
+will be told plainly if you cross that line.
 
 ### Things of Your Own
 
@@ -937,6 +939,105 @@ including the two-word ones (`smooth triangle`, `generic shape`, `object file`).
 
 A call's block need not repeat what the body already said.  It is laid *over* what the primitive made,
 so it holds only what that call wished to change.
+
+### Choosing Inside a Body
+
+A function or a primitive may **choose** which of two answers it gives:
+
+```
+function reachOf(index) -> number {
+    if (index < 3) { return 1 + index * 0.35 }
+    else { return 2.05 + (index - 3) * 0.12 }
+}
+```
+
+A primitive chooses in the same words, and this is where it earns its keep — one name standing for a
+family of things, picking among them by what it was told:
+
+```
+primitive marker(size) -> sphere {
+    if (size > 1) {
+        glow = size * 0.4
+        return sphere { material { pigment Red  ambient glow }  scale size }
+    }
+    else { return sphere { material { pigment Blue }  scale size } }
+}
+
+object marker(1.8) { translate X -2.5 }
+object marker(0.6) { translate X 2.5 }
+```
+
+**A choice ends the body it is written in.**  Both ways out have to give an answer, and nothing may
+follow the choice — the `else` block is the last thing in the body.  That is deliberate, and it buys
+two things worth having.  "Exactly one answer, on every path" becomes a matter of how the thing is
+written rather than something the parser has to reason its way to: there is nowhere for a second answer
+to go and nowhere for a missing one to hide.  And what an arm works out belongs to that arm, because
+there is no "after the choice" for it to leak into.
+
+**Each arm is a body in its own right**, so it may work things out, hold a smaller function or
+primitive of its own, and end in a choice of its own.  A run of cases is written the way you would
+expect, with `else if`:
+
+```
+function bandOf(height) -> number {
+    if (height < 1) { return 0 }
+    else if (height < 4) { grown = height - 1  return 1 + grown * 0.1 }
+    else { return 2 }
+}
+```
+
+An `else if` is exactly an `else` whose body is another choice — the same tree comes out either way —
+and writing it flat saves a pair of braces and a step of indenting per case, which is the difference
+between a run of cases that reads down the page and one that walks off the right of it.  The last
+`else` is still required, since it is what makes every path answer.
+
+**Only the arm taken is carried out.**  The side not taken may be one that could not be worked out at
+all, which is most of what a choice is for: keeping a body away from a case it has no answer for.
+
+**A primitive's arms are each read as the kind it promised.**  A `-> sphere` that gives back a cube in
+one of its arms is refused while the file is being read, not left to be found in a picture.
+
+**A primitive that can stop may call itself.**  This is the largest thing a choice buys, and it is
+not obvious until you see it: recursion needs somewhere to stop, and a body could not stop until it
+could choose.
+
+```
+primitive limb(depth, length, thickness) -> group {
+    if (depth < 1) { return group { sphere { material leaves  scale 0.2 } } }
+    else {
+        return group {
+            cylinder { min Y 0  max Y length  scale [thickness, 1, thickness]  material bark }
+            object limb(depth - 1, length * 0.74, thickness * 0.62) {
+                rotate Z 34  translate Y length
+            }
+            object limb(depth - 1, length * 0.74, thickness * 0.62) {
+                rotate Z -34  translate Y length
+            }
+        }
+    }
+}
+
+object limb(6, 1.9, 0.17)
+```
+
+That is a tree: sixty-three limbs and sixty-four clusters of leaves, none of them written down.  Mind
+the depth, though — each generation multiplies what the last one made, so a small number is a large
+scene.
+
+**When a choice is the wrong tool.**  A value that merely *differs* by some condition — a size, a
+color — wants the [conditional](#choosing-between-values) rather than a choice, since a choice would
+make you repeat the whole answer in both arms:
+
+```
+primitive post(height) -> cube {
+    return cube { scale [0.1, height, 0.1]  material { pigment height > 2 ? Red : Blue } }
+}
+```
+
+Neither is available inside a `density function { }` or an
+[isosurface](advanced-surfaces.md#isosurface): a field holds arithmetic on numbers and has nothing in
+it to compare or to choose with.  A field that must vary by a condition has to be written as arithmetic
+that comes out the same way.
 
 ### Including Other Files
 

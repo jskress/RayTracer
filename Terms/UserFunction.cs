@@ -52,13 +52,12 @@ public class UserFunction
     /// </summary>
     public int RequiredCount { get; }
 
-    private readonly List<FunctionBodyStep> _steps;
-    private readonly Term _body;
+    private readonly FunctionBody _body;
     private readonly Variables _declaredIn;
 
     public UserFunction(
         string name, IReadOnlyList<string> parameterNames, IReadOnlyList<Term> defaults,
-        string kind, List<FunctionBodyStep> steps, Term body, Variables declaredIn = null)
+        string kind, FunctionBody body, Variables declaredIn = null)
     {
         Name = name;
         ParameterNames = parameterNames;
@@ -66,7 +65,6 @@ public class UserFunction
         Kind = kind;
         RequiredCount = defaults.Count(fallback => fallback is null);
 
-        _steps = steps;
         _body = body;
         _declaredIn = declaredIn;
     }
@@ -84,22 +82,22 @@ public class UserFunction
     /// <returns>The function, belonging to that scope.</returns>
     public UserFunction BoundTo(Variables scope)
     {
-        return new UserFunction(Name, ParameterNames, Defaults, Kind, _steps, _body, scope);
+        return new UserFunction(Name, ParameterNames, Defaults, Kind, _body, scope);
     }
 
     /// <summary>
     /// This property reports whether the function may be folded into a field -- a density's shape or
-    /// an isosurface's -- which it may only when its body is a single answer with no workings before
-    /// it.
+    /// an isosurface's -- which it may only when its body is a single answer: no workings before it,
+    /// and no choice.
     /// <para>
     /// The reason is not fussiness.  A field is compiled down to arithmetic over a place and asked
     /// about millions of them, and an isosurface's is differentiated besides, to find which way its
     /// surface faces.  A plain expression can be folded straight in and both of those go on working.
-    /// A body that works things out first has nowhere to be folded into: there is no expression to
-    /// fold, only a small procedure, and a procedure cannot be differentiated.
+    /// Anything more has nowhere to be folded into: there is no expression to fold, only a small
+    /// procedure, and a procedure cannot be differentiated.
     /// </para>
     /// </summary>
-    public bool MayBeFoldedIntoAField => _steps.Count == 0;
+    public bool MayBeFoldedIntoAField => _body.IsASingleAnswer;
 
     /// <summary>
     /// This method returns the function's body with the call's values put in place of its parameter
@@ -123,9 +121,11 @@ public class UserFunction
     }
 
     /// <summary>
-    /// This property holds the expression the function comes back with.
+    /// This property holds the one expression the function comes back with, for folding into a field.
+    /// It is only meaningful when <see cref="MayBeFoldedIntoAField"/> says so, a body that works
+    /// things out or chooses having no single expression to hand back.
     /// </summary>
-    public Term Body => _body;
+    public Term FoldableBody => (Term) _body.Answer;
 
     /// <summary>
     /// This method reports what is wrong with a call of the given size, or <c>null</c> if nothing is.
@@ -178,13 +178,9 @@ public class UserFunction
             scope.SetValue(ParameterNames[index], value);
         }
 
-        // Carried out in order and each into the same scope, so that a later one may lean on an
-        // earlier -- which is most of what they are for, a thing worked out once and then used
-        // several times over, or a smaller function used twice in the answer.
-        foreach (FunctionBodyStep step in _steps)
-            step.CarryOut(scope);
+        (object answer, Variables reached) = _body.Follow(scope);
 
-        return _body.GetValue(scope);
+        return ((Term) answer).GetValue(reached);
     }
 
     /// <summary>
