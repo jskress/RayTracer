@@ -859,6 +859,39 @@ picture looks wrong.
 on one cannot reach another — three calls with three different `translate`s stand in three places, and
 the recipe everybody else uses is left as it was written.
 
+**A primitive may also give back a pigment:**
+
+```
+primitive banded(width, warm = 0.8) -> pigment {
+    pale = [warm, warm * 0.9, warm * 0.7]
+    return linear stripes { pale, [0.2, 0.22, 0.3]  scale width }
+}
+
+sphere { material { pigment banded(0.4) } }
+```
+
+A pigment is named through an expression rather than a clause of its own, so a call of one is written
+wherever a pigment may be named — and takes no block after it, a pigment having no clauses that could
+be laid over one already made.
+
+**A material and an interior may be given back too:**
+
+```
+primitive glazed(hue, gloss = 0.5) -> material {
+    return material { pigment hue  specular gloss  shininess 40 + gloss * 260 }
+}
+
+sphere { material glazed(Red) }
+sphere { material glazed(Blue, 0.9) { shininess 5 } }
+```
+
+Both are named the way a surface is — the word, then the name — so a call is told apart by what
+follows it: a parenthesis.  Both take a block afterward, laid over what the recipe made, so a call may
+be adjusted where it stands without touching the recipe.
+
+A medium cannot yet be given back, for a plainer reason than it sounds: a medium cannot be *named* at
+all in this language, so there is nothing for a call of one to look like.
+
 **A primitive may hold smaller ones**, and functions too — a fence knows how to make a post, and
 nobody else needs to:
 

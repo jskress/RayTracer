@@ -30,7 +30,7 @@ public class PrimitiveCallResolver : ISurfaceResolver
     /// This property holds the primitive's recipe, as written.  It is shared rather than copied,
     /// since resolving it makes a new thing every time in any case.
     /// </summary>
-    public ISurfaceResolver Body { get; init; }
+    public IObjectResolver Body { get; init; }
 
     /// <summary>
     /// This property holds whatever this call added in a block of its own, or <c>null</c> if it added
@@ -59,7 +59,8 @@ public class PrimitiveCallResolver : ISurfaceResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Surface made = Body.ResolveToSurface(context, primitive.ScopeFor(given, ErrorToken));
+        Surface made = ((ISurfaceResolver) Body)
+            .ResolveToSurface(context, primitive.ScopeFor(given, ErrorToken));
 
         // And now whatever the call itself said, in the names the call was written among -- which is
         // how a loop may place a row of these by saying `translate X step` after the call.

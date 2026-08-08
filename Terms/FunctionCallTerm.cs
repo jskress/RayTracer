@@ -2,6 +2,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
 using RayTracer.Fields;
+using RayTracer.Instructions.Pigments;
 
 namespace RayTracer.Terms;
 
@@ -85,6 +86,46 @@ public class FunctionCallTerm : Term
                 throw new TokenException(wrong) { Token = ErrorToken };
 
             return own.Call(values, ErrorToken);
+        }
+
+        // A pigment a scene wrote for itself is named through an expression, so a call of one arrives
+        // here rather than through a clause.  What goes back is not the pigment -- making one needs
+        // the render's context, which an expression has no sight of -- but the makings of it, for
+        // whoever asked to finish once they have the context.
+        if (variables.GetValue(_name, typeof(UserPrimitive)) is UserPrimitive primitive)
+        {
+            string amiss = primitive.CheckCall(values.Length);
+
+            if (amiss != null)
+                throw new TokenException(amiss) { Token = ErrorToken };
+
+            if (primitive.Kind != "pigment")
+            {
+                throw new TokenException(
+                    $"'{_name}' gives back a {primitive.Kind}, which cannot stand in an expression.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            // A pigment is a thing to paint with and not a value to reckon with, so where a number or
+            // a place was wanted, say so here.  Left to the conversion that follows, the complaint
+            // names a class out of the renderer's own workings, which tells a scene's author nothing.
+            if (targetTypes.Length > 0 &&
+                !targetTypes.Any(type => type.IsAssignableFrom(typeof(PigmentCallResolver))))
+            {
+                throw new TokenException(
+                    $"'{_name}' gives back a pigment, which cannot be used as " +
+                    $"{string.Join(" or ", targetTypes.Select(type => type.Name))} here.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            return new PigmentCallResolver
+            {
+                Primitive = primitive, Arguments = values, ErrorToken = ErrorToken
+            };
         }
 
         if (!FunctionCatalog.Instance.IsKnown(_name))

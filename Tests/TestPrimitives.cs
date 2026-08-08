@@ -289,6 +289,85 @@ public class TestPrimitives
     }
 
     [TestMethod]
+    public void TestAPrimitiveMayGiveBackAPigment()
+    {
+        // The other half of what a primitive is for.  A pigment is named through an expression rather
+        // than a clause of its own, so a call of one arrives by a quite different road than a
+        // surface's -- and has to come back as the makings of a pigment rather than a pigment, an
+        // expression having no sight of the render's context to finish one with.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            primitive banded(width, warm = 0.8) -> pigment {
+                pale = [warm, warm * 0.9, warm * 0.7]
+                return linear stripes { pale, [0.2, 0.22, 0.3]  scale width }
+            }
+            sphere { material { pigment banded(0.4) }  translate X -1.2 }
+            sphere { material { pigment banded(0.15, 1.0) }  translate X 1.2 }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+    }
+
+    [TestMethod]
+    public void TestAPigmentPrimitiveCannotStandWhereANumberIsWanted()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            primitive banded(width) -> pigment { return linear stripes { White, Black  scale width } }
+            sphere { scale banded(0.5) }
+            """);
+
+        Assert.IsNull(image);
+        Assert.IsTrue(error.Contains("banded"), $"the complaint should name it: {error}");
+    }
+
+    [TestMethod]
+    public void TestANameHoldingATupleAnswersWhereAColorIsWanted()
+    {
+        // Not about primitives at all, but found through one and worth keeping.  A name was looked up
+        // by the type asked for and reported as nothing when none matched -- so a tuple, which
+        // converts to a color readily enough, could not be used as one.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            pale = [0.8, 0.3, 0.2]
+            sphere { material { pigment pale } }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+    }
+
+    [TestMethod]
+    public void TestAPrimitiveMayGiveBackAMaterialOrAnInterior()
+    {
+        // Both are named the way a surface is -- the word, then the name -- so a call of either is
+        // told apart by what follows: a parenthesis rather than a brace or nothing.  And both may be
+        // adjusted where they stand, the block being laid over what the recipe made.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            primitive glazed(hue, gloss = 0.5) -> material {
+                return material { pigment hue  specular gloss  shininess 40 + gloss * 260 }
+            }
+            primitive misty(thickness) -> interior {
+                return interior { ior 1.4  medium { absorption thickness } }
+            }
+            sphere { material glazed(Red)  translate X -1.5 }
+            sphere { material glazed(Blue, 0.9) { shininess 5 } }
+            sphere {
+                material {
+                    pigment White  transparency 1  diffuse 0.1
+                    interior misty(0.4) { ior 1.9 }
+                }
+                translate X 1.5
+            }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+    }
+
+    [TestMethod]
     public void TestACallIsCheckedAgainstWhatItTakes()
     {
         (Canvas image, string error) = Render($$"""

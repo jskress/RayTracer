@@ -1349,7 +1349,8 @@ public partial class LanguageParser
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | patch | lathe | blob | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
-                { smooth > triangle } | { generic > shape } | { object > file }
+                { smooth > triangle } | { generic > shape } | { object > file } |
+                pigment | material | interior
             ] ?? 'Expecting the kind of surface this gives back here.' >
             openBrace ?? 'Expecting an open brace to follow the kind here.'
         }

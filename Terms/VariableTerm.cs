@@ -39,11 +39,21 @@ public class VariableTerm : Term
             };
         }
 
-        return targetTypes.Length == 0
-            ? variables.GetValue(_name)
-            : targetTypes
-                .Select(type => variables.GetValue(_name, type))
-                .FirstOrDefault(value => value != null);
+        if (targetTypes.Length == 0)
+            return variables.GetValue(_name);
+
+        object found = targetTypes
+            .Select(type => variables.GetValue(_name, type))
+            .FirstOrDefault(value => value != null);
+
+        // Nothing was filed under any of the types asked about, but a name holding one thing may
+        // still answer: what it holds might convert.  Handing it back lets the coercion that follows
+        // decide, rather than reporting nothing and leaving the caller to say it could not resolve
+        // something it never actually looked at.
+        //
+        // This is what left `pale = [0.8, 0.3, 0.2]` unusable as a pigment: a tuple is not a color and
+        // never turned up under one, though it converts to one readily enough.
+        return found ?? variables.GetValue(_name);
     }
 
     /// <summary>

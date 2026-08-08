@@ -1,7 +1,7 @@
 using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
-using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions;
 
 namespace RayTracer.Terms;
 
@@ -40,7 +40,8 @@ public class UserPrimitive
     public IReadOnlyList<Term> Defaults { get; }
 
     /// <summary>
-    /// This property holds the kind of surface it was declared to give back.
+    /// This property holds the kind of thing it was declared to give back -- a kind of surface, or
+    /// a pigment.
     /// </summary>
     public string Kind { get; }
 
@@ -48,7 +49,7 @@ public class UserPrimitive
     /// This property holds the recipe for what it gives back, as written.  A call takes a copy of
     /// this so that whatever the call adds in its own block belongs to that call alone.
     /// </summary>
-    public ISurfaceResolver Body { get; }
+    public IObjectResolver Body { get; }
 
     /// <summary>
     /// This property holds how many values a call must supply.
@@ -60,7 +61,7 @@ public class UserPrimitive
 
     public UserPrimitive(
         string name, IReadOnlyList<string> parameterNames, IReadOnlyList<Term> defaults,
-        string kind, List<FunctionBodyStep> steps, ISurfaceResolver body, Variables declaredIn = null)
+        string kind, List<FunctionBodyStep> steps, IObjectResolver body, Variables declaredIn = null)
     {
         Name = name;
         ParameterNames = parameterNames;

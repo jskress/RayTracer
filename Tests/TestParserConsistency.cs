@@ -78,17 +78,35 @@ public class TestParserConsistency
         // tables then have to know that kind: which grammar rule opens it, how to read it, and what
         // its call's block may say.  Any kind missing from any of them is a shape a scene may use
         // everywhere except from a primitive of its own.
-        HashSet<string> expected = Normalize(SurfacesIn(GrammarList("groupEntryClause")));
+        HashSet<string> surfaces = Normalize(SurfacesIn(GrammarList("groupEntryClause")));
         string primitives = Read("Parser/LanguageParser.Primitives.cs");
 
-        AssertSame(expected, Normalize(GrammarList("primitiveKindClause", asWords: true)),
-            "what may stand in a group and what a primitive may give back");
-        AssertSame(expected, Normalize(KindsIn(primitives, "ParseSurfaceOfKind")),
-            "what a primitive may give back and what can be read back");
-        AssertSame(expected, Normalize(KindsIn(primitives, "ParseCallBlock")),
-            "what a primitive may give back and what a call's block understands");
-        AssertSame(expected, Normalize(KindsIn(primitives, "StartClauseFor")),
-            "what a primitive may give back and what has a grammar rule");
+        // A primitive gives back more than surfaces.  These are the others, and they are listed here
+        // rather than found, so that adding one is a deliberate act with a test to update.
+        HashSet<string> everything = [..surfaces, "pigment", "material", "interior"];
+
+        AssertSame(everything, Normalize(GrammarList("primitiveKindClause", asWords: true)),
+            "what a primitive may say it gives back and what it may give back");
+
+        // A pigment is read before the surfaces are looked for, having no rule of its own to open it,
+        // so it is not among the arms that table wears.
+        HashSet<string> readable = Normalize(KindsIn(primitives, "ParseThingOfKind"));
+
+        readable.UnionWith(new[] { "pigment", "material", "interior" });
+
+        AssertSame(everything, readable, "what a primitive may give back and what can be read back");
+
+        // Only a surface has clauses that could be laid over one already made, and only a surface is
+        // opened by a rule, so these two know the surfaces alone.
+        HashSet<string> blocks = Normalize(KindsIn(primitives, "ParseCallBlock"));
+
+        // That table names the others only to turn them away, having no block to read for them.
+        blocks.ExceptWith(new[] { "pigment", "material", "interior" });
+
+        AssertSame(surfaces, blocks,
+            "the surfaces a primitive may give back and what a call's block understands");
+        AssertSame(surfaces, Normalize(KindsIn(primitives, "StartClauseFor")),
+            "the surfaces a primitive may give back and what has a grammar rule");
     }
 
     [TestMethod]

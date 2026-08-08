@@ -66,7 +66,7 @@ public partial class LanguageParser
         // Known by its own name while its body is read, so that a body may stand on itself.
         _primitives[name] = new UserPrimitive(name, parameterNames, defaults, kindName, [], null);
 
-        (List<FunctionBodyStep> steps, ISurfaceResolver body) = ParsePrimitiveBody(name, kindName);
+        (List<FunctionBodyStep> steps, IObjectResolver body) = ParsePrimitiveBody(name, kindName);
 
         _primitives.Clear();
 
@@ -87,7 +87,7 @@ public partial class LanguageParser
     /// <param name="name">The primitive's name, for complaining with.</param>
     /// <param name="kind">The kind of surface it says it gives back.</param>
     /// <returns>The steps on the way, and the recipe for the answer.</returns>
-    private (List<FunctionBodyStep>, ISurfaceResolver) ParsePrimitiveBody(string name, string kind)
+    private (List<FunctionBodyStep>, IObjectResolver) ParsePrimitiveBody(string name, string kind)
     {
         List<FunctionBodyStep> steps = [];
 
@@ -134,7 +134,7 @@ public partial class LanguageParser
                 $"The primitive '{name}' never says what it gives back; it needs a \"return\".");
         }
 
-        ISurfaceResolver body = ParseSurfaceOfKind(kind, name);
+        IObjectResolver body = ParseThingOfKind(kind, name);
 
         CurrentParser.MatchToken(
             true, () => $"Expecting a close brace to end the primitive '{name}'; nothing may follow " +
@@ -205,8 +205,20 @@ public partial class LanguageParser
     /// <param name="kind">The kind declared.</param>
     /// <param name="name">The primitive's name, for complaining with.</param>
     /// <returns>The recipe for the surface.</returns>
-    private ISurfaceResolver ParseSurfaceOfKind(string kind, string name)
+    private IObjectResolver ParseThingOfKind(string kind, string name)
     {
+        // These are written as themselves rather than opened by a rule of the usual shape, so they
+        // are read before the surfaces are looked for.
+        switch (kind)
+        {
+            case "pigment":
+                return ParsePigmentClause();
+            case "material":
+                return GetMaterialResolver(OpenedBy("startMaterialClause", kind, name));
+            case "interior":
+                return GetInteriorResolver(OpenedBy("startInteriorClause", kind, name));
+        }
+
         Clause clause = ParseClause(StartClauseFor(kind));
 
         if (clause is null)
@@ -249,6 +261,28 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method reads the clause that opens a thing of the given kind, complaining in the same
+    /// terms as the surfaces do when nothing of that kind is there.
+    /// </summary>
+    /// <param name="rule">The grammar rule that opens it.</param>
+    /// <param name="kind">The kind declared.</param>
+    /// <param name="name">The primitive's name, for complaining with.</param>
+    /// <returns>The clause that opens it.</returns>
+    private Clause OpenedBy(string rule, string kind, string name)
+    {
+        Clause clause = ParseClause(rule);
+
+        if (clause is null)
+        {
+            throw CreateUnexpectedInputException(
+                $"The primitive '{name}' says it gives back a {kind}, so a {kind} must follow its " +
+                "\"return\".");
+        }
+
+        return clause;
+    }
+
+    /// <summary>
     /// This method reads whatever a call adds in a block of its own.
     /// <para>
     /// The block is read as the declared kind's own clauses, so a call giving back a cylinder takes
@@ -267,6 +301,12 @@ public partial class LanguageParser
     /// <returns>What the call added, or <c>null</c> if it added nothing.</returns>
     private ISurfaceResolver ParseCallBlock(string kind)
     {
+        // A pigment has no clauses that could be laid over one already made, so a call of one takes
+        // no block at all.  A material and an interior do have such clauses, but a call of either is
+        // read where that kind of thing is named rather than here.
+        if (kind is "pigment" or "material" or "interior")
+            return null;
+
         Token next = CurrentParser.PeekNextToken();
 
         if (next is null || !BounderToken.OpenBrace.Matches(next))
@@ -369,6 +409,44 @@ public partial class LanguageParser
             "object file" => "startObjectFileClause",
             _ => throw new ArgumentException($"There is no grammar rule for a {kind}.")
         };
+    }
+
+    /// <summary>
+    /// This method reads a call of a named material or interior, if that is what stands here.
+    /// <para>
+    /// Both are named the same way a surface is -- the word, then the name -- so a call of one is
+    /// told apart by what comes next: a parenthesis rather than a brace or nothing.
+    /// </para>
+    /// </summary>
+    /// <param name="nameToken">The name that was read.</param>
+    /// <param name="kind">The kind of thing expected.</param>
+    /// <returns>The values the call supplies, or <c>null</c> if this is not a call.</returns>
+    private List<Term> CallArgumentsIfAny(Token nameToken, string kind)
+    {
+        Token next = CurrentParser.PeekNextToken();
+
+        if (next is null || !BounderToken.LeftParen.Matches(next))
+            return null;
+
+        if (!_primitives.TryGetValue(nameToken.Text, out UserPrimitive primitive) ||
+            primitive.Kind != kind)
+        {
+            throw new TokenException(
+                $"Nothing named '{nameToken.Text}' is a {kind} this scene has declared.")
+            {
+                Token = nameToken
+            };
+        }
+
+        CurrentParser.GetNextToken();
+
+        List<Term> arguments = ParseCallArguments();
+        string wrong = primitive.CheckCall(arguments.Count);
+
+        if (wrong != null)
+            throw new TokenException(wrong) { Token = nameToken };
+
+        return arguments;
     }
 
     /// <summary>
