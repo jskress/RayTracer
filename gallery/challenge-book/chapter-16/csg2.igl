@@ -104,13 +104,14 @@ difference {
         material inherited
     }
     group {
-        index = [0, 11]
-        cube {
-            material inherited
-            rotate Y 45
-            scale X 0.1
-            translate Z -1.47
-            rotate Y index * 30
+        for index in [0, 11] {
+            cube {
+                material inherited
+                rotate Y 45
+                scale X 0.1
+                translate Z -1.47
+                rotate Y index * 30
+            }
         }
         material inherited
     }

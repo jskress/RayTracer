@@ -53,8 +53,8 @@ public class SceneResolver : NamedObjectResolver<Scene>
             .Select(resolver => resolver.Resolve(context, variables)));
         value.Lights.AddRange(LightResolvers
             .Select(resolver => (Light) resolver.ResolveToObject(context, variables)));
-        value.Surfaces.AddRange(SurfaceResolvers
-            .Select(resolver => resolver.ResolveToSurface(context, variables)));
+        SurfaceLoop.AddAllTo(
+            context, variables, SurfaceResolvers, surface => value.Surfaces.Add(surface));
 
         if (BackgroundResolver != null)
             value.Background = BackgroundResolver.ResolveToPigment(context, variables);

@@ -83,14 +83,14 @@ public partial class LanguageParser
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
+            'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
-            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'open', 'or', 'orthographic', 'over', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1163,10 +1163,26 @@ public partial class LanguageParser
         ]
 
         // Group clauses.
-        groupIntervalClause:
+        //
+        // A loop, which makes what stands in it once for every value in a range.  The name is optional,
+        // for when the repetition is wanted and the count is not.  The range is written as an interval
+        // like any other -- square brackets take an end in, parentheses leave it out -- so "for
+        // [0, 11]" is twelve turns and "for i = (0, 1) by 0.25" is four, at a quarter, a half, three
+        // quarters and one.
+        startForClause:
         {
-            { [ _identifier | _keyword ] > assignment }{?} > intervalClause >
-            { by > _expression }{?}
+            for > [ _identifier | _keyword ] ?? 'Expecting a name for the count to follow "for" here.' >
+            in ?? 'Expecting "in" and a range to follow the name here.' > intervalClause >
+            { by > _expression }{?} >
+            openBrace ?? 'Expecting an open brace to follow the range here.'
+        }
+        // The same thing with no name for the count, for when the repetition is all that is wanted.
+        // It is a word of its own rather than a "for" with a hole in it, so that a reader never has to
+        // wonder where the name went.
+        startOverClause:
+        {
+            over > intervalClause > { by > _expression }{?} >
+            openBrace ?? 'Expecting an open brace to follow the range here.'
         }
         startGroupClause:
         {
@@ -1177,7 +1193,8 @@ public partial class LanguageParser
         }
         groupEntryClause:
         [
-            groupIntervalClause => 'interval' |
+            startForClause => 'for' |
+            startOverClause => 'over' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
@@ -1216,6 +1233,8 @@ public partial class LanguageParser
         }
         sceneEntryClause:
         [
+            startForClause => 'for' |
+            startOverClause => 'over' |
             namedClause => 'name' |
             startCameraClause => 'camera' |
             startLightClause => 'light' |
@@ -1443,6 +1462,8 @@ public partial class LanguageParser
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |
             startGroupClause          => 'HandleStartGroupClause' |
+            startForClause            => 'HandleStartForClause' |
+            startOverClause           => 'HandleStartForClause' |
             background                => 'HandleBackgroundClause' |
             startEnvironmentClause    => 'HandleStartEnvironmentClause' |
             environmentClause         => 'HandleEnvironmentClause' |

@@ -92,8 +92,9 @@ public class TestVariableScoping
         (Canvas image, string error) = Render($$"""
             {{Staging}}
             group {
-                index = [0, 2]
-                sphere { material { pigment Red }  scale 0.4  translate X index }
+                for index in [0, 2] {
+                    sphere { material { pigment Red }  scale 0.4  translate X index }
+                }
             }
             sphere { material { pigment Blue }  scale 0.4  translate [index, 1.5, 0] }
             """);
@@ -114,8 +115,9 @@ public class TestVariableScoping
             spacing = 1.1
             paint = material { pigment Red }
             group {
-                index = [0, 2]
-                sphere { material paint  scale 0.4  translate X index * spacing }
+                for index in [0, 2] {
+                    sphere { material paint  scale 0.4  translate X index * spacing }
+                }
             }
             """);
 
@@ -134,11 +136,13 @@ public class TestVariableScoping
         (Canvas image, string error) = Render($$"""
             {{Staging}}
             group {
-                index = [0, 2]
-                group {
-                    index = [0, 2]
-                    sphere { material { pigment Red }  scale 0.3  translate X index * 1.2 }
-                    translate Y index * 1.2
+                for index in [0, 2] {
+                    group {
+                        for index in [0, 2] {
+                            sphere { material { pigment Red }  scale 0.3  translate X index * 1.2 }
+                        }
+                        translate Y index * 1.2
+                    }
                 }
             }
             """);
@@ -179,8 +183,9 @@ public class TestVariableScoping
         (Canvas image, string error) = Render($$"""
             {{Staging}}
             group {
-                index = [0, 2]
-                sphere { material { pigment Red }  scale 0.4  translate X index }
+                for index in [0, 2] {
+                    sphere { material { pigment Red }  scale 0.4  translate X index }
+                }
                 translate Y index
             }
             """);
@@ -201,8 +206,9 @@ public class TestVariableScoping
                 return grown * spacing
             }
             group {
-                index = [0, 2]
-                sphere { material { pigment Red }  scale 0.35  translate X reach(index) }
+                for index in [0, 2] {
+                    sphere { material { pigment Red }  scale 0.35  translate X reach(index) }
+                }
             }
             sphere { material { pigment Blue }  scale 0.35  translate X reach(0, 0) }
             """);
@@ -226,8 +232,9 @@ public class TestVariableScoping
                 return 1 + stretch
             }
             group {
-                index = [0, 2]
-                sphere { material { pigment Red }  scale 0.35  translate X spiral(index) }
+                for index in [0, 2] {
+                    sphere { material { pigment Red }  scale 0.35  translate X spiral(index) }
+                }
             }
             """);
 

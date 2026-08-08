@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
@@ -12,6 +13,22 @@ namespace RayTracer.Parser;
 /// </summary>
 public partial class LanguageParser
 {
+    /// <summary>
+    /// This method is used to handle a loop written at the top of a file, where what it makes goes
+    /// straight into the scene the file describes.
+    /// </summary>
+    /// <param name="clause">The clause that opened the loop.</param>
+    private void HandleStartForClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Loop");
+
+        _context.InstructionContext.AddInstruction(new TopLevelLoopCreator
+        {
+            Context = _context.InstructionContext,
+            Loop = ParseForClause(clause)
+        });
+    }
+
     /// <summary>
     /// This method is used to handle the beginning of a group block.
     /// </summary>
@@ -52,8 +69,9 @@ public partial class LanguageParser
         {
             switch (clause.Tag)
             {
-                case "interval":
-                    resolver.GroupInterval = CreateGroupInterval(clause);
+                case "for":
+                case "over":
+                    resolver.SurfaceResolvers.Add(ParseForClause(clause));
                     break;
                 case "plane":
                     resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));
@@ -150,41 +168,85 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to parse the given clause into a group interval.
+    /// This method reads a loop: the range it counts through and the things it makes each time round.
+    /// <para>
+    /// The body is read as though it were a group's, which is exactly what it is -- the same surfaces
+    /// may stand in it, and a loop may stand in it too, that being how one loop is written inside
+    /// another.  What may not stand in it is anything belonging to a group rather than to the things
+    /// in it: a transform, a material, a name.  A loop is not a thing in the scene and has nothing for
+    /// those to be about, so they are refused here rather than read and quietly dropped.
+    /// </para>
     /// </summary>
-    /// <param name="clause">The clause to parse.</param>
-    /// <returns>The group interval.</returns>
-    private static GroupInterval CreateGroupInterval(Clause clause)
+    /// <param name="clause">The clause that opened the loop, whether "for" or "over".</param>
+    /// <returns>The loop.</returns>
+    private SurfaceLoop ParseForClause(Clause clause)
     {
         ClauseReader reader = clause.Reader();
-        string variableName = null;
-        Token token = reader.PeekToken();
+        string counterName = null;
 
-        if (!BounderToken.LeftParen.Matches(token) && !BounderToken.OpenBracket.Matches(token))
+        // "for i in ..." or "over ...", the second being the first with no name for the count.
+        if (reader.NextToken().Text == "for")
         {
-            variableName = reader.NextText();
+            counterName = reader.NextText();
 
-            reader.NextToken(); // The assignment operator.
+            reader.NextToken(); // The "in" keyword.
         }
 
         Token startToken = reader.NextToken();
         bool startIsOpen = BounderToken.LeftParen.Matches(startToken);
-        Term startTerm = (Term) reader.NextExpression();
+        Term start = (Term) reader.NextExpression();
 
         reader.NextToken(); // The comma.
 
-        Term endTerm = (Term) reader.NextExpression();
+        Term end = (Term) reader.NextExpression();
         Token endToken = reader.NextToken();
         bool endIsOpen = BounderToken.RightParen.Matches(endToken);
-        Term stepTerm = null;
+        Term step = null;
 
-        if (reader.HasMoreTokens)
+        // What is left is the "by" and its expression, the open brace having been taken by the clause.
+        if (reader.HasMoreTokens && !BounderToken.OpenBrace.Matches(reader.PeekToken()))
         {
             reader.NextToken(); // The "by" keyword.
 
-            stepTerm = (Term) reader.NextExpression();
+            step = (Term) reader.NextExpression();
         }
 
-        return new GroupInterval(variableName, startTerm, endTerm, stepTerm, startIsOpen, endIsOpen);
+        SurfaceLoop loop = new ()
+        {
+            CounterName = counterName,
+            Start = start,
+            End = end,
+            Step = step,
+            StartIsOpen = startIsOpen,
+            EndIsOpen = endIsOpen
+        };
+        GroupResolver body = ParseObjectResolver<GroupResolver>(
+            "groupEntryClause", HandleLoopEntryClause, validate: false);
+
+        loop.SurfaceResolvers = body.SurfaceResolvers;
+
+        return loop;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause inside a loop, which is a group's item clause with
+    /// the things that belong to a group taken away.
+    /// </summary>
+    /// <param name="clause">The clause to process, or <c>null</c> for a transform.</param>
+    private void HandleLoopEntryClause(Clause clause)
+    {
+        if (clause is null || clause.Tag == "surface")
+        {
+            // Thrown rather than handed to the usual complaint, which would report whatever the
+            // grammar happened to be trying last and bury the one thing worth saying.
+            throw new TokenException(
+                "Only surfaces may stand inside a \"for\".  A transform, a material or a name belongs " +
+                "either to the group around the loop or to one of the things inside it.")
+            {
+                Token = clause is null ? CurrentParser.PeekNextToken() : clause.Tokens[0]
+            };
+        }
+
+        HandleGroupEntryClause(clause);
     }
 }

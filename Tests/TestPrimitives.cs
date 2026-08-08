@@ -178,8 +178,9 @@ public class TestPrimitives
                     }
                 }
                 return group {
-                    step = [0, 4]
-                    object post(step * 1.5) { translate X step * spacing }
+                    for step in [0, 4] {
+                        object post(step * 1.5) { translate X step * spacing }
+                    }
                 }
             }
             object fence(5) { translate [-1.5, 0, 0] }
@@ -220,8 +221,9 @@ public class TestPrimitives
                 return group { sphere { material { pigment Red }  scale 0.35 } }
             }
             group {
-                step = [0, 3]
-                object blob() { translate X step * 1.4 - 2 }
+                for step in [0, 3] {
+                    object blob() { translate X step * 1.4 - 2 }
+                }
             }
             """);
 

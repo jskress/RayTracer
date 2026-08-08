@@ -102,38 +102,41 @@ cylinder {
 
 // The treads.
 group {
-    step = [0, 21]
-    cube {
-        material { pigment [0.60, 0.44, 0.28]  specular 0.25  shininess 60 }
-        scale [0.95, 0.06, 0.30]
-        translate X reachOf(step)
-        rotate Y turnOf(step)
-        translate Y riseOf(step)
+    for step in [0, 21] {
+        cube {
+            material { pigment [0.60, 0.44, 0.28]  specular 0.25  shininess 60 }
+            scale [0.95, 0.06, 0.30]
+            translate X reachOf(step)
+            rotate Y turnOf(step)
+            translate Y riseOf(step)
+        }
     }
 }
 
 // The balusters, each standing from its own tread up to its own rail.  Their height is the difference
 // between two of the functions, which is why nothing here repeats a number.
 group {
-    step = [0, 21]
-    cylinder {
-        min Y 0  max Y 0.92
-        material { pigment [0.70, 0.68, 0.62]  specular 0.45  shininess 140 }
-        scale [0.028, 1, 0.028]
-        translate X reachOf(step) + 0.78
-        rotate Y turnOf(step)
-        translate Y riseOf(step)
+    for step in [0, 21] {
+        cylinder {
+            min Y 0  max Y 0.92
+            material { pigment [0.70, 0.68, 0.62]  specular 0.45  shininess 140 }
+            scale [0.028, 1, 0.028]
+            translate X reachOf(step) + 0.78
+            rotate Y turnOf(step)
+            translate Y riseOf(step)
+        }
     }
 }
 
 // And the knob each baluster carries.
 group {
-    step = [0, 21]
-    sphere {
-        material { pigment [0.74, 0.72, 0.66]  specular 0.55  shininess 160 }
-        scale 0.085
-        translate X reachOf(step) + 0.78
-        rotate Y turnOf(step)
-        translate Y railAt(step)
+    for step in [0, 21] {
+        sphere {
+            material { pigment [0.74, 0.72, 0.66]  specular 0.55  shininess 160 }
+            scale 0.085
+            translate X reachOf(step) + 0.78
+            rotate Y turnOf(step)
+            translate Y railAt(step)
+        }
     }
 }

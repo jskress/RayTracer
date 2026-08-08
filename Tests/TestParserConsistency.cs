@@ -34,7 +34,7 @@ public class TestParserConsistency
     /// </summary>
     private static readonly HashSet<string> NotSurfaces =
     [
-        "interval", "surface", "object", "call", "background", "camera", "environment",
+        "for", "over", "surface", "object", "call", "background", "camera", "environment",
         "environmentBlock", "light", "name"
     ];
 

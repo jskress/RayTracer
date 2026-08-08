@@ -50,7 +50,7 @@ context {
     info {
         title 'Recursive Trees'
         author 'J. Stephen Kress'
-        description 'Eight hundred pieces of geometry from one primitive that calls itself.'
+        description 'Some six hundred pieces of geometry from one primitive that calls itself.'
         copyright true
         software __software__
     }

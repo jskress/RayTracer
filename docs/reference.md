@@ -73,7 +73,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | `physical sky`: what the whole sky and its sun are multiplied by. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
-| `by` | Follows `bounded by`, and a group's `interval … by`. | [Surfaces](surfaces.md#bounding) |
+| `by` | Follows `bounded by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `center` | Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -131,6 +131,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import). | [Surfaces](surfaces.md#blob) |
 | `function` | Isosurface: the arithmetic whose value makes the surface.  Also a medium's `density function`. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
@@ -151,6 +152,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
 | `index` | Interior: `index of refraction`, written out. | [Materials](materials.md#transparency-and-interiors) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
@@ -205,6 +207,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
+| `over` | A `for` loop with no name for its count. | [Surfaces](surfaces.md#repeating-things) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
