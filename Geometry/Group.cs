@@ -51,38 +51,23 @@ public class Group : Surface
     /// <returns>A default bounding box, if any, for the surface.</returns>
     protected override BoundingBox GetDefaultBoundingBox()
     {
-        BoundingBox box = new BoundingBox();
+        BoundingBox box = new ();
 
         foreach (Surface surface in Surfaces)
         {
-            if (surface.BoundingBox == null && surface is not Triangle)
+            BoundingBox child = BoxAround(surface);
+
+            if (child is null)
             {
-                // This child has no way to report a bounding box of its own (e.g. a Disc,
-                // Parallelogram, or any other surface that's unbounded by default) -- since
-                // its region can't be safely excluded from ray testing, the group as a
-                // whole must be unbounded too, rather than silently building an aggregate
-                // box that's too small to include it (which would cull rays aimed at this
-                // child before Group.AddIntersections ever got a chance to test it).
+                // This child has no way to report a box of its own -- an endless cylinder, say, or a
+                // plane -- so its region cannot safely be ruled out, and the group as a whole must be
+                // unbounded too.  Quietly building an aggregate box without it would be a box too
+                // small to hold the group, and rays aimed at that child would be turned away before
+                // Group.AddIntersections ever got a chance to test it.
                 return null;
             }
 
-            // A child that moves is taken in every place it stands while the shutter is open, not
-            // merely where it starts.  A box drawn around its first position alone would have this
-            // group turn away rays that ought to have found it further along its travels, and the
-            // thing would be cut off part way through its own blur.  Since a ray only ever sees one
-            // of the instants sampled, gathering exactly those is no approximation of the path
-            // swept -- it is the whole of what any ray can find.
-            foreach (Matrix transform in surface.TransformsThroughShutter)
-            {
-                if (surface.BoundingBox != null)
-                    box.Add(surface.BoundingBox.TransformedBy(transform));
-                else if (surface is Triangle triangle)
-                {
-                    box.Add(transform * triangle.Point1);
-                    box.Add(transform * triangle.Point2);
-                    box.Add(transform * triangle.Point3);
-                }
-            }
+            box.Add(child);
         }
 
         return box.IsEmpty ? null : box;

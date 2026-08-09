@@ -200,6 +200,40 @@ public abstract class Surface : NamedThing
     protected virtual void PrepareSurfaceForRendering() {}
 
     /// <summary>
+    /// This method returns the box a child of ours occupies in <i>our</i> space, or <c>null</c> when
+    /// the child cannot say where it is and so nothing may be ruled out on its behalf.
+    /// <para>
+    /// A child that moves is taken in every place it stands while the shutter is open, not merely
+    /// where it starts.  A box drawn around its first position alone would turn away rays that ought
+    /// to have found it further along its travels, and the thing would be cut off part way through
+    /// its own blur.  Since a ray only ever sees one of the instants sampled, gathering exactly those
+    /// is no approximation of the path swept -- it is the whole of what any ray can find.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The child to place.</param>
+    /// <returns>The box it occupies here, or <c>null</c> if it has none.</returns>
+    protected static BoundingBox BoxAround(Surface surface)
+    {
+        BoundingBox box = new ();
+
+        foreach (Matrix transform in surface.TransformsThroughShutter)
+        {
+            if (surface.BoundingBox != null)
+                box.Add(surface.BoundingBox.TransformedBy(transform));
+            else if (surface is Triangle triangle)
+            {
+                box.Add(transform * triangle.Point1);
+                box.Add(transform * triangle.Point2);
+                box.Add(transform * triangle.Point3);
+            }
+            else
+                return null;
+        }
+
+        return box.IsEmpty ? null : box;
+    }
+
+    /// <summary>
     /// This method may be overridden to produce a default bounding box for this
     /// shape.
     /// If the user specified one, it will not be replaced and this method

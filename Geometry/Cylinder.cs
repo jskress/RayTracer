@@ -11,6 +11,26 @@ namespace RayTracer.Geometry;
 public class Cylinder : ExtrudedSurface
 {
     /// <summary>
+    /// This method returns the box a cylinder sits in: the unit radius about Y, cut off at the ends
+    /// the scene gave it.
+    /// <para>
+    /// A cylinder that runs on forever has no box, and saying so is the point rather than an omission.
+    /// A box must contain the whole surface or the surface goes missing in patches, and there is no
+    /// finite box that contains an endless one.
+    /// </para>
+    /// </summary>
+    /// <returns>The box this cylinder sits in, or <c>null</c> if it has no ends.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        if (double.IsInfinity(MinimumY) || double.IsInfinity(MaximumY))
+            return null;
+
+        return new BoundingBox()
+            .Add(new Point(-1, MinimumY, -1))
+            .Add(new Point(1, MaximumY, 1));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the cylinder and,
     /// if so, where.
     /// </summary>

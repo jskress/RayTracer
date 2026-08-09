@@ -10,6 +10,19 @@ namespace RayTracer.Geometry;
 public class Sphere : Surface
 {
     /// <summary>
+    /// This method returns the box a sphere sits in, which is the unit cube about the origin: a
+    /// sphere is always the unit sphere here, and whatever size and place a scene gives it is carried
+    /// by its transform rather than by the shape.
+    /// </summary>
+    /// <returns>The box this sphere sits in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        return new BoundingBox()
+            .Add(new Point(-1, -1, -1))
+            .Add(new Point(1, 1, 1));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the sphere and,
     /// if so, where.
     /// </summary>
