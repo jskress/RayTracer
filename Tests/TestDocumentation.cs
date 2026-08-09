@@ -206,6 +206,100 @@ public class TestDocumentation
     }
 
     [TestMethod]
+    public void TestTheGalleryIndexNamesEveryScene()
+    {
+        // The other way round from the test above, and the one that actually bites.  A scene added to
+        // the gallery and left out of the index is invisible: nothing is broken, nothing complains, and
+        // the picture simply never appears on the page.  Four scenes went in over one stretch of work
+        // and the only thing standing between them and that fate was remembering.
+        //
+        // The rule every .igl in the gallery must meet is one of two things.  Either it is a scene, in
+        // which case it has a rendered image beside it and a row in the index; or it is a piece meant
+        // to be pulled into other scenes, in which case it has no image and something includes it.
+        // Anything that is neither has been forgotten about.
+        string gallery = Path.Combine(RepositoryRoot, "gallery");
+        string index = File.ReadAllText(Path.Combine(gallery, "README.md"));
+        string[] scenes = Directory
+            .EnumerateFiles(gallery, "*.igl", SearchOption.AllDirectories)
+            .Order()
+            .ToArray();
+        HashSet<string> included = [];
+
+        foreach (string scene in scenes)
+        {
+            // Resolved against the file doing the including, as the parser itself resolves it.  Two
+            // directories here hold a "default-context.igl", so a bare file name is not an answer.
+            foreach (Match match in Regex.Matches(File.ReadAllText(scene), @"include\s+'([^']+)'"))
+                included.Add(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(scene)!, match.Groups[1].Value)));
+        }
+
+        List<string> forgotten = [];
+
+        foreach (string scene in scenes)
+        {
+            string relative = Path.GetRelativePath(gallery, scene).Replace(Path.DirectorySeparatorChar, '/');
+
+            if (File.Exists(Path.ChangeExtension(scene, ".png")))
+            {
+                if (!index.Contains(relative))
+                    forgotten.Add($"{relative} (rendered, but not in the index)");
+            }
+            else if (!included.Contains(Path.GetFullPath(scene)))
+                forgotten.Add($"{relative} (no image, and nothing includes it)");
+        }
+
+        Assert.IsEmpty(forgotten,
+            "these gallery scenes have been forgotten about:\n  " + string.Join("\n  ", forgotten));
+    }
+
+    [TestMethod]
+    public void TestTheGalleryIndexPutsEverySceneUnderTheRightHeading()
+    {
+        // The index is in three parts, one per directory the gallery is kept in, and a row added under
+        // the wrong heading is worse than one left out: it is there, it works, its picture shows, and
+        // it is quietly filed as somebody else's work.  Ten had drifted before this test existed --
+        // each one appended after the last, and the last had been wrong for some time.
+        Dictionary<string, string> headings = new ()
+        {
+            { "Ray Tracer Challenge Book", "challenge-book/" },
+            { "Stuff Invented Here", "Local/" },
+            { "Ported from POV-Ray", "POVRay/" }
+        };
+        string[] lines = File.ReadAllLines(Path.Combine(RepositoryRoot, "gallery", "README.md"));
+        List<string> misfiled = [];
+        string under = null;
+
+        foreach (string line in lines)
+        {
+            if (line.StartsWith("### "))
+            {
+                under = line[4..].Trim();
+
+                Assert.IsTrue(headings.ContainsKey(under),
+                    $"the gallery index has a heading nothing knows about: {under}");
+
+                continue;
+            }
+
+            // Every path in the row, not only the scene it links to: a row whose thumbnail is drawn
+            // from another section is just as wrong and rather harder to notice.
+            foreach (Match points in Regex.Matches(line, @"(?:href|src)=""([^""]+)"""))
+            {
+                string pointedAt = points.Groups[1].Value;
+
+                if (under is null || pointedAt.StartsWith("http") ||
+                    pointedAt.StartsWith(headings[under]))
+                    continue;
+
+                misfiled.Add($"{pointedAt} is filed under \"{under}\"");
+            }
+        }
+
+        Assert.IsEmpty(misfiled,
+            "these gallery scenes are under the wrong heading:\n  " + string.Join("\n  ", misfiled));
+    }
+
+    [TestMethod]
     public void TestEveryDiagramSourceHasBeenGenerated()
     {
         // A diagram that was written but never run through generate-diagrams.sh leaves a hole in

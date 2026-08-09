@@ -263,86 +263,6 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="challenge-book/cover.igl">The Ray Tracer Challenge Cover Art</a>
     </td>
   </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/medium.png">
-      <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/medium.igl">A Medium</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/scattering.png">
-      <img alt="Scattering" height="120" src="Local/media/scattering.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/scattering.igl">Scattering</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/density.png">
-      <img alt="A Shaped Density" height="120" src="Local/media/density.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/density.igl">A Shaped Density</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/multiple-scattering.png">
-      <img alt="Multiple Scattering" height="120" src="Local/media/multiple-scattering.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/multiple-scattering.igl">Multiple Scattering</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/sunlit-cloud.png">
-      <img alt="A Sunlit Cloud" height="120" src="Local/media/sunlit-cloud.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/sunlit-cloud.igl">A Sunlit Cloud</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/media/pattern-density.png">
-      <img alt="Densities From Patterns" height="120" src="Local/media/pattern-density.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/media/pattern-density.igl">Densities From Patterns</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/functions/spiral-stair.png">
-      <img alt="A Spiral Stair" height="120" src="Local/functions/spiral-stair.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/functions/spiral-stair.igl">A Spiral Stair</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/functions/shape-vocabulary.png">
-      <img alt="A Shape Vocabulary" height="120" src="Local/functions/shape-vocabulary.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/functions/shape-vocabulary.igl">A Shape Vocabulary</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/functions/recursive-trees.png">
-      <img alt="Recursive Trees" height="120" src="Local/functions/recursive-trees.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/functions/recursive-trees.igl">Recursive Trees</a>
-    </td>
-  </tr>
-  <tr style="border: none;">
-    <td style="border: none;"><a href="Local/functions/four-seasons.png">
-      <img alt="Four Seasons" height="120" src="Local/functions/four-seasons.png" width="160"/>
-    </a></td>
-    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
-      <a href="Local/functions/four-seasons.igl">Four Seasons</a>
-    </td>
-  </tr>
 </table>
 
 ### Stuff Invented Here
@@ -802,6 +722,86 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/surfaces/isosurface-noise.igl">Isosurfaces Made Rough With Noise</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/medium.png">
+      <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/medium.igl">A Medium</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/scattering.png">
+      <img alt="Scattering" height="120" src="Local/media/scattering.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/scattering.igl">Scattering</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/density.png">
+      <img alt="A Shaped Density" height="120" src="Local/media/density.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/density.igl">A Shaped Density</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/multiple-scattering.png">
+      <img alt="Multiple Scattering" height="120" src="Local/media/multiple-scattering.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/multiple-scattering.igl">Multiple Scattering</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/sunlit-cloud.png">
+      <img alt="A Sunlit Cloud" height="120" src="Local/media/sunlit-cloud.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/sunlit-cloud.igl">A Sunlit Cloud</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/pattern-density.png">
+      <img alt="Densities From Patterns" height="120" src="Local/media/pattern-density.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/pattern-density.igl">Densities From Patterns</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/spiral-stair.png">
+      <img alt="A Spiral Stair" height="120" src="Local/functions/spiral-stair.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/spiral-stair.igl">A Spiral Stair</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/shape-vocabulary.png">
+      <img alt="A Shape Vocabulary" height="120" src="Local/functions/shape-vocabulary.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/shape-vocabulary.igl">A Shape Vocabulary</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/recursive-trees.png">
+      <img alt="Recursive Trees" height="120" src="Local/functions/recursive-trees.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/recursive-trees.igl">Recursive Trees</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/four-seasons.png">
+      <img alt="Four Seasons" height="120" src="Local/functions/four-seasons.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/four-seasons.igl">Four Seasons</a>
     </td>
   </tr>
 </table>
