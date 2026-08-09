@@ -89,6 +89,25 @@ public class Egg : Surface
     }
 
     /// <summary>
+    /// This method returns the box an egg sits in.
+    /// <para>
+    /// The two spheres are enough to bound the whole of it.  The bottom one sits at the origin and the
+    /// top one at the bottom's own radius above it, so the egg reaches from one radius below the
+    /// origin to both radii above it; and the collar joining them is concave, curving inward between
+    /// the two, so it can never reach further out than the wider sphere does.
+    /// </para>
+    /// </summary>
+    /// <returns>The box this egg sits in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        double across = Math.Max(BottomRadius, TopRadius);
+
+        return new BoundingBox()
+            .Add(new Point(-across, -BottomRadius, -across))
+            .Add(new Point(across, BottomRadius + TopRadius, across));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the egg and, if
     /// so, where.
     /// </summary>

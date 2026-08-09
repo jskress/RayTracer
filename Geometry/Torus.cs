@@ -40,6 +40,20 @@ public class Torus : Surface
     private double _minorSquared;
 
     /// <summary>
+    /// This method returns the box a torus sits in: as wide as its two radii together, and only as
+    /// tall as the tube itself.
+    /// </summary>
+    /// <returns>The box this torus sits in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        double across = MajorRadius + MinorRadius;
+
+        return new BoundingBox()
+            .Add(new Point(-across, -MinorRadius, -across))
+            .Add(new Point(across, MinorRadius, across));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the torus and,
     /// if so, where.
     /// </summary>

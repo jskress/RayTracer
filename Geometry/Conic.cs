@@ -12,6 +12,27 @@ namespace RayTracer.Geometry;
 public class Conic : ExtrudedSurface
 {
     /// <summary>
+    /// This method returns the box a conic sits in.
+    /// <para>
+    /// A conic is the surface where x² + z² = y², so its radius at any height is that height's own
+    /// distance from the origin, and the widest it ever gets between its two ends is at whichever end
+    /// lies further from the middle.  As with a cylinder, one that runs on forever has no box.
+    /// </para>
+    /// </summary>
+    /// <returns>The box this conic sits in, or <c>null</c> if it has no ends.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        if (double.IsInfinity(MinimumY) || double.IsInfinity(MaximumY))
+            return null;
+
+        double widest = Math.Max(Math.Abs(MinimumY), Math.Abs(MaximumY));
+
+        return new BoundingBox()
+            .Add(new Point(-widest, MinimumY, -widest))
+            .Add(new Point(widest, MaximumY, widest));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the conic and,
     /// if so, where.
     /// </summary>
