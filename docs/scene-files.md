@@ -162,9 +162,11 @@ background image 'sky.jpg'
 An [image pigment](pigments-and-patterns.md#image-pigments) used as a background maps
 `spherical` unless told otherwise, since the sky it is being painted on is a sphere.
 
-A background is not a surface: nothing lights it and it casts nothing.  But it is what *any* ray
-returns on striking nothing, not just those from the camera, so a mirror aimed at empty sky shows
-the same sky that stands over it.
+A background is not a surface: nothing lights it, it casts nothing, and on its own it lights nothing
+either — for the sky you look at to be the sky that lights you, add a
+[sky light](lights.md#sky-lights), which carries the background unless given a pigment of its own.  But
+it is what *any* ray returns on striking nothing, not just those from the camera, so a mirror aimed at
+empty sky shows the same sky that stands over it.
 
 `background` may sit at the top level, or inside a `scene { }` block, so that two scenes may
 carry skies of their own:
@@ -419,7 +421,7 @@ rim, or give the medium a container already shaped like the thing.
 
 Everything above stops at the first turn: light goes lamp → one scattering → eye, and no further.  In
 anything thick that is a small share of the light.  Most of what leaves a cloud has been turned a
-dozen times or more on the way out, which is why a real cloud is white rather than grey and why its
+dozen times or more on the way out, which is why a real cloud is white rather than gray and why its
 shadowed side glows rather than going black.
 
 ```
@@ -454,11 +456,21 @@ single direction costs one more path per turn instead of a tree of them, and sin
 every ray does it, the picture as a whole still averages over a great many directions.  The price is
 noise: the added light is an estimate, and a thin one at low sample counts.
 
-**What this still does not give you.**  In this renderer nothing but a lamp gives off light — a
-`background` is a color the eye sees, not something that illuminates.  A path that wanders out of the
-medium therefore ends with nothing.  Real clouds are lit mostly by *sky*, so a cloud here is lit by
-its lamps alone however many turns you follow.  Making the background light the scene is a separate
-thing, and for a daylight cloud it would matter more than this does.
+**What lights it, and what still does not.**  A [sky light](lights.md#sky-lights) is a light like any
+other here, so it is asked at every place along a ray and again at every turn of a followed path — and
+for a cloud that matters more than anything else on this page, real ones being lit mostly by *sky*.  It
+does have to be asked for: a `background` on its own is a color the eye sees and lights nothing.  Put a
+`sky light { }` over a medium and it comes out bright with no lamp in the scene at all; take the sky
+light away and the same medium is all but black.
+
+A path that wanders out of the medium still ends there, and that is not a hole.  The sky it would have
+met on its way out has already been counted where it last turned — every turn asks the lights, and the
+sky is one of them — so following it out as well would count the same light twice and leave the medium
+brighter than it is.
+
+What is genuinely still missing is light off the *surfaces*.  Only lights light a medium — that, and
+whatever it gives off itself — so a cloud is not warmed from beneath by the sunlit field it floats over,
+and smoke is not tinted by the red wall it drifts past.
 
 How many places is a question of how hard to work rather than of what the medium is made of, so it
 lives with the scanner and the anti-aliasing:
@@ -603,7 +615,7 @@ extrusion {
 | **Ranges and blends** | `min` `max` `clamp` `lerp` `smoothstep` |
 | **Angles** | `sin` `cos` `tan` `asin` `acos` `atan` `atan2` `sinh` `cosh` `tanh` `toDegrees` |
 | **Vectors** | `length` (or `magnitude`) `dot` `cross` `normalize` `distance` |
-| **Noise** | `noise` |
+| **Noise** | `noise` `random` |
 
 Several take either numbers or vectors, and which they mean follows from what you hand them:
 `abs`, `min`, `max`, `clamp` and `lerp` all work on both, and `min` and `max` given a *single*
@@ -622,6 +634,56 @@ having it as a function:
 ```
 grain = noise(p) + noise(p * 2) / 2 + noise(p * 4) / 4
 ```
+
+#### Making things differ from one another
+
+`random` is `noise`'s opposite number, and the two are easy to confuse since they answer much the same
+question.  **Noise is smooth**: two nearby points give two nearby values, which is what makes it good
+for the grain of a stone.  **`random` is scattered**: two neighboring keys give values with nothing to
+do with each other, which is what makes it good for a stand of trees where no two are alike.
+
+```
+for tree in [0, 11] {
+    object elm(2 + random(tree) * 1.5) {
+        translate [random(tree, 1) * 40 - 20, 0, random(tree, 2) * 40 - 20]
+    }
+}
+```
+
+It gives a number between 0 and 1, and it takes a **key** — one, two or three of them — rather than
+counting its own calls.  That is the whole design, and it is worth understanding rather than working
+around, because everything useful about it follows:
+
+- **The same key always gives the same number**, in this render and in every render after it.  A scene
+  that scatters things is as reproducible as one that places them by hand.
+- **Nothing else can disturb it.**  What one call gets does not depend on how many calls came first, so
+  adding a tree at the top of a file cannot rearrange the trees below it.
+- **A frame of an animation agrees with the one before it**, so scattered things sit still instead of
+  crawling.
+
+The second and third keys are how one thing gets several numbers of its own: the first says *which
+thing* and the rest say *which of its numbers*.  `random(tree, 1)` and `random(tree, 2)` are as
+unrelated as any two values, so one loop counter is enough for a size, a place, a lean and a color.
+
+**To get a different arrangement, change a key rather than looking for a seed.**  There is no global
+seed to set — that would be a hidden thing that quietly changes every picture in a file — so a scene
+that wants to try several arrangements names its own:
+
+```
+variant = 3
+
+for tree in [0, 11] {
+    object elm(2 + random(tree, variant) * 1.5) { … }
+}
+```
+
+**`random` may not be used in a `density function { }` or an [isosurface](advanced-surfaces.md#isosurface).**
+Those find a surface by looking for where a function crosses zero, and a function whose neighboring
+values are unrelated crosses zero everywhere and nowhere.  `noise` is the one to reach for there, and
+you will be told so if you reach for the wrong one.
+
+To scale a value into a range, multiply and add — `0.8 + random(k) * 0.4` runs from 0.8 to 1.2, which
+is the usual shape of "about this size, give or take".
 
 #### Angles are radians
 
@@ -760,6 +822,323 @@ sphere { translate c }
 
 So the rule of thumb is simply to say what you mean when it helps — when you need arithmetic,
 or when the reader would otherwise have to guess.
+
+### Functions of Your Own
+
+Beyond the [built-in functions](#expressions), a scene may write its own:
+
+```
+function ringRadius(index, spacing = 1.1) -> number {
+    reach = 1 + index * 0.35
+    return reach * spacing
+}
+```
+
+Call it wherever an expression may stand:
+
+```
+sphere { translate X ringRadius(2) }
+sphere { translate X ringRadius(2, 0.8) }
+```
+
+**Two things are called functions here and they are different.** The one an
+[isosurface](advanced-surfaces.md#isosurface) or a `density` is handed is arithmetic over a point in
+space, compiled down so it can be asked about a place millions of times over.  This one is a scene's
+own: named, taking values, worked out wherever an expression may stand.  The leading word tells them
+apart.
+
+| Part | Means |
+| --- | --- |
+| `(a, b = 2)` | The values it takes.  Anything with a fallback may be left out of a call, and those must come last, since a call leaves values off the end. |
+| `-> number` | The kind of thing it gives back: `number`, `color` or `vector`.  Required, so that a call can be checked where it is written rather than when it runs. |
+| `name = ...` | Worked out on the way to the answer.  Later ones may lean on earlier ones. |
+| `return ...` | The answer.  A function must have one, and nothing may follow it. |
+| `if (...) { } else { }` | Two ways out, each giving an answer of its own.  See [Choosing Inside a Body](#choosing-inside-a-body). |
+| `switch (...) { case … default … }` | Any number of ways out, picked by a value.  Same section. |
+
+**Things worked out along the way earn their place.**  A figure the body needs in three places should
+be arrived at once, or the three copies drift apart the first time one is edited.
+
+**A function may hold a smaller one of its own.**  A helper used by one function has no business
+being visible to the whole scene, and a library should be able to export only the name it means to:
+
+```
+function spiral(step) -> number {
+    function easedBy(amount) -> number { return step * amount }
+    return 1 + easedBy(0.45)
+}
+```
+
+The inner one is bound to the *call's* scope, so it sees the values the outer one was handed — which is
+what makes it a helper rather than a second function that must be passed everything over again.  It is
+not reachable from outside, and a function that holds one cannot be folded into a field, for the same
+reason workings cannot.
+
+**A function sees where it was written, not where it was called.**  One written in an
+[included file](#including-other-files) sees what that file set up, and cannot be quietly changed by
+whatever names the calling scene happens to have lying about.  That is what makes a library of them
+safe to rely on.
+
+**One restriction.**  A function may be used inside a `density function { }` or an
+[isosurface](advanced-surfaces.md#isosurface) **only if its body is a single `return`** — nothing
+worked out along the way, and no [choice](#choosing-inside-a-body).  Those compile their arithmetic
+down and, for an isosurface, differentiate it to find surface normals — which can be done by folding a
+plain expression in, and cannot be done at all once there is a small procedure to fold in instead.  You
+will be told plainly if you cross that line.
+
+### Things of Your Own
+
+A `function` gives back a number.  A **`primitive`** gives back a *thing* — something to put in a
+scene:
+
+```
+primitive lamp(height, shade = 0.55) -> group {
+    reach = shade * 1.4
+    return group {
+        cylinder { min Y 0  max Y height  scale [0.06, 1, 0.06] }
+        conic { min Y 0  max Y 1  scale [reach, 0.5, reach]  translate Y height }
+    }
+}
+```
+
+Call it with `object`, the same word that reuses a [named surface](#variables):
+
+```
+object lamp(1.5) { translate X -2.2 }
+object lamp(2.1)
+object lamp(1.2, 0.8) { translate X 2.4 }
+```
+
+Everything a function has, this has: values with fallbacks, workings on the way, `return`, and the
+same rule that a body sees where it was **written** rather than where it was called.
+
+**The kind it gives back must be named exactly** — `-> group`, not merely "a surface".  That is what
+lets the block after a call take *that kind's own clauses*, exactly as reusing a named surface does.  A
+call giving back a cylinder accepts `max Y`; one giving back a group accepts group clauses.  The parser
+reads a call long before anything is built, so it can only know what to accept because you said.
+
+Saying one kind and giving back another is caught while reading, not left to be discovered when a
+picture looks wrong.
+
+**What one call adds belongs to that call.**  Each call takes its own copy of the recipe, so the block
+on one cannot reach another — three calls with three different `translate`s stand in three places, and
+the recipe everybody else uses is left as it was written.
+
+**A primitive may also give back a pigment:**
+
+```
+primitive banded(width, warm = 0.8) -> pigment {
+    pale = [warm, warm * 0.9, warm * 0.7]
+    return linear stripes { pale, [0.2, 0.22, 0.3]  scale width }
+}
+
+sphere { material { pigment banded(0.4) } }
+```
+
+A pigment is named through an expression rather than a clause of its own, so a call of one is written
+wherever a pigment may be named — and takes no block after it, a pigment having no clauses that could
+be laid over one already made.
+
+**A material and an interior may be given back too:**
+
+```
+primitive glazed(hue, gloss = 0.5) -> material {
+    return material { pigment hue  specular gloss  shininess 40 + gloss * 260 }
+}
+
+sphere { material glazed(Red) }
+sphere { material glazed(Blue, 0.9) { shininess 5 } }
+```
+
+Both are named the way a surface is — the word, then the name — so a call is told apart by what
+follows it: a parenthesis.  Both take a block afterward, laid over what the recipe made, so a call may
+be adjusted where it stands without touching the recipe.
+
+**A medium too**, which until now could not even be given a name:
+
+```
+haze = medium { absorption [0.05, 0.06, 0.08]  scattering [0.03, 0.028, 0.02] }
+
+environment { ior Air  medium haze }
+
+primitive smoke(thickness) -> medium {
+    return medium { scattering thickness  absorption thickness * 0.1 }
+}
+
+sphere { material { interior { medium smoke(1.6) { anisotropy 0.4 } } } }
+```
+
+One thing about a named medium is worth knowing, because it is not obvious: **what a medium is allowed
+to be depends on where it is used, not on the medium itself.**  The surroundings have no far side, so
+a medium filling them must be one that has an answer over an endless span; a medium inside a bottle
+need not.  The check therefore travels with the *use*, so the same named medium may be refused in one
+place and accepted in another.
+
+**A primitive may hold smaller ones**, and functions too — a fence knows how to make a post, and
+nobody else needs to:
+
+```
+primitive fence(count, spacing = 0.8) -> group {
+    primitive post(lean) -> group {
+        return group { cube { scale [0.07, 0.7, 0.07]  rotate Z lean } }
+    }
+    return group {
+        step = [0, 4]
+        object post(step * 1.5) { translate X step * spacing }
+    }
+}
+```
+
+A `function` may hold functions but never a primitive, which would not mean anything — a function
+gives back a number, and there is nowhere in a number for a thing to go.
+
+**A call's block belongs to the caller.**  It is read among the names where the call was *written*,
+not among the primitive's — which is what lets a loop place a row of them with `translate X step`.
+The primitive's body, meanwhile, is still read among its own.  Two sets of names, each where it
+belongs.
+
+**Every kind of surface may be given back** — `group`, the three CSG words, and each of the shapes,
+including the two-word ones (`smooth triangle`, `generic shape`, `object file`).
+
+A call's block need not repeat what the body already said.  It is laid *over* what the primitive made,
+so it holds only what that call wished to change.
+
+### Choosing Inside a Body
+
+A function or a primitive may **choose** which of two answers it gives:
+
+```
+function reachOf(index) -> number {
+    if (index < 3) { return 1 + index * 0.35 }
+    else { return 2.05 + (index - 3) * 0.12 }
+}
+```
+
+A primitive chooses in the same words, and this is where it earns its keep — one name standing for a
+family of things, picking among them by what it was told:
+
+```
+primitive marker(size) -> sphere {
+    if (size > 1) {
+        glow = size * 0.4
+        return sphere { material { pigment Red  ambient glow }  scale size }
+    }
+    else { return sphere { material { pigment Blue }  scale size } }
+}
+
+object marker(1.8) { translate X -2.5 }
+object marker(0.6) { translate X 2.5 }
+```
+
+**A choice ends the body it is written in.**  Both ways out have to give an answer, and nothing may
+follow the choice — the `else` block is the last thing in the body.  That is deliberate, and it buys
+two things worth having.  "Exactly one answer, on every path" becomes a matter of how the thing is
+written rather than something the parser has to reason its way to: there is nowhere for a second answer
+to go and nowhere for a missing one to hide.  And what an arm works out belongs to that arm, because
+there is no "after the choice" for it to leak into.
+
+**Each arm is a body in its own right**, so it may work things out, hold a smaller function or
+primitive of its own, and end in a choice of its own.  A run of cases is written the way you would
+expect, with `else if`:
+
+```
+function bandOf(height) -> number {
+    if (height < 1) { return 0 }
+    else if (height < 4) { grown = height - 1  return 1 + grown * 0.1 }
+    else { return 2 }
+}
+```
+
+An `else if` is exactly an `else` whose body is another choice — the same tree comes out either way —
+and writing it flat saves a pair of braces and a step of indenting per case, which is the difference
+between a run of cases that reads down the page and one that walks off the right of it.  The last
+`else` is still required, since it is what makes every path answer.
+
+**Only the arm taken is carried out.**  The side not taken may be one that could not be worked out at
+all, which is most of what a choice is for: keeping a body away from a case it has no answer for.
+
+**A primitive's arms are each read as the kind it promised.**  A `-> sphere` that gives back a cube in
+one of its arms is refused while the file is being read, not left to be found in a picture.
+
+**A primitive that can stop may call itself.**  This is the largest thing a choice buys, and it is
+not obvious until you see it: recursion needs somewhere to stop, and a body could not stop until it
+could choose.
+
+```
+primitive limb(depth, length, thickness) -> group {
+    if (depth < 1) { return group { sphere { material leaves  scale 0.2 } } }
+    else {
+        return group {
+            cylinder { min Y 0  max Y length  scale [thickness, 1, thickness]  material bark }
+            object limb(depth - 1, length * 0.74, thickness * 0.62) {
+                rotate Z 34  translate Y length
+            }
+            object limb(depth - 1, length * 0.74, thickness * 0.62) {
+                rotate Z -34  translate Y length
+            }
+        }
+    }
+}
+
+object limb(6, 1.9, 0.17)
+```
+
+That is a tree: sixty-three limbs and sixty-four clusters of leaves, none of them written down.  Mind
+the depth, though — each generation multiplies what the last one made, so a small number is a large
+scene.
+
+**When there are more than two answers, select on a value.**  A run of `else if`s that all ask about
+the same thing says that thing over and over, and saying it once is both shorter and harder to get
+wrong:
+
+```
+primitive tree(height, season = 'summer') -> group {
+    switch (season) {
+        case 'summer' { return group { … } }
+        case 'autumn', 'fall' { return group { … } }
+        case 'winter' {
+            bare = height * 0.9
+            return group { … }
+        }
+        default { return group { … } }
+    }
+}
+```
+
+| Part | Means |
+| --- | --- |
+| `switch (season)` | The value every case is held against. |
+| `case 'autumn', 'fall'` | One arm answering to several values.  A case may be any expression, not only something written out. |
+| `default { … }` | What catches whatever no case did.  **Required**, for the same reason `else` is. |
+
+**Each arm is a body**, so it may work things out, hold a smaller function of its own, and end in a
+choice or a selection of its own — which is the one thing a switch of the sort most languages offer
+cannot do, and the reason this is written the way it is.  Anything an arm needs, it may work out where
+it is used rather than being pushed out into a function somewhere else.
+
+**A selection is the run of choices it looks like.**  The value is compared with each case in turn and
+the first that matches wins, so two cases that both match are not a contradiction — the first one
+written is the one taken.  It is built as that chain of choices, so nothing new happens when the
+picture is drawn, and everything true of a choice is true of this.
+
+`default` is required rather than worked out because it cannot be worked out: there is no way to know
+that a run of cases covers every number or every piece of text there might be.  Requiring it is what
+keeps "every path gives an answer" a matter of how the thing is written.
+
+**When a choice is the wrong tool.**  A value that merely *differs* by some condition — a size, a
+color — wants the [conditional](#choosing-between-values) rather than a choice, since a choice would
+make you repeat the whole answer in both arms:
+
+```
+primitive post(height) -> cube {
+    return cube { scale [0.1, height, 0.1]  material { pigment height > 2 ? Red : Blue } }
+}
+```
+
+Neither is available inside a `density function { }` or an
+[isosurface](advanced-surfaces.md#isosurface): a field holds arithmetic on numbers and has nothing in
+it to compare or to choose with.  A field that must vary by a condition has to be written as arithmetic
+that comes out the same way.
 
 ### Including Other Files
 

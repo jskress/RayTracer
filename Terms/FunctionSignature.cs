@@ -44,6 +44,12 @@ public class FunctionSignature
     /// </summary>
     public int ParameterCount => ParameterTypes.Length;
 
+    /// <summary>
+    /// This property notes that the function has no place in a field: not that it merely lacks a rule
+    /// for its slope, but that asking it about a place in space means nothing.
+    /// </summary>
+    public bool NotInAField { get; init; }
+
     internal FunctionSignature(string name, MethodInfo method)
     {
         Name = name;

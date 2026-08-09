@@ -211,6 +211,7 @@ public class TestFieldGradients
             bool couldAppear = FunctionCatalog.Instance
                 .SignaturesFor(name)
                 .Any(signature => signature.ReturnType == typeof(double) &&
+                                  !signature.NotInAField &&
                                   signature.ParameterTypes.All(type => type == typeof(double)));
 
             if (!couldAppear || FieldDerivatives.HasRuleFor(name) ||

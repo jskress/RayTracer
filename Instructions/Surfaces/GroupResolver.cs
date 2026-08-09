@@ -1,4 +1,3 @@
-using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -11,14 +10,8 @@ namespace RayTracer.Instructions.Surfaces;
 public class GroupResolver : SurfaceResolver<Group>
 {
     /// <summary>
-    /// This property holds the group interval, if any, we are to use in iterating over
-    /// the group.
-    /// </summary>
-    public GroupInterval GroupInterval { get; set; }
-
-    /// <summary>
     /// This property holds the list of resolvers that will evaluate to the list of surfaces
-    /// for our group.
+    /// for our group.  A loop may stand among them, and puts any number of surfaces there.
     /// </summary>
     public List<ISurfaceResolver> SurfaceResolvers { get; private set; } = [];
 
@@ -30,35 +23,9 @@ public class GroupResolver : SurfaceResolver<Group>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Group value)
     {
-        Interval interval = GroupInterval?.GetInterval(variables) ?? Interval.Once;
-        string variableName = GroupInterval?.VariableName;
-
-        while (!interval.IsAtEnd)
-        {
-            double index = interval.Next();
-
-            if (variableName != null)
-                variables.SetValue(variableName, index);
-
-            CreateChildSurfaces(context, variables, value);
-        }
+        SurfaceLoop.AddAllTo(context, variables, SurfaceResolvers, surface => value.Add(surface));
 
         base.SetProperties(context, variables, value);
-    }
-
-    /// <summary>
-    /// This method will iterate over our surface resolvers and add the created surfaces
-    /// to our group.
-    /// </summary>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <param name="group">The group to add things to.</param>
-    private void CreateChildSurfaces(RenderContext context, Variables variables, Group group)
-    {
-        SurfaceResolvers
-            .Select(surface => surface.ResolveToSurface(context, variables))
-            .ToList()
-            .ForEach(surface => group.Add(surface));
     }
 
     /// <summary>

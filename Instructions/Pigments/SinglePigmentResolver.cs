@@ -26,7 +26,8 @@ public class SinglePigmentResolver : PigmentResolver<Pigment>
     {
         object result = Term.GetValue(
             variables, typeof(Color), typeof(Pigment), typeof(PatternPigment),
-            typeof(BlendedPigment), typeof(MottledPigment), typeof(SolidPigment));
+            typeof(BlendedPigment), typeof(MottledPigment), typeof(SolidPigment),
+            typeof(IPigmentResolver));
 
         if (result == null)
         {

@@ -264,4 +264,73 @@ public class TestFunctionCalls
         Assert.IsNotNull(error);
         Assert.Contains("dot(vector, vector)", error);
     }
+
+    /// <summary>
+    /// This tests that a scattered value may be had wherever an expression stands, and that asking for
+    /// the same one twice gives the same number -- which a running stream could not do, and which is
+    /// what makes a scene that scatters things reproducible.
+    /// </summary>
+    [TestMethod]
+    public void TestAScatteredValueMayBeHadInAnExpression()
+    {
+        Assert.AreEqual(80, WidthFrom("random(3) == random(3) ? 80 : 40"));
+        Assert.AreEqual(80, WidthFrom("random(3) != random(4) ? 80 : 40"));
+        Assert.AreEqual(80, WidthFrom("random(3, 1) != random(3, 2) ? 80 : 40"));
+
+        // Always between zero and one.
+        Assert.AreEqual(80, WidthFrom("random(7) >= 0 and random(7) < 1 ? 80 : 40"));
+
+        // And a known one, so that the number a scene gets is pinned here as well as in the generator.
+        Assert.AreEqual(469, WidthFrom("round(random(3) * 1000)"));
+    }
+
+    /// <summary>
+    /// This tests that a scattered value is turned away from a field, where it would mean nothing: a
+    /// surface is found by looking for where a function crosses zero, and a function whose neighboring
+    /// values are unrelated crosses zero everywhere and nowhere.
+    /// </summary>
+    [TestMethod]
+    public void TestAScatteredValueIsRefusedInAField()
+    {
+        string path = Path.Combine(_directory, "field.igl");
+
+        File.WriteAllText(path, """
+            camera { location [0, 1, -5]  look at [0, 0, 0] }
+            point light { location [-5, 5, -5] }
+            isosurface {
+                function { x² + y² + z² - 1 + random(x) }
+                bounded by [-2, -2, -2], [2, 2, 2]
+            }
+            """);
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            // The refusal comes when the field is built, which is while the scene is being made ready
+            // rather than while it is being read, so the render has to be started to provoke it.
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            renderer?.Render(new RenderOptions
+            {
+                OutputFileName = Path.Combine(_directory, "field.png"), Width = 40, Height = 30
+            });
+        }
+        catch (Exception exception)
+        {
+            Console.Write(exception);
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        string refused = captured.ToString();
+
+        Assert.Contains("no place in a density or an isosurface", refused);
+        Assert.Contains("noise", refused);
+    }
 }

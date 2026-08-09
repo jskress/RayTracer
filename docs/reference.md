@@ -73,8 +73,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | `physical sky`: what the whole sky and its sun are multiplied by. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
-| `by` | Follows `bounded by`, and a group's `interval … by`. | [Surfaces](surfaces.md#bounding) |
+| `by` | Follows `bounded by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
+| `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `center` | Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
@@ -96,6 +97,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern). | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -114,6 +116,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `emission` | Medium: how much light it gives off per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
@@ -130,6 +133,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import). | [Surfaces](surfaces.md#blob) |
 | `function` | Isosurface: the arithmetic whose value makes the surface.  Also a medium's `density function`. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
@@ -146,9 +150,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
 | `index` | Interior: `index of refraction`, written out. | [Materials](materials.md#transparency-and-interiors) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
@@ -195,6 +201,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
 | `null` | The empty value. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
+| `number` | The kind a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `object` | `object file` (loads a mesh), or `object` (reuse by name). | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `octaves` | Turbulence/noise: how many layers of it. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
@@ -202,6 +209,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
+| `over` | A `for` loop with no name for its count. | [Surfaces](surfaces.md#repeating-things) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
@@ -222,6 +230,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `poly` | Wave shape: a polynomial of a given power. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `position` | Text layout: `horizontal`/`vertical position`. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
+| `primitive` | Declares a [thing of your own](scene-files.md#things-of-your-own) that a scene can make. | [Scene Files](scene-files.md#things-of-your-own) |
 | `productions` | L-system: the rewrite rules. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `profile` | Sweep: the 2D cross-section carried along. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `quad` | Path/spline/tube: a quadratic (one control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -235,6 +244,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `refraction` | Interior: the second word of `index of refraction`. | [Materials](materials.md#transparency-and-interiors) |
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
+| `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `right` | Text layout: right-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -274,9 +284,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
+| `surface` | The kind a `primitive` of your own gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `switch` | Picks among any number of answers by a value. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
@@ -612,15 +624,16 @@ or vectors; ask for a form that does not exist and the error names the ones that
 
 | | | | |
 | --- | --- | --- | --- |
-| `abs` | `dot` | `magnitude` | `sign` |
-| `acos` | `exp` | `max` | `sin` |
-| `asin` | `floor` | `min` | `sinh` |
-| `atan` | `length` | `mod` | `smoothstep` |
-| `atan2` | `lerp` | `noise` | `sqrt` |
-| `cbrt` | `log` | `normalize` | `tan` |
-| `ceil` | `log10` | `pow` | `tanh` |
-| `clamp` | `cos` | `round` | `toDegrees` |
-| `cosh` | `cross` | `distance` | `trunc` |
+| `abs` | `cross` | `max` | `sinh` |
+| `acos` | `distance` | `min` | `smoothstep` |
+| `asin` | `dot` | `mod` | `sqrt` |
+| `atan` | `exp` | `noise` | `tan` |
+| `atan2` | `floor` | `normalize` | `tanh` |
+| `cbrt` | `length` | `pow` | `toDegrees` |
+| `ceil` | `lerp` | `random` | `trunc` |
+| `clamp` | `log` | `round` |  |
+| `cos` | `log10` | `sign` |  |
+| `cosh` | `magnitude` | `sin` |  |
 
 #### Colors
 

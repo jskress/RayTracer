@@ -328,6 +328,126 @@ any child that does not have one; a child that names its own material keeps it.
 A group is also what makes a big scene tractable.  It works out a box around its children and
 tests that first, so a ray that misses the group skips every surface in it at once.
 
+### Repeating Things
+
+A group may make what stands in it over and over, counting through a range:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/forClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/forClause.svg">
+  <img alt="Repeating things" src="images/surfaces/forClause.svg">
+</picture>
+
+
+```
+group {
+    for step in [0, 21] {
+        cube {
+            scale [0.95, 0.06, 0.30]
+            translate X 1.2
+            rotate Y step * 24
+            translate Y step * 0.3
+        }
+    }
+}
+```
+
+That is a spiral stair: twenty-two treads, each turned a little further round and set a little
+higher than the last, and none of them written down.  The count — `step` here, and it may be called
+anything — takes each value in the range in turn, and is an ordinary number wherever it appears
+inside the loop.
+
+**The range is an interval.**  Square brackets take an end into the count and parentheses leave it
+out, and `by` says how far to move each time:
+
+| Written | Counts |
+| --- | --- |
+| `[0, 5]` | 0, 1, 2, 3, 4, 5 — six turns |
+| `(0, 5]` | 1, 2, 3, 4, 5 |
+| `[0, 5)` | 0, 1, 2, 3, 4 |
+| `[0, 1] by 0.25` | 0, 0.25, 0.5, 0.75, 1 |
+
+Both ends are expressions like any other, so a loop may be told how far to go by something worked
+out elsewhere — which is what makes a `primitive` that takes a count possible:
+
+```
+primitive fence(posts, spacing = 0.8) -> group {
+    return group {
+        for post in [0, posts - 1] {
+            cube { scale [0.07, 0.7, 0.07]  translate X post * spacing }
+        }
+    }
+}
+
+object fence(12)
+object fence(5, 1.4) { translate Z 3 }
+```
+
+**When the count is not wanted, say `over`.**  It is the same loop with no name for the count, and a
+word of its own so that nobody has to wonder where the name went:
+
+```
+group {
+    over [0, 3] {
+        cylinder { min Y 0  max Y 1.4  scale [0.05, 1, 0.05] }
+    }
+    rotate Y 25
+}
+```
+
+Four of the same thing in the same place is rarely what anyone wants, so this is mostly for the day a
+loop's turns differ by something other than a count.
+
+**Only what stands inside the loop repeats.**  Everything else in the group is made once, so a group
+may hold a run of things and a thing that stands alone, and may hold more than one loop:
+
+```
+group {
+    for i in [0, 11] {
+        cube { translate X 2  rotate Y i * 30 }
+    }
+    sphere { scale 0.5 }        // the hub, made once
+    material { pigment Gray50 }
+}
+```
+
+**Loops nest**, which is how a grid or a stack is written:
+
+```
+group {
+    for row in [0, 7] {
+        for column in [0, 7] {
+            cube { scale 0.45  translate [column - 3.5, 0, row - 3.5] }
+        }
+    }
+}
+```
+
+**The count belongs to the loop.**  It is not visible outside, and two loops one inside the other may
+use the same name without treading on each other — the inner one means the inner one wherever the
+inner one can be seen.  A group's *own* clauses, being outside the loop, cannot see the count either,
+and would have no single value to mean if they could: a group has one transform and a loop has many
+turns.
+
+**Only surfaces may stand inside a `for`.**  A loop is a way of writing rather than a thing in the
+scene, so there is nothing for a `translate` or a `material` written directly in it to be about; those
+belong either to the group around the loop or to the surfaces inside it.  You will be told so where it
+is written.
+
+**A loop may also stand at the top of a file, or in a `scene { }` block**, where what it makes goes
+straight into the scene:
+
+```
+for tree in [0, 5] {
+    object elm(2.5) { translate X tree * 6 - 15 }
+}
+```
+
+The one place it may not stand is inside a [CSG](#combining-surfaces), and that is not an oversight.
+The first surface in a `difference` is the one the others are taken out of, so a loop standing there
+would make which surface that is depend on a number not known until the picture is drawn.  A CSG that
+wants a run of things puts a group inside it, which is what was meant anyway.
+
 ### Combining Surfaces
 
 Where a group merely holds surfaces side by side, a CSG operation makes a genuinely new solid

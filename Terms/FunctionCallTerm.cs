@@ -2,6 +2,7 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.General;
 using RayTracer.Fields;
+using RayTracer.Instructions.Pigments;
 
 namespace RayTracer.Terms;
 
@@ -37,10 +38,16 @@ public class FunctionCallTerm : Term
         _name = name;
         _arguments = arguments;
 
-        string problem = FunctionCatalog.Instance.CheckCall(_name, arguments.Count);
+        // Checked here only when the name is one of the built-in functions.  A scene's own function
+        // may not have been declared yet when a call to it is parsed -- and in any case what it takes
+        // is not known to this catalog -- so those are checked when the call is actually made.
+        if (FunctionCatalog.Instance.IsKnown(_name))
+        {
+            string problem = FunctionCatalog.Instance.CheckCall(_name, arguments.Count);
 
-        if (problem != null)
-            throw new TokenException(problem) { Token = token };
+            if (problem != null)
+                throw new TokenException(problem) { Token = token };
+        }
     }
 
     /// <summary>
@@ -67,6 +74,68 @@ public class FunctionCallTerm : Term
         object[] values = _arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
+
+        // A scene's own function is looked for first, so that a scene may name one as it likes without
+        // having to know what the built-in catalog happens to hold.  It is found by the same walk out
+        // through enclosing scopes that finds any other name, which is what makes it obey scope.
+        if (variables.GetValue(_name, typeof(UserFunction)) is UserFunction own)
+        {
+            string wrong = own.CheckCall(values.Length);
+
+            if (wrong != null)
+                throw new TokenException(wrong) { Token = ErrorToken };
+
+            return own.Call(values, ErrorToken);
+        }
+
+        // A pigment a scene wrote for itself is named through an expression, so a call of one arrives
+        // here rather than through a clause.  What goes back is not the pigment -- making one needs
+        // the render's context, which an expression has no sight of -- but the makings of it, for
+        // whoever asked to finish once they have the context.
+        if (variables.GetValue(_name, typeof(UserPrimitive)) is UserPrimitive primitive)
+        {
+            string amiss = primitive.CheckCall(values.Length);
+
+            if (amiss != null)
+                throw new TokenException(amiss) { Token = ErrorToken };
+
+            if (primitive.Kind != "pigment")
+            {
+                throw new TokenException(
+                    $"'{_name}' gives back a {primitive.Kind}, which cannot stand in an expression.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            // A pigment is a thing to paint with and not a value to reckon with, so where a number or
+            // a place was wanted, say so here.  Left to the conversion that follows, the complaint
+            // names a class out of the renderer's own workings, which tells a scene's author nothing.
+            if (targetTypes.Length > 0 &&
+                !targetTypes.Any(type => type.IsAssignableFrom(typeof(PigmentCallResolver))))
+            {
+                throw new TokenException(
+                    $"'{_name}' gives back a pigment, which cannot be used as " +
+                    $"{string.Join(" or ", targetTypes.Select(type => type.Name))} here.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            return new PigmentCallResolver
+            {
+                Primitive = primitive, Arguments = values, ErrorToken = ErrorToken
+            };
+        }
+
+        if (!FunctionCatalog.Instance.IsKnown(_name))
+        {
+            throw new TokenException($"There is no function named '{_name}'.")
+            {
+                Token = ErrorToken
+            };
+        }
+
         FunctionMatch match = FunctionCatalog.Instance.Match(_name, values);
 
         if (!match.IsMatch)
@@ -85,6 +154,39 @@ public class FunctionCallTerm : Term
     /// <returns>This term, as a field expression.</returns>
     public override FieldExpression ToField(Variables variables)
     {
+        // A scene's own function is folded in bodily -- its body lowered in place of the call, with
+        // the call's values standing in for its parameters -- so that everything a field can do with
+        // arithmetic it can still do, differentiation included.  That only works while the body is a
+        // single expression; one with workings before its answer is a small procedure, and there is
+        // no way to fold a procedure into arithmetic.
+        if (variables.GetValue(_name, typeof(UserFunction)) is UserFunction own)
+        {
+            string wrong = own.CheckCall(_arguments.Count);
+
+            if (wrong != null)
+                throw new TokenException(wrong) { Token = ErrorToken };
+
+            if (!own.MayBeFoldedIntoAField)
+            {
+                throw new TokenException(
+                    $"The function '{_name}' is more than a single expression -- it works things " +
+                    "out, or chooses, on its way to its answer -- so it cannot be used in a density " +
+                    "or an isosurface; those need one expression to fold in and to differentiate.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            // Lowered rather than worked out, since an argument may be a whole piece of field
+            // arithmetic -- one shape function handed to another -- and there is no number to be had
+            // from that until the field is actually asked about a place.
+            object[] given = _arguments
+                .Select(argument => (object) argument.ToField(variables))
+                .ToArray();
+
+            return own.FoldableBody.ToField(own.ScopeForFolding(given));
+        }
+
         FieldExpression[] arguments = _arguments
             .Select(argument => argument.ToField(variables))
             .ToArray();
@@ -99,6 +201,17 @@ public class FunctionCallTerm : Term
             throw new TokenException(
                 $"In a function, '{_name}' must give back a number; this form gives back a " +
                 $"{FunctionSignature.DslNameFor(signature.ReturnType)}.")
+            {
+                Token = ErrorToken
+            };
+        }
+
+        if (signature.NotInAField)
+        {
+            throw new TokenException(
+                $"'{_name}' has no place in a density or an isosurface: it gives neighboring places " +
+                "values with nothing to do with each other, and a surface cannot be found in that. " +
+                "Use \"noise\", which varies smoothly.")
             {
                 Token = ErrorToken
             };

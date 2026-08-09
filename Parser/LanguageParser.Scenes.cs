@@ -46,6 +46,10 @@ public partial class LanguageParser
             case "light":
                 resolver.LightResolvers.Add(ParseLightClause(clause));
                 break;
+            case "for":
+            case "over":
+                resolver.SurfaceResolvers.Add(ParseForClause(clause));
+                break;
             case "plane":
                 resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));
                 break;
@@ -118,6 +122,9 @@ public partial class LanguageParser
                 break;
             case "objectFile":
                 resolver.SurfaceResolvers.Add(ParseObjectFileClause(clause));
+                break;
+            case "call":
+                resolver.SurfaceResolvers.Add(ParseCall(clause));
                 break;
             case "object":
                 resolver.SurfaceResolvers.Add(GetSurfaceResolver(clause));

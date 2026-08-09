@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Graphics;
+using RayTracer.Instructions.Pigments;
 using RayTracer.Pigments;
 
 namespace RayTracer.Terms;
@@ -63,7 +64,14 @@ internal static class TypeConversions
             return (CoercionResult.CouldNotCoerce, null);
 
         // If the value is already of the right type, we're done.
-        if (value == null || value.GetType() == targetType || value.GetType().IsSubclassOf(targetType))
+        //
+        // An interface has to be asked about separately: IsSubclassOf answers only about base
+        // classes, so a value that plainly satisfies an interface was turned away by every test here
+        // and fell to the failure at the end.  Nothing needed it until a pigment a scene had written
+        // for itself began arriving as the makings of one rather than the thing itself.
+        if (value == null || value.GetType() == targetType ||
+            value.GetType().IsSubclassOf(targetType) ||
+            (targetType.IsInterface && targetType.IsInstanceOfType(value)))
             return (CoercionResult.OfProperType, value);
 
         // Handle going to some form of tuple.  Only a tuple can become one, and it matters that
@@ -143,6 +151,14 @@ internal static class TypeConversions
     /// <returns>A result describing whether the value could be coerced and the value.</returns>
     private static (CoercionResult, object) CoerceToPigment(object value)
     {
+        // Something that is already the makings of a pigment is not a thing to make one *out of*, so
+        // it is declined here and left for a later type to claim.  Without this it is swallowed:
+        // nothing below recognizes it, so it falls through as "could not", and the caller sees a
+        // nothing where it had asked about a pigment.  That is how a pigment a scene wrote for itself
+        // vanished on its way to being used.
+        if (value is IPigmentResolver)
+            return (CoercionResult.CouldNotCoerce, value);
+
         CoercionResult result = CoercionResult.OfProperType;
 
         if (value is NumberTuple)

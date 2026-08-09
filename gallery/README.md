@@ -311,6 +311,38 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/media/pattern-density.igl">Densities From Patterns</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/spiral-stair.png">
+      <img alt="A Spiral Stair" height="120" src="Local/functions/spiral-stair.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/spiral-stair.igl">A Spiral Stair</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/shape-vocabulary.png">
+      <img alt="A Shape Vocabulary" height="120" src="Local/functions/shape-vocabulary.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/shape-vocabulary.igl">A Shape Vocabulary</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/recursive-trees.png">
+      <img alt="Recursive Trees" height="120" src="Local/functions/recursive-trees.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/recursive-trees.igl">Recursive Trees</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/four-seasons.png">
+      <img alt="Four Seasons" height="120" src="Local/functions/four-seasons.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/four-seasons.igl">Four Seasons</a>
+    </td>
+  </tr>
 </table>
 
 ### Stuff Invented Here

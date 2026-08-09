@@ -41,6 +41,7 @@ public partial class LanguageParser
             "pigment" => ParsePigmentClause(),
             "material" => GetMaterialResolver(clause),
             "interior" => GetInteriorResolver(clause),
+            "medium" => GetMediumResolver(clause),
             "transform" => GetTransformResolver(clause),
             "plane" => ParsePlaneClause(clause),
             "sphere" => ParseSphereClause(clause),
@@ -56,6 +57,8 @@ public partial class LanguageParser
             "blob" => ParseBlobClause(clause),
             "tube" => ParseTubeClause(clause),
             "sweep" => ParseSweepClause(clause),
+            "isosurface" => ParseIsosurfaceClause(clause),
+            "heightfield" => ParseHeightFieldClause(clause),
             "text" => ParseTextClause(clause),
             // ReSharper disable once StringLiteralTypo
             "lsystem" => ParseLSystemClause(clause),

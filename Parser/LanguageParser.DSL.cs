@@ -64,36 +64,40 @@ public partial class LanguageParser
         // are keywords of ours, and a keyword takes over its name in this specification from the
         // predefined operator that had it -- so the symbols have to be reached for under names of
         // their own.  Naming them here rather than relying on the predefined names is what keeps
-        // both spellings working.
+        // both spellings working.  The conditional is here for the same reason and is worth calling
+        // out, since the collision is not one anybody would foresee: the predefined name for "?" is
+        // "if", so making "if" a keyword of ours takes that name away from it.
+        arrow: _operator("->")
         logicalAnd: _operator("&&")
         logicalOr: _operator("||")
         logicalNot: _operator("!")
+        conditional: _operator("?")
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'camera', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
+            'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
-            'icon', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
+            'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
+            'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
-            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
-            'open', 'or', 'orthographic', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes',
+            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'once',
+            'open', 'or', 'orthographic', 'over', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective',
+            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surfaces', 'svg', 'sweep', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
             'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
@@ -144,7 +148,7 @@ public partial class LanguageParser
                 lessOrEqual: comparison, greaterOrEqual: comparison, notEqualTo: equality
             ]
             trinary: [
-                (if, colon)
+                (conditional, colon)
             ]
         }
 
@@ -1151,6 +1155,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1158,10 +1163,26 @@ public partial class LanguageParser
         ]
 
         // Group clauses.
-        groupIntervalClause:
+        //
+        // A loop, which makes what stands in it once for every value in a range.  The name is optional,
+        // for when the repetition is wanted and the count is not.  The range is written as an interval
+        // like any other -- square brackets take an end in, parentheses leave it out -- so "for
+        // [0, 11]" is twelve turns and "for i = (0, 1) by 0.25" is four, at a quarter, a half, three
+        // quarters and one.
+        startForClause:
         {
-            { [ _identifier | _keyword ] > assignment }{?} > intervalClause >
-            { by > _expression }{?}
+            for > [ _identifier | _keyword ] ?? 'Expecting a name for the count to follow "for" here.' >
+            in ?? 'Expecting "in" and a range to follow the name here.' > intervalClause >
+            { by > _expression }{?} >
+            openBrace ?? 'Expecting an open brace to follow the range here.'
+        }
+        // The same thing with no name for the count, for when the repetition is all that is wanted.
+        // It is a word of its own rather than a "for" with a hole in it, so that a reader never has to
+        // wonder where the name went.
+        startOverClause:
+        {
+            over > intervalClause > { by > _expression }{?} >
+            openBrace ?? 'Expecting an open brace to follow the range here.'
         }
         startGroupClause:
         {
@@ -1172,7 +1193,8 @@ public partial class LanguageParser
         }
         groupEntryClause:
         [
-            groupIntervalClause => 'interval' |
+            startForClause => 'for' |
+            startOverClause => 'over' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
@@ -1197,6 +1219,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1210,6 +1233,8 @@ public partial class LanguageParser
         }
         sceneEntryClause:
         [
+            startForClause => 'for' |
+            startOverClause => 'over' |
             namedClause => 'name' |
             startCameraClause => 'camera' |
             startLightClause => 'light' |
@@ -1237,6 +1262,7 @@ public partial class LanguageParser
             startDiscClause => 'disc' |
             startGenericShapeClause => 'genericShape' |
             startObjectFileClause => 'objectFile' |
+            startCallClause => 'call' |
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
@@ -1260,7 +1286,10 @@ public partial class LanguageParser
         // What fills a piece of space: something a ray passes through rather than strikes.
         startMediumClause:
         {
-            medium > openBrace
+            medium > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "medium" here.'
         }
         mediumEntryClause:
         [
@@ -1307,15 +1336,110 @@ public partial class LanguageParser
             [
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
-                { interior > startThingClause } |
+                { interior > startThingClause } | { medium > startThingClause } |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
-                startPatchClause | startObjectFileClause | startObjectClause | startCsgClause | startGroupClause
+                startPatchClause | startIsosurfaceClause | startObjectFileClause | startObjectClause |
+                startCsgClause | startGroupClause
             ]
+        }
+        // A function a scene writes for itself.  What follows the parenthesis is read in hand rather
+        // than spelled out here, parameters with defaults not being a shape this grammar says well.
+        startFunctionClause:
+        {
+            function > [ _identifier | _keyword ] ?? 'Expecting a name to follow "function" here.' >
+            leftParen ?? 'Expecting a parameter list to follow the function name here.'
+        }
+        functionParameterClause:
+        {
+            [ _identifier | _keyword ] > { assignment > _expression }{?} > comma{?}
+        }
+        // A primitive a scene writes for itself.  The kind it gives back is named exactly, rather than
+        // merely "a surface", because the block after a call takes that kind's own clauses -- so the
+        // parser has to know which those are before it reads them.
+        startPrimitiveClause:
+        {
+            primitive > [ _identifier | _keyword ] ?? 'Expecting a name to follow "primitive" here.' >
+            leftParen ?? 'Expecting a parameter list to follow the name here.'
+        }
+        primitiveKindClause:
+        {
+            arrow ?? 'Expecting "->" and the kind of thing this gives back here.' >
+            [
+                group | union | difference | intersection |
+                plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
+                isosurface | patch | lathe | blob | tube | sweep | extrusion | text | lsystem |
+                heightfield | parallelogram | disc | triangle |
+                { smooth > triangle } | { generic > shape } | { object > file } |
+                pigment | material | interior | medium
+            ] ?? 'Expecting the kind of surface this gives back here.' >
+            openBrace ?? 'Expecting an open brace to follow the kind here.'
+        }
+        primitiveReturnClause:
+        {
+            return ?? 'Expecting "return", "if" or "switch" here; a body must say what it gives back.'
+        }
+        // A call of one, which may carry values and may be followed by a block of that kind's clauses.
+        startCallClause:
+        {
+            object > [ _identifier | _keyword ] ?? 'Expecting a name to follow "object" here.' >
+            leftParen
+        }
+        argumentClause:
+        {
+            _expression > comma{?}
+        }
+        functionKindClause:
+        {
+            arrow ?? 'Expecting "->" and the kind of thing the function gives back here.' >
+            [ number | color | vector ] ?? 'A function gives back a number, a color or a vector.' >
+            openBrace ?? 'Expecting an open brace to follow the function kind here.'
+        }
+        functionLocalClause:
+        {
+            [ _identifier | _keyword ] > assignment > _expression
+        }
+        // A choice, which always ends a body: both ways out give an answer, so there is nowhere for a
+        // second one to go and nowhere for a missing one to hide.
+        startIfClause:
+        {
+            if > leftParen ?? 'Expecting a condition in parentheses to follow "if" here.' >
+            _expression >
+            rightParen ?? 'Expecting a close parenthesis after the condition here.' >
+            openBrace ?? 'Expecting an open brace to follow the condition here.'
+        }
+        startElseClause:
+        {
+            else ?? 'Expecting "else" here; both ways out of a choice must give an answer.'
+        }
+        // A selection: one value held against a run of cases, the first that matches giving the answer.
+        // It ends a body exactly as a choice does and for the same reasons, and the "default" is what
+        // makes every path answer, which is why it is demanded rather than merely allowed.
+        startSwitchClause:
+        {
+            switch > leftParen ?? 'Expecting a value in parentheses to follow "switch" here.' >
+            _expression >
+            rightParen ?? 'Expecting a close parenthesis after the value here.' >
+            openBrace ?? 'Expecting an open brace to follow the value here.'
+        }
+        startCaseClause:
+        {
+            case > _expression > { comma > _expression }{*} >
+            openBrace ?? 'Expecting an open brace to follow the case here.'
+        }
+        startDefaultClause:
+        {
+            default ?? 'Expecting "case" or "default" here; a selection must have a last way out.' >
+            openBrace ?? 'Expecting an open brace to follow "default" here.'
+        }
+        functionReturnClause:
+        {
+            return ?? 'Expecting "return", "if" or "switch" here; a body must say what it gives back.' >
+            _expression
         }
         setVariableClause:
         {
@@ -1324,6 +1448,9 @@ public partial class LanguageParser
 
         // Top-level clause.
         [
+            startPrimitiveClause      => 'HandleStartPrimitiveClause' |
+            startCallClause           => 'HandleStartCallClause' |
+            startFunctionClause       => 'HandleStartFunctionClause' |
             startContextClause        => 'HandleStartContextClause' |
             startSceneClause          => 'HandleStartSceneClause' |
             startCameraClause         => 'HandleStartCameraClause' |
@@ -1355,6 +1482,8 @@ public partial class LanguageParser
             startObjectClause         => 'HandleStartObjectClause' |
             startCsgClause            => 'HandleStartCsgClause' |
             startGroupClause          => 'HandleStartGroupClause' |
+            startForClause            => 'HandleStartForClause' |
+            startOverClause           => 'HandleStartForClause' |
             background                => 'HandleBackgroundClause' |
             startEnvironmentClause    => 'HandleStartEnvironmentClause' |
             environmentClause         => 'HandleEnvironmentClause' |

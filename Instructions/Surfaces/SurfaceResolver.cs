@@ -85,4 +85,16 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     {
         return MemberwiseClone();
     }
+
+    /// <summary>
+    /// This method lays what this resolver says over a surface already made.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="surface">The surface already made.</param>
+    public void ApplyToSurface(RenderContext context, Variables variables, Surface surface)
+    {
+        if (surface is TValue value)
+            ApplyTo(context, variables, value);
+    }
 }

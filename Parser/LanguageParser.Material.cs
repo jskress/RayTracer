@@ -38,6 +38,25 @@ public partial class LanguageParser
         if (token.Text == "inherited")
             return new MaterialResolver { SetToNull = true };
 
+        // A material a scene wrote for itself, called with values.  What follows the call is read as
+        // an overlay by the resolver itself, in the caller's names.
+        if (CallArgumentsIfAny(token, "material") is { } given)
+        {
+            MaterialCallResolver call = new ()
+            {
+                Name = token.Text, Arguments = given, ErrorToken = token
+            };
+
+            if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
+            {
+                CurrentParser.GetNextToken();
+
+                ParseObjectResolver("materialEntryClause", HandleMaterialEntryClause, call, false);
+            }
+
+            return call;
+        }
+
         bool extending = clause.Tokens.Count > 2;
         MaterialResolver resolver = GetExtensibleItem<MaterialResolver>(token, extending);
 
@@ -146,6 +165,23 @@ public partial class LanguageParser
                 "interiorEntryClause", HandleInteriorEntryClause);
         }
 
+        if (CallArgumentsIfAny(token, "interior") is { } given)
+        {
+            InteriorCallResolver call = new ()
+            {
+                Name = token.Text, Arguments = given, ErrorToken = token
+            };
+
+            if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
+            {
+                CurrentParser.GetNextToken();
+
+                ParseObjectResolver("interiorEntryClause", HandleInteriorEntryClause, call, false);
+            }
+
+            return call;
+        }
+
         bool extending = clause.Tokens.Count > 2;
         InteriorResolver resolver = GetExtensibleItem<InteriorResolver>(token, extending);
 
@@ -181,7 +217,7 @@ public partial class LanguageParser
                 break;
             case "medium":
                 // A surface is a far side, so anything a medium may say is allowed here.
-                resolver.MediumResolver = ParseMediumClause();
+                resolver.MediumResolver = GetMediumResolver(clause);
                 break;
             default:
                 throw new NotSupportedException("Unknown interior property found.");

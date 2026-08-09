@@ -51,7 +51,10 @@ public class FunctionCatalog
                         _signatures[attribute.Name] = forms;
                     }
 
-                    forms.Add(new FunctionSignature(attribute.Name, method));
+                    forms.Add(new FunctionSignature(attribute.Name, method)
+                    {
+                        NotInAField = attribute.NotInAField
+                    });
                 }
             }
         }

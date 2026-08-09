@@ -1,0 +1,191 @@
+// One tree, told what time of year it is.
+//
+// This is the same tree four times.  Not four trees written out four ways -- one `tree`, called four
+// times, handed a different word each time:
+//
+//     object tree(1.9, 'summer', 1) { … }
+//     object tree(1.8, 'autumn', 2) { … }
+//
+// Everything that differs between them comes out of a `switch` on that word.  Summer is dense and
+// green; autumn is thinner and turning; winter has no leaves at all and shows the shape they were
+// hanging on; spring is sparse and pale.  Read `foliage` below and the whole difference between the
+// four pictures is nine lines.
+//
+// **Each arm is a body, and that is the point of writing it this way.**  Winter's arm works out how
+// much of a bud is left before it says what it makes; autumn's works out its own color from two
+// numbers.  A selection whose arms could only be expressions -- which is what most languages give you
+// -- would push both of those out into functions somewhere else, and the reader would have to go and
+// find them to learn what winter looks like.  Here it is where winter is.
+//
+// A `default` is required, and it earns its place: there is no way for anything to know that four
+// words cover every word a scene might pass, so the last way out is demanded rather than deduced.
+// Here it is spring, which is to say "anything else is spring" -- and a scene that asks for `'august'`
+// gets a spring tree rather than an error, which is a choice this file is making and not a thing the
+// language decided.
+//
+// Everything else here is the machinery the rest of these scenes are about, so it is worth naming what
+// is doing what, since this one scene uses all of it:
+//
+//   `primitive`  makes `tree`, `limb` and `foliage` -- three things a scene taught itself to make.
+//   `if`         is the base case: a limb with no depth left puts out foliage instead of more limbs.
+//   `switch`     is what the seasons are.
+//   `random`     is why no two limbs are alike, and why the same file always grows the same trees.
+//   `for`        places the leaf clusters, and would place the trees too if they did not each want a
+//                word of their own.
+//
+// Take any one of those away and this scene either cannot be written or has to be written out in
+// full, which for four trees of three generations means something over a thousand lines that nobody
+// would ever edit.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Four Seasons'
+        author 'J. Stephen Kress'
+        description 'One tree, called four times, told a different time of year each time.'
+        copyright true
+        software __software__
+    }
+}
+
+// The habit of the tree, and how far a limb may stray from it.
+shrink = 0.72
+taper = 0.60
+lean = 32
+turn = 122
+vary = 0.30
+variant = 4
+
+bark = material { pigment [0.46, 0.34, 0.25]  specular 0.10  shininess 18 }
+
+// A limb's wobble, asked for by the limb's own number and by which wobble is wanted.
+function wilt(id, which) -> number { return 1 - vary + random(id, which, variant) * vary * 2 }
+function sway(id, which) -> number { return (random(id, which, variant) - 0.5) * lean }
+
+// What hangs on the end of a limb, which is the whole of what a season is.
+//
+// Every arm is a body in its own right: winter works out what is left of a bud before it says what it
+// makes, and autumn works out its color from how far along the turn it is.  Neither had to be lifted
+// out into a function of its own to be allowed there.
+primitive foliage(season, id) -> group {
+    switch (season) {
+        case 'summer' {
+            green = color [0.24, 0.44, 0.17]
+            return group {
+                for leaf in [0, 3] {
+                    sphere {
+                        material { pigment green }
+                        scale 0.20 + random(id, leaf, 20) * 0.10
+                        translate [random(id, leaf, 21) * 0.3 - 0.15,
+                                   random(id, leaf, 22) * 0.2,
+                                   random(id, leaf, 23) * 0.3 - 0.15]
+                    }
+                }
+            }
+        }
+        case 'autumn', 'fall' {
+            // How far along the turn this cluster is, and so how far from green toward amber.
+            turned = random(id, 30, variant)
+            return group {
+                for leaf in [0, 1] {
+                    sphere {
+                        material {
+                            pigment [0.30 + turned * 0.45, 0.36 - turned * 0.10, 0.12]
+                        }
+                        scale 0.17 + random(id, leaf, 24) * 0.08
+                        translate [random(id, leaf, 25) * 0.3 - 0.15, 0, random(id, leaf, 26) * 0.3 - 0.15]
+                    }
+                }
+            }
+        }
+        case 'winter' {
+            // Nothing but the bud the leaf will come back on, and not even that on most of them.
+            left = random(id, 40, variant)
+            if (left > 0.55) {
+                return group {
+                    sphere { material { pigment [0.36, 0.27, 0.21] }  scale 0.05 }
+                }
+            }
+            else { return group { } }
+        }
+        default {
+            // Spring, and anything else a scene asks for.
+            return group {
+                for bud in [0, 1] {
+                    sphere {
+                        material { pigment [0.56, 0.68, 0.36] }
+                        scale 0.09 + random(id, bud, 50) * 0.05
+                        translate [random(id, bud, 51) * 0.2 - 0.1, 0, random(id, bud, 52) * 0.2 - 0.1]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// One limb: a length of wood, and then either foliage or three more limbs.
+primitive limb(depth, length, thickness, twist, id, season) -> group {
+    if (depth < 1) {
+        return group { object foliage(season, id) }
+    }
+    else {
+        return group {
+            cylinder {
+                min Y 0  max Y length
+                material bark
+                scale [thickness, 1, thickness]
+            }
+            object limb(depth - 1, length * wilt(id, 1), thickness * taper, twist + turn, id * 3 + 1, season) {
+                rotate Z lean * wilt(id, 2)
+                rotate Y twist + sway(id, 3)
+                translate Y length
+            }
+            object limb(depth - 1, length * wilt(id, 4), thickness * taper, twist + turn, id * 3 + 2, season) {
+                rotate Z lean * wilt(id, 5)
+                rotate Y twist + turn + sway(id, 6)
+                translate Y length
+            }
+            object limb(depth - 1, length * wilt(id, 7) * 0.9, thickness * taper, twist + turn, id * 3 + 3, season) {
+                rotate Z lean * 0.45 * wilt(id, 8)
+                rotate Y twist + turn * 2 + sway(id, 9)
+                translate Y length * 0.9
+            }
+        }
+    }
+}
+
+// And the tree itself, which is a trunk's worth of limb and a word.
+primitive tree(height, season, id) -> group {
+    return group { object limb(4, height, height * 0.09, 0, id, season) }
+}
+
+camera {
+    location [0, 3.2, -30.0]
+    look at [0, 3.4, 0]
+    field of view 45
+}
+
+background physical sky {
+    sun elevation 27
+    sun azimuth 152
+    turbidity 2.8
+    brightness 3
+}
+
+sky light {
+    samples 20
+}
+
+plane {
+    material {
+        pigment [0.31, 0.34, 0.24]
+        specular 0.03
+    }
+}
+
+// The same tree, four times, told what time of year it is.
+object tree(1.7, 'summer', 1) { translate [-6.2, 0, 0.6] }
+object tree(1.6, 'autumn', 2) { translate [-2.1, 0, 0] }
+object tree(1.7, 'winter', 3) { translate [2.1, 0, 0] }
+object tree(1.6, 'spring', 4) { translate [6.2, 0, 0.6] }

@@ -136,6 +136,8 @@ public partial class LanguageParser
                 return ParseSmoothTriangleClause(clause);
             case ObjectFileResolver:
                 return ParseObjectFileClause(clause);
+            case IsosurfaceResolver:
+                return ParseIsosurfaceClause(clause);
             case CsgSurfaceResolver:
                 return ParseCsgClause(clause);
             case GroupResolver:

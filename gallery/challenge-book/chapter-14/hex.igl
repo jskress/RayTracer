@@ -13,24 +13,25 @@ plane {
 }
 
 group {
-    index = [0, 5]
-    group {
-        sphere {
+    for index in [0, 5] {
+        group {
+            sphere {
+                material inherited
+                scale 0.25
+                translate Z -1
+            }
+            cylinder {
+                min Y 0
+                max Y 1
+                material inherited
+                scale [0.25, 1, 0.25]
+                rotate Z -90
+                rotate Y -30
+                translate Z -1
+            }
             material inherited
-            scale 0.25
-            translate Z -1
+            rotate Y index * 60
         }
-        cylinder {
-            min Y 0
-            max Y 1
-            material inherited
-            scale [0.25, 1, 0.25]
-            rotate Z -90
-            rotate Y -30
-            translate Z -1
-        }
-        material inherited
-        rotate Y index * 60
     }
     rotate X -30
     translate Y 1.5
