@@ -97,6 +97,91 @@ public class TestDefaultBoundingBoxes
         Assert.IsNull(opening.BoundingBox);
     }
 
+    [TestMethod]
+    public void TestAUnionIsInsideItsBox()
+    {
+        AssertNothingEscapes(Combined(CsgOperation.Union, Ball(), Box(1.2, 0, 0)), 4);
+        AssertNothingEscapes(Combined(CsgOperation.Union, Ball(), Ball(0, 2.5, 0)), 6);
+    }
+
+    [TestMethod]
+    public void TestAnIntersectionIsInsideItsBox()
+    {
+        AssertNothingEscapes(Combined(CsgOperation.Intersection, Ball(), Box(0.6, 0, 0)), 4);
+        AssertNothingEscapes(Combined(CsgOperation.Intersection, Box(), Ball(0.5, 0.5, 0)), 4);
+    }
+
+    [TestMethod]
+    public void TestADifferenceIsInsideItsBox()
+    {
+        AssertNothingEscapes(Combined(CsgOperation.Difference, Ball(), Box(0.8, 0.8, 0)), 4);
+        AssertNothingEscapes(Combined(CsgOperation.Difference, Box(), Ball(1, 1, 1)), 4);
+    }
+
+    [TestMethod]
+    public void TestWhatAnEndlessPartLeavesBounded()
+    {
+        // The reasoning worth having a test for.  An intersection cannot reach beyond either of its
+        // parts, so one that can say where it is bounds the whole thing however endless the other is;
+        // and a difference only ever takes material away, so the left one bounds it whatever the right
+        // one does.  A union of an endless thing is genuinely endless and rightly says so.
+        CsgSurface cutBall = Combined(CsgOperation.Intersection, Ball(), new Plane());
+        CsgSurface carvedBall = Combined(CsgOperation.Difference, Ball(), new Plane());
+        CsgSurface endless = Combined(CsgOperation.Union, Ball(), new Plane());
+
+        cutBall.PrepareForRendering();
+        carvedBall.PrepareForRendering();
+        endless.PrepareForRendering();
+
+        Assert.IsNotNull(cutBall.BoundingBox, "a sphere cut by a plane is still inside the sphere");
+        Assert.IsNotNull(carvedBall.BoundingBox, "a sphere carved by a plane is still inside it");
+        Assert.IsNull(endless.BoundingBox, "a union with a plane really does go on forever");
+
+        // And they must still hold what they hold.
+        AssertNothingEscapes(Combined(CsgOperation.Intersection, Ball(), new Plane()), 4);
+        AssertNothingEscapes(Combined(CsgOperation.Difference, Ball(), new Plane()), 4);
+    }
+
+    [TestMethod]
+    public void TestAGroupHoldingACombinationHasABoxOfItsOwn()
+    {
+        // The point of the whole thing: a box on the parts gives every group above them one too, and a
+        // combination that could not say where it was used to stop that at the first CSG it met.
+        Group group = new ();
+
+        group.Add(Combined(CsgOperation.Difference, Ball(), Box(0.5, 0.5, 0.5)));
+        group.Add(Ball(3, 0, 0));
+        group.PrepareForRendering();
+
+        Assert.IsNotNull(group.BoundingBox);
+        AssertNothingEscapes(group, 6);
+    }
+
+    private static Sphere Ball(double x = 0, double y = 0, double z = 0)
+    {
+        Sphere ball = new ();
+
+        if (x != 0 || y != 0 || z != 0)
+            ball.Transform = Transforms.Translate(x, y, z);
+
+        return ball;
+    }
+
+    private static Cube Box(double x = 0, double y = 0, double z = 0)
+    {
+        Cube box = new ();
+
+        if (x != 0 || y != 0 || z != 0)
+            box.Transform = Transforms.Translate(x, y, z);
+
+        return box;
+    }
+
+    private static CsgSurface Combined(CsgOperation operation, Surface left, Surface right)
+    {
+        return new CsgSurface { Operation = operation, Left = left, Right = right };
+    }
+
     /// <summary>
     /// This method fires a great many rays at a surface from every direction and insists that testing
     /// the box first never loses one.

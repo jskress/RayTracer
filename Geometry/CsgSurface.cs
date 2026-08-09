@@ -64,6 +64,53 @@ public class CsgSurface : Surface
     }
 
     /// <summary>
+    /// This method returns the box a combination of two surfaces sits in, which depends on what the
+    /// combination does with them.
+    /// <para>
+    /// <b>A union</b> holds everything in either one, so it needs a box around both -- and if either
+    /// cannot say where it is, neither can the union.
+    /// </para>
+    /// <para>
+    /// <b>An intersection</b> holds only what lies in <i>both</i>, so it cannot reach beyond either of
+    /// them: whichever one can say where it is already bounds the whole thing, and one that cannot say
+    /// costs nothing.  That is worth having rather than merely tidy -- a sphere cut by a plane is
+    /// bounded by the sphere, though a plane goes on forever.  When both can say, the overlap of the
+    /// two is tighter than either alone.
+    /// </para>
+    /// <para>
+    /// <b>A difference</b> takes material away from the left one, and taking material away can only
+    /// make a thing smaller, so the left one's box holds the result whatever the right one is or is
+    /// not.  Half a sphere cut away by a plane is still inside the sphere.
+    /// </para>
+    /// </summary>
+    /// <returns>The box this combination sits in, or <c>null</c> if it has none.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        BoundingBox left = BoxAround(Left);
+        BoundingBox right = BoxAround(Right);
+
+        switch (Operation)
+        {
+            case CsgOperation.Union:
+                if (left is null || right is null)
+                    return null;
+
+                left.Add(right);
+
+                return left;
+
+            case CsgOperation.Intersection:
+                if (left is null)
+                    return right;
+
+                return right is null ? left : left.Overlap(right);
+
+            default:
+                return left;
+        }
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the cube and,
     /// if so, where.
     /// </summary>

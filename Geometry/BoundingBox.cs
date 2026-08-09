@@ -82,6 +82,34 @@ public class BoundingBox
     }
 
     /// <summary>
+    /// This method returns the box where this one and another overlap, or <c>null</c> when they do not
+    /// meet at all.
+    /// <para>
+    /// It is the counterpart of <see cref="Add(BoundingBox)"/>: that one grows to hold both, this one
+    /// keeps only what they have in common.  Where a union of two solids needs the first, an
+    /// intersection of two needs this -- what lies in both can lie no further out than either.
+    /// </para>
+    /// </summary>
+    /// <param name="other">The box to overlap with this one.</param>
+    /// <returns>The overlap, or <c>null</c> if there is none.</returns>
+    internal BoundingBox Overlap(BoundingBox other)
+    {
+        double xMin = Math.Max(_xMin, other._xMin);
+        double xMax = Math.Min(_xMax, other._xMax);
+        double yMin = Math.Max(_yMin, other._yMin);
+        double yMax = Math.Min(_yMax, other._yMax);
+        double zMin = Math.Max(_zMin, other._zMin);
+        double zMax = Math.Min(_zMax, other._zMax);
+
+        if (xMin > xMax || yMin > yMax || zMin > zMax)
+            return null;
+
+        return new BoundingBox()
+            .Add(new Point(xMin, yMin, zMin))
+            .Add(new Point(xMax, yMax, zMax));
+    }
+
+    /// <summary>
     /// This method adjusts the extents of the bounding box by some amount.  The defailt is
     /// a small fraction to help make sure we don't miss any intersections.
     /// </summary>
