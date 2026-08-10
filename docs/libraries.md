@@ -100,6 +100,7 @@ object Elm(8, 'winter', 4)       { translate X -12 }
 | `Elm` | Reaching, the limbs sweeping up and out. |
 | `Oak` | Heavy and broad, throwing its weight sideways. |
 | `Birch` | Slender, pale-barked, dividing into finer twigs than the others. |
+| `Fir` | A conifer: one trunk the whole height, with rings of branches coming off it.  Evergreen, so spring, summer and autumn are the same tree -- but ask one for winter and snow gathers along its boughs. |
 
 Three numbers, of which only the first is required: **how tall**, **what time of year**, and **which
 tree of that kind**.

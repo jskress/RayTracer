@@ -12,13 +12,16 @@
 // | Elm   | Reaching, the limbs sweeping up and out. |
 // | Oak   | Heavy and broad, throwing its weight sideways. |
 // | Birch | Slender, pale-barked, dividing into finer twigs than the others. |
+// | Fir   | A conifer: one trunk the whole height, rings of branches coming off it. |
 //
 // **Height is what you would measure**, near enough -- `Elm(9)` stands about nine units high, which is
 // worth saying because the obvious alternative is for the number to mean the trunk, and then nobody can
 // picture it.
 //
 // **The season is a word**: 'summer', 'autumn' (or 'fall'), 'winter', or anything else for spring.
-// Winter has no leaves at all and shows the shape they were hanging on.
+// Winter has no leaves at all and shows the shape they were hanging on.  A fir keeps its needles, so
+// three of its four seasons look alike -- but it still answers to winter, by taking snow along its
+// boughs, which is the state anybody picturing a fir pictures.
 //
 // **The variant is which tree of that kind you want.**  The same numbers always grow the same tree,
 // down to the last twig, so a scene renders the same way today and next year and in every frame of an
@@ -56,6 +59,7 @@ function TreeShrink(species) -> number {
 // And how much thinner.
 function TreeTaper(species) -> number {
     switch (species) {
+        case 'fir' { return 0.14 }
         case 'oak' { return 0.66 }
         case 'birch' { return 0.55 }
         default { return 0.62 }
@@ -133,11 +137,15 @@ function TreeGreen(species) -> color {
 TreeElmBark = material { pigment [0.44, 0.34, 0.26]  specular 0.10  shininess 18 }
 TreeOakBark = material { pigment [0.35, 0.29, 0.23]  specular 0.08  shininess 14 }
 TreeBirchBark = material { pigment [0.82, 0.80, 0.74]  specular 0.16  shininess 30 }
+TreeFirBark = material { pigment [0.30, 0.22, 0.17]  specular 0.06  shininess 12 }
+TreeNeedles = material { pigment [0.14, 0.30, 0.18]  specular 0.22  shininess 40 }
+TreeSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.30  shininess 60 }
 
 primitive TreeBark(species) -> material {
     switch (species) {
         case 'oak' { return material TreeOakBark }
         case 'birch' { return material TreeBirchBark }
+        case 'fir' { return material TreeFirBark }
         default { return material TreeElmBark }
     }
 }
@@ -283,5 +291,99 @@ primitive Oak(height, season = 'summer', variant = 1) -> group {
 primitive Birch(height, season = 'summer', variant = 1) -> group {
     return group {
         object TreeLimb('birch', season, TreeDepth('birch'), TreeTrunk('birch', height), height * 0.020, 0, 1, variant)
+    }
+}
+
+// -- A conifer, which is built the other way round ------------------------------------------------
+//
+// The three above are made by forking: a limb divides into limbs, which divide again, and the shape
+// of the tree falls out of how they lean.  A fir does not grow that way and cannot be made that way.
+// It has one trunk running the whole height of it, and branches come off that trunk in rings -- a
+// whorl a year, each ring a little shorter than the one below, which is what makes the cone.
+//
+// So this is a loop rather than a recursion, and the two sit side by side in the same library because
+// the shapes are honestly different rather than the same shape differently tuned.
+
+// What lies on top of a bough, which in three seasons out of four is nothing.
+//
+// A fir keeps its needles all year, so a conifer is the one tree here that looks the same in spring,
+// summer and autumn.  Winter is the exception, and not a small one: snow gathers along the upper side
+// of the boughs, which is how anybody would draw a fir from memory.  It rides a little above the
+// needles and a little narrower, so what shows is a white edge along the top of a tier rather than a
+// second set of foliage.
+//
+// Which boughs catch it is decided per bough rather than per handful of needles, so a tree comes out
+// with snow on some limbs and none on others.  A fir under an even coating looks moulded rather than
+// snowed on.
+primitive TreeSnowOn(season, length, id, variant) -> group {
+    switch (season) {
+        case 'winter' {
+            if (random(id, 60, variant) > 0.3) {
+                return group {
+                    for along in [0, 4] {
+                        sphere {
+                            material TreeSnow
+                            scale [length * 0.24, length * 0.085, length * 0.24]
+                            translate Y length * (0.16 + along * 0.19)
+                            // A bough is built along Y and laid over by a quarter turn about Z, and
+                            // that turn carries X up -- so this is what puts the snow on top of the
+                            // branch rather than along the side of it.
+                            translate X length * 0.085 +
+                                      (random(id, along, variant) - 0.5) * length * 0.10
+                        }
+                    }
+                }
+            }
+            else { return group { } }
+        }
+        default { return group { } }
+    }
+}
+
+// One branch: a shaft angled down and out from the trunk, with needles gathered along it.  Real
+// conifer branches sweep -- the wood angles up and the needles hang -- which is more than this does,
+// but the length and the droop are what read at any distance.
+primitive TreeBough(season, length, id, variant) -> group {
+    return group {
+        object TreeWood('fir', length, length * 0.045)
+        for along in [0, 4] {
+            sphere {
+                material TreeNeedles
+                scale [length * 0.30, length * 0.12, length * 0.30]
+                translate Y length * (0.16 + along * 0.19)
+                translate X (random(id, along, variant) - 0.5) * length * 0.12
+            }
+        }
+        object TreeSnowOn(season, length, id, variant)
+        rotate Z 90
+    }
+}
+
+// How wide a fir is at the bottom, as a fraction of its height.  Narrower than instinct says: a fir
+// that is half as wide as it is tall reads as a bush.  It asks for no species because it is about
+// firs and nothing else; the other three shape helpers take one because they genuinely differ.
+function TreeFirSpread() -> number { return 0.30 }
+
+primitive Fir(height, season = 'summer', variant = 1) -> group {
+    // A fir keeps its needles the year round, so three of the four seasons look alike here.  Winter
+    // does not: snow gathers along the boughs, which is the state anybody picturing a fir pictures.
+    whorls = 11
+    bare = height * 0.16
+
+    return group {
+        object TreeWood('fir', height * 0.93, height * 0.028)
+        for whorl in [0, whorls - 1] {
+            for branch in [0, 5] {
+                object TreeBough(season,
+                    height * TreeFirSpread() * (1 - whorl / whorls) *
+                        (0.85 + random(whorl, branch, variant) * 0.3),
+                    whorl * 7 + branch, variant) {
+                    rotate Z -22 - random(whorl, branch, variant + 1) * 14
+                    rotate Y branch * 60 + whorl * 27 +
+                             random(whorl, branch, variant + 2) * 18
+                    translate Y bare + (height - bare) * whorl / (whorls - 1)
+                }
+            }
+        }
     }
 }
