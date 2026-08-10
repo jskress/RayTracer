@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Reflection;
 using RayTracer.Fonts;
 using RayTracer.Graphics;
 using RayTracer.Options;
@@ -42,10 +43,79 @@ public static class LibrariesCommand
             RemoveLibrary(options.RemoveLibrary);
         else if (options.FontAwesomeZip != null)
             InstallFontAwesomeZip(options.FontAwesomeZip);
+        else if (options.InstallShipped)
+            InstallShippedLibraries(options.Replace);
         else if (options.Povray)
             Terminal.ShowError("--povray only makes sense together with --import.");
         else
             Console.WriteLine("No action was specified.  Use '--help' for a list of options.");
+    }
+
+    /// <summary>
+    /// This method copies the libraries that ship with the ray tracer into the user's own library
+    /// set, where scenes can import from them.
+    /// <para>
+    /// It is a thing to be asked for rather than something that happens the first time the ray tracer
+    /// runs.  Writing into somebody's home directory unbidden is the sort of surprise that is hard to
+    /// undo and worse to explain, and a verb can be run again after an update, which a once-only step
+    /// at first run cannot.
+    /// </para>
+    /// <para>
+    /// A library already there is left alone unless the user says to overwrite it: the shipped ones
+    /// are a starting point, and somebody who has tuned a sky to their liking should not lose it to a
+    /// new release of the ray tracer.
+    /// </para>
+    /// </summary>
+    /// <param name="overwrite">Whether to replace libraries that are already there.</param>
+    private static void InstallShippedLibraries(bool overwrite)
+    {
+        Assembly assembly = typeof(LibrariesCommand).Assembly;
+        string prefix = $"{assembly.GetName().Name}.Libraries.";
+        string[] shipped = assembly.GetManifestResourceNames()
+            .Where(name => name.StartsWith(prefix) && name.EndsWith(".igl"))
+            .Order()
+            .ToArray();
+
+        if (shipped.Length == 0)
+        {
+            Terminal.ShowError("This build of the ray tracer carries no libraries of its own.");
+
+            return;
+        }
+
+        Directory.CreateDirectory(LibraryLocator.LibrariesDirectory);
+
+        int written = 0;
+        int kept = 0;
+
+        foreach (string resource in shipped)
+        {
+            string name = resource[prefix.Length..];
+            string path = Path.Combine(LibraryLocator.LibrariesDirectory, name);
+
+            if (File.Exists(path) && !overwrite)
+            {
+                Terminal.Out($"Keeping the '{Path.GetFileNameWithoutExtension(name)}' you already " +
+                             "have; use '--overwrite' to replace it.");
+
+                kept++;
+
+                continue;
+            }
+
+            using Stream source = assembly.GetManifestResourceStream(resource);
+            using StreamReader reader = new (source!);
+
+            File.WriteAllText(path, reader.ReadToEnd());
+
+            Terminal.Out($"Installed '{Path.GetFileNameWithoutExtension(name)}'.");
+
+            written++;
+        }
+
+        Terminal.Out(written == 0
+            ? $"Nothing to do; all {kept} of them were already there."
+            : $"{written} installed into {LibraryLocator.LibrariesDirectory}.");
     }
 
     /// <summary>

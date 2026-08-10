@@ -43,6 +43,10 @@ public partial class LanguageParser
             "interior" => GetInteriorResolver(clause),
             "medium" => GetMediumResolver(clause),
             "transform" => GetTransformResolver(clause),
+            // Every sort of light, told apart the same way a light is anywhere else: by the word
+            // before "light", or by nothing at all for a plain lamp.
+            "light" or "point" or "distant" or "spot" or "area" or "sky"
+                when type == "light" || second == "light" => ParseLightClause(clause),
             "plane" => ParsePlaneClause(clause),
             "sphere" => ParseSphereClause(clause),
             "cube" => ParseCubeClause(clause),

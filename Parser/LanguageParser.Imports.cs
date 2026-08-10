@@ -84,6 +84,8 @@ public partial class LanguageParser
         // filter, not the scene's own.
         HashSet<string> before = _context.ExtensibleItems.Keys.ToHashSet();
         HashSet<string> valuesBefore = _context.InstructionContext.VariableNames.ToHashSet();
+        HashSet<string> primitivesBefore = _primitives.Keys.ToHashSet();
+        HashSet<string> functionsBefore = _context.InstructionContext.FunctionNames.ToHashSet();
         int depth = _entries.Count;
 
         PushEntry(path);
@@ -112,9 +114,22 @@ public partial class LanguageParser
         HashSet<string> valuesArrived = _context.InstructionContext.VariableNames
             .Where(name => !valuesBefore.Contains(name))
             .ToHashSet();
+        // The things a scene teaches itself to make are filtered too, and they have to be looked for
+        // in their own places: a primitive is known to the parser while the file is read, and a
+        // function is a declaration among the instructions.  Before this they were in neither list,
+        // so an import could not grant one -- asking for a primitive by name failed, saying the
+        // library did not define it -- and could not withhold one either, so every helper a library
+        // held arrived in the scene whether it was asked for or not.
+        List<string> primitivesArrived = _primitives.Keys
+            .Where(name => !primitivesBefore.Contains(name))
+            .ToList();
+        List<string> functionsArrived = _context.InstructionContext.FunctionNames
+            .Where(name => !functionsBefore.Contains(name))
+            .ToList();
         List<string> missing = wanted
             .Where(name => !arrived.Contains(name) && !before.Contains(name) &&
-                           !valuesArrived.Contains(name))
+                           !valuesArrived.Contains(name) && !primitivesArrived.Contains(name) &&
+                           !functionsArrived.Contains(name))
             .ToList();
 
         // A name the library does not define is worth complaining about rather than passing over:
@@ -131,5 +146,14 @@ public partial class LanguageParser
 
         foreach (string name in arrived.Where(name => !wanted.Contains(name)))
             _context.ExtensibleItems.Remove(name);
+
+        // What a library teaches the scene to *make* is granted but not withheld, and the reason is
+        // worth writing down because the obvious thing does not work.  Throwing away the helpers a
+        // library did not export throws away the ones its exports are built out of: withhold a
+        // library's `taper` and the `elm` that leans on it stops working, since both are declared
+        // into the one set of names a render has.  Keeping only what was asked for needs a library to
+        // have names of its own, which is the same lexical scoping a function body already gets from
+        // where it was written -- and until a library gets that, granting without withholding is the
+        // half that is right.  Values have always worked this way for want of the same thing.
     }
 }

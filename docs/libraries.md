@@ -26,6 +26,65 @@ Every material in that scene — the woods, the metals, the glass and the stone 
 library and was named, not written.  The whole scene is
 `gallery/POVRay/library-textures.igl`.
 
+### Libraries That Come With It
+
+Some libraries ship with the ray tracer.  They are not there until you ask for them:
+
+```bash
+dotnet run -- libraries --install
+```
+
+That copies them into your library set, and says which it wrote.  It is a thing to ask for rather than
+something that happens the first time you render, because writing into your home directory unbidden is
+a surprise that is hard to undo — and because a verb can be run again after an update, which a
+once-only step at first run cannot.
+
+**A library you already have is left alone.**  If a name is taken, the install keeps yours and says so;
+`--overwrite` replaces it.  So a sky you have tuned to your liking survives a new release of the ray
+tracer, and the shipped ones are a starting point rather than something imposed.
+
+#### Daylight
+
+The one that ships today is `daylight`, and it exists because the sky in this ray tracer is a real
+one — it works out the color of every part of the dome from the way air scatters sunlight.  That is
+what makes it look right, and it is also what makes it awkward, because the numbers it wants are the
+ones nobody can guess.  Nobody knows what turbidity they want.  Everybody knows what a clear morning
+looks like.
+
+```
+import 'daylight' { GoldenHour, GoldenHourLight }
+
+background GoldenHour
+light GoldenHourLight
+```
+
+| | |
+| --- | --- |
+| `ClearMorning` | Mid-morning, sun well up, air washed clean. |
+| `ClearNoon` | Overhead and unforgiving; shadows fall almost straight down. |
+| `GoldenHour` | An hour before sunset, long shadows and a warmth in the light. |
+| `Sunset` | The sun on the horizon, most of its light gone red on the way. |
+| `HazyAfternoon` | Hot and thick, every edge softened and the blue washed out. |
+| `WinterSun` | Low and cold, bright without being warm. |
+| `Overcast` | Flat and shadowless, made rather than derived — see below. |
+| `Dusk` | After the sun has gone, what light there is coming from everywhere. |
+
+**Each is two names, and you want both.**  A sky is what you look at; the light it casts is a separate
+thing, and taking one without the other gives a picture that disagrees with itself — a scene with no
+sky light quietly keeps the flat `ambient` guess that a sky light exists to replace.  So every
+`GoldenHour` has a `GoldenHourLight` beside it.
+
+**They may be adjusted where they are used**, the same as any named thing, so a name is a starting
+point and not a straitjacket:
+
+```
+light GoldenHourLight { samples 64 }
+```
+
+**Two of them are not physical skies at all.**  `Overcast` and `Dusk` are gradients, because a real sky
+with the sun taken out of it is not the same thing as a cloudy one: cloud spreads the sun's light
+across the whole dome rather than hiding it, so the honest way to get an overcast day is to paint one.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

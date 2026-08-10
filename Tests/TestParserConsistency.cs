@@ -140,8 +140,13 @@ public class TestParserConsistency
         HashSet<string> handled = Normalize(SwitchArmsIn(
             Read("Parser/LanguageParser.Variables.cs"), "HandleSetThingToVariableClause"));
 
-        // That switch also names things that are not surfaces at all.
-        handled.ExceptWith(new[] { "pigment", "material", "interior", "transform", "medium" });
+        // That switch also names things that are not surfaces at all -- and every sort of light, which
+        // arrives as the words that may stand before "light" as well as the word itself.
+        handled.ExceptWith(new[]
+        {
+            "pigment", "material", "interior", "transform", "medium",
+            "light", "point", "distant", "spot", "area", "sky"
+        });
 
         // Its two-word kinds are written as a first word and a guard on the second, so both halves
         // turn up separately and neither is the kind.

@@ -25,6 +25,12 @@ public class LibrariesOptions
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool Povray { get; set; }
 
+    [Option("install", Required = false, SetName = "install",
+        HelpText = "This option installs the libraries that ship with the ray tracer into your own " +
+                   "library set.  An existing file of the same name is left alone unless " +
+                   "'--overwrite' is given, so a library you have edited is never quietly replaced.")]
+    public bool InstallShipped { get; set; }
+
     [Option('r', "remove", Required = false, SetName = "remove",
         HelpText = "Removes a library from the ray tracer's library directory.")]
     // ReSharper disable once UnusedAutoPropertyAccessor.Global

@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
@@ -37,6 +38,30 @@ public partial class LanguageParser
     /// <returns>The resolver for the light.</returns>
     private IObjectResolver ParseLightClause(Clause clause)
     {
+        // The word before "light" names the sort, so everything after it sits one token later when
+        // there is one.
+        int offset = clause.Tokens[0].Text == "light" ? 0 : 1;
+
+        // A name where a block would be means a light already described.  Which sort it is comes from
+        // what was stored rather than from the words written here, exactly as "object <name>" works
+        // for a surface of any kind.
+        if (!BounderToken.OpenBrace.Matches(clause.Tokens[offset + 1]))
+        {
+            return GetExtensibleItem<ILightResolver>(clause.Tokens[offset + 1], false) switch
+            {
+                DistantLightResolver => NamedLight<DistantLightResolver>(
+                    clause, "distantLightEntryClause", HandleDistantLightEntryClause, offset),
+                SpotlightResolver => NamedLight<SpotlightResolver>(
+                    clause, "spotLightEntryClause", HandleSpotlightEntryClause, offset),
+                AreaLightResolver => NamedLight<AreaLightResolver>(
+                    clause, "areaLightEntryClause", HandleAreaLightEntryClause, offset),
+                SkyLightResolver => NamedLight<SkyLightResolver>(
+                    clause, "skyLightEntryClause", HandleSkyLightEntryClause, offset),
+                _ => NamedLight<PointLightResolver>(
+                    clause, "pointLightEntryClause", HandlePointLightEntryClause, offset)
+            };
+        }
+
         return clause.Tokens[0].Text switch
         {
             "distant" => ParseObjectResolver<DistantLightResolver>(
@@ -50,6 +75,24 @@ public partial class LanguageParser
             _ => ParseObjectResolver<PointLightResolver>(
                 "pointLightEntryClause", HandlePointLightEntryClause)
         };
+    }
+
+    /// <summary>
+    /// This method finds a light that was given a name and, if the scene added a block of its own,
+    /// lays that over a copy of it.
+    /// </summary>
+    /// <param name="clause">The clause naming the light.</param>
+    /// <param name="entryBlockName">The clause name for reading that sort of light's properties.</param>
+    /// <param name="handler">What handles one of those properties.</param>
+    /// <param name="offset">How many words stand before the name beyond the first.</param>
+    /// <returns>The resolver for the light.</returns>
+    private TResolver NamedLight<TResolver>(
+        Clause clause, string entryBlockName, Action<Clause> handler, int offset)
+        where TResolver : class, ICloneable, IObjectResolver, new()
+    {
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<TResolver>(entryBlockName, handler),
+            entryBlockName, handler, offset);
     }
 
     /// <summary>
