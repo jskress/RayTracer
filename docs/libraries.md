@@ -98,6 +98,13 @@ it: a name is looked for next to the scene first and among the shared libraries 
 or without the `.igl` on the end.  Looking beside the scene first means a scene can carry a
 small library of its own, or put one in front of a shared one under the same name.
 
+A library may hold anything that leaves a name behind — a value, a material, a surface, and since
+scenes gained a language of their own, a [function or a primitive](scene-files.md#things-of-your-own)
+as well.  It keeps its own workings: what a library writes for itself stays in the library, and only
+the names a scene asks for cross over.  See
+[Importing from a library](scene-files.md#importing-from-a-library) for what that means and where the
+line falls.
+
 A hand-written library is nothing more than named definitions in a file:
 
 ```

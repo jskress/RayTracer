@@ -13,7 +13,7 @@ internal class ParsingContext
     /// <summary>
     /// This property holds the instruction context that parsing creates.
     /// </summary>
-    internal InstructionContext InstructionContext { get; } = new ();
+    internal InstructionContext InstructionContext { get; set; } = new ();
 
     /// <summary>
     /// This property holds a dictionary of items that have been assigned to a variable

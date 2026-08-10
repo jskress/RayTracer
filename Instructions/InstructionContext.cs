@@ -34,6 +34,15 @@ public class InstructionContext
     /// This property reports the names of the functions declared so far.  An import uses it the same
     /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
     /// </summary>
+    /// <summary>
+    /// This property reports the names of the primitives declared so far.  An import uses it the same
+    /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
+    /// </summary>
+    internal IReadOnlyList<string> PrimitiveNames => _instructions
+        .OfType<DeclarePrimitiveInstruction>()
+        .Select(instruction => instruction.Primitive.Name)
+        .ToList();
+
     internal IReadOnlyList<string> FunctionNames => _instructions
         .OfType<DeclareFunctionInstruction>()
         .Select(instruction => instruction.Function.Name)
@@ -44,13 +53,25 @@ public class InstructionContext
     /// value or a thing.  A file offered as a library must be, since anything else (a surface, a
     /// camera, a render command) would be dragged into every scene that imported it.
     /// </summary>
-    internal bool HoldsOnlyDefinitions => _instructions
-        .All(instruction => instruction is SetVariableInstruction);
+    internal bool HoldsOnlyDefinitions => _instructions.All(IsADefinition);
+
+    /// <summary>
+    /// This method reports whether one instruction merely gives something a name.  A value, a thing, a
+    /// function and a primitive all count: each leaves a name behind and nothing else, which is the
+    /// whole of what a library is for.
+    /// </summary>
+    /// <param name="instruction">The instruction to judge.</param>
+    /// <returns>Whether it is a definition.</returns>
+    private static bool IsADefinition(Instruction instruction)
+    {
+        return instruction is SetVariableInstruction or DeclareFunctionInstruction
+            or DeclarePrimitiveInstruction;
+    }
 
     /// <summary>
     /// This property reports how many definitions the source held.
     /// </summary>
-    internal int DefinitionCount => _instructions.OfType<SetVariableInstruction>().Count();
+    internal int DefinitionCount => _instructions.Count(IsADefinition);
 
     public void AddInstruction(Instruction instruction)
     {
@@ -80,6 +101,22 @@ public class InstructionContext
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="frame">The frame to render.</param>
+    /// <summary>
+    /// This method carries out the definitions this context holds against the given names, and does
+    /// nothing else.
+    /// <para>
+    /// A library is run this way rather than through <see cref="Execute"/>, which would give it a
+    /// render of its own for want of one.
+    /// </para>
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The scope to carry them out in.</param>
+    internal void CarryOutDefinitions(RenderContext context, Variables variables)
+    {
+        foreach (Instruction instruction in _instructions)
+            instruction.Execute(context, variables);
+    }
+
     public void Execute(
         RenderOptions options, RenderContext context, Variables variables, long frame)
     {

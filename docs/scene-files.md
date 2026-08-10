@@ -1179,5 +1179,34 @@ list, and leaves the rest of the library out of scope.  That matters because the
 may be quite large.  Libraries converted from POVRay are large because of all the definitions
 that POVRay ships with.  One scene will almost never want everything in a library file.
 
+**A library keeps its own workings.**  A library reads in a scope of its own, so the
+[functions and primitives](#functions-of-your-own) it wrote for itself stay there:
+
+```
+// trees.igl
+function taper(n) -> number { … }
+primitive twig(size) -> sphere { … }
+primitive elm(height) -> group { … uses taper and twig … }
+```
+
+```
+import 'trees' { elm }
+
+object elm(3)        // fine
+object twig(1)       // "nothing named twig is a primitive this scene has declared"
+```
+
+`elm` goes on working, because a function or a primitive remembers the scope it was
+**written** in — the same rule that lets one written in an included file see what that file set
+up.  Ask for `twig` by name and you get it; nothing here is secret, it is simply not handed
+over unasked.
+
+**Values and things are handed over whole**, and it is worth knowing why the two differ.  A
+color or a material remembers nothing about where it was written: it is looked up wherever it
+is *used*, so a material given to your scene is resolved among your scene's names.  Hold back
+the color it was written against and it would find nothing when the picture is drawn.  So a
+library's values and materials all arrive, and naming one in the import is simply a way of
+saying out loud that you mean to use it.
+
 The libraries themselves are managed with the `libraries` verb, which is covered in
 [Using Libraries](libraries.md).
