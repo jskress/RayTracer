@@ -1,0 +1,94 @@
+// Daylight you can name.
+//
+// (Not 'skies' -- POV-Ray's own skies.inc converts to a library of that name, and it holds cloud
+// pigments rather than skies to stand under.)
+//
+// The physical sky in this ray tracer is a real one: it works out the color of every part of the dome
+// from the way air scatters sunlight, given where the sun stands and how hazy the day is.  That is
+// what makes it look right, and it is also what makes it hard to use, because the numbers it wants
+// are the ones a person is least able to guess.  Nobody knows what turbidity they want.  Everybody
+// knows what a clear morning looks like.
+//
+// So this library holds skies by name.  Each is a sky and the light that goes with it, and the two
+// are meant to be taken together -- a scene that takes one without the other gets a picture that
+// disagrees with itself, since a sky light is what replaces the flat ambient guess that stands in for
+// bounced light when there is nothing better.  Take both:
+//
+//     import 'daylight' { ClearMorning, ClearMorningLight }
+//
+//     background ClearMorning
+//     light ClearMorningLight
+//
+// Every one of these may be adjusted where it is used, so the names are a starting point rather than
+// a straitjacket.  A scene wanting the same morning with less grain in the shadows says:
+//
+//     light ClearMorningLight { samples 64 }
+//
+// **On the two numbers that decide a sky.**  Elevation is how high the sun stands, in degrees above
+// the horizon: 0 is sunrise, 90 is directly overhead, and the interesting light is all below about 30.
+// Azimuth is which way it lies, in degrees, and matters only in relation to where the camera looks --
+// change it and the shadows swing round.  Turbidity is how much haze the air holds: 2 is a clear day
+// after rain, 3 is ordinary, 6 or more is a hot afternoon in a city, and higher makes the sun's own
+// glow spread wider and the blue wash out.
+//
+// The lights are given a modest number of samples, which is what a sky light works by: it looks at the
+// dome from many directions at each point and asks what it can see.  More samples means less grain and
+// more time.  Twenty-four is enough for a picture to look at; a large or shadowed scene may want more.
+
+// -- Clear days ------------------------------------------------------------------------------------
+
+// Mid-morning, the sun well up and the air washed clean.  The workhorse: bright, blue, and unfussy.
+ClearMorning = pigment physical sky { sun elevation 38  sun azimuth 110  turbidity 2.2  brightness 3 }
+ClearMorningLight = sky light { samples 24 }
+
+// The sun overhead and nothing in the way.  Shadows fall almost straight down, which is unflattering
+// to most things and exactly right for heat.
+ClearNoon = pigment physical sky { sun elevation 78  sun azimuth 180  turbidity 2.4  brightness 3 }
+ClearNoonLight = sky light { samples 24 }
+
+// Late afternoon, an hour or two before the sun goes.  Long shadows and a warmth in the light that no
+// amount of choosing colors by hand gets right.
+GoldenHour = pigment physical sky { sun elevation 9  sun azimuth 255  turbidity 2.8  brightness 3 }
+GoldenHourLight = sky light { samples 32 }
+
+// The sun on the horizon.  Almost all the light is red by the time it arrives, having crossed the
+// whole thickness of the air to get here.
+Sunset = pigment physical sky { sun elevation 1.5  sun azimuth 268  turbidity 3.2  brightness 3 }
+SunsetLight = sky light { samples 40 }
+
+// -- Hazier days -----------------------------------------------------------------------------------
+
+// A hot afternoon in summer, the air thick enough to soften every edge and pale the blue overhead.
+HazyAfternoon = pigment physical sky { sun elevation 46  sun azimuth 220  turbidity 6  brightness 3 }
+HazyAfternoonLight = sky light { samples 32 }
+
+// A low winter sun through cold, still air.  Bright without being warm, and the shadows go on forever.
+WinterSun = pigment physical sky { sun elevation 14  sun azimuth 160  turbidity 2  brightness 3 }
+WinterSunLight = sky light { samples 32 }
+
+// -- No sun in sight -------------------------------------------------------------------------------
+
+// An overcast day, made rather than derived: a real sky with the sun taken out of it is not the same
+// thing as a cloudy one, since cloud spreads the sun's light across the whole dome instead of hiding
+// it.  So this is a plain gradient, cool overhead and paler at the horizon, and a light gathered from
+// all of it.  Shadows are soft to the point of vanishing, which is what an overcast day looks like.
+OvercastHigh = color [0.42, 0.46, 0.54]
+OvercastLow = color [0.62, 0.64, 0.68]
+Overcast = pigment linear gradient {
+    [0, OvercastLow, 1, OvercastHigh]
+    rotate Z 90
+    scale 2
+    translate Y -1
+}
+OvercastLight = sky light { samples 48 }
+
+// Twilight after the sun has gone, when what light there is comes from the whole sky at once.
+DuskHigh = color [0.05, 0.06, 0.11]
+DuskLow = color [0.16, 0.19, 0.27]
+Dusk = pigment linear gradient {
+    [0, DuskLow, 1, DuskHigh]
+    rotate Z 90
+    scale 2
+    translate Y -1
+}
+DuskLight = sky light { samples 48  color [0.9, 0.92, 1] }

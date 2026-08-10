@@ -31,6 +31,15 @@ public class InstructionContext
         .ToList();
 
     /// <summary>
+    /// This property reports the names of the functions declared so far.  An import uses it the same
+    /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
+    /// </summary>
+    internal IReadOnlyList<string> FunctionNames => _instructions
+        .OfType<DeclareFunctionInstruction>()
+        .Select(instruction => instruction.Function.Name)
+        .ToList();
+
+    /// <summary>
     /// This property reports whether every instruction is a plain definition -- a name bound to a
     /// value or a thing.  A file offered as a library must be, since anything else (a surface, a
     /// camera, a render command) would be dragged into every scene that imported it.

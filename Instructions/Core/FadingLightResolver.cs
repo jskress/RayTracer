@@ -13,7 +13,7 @@ namespace RayTracer.Instructions.Core;
 /// </para>
 /// </summary>
 /// <typeparam name="TLight">The type of light being resolved.</typeparam>
-public abstract class FadingLightResolver<TLight> : NamedObjectResolver<TLight>
+public abstract class FadingLightResolver<TLight> : NamedObjectResolver<TLight>, ILightResolver
     where TLight : Light, new()
 {
     /// <summary>
@@ -42,4 +42,14 @@ public abstract class FadingLightResolver<TLight> : NamedObjectResolver<TLight>
 
         FadePowerResolver.AssignTo(value, target => target.FadePower, context, variables);
     }
+    /// <summary>
+    /// This method returns a copy of this resolver, so that a scene using a named light again may
+    /// adjust its copy without touching the one the name still stands for.
+    /// </summary>
+    /// <returns>A copy of this resolver.</returns>
+    public object Clone()
+    {
+        return MemberwiseClone();
+    }
+
 }

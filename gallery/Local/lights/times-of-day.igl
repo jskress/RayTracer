@@ -1,0 +1,91 @@
+// The same objects, four times, under four skies nobody had to work out.
+//
+// Every difference between these four pictures is one word.  The scene says `background ClearMorning`
+// or `background GoldenHour`, takes the light of the same name, and everything else -- the shapes,
+// their materials, where the camera stands -- is written once and shared.
+//
+// That is the whole point of the `daylight` library and it is worth being plain about why it exists.
+// The sky in this ray tracer is a real one: it works out the color of every part of the dome from the
+// way air scatters sunlight, given where the sun stands and how hazy the air is.  That is what makes
+// it look right, and it is exactly what makes it hard to use, because the numbers it asks for are the
+// ones a person is least equipped to guess.  Here is `GoldenHour` written out in full:
+//
+//     pigment physical sky { sun elevation 9  sun azimuth 255  turbidity 2.8  brightness 3 }
+//
+// Nobody knows they want a turbidity of 2.8.  Everybody knows they want the hour before sunset.
+//
+// **A sky comes in two halves and both are needed.**  `GoldenHour` is what you look at; the light it
+// casts is `GoldenHourLight`, and a scene that takes one without the other gets a picture that
+// disagrees with itself -- a scene with no sky light quietly keeps the flat `ambient` guess that a sky
+// light exists to replace, so the shadows fill with a light that has no source.  The library pairs
+// them by name so the two cannot drift apart.
+//
+// Two of the eight are not physical skies at all.  A real sky with the sun taken out of it is not an
+// overcast day: cloud spreads the sun's light across the whole dome rather than hiding it, and the
+// honest way to get that is to paint a gradient and light the scene from all of it.  `Overcast` and
+// `Dusk` are made that way, and they are in the same library under the same naming, because a scene
+// asking for weather should not have to know which of them is derived and which is drawn.
+//
+// The scene below is four of them side by side.  To see the rest, change a name:
+//
+//     import 'daylight' { HazyAfternoon, HazyAfternoonLight }
+//
+// You will need the library installed first, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'daylight' { GoldenHour, GoldenHourLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Times of Day'
+        author 'J. Stephen Kress'
+        description 'A sky and the light it casts, taken by name from the daylight library.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [7.0, 3.6, -12.0]
+    look at [-0.3, 1.1, 0]
+    field of view 48
+}
+
+background GoldenHour
+light GoldenHourLight
+
+// Something for the light to fall on, and something for it to fall behind.
+plane {
+    material {
+        pigment checker { [0.40, 0.40, 0.38], [0.34, 0.34, 0.33]  scale 1.6 }
+        specular 0.04
+    }
+}
+
+sphere {
+    material { pigment [0.72, 0.24, 0.18]  specular 0.5  shininess 90 }
+    translate [-3.2, 1, 0.4]
+}
+
+cube {
+    material { pigment [0.86, 0.83, 0.74]  specular 0.15  shininess 30 }
+    rotate Y 22
+    translate [0.4, 1, -0.8]
+}
+
+cylinder {
+    min Y 0  max Y 2.6
+    material { pigment [0.30, 0.45, 0.34]  specular 0.2  shininess 50 }
+    scale [0.28, 1, 0.28]
+    translate [3.2, 0, 1.0]
+}
+
+torus {
+    radii 0.75, 0.22
+    material { pigment [0.55, 0.52, 0.24]  specular 0.6  shininess 140 }
+    rotate X 90
+    translate [-2.6, 0.75, -2.4]
+}

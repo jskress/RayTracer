@@ -30,6 +30,13 @@
       <None Remove="Tests\**" />
     </ItemGroup>
 
+    <!-- The curated libraries ship inside the assembly rather than beside it, so that installing
+         them works the same however the tool itself was installed, and whatever the working
+         directory happens to be. -->
+    <ItemGroup>
+      <EmbeddedResource Include="Libraries\**\*.igl" />
+    </ItemGroup>
+
 
 
 

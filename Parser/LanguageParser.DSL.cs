@@ -304,10 +304,14 @@ public partial class LanguageParser
 
         // Light clauses.  One opener serves all three sorts, told apart by the word before
         // "light": nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone.
+        // The word before "light", if any, names the sort.  What follows is either a block describing
+        // one or the name of a light already described, which may carry a block of its own to adjust
+        // what it found -- the same shape "object <name>" has for a surface.
         startLightClause:
         {
             [ { [ point | distant | spot | area | sky ] > light } | light ] >
-            openBrace ?? 'Expecting an open brace to follow "light" here.'
+            [ openBrace | { [ _identifier | _keyword ] > openBrace{?} } ]
+                ?? 'Expecting an open brace, or the name of a light, to follow "light" here.'
         }
         lightColorClause: { color > _expression }
         directionClause: { direction > _expression }
@@ -1337,6 +1341,7 @@ public partial class LanguageParser
                 pigment |
                 { material > startThingClause } | { transform > startthingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
+                startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
                 startBlobClause | startTubeClause | startSweepClause | startTextClause |
