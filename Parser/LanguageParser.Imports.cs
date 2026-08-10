@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Dsl;
 using Lex.Parser;
+using RayTracer.Instructions;
 using Lex.Tokens;
 
 namespace RayTracer.Parser;
@@ -83,53 +84,50 @@ public partial class LanguageParser
         // Anything already in scope stays in scope: the library's definitions are what we mean to
         // filter, not the scene's own.
         HashSet<string> before = _context.ExtensibleItems.Keys.ToHashSet();
-        HashSet<string> valuesBefore = _context.InstructionContext.VariableNames.ToHashSet();
         HashSet<string> primitivesBefore = _primitives.Keys.ToHashSet();
-        HashSet<string> functionsBefore = _context.InstructionContext.FunctionNames.ToHashSet();
+        InstructionContext scene = _context.InstructionContext;
+        InstructionContext library = new ();
         int depth = _entries.Count;
+
+        // The library's definitions are gathered on their own rather than mixed into the scene's, so
+        // that they can be carried out among names of the library's own.  That is what lets a name be
+        // kept back from the scene without taking it from the library's own exports as well.
+        _context.InstructionContext = library;
 
         PushEntry(path);
 
-        // Read the library to its end, rather than letting it interleave with the scene the way an
-        // include does.  Nothing can be filtered until everything has been seen.
-        while (_entries.Count > depth)
+        try
         {
-            if (CurrentParser.IsAtEnd())
+            // Read the library to its end, rather than letting it interleave with the scene the way an
+            // include does.  Nothing can be filtered until everything has been seen.
+            while (_entries.Count > depth)
             {
-                PopEntry();
+                if (CurrentParser.IsAtEnd())
+                {
+                    PopEntry();
 
-                continue;
+                    continue;
+                }
+
+                HandleIncludes();
+                _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
             }
-
-            HandleIncludes();
-            _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
+        }
+        finally
+        {
+            _context.InstructionContext = scene;
         }
 
-        List<string> arrived = _context.ExtensibleItems.Keys
-            .Where(name => !before.Contains(name))
-            .ToList();
-        // Values are counted as having arrived too, even though they are not filtered.  Naming one
-        // is then simply a way of saying out loud that the scene means to use it, which is what
-        // anyone reading a library full of named colors will expect to be able to do.
-        HashSet<string> valuesArrived = _context.InstructionContext.VariableNames
-            .Where(name => !valuesBefore.Contains(name))
-            .ToHashSet();
-        // The things a scene teaches itself to make are filtered too, and they have to be looked for
-        // in their own places: a primitive is known to the parser while the file is read, and a
-        // function is a declaration among the instructions.  Before this they were in neither list,
-        // so an import could not grant one -- asking for a primitive by name failed, saying the
-        // library did not define it -- and could not withhold one either, so every helper a library
-        // held arrived in the scene whether it was asked for or not.
-        List<string> primitivesArrived = _primitives.Keys
-            .Where(name => !primitivesBefore.Contains(name))
-            .ToList();
-        List<string> functionsArrived = _context.InstructionContext.FunctionNames
-            .Where(name => !functionsBefore.Contains(name))
-            .ToList();
+        // Everything the library holds, whichever sort it is.  A value and a thing arrive as
+        // instructions; a primitive is known to the parser while a file is read, since a call of one
+        // is *read* rather than looked up when the time comes.
+        HashSet<string> arrived =
+        [
+            ..library.VariableNames, ..library.FunctionNames, ..library.PrimitiveNames,
+            .._context.ExtensibleItems.Keys.Where(name => !before.Contains(name))
+        ];
         List<string> missing = wanted
-            .Where(name => !arrived.Contains(name) && !before.Contains(name) &&
-                           !valuesArrived.Contains(name) && !primitivesArrived.Contains(name) &&
-                           !functionsArrived.Contains(name))
+            .Where(name => !arrived.Contains(name) && !before.Contains(name))
             .ToList();
 
         // A name the library does not define is worth complaining about rather than passing over:
@@ -144,16 +142,32 @@ public partial class LanguageParser
             };
         }
 
-        foreach (string name in arrived.Where(name => !wanted.Contains(name)))
+        // What may be kept back, and what may not.  A function and a primitive carry the scope they
+        // were written in, so holding one back costs the library's exports nothing -- they go on
+        // looking where they were written.  A value or a thing carries nothing: it is looked up
+        // wherever it is used, so a material handed to a scene is resolved among the scene's names, and
+        // holding back the color it was written against would leave it pointing at nothing.  Those go
+        // over whole, which is what they have always done.
+        HashSet<string> published =
+        [
+            ..library.VariableNames,
+            ..library.FunctionNames.Where(wanted.Contains),
+            ..library.PrimitiveNames.Where(wanted.Contains)
+        ];
+
+        scene.AddInstruction(new ImportInstruction { Library = library, Published = published });
+
+        // The two tables the parser keeps for itself are pruned here rather than at render time, since
+        // both are consulted while the *scene* is being read: a name left in either would let a scene
+        // write something the import was meant to have kept back.
+        foreach (string name in _context.ExtensibleItems.Keys
+                     .Where(name => !before.Contains(name) && !wanted.Contains(name))
+                     .ToList())
             _context.ExtensibleItems.Remove(name);
 
-        // What a library teaches the scene to *make* is granted but not withheld, and the reason is
-        // worth writing down because the obvious thing does not work.  Throwing away the helpers a
-        // library did not export throws away the ones its exports are built out of: withhold a
-        // library's `taper` and the `elm` that leans on it stops working, since both are declared
-        // into the one set of names a render has.  Keeping only what was asked for needs a library to
-        // have names of its own, which is the same lexical scoping a function body already gets from
-        // where it was written -- and until a library gets that, granting without withholding is the
-        // half that is right.  Values have always worked this way for want of the same thing.
+        foreach (string name in _primitives.Keys
+                     .Where(name => !primitivesBefore.Contains(name) && !wanted.Contains(name))
+                     .ToList())
+            _primitives.Remove(name);
     }
 }

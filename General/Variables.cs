@@ -70,6 +70,30 @@ public class Variables
     /// </summary>
     /// <param name="key">The name of the desired variable.</param>
     /// <param name="value">The value to set.</param>
+    /// <summary>
+    /// This method copies the named values this scope holds <i>itself</i> into another one, which is
+    /// how a library hands a scene the few names it asked for while keeping the rest to itself.
+    /// <para>
+    /// Only what this scope holds directly is handed over: a name it merely sees through its parent is
+    /// already where the parent can find it.  Every value filed under a name goes across rather than
+    /// one of them, since a name may hold one thing per type -- a color and a number at once -- and
+    /// handing over half of that would be worse than handing over none.
+    /// </para>
+    /// </summary>
+    /// <param name="target">The scope to hand them to.</param>
+    /// <param name="names">The names to hand over.</param>
+    internal void PublishTo(Variables target, IEnumerable<string> names)
+    {
+        foreach (string name in names)
+        {
+            if (!_variables.TryGetValue(name, out Dictionary<RuntimeTypeHandle, object> values))
+                continue;
+
+            foreach (object value in values.Values)
+                target.SetValue(name, value);
+        }
+    }
+
     public void SetValue(string key, object value)
     {
         if (!_variables.TryGetValue(key, out Dictionary<RuntimeTypeHandle, object> values))

@@ -32,6 +32,29 @@ public class TestImports
             T_Wanted = material T_Base { }
             T_Unwanted = material { pigment color [0.2, 0.2, 0.8] }
             """);
+
+        // And the sort a curated library actually is: one name worth exporting, built out of several
+        // that are nobody else's business.
+        Write("trees.igl", """
+            Bark = material { pigment [0.5, 0.35, 0.24] }
+
+            function taper(n) -> number { return n * 0.7 }
+
+            primitive twig(size) -> sphere {
+                return sphere { material { pigment [0.2, 0.5, 0.2] }  scale size }
+            }
+
+            primitive elm(height) -> group {
+                return group {
+                    cylinder {
+                        min Y 0  max Y height
+                        material Bark
+                        scale [taper(0.3), 1, taper(0.3)]
+                    }
+                    object twig(height * 0.35) { translate Y height }
+                }
+            }
+            """);
     }
 
     [TestCleanup]
@@ -126,6 +149,47 @@ public class TestImports
     /// was never defined is only discovered when something goes looking for it, and that happens
     /// while the image is being made rather than while it is being read.
     /// </summary>
+    /// <summary>
+    /// Renders the given scene and reports what stopped it, or <c>null</c> if nothing did.
+    /// <para>
+    /// Parsing is not enough to ask this question.  A name that is not there is discovered when
+    /// something goes looking for it, and nothing does until the instructions run -- so a check that
+    /// stopped at parsing would pass whether the name survived or not, which is worse than no check
+    /// at all because it reads like one.
+    /// </para>
+    /// </summary>
+    private string ErrorFromRendering(string scene)
+    {
+        Write("scene.igl",
+            "context { width 8 height 8 no gamma }\n" +
+            "camera { location [0, 0, -5] look at [0, 0, 0] }\n" +
+            "light { location [0, 0, -5] }\n" +
+            scene);
+
+        string path = Path.Combine(_directory, "scene.igl");
+        StringWriter output = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(output);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            renderer?.Render(new RenderOptions { InputFileName = path });
+        }
+        catch (Exception exception)
+        {
+            return exception.ToString();
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        return output.ToString().Contains("Error") ? output.ToString() : null;
+    }
+
     private void Render(string scene)
     {
         Write("scene.igl",
@@ -172,6 +236,58 @@ public class TestImports
         Render("""
             import 'library' { T_Wanted }
             sphere { material T_Wanted }
+            """);
+    }
+
+    [TestMethod]
+    public void TestALibraryKeepsItsHelpersToItself()
+    {
+        // What an import has always promised and could not keep once a library could hold more than
+        // textures.  A tree is an elm and a twig and a taper, and only the first is anybody else's
+        // business.
+        Render("""
+            import 'trees' { elm }
+            object elm(3)
+            """);
+
+        string function = ErrorFromRendering("""
+            import 'trees' { elm }
+            sphere { scale taper(2) }
+            """);
+        string primitive = ErrorFromRendering("""
+            import 'trees' { elm }
+            object twig(1)
+            """);
+
+        Assert.IsNotNull(function, "the library's own function should not have reached the scene");
+        StringAssert.Contains(function, "taper");
+        Assert.IsNotNull(primitive, "the library's own primitive should not have reached the scene");
+        StringAssert.Contains(primitive, "twig");
+    }
+
+    [TestMethod]
+    public void TestAnExportKeepsSightOfWhatItWasWrittenAmong()
+    {
+        // The half that makes the other half possible, and the reason a library needs a scope rather
+        // than a filter.  Throwing away what the scene did not ask for would throw away what `elm` is
+        // built out of; keeping it in the library's own names costs `elm` nothing, since a primitive
+        // goes on looking where it was written.  If this broke, the test above would still pass -- the
+        // helpers would be gone, along with the export that needed them.
+        Render("""
+            import 'trees' { elm }
+            object elm(2)
+            object elm(3) { translate X 4 }
+            """);
+    }
+
+    [TestMethod]
+    public void TestAHelperMayBeAskedForByName()
+    {
+        // Nothing is secret; it simply is not handed over unasked.
+        Render("""
+            import 'trees' { elm, taper, twig }
+            object elm(3)
+            object twig(taper(1))
             """);
     }
 
