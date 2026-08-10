@@ -1,0 +1,287 @@
+// Trees you can name.
+//
+//     import 'trees' { Elm }
+//
+//     object Elm(9)
+//     object Elm(7, 'autumn') { translate X 12 }
+//     object Elm(8, 'winter', 4) { translate X -12 }
+//
+// A tree takes how tall it should stand, what time of year it is, and which of itself you want.  Only
+// the first is required, so the common case is one number.
+//
+// | Elm   | Reaching, the limbs sweeping up and out. |
+// | Oak   | Heavy and broad, throwing its weight sideways. |
+// | Birch | Slender, pale-barked, dividing into finer twigs than the others. |
+//
+// **Height is what you would measure**, near enough -- `Elm(9)` stands about nine units high, which is
+// worth saying because the obvious alternative is for the number to mean the trunk, and then nobody can
+// picture it.
+//
+// **The season is a word**: 'summer', 'autumn' (or 'fall'), 'winter', or anything else for spring.
+// Winter has no leaves at all and shows the shape they were hanging on.
+//
+// **The variant is which tree of that kind you want.**  The same numbers always grow the same tree,
+// down to the last twig, so a scene renders the same way today and next year and in every frame of an
+// animation.  Change it and you get a different tree of the same species -- which is what you want for
+// a row of them, since three identical elms read as a diagram rather than a hedge:
+//
+//     for tree in [0, 5] {
+//         object Elm(8 + random(tree) * 3, 'summer', tree) { translate X tree * 7 - 17 }
+//     }
+//
+// -- What is here for the library and not for you ------------------------------------------------
+//
+// Everything below beginning with `Tree` is the machinery, and a scene that imports `Elm` does not get
+// any of it: a library keeps its own workings, so `TreeLimb` and `TreeWilt` stay here where they
+// belong.  You may still ask for one by name if you want to build something of your own out of it.
+//
+// The barks are the exception, and the reason is worth knowing rather than guessing.  A material is
+// looked up wherever it is *used* rather than remembering where it was written, so a library's
+// materials have to travel with what they belong to -- which means `TreeElmBark` and its two siblings
+// do arrive in your scene whether you asked or not.  They are named with the prefix so they will not
+// collide with anything of yours.
+
+// -- What a species is, said as numbers ---------------------------------------------------------
+
+// How much shorter each generation of limb is than the one it grew from.
+function TreeShrink(species) -> number {
+    switch (species) {
+        case 'elm' { return 0.76 }
+        case 'oak' { return 0.70 }
+        case 'birch' { return 0.78 }
+        default { return 0.74 }
+    }
+}
+
+// And how much thinner.
+function TreeTaper(species) -> number {
+    switch (species) {
+        case 'oak' { return 0.66 }
+        case 'birch' { return 0.55 }
+        default { return 0.62 }
+    }
+}
+
+// How far a limb turns away from the one it grew from.  This is most of what tells one tree from
+// another at a glance: an elm reaches up and out, an oak throws its weight sideways.
+function TreeLean(species) -> number {
+    switch (species) {
+        case 'elm' { return 26 }
+        case 'oak' { return 44 }
+        case 'birch' { return 20 }
+        default { return 32 }
+    }
+}
+
+// And how far round from one sibling to the next.
+function TreeTurn(species) -> number {
+    switch (species) {
+        case 'oak' { return 132 }
+        default { return 118 }
+    }
+}
+
+// How far any one limb may depart from all of that.  An oak is knottier than a birch.
+function TreeVary(species) -> number {
+    switch (species) {
+        case 'oak' { return 0.38 }
+        case 'birch' { return 0.18 }
+        default { return 0.28 }
+    }
+}
+
+// How many generations of limb: a birch divides into finer and finer twigs, an oak stops sooner and
+// leaves each limb heavy.
+function TreeDepth(species) -> number {
+    switch (species) {
+        case 'birch' { return 5 }
+        case 'oak' { return 4 }
+        default { return 4 }
+    }
+}
+
+// How big a leaf cluster is, which does as much for the look of a tree as its branching does.
+function TreeLeaf(species) -> number {
+    switch (species) {
+        case 'oak' { return 0.26 }
+        case 'birch' { return 0.10 }
+        default { return 0.19 }
+    }
+}
+
+// -- The wobble that keeps a rule from looking like a rule --------------------------------------
+
+function TreeWilt(species, id, which, variant) -> number {
+    return 1 - TreeVary(species) + random(id, which, variant) * TreeVary(species) * 2
+}
+
+function TreeSway(species, id, which, variant) -> number {
+    return (random(id, which, variant) - 0.5) * TreeLean(species)
+}
+
+// -- Bark and leaf --------------------------------------------------------------------------------
+
+// The green of a summer leaf, which differs more between species than people expect.
+function TreeGreen(species) -> color {
+    switch (species) {
+        case 'oak' { return color [0.20, 0.36, 0.14] }
+        case 'birch' { return color [0.38, 0.55, 0.24] }
+        default { return color [0.24, 0.44, 0.17] }
+    }
+}
+
+TreeElmBark = material { pigment [0.44, 0.34, 0.26]  specular 0.10  shininess 18 }
+TreeOakBark = material { pigment [0.35, 0.29, 0.23]  specular 0.08  shininess 14 }
+TreeBirchBark = material { pigment [0.82, 0.80, 0.74]  specular 0.16  shininess 30 }
+
+primitive TreeBark(species) -> material {
+    switch (species) {
+        case 'oak' { return material TreeOakBark }
+        case 'birch' { return material TreeBirchBark }
+        default { return material TreeElmBark }
+    }
+}
+
+// What hangs on the end of a limb, which is the whole of what a season is.
+primitive TreeFoliage(species, season, id, variant) -> group {
+    switch (season) {
+        case 'summer' {
+            green = TreeGreen(species)
+            return group {
+                for leaf in [0, 3] {
+                    sphere {
+                        material { pigment green }
+                        scale TreeLeaf(species) + random(id, leaf, variant) * TreeLeaf(species) * 0.5
+                        translate [random(id, leaf, variant + 1) * 0.30 - 0.15,
+                                   random(id, leaf, variant + 2) * 0.20,
+                                   random(id, leaf, variant + 3) * 0.30 - 0.15]
+                    }
+                }
+            }
+        }
+        case 'autumn', 'fall' {
+            turned = random(id, 30, variant)
+            return group {
+                for leaf in [0, 1] {
+                    sphere {
+                        material { pigment [0.30 + turned * 0.45, 0.36 - turned * 0.10, 0.12] }
+                        scale TreeLeaf(species) * 0.9 + random(id, leaf, variant + 4) * 0.08
+                        translate [random(id, leaf, variant + 5) * 0.30 - 0.15, 0,
+                                   random(id, leaf, variant + 6) * 0.30 - 0.15]
+                    }
+                }
+            }
+        }
+        case 'winter' {
+            left = random(id, 40, variant)
+            if (left > 0.55) {
+                return group { sphere { material { pigment [0.36, 0.27, 0.21] }  scale 0.05 } }
+            }
+            else { return group { } }
+        }
+        default {
+            return group {
+                for bud in [0, 1] {
+                    sphere {
+                        material { pigment [0.56, 0.68, 0.36] }
+                        scale 0.09 + random(id, bud, variant + 7) * 0.05
+                        translate [random(id, bud, variant + 8) * 0.20 - 0.1, 0,
+                                   random(id, bud, variant + 9) * 0.20 - 0.1]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// The wood of one limb: a cone rather than a rod, because a limb that keeps one thickness all the way
+// and then meets a thinner one leaves a step, and a trunk full of steps reads as a stack of pipes.
+//
+// A conic here is the surface where x² + z² = y², so its radius at any height is that height itself.
+// A slice from the tip's thickness to the base's is therefore already the taper wanted; stretching it
+// along Y makes it as long as the limb, turning it over puts the fat end at the bottom, and the lift
+// stands it on the origin.
+primitive TreeWood(species, length, thickness) -> conic {
+    tip = thickness * TreeTaper(species)
+    stretch = length / (thickness - tip)
+    return conic {
+        min Y tip  max Y thickness
+        material TreeBark(species)
+        scale [1, stretch, 1]
+        rotate X 180
+        translate Y thickness * stretch
+    }
+}
+
+// One limb: a length of wood, and then either foliage or three more limbs.
+primitive TreeLimb(species, season, depth, length, thickness, twist, id, variant) -> group {
+    if (depth < 1) {
+        return group { object TreeFoliage(species, season, id, variant) }
+    }
+    else {
+        return group {
+            object TreeWood(species, length, thickness)
+            object TreeLimb(species, season, depth - 1,
+                            length * TreeShrink(species) * TreeWilt(species, id, 1, variant),
+                            thickness * TreeTaper(species), twist + TreeTurn(species),
+                            id * 3 + 1, variant) {
+                rotate Z TreeLean(species) * TreeWilt(species, id, 2, variant)
+                rotate Y twist + TreeSway(species, id, 3, variant)
+                translate Y length
+            }
+            object TreeLimb(species, season, depth - 1,
+                            length * TreeShrink(species) * TreeWilt(species, id, 4, variant),
+                            thickness * TreeTaper(species), twist + TreeTurn(species),
+                            id * 3 + 2, variant) {
+                rotate Z TreeLean(species) * TreeWilt(species, id, 5, variant)
+                rotate Y twist + TreeTurn(species) + TreeSway(species, id, 6, variant)
+                translate Y length
+            }
+            object TreeLimb(species, season, depth - 1,
+                            length * TreeShrink(species) * TreeWilt(species, id, 7, variant) * 0.9,
+                            thickness * TreeTaper(species), twist + TreeTurn(species),
+                            id * 3 + 3, variant) {
+                rotate Z TreeLean(species) * 0.45 * TreeWilt(species, id, 8, variant)
+                rotate Y twist + TreeTurn(species) * 2 + TreeSway(species, id, 9, variant)
+                translate Y length * 0.9
+            }
+        }
+    }
+}
+
+// -- The trees themselves --------------------------------------------------------------------------
+
+// How tall a tree comes out for a first limb of one: every generation adds its own length, each a
+// fraction of the one below.  A limb leans as well as rises, so the true height is less than this sum,
+// and the fudge that follows is measured rather than derived.
+function TreeReach(species) -> number {
+    return (1 - pow(TreeShrink(species), TreeDepth(species))) / (1 - TreeShrink(species))
+}
+
+// The length of the first limb for a tree meant to stand about this tall.
+//
+// The sum above counts every generation at its full length, and a tree does not stand that tall: a
+// limb leans as it rises, so each generation adds less height than length.  The 1.06 is measured
+// rather than derived -- three species were stood beside a post of known height and came out a little
+// over a third too tall, all three by the same fraction, which is what makes one number enough.
+function TreeTrunk(species, height) -> number {
+    return height / TreeReach(species) / 1.06
+}
+
+primitive Elm(height, season = 'summer', variant = 1) -> group {
+    return group {
+        object TreeLimb('elm', season, TreeDepth('elm'), TreeTrunk('elm', height), height * 0.030, 0, 1, variant)
+    }
+}
+
+primitive Oak(height, season = 'summer', variant = 1) -> group {
+    return group {
+        object TreeLimb('oak', season, TreeDepth('oak'), TreeTrunk('oak', height), height * 0.042, 0, 1, variant)
+    }
+}
+
+primitive Birch(height, season = 'summer', variant = 1) -> group {
+    return group {
+        object TreeLimb('birch', season, TreeDepth('birch'), TreeTrunk('birch', height), height * 0.020, 0, 1, variant)
+    }
+}

@@ -85,6 +85,48 @@ light GoldenHourLight { samples 64 }
 with the sun taken out of it is not the same thing as a cloudy one: cloud spreads the sun's light
 across the whole dome rather than hiding it, so the honest way to get an overcast day is to paint one.
 
+#### Trees
+
+```
+import 'trees' { Elm }
+
+object Elm(9)
+object Elm(7, 'autumn')          { translate X 12 }
+object Elm(8, 'winter', 4)       { translate X -12 }
+```
+
+| | |
+| --- | --- |
+| `Elm` | Reaching, the limbs sweeping up and out. |
+| `Oak` | Heavy and broad, throwing its weight sideways. |
+| `Birch` | Slender, pale-barked, dividing into finer twigs than the others. |
+
+Three numbers, of which only the first is required: **how tall**, **what time of year**, and **which
+tree of that kind**.
+
+**Height is what you would measure** — `Elm(9)` stands about nine units high.  That is worth saying
+because the obvious alternative is for the number to mean the trunk, and then nobody can picture it.
+
+**The season is a word**: `'summer'`, `'autumn'` (or `'fall'`), `'winter'`, or anything else for
+spring.  A winter tree has no leaves at all and shows the shape they were hanging on.
+
+**The variant is which tree of that kind you want.**  The same numbers always grow the same tree, down
+to the last twig — today, next year, and in every frame of an animation.  Change it and you get a
+different tree of the same species, which is what a row of them needs, since three identical elms read
+as a diagram rather than a hedge:
+
+```
+for tree in [0, 5] {
+    object Elm(8 + random(tree) * 3, 'summer', tree) { translate X tree * 7 - 17 }
+}
+```
+
+The library keeps its own workings.  A scene that imports `Elm` does not also inherit the dozen
+functions and primitives an elm is built from — see
+[Importing from a library](scene-files.md#importing-from-a-library) for the rule, and for the one
+exception: the barks are materials, and a material is looked up where it is *used*, so `TreeElmBark`
+and its siblings do arrive.  They carry the prefix so they will not collide with anything of yours.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

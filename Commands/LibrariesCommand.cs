@@ -307,8 +307,28 @@ public static class LibrariesCommand
     /// <returns>How many things the library defines.</returns>
     private static int CountDefinitions(string path) => File
         .ReadLines(path)
-        .Count(line => line.Length > 0 && !char.IsWhiteSpace(line[0]) &&
-                       !line.StartsWith("//", StringComparison.Ordinal) && line.Contains(" = "));
+        .Count(IsADefinition);
+
+    /// <summary>
+    /// This method reports whether a line of a library begins a definition: a name bound to something,
+    /// or a function or a primitive the library wrote for itself.
+    /// <para>
+    /// The last two are here because a library may now hold them, and counting only the assignments
+    /// left a library of trees reporting a handful of definitions when it holds a score of them.
+    /// </para>
+    /// </summary>
+    /// <param name="line">The line to judge.</param>
+    /// <returns>Whether it begins a definition.</returns>
+    private static bool IsADefinition(string line)
+    {
+        if (line.Length == 0 || char.IsWhiteSpace(line[0]) ||
+            line.StartsWith("//", StringComparison.Ordinal))
+            return false;
+
+        return line.Contains(" = ") ||
+               line.StartsWith("function ", StringComparison.Ordinal) ||
+               line.StartsWith("primitive ", StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// This method reads the note a generated library carries about where it came from.
