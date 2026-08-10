@@ -2,7 +2,7 @@
 //
 // Everything standing here came from two lines:
 //
-//     import 'trees'    { Elm, Oak, Birch }
+//     import 'trees'    { Elm, Oak, Birch, Fir }
 //     import 'daylight' { ClearMorning, ClearMorningLight }
 //
 // and then nine calls saying how tall, what time of year, and which of that kind.  There is no bark
@@ -21,7 +21,20 @@
 // makes a row read as trees.  Take it out and this picture becomes three trees repeated three times.
 //
 // **The seasons are a word.**  The birches on the right are in autumn and the oak behind them has
-// already lost its leaves, which is a thing this file says by writing 'autumn' and 'winter'.
+// already lost its leaves, which is a thing this file says by writing 'autumn' and 'winter'.  Trees of
+// different kinds turning at different times is what a real stand looks like in October.
+//
+// The firs are asked for in summer, and that is a choice this scene is making rather than a limit.  A
+// fir keeps its needles the year round, so three of its four seasons look alike -- but ask one for
+// 'winter' and snow gathers along its boughs, and a snow-laden conifer standing beside a elm in full
+// leaf would look like a mistake rather than a demonstration.  Snow is a fact about the whole picture,
+// where a turning leaf is a fact about one tree.
+//
+// A fir is not an elm with different numbers, and the library does not pretend otherwise.  The three
+// broadleaves are made by forking -- a limb divides into limbs, and the shape falls out of how they
+// lean.  A conifer has one trunk the whole height of it with rings of branches coming off, a whorl a
+// year, each ring shorter than the one below.  That is a loop rather than a recursion, and the two
+// sit side by side in one library because the shapes are honestly different.
 //
 // What is worth noticing about the sky is what it does *not* say.  `ClearMorning` is a real physical
 // sky -- the color of every part of the dome worked out from the way air scatters sunlight -- and the
@@ -34,7 +47,7 @@
 //
 //     dotnet run -- libraries --install
 
-import 'trees'    { Elm, Oak, Birch }
+import 'trees'    { Elm, Oak, Birch, Fir }
 import 'daylight' { ClearMorning, ClearMorningLight }
 
 context {
@@ -83,3 +96,6 @@ object Birch(8, 'autumn', 6) { translate [10, 0, 3] }
 object Birch(7, 'autumn', 7) { translate [12.5, 0, -5] }
 object Elm(7, 'summer', 8) { translate [1, 0, 12] }
 object Oak(6, 'summer', 9) { translate [-6, 0, 14] }
+object Fir(13, 'summer', 10) { translate [-11, 0, 19] }
+object Fir(10, 'summer', 11) { translate [-3, 0, 23] }
+object Fir(11.5, 'summer', 12) { translate [6, 0, 18] }

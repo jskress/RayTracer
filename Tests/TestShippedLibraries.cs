@@ -163,7 +163,7 @@ public class TestShippedLibraries
     /// every scene that imports them, so changing one should be a failure and not a shrug.
     /// </para>
     /// </summary>
-    private static readonly string[] Species = ["Elm", "Oak", "Birch"];
+    private static readonly string[] Species = ["Elm", "Oak", "Birch", "Fir"];
 
     [TestMethod]
     public void TestEveryTreeGrowsInEverySeason()
@@ -198,6 +198,26 @@ public class TestShippedLibraries
 
         foreach (string tree in Species)
         {
+            // A fir makes a different promise from the others and is held to that one.  It keeps its
+            // needles, so spring, summer and autumn are the same tree -- and it takes snow, so winter
+            // is not.  Both halves matter: a fir that differed in autumn would have lost its needles,
+            // and one that did not differ in winter would have lost its snow.
+            if (tree == "Fir")
+            {
+                Canvas evergreen = Picture(tree, "summer");
+
+                foreach (string season in new[] { "autumn", "spring" })
+                {
+                    Assert.IsFalse(Differs(evergreen, Picture(tree, season)),
+                        $"a fir keeps its needles and should look the same in {season}");
+                }
+
+                Assert.IsTrue(Differs(evergreen, Picture(tree, "winter")),
+                    "a fir should carry snow in winter");
+
+                continue;
+            }
+
             Canvas[] pictures = seasons.Select(season => Picture(tree, season)).ToArray();
 
             for (int one = 0; one < seasons.Length; one++)
@@ -217,9 +237,14 @@ public class TestShippedLibraries
     /// <summary>
     /// Grows one tree of one species in one season, and hands back whatever stopped it.
     /// </summary>
-    private string Grow(string tree, string season)
+    private string Grow(string tree, string season, int? variant = 2)
     {
         string scene = Path.Combine(_directory, "scene.igl");
+        // A null leaves that argument off altogether, which is how the defaults get tested.  They are
+        // positional, so leaving the season off leaves the variant off too.
+        string call = $"{tree}(8" +
+                      (season is null ? "" : $", \'{season}\'") +
+                      (season is null || variant is null ? "" : $", {variant}") + ")";
 
         File.WriteAllText(scene, $$"""
             import 'trees' { {{tree}} }
@@ -227,7 +252,7 @@ public class TestShippedLibraries
             camera { location [10, 5, -16]  look at [0, 4, 0]  field of view 45 }
             point light { location [-10, 14, -12] }
             background [0.5, 0.6, 0.8]
-            object {{tree}}(8, '{{season}}', 2)
+            object {{call}}
             """);
 
         return Render(scene);
@@ -236,9 +261,9 @@ public class TestShippedLibraries
     /// <summary>
     /// Grows one and hands back the picture of it.
     /// </summary>
-    private Canvas Picture(string tree, string season)
+    private Canvas Picture(string tree, string season, int? variant = 2)
     {
-        Assert.IsNull(Grow(tree, season), $"{tree} should grow in {season}");
+        Assert.IsNull(Grow(tree, season, variant), $"{tree} should grow in {season}");
 
         return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
     }
@@ -262,6 +287,26 @@ public class TestShippedLibraries
         }
 
         return false;
+    }
+
+    [TestMethod]
+    public void TestATreeAskedForWithNoSeasonGrowsInSummer()
+    {
+        // Every tree takes the season last and defaults it, so most scenes never write one -- which
+        // makes the default the season most trees in most scenes are actually in, and it should be the
+        // same one for all of them.  A single tree defaulting differently is invisible while nothing
+        // depends on the season and becomes a snow-laden fir in a summer stand the moment something
+        // does.  That is not hypothetical: the fir defaulted to winter, harmlessly, right up until
+        // winter grew snow.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
+            Path.Combine(_directory, "trees.igl"), true);
+
+        foreach (string tree in Species)
+        {
+            Assert.IsFalse(Differs(Picture(tree, null), Picture(tree, "summer", null)),
+                $"a {tree} asked for with no season should be the same as one in summer");
+        }
     }
 
     [TestMethod]
