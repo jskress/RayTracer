@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
@@ -152,6 +153,140 @@ public class TestShippedLibraries
 
             Assert.IsNull(Render(scene), $"{sky} and {sky}Light should make a scene together");
         }
+    }
+
+    /// <summary>
+    /// The trees the library holds out, written down rather than read out of the library.
+    /// <para>
+    /// Naming them here is the point.  A test that learns the species from the file it is testing
+    /// cannot notice a rename -- it simply tests whatever it finds -- and these names are a promise to
+    /// every scene that imports them, so changing one should be a failure and not a shrug.
+    /// </para>
+    /// </summary>
+    private static readonly string[] Species = ["Elm", "Oak", "Birch"];
+
+    [TestMethod]
+    public void TestEveryTreeGrowsInEverySeason()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
+            Path.Combine(_directory, "trees.igl"), true);
+
+        foreach (string tree in Species)
+        {
+            foreach (string season in new[] { "summer", "autumn", "fall", "winter", "spring" })
+                Assert.IsNull(Grow(tree, season), $"{tree} should grow in {season}");
+        }
+    }
+
+    [TestMethod]
+    public void TestEachSeasonLooksLikeItselfAndNoOther()
+    {
+        // That a tree renders in winter says nothing.  A season whose name stopped matching falls
+        // through to the default and grows a spring tree instead, which renders perfectly well and is
+        // wrong -- and comparing it against summer would not notice, since spring does not look like
+        // summer either.  So every season is held against every other, which is the only comparison
+        // that catches one quietly becoming another.
+        //
+        // "fall" is the exception and is held the other way: it names the same arm as "autumn", so the
+        // two must come out *identical*.  Drop one of the two words and this is what says so.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
+            Path.Combine(_directory, "trees.igl"), true);
+
+        string[] seasons = ["summer", "autumn", "winter", "spring"];
+
+        foreach (string tree in Species)
+        {
+            Canvas[] pictures = seasons.Select(season => Picture(tree, season)).ToArray();
+
+            for (int one = 0; one < seasons.Length; one++)
+            {
+                for (int other = one + 1; other < seasons.Length; other++)
+                {
+                    Assert.IsTrue(Differs(pictures[one], pictures[other]),
+                        $"a {tree} in {seasons[other]} looks exactly like one in {seasons[one]}");
+                }
+            }
+
+            Assert.IsFalse(Differs(pictures[1], Picture(tree, "fall")),
+                $"a {tree} in the fall should be the same as one in the autumn");
+        }
+    }
+
+    /// <summary>
+    /// Grows one tree of one species in one season, and hands back whatever stopped it.
+    /// </summary>
+    private string Grow(string tree, string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'trees' { {{tree}} }
+            context { angles are degrees  no gamma }
+            camera { location [10, 5, -16]  look at [0, 4, 0]  field of view 45 }
+            point light { location [-10, 14, -12] }
+            background [0.5, 0.6, 0.8]
+            object {{tree}}(8, '{{season}}', 2)
+            """);
+
+        return Render(scene);
+    }
+
+    /// <summary>
+    /// Grows one and hands back the picture of it.
+    /// </summary>
+    private Canvas Picture(string tree, string season)
+    {
+        Assert.IsNull(Grow(tree, season), $"{tree} should grow in {season}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// Reports whether two pictures differ anywhere worth noticing.
+    /// </summary>
+    private static bool Differs(Canvas first, Canvas second)
+    {
+        for (int x = 0; x < first.Width; x++)
+        {
+            for (int y = 0; y < first.Height; y++)
+            {
+                Color one = first.GetPixel(x, y);
+                Color other = second.GetPixel(x, y);
+
+                if (Math.Abs(one.Red - other.Red) + Math.Abs(one.Green - other.Green) +
+                    Math.Abs(one.Blue - other.Blue) > 0.05)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    [TestMethod]
+    public void TestATreeKeepsItsOwnWorkings()
+    {
+        // The reason the library could not be written before the scoping went in.  A tree is a limb and
+        // a foliage and a wilt and a sway, and a scene that asked for an elm used to get all of them.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
+            Path.Combine(_directory, "trees.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'trees' { Elm }
+            camera { location [12, 6, -18]  look at [0, 4, 0] }
+            point light { location [-10, 14, -12] }
+            object Elm(8)
+            sphere { scale TreeShrink('elm') }
+            """);
+
+        string error = Render(scene);
+
+        Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
+        StringAssert.Contains(error, "TreeShrink");
     }
 
     /// <summary>

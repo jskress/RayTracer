@@ -805,6 +805,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-stand-of-trees.png">
+      <img alt="A Stand of Trees" height="120" src="Local/functions/a-stand-of-trees.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-stand-of-trees.igl">A Stand of Trees</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/four-seasons.png">
       <img alt="Four Seasons" height="120" src="Local/functions/four-seasons.png" width="160"/>
     </a></td>
