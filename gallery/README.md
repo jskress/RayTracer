@@ -828,6 +828,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/functions/a-block-of-buildings.igl">A Block of Buildings</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-corner-of-a-field.png">
+      <img alt="A Corner of a Field" height="120" src="Local/functions/a-corner-of-a-field.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-corner-of-a-field.igl">A Corner of a Field</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

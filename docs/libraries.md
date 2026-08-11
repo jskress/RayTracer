@@ -152,6 +152,68 @@ functions and primitives an elm is built from — see
 exception: the barks are materials, and a material is looked up where it is *used*, so `TreeElmBark`
 and its siblings do arrive.  They carry the prefix so they will not collide with anything of yours.
 
+#### Undergrowth
+
+```
+import 'undergrowth' { Grass, Boxwood, Lavender }
+
+object Grass(10)
+object Boxwood(1.2, 'winter')    { translate X 3 }
+object Lavender(0.8, 'summer', 4) { translate X -3 }
+```
+
+The `trees` library gives a scene its trees and leaves them standing on a flat green plane.  This one
+is the rest of it — the grass underfoot and the shrubs between, which is most of what separates a
+picture of some trees from a picture of somewhere.
+
+| | |
+| --- | --- |
+| `Grass` | An area of it, covered edge to edge.  The first number is how far across, not how tall. |
+| `Tuft` | One clump on its own, for putting somewhere in particular. |
+| `Boxwood` | A dense clipped dome.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
+| `Bramble` | Arching canes with leaves along them; berries in autumn, bare canes in winter. |
+| `Lavender` | A mound of fine stems, in flower through the summer and cut back by winter. |
+
+**The first three numbers mean what they mean everywhere else** — how big, what time of year, and
+which one of that kind — so a scene that has planted an autumn stand can plant autumn undergrowth
+beneath it without learning a second set of habits.  Only the first is ever required.
+
+**What a season does differs by plant**, as it does in a garden.  Grass goes tawny and then to pale
+straw, and lies down as well as changing color.  A bramble turns, fruits, and finally stands as bare
+canes.  Lavender flowers, fades, and is cut back.  A boxwood is evergreen and does what the fir does:
+three of its four seasons look alike, and in winter it takes snow.
+
+**Height is the setting that matters most**, and not for the reason you would guess.  A blade of grass
+is about a fortieth of its length across, which is right — and it means ankle-high grass seen from
+across a field has blades a third of a pixel wide.  A blade thinner than its pixel does not draw as a
+blade; it draws as a speck, and a field of specks draws as wire wool.  Knee-high grass in the same
+picture reads immediately, and costs *less*, since taller tufts stand further apart.  If a patch looks
+like static, make it taller before you make it denser.
+
+**Grass is the one thing here that can make a scene slow**, and it is worth saying so plainly rather
+than leaving it to be discovered.  A blade is two tubes, a tuft is a dozen blades, and an area of it
+is a tuft every fifth of a unit in both directions — so `Grass(8)` is on the order of twenty thousand
+surfaces.  That is a number this ray tracer handles perfectly well, but it is twenty thousand rather
+than twenty, and the reason it is affordable is worth knowing: the tufts are gathered into blocks of
+sixty-four and the blocks into one group.  A group that a ray gets inside asks *every* child, so one
+flat list of two thousand tufts is two thousand questions per ray; two layers makes it thirty-odd.
+Measured on one patch, flattening it is the same picture and **four times the wait**.
+
+A [sky light](materials.md) is the other half of any grass bill.  It works by looking at the dome from
+many directions at every point it lights, and every one of those looks has to get out through the
+grass, so the sample count is most of the render time in a scene like that.  Turning it down where it
+is used costs less than it sounds — grass has no large flat surface for the grain to show on.
+
+`Grass` takes two more numbers after the usual three, and they come *after* rather than among them
+precisely so the first three keep their meaning:
+
+```
+object Grass(8, 'summer', 1, 0.3, 0.5)     // half as many tufts, a quarter the surfaces
+```
+
+Halving the last one quarters the count, since the tufts thin out in both directions at once.  Grass
+seen from across a field does not need what grass seen from a foot away needs.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

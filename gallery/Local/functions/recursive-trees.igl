@@ -116,10 +116,15 @@ primitive limb(depth, length, thickness, twist, id) -> group {
     }
     else {
         return group {
-            cylinder {
-                min Y 0  max Y length
+            // A tube rather than a cylinder, because a cylinder ends in a flat disc: the next limb
+            // leaves that disc at an angle and the disc is left standing proud, edge-on, so every
+            // fork gets a dark band across it and the tree reads as pipes stacked end to end.  A tube
+            // ends in a hemisphere, which looks the same from every direction, and it tapers along
+            // its length as well, so a limb no longer steps down where it meets the next.
+            tube {
                 material bark
-                scale [thickness, 1, thickness]
+                radius thickness at [0, 0, 0]
+                radius thickness * taper at [0, length, 0]
             }
             object limb(depth - 1, length * wilt(id, 1), thickness * taper, twist + turn, id * 3 + 1) {
                 rotate Z lean * wilt(id, 2)

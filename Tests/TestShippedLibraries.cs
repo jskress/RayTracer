@@ -355,6 +355,247 @@ public class TestShippedLibraries
         }
     }
 
+    /// <summary>
+    /// What the undergrowth library holds out, written down here rather than read out of the file, for
+    /// the same reason the tree species are: a test that learns the names from the thing it is testing
+    /// cannot notice a rename.
+    /// </summary>
+    private static readonly string[] Plants = ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender"];
+
+    /// <summary>
+    /// How big to ask for each, since these are not all measured in the same thing: the first number
+    /// to <c>Grass</c> is how far across a patch reaches, and to everything else it is a height.
+    /// </summary>
+    private static string SizeOf(string plant) => plant switch
+    {
+        "Grass" => "2",
+        "Tuft" => "0.5",
+        _ => "1.1"
+    };
+
+    /// <summary>
+    /// Grows one plant in one season, and hands back whatever stopped it.
+    /// </summary>
+    private string Sprout(string plant, string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string call = season is null
+            ? $"{plant}({SizeOf(plant)})"
+            : $"{plant}({SizeOf(plant)}, '{season}', 3)";
+
+        File.WriteAllText(scene, $$"""
+            import 'undergrowth' { {{plant}} }
+            context { angles are degrees  no gamma }
+            camera { location [1.4, 1.1, -2.4]  look at [0, 0.28, 0]  field of view 46 }
+            point light { location [-4, 6, -5] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        return Render(scene, 90, 70);
+    }
+
+    /// <summary>
+    /// Grows one and hands back the picture of it.
+    /// </summary>
+    private Canvas Sprouted(string plant, string season)
+    {
+        Assert.IsNull(Sprout(plant, season), $"{plant} should grow in {season}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryPlantGrowsInEverySeason()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "undergrowth.igl"),
+            Path.Combine(_directory, "undergrowth.igl"), true);
+
+        foreach (string plant in Plants)
+        {
+            foreach (string season in new[] { "summer", "autumn", "fall", "winter", "spring" })
+                Assert.IsNull(Sprout(plant, season), $"{plant} should grow in {season}");
+
+            Assert.IsNull(Sprout(plant, null), $"{plant} should grow with no season named");
+        }
+    }
+
+    [TestMethod]
+    public void TestEachPlantsSeasonsLookLikeThemselves()
+    {
+        // The same rule the trees are held to, and it matters more here: what a season does differs by
+        // plant, so there is no single change to look for.  Grass goes tawny and lies down, a bramble
+        // fruits and then goes bare, lavender flowers and fades -- and every one of those has to be a
+        // real difference rather than a word that fell through to the wrong arm.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "undergrowth.igl"),
+            Path.Combine(_directory, "undergrowth.igl"), true);
+
+        string[] seasons = ["summer", "autumn", "winter", "spring"];
+
+        foreach (string plant in Plants)
+        {
+            // A boxwood is evergreen and so makes the promise the fir makes: three seasons alike, and
+            // snow in the fourth.  Both halves are held, since one without the other is a boxwood that
+            // has either lost its leaves or lost its snow.
+            if (plant == "Boxwood")
+            {
+                Canvas evergreen = Sprouted(plant, "summer");
+
+                foreach (string season in new[] { "autumn", "spring" })
+                {
+                    Assert.IsFalse(Differs(evergreen, Sprouted(plant, season)),
+                        $"a boxwood is evergreen and should look the same in {season}");
+                }
+
+                Assert.IsTrue(Differs(evergreen, Sprouted(plant, "winter")),
+                    "a boxwood should carry snow in winter");
+
+                continue;
+            }
+
+            Canvas[] pictures = seasons.Select(season => Sprouted(plant, season)).ToArray();
+
+            for (int one = 0; one < seasons.Length; one++)
+            {
+                for (int other = one + 1; other < seasons.Length; other++)
+                {
+                    Assert.IsTrue(Differs(pictures[one], pictures[other]),
+                        $"a {plant} in {seasons[other]} looks exactly like one in {seasons[one]}");
+                }
+            }
+
+            Assert.IsFalse(Differs(pictures[1], Sprouted(plant, "fall")),
+                $"a {plant} in the fall should be the same as one in the autumn");
+        }
+    }
+
+    [TestMethod]
+    public void TestGrassTurnsTheColorTheSeasonSaysItDoes()
+    {
+        // Held apart from the test above because that one asks only whether the seasons *differ*, and
+        // grass differs in two ways at once: it changes color and it lies down.  Take the color away
+        // and the pictures still differ, by shape alone, so that test goes on passing while a summer
+        // green August lawn stands in for a February one.  This asks what the library actually
+        // promises: green while it is growing, and not green once it is not.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "undergrowth.igl"),
+            Path.Combine(_directory, "undergrowth.igl"), true);
+
+        foreach ((string season, bool green) in new[]
+                 {
+                     ("summer", true), ("spring", true), ("autumn", false), ("winter", false)
+                 })
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            // Straight down at a patch, so nothing but grass and the gaps between it are in shot, and
+            // the ground is a gray that leans neither way.
+            File.WriteAllText(scene, $$"""
+                import 'undergrowth' { Grass }
+                context { angles are degrees  no gamma }
+                camera { location [0, 2.4, 0]  look at [0, 0, 0]  up [0, 0, 1]  field of view 50 }
+                point light { location [-3, 6, -3] }
+                background [0.5, 0.5, 0.5]
+                plane { material { pigment [0.5, 0.5, 0.5] } }
+                object Grass(4, '{{season}}', 1)
+                """);
+
+            Assert.IsNull(Render(scene, 110, 110), $"grass should render in {season}");
+
+            Canvas image = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            double lean = 0;
+
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Color pixel = image.GetPixel(x, y);
+
+                    lean += pixel.Green - pixel.Red;
+                }
+            }
+
+            Assert.AreEqual(green, lean > 0,
+                $"grass in {season} leans {(lean > 0 ? "green" : "brown")}, and should not");
+        }
+    }
+
+    [TestMethod]
+    public void TestHowMuchGrassThereIsCanBeTurnedDown()
+    {
+        // The knob the documentation tells an author to reach for when a scene has become slow, so it
+        // has to do something.  Fewer tufts is less of the picture covered, and the three settings must
+        // give three different pictures rather than one picture and two claims about it.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "undergrowth.igl"),
+            Path.Combine(_directory, "undergrowth.igl"), true);
+
+        List<double> covered = [];
+
+        foreach (string density in new[] { "0.4", "0.7", "1" })
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            File.WriteAllText(scene, $$"""
+                import 'undergrowth' { Grass }
+                context { angles are degrees  no gamma }
+                camera { location [0, 1.6, -2.6]  look at [0, 0, 0]  field of view 50 }
+                point light { location [-4, 6, -5] }
+                background [0.5, 0.6, 0.8]
+                plane { material { pigment [0.9, 0.1, 0.1] } }
+                object Grass(3, 'summer', 1, 0.3, {{density}})
+                """);
+
+            Assert.IsNull(Render(scene, 120, 90), $"grass at a density of {density} should render");
+
+            Canvas image = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            int green = 0;
+
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    Color pixel = image.GetPixel(x, y);
+
+                    // The ground is red on purpose, so a pixel is either grass or a gap.
+                    if (pixel.Green > pixel.Red)
+                        green++;
+                }
+            }
+
+            covered.Add(green);
+        }
+
+        Assert.IsTrue(covered[0] < covered[1] && covered[1] < covered[2],
+            $"more density should cover more ground, and got {string.Join(", ", covered)}");
+    }
+
+    [TestMethod]
+    public void TestTheUndergrowthKeepsItsOwnWorkings()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "undergrowth.igl"),
+            Path.Combine(_directory, "undergrowth.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'undergrowth' { Boxwood }
+            camera { location [0, 1, -4]  look at [0, 0.4, 0] }
+            point light { location [-5, 5, -5] }
+            object Boxwood(1)
+            sphere { scale UnderBladeHeight('summer') }
+            """);
+
+        string error = Render(scene);
+
+        Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
+        StringAssert.Contains(error, "UnderBladeHeight");
+    }
+
     [TestMethod]
     public void TestATreeKeepsItsOwnWorkings()
     {
@@ -383,7 +624,7 @@ public class TestShippedLibraries
     /// <summary>
     /// Renders a scene small and fast, and hands back whatever stopped it.
     /// </summary>
-    private string Render(string path)
+    private string Render(string path, int wide = 40, int high = 30)
     {
         StringWriter captured = new ();
         TextWriter was = Console.Out;
@@ -399,7 +640,7 @@ public class TestShippedLibraries
 
             renderer.Render(new RenderOptions
             {
-                OutputFileName = Path.Combine(_directory, "out.png"), Width = 40, Height = 30
+                OutputFileName = Path.Combine(_directory, "out.png"), Width = wide, Height = high
             });
 
             return captured.ToString().Contains("Error") ? captured.ToString() : null;

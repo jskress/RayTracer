@@ -202,22 +202,22 @@ primitive TreeFoliage(species, season, id, variant) -> group {
     }
 }
 
-// The wood of one limb: a cone rather than a rod, because a limb that keeps one thickness all the way
-// and then meets a thinner one leaves a step, and a trunk full of steps reads as a stack of pipes.
+// The wood of one limb: a tube, which is a length of tapering rod with a *sphere* at each end of it.
 //
-// A conic here is the surface where x² + z² = y², so its radius at any height is that height itself.
-// A slice from the tip's thickness to the base's is therefore already the taper wanted; stretching it
-// along Y makes it as long as the limb, turning it over puts the fat end at the bottom, and the lift
-// stands it on the origin.
-primitive TreeWood(species, length, thickness) -> conic {
-    tip = thickness * TreeTaper(species)
-    stretch = length / (thickness - tip)
-    return conic {
-        min Y tip  max Y thickness
+// It was a cone until it was looked at closely, and the difference between the two is the whole
+// difference between a tree and a diagram of one.  A cone ends in a flat disc.  Set a limb growing at
+// an angle from the tip of another and the parent's disc is left standing proud of it, edge-on to the
+// light, and every fork in the tree gets a dark band across it -- so the limbs read as separate pieces
+// laid end to end rather than as one thing that grew.  A tube ends in a hemisphere, and a hemisphere
+// looks the same from every direction, so the child limb leaves it at any angle without a seam.
+//
+// It is also less to write: a tube is told the radius it starts and ends at, which is the taper said
+// directly instead of arrived at by slicing a cone and stretching the slice.
+primitive TreeWood(species, length, thickness) -> tube {
+    return tube {
         material TreeBark(species)
-        scale [1, stretch, 1]
-        rotate X 180
-        translate Y thickness * stretch
+        radius thickness at [0, 0, 0]
+        radius thickness * TreeTaper(species) at [0, length, 0]
     }
 }
 
@@ -251,7 +251,11 @@ primitive TreeLimb(species, season, depth, length, thickness, twist, id, variant
                             id * 3 + 3, variant) {
                 rotate Z TreeLean(species) * 0.45 * TreeWilt(species, id, 8, variant)
                 rotate Y twist + TreeTurn(species) * 2 + TreeSway(species, id, 9, variant)
-                translate Y length * 0.9
+                // At the tip, like its two siblings, and not part way down.  A limb leaving the side
+                // of another has to start as wide as its parent is *there*, and this one started as
+                // wide as its parent ends -- so it emerged from the wood with a step around it.  The
+                // cones this was written for hid that in their own banding; a tube shows it plainly.
+                translate Y length
             }
         }
     }

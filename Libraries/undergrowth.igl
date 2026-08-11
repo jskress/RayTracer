@@ -1,0 +1,482 @@
+// What grows under the trees.
+//
+//     import 'undergrowth' { Grass, Boxwood }
+//
+//     object Grass(8)
+//     object Boxwood(1.2, 'winter') { translate X 3 }
+//
+// The `trees` library gives a scene its trees and leaves it standing on a flat green plane.  This one
+// is the rest of it: the grass underfoot and the shrubs between, which is most of what separates a
+// picture of some trees from a picture of somewhere.
+//
+// Everything here takes the same three things a tree does, in the same order and with the same
+// meanings -- **how big**, **what time of year**, and **which one of that kind** -- so a scene that has
+// planted an autumn stand can plant autumn undergrowth beneath it without learning a second set of
+// habits.  Only the first is ever required.  `Grass` takes two more after those, and they come after
+// rather than among them precisely so that the first three mean what they mean everywhere else.
+//
+// | `Grass` | An area of it, covered edge to edge.  The first number is how far across. |
+// | `Tuft` | One clump on its own, for putting somewhere in particular. |
+// | `Boxwood` | A dense clipped dome.  Evergreen, and takes snow in winter. |
+// | `Bramble` | Arching canes with leaves along them; berries in autumn, bare in winter. |
+// | `Lavender` | A mound of fine stems, in flower through the summer. |
+//
+// **The seasons are the same words**: 'summer', 'autumn' (or 'fall'), 'winter', or anything else for
+// spring.  What each does differs by plant, as it does in a garden.  Grass goes tawny and then to pale
+// straw; a bramble turns, fruits, and finally stands as bare canes; lavender flowers and fades.  A
+// boxwood is evergreen and so does what the fir in the `trees` library does -- three of its four
+// seasons look alike, and in winter it takes snow.
+//
+// -- A word about what grass costs -----------------------------------------------------------------
+//
+// It is the one thing here that can make a scene slow, and it is worth being plain about why rather
+// than letting it be discovered.  A blade of grass is two cones; a tuft is a dozen blades; an area of
+// it is a tuft every fifth of a unit in both directions.  So `Grass(8)` is on the order of twenty
+// thousand surfaces, which this ray tracer handles perfectly well -- a group hands a ray a bounding
+// box and the ray never looks inside -- but it is twenty thousand rather than twenty.
+//
+// The last number is what to turn when that matters:
+//
+//     object Grass(8, 'summer', 1, 0.3, 0.5)     // half as many tufts, a quarter the surfaces
+//
+// Halving it quarters the count, since the tufts thin out in both directions at once.  Grass seen from
+// across a field does not need what grass seen from a foot away needs.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Under` is the machinery, and a scene that imports `Grass` does not get any
+// of it.  The materials are the exception, for the reason the trees library gives: a material is
+// looked up where it is used rather than where it was written, so it has to travel with what it
+// belongs to.  They are all prefixed so they will not collide with anything of yours.
+
+// -- Leaf, blade, stem and snow --------------------------------------------------------------------
+
+UnderBladeGreen = material { pigment [0.22, 0.36, 0.13]  specular 0.12  shininess 25  ambient 0.20 }
+UnderBladeSpring = material { pigment [0.30, 0.48, 0.16]  specular 0.14  shininess 25  ambient 0.20 }
+UnderBladeTawny = material { pigment [0.40, 0.32, 0.13]  specular 0.10  shininess 20  ambient 0.20 }
+UnderBladeStraw = material { pigment [0.50, 0.46, 0.32]  specular 0.08  shininess 16  ambient 0.22 }
+UnderBoxLeaf = material { pigment [0.15, 0.27, 0.13]  specular 0.16  shininess 34  ambient 0.18 }
+UnderBoxLeafLit = material { pigment [0.24, 0.40, 0.18]  specular 0.20  shininess 40  ambient 0.20 }
+UnderCaneWood = material { pigment [0.36, 0.28, 0.21]  specular 0.10  shininess 18 }
+UnderCaneLeaf = material { pigment [0.26, 0.42, 0.19]  specular 0.12  shininess 24  ambient 0.18 }
+UnderCaneTurned = material { pigment [0.44, 0.22, 0.09]  specular 0.12  shininess 24  ambient 0.18 }
+UnderCaneBud = material { pigment [0.54, 0.66, 0.34]  specular 0.14  shininess 26  ambient 0.18 }
+UnderBerry = material { pigment [0.13, 0.04, 0.10]  specular 0.60  shininess 140 }
+UnderLavStem = material { pigment [0.44, 0.48, 0.36]  specular 0.10  shininess 20  ambient 0.18 }
+UnderLavFlower = material { pigment [0.45, 0.31, 0.63]  specular 0.22  shininess 45  ambient 0.20 }
+UnderLavFaded = material { pigment [0.50, 0.46, 0.44]  specular 0.10  shininess 20  ambient 0.20 }
+UnderSnowWhite = material { pigment [0.93, 0.94, 0.97]  specular 0.30  shininess 60 }
+
+// What color the grass is, which is the whole of what a season does to it.
+primitive UnderBladeSkin(season) -> material {
+    switch (season) {
+        case 'autumn', 'fall' { return material UnderBladeTawny }
+        case 'winter' { return material UnderBladeStraw }
+        case 'summer' { return material UnderBladeGreen }
+        default { return material UnderBladeSpring }
+    }
+}
+
+// Grass does not only change color over the year; it lies down.  Winter grass is half the height of
+// summer grass and bent much further over, which reads at a distance where the color alone does not.
+function UnderBladeHeight(season) -> number {
+    switch (season) {
+        case 'autumn', 'fall' { return 0.9 }
+        case 'winter' { return 0.55 }
+        case 'summer' { return 1 }
+        default { return 0.8 }
+    }
+}
+
+function UnderBladeBend(season) -> number {
+    switch (season) {
+        case 'winter' { return 2.1 }
+        case 'autumn', 'fall' { return 1.35 }
+        default { return 1 }
+    }
+}
+
+// -- Grass -----------------------------------------------------------------------------------------
+
+// One length of blade: a tapering rod, leaning over.  It is a tube rather than a cone for the
+// reason everything else here is -- a tube ends in a hemisphere, so the upper length leaves the
+// lower one without a flat disc showing at the bend.
+primitive UnderBladePart(season, tall, wide, lean) -> group {
+    return group {
+        tube {
+            material UnderBladeSkin(season)
+            radius wide at [0, 0, 0]
+            radius wide * 0.35 at [0, tall, 0]
+            rotate Z lean
+        }
+    }
+}
+
+// A blade, which arches because its upper length carries on from where the lower one left off and
+// bends further.  One straight length reads as a spike; it is the second that makes it grass.
+primitive UnderBlade(season, tall, wide, bend, over, turn) -> group {
+    lower = tall * 0.58
+
+    return group {
+        object UnderBladePart(season, lower, wide, bend)
+        object UnderBladePart(season, tall - lower, wide * 0.45, over) {
+            translate Y lower * 0.97
+            rotate Z bend
+        }
+        rotate Y turn
+    }
+}
+
+// One clump.  The blades start from nearly the same place and go their own ways.
+//
+// A blade is a fortieth of its own length across, which is about right for grass and is also the
+// thing that decides whether a patch can be seen at all.  A blade thinner than the pixel it lands on
+// does not draw as a blade; it draws as a speck, and a field of specks draws as wire wool.
+//
+// That is worth knowing because it makes **height the setting that matters most**.  Ankle-high grass
+// seen from across a field has blades a third of a pixel wide and will always look like noise, however
+// many of them there are.  Knee-high grass in the same picture has blades that land on a pixel and
+// reads immediately -- and costs less, since taller tufts stand further apart.  If a patch looks like
+// static, make it taller before making it denser.
+primitive Tuft(height = 0.3, season = 'summer', variant = 1) -> group {
+    tall = height * UnderBladeHeight(season)
+    bend = UnderBladeBend(season)
+
+    return group {
+        for blade in [0, 9] {
+            object UnderBlade(season,
+                              tall * (0.7 + random(variant, blade, 1) * 0.6), height * 0.038,
+                              (5 + random(variant, blade, 2) * 9) * bend,
+                              (16 + random(variant, blade, 3) * 22) * bend,
+                              random(variant, blade, 4) * 360) {
+                translate [(random(variant, blade, 5) - 0.5) * height * 0.55, 0,
+                           (random(variant, blade, 6) - 0.5) * height * 0.55]
+            }
+        }
+    }
+}
+
+// An area of it, `across` units on a side and centered where it is put.
+//
+// The tufts are counted on a grid and then thrown nearly a whole cell off it, which is what stops the
+// grid from being the thing you see.  A lattice is very easy to notice and impossible to unsee.
+primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
+    step = height * 0.63 / density
+    last = across / step - 1
+    across8 = 8
+
+    return group {
+        // Gathered into blocks of eight by eight rather than left as one long list, and that is not
+        // tidiness -- it is the whole of what makes an area of grass affordable.  A group hands a ray
+        // a bounding box, and if the ray gets in, the group then asks *every* child.  One flat group
+        // of two thousand tufts is two thousand questions for every ray that reaches the ground, and
+        // a sky light asks a great many rays.  Two layers turns that into thirty-odd blocks plus the
+        // sixty-four inside whichever ones were hit.
+        for blockRow in [0, last / across8] {
+            for blockColumn in [0, last / across8] {
+                group {
+                    for row in [0, across8 - 1] {
+                        for column in [0, across8 - 1] {
+                            here = blockRow * across8 + row
+                            over = blockColumn * across8 + column
+
+                            // The last block on each side hangs over the edge, so its overhang is
+                            // simply not made.  An area asked for is the area you get.
+                            if (here <= last && over <= last) {
+                                object Tuft(height * (0.75 + random(here, over, variant) * 0.5),
+                                            season, variant * 7919 + here * 512 + over) {
+                                    translate [over * step - across / 2 +
+                                                   (random(here, over, variant + 1) - 0.5) * step * 1.8,
+                                               0,
+                                               here * step - across / 2 +
+                                                   (random(here, over, variant + 2) - 0.5) * step * 1.8]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// -- Boxwood ---------------------------------------------------------------------------------------
+
+// What settles on it, which is nothing at all for three seasons of the four.  A boxwood is evergreen,
+// so it would otherwise be the one plant here that took the word and ignored it -- and a clipped dome
+// under snow is what a garden looks like in January.
+primitive UnderBoxwoodSnow(season, height, variant) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                // Laid along the same rings the foliage is, and only the upper ones: snow settles on
+                // what faces the sky.  Sitting it at a fixed height instead put it *inside* the dome,
+                // where it was worth nothing at all.
+                for ring in [6, 10] {
+                    up = ring / 10
+                    wide = height * 0.46 * sqrt(1 - up * up * 0.93)
+                    round = wide / height * 34
+
+                    for step in [0, round] {
+                        if (random(ring, step, variant + 5) > 0.42) {
+                            sphere {
+                                material UnderSnowWhite
+                                scale [height * 0.075, height * 0.035, height * 0.075]
+                                translate X wide
+                                rotate Y step * 360 / (round + 1) + ring * 23 +
+                                       random(ring, step, variant + 1) * 18
+                                translate Y height * (0.13 + up * 0.81) + height * 0.055
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// Which of the two greens a given cluster wears.  One flat green over the whole dome reads as a
+// green ball; a dome made of two, sprinkled, reads as a great many small leaves catching the light
+// differently, which is what a clipped shrub actually looks like.
+primitive UnderBoxShade(pick) -> material {
+    if (pick > 0.58) {
+        return material UnderBoxLeafLit
+    }
+    else {
+        return material UnderBoxLeaf
+    }
+}
+
+// A clipped dome: rings of leaf clusters, each ring higher and narrower than the one below.  The
+// narrowing follows a circle rather than a straight taper, which is what gives it a shoulder instead
+// of a cone.
+//
+// How many clusters go round a ring is worked out from how wide that ring is, rather than being the
+// same number all the way up.  A fixed count crowds them at the top and leaves the bottom bald, which
+// is the tell-tale of a shape made by a loop that was not thinking.
+primitive Boxwood(height, season = 'summer', variant = 1) -> group {
+    rings = 11
+
+    return group {
+        // The stem it was grown from, just showing under the skirt.  A dome sitting straight on the
+        // ground is a ball; a dome on a stem is a shrub.
+        tube {
+            material UnderCaneWood
+            radius height * 0.035 at [0, 0, 0]
+            radius height * 0.025 at [0, height * 0.22, 0]
+        }
+
+        for ring in [0, rings - 1] {
+            up = ring / (rings - 1)
+            wide = height * 0.46 * sqrt(1 - up * up * 0.93)
+            round = wide / height * 34
+
+            for step in [0, round] {
+                sphere {
+                    material UnderBoxShade(random(ring, step, variant + 9))
+                    scale height * 0.072 * (0.7 + random(ring, step, variant) * 0.6)
+                    translate X wide * (0.94 + random(ring, step, variant + 3) * 0.12)
+                    rotate Y step * 360 / (round + 1) + ring * 23 +
+                           random(ring, step, variant + 1) * 18
+                    translate Y height * (0.13 + up * 0.81)
+                }
+            }
+        }
+
+        // A few larger clusters set inside, so that a gap between the outer ones shows more foliage
+        // rather than showing the sky through the middle of the bush.
+        for ring in [0, 5] {
+            up = ring / 5
+            deep = height * 0.30 * sqrt(1 - up * up * 0.9)
+
+            for step in [0, 6] {
+                sphere {
+                    material UnderBoxLeaf
+                    scale height * 0.105
+                    translate X deep
+                    rotate Y step * 51 + ring * 29
+                    translate Y height * (0.18 + up * 0.68)
+                }
+            }
+        }
+
+        object UnderBoxwoodSnow(season, height, variant)
+    }
+}
+
+// -- Bramble ---------------------------------------------------------------------------------------
+
+// What hangs on a cane, which is the whole of what a season is to a bramble.
+primitive UnderCaneLeaves(season, thick, id, variant) -> group {
+    switch (season) {
+        case 'summer' {
+            return group {
+                for leaf in [0, 4] {
+                    sphere {
+                        material UnderCaneLeaf
+                        scale thick * (1.3 + random(id, leaf, variant) * 0.9)
+                        translate X thick * 2.4
+                        rotate Y leaf * 72 + random(id, leaf, variant + 1) * 45
+                    }
+                }
+            }
+        }
+        case 'autumn', 'fall' {
+            return group {
+                for leaf in [0, 3] {
+                    sphere {
+                        material UnderCaneTurned
+                        scale thick * (1.2 + random(id, leaf, variant + 2) * 0.8)
+                        translate X thick * 2.4
+                        rotate Y leaf * 90 + random(id, leaf, variant + 3) * 55
+                    }
+                }
+                // The fruit, which is why anybody looks at a bramble in September.
+                if (random(id, 31, variant) > 0.45) {
+                    for berry in [0, 2] {
+                        sphere {
+                            material UnderBerry
+                            scale thick * 1.5
+                            translate X thick * 2.2
+                            rotate Y berry * 120 + 40
+                            translate Y thick * -2
+                        }
+                    }
+                }
+            }
+        }
+        case 'winter' {
+            // Bare, which is the point of a bramble in winter: the arch is the whole of what is left.
+            return group { }
+        }
+        default {
+            return group {
+                for bud in [0, 1] {
+                    sphere {
+                        material UnderCaneBud
+                        scale thick * (2 + random(id, bud, variant + 4) * 1.2)
+                        translate X thick * 2.4
+                        rotate Y bud * 140 + random(id, bud, variant + 5) * 80
+                    }
+                }
+            }
+        }
+    }
+}
+
+// One length of cane, and then the rest of the cane carrying on from its tip.  Written as a recursion
+// rather than a loop because that is what an arch is: each length leans a little further than the one
+// it grew from, and only the thing that grew from it knows where that was.
+primitive UnderCane(season, left, length, thick, bend, id, variant) -> group {
+    if (left < 1) {
+        return group { }
+    }
+    else {
+        return group {
+            // A tube, which is a tapering rod with a sphere at each end of it, and the ends are the
+            // point.  A cone finishes in a flat disc: set the next length of cane growing at an angle
+            // from it and the disc stands proud, edge-on to the light, so every joint in the arch gets
+            // a dark band across it and the cane reads as a row of sticks.  A hemisphere looks the
+            // same from every direction, so the next length leaves it at any angle without a seam.
+            tube {
+                material UnderCaneWood
+                radius thick at [0, 0, 0]
+                radius thick * 0.90 at [0, length, 0]
+            }
+
+            object UnderCaneLeaves(season, thick, id, variant) { translate Y length * 0.72 }
+
+            object UnderCane(season, left - 1, length * 0.88, thick * 0.90, bend,
+                             id * 3 + 1, variant) {
+                rotate Z bend
+                translate Y length
+            }
+        }
+    }
+}
+
+primitive Bramble(height, season = 'summer', variant = 1) -> group {
+    return group {
+        for cane in [0, 8] {
+            reach = height * (0.26 + random(cane, 41, variant) * 0.10)
+
+            // A group of its own, because the turn that sets this cane apart from its neighbours
+            // belongs to the cane; a loop is a way of writing and has nothing for a transform to be
+            // about.
+            group {
+                object UnderCane(season, 5, reach, height * 0.022,
+                                 13 + random(cane, 42, variant) * 9, cane, variant)
+                rotate Z 6 + random(cane, 43, variant) * 10
+                rotate Y cane * 40 + random(cane, 44, variant) * 30
+            }
+        }
+    }
+}
+
+// -- Lavender --------------------------------------------------------------------------------------
+
+// What tops a stem: a flower head in summer, faded in autumn, nothing at all in winter, and a green
+// tip in spring.
+primitive UnderLavenderHead(season, height, thick) -> group {
+    switch (season) {
+        case 'summer' {
+            return group {
+                tube {
+                    material UnderLavFlower
+                    radius thick * 2.6 at [0, 0, 0]
+                    radius thick * 0.4 at [0, height * 0.26, 0]
+                }
+            }
+        }
+        case 'autumn', 'fall' {
+            return group {
+                tube {
+                    material UnderLavFaded
+                    radius thick * 2 at [0, 0, 0]
+                    radius thick * 0.4 at [0, height * 0.18, 0]
+                }
+            }
+        }
+        case 'winter' { return group { } }
+        default {
+            return group {
+                sphere { material UnderCaneBud  scale thick * 1.8 }
+            }
+        }
+    }
+}
+
+// How far a lavender has been cut back, which is a winter fact and no season else.
+function UnderLavenderCut(season) -> number {
+    switch (season) {
+        case 'winter' { return 0.55 }
+        default { return 1 }
+    }
+}
+
+// A mound of fine stems, each carrying whatever the season puts on it.  Winter takes the flowers away
+// and cuts the stems back, which is what a lavender actually looks like after it has been pruned.
+primitive Lavender(height, season = 'summer', variant = 1) -> group {
+    short = UnderLavenderCut(season)
+
+    return group {
+        for stem in [0, 19] {
+            tall = height * short * (0.6 + random(variant, stem, 51) * 0.55)
+            thick = height * 0.013
+
+            group {
+                tube {
+                    material UnderLavStem
+                    radius thick at [0, 0, 0]
+                    radius thick * 0.75 at [0, tall, 0]
+                }
+                object UnderLavenderHead(season, height * short, thick) { translate Y tall }
+                rotate Z 5 + random(variant, stem, 52) * 22
+                rotate Y random(variant, stem, 53) * 360
+                translate [(random(variant, stem, 54) - 0.5) * height * 0.42, 0,
+                           (random(variant, stem, 55) - 0.5) * height * 0.42]
+            }
+        }
+    }
+}

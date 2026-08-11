@@ -1,0 +1,129 @@
+// The same trees as the stand, standing in somewhere rather than on a plane.
+//
+// The tree library was the first of these, and rendering it showed up what it did not do.  Nine trees
+// came out of two lines and looked right, and they were standing on a flat green sheet, which is the
+// one thing no tree has ever done.  A picture of some trees is not a picture of a place, and what
+// separates them is entirely the stuff nobody thinks to ask for: the grass underfoot, the bramble that
+// got into the hedge, the lavender somebody planted and the boxwood somebody clipped.
+//
+// So this scene imports three libraries and describes none of what is in it:
+//
+//     import 'trees'       { Oak, Birch }
+//     import 'undergrowth' { Grass, Bramble, Boxwood, Lavender, Tuft }
+//     import 'daylight'    { ClearMorning, ClearMorningLight }
+//
+// **One word sets the season for all three.**  There is a line partway down that says
+//
+//     Season = 'summer'
+//
+// and it is handed to the trees, the grass, the brambles, the lavender and the boxwood alike.  Each
+// does something different with it, which is what a season actually is rather than a filter over the
+// picture.  Change it to 'autumn' and the birches turn, the grass goes tawny *and lies down*, and the
+// brambles fruit.  Change it to 'winter' and the birches are bare, the grass is straw flattened
+// further, the brambles are down to their arches, the lavender is cut back, and snow gathers on the
+// boxwood -- which has done nothing at all in the other three, being evergreen.  Not one other line
+// would need editing.
+//
+// That the boxwood ignores three seasons out of four is worth noticing rather than apologising for.  A
+// real garden in October is not uniformly autumnal; it is a few things changing among a lot of things
+// that are not, and a library that made everything turn together would look painted.
+//
+// **The grass is where the cost is**, and it is worth knowing why.  Every blade is two tubes, so the
+// sward here is a bit over forty thousand surfaces against a couple of thousand for everything else.
+// It renders at all because of how those forty thousand are stacked: the tufts are gathered into
+// blocks of sixty-four and the blocks into one group, so a ray that reaches the ground asks about
+// thirty-odd boxes rather than two thousand.  Left flat it is the same picture and several times the
+// wait.  The last number to `Grass` is what to turn down when a draft needs to be quick -- halving it
+// quarters the count.
+//
+// The sky light is the other half of the bill and is turned down here too, for a reason worth knowing:
+// a sky light works by looking at the dome from many directions at every point it lights, and every
+// one of those looks has to get out through the grass.
+//
+// **Where the camera stands is not a matter of taste.**  Every sky in the `daylight` library has its
+// sun toward +Z, so a camera out at -Z looking back would see the shaded side of every tree, every
+// bramble and every blade, and the picture would come out a silhouette with nothing in it to say why.
+// `ClearMorning` puts the sun toward +X and +Z, so the camera stands off that way and sees lit faces.
+// The first cut of this scene used the low evening sun of `GoldenHour` and was too murky to read.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'trees'       { Oak, Birch }
+import 'undergrowth' { Grass, Bramble, Boxwood, Lavender, Tuft }
+import 'daylight'    { ClearMorning, ClearMorningLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Corner of a Field'
+        author 'J. Stephen Kress'
+        description 'Trees standing in somewhere, from three libraries and one word for the season.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [5.2, 3.4, 15.5]
+    look at [-1.6, 2.6, -4]
+    field of view 46
+}
+
+background ClearMorning
+// Fewer looks at the sky than the library asks for by default.  A sky light works by looking at the
+// dome from many directions at every point it lights, and it has to do that through the grass -- so on
+// a scene like this one the sample count is most of the render time.  Sixteen is grainier than
+// thirty-two and this picture has no large flat surface for the grain to show on.
+light ClearMorningLight { samples 16 }
+
+// The ground under the grass, dark enough that the gaps between tufts read as shadow rather than dirt.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.35
+            [0, color [0.24, 0.27, 0.15], 1, color [0.33, 0.34, 0.20]]
+            scale 2.5
+        }
+        specular 0.02
+    }
+}
+
+Season = 'summer'
+
+object Grass(19, Season, 1, 0.75, 0.85) { translate Z -4 }
+
+// Two trees, well back, because the field is the subject and they are what it is a corner of.
+object Oak(9, Season, 3)    { translate [-4.5, 0, -7] }
+object Birch(8, Season, 5)  { translate [2.5, 0, -9] }
+object Birch(6.5, Season, 6) { translate [5.5, 0, -6] }
+
+// The hedge line: brambles get everywhere, which is the whole character of them.
+group {
+    for i in [0, 5] {
+        lean = random(i, 71, 2) * 30
+
+        group {
+            object Bramble(1.5 + random(i, 70, 2) * 0.9, Season, i + 2)
+            rotate Y lean
+            translate [i * 2.3 - 6.5 + random(i, 72, 2) * 0.8, 0,
+                       -3.6 + random(i, 73, 2) * 1.2]
+        }
+    }
+}
+
+// Somebody's planting, gone a little wild.
+object Boxwood(1.9, Season, 2)   { translate [-3.4, 0, 1.2] }
+object Boxwood(1.45, Season, 5)  { translate [-4.8, 0, 2.6] }
+object Lavender(1.15, Season, 3) { translate [1.4, 0, 2.6] }
+object Lavender(1.0, Season, 7)  { translate [2.6, 0, 3.6] }
+
+// A few tufts standing clear of the sward, taller than their neighbours, which is what a rough field
+// does where nothing has walked.
+for i in [0, 4] {
+    object Tuft(1.1 + random(i, 80, 4) * 0.5, Season, i + 20) {
+        translate [i * 2.4 - 4.4 + random(i, 81, 4) * 0.9, 0, 4.6 + random(i, 82, 4) * 1.6]
+    }
+}
