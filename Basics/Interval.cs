@@ -35,8 +35,28 @@ public record Interval
 
     /// <summary>
     /// This property notes whether the interval has been exhausted.
+    /// <para>
+    /// It asks whether the <i>next</i> value would lie beyond the end rather than whether the current
+    /// one has landed on it, and the difference is the difference between stopping and not stopping.
+    /// A range only reaches its end exactly when the end is a whole number of steps from the start,
+    /// and nothing makes anyone write one that is: <c>[0, 3.4]</c> counted by ones goes 0, 1, 2, 3, 4,
+    /// and never once equals 3.4.  Asking whether it had arrived meant such a range ran forever.
+    /// </para>
+    /// <para>
+    /// The end itself is still taken when it is landed on, which is what the check against
+    /// <see cref="DoubleExtensions.Near"/> is for: a step of a quarter reaches one as 0.99999999, and
+    /// a range written to include its end must include it.
+    /// </para>
     /// </summary>
-    public bool IsAtEnd => _value.Near(_stopAt);
+    public bool IsAtEnd
+    {
+        get
+        {
+            double next = _value + _step;
+
+            return !next.Near(_stopAt) && (_step > 0 ? next > _stopAt : next < _stopAt);
+        }
+    }
 
     private double _value;
     private double _step;

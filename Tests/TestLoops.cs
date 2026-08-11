@@ -457,4 +457,48 @@ public class TestLoops
         Assert.IsNull(withAnEquals);
         Assert.IsTrue(alsoRefused.Contains("in"), $"and should ask for \"in\": {alsoRefused}");
     }
+
+    [TestMethod]
+    public void TestARangeItsStepCannotLandOnStopsAnyway()
+    {
+        // This used to hang.  A range only reaches its end exactly when the end is a whole number of
+        // steps away, and nothing makes anybody write one that is -- least of all a range whose end is
+        // worked out from something else, which is the usual way one gets written.  Four balls here:
+        // 0, 1, 2 and 3, with 3.4 never landed on and rightly not waited for.
+        Assert.AreEqual(4, ThingsInARow("""
+            group {
+                for i in [0, 3.4] {
+                    sphere { material { pigment Red }  scale 0.35  translate X i * 1.4 - 3.5 }
+                }
+            }
+            """));
+    }
+
+    [TestMethod]
+    public void TestAStepThatWouldNeverArriveIsRefused()
+    {
+        // The other two ways a loop used to hang, and the reason they are worth a complaint rather
+        // than a shrug: the range is made of expressions, so a loop that has counted properly for
+        // months can be handed a step of zero by a value worked out somewhere else entirely.
+        foreach ((string written, string expected) in new[]
+                 {
+                     ("for i in [0, 5] by 0", "cannot be zero"),
+                     ("for i in [0, 5] by -1", "heads the other way"),
+                     ("over [0, 5] by 0", "cannot be zero")
+                 })
+        {
+            (Canvas image, string error) = Render($$"""
+                group {
+                    {{written}} {
+                        sphere { material { pigment Red }  scale 0.35 }
+                    }
+                }
+                """);
+
+            Assert.IsNull(image, written);
+            Assert.IsTrue(error.Contains(expected),
+                $"{written}: the complaint should say why: {error}");
+        }
+    }
+
 }

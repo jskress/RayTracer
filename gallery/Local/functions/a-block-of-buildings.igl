@@ -1,0 +1,137 @@
+// Eleven buildings, and no two of them were described.
+//
+// A loop already let a scene say *make this eleven times*.  What it could not say was *and make them
+// different*, because everything inside a loop's braces was made on every turn without exception.  A
+// row of eleven identical towers is a diagram; a row of eleven that differ is a street.  This scene is
+// about the two small things that close that gap.
+//
+// **A name worked out part way down.**  Each turn begins by settling what this building is:
+//
+//     high = 3.2 + random(i, 1) * 6.5
+//
+// and `high` is then used seven times over -- by the shell, by the roof, by the windows, by whatever
+// stands on top.  Without it, that arithmetic would be written out seven times and the seven would
+// drift apart the first time one of them was edited.  The name lasts as long as the turn does, so the
+// next building works out its own and nothing leaks between them.
+//
+// **A choice among the surfaces.**  What goes on a roof depends on how tall the building is:
+//
+//     if (high > 8) { ...a spire... }
+//     else if (high > 6) { ...a water tank... }
+//
+// Note what is *not* written: there is no final `else`.  The short buildings get nothing on top, and
+// nothing is a perfectly good thing for an arm to make.  That is the one place this `if` differs from
+// the `if` that ends a function -- there, both ways out must give an answer, because a function that
+// answered on one path and not the other would have a hole in it.  Here an arm makes things, and a
+// roof with nothing on it is a roof.
+//
+// The lit windows are the same idea one level down: every floor of every building asks whether this
+// one is lit, and most turns make nothing at all.
+//
+//     if (random(i, floor * 2 + side, 7) > 0.55) { ...a pane... }
+//
+// The file never says where a single one of them goes.  `spacing` is named once, at the top of the
+// group, and reaches every turn of the loop and every window inside it -- change it and the street
+// rearranges itself, water tanks and lit panes and all, because nothing here was ever told a position.
+// Everything was told a rule.
+//
+// It is worth saying what this is *not*.  These are boxes with lights on, not architecture; a real
+// building has a plan, a frontage and a way of meeting the ground.  What is being shown is that a
+// scene can now decide, per turn, what to make rather than only where to put it -- which is the thing
+// that has to exist before anything more careful can be built on top of it.
+//
+// You will need the daylight library, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'daylight' { GoldenHour, GoldenHourLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Block of Buildings'
+        author 'J. Stephen Kress'
+        description 'Eleven buildings that differ, from one loop that describes none of them.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [15, 8.5, 27]
+    look at [0, 4.2, 0]
+    field of view 50
+}
+
+background GoldenHour
+light GoldenHourLight
+
+Concrete = material { pigment [0.62, 0.60, 0.56]  specular 0.06  shininess 20 }
+DarkTrim = material { pigment [0.24, 0.23, 0.22]  specular 0.10  shininess 30 }
+LitPane = material { pigment [0.98, 0.88, 0.62]  ambient 0.85  specular 0.30  shininess 90 }
+Roadway = material { pigment [0.30, 0.30, 0.31]  specular 0.04 }
+
+plane { material Roadway }
+
+// The street.  Everything below is decided rather than described.
+group {
+    spacing = 2.45
+
+    for i in [0, 10] {
+        high = 3.2 + random(i, 1) * 6.5
+        wide = 0.85 + random(i, 2) * 0.45
+        along = i * spacing - 12.2
+
+        // The building itself.
+        cube {
+            material Concrete
+            scale [wide, high / 2, wide]
+            translate [along, high / 2, 0]
+        }
+
+        // A band where it meets the ground, which is what keeps a box from reading as a box.
+        cube {
+            material DarkTrim
+            scale [wide * 1.06, 0.16, wide * 1.06]
+            translate [along, 0.16, 0]
+        }
+
+        // What stands on the roof, if anything does.  The tall ones get a spire, the middling ones a
+        // tank, and the short ones are left alone -- which is why there is no closing "else".
+        if (high > 8) {
+            conic {
+                min Y 0  max Y 1
+                material DarkTrim
+                scale [wide * 0.30, 2.6, wide * 0.30]
+                rotate X 180
+                translate [along, high + 2.6, 0]
+            }
+        }
+        else if (high > 6) {
+            cylinder {
+                min Y 0  max Y 1
+                material DarkTrim
+                scale [wide * 0.42, 0.85, wide * 0.42]
+                translate [along, high, 0]
+            }
+        }
+
+        // The windows.  Every floor of every face asks for itself, and most of them come out dark.
+        for floor in [0, high - 2.2] {
+            up = 1.0 + floor * 0.95
+
+            for side in [0, 1] {
+                across = (side - 0.5) * wide
+
+                if (random(i, floor * 2 + side, 7) > 0.55) {
+                    cube {
+                        material LitPane
+                        scale [wide * 0.26, 0.30, 0.04]
+                        translate [along + across, up, wide + 0.02]
+                    }
+                }
+            }
+        }
+    }
+}

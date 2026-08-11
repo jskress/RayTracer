@@ -150,11 +150,12 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
-| `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back. | [Scene Files](scene-files.md#choosing-inside-a-body) |
+| `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back, or which surfaces to make where they are listed. | [Surfaces](surfaces.md#choosing-what-to-make) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
 | `in` | Follows a `for` loop's count: `for i in [0, 11]`. | [Surfaces](surfaces.md#repeating-things) |
+| `else` | The other way out of an `if`, optional where surfaces are listed. | [Surfaces](surfaces.md#choosing-what-to-make) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
 | `index` | Interior: `index of refraction`, written out. | [Materials](materials.md#transparency-and-interiors) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |

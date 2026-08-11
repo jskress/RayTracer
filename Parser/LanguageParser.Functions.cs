@@ -168,7 +168,7 @@ public partial class LanguageParser
                 continue;
             }
 
-            Clause local = ParseClause("functionLocalClause");
+            Clause local = ParseClause("localClause");
 
             if (local is null)
                 return steps;

@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using RayTracer.Basics;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
+using RayTracer.Pigments;
 using RayTracer.Renderer;
 
 namespace Tests;
@@ -152,6 +154,50 @@ public class TestShippedLibraries
                 """);
 
             Assert.IsNull(Render(scene), $"{sky} and {sky}Light should make a scene together");
+        }
+    }
+
+    [TestMethod]
+    public void TestEverySkyKeepsItsSunOnTheSideTheDocumentationSaysItIs()
+    {
+        // The documentation tells an author to face what they want lit toward +Z, because every sky
+        // here has its sun on that side.  That is a promise about six numbers in one file, and a
+        // number is exactly the sort of thing that gets nudged -- so it is checked rather than
+        // trusted.  An author who followed the advice and got a silhouette would have no way of
+        // knowing the advice had gone stale.
+        MatchCollection suns = Regex.Matches(
+            File.ReadAllText(Shipped.First(path => Path.GetFileName(path) == "daylight.igl")),
+            @"(?m)^([A-Za-z]+) = pigment physical sky \{\s*sun elevation ([-\d.]+)\s+sun azimuth ([-\d.]+)");
+
+        Assert.IsTrue(suns.Count >= 6, $"expected the physical skies, and found {suns.Count}");
+
+        foreach (Match sun in suns)
+        {
+            PhysicalSkyPigment sky = new ()
+            {
+                SunElevation = double.Parse(sun.Groups[2].Value),
+                SunAzimuth = double.Parse(sun.Groups[3].Value)
+            };
+
+            Assert.IsTrue(sky.TowardSun.Z >= 0,
+                $"{sun.Groups[1].Value} has its sun toward {sky.TowardSun}, which the documentation " +
+                "says no sky here does; either move it back or rewrite what libraries.md promises");
+        }
+    }
+
+    [TestMethod]
+    public void TestAnAzimuthPointsWhereTheDocumentationSaysItDoes()
+    {
+        // The table in libraries.md, held against the thing it describes.  A compass with -Z for north.
+        foreach ((double azimuth, double x, double z) in new[]
+                 {
+                     (0.0, 0.0, -1.0), (90.0, 1.0, 0.0), (180.0, 0.0, 1.0), (270.0, -1.0, 0.0)
+                 })
+        {
+            Vector toward = new PhysicalSkyPigment { SunElevation = 0, SunAzimuth = azimuth }.TowardSun;
+
+            Assert.IsTrue(Math.Abs(toward.X - x) < 0.001 && Math.Abs(toward.Z - z) < 0.001,
+                $"an azimuth of {azimuth} points {toward}, and the documentation says [{x}, 0, {z}]");
         }
     }
 

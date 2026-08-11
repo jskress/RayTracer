@@ -53,7 +53,7 @@ public class SceneResolver : NamedObjectResolver<Scene>
             .Select(resolver => resolver.Resolve(context, variables)));
         value.Lights.AddRange(LightResolvers
             .Select(resolver => (Light) resolver.ResolveToObject(context, variables)));
-        SurfaceLoop.AddAllTo(
+        SurfaceListEntry.AddAllTo(
             context, variables, SurfaceResolvers, surface => value.Surfaces.Add(surface));
 
         if (BackgroundResolver != null)

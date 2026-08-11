@@ -85,6 +85,30 @@ light GoldenHourLight { samples 64 }
 with the sun taken out of it is not the same thing as a cloudy one: cloud spreads the sun's light
 across the whole dome rather than hiding it, so the honest way to get an overcast day is to paint one.
 
+**Every one of these skies has its sun on the `+Z` side.**  That is worth knowing before you place a
+camera, because the consequence is invisible until you render: a wall, a row of buildings or a face
+of anything that points toward `-Z` is in shade under all six, and a camera sitting out at `-Z`
+looking back — which is the usual place to put one — sees the shaded side of everything.  The picture
+comes out a silhouette, and nothing in it says why.
+
+The sun's direction is worked out from its `elevation` and `azimuth`, and the azimuth runs the way a
+compass does with `-Z` for north:
+
+| Azimuth | The sun lies toward |
+| --- | --- |
+| `0` | `-Z` |
+| `90` | `+X` |
+| `180` | `+Z` |
+| `270` | `-X` |
+
+The six run from `110` to `268`, which is the half of the compass between `+X` and `-X` passing
+through `+Z` — morning on one side, evening on the other, and none of them behind you.  So face what
+you want lit toward `+Z`, or write a sky of your own with the azimuth you need:
+
+```
+MyMorning = pigment physical sky { sun elevation 30  sun azimuth 20  turbidity 2.2  brightness 3 }
+```
+
 #### Trees
 
 ```
