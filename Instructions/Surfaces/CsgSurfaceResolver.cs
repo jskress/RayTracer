@@ -30,13 +30,22 @@ public class CsgSurfaceResolver : SurfaceResolver<CsgSurface>, IValidatable
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, CsgSurface value)
     {
-        List<Surface> surfaces = SurfaceResolvers
-            .Select(resolver => resolver.ResolveToSurface(context, variables))
-            .ToList();
+        // A block written after a call of a scene's own primitive is laid *over* the surface that call
+        // has already made, and holds only what the call wished to change -- a transform, a material.
+        // It names no children and it carries no operation, so there is nothing for either to do here.
+        // Doing them anyway went wrong in both directions: the children were rebuilt from an empty
+        // list, which threw, and the operation would have been written over with the default and
+        // quietly turned an intersection into a union.
+        if (SurfaceResolvers is { Count: > 0 })
+        {
+            List<Surface> surfaces = SurfaceResolvers
+                .Select(resolver => resolver.ResolveToSurface(context, variables))
+                .ToList();
 
-        value.Operation = Operation;
+            value.Operation = Operation;
 
-        SetChildren(value, surfaces);
+            SetChildren(value, surfaces);
+        }
 
         base.SetProperties(context, variables, value);
     }

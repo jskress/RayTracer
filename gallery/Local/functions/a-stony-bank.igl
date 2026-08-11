@@ -1,0 +1,123 @@
+// Four libraries and one word, and the file describes none of what is in it.
+//
+//     import 'trees'       { Birch }
+//     import 'undergrowth' { Grass, Tuft, Bramble }
+//     import 'rocks'       { Boulder, Cobble, Scree }
+//     import 'daylight'    { ClearMorning, ClearMorningLight }
+//
+// The corner-of-a-field scene put trees in grass and called it somewhere.  It was still swept: real
+// ground has stone in it, and stone is the thing that stops a piece of ground reading as a lawn with
+// props on it.
+//
+// **A rock is a shape problem before it is anything else.**  What gives one away is a silhouette that
+// is too regular -- a sphere reads as a ball from every angle, and colouring the surface does not
+// repair it, because the outline is what the eye checks first.  So the boulders here are
+// *isosurfaces*: a ball with noise taken out of its radius, which gives an outline irregular in the
+// way stone is.  The price is that an isosurface has to be marched along the ray rather than solved
+// for, and sixty-four of them cost about twenty times what sixty-four spheres cost.
+//
+// The scree is not made that way.  Those are cobbles -- a sphere with two flat faces cut off it by
+// turned cubes, all analytic -- which read as broken stone rather than weathered stone and cost about
+// a quarter as much.  That is the whole reason the library holds two kinds: the careful expensive one
+// for the few you look at, and the cheap one for the many you do not.  There are three boulders here
+// and rather more than three hundred cobbles.
+//
+// **It is winter, and the word does something different to each library.**  The birches are bare.  The
+// grass is straw-coloured and lying down.  The brambles are down to their arches.  And the stone takes
+// snow -- in patches, sunk into the rock rather than sat on it, because a smooth white dome laid over
+// a rough stone announces that the two were made by different hands.
+//
+// A rock is not deciduous, so three of its four seasons are the same stone.  It takes the season
+// anyway, and the reason is this scene: `Season` is written once, at the top, and handed to four
+// libraries at once.  A rock that would not answer to the word would have to be told separately, and
+// then somebody would forget.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'trees'       { Birch }
+import 'undergrowth' { Grass, Tuft, Bramble }
+import 'rocks'       { Boulder, Cobble, Scree }
+import 'daylight'    { ClearMorning, ClearMorningLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Stony Bank'
+        author 'J. Stephen Kress'
+        description 'Stone, grass and bare trees in winter, every one of them out of a library.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [4.6, 2.6, 12.0]
+    look at [-1.2, 2.0, -3]
+    field of view 48
+}
+
+background ClearMorning
+// Turned down from what the library asks for by default.  A sky light looks at the dome from many
+// directions at every point it lights, and here every one of those looks has to get out through the
+// grass and past three marched surfaces.
+light ClearMorningLight { samples 14 }
+
+// The bank itself, cold and stony rather than green.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.4
+            [0, color [0.30, 0.29, 0.25], 1, color [0.40, 0.38, 0.33]]
+            scale 2.2
+        }
+        specular 0.02
+    }
+}
+
+Season = 'winter'
+
+// Rough winter grass over the whole bank, thinned out because the stone is the subject here.
+object Grass(17, Season, 1, 0.62, 0.55) { translate Z -3 }
+
+// The scree that gives the bank its name, banked up where the ground would fall away.
+object Scree(9, Season, 2, 0.34, 0.85) { translate [-1.5, 0, 1.5] }
+object Scree(6, Season, 3, 0.26, 0.8)  { translate [4.0, 0, -1.0] }
+
+// The three you actually look at.
+object Boulder(2.4, Season, 4) { translate [-3.4, 0.42, 0.5] }
+object Boulder(1.7, Season, 5) { translate [-1.0, 0.30, 2.6] }
+object Boulder(1.3, Season, 6) { translate [2.2, 0.24, 2.0] }
+
+// A few cobbles set apart from the scree, since stone does not only occur in heaps.
+for i in [0, 4] {
+    object Cobble(0.35 + random(i, 90, 3) * 0.3, Season, i + 40) {
+        translate [i * 2.6 - 5.0 + random(i, 91, 3) * 1.2, 0.07,
+                   3.4 + random(i, 92, 3) * 1.4]
+    }
+}
+
+// Bare birches, well back, because a bank is a foreground and they are what it runs up to.
+object Birch(8, Season, 7)   { translate [-4.0, 0, -8] }
+object Birch(6.5, Season, 8) { translate [1.5, 0, -9.5] }
+
+// Bramble in the lee of the biggest stone, which is where it would be.
+group {
+    for i in [0, 3] {
+        group {
+            object Bramble(1.3 + random(i, 93, 5) * 0.7, Season, i + 50)
+            rotate Y random(i, 94, 5) * 360
+            translate [i * 1.9 - 5.2 + random(i, 95, 5) * 0.8, 0,
+                       -2.4 + random(i, 96, 5) * 1.4]
+        }
+    }
+}
+
+// A few tufts standing clear of the sward, where nothing has walked.
+for i in [0, 3] {
+    object Tuft(0.8 + random(i, 97, 6) * 0.4, Season, i + 60) {
+        translate [i * 2.8 - 3.8 + random(i, 98, 6) * 1.0, 0, 5.2 + random(i, 99, 6) * 1.2]
+    }
+}

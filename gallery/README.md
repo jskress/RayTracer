@@ -836,6 +836,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/functions/a-corner-of-a-field.igl">A Corner of a Field</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-stony-bank.png">
+      <img alt="A Stony Bank" height="120" src="Local/functions/a-stony-bank.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-stony-bank.igl">A Stony Bank</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

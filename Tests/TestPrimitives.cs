@@ -455,4 +455,102 @@ public class TestPrimitives
         Assert.IsNull(image);
         Assert.IsTrue(error.Contains("group"), $"the complaint should say what was promised: {error}");
     }
+
+    /// <summary>
+    /// A closer view than <see cref="Staging"/>, for the tests that compare a call against the same
+    /// thing written out where it stands.  It has to show something small clearly.
+    /// </summary>
+    private const string CloseUp = """
+        camera { location [0, 0.8, -3.0]  look at [0, 0.2, 0]  field of view 45 }
+        point light { location [-5, 7, -6] }
+        background [0.6, 0.7, 0.85]
+        plane { material { pigment [0.4, 0.4, 0.35] } }
+        Rock = material { pigment [0.55, 0.53, 0.5] }
+        """;
+
+    /// <summary>
+    /// Reports whether two pictures differ anywhere worth noticing.
+    /// </summary>
+    private static bool Differs(Canvas first, Canvas second)
+    {
+        for (int x = 0; x < first.Width; x++)
+        {
+            for (int y = 0; y < first.Height; y++)
+            {
+                Color one = first.GetPixel(x, y);
+                Color other = second.GetPixel(x, y);
+
+                if (Math.Abs(one.Red - other.Red) + Math.Abs(one.Green - other.Green) +
+                    Math.Abs(one.Blue - other.Blue) > 0.02)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    [TestMethod]
+    public void TestWhatACallAddsGoesOutsideWhatTheBodyAlreadyDid()
+    {
+        // The body's transform is written in the primitive's own frame and the call's block is written
+        // in the caller's, so the two compose, the call's outermost.  Assigning over it is what used to
+        // happen, and it was invisible for as long as it was because every primitive written so far
+        // hands back a *group* with no transform of its own, keeping its transforms on the things
+        // inside.  The first primitive to scale the thing it gives back -- a stone sized to order --
+        // had that size thrown away by any call that added a `translate` to place it.
+        //
+        // The check is an equivalence rather than a measurement: a call must come out as the same
+        // picture as the thing it stands for, written out longhand.
+        (Canvas made, string first) = Render($$"""
+            {{CloseUp}}
+            primitive Stone(size) -> sphere { return sphere { material Rock  scale size } }
+            object Stone(0.25) { translate Y 0.25 }
+            """);
+        (Canvas written, string second) = Render($$"""
+            {{CloseUp}}
+            sphere { material Rock  scale 0.25  translate Y 0.25 }
+            """);
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+        Assert.IsFalse(Differs(made, written),
+            "a call that places what it made should keep the size the body gave it");
+    }
+
+    [TestMethod]
+    public void TestACallMayPlaceSomethingBuiltOutOfACombination()
+    {
+        // A primitive giving back a CSG used to throw outright the moment a call put a block after it,
+        // and it threw in the one place a block is for -- a loop scattering a run of them, each needing
+        // its own place.  The block names no children and carries no operation, so there was nothing
+        // for either to do, and doing them anyway rebuilt the children from an empty list.
+        (Canvas made, string first) = Render($$"""
+            {{CloseUp}}
+            primitive Chip(size) -> intersection {
+                return intersection {
+                    sphere { }
+                    cube { scale 0.86  rotate Y 30 }
+                    material Rock
+                    scale size
+                }
+            }
+            object Chip(0.25) { translate Y 0.25 }
+            """);
+        (Canvas written, string second) = Render($$"""
+            {{CloseUp}}
+            intersection {
+                sphere { }
+                cube { scale 0.86  rotate Y 30 }
+                material Rock
+                scale 0.25
+                translate Y 0.25
+            }
+            """);
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+        Assert.IsFalse(Differs(made, written),
+            "a combination placed by a call should be the same as one written out where it stands");
+    }
+
 }

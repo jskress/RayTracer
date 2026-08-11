@@ -214,6 +214,44 @@ object Grass(8, 'summer', 1, 0.3, 0.5)     // half as many tufts, a quarter the 
 Halving the last one quarters the count, since the tufts thin out in both directions at once.  Grass
 seen from across a field does not need what grass seen from a foot away needs.
 
+#### Rocks
+
+```
+import 'rocks' { Boulder, Scree }
+
+object Boulder(1.2)
+object Scree(6, 'winter')        { translate Z 4 }
+```
+
+The other two libraries grow things.  This one is what they grow among, and it is the last thing a
+piece of ground needs before it stops looking swept.
+
+| | |
+| --- | --- |
+| `Boulder` | One big weathered stone, lumpy all over.  The expensive one — see below. |
+| `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
+| `Scree` | An area of cobbles, thrown down thickly.  The first number is how far across. |
+
+**The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
+the four are the same stone; in winter snow lies on top of it, as it gathers on the fir and the
+boxwood.  That is all the word does, and it is asked for anyway so a scene that sets its season in one
+place gets rock agreeing with the grass around it.
+
+**There are two kinds of stone for a reason.**  A rock is a shape problem before it is anything else:
+what gives one away instantly is a silhouette that is too regular.  A sphere reads as a ball from
+every angle and no amount of colouring the surface repairs it, because the outline is what the eye
+checks.
+
+So a `Boulder` is an [isosurface](advanced-surfaces.md#isosurface) — a ball with noise subtracted from
+its radius, which gives an outline irregular in the way stone is.  That is the real thing at the real
+price: an isosurface is *marched* along the ray rather than solved for, and sixty-four of them
+measured about twenty times what sixty-four spheres cost.  A `Cobble` is a sphere with flat faces cut
+off it by a couple of turned cubes — all analytic, nothing marched — which reads as broken stone
+rather than weathered stone, and measured about four times a sphere rather than twenty.
+
+That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
+for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
