@@ -1199,6 +1199,7 @@ public partial class LanguageParser
         [
             startForClause => 'for' |
             startOverClause => 'over' |
+            startIfClause => 'if' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |
@@ -1227,7 +1228,8 @@ public partial class LanguageParser
             startObjectClause => 'object' |
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
-            surfaceEntryClause => 'surface'
+            surfaceEntryClause => 'surface' |
+            localClause => 'local'
         ]
 
         // Scene clauses.
@@ -1239,6 +1241,7 @@ public partial class LanguageParser
         [
             startForClause => 'for' |
             startOverClause => 'over' |
+            startIfClause => 'if' |
             namedClause => 'name' |
             startCameraClause => 'camera' |
             startLightClause => 'light' |
@@ -1272,7 +1275,8 @@ public partial class LanguageParser
             startGroupClause => 'group' |
             background => 'background' |
             startEnvironmentClause => 'environmentBlock' |
-            environmentClause => 'environment'
+            environmentClause => 'environment' |
+            localClause => 'local'
         ] ?? 'Unsupported scene property found.'
 
         // What is true of the space between a scene's objects rather than of any object.  It is
@@ -1404,12 +1408,21 @@ public partial class LanguageParser
             [ number | color | vector ] ?? 'A function gives back a number, a color or a vector.' >
             openBrace ?? 'Expecting an open brace to follow the function kind here.'
         }
-        functionLocalClause:
+        localClause:
         {
             [ _identifier | _keyword ] > assignment > _expression
         }
-        // A choice, which always ends a body: both ways out give an answer, so there is nowhere for a
-        // second one to go and nowhere for a missing one to hide.
+        // An "else" that may or may not be there.  A choice standing among surfaces is allowed to have
+        // no second arm, so this one asks rather than insists, and carries no complaint of its own.
+        optionalElseClause:
+        {
+            else
+        }
+        // A choice.  The same words open both kinds: the one that ends a body, where both ways out give
+        // an answer so there is nowhere for a second one to go and nowhere for a missing one to hide,
+        // and the one that stands among surfaces, where an arm makes things rather than answering and
+        // making nothing is a perfectly good thing for it to do.  Which is being read is settled by
+        // where it stands, and the difference is only in what follows the brace.
         startIfClause:
         {
             if > leftParen ?? 'Expecting a condition in parentheses to follow "if" here.' >
@@ -1489,6 +1502,7 @@ public partial class LanguageParser
             startGroupClause          => 'HandleStartGroupClause' |
             startForClause            => 'HandleStartForClause' |
             startOverClause           => 'HandleStartForClause' |
+            startIfClause             => 'HandleStartSurfaceIfClause' |
             background                => 'HandleBackgroundClause' |
             startEnvironmentClause    => 'HandleStartEnvironmentClause' |
             environmentClause         => 'HandleEnvironmentClause' |

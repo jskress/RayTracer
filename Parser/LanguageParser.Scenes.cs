@@ -50,6 +50,12 @@ public partial class LanguageParser
             case "over":
                 resolver.SurfaceResolvers.Add(ParseForClause(clause));
                 break;
+            case "if":
+                resolver.SurfaceResolvers.Add(ParseSurfaceIfClause(clause));
+                break;
+            case "local":
+                resolver.SurfaceResolvers.Add(ParseLocalClause(clause));
+                break;
             case "plane":
                 resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));
                 break;

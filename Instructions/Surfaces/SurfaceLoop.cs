@@ -1,3 +1,5 @@
+using Lex.Parser;
+using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
@@ -10,20 +12,13 @@ namespace RayTracer.Instructions.Surfaces;
 /// This class holds a run of surfaces made over and over: a range to count through, a name to call the
 /// count by, and the things to make each time round.
 /// <para>
-/// It stands in a group's list of surfaces without being one, which is the whole difficulty of it: what
-/// it puts there is not one surface but any number, and which number is not known until the range is
-/// worked out, that being an expression like any other.  So it answers <see cref="ResolveToSurface"/>
-/// with a refusal and is asked <see cref="AddSurfacesTo"/> instead, by the one place that walks such a
-/// list.
-/// </para>
-/// <para>
-/// The things it makes are put straight where the loop was written rather than into a group of the
-/// loop's own.  That is deliberate: a loop is a way of writing, not a thing in the scene, and a reader
-/// who writes twelve cubes by hand and a reader who writes a loop that makes twelve should get the same
-/// twelve cubes in the same place in the tree.
+/// It stands in a group's list of surfaces without being one, which is the whole difficulty of it and
+/// the reason <see cref="SurfaceListEntry"/> exists: what it puts there is not one surface but any
+/// number, and which number is not known until the range is worked out, that being an expression like
+/// any other.
 /// </para>
 /// </summary>
-public class SurfaceLoop : ISurfaceResolver
+public class SurfaceLoop : SurfaceListEntry
 {
     /// <summary>
     /// This property holds the name the count is known by inside the loop, or <c>null</c> when the
@@ -57,6 +52,16 @@ public class SurfaceLoop : ISurfaceResolver
     public bool EndIsOpen { get; init; }
 
     /// <summary>
+    /// This property holds the token to complain about when the range makes no sense.
+    /// </summary>
+    public Token ErrorToken { get; init; }
+
+    /// <summary>
+    /// This property holds what to call this when complaining that it is not a surface.
+    /// </summary>
+    protected override string Description => "A loop";
+
+    /// <summary>
     /// This property holds what the loop makes each time round, in the order it was written.  A loop
     /// may stand among them, which is how one loop is written inside another.
     /// </summary>
@@ -68,16 +73,37 @@ public class SurfaceLoop : ISurfaceResolver
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="add">What to do with each surface it makes.</param>
-    public void AddSurfacesTo(RenderContext context, Variables variables, Action<Surface> add)
+    public override void AddSurfacesTo(
+        RenderContext context, Variables variables, Action<Surface> add)
     {
+        double start = Start.GetValue<double>(variables);
+        double end = End.GetValue<double>(variables);
+        double step = Step?.GetValue<double>(variables) ?? 1;
+
+        // A step of nothing never arrives, and a step pointing away from the end never arrives either.
+        // Both are worth saying out loud rather than leaving to be discovered, since what either one
+        // does is hang: the range is made of expressions, so a loop that has counted properly for
+        // months can be given a step of zero by a value worked out somewhere else entirely.
+        if (step == 0 || (end - start) * step < 0)
+        {
+            throw new TokenException(
+                step == 0
+                    ? "A loop's step cannot be zero; the count would never reach the end of the range."
+                    : $"A loop counting from {start} to {end} cannot step by {step}, which heads the " +
+                      "other way and would never reach the end.")
+            {
+                Token = ErrorToken
+            };
+        }
+
         Interval interval = new Interval
             {
-                Start = Start.GetValue<double>(variables),
-                End = End.GetValue<double>(variables),
+                Start = start,
+                End = end,
                 IsStartOpen = StartIsOpen,
                 IsEndOpen = EndIsOpen
             }
-            .Reset(Step?.GetValue<double>(variables) ?? 1);
+            .Reset(step);
 
         while (!interval.IsAtEnd)
         {
@@ -97,65 +123,11 @@ public class SurfaceLoop : ISurfaceResolver
     }
 
     /// <summary>
-    /// This method walks a list of things standing in a group and adds what each makes to it, which is
-    /// one surface for nearly all of them and any number for a loop.
-    /// </summary>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <param name="entries">The things standing there.</param>
-    /// <param name="add">What to do with each surface they make.</param>
-    public static void AddAllTo(
-        RenderContext context, Variables variables, List<ISurfaceResolver> entries,
-        Action<Surface> add)
-    {
-        foreach (ISurfaceResolver entry in entries)
-        {
-            if (entry is SurfaceLoop loop)
-                loop.AddSurfacesTo(context, variables, add);
-            else
-                add(entry.ResolveToSurface(context, variables));
-        }
-    }
-
-    /// <summary>
-    /// This method is never called; a loop is not one surface and cannot answer as one.
-    /// </summary>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <returns>Nothing; this always throws.</returns>
-    public Surface ResolveToSurface(RenderContext context, Variables variables)
-    {
-        throw new NotSupportedException("A loop makes a run of surfaces rather than one.");
-    }
-
-    /// <summary>
-    /// This method is never called; a loop makes things rather than laying anything over one.
-    /// </summary>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <param name="surface">The surface already made.</param>
-    public void ApplyToSurface(RenderContext context, Variables variables, Surface surface)
-    {
-        throw new NotSupportedException("A loop cannot be laid over a surface.");
-    }
-
-    /// <summary>
-    /// This method is never called; a loop is not one surface and cannot answer as one.
-    /// </summary>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <returns>Nothing; this always throws.</returns>
-    public object ResolveToObject(RenderContext context, Variables variables)
-    {
-        return ResolveToSurface(context, variables);
-    }
-
-    /// <summary>
     /// This method returns a copy of this loop, with a list of its own so that two copies cannot tread
     /// on each other.
     /// </summary>
     /// <returns>A copy of this loop.</returns>
-    public object Clone()
+    public override object Clone()
     {
         SurfaceLoop loop = (SurfaceLoop) MemberwiseClone();
 

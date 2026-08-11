@@ -31,11 +31,18 @@ public class TestParserConsistency
 
     /// <summary>
     /// These are the words that stand in the same lists as the surface kinds without being one.
+    /// <para>
+    /// "for", "over", "if" and "local" are here for a reason worth stating, since they are the ones a
+    /// reader is likeliest to think belong: they are ways of writing rather than things in the scene.
+    /// A loop or a choice makes any number of surfaces and a name makes none, so none of the three can
+    /// stand where exactly one surface is wanted -- which is what a CSG's two sides are, and what a
+    /// name is given to.
+    /// </para>
     /// </summary>
     private static readonly HashSet<string> NotSurfaces =
     [
-        "for", "over", "surface", "object", "call", "background", "camera", "environment",
-        "environmentBlock", "light", "name"
+        "for", "over", "if", "local", "surface", "object", "call", "background", "camera",
+        "environment", "environmentBlock", "light", "name"
     ];
 
     [TestMethod]

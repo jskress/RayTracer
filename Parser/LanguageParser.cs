@@ -204,8 +204,19 @@ public partial class LanguageParser
     /// <returns></returns>
     private Clause ParseClause(string clauseName)
     {
+        // Nothing is left to read the clause out of, which is an answer rather than a fault: asking
+        // for a clause is always allowed to come back with none.  It matters for the clauses that are
+        // asked for on the chance of their being there, since the thing they are optional to may
+        // perfectly well be the last thing in the file -- and the file is let go of the moment its
+        // last clause has been read, before whatever read it has finished asking its questions.
+        if (CurrentParser is null)
+            return null;
+
         HandleIncludes();
         HandleIncludeEnd();
+
+        if (CurrentParser is null)
+            return null;
 
         Clause clause = LanguageDsl.ParseClause(CurrentParser, clauseName);
 

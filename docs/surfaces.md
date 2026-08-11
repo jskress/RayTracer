@@ -432,7 +432,7 @@ turns.
 **Only surfaces may stand inside a `for`.**  A loop is a way of writing rather than a thing in the
 scene, so there is nothing for a `translate` or a `material` written directly in it to be about; those
 belong either to the group around the loop or to the surfaces inside it.  You will be told so where it
-is written.
+is written.  The same is true of the `if` below, and for the same reason.
 
 **A loop may also stand at the top of a file, or in a `scene { }` block**, where what it makes goes
 straight into the scene:
@@ -447,6 +447,102 @@ The one place it may not stand is inside a [CSG](#combining-surfaces), and that 
 The first surface in a `difference` is the one the others are taken out of, so a loop standing there
 would make which surface that is depend on a number not known until the picture is drawn.  A CSG that
 wants a run of things puts a group inside it, which is what was meant anyway.
+
+### Choosing What to Make
+
+Wherever surfaces are listed, an `if` decides whether to make some of them:
+
+```
+group {
+    for post in [0, 11] {
+        cube { scale [0.07, 0.7, 0.07]  translate X post * 0.8 }
+
+        if (post % 4 == 0) {
+            cylinder { min Y 0  max Y 1.1  scale [0.11, 1, 0.11]  translate X post * 0.8 }
+        }
+    }
+}
+```
+
+That is a fence with a stouter post every fourth one.  The decision is taken afresh on every turn of
+the loop, so the count — or anything worked out from it — is exactly what the condition is usually
+about.
+
+**The `else` is optional**, and that is the one way this differs from the `if` that ends a
+[function's body](scene-files.md#choosing-inside-a-body).  There, both ways out must give an answer,
+since a function that answered on one path and not the other would be a function with a hole in it.
+Here an arm *makes things*, and making nothing at all is a perfectly good thing for it to do.  So the
+fence above is complete as it stands rather than half-written.
+
+When there is something to put in the second arm, put it there:
+
+```
+group {
+    for i in [0, 7] {
+        if (i % 2 == 0) {
+            sphere { scale 0.4  translate X i }
+        }
+        else {
+            cube { scale 0.35  translate X i }
+        }
+    }
+}
+```
+
+**An `else` may carry another `if`**, which is how a run of cases is written down the page rather
+than off the right of it:
+
+```
+if (height > 8) {
+    object Fir(height)
+}
+else if (height > 4) {
+    object Oak(height)
+}
+else {
+    object Birch(height)
+}
+```
+
+**An `if` may stand anywhere surfaces may** — in a group, in a loop, in another `if`, in a
+`scene { }` block, or at the top of a file, where what it makes goes straight into the scene.  A loop
+may stand inside one and it inside a loop.  As with a loop, the one place it may not stand is inside a
+CSG, and for the same reason: a CSG's two sides are each exactly one surface, and an `if` may make any
+number, including none.
+
+The condition must work out to true or false.  A number is not a stand-in for either, and you will be
+told so rather than have one quietly treated as the other.
+
+### Working Something Out Part Way Down
+
+A list of surfaces may name a value and go on using it:
+
+```
+group {
+    for i in [0, 11] {
+        lean = 6 + i * 2.5
+        reach = 1.4 - i * 0.06
+
+        cube {
+            scale [reach, 0.06, 0.30]
+            translate X reach
+            rotate Y i * 24 + lean
+            translate Y i * 0.3
+        }
+    }
+}
+```
+
+This is the same thing a [function's body](scene-files.md#functions-of-your-own) may do,
+in the same words and for the same reason: a figure wanted in more than one place should be arrived
+at once rather than twice, or the two drift apart the first time one of them is edited.  Inside a
+loop it earns its keep faster, since what it names usually depends on the count and so is a different
+value every turn.
+
+**The name belongs to the list it stands in.**  It is known to everything below it there, including
+the insides of the surfaces, and to nothing outside — so a group that works out a spacing for its own
+use does not hand that spacing to the group that holds it.  A name may stand over one from further
+out for as long as its list lasts, and the outer one is untouched when the list ends.
 
 ### Combining Surfaces
 

@@ -23,7 +23,7 @@ public class GroupResolver : SurfaceResolver<Group>
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, Group value)
     {
-        SurfaceLoop.AddAllTo(context, variables, SurfaceResolvers, surface => value.Add(surface));
+        SurfaceListEntry.AddAllTo(context, variables, SurfaceResolvers, surface => value.Add(surface));
 
         base.SetProperties(context, variables, value);
     }
