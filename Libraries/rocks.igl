@@ -1,0 +1,215 @@
+// Stone to put on the ground.
+//
+//     import 'rocks' { Boulder, Scree }
+//
+//     object Boulder(1.2)
+//     object Scree(6, 'winter') { translate Z 4 }
+//
+// The `trees` and `undergrowth` libraries grow things.  This one is what they grow among, and it is
+// the last thing a piece of ground needs before it stops looking swept.
+//
+// | `Boulder` | One big weathered stone, lumpy all over.  The expensive one -- see below. |
+// | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
+// | `Scree` | An area of cobbles, thrown down thickly. |
+//
+// The three numbers mean what they mean in the other libraries -- **how big**, **what time of year**,
+// and **which one of that kind** -- and only the first is ever required.  For `Boulder` and `Cobble`
+// the size is roughly how far across the stone is; for `Scree` it is how far the area reaches, since
+// an area is not a stone.
+//
+// **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
+// the four are the same stone; in winter snow lies on top of it, in the same way it gathers on the fir
+// in `trees` and the boxwood in `undergrowth`.  That is the whole of what the word does, and it is
+// asked for anyway so that a scene setting its season in one place gets rock that agrees with the
+// grass around it.
+//
+// -- Two kinds of stone, and why there are two --------------------------------------------------
+//
+// A rock is a shape problem before it is anything else: what gives a stone away instantly is a
+// silhouette that is too regular.  A sphere reads as a ball from every angle, and no amount of
+// colouring the surface repairs it, because the outline is what the eye checks.
+//
+// So `Boulder` is an **isosurface** -- a ball with noise subtracted from its radius, which makes an
+// outline that is irregular in the way stone is.  It is the real thing and it costs the real price:
+// an isosurface is found by marching along the ray rather than solved for, and sixty-four of them
+// measured about twenty times what sixty-four spheres cost.
+//
+// `Cobble` is a **sphere with flat faces cut off it** by a couple of turned cubes -- everything
+// analytic, nothing marched.  It reads as broken stone rather than weathered stone, which is what a
+// smaller rock usually is anyway, and it measured about four times a sphere rather than twenty.
+//
+// The division is the same one `undergrowth` makes between `Tuft` and `Grass`: the expensive, careful
+// one for the few you look at, and the cheap one for the many you do not.  A picture wants some of
+// each -- a boulder or two among a scree of cobbles -- and that is what the sizes are chosen for.
+//
+// -- What is here for the library and not for you ------------------------------------------------
+//
+// Everything beginning with `Rock` is the machinery.  The materials arrive in your scene whether you
+// asked or not, for the reason the other libraries give -- a material is looked up where it is *used*
+// -- so they carry the prefix and will not collide with anything of yours.
+
+// -- Stone ---------------------------------------------------------------------------------------
+
+// Mottled rather than flat, and the mottling is what saves the whole library from looking like putty.
+// A pigment is worked out from where a point is *in the scene*, so two stones side by side take
+// different parts of the same speckle and come out looking like two stones rather than one repeated.
+RockGrey = pigment granite with seed 7 {
+    [0.0, color [0.26, 0.25, 0.23],
+     0.5, color [0.38, 0.37, 0.34],
+     1.0, color [0.49, 0.47, 0.43]]
+    scale 0.35
+}
+
+RockStone = material { pigment RockGrey  specular 0.10  shininess 22  ambient 0.16 }
+RockSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.28  shininess 55 }
+
+// What lies on top of a stone, which is nothing at all for three seasons of the four.
+//
+// It is a handful of squashed balls **sunk into** the top of the rock, most of each one inside the
+// stone so that only its crown shows.  Two earlier tries were worse in instructive ways.  One big ball
+// sat on top reads as a mushroom.  One big ball sunk in reads as a dish of cream, because a smooth
+// dome laid across a rough stone announces that the two were made by different hands.  Snow scattered
+// in patches breaks that line up, and it is the same thing the boxwood in `undergrowth` does with the
+// snow on its crown.
+primitive RockCap(season, size, flat, variant) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                // Whether this stone caught any snow at all is decided first, and about a third do
+                // not.  Snow lies unevenly -- it blows off, it slides, it melts where the stone
+                // faces the sun -- and a scree in which *every* stone wears a white cap reads as a
+                // field of eggs.  A third of them bare is what makes the rest look like weather.
+                if (random(variant, 65) > 0.34) {
+                    for patch in [0, 6] {
+                        if (random(patch, 62, variant) > 0.34) {
+                            sphere {
+                                material RockSnow
+                                scale [size * 0.30, size * flat * 0.26, size * 0.30]
+                                translate X size * 0.50 * random(patch, 63, variant)
+                                rotate Y patch * 53 + random(patch, 64, variant) * 44
+                                translate Y size * flat * 0.60
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- Boulder -------------------------------------------------------------------------------------
+
+// A ball with noise taken out of its radius, at two scales: a coarse one that decides the lumps and a
+// finer one that roughens what the coarse one left.
+//
+// The noise is sampled at an offset that comes from the variant, which is the only way one of these
+// can be told from another -- `random` cannot be called inside a field, since a field is compiled
+// once and asked about millions of points, so the variation has to be carried in rather than drawn
+// there.  Moving where the noise is *read* is as good as changing the noise.
+//
+// `bounded by` is a little wider than the ball, because the noise pushes the surface out past radius
+// one and anything outside the box is simply not there -- a box drawn too tight slices the stone off
+// flat rather than failing in any way that says so.
+primitive Boulder(size, season = 'summer', variant = 1) -> group {
+    ox = random(variant, 11) * 40
+    oy = random(variant, 12) * 40
+    oz = random(variant, 13) * 40
+    flat = 0.58 + random(variant, 14) * 0.22
+
+    return group {
+        isosurface {
+            material RockStone
+            function {
+                sqrt(x * x + y * y + z * z) - 1
+                    - 0.23 * (noise(x * 1.9 + ox, y * 1.9 + oy, z * 1.9 + oz) - 0.5)
+                    - 0.11 * (noise(x * 4.3 + ox, y * 4.3 + oy, z * 4.3 + oz) - 0.5)
+                    - 0.05 * (noise(x * 9.1 + ox, y * 9.1 + oy, z * 9.1 + oz) - 0.5)
+            }
+            bounded by [-1.6, -1.6, -1.6], [1.6, 1.6, 1.6]
+            scale [size * 0.5, size * 0.5 * flat, size * 0.5 * (0.82 + random(variant, 15) * 0.3)]
+            rotate Y random(variant, 16) * 360
+        }
+
+        object RockCap(season, size * 0.5, flat, variant)
+    }
+}
+
+// -- Cobble --------------------------------------------------------------------------------------
+
+// A stone knocked off a bigger one: a ball with two flat faces cut across it.  Everything here is
+// analytic -- one sphere and two cubes -- so it costs what a handful of spheres costs rather than
+// what a marched surface costs.
+//
+// The cubes have to be *smaller* than the ball to cut it at all.  A cube wider than the sphere it is
+// intersected with removes nothing, which is a mistake that looks like the cutting not working.
+primitive Cobble(size, season = 'summer', variant = 1) -> group {
+    flat = 0.55 + random(variant, 21) * 0.25
+
+    return group {
+        intersection {
+            sphere { }
+            cube {
+                scale 0.88
+                rotate X (random(variant, 22) - 0.5) * 80
+                rotate Y random(variant, 23) * 360
+                translate [(random(variant, 24) - 0.5) * 0.45, 0,
+                           (random(variant, 25) - 0.5) * 0.45]
+            }
+            cube {
+                scale 0.82
+                rotate Z (random(variant, 26) - 0.5) * 80
+                rotate Y random(variant, 27) * 360
+                translate [0, (random(variant, 28) - 0.5) * 0.45,
+                           (random(variant, 29) - 0.5) * 0.45]
+            }
+            material RockStone
+            scale [size * 0.5, size * 0.5 * flat, size * 0.5 * (0.8 + random(variant, 30) * 0.35)]
+            rotate Y random(variant, 31) * 360
+        }
+
+        object RockCap(season, size * 0.5, flat, variant)
+    }
+}
+
+// -- Scree ---------------------------------------------------------------------------------------
+
+// An area of cobbles, `across` units on a side and centred where it is put.
+//
+// Counted on a grid and then thrown nearly a whole cell off it, exactly as the grass is, and for the
+// same reason: a lattice is very easy to notice and impossible to unsee.  They are gathered into
+// blocks of sixty-four for the same reason too -- a group that a ray gets inside asks *every* child,
+// so a flat list of a thousand stones is a thousand questions for every ray that reaches the ground.
+primitive Scree(across, season = 'summer', variant = 1, size = 0.3, density = 1) -> group {
+    step = size * 1.25 / density
+    last = across / step - 1
+    block = 8
+
+    return group {
+        for blockRow in [0, last / block] {
+            for blockColumn in [0, last / block] {
+                group {
+                    for row in [0, block - 1] {
+                        for column in [0, block - 1] {
+                            here = blockRow * block + row
+                            over = blockColumn * block + column
+
+                            if (here <= last && over <= last) {
+                                stone = size * (0.55 + random(here, over, variant) * 0.75)
+
+                                object Cobble(stone, season,
+                                              variant * 6421 + here * 512 + over) {
+                                    translate [over * step - across / 2 +
+                                                   (random(here, over, variant + 1) - 0.5) * step * 1.7,
+                                               stone * 0.16,
+                                               here * step - across / 2 +
+                                                   (random(here, over, variant + 2) - 0.5) * step * 1.7]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -596,6 +596,185 @@ public class TestShippedLibraries
         StringAssert.Contains(error, "UnderBladeHeight");
     }
 
+    /// <summary>
+    /// What the rocks library holds out, written down here rather than read out of the file.
+    /// </summary>
+    private static readonly string[] Stones = ["Boulder", "Cobble", "Scree"];
+
+    /// <summary>
+    /// Grows one stone in one season, and hands back whatever stopped it.
+    /// </summary>
+    private string Quarry(string stone, string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string size = stone == "Scree" ? "1.6" : "1";
+        string call = season is null
+            ? $"{stone}({size})"
+            : $"{stone}({size}, '{season}', 3)";
+
+        File.WriteAllText(scene, $$"""
+            import 'rocks' { {{stone}} }
+            context { angles are degrees  no gamma }
+            camera { location [1.2, 1.1, -2.2]  look at [0, 0.16, 0]  field of view 46 }
+            point light { location [-4, 6, -5] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        return Render(scene, 90, 70);
+    }
+
+    /// <summary>
+    /// Makes one stone of one variant in one season and hands back the picture.
+    /// </summary>
+    private Canvas StoneIn(string stone, string season, int variant)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string size = stone == "Scree" ? "1.6" : "1";
+
+        File.WriteAllText(scene, $$"""
+            import 'rocks' { {{stone}} }
+            context { angles are degrees  no gamma }
+            camera { location [1.2, 1.1, -2.2]  look at [0, 0.16, 0]  field of view 46 }
+            point light { location [-4, 6, -5] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{stone}}({{size}}, '{{season}}', {{variant}})
+            """);
+
+        Assert.IsNull(Render(scene, 90, 70), $"{stone} {variant} should be made in {season}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryStoneIsMadeInEverySeason()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "rocks.igl"),
+            Path.Combine(_directory, "rocks.igl"), true);
+
+        foreach (string stone in Stones)
+        {
+            foreach (string season in new[] { "summer", "autumn", "fall", "winter", "spring" })
+                Assert.IsNull(Quarry(stone, season), $"{stone} should be made in {season}");
+
+            Assert.IsNull(Quarry(stone, null), $"{stone} should be made with no season named");
+        }
+    }
+
+    [TestMethod]
+    public void TestAStoneTakesSnowInWinterAndInNoOtherSeason()
+    {
+        // The whole of what a season does to a rock, and it is worth holding to both halves.  A stone
+        // is not deciduous, so three of the four must be the *same* stone -- a rock that changed in
+        // autumn would be a rock pretending to be a leaf -- and the fourth must not be, or the word
+        // has been taken and ignored, which is the fault the fir was pulled up for.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "rocks.igl"),
+            Path.Combine(_directory, "rocks.igl"), true);
+
+        foreach (string stone in Stones)
+        {
+            // Snow lies unevenly on purpose -- about a third of stones catch none, so that a scree
+            // does not read as a field of eggs.  That makes "this stone differs in winter" the wrong
+            // thing to assert: pick the wrong variant and it is false about a library working just
+            // as intended.  So several are asked and what is held is that *most* take snow.
+            //
+            // Deliberately not tested: what that fraction is.  A first attempt asked that not all six
+            // were snowy, and it could not fail reliably -- with only six samples the count lands on
+            // five by chance often enough that the assertion passes while the rule it checks is gone.
+            // Enough samples to make it sound would be enough renders to make the suite slow, and the
+            // fraction is a tuning choice like how a birch branches.  The sweep guards that.
+            int snowy = 0;
+
+            for (int variant = 1; variant <= 6; variant++)
+            {
+                Canvas bare = StoneIn(stone, "summer", variant);
+
+                foreach (string season in new[] { "autumn", "spring" })
+                {
+                    Assert.IsFalse(Differs(bare, StoneIn(stone, season, variant)),
+                        $"a {stone} should be the same stone in {season} as in summer");
+                }
+
+                if (Differs(bare, StoneIn(stone, "winter", variant)))
+                    snowy++;
+            }
+
+            Assert.IsTrue(snowy >= 3,
+                $"only {snowy} of six {stone} variants took any snow in winter");
+
+        }
+    }
+
+    [TestMethod]
+    public void TestOneStoneIsNotAnother()
+    {
+        // The variant has to do something, or a scree of them is one stone repeated -- which is what a
+        // field of identical rocks announces at a glance.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "rocks.igl"),
+            Path.Combine(_directory, "rocks.igl"), true);
+
+        foreach (string stone in new[] { "Boulder", "Cobble" })
+        {
+            List<Canvas> stones = [];
+
+            foreach (int variant in new[] { 1, 2, 3 })
+            {
+                string scene = Path.Combine(_directory, "scene.igl");
+
+                File.WriteAllText(scene, $$"""
+                    import 'rocks' { {{stone}} }
+                    context { angles are degrees  no gamma }
+                    camera { location [1.2, 1.1, -2.2]  look at [0, 0.16, 0]  field of view 46 }
+                    point light { location [-4, 6, -5] }
+                    background [0.5, 0.6, 0.8]
+                    plane { material { pigment [0.3, 0.3, 0.3] } }
+                    object {{stone}}(1, 'summer', {{variant}})
+                    """);
+
+                Assert.IsNull(Render(scene, 90, 70), $"{stone} {variant} should render");
+
+                stones.Add(new ImageFile(Path.Combine(_directory, "out.png")).Load()[0]);
+            }
+
+            for (int one = 0; one < stones.Count; one++)
+            {
+                for (int other = one + 1; other < stones.Count; other++)
+                {
+                    Assert.IsTrue(Differs(stones[one], stones[other]),
+                        $"{stone} variants {one + 1} and {other + 1} came out the same stone");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    public void TestTheRocksKeepTheirOwnWorkings()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "rocks.igl"),
+            Path.Combine(_directory, "rocks.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'rocks' { Boulder }
+            camera { location [0, 1, -4]  look at [0, 0.2, 0] }
+            point light { location [-5, 5, -5] }
+            object Boulder(1)
+            object RockCap('winter', 1, 1, 1)
+            """);
+
+        string error = Render(scene);
+
+        Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
+        StringAssert.Contains(error, "RockCap");
+    }
+
     [TestMethod]
     public void TestATreeKeepsItsOwnWorkings()
     {

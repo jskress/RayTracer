@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
@@ -94,7 +95,24 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     /// <param name="surface">The surface already made.</param>
     public void ApplyToSurface(RenderContext context, Variables variables, Surface surface)
     {
-        if (surface is TValue value)
-            ApplyTo(context, variables, value);
+        if (surface is not TValue value)
+            return;
+
+        Matrix already = value.Transform;
+
+        ApplyTo(context, variables, value);
+
+        // What the call said belongs *outside* what the primitive already made.  The body's transform
+        // is written in the primitive's own frame and the call's is written in the caller's, so the
+        // two compose -- the call's last, since it is the outer one -- rather than the call's simply
+        // replacing what the body said.
+        //
+        // Assigning over it is what used to happen, and it went unnoticed for as long as it did
+        // because every primitive written so far hands back a group with no transform of its own,
+        // keeping its transforms on the things inside.  The moment one puts a transform on the thing
+        // it gives back -- a stone scaled to size, say -- a call that adds `translate` to place it
+        // threw the size away.
+        if (already is not null && TransformResolver is not null)
+            value.Transform = value.Transform * already;
     }
 }
