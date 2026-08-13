@@ -106,10 +106,22 @@ public partial class LanguageParser
         // nothing could still reach the eye, and that rests on a floor under how much stuff there is.
         // A shape free to thin toward nothing takes the floor away, and with it any honest stopping
         // point -- so rather than invent one, this asks for a shape to be given an end of its own.
-        return medium.HasShape
-            ? "A medium whose density varies must fill a surface rather than the surroundings, " +
-              "since a crossing with no end has nowhere to stop when the stuff in it may thin away " +
-              "to nothing.  Put the medium in a surface -- a large flattened box, for a ground fog."
+        // Which of the two it is matters to whoever has to fix it.  Both have to be walked along
+        // rather than written down, and it is the walking an endless crossing cannot do -- but a
+        // scene told its *density* varies, when what varies is the color it gives off, has been
+        // told something untrue and will go looking in the wrong place.
+        if (medium.DensityVaries)
+        {
+            return "A medium whose density varies must fill a surface rather than the " +
+                   "surroundings, since a crossing with no end has nowhere to stop when the stuff " +
+                   "in it may thin away to nothing.  Put the medium in a surface -- a large " +
+                   "flattened box, for a ground fog.";
+        }
+
+        return medium.EmissionPigment is not null
+            ? "A medium whose emission varies must fill a surface rather than the surroundings.  " +
+              "Light that differs from place to place has to be gathered place by place, and a " +
+              "crossing with no end gives no honest place to stop.  Put the medium in a surface."
             : null;
     }
 
@@ -227,6 +239,16 @@ public partial class LanguageParser
                 };
                 break;
             case "emission":
+                // A medium that gives off the same light everywhere says so as one color; one
+                // whose light varies from place to place says so as a pigment, which is already
+                // the thing that answers what color a place is.
+                if (clause.Text(1) == "pigment")
+                {
+                    resolver.EmissionPigmentResolver = ParsePigmentClause();
+
+                    break;
+                }
+
                 resolver.EmissionResolver = new CoefficientResolver
                 {
                     Term = term, Validator = ValidateCoefficient("emit")

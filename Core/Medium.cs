@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 using RayTracer.Fields;
 using RayTracer.Graphics;
 
@@ -60,6 +61,18 @@ public class Medium
     /// carries -- and not light borrowed from any lamp.
     /// </summary>
     public Color Emission { get; set; } = Colors.Black;
+
+    /// <summary>
+    /// This property holds what the medium gives off from place to place, when what it gives off
+    /// is not the same everywhere.
+    /// <para>
+    /// It is a pigment rather than a field because what varies is a <i>color</i>, and a pigment is
+    /// already the thing that answers what color a place is.  A flame is the case it was added for:
+    /// white at the heart, yellow above that and red at the tip, which is most of what makes fire
+    /// read as fire and which one flat color cannot say at all.
+    /// </para>
+    /// </summary>
+    public Pigment EmissionPigment { get; set; }
 
     /// <summary>
     /// This property holds how much light the medium turns aside for each unit of distance, color by
@@ -166,7 +179,17 @@ public class Medium
     /// This property reports whether the medium's density varies from place to place, and so whether a
     /// crossing of it has to be marched rather than answered.
     /// </summary>
-    public bool HasShape => DensityField is not null || DensityPattern is not null;
+    public bool HasShape => DensityVaries || EmissionPigment is not null;
+
+    /// <summary>
+    /// This property reports whether it is the <i>amount</i> of the stuff that differs from place
+    /// to place, as against the light it gives off.  Both have to be walked along rather than
+    /// written down, so <see cref="HasShape"/> covers the two together -- but only this one takes
+    /// away the floor under how much stuff a crossing must pass through, and that is what an
+    /// endless crossing rests on.  The two are asked apart so that whoever is turned away is told
+    /// which of them they wrote.
+    /// </summary>
+    public bool DensityVaries => DensityField is not null || DensityPattern is not null;
 
     /// <summary>
     /// This method returns how much of the stuff there is at the given place.  A shape that would go
@@ -175,6 +198,16 @@ public class Medium
     /// </summary>
     /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
     /// <returns>The density there.</returns>
+    /// <summary>
+    /// This method returns what the medium gives off at the given place.
+    /// </summary>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <returns>What it gives off there.</returns>
+    public Color EmissionAt(Point point)
+    {
+        return EmissionPigment is null ? Emission : EmissionPigment.GetTransformedColorFor(point);
+    }
+
     public double DensityAt(Point point)
     {
         if (DensityField is not null)
@@ -223,9 +256,16 @@ public class Medium
     /// to stop coming this way.
     /// </summary>
     public bool MustBeBounded =>
-        Emission.Red > 0 && ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
-        Emission.Green > 0 && ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
-        Emission.Blue > 0 && ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
+        // A pigment is asked about a point and cannot be asked whether it is ever anything but
+        // black, so one is taken as emitting in every color.  Erring this way turns away a medium
+        // that might have been harmless; erring the other way lets an endless one through, and
+        // that is a picture of infinity rather than a picture of anything.
+        (EmissionPigment is not null || Emission.Red > 0) &&
+            ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
+        (EmissionPigment is not null || Emission.Green > 0) &&
+            ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
+        (EmissionPigment is not null || Emission.Blue > 0) &&
+            ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
 
     /// <summary>
     /// This method returns what share of the light stopped in one color carried on rather than being
@@ -307,7 +347,9 @@ public class Medium
     }
 
     private bool Absorbs => Absorption.Red > 0 || Absorption.Green > 0 || Absorption.Blue > 0;
-    private bool Emits => Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;
+    private bool Emits =>
+        EmissionPigment is not null ||
+        Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;
 
     /// <summary>
     /// This method returns how much light of one color stops coming this way per unit of distance,

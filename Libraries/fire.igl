@@ -1,0 +1,301 @@
+// Things that burn.
+//
+//     import 'fire' { Campfire, CampfireLight }
+//
+//     object Campfire(1.4)
+//     light CampfireLight { location [0, 0.7, 0] }
+//
+// | `Flame` | One flame on its own.  The first number is how tall it stands. |
+// | `Campfire` | Logs, embers between them, and flames over the lot.  The number is how far across. |
+// | `Torch` | A shaft with a flame at the top of it. |
+// | `Embers` | Coals with no flame left, for a fire going out. |
+//
+// **These take two numbers, not three.**  Everything else in these libraries takes a season second,
+// and fire does not, because fire does not have one.  A word taken and ignored is worse than a word
+// not asked for: it says the library thought about the question when it did not.
+//
+// -- The one thing you have to do yourself --------------------------------------------------------
+//
+// **A flame here gives off light you can see and no light that falls on anything.**  That is not an
+// oversight in the library; it is what this renderer does.  A glowing medium adds its light to rays
+// passing *through* it, so the flame is bright to look at, and nothing carries that light out to the
+// ground or the faces around it.  Put a fire in a dark room with nothing else and the room stays
+// black.
+//
+// So every fire here comes with a light to go beside it, named to match -- `Campfire` and
+// `CampfireLight` -- in the same way a sky in `daylight` comes with the light it casts.  The
+// difference, and it is the awkward part, is that **you have to put the light where the fire is**:
+//
+//     object Campfire(1.4)          { translate [3, 0, -2] }
+//     light CampfireLight           { location  [3, 0.7, -2] }
+//
+// A sky needs no position and a fire does, and a primitive in this language can hand back a group, a
+// material or a medium but not a light -- so the two placements cannot be written once.  Say them
+// together, and if the fire moves, move the light.
+//
+// The lights fade with distance, which is what makes a fire read as a fire rather than as a lamp: the
+// ground bright within a step or two and the dark closing in past that.  Their colors are well over
+// one for the same reason, since `fade distance` names where the light is still worth its stated color
+// rather than where it stops.
+//
+// -- What a flame costs ---------------------------------------------------------------------------
+//
+// A flame is a medium and a medium is *walked along*, so what it costs is set by how many places along
+// each crossing the renderer stops to ask.  That is a scene-wide setting and the library cannot make
+// it:
+//
+//     context { medium samples 120 }
+//
+// Sixty is enough for a flame across a room.  A hundred and twenty is what a flame filling the frame
+// wants.  Below about forty the flame goes banded, and the bands are steps of the walk showing
+// through.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Fire` is the machinery.  The materials and pigments arrive in your scene
+// whether you asked or not, for the reason the other libraries give -- a material is looked up where it
+// is *used* -- so they carry the prefix.
+
+// -- The colors of burning -------------------------------------------------------------------------
+
+FireWhite = color [5.2, 4.4, 3.1]
+FireYellow = color [4.4, 2.3, 0.55]
+FireOrange = color [2.3, 0.75, 0.11]
+FireRed = color [0.75, 0.13, 0.03]
+FireCoal = color [1.5, 0.30, 0.05]
+FireAsh = color [0.10, 0.09, 0.09]
+
+// What a flame gives off, and it is not one color: white at the heart, yellow above that, orange, and
+// red at the tip.  That gradient is most of what makes fire read as fire, and until `emission` would
+// take a pigment it could not be said at all -- one flat color gives a glowing orange blob.
+//
+// A linear gradient runs along X, so it is turned a quarter to run up Y instead, then stretched and
+// dropped so that nought sits at the foot of the flame and one at its top.  It is asked in the space
+// of the shell it fills, so it stretches with the flame rather than staying a fixed size.
+FireHeat = pigment linear gradient {
+    [0, FireWhite, 0.30, FireYellow, 0.62, FireOrange, 1, FireRed]
+    rotate Z 90
+    scale 2
+    translate Y -1
+}
+
+// A coal is the same idea with the fire gone out of the top of it.
+FireCoalHeat = pigment linear gradient {
+    [0, FireCoal, 0.55, FireRed, 1, FireAsh]
+    rotate Z 90
+    scale 2
+    translate Y -1
+}
+
+FireLogBark = material { pigment [0.20, 0.15, 0.11]  specular 0.06  shininess 12  ambient 0.10 }
+FireLogEnd = material { pigment [0.30, 0.24, 0.18]  specular 0.08  shininess 14  ambient 0.10 }
+
+// The shell a flame is carried in: seen through entirely, casting nothing, and refracting nothing.
+// Everything you see of a flame comes from what is inside this.
+FireShell = material {
+    pigment White
+    ambient 0
+    diffuse 0
+    specular 0
+    transparency 1
+}
+
+// -- Why a fire is one volume and not a stack of them ---------------------------------------------
+//
+// Every glowing thing here is a *medium*, and a medium is carried inside a shell the ray passes
+// through.  Two such shells over one another are fine.  **Three are not**: measured, a ray crossing
+// three of them comes back black wherever the stuff inside is thin, because each crossing spends one
+// of the four refractions the renderer allows and there are none left to reach what lies beyond.
+//
+// So a campfire here is not three flames and a bed of coals in four shells.  It is one shell with one
+// medium in it, whose density describes all of them at once -- and that is cheaper as well as
+// correct, since a ray crosses one boundary rather than eight.
+//
+// The pieces are put together with `max`, which is the right join for this: where two lobes overlap
+// the thicker one wins, rather than the two adding up into a bright seam down the middle.
+
+// One flame-shaped lobe, as an amount of stuff: one at the core of it, nought at the edge, and
+// **going on down past nought outside**.  It is a single expression because that is what a density
+// function may call.
+//
+// Not clamping at nought here is the whole of what makes the noise erode the flame rather than create
+// one.  Clamped, everywhere outside every lobe reads as exactly nought, and the noise -- which both
+// adds and takes away -- then lifts a fog of stuff out of the empty air and fills the shell with a
+// glowing ball.  Left negative, the air outside is far enough below nought that no noise can raise it,
+// and the wobble lands only where there was something to wobble.  Clamp once, at the end.
+function FireLobe(px, py, pz, ox, oz, wide, taper) -> number {
+    return 1 - sqrt((px - ox) * (px - ox) + (pz - oz) * (pz - oz))
+               / (wide * max(0.05, 1 - (py + 1) * taper))
+}
+
+// A bed of coals: low, wide and flat, sitting on the floor of the shell.  Negative outside, for the
+// reason above.
+function FireBed(px, py, pz, wide) -> number {
+    return 1 - sqrt(px * px + pz * pz) / wide - (py + 1) * 3.2
+}
+
+// -- One flame ---------------------------------------------------------------------------------
+
+// A flame's shape is a taper narrowing as it rises, with noise eaten into it so the edge wavers.  The
+// noise is read at an offset that comes from the variant, which is the only way one flame can be told
+// from another: `random` cannot be called inside a density function, since the function is compiled
+// once and asked about millions of points, so the variation is carried in rather than drawn there.
+//
+// `lean` tips the whole flame, because a flame standing dead upright reads as a lamp.
+primitive Flame(height, variant = 1) -> group {
+    ox = random(variant, 71) * 40
+    oy = random(variant, 72) * 40
+    oz = random(variant, 73) * 40
+    wide = height * 0.30 * (0.85 + random(variant, 74) * 0.3)
+
+    return group {
+        sphere {
+            material FireShell {
+                interior {
+                    ior 1.0
+                    medium {
+                        emission pigment FireHeat
+                        absorption [0.42, 0.85, 1.55]
+                        density function {
+                            max(0, 1 - sqrt(x * x + z * z) / (0.55 * (1 - y * 0.44))
+                                    - 0.75 * (noise(x * 3.2 + ox, y * 2.1 + oy - 1.1, z * 3.2 + oz)
+                                              - 0.34))
+                        }
+                    }
+                }
+            }
+            no shadow
+            scale [wide, height * 0.5, wide]
+            translate Y height * 0.5
+        }
+
+        rotate Z (random(variant, 75) - 0.5) * 16
+        rotate Y random(variant, 76) * 360
+    }
+}
+
+// A light to stand in a flame.  Small, warm, and fading fast, which is what a flame's light does.
+FlameLight = point light {
+    color [1.4, 0.88, 0.42]
+    fade distance 0.7
+}
+
+// -- Embers --------------------------------------------------------------------------------------
+
+// Coals: lumps that glow from within rather than being lit.  They are cheap next to a flame -- a
+// small shell each, and no noise to walk through -- so a fire going out costs a fraction of one
+// burning.
+primitive Embers(size, variant = 1) -> group {
+    return group {
+        sphere {
+            material FireShell {
+                interior {
+                    ior 1.0
+                    medium {
+                        emission pigment FireCoalHeat
+                        absorption [0.6, 1.1, 1.8]
+                        // One volume with the coals cut out of it by noise, rather than a coal each.
+                        // Nine shells over one another would come back black; see above.
+                        density function {
+                            max(0, FireBed(x, y, z, 0.85)
+                                   - 1.15 * (noise(x * 4.6 + 11, y * 3 + 5, z * 4.6 + 7) - 0.30))
+                        }
+                    }
+                }
+            }
+            no shadow
+            scale [size * 0.5, size * 0.22, size * 0.5]
+            translate Y size * 0.11
+        }
+    }
+}
+
+EmbersLight = point light {
+    color [0.55, 0.20, 0.06]
+    fade distance 0.5
+}
+
+// -- A campfire ----------------------------------------------------------------------------------
+
+// Logs leaned into a ring, coals in the middle of them, and flames over the lot.  The logs are tubes
+// rather than cones for the reason everything woody in these libraries is: a tube ends in a
+// hemisphere, and a cone's flat disc shows as a dark band wherever another thing meets it.
+primitive FireLogs(size, variant = 1) -> group {
+    return group {
+        for log in [0, 5] {
+            long = size * (0.85 + random(log, 91, variant) * 0.3)
+            thick = size * 0.075
+
+            group {
+                tube {
+                    material FireLogBark
+                    radius thick at [0, 0, 0]
+                    radius thick * 0.82 at [0, long, 0]
+                }
+                rotate Z 62 + random(log, 92, variant) * 12
+                rotate Y log * 60 + random(log, 93, variant) * 26
+                translate Y size * 0.06
+            }
+        }
+    }
+}
+
+primitive Campfire(size, variant = 1) -> group {
+    ox = random(variant, 97) * 40
+    oz = random(variant, 98) * 40
+
+    return group {
+        object FireLogs(size, variant)
+
+        // Coals and three flames, all in the one medium.  The heat gradient runs the whole height of
+        // the shell, so the coals at the foot come out dull red and the flame tips orange without
+        // anything having to say so twice.
+        sphere {
+            material FireShell {
+                interior {
+                    ior 1.0
+                    medium {
+                        emission pigment FireHeat
+                        absorption [0.42, 0.85, 1.55]
+                        density function {
+                            max(0,
+                                max(FireBed(x, y, z, 0.72) * 0.9,
+                                    max(FireLobe(x, y, z, -0.14, 0.08, 0.46, 0.40),
+                                        max(FireLobe(x, y, z, 0.16, -0.10, 0.38, 0.44),
+                                            FireLobe(x, y, z, 0.02, 0.18, 0.32, 0.47))))
+                                - 1.05 * (noise(x * 2.6 + ox, y * 1.8 - 1.0, z * 2.6 + oz) - 0.30))
+                        }
+                    }
+                }
+            }
+            no shadow
+            scale [size * 0.50, size * 0.60, size * 0.50]
+            translate Y size * 0.62
+        }
+    }
+}
+
+// Bigger and further-reaching than one flame's, since a campfire is several and they light each
+// other's smoke as well as the ground.
+CampfireLight = point light {
+    color [2.1, 1.25, 0.52]
+    fade distance 1.15
+}
+
+// -- A torch -------------------------------------------------------------------------------------
+
+primitive Torch(height, variant = 1) -> group {
+    return group {
+        tube {
+            material FireLogEnd
+            radius height * 0.028 at [0, 0, 0]
+            radius height * 0.036 at [0, height * 0.72, 0]
+        }
+        object Flame(height * 0.34, variant) { translate Y height * 0.70 }
+    }
+}
+
+TorchLight = point light {
+    color [1.6, 0.95, 0.42]
+    fade distance 0.8
+}

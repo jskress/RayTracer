@@ -1,0 +1,110 @@
+// A fire at night, and the one thing in these libraries that had to change the renderer first.
+//
+//     import 'fire'        { Campfire, CampfireLight, Torch, TorchLight }
+//     import 'rocks'       { Boulder, Cobble }
+//     import 'undergrowth' { Tuft }
+//
+// **A flame is not one color, and until this scene could be made, it had to be.**  A medium's
+// `emission` said how much light it gave off and said it once, for the whole volume -- so a flame came
+// out as a glowing orange blob, and the thing that most makes fire read as fire was simply not
+// sayable.  Now `emission` takes a *pigment*, which is already what answers "what color is it here",
+// and a flame runs white at the heart, through yellow and orange, to red at the tip.  One volume, one
+// medium, one gradient.
+//
+// **What it still cannot do is light the ground.**  A glowing medium adds its light to rays passing
+// through it -- that is what you look at -- and nothing carries that light outward to the stones and
+// the grass.  So the pool of light here comes from lamps standing inside the fires, one to each, and
+// the library hands them out by name for exactly that reason.  You will find them written next to the
+// fires below, and if a fire moved and its lamp did not, the picture would quietly stop making sense.
+//
+// That seam is the honest state of things rather than a trick: making an emitting volume light the
+// scene is a real piece of work and has not been done.  When it is, the lamps go away and these lines
+// get shorter.
+//
+// **A campfire is one volume, not four.**  Three flames and a bed of coals could each have their own
+// shell, and it would be wrong: a ray crossing three of them comes back black wherever the stuff
+// inside is thin, because every crossing spends one of the four refractions the renderer allows.  So
+// the density function describes the coals and all three flames at once, joined with `max`, and the
+// heat gradient runs the whole height of it -- dull red down among the logs, white where the flames
+// leave them.
+//
+// The stones are here because a fire wants something to be a fire *in*.  They are lit from below and
+// close by, which is the light a fire actually gives and the reason the tops of the boulders stay
+// dark.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'fire'        { Campfire, CampfireLight, Torch, TorchLight, Embers, EmbersLight }
+import 'rocks'       { Boulder, Cobble }
+import 'undergrowth' { Tuft }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // A flame is walked along rather than solved for, and this is how many places along each crossing
+    // the walk stops to ask.  It is most of what this picture costs.
+    medium samples 110
+    info {
+        title 'A Fire in the Open'
+        author 'J. Stephen Kress'
+        description 'A campfire at night, its flame white at the heart and red at the tip.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [3.4, 2.35, -6.2]
+    look at [-0.2, 0.85, 0]
+    field of view 44
+}
+
+background [0.015, 0.016, 0.030]
+
+// The ground: dark, and rough enough that the firelight has something to catch on.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.4
+            [0, color [0.19, 0.16, 0.13], 1, color [0.28, 0.24, 0.19]]
+            scale 1.4
+        }
+        // Almost no ambient.  Ambient is a flat guess standing in for light that has bounced, and it
+        // lays an even floor across the whole picture that no falloff can dig through -- which is
+        // exactly what a night scene must not have.  The dark here has to be dark.
+        ambient 0.008
+        specular 0.03
+    }
+}
+
+// The fire, and the lamp that stands in it.  These two lines belong together.
+object Campfire(1.5, 2)
+light CampfireLight { location [0, 0.62, 0] }
+
+// A torch stuck in the ground a little way off, with its own smaller lamp.
+object Torch(1.9, 5)       { translate [-2.5, 0, 1.1] }
+light TorchLight           { location  [-2.5, 1.35, 1.1] }
+
+// Yesterday's fire, gone to coals.  No flame, so its light is dull and reaches barely a step.
+object Embers(0.8, 7)      { translate [2.3, 0, 1.6] }
+light EmbersLight          { location  [2.3, 0.1, 1.6] }
+
+// Stones round the fire, close enough to be lit from below.
+object Boulder(1.5, 'summer', 3) { translate [-1.9, 0.26, -1.4] }
+object Boulder(1.1, 'summer', 8) { translate [1.7, 0.20, -1.1] }
+
+for i in [0, 6] {
+    object Cobble(0.26 + random(i, 41, 2) * 0.2, 'summer', i + 20) {
+        translate [i * 0.62 - 1.9 + random(i, 42, 2) * 0.4, 0.06,
+                   -0.95 + random(i, 43, 2) * 0.35]
+    }
+}
+
+// A few tufts at the edge of the light, which is where the dark starts to matter.
+for i in [0, 4] {
+    object Tuft(0.42 + random(i, 51, 4) * 0.25, 'summer', i + 30) {
+        translate [i * 1.5 - 3.0 + random(i, 52, 4) * 0.7, 0, 2.1 + random(i, 53, 4) * 0.9]
+    }
+}

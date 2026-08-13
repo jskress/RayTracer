@@ -117,7 +117,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
-| `emission` | Medium: how much light it gives off per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
+| `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment. | [Scene Files](scene-files.md#filling-that-space) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |

@@ -252,6 +252,52 @@ rather than weathered stone, and measured about four times a sphere rather than 
 That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
 for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
 
+#### Fire
+
+```
+import 'fire' { Campfire, CampfireLight }
+
+object Campfire(1.4)        { translate [3, 0, -2] }
+light CampfireLight         { location  [3, 0.7, -2] }
+```
+
+| | |
+| --- | --- |
+| `Flame` | One flame on its own.  The first number is how tall it stands. |
+| `Campfire` | Logs, coals between them, and flames over the lot.  The number is how far across. |
+| `Torch` | A shaft with a flame at the top of it. |
+| `Embers` | Coals with no flame left, for a fire going out. |
+
+**These take two numbers, not three.**  Everything else in these libraries takes a season second, and
+fire does not, because fire does not have one.  A word taken and ignored is worse than a word not
+asked for: it says the library thought about the question when it did not.
+
+**A flame gives off light you can see and no light that falls on anything.**  That is what this
+renderer does, not an omission in the library: a glowing [medium](scene-files.md#filling-that-space)
+adds its light to rays passing *through* it, and nothing carries that light out to the ground.  Put a
+fire in a dark room with nothing else and the room stays black.
+
+So every fire comes with a light named to match, as a sky does — but unlike a sky, **you have to put
+it where the fire is**.  A sky needs no position and a fire does, and a primitive in this language can
+hand back a group, a material or a medium but *not* a light, so the two placements cannot be written
+once.  Say them together, and if the fire moves, move the light.
+
+**A flame is a medium, so it is walked along**, and what it costs is how many places along each
+crossing the renderer stops to ask.  That is scene-wide and the library cannot set it:
+
+```
+context { medium samples 120 }
+```
+
+Sixty does for a flame across a room; a hundred and twenty for one filling the frame.  Below about
+forty a flame goes banded, and the bands are the steps of the walk showing through.
+
+**Two glowing volumes may overlap; three may not.**  Each shell a ray crosses spends one of the four
+refractions the renderer allows, and a ray that runs out comes back black wherever the stuff inside is
+thin.  That is why a campfire here is one shell whose density describes the coals and all three flames
+together, rather than four shells stacked — which is also cheaper, since a ray crosses one boundary
+instead of eight.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

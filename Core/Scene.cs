@@ -242,12 +242,15 @@ public class Scene : NamedThing, IDisposable
         {
             double along = (index + JitterFor(index, shift)) * step;
             Point where = ray.Origin + heading * along;
-            double density = medium.DensityAt(container.WorldToSurface(where, ray.TimeIndex));
+            Point local = container.WorldToSurface(where, ray.TimeIndex);
+            double density = medium.DensityAt(local);
 
             if (density <= 0)
                 continue;
 
-            Color source = medium.Emission * density;
+            // Asked at the same point the density was, so that a medium whose color varies and a
+            // medium whose amount varies are describing the same place.
+            Color source = medium.EmissionAt(local) * density;
 
             if (gathers)
             {

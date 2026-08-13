@@ -3,6 +3,7 @@ using RayTracer.Core;
 using RayTracer.Fields;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Instructions.Pigments;
 
 namespace RayTracer.Instructions;
 
@@ -21,6 +22,12 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
     /// distance.
     /// </summary>
     public Resolver<Color> EmissionResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for what the medium gives off from place to place, when
+    /// that is not the same everywhere.
+    /// </summary>
+    public IPigmentResolver EmissionPigmentResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how much light the medium turns aside per unit of
@@ -103,6 +110,9 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
     {
         AbsorptionResolver.AssignTo(value, target => target.Absorption, context, variables);
         EmissionResolver.AssignTo(value, target => target.Emission, context, variables);
+
+        if (EmissionPigmentResolver is not null)
+            value.EmissionPigment = EmissionPigmentResolver.ResolveToPigment(context, variables);
         ScatteringResolver.AssignTo(value, target => target.Scattering, context, variables);
         AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
         PhaseFunctionResolver.AssignTo(value, target => target.PhaseFunction, context, variables);

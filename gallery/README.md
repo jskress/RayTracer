@@ -844,6 +844,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/functions/a-stony-bank.igl">A Stony Bank</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-fire-in-the-open.png">
+      <img alt="A Fire in the Open" height="120" src="Local/functions/a-fire-in-the-open.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-fire-in-the-open.igl">A Fire in the Open</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray
