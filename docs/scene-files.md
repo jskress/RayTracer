@@ -236,7 +236,7 @@ and the eye.  Together those are haze, fog, smoke, and the glow of a gas.
 | Property | Default | What it does |
 | --- | --- | --- |
 | `absorption` | none | How much light the medium takes out for each unit of distance. |
-| `emission` | none | How much light it gives off for each unit of distance. |
+| `emission` | none | How much light it gives off for each unit of distance.  May be a [pigment](#a-medium-whose-light-varies), for light that differs from place to place. |
 | `density` | 1 | A plain multiplier on both, so how *much* of the stuff there is can be said apart from what the stuff does. |
 
 The first two are colors, because a haze that dims red more than blue is the whole reason far hills
@@ -416,6 +416,42 @@ so it fills its container right up to the edge — which is exactly right for sm
 room, and wrong for a cloud, whose whole character is that it fades into the air around it.  For
 something that has to have an outline of its own, either write a function that reaches nothing at the
 rim, or give the medium a container already shaped like the thing.
+
+#### A medium whose light varies
+
+`emission` says how much light the medium gives off, and as written above it says one colour for the
+whole of it.  A flame is not one colour: it is white at its heart, yellow above that, and red at its
+tip, and that gradient is most of what makes fire read as fire.
+
+So `emission` will also take a **pigment**, which is already the thing in this renderer that answers
+*what colour is it here*:
+
+```
+FlameHeat = pigment linear gradient {
+    [0, White, 0.35, Yellow, 0.7, Orange, 1, Red]
+    rotate Z 90  scale 2  translate Y -1
+}
+
+medium {
+    emission pigment FlameHeat
+    absorption [0.4, 0.8, 1.5]
+    density function { … }
+}
+```
+
+It is asked at the same place the density is — in the space of the surface the medium fills — so a
+medium whose colour varies and one whose amount varies are describing the same place, and both move
+with the thing they fill.
+
+**A medium whose light varies has to fill a surface**, exactly as one whose density varies does, and
+for the same reason: light that differs from place to place has to be gathered place by place, and a
+crossing with no end gives no honest place to stop.  The two are refused separately so the complaint
+names which one you wrote.
+
+**What this does not do is light anything else.**  A glowing medium adds its light to rays passing
+*through* it, so you can see it; nothing carries that light to the surfaces around it.  A scene that
+wants a fire to light a room puts a light in the fire, and
+[`gallery/Local/lights/candle.igl`](../gallery/Local/lights/candle.igl) is the worked example.
 
 #### Multiple scattering
 

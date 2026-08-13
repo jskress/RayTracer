@@ -775,6 +775,145 @@ public class TestShippedLibraries
         StringAssert.Contains(error, "RockCap");
     }
 
+    /// <summary>
+    /// What the fire library holds out, written down rather than read out of the file.
+    /// </summary>
+    private static readonly string[] Fires = ["Flame", "Campfire", "Torch", "Embers"];
+
+    /// <summary>
+    /// Lights one fire and hands back the picture.  A fire is a medium, so the scene has to say how
+    /// many places along a crossing to stop and ask; the library cannot say it.
+    /// </summary>
+    private Canvas Lit(string fire, double size, int variant)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'fire' { {{fire}} }
+            context { angles are degrees  no gamma  medium samples 80 }
+            camera { location [0, 0.55, -2.2]  look at [0, 0.5, 0]  field of view 44 }
+            background Black
+            object {{fire}}({{size}}, {{variant}})
+            """);
+
+        Assert.IsNull(Render(scene, 100, 100), $"{fire} should light");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryFireLights()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "fire.igl"),
+            Path.Combine(_directory, "fire.igl"), true);
+
+        foreach (string fire in Fires)
+            Assert.IsNotNull(Lit(fire, 1, 1), $"{fire} should light");
+    }
+
+    [TestMethod]
+    public void TestAFlameIsHotterAtItsFootThanAtItsTip()
+    {
+        // The whole reason `emission` was taught to take a pigment.  A flame is white at the heart and
+        // red at the tip, and one flat color cannot say it -- so this is the claim that would quietly
+        // stop being true if the pigment were dropped and a color put back.
+        //
+        // Read as *how blue* rather than how bright: the foot is white-hot and so carries blue, the tip
+        // is red and carries almost none.  Brightness alone would not do, since a flame is thicker at
+        // the foot and would be brighter there whatever color it was.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "fire.igl"),
+            Path.Combine(_directory, "fire.igl"), true);
+
+        Canvas flame = Lit("Flame", 1, 1);
+
+        // Where the flame actually is, rather than where it is assumed to be.  Hard-coded rows are how
+        // this test first failed: they sat below the flame entirely and compared nothing with nothing,
+        // which reads exactly like the feature being broken.
+        List<int> lit = [];
+
+        for (int y = 0; y < flame.Height; y++)
+        {
+            double red = 0;
+
+            for (int x = 0; x < flame.Width; x++)
+                red += flame.GetPixel(x, y).Red;
+
+            if (red > 1)
+                lit.Add(y);
+        }
+
+        Assert.IsTrue(lit.Count >= 10, $"the flame covers only {lit.Count} rows, so there is little to read");
+
+        double tip = Blueness(flame, lit[0], lit[lit.Count / 5]);
+        double foot = Blueness(flame, lit[^(lit.Count / 5 + 1)], lit[^1]);
+
+        Assert.IsTrue(foot > tip * 1.5,
+            $"the foot should be the whiter, and got {foot:F3} against {tip:F3} at the tip");
+    }
+
+    /// <summary>
+    /// How much blue a band of the picture carries next to its red, which is how white-hot it is.
+    /// <para>
+    /// Summed over the band and then divided, rather than divided per pixel and averaged: a flame's
+    /// edge is nearly black, and a per-pixel ratio there is noise divided by noise.
+    /// </para>
+    /// </summary>
+    private static double Blueness(Canvas image, int from, int to)
+    {
+        double red = 0;
+        double blue = 0;
+
+        for (int y = from; y <= to; y++)
+        {
+            for (int x = 0; x < image.Width; x++)
+            {
+                red += image.GetPixel(x, y).Red;
+                blue += image.GetPixel(x, y).Blue;
+            }
+        }
+
+        return blue / (red + 0.0001);
+    }
+
+    [TestMethod]
+    public void TestOneFireIsNotAnother()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "fire.igl"),
+            Path.Combine(_directory, "fire.igl"), true);
+
+        foreach (string fire in new[] { "Flame", "Campfire" })
+        {
+            Assert.IsTrue(Differs(Lit(fire, 1, 1), Lit(fire, 1, 2)),
+                $"two {fire} variants came out the same fire");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheFiresKeepTheirOwnWorkings()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "fire.igl"),
+            Path.Combine(_directory, "fire.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'fire' { Flame }
+            camera { location [0, 0.5, -3]  look at [0, 0.5, 0] }
+            point light { location [-5, 5, -5] }
+            object Flame(1)
+            sphere { scale FireLobe(0, 0, 0, 0, 0, 1, 1) }
+            """);
+
+        string error = Render(scene);
+
+        Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
+        StringAssert.Contains(error, "FireLobe");
+    }
+
     [TestMethod]
     public void TestATreeKeepsItsOwnWorkings()
     {

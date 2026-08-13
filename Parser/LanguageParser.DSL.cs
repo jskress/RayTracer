@@ -1301,7 +1301,10 @@ public partial class LanguageParser
         }
         mediumEntryClause:
         [
-            { absorption > _expression } | { emission > _expression } |
+            { absorption > _expression } |
+            // The pigment form first, since "emission pigment ..." would otherwise be tried as
+            // an expression, which it is not.
+            { emission > pigment } | { emission > _expression } |
             { scattering > _expression } | { anisotropy > _expression } |
             {
                 density > function > openBrace ?? 'Expecting an open brace to follow "function" here.' >

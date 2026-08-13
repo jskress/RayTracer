@@ -697,4 +697,119 @@ public class TestMediumClauses
 
         return brightest;
     }
+
+    /// <summary>
+    /// A glowing volume seen against nothing, tall enough that top and bottom can be told apart.
+    /// </summary>
+    private const string Glowing = """
+        camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 40 }
+        background Black
+        """;
+
+    [TestMethod]
+    public void TestAMediumMayGiveOffADifferentColorFromPlaceToPlace()
+    {
+        // What one flat color cannot say.  A flame is white at its heart and red at its tip, and that
+        // gradient is most of what makes fire read as fire -- so emission takes a pigment, which is
+        // already the thing in this renderer that answers what color a place is.
+        (Canvas image, string error) = Render($$"""
+            Lower = color [1.1, 0.05, 0.03]
+            Upper = color [0.03, 0.05, 1.1]
+            Split = pigment linear gradient { [0, Lower, 1, Upper]  rotate Z 90  scale 2  translate Y -1 }
+            {{Glowing}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { ior 1.0  medium { emission pigment Split  absorption [0.4, 0.4, 0.4] } }
+                }
+                no shadow
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        Color top = image.GetPixel(20, 12);
+        Color bottom = image.GetPixel(20, 28);
+
+        // Compared against each other rather than against absolute values.  A ray crosses a range
+        // of heights and gathers what it finds all along, so neither end is ever the pure color
+        // the gradient names there -- what the pigment promises is that one end leans one way and
+        // the other leans the other, and that is what is asked.
+        Assert.IsTrue(bottom.Red > top.Red,
+            $"the low end should be the redder, and got {bottom} against {top}");
+        Assert.IsTrue(top.Blue > bottom.Blue,
+            $"the high end should be the bluer, and got {top} against {bottom}");
+    }
+
+    [TestMethod]
+    public void TestAMediumGivingOffOneColorStillDoes()
+    {
+        // The form every existing scene uses.  A pigment is the addition, not the replacement.
+        (Canvas image, string error) = Render($$"""
+            {{Glowing}}
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { ior 1.0  medium { emission [4, 0.2, 0.1]  absorption [0.4, 0.4, 0.4] } }
+                }
+                no shadow
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        Color top = image.GetPixel(20, 12);
+        Color bottom = image.GetPixel(20, 28);
+
+        Assert.IsTrue(top.Red > top.Blue * 2 && bottom.Red > bottom.Blue * 2,
+            "a medium given one color should give off that color everywhere");
+    }
+
+    [TestMethod]
+    public void TestWhatTheSurroundingsRefuseTheyNameCorrectly()
+    {
+        // Both of these must fill a surface, and for the same underlying reason -- each has to be
+        // walked along rather than written down, and an endless crossing has no honest place to
+        // stop.  But they are different mistakes and get different complaints, because a scene
+        // told its *density* varies when what varies is the light it gives off has been told
+        // something untrue and will go looking in the wrong place.  Refusing correctly is not the
+        // same as refusing.
+        (Canvas shaped, string aboutDensity) = Render("""
+            camera { location [0, 0, -5]  look at [0, 0, 0] }
+            background Black
+            environment { medium { absorption [0.4, 0.4, 0.4]  density function { 1 - y } } }
+            sphere { material { pigment Blue } }
+            """);
+        (Canvas glowing, string aboutEmission) = Render("""
+            Glow = pigment linear gradient { [0, White, 1, Red] }
+            camera { location [0, 0, -5]  look at [0, 0, 0] }
+            background Black
+            environment { medium { emission pigment Glow  absorption [0.4, 0.4, 0.4] } }
+            sphere { material { pigment Blue } }
+            """);
+
+        Assert.IsNull(shaped);
+        Assert.IsNull(glowing);
+        StringAssert.Contains(aboutDensity, "whose density varies");
+        StringAssert.Contains(aboutEmission, "whose emission varies");
+    }
+
+    [TestMethod]
+    public void TestAnEndlessMediumThatGlowsIsStillRefusedWhenItsColorVaries()
+    {
+        // A medium that gives off light with nothing to take it back out is infinitely bright over an
+        // endless span, and the surroundings are endless.  That was already refused for a flat color;
+        // a pigment cannot be asked whether it is ever anything but black, so one is taken as emitting
+        // and refused the same way.  Letting it through would render a picture of infinity.
+        (Canvas image, string error) = Render(""
+            + "Glow = pigment linear gradient { [0, White, 1, Red] }\n"
+            + "camera { location [0, 0, -5]  look at [0, 0, 0] }\n"
+            + "background Black\n"
+            + "environment { medium { emission pigment Glow } }\n"
+            + "sphere { material { pigment Blue } }\n");
+
+        Assert.IsNull(image);
+        StringAssert.Contains(error, "must absorb or scatter wherever it emits");
+    }
+
 }
