@@ -940,6 +940,229 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// What the buildings library holds out, written down here rather than read out of the file, for
+    /// the same reason the tree species are: a test that learns the names from the thing it is testing
+    /// cannot notice a rename.
+    /// </summary>
+    private static readonly string[] Buildings = ["House", "Row", "Tower"];
+
+    /// <summary>
+    /// How big to ask for each, since the first number does not mean the same thing to all three: to a
+    /// <c>Row</c> it is how many houses, and to the other two it is a height.
+    /// </summary>
+    private static string BuildingSizeOf(string building) => building switch
+    {
+        "Row" => "3",
+        "Tower" => "9",
+        _ => "4"
+    };
+
+    /// <summary>
+    /// Raises one building, from in front of it unless asked otherwise, and hands back whatever
+    /// stopped it.  The camera looks at the -Z face because that is the face these put their windows
+    /// and doors on.
+    /// </summary>
+    private string Raise(string building, string season, int? variant = 2, bool fromBehind = false)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string call = season is null
+            ? $"{building}({BuildingSizeOf(building)})"
+            : variant is null
+                ? $"{building}({BuildingSizeOf(building)}, '{season}')"
+                : $"{building}({BuildingSizeOf(building)}, '{season}', {variant})";
+        string where = fromBehind ? "[0, 9, 26]" : "[0, 9, -26]";
+
+        File.WriteAllText(scene, $$"""
+            import 'buildings' { {{building}} }
+            context { angles are degrees  no gamma }
+            camera { location {{where}}  look at [0, 4, 0]  field of view 46 }
+            point light { location [-9, 20, -12] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        return Render(scene, 110, 84);
+    }
+
+    /// <summary>
+    /// Raises one and hands back the picture of it.
+    /// </summary>
+    private Canvas Raised(string building, string season, int? variant = 2, bool fromBehind = false)
+    {
+        Assert.IsNull(Raise(building, season, variant, fromBehind),
+            $"{building} should stand in {season ?? "no season at all"}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryBuildingStandsInEverySeason()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        foreach (string building in Buildings)
+        {
+            foreach (string season in new[] { "summer", "autumn", "fall", "winter", "spring" })
+                Assert.IsNull(Raise(building, season), $"{building} should stand in {season}");
+        }
+    }
+
+    [TestMethod]
+    public void TestWinterPutsSnowOnEveryBuilding()
+    {
+        // The season is the one word these take that has to *do* something, and it very nearly did
+        // not: the snow was laid at the roof slope's own offset rather than pushed out along that
+        // slope's normal, so every flake of it sat inside the roof and the only trace was a faint
+        // change in the shadows.  A test that merely rendered winter would have passed throughout.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        foreach (string building in Buildings)
+        {
+            Assert.IsTrue(Differs(Raised(building, "summer"), Raised(building, "winter")),
+                $"a {building} in winter should not look like one in summer");
+        }
+    }
+
+    [TestMethod]
+    public void TestABuildingAskedForWithNoSeasonStandsInSummer()
+    {
+        // These take the season last and default it, so most scenes never write one.  The default has
+        // to be the season a scene that says nothing actually gets, and in the trees library one
+        // species quietly defaulted to a different one from all the rest.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        foreach (string building in Buildings)
+        {
+            Assert.IsFalse(Differs(Raised(building, null), Raised(building, "summer", null)),
+                $"a {building} asked for with no season should be the same as one in summer");
+        }
+    }
+
+    /// <summary>
+    /// Counts the glass in a picture.  The glass in this library is the one dark, cool thing in it --
+    /// the walls and trim are all warm, the ground is neutral gray and the sky is bright -- so a pixel
+    /// that is dark and bluer than it is red is a window.
+    /// </summary>
+    private static int Windows(Canvas canvas)
+    {
+        int found = 0;
+
+        for (int x = 0; x < canvas.Width; x++)
+        {
+            for (int y = 0; y < canvas.Height; y++)
+            {
+                Color pixel = canvas.GetPixel(x, y);
+
+                if (pixel.Blue > pixel.Red + 0.02 && pixel.Blue < 0.45)
+                    found++;
+            }
+        }
+
+        return found;
+    }
+
+    [TestMethod]
+    public void TestABuildingPutsItsWindowsOnTheFaceASceneLooksAt()
+    {
+        // Every one of these is built to be looked at from -Z, and the windows, the door and the sills
+        // all go on that face.  They were first written onto the far side, which renders perfectly
+        // well and gives a scene a row of blank walls -- nothing errored, and nothing showed.
+        //
+        // This counts the glass rather than comparing the two pictures, and the difference matters: a
+        // building is not symmetric -- the chimney stands off to one side and the whole thing is set a
+        // few degrees off square -- so front and back differ *whatever* face the windows are on.  The
+        // first version of this test compared the pictures, passed, and proved nothing.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        foreach (string building in Buildings)
+        {
+            int front = Windows(Raised(building, "summer"));
+            int behind = Windows(Raised(building, "summer", 2, true));
+
+            Assert.IsTrue(front > behind * 3,
+                $"a {building} shows {front} pixels of glass from the front and {behind} from " +
+                "behind; its windows are not on the face a scene looks at");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheVariantChangesABuilding()
+    {
+        // A number a scene may pass has to be a number that does something; a knob wired to nothing is
+        // worse than no knob, since a scene will pass it and believe it worked.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        foreach (string building in Buildings)
+        {
+            Assert.IsTrue(Differs(Raised(building, "summer", 1), Raised(building, "summer", 4)),
+                $"two {building}s of different variants should not be the same building");
+        }
+    }
+
+    [TestMethod]
+    public void TestARowIsCountedRatherThanMeasured()
+    {
+        // The first number means something different here than everywhere else in these libraries, and
+        // the documentation says so -- a terrace is counted.  So more houses has to mean a longer row.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "buildings.igl"),
+            Path.Combine(_directory, "buildings.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        int[] widths = new int[2];
+
+        foreach ((int houses, int index) in new[] { (2, 0), (5, 1) })
+        {
+            File.WriteAllText(scene, $$"""
+                import 'buildings' { Row }
+                context { angles are degrees  no gamma }
+                camera { location [0, 6, -46]  look at [0, 3, 0]  field of view 46 }
+                point light { location [-9, 14, -12] }
+                background [0.2, 0.35, 0.9]
+                object Row({{houses}}, 'summer', 2)
+                """);
+
+            Assert.IsNull(Render(scene, 180, 60), $"a row of {houses} should stand");
+
+            Canvas canvas = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            int left = canvas.Width;
+            int right = -1;
+
+            // The background is the only strongly blue thing in the picture, so anything else is the
+            // terrace.  There is deliberately no ground plane here, for that reason.
+            for (int x = 0; x < canvas.Width; x++)
+            {
+                for (int y = 0; y < canvas.Height; y++)
+                {
+                    Color pixel = canvas.GetPixel(x, y);
+
+                    if (pixel.Blue - pixel.Red > 0.2)
+                        continue;
+
+                    left = Math.Min(left, x);
+                    right = Math.Max(right, x);
+                }
+            }
+
+            widths[index] = right - left;
+        }
+
+        Assert.IsTrue(widths[1] > widths[0],
+            $"a row of five ({widths[1]} across) should be wider than a row of two ({widths[0]})");
+    }
+
+    /// <summary>
     /// Renders a scene small and fast, and hands back whatever stopped it.
     /// </summary>
     private string Render(string path, int wide = 40, int high = 30)
