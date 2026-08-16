@@ -1,9 +1,8 @@
 // Things that burn.
 //
-//     import 'fire' { Campfire, CampfireLight }
+//     import 'fire' { Campfire }
 //
-//     object Campfire(1.4)
-//     light CampfireLight { location [0, 0.7, 0] }
+//     object Campfire(1.4) { translate [3, 0, -2] }
 //
 // | `Flame` | One flame on its own.  The first number is how tall it stands. |
 // | `Campfire` | Logs, embers between them, and flames over the lot.  The number is how far across. |
@@ -14,29 +13,33 @@
 // and fire does not, because fire does not have one.  A word taken and ignored is worse than a word
 // not asked for: it says the library thought about the question when it did not.
 //
-// -- The one thing you have to do yourself --------------------------------------------------------
+// -- A fire is its own light ------------------------------------------------------------------------
 //
-// **A flame here gives off light you can see and no light that falls on anything.**  That is not an
-// oversight in the library; it is what this renderer does.  A glowing medium adds its light to rays
-// passing *through* it, so the flame is bright to look at, and nothing carries that light out to the
-// ground or the faces around it.  Put a fire in a dark room with nothing else and the room stays
-// black.
+// **Put a fire in a scene and the scene is lit.**  There is nothing to place beside it and nothing to
+// keep in step.  The stuff a flame is made of gives off light where it is, and that light falls on the
+// ground and the faces around it, casts their shadows, and carries the flame's own color to them --
+// orange low down where the fire is orange, paler where it is white.
 //
-// So every fire here comes with a light to go beside it, named to match -- `Campfire` and
-// `CampfireLight` -- in the same way a sky in `daylight` comes with the light it casts.  The
-// difference, and it is the awkward part, is that **you have to put the light where the fire is**:
+// This is worth spelling out because it was not always so, and every scene written before it had to
+// stand a lamp inside the fire by hand:
 //
-//     object Campfire(1.4)          { translate [3, 0, -2] }
-//     light CampfireLight           { location  [3, 0.7, -2] }
+//     object Campfire(1.4)   { translate [3, 0, -2] }
+//     light CampfireLight    { location  [3, 0.7, -2] }      // no longer needed, and no longer here
 //
-// A sky needs no position and a fire does, and a primitive in this language can hand back a group, a
-// material or a medium but not a light -- so the two placements cannot be written once.  Say them
-// together, and if the fire moves, move the light.
+// Two placements had to agree, and if the fire moved and the lamp did not, the picture quietly stopped
+// making sense.  `CampfireLight` and its three siblings are gone; a scene that used them should delete
+// the line.
 //
-// The lights fade with distance, which is what makes a fire read as a fire rather than as a lamp: the
-// ground bright within a step or two and the dark closing in past that.  Their colors are well over
-// one for the same reason, since `fade distance` names where the light is still worth its stated color
-// rather than where it stops.
+// **How bright a fire is, is not a setting.**  It follows from what the flame is made of and how big it
+// is, falling away as the square of the distance.  A bigger fire lights more of the room.  If a fire is
+// too bright for a picture, the honest fix is a smaller fire.
+//
+// **What it costs is the sample count**, which is how many places inside the flame each lit point looks
+// at.  The numbers here are chosen against what each fire is for -- twenty for a single flame, eight
+// for embers that barely reach past themselves, twenty-eight for a campfire that has to light a
+// clearing.  Too few shows as mottling on smooth surfaces nearby, each point guessing the fire's shape
+// from a handful of looks.  Measured, a volume light at eight samples costs about three times a plain
+// lamp, and at forty about thirteen times.
 //
 // -- What a flame costs ---------------------------------------------------------------------------
 //
@@ -165,6 +168,7 @@ primitive Flame(height, variant = 1) -> group {
                 }
             }
             no shadow
+            gives light samples 20
             scale [wide, height * 0.5, wide]
             translate Y height * 0.5
         }
@@ -172,12 +176,6 @@ primitive Flame(height, variant = 1) -> group {
         rotate Z (random(variant, 75) - 0.5) * 16
         rotate Y random(variant, 76) * 360
     }
-}
-
-// A light to stand in a flame.  Small, warm, and fading fast, which is what a flame's light does.
-FlameLight = point light {
-    color [1.4, 0.88, 0.42]
-    fade distance 0.7
 }
 
 // -- Embers --------------------------------------------------------------------------------------
@@ -204,15 +202,11 @@ primitive Embers(size, variant = 1) -> group {
                 }
             }
             no shadow
+            gives light samples 8
             scale [size * 0.5, size * 0.22, size * 0.5]
             translate Y size * 0.11
         }
     }
-}
-
-EmbersLight = point light {
-    color [0.55, 0.20, 0.06]
-    fade distance 0.5
 }
 
 // -- A campfire ----------------------------------------------------------------------------------
@@ -269,17 +263,11 @@ primitive Campfire(size, variant = 1) -> group {
                 }
             }
             no shadow
+            gives light samples 28
             scale [size * 0.50, size * 0.60, size * 0.50]
             translate Y size * 0.62
         }
     }
-}
-
-// Bigger and further-reaching than one flame's, since a campfire is several and they light each
-// other's smoke as well as the ground.
-CampfireLight = point light {
-    color [2.1, 1.25, 0.52]
-    fade distance 1.15
 }
 
 // -- A torch -------------------------------------------------------------------------------------
@@ -295,7 +283,3 @@ primitive Torch(height, variant = 1) -> group {
     }
 }
 
-TorchLight = point light {
-    color [1.6, 0.95, 0.42]
-    fade distance 0.8
-}

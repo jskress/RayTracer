@@ -1,0 +1,189 @@
+// The same desk as `candle.igl`, lit by the flame instead of by a lamp standing in it.
+//
+// These two scenes are a pair and are meant to be looked at together.  The other one is **staged**: a
+// flame you can see, and beside it an area light, hand-placed inside the flame, hand-matched to its
+// size, given a color and a `fade distance` chosen until the desk looked right.  This one is
+// **physical**: the flame is the light.  The shell holding the glowing gas says
+//
+//     gives light samples 36
+//
+// and there is no lamp anywhere in the file.  What falls on the desk is worked out from what the gas
+// gives off, how much of it there is, and how far away it is.
+//
+// **Neither is the wrong way.**  That is the point of having both.
+//
+// -- What the physical one gives you --------------------------------------------------------------
+//
+// Nothing to keep in step.  In the staged scene the flame and its lamp are two things that have to
+// agree: move the candle and you must move the light, resize the flame and you must resize the light,
+// and if you forget, the picture goes subtly wrong in a way nothing complains about.  Here there is
+// one thing.
+//
+// The light is the flame's own color, place by place, because it *is* the flame.  Where the gas is
+// pale at the heart the light it throws is pale; where it deepens to orange at the edge, so does what
+// lands on the wax.  The staged scene picks one color for the lamp and lives with it.
+//
+// The shadows are soft for the right reason.  An extended source makes soft edges, and a flame is
+// extended -- so the disc of shadow the candle's own body lays on the desk comes out soft without
+// anyone choosing that it should.  The staged scene had to reach for an *area* light and size it by
+// hand to get the same thing, and its comment says so.
+//
+// -- What the staged one gives you ----------------------------------------------------------------
+//
+// Control, and speed.  A lamp is a number you can turn.  If the far books want to be a little more
+// visible, the staged scene pushes `fade distance` out a fraction; this one cannot, because how far
+// the light reaches is not a setting here -- it follows from the fire.  The honest lever is a bigger
+// or brighter flame, and that changes how the flame *looks* as well.
+//
+// Which is exactly what happened here.  The staged scene's flame emits `[3.4, 1.55, 0.42]`, chosen so
+// the flame would look right while the lamp did the lighting.  The same number here had to do both
+// jobs and lit almost nothing, so it is ten times larger.  That is not a fudge -- a real flame really
+// is far brighter than the things around it, and the old number was only ever a look.  But it is the
+// trade: one number, two jobs.
+//
+// And it costs.  Every point being shaded looks at thirty-six places inside the flame and casts a
+// shadow ray to each, where the staged scene's area light took nine.  This picture is several times
+// the wait.
+//
+// One difference is worth naming because it looks like a fault and is not.  The desk is polished --
+// `specular 0.2` -- and low in the frame it throws back a bright patch where it catches the flame.
+// That is the flame reflected in the wax-smooth wood, and it is stronger here than in the staged scene
+// for the plain reason that the source is stronger.  It is left alone rather than dimmed: turning the
+// desk's shine down would make the two scenes differ in something besides their light, and then the
+// comparison would be worth less.
+//
+// -- What is the same ------------------------------------------------------------------------------
+//
+// Everything else, deliberately: the desk, the wax, the wick, the books, the mug, the paper, the
+// camera, and the faint haze in the air.  The two files differ in the light and in nothing else, so
+// what you see between them is the light and nothing else.
+//
+// The tiny `ambient` is worth keeping in view in both.  It stands for light that has bounced, which
+// this renderer does not follow, and it is exempt from both shadowing and falloff -- so left at its
+// default tenth it lays an even floor across the picture that no darkness can dig through.  Fourteen
+// thousandths is what keeps the far corners dark rather than dead.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    medium samples 120
+    info {
+        title 'A Candle by Its Own Light'
+        author 'J. Stephen Kress'
+        description 'The same desk, lit by the flame itself rather than by a lamp standing in it.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-1.6, 2.1, -6.4]
+    look at [0.2, 0.8, 0.1]
+    field of view 46
+}
+
+background Black
+
+// The air of the room: faint, and lit only where the flame still reaches it.
+environment {
+    ior Air
+    medium {
+        absorption [0.020, 0.024, 0.031]
+        scattering [0.034, 0.027, 0.020]
+    }
+}
+
+// The desk.
+plane {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.6  octaves 2 }
+            [0, [0.24, 0.13, 0.06], 0.12, [0.30, 0.17, 0.08],
+             0.30, [0.46, 0.28, 0.13], 0.92, [0.50, 0.31, 0.15],
+             1, [0.24, 0.13, 0.06]]
+            scale [0.22, 0.22, 7]
+            rotate Y 12
+        }
+        ambient 0.014
+        specular 0.2
+        shininess 45
+    }
+}
+
+// The candle, and the wick it burns at.
+cylinder {
+    min Y 0  max Y 1.15
+    material { pigment [0.90, 0.86, 0.74]  ambient 0.014  specular 0.25  shininess 60 }
+    scale [0.20, 1, 0.20]
+}
+
+cylinder {
+    min Y 0  max Y 0.10
+    material { pigment [0.16, 0.13, 0.11]  ambient 0.014 }
+    scale [0.011, 1, 0.011]
+    rotate Z 7
+    translate Y 1.15
+}
+
+// The flame: glowing gas in an invisible shell, swallowing its own blue as it leaves.
+sphere {
+    material {
+        pigment White
+        ambient 0
+        diffuse 0
+        specular 0
+        transparency 1
+        interior {
+            ior 1.0
+            medium {
+                emission [34, 15.5, 4.2]
+                absorption [0.5, 0.9, 1.6]
+            }
+        }
+    }
+    no shadow
+    gives light samples 36
+    scale [0.115, 0.235, 0.115]
+    translate Y 1.37
+}
+
+// Two books, the upper one set askew as a read book is.
+cube {
+    material { pigment [0.42, 0.16, 0.14]  ambient 0.014  specular 0.1 }
+    scale [0.85, 0.10, 0.62]
+    translate [1.65, 0.10, 0.45]
+}
+
+cube {
+    material { pigment [0.19, 0.27, 0.35]  ambient 0.014  specular 0.1 }
+    scale [0.78, 0.08, 0.56]
+    rotate Y 9
+    translate [1.62, 0.28, 0.38]
+}
+
+// A pen, lying where it was put down.
+cylinder {
+    min Y 0  max Y 1.4
+    material { pigment [0.13, 0.14, 0.17]  ambient 0.014  specular 0.55  shininess 140 }
+    scale [0.034, 1, 0.034]
+    rotate Z 90
+    rotate Y 28
+    translate [-1.35, 0.034, -0.55]
+}
+
+// A cup, to catch the light on something round and near.
+cylinder {
+    min Y 0  max Y 0.42
+    open
+    material { pigment [0.62, 0.60, 0.55]  ambient 0.014  specular 0.35  shininess 90 }
+    scale [0.24, 1, 0.24]
+    translate [-0.95, 0, 0.85]
+}
+
+// A sheet of paper, half in the pool of light and half out of it.
+cube {
+    material { pigment [0.82, 0.79, 0.72]  ambient 0.014  specular 0.05 }
+    scale [0.62, 0.004, 0.44]
+    rotate Y -14
+    translate [0.55, 0.004, -1.05]
+}
