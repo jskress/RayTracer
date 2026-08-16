@@ -300,6 +300,56 @@ thin.  That is why a campfire here is one shell whose density describes the coal
 together, rather than four shells stacked — which is also cheaper, since a ray crosses one boundary
 instead of eight.
 
+#### Buildings
+
+```
+import 'buildings' { House, Row, Tower }
+
+object House(4)
+object Row(5, 'winter')       { translate X 12 }
+object Tower(14, 'summer', 3) { translate X -14 }
+```
+
+| | |
+| --- | --- |
+| `House` | One dwelling: plinth, walls, a gabled roof, a door and windows. |
+| `Row` | Several houses joined shoulder to shoulder, as a terrace. |
+| `Tower` | A taller block, bay after bay, with a parapet rather than a roof. |
+
+The three numbers mean what they mean everywhere else — **how big**, **what time of year**, and **which
+one of that kind** — and only the first is required.  For a `Row` the first number is **how many
+houses**, since a terrace is counted rather than measured.
+
+**These face `-Z`**, which is the way a camera written the usual way is looking.  The windows, the door
+and the sills are all on that face; the other three sides are wall.  Turn a building with `rotate Y` to
+put its front where you want it.
+
+**The season puts snow on the roofs**, and does nothing else, which is the whole of what winter does to
+a building seen from outside.  A building is not deciduous; it takes the word so that a scene setting
+its season once gets roofs that agree with its ground.
+
+##### What makes a box into a building
+
+This library exists because of a scene that failed at it.  `a-block-of-buildings` in the gallery raises
+eleven towers out of one loop, and says of itself that they are *boxes with lights on, not
+architecture*.  Four things do most of the difference, and all four are cheap:
+
+**A plinth.**  A wall that meets the ground in a line reads as a sheet standing on grass.  A course at
+the bottom, a little proud of the wall and a little lighter, is how a building sits down.
+
+**Depth in the window.**  A rectangle of dark paint on a wall is a picture of a window.  What reads is
+the *reveal*: glass set back, a frame standing proud around it, and a sill that overhangs and throws a
+small shadow.
+
+**An overhang.**  Eaves that reach past the wall lay a shadow line along the top of the facade.
+Without it a roof looks glued on; with it the roof is clearly above and the wall clearly below.
+
+**A top that is not a cut.**  A gable, or a parapet standing above the roof line.  A box ended flat at
+the top is the strongest single tell that a thing is a box — which is why a `Tower` gets a parapet, and
+why in winter its snow lies *across* that parapet rather than down inside it.  Snow inside a parapet is
+invisible from any camera standing on the ground, and a season that cannot be seen is a word taken and
+ignored.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

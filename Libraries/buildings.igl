@@ -1,0 +1,290 @@
+// Places for people, to put a road between.
+//
+//     import 'buildings' { House, Row, Tower }
+//
+//     object House(4)
+//     object Row(5, 'winter')      { translate X 12 }
+//     object Tower(14, 'summer', 3) { translate X -14 }
+//
+// | `House` | One dwelling: plinth, walls, a gabled roof, a door and windows. |
+// | `Row` | Several houses joined shoulder to shoulder, as a terrace. |
+// | `Tower` | A taller block, bay after bay, with a parapet rather than a roof. |
+//
+// The three numbers mean what they mean in the other libraries -- **how big**, **what time of year**,
+// and **which one of that kind** -- and only the first is required.  Height is the eaves-to-ground
+// measure for a house and the whole height for a tower; for a `Row` the first number is **how many
+// houses**, since a terrace is counted rather than measured.
+//
+// **The season puts snow on the roofs** and does nothing else, which is the whole of what winter does
+// to a building from the outside.  A building is not deciduous; it takes the word so that a scene
+// setting its season once gets roofs that agree with the ground.
+//
+// -- What makes a box into a building --------------------------------------------------------------
+//
+// This library exists because of a scene that failed at it.  `a-block-of-buildings` in the gallery
+// raises eleven towers out of one loop, and says of itself that they are *boxes with lights on, not
+// architecture* -- a real building has a plan, a frontage, and a way of meeting the ground.  Four
+// things do most of that work, and all four are cheap:
+//
+// **A plinth.**  A wall that meets the ground in a line reads as a sheet standing on grass.  A course
+// at the bottom, a little proud of the wall and a little lighter, is how a building sits down.
+//
+// **Depth in the window.**  A rectangle of dark paint on a wall is a picture of a window.  What reads
+// is the *reveal*: the glass set back, a frame standing proud around it, and a sill that overhangs and
+// throws a small shadow.  The first try here laid bars *across* the opening instead of bordering it,
+// and every window came out as a white plus sign stuck to the wall.
+//
+// **An overhang.**  Eaves that reach past the wall lay a shadow line along the top of the facade.
+// Without it a roof looks glued on; with it the roof is clearly above and the wall clearly below.
+//
+// **A top that is not a cut.**  A gable, or a parapet standing above the roof line.  A box ended flat
+// at the top is the single strongest tell that a thing is a box.
+//
+// The gable is worth a word.  Its pitch is forty-five degrees, and that is not a style choice: it lets
+// the end wall be cut as the top half of a square stood on its corner, which is one `intersection` of
+// two boxes.  A cube turned a quarter is a *diamond*, not a triangle -- turning one and hoping leaves
+// a diamond sticking up through the ridge, which is what the first attempt did.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Build` is the machinery.  The materials arrive in your scene whether you
+// asked or not, for the reason the other libraries give -- a material is looked up where it is *used*
+// -- so they carry the prefix.
+
+// -- What buildings are made of --------------------------------------------------------------------
+
+BuildWall = material { pigment [0.74, 0.70, 0.62]  specular 0.05  shininess 16 }
+BuildWallWarm = material { pigment [0.66, 0.53, 0.44]  specular 0.05  shininess 16 }
+BuildWallCool = material { pigment [0.62, 0.63, 0.61]  specular 0.06  shininess 18 }
+BuildTrim = material { pigment [0.90, 0.88, 0.84]  specular 0.12  shininess 30 }
+BuildRoof = material { pigment [0.30, 0.26, 0.25]  specular 0.10  shininess 20 }
+BuildRoofRed = material { pigment [0.42, 0.24, 0.18]  specular 0.10  shininess 20 }
+BuildGlass = material { pigment [0.09, 0.12, 0.15]  specular 0.55  shininess 140  reflective 0.22 }
+BuildDoor = material { pigment [0.28, 0.18, 0.14]  specular 0.20  shininess 40 }
+BuildSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
+
+// Three walls and two roofs, so a row does not come out as one house repeated.  Which one a building
+// wears is its variant's business.
+primitive BuildWallOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material BuildWall }
+        case 1 { return material BuildWallWarm }
+        default { return material BuildWallCool }
+    }
+}
+
+primitive BuildRoofOf(variant) -> material {
+    if (mod(floor(variant), 2) == 0) {
+        return material BuildRoof
+    }
+    else {
+        return material BuildRoofRed
+    }
+}
+
+// -- A window ----------------------------------------------------------------------------------
+
+// An opening set back into the wall, a frame standing proud *around* it, and a sill under it that
+// reaches further out than anything else and throws the small shadow that sells the whole thing.
+//
+// It is placed with its middle on the face of the wall, so the glass falls behind and the frame in
+// front.
+primitive BuildWindow(wide, tall, deep) -> group {
+    return group {
+        cube { material BuildGlass  scale [wide, tall, deep]  translate Z -deep * 1.4 }
+
+        cube { material BuildTrim  scale [wide * 1.18, tall * 0.09, deep]  translate Y tall * 1.09 }
+        cube { material BuildTrim  scale [wide * 1.30, tall * 0.10, deep * 2.2]
+               translate Y -tall * 1.10 }
+        cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X -wide * 1.10 }
+        cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X wide * 1.10 }
+    }
+}
+
+// -- A house -----------------------------------------------------------------------------------
+
+// The snow that lies on a pitched roof, which is nothing at all for three seasons of the four.  It is
+// two slabs laid on the two slopes, a shade proud of them, so what shows is a white edge along the
+// ridge and the eaves rather than a white roof.
+primitive BuildRoofSnow(season, wide, deep, height) -> group {
+    switch (season) {
+        case 'winter' {
+            // Laid a little way out along each slope's own normal.  Set at the slope's own offset
+            // it disappears *inside* the roof, which is what the first attempt did -- snow has to be
+            // pushed out, not merely placed.
+            return group {
+                cube { material BuildSnow  scale [wide * 0.84, height * 0.016, deep * 1.19]
+                       rotate Z 45
+                       translate [-wide * 0.56 - height * 0.026, wide * 0.56 + height * 0.026, 0] }
+                cube { material BuildSnow  scale [wide * 0.84, height * 0.016, deep * 1.19]
+                       rotate Z -45
+                       translate [wide * 0.56 + height * 0.026, wide * 0.56 + height * 0.026, 0] }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// Snow on a flat top, which is what a parapet leaves.  It lies *across* the parapet rather than down
+// inside it, and that is the whole point: snow lying inside a parapet is invisible from any camera
+// standing on the ground, so a tower's season would do nothing at all in the scenes towers are
+// actually in.  A cap on the wall shows as the bright line along the top of a snowy block, which is
+// what you see from the street.
+primitive BuildFlatSnow(season, wide, deep) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                cube { material BuildSnow  scale [wide, wide * 0.025, deep] }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// The shell of a house without its windows, so that a row can build one of these per dwelling and
+// hang whatever windows that dwelling wants on it.
+primitive BuildHouseShell(height, season, variant, wide, deep) -> group {
+    walls = height * 0.50
+
+    return group {
+        // How it meets the ground.
+        cube { material BuildTrim  scale [wide * 1.04, height * 0.03, deep * 1.04]
+               translate Y height * 0.03 }
+        cube { material BuildWallOf(variant)  scale [wide, walls, deep]
+               translate Y walls + height * 0.06 }
+
+        group {
+            // The end walls, cut as the top half of a diamond -- see the note at the head of this file.
+            intersection {
+                cube { rotate Z 45  scale wide * 0.7071 }
+                cube { scale [wide * 1.2, wide, deep]  translate Y wide }
+                material BuildWallOf(variant)
+                translate Z deep * 0.99
+            }
+            intersection {
+                cube { rotate Z 45  scale wide * 0.7071 }
+                cube { scale [wide * 1.2, wide, deep]  translate Y wide }
+                material BuildWallOf(variant)
+                translate Z -deep * 0.99
+            }
+
+            // The slopes, reaching past the wall so the eaves overhang and lay their shadow.
+            cube { material BuildRoofOf(variant)  scale [wide * 0.80, height * 0.020, deep * 1.14]
+                   rotate Z 45  translate [-wide * 0.56, wide * 0.56, 0] }
+            cube { material BuildRoofOf(variant)  scale [wide * 0.80, height * 0.020, deep * 1.14]
+                   rotate Z -45  translate [wide * 0.56, wide * 0.56, 0] }
+
+            object BuildRoofSnow(season, wide, deep, height)
+
+            translate Y walls * 2 + height * 0.06
+        }
+
+        cube { material BuildRoofOf(variant)  scale [wide * 0.10, height * 0.085, wide * 0.10]
+               translate [wide * 0.42, walls * 2 + height * 0.30, -deep * 0.35] }
+    }
+}
+
+primitive House(height, season = 'summer', variant = 1) -> group {
+    wide = height * 0.34
+    deep = height * 0.30
+    walls = height * 0.50
+
+    return group {
+        object BuildHouseShell(height, season, variant, wide, deep)
+
+        for side in [0, 1] {
+            across = (side - 0.5) * wide * 0.90
+
+            object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                translate [across, walls * 0.55, -deep]
+            }
+            object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                translate [across, walls * 1.45, -deep]
+            }
+        }
+
+        cube { material BuildDoor  scale [wide * 0.11, walls * 0.30, deep * 0.03]
+               translate [0, walls * 0.36, -deep] }
+
+        // A house set exactly square to the road is a house nobody built.
+        rotate Y (random(variant, 61) - 0.5) * 7
+    }
+}
+
+// -- A row -------------------------------------------------------------------------------------
+
+// Houses shoulder to shoulder.  They share a height and a depth, because a terrace was built at once,
+// and differ in their walls, their roofs and their windows, because the people in them did not.
+primitive Row(houses, season = 'summer', variant = 1) -> group {
+    height = 3.6
+    wide = height * 0.34
+    deep = height * 0.30
+    walls = height * 0.50
+
+    return group {
+        for house in [0, houses - 1] {
+            group {
+                object BuildHouseShell(height, season, variant * 13 + house, wide, deep)
+
+                for side in [0, 1] {
+                    across = (side - 0.5) * wide * 0.90
+
+                    object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                        translate [across, walls * 0.55, -deep]
+                    }
+                    object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                        translate [across, walls * 1.45, -deep]
+                    }
+                }
+
+                cube { material BuildDoor  scale [wide * 0.11, walls * 0.30, deep * 0.03]
+                       translate [0, walls * 0.36, -deep] }
+
+                translate X house * wide * 2 - (houses - 1) * wide
+            }
+        }
+    }
+}
+
+// -- A tower -----------------------------------------------------------------------------------
+
+// Taller, and ended with a parapet rather than a roof: a low wall standing above the top floor, which
+// is what stops a tall box from looking cut off.  The bays are regular because a building's windows
+// are regular -- what varies between towers is how many bays and how tall a floor is, not where any
+// one window landed.
+primitive Tower(height, season = 'summer', variant = 1) -> group {
+    wide = height * (0.15 + random(variant, 71) * 0.06)
+    deep = wide * (0.72 + random(variant, 72) * 0.4)
+    // A storey is a storey whatever the building is: a taller tower has *more* floors, not taller
+    // ones.  Deriving the count from the height as a fraction gave every tower the same eight.
+    floors = max(3, floor(height / 2.2))
+    storey = height / floors
+    bays = 2 + floor(random(variant, 73) * 3)
+
+    return group {
+        cube { material BuildTrim  scale [wide * 1.05, height * 0.018, deep * 1.05]
+               translate Y height * 0.018 }
+        cube { material BuildWallOf(variant)  scale [wide, height * 0.5, deep]
+               translate Y height * 0.5 + height * 0.03 }
+
+        // The parapet: a band standing above the top floor, and a course under it.
+        cube { material BuildTrim  scale [wide * 1.04, height * 0.012, deep * 1.04]
+               translate Y height * 1.03 }
+        cube { material BuildWallOf(variant)  scale [wide * 1.02, height * 0.030, deep * 1.02]
+               translate Y height * 1.06 }
+
+        for level in [1, floors - 1] {
+            for bay in [0, bays - 1] {
+                across = (bay - (bays - 1) * 0.5) * wide * 1.6 / bays
+
+                object BuildWindow(wide * 0.5 / bays, storey * 0.26, deep * 0.05) {
+                    translate [across, level * storey + storey * 0.45, -deep]
+                }
+            }
+        }
+
+        object BuildFlatSnow(season, wide * 1.06, deep * 1.06) { translate Y height * 1.09 }
+
+        rotate Y (random(variant, 74) - 0.5) * 6
+    }
+}
