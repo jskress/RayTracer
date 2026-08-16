@@ -94,7 +94,7 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
@@ -519,6 +519,12 @@ public partial class LanguageParser
         {
             no > shadow ?? 'Expecting "shadow" to follow "no" here.'
         }
+        // A surface saying that the stuff inside it lights what is around, and not merely itself.
+        givesLightClause:
+        {
+            gives > light ?? 'Expecting "light" to follow "gives" here.' >
+            { samples > _expression }{?}
+        }
         surfaceTransformClause:
         {
             transform > [ _identifier | _keyword ] ?? 'Expecting an identifier to follow "transform" here.' >
@@ -536,7 +542,7 @@ public partial class LanguageParser
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
-            boundedByClause | withSeedClause | startMotionClause
+            givesLightClause | boundedByClause | withSeedClause | startMotionClause
         ]
         
         // Plane clause.

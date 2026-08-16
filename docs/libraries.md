@@ -255,10 +255,9 @@ for the few you look at, the cheap one for the many you do not.  A picture wants
 #### Fire
 
 ```
-import 'fire' { Campfire, CampfireLight }
+import 'fire' { Campfire }
 
-object Campfire(1.4)        { translate [3, 0, -2] }
-light CampfireLight         { location  [3, 0.7, -2] }
+object Campfire(1.4) { translate [3, 0, -2] }
 ```
 
 | | |
@@ -272,15 +271,18 @@ light CampfireLight         { location  [3, 0.7, -2] }
 fire does not, because fire does not have one.  A word taken and ignored is worse than a word not
 asked for: it says the library thought about the question when it did not.
 
-**A flame gives off light you can see and no light that falls on anything.**  That is what this
-renderer does, not an omission in the library: a glowing [medium](scene-files.md#filling-that-space)
-adds its light to rays passing *through* it, and nothing carries that light out to the ground.  Put a
-fire in a dark room with nothing else and the room stays black.
+**Put a fire in a scene and the scene is lit.**  There is nothing to place beside it and nothing to
+keep in step: the stuff a flame is made of gives off light where it is, and that light falls on the
+ground, casts shadows, and carries the flame's own colour with it — see
+[a surface that gives light](surfaces.md#a-surface-that-gives-light).
 
-So every fire comes with a light named to match, as a sky does — but unlike a sky, **you have to put
-it where the fire is**.  A sky needs no position and a fire does, and a primitive in this language can
-hand back a group, a material or a medium but *not* a light, so the two placements cannot be written
-once.  Say them together, and if the fire moves, move the light.
+That was not always so.  Until it was, every fire needed a lamp written beside it and moved with it,
+and this library shipped `CampfireLight` and three siblings for the purpose.  **They are gone.**  A
+scene that used them should delete the line.
+
+**How bright a fire is, is not a setting.**  It follows from what the flame is made of and how big it
+is, falling away as the square of the distance.  If a fire lights too much of a picture, the honest fix
+is a smaller fire.
 
 **A flame is a medium, so it is walked along**, and what it costs is how many places along each
 crossing the renderer stops to ask.  That is scene-wide and the library cannot set it:

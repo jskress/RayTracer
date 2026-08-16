@@ -74,6 +74,7 @@ public class RenderInstruction : Instruction
         scene.Background.RenderingIsAboutToStart(context, null);
 
         HangTheSun(scene);
+        LightTheGlowingThings(scene);
 
         Canvas = camera.Render(context, scene);
     }
@@ -115,6 +116,41 @@ public class RenderInstruction : Instruction
     {
         if (scene.Background is PhysicalSkyPigment sky && sky.SunAsALight() is { } sun)
             scene.Lights.Add(sun);
+    }
+
+    /// <summary>
+    /// This method turns every surface that said its stuff should light the scene into a light.
+    /// <para>
+    /// It happens here, after the surfaces are prepared, because a volume light measures the stuff
+    /// inside its surface when it is made -- and it cannot do that until the surface knows its own
+    /// bounding box, which is settled by preparing.  It also happens after the materials are finalized,
+    /// since a surface with no material of its own inherits one, and the medium is in the material.
+    /// </para>
+    /// <para>
+    /// A surface that asked for this and has nothing to give -- no medium, or one that emits nothing,
+    /// or one whose density came out at nought everywhere -- is passed over rather than complained
+    /// about.  A fire that has gone out is a perfectly good thing to have in a scene, and it should
+    /// cost nothing rather than being an error.
+    /// </para>
+    /// </summary>
+    /// <param name="scene">The scene to light.</param>
+    private static void LightTheGlowingThings(Scene scene)
+    {
+        foreach (Surface surface in new SurfaceIterator(scene.Surfaces).Surfaces)
+        {
+            if (surface.GivesLightSamples is not { } samples)
+                continue;
+
+            Medium medium = surface.Material?.Interior?.Medium;
+
+            if (medium is null)
+                continue;
+
+            VolumeLight light = new (surface, medium) { Samples = samples };
+
+            if (light.Lights)
+                scene.Lights.Add(light);
+        }
     }
 
     /// <summary>

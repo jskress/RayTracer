@@ -14,6 +14,16 @@
 // The air in the room is a medium too, faintly hazy, and that is what draws the soft halo around the
 // flame.
 //
+// **This scene has a twin.**  `candle-by-its-own-light.igl` is the same desk, the same wax, the same
+// books, and the same camera, lit by the flame itself: the shell holding the glowing gas says
+// `gives light`, and there is no lamp in the file at all.  The two are meant to be read together --
+// this one **staged**, that one **physical** -- because neither is the wrong way and the differences
+// between them are the whole lesson.
+//
+// This one keeps its lamp on purpose.  It is a demonstration of `fade distance`, and a volume light
+// has its falloff built into the physics and takes no fade at all; converting it would not swap one
+// light for another, it would delete the thing being shown.
+//
 // The light is an area light rather than a lamp at a point, and the ring of shadow around the
 // candle's foot is why.  A flame sits just above a fat candle, so the candle's own body blocks the
 // light going down and outward and lays a broad disc of shadow on the desk around itself -- that is

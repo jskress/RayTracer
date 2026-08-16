@@ -1,6 +1,6 @@
 // A fire at night, and the one thing in these libraries that had to change the renderer first.
 //
-//     import 'fire'        { Campfire, CampfireLight, Torch, TorchLight }
+//     import 'fire'        { Campfire, Torch, Embers }
 //     import 'rocks'       { Boulder, Cobble }
 //     import 'undergrowth' { Tuft }
 //
@@ -11,15 +11,19 @@
 // and a flame runs white at the heart, through yellow and orange, to red at the tip.  One volume, one
 // medium, one gradient.
 //
-// **What it still cannot do is light the ground.**  A glowing medium adds its light to rays passing
-// through it -- that is what you look at -- and nothing carries that light outward to the stones and
-// the grass.  So the pool of light here comes from lamps standing inside the fires, one to each, and
-// the library hands them out by name for exactly that reason.  You will find them written next to the
-// fires below, and if a fire moved and its lamp did not, the picture would quietly stop making sense.
+// **And it lights the ground.**  There is no lamp anywhere in this file.  Every scrap of light here
+// comes out of the fires themselves: the stuff a flame is made of gives off light where it is, that
+// light falls on the stones and the grass, and it carries the flame's own color with it -- so the
+// ground near the fire is orange because the fire is orange there.
 //
-// That seam is the honest state of things rather than a trick: making an emitting volume light the
-// scene is a real piece of work and has not been done.  When it is, the lamps go away and these lines
-// get shorter.
+// An earlier version of this scene had a lamp written beside each fire, because a glowing medium used
+// to be seen and not felt.  Two placements had to agree, and a fire moved without its lamp made a
+// picture that quietly stopped making sense.  Those lines are gone.
+//
+// **How bright a fire is, is not a setting.**  It follows from what the flame is made of and how big
+// it is, falling away as the square of the distance, which is why the far grass is nearly black and
+// the near stones are not.  There is no knob to turn: a fire that lit too much would have to be a
+// smaller fire.
 //
 // **A campfire is one volume, not four.**  Three flames and a bed of coals could each have their own
 // shell, and it would be wrong: a ray crossing three of them comes back black wherever the stuff
@@ -36,7 +40,7 @@
 //
 //     dotnet run -- libraries --install
 
-import 'fire'        { Campfire, CampfireLight, Torch, TorchLight, Embers, EmbersLight }
+import 'fire'        { Campfire, Torch, Embers }
 import 'rocks'       { Boulder, Cobble }
 import 'undergrowth' { Tuft }
 
@@ -56,9 +60,9 @@ context {
 }
 
 camera {
-    location [3.4, 2.35, -6.2]
-    look at [-0.2, 0.85, 0]
-    field of view 44
+    location [2.5, 1.55, -4.4]
+    look at [-0.1, 0.75, 0]
+    field of view 46
 }
 
 background [0.015, 0.016, 0.030]
@@ -79,17 +83,15 @@ plane {
     }
 }
 
-// The fire, and the lamp that stands in it.  These two lines belong together.
+// The fire.  One line, and it lights the picture.
 object Campfire(1.5, 2)
-light CampfireLight { location [0, 0.62, 0] }
 
-// A torch stuck in the ground a little way off, with its own smaller lamp.
+// A torch stuck in the ground a little way off.
 object Torch(1.9, 5)       { translate [-2.5, 0, 1.1] }
-light TorchLight           { location  [-2.5, 1.35, 1.1] }
 
-// Yesterday's fire, gone to coals.  No flame, so its light is dull and reaches barely a step.
+// Yesterday's fire, gone to coals: its light is dull and reaches barely a step past itself, which is
+// what a fire that has burned down actually does.
 object Embers(0.8, 7)      { translate [2.3, 0, 1.6] }
-light EmbersLight          { location  [2.3, 0.1, 1.6] }
 
 // Stones round the fire, close enough to be lit from below.
 object Boulder(1.5, 'summer', 3) { translate [-1.9, 0.26, -1.4] }

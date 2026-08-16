@@ -448,10 +448,16 @@ for the same reason: light that differs from place to place has to be gathered p
 crossing with no end gives no honest place to stop.  The two are refused separately so the complaint
 names which one you wrote.
 
-**What this does not do is light anything else.**  A glowing medium adds its light to rays passing
-*through* it, so you can see it; nothing carries that light to the surfaces around it.  A scene that
-wants a fire to light a room puts a light in the fire, and
-[`gallery/Local/lights/candle.igl`](../gallery/Local/lights/candle.igl) is the worked example.
+**On its own this lights nothing else.**  A glowing medium adds its light to rays passing *through*
+it, so you can see it, and by itself nothing carries that light to the surfaces around it.  Saying
+[`gives light`](surfaces.md#a-surface-that-gives-light) on the surface the medium fills is what changes
+that: the stuff inside then lights the room, casts shadows and colours them, with nothing to place
+beside it.  [`gallery/Local/functions/a-fire-in-the-open.igl`](../gallery/Local/functions/a-fire-in-the-open.igl)
+is a scene with no light written in it at all.
+
+A scene may still prefer a lamp of its own — [`candle.igl`](../gallery/Local/lights/candle.igl) does,
+because it is a demonstration of [`fade distance`](lights.md), and a volume light has its falloff built
+in and takes no fade at all.
 
 #### Multiple scattering
 

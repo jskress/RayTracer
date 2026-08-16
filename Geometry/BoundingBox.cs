@@ -24,6 +24,17 @@ public class BoundingBox
     private double _zMax = double.MinValue;
 
     /// <summary>
+    /// This property reports the corner of the box with the smallest coordinates.
+    /// </summary>
+    public Point Minimum => new (_xMin, _yMin, _zMin);
+
+    /// <summary>
+    /// This property reports the corner with the largest, so that something needing to spread points
+    /// through the box -- a light sampling the stuff inside a surface, say -- can say where it is.
+    /// </summary>
+    public Point Maximum => new (_xMax, _yMax, _zMax);
+
+    /// <summary>
     /// This method is used to add the point to the bounding box, expanding it as necessary.
     /// </summary>
     /// <param name="point">The point to add.</param>

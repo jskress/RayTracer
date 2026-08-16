@@ -62,6 +62,43 @@ A surface with `no shadow` is still seen, but light passes through it as though 
 there.  It is a cheat, and a useful one: a glass pane that would otherwise darken a room, or
 a light's own visible bulb that should not shade what it lights.
 
+#### A surface that gives light
+
+A glowing [medium](scene-files.md#filling-that-space) is seen and not felt.  It adds its light to rays
+passing *through* it, so a flame is bright to look at — and nothing carries that light out to the
+ground, so a fire in a dark room leaves the room dark.  `gives light` is what changes that:
+
+```
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  transparency 1
+        interior { medium { emission pigment FlameHeat  density function { … } } }
+    }
+    no shadow
+    gives light samples 40
+}
+```
+
+The stuff inside now lights what is around it, casts shadows, and colours them: a flame lights the
+ground orange because *the flame's own colour at each place* is what arrives.  There is nothing to
+position and nothing to keep in step — the fire is the light.
+
+**How bright it is, is not a setting.**  It follows from the emission, the density and the size of the
+volume, falling away as the square of the distance.  A bigger fire lights more; a dimmer one lights
+less.  If a fire is too bright in a scene, the honest fix is a smaller or dimmer fire, not a knob on
+the light.
+
+**`samples` is how many places inside the stuff are looked at** when a point is shaded, and it is a
+cost-against-grain trade like an [area light](materials.md)'s steps.  Eight is enough for a small flame
+lighting a wall a few units off; forty is what a large fire in the foreground wants.  Too few shows as
+mottling on smooth surfaces, since each point is guessing at the fire's shape from a handful of looks.
+
+The places are chosen **in proportion to how much stuff is there**, worked out once before rendering,
+so a flame filling a fifth of its shell does not spend four fifths of its samples on empty air.
+
+A surface that asks for this and has nothing to give — no medium, or one that emits nothing — is
+passed over rather than refused.  A fire that has gone out is a reasonable thing to have in a scene.
+
 #### `bounded by`
 
 Most surfaces work out a bounding box for themselves, so you can leave this alone.  It is

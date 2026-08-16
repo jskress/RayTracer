@@ -101,6 +101,13 @@ public partial class LanguageParser
             case "no.shadow":
                 resolver.NoShadowResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "gives.light":
+                // With no count named, enough places to be looked at from that a flame does not show
+                // its samples as banding on what it lights.
+                resolver.GivesLightResolver = clause.Expressions.Count > 0
+                    ? new TermResolver<int?> { Term = term }
+                    : new LiteralResolver<int?> { Value = 24 };
+                break;
             case "bounded.by":
                 resolver.BoundingBoxResolver = new BoundingBoxResolver
                 {

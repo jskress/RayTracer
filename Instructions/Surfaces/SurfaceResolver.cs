@@ -29,6 +29,12 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public Resolver<bool> NoShadowResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many places the stuff inside the surface is
+    /// looked at from when it lights the scene.
+    /// </summary>
+    public Resolver<int?> GivesLightResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the bounding box property of our group.
     /// </summary>
     public BoundingBoxResolver BoundingBoxResolver { get; set; }
@@ -64,6 +70,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
         MaterialResolver.AssignTo(value, target => target.Material, context, variables);
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
+        GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 

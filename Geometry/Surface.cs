@@ -35,6 +35,17 @@ public abstract class Surface : NamedThing
     public BoundingBox BoundingBox { get; set; }
 
     /// <summary>
+    /// This property holds how many places the stuff inside this surface is looked at from when
+    /// it lights the scene, or <c>null</c> when it does not light the scene at all.
+    /// <para>
+    /// A glowing medium is otherwise seen and not felt: it adds its light to rays that pass
+    /// through it, so a flame is bright to look at, and nothing carries that light out to the
+    /// ground.  Saying this turns the stuff inside into a light as well.
+    /// </para>
+    /// </summary>
+    public int? GivesLightSamples { get; set; }
+
+    /// <summary>
     /// This property holds the transform for the surface for converting from world to
     /// surface space.
     /// </summary>
@@ -319,6 +330,27 @@ public abstract class Surface : NamedThing
             point = Parent.WorldToSurface(point, timeIndex);
 
         return InverseTransformAt(timeIndex) * point;
+    }
+
+    /// <summary>
+    /// This method handles converting the given point from the surface's coordinate system to the
+    /// world's, which is <see cref="WorldToSurface"/> walked the other way.
+    /// <para>
+    /// It exists for the things that have something to say about a place *inside* a surface and must
+    /// say it out in the world: a light made of the stuff filling a surface has to tell a point being
+    /// shaded which way to look and how far, and both of those are the world's business.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to convert.</param>
+    /// <param name="timeIndex">Which instant to convert at.</param>
+    /// <returns>The point, in the world's coordinate system.</returns>
+    public Point SurfaceToWorld(Point point, int timeIndex = 0)
+    {
+        Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
+
+        point = forward * point;
+
+        return Parent is null ? point : Parent.SurfaceToWorld(point, timeIndex);
     }
 
     /// <summary>

@@ -360,7 +360,7 @@ public partial class LanguageParser
         string first = clause.Text();
         List<string> words = [first];
 
-        if (first is "apply" or "no" or "bounded" or "with")
+        if (first is "apply" or "no" or "bounded" or "with" or "gives")
             words.Add(clause.Text(1));
 
         return string.Join('.', words);
