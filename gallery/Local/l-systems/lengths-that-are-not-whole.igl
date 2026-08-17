@@ -1,0 +1,103 @@
+// The figure that made parameters necessary.
+//
+// Prusinkiewicz and Lindenmayer open their section on parametric L-systems by pointing at what a
+// plain one cannot do.  Every line an ordinary L-system draws is one step long, or two, or three:
+// the turtle has a single `length` and the alphabet has no way to say *this* segment is shorter.
+// So even an isosceles right triangle cannot be traced -- the hypotenuse is the square root of two
+// times the side, and no whole number of steps ever lands on it.  You can approximate by making the
+// step tiny, but then that unit has to divide every length in the model, and a single internode
+// takes hundreds of symbols to draw.
+//
+// **A module may now carry numbers**, and a production may do arithmetic on them:
+//
+//     'A(s)' -> '!F(s)[+A(s / R)][/(90)-A(s / R)]'
+//
+// That is the book's equation (1.9).  An apex `A` carrying a size draws a segment of exactly that
+// length, then puts out two smaller apices, each a factor `R` down from it.  The structure is a
+// recursive subdivision of a rectangle into two similar rectangles, which needs its edges in the
+// proportion of one to the square root of two -- so `R` is a shade over 1.414.  No whole number of
+// steps lands on that, and there is no way to write this without parameters.
+//
+// **The arithmetic is ordinary arithmetic.**  `R` below is a scene value, in scope inside the
+// production like any other name, which is why this language needs no equivalent of the book's
+// `#define`.  A module's argument may call `sqrt`, may hold a nested call, may say anything an
+// expression can say.
+//
+// **Where a letter ends and arithmetic begins is decided by the parentheses.**  Read `[+A(s / R)]`
+// and notice that the `+` is a turn while the `/` inside is a division -- then read
+// `[/(90)-A(s / R)]`, where the leading `/` is a *roll*, taking 90 as its own parameter.  The book
+// warns about this directly: `+`, `&`, `^` and `/` are letters of the alphabet *and* operators, and
+// which is meant depends on where it sits.  A word is read module by module -- a letter, then a
+// balanced parenthesis if one follows it immediately -- so the two can never be confused.
+//
+// **A number may drive any of the turtle's commands, not just `F`.**  `/(90)` rolls ninety degrees
+// where the `angle` in the controls would otherwise have decided, which is what gives this
+// structure its depth rather than leaving it flat.  A command written bare goes on using the
+// controls, so nothing written before parameters existed has changed.
+//
+// The book sets `R` slightly above the square root of two on purpose: at the exact value the
+// structure touches itself, and a little over keeps it clear.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Lengths That Are Not Whole'
+        author 'J. Stephen Kress'
+        description 'A branching structure whose every segment is a different, irrational length.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2.6, 2.4, -5.2]
+    look at [-0.1, 1.5, 0]
+    field of view 44
+}
+
+point light { location [8, 12, -10] }
+
+// A weaker lamp opposite, so the far side of the structure is not simply black.
+point light {
+    location [-9, 5, -6]
+    color [0.30, 0.32, 0.38]
+}
+
+background [0.10, 0.11, 0.16]
+
+plane {
+    material {
+        pigment [0.15, 0.16, 0.19]
+        ambient 0.10
+        specular 0.04
+    }
+}
+
+// A shade over the square root of two, which is the proportion the subdivision needs.
+R = 1.456
+
+tree = lsystem {
+    axiom '$A(1)'
+    productions {
+        'A(s)' -> '!F(s)[+A(s / R)][/(90)-A(s / R)]'
+    }
+    controls {
+        tubes
+        angle 85
+        diameter 0.09
+        factor 0.78
+    }
+}
+
+lsystem tree {
+    generations 9
+    material {
+        pigment [0.78, 0.66, 0.44]
+        specular 0.25
+        shininess 50
+        ambient 0.10
+    }
+    scale 1.5
+}

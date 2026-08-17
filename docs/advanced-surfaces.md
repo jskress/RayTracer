@@ -721,6 +721,70 @@ That is what keeps a stand of trees from looking like one tree copied.  The choi
 from a seed, so a scene still renders the same way twice; `with seed` on the L-system changes
 which stand of trees you get.
 
+#### Parameters
+
+A module may carry numbers, and a production may do arithmetic on them:
+
+```
+R = 1.456
+
+tree = lsystem {
+    axiom '$A(1)'
+    productions {
+        'A(s)' -> '!F(s)[+A(s / R)][/(90)-A(s / R)]'
+    }
+}
+```
+
+`A(s)` binds the name `s` to whatever number the module carries; `F(s)` draws a segment of exactly
+that length; `A(s / R)` passes on a smaller one.
+
+**Why it matters** is best put by Prusinkiewicz and Lindenmayer, who introduced it: without
+parameters every line is one step long, or two, or three, so even an isosceles right triangle cannot
+be traced — the hypotenuse is √2 times the side and no whole number of steps lands on it. You can
+shrink the step until it divides everything, but then a single internode takes hundreds of symbols.
+
+**The first number drives the turtle.** `F(a)` steps `a`, `f(a)` moves without drawing, `+(a)`,
+`-(a)`, `^(a)`, `&(a)`, `\(a)` and `/(a)` turn by `a` **degrees**, and `!(w)` sets the width
+outright rather than shrinking it by `factor`. Any further numbers are the model's own business —
+`F(x, t)` may carry a counter the turtle never looks at.
+
+**A command written bare still uses `controls`.** That is the other half of the rule, and it is what
+keeps every L-system written before parameters existed drawing exactly as it did.
+
+**Arithmetic is ordinary arithmetic.** A module's argument is an expression like any other, so it
+may call `sqrt`, hold a nested call, and — as `R` does above — use a value the scene named. That is
+why there is no need for anything like the book's `#define`.
+
+##### Conditions
+
+A production may be guarded, and then it only applies where the guard is true:
+
+```
+productions {
+    'A(t) : t > 3'  -> 'F(1)'
+    'A(t) : t <= 3' -> 'F(1)A(t + 1)'
+}
+```
+
+Conditions use `==` for equality, not the single `=` the book prints — everything after the colon is
+an ordinary expression in this language.
+
+**A rule applies only when the letter, the number of parameters *and* the condition all agree.** So
+`F(x)` and `F(x, t)` are two different rules rather than one that sometimes goes wrong, and a module
+that suits no rule is carried through untouched.
+
+##### Where a letter ends and arithmetic begins
+
+The book warns that `+`, `&`, `^` and `/` are letters of the alphabet *and* arithmetic operators,
+and which is meant depends on where it sits. In `F(x*h)+F(x*q)` the `*` is a multiplication and the
+`+` is a turn.
+
+A word is read module by module — a letter, then a balanced parenthesis **only if one follows it
+immediately** — so the two can never be confused. One consequence is worth knowing: a parenthesis
+that does not follow a letter directly is not a parameter list. In `[F(2)]` the `(2)` belongs to the
+`F`, not to the bracket.
+
 #### Bending, with `tropism`
 
 A plant drawn from rules alone runs dead straight between its turns, and that is the surest sign

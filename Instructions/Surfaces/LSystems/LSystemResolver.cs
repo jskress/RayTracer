@@ -5,6 +5,8 @@ using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Geometry.LSystems;
 
+using RayTracer.Parser;
+
 namespace RayTracer.Instructions.Surfaces.LSystems;
 
 /// <summary>
@@ -83,6 +85,14 @@ public class LSystemResolver: SurfaceResolver<LSystem>, IValidatable
         RenderingControlsResolver.AssignTo(value, target => target.RenderingControls, context, variables);
         IgnoreOrientationCommandsResolver.AssignTo(value, target => target.IgnoreOrientationCommands, context, variables);
         SymbolsToIgnoreResolver.AssignTo(value, target => target.SymbolsToIgnore, context, variables);
+
+        // Captured here for the same reason the leaf recipe below is: the L-system works its word
+        // out at render time, when it has neither a render context nor a scope of its own, but a
+        // module's arithmetic has to be evaluated then rather than now -- what a successor like
+        // F(x * 0.5) comes to depends on the module being rewritten.  So the scope it was written
+        // in, and the way to compile a piece of that arithmetic, are handed over here.
+        value.Scope = variables;
+        value.Compile = LanguageParser.CompileModuleArgument;
 
         value.CommandMappings.AddRange(CommandMappings);
         value.ProductionRules.AddRange(ProductionRuleResolvers

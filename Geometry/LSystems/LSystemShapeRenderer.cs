@@ -129,11 +129,11 @@ public abstract class LSystemShapeRenderer
     /// </summary>
     internal List<Material> DepthMaterials { get; } = [];
 
-    private readonly string _production;
+    private readonly Module[] _production;
     private readonly Stack<Turtle> _stack;
     private readonly Stack<List<Point>> _polygons;
 
-    protected LSystemShapeRenderer(string production)
+    protected LSystemShapeRenderer(Module[] production)
     {
         _production = production;
         _stack = new Stack<Turtle>();
@@ -157,7 +157,12 @@ public abstract class LSystemShapeRenderer
         // We walk the runes by index rather than mapping them straight to commands, because a
         // '~' may name the surface it wants in the rune that follows it, and that one has to be
         // claimed before it is read as a command in its own right.
-        Rune[] runes = _production.AsRunes();
+        // The word's letters on their own.  Everything that reads the word structurally -- what a
+        // '~' names, where a cut branch ends -- reads letters and never numbers, so those go on
+        // working exactly as they did.  The numbers are taken from the module itself, below.
+        Rune[] runes = _production
+            .Select(module => module.Letter)
+            .ToArray();
 
         for (int index = 0; index < runes.Length; index++)
         {
@@ -170,6 +175,11 @@ public abstract class LSystemShapeRenderer
 
                 continue;
             }
+
+            // Whatever number this module carries is handed to the turtle before the command runs,
+            // and taken away again after, so that a module written without one falls back to the
+            // rendering controls exactly as it always did.
+            _stack.Peek().UseParameter(_production[index].Primary);
 
             TurtleCommand command = ToTurtleCommand(runes[index]);
 
@@ -205,6 +215,8 @@ public abstract class LSystemShapeRenderer
                     Execute(_stack.Peek(), command);
                     break;
             }
+
+            _stack.Peek().UseParameter(null);
         }
 
         Complete(turtle);

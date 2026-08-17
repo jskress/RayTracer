@@ -48,11 +48,14 @@ public class TestLSystemProductions
         // thing twice answers the same both times.  (It used to draw from a shared, advancing
         // generator, which is what made repeated renders of one tree differ.)
         for (int generation = 0; generation <= 4; generation++)
-            Assert.AreEqual(CoinFlip(7).Produce(generation), CoinFlip(7).Produce(generation));
+            Assert.AreEqual(
+                ModuleWord.AsText(CoinFlip(7).Produce(generation)),
+                ModuleWord.AsText(CoinFlip(7).Produce(generation)));
 
         LSystemProducer producer = CoinFlip(7);
 
-        Assert.AreEqual(producer.Produce(3), producer.Produce(3));
+        Assert.AreEqual(
+            ModuleWord.AsText(producer.Produce(3)), ModuleWord.AsText(producer.Produce(3)));
     }
 
     [TestMethod]
@@ -60,7 +63,8 @@ public class TestLSystemProductions
     {
         // Eight independent coin-flips, so two different seeds should disagree somewhere -- the
         // choice really is being steered by the seed, not fixed.
-        Assert.AreNotEqual(CoinFlip(1).Produce(1), CoinFlip(2).Produce(1));
+        Assert.AreNotEqual(
+            ModuleWord.AsText(CoinFlip(1).Produce(1)), ModuleWord.AsText(CoinFlip(2).Produce(1)));
     }
 
     [TestMethod]
@@ -70,7 +74,9 @@ public class TestLSystemProductions
         // and grew a different tree every render.  It falls back to a fixed default seed now, so
         // two unseeded producers agree -- a scene wanting a different tree names a seed rather
         // than getting one by chance.
-        Assert.AreEqual(CoinFlip(null).Produce(1), CoinFlip(null).Produce(1));
+        Assert.AreEqual(
+            ModuleWord.AsText(CoinFlip(null).Produce(1)),
+            ModuleWord.AsText(CoinFlip(null).Produce(1)));
     }
 
     [TestMethod]
@@ -86,7 +92,7 @@ public class TestLSystemProductions
             .AddRule(NewRule("B<F", "q", 0.5));
 
         // The F after A resolves within its own group (x or y), the F after B within its (p or q).
-        string result = producer.Produce(1);
+        string result = ModuleWord.AsText(producer.Produce(1));
 
         Assert.IsTrue(result is "AxBp" or "AxBq" or "AyBp" or "AyBq", result);
     }
@@ -138,6 +144,8 @@ public class TestLSystemProductions
     private static void Verify(LSystemProducer producer, params string[] expected)
     {
         for (int generation = 0; generation < expected.Length; generation++)
-            Assert.AreEqual(expected[generation], producer.Produce(generation), $"Generation {generation}");
+            Assert.AreEqual(
+                expected[generation], ModuleWord.AsText(producer.Produce(generation)),
+                $"Generation {generation}");
     }
 }

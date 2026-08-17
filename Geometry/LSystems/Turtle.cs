@@ -57,6 +57,12 @@ public class Turtle
 
     private readonly LSystemRenderingControls _controls;
 
+    // The number the module being executed carries, if it carries one.  Prusinkiewicz and
+    // Lindenmayer put it plainly: where a symbol the turtle reads has parameters, the first of them
+    // controls the turtle, and where it has none the defaults from outside the L-system are used.
+    // So this is set before each command and consulted by whichever of the methods below runs.
+    private double? _parameter;
+
     internal Turtle(LSystemRenderingControls controls)
     {
         _controls = controls;
@@ -69,13 +75,34 @@ public class Turtle
     }
 
     /// <summary>
+    /// This method sets the number the next command should use in place of its default, or clears
+    /// it when the module carries none.
+    /// </summary>
+    /// <param name="value">The module's first number, or null.</param>
+    public void UseParameter(double? value)
+    {
+        _parameter = value;
+    }
+
+    /// <summary>
+    /// This property reports the angle the current command should turn by: the module's own number
+    /// where it has one, and the angle from the rendering controls where it has not.
+    /// <para>
+    /// A number written in a module is taken as degrees, which is what <em>The Algorithmic Beauty
+    /// of Plants</em> means by <c>+(a)</c>.  The controls' own angle has already been converted by
+    /// the time it arrives here, so the two meet in radians.
+    /// </para>
+    /// </summary>
+    private double Angle => _parameter?.ToRadians() ?? _controls.Angle;
+
+    /// <summary>
     /// This method is used to move the turtle by the current distance in the current
     /// direction.
     /// </summary>
     public void Move()
     {
         PreviousLocation = Location;
-        Location += Direction * _controls.Length;
+        Location += Direction * (_parameter ?? _controls.Length);
 
         ApplyTropism();
     }
@@ -119,7 +146,7 @@ public class Turtle
     /// <param name="sign">The direction of the turn.</param>
     public void Yaw(int sign)
     {
-        Direction = RotateAround(Direction, Up, _controls.Angle * sign);
+        Direction = RotateAround(Direction, Up, Angle * sign);
     }
 
     /// <summary>
@@ -129,7 +156,7 @@ public class Turtle
     public void Pitch(int sign)
     {
         Vector axis = Direction.Cross(Up);
-        double angle = _controls.Angle * sign;
+        double angle = Angle * sign;
 
         Direction = RotateAround(Direction, axis, angle);
         Up = RotateAround(Up, axis, angle);
@@ -141,7 +168,7 @@ public class Turtle
     /// <param name="sign">The direction of the roll.</param>
     public void Roll(int sign)
     {
-        Up = RotateAround(Up, Direction, _controls.Angle * sign);
+        Up = RotateAround(Up, Direction, Angle * sign);
     }
 
     /// <summary>
@@ -205,7 +232,9 @@ public class Turtle
     /// </summary>
     public void DecreaseDiameter()
     {
-        Diameter *= _controls.Factor;
+        // A number here is the width to take, not a factor to shrink by, which is what ABOP's
+        // !(w) means.
+        Diameter = _parameter ?? Diameter * _controls.Factor;
     }
 
     /// <summary>

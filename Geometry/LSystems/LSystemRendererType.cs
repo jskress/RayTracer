@@ -16,7 +16,7 @@ public enum LSystemRendererType
 public static class LSystemRendererTypeExtensions
 {
     public static LSystemShapeRenderer GetRenderer(
-        this LSystemRendererType type, string production)
+        this LSystemRendererType type, Module[] production)
     {
         return type switch
         {

@@ -381,6 +381,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/lengths-that-are-not-whole.png">
+      <img alt="Lengths That Are Not Whole" height="120" src="Local/l-systems/lengths-that-are-not-whole.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/lengths-that-are-not-whole.igl">Lengths That Are Not Whole</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/hilbert.png">
       <img alt="L-System Test: Hilbert Curve" height="120" src="Local/l-systems/hilbert.png" width="160"/>
     </a></td>
