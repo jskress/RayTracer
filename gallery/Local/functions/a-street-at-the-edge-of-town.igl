@@ -95,7 +95,7 @@ plane {
 cube {
     material { pigment [0.26, 0.26, 0.27]  ambient 0.05  specular 0.04  shininess 12 }
     scale [40, 0.02, 3.2]
-    translate [0, 0.02, -6.4]
+    translate [0, 0.02, -8.0]
 }
 
 // -- The near side of the street ------------------------------------------------------------------
@@ -127,14 +127,24 @@ object Elm(6.1, 'summer', 12)  { translate [6.5, 0, 6.8] }
 object Birch(4.6, 'summer', 7) { translate [-10.2, 0, -3.4] }
 object Birch(4.2, 'summer', 2) { translate [4.2, 0, -3.6] }
 
-// Grass on the verge between the houses and the road, and tufts at the kerb where the mower does not
-// reach.
-object Grass(9, 'summer', 21)  { translate [-9, 0, -3.4] }
-object Grass(9, 'summer', 22)  { translate [2, 0, -3.4] }
+// Grass on the verge between the houses and the road.
+//
+// A verge is a *strip*, and `Grass` does not make one: its number is how far across a patch reaches in
+// both directions at once, so `Grass(9)` is a nine-by-nine square centered where it is put.  Two of
+// those laid along a frontage reach four and a half units back from their line, which put grass across
+// the whole carriageway.  A run of narrow patches shoulder to shoulder is how a strip is asked for, and
+// it costs less than the two squares did, since a strip is a good deal less ground than a field.
+for patch in [0, 6] {
+    object Grass(3.4, 'summer', 21 + patch) {
+        translate [patch * 3.4 - 12, 0, -2.85]
+    }
+}
 
+// Tufts at the kerb, where the mower does not reach.  They sit a little clear of the road's edge, on
+// the grass side of it.
 for i in [0, 7] {
     object Tuft(0.34 + random(i, 31, 5) * 0.22, 'summer', i + 40) {
         translate [i * 3.6 - 13 + random(i, 32, 5) * 1.4, 0,
-                   -4.9 + random(i, 33, 5) * 0.5]
+                   -4.62 + random(i, 33, 5) * 0.32]
     }
 }

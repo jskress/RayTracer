@@ -53,7 +53,7 @@ context {
 
 camera {
     location [-15, 7.0, -31]
-    look at [2.0, 3.6, -2.5]
+    look at [-1.5, 3.6, -2.5]
     field of view 56
 }
 
@@ -124,12 +124,28 @@ object Elm(6.2, 'summer', 4)   { translate [-17, 0, 9] }
 object Elm(5.8, 'summer', 9)   { translate [-5, 0, 10] }
 object Birch(4.4, 'summer', 7) { translate [5.5, 0, 0.6] }
 
-object Grass(8, 'summer', 21)  { translate [-9, 0, -0.4] }
-object Grass(8, 'summer', 22)  { translate [2, 0, -0.4] }
+// A verge is a *strip*, and `Grass` does not make one: its number is how far a patch reaches in both
+// directions at once, so `Grass(8)` is an eight-by-eight square centered where it is put.  Two of
+// those laid along this frontage reached four units either side of their line, which put grass across
+// half the carriageway, through the far-lane traffic and into the fronts of the houses.  A run of
+// narrow patches shoulder to shoulder is how a strip is asked for, and it costs less than the two
+// squares did, since a strip is a good deal less ground than a field.
+//
+// The fourth number is how tall a blade stands, and it is raised here because the strip is narrow and
+// thirty units off.  A blade is about a fortieth of its length across, so ankle-high grass at this
+// distance is thinner than the pixel drawn for it and the whole verge goes to plain green.  Taller
+// grass reads at once *and* costs less, since taller tufts stand further apart.
+for patch in [0, 12] {
+    object Grass(2.6, 'summer', 21 + patch, 0.46) {
+        translate [patch * 2.6 - 17, 0, 0.55]
+    }
+}
 
+// Tufts on the near side of the road, where the mower does not reach.  They stand clear of the
+// carriageway rather than on it.
 for i in [0, 6] {
     object Tuft(0.32 + random(i, 31, 5) * 0.20, 'summer', i + 40) {
         translate [i * 4.2 - 14 + random(i, 32, 5) * 1.4, 0,
-                   -9.6 + random(i, 33, 5) * 0.5]
+                   -10.45 + random(i, 33, 5) * 0.45]
     }
 }
