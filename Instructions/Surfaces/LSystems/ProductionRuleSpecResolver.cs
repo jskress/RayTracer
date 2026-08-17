@@ -40,6 +40,16 @@ public class ProductionRuleSpecResolver : ObjectResolver<ProductionRuleSpec>
     public Resolver<string> ProductionResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the names the predecessor binds.
+    /// </summary>
+    public Resolver<string[]> FormalsResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the condition the rule is guarded by.
+    /// </summary>
+    public Resolver<string> ConditionResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// production rule.
     /// </summary>
@@ -54,6 +64,8 @@ public class ProductionRuleSpecResolver : ObjectResolver<ProductionRuleSpec>
         RightContextResolver.AssignTo(value, target => target.RightContext, context, variables);
         BreakValueResolver.AssignTo(value, target => target.BreakValue, context, variables);
         ProductionResolver.AssignTo(value, target => target.Production, context, variables);
+        FormalsResolver.AssignTo(value, target => target.Formals, context, variables);
+        ConditionResolver.AssignTo(value, target => target.Condition, context, variables);
 
         string error = value.Validate();
 

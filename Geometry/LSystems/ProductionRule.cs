@@ -1,5 +1,7 @@
 using System.Text;
 using RayTracer.Basics;
+using RayTracer.General;
+using RayTracer.Terms;
 using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
@@ -14,7 +16,44 @@ public class ProductionRule : ProductionRuleBase
     /// When this rule does not have any stochastic aspect, the spectrum will hold only a
     /// single value.
     /// </summary>
-    public Spectrum<Rune[]> Productions { get; } = new ();
+    public Spectrum<ModuleTemplate[]> Productions { get; } = new ();
+
+    /// <summary>
+    /// This property holds the condition this rule is guarded by, or null when it has none.
+    /// </summary>
+    public Term Condition { get; init; }
+
+    /// <summary>
+    /// This method reports whether this rule may be applied to the given module: the number of
+    /// numbers the module carries has to agree with the number of names the rule binds, and the
+    /// rule's condition, if it has one, has to be true of them.
+    /// <para>
+    /// The arity check is what lets <c>F(x)</c> and <c>F(x, t)</c> be two different rules for the
+    /// same letter rather than one rule that sometimes goes wrong, and it is Prusinkiewicz and
+    /// Lindenmayer's own requirement: a production matches only when the letter agrees, the number
+    /// of parameters agrees, and the condition holds.
+    /// </para>
+    /// </summary>
+    /// <param name="module">The module being rewritten.</param>
+    /// <param name="parent">The scope the L-system was written in.</param>
+    /// <param name="scope">The scope holding this rule's names, bound to the module's numbers.</param>
+    /// <returns><c>true</c>, if this rule applies to the module.</returns>
+    public bool AppliesTo(Module module, Variables parent, out Variables scope)
+    {
+        scope = null;
+
+        if (Formals.Length != module.Arity)
+            return false;
+
+        // A child scope per application, so a rule's names cannot leak into the scene or into the
+        // next module rewritten.  This is the same scoping a function body gets.
+        scope = new Variables(parent);
+
+        for (int index = 0; index < Formals.Length; index++)
+            scope.SetValue(Formals[index], module.Parameters[index]);
+
+        return Condition is null || Condition.GetValue<bool>(scope);
+    }
 
     /// <summary>
     /// This property holds the collection of runes that should be ignored regarding
@@ -189,14 +228,22 @@ public class ProductionRule : ProductionRuleBase
     /// <summary>
     /// This method provides a string representation of this production rule.
     /// </summary>
+    /// <summary>
+    /// This method writes a production out the way it was written.
+    /// </summary>
+    private static string AsText(ModuleTemplate[] production)
+    {
+        return string.Concat(production.Select(module => module.ToString()));
+    }
+
     /// <returns>This rule, as a string.</returns>
     public override string ToString()
     {
         string text;
         if (Productions.Count == 1)
         {
-            (_, Rune[] production) = Productions.GetByIndex(0);
-            text = production.AsString();
+            (_, ModuleTemplate[] production) = Productions.GetByIndex(0);
+            text = AsText(production);
         }
         else
         {
@@ -204,8 +251,8 @@ public class ProductionRule : ProductionRuleBase
 
             for (int index = 0; index < Productions.Count; index++)
             {
-                (double breakValue, Rune[] production) = Productions.GetByIndex(index);
-                entries.Add($"{production.AsString()} >= {breakValue}");
+                (double breakValue, ModuleTemplate[] production) = Productions.GetByIndex(index);
+                entries.Add($"{AsText(production)} >= {breakValue}");
             }
             
             text = string.Join(", ", entries);

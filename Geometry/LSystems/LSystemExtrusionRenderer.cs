@@ -9,7 +9,7 @@ public class LSystemExtrusionRenderer : LSystemShapeRenderer
 {
     private GeneralPath _path;
 
-    public LSystemExtrusionRenderer(string production) : base(production) {}
+    public LSystemExtrusionRenderer(Module[] production) : base(production) {}
 
     /// <summary>
     /// This method is used to tell us that the rendering to a surface is starting.

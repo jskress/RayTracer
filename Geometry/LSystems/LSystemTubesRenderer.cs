@@ -15,7 +15,7 @@ namespace RayTracer.Geometry.LSystems;
 /// </summary>
 public class LSystemTubesRenderer : LSystemShapeRenderer
 {
-    public LSystemTubesRenderer(string production) : base(production) {}
+    public LSystemTubesRenderer(Module[] production) : base(production) {}
 
     private double _initialRadius;
     private TubeSegment _pending;

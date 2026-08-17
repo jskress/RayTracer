@@ -1,5 +1,7 @@
 using System.Text;
 using RayTracer.Core;
+using RayTracer.General;
+using RayTracer.Terms;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -88,12 +90,25 @@ public class LSystem : Group
     public Rune[] SymbolsToIgnore { get; init; }
 
     /// <summary>
+    /// This property holds how to turn a module's argument text into a term.  It is only ever asked
+    /// for when a word actually carries parameters, so an L-system built in code from bare letters
+    /// needs none.
+    /// </summary>
+    public Func<string, Term> Compile { get; set; }
+
+    /// <summary>
+    /// This property holds the scope this L-system was written in, which is what a rule's condition
+    /// and its successor arithmetic are worked out against.
+    /// </summary>
+    public Variables Scope { get; set; }
+
+    /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        string production = GetProduction();
+        Module[] production = GetProduction();
         LSystemShapeRenderer renderer = RenderingControls.CreateRenderer(production);
 
         foreach (LSystemRenderCommandMapping mapping in CommandMappings)
@@ -125,13 +140,15 @@ public class LSystem : Group
     /// geometry.
     /// </summary>
     /// <returns>The production to use.</returns>
-    private string GetProduction()
+    private Module[] GetProduction()
     {
         LSystemProducer producer = new LSystemProducer
         {
             Axiom = Axiom,
             Seed = Seed,
-            SymbolsToIgnore = GetAllSymbolsToIgnore()
+            SymbolsToIgnore = GetAllSymbolsToIgnore(),
+            Compile = Compile,
+            Scope = Scope
         };
 
         foreach (ProductionRuleSpec rule in ProductionRules)

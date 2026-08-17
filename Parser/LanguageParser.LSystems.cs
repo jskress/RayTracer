@@ -371,7 +371,14 @@ public partial class LanguageParser
         ProductionRuleSpecResolver resolver, ClauseReader reader)
     {
         Token keyToken = reader.NextToken();
-        string key = keyToken.Text.RemoveAllWhitespace();
+
+        // The condition comes off FIRST, and the order matters a great deal.  A condition may
+        // perfectly well read "t > 5", and the context markers this method goes looking for next
+        // are '<' and '>' -- so a conditional rule read the other way round would be taken to have
+        // a right context of "5" and would then match nothing at all, silently.
+        (string predecessor, string condition) = SplitOffCondition(keyToken.Text);
+
+        string key = ModuleWord.StripWhitespaceBetweenModules(predecessor);
         Rune[] runes = key.AsRunes();
         int leftIndex = Array.IndexOf(runes, new Rune('<'));
         int rightIndex = Array.IndexOf(runes, new Rune('>'));
@@ -386,8 +393,8 @@ public partial class LanguageParser
             message = "Left context indicated but not provided.";
         else if (right is { Length: 0 })
             message = "Right context indicated but not provided.";
-        else if (variable.Length != 1)
-            message = "The variable must contain exactly one Unicode character.";
+        else if (variable.Length == 0)
+            message = "The variable is missing.";
 
         if (message != null)
         {
@@ -397,8 +404,23 @@ public partial class LanguageParser
             };
         }
 
-        resolver.KeyResolver = new LiteralResolver<string> { Value = key };
-        resolver.VariableResolver = new LiteralResolver<Rune> { Value = variable[0] };
+        // The predecessor may now be a module rather than a bare letter, so the letter and the
+        // names it binds are read out of it together.
+        (Rune letter, string[] formals) = ReadPredecessor(variable, keyToken);
+
+        // The key is what tells one rule from another, and it has to carry the condition.  Two
+        // rules for the same predecessor differing only in their condition -- which is how every
+        // grow-or-stop model in the book is written -- would otherwise share a key, and rules
+        // sharing a key are stochastic alternatives of one rule rather than two rules.  The pair
+        // would then be laid out across the probability interval and one of them chosen at random.
+        string ruleKey = condition is null
+            ? key
+            : $"{key}:{condition.RemoveAllWhitespace()}";
+
+        resolver.KeyResolver = new LiteralResolver<string> { Value = ruleKey };
+        resolver.VariableResolver = new LiteralResolver<Rune> { Value = letter };
+        resolver.FormalsResolver = new LiteralResolver<string[]> { Value = formals };
+        resolver.ConditionResolver = new LiteralResolver<string> { Value = condition };
         resolver.LeftContextResolver = new LiteralResolver<ProductionBranch>
         {
             Value = left == null ? null : ProductionBranch.Parse(left)
@@ -407,6 +429,62 @@ public partial class LanguageParser
         {
             Value = right == null ? null : ProductionBranch.Parse(right)
         };
+    }
+
+    /// <summary>
+    /// This method splits a production's key into the predecessor and the condition guarding it,
+    /// at the first colon that is not inside a module's parentheses.
+    /// </summary>
+    /// <param name="text">The key as written.</param>
+    /// <returns>The predecessor and the condition, the latter null when there is none.</returns>
+    private static (string Predecessor, string Condition) SplitOffCondition(string text)
+    {
+        Rune[] runes = text.AsRunes();
+        Rune colon = new (':');
+        Rune open = new ('(');
+        Rune close = new (')');
+        int depth = 0;
+
+        for (int index = 0; index < runes.Length; index++)
+        {
+            if (runes[index] == open)
+                depth++;
+            else if (runes[index] == close)
+                depth--;
+            else if (runes[index] == colon && depth == 0)
+            {
+                string before = string.Concat(runes[..index].Select(rune => rune.ToString()));
+                string after = string.Concat(runes[(index + 1)..].Select(rune => rune.ToString()));
+
+                if (after.Trim().Length == 0)
+                    return (before, null);
+
+                return (before, after);
+            }
+        }
+
+        return (text, null);
+    }
+
+    /// <summary>
+    /// This method reads a production's predecessor into the letter it rewrites and the names it
+    /// binds, turning anything wrong with it into an error against the rule's own token.
+    /// </summary>
+    private static (Rune Letter, string[] Formals) ReadPredecessor(Rune[] variable, Token keyToken)
+    {
+        string text = string.Concat(variable.Select(rune => rune.ToString()));
+
+        try
+        {
+            return ModuleWord.ParsePredecessor(text);
+        }
+        catch (Exception exception)
+        {
+            throw new TokenException($"The production rule key is not valid. {exception.Message}")
+            {
+                Token = keyToken
+            };
+        }
     }
 
     /// <summary>

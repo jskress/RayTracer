@@ -30,6 +30,11 @@ public abstract class ProductionRuleBase
     public ProductionBranch RightContext { get; init; }
 
     /// <summary>
+    /// This property holds the names the predecessor binds, in the order it binds them.
+    /// </summary>
+    public string[] Formals { get; init; } = [];
+
+    /// <summary>
     /// This method provides a string representation of this production rule.
     /// </summary>
     /// <returns>This rule, as a string.</returns>

@@ -8,7 +8,7 @@ namespace RayTracer.Geometry.LSystems;
 /// </summary>
 public class LSystemsPipesRenderer : LSystemShapeRenderer
 {
-    public LSystemsPipesRenderer(string production) : base(production) {}
+    public LSystemsPipesRenderer(Module[] production) : base(production) {}
 
     private double _initialRadius;
 

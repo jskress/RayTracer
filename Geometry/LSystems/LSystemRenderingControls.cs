@@ -61,7 +61,7 @@ public class LSystemRenderingControls
     /// </summary>
     /// <param name="production">The production that the renderer is to render.</param>
     /// <returns>An appropriately configured production renderer.</returns>
-    internal LSystemShapeRenderer CreateRenderer(string production)
+    internal LSystemShapeRenderer CreateRenderer(Module[] production)
     {
         LSystemShapeRenderer renderer = RendererType.GetRenderer(production);
 

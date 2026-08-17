@@ -19,6 +19,12 @@ public class ProductionRuleSpec : ProductionRuleBase
     public string Production { get; set; }
 
     /// <summary>
+    /// This property holds the condition the rule is guarded by, as written, or null when it has
+    /// none.  A rule with a condition only applies where that condition is true.
+    /// </summary>
+    public string Condition { get; set; }
+
+    /// <summary>
     /// This method is used to validate the content of this production rule.  If no errors
     /// are found, then <c>null</c> will be returned.
     /// </summary>

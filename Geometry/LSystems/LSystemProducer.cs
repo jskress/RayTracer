@@ -1,5 +1,7 @@
 using System.Text;
 using RayTracer.Extensions;
+using RayTracer.General;
+using RayTracer.Terms;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -22,10 +24,7 @@ public class LSystemProducer
     /// <summary>
     /// This property holds the axiom, or starting point, for the L-system production.
     /// </summary>
-    public string Axiom
-    {
-        set => _axiom = value.AsRunes();
-    }
+    public string Axiom { get; init; }
 
     /// <summary>
     /// This property holds the seed for any randomness to use.
@@ -39,9 +38,20 @@ public class LSystemProducer
     /// </summary>
     public Rune[] SymbolsToIgnore { get; init; }
 
+    /// <summary>
+    /// This property holds how to turn a module's argument text into a term.  It is only ever asked
+    /// for when a word actually carries arguments.
+    /// </summary>
+    public Func<string, Term> Compile { get; init; }
+
+    /// <summary>
+    /// This property holds the scope the L-system was written in, which a rule's condition and its
+    /// successor arithmetic are worked out against.
+    /// </summary>
+    public Variables Scope { get; init; }
+
     private readonly Dictionary<Rune, ProductionRuleSet> _ruleSets = new ();
 
-    private Rune[] _axiom;
     private Random _random;
 
     /// <summary>
@@ -57,7 +67,9 @@ public class LSystemProducer
         {
             _ruleSets[ruleSpec.Variable] = ruleSet = new ProductionRuleSet
             {
-                SymbolsToIgnore = SymbolsToIgnore
+                SymbolsToIgnore = SymbolsToIgnore,
+                Compile = Compile,
+                Scope = Scope
             };
         }
 
@@ -71,9 +83,9 @@ public class LSystemProducer
     /// </summary>
     /// <param name="generation">The number of generations to iterate over.</param>
     /// <returns>The resulting production.</returns>
-    public string Produce(int generation)
+    public Module[] Produce(int generation)
     {
-        if (_axiom.IsNullOrEmpty())
+        if (string.IsNullOrEmpty(Axiom?.Trim()))
             throw new Exception("Axiom is required but was not provided or is of zero length.");
 
         // A generator private to this run, rather than a shared cached one keyed by the seed.
@@ -84,16 +96,21 @@ public class LSystemProducer
         // was caught in; see NoiseGenerator.)
         _random = new Random(Seed ?? DefaultSeed);
 
-        Rune[] runes = _axiom;
+        // The axiom is a word like any other, so it is read the same way and may carry numbers of
+        // its own -- which is what lets a model start from F(1, 0) rather than from a bare letter.
+        Module[] modules = ModuleWord
+            .Parse(ModuleWord.StripWhitespaceBetweenModules(Axiom), Compile)
+            .Select(template => template.Resolve(Scope))
+            .ToArray();
 
         while (generation > 0)
         {
-            runes = ApplyProductions(runes);
+            modules = ApplyProductions(modules);
 
             generation--;
         }
 
-        return runes.AsString();
+        return modules;
     }
 
     /// <summary>
@@ -102,20 +119,28 @@ public class LSystemProducer
     /// </summary>
     /// <param name="source">The source to start with; i.e., the previous generation.</param>
     /// <returns>The result of applying our productions to the source.</returns>
-    private Rune[] ApplyProductions(Rune[] source)
+    private Module[] ApplyProductions(Module[] source)
     {
-        List<Rune> runes = [];
+        List<Module> produced = [];
+
+        // The word's letters on their own, worked out once for the whole pass rather than per
+        // module.  Context matching reads only letters -- it asks what stands beside this module,
+        // never what numbers it carries -- so it needs nothing else, and the whole of the existing
+        // context machinery goes on working untouched.
+        Rune[] letters = source
+            .Select(module => module.Letter)
+            .ToArray();
 
         for (int index = 0; index < source.Length; index++)
         {
-            Rune rune = source[index];
-            
-            if (_ruleSets.TryGetValue(rune, out ProductionRuleSet ruleSet))
-                runes.AddRange(ruleSet.GetProduction(source, index, _random));
+            Module module = source[index];
+
+            if (_ruleSets.TryGetValue(module.Letter, out ProductionRuleSet ruleSet))
+                produced.AddRange(ruleSet.GetProduction(source, letters, index, _random));
             else
-                runes.Add(rune);
+                produced.Add(module);
         }
 
-        return runes.ToArray();
+        return produced.ToArray();
     }
 }

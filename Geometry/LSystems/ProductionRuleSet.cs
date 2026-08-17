@@ -1,5 +1,7 @@
 using System.Text;
 using RayTracer.Extensions;
+using RayTracer.General;
+using RayTracer.Terms;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -25,6 +27,18 @@ public class ProductionRuleSet
     internal Rune[] SymbolsToIgnore { get; init; }
 
     /// <summary>
+    /// This property holds how to turn a module's argument text into a term.  It is only ever asked
+    /// for when a production actually carries arguments.
+    /// </summary>
+    internal Func<string, Term> Compile { get; init; }
+
+    /// <summary>
+    /// This property holds the scope the L-system was written in, which is what a rule's condition
+    /// and successor arithmetic are worked out against.
+    /// </summary>
+    internal Variables Scope { get; init; }
+
+    /// <summary>
     /// This method is used to add a new rule based on the given rule specification.
     /// </summary>
     /// <param name="ruleSpec">The specification to base the new rule on.</param>
@@ -44,7 +58,9 @@ public class ProductionRuleSet
                 Variable = ruleSpec.Variable,
                 LeftContext = ruleSpec.LeftContext,
                 RightContext = ruleSpec.RightContext,
-                SymbolsToIgnore = SymbolsToIgnore
+                SymbolsToIgnore = SymbolsToIgnore,
+                Formals = ruleSpec.Formals,
+                Condition = ruleSpec.Condition is null ? null : Compile(ruleSpec.Condition)
             };
 
             _rules.Add(rule);
@@ -53,7 +69,10 @@ public class ProductionRuleSet
                 rule2.Key.Length.CompareTo(rule1.Key.Length));
         }
 
-        rule.Productions.AddEntry(ruleSpec.Production.RemoveAllWhitespace().AsRunes(), band);
+        rule.Productions.AddEntry(
+            ModuleWord.Parse(
+                ModuleWord.StripWhitespaceBetweenModules(ruleSpec.Production), Compile),
+            band);
 
         band += ruleSpec.BreakValue;
 
@@ -70,21 +89,36 @@ public class ProductionRuleSet
     /// <param name="index">The index of the current rune in the source.</param>
     /// <param name="random">The random number generator to use, when necessary.</param>
     /// <returns>The appropriate production.</returns>
-    public Rune[] GetProduction(Rune[] source, int index, Random random)
+    /// <param name="modules">The word being rewritten.</param>
+    /// <param name="letters">The word's letters on their own, which is what context matching reads.
+    /// Context looks only at letters and never at numbers, so a word's parameters simply do not
+    /// arise here -- which is exactly what non-parametric context means.</param>
+    /// <param name="index">The index of the current module in the word.</param>
+    /// <param name="random">The random number generator to use, when necessary.</param>
+    /// <returns>The appropriate production.</returns>
+    public Module[] GetProduction(Module[] modules, Rune[] letters, int index, Random random)
     {
-        ProductionRule rule = _rules.Count switch
-        {
-            < 1 => throw new NotSupportedException("There are no production rules in this rule set."),
-            _ => _rules
-                .FirstOrDefault(r => r.Matches(source, index))
-        };
+        if (_rules.Count < 1)
+            throw new NotSupportedException("There are no production rules in this rule set.");
 
-        (_, Rune[] production) = rule is null
-            ? (double.NaN, [source[index]])
-            : rule.Productions.Count > 1
-                ? rule.Productions.GetByValue(random.NextDouble())
-                : rule.Productions.GetByIndex(0);
+        Module module = modules[index];
+        Variables scope = null;
+        ProductionRule rule = _rules
+            .FirstOrDefault(candidate => candidate.Matches(letters, index) &&
+                                         candidate.AppliesTo(module, Scope, out scope));
 
-        return production; 
+        // Nothing matched, so the module stands.  That is Prusinkiewicz and Lindenmayer's rule and
+        // it is already how a letter with no rule at all behaves: a module whose letter has rules
+        // but whose arity or condition suits none of them is simply carried through untouched.
+        if (rule is null)
+            return [module];
+
+        (_, ModuleTemplate[] production) = rule.Productions.Count > 1
+            ? rule.Productions.GetByValue(random.NextDouble())
+            : rule.Productions.GetByIndex(0);
+
+        return production
+            .Select(template => template.Resolve(scope))
+            .ToArray();
     }
 }
