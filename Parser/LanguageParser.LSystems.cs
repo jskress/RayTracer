@@ -2,6 +2,7 @@ using System.Text;
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Geometry.LSystems;
 using RayTracer.Instructions;
@@ -191,6 +192,12 @@ public partial class LanguageParser
                 break;
             case "factor":
                 resolver.FactorResolver = new TermResolver<double> { Term = term };
+                break;
+            case "tropism":
+                resolver.TropismResolver = new TermResolver<Vector> { Term = term };
+                break;
+            case "susceptibility":
+                resolver.SusceptibilityResolver = new TermResolver<double> { Term = term };
                 break;
             default:
                 throw new NotSupportedException("Unknown rendering controls property found.");

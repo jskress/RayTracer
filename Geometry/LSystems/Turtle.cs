@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -75,6 +76,41 @@ public class Turtle
     {
         PreviousLocation = Location;
         Location += Direction * _controls.Length;
+
+        ApplyTropism();
+    }
+
+    /// <summary>
+    /// This method bends the turtle a little way toward the tropism direction, which is what
+    /// makes a branch sag under its own weight or lean away from a wind instead of running dead
+    /// straight to wherever it was aimed.
+    /// <para>
+    /// The turn is Prusinkiewicz and Lindenmayer's: an angle of <c>e * |H x T|</c> about the axis
+    /// <c>H x T</c>, where H is the heading and T the tropism.  The cross product is doing two
+    /// jobs at once, which is the elegance of it -- its direction is the axis to turn about, and
+    /// its length is the sine of the angle between heading and tropism, so a segment already
+    /// pointing along the tropism is left alone while one across it bends the most.  Physically
+    /// it is the torque on a segment held at one end with a force applied at the other.
+    /// </para>
+    /// </summary>
+    private void ApplyTropism()
+    {
+        if (_controls.Susceptibility.Near(0))
+            return;
+
+        Vector axis = Direction.Cross(_controls.Tropism);
+
+        // A segment pointing straight along the tropism, or straight against it, has no torque on
+        // it and no axis to turn about either.  Both fall out here rather than being special-cased.
+        if (axis.Magnitude.Near(0))
+            return;
+
+        double angle = _controls.Susceptibility * axis.Magnitude;
+
+        axis = axis.Unit;
+
+        Direction = RotateAround(Direction, axis, angle);
+        Up = RotateAround(Up, axis, angle);
     }
 
     /// <summary>

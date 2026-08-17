@@ -288,6 +288,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
 | `surface` | The kind a `primitive` of your own gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `susceptibility` | L-system control: how readily segments bend toward the tropism. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `switch` | Picks among any number of answers by a value. | [Scene Files](scene-files.md#choosing-inside-a-body) |
@@ -306,6 +307,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a three-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `tropism` | L-system control: the direction segments bend toward. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism) |
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `tube` | Surface: a round tube of varying radius along a path. | [Advanced Surfaces](advanced-surfaces.md#tube) |
 | `tubes` | L-system control: draw edges as tapering tubes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
