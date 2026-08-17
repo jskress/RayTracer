@@ -419,12 +419,12 @@ rim, or give the medium a container already shaped like the thing.
 
 #### A medium whose light varies
 
-`emission` says how much light the medium gives off, and as written above it says one colour for the
-whole of it.  A flame is not one colour: it is white at its heart, yellow above that, and red at its
+`emission` says how much light the medium gives off, and as written above it says one color for the
+whole of it.  A flame is not one color: it is white at its heart, yellow above that, and red at its
 tip, and that gradient is most of what makes fire read as fire.
 
 So `emission` will also take a **pigment**, which is already the thing in this renderer that answers
-*what colour is it here*:
+*what color is it here*:
 
 ```
 FlameHeat = pigment linear gradient {
@@ -440,7 +440,7 @@ medium {
 ```
 
 It is asked at the same place the density is — in the space of the surface the medium fills — so a
-medium whose colour varies and one whose amount varies are describing the same place, and both move
+medium whose color varies and one whose amount varies are describing the same place, and both move
 with the thing they fill.
 
 **A medium whose light varies has to fill a surface**, exactly as one whose density varies does, and
@@ -451,7 +451,7 @@ names which one you wrote.
 **On its own this lights nothing else.**  A glowing medium adds its light to rays passing *through*
 it, so you can see it, and by itself nothing carries that light to the surfaces around it.  Saying
 [`gives light`](surfaces.md#a-surface-that-gives-light) on the surface the medium fills is what changes
-that: the stuff inside then lights the room, casts shadows and colours them, with nothing to place
+that: the stuff inside then lights the room, casts shadows and colors them, with nothing to place
 beside it.  [`gallery/Local/functions/a-fire-in-the-open.igl`](../gallery/Local/functions/a-fire-in-the-open.igl)
 is a scene with no light written in it at all.
 

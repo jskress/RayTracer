@@ -79,8 +79,8 @@ sphere {
 }
 ```
 
-The stuff inside now lights what is around it, casts shadows, and colours them: a flame lights the
-ground orange because *the flame's own colour at each place* is what arrives.  There is nothing to
+The stuff inside now lights what is around it, casts shadows, and colors them: a flame lights the
+ground orange because *the flame's own color at each place* is what arrives.  There is nothing to
 position and nothing to keep in step — the fire is the light.
 
 **How bright it is, is not a setting.**  It follows from the emission, the density and the size of the

@@ -396,8 +396,8 @@ thousands of times brighter than its neighbours -- speckle that gets *worse* as 
 you want a visible sun, place one: a sphere of the right size in the right direction, or a `disc`.
 
 **The sun comes with it.**  A physical sky adds its own `distant light`, pointed the way the sun
-lies and coloured by what is left of the sunlight after the air it has just crossed -- which is why a
-low sun arrives orange without anyone saying so.  You say *where* the sun is; what colour it is
+lies and colored by what is left of the sunlight after the air it has just crossed -- which is why a
+low sun arrives orange without anyone saying so.  You say *where* the sun is; what color it is
 follows.  A scene wanting the sky without its sun writes `no light` inside the block:
 
 ```

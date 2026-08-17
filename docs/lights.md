@@ -196,8 +196,8 @@ point light {
 }
 ```
 
-`fade distance` names **where the light is worth what its colour says**.  At that distance it delivers
-its colour exactly; twice as far it delivers a quarter as much, three times as far a ninth.  Nearer
+`fade distance` names **where the light is worth what its color says**.  At that distance it delivers
+its color exactly; twice as far it delivers a quarter as much, three times as far a ninth.  Nearer
 than that it is simply left alone rather than allowed to grow without bound — the true law runs to
 infinity at no distance at all, and a real flame is not a point in any case.
 
