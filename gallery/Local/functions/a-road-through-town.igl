@@ -1,0 +1,135 @@
+// The road the street scene left empty.
+//
+//     import 'vehicles'    { Car, Van, Truck }
+//     import 'buildings'   { House, Row, Tower }
+//     import 'trees'       { Elm, Birch }
+//     import 'undergrowth' { Grass, Tuft }
+//
+// `a-street-at-the-edge-of-town` is about what turns a box into a *building*.  This one is the same
+// question asked of a vehicle, and the answer is a different four things -- which is worth saying,
+// because the obvious guess is that they would be the same list at a smaller size, and they are not.
+//
+// **Rounded edges, and this one is not optional.**  A building may be square and still be a building;
+// a vehicle may not.  A shape with corners never reads as a car, at any size, from any angle.  Every
+// body panel here is a `superellipsoid` with its exponents held down near a fifth -- a box with the
+// edges taken off -- and that single choice does more than the other three together.
+//
+// **Wheels cut into arches.**  The arches are cylinders taken out of the body with a `difference`, so a
+// wheel stands in a hole rather than against a wall.  A wheel touching a flat side is a toy, and no
+// amount of detail on the tyre repairs it.
+//
+// **Glass capped with paint.**  A glasshouse whose top is glass reads as a suitcase left on the roof --
+// which is exactly what the first attempt looked like.  What turns it into a cabin is a painted roof
+// panel a shade *wider* than the glass, so the glass is only ever seen as a band beneath it.
+//
+// **Gloss.**  This is the one that separates the two libraries outright.  A building is matte; a vehicle
+// is not, and the highlight sliding along a wing is most of what says *painted metal* rather than
+// *painted wood*.  Look at the roofs of the cars against the roofs of the houses behind them: the same
+// sun, and two quite different surfaces.
+//
+// **They face `+X`**, so the near lane needed no turning and the far lane is `rotate Y 180`.  A street
+// running left to right is the common case, and the library is pointed the way that makes it free.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'vehicles'    { Car, Van, Truck }
+import 'buildings'   { House, Row, Tower }
+import 'trees'       { Elm, Birch }
+import 'undergrowth' { Grass, Tuft }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Road Through Town'
+        author 'J. Stephen Kress'
+        description 'Traffic on a road, with the town it runs through standing behind it.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-15, 7.0, -31]
+    look at [2.0, 3.6, -2.5]
+    field of view 56
+}
+
+background physical sky {
+    sun elevation 34
+    sun azimuth 40
+    turbidity 3.0
+    brightness 3
+}
+
+sky light { samples 32 }
+
+// The verge.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.35
+            [0, color [0.30, 0.36, 0.22], 1, color [0.38, 0.44, 0.28]]
+            scale 3.5
+        }
+        ambient 0.05
+        specular 0.02
+    }
+}
+
+// The road, laid a hair above the verge so the two do not fight over the same points, with a line
+// down the middle of it.
+cube {
+    material { pigment [0.25, 0.25, 0.26]  ambient 0.05  specular 0.05  shininess 14 }
+    scale [44, 0.02, 4.4]
+    translate [0, 0.02, -5.5]
+}
+
+for dash in [0, 15] {
+    cube {
+        material { pigment [0.72, 0.70, 0.58]  ambient 0.06  specular 0.04 }
+        scale [0.85, 0.01, 0.09]
+        translate [dash * 5.2 - 34, 0.045, -5.5]
+    }
+}
+
+// -- The traffic ----------------------------------------------------------------------------------
+
+// The near lane, driving to the right, which is the way these are built to face.
+object Truck(8.6, 'summer', 5) { translate [1.5, 0, -7.4] }
+object Car(4.4, 'summer', 1)   { translate [-7.5, 0, -7.4] }
+object Car(4.5, 'summer', 0)   { translate [11, 0, -7.4] }
+
+// The far lane, turned round.  One line each, and the only difference between the two lanes.
+object Van(5.7, 'summer', 3)   { rotate Y 180  translate [-7.5, 0, -3.5] }
+object Car(4.4, 'summer', 2)   { rotate Y 180  translate [8.5, 0, -3.5] }
+
+// Parked at the kerb, hard against the houses, which is what makes the road read as a road rather
+// than a strip of gray.
+object Car(4.4, 'summer', 4)   { translate [-1.5, 0, -1.4] }
+
+// -- The town it runs through ----------------------------------------------------------------------
+
+object House(4.2, 'summer', 0) { translate [-14.5, 0, 3.5] }
+object Row(5, 'summer', 2)     { translate [-2, 0, 3.2] }
+object House(4.0, 'summer', 5) { translate [10, 0, 3.4] }
+
+object Tower(13, 'summer', 3)  { rotate Y -14  translate [23, 0, 17] }
+
+// -- What grows between ----------------------------------------------------------------------------
+
+object Elm(6.2, 'summer', 4)   { translate [-17, 0, 9] }
+object Elm(5.8, 'summer', 9)   { translate [-5, 0, 10] }
+object Birch(4.4, 'summer', 7) { translate [5.5, 0, 0.6] }
+
+object Grass(8, 'summer', 21)  { translate [-9, 0, -0.4] }
+object Grass(8, 'summer', 22)  { translate [2, 0, -0.4] }
+
+for i in [0, 6] {
+    object Tuft(0.32 + random(i, 31, 5) * 0.20, 'summer', i + 40) {
+        translate [i * 4.2 - 14 + random(i, 32, 5) * 1.4, 0,
+                   -9.6 + random(i, 33, 5) * 0.5]
+    }
+}

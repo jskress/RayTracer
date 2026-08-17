@@ -350,6 +350,55 @@ why in winter its snow lies *across* that parapet rather than down inside it.  S
 invisible from any camera standing on the ground, and a season that cannot be seen is a word taken and
 ignored.
 
+#### Vehicles
+
+```
+import 'vehicles' { Car, Van, Truck }
+
+object Car(4.4)
+object Van(5.6, 'winter')      { translate X 9 }
+object Truck(8.5, 'summer', 3) { translate X -11 }
+```
+
+| | |
+| --- | --- |
+| `Car` | A saloon: rounded body, a glasshouse under a painted roof, four wheels in cut arches. |
+| `Van` | A cab with a box behind it, taller than it is wide, and higher off the ground. |
+| `Truck` | A cab and a flat bed with a load on it, on six wheels. |
+
+**The first number is a length, not a height.**  This is the one library that changes what the first
+number means, and it changes it because that is how a vehicle is described — a car is four and a half
+metres long, not one and a half tall.  The other two numbers mean what they always mean, and only the
+length is required.
+
+**These face `+X`**, so a vehicle drives to the right in a camera looking the usual way, and a street
+running left to right needs no turning at all.  `rotate Y 180` sends one the other way.
+
+**The season lays snow on whatever is flat and facing up** — roof, bonnet, boot, the top of a van's box
+— and does nothing else.  A street whose houses are white-roofed while its cars are not is a street
+that has quietly stopped making sense.
+
+##### What makes a box into a car
+
+The same question [the buildings](#buildings) ask, with a different answer:
+
+**Rounded edges, and this one is not optional.**  A shape with corners never reads as a vehicle, at any
+size, from any angle.  Every body panel here is a
+[superellipsoid](surfaces.md#superellipsoid) held down at about a fifth — a box with its edges taken
+off.  This alone does more than the other three together.
+
+**Wheels cut into arches, not bolted to a flat side.**  The arches are cylinders taken out of the body
+with a `difference`, so a wheel stands in a hole rather than against a wall.  A wheel touching a flat
+slab is a toy, and no amount of tyre detail repairs it.
+
+**The glass must be capped with paint.**  A glasshouse whose top is glass reads as a suitcase left on
+the roof.  What turns it into a cabin is a painted roof panel a shade *wider* than the glass, so the
+glass is only ever seen as a band beneath it.
+
+**Gloss.**  A building is matte and a vehicle is not, and the highlight sliding along a wing is most of
+what says *painted metal*.  Drop these to a building's `specular 0.05` and the shape stops reading long
+before the color does.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

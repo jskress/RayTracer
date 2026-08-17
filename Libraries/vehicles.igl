@@ -1,0 +1,380 @@
+// Things to put on the road the buildings left between them.
+//
+//     import 'vehicles' { Car, Van, Truck }
+//
+//     object Car(4.4)
+//     object Van(5.6, 'winter')      { translate X 9 }
+//     object Truck(8.5, 'summer', 3) { translate X -11 }
+//
+// | `Car` | A saloon: rounded body, a glasshouse under a painted roof, four wheels in cut arches. |
+// | `Van` | A cab with a box behind it, taller than it is wide, and higher off the ground. |
+// | `Truck` | A cab and a flat bed with a load on it, on six wheels. |
+//
+// **The first number is a length**, not a height, because that is how a vehicle is described -- a car
+// is four and a half metres long, not one and a half tall.  Everything else in these libraries is
+// measured by its height, and this is the one place that changes; the other two numbers mean what they
+// always mean, **what time of year** and **which one of that kind**, and only the length is required.
+//
+// **These face +X**, so a vehicle drives to the right in a camera looking the usual way, and a street
+// running left to right needs no turning at all.  `rotate Y 180` sends one the other way; `rotate Y 90`
+// points it at the camera.
+//
+// **The season lays snow on whatever is flat and facing up** -- the roof, the bonnet, the boot, the top
+// of a van's box -- and does nothing else.  A vehicle in winter has been standing in the weather along
+// with the buildings around it, and a street whose houses are white-roofed while its cars are not is a
+// street that has quietly stopped making sense.
+//
+// -- What makes a box into a car --------------------------------------------------------------------
+//
+// The same question the `buildings` library asks, with a different answer.  Four things again, and
+// again all four are cheap:
+//
+// **Rounded edges, and this one is not optional.**  A shape with corners never reads as a vehicle, at
+// any size, from any angle.  Every body panel here is a `superellipsoid` -- the surface that runs from
+// a box through a sphere as its two exponents grow -- held down at about a fifth, which is a box whose
+// edges have been taken off.  This alone does more than the other three together.
+//
+// **Wheels cut into arches, not bolted to a flat side.**  The arches here are `cylinder`s taken out of
+// the body with a `difference`, so the wheel stands in a hole rather than against a wall.  A wheel
+// touching a flat slab is a toy, and no amount of tyre detail repairs it.
+//
+// **The glass must be capped with paint.**  A glasshouse whose top is glass reads as a suitcase left on
+// the roof -- which is exactly what the first attempt here looked like.  What turns it into a cabin is a
+// painted roof panel a shade *wider* than the glass, so the glass is only ever seen as a band beneath
+// it, never from above.
+//
+// **Gloss.**  A building is matte and a vehicle is not, and the highlight sliding along a wing is most
+// of what says *painted metal* rather than *painted wood*.  These carry a high `specular`, a tight
+// `shininess` and a little `reflective`; take those away and the shape stops reading long before the
+// color does.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Vehicle` is the machinery.  The materials arrive in your scene whether you
+// asked or not, for the reason the other libraries give -- a material is looked up where it is *used*
+// -- so they carry the prefix.
+
+// -- What vehicles are made of ---------------------------------------------------------------------
+
+// The gloss is the point; see above.  A paint with these numbers dropped to a building's `specular
+// 0.05` stops reading as a vehicle even with the shape untouched.
+VehicleRed = material { pigment [0.52, 0.11, 0.09]  specular 0.85  shininess 200  reflective 0.16 }
+VehicleBlue = material { pigment [0.13, 0.20, 0.42]  specular 0.85  shininess 200  reflective 0.16 }
+VehicleWhite = material { pigment [0.80, 0.80, 0.79]  specular 0.85  shininess 200  reflective 0.14 }
+VehicleGreen = material { pigment [0.13, 0.28, 0.19]  specular 0.85  shininess 200  reflective 0.16 }
+VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.14 }
+VehicleGrey = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.18 }
+
+VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.34 }
+VehicleTyre = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
+VehicleHub = material { pigment [0.62, 0.63, 0.66]  specular 0.70  shininess 160  reflective 0.20 }
+VehicleChrome = material { pigment [0.70, 0.71, 0.74]  specular 0.95  shininess 300  reflective 0.40 }
+VehicleLamp = material { pigment [0.86, 0.83, 0.71]  specular 0.90  shininess 250 }
+VehicleTail = material { pigment [0.58, 0.06, 0.05]  specular 0.90  shininess 250 }
+VehicleBed = material { pigment [0.34, 0.30, 0.26]  specular 0.12  shininess 20 }
+VehicleSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
+
+// Six paints, so that a street does not come out as one car repeated.  Which one a vehicle wears is
+// its variant's business.
+primitive VehiclePaint(variant) -> material {
+    switch (mod(floor(variant), 6)) {
+        case 0 { return material VehicleRed }
+        case 1 { return material VehicleBlue }
+        case 2 { return material VehicleWhite }
+        case 3 { return material VehicleGreen }
+        case 4 { return material VehicleSand }
+        default { return material VehicleGrey }
+    }
+}
+
+// -- A wheel -----------------------------------------------------------------------------------
+
+// A tyre on its side with a hub a shade proud of it at each end, so that the wheel reads from either
+// side of the vehicle without having to know which side it is on.
+primitive VehicleWheel(radius, width) -> group {
+    return group {
+        cylinder {
+            material VehicleTyre
+            min Y -1  max Y 1
+            scale [radius, width, radius]
+            rotate X 90
+        }
+        cylinder {
+            material VehicleHub
+            min Y -1  max Y 1
+            scale [radius * 0.44, width * 0.55, radius * 0.44]
+            rotate X 90
+            translate Z width * 0.5
+        }
+        cylinder {
+            material VehicleHub
+            min Y -1  max Y 1
+            scale [radius * 0.44, width * 0.55, radius * 0.44]
+            rotate X 90
+            translate Z -width * 0.5
+        }
+    }
+}
+
+// -- Snow ----------------------------------------------------------------------------------------
+
+// A drift on one flat surface, which is nothing at all for three seasons of the four.  It is given the
+// middle of the panel and how far it reaches, and lies a shade above it.
+primitive VehicleSnowOn(season, wide, deep, where) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                superellipsoid {
+                    material VehicleSnow
+                    east 0.35
+                    north 0.30
+                    scale [wide, wide * 0.035, deep]
+                    translate where
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- A car -------------------------------------------------------------------------------------
+
+primitive Car(length, season = 'summer', variant = 1) -> group {
+    wide = length * 0.40
+    tyre = length * 0.072
+    base = length * 0.58
+    track = wide * 0.46
+
+    return group {
+        // The lower body, with the arches taken out of it rather than drawn on.
+        difference {
+            superellipsoid {
+                east 0.22
+                north 0.30
+                scale [length * 0.5, length * 0.068, wide * 0.5]
+                translate Y length * 0.150
+            }
+            cylinder {
+                min Y -1  max Y 1
+                scale [tyre * 1.28, wide, tyre * 1.28]
+                rotate X 90
+                translate [base * 0.5, tyre * 1.06, 0]
+            }
+            cylinder {
+                min Y -1  max Y 1
+                scale [tyre * 1.28, wide, tyre * 1.28]
+                rotate X 90
+                translate [-base * 0.5, tyre * 1.06, 0]
+            }
+            material VehiclePaint(variant)
+        }
+
+        // The glasshouse: narrower and shorter than the body, and set back so there is a bonnet.
+        superellipsoid {
+            material VehicleGlass
+            east 0.30
+            north 0.36
+            scale [length * 0.235, length * 0.056, wide * 0.40]
+            translate [-length * 0.035, length * 0.255, 0]
+        }
+
+        // The roof, in paint and wider than the glass, which is what turns a suitcase into a cabin.
+        superellipsoid {
+            material VehiclePaint(variant)
+            east 0.24
+            north 0.50
+            scale [length * 0.245, length * 0.026, wide * 0.435]
+            translate [-length * 0.038, length * 0.308, 0]
+        }
+
+        // A bumper at each end, which is also what keeps the nose from ending in a flat cut.
+        cube { material VehicleChrome  scale [length * 0.010, length * 0.014, wide * 0.46]
+               translate [length * 0.498, length * 0.115, 0] }
+        cube { material VehicleChrome  scale [length * 0.010, length * 0.014, wide * 0.46]
+               translate [-length * 0.498, length * 0.115, 0] }
+
+        cube { material VehicleLamp  scale [length * 0.012, length * 0.018, wide * 0.10]
+               translate [length * 0.492, length * 0.160, wide * 0.30] }
+        cube { material VehicleLamp  scale [length * 0.012, length * 0.018, wide * 0.10]
+               translate [length * 0.492, length * 0.160, -wide * 0.30] }
+        cube { material VehicleTail  scale [length * 0.012, length * 0.016, wide * 0.10]
+               translate [-length * 0.492, length * 0.170, wide * 0.30] }
+        cube { material VehicleTail  scale [length * 0.012, length * 0.016, wide * 0.10]
+               translate [-length * 0.492, length * 0.170, -wide * 0.30] }
+
+        object VehicleWheel(tyre, wide * 0.070) { translate [base * 0.5, tyre, track] }
+        object VehicleWheel(tyre, wide * 0.070) { translate [base * 0.5, tyre, -track] }
+        object VehicleWheel(tyre, wide * 0.070) { translate [-base * 0.5, tyre, track] }
+        object VehicleWheel(tyre, wide * 0.070) { translate [-base * 0.5, tyre, -track] }
+
+        // Snow on the roof, the bonnet and the boot -- the three things on a car that face the sky.
+        object VehicleSnowOn(season, length * 0.235, wide * 0.42,
+                             [-length * 0.038, length * 0.336, 0])
+        object VehicleSnowOn(season, length * 0.130, wide * 0.44,
+                             [length * 0.330, length * 0.222, 0])
+        object VehicleSnowOn(season, length * 0.090, wide * 0.44,
+                             [-length * 0.370, length * 0.222, 0])
+
+        rotate Y (random(variant, 81) - 0.5) * 3
+    }
+}
+
+// -- A van -------------------------------------------------------------------------------------
+
+// A cab with a box behind it.  A van is taller than a car and sits higher off the ground, and the box
+// is the one panel in this library that is allowed to be nearly square -- a van's back *is* a box, and
+// pretending otherwise makes it a car with a hump.
+primitive Van(length, season = 'summer', variant = 1) -> group {
+    wide = length * 0.38
+    tyre = length * 0.078
+    base = length * 0.60
+    track = wide * 0.46
+    tall = length * 0.30
+
+    return group {
+        difference {
+            superellipsoid {
+                east 0.20
+                north 0.22
+                scale [length * 0.5, tall, wide * 0.5]
+                translate Y tall + length * 0.070
+            }
+            cylinder {
+                min Y -1  max Y 1
+                scale [tyre * 1.30, wide, tyre * 1.30]
+                rotate X 90
+                translate [base * 0.5, tyre * 1.02, 0]
+            }
+            cylinder {
+                min Y -1  max Y 1
+                scale [tyre * 1.30, wide, tyre * 1.30]
+                rotate X 90
+                translate [-base * 0.5, tyre * 1.02, 0]
+            }
+            material VehiclePaint(variant)
+        }
+
+        // The windscreen, which carries on round onto both sides of the cab.  It has to stand a hair
+        // *proud* of the body: set just inside the box's width, as it first was, the glass is buried
+        // and the van shows a blank green wall from every angle a scene actually uses.
+        superellipsoid {
+            material VehicleGlass
+            east 0.28
+            north 0.30
+            scale [length * 0.105, tall * 0.28, wide * 0.505]
+            translate [length * 0.380, tall * 1.62, 0]
+        }
+
+        cube { material VehicleChrome  scale [length * 0.010, length * 0.014, wide * 0.46]
+               translate [length * 0.498, length * 0.115, 0] }
+
+        cube { material VehicleLamp  scale [length * 0.010, length * 0.016, wide * 0.09]
+               translate [length * 0.496, length * 0.170, wide * 0.32] }
+        cube { material VehicleLamp  scale [length * 0.010, length * 0.016, wide * 0.09]
+               translate [length * 0.496, length * 0.170, -wide * 0.32] }
+        cube { material VehicleTail  scale [length * 0.010, length * 0.016, wide * 0.09]
+               translate [-length * 0.496, length * 0.180, wide * 0.32] }
+        cube { material VehicleTail  scale [length * 0.010, length * 0.016, wide * 0.09]
+               translate [-length * 0.496, length * 0.180, -wide * 0.32] }
+
+        object VehicleWheel(tyre, wide * 0.080) { translate [base * 0.5, tyre, track] }
+        object VehicleWheel(tyre, wide * 0.080) { translate [base * 0.5, tyre, -track] }
+        object VehicleWheel(tyre, wide * 0.080) { translate [-base * 0.5, tyre, track] }
+        object VehicleWheel(tyre, wide * 0.080) { translate [-base * 0.5, tyre, -track] }
+
+        object VehicleSnowOn(season, length * 0.44, wide * 0.46,
+                             [-length * 0.030, tall * 2 + length * 0.078, 0])
+
+        rotate Y (random(variant, 82) - 0.5) * 3
+    }
+}
+
+// -- A truck -----------------------------------------------------------------------------------
+
+// A cab, a flat bed behind it with a load strapped down, and six wheels: one axle at the front and a
+// pair of them under the load, which is where the weight is.
+primitive Truck(length, season = 'summer', variant = 1) -> group {
+    wide = length * 0.30
+    tyre = length * 0.062
+    track = wide * 0.44
+    tall = length * 0.105
+    deck = length * 0.170
+
+    return group {
+        // The chassis, which is what the cab and the bed both stand on.
+        cube { material VehicleGrey  scale [length * 0.48, length * 0.014, wide * 0.40]
+               translate Y deck - length * 0.014 }
+
+        // The cab.
+        difference {
+            superellipsoid {
+                east 0.20
+                north 0.24
+                scale [length * 0.150, tall, wide * 0.5]
+                translate [length * 0.325, tall + deck, 0]
+            }
+            cylinder {
+                min Y -1  max Y 1
+                scale [tyre * 1.32, wide, tyre * 1.32]
+                rotate X 90
+                translate [length * 0.340, tyre * 0.90, 0]
+            }
+            material VehiclePaint(variant)
+        }
+
+        superellipsoid {
+            material VehicleGlass
+            east 0.26
+            north 0.28
+            scale [length * 0.070, tall * 0.34, wide * 0.505]
+            translate [length * 0.400, tall * 1.50 + deck, 0]
+        }
+
+        // The bed, and boards down each side of it.
+        cube { material VehicleBed  scale [length * 0.290, length * 0.012, wide * 0.48]
+               translate [-length * 0.170, deck + length * 0.012, 0] }
+        cube { material VehiclePaint(variant)  scale [length * 0.290, length * 0.040, wide * 0.030]
+               translate [-length * 0.170, deck + length * 0.055, wide * 0.46] }
+        cube { material VehiclePaint(variant)  scale [length * 0.290, length * 0.040, wide * 0.030]
+               translate [-length * 0.170, deck + length * 0.055, -wide * 0.46] }
+        cube { material VehiclePaint(variant)  scale [length * 0.014, length * 0.040, wide * 0.48]
+               translate [-length * 0.452, deck + length * 0.055, 0] }
+
+        // The load, which is what stops a flat bed from reading as an empty shelf.
+        superellipsoid {
+            material VehicleSand
+            east 0.25
+            north 0.25
+            scale [length * 0.215, length * 0.075, wide * 0.40]
+            translate [-length * 0.175, deck + length * 0.090, 0]
+        }
+
+        cube { material VehicleChrome  scale [length * 0.010, length * 0.014, wide * 0.46]
+               translate [length * 0.478, deck * 0.55, 0] }
+
+        cube { material VehicleLamp  scale [length * 0.008, length * 0.014, wide * 0.09]
+               translate [length * 0.476, deck * 0.80, wide * 0.32] }
+        cube { material VehicleLamp  scale [length * 0.008, length * 0.014, wide * 0.09]
+               translate [length * 0.476, deck * 0.80, -wide * 0.32] }
+
+        // Front axle, then two under the load.
+        object VehicleWheel(tyre, wide * 0.085) { translate [length * 0.340, tyre, track] }
+        object VehicleWheel(tyre, wide * 0.085) { translate [length * 0.340, tyre, -track] }
+
+        for axle in [0, 1] {
+            object VehicleWheel(tyre, wide * 0.085) {
+                translate [-length * (0.150 + axle * 0.150), tyre, track]
+            }
+            object VehicleWheel(tyre, wide * 0.085) {
+                translate [-length * (0.150 + axle * 0.150), tyre, -track]
+            }
+        }
+
+        object VehicleSnowOn(season, length * 0.150, wide * 0.46,
+                             [length * 0.325, tall * 2 + deck, 0])
+        object VehicleSnowOn(season, length * 0.215, wide * 0.38,
+                             [-length * 0.175, deck + length * 0.170, 0])
+
+        rotate Y (random(variant, 83) - 0.5) * 3
+    }
+}
