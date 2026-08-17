@@ -868,6 +868,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/functions/a-street-at-the-edge-of-town.igl">A Street at the Edge of Town</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-road-through-town.png">
+      <img alt="A Road Through Town" height="120" src="Local/functions/a-road-through-town.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-road-through-town.igl">A Road Through Town</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

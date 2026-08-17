@@ -1163,6 +1163,213 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// What the vehicles library holds out, written down here rather than read out of the file, for
+    /// the same reason the tree species are: a test that learns the names from the thing it is testing
+    /// cannot notice a rename.
+    /// </summary>
+    private static readonly string[] Vehicles = ["Car", "Van", "Truck"];
+
+    /// <summary>
+    /// How long to ask for each.  These are the one library measured by length rather than height, so
+    /// the numbers are the lengths a vehicle of that sort actually is.
+    /// </summary>
+    private static string VehicleLengthOf(string vehicle) => vehicle switch
+    {
+        "Van" => "5.6",
+        "Truck" => "8.5",
+        _ => "4.4"
+    };
+
+    /// <summary>
+    /// Drives one vehicle out, and hands back whatever stopped it.  The camera stands off the front
+    /// quarter, which is where a scene puts one and where its glass has to be visible from.
+    /// </summary>
+    private string Drive(string vehicle, string season, int? variant = 2)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string call = season is null
+            ? $"{vehicle}({VehicleLengthOf(vehicle)})"
+            : variant is null
+                ? $"{vehicle}({VehicleLengthOf(vehicle)}, '{season}')"
+                : $"{vehicle}({VehicleLengthOf(vehicle)}, '{season}', {variant})";
+
+        File.WriteAllText(scene, $$"""
+            import 'vehicles' { {{vehicle}} }
+            context { angles are degrees  no gamma }
+            camera { location [7, 5.5, -13]  look at [0, 0.9, 0]  field of view 46 }
+            point light { location [6, 12, -10] }
+            background [0.35, 0.45, 0.75]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        return Render(scene, 130, 100);
+    }
+
+    /// <summary>
+    /// Drives one out and hands back the picture of it.
+    /// </summary>
+    private Canvas Driven(string vehicle, string season, int? variant = 2)
+    {
+        Assert.IsNull(Drive(vehicle, season, variant),
+            $"{vehicle} should stand in {season ?? "no season at all"}");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryVehicleStandsInEverySeason()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        foreach (string vehicle in Vehicles)
+        {
+            foreach (string season in new[] { "summer", "autumn", "fall", "winter", "spring" })
+                Assert.IsNull(Drive(vehicle, season), $"{vehicle} should stand in {season}");
+        }
+    }
+
+    [TestMethod]
+    public void TestWinterLaysSnowOnEveryVehicle()
+    {
+        // A vehicle takes the season so that a street whose houses are white-roofed does not have
+        // bare-roofed cars parked along it.  A word taken and ignored is worse than a word not asked
+        // for, so what winter does has to be visible from where a scene stands.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        foreach (string vehicle in Vehicles)
+        {
+            Assert.IsTrue(Differs(Driven(vehicle, "summer"), Driven(vehicle, "winter")),
+                $"a {vehicle} in winter should not look like one in summer");
+        }
+    }
+
+    [TestMethod]
+    public void TestAVehicleAskedForWithNoSeasonIsInSummer()
+    {
+        // These take the season last and default it, so most scenes never write one.  The default has
+        // to be the season a scene that says nothing actually gets.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        foreach (string vehicle in Vehicles)
+        {
+            Assert.IsFalse(Differs(Driven(vehicle, null), Driven(vehicle, "summer", null)),
+                $"a {vehicle} asked for with no season should be the same as one in summer");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheVariantChangesAVehicle()
+    {
+        // Six paints, so a street is not one car repeated.  A knob wired to nothing is worse than no
+        // knob, since a scene will pass it and believe it worked.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        foreach (string vehicle in Vehicles)
+        {
+            Assert.IsTrue(Differs(Driven(vehicle, "summer", 1), Driven(vehicle, "summer", 4)),
+                $"two {vehicle}s of different variants should not be the same vehicle");
+        }
+    }
+
+    [TestMethod]
+    public void TestEveryVehicleShowsItsGlass()
+    {
+        // The glass on a van and on a truck first sat *just inside* the body's width, where it renders
+        // perfectly and cannot be seen from any angle a scene uses -- a blank painted wall where a
+        // windscreen should be.  Nothing errored and nothing showed, which is the same fault the
+        // buildings library's windows had on the far wall.
+        //
+        // The glass is the one thing here that is dark and clearly cooler than it is warm: the paint is
+        // bright, the tyres are near-black and neutral, and the ground is gray.  So counting the cool
+        // dark pixels counts glass.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        foreach (string vehicle in Vehicles)
+        {
+            Canvas canvas = Driven(vehicle, "summer");
+            int glass = 0;
+
+            for (int x = 0; x < canvas.Width; x++)
+            {
+                for (int y = 0; y < canvas.Height; y++)
+                {
+                    Color pixel = canvas.GetPixel(x, y);
+
+                    if (pixel.Blue > pixel.Red + 0.02 && pixel.Blue < 0.30)
+                        glass++;
+                }
+            }
+
+            Assert.IsTrue(glass > 12,
+                $"a {vehicle} shows only {glass} pixels of glass; its windows are buried in its body");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheFirstNumberIsALength()
+    {
+        // Every other library measures its things by height, and this one does not -- a vehicle is
+        // described by how long it is.  The documentation says so, so it is worth holding to.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
+            Path.Combine(_directory, "vehicles.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        int[] widths = new int[2];
+
+        foreach ((string length, int index) in new[] { ("3", 0), ("7", 1) })
+        {
+            File.WriteAllText(scene, $$"""
+                import 'vehicles' { Car }
+                context { angles are degrees  no gamma }
+                camera { location [0, 3, -22]  look at [0, 0.7, 0]  field of view 46 }
+                point light { location [6, 12, -10] }
+                background [0.2, 0.35, 0.9]
+                object Car({{length}}, 'summer', 2)
+                """);
+
+            Assert.IsNull(Render(scene, 180, 70), $"a car of {length} should stand");
+
+            Canvas canvas = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            int left = canvas.Width;
+            int right = -1;
+
+            // The background is the only strongly blue thing in the picture -- there is deliberately
+            // no ground plane here -- so anything else is the car.
+            for (int x = 0; x < canvas.Width; x++)
+            {
+                for (int y = 0; y < canvas.Height; y++)
+                {
+                    Color pixel = canvas.GetPixel(x, y);
+
+                    if (pixel.Blue - pixel.Red > 0.2)
+                        continue;
+
+                    left = Math.Min(left, x);
+                    right = Math.Max(right, x);
+                }
+            }
+
+            widths[index] = right - left;
+        }
+
+        Assert.IsTrue(widths[1] > widths[0] * 1.6,
+            $"a car of seven ({widths[1]} across) should be much longer than one of three " +
+            $"({widths[0]}); the first number is a length");
+    }
+
+    /// <summary>
     /// Renders a scene small and fast, and hands back whatever stopped it.
     /// </summary>
     private string Render(string path, int wide = 40, int high = 30)
