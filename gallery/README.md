@@ -325,6 +325,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/l-systems/a-signal-along-a-filament.png">
+      <img alt="A Signal Along a Filament" height="120" src="Local/l-systems/a-signal-along-a-filament.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/l-systems/a-signal-along-a-filament.igl">A Signal Along a Filament</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/l-systems/axial.png">
       <img alt="L-System Test: Axial Tree" height="120" src="Local/l-systems/axial.png" width="160"/>
     </a></td>

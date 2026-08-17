@@ -90,9 +90,8 @@ public class ProductionRuleSet
     /// <param name="random">The random number generator to use, when necessary.</param>
     /// <returns>The appropriate production.</returns>
     /// <param name="modules">The word being rewritten.</param>
-    /// <param name="letters">The word's letters on their own, which is what context matching reads.
-    /// Context looks only at letters and never at numbers, so a word's parameters simply do not
-    /// arise here -- which is exactly what non-parametric context means.</param>
+    /// <param name="letters">The word's letters on their own, kept for the callers that only need
+    /// to know what stands where.</param>
     /// <param name="index">The index of the current module in the word.</param>
     /// <param name="random">The random number generator to use, when necessary.</param>
     /// <returns>The appropriate production.</returns>
@@ -103,9 +102,17 @@ public class ProductionRuleSet
 
         Module module = modules[index];
         Variables scope = null;
+        Dictionary<string, double> bindings = [];
         ProductionRule rule = _rules
-            .FirstOrDefault(candidate => candidate.Matches(letters, index) &&
-                                         candidate.AppliesTo(module, Scope, out scope));
+            .FirstOrDefault(candidate =>
+            {
+                // A fresh set per candidate: a rule that matched its context and then failed on
+                // arity or condition must not leave its bindings behind for the next one to use.
+                bindings.Clear();
+
+                return candidate.Matches(modules, index, bindings) &&
+                       candidate.AppliesTo(module, Scope, bindings, out scope);
+            });
 
         // Nothing matched, so the module stands.  That is Prusinkiewicz and Lindenmayer's rule and
         // it is already how a letter with no rule at all behaves: a module whose letter has rules

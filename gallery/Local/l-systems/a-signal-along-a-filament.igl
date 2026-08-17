@@ -1,0 +1,93 @@
+// What a rule can know about its neighbours.
+//
+// A context-sensitive production already asked *what stands beside this module* -- that is how the
+// bacterium in `context-sensitive` passes a signal along its filament.  What it could not ask was
+// **what are they carrying**.  Now it can:
+//
+//     '!(a)<!(c)>!(b)' -> '!(c + 0.25 * (a + b - 2 * c))'
+//
+// Each cell works out its new value from the two either side of it, and that expression is the
+// discrete diffusion equation: a cell moves a quarter of the way toward the average of its
+// neighbours.  There is no way to write it without parameters in the context -- knowing that a
+// neighbour is *there* tells you nothing about how much it holds.
+//
+// The five rods are the same filament after nought, two, six, twelve and twenty steps, from the far
+// side to the near.  Every one begins as a thin thread with a single fat cell in the middle; each
+// step spreads that bulge a little further and lowers it a little, until it is a long shallow swell.
+// The material is the same throughout and the segment lengths never change, so the shape you are
+// looking at is nothing but the numbers being passed from cell to cell.
+//
+// **`!` takes the width to draw at**, so a cell's number is its own thickness -- which is why the
+// signal can simply be looked at rather than plotted.
+//
+// **The `F` between cells is ignored for context.**  Without `ignore 'F'` each `!` would find an `F`
+// beside it rather than another `!`, and no rule would ever match.  That is the same device the book
+// uses, and the same one the older context-sensitive scene here needs.
+//
+// **A context naming parameters wants exactly that many.**  `!(a)` matches a cell carrying one
+// number and would not match a bare `!`, which is the same rule the predecessor follows.  A context
+// written as a plain letter names nothing and asks nothing -- which is what lets every
+// context-sensitive L-system written before parameters existed go on working untouched.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'A Signal Along a Filament'
+        author 'J. Stephen Kress'
+        description 'A parametric context passing a diffusing signal from cell to cell.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3.4, -7.2]
+    look at [0, 0.25, 2.0]
+    field of view 42
+}
+
+point light { location [7, 12, -11] }
+
+point light {
+    location [-8, 6, -7]
+    color [0.28, 0.30, 0.36]
+}
+
+background [0.09, 0.10, 0.14]
+
+// No ground here on purpose: this is a diagram of five numbers-in-a-row, and a plane under it
+// contributes five shadows that read as five more rods.
+
+// Twenty-one cells, thin but for one fat one in the middle.  A cell is a width and a step: the
+// `!(...)` carries the signal and the `F(0.5)` is the length of cell it draws.
+filament = lsystem {
+    axiom '!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.30)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)!(0.02)F(0.5)'
+
+    // The steps are not cells, so they must not be counted as neighbours.
+    ignore 'F'
+
+    productions {
+        '!(a)<!(c)>!(b)' -> '!(c + 0.25 * (a + b - 2 * c))'
+    }
+
+    controls {
+        tubes
+        length 0.5
+    }
+}
+
+Cell = material {
+    pigment [0.55, 0.78, 0.72]
+    specular 0.40
+    shininess 90
+    ambient 0.22
+}
+
+// The same filament at five ages, laid one behind another.  Only `generations` differs.
+lsystem filament { generations 0   material Cell  translate [-5.2, 0.35, 5.6] }
+lsystem filament { generations 2   material Cell  translate [-5.2, 0.35, 3.8] }
+lsystem filament { generations 6   material Cell  translate [-5.2, 0.35, 2.0] }
+lsystem filament { generations 12  material Cell  translate [-5.2, 0.35, 0.2] }
+lsystem filament { generations 20  material Cell  translate [-5.2, 0.35, -1.6] }

@@ -18,8 +18,8 @@ public class TestLSystemProductions
             Key = key,
             Variable = key[vs..ve].AsRunes()[0],
             BreakValue = breakValue,
-            LeftContext = p1 < 0 ? null : ProductionBranch.Parse(key[..p1].AsRunes()),
-            RightContext = p2 < 1 ? null : ProductionBranch.Parse(key[p2..].AsRunes()),
+            LeftContext = p1 < 0 ? null : ProductionBranch.ParsePattern(key[..p1]),
+            RightContext = p2 < 1 ? null : ProductionBranch.ParsePattern(key[p2..]),
             Production = production
         };
     }

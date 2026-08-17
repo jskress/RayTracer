@@ -53,8 +53,8 @@ public class TestLSystemLeaves
         {
             Key = key,
             Variable = key[variableStart..variableEnd].AsRunes()[0],
-            LeftContext = lt < 0 ? null : ProductionBranch.Parse(key[..lt].AsRunes()),
-            RightContext = gt < 0 ? null : ProductionBranch.Parse(key[(gt + 1)..].AsRunes()),
+            LeftContext = lt < 0 ? null : ProductionBranch.ParsePattern(key[..lt]),
+            RightContext = gt < 0 ? null : ProductionBranch.ParsePattern(key[(gt + 1)..]),
             Production = production
         };
     }
