@@ -63,7 +63,7 @@ public class MultipleScattering
     /// <summary>
     /// This method returns how much light arrives at a place having been turned aside more than once.
     /// </summary>
-    /// <param name="height">How high the place is, in metres.</param>
+    /// <param name="height">How high the place is, in meters.</param>
     /// <param name="sunCosine">The cosine of the sun's angle from straight up there.</param>
     /// <returns>How much arrives, band by band.</returns>
     public double[] At(double height, double sunCosine)
@@ -98,7 +98,7 @@ public class MultipleScattering
     /// This method works out one entry of the table.
     /// </summary>
     /// <param name="turbidity">How hazy the air is.</param>
-    /// <param name="height">How high the place is, in metres.</param>
+    /// <param name="height">How high the place is, in meters.</param>
     /// <param name="sunCosine">The cosine of the sun's angle from straight up.</param>
     /// <param name="directions">How many directions to gather from.</param>
     /// <returns>How much arrives having been turned more than once, band by band.</returns>
@@ -168,7 +168,7 @@ public class MultipleScattering
     /// square of the row so that most of them sit low down, where nearly all of the air is.
     /// </summary>
     /// <param name="row">The row in question.</param>
-    /// <returns>The height there, in metres.</returns>
+    /// <returns>The height there, in meters.</returns>
     private double HeightAt(int row)
     {
         double along = _heights == 1 ? 0 : (double) row / (_heights - 1);

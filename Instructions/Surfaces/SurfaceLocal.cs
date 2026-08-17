@@ -11,7 +11,7 @@ namespace RayTracer.Instructions.Surfaces;
 /// wanted in three places should be arrived at once rather than three times, or the three drift apart
 /// the first time one of them is edited.  Inside a loop it is worth more than that, since the figure
 /// usually depends on the count and so is a different figure every turn -- a height, an angle, a
-/// colour worked out from how far along the run this one is.  Without it, that arithmetic has to be
+/// color worked out from how far along the run this one is.  Without it, that arithmetic has to be
 /// written out again at every place in the turn that needs it.
 /// </para>
 /// <para>
