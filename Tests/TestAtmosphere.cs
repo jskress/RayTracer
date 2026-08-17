@@ -80,7 +80,7 @@ public class TestAtmosphere
         Assert.AreEqual(Math.Exp(-1), Atmosphere.AirDensityAt(Atmosphere.AirScaleHeight), 1e-12);
         Assert.AreEqual(Math.Exp(-1), Atmosphere.HazeDensityAt(Atmosphere.HazeScaleHeight), 1e-12);
 
-        // At two kilometres up most of the haze is already below you and most of the air is not.
+        // At two kilometers up most of the haze is already below you and most of the air is not.
         Assert.IsTrue(Atmosphere.HazeDensityAt(2000) < 0.2, "the haze should be nearly gone");
         Assert.IsTrue(Atmosphere.AirDensityAt(2000) > 0.75, "the air should barely have thinned");
 

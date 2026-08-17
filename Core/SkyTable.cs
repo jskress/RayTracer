@@ -35,7 +35,7 @@ public class SkyTable
     /// </summary>
     /// <param name="air">The air to look through.</param>
     /// <param name="towardSun">Which way the sun lies.</param>
-    /// <param name="height">How far above the ground the viewer stands, in metres.</param>
+    /// <param name="height">How far above the ground the viewer stands, in meters.</param>
     /// <param name="rows">How many heights in the sky to work out.</param>
     /// <param name="columns">How many ways round to work out.</param>
     public SkyTable(Atmosphere air, Vector towardSun, double height, int rows = 97, int columns = 64)

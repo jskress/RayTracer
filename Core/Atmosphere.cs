@@ -21,7 +21,7 @@ namespace RayTracer.Core;
 /// </para>
 /// <para>
 /// Both thin out with height, and not at the same rate: the air itself falls away with a scale height
-/// of some eight and a half kilometres, while haze is mostly held in the lowest kilometre or two.
+/// of some eight and a half kilometers, while haze is mostly held in the lowest kilometer or two.
 /// That difference is why a hazy day washes out the horizon while leaving the zenith nearly as blue
 /// as ever -- looking level you are looking through nearly all of the haze, and looking up you are
 /// looking through almost none of it.
@@ -30,19 +30,19 @@ namespace RayTracer.Core;
 public class Atmosphere
 {
     /// <summary>
-    /// This field holds the radius of the planet, in metres.
+    /// This field holds the radius of the planet, in meters.
     /// </summary>
     public const double GroundRadius = 6_360_000;
 
     /// <summary>
-    /// This field holds the radius at which the air is taken to have run out, in metres.  There is no
-    /// true edge, the air simply thinning forever, but by sixty kilometres up there is far too little
+    /// This field holds the radius at which the air is taken to have run out, in meters.  There is no
+    /// true edge, the air simply thinning forever, but by sixty kilometers up there is far too little
     /// left to turn any light worth counting.
     /// </summary>
     public const double TopRadius = 6_420_000;
 
     /// <summary>
-    /// This field holds how quickly the air thins with height, in metres.
+    /// This field holds how quickly the air thins with height, in meters.
     /// <para>
     /// It is <c>kT/mg</c> for air at fifteen degrees, which comes to 8435 -- not the 8000 that gets
     /// passed around, which is the same quantity worked out at freezing.  The difference is worth
@@ -54,16 +54,16 @@ public class Atmosphere
     public const double AirScaleHeight = 8435;
 
     /// <summary>
-    /// This field holds how quickly haze thins with height, in metres.  Far faster than the air,
+    /// This field holds how quickly haze thins with height, in meters.  Far faster than the air,
     /// haze being a thing of the weather rather than of the atmosphere at large.
     /// </summary>
     public const double HazeScaleHeight = 1200;
 
     /// <summary>
-    /// This field holds how many air molecules there are in a cubic metre at sea level, at fifteen
+    /// This field holds how many air molecules there are in a cubic meter at sea level, at fifteen
     /// degrees and one atmosphere.
     /// </summary>
-    private const double MoleculesPerCubicMetre = 2.5469e25;
+    private const double MoleculesPerCubicMeter = 2.5469e25;
 
     /// <summary>
     /// This field holds how much air molecules depart from being perfect spheres, which lets a little
@@ -114,7 +114,7 @@ public class Atmosphere
     /// around it.
     /// </summary>
     /// <param name="view">Which way to look.</param>
-    /// <param name="height">How high the place is, in metres.</param>
+    /// <param name="height">How high the place is, in meters.</param>
     /// <returns>How much comes back, band by band.</returns>
     public double[] TurnedBackAlong(Vector view, double height)
     {
@@ -153,7 +153,7 @@ public class Atmosphere
 
     /// <summary>
     /// This method returns how strongly the air itself turns light of the given wavelength aside, per
-    /// metre, at sea level.
+    /// meter, at sea level.
     /// <para>
     /// This is Rayleigh's own result and nothing is fitted in it: how much a scatterer far smaller
     /// than a wavelength turns light follows from how strongly the light polarizes it, which is what
@@ -162,20 +162,20 @@ public class Atmosphere
     /// </para>
     /// </summary>
     /// <param name="wavelength">The wavelength in question, in nanometers.</param>
-    /// <returns>How much is turned aside per metre at sea level.</returns>
+    /// <returns>How much is turned aside per meter at sea level.</returns>
     public static double AirScatteringAt(double wavelength)
     {
-        double metres = wavelength * 1e-9;
+        double meters = wavelength * 1e-9;
         double refractive = RefractiveIndexOfAir(wavelength);
         double polarizability = refractive * refractive - 1;
         double king = (6 + 3 * Depolarization) / (6 - 7 * Depolarization);
 
         return 8 * Math.PI * Math.PI * Math.PI * polarizability * polarizability /
-               (3 * MoleculesPerCubicMetre * Math.Pow(metres, 4)) * king;
+               (3 * MoleculesPerCubicMeter * Math.Pow(meters, 4)) * king;
     }
 
     /// <summary>
-    /// This method returns how strongly haze turns light aside, per metre, at sea level.
+    /// This method returns how strongly haze turns light aside, per meter, at sea level.
     /// <para>
     /// Where the air's own scattering is derived, this is measured and approximate, and deliberately
     /// so: what haze is made of varies from day to day and place to place far more than any formula
@@ -183,7 +183,7 @@ public class Atmosphere
     /// wavelength much alike, so unlike the air this barely depends on color at all.
     /// </para>
     /// </summary>
-    /// <returns>How much is turned aside per metre at sea level.</returns>
+    /// <returns>How much is turned aside per meter at sea level.</returns>
     public double HazeScattering()
     {
         // Air with a turbidity of one has no haze in it by definition, so what haze does must run
@@ -196,7 +196,7 @@ public class Atmosphere
     /// droplets absorb a little of what strikes them, so rather less than a tenth of what haze takes
     /// out of a beam never goes anywhere at all.
     /// </summary>
-    /// <returns>How much is taken out per metre at sea level, scattered and swallowed together.</returns>
+    /// <returns>How much is taken out per meter at sea level, scattered and swallowed together.</returns>
     public double HazeExtinction()
     {
         return HazeScattering() / 0.9;
@@ -205,7 +205,7 @@ public class Atmosphere
     /// <summary>
     /// This method returns how much of the sea level air remains at the given height.
     /// </summary>
-    /// <param name="height">How far above the ground, in metres.</param>
+    /// <param name="height">How far above the ground, in meters.</param>
     /// <returns>The share of the sea level amount that is left there.</returns>
     public static double AirDensityAt(double height)
     {
@@ -215,7 +215,7 @@ public class Atmosphere
     /// <summary>
     /// This method returns how much of the sea level haze remains at the given height.
     /// </summary>
-    /// <param name="height">How far above the ground, in metres.</param>
+    /// <param name="height">How far above the ground, in meters.</param>
     /// <returns>The share of the sea level amount that is left there.</returns>
     public static double HazeDensityAt(double height)
     {
@@ -267,7 +267,7 @@ public class Atmosphere
 
     /// <summary>
     /// This method returns how much light the air turns aside at each wavelength the renderer works
-    /// in, per metre at sea level.
+    /// in, per meter at sea level.
     /// </summary>
     /// <returns>The scattering, band by band.</returns>
     public static double[] AirScatteringPerBand()
@@ -319,7 +319,7 @@ public class Atmosphere
     /// </summary>
     /// <param name="view">Which way is being looked, as a unit vector with Y upward.</param>
     /// <param name="towardSun">Which way the sun lies, as a unit vector with Y upward.</param>
-    /// <param name="height">How far the viewer stands above the ground, in metres.</param>
+    /// <param name="height">How far the viewer stands above the ground, in meters.</param>
     /// <returns>How much light arrives, band by band.</returns>
     public double[] RadianceToward(Vector view, Vector towardSun, double height)
     {
@@ -395,7 +395,7 @@ public class Atmosphere
     /// which is what makes a low sun red.
     /// </summary>
     /// <param name="towardSun">Which way the sun lies, as a unit vector with Y upward.</param>
-    /// <param name="height">How far the viewer stands above the ground, in metres.</param>
+    /// <param name="height">How far the viewer stands above the ground, in meters.</param>
     /// <returns>What is left of the sunlight, band by band.</returns>
     public double[] SunlightAfterAir(Vector towardSun, double height)
     {
@@ -472,7 +472,7 @@ public class Atmosphere
     /// than behind" rather than by looking for a crossing, and that is deliberate.  Every interesting
     /// case here starts <i>on</i> the ground or very near it, and a ray starting exactly on a sphere
     /// meets it at no distance at all -- so looking for a crossing at a positive distance says that a
-    /// ray pointing straight down misses the planet, and lets it march twelve thousand kilometres
+    /// ray pointing straight down misses the planet, and lets it march twelve thousand kilometers
     /// through solid rock.  Asking about the closest approach has no such corner: pointing down, the
     /// nearest approach is ahead and inside; pointing up, it is behind.
     /// </para>
@@ -497,7 +497,7 @@ public class Atmosphere
     /// This method returns how far above the ground a place is.
     /// </summary>
     /// <param name="where">The place in question.</param>
-    /// <returns>Its height above the ground, in metres.</returns>
+    /// <returns>Its height above the ground, in meters.</returns>
     private static double HeightOf(Point where)
     {
         return Math.Sqrt(where.X * where.X + where.Y * where.Y + where.Z * where.Z) - GroundRadius;
@@ -621,9 +621,9 @@ public class Atmosphere
         const double SpeedOfLight = 2.99792458e8;
         const double BoltzmannConstant = 1.380649e-23;
 
-        double metres = wavelength * 1e-9;
-        double front = 2 * PlanckConstant * SpeedOfLight * SpeedOfLight / Math.Pow(metres, 5);
-        double exponent = PlanckConstant * SpeedOfLight / (metres * BoltzmannConstant * temperature);
+        double meters = wavelength * 1e-9;
+        double front = 2 * PlanckConstant * SpeedOfLight * SpeedOfLight / Math.Pow(meters, 5);
+        double exponent = PlanckConstant * SpeedOfLight / (meters * BoltzmannConstant * temperature);
 
         return front / (Math.Exp(exponent) - 1);
     }

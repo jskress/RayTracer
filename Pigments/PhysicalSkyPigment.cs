@@ -54,8 +54,8 @@ public class PhysicalSkyPigment : Pigment
     public double Turbidity { get; set; } = 2.5;
 
     /// <summary>
-    /// This property holds how far above sea level the scene stands, in metres.  It matters most for
-    /// the haze, which is nearly all held in the lowest kilometre or two: a scene set on a mountain
+    /// This property holds how far above sea level the scene stands, in meters.  It matters most for
+    /// the haze, which is nearly all held in the lowest kilometer or two: a scene set on a mountain
     /// has a deeper and cleaner blue than one at the shore, and this is why.
     /// </summary>
     public double Height { get; set; }
@@ -137,7 +137,7 @@ public class PhysicalSkyPigment : Pigment
         // Divided by pi, and it is worth saying why, because getting this wrong makes a sky look three
         // times too dark and sends you hunting through the physics for the missing light.
         //
-        // The sun's color here is how much light falls on a square metre, while the sky's is how
+        // The sun's color here is how much light falls on a square meter, while the sky's is how
         // bright it looks -- two different quantities that happen to be written in the same units.  A
         // surface facing light of strength E does not glow at E; it spreads what it caught over every
         // direction and so glows at E over pi.  This renderer has no such division in its shading -- a

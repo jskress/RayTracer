@@ -103,7 +103,7 @@ public class TestSkyRadiance
         //
         // This test used to allow "a little", and that let a real fault through: a ray starting exactly
         // on the ground and pointing down was reckoned to miss the planet, and marched twelve thousand
-        // kilometres through it.  What made the answer look reasonable anyway was that the rock counted
+        // kilometers through it.  What made the answer look reasonable anyway was that the rock counted
         // as sea level air, which swallowed the light almost at once.  A test that asks for the right
         // answer rather than a plausible one would have caught it on the first run.
         Vector sun = new (0.3, 0.8, 0);

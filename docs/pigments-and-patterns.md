@@ -380,7 +380,7 @@ throwing light forward, and of the two thinning with height at quite different r
 | `sun elevation` | How high the sun stands above the horizon, in degrees.  90 is overhead, 0 is on the horizon. |
 | `sun azimuth` | Which way round it lies, in degrees, measured from -Z and turning toward +X. |
 | `turbidity` | How hazy the air is.  1 is perfectly clean air, which happens nowhere; 2-3 is a clear day; 6 and beyond loses the horizon in white. |
-| `height` | How far above sea level the scene stands, in metres.  Mostly it changes the haze, nearly all of which sits in the lowest kilometre or two -- which is why a mountain sky is a deeper, cleaner blue. |
+| `height` | How far above sea level the scene stands, in meters.  Mostly it changes the haze, nearly all of which sits in the lowest kilometer or two -- which is why a mountain sky is a deeper, cleaner blue. |
 | `brightness` | What the whole sky is multiplied by.  See below. |
 | `rows`, `columns` | How finely the sky is worked out and kept.  Rarely worth touching. |
 

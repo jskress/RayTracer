@@ -27,7 +27,7 @@
 //
 // A rock is a shape problem before it is anything else: what gives a stone away instantly is a
 // silhouette that is too regular.  A sphere reads as a ball from every angle, and no amount of
-// colouring the surface repairs it, because the outline is what the eye checks.
+// coloring the surface repairs it, because the outline is what the eye checks.
 //
 // So `Boulder` is an **isosurface** -- a ball with noise subtracted from its radius, which makes an
 // outline that is irregular in the way stone is.  It is the real thing and it costs the real price:
