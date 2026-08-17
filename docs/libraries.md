@@ -239,7 +239,7 @@ place gets rock agreeing with the grass around it.
 
 **There are two kinds of stone for a reason.**  A rock is a shape problem before it is anything else:
 what gives one away instantly is a silhouette that is too regular.  A sphere reads as a ball from
-every angle and no amount of colouring the surface repairs it, because the outline is what the eye
+every angle and no amount of coloring the surface repairs it, because the outline is what the eye
 checks.
 
 So a `Boulder` is an [isosurface](advanced-surfaces.md#isosurface) — a ball with noise subtracted from
@@ -273,7 +273,7 @@ asked for: it says the library thought about the question when it did not.
 
 **Put a fire in a scene and the scene is lit.**  There is nothing to place beside it and nothing to
 keep in step: the stuff a flame is made of gives off light where it is, and that light falls on the
-ground, casts shadows, and carries the flame's own colour with it — see
+ground, casts shadows, and carries the flame's own color with it — see
 [a surface that gives light](surfaces.md#a-surface-that-gives-light).
 
 That was not always so.  Until it was, every fire needed a lamp written beside it and moved with it,
