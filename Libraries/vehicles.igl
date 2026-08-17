@@ -11,7 +11,7 @@
 // | `Truck` | A cab and a flat bed with a load on it, on six wheels. |
 //
 // **The first number is a length**, not a height, because that is how a vehicle is described -- a car
-// is four and a half metres long, not one and a half tall.  Everything else in these libraries is
+// is four and a half meters long, not one and a half tall.  Everything else in these libraries is
 // measured by its height, and this is the one place that changes; the other two numbers mean what they
 // always mean, **what time of year** and **which one of that kind**, and only the length is required.
 //
@@ -36,7 +36,7 @@
 //
 // **Wheels cut into arches, not bolted to a flat side.**  The arches here are `cylinder`s taken out of
 // the body with a `difference`, so the wheel stands in a hole rather than against a wall.  A wheel
-// touching a flat slab is a toy, and no amount of tyre detail repairs it.
+// touching a flat slab is a toy, and no amount of tire detail repairs it.
 //
 // **The glass must be capped with paint.**  A glasshouse whose top is glass reads as a suitcase left on
 // the roof -- which is exactly what the first attempt here looked like.  What turns it into a cabin is a
@@ -66,7 +66,7 @@ VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 18
 VehicleGrey = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.18 }
 
 VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.34 }
-VehicleTyre = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
+VehicleTire = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
 VehicleHub = material { pigment [0.62, 0.63, 0.66]  specular 0.70  shininess 160  reflective 0.20 }
 VehicleChrome = material { pigment [0.70, 0.71, 0.74]  specular 0.95  shininess 300  reflective 0.40 }
 VehicleLamp = material { pigment [0.86, 0.83, 0.71]  specular 0.90  shininess 250 }
@@ -89,12 +89,12 @@ primitive VehiclePaint(variant) -> material {
 
 // -- A wheel -----------------------------------------------------------------------------------
 
-// A tyre on its side with a hub a shade proud of it at each end, so that the wheel reads from either
+// A tire on its side with a hub a shade proud of it at each end, so that the wheel reads from either
 // side of the vehicle without having to know which side it is on.
 primitive VehicleWheel(radius, width) -> group {
     return group {
         cylinder {
-            material VehicleTyre
+            material VehicleTire
             min Y -1  max Y 1
             scale [radius, width, radius]
             rotate X 90
@@ -141,7 +141,7 @@ primitive VehicleSnowOn(season, wide, deep, where) -> group {
 
 primitive Car(length, season = 'summer', variant = 1) -> group {
     wide = length * 0.40
-    tyre = length * 0.072
+    tire = length * 0.072
     base = length * 0.58
     track = wide * 0.46
 
@@ -156,15 +156,15 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
             }
             cylinder {
                 min Y -1  max Y 1
-                scale [tyre * 1.28, wide, tyre * 1.28]
+                scale [tire * 1.28, wide, tire * 1.28]
                 rotate X 90
-                translate [base * 0.5, tyre * 1.06, 0]
+                translate [base * 0.5, tire * 1.06, 0]
             }
             cylinder {
                 min Y -1  max Y 1
-                scale [tyre * 1.28, wide, tyre * 1.28]
+                scale [tire * 1.28, wide, tire * 1.28]
                 rotate X 90
-                translate [-base * 0.5, tyre * 1.06, 0]
+                translate [-base * 0.5, tire * 1.06, 0]
             }
             material VehiclePaint(variant)
         }
@@ -202,10 +202,10 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
         cube { material VehicleTail  scale [length * 0.012, length * 0.016, wide * 0.10]
                translate [-length * 0.492, length * 0.170, -wide * 0.30] }
 
-        object VehicleWheel(tyre, wide * 0.070) { translate [base * 0.5, tyre, track] }
-        object VehicleWheel(tyre, wide * 0.070) { translate [base * 0.5, tyre, -track] }
-        object VehicleWheel(tyre, wide * 0.070) { translate [-base * 0.5, tyre, track] }
-        object VehicleWheel(tyre, wide * 0.070) { translate [-base * 0.5, tyre, -track] }
+        object VehicleWheel(tire, wide * 0.070) { translate [base * 0.5, tire, track] }
+        object VehicleWheel(tire, wide * 0.070) { translate [base * 0.5, tire, -track] }
+        object VehicleWheel(tire, wide * 0.070) { translate [-base * 0.5, tire, track] }
+        object VehicleWheel(tire, wide * 0.070) { translate [-base * 0.5, tire, -track] }
 
         // Snow on the roof, the bonnet and the boot -- the three things on a car that face the sky.
         object VehicleSnowOn(season, length * 0.235, wide * 0.42,
@@ -226,7 +226,7 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
 // pretending otherwise makes it a car with a hump.
 primitive Van(length, season = 'summer', variant = 1) -> group {
     wide = length * 0.38
-    tyre = length * 0.078
+    tire = length * 0.078
     base = length * 0.60
     track = wide * 0.46
     tall = length * 0.30
@@ -241,15 +241,15 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
             }
             cylinder {
                 min Y -1  max Y 1
-                scale [tyre * 1.30, wide, tyre * 1.30]
+                scale [tire * 1.30, wide, tire * 1.30]
                 rotate X 90
-                translate [base * 0.5, tyre * 1.02, 0]
+                translate [base * 0.5, tire * 1.02, 0]
             }
             cylinder {
                 min Y -1  max Y 1
-                scale [tyre * 1.30, wide, tyre * 1.30]
+                scale [tire * 1.30, wide, tire * 1.30]
                 rotate X 90
-                translate [-base * 0.5, tyre * 1.02, 0]
+                translate [-base * 0.5, tire * 1.02, 0]
             }
             material VehiclePaint(variant)
         }
@@ -277,10 +277,10 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
         cube { material VehicleTail  scale [length * 0.010, length * 0.016, wide * 0.09]
                translate [-length * 0.496, length * 0.180, -wide * 0.32] }
 
-        object VehicleWheel(tyre, wide * 0.080) { translate [base * 0.5, tyre, track] }
-        object VehicleWheel(tyre, wide * 0.080) { translate [base * 0.5, tyre, -track] }
-        object VehicleWheel(tyre, wide * 0.080) { translate [-base * 0.5, tyre, track] }
-        object VehicleWheel(tyre, wide * 0.080) { translate [-base * 0.5, tyre, -track] }
+        object VehicleWheel(tire, wide * 0.080) { translate [base * 0.5, tire, track] }
+        object VehicleWheel(tire, wide * 0.080) { translate [base * 0.5, tire, -track] }
+        object VehicleWheel(tire, wide * 0.080) { translate [-base * 0.5, tire, track] }
+        object VehicleWheel(tire, wide * 0.080) { translate [-base * 0.5, tire, -track] }
 
         object VehicleSnowOn(season, length * 0.44, wide * 0.46,
                              [-length * 0.030, tall * 2 + length * 0.078, 0])
@@ -295,7 +295,7 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
 // pair of them under the load, which is where the weight is.
 primitive Truck(length, season = 'summer', variant = 1) -> group {
     wide = length * 0.30
-    tyre = length * 0.062
+    tire = length * 0.062
     track = wide * 0.44
     tall = length * 0.105
     deck = length * 0.170
@@ -315,9 +315,9 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
             }
             cylinder {
                 min Y -1  max Y 1
-                scale [tyre * 1.32, wide, tyre * 1.32]
+                scale [tire * 1.32, wide, tire * 1.32]
                 rotate X 90
-                translate [length * 0.340, tyre * 0.90, 0]
+                translate [length * 0.340, tire * 0.90, 0]
             }
             material VehiclePaint(variant)
         }
@@ -358,15 +358,15 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
                translate [length * 0.476, deck * 0.80, -wide * 0.32] }
 
         // Front axle, then two under the load.
-        object VehicleWheel(tyre, wide * 0.085) { translate [length * 0.340, tyre, track] }
-        object VehicleWheel(tyre, wide * 0.085) { translate [length * 0.340, tyre, -track] }
+        object VehicleWheel(tire, wide * 0.085) { translate [length * 0.340, tire, track] }
+        object VehicleWheel(tire, wide * 0.085) { translate [length * 0.340, tire, -track] }
 
         for axle in [0, 1] {
-            object VehicleWheel(tyre, wide * 0.085) {
-                translate [-length * (0.150 + axle * 0.150), tyre, track]
+            object VehicleWheel(tire, wide * 0.085) {
+                translate [-length * (0.150 + axle * 0.150), tire, track]
             }
-            object VehicleWheel(tyre, wide * 0.085) {
-                translate [-length * (0.150 + axle * 0.150), tyre, -track]
+            object VehicleWheel(tire, wide * 0.085) {
+                translate [-length * (0.150 + axle * 0.150), tire, -track]
             }
         }
 

@@ -368,7 +368,7 @@ object Truck(8.5, 'summer', 3) { translate X -11 }
 
 **The first number is a length, not a height.**  This is the one library that changes what the first
 number means, and it changes it because that is how a vehicle is described — a car is four and a half
-metres long, not one and a half tall.  The other two numbers mean what they always mean, and only the
+meters long, not one and a half tall.  The other two numbers mean what they always mean, and only the
 length is required.
 
 **These face `+X`**, so a vehicle drives to the right in a camera looking the usual way, and a street
@@ -389,7 +389,7 @@ off.  This alone does more than the other three together.
 
 **Wheels cut into arches, not bolted to a flat side.**  The arches are cylinders taken out of the body
 with a `difference`, so a wheel stands in a hole rather than against a wall.  A wheel touching a flat
-slab is a toy, and no amount of tyre detail repairs it.
+slab is a toy, and no amount of tire detail repairs it.
 
 **The glass must be capped with paint.**  A glasshouse whose top is glass reads as a suitcase left on
 the roof.  What turns it into a cabin is a painted roof panel a shade *wider* than the glass, so the
