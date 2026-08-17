@@ -1,3 +1,5 @@
+using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
@@ -36,6 +38,22 @@ public class LSystemRenderingControls
     /// diameter is to be decreased, it is multiplied by this factor.
     /// </summary>
     public double Factor { get; set; } = 0.9;
+
+    /// <summary>
+    /// This property carries the direction that segments bend toward as they are drawn.  It is
+    /// a force rather than a heading: straight down is gravity, and something with a sideways
+    /// lean is a prevailing wind.  It does nothing on its own; <see cref="Susceptibility"/> is
+    /// what says how far the plant gives way to it.
+    /// </summary>
+    public Vector Tropism { get; set; } = Directions.Down;
+
+    /// <summary>
+    /// This property carries how readily a segment bends toward the tropism direction, which is
+    /// the <c>e</c> of Prusinkiewicz and Lindenmayer's formula.  Nought, the default, leaves the
+    /// turtle exactly as it was, so an L-system written before any of this existed draws the
+    /// same way it always did.
+    /// </summary>
+    public double Susceptibility { get; set; }
 
     /// <summary>
     /// This method creates an appropriately configured renderer based on the information

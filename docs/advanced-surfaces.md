@@ -721,6 +721,39 @@ That is what keeps a stand of trees from looking like one tree copied.  The choi
 from a seed, so a scene still renders the same way twice; `with seed` on the L-system changes
 which stand of trees you get.
 
+#### Bending, with `tropism`
+
+A plant drawn from rules alone runs dead straight between its turns, and that is the surest sign
+that nobody grew it.  Real branches sag under their own weight, lean away from a prevailing wind,
+and reach toward the light.  `controls` can say so:
+
+```
+controls {
+    tubes
+    angle 28
+    tropism [0, -1, 0]
+    susceptibility 0.12
+}
+```
+
+`tropism` is the direction segments bend **toward** — straight down for gravity, something with a
+sideways lean for a wind, upward for a plant reaching for the light.  `susceptibility` is how
+readily they give way to it, and **it is nought unless you say otherwise**, so an L-system written
+before any of this existed draws exactly as it always did.
+
+The turn is Prusinkiewicz and Lindenmayer's, from *The Algorithmic Beauty of Plants*: after each
+segment the turtle is rotated by an angle of `e |H x T|` about the axis `H x T`, where `H` is the
+heading, `T` the tropism and `e` the susceptibility.  The cross product does two jobs at once,
+which is the neatness of it — its direction is the axis to turn about, and its length is the sine
+of the angle between heading and tropism.  So a segment already pointing along the tropism is left
+alone, and one lying square across it bends the most.  It is the torque on a stick held at one end
+with a force pulling on the other.
+
+Two consequences worth knowing.  **The bend accumulates**: each segment turns a little further than
+the last, so a branch curves rather than taking one kink and carrying on.  And **it applies to the
+trunk too** — at a high susceptibility a tree does not merely droop at the tips, it lies down.
+Values around 0.1 give a tree that has weathered something; 0.3 gives a weeping form.
+
 `controls` chooses `pipes` or `tubes` for the stems — `tubes` taper into one another and leave
 no shoulder at a joint, `pipes` are cheaper where the diameter never changes.
 

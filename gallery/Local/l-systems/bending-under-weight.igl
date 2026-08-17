@@ -1,0 +1,135 @@
+// One tree, three times, and the only thing that differs is how far it gives way.
+//
+// A plant drawn from rules alone runs dead straight between its turns, and that is the surest sign
+// that nobody grew it.  Real branches sag under their own weight, lean away from a prevailing wind,
+// and reach toward the light.  `tropism` is the direction they bend **toward**, and
+// `susceptibility` is how readily they give way to it:
+//
+//     controls {
+//         tropism [0, -1, 0]
+//         susceptibility 0.12
+//     }
+//
+// The three trees here are the same four-line L-system at the same generation, the same seed and
+// the same angle.  Left to right they are given nothing, a little, and a lot.
+//
+// **The turn is the torque on the segment.**  After each segment the turtle is rotated by an angle
+// of `e |H x T|` about the axis `H x T` -- heading crossed with tropism, times susceptibility.  The
+// cross product does two jobs at once, which is the neatness of it: its direction is the axis to
+// turn about, and its length is the sine of the angle between heading and tropism.  So a shoot
+// already pointing straight down is not bent any further by gravity, while one reaching out
+// sideways is bent the most.  That is Prusinkiewicz and Lindenmayer's formula from *The Algorithmic
+// Beauty of Plants*, and it is a physical statement rather than a fudge: `T` is a force applied to
+// the far end of `H`, and `H x T` is the torque about where the branch is held.
+//
+// **The bend accumulates.**  Each segment turns a little further than the one before it, so a
+// branch describes a curve rather than taking one kink and then carrying on straight.  That is why
+// the right-hand tree's outer twigs hang almost vertically while its inner limbs merely lean.
+//
+// **And it applies to the trunk.**  At a high susceptibility a tree does not just droop at the
+// tips; it lies down.  The right-hand tree is past what any tree does and is here to show where the
+// number leads -- the middle one, at about a tenth, is a tree that has weathered something.
+//
+// Nought is the default, so every L-system written before this existed draws exactly as it always
+// did.  That was checked rather than assumed: all eleven L-system scenes in this gallery render
+// pixel-for-pixel identically.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Bending Under Weight'
+        author 'J. Stephen Kress'
+        description 'One L-system tree drawn three times, given nothing, a little and a lot of tropism.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 5.6, -34]
+    look at [0, 3.0, 0]
+    field of view 48
+}
+
+point light {
+    location [20, 24, -22]
+}
+
+// A second, weaker lamp on the far side, so the drooping side of each tree is not simply black.
+point light {
+    location [-24, 14, -14]
+    color [0.34, 0.36, 0.40]
+}
+
+background [0.52, 0.62, 0.78]
+
+plane {
+    material {
+        pigment [0.34, 0.38, 0.30]
+        ambient 0.18
+        specular 0.02
+    }
+}
+
+// The same plant three times over.  Only `susceptibility` differs; everything else -- the rules,
+// the angle, the segment length, the generation count -- is held the same on purpose, so that what
+// changes in the picture can only have come from the one number.
+
+upright = lsystem {
+    axiom '$A'
+    productions {
+        'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
+    }
+    controls {
+        tubes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+        tropism [0, -1, 0]
+        susceptibility 0
+    }
+}
+
+weathered = lsystem {
+    axiom '$A'
+    productions {
+        'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
+    }
+    controls {
+        tubes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+        tropism [0, -1, 0]
+        susceptibility 0.10
+    }
+}
+
+weeping = lsystem {
+    axiom '$A'
+    productions {
+        'A' -> '!F[&FA~]/[&FA~]/[&FA~]/[&FA~]'
+    }
+    controls {
+        tubes
+        angle 28
+        diameter 0.4
+        length 1.4
+        factor 0.7
+        tropism [0, -1, 0]
+        susceptibility 0.26
+    }
+}
+
+Bark = material {
+    pigment SaddleBrown
+    specular 0
+}
+
+lsystem upright   { generations 4  material Bark  scale 0.52  translate X -9 }
+lsystem weathered { generations 4  material Bark  scale 0.52 }
+lsystem weeping   { generations 4  material Bark  scale 0.52  translate X 9 }

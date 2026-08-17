@@ -97,9 +97,9 @@ public partial class LanguageParser
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'susceptibility', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'true', 'tube', 'tubes',
+            'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes',
             'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
             'wrinkles',
@@ -1026,7 +1026,8 @@ public partial class LanguageParser
         lsystemRenderingControlsEntryClause:
         [
             extrusion | pipes | tubes | { angle > _expression } | { length > _expression } |
-            { diameter > _expression } | { factor > _expression }
+            { diameter > _expression } | { factor > _expression } |
+            { tropism > _expression } | { susceptibility > _expression }
         ]
 
         // Height field clauses.
