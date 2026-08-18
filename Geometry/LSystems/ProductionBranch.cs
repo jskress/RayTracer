@@ -1,4 +1,5 @@
 using System.Text;
+using RayTracer.Extensions;
 
 namespace RayTracer.Geometry.LSystems;
 
@@ -22,30 +23,44 @@ public class ProductionBranch
     /// </summary>
     /// <param name="Rune">The rune in the sibling list.</param>
     /// <param name="Branch">The branch in the sibling list.</param>
-    private record Entry(Rune? Rune = null, ProductionBranch Branch = null)
+    private record Entry(
+        Rune? Rune = null,
+        ProductionBranch Branch = null,
+        string[] Formals = null,
+        double[] Values = null)
     {
         internal bool IsRune => Rune is not null;
         internal bool IsBranch => Branch is not null;
 
         public override string ToString()
         {
-            return IsRune ? Rune.ToString() : $"[{Branch}]";
+            if (IsBranch)
+                return $"[{Branch}]";
+
+            if (Formals is { Length: > 0 })
+                return $"{Rune}({string.Join(", ", Formals)})";
+
+            return Values is { Length: > 0 }
+                ? $"{Rune}({string.Join(", ", Values)})"
+                : Rune.ToString();
         }
     }
 
     /// <summary>
-    /// This method is used to create a production branch from the given set of runes.
+    /// This method creates a branch out of a piece of the word being rewritten -- the reality a
+    /// context pattern is matched against.  Each module keeps the numbers it carries, so that a
+    /// pattern naming them has something to bind.
     /// </summary>
-    /// <param name="source">The runes to create the branch from.</param>
+    /// <param name="source">The modules to create the branch from.</param>
     /// <returns>The created branch.</returns>
-    public static ProductionBranch Parse(Rune[] source)
+    public static ProductionBranch Parse(Module[] source)
     {
         List<Entry> entries = [];
         int index = 0;
-        
+
         while (index < source.Length)
         {
-            if (source[index] == LSystemProducer.LeftBracket)
+            if (source[index].Letter == LSystemProducer.LeftBracket)
             {
                 int end = FindClosingBracket(source, index);
 
@@ -53,13 +68,99 @@ public class ProductionBranch
 
                 index = end;
             }
-            else if (source[index] != LSystemProducer.RightBracket)
-                entries.Add(new Entry(Rune: source[index]));
+            else if (source[index].Letter != LSystemProducer.RightBracket)
+            {
+                entries.Add(new Entry(
+                    Rune: source[index].Letter, Values: source[index].Parameters));
+            }
 
             index++;
         }
 
         return new ProductionBranch(entries);
+    }
+
+    /// <summary>
+    /// This method creates a branch out of the text a context is written as -- the pattern rather
+    /// than the reality.  A letter here may be followed by parentheses holding <em>names</em>, as
+    /// in <c>A(x)</c>: those are formal parameters waiting to be bound to whatever the module that
+    /// matches them turns out to be carrying.
+    /// </summary>
+    /// <param name="text">The context as written.</param>
+    /// <returns>The created branch.</returns>
+    public static ProductionBranch ParsePattern(string text)
+    {
+        return ParsePattern(text.AsRunes(), 0, text.AsRunes().Length);
+    }
+
+    private static ProductionBranch ParsePattern(Rune[] source, int from, int to)
+    {
+        List<Entry> entries = [];
+        int index = from;
+
+        while (index < to)
+        {
+            if (source[index] == LSystemProducer.LeftBracket)
+            {
+                int end = FindClosingBracket(source, index);
+
+                entries.Add(new Entry(Branch: ParsePattern(source, index + 1, end)));
+
+                index = end + 1;
+
+                continue;
+            }
+
+            if (source[index] == LSystemProducer.RightBracket)
+            {
+                index++;
+
+                continue;
+            }
+
+            Rune letter = source[index++];
+
+            // The names travel with the letter before them, exactly as in a word, and for the same
+            // reason: a parenthesis belongs to the letter it follows and to nothing else.
+            if (index < to && source[index] == OpenParenthesis)
+            {
+                int close = FindClosingParenthesis(source, index, to);
+                string inside = string.Concat(source[(index + 1)..close]
+                    .Select(rune => rune.ToString()));
+
+                entries.Add(new Entry(
+                    Rune: letter,
+                    Formals: inside.Trim().Length == 0
+                        ? []
+                        : inside.Split(',').Select(name => name.Trim()).ToArray()));
+
+                index = close + 1;
+
+                continue;
+            }
+
+            entries.Add(new Entry(Rune: letter));
+        }
+
+        return new ProductionBranch(entries);
+    }
+
+    private static readonly Rune OpenParenthesis = new ('(');
+    private static readonly Rune CloseParenthesis = new (')');
+
+    private static int FindClosingParenthesis(Rune[] source, int index, int to)
+    {
+        int depth = 0;
+
+        for (int scan = index; scan < to; scan++)
+        {
+            if (source[scan] == OpenParenthesis)
+                depth++;
+            else if (source[scan] == CloseParenthesis && --depth == 0)
+                return scan;
+        }
+
+        throw new Exception("An L-system context opens a parenthesis that is never closed.");
     }
 
     private readonly List<Entry> _entries;
@@ -77,12 +178,18 @@ public class ProductionBranch
     /// <param name="style">The style of matching for the set of runes.</param>
     /// <returns><c>true</c>, if this branch matches the one provided, or <c>false</c>, if
     /// not.</returns>
-    internal bool Matches(ProductionBranch other, ProductBranchMatchStyle style)
+    /// <param name="bindings">Collects what a parametric context binds: where this pattern says
+    /// <c>A(x)</c> and the word says <c>A(4)</c>, <c>x</c> is bound to 4 here.  The bindings are
+    /// only worth keeping if the whole match succeeds, so a caller that gets <c>false</c> back
+    /// should discard them.</param>
+    internal bool Matches(
+        ProductionBranch other, ProductBranchMatchStyle style,
+        Dictionary<string, double> bindings = null)
     {
         return style switch
         {
-            ProductBranchMatchStyle.AtEnd => MatchToTheLeft(other),
-            ProductBranchMatchStyle.AtStart => MatchToTheRight(other),
+            ProductBranchMatchStyle.AtEnd => MatchToTheLeft(other, bindings),
+            ProductBranchMatchStyle.AtStart => MatchToTheRight(other, bindings),
             _ => false
         };
     }
@@ -93,7 +200,7 @@ public class ProductionBranch
     /// </summary>
     /// <param name="other">The branch we are comparing ourselves to.</param>
     /// <returns><c>true</c>, if the entries match, or <c>false</c>, if not.</returns>
-    private bool MatchToTheLeft(ProductionBranch other)
+    private bool MatchToTheLeft(ProductionBranch other, Dictionary<string, double> bindings)
     {
         int theirs = other._entries.Count - 1;
 
@@ -102,7 +209,8 @@ public class ProductionBranch
             if (_entries[ours].IsRune)
                 theirs = FindRune(other._entries, theirs, -1);
 
-            if (theirs < 0 || !MatchesAt(other, ProductBranchMatchStyle.AtEnd, ours, theirs))
+            if (theirs < 0 ||
+                !MatchesAt(other, ProductBranchMatchStyle.AtEnd, ours, theirs, bindings))
                 return false;
 
             theirs--;
@@ -117,7 +225,7 @@ public class ProductionBranch
     /// </summary>
     /// <param name="other">The branch we are comparing ourselves to.</param>
     /// <returns><c>true</c>, if the entries match, or <c>false</c>, if not.</returns>
-    private bool MatchToTheRight(ProductionBranch other)
+    private bool MatchToTheRight(ProductionBranch other, Dictionary<string, double> bindings)
     {
         int theirs = 0;
 
@@ -126,7 +234,8 @@ public class ProductionBranch
             if (_entries[ours].IsRune)
                 theirs = FindRune(other._entries, theirs, 1);
 
-            if (theirs < 0 || !MatchesAt(other, ProductBranchMatchStyle.AtStart, ours, theirs))
+            if (theirs < 0 ||
+                !MatchesAt(other, ProductBranchMatchStyle.AtStart, ours, theirs, bindings))
                 return false;
 
             theirs++;
@@ -145,16 +254,39 @@ public class ProductionBranch
     /// compare.</param>
     /// <returns><c>true</c>, if the entries match, or <c>false</c>, if not.</returns>
     private bool MatchesAt(
-        ProductionBranch other, ProductBranchMatchStyle style, int ourIndex, int theirIndex)
+        ProductionBranch other, ProductBranchMatchStyle style, int ourIndex, int theirIndex,
+        Dictionary<string, double> bindings)
     {
-        if ((_entries[ourIndex].IsRune && other._entries[theirIndex].IsBranch) ||
-            (_entries[ourIndex].IsBranch && other._entries[theirIndex].IsRune))
+        Entry ours = _entries[ourIndex];
+        Entry theirs = other._entries[theirIndex];
+
+        if ((ours.IsRune && theirs.IsBranch) || (ours.IsBranch && theirs.IsRune))
             return false;
 
-        if (_entries[ourIndex].IsRune)
-            return _entries[ourIndex].Rune == other._entries[theirIndex].Rune;
-        
-        return _entries[ourIndex].Branch.Matches(other._entries[theirIndex].Branch, style);
+        if (ours.IsBranch)
+            return ours.Branch.Matches(theirs.Branch, style, bindings);
+
+        if (ours.Rune != theirs.Rune)
+            return false;
+
+        // A context written with names only matches a module carrying exactly that many numbers,
+        // which is the same rule the strict predecessor follows.  A context written as a bare
+        // letter names nothing and so asks nothing of the numbers.
+        if (ours.Formals is not { Length: > 0 })
+            return true;
+
+        double[] values = theirs.Values ?? [];
+
+        if (values.Length != ours.Formals.Length)
+            return false;
+
+        if (bindings is not null)
+        {
+            for (int index = 0; index < values.Length; index++)
+                bindings[ours.Formals[index]] = values[index];
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -175,6 +307,32 @@ public class ProductionBranch
             if (source[index] == LSystemProducer.LeftBracket)
                 depth++;
             else if (source[index] == LSystemProducer.RightBracket)
+            {
+                depth--;
+
+                if (depth == 0)
+                    break;
+            }
+
+            index++;
+        }
+        while (index < source.Length);
+
+        return index;
+    }
+
+    /// <summary>
+    /// This method finds the bracket closing the one at the given place in a word.
+    /// </summary>
+    private static int FindClosingBracket(Module[] source, int index)
+    {
+        int depth = 0;
+
+        do
+        {
+            if (source[index].Letter == LSystemProducer.LeftBracket)
+                depth++;
+            else if (source[index].Letter == LSystemProducer.RightBracket)
             {
                 depth--;
                 

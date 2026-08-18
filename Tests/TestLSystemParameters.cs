@@ -268,4 +268,122 @@ public class TestLSystemParameters
 
         return found;
     }
+
+    /// <summary>
+    /// Builds a rule from a full key -- left context, predecessor and right context together, as a
+    /// scene writes them -- so that a parametric context can be exercised.
+    /// </summary>
+    private static ProductionRuleSpec ContextRule(string key, string production, string condition = null)
+    {
+        int left = key.IndexOf('<');
+        int right = key.IndexOf('>');
+        string middle = key[(left < 0 ? 0 : left + 1)..(right < 0 ? key.Length : right)];
+
+        (System.Text.Rune letter, string[] formals) = ModuleWord.ParsePredecessor(middle);
+
+        return new ProductionRuleSpec
+        {
+            Key = condition is null ? key : $"{key}:{condition}",
+            Variable = letter,
+            Formals = formals,
+            Condition = condition,
+            LeftContext = left < 0 ? null : ProductionBranch.ParsePattern(key[..left]),
+            RightContext = right < 0 ? null : ProductionBranch.ParsePattern(key[(right + 1)..]),
+            Production = production,
+            BreakValue = 1
+        };
+    }
+
+    [TestMethod]
+    public void TestALeftContextBindsWhatItMatched()
+    {
+        LSystemProducer producer = Producer("A(4)B(5)")
+            .AddRule(ContextRule("A(x)<B(y)", "C(x + y)"));
+
+        Assert.AreEqual("A(4)C(9)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestARightContextBindsWhatItMatched()
+    {
+        LSystemProducer producer = Producer("B(5)C(6)")
+            .AddRule(ContextRule("B(y)>C(z)", "D(y + z)"));
+
+        Assert.AreEqual("D(11)C(6)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestTheBooksOwnParametricContextExample()
+    {
+        // Straight out of section 1.10.2, including the answer it prints:
+        //
+        //     A(x) < B(y) > C(z) : x + y + z > 10 -> E((x + y) / 2) F((y + z) / 2)
+        //
+        // applied to ... A(4) B(5) C(6) ... replaces the B(5) with E(4.5) F(5.5).
+        LSystemProducer producer = Producer("A(4)B(5)C(6)")
+            .AddRule(ContextRule(
+                "A(x)<B(y)>C(z)", "E((x + y) / 2)F((y + z) / 2)", "x + y + z > 10"));
+
+        Assert.AreEqual("A(4)E(4.5)F(5.5)C(6)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestTheBooksExampleIsRefusedWhenItsConditionFails()
+    {
+        // The same rule against modules that do not add up to more than ten.  The letters still
+        // line up, so this is the condition doing the refusing and nothing else.
+        LSystemProducer producer = Producer("A(1)B(2)C(3)")
+            .AddRule(ContextRule(
+                "A(x)<B(y)>C(z)", "E((x + y) / 2)F((y + z) / 2)", "x + y + z > 10"));
+
+        Assert.AreEqual("A(1)B(2)C(3)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestAContextNamingParametersWantsThemToBeThere()
+    {
+        // A context written with names asks for a module carrying that many numbers, which is the
+        // same rule the predecessor follows.  Here the A alongside carries none, so the rule does
+        // not apply and the B stands.
+        LSystemProducer producer = Producer("AB(5)")
+            .AddRule(ContextRule("A(x)<B(y)", "C(x + y)"));
+
+        Assert.AreEqual("AB(5)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestAContextNamingParametersRefusesAModuleCarryingTooMany()
+    {
+        // The other side of the arity check, and the side that a "not enough" test cannot reach:
+        // a context naming one parameter must also refuse a module carrying two.  Checking only
+        // that too few is refused leaves a one-sided comparison passing, which is exactly what a
+        // probe of this found.
+        LSystemProducer producer = Producer("A(4, 9)B(5)")
+            .AddRule(ContextRule("A(x)<B(y)", "C(x + y)"));
+
+        Assert.AreEqual("A(4, 9)B(5)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestABareContextLetterAsksNothingOfTheNumbers()
+    {
+        // The other side of that: a context written as a plain letter names nothing, so it matches
+        // whatever that letter is carrying.  This is what keeps every context-sensitive L-system
+        // written before parameters existed working unchanged.
+        LSystemProducer producer = Producer("A(4)B(5)")
+            .AddRule(ContextRule("A<B(y)", "C(y)"));
+
+        Assert.AreEqual("A(4)C(5)", ModuleWord.AsText(producer.Produce(1)));
+    }
+
+    [TestMethod]
+    public void TestThePredecessorOutranksTheContextForASharedName()
+    {
+        // If a context and the predecessor bind the same name, the module being rewritten wins --
+        // it is the one the rule is about.
+        LSystemProducer producer = Producer("A(4)B(5)")
+            .AddRule(ContextRule("A(x)<B(x)", "C(x)"));
+
+        Assert.AreEqual("A(4)C(5)", ModuleWord.AsText(producer.Produce(1)));
+    }
 }

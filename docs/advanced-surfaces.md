@@ -774,6 +774,29 @@ an ordinary expression in this language.
 `F(x)` and `F(x, t)` are two different rules rather than one that sometimes goes wrong, and a module
 that suits no rule is carried through untouched.
 
+##### Parameters in a context
+
+A context may name parameters too, and then it binds them for the condition and the successor to
+use:
+
+```
+productions {
+    'A(x)<B(y)>C(z) : x + y + z > 10' -> 'E((x + y) / 2)F((y + z) / 2)'
+}
+```
+
+That is the book's own example. Given `A(4)B(5)C(6)`, the `B(5)` becomes `E(4.5)F(5.5)` — the rule
+can see what its neighbours are carrying, not merely that they are there. This is how a signal
+passes along a filament: each module works out its new value from the ones either side of it.
+
+**A context naming parameters wants exactly that many.** `A(x)` matches an `A` carrying one number
+and not an `A` carrying none or two — the same rule the predecessor follows. **A context written as
+a bare letter names nothing and so asks nothing**, which is what keeps every context-sensitive
+L-system written before parameters existed working unchanged.
+
+**If a context and the predecessor bind the same name, the predecessor wins.** The module being
+rewritten is the one the rule is about.
+
 ##### Where a letter ends and arithmetic begins
 
 The book warns that `+`, `&`, `^` and `/` are letters of the alphabet *and* arithmetic operators,

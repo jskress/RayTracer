@@ -38,7 +38,8 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="parent">The scope the L-system was written in.</param>
     /// <param name="scope">The scope holding this rule's names, bound to the module's numbers.</param>
     /// <returns><c>true</c>, if this rule applies to the module.</returns>
-    public bool AppliesTo(Module module, Variables parent, out Variables scope)
+    public bool AppliesTo(
+        Module module, Variables parent, Dictionary<string, double> bindings, out Variables scope)
     {
         scope = null;
 
@@ -48,6 +49,14 @@ public class ProductionRule : ProductionRuleBase
         // A child scope per application, so a rule's names cannot leak into the scene or into the
         // next module rewritten.  This is the same scoping a function body gets.
         scope = new Variables(parent);
+
+        // Whatever the context bound goes in first, so that a name the predecessor also uses is the
+        // predecessor's -- the module being rewritten has the last word about its own numbers.
+        if (bindings is not null)
+        {
+            foreach (KeyValuePair<string, double> pair in bindings)
+                scope.SetValue(pair.Key, pair.Value);
+        }
 
         for (int index = 0; index < Formals.Length; index++)
             scope.SetValue(Formals[index], module.Parameters[index]);
@@ -70,17 +79,18 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="source">The source to check.</param>
     /// <param name="index">The current location in the source.</param>
     /// <returns><c>true</c>, if this rule matches the given source at the index provided.</returns>
-    public bool Matches(Rune[] source, int index)
+    /// <param name="bindings">Collects whatever a parametric context binds.</param>
+    public bool Matches(Module[] source, int index, Dictionary<string, double> bindings = null)
     {
         // Note: we will only be here in this method if our variable was already matched.
         if (!SymbolsToIgnore.IsNullOrEmpty() &&
             (LeftContext is not null || RightContext is not null))
             (source, index) = RemoveIgnoredSymbols(source, index);
 
-        if (LeftContext is not null && !LeftContextMatches(source, index))
+        if (LeftContext is not null && !LeftContextMatches(source, index, bindings))
             return false;
 
-        return RightContext is null || RightContextMatches(source, index);
+        return RightContext is null || RightContextMatches(source, index, bindings);
     }
 
     /// <summary>
@@ -91,14 +101,14 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="index">The index in the array of the current symbol.</param>
     /// <returns>A new array that does not contain any of our ignored symbols and the
     /// updated index that accounts for removals.</returns>
-    private (Rune[], int) RemoveIgnoredSymbols(Rune[] source, int index)
+    private (Module[], int) RemoveIgnoredSymbols(Module[] source, int index)
     {
-        List<Rune> work = [];
+        List<Module> work = [];
         int leftCount = 0;
 
         for (int i = 0; i < source.Length; i++)
         {
-            if (SymbolsToIgnore.Contains(source[i]))
+            if (SymbolsToIgnore.Contains(source[i].Letter))
             {
                 if (i < index)
                     leftCount++;
@@ -119,9 +129,10 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="index">The current location in the source.</param>
     /// <returns><c>true</c>, if the left context matches the given source at the index
     /// provided.</returns>
-    private bool LeftContextMatches(Rune[] source, int index)
+    private bool LeftContextMatches(
+        Module[] source, int index, Dictionary<string, double> bindings)
     {
-        if (index > 0 && source[index - 1] == LSystemProducer.LeftBracket)
+        if (index > 0 && source[index - 1].Letter == LSystemProducer.LeftBracket)
             index--;
 
         if (index > 0)
@@ -132,7 +143,7 @@ public class ProductionRule : ProductionRuleBase
             {
                 ProductionBranch left = ProductionBranch.Parse(source[(start + 1)..index]);
 
-                return LeftContext.Matches(left, ProductBranchMatchStyle.AtEnd);
+                return LeftContext.Matches(left, ProductBranchMatchStyle.AtEnd, bindings);
             }
         }
 
@@ -146,7 +157,8 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="index">The current location in the source.</param>
     /// <returns><c>true</c>, if the right context matches the given source at the index
     /// provided.</returns>
-    private bool RightContextMatches(Rune[] source, int index)
+    private bool RightContextMatches(
+        Module[] source, int index, Dictionary<string, double> bindings)
     {
         if (index < source.Length - 1)
         {
@@ -156,7 +168,7 @@ public class ProductionRule : ProductionRuleBase
             {
                 ProductionBranch right = ProductionBranch.Parse(source[(index + 1)..end]);
 
-                return RightContext.Matches(right, ProductBranchMatchStyle.AtStart);
+                return RightContext.Matches(right, ProductBranchMatchStyle.AtStart, bindings);
             }
         }
 
@@ -171,15 +183,15 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="index">The current location in the source.</param>
     /// <returns>The index of the left bracket that begins the current sibling list or
     /// <c>-1</c> if such a bracket could not be found.</returns>
-    private static int FindSiblingStart(Rune[] source, int index)
+    private static int FindSiblingStart(Module[] source, int index)
     {
         int depth = 0;
 
         do
         {
-            if (source[index] == LSystemProducer.RightBracket)
+            if (source[index].Letter == LSystemProducer.RightBracket)
                 depth++;
-            else if (source[index] == LSystemProducer.LeftBracket)
+            else if (source[index].Letter == LSystemProducer.LeftBracket)
             {
                 depth--;
 
@@ -202,15 +214,15 @@ public class ProductionRule : ProductionRuleBase
     /// <param name="index">The current location in the source.</param>
     /// <returns>The index of the right bracket that ends the current sibling list or
     /// <c>source.Length</c> if such a bracket could not be found.</returns>
-    private static int FindSiblingEnd(Rune[] source, int index)
+    private static int FindSiblingEnd(Module[] source, int index)
     {
         int depth = 0;
 
         do
         {
-            if (source[index] == LSystemProducer.LeftBracket)
+            if (source[index].Letter == LSystemProducer.LeftBracket)
                 depth++;
-            else if (source[index] == LSystemProducer.RightBracket)
+            else if (source[index].Letter == LSystemProducer.RightBracket)
             {
                 depth--;
 

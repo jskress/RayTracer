@@ -423,11 +423,17 @@ public partial class LanguageParser
         resolver.ConditionResolver = new LiteralResolver<string> { Value = condition };
         resolver.LeftContextResolver = new LiteralResolver<ProductionBranch>
         {
-            Value = left == null ? null : ProductionBranch.Parse(left)
+            Value = left == null
+                ? null
+                : ProductionBranch.ParsePattern(
+                    string.Concat(left.Select(rune => rune.ToString())))
         };
         resolver.RightContextResolver = new LiteralResolver<ProductionBranch>
         {
-            Value = right == null ? null : ProductionBranch.Parse(right)
+            Value = right == null
+                ? null
+                : ProductionBranch.ParsePattern(
+                    string.Concat(right.Select(rune => rune.ToString())))
         };
     }
 
