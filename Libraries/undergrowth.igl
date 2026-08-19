@@ -205,6 +205,59 @@ primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 
 // What settles on it, which is nothing at all for three seasons of the four.  A boxwood is evergreen,
 // so it would otherwise be the one plant here that took the word and ignored it -- and a clipped dome
 // under snow is what a garden looks like in January.
+// -- What a leaf is ---------------------------------------------------------------------------------
+
+// The blade of one leaf, authored growing along +Y from its base to a point at its tip, its width
+// across X and a shallow cup lifting toward +Z.  It is drawn at a length of one and scaled where it
+// is used.
+//
+// **These were spheres**, in a shrub built as a dome of them, and a dome of spheres reads as a bunch
+// of grapes rather than as foliage however carefully the dome is shaped.  The `trees` library carried
+// the same fault and was fixed the same way; this is the rest of that job.  A leaf is a `patch`, a
+// bicubic sheet pulled into shape by sixteen control points, and the point of it over a flat shape is
+// the **cup**: a leaf that is dead flat takes the light evenly across its whole face and reads as
+// plastic, where a cupped one catches the light along one edge and turns away from it along the
+// other.
+//
+// Berries and buds are left as spheres on purpose.  A berry *is* a small ball, and a bud very nearly
+// is; the sphere was only ever wrong where it stood in for a leaf.
+primitive UnderLeaf(kind) -> group {
+    switch (kind) {
+        // A bramble leaf: ovate and drawn to a point, longer than it is broad.
+        case 'bramble' {
+            return group { patch {
+                points
+                    [-0.0600, 0.0000, 0.0000], [-0.0200, 0.0000, 0.0000], [0.0200, 0.0000, 0.0000], [0.0600, 0.0000, 0.0000],
+                    [-0.2800, 0.2800, 0.0000], [-0.0933, 0.2800, 0.0533], [0.0933, 0.2800, 0.0533], [0.2800, 0.2800, 0.0000],
+                    [-0.2000, 0.6200, 0.0000], [-0.0667, 0.6200, 0.0427], [0.0667, 0.6200, 0.0427], [0.2000, 0.6200, 0.0000],
+                    [-0.0200, 1.0000, 0.0000], [-0.0067, 1.0000, 0.0000], [0.0067, 1.0000, 0.0000], [0.0200, 1.0000, 0.0000]
+                uSteps 3
+                vSteps 3
+            } }
+        }
+
+        // A boxwood leaf: small, broad and blunt.  Buxus carries hundreds of little rounded ovals,
+        // which is what gives a clipped box its density.
+        default {
+            return group { patch {
+                points
+                    [-0.1000, 0.0000, 0.0000], [-0.0333, 0.0000, 0.0000], [0.0333, 0.0000, 0.0000], [0.1000, 0.0000, 0.0000],
+                    [-0.3000, 0.2500, 0.0000], [-0.1000, 0.2500, 0.0489], [0.1000, 0.2500, 0.0489], [0.3000, 0.2500, 0.0000],
+                    [-0.2600, 0.6500, 0.0000], [-0.0867, 0.6500, 0.0400], [0.0867, 0.6500, 0.0400], [0.2600, 0.6500, 0.0000],
+                    [-0.0500, 1.0000, 0.0000], [-0.0167, 1.0000, 0.0000], [0.0167, 1.0000, 0.0000], [0.0500, 1.0000, 0.0000]
+                uSteps 3
+                vSteps 3
+            } }
+        }
+    }
+}
+
+// How many rings of leaves a boxwood's dome is built from.  It is a function rather than a number in
+// two places because the snow is laid along the very same rings, and the two must agree: raise the
+// leaves to fifteen rings while the snow still counts in tens and the snow settles between the
+// leaves instead of on them.
+function UnderBoxRings() -> number { return 15 }
+
 primitive UnderBoxwoodSnow(season, height, variant) -> group {
     switch (season) {
         case 'winter' {
@@ -212,10 +265,10 @@ primitive UnderBoxwoodSnow(season, height, variant) -> group {
                 // Laid along the same rings the foliage is, and only the upper ones: snow settles on
                 // what faces the sky.  Sitting it at a fixed height instead put it *inside* the dome,
                 // where it was worth nothing at all.
-                for ring in [6, 10] {
-                    up = ring / 10
+                for ring in [floor(UnderBoxRings() * 0.6), UnderBoxRings() - 1] {
+                    up = ring / (UnderBoxRings() - 1)
                     wide = height * 0.46 * sqrt(1 - up * up * 0.93)
-                    round = wide / height * 34
+                    round = wide / height * 58
 
                     for step in [0, round] {
                         if (random(ring, step, variant + 5) > 0.42) {
@@ -256,7 +309,7 @@ primitive UnderBoxShade(pick) -> material {
 // same number all the way up.  A fixed count crowds them at the top and leaves the bottom bald, which
 // is the tell-tale of a shape made by a loop that was not thinking.
 primitive Boxwood(height, season = 'summer', variant = 1) -> group {
-    rings = 11
+    rings = UnderBoxRings()
 
     return group {
         // The stem it was grown from, just showing under the skirt.  A dome sitting straight on the
@@ -270,12 +323,17 @@ primitive Boxwood(height, season = 'summer', variant = 1) -> group {
         for ring in [0, rings - 1] {
             up = ring / (rings - 1)
             wide = height * 0.46 * sqrt(1 - up * up * 0.93)
-            round = wide / height * 34
+            round = wide / height * 58
 
             for step in [0, round] {
-                sphere {
+                object UnderLeaf('boxwood') {
                     material UnderBoxShade(random(ring, step, variant + 9))
-                    scale height * 0.072 * (0.7 + random(ring, step, variant) * 0.6)
+                    scale height * 0.155 * (0.7 + random(ring, step, variant) * 0.6)
+                    // The blade grows along +Y and the shell is built out along +X, so it is turned a
+                    // quarter to face outward, then tipped by a random amount so the surface of the
+                    // bush is leaves at every angle rather than a tiled sphere.
+                    rotate X random(ring, step, variant + 5) * 60 - 30
+                    rotate Z -68 - random(ring, step, variant + 6) * 44
                     translate X wide * (0.94 + random(ring, step, variant + 3) * 0.12)
                     rotate Y step * 360 / (round + 1) + ring * 23 +
                            random(ring, step, variant + 1) * 18
@@ -291,9 +349,10 @@ primitive Boxwood(height, season = 'summer', variant = 1) -> group {
             deep = height * 0.30 * sqrt(1 - up * up * 0.9)
 
             for step in [0, 6] {
-                sphere {
+                object UnderLeaf('boxwood') {
                     material UnderBoxLeaf
-                    scale height * 0.105
+                    scale height * 0.20
+                    rotate Z -70
                     translate X deep
                     rotate Y step * 51 + ring * 29
                     translate Y height * (0.18 + up * 0.68)
@@ -313,9 +372,11 @@ primitive UnderCaneLeaves(season, thick, id, variant) -> group {
         case 'summer' {
             return group {
                 for leaf in [0, 4] {
-                    sphere {
+                    object UnderLeaf('bramble') {
                         material UnderCaneLeaf
-                        scale thick * (1.3 + random(id, leaf, variant) * 0.9)
+                        scale thick * (5.5 + random(id, leaf, variant) * 3.5)
+                        rotate X random(id, leaf, variant + 6) * 50 - 25
+                        rotate Z -62 - random(id, leaf, variant + 7) * 40
                         translate X thick * 2.4
                         rotate Y leaf * 72 + random(id, leaf, variant + 1) * 45
                     }
@@ -325,9 +386,12 @@ primitive UnderCaneLeaves(season, thick, id, variant) -> group {
         case 'autumn', 'fall' {
             return group {
                 for leaf in [0, 3] {
-                    sphere {
+                    object UnderLeaf('bramble') {
                         material UnderCaneTurned
-                        scale thick * (1.2 + random(id, leaf, variant + 2) * 0.8)
+                        scale thick * (5 + random(id, leaf, variant + 2) * 3)
+                        // Further over than in summer: a turned leaf hangs from its stalk.
+                        rotate X random(id, leaf, variant + 8) * 40 - 10
+                        rotate Z -78 - random(id, leaf, variant + 9) * 34
                         translate X thick * 2.4
                         rotate Y leaf * 90 + random(id, leaf, variant + 3) * 55
                     }

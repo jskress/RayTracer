@@ -49,13 +49,10 @@ public class Tube : Surface
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        if (!Discontinuous)
-        {
-            SegmentContinuity.Validate(
-                Start.Center,
-                Segments.Select(spec => (spec.Control1?.Center, spec.Control2?.Center, spec.End.Center)),
-                "tube");
-        }
+        SegmentContinuity.Validate(
+            Start.Center,
+            Segments.Select(spec => (spec.Control1?.Center, spec.Control2?.Center, spec.End.Center)),
+            "tube", !Discontinuous);
 
         _segments.Clear();
 
@@ -63,8 +60,29 @@ public class Tube : Surface
 
         foreach (TubeSegmentSpec spec in Segments)
         {
+            // A curved segment whose control points leave it geometrically straight is built as the
+            // straight segment it actually is.  This is not tidiness: the envelope solve for a curved
+            // segment works from the differences of its control points, and when those collapse the
+            // polynomial it samples drops degree and the solve finds nothing -- so the segment
+            // renders as its two end spheres and no body at all, with no error to say so.  A bend
+            // that works out to nought is a perfectly reasonable thing for a scene to compute, and it
+            // should draw as a straight piece rather than disappear.
+            bool straight = (spec.Control1, spec.Control2) switch
+            {
+                (null, _) => false,
+                (not null, null) => IsStraight(
+                    current.Center, spec.Control1.Center, spec.End.Center),
+                (not null, not null) => IsStraight(
+                    current.Center, spec.Control1.Center, spec.Control2.Center, spec.End.Center)
+            };
+
             Surface segment = (spec.Control1, spec.Control2) switch
             {
+                _ when straight => new TubeSegment
+                {
+                    Start = current.Center, StartRadius = current.Radius,
+                    End = spec.End.Center, EndRadius = spec.End.Radius
+                },
                 (null, _) => new TubeSegment
                 {
                     Start = current.Center, StartRadius = current.Radius,
@@ -111,6 +129,44 @@ public class Tube : Surface
             _root.PrepareForRendering(SampleTimes);
         }
     }
+
+    /// <summary>
+    /// This method reports whether a quadratic segment is really a straight line.
+    /// <para>
+    /// A quadratic Bezier bends by its second difference, <c>start - 2 * control + end</c>.  Where
+    /// that is nought the control point sits exactly halfway between the ends, every quadratic term
+    /// drops out, and what is left is a line.  The test is relative to the segment's own length so
+    /// that it means the same thing for a twig and for a tree trunk.
+    /// </para>
+    /// </summary>
+    private static bool IsStraight(Point start, Point control, Point end)
+    {
+        Vector span = end - start;
+        Vector bend = (start - control) - (control - end);
+
+        return bend.Magnitude <= span.Magnitude * StraightTolerance;
+    }
+
+    /// <summary>
+    /// This method reports whether a cubic segment is really a straight line, which it is when both
+    /// of the differences that give it its shape have collapsed.
+    /// </summary>
+    private static bool IsStraight(Point start, Point control1, Point control2, Point end)
+    {
+        Vector span = end - start;
+        Vector second = (start - control1) + (control2 - control1);
+        Vector third = (end - start) - 3 * (control2 - control1);
+        double limit = span.Magnitude * StraightTolerance;
+
+        return second.Magnitude <= limit && third.Magnitude <= limit;
+    }
+
+    /// <summary>
+    /// How far a control point may sit off the straight line, as a fraction of the segment's own
+    /// length, and still count as straight.  It is small: this is meant to catch a bend that has
+    /// genuinely collapsed, not to flatten a shallow one.
+    /// </summary>
+    private const double StraightTolerance = 1e-9;
 
     /// <summary>
     /// This method returns a default bounding box that encloses every segment.

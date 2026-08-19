@@ -27,8 +27,12 @@ internal static class SegmentContinuity
     /// curve, and both present means a cubic curve.</param>
     /// <param name="noun">A noun (e.g. "tube", "sweep's spline") to use in the error
     /// message.</param>
+    /// <param name="checkContinuity">Whether to check for kinks.  A chain marked discontinuous
+    /// says its kinks are meant, so that half is skipped -- but the shape check below is not, for
+    /// the reason given there.</param>
     public static void Validate(
-        Point start, IEnumerable<(Point Control1, Point Control2, Point End)> segments, string noun)
+        Point start, IEnumerable<(Point Control1, Point Control2, Point End)> segments, string noun,
+        bool checkContinuity = true)
     {
         Point current = start;
         Vector previousExitTangent = null;
@@ -38,7 +42,22 @@ internal static class SegmentContinuity
         {
             (Vector entryTangent, Vector exitTangent) = GetTangents(current, control1, control2, end);
 
-            if (previousExitTangent is not null && !DirectionsMatch(previousExitTangent, entryTangent))
+            // A segment that goes nowhere is checked whatever the chain was marked, because it is
+            // not a kink and "discontinuous" does not mean what it would need to mean to excuse it.
+            // Saying so here also keeps the message below honest: the tangent of a segment with no
+            // length is the zero vector, its unit is a NaN, and the angle worked out from it comes
+            // out as "about NaN degrees" -- which names neither the place nor the problem.
+            if (IsEmpty(entryTangent) || IsEmpty(exitTangent))
+            {
+                throw new Exception(
+                    $"The {noun} has a segment of no length at control point {index} (near " +
+                    $"[{current.X:F3}, {current.Y:F3}, {current.Z:F3}]) -- its start, its control " +
+                    "points and its end are all the same place, so it has no direction to travel " +
+                    "in.  Remove it, or move one of its points.");
+            }
+
+            if (checkContinuity && previousExitTangent is not null &&
+                !DirectionsMatch(previousExitTangent, entryTangent))
             {
                 double angle = Math.Acos(Math.Clamp(previousExitTangent.Unit.Dot(entryTangent.Unit), -1, 1)) *
                     180 / Math.PI;
@@ -55,6 +74,20 @@ internal static class SegmentContinuity
             index++;
         }
     }
+
+    /// <summary>
+    /// This method reports whether a tangent has collapsed to nothing, which is what a segment
+    /// whose points all coincide produces.
+    /// </summary>
+    private static bool IsEmpty(Vector tangent)
+    {
+        return tangent.Magnitude <= EmptyTolerance;
+    }
+
+    /// <summary>
+    /// How short a tangent may be before the segment counts as having no length at all.
+    /// </summary>
+    private const double EmptyTolerance = 1e-12;
 
     /// <summary>
     /// This method returns the entry and exit tangent directions for a segment, given its

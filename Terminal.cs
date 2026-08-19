@@ -158,6 +158,16 @@ public static class Terminal
     }
 
     /// <summary>
+    /// This method is used to write a warning out.  A warning is something the person running the
+    /// program needs to know and which does not stop it, so unlike an error it does not halt.
+    /// </summary>
+    /// <param name="message">The warning to write out.</param>
+    public static void ShowWarning(string message)
+    {
+        OutInColor($"Warning: {message}", ConsoleColor.Yellow);
+    }
+
+    /// <summary>
     /// This method is used to show details about the given exception.
     /// </summary>
     /// <param name="exception">The exception to show.</param>

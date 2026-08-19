@@ -83,6 +83,8 @@ public static class LibrariesCommand
             return;
         }
 
+        WarnIfTheBuildIsBehindTheSource(assembly, prefix, shipped);
+
         Directory.CreateDirectory(LibraryLocator.LibrariesDirectory);
 
         int written = 0;
@@ -116,6 +118,80 @@ public static class LibrariesCommand
         Terminal.Out(written == 0
             ? $"Nothing to do; all {kept} of them were already there."
             : $"{written} installed into {LibraryLocator.LibrariesDirectory}.");
+    }
+
+    /// <summary>
+    /// This method warns when the libraries carried inside the assembly no longer match the ones in
+    /// the repository they were built from.
+    /// <para>
+    /// A library ships as an <em>embedded resource</em>, so installing one copies it out of the
+    /// assembly and never off disk.  Edit <c>Libraries/trees.igl</c>, install without building, and
+    /// the old library is written out over your changes while the command cheerfully reports having
+    /// installed it.  Nothing is wrong and nothing is said, which is the worst way for a thing to go
+    /// wrong: the edit appears to have been applied and the next render quietly disagrees.  Anyone
+    /// then measuring the effect of that edit is measuring nothing at all.
+    /// </para>
+    /// <para>
+    /// This only has anything to say when the ray tracer is running from the tree it was built in --
+    /// an installed copy has no repository to compare against, and stays silent.
+    /// </para>
+    /// </summary>
+    /// <param name="assembly">The assembly carrying the libraries.</param>
+    /// <param name="prefix">The prefix its library resources are named with.</param>
+    /// <param name="shipped">The library resources it carries.</param>
+    private static void WarnIfTheBuildIsBehindTheSource(
+        Assembly assembly, string prefix, string[] shipped)
+    {
+        string source = FindSourceLibraries();
+
+        if (source is null)
+            return;
+
+        List<string> stale = [];
+
+        foreach (string resource in shipped)
+        {
+            string name = resource[prefix.Length..];
+            string path = Path.Combine(source, name);
+
+            if (!File.Exists(path))
+                continue;
+
+            using Stream stream = assembly.GetManifestResourceStream(resource);
+            using StreamReader reader = new (stream!);
+
+            if (reader.ReadToEnd() != File.ReadAllText(path))
+                stale.Add(Path.GetFileNameWithoutExtension(name));
+        }
+
+        if (stale.Count == 0)
+            return;
+
+        Terminal.ShowWarning(
+            $"The build is behind the source for: {string.Join(", ", stale.Order())}.  A library " +
+            "is installed from inside the assembly, not from the folder, so what is about to be " +
+            "written is the older text.  Build first, then install.");
+    }
+
+    /// <summary>
+    /// This method finds the repository's own <c>Libraries</c> folder by walking up from wherever
+    /// the program is running, or hands back null when there is no repository above it.
+    /// </summary>
+    /// <returns>The repository's libraries folder, or null.</returns>
+    private static string FindSourceLibraries()
+    {
+        DirectoryInfo directory = new (AppContext.BaseDirectory);
+
+        while (directory is not null &&
+               !File.Exists(Path.Combine(directory.FullName, "RayTracer.csproj")))
+            directory = directory.Parent;
+
+        if (directory is null)
+            return null;
+
+        string libraries = Path.Combine(directory.FullName, "Libraries");
+
+        return Directory.Exists(libraries) ? libraries : null;
     }
 
     /// <summary>
