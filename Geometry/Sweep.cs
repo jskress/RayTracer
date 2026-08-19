@@ -81,13 +81,10 @@ public class Sweep : Group
     /// </summary>
     private void CreateTriangles()
     {
-        if (!Spline.Discontinuous)
-        {
-            SegmentContinuity.Validate(
-                Spline.Start,
-                Spline.Segments.Select(spec => (spec.Control1, spec.Control2, spec.End)),
-                "sweep's spline");
-        }
+        SegmentContinuity.Validate(
+            Spline.Start,
+            Spline.Segments.Select(spec => (spec.Control1, spec.Control2, spec.End)),
+            "sweep's spline", !Spline.Discontinuous);
 
         List<ISplineCurve> curves = Spline.GetCurves();
         (List<Point> positions, List<Vector> tangents, List<double> scales) = SampleSpline(curves);

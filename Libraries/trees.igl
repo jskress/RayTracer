@@ -98,9 +98,12 @@ function TreeVary(species) -> number {
 // leaves each limb heavy.
 function TreeDepth(species) -> number {
     switch (species) {
-        case 'birch' { return 5 }
-        case 'oak' { return 4 }
-        default { return 4 }
+        // Measured on an elm at 380 by 300: depth four renders in 3.2 seconds and gives a spindly
+        // canopy you can see straight through; five takes 7.1 and fills; six takes 19.4 for a
+        // further gain that is real but much smaller.  Five is the knee of that curve.
+        case 'birch' { return 6 }
+        case 'oak' { return 5 }
+        default { return 5 }
     }
 }
 
@@ -138,7 +141,7 @@ TreeElmBark = material { pigment [0.44, 0.34, 0.26]  specular 0.10  shininess 18
 TreeOakBark = material { pigment [0.35, 0.29, 0.23]  specular 0.08  shininess 14 }
 TreeBirchBark = material { pigment [0.82, 0.80, 0.74]  specular 0.16  shininess 30 }
 TreeFirBark = material { pigment [0.30, 0.22, 0.17]  specular 0.06  shininess 12 }
-TreeNeedles = material { pigment [0.14, 0.30, 0.18]  specular 0.22  shininess 40 }
+TreeNeedles = material { pigment [0.14, 0.30, 0.18]  specular 0.22  shininess 40  ambient 0.24 }
 TreeSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.30  shininess 60 }
 
 primitive TreeBark(species) -> material {
@@ -150,19 +153,282 @@ primitive TreeBark(species) -> material {
     }
 }
 
+// -- What a leaf is ---------------------------------------------------------------------------------
+
+// The blade of one leaf, authored growing along +Y from nothing at its base to a point at its tip,
+// its width across X and a shallow cup lifting toward +Z.  It is drawn at a length of one and scaled
+// where it is used.
+//
+// **These were spheres.**  Four green balls per twig, which is what the library shipped with, and at
+// any distance where a leaf is more than a few pixels across it reads as a bunch of grapes.  Measured
+// at eight hundred pixels and a forty-six degree field, a leaf on an elm gets thirty pixels at six
+// units off and nine at twenty -- easily enough to tell an oval from a triangle from a lobed edge, so
+// the shape is worth getting right rather than approximating with a ball.
+//
+// Three of the four are `patch` surfaces: a bicubic sheet pulled into shape by sixteen control
+// points, which gives a smooth outline and, more importantly, a **cup**.  A leaf that is dead flat
+// takes the light evenly across its whole face and reads as a plastic cut-out; a cupped one catches
+// the light along one edge and turns away from it along the other, which is most of what makes
+// foliage look soft.
+//
+// The oak is the exception, and the reason is worth stating: **a bicubic patch cannot be lobed.**  Its
+// silhouette comes from cubic boundary curves, and a cubic can carry one inflection -- enough for a
+// waisted oval, nowhere near the five rounded lobes down each edge that make an oak leaf an oak leaf.
+// So the oak is a `generic shape` instead: an arbitrary closed outline left flat.  It gives up the
+// cup and keeps the lobes, which is the right way round -- the lobes are what identify it.  A generic
+// shape is also cheaper to intersect than an extrusion of the same outline, being a flat thing in
+// space rather than a solid, and a leaf has no thickness worth paying for either way.
+// It gives back a `group` rather than a surface because the four are not all the same kind of
+// surface -- three patches and one generic shape -- and a primitive must name one kind.  A group
+// of one costs a bounding box, which a leaf is glad of anyway.
+primitive TreeBlade(species) -> group {
+    switch (species) {
+        // Oak: lobed, and flat for the reason above.  The outline is a great many short lines rather
+        // than a few curves because the lobes are easier to state as a width that rises and falls up
+        // the leaf than as a hand-fitted set of Beziers.
+        case 'oak' {
+            return group { generic shape {
+                path {
+                move to 0.0000, 0.0000
+                line to 0.1260, 0.0250
+                line to 0.1758, 0.0500
+                line to 0.2360, 0.0750
+                line to 0.2835, 0.1000
+                line to 0.2985, 0.1250
+                line to 0.2759, 0.1500
+                line to 0.2301, 0.1750
+                line to 0.1883, 0.2000
+                line to 0.1776, 0.2250
+                line to 0.2100, 0.2500
+                line to 0.2755, 0.2750
+                line to 0.3464, 0.3000
+                line to 0.3901, 0.3250
+                line to 0.3864, 0.3500
+                line to 0.3376, 0.3750
+                line to 0.2684, 0.4000
+                line to 0.2129, 0.4250
+                line to 0.1984, 0.4500
+                line to 0.2309, 0.4750
+                line to 0.2929, 0.5000
+                line to 0.3521, 0.5250
+                line to 0.3777, 0.5500
+                line to 0.3560, 0.5750
+                line to 0.2963, 0.6000
+                line to 0.2255, 0.6250
+                line to 0.1738, 0.6500
+                line to 0.1596, 0.6750
+                line to 0.1812, 0.7000
+                line to 0.2192, 0.7250
+                line to 0.2476, 0.7500
+                line to 0.2474, 0.7750
+                line to 0.2155, 0.8000
+                line to 0.1619, 0.8250
+                line to 0.1035, 0.8500
+                line to 0.0663, 0.8750
+                line to 0.0494, 0.9000
+                line to 0.0425, 0.9250
+                line to 0.0343, 0.9500
+                line to 0.0199, 0.9750
+                line to 0.0000, 1.0000
+                line to -0.0199, 0.9750
+                line to -0.0343, 0.9500
+                line to -0.0425, 0.9250
+                line to -0.0494, 0.9000
+                line to -0.0663, 0.8750
+                line to -0.1035, 0.8500
+                line to -0.1619, 0.8250
+                line to -0.2155, 0.8000
+                line to -0.2474, 0.7750
+                line to -0.2476, 0.7500
+                line to -0.2192, 0.7250
+                line to -0.1812, 0.7000
+                line to -0.1596, 0.6750
+                line to -0.1738, 0.6500
+                line to -0.2255, 0.6250
+                line to -0.2963, 0.6000
+                line to -0.3560, 0.5750
+                line to -0.3777, 0.5500
+                line to -0.3521, 0.5250
+                line to -0.2929, 0.5000
+                line to -0.2309, 0.4750
+                line to -0.1984, 0.4500
+                line to -0.2129, 0.4250
+                line to -0.2684, 0.4000
+                line to -0.3376, 0.3750
+                line to -0.3864, 0.3500
+                line to -0.3901, 0.3250
+                line to -0.3464, 0.3000
+                line to -0.2755, 0.2750
+                line to -0.2100, 0.2500
+                line to -0.1776, 0.2250
+                line to -0.1883, 0.2000
+                line to -0.2301, 0.1750
+                line to -0.2759, 0.1500
+                line to -0.2985, 0.1250
+                line to -0.2835, 0.1000
+                line to -0.2360, 0.0750
+                line to -0.1758, 0.0500
+                line to -0.1260, 0.0250
+                line to -0.1012, 0.0000
+                close
+                }
+            }
+        } }
+
+        // Birch: a small deltoid.  Broad and nearly straight across the base, drawn to a sharp point,
+        // and barely longer than it is wide.
+        case 'birch' {
+            return group { patch {
+                points
+            [-0.0700, 0.0000, 0.0000], [-0.0233, 0.0000, 0.0000], [0.0233, 0.0000, 0.0000], [0.0700, 0.0000, 0.0000],
+            [-0.4000, 0.2200, 0.0000], [-0.1333, 0.2200, 0.0489], [0.1333, 0.2200, 0.0489], [0.4000, 0.2200, 0.0000],
+            [-0.2300, 0.6000, 0.0000], [-0.0767, 0.6000, 0.0356], [0.0767, 0.6000, 0.0356], [0.2300, 0.6000, 0.0000],
+            [-0.0150, 1.0000, 0.0000], [-0.0050, 1.0000, 0.0000], [0.0050, 1.0000, 0.0000], [0.0150, 1.0000, 0.0000]
+                uSteps 3
+                vSteps 3
+            }
+        } }
+
+        // Fir: a needled shoot, not a needle -- and flat, like the oak, though for the opposite
+        // reason.  The oak is a `generic shape` because a patch cannot hold its outline; this is one
+        // because a patch holds curvature a shoot has not got.  Measured, a fir carrying patches took
+        // eighty-eight seconds against fifty-six for flat shapes, and a bicubic patch has no
+        // closed-form intersection -- it is subdivided per ray -- so the curvature is worth paying
+        // for where it shows and worth avoiding where it does not.
+        //
+        // **It is a shoot rather than a single needle because a needle is thinner than its pixel.**
+        // A real fir needle is some twenty times as long as it is wide; drawn at that ratio on a tree
+        // that fits the frame it comes out twenty-two pixels long and *one and a half wide*, and a
+        // mass of hairs renders as wire wool rather than as foliage.  This is the same trap the grass
+        // in `undergrowth` fell into.  So the outline is about six to one, with its edge notched to
+        // suggest the needles along it, and each one drawn stands for several.
+        case 'fir' {
+            return group { generic shape {
+                path {
+                    move to 0.0000, 0.0000
+                    line to 0.0628, 0.0333
+                    line to 0.0474, 0.0667
+                    line to 0.0580, 0.1000
+                    line to 0.0896, 0.1333
+                    line to 0.0986, 0.1667
+                    line to 0.0738, 0.2000
+                    line to 0.0589, 0.2333
+                    line to 0.0834, 0.2667
+                    line to 0.1130, 0.3000
+                    line to 0.1028, 0.3333
+                    line to 0.0704, 0.3667
+                    line to 0.0692, 0.4000
+                    line to 0.1030, 0.4333
+                    line to 0.1190, 0.4667
+                    line to 0.0919, 0.5000
+                    line to 0.0646, 0.5333
+                    line to 0.0796, 0.5667
+                    line to 0.1113, 0.6000
+                    line to 0.1077, 0.6333
+                    line to 0.0734, 0.6667
+                    line to 0.0601, 0.7000
+                    line to 0.0841, 0.7333
+                    line to 0.1019, 0.7667
+                    line to 0.0819, 0.8000
+                    line to 0.0524, 0.8333
+                    line to 0.0526, 0.8667
+                    line to 0.0703, 0.9000
+                    line to 0.0662, 0.9333
+                    line to 0.0383, 0.9667
+                    line to 0.0000, 1.0000
+                    line to -0.0383, 0.9667
+                    line to -0.0662, 0.9333
+                    line to -0.0703, 0.9000
+                    line to -0.0526, 0.8667
+                    line to -0.0524, 0.8333
+                    line to -0.0819, 0.8000
+                    line to -0.1019, 0.7667
+                    line to -0.0841, 0.7333
+                    line to -0.0601, 0.7000
+                    line to -0.0734, 0.6667
+                    line to -0.1077, 0.6333
+                    line to -0.1113, 0.6000
+                    line to -0.0796, 0.5667
+                    line to -0.0646, 0.5333
+                    line to -0.0919, 0.5000
+                    line to -0.1190, 0.4667
+                    line to -0.1030, 0.4333
+                    line to -0.0692, 0.4000
+                    line to -0.0704, 0.3667
+                    line to -0.1028, 0.3333
+                    line to -0.1130, 0.3000
+                    line to -0.0834, 0.2667
+                    line to -0.0589, 0.2333
+                    line to -0.0738, 0.2000
+                    line to -0.0986, 0.1667
+                    line to -0.0896, 0.1333
+                    line to -0.0580, 0.1000
+                    line to -0.0474, 0.0667
+                    line to -0.0628, 0.0333
+                    line to -0.0666, 0.0000
+                    close
+                }
+            } }
+        }
+
+        // Elm: an ovate blade, widest below the middle and pointed at both ends, about twice as long
+        // as it is wide.
+        default {
+            return group { patch {
+                points
+            [-0.0200, 0.0000, 0.0000], [-0.0067, 0.0000, 0.0000], [0.0067, 0.0000, 0.0000], [0.0200, 0.0000, 0.0000],
+            [-0.2600, 0.3000, 0.0000], [-0.0867, 0.3000, 0.0489], [0.0867, 0.3000, 0.0489], [0.2600, 0.3000, 0.0000],
+            [-0.2000, 0.6500, 0.0000], [-0.0667, 0.6500, 0.0400], [0.0667, 0.6500, 0.0400], [0.2000, 0.6500, 0.0000],
+            [-0.0200, 1.0000, 0.0000], [-0.0067, 1.0000, 0.0000], [0.0067, 1.0000, 0.0000], [0.0200, 1.0000, 0.0000]
+                uSteps 3
+                vSteps 3
+            }
+        } }
+    }
+}
+
+// How many leaves hang at the end of one twig.  The library shipped with four, which is part of why
+// a tree read as sparse: a real twig carries a spray, not a handful.
+function TreeLeaves(species) -> number {
+    switch (species) {
+        case 'birch' { return 10 }
+        case 'oak' { return 12 }
+        default { return 14 }
+    }
+}
+
 // What hangs on the end of a limb, which is the whole of what a season is.
-primitive TreeFoliage(species, season, id, variant) -> group {
+//
+// A blade is authored growing along +Y, and this is called from inside the limb's own group, so +Y
+// already runs along the twig.  That means a leaf needs no frame arithmetic to point the right way:
+// pitching it away from the axis and spinning it about that axis is enough, and the whole spray then
+// travels with the limb wherever the limb was turned to.
+primitive TreeFoliage(species, season, id, variant, twig) -> group {
+    count = TreeLeaves(species)
+
     switch (season) {
         case 'summer' {
             green = TreeGreen(species)
             return group {
-                for leaf in [0, 3] {
-                    sphere {
-                        material { pigment green }
-                        scale TreeLeaf(species) + random(id, leaf, variant) * TreeLeaf(species) * 0.5
-                        translate [random(id, leaf, variant + 1) * 0.30 - 0.15,
-                                   random(id, leaf, variant + 2) * 0.20,
-                                   random(id, leaf, variant + 3) * 0.30 - 0.15]
+                for leaf in [0, count - 1] {
+                    object TreeBlade(species) {
+                        // No two leaves on a tree are the same green.  A canopy of one flat colour
+                        // reads as a single painted object however good the shapes are, and varying
+                        // it per leaf costs nothing at all.
+                        material {
+                            pigment green * (0.78 + random(id, leaf, variant + 11) * 0.44)
+                            specular 0.10
+                            shininess 22
+                            ambient 0.26
+                        }
+                        scale TreeLeaf(species) * 1.5 *
+                              (0.80 + random(id, leaf, variant) * 0.45)
+                        // Pitched away from the twig, then drooping a little further: a leaf held
+                        // out flat reads as a signpost.
+                        rotate X 52 + random(id, leaf, variant + 1) * 34
+                        rotate Y leaf * 360 / count +
+                                 random(id, leaf, variant + 2) * 40
+                        translate Y -twig * random(id, leaf, variant + 3) * 0.85
                     }
                 }
             }
@@ -170,12 +436,22 @@ primitive TreeFoliage(species, season, id, variant) -> group {
         case 'autumn', 'fall' {
             turned = random(id, 30, variant)
             return group {
-                for leaf in [0, 1] {
-                    sphere {
-                        material { pigment [0.30 + turned * 0.45, 0.36 - turned * 0.10, 0.12] }
-                        scale TreeLeaf(species) * 0.9 + random(id, leaf, variant + 4) * 0.08
-                        translate [random(id, leaf, variant + 5) * 0.30 - 0.15, 0,
-                                   random(id, leaf, variant + 6) * 0.30 - 0.15]
+                for leaf in [0, count - 3] {
+                    object TreeBlade(species) {
+                        material {
+                            pigment [0.34 + turned * 0.40, 0.30 - turned * 0.08, 0.10]
+                            specular 0.08
+                            shininess 18
+                            ambient 0.26
+                        }
+                        scale TreeLeaf(species) * 1.45 *
+                              (0.75 + random(id, leaf, variant + 4) * 0.4)
+                        // Further over than in summer: an autumn leaf has given up holding itself
+                        // out and hangs from its stalk.
+                        rotate X 66 + random(id, leaf, variant + 5) * 30
+                        rotate Y leaf * 360 / count +
+                                 random(id, leaf, variant + 6) * 50
+                        translate Y -twig * random(id, leaf, variant + 7) * 0.85
                     }
                 }
             }
@@ -189,12 +465,14 @@ primitive TreeFoliage(species, season, id, variant) -> group {
         }
         default {
             return group {
-                for bud in [0, 1] {
-                    sphere {
-                        material { pigment [0.56, 0.68, 0.36] }
-                        scale 0.09 + random(id, bud, variant + 7) * 0.05
-                        translate [random(id, bud, variant + 8) * 0.20 - 0.1, 0,
-                                   random(id, bud, variant + 9) * 0.20 - 0.1]
+                for bud in [0, 2] {
+                    object TreeBlade(species) {
+                        material { pigment [0.58, 0.70, 0.36]  specular 0.16  shininess 30  ambient 0.26 }
+                        // A spring leaf is a small one, not a different one.
+                        scale TreeLeaf(species) * 1.5 *
+                              (0.7 + random(id, bud, variant + 7) * 0.5)
+                        rotate X 40 + random(id, bud, variant + 8) * 30
+                        rotate Y bud * 120 + random(id, bud, variant + 9) * 60
                     }
                 }
             }
@@ -202,40 +480,79 @@ primitive TreeFoliage(species, season, id, variant) -> group {
     }
 }
 
+// How far a limb wanders off the straight line between its ends, as a fraction of its own length.
+// A fir is nearly nothing -- a conifer's leader and boughs run true -- where a broadleaf sweeps.
+function TreeSweep(species) -> number {
+    switch (species) {
+        case 'fir' { return 0.04 }
+        case 'birch' { return 0.16 }
+        case 'oak' { return 0.13 }
+        default { return 0.15 }
+    }
+}
+
+// Which way, and how far, this particular limb sweeps.  Signed, so limbs curve both ways and a tree
+// does not come out combed.
+//
+// **The size and the direction are drawn separately, and that is not fussiness.**  Written the
+// obvious way -- `(random - 0.5) * 2` -- a limb whose random landed near a half would get a bend of
+// nearly nothing, and a curve with no bend in it is a straight line: its control point lies on the
+// line between its ends.  A tube segment in that state renders *nothing at all* except the sphere at
+// each end of it, with no error and no complaint.  So a tree would have been missing whichever limbs
+// happened to draw badly, differently for every variant, and nothing would have said why.  Drawing
+// the magnitude from a range that never reaches nought keeps every limb genuinely curved.
+function TreeBend(species, length, id, variant) -> number {
+    return length * TreeSweep(species) *
+           (0.30 + random(id, 78, variant) * 0.70) *
+           (1 - 2 * floor(random(id, 77, variant) * 2))
+}
+
+// The angle a limb is heading at by the time it reaches its tip, which is what anything growing from
+// that tip must be turned by if it is to carry on rather than kink.  A quadratic ends heading along
+// the line from its control point to its endpoint, which is what this measures.
+function TreeBendAngle(species, length, id, variant) -> number {
+    return toDegrees(atan2(TreeBend(species, length, id, variant) * 0.75, length * 0.45))
+}
+
 // The wood of one limb: a tube, which is a length of tapering rod with a *sphere* at each end of it.
 //
-// It was a cone until it was looked at closely, and the difference between the two is the whole
-// difference between a tree and a diagram of one.  A cone ends in a flat disc.  Set a limb growing at
-// an angle from the tip of another and the parent's disc is left standing proud of it, edge-on to the
-// light, and every fork in the tree gets a dark band across it -- so the limbs read as separate pieces
-// laid end to end rather than as one thing that grew.  A tube ends in a hemisphere, and a hemisphere
-// looks the same from every direction, so the child limb leaves it at any angle without a seam.
+// **It curves.**  A tube is threaded through points and will bend between them, and this used two
+// bare points -- a straight segment, which is the least a tube can do.  A branch running dead
+// straight from base to tip is the loudest thing left in a tree once its leaves are right: real wood
+// sweeps as it reaches, and a fork of two straight sticks reads as scaffolding.  One `quad` costs one
+// surface, exactly as the straight one did, and the taper follows the bend without being asked.
 //
-// It is also less to write: a tube is told the radius it starts and ends at, which is the taper said
-// directly instead of arrived at by slicing a cone and stretching the slice.
-primitive TreeWood(species, length, thickness) -> tube {
+// `quad` rather than `curve`: a quadratic takes a single control point, so the whole limb is one
+// segment with no join in it, and a tube with no join cannot fail the tangent-continuity check that
+// a join has to satisfy.
+primitive TreeWood(species, length, thickness, id, variant) -> tube {
+    bend = TreeBend(species, length, id, variant)
+
     return tube {
         material TreeBark(species)
         radius thickness at [0, 0, 0]
-        radius thickness * TreeTaper(species) at [0, length, 0]
+        quad radius thickness * 0.45 + thickness * TreeTaper(species) * 0.55
+                 at [bend * 0.25, length * 0.55, 0]
+             radius thickness * TreeTaper(species) at [bend, length, 0]
     }
 }
 
 // One limb: a length of wood, and then either foliage or three more limbs.
 primitive TreeLimb(species, season, depth, length, thickness, twist, id, variant) -> group {
     if (depth < 1) {
-        return group { object TreeFoliage(species, season, id, variant) }
+        return group { object TreeFoliage(species, season, id, variant, length) }
     }
     else {
         return group {
-            object TreeWood(species, length, thickness)
+            object TreeWood(species, length, thickness, id, variant)
             object TreeLimb(species, season, depth - 1,
                             length * TreeShrink(species) * TreeWilt(species, id, 1, variant),
                             thickness * TreeTaper(species), twist + TreeTurn(species),
                             id * 3 + 1, variant) {
                 rotate Z TreeLean(species) * TreeWilt(species, id, 2, variant)
                 rotate Y twist + TreeSway(species, id, 3, variant)
-                translate Y length
+                rotate Z -TreeBendAngle(species, length, id, variant)
+                translate [TreeBend(species, length, id, variant), length, 0]
             }
             object TreeLimb(species, season, depth - 1,
                             length * TreeShrink(species) * TreeWilt(species, id, 4, variant),
@@ -243,7 +560,8 @@ primitive TreeLimb(species, season, depth, length, thickness, twist, id, variant
                             id * 3 + 2, variant) {
                 rotate Z TreeLean(species) * TreeWilt(species, id, 5, variant)
                 rotate Y twist + TreeTurn(species) + TreeSway(species, id, 6, variant)
-                translate Y length
+                rotate Z -TreeBendAngle(species, length, id, variant)
+                translate [TreeBend(species, length, id, variant), length, 0]
             }
             object TreeLimb(species, season, depth - 1,
                             length * TreeShrink(species) * TreeWilt(species, id, 7, variant) * 0.9,
@@ -251,11 +569,12 @@ primitive TreeLimb(species, season, depth, length, thickness, twist, id, variant
                             id * 3 + 3, variant) {
                 rotate Z TreeLean(species) * 0.45 * TreeWilt(species, id, 8, variant)
                 rotate Y twist + TreeTurn(species) * 2 + TreeSway(species, id, 9, variant)
+                rotate Z -TreeBendAngle(species, length, id, variant)
                 // At the tip, like its two siblings, and not part way down.  A limb leaving the side
                 // of another has to start as wide as its parent is *there*, and this one started as
                 // wide as its parent ends -- so it emerged from the wood with a step around it.  The
                 // cones this was written for hid that in their own banding; a tube shows it plainly.
-                translate Y length
+                translate [TreeBend(species, length, id, variant), length, 0]
             }
         }
     }
@@ -349,13 +668,24 @@ primitive TreeSnowOn(season, length, id, variant) -> group {
 // but the length and the droop are what read at any distance.
 primitive TreeBough(season, length, id, variant) -> group {
     return group {
-        object TreeWood('fir', length, length * 0.045)
+        object TreeWood('fir', length, length * 0.045, id, variant)
+
+        // Needles, in sprays along the bough.  These were flattened spheres, for the same reason the
+        // broadleaves were round ones, and at any distance where a fir is more than a smudge the
+        // difference between a squashed ball and a spray of needles is the difference between a
+        // conifer and a topiary.
         for along in [0, 4] {
-            sphere {
-                material TreeNeedles
-                scale [length * 0.30, length * 0.12, length * 0.30]
-                translate Y length * (0.16 + along * 0.19)
-                translate X (random(id, along, variant) - 0.5) * length * 0.12
+            for needle in [0, 5] {
+                object TreeBlade('fir') {
+                    material TreeNeedles
+                    scale length * 0.34 * (0.75 + random(id, along * 6 + needle, variant) * 0.5)
+                    // Needles stand well out from the shoot and sweep back toward its tip, which is
+                    // what gives a fir bough its brush.
+                    rotate X 62 + random(id, along * 6 + needle, variant + 1) * 26
+                    rotate Y needle * 60 + along * 23 +
+                             random(id, along * 6 + needle, variant + 2) * 24
+                    translate Y length * (0.12 + along * 0.185)
+                }
             }
         }
         object TreeSnowOn(season, length, id, variant)
@@ -375,7 +705,7 @@ primitive Fir(height, season = 'summer', variant = 1) -> group {
     bare = height * 0.16
 
     return group {
-        object TreeWood('fir', height * 0.93, height * 0.028)
+        object TreeWood('fir', height * 0.93, height * 0.028, 0, variant)
         for whorl in [0, whorls - 1] {
             for branch in [0, 5] {
                 object TreeBough(season,
