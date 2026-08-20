@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
 using CommandLine;
 using RayTracer.General;
@@ -236,6 +235,20 @@ public class RenderOptions
     /// </summary>
     public AliasingOption AntiAliasing { get; } = new();
 
+    [Option('p', "progress", Required = false,
+        HelpText = "Sets how progress is reported: bar (the default), tool or none.")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public string ProgressStyleText
+    {
+        get => ProgressStyle.ToString().ToLowerInvariant();
+        set => ProgressStyle = ToProgressStyle(value);
+    }
+
+    /// <summary>
+    /// This property holds how progress should be reported.
+    /// </summary>
+    public ProgressStyle ProgressStyle { get; private set; } = ProgressStyle.Bar;
+
     private string _inputFileName;
     private string _outputDirectory;
     private string _outputFileName;
@@ -264,6 +277,18 @@ public class RenderOptions
     }
 
     /// <summary>
+    /// This is a helper method for converting a piece of text to the progress style it names.  The
+    /// text is taken case-insensitively and may be abbreviated, in the same way the output level's
+    /// text may be, so <c>-p tool</c> and <c>-p t</c> mean the same thing.
+    /// </summary>
+    /// <param name="styleText">The text to start with.</param>
+    /// <returns>The progress style the text names.</returns>
+    private static ProgressStyle ToProgressStyle(string styleText)
+    {
+        return ToNamedValue<ProgressStyle>(styleText, "style of progress", "bar, tool or none");
+    }
+
+    /// <summary>
     /// This is a helper method for converting a piece of text to the output level it
     /// represents.
     /// We do so by treating the input in a case-insensitive way and allow it to be an
@@ -273,18 +298,49 @@ public class RenderOptions
     /// <returns>The output level the text represents.</returns>
     private static OutputLevel ToOutputLevel(string levelText)
     {
-        levelText = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(levelText);
+        return ToNamedValue<OutputLevel>(levelText, "output level", "quiet, normal, chatty or verbose");
+    }
 
-        foreach (string name in Enum.GetNames(typeof(OutputLevel)))
+    /// <summary>
+    /// This is a helper method for finding the one value of an enumeration that a piece of text names.
+    /// The text is taken case-insensitively and may be abbreviated to any leading part of a name that
+    /// only one value shares, so <c>-l v</c> and <c>-l VERBOSE</c> both mean the same thing.
+    /// <para>
+    /// Two things here are worth not undoing, since both were live faults.  The comparison is
+    /// case-insensitive rather than done by title-casing the text first: title-casing leaves a word
+    /// that is already all capitals alone, on the assumption that it is an acronym, so <c>VERBOSE</c>
+    /// came out of it unchanged, matched nothing, and was refused by an option whose own help text
+    /// promises that its values are not case-sensitive.
+    /// </para>
+    /// <para>
+    /// And empty text is refused rather than searched for.  Every name begins with an empty string, so
+    /// a search would match the first value declared and return it -- which for the output level meant
+    /// that <c>-l ''</c> rendered in complete silence, no error and no output, where a script filling
+    /// that in from an unset variable would have wanted the ordinary default.
+    /// </para>
+    /// <para>
+    /// One caveat comes with matching on a leading part: no two names of either enumeration share a
+    /// first letter today, so every abbreviation names exactly one value, but a name added later that
+    /// did share one would be reachable only by spelling more of it out -- the earlier-declared value
+    /// would take the shorter form.  Worth a thought before adding to either list.
+    /// </para>
+    /// </summary>
+    /// <param name="text">The text to interpret.</param>
+    /// <param name="noun">What the value is, for the message if the text names nothing.</param>
+    /// <param name="choices">The values to offer, for that same message.</param>
+    /// <returns>The one value the text names.</returns>
+    private static TValue ToNamedValue<TValue>(string text, string noun, string choices)
+        where TValue : struct, Enum
+    {
+        if (!string.IsNullOrWhiteSpace(text))
         {
-            if (name.StartsWith(levelText))
+            foreach (string name in Enum.GetNames<TValue>())
             {
-                return Enum.TryParse(name, out OutputLevel outputLevel)
-                    ? outputLevel
-                    : OutputLevel.Normal;
+                if (name.StartsWith(text, StringComparison.OrdinalIgnoreCase))
+                    return Enum.Parse<TValue>(name);
             }
         }
 
-        throw new ArgumentException($"The text, '{levelText}', is not a valid output level.");
+        throw new ArgumentException($"'{text}' is not an {noun}; use {choices}.");
     }
 }
