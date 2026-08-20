@@ -17,7 +17,7 @@ public class LineParallelScanner : IScanner
     {
         if (height > width)
         {
-            Parallel.For(0, height, new ParallelOptions(), y =>
+            Parallel.For(0, height, Scanning.Options, y =>
             {
                 for (int x = 0; x < width; x++)
                     function.Invoke(x, y);
@@ -25,7 +25,7 @@ public class LineParallelScanner : IScanner
         }
         else
         {
-            Parallel.For(0, width, new ParallelOptions(), x =>
+            Parallel.For(0, width, Scanning.Options, x =>
             {
                 for (int y = 0; y < height; y++)
                     function.Invoke(x, y);
