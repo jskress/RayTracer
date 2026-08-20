@@ -900,6 +900,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/functions/a-road-through-town.igl">A Road Through Town</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/the-angle-a-plant-uses.png">
+      <img alt="The Angle a Plant Uses" height="120" src="Local/functions/the-angle-a-plant-uses.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/the-angle-a-plant-uses.igl">The Angle a Plant Uses</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/bare-wood.png">
+      <img alt="Bare Wood" height="120" src="Local/functions/bare-wood.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/bare-wood.igl">Bare Wood</a>
+    </td>
+  </tr>
 </table>
 
 ### Ported from POV-Ray

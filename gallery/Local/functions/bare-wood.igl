@@ -1,0 +1,75 @@
+// Winter, when you can see how a tree is built.
+//
+//     import 'trees' { Elm, Oak, Birch }
+//
+// A tree in leaf is mostly canopy: the wood is glimpsed between handfuls of green and its shape is
+// taken on trust.  Strip the leaves and the shape is all there is, which is why this scene is set in
+// the one season the library draws bare.
+//
+// **A branch is not a stick.**  It leaves its parent going one way and arrives at its tip going
+// another, sweeping between the two, and a tree built from straight pieces reads as scaffolding no
+// matter how carefully the pieces are angled.  Every limb here is a single quadratic -- one surface,
+// exactly as a straight one was -- and the taper follows the bend without being asked.
+//
+// **The arithmetic of that is worth knowing, because getting it wrong looks like getting it right.**
+// A quadratic's greatest departure from the straight line between its ends is `bend * (2k - 1) / 4`,
+// where `k` says how far across that line its control point sits.  Put the control near the middle
+// of the chord and the term vanishes: the tip is displaced, so the numbers all look correct, but the
+// path between the ends is dead straight and the branch is still a stick pointing slightly off.  The
+// first attempt at this scene's trees did exactly that and rendered as though nothing had changed.
+// Here the control stands directly above each limb's base, so a limb leaves going straight up and
+// leans over to reach its tip -- which is what a branch does.
+//
+// **How far each species sweeps is part of what it is.**  An oak is gnarled and bends most; a birch
+// is a straighter thing; a fir hardly bends at all, since a conifer's leader and boughs run true.
+// The direction is drawn separately from the amount, and the amount never reaches nought -- a limb
+// with no bend in it is a straight line, and a curve that is really a line used to render as nothing
+// at all.
+//
+// You will need the library, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'trees' { Elm, Oak, Birch }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Bare Wood'
+        author 'J. Stephen Kress'
+        description 'Winter trees, where the shape of the wood is all there is to look at.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [7.5, 5.2, -17]
+    look at [-0.5, 4.6, 1]
+    field of view 50
+}
+
+// A low sun almost behind them, so the limbs are drawn as edges rather than filled in -- which is
+// what makes a curve read as a curve.
+background physical sky {
+    sun elevation 11
+    sun azimuth 24
+    turbidity 2.4
+    brightness 3
+}
+
+sky light { samples 22 }
+
+plane {
+    material {
+        pigment [0.55, 0.57, 0.60]
+        ambient 0.16
+        specular 0.03
+    }
+}
+
+object Elm(9, 'winter', 4)    { translate [-5.6, 0, 2.5] }
+object Oak(8, 'winter', 9)    { translate [0.4, 0, 0] }
+object Birch(7.5, 'winter', 7) { translate [5.2, 0, -1.5] }
+object Elm(7, 'winter', 12)   { translate [-10, 0, 6.5] }

@@ -484,12 +484,30 @@ primitive TreeFoliage(species, season, id, variant, twig) -> group {
 // A fir is nearly nothing -- a conifer's leader and boughs run true -- where a broadleaf sweeps.
 function TreeSweep(species) -> number {
     switch (species) {
-        case 'fir' { return 0.04 }
-        case 'birch' { return 0.16 }
-        case 'oak' { return 0.13 }
-        default { return 0.15 }
+        case 'fir' { return 0.05 }
+        case 'birch' { return 0.22 }
+        case 'oak' { return 0.34 }
+        default { return 0.30 }
     }
 }
+
+// Where the control point of a limb's curve sits, along and across.
+//
+// **These two numbers are why an earlier attempt at this looked straight**, and the arithmetic is
+// worth writing down.  A quadratic's greatest departure from the straight line between its ends is
+// `bend * (2k - 1) / 4`, where `k` is how far across that line the control point sits.  Put the
+// control near the middle of the chord -- k of a half -- and the term vanishes: the tip is displaced
+// but the path between the ends is dead straight, which is a stick pointing slightly off rather than
+// a branch.  The first version used k = 0.25 and bent by an eighth of the sweep, under two percent of
+// the limb's length, and read as no bend at all.
+//
+// At k = 0 the control stands directly above the base, so the limb leaves going straight up and
+// leans over to reach its tip, which is what a branch does.  The departure is then a quarter of the
+// sweep, and the sweep itself is larger.
+function TreeBendAcross() -> number { return 0 }
+
+// How far up the limb that control point sits.
+function TreeBendAlong() -> number { return 0.55 }
 
 // Which way, and how far, this particular limb sweeps.  Signed, so limbs curve both ways and a tree
 // does not come out combed.
@@ -509,9 +527,12 @@ function TreeBend(species, length, id, variant) -> number {
 
 // The angle a limb is heading at by the time it reaches its tip, which is what anything growing from
 // that tip must be turned by if it is to carry on rather than kink.  A quadratic ends heading along
-// the line from its control point to its endpoint, which is what this measures.
+// the line from its control point to its endpoint, which is what this measures -- and both of those
+// come from the same two numbers as the curve itself, so this cannot drift out of step with it.
 function TreeBendAngle(species, length, id, variant) -> number {
-    return toDegrees(atan2(TreeBend(species, length, id, variant) * 0.75, length * 0.45))
+    return toDegrees(atan2(
+        TreeBend(species, length, id, variant) * (1 - TreeBendAcross()),
+        length * (1 - TreeBendAlong())))
 }
 
 // The wood of one limb: a tube, which is a length of tapering rod with a *sphere* at each end of it.
@@ -532,7 +553,7 @@ primitive TreeWood(species, length, thickness, id, variant) -> tube {
         material TreeBark(species)
         radius thickness at [0, 0, 0]
         quad radius thickness * 0.45 + thickness * TreeTaper(species) * 0.55
-                 at [bend * 0.25, length * 0.55, 0]
+                 at [bend * TreeBendAcross(), length * TreeBendAlong(), 0]
              radius thickness * TreeTaper(species) at [bend, length, 0]
     }
 }
@@ -589,14 +610,26 @@ function TreeReach(species) -> number {
     return (1 - pow(TreeShrink(species), TreeDepth(species))) / (1 - TreeShrink(species))
 }
 
-// The length of the first limb for a tree meant to stand about this tall.
+// How much taller than its arithmetic each species stands, measured rather than derived: one of each
+// was stood beside a post of exactly nine units and read off against it.
 //
-// The sum above counts every generation at its full length, and a tree does not stand that tall: a
-// limb leans as it rises, so each generation adds less height than length.  The 1.06 is measured
-// rather than derived -- three species were stood beside a post of known height and came out a little
-// over a third too tall, all three by the same fraction, which is what makes one number enough.
+// **It used to be one number for all of them, and the sweep is why it cannot be.**  The sum above
+// counts every generation at its full length; what that turns into in height depends on how much of
+// each limb goes sideways, and the species now sweep by quite different amounts -- an oak by a third
+// of its length, a birch by a fifth.  Measured against the post, an elm came out at 9.75 for a nine
+// asked, a birch at 9.51 and an oak at exactly 9.  One constant served while every species bent about
+// the same; it stopped serving the moment they stopped.
+function TreeStand(species) -> number {
+    switch (species) {
+        case 'oak' { return 1.060 }
+        case 'birch' { return 1.120 }
+        default { return 1.148 }
+    }
+}
+
+// The length of the first limb for a tree meant to stand about this tall.
 function TreeTrunk(species, height) -> number {
-    return height / TreeReach(species) / 1.06
+    return height / TreeReach(species) / TreeStand(species)
 }
 
 primitive Elm(height, season = 'summer', variant = 1) -> group {
@@ -704,8 +737,13 @@ primitive Fir(height, season = 'summer', variant = 1) -> group {
     whorls = 11
     bare = height * 0.16
 
+    // A fir's height is set here rather than by TreeStand, since it never goes through TreeTrunk:
+    // it is one leader with whorls off it rather than a limb that divides.  Measured against a post
+    // at 9.19 for a nine asked before this factor was applied.
+    stand = 0.979
+
     return group {
-        object TreeWood('fir', height * 0.93, height * 0.028, 0, variant)
+        object TreeWood('fir', height * 0.911, height * 0.028, 0, variant)
         for whorl in [0, whorls - 1] {
             for branch in [0, 5] {
                 object TreeBough(season,
@@ -715,7 +753,7 @@ primitive Fir(height, season = 'summer', variant = 1) -> group {
                     rotate Z -22 - random(whorl, branch, variant + 1) * 14
                     rotate Y branch * 60 + whorl * 27 +
                              random(whorl, branch, variant + 2) * 18
-                    translate Y bare + (height - bare) * whorl / (whorls - 1)
+                    translate Y (bare + (height - bare) * whorl / (whorls - 1)) * stand
                 }
             }
         }

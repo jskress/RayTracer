@@ -1,0 +1,104 @@
+// One number, and the only one that works.
+//
+// A growing tip puts out leaves one at a time, turning a little between each.  How far it turns
+// decides everything about the plant: whether the leaves end up in tidy rows with the upper ones
+// shading the lower, or spread so that every one of them gets light.  Real plants -- sunflowers,
+// pine cones, pineapples, the scales on a fir -- turn by very nearly the same angle, and it is not a
+// round number.
+//
+// **It is 360 degrees times tau to the minus two, about 137.5**, where tau is the golden mean.  The
+// three heads here are the same construction with only that angle changed.
+//
+// **Left, 90 degrees.**  A quarter turn, so every fourth floret lands in the same direction and the
+// head is four spokes with nothing between them.  Any angle that is a simple fraction of a turn does
+// this: the pattern closes on itself and the gaps never fill.
+//
+// **Middle, 137.0 degrees.**  Half a degree short of the golden angle, which sounds close enough.
+// It is not: the arms curve away into visible spirals with lanes of bare ground between them.
+//
+// **Right, 137.507... degrees.**  No two florets ever line up, because the golden mean is the number
+// hardest to approximate by a fraction -- that is what being "most irrational" means, and it is
+// exactly the property wanted here.  The head packs evenly all the way out, and the spirals your eye
+// picks out run in both directions at once, in counts that are consecutive Fibonacci numbers.
+//
+// Each floret sits at a distance proportional to the square root of its number, which is what keeps
+// the area they share constant: the head grows outward at the rate its middle produces them.
+//
+// The construction is nothing but a loop, a square root, and a turn.  There is no engine support for
+// any of this and none is needed -- which is worth saying, because it looks like it ought to need
+// some.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'The Angle a Plant Uses'
+        author 'J. Stephen Kress'
+        description 'One head built three times, turning by 90, 137 and 137.5 degrees between florets.'
+        copyright true
+        software __software__
+    }
+}
+
+// Looking down on the heads, but not straight down: a camera aimed along the world's own up axis has
+// no way left to decide which way is up in the picture, and renders very little.
+camera {
+    location [0, 11.5, -9.8]
+    look at [0, -0.3, 0.2]
+    field of view 56
+}
+
+point light { location [6, 12, -9] }
+
+point light {
+    location [0, 11.5, -9.8]
+    color [0.26, 0.28, 0.34]
+}
+
+background [0.09, 0.10, 0.13]
+
+Floret = material {
+    pigment [0.46, 0.34, 0.17]
+    specular 0.45
+    shininess 80
+    ambient 0.14
+}
+
+Rim = material {
+    pigment [0.62, 0.50, 0.20]
+    specular 0.30
+    shininess 50
+    ambient 0.12
+}
+
+// One head: florets numbered outward, each turned by the given angle from the one before it and set
+// at the square root of its number.
+primitive Head(angle, count, spacing) -> group {
+    return group {
+        for i in [1, count] {
+            sphere {
+                material Floret
+                scale spacing * 0.46
+                // A floret is flattened, because a seed lying in a head is not a ball.
+                scale [1, 0.55, 1]
+                translate X (spacing * sqrt(i))
+                rotate Y (i * angle)
+            }
+        }
+
+        // A rim, so each head reads as a head rather than as a scatter of dots.
+        for edge in [0, 71] {
+            sphere {
+                material Rim
+                scale spacing * 0.40
+                scale [1, 0.5, 1]
+                translate X (spacing * sqrt(count) + spacing * 0.75)
+                rotate Y (edge * 5)
+            }
+        }
+    }
+}
+
+object Head(90, 300, 0.145)         { translate [-5.8, 0, -3.4] }
+object Head(137.0, 300, 0.145)      { }
+object Head(137.507764, 300, 0.145) { translate [5.8, 0, 3.4] }
