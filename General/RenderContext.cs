@@ -109,7 +109,7 @@ public class RenderContext
     /// <summary>
     /// This property holds the progress bar we are using.
     /// </summary>
-    public ProgressBar ProgressBar { get; init; }
+    public IProgressReporter Progress { get; init; }
 
     /// <summary>
     /// This property holds the statistics collector being used.

@@ -2,6 +2,8 @@
 using RayTracer.Core;
 using RayTracer.Graphics;
 
+using RayTracer.Renderer;
+
 namespace RayTracer.Pixels;
 
 /// <summary>
@@ -14,6 +16,13 @@ public abstract class PixelRenderer
     /// This property holds the object to use to convert pixels to rays
     /// </summary>
     protected PixelToRayConverter Converter { get; }
+
+    /// <summary>
+    /// This property holds where to put the counts, or null when nobody asked for any.  It is set
+    /// once before the render starts rather than passed down through every call, since the same
+    /// renderer instance serves every pixel on every thread.
+    /// </summary>
+    internal Statistics Statistics { get; set; }
 
     protected PixelRenderer(PixelToRayConverter converter)
     {
@@ -49,6 +58,8 @@ public abstract class PixelRenderer
         double shiftX = 0, double shiftY = 0)
     {
         int count = Converter.Sampler.SampleCount;
+
+        Statistics?.CountSample(count);
 
         if (count == 1)
             return scene.GetColorFor(Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY));
