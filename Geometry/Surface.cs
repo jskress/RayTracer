@@ -241,7 +241,12 @@ public abstract class Surface : NamedThing
                 return null;
         }
 
-        return box.IsEmpty ? null : box;
+        // Empty is returned as empty rather than as nothing, for the same reason a group returns an
+        // empty box for having nothing in it: a child that occupies no region can be hit by no ray,
+        // where a child with no box at all has to be treated as though it could be hit by any of
+        // them.  Returning null here put the second meaning on the first case, and since a group is
+        // unbounded the moment any child is, that one wrong answer travelled all the way up.
+        return box;
     }
 
     /// <summary>

@@ -136,6 +136,12 @@ background Black
 background [0.05, 0.06, 0.09]
 ```
 
+Whether that transparency reaches the file is decided by the image itself.  A render that comes
+out opaque everywhere — which is what setting a `background` to an opaque color gives you — is
+written without an alpha channel at all, since a fourth channel of nothing but "fully opaque"
+is a quarter of the file spent saying nothing.  A render with any transparency anywhere in it
+keeps the channel that records it.  Nothing needs to be asked for either way.
+
 It takes a *pigment*, not merely a color, so a sky may be patterned:
 
 ```

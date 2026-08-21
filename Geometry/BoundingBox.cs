@@ -59,7 +59,11 @@ public class BoundingBox
     /// <param name="other">The bounding box to add.</param>
     public void Add(BoundingBox other)
     {
-        if (other != null)
+        // An empty box holds nothing, so adding one must change nothing -- including whether this box
+        // is still empty.  The element-wise arithmetic below already leaves the extents alone, since
+        // an empty box carries its minima at the largest possible number and its maxima at the
+        // smallest, but it would otherwise leave this box marked as no longer empty.
+        if (other is { IsEmpty: false })
         {
             _xMin = Math.Min(_xMin, other._xMin);
             _yMin = Math.Min(_yMin, other._yMin);
@@ -83,6 +87,12 @@ public class BoundingBox
     internal BoundingBox TransformedBy(Matrix matrix)
     {
         BoundingBox box = new ();
+
+        // Nothing anywhere, moved anywhere, is still nothing anywhere.  Left to run, the loop below
+        // would put the largest and smallest numbers a double can hold through a matrix and hand back
+        // whatever came of that, which is a box that holds everything -- the exact opposite.
+        if (IsEmpty)
+            return box;
 
         foreach (double x in new[] { _xMin, _xMax })
         foreach (double y in new[] { _yMin, _yMax })
@@ -127,6 +137,11 @@ public class BoundingBox
     /// <param name="amount">The amount to pad by.</param>
     public void Expand(double amount = Padding)
     {
+        // There is no surface here to be caught just outside of, and padding the inverted extents an
+        // empty box carries would only make them more inverted.
+        if (IsEmpty)
+            return;
+
         _xMin -= amount;
         _yMin -= amount;
         _zMin -= amount;

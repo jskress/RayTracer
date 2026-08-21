@@ -157,6 +157,94 @@ public class TestDefaultBoundingBoxes
         AssertNothingEscapes(group, 6);
     }
 
+    [TestMethod]
+    public void TestAnEmptyGroupCanBeHitByNothing()
+    {
+        // A group with nothing in it holds nothing, so no ray can find anything inside it.  It used to
+        // report *no box at all*, which says the opposite -- come in and test everything -- and the
+        // empty box it reports now turns every ray away, since an empty box carries its minima at the
+        // largest number a double holds and its maxima at the smallest.
+        Group group = new ();
+
+        group.PrepareForRendering();
+
+        Assert.IsNotNull(group.BoundingBox);
+
+        for (int index = 0; index < Rays; index++)
+        {
+            Ray ray = RayNumber(index, 4);
+            List<Intersection> intersections = [];
+
+            group.Intersect(ray, intersections);
+
+            Assert.AreEqual(0, intersections.Count, $"ray {index} got into an empty group");
+        }
+    }
+
+    [TestMethod]
+    public void TestAnEmptyGroupDoesNotRobItsParentOfABox()
+    {
+        // The fault this pair of tests exists for, and it was worth a great deal.  A group is treated
+        // as unbounded whenever any child cannot say where it is, which is right for a plane and quite
+        // wrong for a group holding nothing -- and because the answer travels upward, one empty group
+        // left every group above it unbounded too.  Measured on a-stand-of-trees: 328 empty groups
+        // robbed 447 more, and each ray was doing 7,227 box tests to enter 25 of them.
+        Group group = new ();
+
+        group.Add(new Group());
+        group.Add(Ball());
+        group.PrepareForRendering();
+
+        Assert.IsNotNull(group.BoundingBox, "an empty child robbed this group of its box");
+
+        // And the box must still hold the sphere.  A box that came out too *small* would be the far
+        // worse outcome of getting this wrong: the sphere would vanish in patches rather than merely
+        // costing time.
+        AssertNothingEscapes(group, 6);
+    }
+
+    [TestMethod]
+    public void TestAnEmptyGroupBuriedDeepDoesNotRobTheTop()
+    {
+        // The answer travels up through however many groups there are, so one empty group at the
+        // bottom of a stack has to be stopped at the bottom of the stack.
+        Group inner = new ();
+
+        inner.Add(new Group());
+        inner.Add(Ball());
+
+        Group middle = new ();
+
+        middle.Add(inner);
+
+        Group outer = new ();
+
+        outer.Add(middle);
+        outer.Add(Ball(3, 0, 0));
+        outer.PrepareForRendering();
+
+        Assert.IsNotNull(inner.BoundingBox);
+        Assert.IsNotNull(middle.BoundingBox);
+        Assert.IsNotNull(outer.BoundingBox);
+        AssertNothingEscapes(outer, 8);
+    }
+
+    [TestMethod]
+    public void TestAChildThatTrulyCannotSayWhereItIsStillLeavesTheGroupUnbounded()
+    {
+        // The other side of the comparison, and the reason to write it down: the fix must tell "I hold
+        // nothing" apart from "I hold something endless", and a test that only checked the first would
+        // pass just as well if the second had been broken along with it.  A plane goes on forever, so a
+        // group holding one has to be entered by every ray.
+        Group group = new ();
+
+        group.Add(new Plane());
+        group.Add(Ball());
+        group.PrepareForRendering();
+
+        Assert.IsNull(group.BoundingBox, "a group holding a plane must stay unbounded");
+    }
+
     private static Sphere Ball(double x = 0, double y = 0, double z = 0)
     {
         Sphere ball = new ();
