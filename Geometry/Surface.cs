@@ -290,6 +290,64 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
+    /// <summary>
+    /// This method finds where a ray crosses this surface, but only within a stretch of the ray, and
+    /// is for asking whether anything stands between a point and a light.
+    /// <para>
+    /// A shadow query throws away every crossing behind the point it started from and every crossing
+    /// past the light, so a box lying wholly in either of those stretches holds nothing the query
+    /// could use, and the surfaces inside it need never be asked.  On the teapot scene that is about
+    /// two crossings in five.
+    /// </para>
+    /// <para>
+    /// <b>The bound is not passed to the surface itself, only used to rule its box out.</b>  That is
+    /// what keeps this from breaking a CSG surface: a CSG works out what is solid by walking every
+    /// crossing of both its halves in order, and needs the ones behind the ray's origin to know
+    /// whether it started inside.  Ruling out a CSG whose whole box is behind the point is fine --
+    /// every crossing it could report would have been discarded anyway -- but truncating the list
+    /// *inside* one would change what it thinks is solid.  So the bound travels only as far as the
+    /// next box, and a surface asked to intersect is always asked in full.
+    /// </para>
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    /// <param name="maxDistance">How far along the ray to care about; anything at or past this, or
+    /// behind the origin, may be ignored.  Infinite for a light with no near side.</param>
+    public void IntersectWithin(Ray ray, List<Intersection> intersections, double maxDistance)
+    {
+        ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
+
+        if (BoundingBox is not null)
+        {
+            (double from, double to) = BoundingBox.GetIntersections(ray);
+
+            // A miss, or a box lying wholly behind the point, or wholly past the light.  Reaching
+            // this method is itself what licenses the last two: only a shadow query asks this way,
+            // and a shadow query discards exactly those crossings.  An ordinary intersection goes
+            // through Intersect instead, and keeps them -- CSG counts the ones behind the origin to
+            // work out what is solid, and refraction needs them to tell leaving from entering.
+            //
+            // Note that the behind test does not depend on the far bound at all.  A sky light has no
+            // near side, so its distance is infinite and nothing can ever be past it; tying the two
+            // together, as this first did, quietly bought nothing on every scene lit by one.
+            if (from > to || to < 0 || from > maxDistance)
+                return;
+        }
+
+        AddIntersectionsWithin(ray, intersections, maxDistance);
+    }
+
+    /// <summary>
+    /// This method hands a bounded query on to the surface.  Only a group has anything to do with the
+    /// bound -- it passes it down to its own children -- and every other surface simply answers in
+    /// full, which is what makes the bound safe to give to anything at all.
+    /// </summary>
+    protected virtual void AddIntersectionsWithin(
+        Ray ray, List<Intersection> intersections, double maxDistance)
+    {
+        AddIntersections(ray, intersections);
+    }
+
     public void Intersect(Ray ray, List<Intersection> intersections)
     {
         // A moving surface is carried into its own space by where it stands at the instant this

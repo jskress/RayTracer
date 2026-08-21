@@ -202,4 +202,41 @@ internal class BoundingVolumeHierarchy
             Visit(branch.Right, ray, intersections);
         }
     }
+
+    /// <summary>
+    /// This method hands the ray to the surfaces in the boxes it crosses, over a stretch of the ray
+    /// rather than the whole of it.  This is the shadow query's traversal, and it is kept apart from
+    /// the ordinary one on purpose rather than sharing a path with an infinite bound: the two differ
+    /// in what they are allowed to throw away, not merely in how far they look.
+    /// </summary>
+    internal void IntersectWithin(Ray ray, List<Intersection> intersections, double maxDistance)
+    {
+        VisitWithin(_root, ray, intersections, maxDistance);
+    }
+
+    private static void VisitWithin(
+        Node node, Ray ray, List<Intersection> intersections, double maxDistance)
+    {
+        (double from, double to) = node.Box.GetIntersections(ray);
+
+        // A miss, a box wholly behind the point, or a box wholly past the light.  A shadow query
+        // discards all three, so the surfaces inside need never be asked.  What is still never done,
+        // even here: nothing is pruned for lying beyond the nearest crossing found so far, which is
+        // the usual trick for a hierarchy and would break CSG and refraction both.
+        if (from > to || to < 0 || from > maxDistance)
+            return;
+
+        if (node is Leaf leaf)
+        {
+            foreach (Surface surface in leaf.Surfaces)
+                surface.IntersectWithin(ray, intersections, maxDistance);
+        }
+        else
+        {
+            Branch branch = (Branch) node;
+
+            VisitWithin(branch.Left, ray, intersections, maxDistance);
+            VisitWithin(branch.Right, ray, intersections, maxDistance);
+        }
+    }
 }

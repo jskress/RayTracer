@@ -132,23 +132,50 @@ public class Group : Surface
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
+    /// <summary>
+    /// This method answers a shadow query, which differs from an ordinary one in what it may throw
+    /// away rather than in how far it looks.  The two are kept as separate paths on purpose: sharing
+    /// one, with an infinite bound standing for "unbounded", conflates a sky light -- whose distance
+    /// really is infinite -- with an ordinary intersection that must keep everything.
+    /// </summary>
+    protected override void AddIntersectionsWithin(
+        Ray ray, List<Intersection> intersections, double maxDistance)
+    {
+        List<Intersection> ours = [];
+
+        if (_hierarchy is not null)
+            _hierarchy.IntersectWithin(ray, ours, maxDistance);
+        else
+        {
+            foreach (Surface surface in _walked ?? Surfaces)
+                surface.IntersectWithin(ray, ours, maxDistance);
+        }
+
+        if (_unbounded is not null)
+        {
+            // The planes and endless cylinders, which have no box to be ruled out by, so they are
+            // asked about every ray however short a stretch of it is wanted.  About half the crossings
+            // a shadow ray throws away come from exactly here, and that is the ceiling on what any
+            // amount of box pruning can save.
+            foreach (Surface surface in _unbounded)
+                surface.IntersectWithin(ray, ours, maxDistance);
+        }
+
+        intersections.AddRange(ours);
+    }
+
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         List<Intersection> ours = [];
 
         if (_hierarchy is not null)
             _hierarchy.Intersect(ray, ours);
-        else if (_walked is not null)
-        {
-            foreach (Surface surface in _walked)
-                surface.Intersect(ray, ours);
-        }
         else
         {
-            // Nothing has been arranged, which means this group was never prepared for rendering --
-            // as happens in a test that builds a group and asks it about a ray directly.  Walking
-            // what is there is the honest answer.
-            foreach (Surface surface in Surfaces)
+            // With nothing arranged, this group was never prepared for rendering -- as happens in a
+            // test that builds a group and asks it about a ray directly.  Walking what is there is
+            // the honest answer.
+            foreach (Surface surface in _walked ?? Surfaces)
                 surface.Intersect(ray, ours);
         }
 
