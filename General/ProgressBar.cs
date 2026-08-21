@@ -4,7 +4,7 @@ namespace RayTracer.General;
 /// This class provides a progress bar.  It only displays if rendering takes longer than
 /// a defined threshold.
 /// </summary>
-public class ProgressBar
+public class ProgressBar : IProgressReporter
 {
     private static readonly TimeSpan Threshold = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);

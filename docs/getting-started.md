@@ -171,6 +171,43 @@ the extra rays are worth paying for.
 letters, in any case you like.  `normal` draws a progress bar; `quiet` says nothing until
 the render finishes or something goes wrong.
 
+`-p`, `--progress` chooses how progress is reported, and takes `bar`, `tool` or `none` —
+abbreviations and any capitalization are fine here too.
+
+`bar` is the default and is what the ray tracer has always done: one line, redrawn in place,
+with a bar and an estimate of the time left, appearing only once a render has gone on longer
+than two seconds.
+
+`tool` is for when something other than a person is watching.  It writes whole lines of
+`key=value` text, with no color and no cursor movement, one every two seconds:
+
+```
+start elapsed=0.0 setup=2.14 pixels=0/480000 samples=0 sceneRays=0
+progress elapsed=2.0 pixels=4188/480000 done=0.0087 eta=227.2 samples=4188 sceneRays=39264
+done elapsed=2767.0 pixels=480000/480000 done=1.0000 eta=0.0 samples=480000 sceneRays=8846000
+statistics pixels=480000 samples=480000 primaryRays=480000 sceneRays=8846000 samplesPerPixel=1.00 sceneRaysPerSample=18.43
+```
+
+`elapsed` is the render's own time, and `setup` on the opening line is everything before it —
+loading, parsing the scene file, and building its geometry.
+
+The bar is invisible through a pipe — it is drawn by walking the cursor back over its own
+line — so a program watching one has nothing to go on but the age of the process, and cannot
+tell a slow render from a stuck one.  These lines come on the clock rather than at fractions
+of the way through, which is what makes that distinction readable: a render that has wedged
+stops producing lines, while one that is merely slow goes on producing them with the counts
+barely moving.
+
+The `statistics` line at the end is worth a word, since it answers *where did the time go*.
+`samplesPerPixel` is anti-aliasing's appetite: `1.00` means none was asked for, `5.00` means
+the adaptive sampler never needed to subdivide, and a large number means it subdivided nearly
+everywhere.  `sceneRaysPerSample` is what shading each of those samples cost — every shadow
+ray each light sample needed, every reflection and refraction, and every step through a
+participating medium.  A scene taking far longer than expected is nearly always doing one of
+those two things far more than expected.
+
+`none` reports nothing at all.
+
 ### Your First Scene
 
 A scene needs three things: something to look with, something to look at, and something to

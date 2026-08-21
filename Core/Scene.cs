@@ -4,6 +4,8 @@ using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
 
+using RayTracer.Renderer;
+
 namespace RayTracer.Core;
 
 /// <summary>
@@ -51,6 +53,13 @@ public class Scene : NamedThing, IDisposable
     /// what its index of refraction is.
     /// </summary>
     public SceneEnvironment Environment { get; set; } = new ();
+
+    /// <summary>
+    /// This property holds where to put the counts, or null when nobody asked for any.  It is set
+    /// once before the render starts rather than passed down through every call, since the scene is
+    /// asked about rays from every thread and from a good many depths of recursion.
+    /// </summary>
+    internal Statistics Statistics { get; set; }
 
     /// <summary>
     /// This method determines the color for the given ray.
@@ -714,6 +723,8 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray to test.</param>
     public List<Intersection> Intersect(Ray ray)
     {
+        Statistics?.CountSceneRay();
+
         List<Intersection> intersections = [];
 
         foreach (Surface surface in Surfaces)

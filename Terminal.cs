@@ -158,6 +158,22 @@ public static class Terminal
     }
 
     /// <summary>
+    /// This method writes one whole line out and flushes it, with no regard to the output level.
+    /// <para>
+    /// It exists for progress meant to be read by a program rather than a person.  Such a line has
+    /// to arrive as it happens -- a reader watching for a stall is watching the gaps between lines,
+    /// so a line held in a buffer is worse than no line at all -- and it has to be free of the cursor
+    /// movement and colour the progress bar uses, since neither survives a pipe.
+    /// </para>
+    /// </summary>
+    /// <param name="text">The line to write.</param>
+    public static void OutLine(string text)
+    {
+        Console.Out.WriteLine(text);
+        Console.Out.Flush();
+    }
+
+    /// <summary>
     /// This method is used to write a warning out.  A warning is something the person running the
     /// program needs to know and which does not stop it, so unlike an error it does not halt.
     /// </summary>

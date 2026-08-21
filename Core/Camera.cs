@@ -140,11 +140,16 @@ public class Camera : NamedThing
         PixelToRayConverter converter = CreateConverter(context);
         PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
-        context.ProgressBar?.SetTotal(canvas.Width * canvas.Height);
+        renderer.Statistics = context.Statistics;
+        scene.Statistics = context.Statistics;
+
+        context.Progress?.SetTotal(canvas.Width * canvas.Height);
 
         // The progress bar takes the cursor away while it has the line, so it must be given the
         // chance to hand it back however the render ends.  A scene that fails part way through would
-        // otherwise leave the terminal with no cursor at all.
+        // otherwise leave the terminal with no cursor at all.  The tool reporter has no cursor to
+        // give back but still wants its closing line, which is why this is asked of the interface
+        // rather than of the bar.
         try
         {
             context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
@@ -152,12 +157,13 @@ public class Camera : NamedThing
                 Color color = renderer.Render(scene, x, y);
 
                 canvas.SetColor(color, x, y);
-                context.ProgressBar?.Bump();
+                context.Statistics?.CountPixel();
+                context.Progress?.Bump();
             });
         }
         finally
         {
-            context.ProgressBar?.Done();
+            context.Progress?.Done();
         }
 
         return canvas;

@@ -65,11 +65,33 @@ public class ImageRenderer
     {
         RenderContext context = new ()
         {
-            ProgressBar = new ProgressBar(),
+            Progress = CreateProgressReporter(options),
             Statistics = _statistics
         };
         Variables variables = new Variables(_globals);
 
         _instructionContext.Execute(options, context, variables, frame);
+
+        // The counts are worth having whichever way progress was reported, but only the tool style
+        // has a reader that wants them as text; a person watching the bar has just had the render's
+        // own timing reported to them and does not need this as well.
+        if (options.ProgressStyle == ProgressStyle.Tool)
+            Terminal.OutLine(_statistics.AsText());
+    }
+
+    /// <summary>
+    /// This method creates the thing the render will report its progress through.  This is the only
+    /// place the choice is made: everything downstream of here knows nothing but the interface.
+    /// </summary>
+    /// <param name="options">The command line options supplied by the user.</param>
+    /// <returns>The progress reporter to use, or null for no reporting at all.</returns>
+    private IProgressReporter CreateProgressReporter(RenderOptions options)
+    {
+        return options.ProgressStyle switch
+        {
+            ProgressStyle.Bar => new ProgressBar(),
+            ProgressStyle.Tool => new ToolProgressReporter(_statistics),
+            _ => null
+        };
     }
 }

@@ -17,7 +17,7 @@ public class PixelParallelScanner : IScanner
     {
         int pixels = width * height;
 
-        Parallel.For(0, pixels, new ParallelOptions(), pixel =>
+        Parallel.For(0, pixels, Scanning.Options, pixel =>
         {
             int y = pixel / width;
             int x = pixel - width * y;
