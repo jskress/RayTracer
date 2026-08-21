@@ -25,7 +25,7 @@ public class TestSpatialSubdivision
     /// This method asks every child of the group directly, which is what the group itself used to do
     /// and what its hierarchy must agree with to the last crossing.
     /// </summary>
-    private static List<double> WalkedAnswer(Group group, Ray ray)
+    private static List<(double Distance, Surface Surface)> WalkedAnswer(Group group, Ray ray)
     {
         List<Intersection> found = [];
 
@@ -34,16 +34,28 @@ public class TestSpatialSubdivision
 
         found.Sort();
 
-        return found.Select(intersection => intersection.Distance).ToList();
+        return Described(found);
     }
 
-    private static List<double> GroupAnswer(Group group, Ray ray)
+    private static List<(double Distance, Surface Surface)> GroupAnswer(Group group, Ray ray)
     {
         List<Intersection> found = [];
 
         group.AddIntersections(ray, found);
 
-        return found.Select(intersection => intersection.Distance).ToList();
+        return Described(found);
+    }
+
+    /// <summary>
+    /// The surface matters as much as the distance here.  Comparing distances alone would call two
+    /// different surfaces met at the same distance a match, which is the very case that used to come
+    /// out differently depending on how the geometry was walked.
+    /// </summary>
+    private static List<(double Distance, Surface Surface)> Described(List<Intersection> found)
+    {
+        return found
+            .Select(intersection => (intersection.Distance, intersection.Surface))
+            .ToList();
     }
 
     /// <summary>
@@ -58,8 +70,8 @@ public class TestSpatialSubdivision
         for (int index = 0; index < Rays; index++)
         {
             Ray ray = RayNumber(index, from);
-            List<double> walked = WalkedAnswer(group, ray);
-            List<double> tree = GroupAnswer(group, ray);
+            List<(double Distance, Surface Surface)> walked = WalkedAnswer(group, ray);
+            List<(double Distance, Surface Surface)> tree = GroupAnswer(group, ray);
 
             hits += walked.Count;
 
@@ -67,7 +79,12 @@ public class TestSpatialSubdivision
                 $"ray {index} found {walked.Count} crossings by walking and {tree.Count} by the tree");
 
             for (int at = 0; at < walked.Count; at++)
-                Assert.AreEqual(walked[at], tree[at], 1e-12, $"ray {index}, crossing {at}");
+            {
+                Assert.AreEqual(walked[at].Distance, tree[at].Distance, 1e-12,
+                    $"ray {index}, crossing {at}");
+                Assert.AreSame(walked[at].Surface, tree[at].Surface,
+                    $"ray {index}, crossing {at} came from a different surface");
+            }
         }
 
         // A differential test where the rays all miss agrees perfectly and proves nothing, so this
@@ -138,13 +155,13 @@ public class TestSpatialSubdivision
         group.PrepareForRendering();
 
         Ray ray = new (new Point(3, 3, 3), new Vector(1, 0, 0));
-        List<double> walked = WalkedAnswer(group, ray);
-        List<double> tree = GroupAnswer(group, ray);
+        List<(double Distance, Surface Surface)> walked = WalkedAnswer(group, ray);
+        List<(double Distance, Surface Surface)> tree = GroupAnswer(group, ray);
 
         CollectionAssert.AreEqual(walked, tree);
-        Assert.IsTrue(walked.Any(distance => distance < 0),
+        Assert.IsTrue(walked.Any(crossing => crossing.Distance < 0),
             "this ray should have had something behind it to find");
-        Assert.IsTrue(tree.Any(distance => distance < 0),
+        Assert.IsTrue(tree.Any(crossing => crossing.Distance < 0),
             "the tree dropped every crossing behind the ray's origin");
     }
 

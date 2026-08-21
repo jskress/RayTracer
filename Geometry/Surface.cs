@@ -8,6 +8,29 @@ namespace RayTracer.Geometry;
 /// </summary>
 public abstract class Surface : NamedThing
 {
+    private static long _surfacesMade;
+
+    /// <summary>
+    /// This property carries the order in which this surface came into being, and exists to settle
+    /// which of two surfaces is shaded when a ray meets both at exactly the same distance.
+    /// <para>
+    /// Such a tie is commoner than it sounds -- two solids meeting exactly at a face, a cube
+    /// subtracted from another so that their sides are coplanar -- and something has to decide it.
+    /// What decided it before was the order the crossings happened to be handed to the sorter, which
+    /// is to say nothing decided it: <c>List.Sort</c> is not a stable sort, so equal keys come out in
+    /// whatever order the sort's own bookkeeping left them.  Change how the geometry is walked and the
+    /// answer changes.  That was measurable -- reversing the walk over a group's children moved two
+    /// pixels of one gallery scene, and introducing the tree of boxes moved two others.
+    /// </para>
+    /// <para>
+    /// Counting surfaces as they are built gives an order that is the order they are written in, since
+    /// a scene file is read once, start to finish, on one thread.  So the tie goes to whichever surface
+    /// the author mentioned first, which is at least a reason, and it is the same reason on every run
+    /// however the geometry is arranged for searching.
+    /// </para>
+    /// </summary>
+    internal long Ordinal { get; } = Interlocked.Increment(ref _surfacesMade);
+
     /// <summary>
     /// This property holds a reference to the parent of the surface if there is one.
     /// </summary>

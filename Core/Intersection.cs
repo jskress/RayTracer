@@ -168,8 +168,23 @@ public class Intersection : IComparable<Intersection>
         if (ReferenceEquals(this, other))
             return 0;
 
-        return ReferenceEquals(null, other)
-            ? 1
-            : Distance.CompareTo(other.Distance);
+        if (ReferenceEquals(null, other))
+            return 1;
+
+        int byDistance = Distance.CompareTo(other.Distance);
+
+        if (byDistance != 0)
+            return byDistance;
+
+        // Equal distances are broken by which surface was built first, so that the order two crossings
+        // come out in never depends on the order they went in.  Without this the comparison is only
+        // partial, and a partial comparison handed to an unstable sort means the picture depends on how
+        // the geometry happened to be walked -- see Surface.Ordinal for what that cost.
+        if (ReferenceEquals(Surface, other.Surface))
+            return 0;
+
+        return Surface is null ? -1
+            : other.Surface is null ? 1
+            : Surface.Ordinal.CompareTo(other.Surface.Ordinal);
     }
 }
