@@ -645,6 +645,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/the-utah-teapot.png">
+      <img alt="The Utah Teapot" height="120" src="Local/surfaces/the-utah-teapot.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/the-utah-teapot.igl">The Utah Teapot</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/materials/normals.png">
       <img alt="Normal Perturbation" height="120" src="Local/materials/normals.png" width="160"/>
     </a></td>
