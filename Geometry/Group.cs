@@ -43,7 +43,55 @@ public class Group : Surface
             foreach (Surface surface in new SurfaceIterator(Surfaces).Surfaces)
                 surface.Material ??= Material;
         }
+
+        ArrangeChildren();
     }
+
+    /// <summary>
+    /// This method sorts the children into a tree of nested boxes, so that a ray reaching this group
+    /// need not be shown every last thing in it.
+    /// <para>
+    /// The children are prepared first, just above, and that order is not incidental: a child cannot
+    /// say what box it occupies until it has worked one out for itself.
+    /// </para>
+    /// <para>
+    /// A child that cannot say where it is -- a plane, an endless cylinder -- has no place in a tree
+    /// of boxes, so those are kept aside and handed every ray.  There are only ever a few of them, and
+    /// a group holding one is unbounded anyway.
+    /// </para>
+    /// </summary>
+    private void ArrangeChildren()
+    {
+        List<(Surface Surface, BoundingBox Box)> placed = [];
+
+        _unbounded = null;
+
+        foreach (Surface surface in Surfaces)
+        {
+            BoundingBox box = BoxAround(surface);
+
+            if (box is null)
+                (_unbounded ??= []).Add(surface);
+            else if (!box.IsEmpty)
+                placed.Add((surface, box));
+
+            // A child with an empty box occupies no region at all -- an empty group -- so it can be
+            // hit by nothing and is left out of both lists.
+        }
+
+        _hierarchy = BoundingVolumeHierarchy.Build(placed);
+
+        // Whatever was not worth arranging is walked the old way.  Below the threshold the walk is
+        // faster than any search of it, and this is the common case by count: most groups an author
+        // writes hold two or three things.
+        _walked = _hierarchy is null
+            ? placed.Select(entry => entry.Surface).ToList()
+            : null;
+    }
+
+    private BoundingVolumeHierarchy _hierarchy;
+    private List<Surface> _walked;
+    private List<Surface> _unbounded;
 
     /// <summary>
     /// This method is used to produce a default bounding box for this shape.
@@ -88,8 +136,27 @@ public class Group : Surface
     {
         List<Intersection> ours = [];
 
-        foreach (Surface surface in Surfaces)
-            surface.Intersect(ray, ours);
+        if (_hierarchy is not null)
+            _hierarchy.Intersect(ray, ours);
+        else if (_walked is not null)
+        {
+            foreach (Surface surface in _walked)
+                surface.Intersect(ray, ours);
+        }
+        else
+        {
+            // Nothing has been arranged, which means this group was never prepared for rendering --
+            // as happens in a test that builds a group and asks it about a ray directly.  Walking
+            // what is there is the honest answer.
+            foreach (Surface surface in Surfaces)
+                surface.Intersect(ray, ours);
+        }
+
+        if (_unbounded is not null)
+        {
+            foreach (Surface surface in _unbounded)
+                surface.Intersect(ray, ours);
+        }
 
         ours.Sort();
 

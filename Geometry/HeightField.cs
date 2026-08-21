@@ -87,14 +87,21 @@ public class HeightField : Group
     {
         int count = 0;
 
+        // The triangles go straight into this group rather than into one group per row of the image.
+        // The banding was an attempt at the very problem a group now solves for itself, and a poor
+        // one: a row is a long thin slab, so a ray crossing the terrain lengthwise passes through most
+        // of them, and the terrain was divided along one axis and not the other.  Handed the lot, a
+        // group divides it by where the triangles actually sit, in whichever direction they are most
+        // spread out.
+        //
+        // Measured on the terrain in docs/examples at 400x300: 1.34s unbanded against 1.42s banded,
+        // three runs each and no overlap between them.  Worth knowing that the same comparison at
+        // 200x150 came out the other way round -- at a render of about a second, building the tree and
+        // starting the process cost more than the tracing they were being compared through.
         for (int y = 0; y < _canvas.Height - 1; y++)
         {
-            Group group = new Group();
-
             for (int x = 0; x < _canvas.Width - 1; x++)
-                count += AddSurfaceTriangles(group, x, y, sx, sy);
-
-            Add(group);
+                count += AddSurfaceTriangles(this, x, y, sx, sy);
         }
 
         return count;
