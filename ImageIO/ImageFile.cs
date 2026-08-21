@@ -110,10 +110,15 @@ public class ImageFile
         // scale them back up to fill out the 16-bit range each Magick.NET pixel expects.
         double scale = 65535.0 / context.MaxColorChannelValue;
 
+        bool anyTransparency = false;
+
         foreach (IPixel<float> pixel in pixels)
         {
             Color color = canvas.GetPixel(pixel.X, pixel.Y);
             (int red, int green, int blue, int alpha) = color.ToChannelValues(context);
+
+            if (alpha < context.MaxColorChannelValue)
+                anyTransparency = true;
 
             pixel.SetValues([
                 (float) (red * scale), (float) (green * scale),
@@ -130,16 +135,23 @@ public class ImageFile
         // pixels either way; writing at 8 bits then folds each channel back down losslessly,
         // since the values are already quantized to 8 bits.
         //
-        // TrueColorAlpha is forced regardless of depth: left to its own heuristics, Magick.NET's
-        // PNG writer will opportunistically shrink low-color-variety, fully-opaque images down to
-        // a palette or gray+alpha encoding.  That is a fine size optimization in general, but
-        // ImageFile.Load() reads pixels back assuming a true RGB(A) layout, so those alternate
-        // encodings cause the alpha channel to come back corrupted (near zero) on the next load.
+        // The color type is always stated rather than left to Magick.NET, and which one is stated
+        // depends on whether any pixel in the image is less than fully opaque.  An image that is
+        // opaque throughout has no use for a fourth channel and is written without one; an image
+        // with any transparency in it keeps the channel that records it.
+        //
+        // Both halves of that matter.  Stating it is what keeps Magick.NET from choosing for itself:
+        // left alone, its PNG writer opportunistically shrinks a low-color-variety image to a palette
+        // or gray encoding, and those come back through Load() as something other than the true
+        // RGB(A) layout it reads.  And choosing by the image's own content is what keeps an opaque
+        // render from carrying a channel of nothing but 255s -- which is what this did for a while,
+        // having stated TrueColorAlpha unconditionally to solve the first problem without noticing
+        // the second.
         if (MagickFormatInfo.Create(new FileInfo(_fileName))?.Format == MagickFormat.Png)
         {
             image.Write(_fileName, new PngWriteDefines
             {
-                ColorType = ColorType.TrueColorAlpha,
+                ColorType = anyTransparency ? ColorType.TrueColorAlpha : ColorType.TrueColor,
                 BitDepth = (uint) context.BitsPerChannel
             });
         }

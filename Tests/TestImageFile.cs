@@ -132,6 +132,53 @@ public class TestImageFile
     }
 
     [TestMethod]
+    public void TestAnOpaqueImageIsWrittenWithoutAnAlphaChannel()
+    {
+        // An image that is opaque everywhere has no use for a fourth channel, and writing one costs
+        // a quarter of the file to carry nothing but 255s.  This was the intent all along; it was
+        // lost when the color type came to be stated unconditionally as TrueColorAlpha in order to
+        // stop Magick.NET choosing a palette encoding of its own.  Both wants are satisfied by
+        // stating the color type either way and picking which from the image's own content.
+        Assert.AreEqual(ColorType.TrueColor, SavedPngColorType(opaque: true));
+    }
+
+    [TestMethod]
+    public void TestAnImageWithAnyTransparencyKeepsItsAlphaChannel()
+    {
+        // The other side of it, and the half that must not be traded away for the first: one pixel
+        // short of opaque anywhere in the image is enough to need the channel that records it.
+        Assert.AreEqual(ColorType.TrueColorAlpha, SavedPngColorType(opaque: false));
+    }
+
+    /// <summary>
+    /// Saves a small image, opaque or not as asked, and reports the color type the PNG was written
+    /// with.
+    /// </summary>
+    private static ColorType SavedPngColorType(bool opaque)
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"raytracer-type-{Guid.NewGuid():N}.png");
+
+        try
+        {
+            Canvas canvas = new (2, 1);
+
+            canvas.SetColor(new Color(0.3, 0.6, 0.9), 0, 0);
+            canvas.SetColor(opaque ? new Color(1, 1, 1) : new Color(1, 1, 1, 0.5), 1, 0);
+
+            new ImageFile(path).Save(canvas, new RenderContext { ApplyGamma = false });
+
+            using MagickImage image = new (path);
+
+            return image.ColorType;
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public void TestThePngIsWrittenAtTheConfiguredChannelDepth()
     {
         // The image carries exactly the precision it was rendered with: an 8-bit render writes an
