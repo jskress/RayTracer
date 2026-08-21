@@ -7,6 +7,21 @@
         <Nullable>disable</Nullable>
         <LangVersion>14</LangVersion>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+        <!--
+        The server collector, rather than the workstation one the SDK defaults to.  A ray tracer is
+        the workload it was made for: every core allocating hard, and nothing shared between them.
+        Shadow rays are where that bites.  In the teapot scene 98.9% of all rays are shadow rays, and
+        each one builds a list and two or three intersection objects to report what it found, which
+        comes to some fourteen million objects for a 200x150 render and sixteen times that at gallery
+        size.  All of it dies at once, which is the easy case for a collector, but not while every
+        thread is queueing for the same heap.
+
+        Measured, and pixel for pixel identical either way: the teapot 13.05s to 8.25s,
+        a-stand-of-trees 8.26s to 6.41s, heightfield 1.15s to 0.92s, the candle 1.96s to 1.66s.  The
+        gain follows how much of a scene is shadow rays, which is the same as how much of it allocates.
+        -->
+        <ServerGarbageCollection>true</ServerGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>
