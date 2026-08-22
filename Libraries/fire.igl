@@ -90,7 +90,23 @@ FireCoalHeat = pigment linear gradient {
     translate Y -1
 }
 
-FireLogBark = material { pigment [0.20, 0.15, 0.11]  specular 0.06  shininess 12  ambient 0.10 }
+FireLogBark = material {
+    pigment crackle with seed 5 {
+        turbulence 0.18
+        [0.012, color [0.042, 0.031, 0.024],
+         0.070, color [0.092, 0.070, 0.052],
+         0.158, color [0.145, 0.111, 0.082],
+         0.288, color [0.198, 0.153, 0.114],
+         0.507, color [0.248, 0.196, 0.148]]
+        // A log here is about a sixth of a unit across, and bark furrows on a log that size run a
+        // centimetre or two apart -- twenty or thirty cells round the circumference.  At 0.075 the
+        // cells came out a third of the log's diameter each and it read as a pineapple.
+        scale 0.022
+    }
+    specular 0.03
+    shininess 8
+    ambient 0.07
+}
 FireLogEnd = material { pigment [0.30, 0.24, 0.18]  specular 0.08  shininess 14  ambient 0.10 }
 
 // The shell a flame is carried in: seen through entirely, casting nothing, and refracting nothing.
@@ -194,8 +210,15 @@ primitive Embers(size, variant = 1) -> group {
                         absorption [0.6, 1.1, 1.8]
                         // One volume with the coals cut out of it by noise, rather than a coal each.
                         // Nine shells over one another would come back black; see above.
+                        // **The bed is thin, so it is made dense to compensate.**  What a medium
+                        // gives back is its emission times its density times how far the ray travels
+                        // through it, and a coal bed is by nature a slab: a ray crosses about a tenth
+                        // of a unit of it where the campfire above offers nearly three tenths of
+                        // flame.  At the same density that came out three times too faint to read as
+                        // anything.  The alternative was a much taller shell, which would be mostly
+                        // empty and marched for nothing.
                         density function {
-                            max(0, FireBed(x, y, z, 0.85)
+                            max(0, FireBed(x, y, z, 0.85) * 2.8
                                    - 1.15 * (noise(x * 4.6 + 11, y * 3 + 5, z * 4.6 + 7) - 0.30))
                         }
                     }
@@ -203,32 +226,69 @@ primitive Embers(size, variant = 1) -> group {
             }
             no shadow
             gives light samples 8
-            scale [size * 0.5, size * 0.22, size * 0.5]
-            translate Y size * 0.11
+
+            // **These two numbers had the coals underground.**  `FireBed` is a slab in the floor of
+            // its shell -- its density only rises above nought below about py = -0.69, which is the
+            // bottom sixth of the sphere -- so a shell scaled to 0.22 and lifted by only 0.11 put the
+            // whole of the glowing part between Y -0.088 and -0.033, under the ground plane.  Nothing
+            // reports that: a buried light still lights nothing and a buried medium still renders,
+            // faithfully, as the black it can be seen to be.  The scene called for embers and got a
+            // patch of unlit dirt.
+            //
+            // The lift now matches the vertical scale, which stands the shell on the ground rather
+            // than half-sunk in it, and the scale is larger so the sixth of it that glows is a bed
+            // worth seeing rather than a seam.
+            scale [size * 0.5, size * 0.40, size * 0.5]
+            translate Y size * 0.40
         }
     }
 }
 
 // -- A campfire ----------------------------------------------------------------------------------
 
-// Logs leaned into a ring, coals in the middle of them, and flames over the lot.  The logs are tubes
-// rather than cones for the reason everything woody in these libraries is: a tube ends in a
-// hemisphere, and a cone's flat disc shows as a dark band wherever another thing meets it.
+// Two logs lying across the bed and four leaning in over them, which is how a fire is actually built.
+// The logs are tubes rather than cones for the reason everything woody in these libraries is: a tube
+// ends in a hemisphere, and a cone's flat disc shows as a dark band wherever another thing meets it.
+//
+// **The first version of this made a starburst, and the reason is worth writing down.**  Each log was a
+// vertical tube with its base at the origin, tilted by `rotate Z` and then swung round by `rotate Y`.
+// Rotating about the origin leaves the *base* where it is and swings the *tip* out -- so six logs came
+// out with their ends gathered in the middle and their far ends radiating outward like the spokes of a
+// wheel.  Worse, the tilt was 62 degrees off vertical, which is 28 off the ground, so they lay nearly
+// flat as well.  Logs do not do either of those things.
+//
+// A leaning log is the other way about: its base sits out on the ground and its tip rests over the
+// middle.  So each is given its two ends directly rather than rotated into place, which says what is
+// meant and cannot swing the wrong end.
 primitive FireLogs(size, variant = 1) -> group {
     return group {
-        for log in [0, 5] {
-            long = size * (0.85 + random(log, 91, variant) * 0.3)
-            thick = size * 0.075
+        // The bed: a couple lying across each other, off centre, which is what the leaning ones rest
+        // against and what holds the coals up off the cold ground.
+        for lying in [0, 1] {
+            long = size * (0.92 + random(lying, 90, variant) * 0.3)
+            thick = size * (0.072 + random(lying, 96, variant) * 0.022)
+            turn = (34 + lying * 68 + random(lying, 88, variant) * 26) * π / 180
+            off = size * (0.04 + random(lying, 89, variant) * 0.12)
 
-            group {
-                tube {
-                    material FireLogBark
-                    radius thick at [0, 0, 0]
-                    radius thick * 0.82 at [0, long, 0]
-                }
-                rotate Z 62 + random(log, 92, variant) * 12
-                rotate Y log * 60 + random(log, 93, variant) * 26
-                translate Y size * 0.06
+            tube {
+                material FireLogBark
+                radius thick at [-long * 0.5 * cos(turn), thick, -long * 0.5 * sin(turn) + off]
+                radius thick * 0.86 at [long * 0.5 * cos(turn), thick, long * 0.5 * sin(turn) + off]
+            }
+        }
+
+        // The lean: bases out on the ground, tips gathered over the middle but not all at one point,
+        // since four logs meeting exactly would read as a tripod rather than as a fire.
+        for log in [0, 4] {
+            around = (log * 72 + 14 + random(log, 93, variant) * 46) * π / 180
+            reach = size * (0.34 + random(log, 91, variant) * 0.18)
+            top = size * (0.40 + random(log, 94, variant) * 0.22)
+            thick = size * (0.056 + random(log, 95, variant) * 0.030)
+
+            tube {
+                material FireLogBark
+                radius thick at [reach * cos(around), thick * 0.8, reach * sin(around)]
+                radius thick * 0.84 at [size * (random(log, 99, variant) - 0.5) * 0.18, top, size * (random(log, 100, variant) - 0.5) * 0.18]
             }
         }
     }
