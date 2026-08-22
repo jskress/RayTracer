@@ -813,6 +813,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/a-sea-with-weather-in-it.png">
+      <img alt="A Sea With Weather In It" height="120" src="Local/media/a-sea-with-weather-in-it.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/a-sea-with-weather-in-it.igl">A Sea With Weather In It</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/spiral-stair.png">
       <img alt="A Spiral Stair" height="120" src="Local/functions/spiral-stair.png" width="160"/>
     </a></td>

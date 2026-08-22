@@ -1,0 +1,234 @@
+// Water you can name.
+//
+// Water is hard to write for the same reason a sky is: what makes it look right is a set of numbers
+// nobody can guess.  Nobody knows what wavelength they want, or what exponent sharpens a crest.
+// Everybody knows what a calm morning on a lake looks like, and what choppy looks like.
+//
+// So this library holds water by the state of it.  Take a surface and a water to go in it:
+//
+//     import 'water' { Water, SeaWater }
+//
+//     object Water(120, 200, 'breezy') { material SeaWater  translate Z 90 }
+//
+// **The surface does not come with a material, and that is deliberate.**  What a body of water looks
+// like is mostly its material -- how dark it is, how much it mirrors, what it lets through -- so
+// leaving it out would be leaving out the half that matters.  Pick one of `SeaWater`, `LakeWater` or
+// `PoolWater` below, or write your own from them.
+//
+// **On real geometry rather than a lit lie.**  The surface here is an isosurface: the waves are
+// actually there.  The silhouette against the horizon is as rough as the middle of the picture, the
+// shadows are wave-shaped, and what the water refracts is bent by the slope it really has.  Tilting
+// the normal of a flat plane -- a `normal` block -- gets a similar look head-on for far less work and
+// gives it all away at the horizon, where a flat plane stays a straight line.
+//
+// **The price, which is worth knowing before the first render.**  Real waves are real detail, and
+// detail at a distance aliases.  Left to one sample a pixel, water going away from the camera turns
+// to grey mush around the horizon -- each pixel is averaging some normals that mirror the sky and
+// some that look into the dark, and the average of those is neither.  Measured on a horizon-filling
+// ocean at 400x300: 1.5 seconds with no anti-aliasing and a mush band, 31 seconds at `-a adaptive:3`
+// and clean.  **Water wants anti-aliasing.**  That is not a fault in the water; it is the honest cost
+// of the waves being there, and the same bill comes due for any surface with fine detail in it.
+//
+// **Give it something to reflect.**  Water is mostly a mirror, and a mirror in an empty room shows an
+// empty room.  A flat background colour makes water look like paint, whatever else is right about it.
+// A sky with structure -- a gradient, or better one of the skies from the `daylight` library -- is
+// what turns the surface into water.
+
+// ---------------------------------------------------------------------------------------------
+// The states, from a dead calm to a gale.  Each is three numbers: how tall the swell is, how far
+// apart the crests are, and how sharply peaked they get.
+// ---------------------------------------------------------------------------------------------
+
+// How tall the swell stands, in scene units, crest to trough.
+//
+// **These are set by steepness, not by eye.**  What decides whether a surface reads as water is the
+// ratio of a wave's height to its length, and the first set of numbers here was chosen by looking at
+// one render from one camera: they came out between one and three percent, where real waves run to
+// about one in seven before they break.  Water five times too shallow does not read as calm water, it
+// reads as a rumpled sheet, and no amount of adjusting the material repairs it.  Against the lengths
+// below these give a steepness of about 0.006 at 'glassy' rising to 0.11 at 'rough'.
+function WaterCrest(state) -> number {
+    switch (state) {
+        case 'glassy' { return 0.022 }
+        case 'calm' { return 0.16 }
+        case 'breezy' { return 0.62 }
+        case 'choppy' { return 1.60 }
+        case 'rough' { return 5.20 }
+        default { return 0.16 }
+    }
+}
+
+// How far apart the crests run.  Longer with a bigger sea, which is what makes a rough sea read as
+// large rather than merely as noisy: waves that grow taller without growing longer look like a scale
+// model of themselves.
+function WaterLength(state) -> number {
+    switch (state) {
+        case 'glassy' { return 3.5 }
+        case 'calm' { return 7 }
+        case 'breezy' { return 14 }
+        case 'choppy' { return 20 }
+        case 'rough' { return 46 }
+        default { return 7 }
+    }
+}
+
+// How sharply the crests peak.  This is the number that separates water from a bedsheet.
+//
+// A plain sine is symmetric -- as round at the top as at the bottom -- and reads as a swimming pool
+// however tall it is made.  Real swell is trochoidal: peaked above, broad below, because the water at
+// a crest is moving forward and bunches up there.  Raising a rectified sine to a power does the same
+// thing to the shape: at 1 it is the plain sine, and the higher it goes the more the crests draw up
+// into ridges with flats between them.
+//
+// It is an imitation of the real curve and not the curve itself.  A true trochoid displaces the
+// surface sideways as well as up, leaning the crest over in the direction of travel, and a height
+// written as `y - f(x, z)` cannot lean anything: every point is directly above where it started.
+// What that costs is the forward tilt of a big breaking sea; below 'rough' there is little in it.
+function WaterSharpness(state) -> number {
+    switch (state) {
+        case 'glassy' { return 1.0 }
+        case 'calm' { return 1.4 }
+        case 'breezy' { return 2.2 }
+        case 'choppy' { return 2.8 }
+        case 'rough' { return 3.4 }
+        default { return 1.4 }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The wave field itself.
+// ---------------------------------------------------------------------------------------------
+
+// The height of the water above its rest level at the point a field is asking about.
+//
+// This is a single expression because it has to be: a function called from inside a surface's own
+// function may only be one, since the surface needs the slope of what it is given and a slope is
+// worked out from the expression rather than run for.
+//
+// Five terms, each a wave train crossing the others at an angle.  The first two carry the swell and
+// are sharpened; the last three are ripples, left as plain sines because ripples really are about
+// symmetric and sharpening them only makes them expensive.  The angles are deliberately unrelated --
+// nothing here is a multiple of anything else -- so the pattern does not come out looking woven.
+//
+// **Each swell term is a sharpened wave mixed back with its own plain one, and the mixing is not
+// decoration.**  Sharpening a crest flattens the trough, necessarily: a number near nought raised to a
+// power above one is much nearer nought, over a broad stretch either side of the lowest point.  Pure
+// sharpening therefore paid for its ridges with dead-flat plateaus between them, which showed at
+// 'rough' as smooth leaf-shaped patches lying in the troughs and looked like a fault in the renderer.
+// Keeping a third of each term unsharpened leaves the crests drawn up and gives the troughs their
+// curve back.
+function WaterHeight(crest, length, sharpness, variant) -> number {
+    return crest * 0.62 * (0.68 * pow(0.5 + 0.5 * sin((x * 0.92 + z * 0.39) / length * 6.283 + variant), sharpness)
+                         + 0.32 * (0.5 + 0.5 * sin((x * 0.92 + z * 0.39) / length * 6.283 + variant)))
+         + crest * 0.30 * (0.68 * pow(0.5 + 0.5 * sin((x * -0.42 + z * 0.91) / length * 9.100 + variant * 2.3), sharpness)
+                         + 0.32 * (0.5 + 0.5 * sin((x * -0.42 + z * 0.91) / length * 9.100 + variant * 2.3)))
+         + crest * 0.07 * sin((x * 0.71 + z * -0.70) / length * 31.4 + variant * 3.7)
+         + crest * 0.035 * sin((x * 0.26 + z * 0.97) / length * 67.0 + variant * 5.1)
+         + crest * 0.018 * sin((x * -0.87 + z * -0.49) / length * 121.0 + variant * 7.3)
+}
+
+// ---------------------------------------------------------------------------------------------
+// The surface.
+// ---------------------------------------------------------------------------------------------
+
+// A body of water, lying in the X/Z plane with its rest level at y = 0 and centered on the origin.
+//
+// `across` and `along` are its extent in X and Z.  Make them larger than the picture needs rather
+// than smaller: the box costs almost nothing to enlarge -- an ocean reaching the horizon measured 1.5
+// seconds against 1.4 for a pond, since a ray finds the surface just as quickly either way -- and a
+// box cut too small ends in a straight edge in mid-water, which reads as a cliff.
+//
+// `variant` shifts every wave train's phase, so two bodies of water in one scene are not the same
+// water twice.
+primitive Water(across, along, state = 'calm', variant = 1) -> isosurface {
+    crest = WaterCrest(state)
+    length = WaterLength(state)
+    sharpness = WaterSharpness(state)
+
+    // The box has to hold the waves, and the sharpened terms all sum at a crest, so the room left
+    // above is the sum of their weights rather than the tallest of them.  Below is only as deep as
+    // the trough, which the rectified terms never take past nought.
+    return isosurface {
+        function { y - WaterHeight(crest, length, sharpness, variant) }
+        bounded by
+            [-across / 2, -crest * 0.2, -along / 2],
+            [across / 2, crest * 1.1, along / 2]
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The waters.  Each is a whole material, meant to be handed to the surface above.
+// ---------------------------------------------------------------------------------------------
+
+// **Why these mostly transmit and mostly reflect at once, which sounds contradictory.**  Water does
+// both, and which one you see depends entirely on the angle you see it at: looking straight down into
+// a pool you see the bottom, and looking along the surface at the far shore you see the sky.  The
+// renderer works that out for itself -- a material that both reflects and transmits gets its two
+// contributions weighed by the angle, so the same water is a window underfoot and a mirror at the
+// horizon with nothing said here to arrange it.  It is the one place where writing down two things
+// that seem to disagree gives the right answer at every angle in between.
+
+// Deep water: dark, blue-green, and lively.  The pigment barely shows -- most of what a sea looks
+// like arrives from the sky above it -- but what there is of it wants to be dark, since a bright
+// pigment is what makes water read as paint.
+// **The clarity is what makes it a sea rather than a snowfield, and it took a render to see why.**
+// Looking down into water, you see whatever lies below; a wave face turned toward the camera is
+// mostly a window rather than a mirror, because that is what the angle decides.  With nothing below
+// an open sea, the ray that goes down carries on for ever and comes back with the sky -- so the water
+// showed sky whichever way it was facing, at every angle, and came out a uniform pale white.  It read
+// as fresh snow.
+//
+// Clarity is the honest fix rather than putting a floor in: light fades over distance travelled
+// through the substance, by Beer's law, so a ray heading down into deep water is simply absorbed and
+// comes back with nothing.  That is what deep water *is*.  Nine units to fade to a third is dark
+// enough to read as depth at the scale these wavelengths are written in.
+//
+// `filter` is a fraction and not a color -- how fully the pigment tints what passes through -- so the
+// blue-green of deep water comes from the pigment above.
+//
+// **Absorbing alone overshot, and the ambient is standing in for what is missing.**  Set to absorb
+// hard, the sea went past deep and came out nearly black -- convincing oil, unconvincing water.  Real
+// water is not dark because light goes into it and is lost; it is blue-green because light goes in,
+// *scatters*, and some of it comes back up.  Nothing here traces that: it would want a scattering
+// medium inside the surface, which is real work and dear to render.  A little ambient and a longer
+// clarity stand in for the light that ought to come back, which is a fudge and worth knowing is one.
+SeaWater = material {
+    pigment [0.025, 0.105, 0.125]
+    ambient 0.09
+    diffuse 0.10
+    specular 1
+    shininess 900
+    reflective 1
+    transparency 0.88
+    interior {
+        index of refraction Water
+        clarity 24
+        filter 1
+    }
+}
+
+// Fresh water over a bed near enough to see: browner, and letting more through, so what is underneath
+// does most of the talking.
+LakeWater = material {
+    pigment [0.045, 0.070, 0.050]
+    ambient 0.03
+    diffuse 0.10
+    specular 1
+    shininess 700
+    reflective 0.85
+    transparency 0.93
+    interior { index of refraction Water }
+}
+
+// Clear water in a tiled pool: bright, clean, and almost entirely a window.  This is the one where
+// what lies beneath matters most, so give it something worth refracting.
+PoolWater = material {
+    pigment [0.10, 0.30, 0.34]
+    ambient 0.05
+    diffuse 0.12
+    specular 1
+    shininess 800
+    reflective 0.7
+    transparency 0.95
+    interior { index of refraction Water }
+}

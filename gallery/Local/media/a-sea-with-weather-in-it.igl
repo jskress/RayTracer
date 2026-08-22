@@ -1,0 +1,111 @@
+// Water where the waves are really there.
+//
+// Every renderer can make a flat plane look wet.  Tilt its normals about with a `normal` block and,
+// looked at from above, the thing is convincing: the light breaks up, the reflections wobble, it reads
+// as water.  Then move the camera down to where a seascape actually looks -- along the surface, out
+// toward the horizon -- and it falls apart, because a plane with tilted normals is still a plane and
+// its horizon is still a ruled line.
+//
+// So the water here is an **isosurface**: a function of position whose zero is the surface, marched
+// until a ray crosses it.  The waves are geometry.  The horizon is ragged because there are wave
+// crests standing in front of other wave crests, the near troughs really are below the near crests,
+// and every reflection is off the slope the water actually has at that point.
+//
+// **The sea state is one word**, from the `water` library, which holds sea states the way `daylight`
+// holds skies: by name, because the numbers that make water look right -- wavelength, crest exponent
+// -- are the ones nobody can guess.  This is `choppy`; the library runs from `glassy` to `rough`.
+//
+// **On how far the water reaches.**  It runs two thousand units off, which is far past anything the
+// picture can resolve, and that is on purpose: the box costs almost nothing to enlarge, and one cut
+// short ends in a straight edge lying in mid-water.  A first attempt put three seas side by side to
+// compare states and got neither -- from a camera down at the surface, where a seascape belongs, the
+// two outer seas were off the edges of the frame and their near boundaries drew a hard line across
+// the water.  Comparisons belong in the documentation; a picture is better off being one sea.
+//
+// **On what the water is showing.**  Water is mostly a mirror, so most of what is in this picture
+// arrives from the sky rather than from the sea, which is why the sky is a graded one and not a flat
+// color -- and why it is bright near the horizon, since that pale band is what the far water hands
+// back.  Note which way round the two halves of the water read: the near water is *dark*, because
+// looking down into water is looking through it, and there is nothing under an open sea but more
+// water.  The far water is bright, because along the surface it is a mirror.  Nothing arranges that;
+// it falls out of the angle, and it is the same effect that makes a wet road shine ahead of you and
+// not at your feet.  A mirror in an empty room shows an empty room, and flat-lit water looks like paint.  The
+// posts are here for the same reason: something has to stand in the water for its reflection to break
+// across the waves, and a reflection that bends over a crest is worth more than any amount of detail
+// in the water itself.
+//
+// **On the cost, which is the honest price of real waves.**  Detail at a distance aliases: at one
+// sample a pixel the far water turns to grey mush, since each pixel is averaging normals that mirror
+// the bright sky against normals that look down into the dark, and the mean of those is neither. This
+// renders with anti-aliasing for that reason and for no other.
+
+import 'water' { Water, SeaWater }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'A Sea With Weather In It'
+        author 'J. Stephen Kress'
+        description 'Three sea states, one word apart, with the waves as real geometry.'
+        copyright true
+        software __software__
+    }
+}
+
+// Down at the surface, which is where a seascape belongs and also where the argument is: from here
+// the crests stand against the sky and the horizon is ragged because there are waves in front of
+// waves.  A flat plane with tilted normals cannot do that at any camera height, and this is the height
+// at which it stops being able to pretend.
+camera {
+    location [0, 1.5, -17]
+    look at [0, 1.35, 44]
+    field of view 54
+}
+
+point light {
+    location [-90, 26, 30]
+    color [1.55, 1.46, 1.30]
+}
+
+// A graded sky.  The pigment is painted on a unit sphere infinitely far off, so its own scale means
+// nothing here and the stops run over the whole dome.
+background linear Y gradient {
+    [0.0, [1.05, 1.06, 1.02],
+     0.30, [0.78, 0.86, 0.96],
+     0.60, [0.48, 0.66, 0.90],
+     1.0, [0.16, 0.36, 0.74]]
+}
+
+object Water(2600, 2100, 'choppy', 4) { material SeaWater  translate Z 1000 }
+
+// Something to break a reflection over. A worn post reads as scale in a way an unbroken surface never
+// can: without it there is nothing in the picture to say whether the swell is a foot high or twenty.
+Post = material {
+    pigment [0.30, 0.24, 0.18]
+    ambient 0.10
+    specular 0.16
+    shininess 30
+}
+
+cylinder {
+    material Post
+    min Y 0  max Y 1
+    scale [0.5, 3.4, 0.5]
+    translate [-4.5, -0.7, 22]
+}
+
+cylinder {
+    material Post
+    min Y 0  max Y 1
+    scale [0.42, 2.6, 0.42]
+    translate [5.5, -0.6, 30]
+}
+
+cylinder {
+    material Post
+    min Y 0  max Y 1
+    scale [0.38, 2.1, 0.38]
+    translate [12, -0.5, 46]
+}

@@ -399,6 +399,72 @@ glass is only ever seen as a band beneath it.
 what says *painted metal*.  Drop these to a building's `specular 0.05` and the shape stops reading long
 before the color does.
 
+#### Water
+
+```
+import 'water' { Water, SeaWater }
+
+object Water(700, 900, 'breezy') { material SeaWater  translate Z 300 }
+```
+
+| | |
+| --- | --- |
+| `Water` | A body of water lying in X/Z with its rest level at `y = 0`, centered on the origin. |
+| `SeaWater` | Deep water: dark, blue-green, mostly a mirror. |
+| `LakeWater` | Fresh water over a bed near enough to see, letting more through. |
+| `PoolWater` | Clear water in a tiled pool, almost entirely a window. |
+
+**The surface comes without a material, and you must give it one.**  What a body of water looks like is
+mostly its material, so shipping the surface with one would be shipping the half that matters least.
+This is the same bargain [the skies](#daylight) strike: take both halves or the picture disagrees with
+itself.
+
+The states run `glassy`, `calm`, `breezy`, `choppy`, `rough`.  Each sets three things — how tall the
+swell stands, how far apart the crests run, and how sharply they peak.  **The crests get longer as
+well as taller**, which is what makes a rough sea read as *large*: waves that grow taller without
+growing longer look like a scale model of themselves.
+
+`Water(across, along, state, variant)` takes its extent in X and Z.  **Make it larger than the picture
+needs.**  Enlarging costs almost nothing — an ocean reaching the horizon measured 1.5 seconds against
+1.4 for a pond, because a ray finds the surface just as quickly either way — while a box cut too small
+ends in a straight edge in mid-water, which reads as a cliff.  `variant` shifts every wave train's
+phase, so two bodies of water in one scene are not the same water twice.
+
+##### What makes a surface into water
+
+**The waves are really there.**  This is an [isosurface](advanced-surfaces.md#isosurface), so the
+silhouette against the horizon is as rough as the middle of the picture, the shadows are wave-shaped,
+and what the water refracts is bent by the slope it actually has.  A
+[`normal` block](materials.md#roughening-the-surface) on a flat plane gets a similar look head-on for
+far less work, and gives itself away at exactly the place a seascape is looking: at the horizon a flat
+plane is still a straight line.
+
+**It wants anti-aliasing, and that is the bill for the waves being real.**  Real detail at a distance
+aliases.  At one sample a pixel, water going away from the camera turns to grey mush near the horizon,
+because each pixel is averaging some normals that mirror the sky and some that look down into the
+dark, and the average of those is neither.  Measured on a horizon-filling ocean at 400×300: **1.5
+seconds with a mush band, 31 seconds at `-a adaptive:3` and clean.**  The same bill comes due for any
+surface with fine detail in it.
+
+**Give it something to reflect.**  Water is mostly a mirror, and a mirror in an empty room shows an
+empty room — a flat background color makes water look like paint whatever else is right about it.  A
+gradient will do; one of [the skies](#daylight) does it better.
+
+**The crests are sharpened, and the sharpening had to be pulled back.**  A plain sine is as round on
+top as underneath and reads as a swimming pool however tall it is made; real swell is peaked above and
+broad below, because the water at a crest is moving forward and bunches there.  Raising a rectified
+sine to a power imitates that — but it flattens the trough while it sharpens the crest, necessarily,
+since a number near nought raised to a power is much nearer nought over a broad stretch either side of
+the bottom.  Pure sharpening therefore paid for its ridges with dead-flat plateaus lying in the
+troughs, which at `rough` looked like smooth leaf-shaped patches and read as a fault in the renderer.
+Each swell term is now about two thirds sharpened and one third plain, which keeps the crests drawn up
+and gives the troughs their curve back.
+
+**What is still missing, and it is a real thing.**  A true trochoid displaces the surface *sideways*
+as well as up, leaning each crest over in the direction it travels.  A height written as `y - f(x, z)`
+cannot lean anything — every point stays directly above where it started — so what these waves lack is
+the forward tilt of a big breaking sea.  Below `rough` there is little in it.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
