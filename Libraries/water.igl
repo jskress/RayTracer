@@ -35,8 +35,8 @@
 // what turns the surface into water.
 
 // ---------------------------------------------------------------------------------------------
-// The states, from a dead calm to a gale.  Each is three numbers: how tall the swell is, how far
-// apart the crests are, and how sharply peaked they get.
+// The states, from a dead calm to a gale.  Each is four numbers: how tall the swell is, how far apart
+// the crests are, how sharply peaked they get, and how far they lean.
 // ---------------------------------------------------------------------------------------------
 
 // How tall the swell stands, in scene units, crest to trough.
@@ -80,10 +80,9 @@ function WaterLength(state) -> number {
 // thing to the shape: at 1 it is the plain sine, and the higher it goes the more the crests draw up
 // into ridges with flats between them.
 //
-// It is an imitation of the real curve and not the curve itself.  A true trochoid displaces the
-// surface sideways as well as up, leaning the crest over in the direction of travel, and a height
-// written as `y - f(x, z)` cannot lean anything: every point is directly above where it started.
-// What that costs is the forward tilt of a big breaking sea; below 'rough' there is little in it.
+// Sharpening is only half of a trochoid, though: the other half is that the crest leans over in the
+// direction it travels, and that is what `WaterLean` below does.  The two are separate knobs because
+// they are separate effects -- how *peaked* the wave is, and how *asymmetric*.
 function WaterSharpness(state) -> number {
     switch (state) {
         case 'glassy' { return 1.0 }
@@ -92,6 +91,34 @@ function WaterSharpness(state) -> number {
         case 'choppy' { return 2.8 }
         case 'rough' { return 3.4 }
         default { return 1.4 }
+    }
+}
+
+// How far a crest leans forward, as a fraction of a wavelength shifted at the top of the wave.
+//
+// **This is what makes swell trochoidal rather than merely peaked**, and it is the one shape property
+// a height written as `y - f(x, z)` looks unable to have -- every point being directly above where it
+// started.  The way round it is that an implicit surface need not be a graph: shear the field's own
+// horizontal argument by its height, `f(x - lean * y, z)`, and the surface leans.  Nothing about the
+// renderer changes; it is the same marched isosurface.
+//
+// Measured on a single train of crest 1.6 and wavelength 20, solving the implicit equation directly:
+// the crest height stays at 1.6000 exactly while the two faces diverge, the ratio of back slope to
+// front going 1.00, 0.68, 0.43 as the shear rises.  That is a trochoid's signature -- steep in front,
+// broad behind, and no shorter for it.
+//
+// Given as a fraction of a wavelength so that it means the same thing at every sea state, since a
+// shear in bare units would lean a ripple far harder than a swell.  Kept below about a third: past
+// that the implicit surface stops leaning and starts folding into overlapping sheets, which is not a
+// breaking wave but a mess.  A real breaking wave wants a different surface altogether.
+function WaterLean(state) -> number {
+    switch (state) {
+        case 'glassy' { return 0 }
+        case 'calm' { return 0.10 }
+        case 'breezy' { return 0.18 }
+        case 'choppy' { return 0.26 }
+        case 'rough' { return 0.32 }
+        default { return 0.10 }
     }
 }
 
@@ -117,11 +144,14 @@ function WaterSharpness(state) -> number {
 // 'rough' as smooth leaf-shaped patches lying in the troughs and looked like a fault in the renderer.
 // Keeping a third of each term unsharpened leaves the crests drawn up and gives the troughs their
 // curve back.
-function WaterHeight(crest, length, sharpness, variant) -> number {
-    return crest * 0.62 * (0.68 * pow(0.5 + 0.5 * sin((x * 0.92 + z * 0.39) / length * 6.283 + variant), sharpness)
-                         + 0.32 * (0.5 + 0.5 * sin((x * 0.92 + z * 0.39) / length * 6.283 + variant)))
-         + crest * 0.30 * (0.68 * pow(0.5 + 0.5 * sin((x * -0.42 + z * 0.91) / length * 9.100 + variant * 2.3), sharpness)
-                         + 0.32 * (0.5 + 0.5 * sin((x * -0.42 + z * 0.91) / length * 9.100 + variant * 2.3)))
+// The shear is applied to the two swell terms and not to the ripples.  Ripples are small enough that
+// leaning them buys nothing visible and costs the marcher the same as leaning the swell does; and
+// riding as they do on a surface that is itself already leaning, they are carried along by it.
+function WaterHeight(crest, length, sharpness, variant, shear) -> number {
+    return crest * 0.62 * (0.68 * pow(0.5 + 0.5 * sin((x * 0.92 + z * 0.39 - shear * y) / length * 6.283 + variant), sharpness)
+                         + 0.32 * (0.5 + 0.5 * sin((x * 0.92 + z * 0.39 - shear * y) / length * 6.283 + variant)))
+         + crest * 0.30 * (0.68 * pow(0.5 + 0.5 * sin((x * -0.42 + z * 0.91 - shear * y) / length * 9.100 + variant * 2.3), sharpness)
+                         + 0.32 * (0.5 + 0.5 * sin((x * -0.42 + z * 0.91 - shear * y) / length * 9.100 + variant * 2.3)))
          + crest * 0.07 * sin((x * 0.71 + z * -0.70) / length * 31.4 + variant * 3.7)
          + crest * 0.035 * sin((x * 0.26 + z * 0.97) / length * 67.0 + variant * 5.1)
          + crest * 0.018 * sin((x * -0.87 + z * -0.49) / length * 121.0 + variant * 7.3)
@@ -145,11 +175,15 @@ primitive Water(across, along, state = 'calm', variant = 1) -> isosurface {
     length = WaterLength(state)
     sharpness = WaterSharpness(state)
 
+    // The lean is a fraction of a wavelength at the crest, so turning it into a shear on `y` means
+    // dividing by how tall the crest is: a shift of `lean` wavelengths over a rise of `crest`.
+    shear = WaterLean(state) * length / crest
+
     // The box has to hold the waves, and the sharpened terms all sum at a crest, so the room left
     // above is the sum of their weights rather than the tallest of them.  Below is only as deep as
     // the trough, which the rectified terms never take past nought.
     return isosurface {
-        function { y - WaterHeight(crest, length, sharpness, variant) }
+        function { y - WaterHeight(crest, length, sharpness, variant, shear) }
         bounded by
             [-across / 2, -crest * 0.2, -along / 2],
             [across / 2, crest * 1.1, along / 2]

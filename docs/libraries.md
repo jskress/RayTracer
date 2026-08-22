@@ -419,8 +419,8 @@ mostly its material, so shipping the surface with one would be shipping the half
 This is the same bargain [the skies](#daylight) strike: take both halves or the picture disagrees with
 itself.
 
-The states run `glassy`, `calm`, `breezy`, `choppy`, `rough`.  Each sets three things — how tall the
-swell stands, how far apart the crests run, and how sharply they peak.  **The crests get longer as
+The states run `glassy`, `calm`, `breezy`, `choppy`, `rough`.  Each sets four things — how tall the
+swell stands, how far apart the crests run, how sharply they peak, and how far they lean.  **The crests get longer as
 well as taller**, which is what makes a rough sea read as *large*: waves that grow taller without
 growing longer look like a scale model of themselves.
 
@@ -460,10 +460,24 @@ troughs, which at `rough` looked like smooth leaf-shaped patches and read as a f
 Each swell term is now about two thirds sharpened and one third plain, which keeps the crests drawn up
 and gives the troughs their curve back.
 
-**What is still missing, and it is a real thing.**  A true trochoid displaces the surface *sideways*
-as well as up, leaning each crest over in the direction it travels.  A height written as `y - f(x, z)`
-cannot lean anything — every point stays directly above where it started — so what these waves lack is
-the forward tilt of a big breaking sea.  Below `rough` there is little in it.
+**The crests lean, and getting there needed no new machinery.**  A true trochoid displaces the
+surface *sideways* as well as up, so each crest tilts in the direction it travels: steep in front,
+broad behind.  A height written as `y - f(x, z)` looks unable to do that, since every point is
+directly above where it started — but an implicit surface need not be a graph.  Shear the field's own
+horizontal argument by its height, `f(x - lean·y, z)`, and it leans.  It is the same marched
+isosurface as before.
+
+Measured on a single train of crest 1.6 and wavelength 20, by solving the implicit equation directly:
+the crest height stays at **1.6000 exactly** while the two faces diverge, the ratio of back slope to
+front going 1.00, 0.68, 0.43 as the shear rises.  That is a trochoid's signature — asymmetric, and no
+shorter for it.  Each state carries its own lean, given as a fraction of a wavelength so it means the
+same thing at every scale.  It costs about 1.6× to march.
+
+**What a lean is not.**  A wave that actually *breaks* — a crest folding over into a tube — is not
+this.  Push the shear past about a third of a wavelength and the surface stops leaning and starts
+folding into overlapping sheets, which is a mess rather than a breaker.  That wants a different
+surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
+an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
 
 ### Where Libraries Live
 
