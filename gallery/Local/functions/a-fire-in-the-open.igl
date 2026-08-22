@@ -91,7 +91,15 @@ object Torch(1.9, 5)       { translate [-2.5, 0, 1.1] }
 
 // Yesterday's fire, gone to coals: its light is dull and reaches barely a step past itself, which is
 // what a fire that has burned down actually does.
-object Embers(0.8, 7)      { translate [2.3, 0, 1.6] }
+//
+// This was invisible for two reasons at once, which is why it stayed invisible.  It stood at
+// [2.3, 0, 1.6], which is 28.6 degrees off the camera's axis against a half-field of 23 -- outside the
+// picture altogether.  And the primitive itself had its coals *underground*, so moving it into frame
+// on its own would have shown nothing and looked like the wrong fix.  Neither fault announces itself:
+// a scene renders perfectly well with an object behind the viewer, and a buried glow renders faithfully
+// as the black it can be seen to be.  When something placed deliberately cannot be found, check both
+// the arithmetic and the thing itself.
+object Embers(0.8, 7)      { translate [1.15, 0, 0.8] }
 
 // Stones round the fire, close enough to be lit from below.
 object Boulder(1.5, 'summer', 3) { translate [-1.9, 0.26, -1.4] }

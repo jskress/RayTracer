@@ -53,14 +53,44 @@
 // Mottled rather than flat, and the mottling is what saves the whole library from looking like putty.
 // A pigment is worked out from where a point is *in the scene*, so two stones side by side take
 // different parts of the same speckle and come out looking like two stones rather than one repeated.
+//
+// **The stops are placed where granite's values actually fall, and the first version of this was not.**
+// It is natural to write a color map across nought to one, and quite wrong here: granite is a sum of
+// six octaves of `|0.5 - noise|`, and measured over sixty thousand points it runs 0.017 to 0.684 with
+// a mean of 0.232 and **99.2% of it below 0.5**.  Stops at 0.0, 0.5 and 1.0 therefore squeezed every
+// stone into the gap between the first two colors: an intended spread of 0.26 to 0.49 came out as
+// 0.28 to 0.36, a third of the contrast that was written and all of it in the pale middle.  Rocks that
+// each had a single flat tone, which is most of what made them look like putty after all.
+//
+// These stops are the 1st, 25th, 50th, 75th and 95th percentiles of what granite really gives, so the
+// whole of the color range gets used and the speckle arrives.
+//
+// **And they are darker than they look like they should be.**  Dry granite sits near a fifth of the
+// light it receives, and basalt lower; the old middle tone of 0.32 was closer to concrete.  Under a
+// warm daylight sky a too-bright grey does not read as pale stone, it reads as pale *plastic*, and
+// takes the sun's color with it -- which is where the yellow came from.
 RockGrey = pigment granite with seed 7 {
-    [0.0, color [0.26, 0.25, 0.23],
-     0.5, color [0.38, 0.37, 0.34],
-     1.0, color [0.49, 0.47, 0.43]]
+    [0.06, color [0.085, 0.082, 0.078],
+     0.16, color [0.135, 0.130, 0.122],
+     0.22, color [0.185, 0.178, 0.166],
+     0.30, color [0.245, 0.236, 0.220],
+     0.41, color [0.325, 0.313, 0.292]]
     scale 0.35
 }
 
-RockStone = material { pigment RockGrey  specular 0.10  shininess 22  ambient 0.16 }
+// **Rock has almost no highlight, and what it has is not gathered.**  A tenth of specular at a
+// shininess of 22 is a soft, collected sheen, and a collected sheen sliding over a smoothly shaded
+// form is the strongest plastic cue there is -- it says *coated*.  Stone is scattering light off a
+// surface rough at a scale far below anything modelled here, so what it gives back is broad and dim.
+// The ambient comes down with it: a sixth of the light arriving from nowhere in particular was lifting
+// the crevices to the same tone as the faces, which flattens exactly the shading that says *rough*.
+RockStone = material {
+    pigment RockGrey
+    specular 0.03
+    shininess 9
+    ambient 0.06
+    brilliance 1.4
+}
 RockSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.28  shininess 55 }
 
 // What lies on top of a stone, which is nothing at all for three seasons of the four.

@@ -252,6 +252,33 @@ rather than weathered stone, and measured about four times a sphere rather than 
 That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
 for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
 
+##### What makes a shape into stone
+
+The shape argument above cuts both ways.  A good outline does not save a bad material: these rocks had
+the right silhouette from the start and still read as pale plastic, and it took three separate faults
+to fix.
+
+**The color map's stops have to sit where the pattern's values actually fall.**  It is natural to
+write a map from nought to one, and quite wrong for `granite`, which is a sum of six octaves of
+`|0.5 − noise|`.  Measured over sixty thousand points it runs **0.017 to 0.684, mean 0.232, with 99.2%
+of it below 0.5** — so stops at 0.0, 0.5 and 1.0 squeezed every stone into the gap between the first
+two colors.  An intended spread of 0.26 to 0.49 arrived as 0.28 to 0.36: a third of the contrast that
+was written, and all of it in the pale middle.  Each rock came out a single flat tone, which is most of
+what made them look like putty.  The stops now sit at granite's 1st, 25th, 50th, 75th and 95th
+percentiles, and the speckle arrives.
+
+**Stone is darker than it seems it should be.**  Dry granite returns about a fifth of the light that
+falls on it, and basalt less; the old middle tone of 0.32 was concrete.  Under a warm sky a too-bright
+grey does not read as pale stone but as pale *plastic*, and it takes the sun's color with it — which is
+where the yellow cast came from.
+
+**A gathered highlight is the strongest plastic cue there is.**  `specular 0.10` at `shininess 22` is a
+soft collected sheen, and a collected sheen sliding across a smoothly shaded form says *coated*.  Stone
+scatters off a surface rough far below the scale of anything modelled, so what comes back is broad and
+dim: `specular 0.03` at `shininess 9`.  The ambient came down with it, from 0.16 to 0.06 — a sixth of
+the light arriving from nowhere in particular was lifting the crevices to the same tone as the faces,
+flattening the very shading that says *rough*.
+
 #### Fire
 
 ```
@@ -270,6 +297,30 @@ object Campfire(1.4) { translate [3, 0, -2] }
 **These take two numbers, not three.**  Everything else in these libraries takes a season second, and
 fire does not, because fire does not have one.  A word taken and ignored is worse than a word not
 asked for: it says the library thought about the question when it did not.
+
+##### What makes a pile of tubes into a fire
+
+**A fire is built, and how it is built shows.**  The logs here lie two across the bed with four leaning
+in over them, bases out on the ground and tips gathered above the middle.  The first version made a
+*starburst*: each log was a vertical tube with its base at the origin, tilted and then swung round, and
+rotating about the origin holds the base still while the tip swings out — so six logs came out with
+their ends meeting in the middle and their far ends radiating like the spokes of a wheel, lying only
+28° off the ground besides.  A leaning log is the other way about, so each is now given its two ends
+directly rather than rotated into place: it says what is meant, and it cannot swing the wrong end.
+
+**Bark, not a flat brown.**  A log of one uniform colour is a dowel — nothing about its surface says
+wood, so the eye reads the shape alone, and the shape of a tube is a tube.  The bark is a
+[`crackle`](pigments-and-patterns.md#continuous-patterns) pigment, which is a web of cracks between cells and
+therefore exactly the right pattern, with its stops set at crackle's own percentiles rather than spread
+over nought to one.  Scale matters more than it looks: at cells a third of the log's diameter it read
+as a pineapple, and a log wants twenty or thirty cells round its circumference.
+
+**And the coals have to be above the ground.**  `FireBed` is a slab in the *floor* of its shell — its
+density only rises above nought in the bottom sixth — so a shell that is scaled flat and then lifted by
+half of that scale puts the whole glowing part underground.  `Embers` did exactly that, and rendered
+faithfully as unlit dirt.  Being a slab, it is also thin, and what a medium gives back is emission
+times density times the distance a ray travels through it: a coal bed crossed in a tenth of a unit
+needs several times the density of a flame crossed in three tenths, or it comes out too faint to find.
 
 **Put a fire in a scene and the scene is lit.**  There is nothing to place beside it and nothing to
 keep in step: the stuff a flame is made of gives off light where it is, and that light falls on the
