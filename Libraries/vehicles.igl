@@ -139,6 +139,38 @@ primitive VehicleSnowOn(season, wide, deep, where) -> group {
 
 // -- A car -------------------------------------------------------------------------------------
 
+// A wing mirror: an arm off the body and a glass in a shell.
+//
+// **This is the best return on two surfaces anywhere in the library**, and the reason is silhouette.
+// Everything else on a vehicle is inside its outline -- lamps, plates, a grille all lie flush or
+// recessed, so they colour the face without changing the shape of it. A mirror sticks out. It is the
+// one thing that breaks the smooth line of a body, and a body with an unbroken line reads as a
+// pressed-metal toy however well painted it is.
+primitive VehicleMirror(size, variant = 1) -> group {
+    return group {
+        cube { material VehiclePaint(variant)  scale [size * 0.10, size * 0.09, size * 0.42]
+               translate Z size * 0.42 }
+        cube { material VehiclePaint(variant)  scale [size * 0.24, size * 0.30, size * 0.10]
+               translate Z size * 0.90 }
+        cube { material VehicleGlass  scale [size * 0.06, size * 0.24, size * 0.085]
+               translate [-size * 0.22, 0, size * 0.90] }
+    }
+}
+
+// A grille: a dark recess with bars across it.  A nose that is only paint and two lamps reads as
+// blank, and what fills it on any real vehicle is a hole with something in it -- so this is a sunken
+// dark panel with three chrome bars standing in front, which gives the face the horizontal lines it
+// otherwise lacks entirely.
+primitive VehicleGrille(wide, tall, deep, variant = 1) -> group {
+    return group {
+        cube { material VehicleBed  scale [deep, tall, wide] }
+        for bar in [0, 2] {
+            cube { material VehicleChrome  scale [deep * 0.55, tall * 0.13, wide * 0.97]
+                   translate [deep * 0.9, (bar - 1) * tall * 0.55, 0] }
+        }
+    }
+}
+
 primitive Car(length, season = 'summer', variant = 1) -> group {
     wide = length * 0.40
     tire = length * 0.072
@@ -201,6 +233,34 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
                translate [-length * 0.492, length * 0.170, wide * 0.30] }
         cube { material VehicleTail  scale [length * 0.012, length * 0.016, wide * 0.10]
                translate [-length * 0.492, length * 0.170, -wide * 0.30] }
+
+        // The face: a grille between the lamps, and a plate under it.
+        object VehicleGrille(wide * 0.19, length * 0.020, length * 0.010, variant) {
+            translate [length * 0.489, length * 0.163, 0]
+        }
+        cube { material VehicleWhite  scale [length * 0.006, length * 0.011, wide * 0.13]
+               translate [length * 0.500, length * 0.128, 0] }
+        cube { material VehicleWhite  scale [length * 0.006, length * 0.011, wide * 0.13]
+               translate [-length * 0.500, length * 0.135, 0] }
+
+        // A mirror each side, on the door where the glasshouse begins.  Set at the body's own
+        // half-width, not inside it: the arm reaches outward from where it is placed, so a mirror
+        // put at 0.44 of the width had its whole length inside a body half a width across and showed
+        // as two lumps on the shoulder.
+        object VehicleMirror(length * 0.052, variant) {
+            translate [length * 0.075, length * 0.235, wide * 0.50]
+        }
+        object VehicleMirror(length * 0.052, variant) {
+            rotate Y 180
+            translate [length * 0.075, length * 0.235, -wide * 0.50]
+        }
+
+        // An exhaust, off centre at the back, because they never come out of the middle.
+        tube {
+            material VehicleChrome
+            radius length * 0.010 at [-length * 0.470, length * 0.098, -wide * 0.24]
+            radius length * 0.010 at [-length * 0.512, length * 0.098, -wide * 0.24]
+        }
 
         object VehicleWheel(tire, wide * 0.070) { translate [base * 0.5, tire, track] }
         object VehicleWheel(tire, wide * 0.070) { translate [base * 0.5, tire, -track] }
@@ -276,6 +336,18 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
                translate [-length * 0.496, length * 0.180, wide * 0.32] }
         cube { material VehicleTail  scale [length * 0.010, length * 0.016, wide * 0.09]
                translate [-length * 0.496, length * 0.180, -wide * 0.32] }
+
+        // Mirrors, which on a cab this square are the only thing that breaks its outline.  Set just
+        // behind the windscreen and a little below its middle: the screen sits at tall * 1.62, which
+        // with tall at 0.30 of the length puts it at y = 0.486, and a first guess of 0.62 had them
+        // hanging in the air above the roof.
+        object VehicleMirror(length * 0.062, variant) {
+            translate [length * 0.335, length * 0.445, wide * 0.50]
+        }
+        object VehicleMirror(length * 0.062, variant) {
+            rotate Y 180
+            translate [length * 0.335, length * 0.445, -wide * 0.50]
+        }
 
         object VehicleWheel(tire, wide * 0.080) { translate [base * 0.5, tire, track] }
         object VehicleWheel(tire, wide * 0.080) { translate [base * 0.5, tire, -track] }
@@ -358,6 +430,16 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
                translate [length * 0.476, deck * 0.80, -wide * 0.32] }
 
         // Front axle, then two under the load.
+        // Mirrors, set from the cab's own screen rather than from the vehicle's length, since this
+        // cab stands on a deck and its glass is higher than a van's by exactly that much.
+        object VehicleMirror(length * 0.052, variant) {
+            translate [length * 0.352, tall * 1.32 + deck, wide * 0.50]
+        }
+        object VehicleMirror(length * 0.052, variant) {
+            rotate Y 180
+            translate [length * 0.352, tall * 1.32 + deck, -wide * 0.50]
+        }
+
         object VehicleWheel(tire, wide * 0.085) { translate [length * 0.340, tire, track] }
         object VehicleWheel(tire, wide * 0.085) { translate [length * 0.340, tire, -track] }
 
