@@ -363,7 +363,7 @@ object Tower(14, 'summer', 3) { translate X -14 }
 
 | | |
 | --- | --- |
-| `House` | One dwelling: plinth, walls, a gabled roof, a door and windows. |
+| `House` | One dwelling: plinth, brick walls, a boarded gable, a roof, a doorway and windows. |
 | `Row` | Several houses joined shoulder to shoulder, as a terrace. |
 | `Tower` | A taller block, bay after bay, with a parapet rather than a roof. |
 
@@ -401,6 +401,45 @@ why in winter its snow lies *across* that parapet rather than down inside it.  S
 invisible from any camera standing on the ground, and a season that cannot be seen is a word taken and
 ignored.
 
+**A wall made of something, and not all of the same something.**  A house wears brick — one of three, a
+yellow stock, a red or a grey, picked by its variant along with everything else — and its gable is
+boarded and painted above it.  That is what houses do, and it also puts a change of texture exactly
+where the wall stops, which does more for the top of a facade than either material does alone.  A
+`Tower` gets neither; a block in render or concrete is what a block is, and it keeps the two kinds of
+building apart.
+
+Both of those are patterns on a wall, and patterns on walls have traps in them.
+
+**[A pattern is worked out in the surface's own
+space](pigments-and-patterns.md#patterns-live-in-the-surfaces-space).**  A wall is a cube scaled
+differently on all three axes, so a pattern laid on plainly comes out stretched by whatever those
+numbers were — long flat bricks on the front and short tall ones on the end.  Dividing the scale back
+out is what gives bricks of one size, and it is why the library's brick and boarding both have to be
+told the wall they are going on.
+
+**In a `union` or an `intersection`, the space that counts is the *leaf* the ray actually met**, not the
+shape you wrote the material on.  A gable is an `intersection` of a turned cube with a thin one, and
+sizing a pattern for the intersection rather than for the thin cube inside it gave bricks two and a half
+times too long, plainly coarser than the wall below.  This is also why the boarding is written on the
+thin cube alone and the sloping edges get flat paint: those edges belong to the *turned* cube, so boards
+read in its space would run at forty-five degrees.
+
+**`brick` lays joints in all three directions.**  A wall's face has one constant coordinate, so that
+face either misses the joints running that way or lands squarely in one — and landing in one turns
+*every other course of the whole face* to mortar, because those joints are staggered by course.  Worth
+measuring rather than trusting: driving a house wall into its depth joints on purpose took the face from
+twenty-two per cent mortar to sixty-one.
+
+What no amount of care will do is turn a corner.  Real brickwork toothes at a quoin, alternate courses
+reaching round; a pattern is a lattice cut by the wall's faces, so courses line up in height all the way
+round a house and the bond does not interlock where two walls meet.  At the distance a building is seen
+from that is invisible, and it is the reason to reach for a pattern here rather than for geometry.
+
+For the boarding the useful trick is that `linear Y gradient` is a **sawtooth** — it climbs from nought
+to one over each unit and starts again — so one unit is one board and the color map is a cross-section
+of it: bright at the proud bottom edge, receding up the face, dark in the last tenth where the board
+above laps over.  The drop back to nought *is* the board line, and there is nothing to smooth out.
+
 #### Vehicles
 
 ```
@@ -428,6 +467,29 @@ running left to right needs no turning at all.  `rotate Y 180` sends one the oth
 **The season lays snow on whatever is flat and facing up** — roof, bonnet, boot, the top of a van's box
 — and does nothing else.  A street whose houses are white-roofed while its cars are not is a street
 that has quietly stopped making sense.
+
+##### What makes a shape into something built
+
+The buildings and the vehicles were both made of as few surfaces as would carry the shape, and shape
+was never quite the problem: what they lacked was the small stuff that **projects or recesses**.  That
+distinction is the whole of this pass.  A detail painted flat onto a wall does nothing at the angles a
+street is actually seen from; a detail that stands out a hand's width catches the light on one side and
+throws a shadow on the other, and it is those two edges that say a thing was *built* rather than
+moulded.
+
+On a house that meant a **chimney** tall enough to stand clear of the ridge with a cap slab on it
+(there was one before, whose top cleared the roof by a tenth of its height and read as a wart), a
+**ridge cap** along the join of the two slopes, a **gutter** under each eave with a **downpipe** to the
+ground, and a **doorway** rather than a door: a surround up both sides, a head across the top, and a
+step at the foot.  The downpipe is the cheapest of them and possibly the most valuable — one vertical
+line on a face otherwise made of horizontal courses, and the eye finds it at any distance.
+
+On a vehicle it meant **wing mirrors** above all.  Everything else on a car lies flush or recessed —
+lamps, plates, a grille all colour the face without changing its outline — and a mirror is the one
+thing that breaks the line of the body.  A body with an unbroken line reads as a pressed-metal toy
+however well it is painted.  Then a **grille** with bars in a sunken recess, since a nose of paint and
+two lamps reads as blank, **number plates**, and an **exhaust** off centre at the back, because they
+never come out of the middle.
 
 ##### What makes a box into a car
 

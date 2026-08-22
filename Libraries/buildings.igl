@@ -60,6 +60,10 @@ BuildTrim = material { pigment [0.90, 0.88, 0.84]  specular 0.12  shininess 30 }
 BuildRoof = material { pigment [0.30, 0.26, 0.25]  specular 0.10  shininess 20 }
 BuildRoofRed = material { pigment [0.42, 0.24, 0.18]  specular 0.10  shininess 20 }
 BuildGlass = material { pigment [0.09, 0.12, 0.15]  specular 0.55  shininess 140  reflective 0.22 }
+// Brick, and a shade off the walls: a chimney built of the same render as the house reads as a lump of
+// the house rather than as a chimney.
+BuildChimney = material { pigment [0.34, 0.24, 0.20]  specular 0.03  shininess 8  ambient 0.10 }
+
 BuildDoor = material { pigment [0.28, 0.18, 0.14]  specular 0.20  shininess 40 }
 BuildSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
 
@@ -70,6 +74,152 @@ primitive BuildWallOf(variant) -> material {
         case 0 { return material BuildWall }
         case 1 { return material BuildWallWarm }
         default { return material BuildWallCool }
+    }
+}
+
+// -- Brick -----------------------------------------------------------------------------------------
+
+// The brick pattern is laid out in *inches*: its brick is eight long, three high and four and a half
+// deep, with a half-inch joint, which is a real brick.  So the only thing to work out is how many
+// scene units an inch is, and a two-storey house is twenty feet -- two hundred and forty inches.
+// Brick is a real size whatever size the house is, so a taller house gets more courses rather than
+// bigger bricks, which is one of the stronger cues that a thing is built rather than modelled.
+
+// Three bricks to go with the three walls: a yellow stock, a red, and a grey.
+//
+// The mortar is only a shade lighter than its brick, which is what a wall looks like from across a
+// street rather than from a foot away.
+//
+// It is worth recording what that did *not* fix, since the reasoning that led to it was wrong.  These
+// walls read pale grey under the gallery's sky, and the theory was that a joint takes up a fifth of a
+// wall's face, so mortar much lighter than the brick would average the whole wall towards it.
+// Darkening all three mortars moved the walls by **one part in two hundred and fifty-five** -- nothing.
+// What makes a sky-lit wall pale is the sky's own light filling in the channels the brick is dark in:
+// red brick at 0.48, 0.25, 0.19 comes back as 118, 104, 89, with the green and blue lifted almost to
+// the red.  The mortar is still right at this value, but as a close-up nicety, not as a cure.
+function BuildBrickTint(variant) -> color {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return [0.56, 0.50, 0.39] }
+        case 1 { return [0.48, 0.25, 0.19] }
+        default { return [0.42, 0.39, 0.37] }
+    }
+}
+
+function BuildMortarTint(variant) -> color {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return [0.62, 0.60, 0.55] }
+        case 1 { return [0.55, 0.52, 0.48] }
+        default { return [0.57, 0.56, 0.54] }
+    }
+}
+
+// Brick for a wall of a given size, which is why this has to be told the size.
+//
+// **A pattern is worked out in the surface's own space**, and a wall is a unit cube scaled differently
+// on all three axes -- so laid on plainly, the same pattern gives long flat bricks on the front and
+// short tall ones on the end.  The scale below divides that back out, so `sx`, `sy` and `sz` are
+// whatever the cube wearing this was scaled by.  A wall whose material sits on something unscaled --
+// the gables are an `intersection` carrying only a translate -- passes ones.
+//
+// Dividing it back out buys something beyond bricks of one size: both patterns then measure in inches
+// from their own origin, and the wall's origin is its middle while the gable's is the wall top, which
+// is `height * 0.50` above it.  That is a hundred and twenty inches, or forty courses exactly, so the
+// gable's courses carry on from the wall's without a jog at the eave.  It is worth knowing that is
+// arithmetic and not luck: change the wall height away from half the house and it stops being true.
+//
+// `nz` shifts the pattern along Z, and it exists because of a trap.  The pattern lays joints in all
+// three directions, so a face of constant Z either misses the depth joints or lands in one -- and if it
+// lands in one, *every other course of that whole face turns to mortar*, since the depth joints are
+// staggered by course.  A wall six units high is seventy-two inches deep, and seventy-two is exactly
+// sixteen bricks, so the front and back faces sit precisely on a joint plane.  What saves them today is
+// the epsilon the pattern adds before it compares, which tips an exact landing to brick rather than
+// mortar -- far too fine a thing to rest a wall on.  Driving it the other way on purpose was measured:
+// sixty-one per cent of the wall came out mortar instead of twenty-two.  So the wall asks for a shift
+// of a little under an inch, which puts its faces a third of the way into a brick.  The gables, at
+// three and a half inches, are already clear and ask for none.
+//
+// `ny` shifts it along Y, which is what makes two walls agree about where a course line falls.  The
+// wall gets away without one because the gable's forty courses fall out of the proportions; a wall
+// whose origin is at some other height has to be told how far, in inches, and the remainder over six
+// -- a course and its stagger -- is the number to give.
+//
+// What none of this can do is turn a corner.  Real brickwork *toothes* at a quoin, alternate courses
+// reaching round; this is a lattice cut by the wall's faces, so the courses line up in height all the
+// way round and the bond does not interlock at the corner.  At the distance a building is ever seen
+// from, that is invisible.
+primitive BuildBrickOf(variant, height, sx, sy, sz, ny = 0, nz = 0) -> material {
+    inch = height / 240
+
+    return material {
+        pigment brick {
+            BuildMortarTint(variant), BuildBrickTint(variant)
+            scale [inch / sx, inch / sy, inch / sz]
+            translate [0, -ny * inch / sy, -nz * inch / sz]
+        }
+        specular 0.03  shininess 8  brilliance 1.1
+    }
+}
+
+// -- Weatherboard ----------------------------------------------------------------------------------
+
+// What goes on a gable.  Brick is what a wall is made of; a gable above it is boarded and painted,
+// which is both what houses do and a welcome change of texture where the wall stops.
+
+// A gable has to be a different color from the wall under it, and *which way* different depends on the
+// brick.  Painting all three a cream was measured at gallery distance and the yellow stock house came
+// back with a gable of 131, 127, 108 over a wall of 126, 126, 107 -- the boarding had simply vanished,
+// while the same cream over red brick stood 30 clear.  A pale brick has no room left above it, so its
+// boarding goes dark instead; the red keeps its off-white, and the grey a sage that sits 16 below it.
+// One dark, one light, one middling, and each one chosen against what it is over.
+//
+// The `color` casts are load-bearing.  A bare `[r, g, b]` is a tuple, and the `-> color` on the
+// declaration does not convert it -- so the shades below, which multiply this by a number, failed with
+// "cannot multiply items of type NumberTuple to those of type Double".  `Color * double` is perfectly
+// well supported; it was never a color.
+function BuildSidingTint(variant) -> color {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return color [0.32, 0.36, 0.31] }
+        case 1 { return color [0.78, 0.76, 0.72] }
+        default { return color [0.52, 0.56, 0.50] }
+    }
+}
+
+// A lapped board, drawn from its shadow rather than from its color.
+//
+// `linear Y gradient` is a sawtooth: it climbs cleanly from nought to one over each unit and starts
+// again, so one unit is one board and the color map is a cross-section of it.  Reading it from the
+// bottom of a board upwards is reading it the way the light does: the bottom edge stands proudest of
+// the wall and catches most, the face recedes as it goes up, and the last tenth is in the shadow of the
+// board lapped over it.  Then the value drops back to nought at the next edge, and that discontinuity
+// *is* the board line -- there is nothing to smooth out.
+//
+// The exposure is six inches, in the same inches the brick is laid in, so boards and courses are both
+// real sizes and a taller house gets more of each.  Where the bottom course falls is left alone; siding
+// is cut to the eave, so a part board at the wall top is what a house actually looks like.
+primitive BuildSidingOf(variant, height, sy) -> material {
+    board = height * 6 / 240
+
+    return material {
+        pigment linear Y gradient {
+            [0.00, color BuildSidingTint(variant),
+             0.55, color BuildSidingTint(variant) * 0.93,
+             0.86, color BuildSidingTint(variant) * 0.84,
+             0.90, color BuildSidingTint(variant) * 0.42,
+             1.00, color BuildSidingTint(variant) * 0.42]
+            scale [1, board / sy, 1]
+        }
+        specular 0.07  shininess 24
+    }
+}
+
+// The same paint with no boards in it, for the gable's sloping edges.  Those belong to the *diamond*,
+// which is turned a quarter, so a pattern read in its space would run its boards at forty-five degrees
+// -- the one place in the gable where the boarded material would be wrong.  They are slivers under the
+// roof, so flat paint is all they need and all they should have.
+primitive BuildSidingFlatOf(variant) -> material {
+    return material {
+        pigment BuildSidingTint(variant)
+        specular 0.07  shininess 24
     }
 }
 
@@ -98,6 +248,28 @@ primitive BuildWindow(wide, tall, deep) -> group {
                translate Y -tall * 1.10 }
         cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X -wide * 1.10 }
         cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X wide * 1.10 }
+    }
+}
+
+// A doorway: the leaf itself, a surround standing proud of it on three sides, a head across the top
+// and a step at the foot.  The proportions echo `BuildWindow` on purpose -- a house whose door is
+// trimmed differently from its windows reads as two houses.
+primitive BuildDoorway(wide, tall, deep) -> group {
+    return group {
+        cube { material BuildDoor  scale [wide, tall, deep]  translate Z -deep * 0.5 }
+
+        // The surround: up both sides and across the head, standing out from the wall.
+        cube { material BuildTrim  scale [wide * 0.16, tall * 1.03, deep * 2.0]
+               translate X -wide * 1.14 }
+        cube { material BuildTrim  scale [wide * 0.16, tall * 1.03, deep * 2.0]
+               translate X wide * 1.14 }
+        cube { material BuildTrim  scale [wide * 1.42, tall * 0.055, deep * 2.4]
+               translate Y tall * 1.03 }
+
+        // The step, wider than the doorway and standing on the ground, which is what stops the door
+        // looking as though it opens onto a wall.
+        cube { material BuildTrim  scale [wide * 1.55, tall * 0.04, deep * 6.0]
+               translate [0, -tall * 1.02, -deep * 3.0] }
     }
 }
 
@@ -150,22 +322,50 @@ primitive BuildHouseShell(height, season, variant, wide, deep) -> group {
         // How it meets the ground.
         cube { material BuildTrim  scale [wide * 1.04, height * 0.03, deep * 1.04]
                translate Y height * 0.03 }
-        cube { material BuildWallOf(variant)  scale [wide, walls, deep]
+        cube { material BuildBrickOf(variant, height, wide, walls, deep, 0, 0.85)
+               scale [wide, walls, deep]
                translate Y walls + height * 0.06 }
 
         group {
             // The end walls, cut as the top half of a diamond -- see the note at the head of this file.
+            //
+            // **The limiting box has to be thin, and it was not.**  The intersection's thickness in Z
+            // was set by the diamond's own uniform scale, wide * 0.7071, which for a house six units
+            // high is 1.44 either side: a gable 2.88 thick, centred just outside a face 1.80 out, so
+            // it stood 1.42 clear of the house at both ends.  What that looked like was a solid
+            // triangular prism jutting out over the upstairs windows -- and it was there from the
+            // first render of this library, unremarked, because a gable seen straight on looks the
+            // same whether it is a wall or a wedge.  It is only from an angle that it gives itself
+            // away.
+            //
+            // A gable is a wall, so the box now sets the thickness and the diamond only the shape.
             intersection {
                 cube { rotate Z 45  scale wide * 0.7071 }
-                cube { scale [wide * 1.2, wide, deep]  translate Y wide }
-                material BuildWallOf(variant)
-                translate Z deep * 0.99
+                cube { material BuildSidingOf(variant, height, wide)
+                       scale [wide * 1.2, wide, deep * 0.05]  translate Y wide }
+            // The boarding goes on the *limiting* cube and not on the intersection, because a
+            // pattern is worked out in the space of the leaf surface the ray actually met -- in an
+            // intersection, one of the children.  The triangular face is the thin cube's, so that is
+            // where the boards belong and that is whose scale has to be divided back out.  Writing a
+            // pattern on the intersection instead reads it in whichever child is showing, which is
+            // how the brick that used to be here came out two and a half times too long and twice
+            // too tall.
+                material BuildSidingFlatOf(variant)
+                translate Z deep * 0.96
             }
             intersection {
                 cube { rotate Z 45  scale wide * 0.7071 }
-                cube { scale [wide * 1.2, wide, deep]  translate Y wide }
-                material BuildWallOf(variant)
-                translate Z -deep * 0.99
+                cube { material BuildSidingOf(variant, height, wide)
+                       scale [wide * 1.2, wide, deep * 0.05]  translate Y wide }
+            // The boarding goes on the *limiting* cube and not on the intersection, because a
+            // pattern is worked out in the space of the leaf surface the ray actually met -- in an
+            // intersection, one of the children.  The triangular face is the thin cube's, so that is
+            // where the boards belong and that is whose scale has to be divided back out.  Writing a
+            // pattern on the intersection instead reads it in whichever child is showing, which is
+            // how the brick that used to be here came out two and a half times too long and twice
+            // too tall.
+                material BuildSidingFlatOf(variant)
+                translate Z -deep * 0.96
             }
 
             // The slopes, reaching past the wall so the eaves overhang and lay their shadow.
@@ -176,11 +376,56 @@ primitive BuildHouseShell(height, season, variant, wide, deep) -> group {
 
             object BuildRoofSnow(season, wide, deep, height)
 
+            // A gutter along each eave, and it earns its two boxes.  An eave is where a roof stops
+            // being a roof, and a bare edge there reads as card: what a real one has is a half-round
+            // running the length of it, standing a little below and a little out from the slope's
+            // lip, throwing a line of shadow onto the wall head.  The tube is a tube rather than a box
+            // because a gutter seen end-on is round, and the ends show wherever a house ends.
+            for eave in [0, 1] {
+                tube {
+                    material BuildTrim
+                    radius wide * 0.035 at [(eave - 0.5) * 2 * wide * 1.13, -height * 0.010, -deep * 1.14]
+                    radius wide * 0.035 at [(eave - 0.5) * 2 * wide * 1.13, -height * 0.010, deep * 1.14]
+                }
+            }
+
             translate Y walls * 2 + height * 0.06
         }
 
-        cube { material BuildRoofOf(variant)  scale [wide * 0.10, height * 0.085, wide * 0.10]
-               translate [wide * 0.42, walls * 2 + height * 0.30, -deep * 0.35] }
+        // **A chimney that reads as one.**  This was a cube of half-height 0.085 of the house standing
+        // at y = 0.30 of it, which put its top at 8.31 against a ridge at 8.22 -- so a tenth of it
+        // cleared the roof and the rest was buried in the slope.  From any distance it was a wart.
+        //
+        // A chimney is a stack and a cap: the stack wants to stand clear of the ridge by something
+        // like its own width, and the cap is a thin slab a little wider than the stack, which is what
+        // gives the top edge its line.  Set on the ridge rather than out on a slope, so it stands
+        // upright out of the roof instead of appearing to lean out of it.
+        group {
+            cube { material BuildChimney  scale [wide * 0.115, height * 0.115, wide * 0.115]
+                   translate Y height * 0.115 }
+            cube { material BuildTrim  scale [wide * 0.145, height * 0.014, wide * 0.145]
+                   translate Y height * 0.238 }
+            translate [0, walls * 2 + height * 0.06 + wide * 0.72, -deep * 0.42]
+        }
+
+        // The downpipe: from the near-left eave to the ground, a hand's width off the wall.  One
+        // vertical line on a face otherwise made of horizontal courses, and the eye finds it at any
+        // distance -- which is why a street of houses without one reads as a model of a street.
+        tube {
+            material BuildTrim
+            radius wide * 0.026 at [-wide * 1.06, height * 0.02, -deep * 1.02]
+            radius wide * 0.026 at [-wide * 1.06, walls * 2 + height * 0.05, -deep * 1.02]
+        }
+
+        // The ridge cap: the strip of tile or lead that covers the join where two slopes meet.  It is
+        // a small thing that reads at any distance, because it is the one horizontal line on a roof
+        // otherwise made of two slopes going the other way.
+        // The apex sits at wide * 1.12 above the wall top, not wide * 1.0: each slope runs
+        // wide * 0.80 along its own 45 degrees from a centre at wide * 0.56, which reaches
+        // 0.56 + 0.80 * cos(45) = 1.13.  Set at 1.0 the cap was inside the roof and showed nothing.
+        cube { material BuildTrim  scale [wide * 0.07, wide * 0.07, deep * 1.16]
+               rotate Z 45
+               translate [0, walls * 2 + height * 0.06 + wide * 1.12, 0] }
     }
 }
 
@@ -203,8 +448,17 @@ primitive House(height, season = 'summer', variant = 1) -> group {
             }
         }
 
-        cube { material BuildDoor  scale [wide * 0.11, walls * 0.30, deep * 0.03]
-               translate [0, walls * 0.36, -deep] }
+        // **The door was a flat panel laid on the wall**, which is what a door looks like in a
+        // drawing and not in a street.  What makes a doorway is the things around it: a surround
+        // standing proud of the render, a step to meet the ground, and a head over the top.  All
+        // three project, and projecting is the whole point -- each throws a small shadow, and it is
+        // those shadows rather than the colour that say a hole was made in a wall.
+        // Set so the foot of the door lands on top of the plinth, at height * 0.06, rather than
+        // 0.18 below it.  The door always started inside the plinth; nothing showed while it was a
+        // flat panel, but a step at the foot of it then had nowhere to sit and read as a nub.
+        object BuildDoorway(wide * 0.11, walls * 0.30, deep * 0.03) {
+            translate [0, walls * 0.30 + height * 0.06, -deep]
+        }
 
         // A house set exactly square to the road is a house nobody built.
         rotate Y (random(variant, 61) - 0.5) * 7
