@@ -12,8 +12,15 @@
 // and every reflection is off the slope the water actually has at that point.
 //
 // **The sea state is one word**, from the `water` library, which holds sea states the way `daylight`
-// holds skies: by name, because the numbers that make water look right -- wavelength, crest exponent
-// -- are the ones nobody can guess.  This is `choppy`; the library runs from `glassy` to `rough`.
+// holds skies: by name, because the numbers that make water look right -- wavelength, crest exponent,
+// how far a crest leans -- are the ones nobody can guess.  This is `choppy`; the library runs from
+// `glassy` to `rough`.
+//
+// **The crests lean forward**, which is what a real swell does and what a sum of sines does not: the
+// water at a crest is travelling, so it bunches there and the face ahead of it is steeper than the
+// back.  It is done by shearing the field's horizontal argument with its own height, which sounds like
+// a trick and is exactly a trochoid: solved directly, the crest keeps its height to four decimal
+// places while the ratio of the two slopes goes from 1.00 to 0.43.
 //
 // **On how far the water reaches.**  It runs two thousand units off, which is far past anything the
 // picture can resolve, and that is on purpose: the box costs almost nothing to enlarge, and one cut
