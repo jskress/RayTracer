@@ -797,7 +797,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--camera` | The [camera](cameras.md#placing-a-camera) to render with, when the scene has more than one. |
 | `-w`, `--width` | Image width; otherwise the scene's, otherwise 800. |
 | `-h`, `--height` | Image height; otherwise the scene's, otherwise 600. |
-| `-a`, `--antialias` | The [anti-aliasing](context.md#anti-aliasing) to apply. |
+| `-a`, `--antialias` | The [anti-aliasing](context.md#anti-aliasing) to apply: `off`, or `adaptive:depth`, or `adaptive:depth:threshold`. |
 | `-g`, `--gamma` | The [gamma](context.md#gamma) to correct the output for. |
 | `--no-gamma` | Apply no gamma correction. |
 | `--no-shadows` | Turn shadows off everywhere. |

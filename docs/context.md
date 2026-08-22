@@ -123,7 +123,9 @@ to happen in a predictable order.
 
 Antialiasing is set from the command line rather than from the context block, with
 `-a`/`--antialias`; see
-[Command Line Options](getting-started.md#how-big-and-how-good).
+[Command Line Options](getting-started.md#how-big-and-how-good), which also covers the
+threshold — how far two samples within one pixel must disagree before the sampler looks
+closer, and the number to reach for when a detailed scene is taking too long.
 
 ### Image Size
 
