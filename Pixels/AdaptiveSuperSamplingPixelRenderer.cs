@@ -11,14 +11,22 @@ namespace RayTracer.Pixels;
 /// </summary>
 public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
 {
-    private const double DistanceThreshold = 0.1;
+    /// <summary>
+    /// How far a corner's color may sit from the center's before that corner is looked at more
+    /// closely.  A tenth was the only value this ever had, and it was written into the class where
+    /// nobody could reach it.
+    /// </summary>
+    internal const double DefaultThreshold = 0.1;
 
     private readonly int _maximumDepth;
+    private readonly double _threshold;
 
-    public AdaptiveSuperSamplingPixelRenderer(PixelToRayConverter converter, int maximumDepth)
+    public AdaptiveSuperSamplingPixelRenderer(
+        PixelToRayConverter converter, int maximumDepth, double threshold = DefaultThreshold)
         : base(converter)
     {
         _maximumDepth = maximumDepth;
+        _threshold = threshold;
     }
 
     /// <summary>
@@ -61,16 +69,16 @@ public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
 
             depth--;
 
-            if (center.Distance(topLeft) > DistanceThreshold)
+            if (center.Distance(topLeft) > _threshold)
                 topLeft = Evaluate(scene, x, y, cx - shift, cy - shift, nextShift, depth);
 
-            if (center.Distance(topRight) > DistanceThreshold)
+            if (center.Distance(topRight) > _threshold)
                 topRight = Evaluate(scene, x, y, cx + shift, cy - shift, nextShift, depth);
 
-            if (center.Distance(bottomLeft) > DistanceThreshold)
+            if (center.Distance(bottomLeft) > _threshold)
                 bottomLeft = Evaluate(scene, x, y, cx - shift, cy + shift, nextShift, depth);
 
-            if (center.Distance(bottomRight) > DistanceThreshold)
+            if (center.Distance(bottomRight) > _threshold)
                 bottomRight = Evaluate(scene, x, y, cx + shift, cy + shift, nextShift, depth);
         }
 

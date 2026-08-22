@@ -149,6 +149,27 @@ corner and looks closer.  This repeats down to the depth you allow.  A pixel in 
 of a flat expanse costs five rays; one on the edge of something costs more, which is where
 the extra rays are worth paying for.
 
+**"By enough to notice" is a number, and you may say what it is** — a third part after the
+depth, as `adaptive:3:0.35`.  It is how far apart two colors must be before the sampler
+subdivides, from just above nought to one, and it defaults to `0.1`.
+
+That default is cautious, and on a scene with a lot of fine detail it is worth raising.
+Measured on a sea of isosurface waves at 300×225:
+
+| | time | samples per pixel | difference from `0.1` |
+| --- | --- | --- | --- |
+| `adaptive:3` | 3m 18s | 16.86 | — |
+| `adaptive:3:0.2` | 2m 06s | 10.86 | mean 0.14/255, 0.11% of pixels by more than 8 |
+| `adaptive:3:0.35` | 1m 30s | 7.83 | mean 0.24/255, 0.35% of pixels by more than 8 |
+
+Two and a fifth times faster for a mean difference of a quarter of one level in 255, on a
+scene where the two pictures cannot be told apart side by side.  The dial is worth knowing
+about before waiting out a long render at the default.
+
+Raise it too far and anti-aliasing quietly stops happening: past `1` no two colors can differ
+enough to subdivide at all, which is why anything above that is refused rather than accepted
+and ignored.
+
 #### Color and light
 
 | Option | What it does |
