@@ -1402,4 +1402,125 @@ public class TestShippedLibraries
             Console.SetOut(was);
         }
     }
+    /// <summary>
+    /// What the trains library holds out, written down here rather than read out of the library, so
+    /// that a renamed primitive fails a test rather than quietly stopping being offered.
+    /// </summary>
+    private static readonly string[] RollingStock = ["Locomotive", "Tender"];
+
+    [TestMethod]
+    public void TestEveryPieceOfRollingStockBuilds()
+    {
+        // A library's primitives are not covered by the sweep above, which finds names by looking for
+        // assignments -- a primitive is declared, not assigned.  So each one is asked for by name and
+        // built, which is the only way a mistake inside one of them shows up as a test failure rather
+        // than as a locomotive nobody can render.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trains.igl"),
+            Path.Combine(_directory, "trains.igl"), true);
+
+        foreach (string piece in RollingStock)
+        foreach (string season in (string[]) ["summer", "winter"])
+            Assert.IsNull(Run(piece, season), $"{piece} should build in {season}");
+    }
+
+    [TestMethod]
+    public void TestATrackIsLaidToStandardGaugeWhateverLengthIsAskedFor()
+    {
+        // The gauge is the one number in this library that must not move with the size of anything,
+        // because an engine dropped onto a length of line has to fit it.  Two very different lengths
+        // of track are laid and the rails have to come out the same distance apart in both.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trains.igl"),
+            Path.Combine(_directory, "trains.igl"), true);
+
+        foreach (int length in (int[]) [12, 90])
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            // Looking straight down the rails from above, so the two bright heads are the only thing
+            // in the picture and their spacing can be measured off it.
+            File.WriteAllText(scene, $$"""
+                import 'trains' { Track }
+                context { angles are degrees  no gamma }
+                camera { location [0, 9, 0]  look at [0, 0, 0]  up [1, 0, 0]  field of view 30 }
+                point light { location [0, 14, 0] }
+                background [0, 0, 0]
+                object Track({{length}})
+                """);
+
+            Assert.IsNull(Render(scene), $"a track of {length} should lay");
+
+            Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+
+            // Each column is summed down the whole picture rather than sampled on one row, and the
+            // brightest column in each half is taken as that rail.  Sampling a single row and calling
+            // everything above a threshold "rail" does not work: the ballast comes close enough to the
+            // threshold to be caught by it, and where the sleepers fall depends on how many there are,
+            // so the same gauge measured 11 pixels at one length and 26 at another.  A rail runs the
+            // whole height of this picture and nothing else does, so a column total tells them apart
+            // with room to spare.
+            int half = picture.Width / 2;
+            int left = BrightestColumn(picture, 0, half);
+            int right = BrightestColumn(picture, half, picture.Width);
+
+            int measured = right - left;
+            int expected = _gauge ?? (_gauge = measured).Value;
+
+            Assert.IsTrue(Math.Abs(measured - expected) <= 1,
+                $"a track of {length} measured {measured} pixels between the rails where the one " +
+                $"before it measured {expected} -- the gauge is moving with the length");
+        }
+    }
+
+    private int? _gauge;
+
+    /// <summary>
+    /// Finds the brightest column of a picture over a range of it, by total rather than by any one
+    /// pixel, so that what is being looked for has to be bright all the way down.
+    /// </summary>
+    private static int BrightestColumn(Canvas picture, int from, int to)
+    {
+        int best = from;
+        double most = -1;
+
+        for (int x = from; x < to; x++)
+        {
+            double total = 0;
+
+            for (int y = 0; y < picture.Height; y++)
+                total += picture.GetPixel(x, y).Red;
+
+            if (total > most)
+            {
+                most = total;
+                best = x;
+            }
+        }
+
+        Assert.IsTrue(most > 0, "this picture has nothing in it at all");
+
+        return best;
+    }
+
+    /// <summary>
+    /// Builds one piece of rolling stock and hands back whatever stopped it.
+    /// </summary>
+    private string Run(string piece, string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'trains' { {{piece}}, Track }
+            context { angles are degrees  no gamma }
+            camera { location [14, 6, -18]  look at [0, 2, 0]  field of view 46 }
+            point light { location [-12, 16, -20] }
+            background [0.5, 0.6, 0.8]
+            object Track(30)
+            object {{piece}}(11.6, '{{season}}')
+            """);
+
+        return Render(scene);
+    }
+
 }

@@ -1,0 +1,830 @@
+// Something to put on rails, and the rails to put it on.
+//
+//     import 'trains' { Locomotive, Tender, Track }
+//
+//     object Track(60)
+//     object Locomotive(11.6)
+//     object Tender(8.4) { translate X -10.2 }
+//
+// | `Locomotive` | A GWR 4-6-0: tapered boiler, copper-capped chimney, three coupled drivers on rods. |
+// | `Tender`     | The six-wheeled tender that goes behind it, coal heaped above the coping. |
+// | `Track`      | A length of line: rails on sleepers on ballast, at standard gauge. |
+//
+// **The first number is a length**, as it is for the road vehicles and for the same reason -- an engine
+// is described by how long it is, not how tall.  The other two mean what they mean everywhere, **what
+// time of year** and **which one of that kind**, and only the length is required.
+//
+// **These face +X**, like the road vehicles, so an engine runs to the right in a camera looking the
+// usual way and a line laid left to right needs no turning.
+//
+// **Rail top is y = 0.**  Everything the engine is made of is measured up from the rail it stands on,
+// and the ballast and sleepers hang below.  That means an engine and a length of track drop into a
+// scene at the same origin and simply fit, and it means a `plane` at y = 0 is the wrong floor for a
+// railway -- put the ground a little lower and let the ballast stand out of it.
+//
+// -- What it is a model of --------------------------------------------------------------------------
+//
+// A Great Western 4900 Class "Hall", which is to say 5972 *Olton Hall* in the crimson it was painted
+// for the films, with the nameplates it wears there.  The dimensions below are the prototype's, to the
+// nearest fraction that matters: six-foot drivers, a coupled wheelbase of fifteen feet six, standard
+// gauge, and thirteen feet from rail to the top of the chimney.
+//
+// They are written in **meters**, and the trick that lets them be is the same one the brick in
+// `buildings` uses with inches: one line fixes how long a meter is for this engine, and everything
+// after it is a real measurement rather than a fraction of a fraction.  Change the length and the
+// engine stays in proportion because every number is still that many meters.
+//
+// -- What makes a box into a locomotive ------------------------------------------------------------
+//
+// The other libraries each ask this and get a different answer.  Here there are five, and the first
+// two are worth more than the rest together.
+//
+// **Spokes.**  A locomotive wheel is mostly air, and a solid disc reads as a toy at any size.  A rim
+// is a `difference` of two cylinders, and the spokes are a `for` loop of thin bars turned about the
+// axis -- twenty of them on a driver.  What this buys is not only the wheel: it is the *shadow*, which
+// arrives striped, and the daylight that comes through the frames under the boiler.
+//
+// **Rods.**  Spoked wheels alone still read as a cart.  What says *engine* is the coupling rod tying
+// all three drivers together and the main rod reaching back from the cylinder, because those are the
+// only parts whose whole purpose is that the thing moves.  They are `tube`s -- two points and a radius,
+// no angles to work out -- flattened along Z into bars, since a rod is forged flat and a round one
+// reads as plumbing.
+//
+// **A boiler that tapers.**  This is the Great Western signature and it is nearly free: one `lathe`
+// turns the smokebox, the shoulder behind it and the coned barrel as a single revolved profile.  A
+// parallel boiler is a tube; a coned one is a locomotive.
+//
+// **No dome.**  Almost every other engine has a steam dome standing up on the barrel, and a GWR taper
+// boiler does not -- the regulator is in the smokebox.  Leaving it off is the sort of absence that only
+// works if it is deliberate: the boiler top runs clean from the chimney to the safety valve, and that
+// clean line is most of what makes the class recognisable.
+//
+// **Copper and brass, in two places only.**  The chimney cap and the safety valve bonnet.  Every other
+// bright thing on the engine is lining, and lining is thin.  Put polish anywhere else and it stops
+// looking like a locomotive and starts looking like a fairground ride.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Train` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive in your scene whether
+// you asked for them or not.
+
+// -- What an engine is made of ---------------------------------------------------------------------
+
+// Crimson lake, and glossy, for the reason the road vehicles are: the highlight travelling along a
+// boiler is most of what says cold wet metal.  The ambient is set down on purpose -- left at the
+// default, locomotive black comes back as a mid grey and the crimson as a dusty pink, which is the
+// trap `daylight`'s notes describe.
+TrainCrimson = material {
+    pigment [0.295, 0.048, 0.052]
+    specular 0.62  shininess 150  reflective 0.13  ambient 0.055  brilliance 1.25
+}
+TrainBlack = material {
+    pigment [0.038, 0.038, 0.042]
+    specular 0.55  shininess 170  reflective 0.11  ambient 0.035  brilliance 1.3
+}
+// The smokebox and chimney live in the fire's draught and never hold a shine the boiler does.
+TrainSmokebox = material {
+    pigment [0.052, 0.050, 0.048]
+    specular 0.22  shininess 60  ambient 0.040
+}
+TrainCopper = material {
+    pigment [0.55, 0.26, 0.12]
+    specular 0.90  shininess 240  reflective 0.34  ambient 0.06  brilliance 1.6
+}
+TrainBrass = material {
+    pigment [0.60, 0.47, 0.15]
+    specular 0.88  shininess 220  reflective 0.30  ambient 0.06  brilliance 1.55
+}
+// The lining, and the buffer beam it also serves.
+TrainGold = material {
+    pigment [0.72, 0.58, 0.22]  specular 0.70  shininess 160  reflective 0.16  ambient 0.07
+}
+TrainSteel = material {
+    pigment [0.30, 0.31, 0.33]  specular 0.60  shininess 130  reflective 0.18  ambient 0.05
+}
+// A tire is wiped bright by the rail it runs on; the wheel behind it is not.
+TrainTire = material {
+    pigment [0.255, 0.262, 0.275]  specular 0.72  shininess 180  reflective 0.24  ambient 0.05
+}
+TrainGlass = material {
+    pigment [0.07, 0.09, 0.11]  specular 0.60  shininess 190  reflective 0.26  ambient 0.04
+}
+TrainSnowCap = material {
+    pigment [0.90, 0.92, 0.96]  specular 0.28  shininess 55  ambient 0.10
+}
+TrainCoal = material {
+    pigment granite with seed 11 {
+        [0.06, color [0.030, 0.029, 0.032],
+         0.18, color [0.052, 0.050, 0.055],
+         0.30, color [0.082, 0.079, 0.086],
+         0.44, color [0.125, 0.121, 0.130]]
+        scale 0.16
+    }
+    specular 0.34  shininess 44  ambient 0.035  brilliance 1.4
+}
+
+// -- What a railway is made of ---------------------------------------------------------------------
+
+// A rail head is polished by traffic and the web below it is rusted, which is the whole reason a line
+// reads as a line from a distance: two bright threads on a dark bed.
+TrainRailHead = material {
+    pigment [0.52, 0.53, 0.55]  specular 0.80  shininess 200  reflective 0.30  ambient 0.06
+}
+TrainRailWeb = material {
+    pigment [0.155, 0.112, 0.090]  specular 0.10  shininess 20  ambient 0.055
+}
+TrainSleeper = material {
+    pigment crackle with seed 3 {
+        turbulence 0.22
+        [0.02, color [0.070, 0.056, 0.044],
+         0.16, color [0.098, 0.079, 0.061],
+         0.34, color [0.128, 0.104, 0.080],
+         0.62, color [0.158, 0.129, 0.100]]
+        scale 0.09
+    }
+    specular 0.05  shininess 10  ambient 0.06
+}
+// Ballast is *stones*, and that wants a pattern with cells in it rather than a noise.  `crackle` is
+// nearest, but which way round to map it took getting wrong first.
+//
+// Crackle is nought at its seed points and climbs towards the cell walls, so the seeds are the middles
+// of the stones and the walls are the gaps between them.  Mapped dark-to-light in the obvious direction
+// that paints the *gaps* pale, and a bed of crushed rock came out as a white net drawn over dark
+// ground -- a mosaic, not gravel.  It wants the other way about: the seeds are stone faces catching the
+// light and the walls are the shadows between, so the map runs pale at nought and dark at the top.
+// A little turbulence then takes the geometric regularity out of the cell walls.
+//
+// **The stops are the percentiles, not an even spread over nought to one.**  Measured over sixty
+// thousand points, crackle runs 0 to 1 but its median is 0.158 and only a hundredth of it is above
+// 0.666 -- so an even map leaves practically the whole bed in its darkest two tones and the other three
+// never appear.  These are the 10th, 25th, 50th, 75th and 90th, so each tone gets about the same share
+// of the surface.  This is the same trap the rock library fell into and the reason it is worth measuring
+// a pattern before mapping it.
+TrainBallast = material {
+    pigment crackle with seed 5 {
+        turbulence 0.18
+        [0.026, color [0.205, 0.196, 0.182],
+         0.069, color [0.168, 0.160, 0.148],
+         0.158, color [0.132, 0.126, 0.117],
+         0.287, color [0.098, 0.093, 0.086],
+         0.425, color [0.064, 0.061, 0.057]]
+        scale 0.032
+    }
+    // Darker than it looks like it should be, for the reason the rock library records: crushed stone
+    // returns about a fifth of the light it gets, and a grey mixed brighter than that stops reading as
+    // stone and starts reading as pale plastic.  The first version of this map topped out at 0.300 and
+    // came back looking like exposed-aggregate paving.
+    specular 0.04  shininess 9  ambient 0.06  brilliance 1.25
+}
+
+// A wheel's paint has to arrive as a *number*, not as a material.  Variables in this language are
+// typed and a primitive's parameters carry numbers, strings, colors and vectors -- hand one a material
+// and it reports that the name is "not defined or is not the proper type", which is a confusing way to
+// be told that materials do not travel that way.  So the choice is made here, on the far side of the
+// call, exactly as `buildings` does it for its walls.
+primitive TrainPaintOf(which) -> material {
+    switch (floor(which)) {
+        case 0 { return material TrainCrimson }
+        default { return material TrainBlack }
+    }
+}
+
+// -- A wheel ---------------------------------------------------------------------------------------
+
+// Built with its axis up Y so the spokes fan out in the XZ plane, where one `rotate Y` per spoke is all
+// the arithmetic there is, and laid over a quarter turn at the end so the axis runs across the track.
+//
+// `half` is a half-width, as it is for the road vehicles' wheels.
+primitive TrainWheel(radius, half, spokes, paint) -> group {
+    return group {
+        // The tire is a ring, not a disc.  This is the whole trick, and everything else hangs off it.
+        difference {
+            cylinder { min Y -1  max Y 1  scale [radius, half, radius] }
+            cylinder { min Y -1.4  max Y 1.4  scale [radius * 0.885, half, radius * 0.885] }
+            material TrainTire
+        }
+        // The boss, wide enough to swallow the inner ends of the spokes.
+        cylinder { material TrainPaintOf(paint)  min Y -1  max Y 1
+                   scale [radius * 0.215, half * 1.2, radius * 0.215] }
+        for spoke in [1, spokes] {
+            cube { material TrainPaintOf(paint)
+                   scale [radius * 0.36, half * 0.34, radius * 0.036]
+                   translate X radius * 0.545
+                   rotate Y (spoke * 360 / spokes) }
+        }
+        rotate X 90
+    }
+}
+
+// A driver is a wheel with a crank pin standing out of it, caught at the angle the rods are frozen in.
+//
+// The pin's offset is given as two numbers rather than as a radius and an angle, and that is on purpose:
+// transforms in this library are written in degrees, `cos` and `sin` take radians, and a library that
+// mixed the two would work or not work depending on a `context` block in someone else's scene.  Two
+// offsets need no trigonometry, and the caller works them out once for all three axles -- which it has
+// to do anyway, since a coupling rod is only straight if every pin is at the same angle.
+primitive TrainDriver(radius, half, pinX, pinY, paint) -> group {
+    return group {
+        object TrainWheel(radius, half, 20, paint)
+        cylinder {
+            material TrainSteel
+            min Y -1  max Y 1
+            scale [radius * 0.062, half * 2.6, radius * 0.062]
+            rotate X 90
+            translate [pinX, pinY, 0]
+        }
+    }
+}
+
+// -- A rod -----------------------------------------------------------------------------------------
+
+// Two points and a thickness.  A `tube` needs no angle worked out for it, and flattening it along Z
+// afterwards turns a pipe into the forged bar a rod actually is.
+primitive TrainRod(x1, y1, x2, y2, wide, thick, z) -> tube {
+    return tube {
+        material TrainSteel
+        radius wide at [x1, y1, 0]
+        radius wide at [x2, y2, 0]
+        scale [1, 1, thick / wide]
+        translate Z z
+    }
+}
+
+// -- Snow ------------------------------------------------------------------------------------------
+
+// Winter on a locomotive is not winter on a house, and this is the one place the season had to be
+// thought about rather than copied.  **A boiler in steam is hot**, so nothing lies on the barrel, the
+// smokebox or the chimney -- an engine caught in snow with a white boiler is an engine that is cold and
+// out of use, which is not what a scene wants.  What does carry snow is everything the fire never
+// reaches: the buffer beam, the front platform, the cab roof and the tender.
+primitive TrainSnowOn(season, alongHalf, acrossHalf, where) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                superellipsoid {
+                    material TrainSnowCap
+                    east 0.35  north 0.30
+                    scale [alongHalf, alongHalf * 0.055, acrossHalf]
+                    translate where
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- A locomotive ----------------------------------------------------------------------------------
+
+primitive Locomotive(length, season = 'summer', variant = 1) -> group {
+    // One line fixes how long a meter is, and every number after it is a real measurement.  An engine
+    // over buffers is thirty-eight feet.
+    m = length / 11.6
+
+    driverR = 0.914 * m         // six-foot wheels
+    driverHalf = 0.055 * m
+    bogieR = 0.457 * m
+    wheelZ = 0.752 * m          // standard gauge, plus the tire
+    boilerY = 2.59 * m          // boiler centre above the rail
+    plateY = 1.55 * m           // the running plate
+    rodZ = 0.88 * m
+    cylZ = 0.92 * m
+    cylY = 1.30 * m
+
+    // The crank pins, all three at the same angle so the coupling rod between them is straight.  A
+    // 0.34 m crank caught forty degrees past bottom dead centre.
+    pinX = 0.260 * m
+    pinY = 0.219 * m
+
+    axle1 = 4.35 * m
+    axle2 = 6.56 * m
+    axle3 = 9.07 * m
+
+    return group {
+        // -- The boiler.  One lathe turns the smokebox, the shoulder behind it and the coned barrel,
+        // -- which is the Great Western signature and the reason this is a revolved profile rather
+        // -- than a stack of cylinders.  It is turned about Y and laid along X afterwards.
+        // The smokebox, which is never painted -- it lives in the fire's draught.
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.830, 0
+                line to 0.830, 1.85
+                line to 0, 1.85
+            }
+            material TrainSmokebox
+            scale m
+            rotate Z -90
+            translate [1.35 * m, boilerY, 0]
+        }
+        // The barrel, and this is the one shape the whole engine is recognised by: it cones outwards
+        // towards the firebox.  A first attempt sleeved a straight crimson cylinder over a tapered
+        // lathe, which threw the taper away and left a sausage; the paint has to be a turning of its
+        // own so it keeps the cone.
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.745, 0
+                line to 0.845, 4.25
+                line to 0, 4.25
+            }
+            material TrainCrimson
+            scale m
+            rotate Z -90
+            translate [3.20 * m, boilerY, 0]
+        }
+        // Boiler bands, each sized for the barrel where it actually sits -- a band of one radius on a
+        // coned barrel is buried at one end and floating at the other.
+        for band in [0, 3] {
+            torus {
+                radii (0.757 + band * 0.0259) * m, 0.019 * m
+                material TrainGold
+                rotate X 90
+                translate [(3.75 + band * 1.10) * m, boilerY, 0]
+            }
+        }
+        // The smokebox door: a dish standing out of the front, with a brass dart across it.
+        sphere {
+            material TrainSmokebox
+            scale [0.30 * m, 0.775 * m, 0.775 * m]
+            translate [1.35 * m, boilerY, 0]
+        }
+        cylinder {
+            material TrainBrass
+            min Y -1  max Y 1
+            scale [0.055 * m, 0.42 * m, 0.055 * m]
+            translate [1.06 * m, boilerY, 0]
+        }
+        // The cross bar of the dart lies *across* the door.  Turned about Z it pointed straight out of
+        // the smokebox instead, which from the side read as a stub and from the front as nothing.
+        cylinder {
+            material TrainBrass  min Y -1  max Y 1
+            scale [0.042 * m, 0.235 * m, 0.042 * m]
+            rotate X 90
+            translate [1.10 * m, boilerY + 0.10 * m, 0]
+        }
+
+        // -- The chimney, in two turnings: a cast one and the copper cap that is the other half of
+        // -- what makes a Great Western engine one.
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.345, 0
+                line to 0.278, 0.09
+                line to 0.268, 0.40
+                line to 0, 0.40
+            }
+            material TrainSmokebox
+            scale m
+            translate [2.05 * m, 3.28 * m, 0]
+        }
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.272, 0
+                line to 0.360, 0.055
+                line to 0.364, 0.175
+                line to 0.292, 0.205
+                line to 0.232, 0.06
+                line to 0, 0.03
+            }
+            material TrainCopper
+            scale m
+            translate [2.05 * m, 3.68 * m, 0]
+        }
+
+        // -- The firebox: Belpaire, so squared off on top and wider than the barrel it follows.
+        superellipsoid {
+            material TrainCrimson
+            east 0.24  north 0.13
+            scale [1.075 * m, 0.855 * m, 0.915 * m]
+            translate [8.525 * m, 2.705 * m, 0]
+        }
+        // The brass safety valve bonnet, the only other bright thing on the engine.
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.262, 0
+                line to 0.228, 0.10
+                line to 0.152, 0.315
+                quad 0.098, 0.350 to 0, 0.350
+            }
+            material TrainBrass
+            scale m
+            translate [8.95 * m, 3.44 * m, 0]
+        }
+        // The top feed, which is where a dome would be on anything else.
+        superellipsoid {
+            material TrainCrimson
+            east 0.5  north 0.45
+            scale [0.30 * m, 0.115 * m, 0.42 * m]
+            translate [4.55 * m, 3.38 * m, 0]
+        }
+        // The whistles, behind the safety valve where a Great Western engine carries them.
+        for whistle in [0, 1] {
+            cylinder {
+                material TrainBrass  min Y -1  max Y 1
+                scale [0.036 * m, 0.082 * m, 0.036 * m]
+                translate [(9.28 + whistle * 0.15) * m, 3.575 * m, (0.10 - whistle * 0.20) * m]
+            }
+        }
+
+        // -- The handrails.  A `tube` takes as many points as it likes, so this one follows the boiler
+        // -- rather than ignoring it: in towards the barrel's narrow front and out again towards the
+        // -- firebox, which is what a handrail on a coned boiler actually does.  Each z below is the
+        // -- boiler's own half-width at that station, at the height the rail runs.
+        for side in [0, 1] {
+            tube {
+                material TrainSteel
+                // The kink at the barrel's narrow point is the whole idea, so it is declared rather
+                // than smoothed -- a tube refuses a bend it was not told about, which is a kindness.
+                discontinuous
+                radius 0.024 * m at [1.45 * m, boilerY + 0.42 * m,
+                                     (0.729 - side * 1.458) * m]
+                radius 0.024 * m at [3.25 * m, boilerY + 0.42 * m,
+                                     (0.628 - side * 1.256) * m]
+                radius 0.024 * m at [7.40 * m, boilerY + 0.42 * m,
+                                     (0.746 - side * 1.492) * m]
+            }
+        }
+
+        // -- The cab.  A solid shell with its openings cut out of it, which is enough: nothing that
+        // -- sees the inside of a cab from outside a scene will see it well enough to want more.
+        difference {
+            superellipsoid {
+                east 0.14  north 0.14
+                scale [0.850 * m, 1.135 * m, 1.295 * m]
+            }
+            // The side windows.
+            cube { scale [0.355 * m, 0.310 * m, 1.4 * m]  translate [-0.19 * m, 0.395 * m, 0] }
+            // The cut-away behind them, which is how a cab is got into.
+            cube { scale [0.28 * m, 0.46 * m, 1.4 * m]  translate [0.76 * m, -0.34 * m, 0] }
+            material TrainCrimson
+            translate [10.45 * m, 2.685 * m, 0]
+        }
+        // Glass in the side openings, set back from the sheet so the opening has a depth to it.
+        for side in [0, 1] {
+            cube {
+                material TrainGlass
+                scale [0.340 * m, 0.295 * m, 0.02 * m]
+                translate [10.26 * m, 3.080 * m, (1.22 - side * 2.44) * m]
+            }
+        }
+        // The roof, gently crowned and a little wider than the cab, for the reason the road vehicles
+        // cap their glass: a roof narrower than what it covers reads as a lid set on top.
+        superellipsoid {
+            material TrainCrimson
+            east 0.22  north 0.85
+            scale [0.940 * m, 0.105 * m, 1.415 * m]
+            translate [10.44 * m, 3.80 * m, 0]
+        }
+
+        // -- The running plate, with a valance under its edge to give it a shadow line.
+        cube {
+            material TrainBlack
+            scale [4.90 * m, 0.030 * m, 1.130 * m]
+            translate [5.55 * m, plateY, 0]
+        }
+        for side in [0, 1] {
+            cube {
+                material TrainCrimson
+                scale [4.90 * m, 0.085 * m, 0.022 * m]
+                translate [5.55 * m, plateY - 0.085 * m, (1.13 - side * 2.26) * m]
+            }
+        }
+        // The front platform, lower and narrower, over the bogie -- and the ramp down to it.  A plate
+        // that runs dead level from the buffer beam to the cab is the single flattest thing about a
+        // model locomotive; the step down over the bogie is what gives the side a line to follow.
+        cube {
+            material TrainBlack
+            scale [0.575 * m, 0.030 * m, 0.900 * m]
+            translate [0.725 * m, 1.30 * m, 0]
+        }
+        cube {
+            material TrainBlack
+            scale [0.395 * m, 0.030 * m, 0.900 * m]
+            rotate Z 18.4
+            translate [1.675 * m, 1.425 * m, 0]
+        }
+
+        // -- The splashers.  Each is an arch cut from a cylinder about its own axle, reaching from the
+        // -- plate to just over the tire -- the top fifth of the wheel and no more, so the spokes stay
+        // -- the thing you look at.  The middle one carries the nameplate.
+        for wheel in [0, 2] {
+            for side in [0, 1] {
+                intersection {
+                    // The quarter turn is the *cylinder's*, and putting it on the intersection instead
+                    // is why there were no splashers at all at first: rotating the whole thing turned
+                    // the clipping cube's "above the axle" into "off to one side", and an arch clipped
+                    // sideways is nothing.
+                    cylinder { min Y -1  max Y 1
+                               scale [driverR * 1.075, 0.150 * m, driverR * 1.075]
+                               rotate X 90 }
+                    cube { scale [driverR * 1.2, 0.215 * m, 0.4 * m]
+                           translate Y (plateY - driverR + 0.215 * m) }
+                    material TrainCrimson
+                    translate [axle1 + wheel * 2.36 * m, driverR, (0.845 - side * 1.69) * m]
+                }
+            }
+        }
+        // The nameplate: brass on the middle splasher, which is where 5972 carries hers.
+        for side in [0, 1] {
+            cube {
+                material TrainBrass
+                scale [0.62 * m, 0.088 * m, 0.016 * m]
+                translate [axle2, 1.79 * m, (0.995 - side * 1.99) * m]
+            }
+        }
+
+        // -- The wheels.  Three coupled axles and a four-wheel bogie under the front.
+        for side in [0, 1] {
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+                { translate [axle1, driverR, (wheelZ - side * 2 * wheelZ)] }
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+                { translate [axle2, driverR, (wheelZ - side * 2 * wheelZ)] }
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+                { translate [axle3, driverR, (wheelZ - side * 2 * wheelZ)] }
+            object TrainWheel(bogieR, 0.048 * m, 12, 1)
+                { translate [1.30 * m, bogieR, (wheelZ - side * 2 * wheelZ)] }
+            object TrainWheel(bogieR, 0.048 * m, 12, 1)
+                { translate [2.35 * m, bogieR, (wheelZ - side * 2 * wheelZ)] }
+        }
+        // The frames the drivers hang in, which is what daylight comes through under a boiler.
+        for side in [0, 1] {
+            cube {
+                material TrainBlack
+                scale [3.30 * m, 0.36 * m, 0.026 * m]
+                translate [6.70 * m, 0.86 * m, (0.640 - side * 1.28) * m]
+            }
+        }
+        // The bogie frame.
+        for side in [0, 1] {
+            cube {
+                material TrainBlack
+                scale [0.86 * m, 0.165 * m, 0.032 * m]
+                translate [1.825 * m, bogieR + 0.06 * m, (0.640 - side * 1.28) * m]
+            }
+        }
+
+        // -- The motion.  Outside cylinders, a piston rod back to the crosshead, then the main rod
+        // -- reaching the middle axle, and the coupling rod tying all three together.
+        for side in [0, 1] {
+            superellipsoid {
+                material TrainBlack
+                east 0.28  north 0.26
+                scale [0.545 * m, 0.375 * m, 0.350 * m]
+                translate [2.62 * m, cylY, (cylZ - side * 2 * cylZ)]
+            }
+            // The cover on the front of it, which is what tells you it is a cylinder and not a box.
+            cylinder {
+                material TrainBlack  min Y -1  max Y 1
+                scale [0.290 * m, 0.045 * m, 0.290 * m]
+                rotate Z 90
+                translate [3.15 * m, cylY, (cylZ - side * 2 * cylZ)]
+            }
+            // The piston rod, and the crosshead it drives -- without which the main rod comes out of
+            // nowhere.
+            cylinder {
+                material TrainSteel  min Y -1  max Y 1
+                scale [0.048 * m, 0.470 * m, 0.048 * m]
+                rotate Z 90
+                translate [3.62 * m, cylY, (rodZ - side * 2 * rodZ)]
+            }
+            cube {
+                material TrainBlack
+                scale [0.145 * m, 0.125 * m, 0.058 * m]
+                translate [4.10 * m, cylY, (rodZ - side * 2 * rodZ)]
+            }
+            // The slide bars the crosshead runs between.
+            for bar in [0, 1] {
+                cube {
+                    material TrainSteel
+                    scale [0.560 * m, 0.020 * m, 0.030 * m]
+                    translate [4.28 * m, cylY + (0.145 - bar * 0.290) * m,
+                               (rodZ - side * 2 * rodZ)]
+                }
+            }
+            // **The offset has to carry the side's sign with it.**  Written as
+            // `(rodZ - side * 2 * rodZ) + 0.06`, the outboard nudge moved the rod outboard on one
+            // side of the engine and inboard on the other, where it disappeared behind the wheel.
+            object TrainRod(4.10 * m, cylY, axle2 + pinX, driverR + pinY,
+                            0.078 * m, 0.038 * m,
+                            (rodZ + 0.062 * m) - side * 2 * (rodZ + 0.062 * m))
+            object TrainRod(axle1 + pinX, driverR + pinY, axle3 + pinX, driverR + pinY,
+                            0.072 * m, 0.034 * m, (rodZ - side * 2 * rodZ))
+        }
+
+        // -- The front end: a buffer beam, two buffers and a coupling hook.
+        cube {
+            material TrainGold
+            scale [0.070 * m, 0.190 * m, 1.100 * m]
+            translate [0.070 * m, 1.435 * m, 0]
+        }
+        for side in [0, 1] {
+            cylinder {
+                material TrainSteel  min Y -1  max Y 1
+                scale [0.075 * m, 0.145 * m, 0.075 * m]
+                rotate Z 90
+                translate [-0.075 * m, 1.435 * m, (0.850 - side * 1.70) * m]
+            }
+            cylinder {
+                material TrainSteel  min Y -1  max Y 1
+                scale [0.145 * m, 0.022 * m, 0.145 * m]
+                rotate Z 90
+                translate [-0.212 * m, 1.435 * m, (0.850 - side * 1.70) * m]
+            }
+        }
+        // The lamp irons and a lamp on the near one.
+        cube {
+            material TrainBlack
+            scale [0.090 * m, 0.105 * m, 0.090 * m]
+            translate [0.10 * m, 1.72 * m, 0]
+        }
+
+        // Snow lies where the fire never reaches, and nowhere else -- see the note above.
+        object TrainSnowOn(season, 0.575 * m, 0.900 * m, [0.725 * m, 1.330 * m, 0])
+        object TrainSnowOn(season, 0.880 * m, 1.345 * m, [10.42 * m, 3.905 * m, 0])
+
+        // Built nose-at-the-origin running towards +X in its own numbers, which puts the nose at the
+        // *left* once it is centred -- so it faced -X, the opposite of what this library promises and
+        // of what `vehicles` does.  Turning it end for end first is the fix; the engine is symmetric
+        // across Z so the turn costs nothing else.
+        rotate Y 180
+        translate X length * 0.5
+    }
+}
+
+// -- A tender --------------------------------------------------------------------------------------
+
+// A Collett four-thousand-gallon tender, which is what runs behind a Hall.  It is a simpler object than
+// the engine and gets its character from three things: the coping standing above the tank sides, the
+// coal heaped over the top of that, and the fact that it is the same crimson as the engine so the two
+// read as one machine rather than as a machine towing a box.
+primitive Tender(length, season = 'summer', variant = 1) -> group {
+    m = length / 8.05           // twenty-six feet six over buffers
+
+    wheelR = 0.572 * m
+    wheelZ = 0.752 * m
+    plateY = 1.24 * m
+
+    return group {
+        // The tank.
+        superellipsoid {
+            material TrainCrimson
+            east 0.13  north 0.13
+            scale [3.42 * m, 0.700 * m, 1.290 * m]
+            translate [3.86 * m, 1.955 * m, 0]
+        }
+        // The coping, standing above the tank on three sides -- open towards the engine, which is how
+        // the coal gets forward to the shovel.
+        for side in [0, 1] {
+            cube {
+                material TrainCrimson
+                scale [3.42 * m, 0.235 * m, 0.048 * m]
+                translate [3.86 * m, 2.890 * m, (1.242 - side * 2.484) * m]
+            }
+        }
+        cube {
+            material TrainCrimson
+            scale [0.048 * m, 0.235 * m, 1.290 * m]
+            translate [7.232 * m, 2.890 * m, 0]
+        }
+        // The coal, heaped above the coping and falling away towards the front.
+        superellipsoid {
+            material TrainCoal
+            east 0.75  north 0.62
+            scale [2.30 * m, 0.520 * m, 1.175 * m]
+            translate [4.62 * m, 2.940 * m, 0]
+        }
+        // Gold lining along the tank side, which is most of what the livery is.
+        for side in [0, 1] {
+            cube {
+                material TrainGold
+                scale [3.30 * m, 0.020 * m, 0.020 * m]
+                translate [3.86 * m, 2.320 * m, (1.300 - side * 2.600) * m]
+            }
+        }
+        // The frames and the running plate.
+        cube {
+            material TrainBlack
+            scale [3.60 * m, 0.032 * m, 1.320 * m]
+            translate [3.86 * m, plateY, 0]
+        }
+        for side in [0, 1] {
+            cube {
+                material TrainBlack
+                scale [3.30 * m, 0.235 * m, 0.028 * m]
+                translate [3.86 * m, 0.900 * m, (0.640 - side * 1.28) * m]
+            }
+        }
+        // Six wheels, plain-spoked and smaller than a driver.
+        for side in [0, 1] {
+            for axle in [0, 2] {
+                object TrainWheel(wheelR, 0.050 * m, 14, 0)
+                    { translate [(1.62 + axle * 2.12) * m, wheelR,
+                                 (wheelZ - side * 2 * wheelZ)] }
+            }
+        }
+        // A buffer beam at each end, since a tender is coupled at both.
+        for end in [0, 1] {
+            cube {
+                material TrainGold
+                scale [0.070 * m, 0.190 * m, 1.100 * m]
+                translate [(0.070 + end * 7.910) * m, 1.130 * m, 0]
+            }
+            for side in [0, 1] {
+                cylinder {
+                    material TrainSteel  min Y -1  max Y 1
+                    scale [0.075 * m, 0.145 * m, 0.075 * m]
+                    rotate Z 90
+                    translate [(-0.075 + end * 8.200) * m, 1.130 * m,
+                               (0.850 - side * 1.70) * m]
+                }
+            }
+        }
+
+        object TrainSnowOn(season, 2.30 * m, 1.175 * m, [4.62 * m, 3.470 * m, 0])
+
+        // Turned end for end for the engine's reason, which also puts this tender's open coping end
+        // towards +X -- the side the engine is on.
+        rotate Y 180
+        translate X length * 0.5
+    }
+}
+
+// -- A length of line ------------------------------------------------------------------------------
+
+// Rails on sleepers on ballast, at standard gauge, running along X with its middle at the origin.
+//
+// The `length` here is how much line you want, not the size of anything on it -- the gauge and the
+// sleeper spacing are fixed, because they are fixed on a real railway and because a locomotive dropped
+// on this has to fit it.  Rail top is y = 0, so the whole of it hangs below the datum the engine
+// stands on.
+//
+// **A rail is two colors, and that is the whole of why a line reads as a line.**  The head is wiped
+// bright by every wheel that passes and the web below it rusts, so from any distance a railway is two
+// bright threads on a dark bed.  Painted one color it disappears into the ballast.
+primitive Track(length, season = 'summer') -> group {
+    gauge = 1.435
+    sleepers = floor(length / 0.65)
+
+    return group {
+        for side in [0, 1] {
+            // The web, and the head standing on it.
+            cube {
+                material TrainRailWeb
+                scale [length * 0.5, 0.062, 0.021]
+                translate [0, -0.098, gauge * 0.5 - side * gauge]
+            }
+            cube {
+                material TrainRailHead
+                scale [length * 0.5, 0.018, 0.036]
+                translate [0, -0.018, gauge * 0.5 - side * gauge]
+            }
+            // The foot.
+            cube {
+                material TrainRailWeb
+                scale [length * 0.5, 0.014, 0.058]
+                translate [0, -0.174, gauge * 0.5 - side * gauge]
+            }
+        }
+        for sleeper in [0, sleepers] {
+            cube {
+                material TrainSleeper
+                scale [0.125, 0.063, 1.300]
+                translate [(sleeper - sleepers * 0.5) * 0.65, -0.251, 0]
+            }
+        }
+        // The ballast, as one extruded trapezoid: wide at the bottom, narrower at the top, and with the
+        // top two corners taken off by a `quad` each.  It began as two flattened cubes stacked one on
+        // the other, which gave a stepped profile no bed of stones has -- a real one is a heap, and a
+        // heap has sloping shoulders that round over where they meet the top.
+        //
+        // The path is written as (height, across) and the solid is given its length along Y, then laid
+        // down the track: an extrusion's path lies in XZ and its thickness runs up Y, so `rotate Z 90`
+        // is what turns "a cross-section a certain number of units thick" into "a bed a certain number
+        // of units long".
+        //
+        // **The top sits at -0.250, which leaves a sleeper about half proud of it.**  It began at
+        // -0.200, and a sleeper spans -0.314 to -0.188 -- so a tenth of its depth showed and the bed
+        // read as a slab with planks laid on it rather than as stone packed around them.  Half buried
+        // is about what a tamped bed looks like.  Lowering the bed is the right way round to fix that
+        // rather than raising the sleepers: rail top is y = 0 for the whole library, and lifting the
+        // sleepers would carry the rails, and therefore the engine, up with them.
+        extrusion {
+            path {
+                move to -0.640, -2.050
+                line to -0.640, 2.050
+                line to -0.337, 1.584
+                quad -0.250, 1.450 to -0.250, 1.290
+                line to -0.250, -1.290
+                quad -0.250, -1.450 to -0.337, -1.584
+                close
+            }
+            material TrainBallast
+            min Y -length * 0.5
+            max Y length * 0.5
+            rotate Z 90
+        }
+    }
+}

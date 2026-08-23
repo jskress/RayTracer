@@ -4,6 +4,8 @@
 //     import 'buildings'   { House, Row, Tower }
 //     import 'trees'       { Elm, Birch }
 //     import 'undergrowth' { Grass, Tuft }
+import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
+//     import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
 //
 // `a-street-at-the-edge-of-town` is about what turns a box into a *building*.  This one is the same
 // question asked of a vehicle, and the answer is a different four things -- which is worth saying,
@@ -57,14 +59,12 @@ camera {
     field of view 56
 }
 
-background physical sky {
-    sun elevation 34
-    sun azimuth 40
-    turbidity 3.0
-    brightness 3
-}
+// The azimuth is this scene's to give and the rest of the sky is the library's -- see `daylight` on why
+// those are different kinds of number.  40 puts the sun round on the near side of a street facing -Z,
+// which is what lights the frontages and the near flank of every vehicle on the road.
+background ClearAfternoonFrom(40)
 
-sky light { samples 32 }
+light ClearAfternoonLight
 
 // The verge.
 plane {

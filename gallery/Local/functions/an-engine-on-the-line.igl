@@ -1,0 +1,246 @@
+// A locomotive standing on a length of line, and nothing in the scene describing either.
+//
+//     import 'trains'      { Locomotive, Tender, Track }
+//     import 'trees'       { Oak, Birch, Fir }
+//     import 'undergrowth' { Grass, Tuft }
+import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
+//     import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
+//
+// This is the scene the `trains` library was written for, and it is worth saying what it is a test of.
+// The engine is a Great Western 4-6-0 -- 5972 *Olton Hall*, in the crimson she was painted for the
+// films -- and the two things that make her one are a boiler that cones outwards towards the firebox
+// and the fact that there is no steam dome standing on it.  Both are easy to miss and neither can be
+// faked with paint, so a picture of this engine is really a picture of one `lathe` and one absence.
+//
+// **The line is what makes it a railway.**  An engine on a green plane is a model on a table.  What
+// turns it into a place is entirely the stuff underneath: a bed of stones with sloping shoulders, wooden
+// sleepers half buried in it, and two rails whose heads are wiped bright by traffic while everything
+// below them rusts.  That last one does more at this distance than any detail on the engine -- from
+// here a railway *is* two bright threads on a dark bed, and painted one colour the whole line
+// disappears into the ballast it sits on.
+//
+// **Everything stands on the ballast, not on the ground.**  Rail top is y = 0 in the trains library and
+// the bed hangs below it, so the ground plane here is set down at -0.64 and the line stands out of it.
+// Put the ground at zero instead and the engine is buried to the axles.
+//
+// **The season is set once**, as it is in the field and the street, and the engine does something with
+// it that the buildings do not: an engine in steam is *hot*, so no snow lies on the boiler, the
+// smokebox or the chimney.  What it does lie on is the front platform, the cab roof and the coal.  A
+// locomotive with a white boiler is a locomotive nobody has lit, which is a different picture.
+
+Season = 'summer'
+
+import 'trains'      { Locomotive, Tender, Track }
+import 'trees'       { Oak, Birch, Fir }
+import 'undergrowth' { Grass, Tuft }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // A medium is walked along, and sixteen steps -- the default -- bands a plume this size into
+    // visible shells.  Forty is enough for the edges to read as soft rather than as contours.
+    medium samples 40
+    info {
+        title 'An Engine on the Line'
+        author 'J. Stephen Kress'
+        description 'A Great Western 4-6-0 and her tender, standing on a length of line.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [17.5, 4.4, -15.5]
+    look at [-2.4, 1.9, 0.6]
+    field of view 45
+}
+
+// The sun round on the near side, which is what puts a highlight down the whole length of a boiler and
+// picks the spokes out of the shadow under it.  There is very little on a locomotive that reads without
+// a raking light on it.
+//
+// **The azimuth is the only part of the sky this scene decides**, and that is the split `daylight`
+// draws: the hour and the air are the sky's business, where the sun lies is the composition's.  The
+// camera stands at +X and -Z, so a small azimuth lights what it can see -- 40 rakes down the near flank
+// and along the boiler from the front.  This scene first asked for 246, which put the sun at -X and +Z:
+// behind the engine and on its far side, and no amount of raising it helped.
+background ClearAfternoonFrom(40)
+
+light ClearAfternoonLight
+
+// The ground, set down so the ballast stands out of it.
+plane {
+    material {
+        pigment granite with seed 17 {
+            [0.06, color [0.115, 0.140, 0.082],
+             0.16, color [0.145, 0.175, 0.100],
+             0.22, color [0.170, 0.205, 0.118],
+             0.30, color [0.200, 0.238, 0.138],
+             0.41, color [0.240, 0.282, 0.165]]
+            scale 1.6
+        }
+        specular 0.03  shininess 8
+    }
+    translate Y -0.64
+}
+
+object Track(78)
+
+object Locomotive(11.6, Season)
+object Tender(8.05, Season) { translate X -10.35 }
+
+// Grass either side of the line, and **`Grass` lays a square**: the number it takes is the side of the
+// patch, not its length along one axis.  Asking for one seventy-four across to line a
+// seventy-eight-unit track put grass over the rails and the sleepers both -- which reads as a line
+// nobody has used in ten years -- and made forty-four thousand tufts doing it.  Narrow patches strung
+// along the line cover the same ground, keep off a bed that gets tamped every few years, and cost about
+// a quarter as much.
+for patch in [0, 7] {
+    object Grass(9, Season, patch + 1, 0.52, 0.7) {
+        translate [(patch - 3.5) * 9, -0.64, -7.2]
+    }
+    object Grass(9, Season, patch + 20, 0.58, 0.6) {
+        translate [(patch - 3.5) * 9, -0.64, -16.4]
+    }
+    object Grass(9, Season, patch + 40, 0.55, 0.6) {
+        translate [(patch - 3.5) * 9, -0.64, 7.4]
+    }
+}
+
+// Taller tufts right on the shoulder, where the ballast runs out and nothing tamps it.
+for tuft in [0, 25] {
+    object Tuft(0.5 + random(tuft, 91) * 0.55, Season, tuft + 70) {
+        translate [(tuft - 12.5) * 3.1 + random(tuft, 92) * 2.4, -0.64,
+                   (2.55 + random(tuft, 93) * 0.9) * (1 - 2 * floor(random(tuft, 94) * 2))]
+    }
+}
+
+// A line runs through somewhere.  These are behind the train and well back, so they read as the far
+// side of a cutting rather than as trees somebody placed.
+object Oak(11.5, Season, 3)  { translate [-27, -0.64, 27] }
+object Birch(9, Season, 7)   { translate [-14, -0.64, 33] }
+object Fir(13, Season, 2)    { translate [3, -0.64, 36] }
+object Birch(8.5, Season, 11) { translate [19, -0.64, 30] }
+object Oak(10, Season, 5)    { translate [34, -0.64, 33] }
+
+// -- Steam ---------------------------------------------------------------------------------------
+
+// The engine is standing, not working, so what comes out of the chimney is mostly the fire ticking
+// over: a dark core at the cap that goes white within a few feet as it expands and the steam in it
+// condenses.  That is two shells rather than one, because a medium carries a single scattering and a
+// single absorption, and the whole point here is that the two change along the plume.
+//
+// **These are one-offs and belong in the scene, not in `trains`.**  A plume's size, lean and how much
+// of it there is are all things a picture decides, not things an engine has; a library primitive would
+// have to take half a dozen numbers and would still be wrong for the next scene.
+//
+// Each is a shell the ray passes through with a `medium` inside, and each is `no shadow`: a scattering
+// medium that also casts one has to be walked along every shadow ray as well, which is a great deal of
+// work for a soft grey patch on the ballast.
+//
+// The chimney stands at x 3.75 and its copper cap tops out at y 3.885, which is where all of this has
+// to start.  Those are the engine's own numbers read back out of the library: the chimney sits 2.05 m
+// from the nose, and the engine is turned end for end and centred, so 5.8 - 2.05 puts it there.
+
+SteamShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
+
+// The dark core, close over the cap.
+sphere {
+    material SteamShell {
+        interior {
+            ior 1.0
+            medium {
+                scattering 0.4
+                absorption [1.55, 1.48, 1.40]
+                anisotropy 0.2
+                density function {
+                    max(0, (1 - (y + 1) * 0.48)
+                           * (1 - sqrt(x * x + z * z) / (0.26 + (y + 1) * 0.20))
+                           - 0.45 * (noise(x * 3.4, y * 2.4 + 2.1, z * 3.4) - 0.30))
+                }
+            }
+        }
+    }
+    no shadow
+    scale [0.75, 1.28, 0.75]
+    translate [3.69, 5.06, 0]
+}
+
+// The white plume above and around it, leaning back over the boiler.  The lean is done inside the
+// density rather than by turning the shell: shifting x by the height is the same trick the water
+// library uses to lean a crest, and it keeps the shell an honest bounding shape.
+sphere {
+    material SteamShell {
+        interior {
+            ior 1.0
+            medium {
+                scattering [6.8, 7.0, 7.4]
+                absorption 0.05
+                anisotropy 0.35
+                // **A plume has to be wide where it is dense.**  The first version narrowed to 0.13 of
+                // unit space at the cap and faded to a tenth by the top, so the dense part had almost
+                // no depth to look through and the wide part had almost nothing in it: what rendered
+                // was a thin grey streak with a gap between it and the chimney.  Widening the base and
+                // slowing the fade is the whole fix.
+                density function {
+                    max(0, (1 - (y + 1) * 0.43)
+                           * (1 - sqrt((x + (y + 1) * 0.40) * (x + (y + 1) * 0.40) + z * z)
+                                 / (0.24 + (y + 1) * 0.30))
+                           - 0.62 * (noise(x * 3.6, y * 2.6 - 0.7, z * 3.6) - 0.33))
+                }
+            }
+        }
+    }
+    no shadow
+    scale [2.05, 2.30, 2.05]
+    translate [3.34, 5.94, 0]
+}
+
+// A wisp at the safety valve, which is where an engine standing with the fire made up lets go of what
+// it cannot hold.  Small, and worth having precisely because it is small: one plume reads as a chimney,
+// two read as a boiler under pressure.
+sphere {
+    material SteamShell {
+        interior {
+            ior 1.0
+            medium {
+                scattering [6.4, 6.6, 7.0]
+                absorption 0.04
+                anisotropy 0.3
+                density function {
+                    max(0, (1 - (y + 1) * 0.50)
+                           * (1 - sqrt((x + (y + 1) * 0.30) * (x + (y + 1) * 0.30) + z * z)
+                                 / (0.28 + (y + 1) * 0.26))
+                           - 0.5 * (noise(x * 4.6, y * 3.1 + 5.3, z * 4.6) - 0.32))
+                }
+            }
+        }
+    }
+    no shadow
+    scale [0.55, 1.15, 0.55]
+    translate [-3.35, 4.85, 0]
+}
+
+// And steam off the cylinder drain cocks, lying low and spreading along the ballast.  This is the one
+// that puts the engine *on* the ground rather than above it -- a plume high up leaves the bottom of a
+// locomotive looking as clean as a drawing.
+sphere {
+    material SteamShell {
+        interior {
+            ior 1.0
+            medium {
+                scattering [11.5, 11.8, 12.4]
+                absorption 0.04
+                anisotropy 0.4
+                density function {
+                    max(0, (1 - (y + 1) * 0.30)
+                           * (1 - sqrt(x * x * 0.42 + z * z) / (0.60 + (y + 1) * 0.20))
+                           - 0.40 * (noise(x * 3.4, y * 4.6 - 3.4, z * 3.4) - 0.30))
+                }
+            }
+        }
+    }
+    no shadow
+    scale [1.9, 0.72, 1.35]
+    translate [3.00, 0.50, -0.38]
+}
