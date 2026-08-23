@@ -4,7 +4,7 @@
 //     import 'buildings'   { House, Row, Tower }
 //     import 'trees'       { Elm, Birch }
 //     import 'undergrowth' { Grass, Tuft }
-import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
+//     import 'roads'       { Road, Curb }
 //     import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
 //
 // `a-street-at-the-edge-of-town` is about what turns a box into a *building*.  This one is the same
@@ -40,6 +40,8 @@ import 'vehicles'    { Car, Van, Truck }
 import 'buildings'   { House, Row, Tower }
 import 'trees'       { Elm, Birch }
 import 'undergrowth' { Grass, Tuft }
+import 'roads'       { Road, Curb }
+import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
 
 context {
     parallel pixel scanner
@@ -79,36 +81,34 @@ plane {
     }
 }
 
-// The road, laid a hair above the verge so the two do not fight over the same points, with a line
-// down the middle of it.
-cube {
-    material { pigment [0.25, 0.25, 0.26]  ambient 0.05  specular 0.05  shininess 14 }
-    scale [44, 0.02, 4.4]
-    translate [0, 0.02, -5.5]
-}
-
-for dash in [0, 15] {
-    cube {
-        material { pigment [0.72, 0.70, 0.58]  ambient 0.06  specular 0.04 }
-        scale [0.85, 0.01, 0.09]
-        translate [dash * 5.2 - 34, 0.045, -5.5]
-    }
-}
+// The road, from the library rather than as a slab of gray with dashes laid on it by hand.  The camber,
+// the wheel tracks, the silt in the channels and the markings all come with it.
+//
+// **It is lifted by its own crown**, for the reason the street scene gives: a cambered road dips below
+// its crown everywhere but the middle, and the verge here is a `plane` at y = 0.  Lifting it puts the
+// channels at the verge, which is where a road meets one.
+//
+// The traffic below is lifted too, each vehicle by the height of the road *where it stands* -- which is
+// not one number, because that is the whole point of a camber.  A car parked in the channel sits four
+// fifths of the crown lower than one out in the lane.
+object Road(88, 8.8, 'summer', 1)  { translate [0, 0.11, -5.5] }
+object Curb(88)                    { translate Z -1.1 }
+object Curb(88)                    { rotate Y 180  translate Z -9.9 }
 
 // -- The traffic ----------------------------------------------------------------------------------
 
 // The near lane, driving to the right, which is the way these are built to face.
-object Truck(8.6, 'summer', 5) { translate [1.5, 0, -7.4] }
-object Car(4.4, 'summer', 1)   { translate [-7.5, 0, -7.4] }
-object Car(4.5, 'summer', 0)   { translate [11, 0, -7.4] }
+object Truck(8.6, 'summer', 5) { translate [1.5, 0.0895, -7.4] }
+object Car(4.4, 'summer', 1)   { translate [-7.5, 0.0895, -7.4] }
+object Car(4.5, 'summer', 0)   { translate [11, 0.0895, -7.4] }
 
 // The far lane, turned round.  One line each, and the only difference between the two lanes.
-object Van(5.7, 'summer', 3)   { rotate Y 180  translate [-7.5, 0, -3.5] }
-object Car(4.4, 'summer', 2)   { rotate Y 180  translate [8.5, 0, -3.5] }
+object Van(5.7, 'summer', 3)   { rotate Y 180  translate [-7.5, 0.0873, -3.5] }
+object Car(4.4, 'summer', 2)   { rotate Y 180  translate [8.5, 0.0873, -3.5] }
 
-// Parked at the kerb, hard against the houses, which is what makes the road read as a road rather
+// Parked at the curb, hard against the houses, which is what makes the road read as a road rather
 // than a strip of gray.
-object Car(4.4, 'summer', 4)   { translate [-1.5, 0, -1.4] }
+object Car(4.4, 'summer', 4)   { translate [-1.5, 0.0145, -1.4] }
 
 // -- The town it runs through ----------------------------------------------------------------------
 

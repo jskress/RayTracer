@@ -1,0 +1,571 @@
+// The road the buildings stand along and the vehicles stand on.
+//
+//     import 'roads' { Road, Curb, Pavement, Junction, CurbCorner, Crossing }
+//
+//     object Road(80, 7)
+//     object Curb(80)     { translate Z 4.1 }
+//     object Pavement(80, 3) { translate Z 5.8 }
+//
+// | `Road`     | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
+// | `Curb`     | A curb run and the channel beside it, for the edge of a carriageway. |
+// | `Pavement` | A footway in slabs, for behind the curb. |
+// | `Junction`   | The mouth where a side road opens off a main one. |
+// | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
+// | `Crossing`   | A zebra, laid on a carriageway of the same width. |
+//
+// **The first two numbers are a length and a width**, because a road is the one thing in these
+// libraries that genuinely has two sizes and no sensible ratio between them.  The two after them mean
+// what they always mean, **what time of year** and **which one of that kind**.
+//
+// **These run along X**, so a road runs left to right in a camera looking the usual way -- the same
+// direction the vehicles drive and the trains run, and for the same reason.
+//
+// **The road surface is y = 0** and everything else hangs below it, which is where `vehicles` puts the
+// bottom of its tires.  So a car dropped on a road at the same origin stands on it, with nothing to work
+// out.  It does mean a `plane` at y = 0 is the wrong ground for a street: put the verge a little lower,
+// around -0.12, and let the curb stand out of it.
+//
+// -- Which one of that kind ------------------------------------------------------------------------
+//
+// The variant picks the surface, and here that is a bigger choice than a color:
+//
+// | `0` | New asphalt: nearly black, tight, the aggregate still buried in the binder. |
+// | `1` | Worn asphalt: grayed by the sun, the aggregate showing, and cracked. |
+// | `2` | Concrete: pale, and jointed rather than continuous. |
+//
+// -- What makes a slab into a road -----------------------------------------------------------------
+//
+// The other libraries each ask this.  A road is the flattest thing in any of these scenes, so it has
+// the least to work with and the answers are correspondingly small.
+//
+// **Camber.**  A road is crowned so the water runs off it, by about one part in forty.  That is far too
+// little to see directly and it is most of what stops a carriageway reading as a sheet of paper: the
+// crown catches the light differently from the channels, so a road gets a long soft highlight down its
+// middle instead of one flat tone.  It is built here as strips at descending heights rather than as a
+// curve, because a facet across half a meter at a fortieth of a gradient is not a facet anyone will see.
+//
+// **Wheel tracks.**  Traffic polishes two bands in each lane and leaves everything else matte -- the
+// crown, the lane middles and the channels.  This is the single strongest cue that a road is *used*, and
+// it costs nothing but choosing a material per strip.  It wants to be a *small* difference over a wide
+// band: the first attempt gave the tracks three times the surround's specular, and what that reads as is
+// two stripes painted down the road rather than wear.  The tracks sit where a car's wheels actually run:
+// a lane centered at half the half-width, wheels three quarters of a meter either side of that.
+//
+// **Dirt at the edges.**  Nothing sweeps the last half meter against a curb, so it silts up.  A road
+// that is the same color edge to edge reads as newly laid whatever its surface material says.
+//
+// **Asphalt is much darker than it looks.**  New asphalt returns about a twentieth of the light that
+// falls on it, which is darker than almost anyone mixes it -- and the rock library's lesson applies
+// exactly: a gray mixed too bright stops reading as a surface and starts reading as pale plastic.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Road` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+
+// -- What a road is made of ------------------------------------------------------------------------
+
+// New asphalt.  The speckle is the aggregate, and it is fine and low-contrast because in a new surface
+// the stone is still buried -- what you see is binder with a hint of grain under it.
+RoadNewAsphalt = material {
+    pigment granite with seed 13 {
+        [0.06, color [0.038, 0.038, 0.042],
+         0.16, color [0.048, 0.048, 0.053],
+         0.22, color [0.056, 0.056, 0.062],
+         0.30, color [0.066, 0.066, 0.072],
+         0.41, color [0.080, 0.080, 0.087]]
+        scale 0.05
+    }
+    specular 0.10  shininess 22  ambient 0.05  brilliance 1.2
+}
+
+// The same, polished by tires: no lighter, but glossier, which is what a wheel track actually is.
+RoadNewTrack = material {
+    pigment granite with seed 13 {
+        [0.06, color [0.034, 0.034, 0.038],
+         0.16, color [0.042, 0.042, 0.047],
+         0.22, color [0.049, 0.049, 0.055],
+         0.30, color [0.058, 0.058, 0.065],
+         0.41, color [0.070, 0.070, 0.078]]
+        scale 0.05
+    }
+    specular 0.16  shininess 40  reflective 0.03  ambient 0.05  brilliance 1.2
+}
+
+// Worn asphalt, grayed by the sun with the aggregate showing through -- and cracked.
+//
+// **The cracks are the rare end of `crackle`, and knowing where that end actually is matters twice.**
+// Crackle climbs from nought at its seed points towards the cell walls, so a map that darkens only near
+// the top paints *only* the walls: a sparse net of thin dark lines over an even surface, which is what
+// cracked asphalt looks like.  Spread the same map evenly over nought to one and the whole road turns
+// into dark crazy paving.
+//
+// But the top is much lower than it looks.  Measured over sixty thousand points crackle's 95th
+// percentile is **0.508** and its 99th is **0.666** -- so the first version of this, with its dark tones
+// at 0.68 and 0.82, put them *past the end of the distribution* and rendered a road with no cracks in it
+// at all.  Wanting cracks to be rare is right; putting them beyond reach is not the way to get it.  The
+// dark end starts at 0.46 here -- about the 91st percentile, so roughly a twelfth of the surface.  Any
+// higher and it picks out only crackle's *vertices*, where three cells meet, and renders as scattered
+// dots rather than lines; 0.56 did exactly that.  A band this wide catches whole walls -- and the cells are 20 cm, not
+// the 55 cm they started at, because the top few per cent of crackle is a *ring* around every wall
+// rather than a line: at 55 cm those rings render as dark blobs, and only at 20 cm do they read as
+// cracking.  The turbulence came down with them, since smearing a ring only makes it a wider ring.
+RoadWornAsphalt = material {
+    pigment crackle with seed 21 {
+        turbulence 0.12
+        [0.04, color [0.152, 0.150, 0.146],
+         0.24, color [0.163, 0.161, 0.156],
+         0.38, color [0.150, 0.148, 0.144],
+         0.46, color [0.114, 0.112, 0.110],
+         0.60, color [0.052, 0.051, 0.050]]
+        scale 0.20
+    }
+    specular 0.06  shininess 14  ambient 0.055  brilliance 1.25
+}
+
+RoadWornTrack = material {
+    pigment crackle with seed 21 {
+        turbulence 0.12
+        [0.04, color [0.130, 0.129, 0.126],
+         0.24, color [0.140, 0.139, 0.136],
+         0.38, color [0.128, 0.127, 0.124],
+         0.46, color [0.098, 0.097, 0.095],
+         0.60, color [0.046, 0.045, 0.044]]
+        scale 0.20
+    }
+    specular 0.13  shininess 34  reflective 0.02  ambient 0.055  brilliance 1.25
+}
+
+// Concrete: pale, and the aggregate in it is coarser than asphalt's because there is no binder hiding it.
+RoadConcrete = material {
+    pigment granite with seed 29 {
+        [0.06, color [0.225, 0.223, 0.212],
+         0.16, color [0.262, 0.259, 0.246],
+         0.22, color [0.288, 0.285, 0.271],
+         0.30, color [0.318, 0.314, 0.298],
+         0.41, color [0.355, 0.351, 0.333]]
+        scale 0.09
+    }
+    specular 0.05  shininess 12  ambient 0.06  brilliance 1.3
+}
+
+RoadConcreteTrack = material {
+    pigment granite with seed 29 {
+        [0.06, color [0.195, 0.193, 0.184],
+         0.16, color [0.228, 0.225, 0.214],
+         0.22, color [0.250, 0.247, 0.235],
+         0.30, color [0.276, 0.273, 0.259],
+         0.41, color [0.308, 0.305, 0.289]]
+        scale 0.09
+    }
+    specular 0.12  shininess 30  reflective 0.02  ambient 0.06  brilliance 1.3
+}
+
+// The silt against a curb: grit, dust and whatever the last rain left.  Browner than the road, always.
+RoadEdgeDirt = material {
+    pigment granite with seed 37 {
+        turbulence 0.2
+        [0.08, color [0.072, 0.066, 0.056],
+         0.20, color [0.096, 0.088, 0.073],
+         0.30, color [0.122, 0.111, 0.092],
+         0.42, color [0.150, 0.136, 0.112]]
+        scale 0.22
+    }
+    specular 0.03  shininess 9  ambient 0.055  brilliance 1.3
+}
+
+// Curbstone and paving: the same cast concrete, a shade apart so the two do not merge into one gray mass.
+RoadCurbStone = material {
+    pigment granite with seed 43 {
+        [0.06, color [0.235, 0.232, 0.222],
+         0.16, color [0.276, 0.272, 0.259],
+         0.22, color [0.302, 0.298, 0.284],
+         0.30, color [0.334, 0.329, 0.313],
+         0.41, color [0.372, 0.367, 0.349]]
+        scale 0.10
+    }
+    specular 0.06  shininess 16  ambient 0.06  brilliance 1.3
+}
+
+RoadSlab = material {
+    pigment granite with seed 47 {
+        [0.06, color [0.205, 0.203, 0.196],
+         0.16, color [0.242, 0.239, 0.230],
+         0.22, color [0.266, 0.263, 0.253],
+         0.30, color [0.295, 0.291, 0.280],
+         0.41, color [0.330, 0.326, 0.313]]
+        scale 0.13
+    }
+    specular 0.05  shininess 14  ambient 0.06  brilliance 1.3
+}
+
+// Road paint is never white.  It is laid white, and then traffic and weather take it to a dirty cream
+// within a season -- and a marking mixed at full white is the one thing on a road that will not sit
+// down into the picture.
+RoadPaint = material {
+    pigment [0.545, 0.535, 0.495]  specular 0.10  shininess 20  ambient 0.07
+}
+
+// The build-up under the wearing course.  Plain on purpose: a *scaled* cube stretches whatever pattern
+// it wears, and this one is thirty times longer than it is wide.
+RoadBase = material {
+    pigment [0.042, 0.042, 0.046]  specular 0.03  shininess 9  ambient 0.05
+}
+
+RoadSnow = material {
+    pigment [0.90, 0.92, 0.96]  specular 0.24  shininess 50  ambient 0.10
+}
+
+// -- Choosing a surface ----------------------------------------------------------------------------
+
+primitive RoadPlainOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoadNewAsphalt }
+        case 1 { return material RoadWornAsphalt }
+        default { return material RoadConcrete }
+    }
+}
+
+primitive RoadTrackOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoadNewTrack }
+        case 1 { return material RoadWornTrack }
+        default { return material RoadConcreteTrack }
+    }
+}
+
+// Whether a strip of the carriageway is a wheel track.
+//
+// `across` is nought at the crown and one at the channel.  A lane sits centered on half of that, and a
+// car's wheels run about three quarters of a meter either side of the lane's middle -- so on a
+// seven-meter road the tracks land near 0.29 and 0.71, which is a band either side of 0.5.  Everything
+// else stays matte: the crown, the middle of each lane, and the channel.
+primitive RoadSurfaceAt(variant, across) -> material {
+    if (abs(across - 0.5) > 0.08 and abs(across - 0.5) < 0.35) {
+        return material RoadTrackOf(variant)
+    }
+    else {
+        return material RoadPlainOf(variant)
+    }
+}
+
+// -- Snow ------------------------------------------------------------------------------------------
+
+// Winter on a road is not winter on a roof: **the traffic clears the tracks and nothing clears the rest**.
+// So snow lies along the crown, where no wheel runs, and banks up in the channels where it is thrown --
+// and a road under snow with a clean unbroken white surface is a road nobody has driven since it fell.
+primitive RoadWinter(season, length, width) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                cube {
+                    material RoadSnow
+                    scale [length * 0.5, 0.008, width * 0.070]
+                    translate Y 0.006
+                }
+                cube {
+                    material RoadSnow
+                    scale [length * 0.5, 0.010, width * 0.085]
+                    translate [0, -width * 0.0116, width * 0.415]
+                }
+                cube {
+                    material RoadSnow
+                    scale [length * 0.5, 0.010, width * 0.085]
+                    translate [0, -width * 0.0116, -width * 0.415]
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- Joints ----------------------------------------------------------------------------------------
+
+// Concrete is laid in bays and asphalt is not, so a concrete carriageway carries a joint across it every
+// few meters and an asphalt one carries none.
+//
+// **A joint is a gap, not a dark line laid on top.**  The first attempt was a thin dark cube across the
+// road at half the camber's depth, and it rendered as almost nothing: a single cube is flat and the road
+// is crowned, so the joint sat *under* the wearing course across most of the width and poked out only
+// near the channels, giving one odd diagonal mark. Raising it would have made it a bar standing proud of
+// the crown instead. What a joint actually is, is a place where the surface stops -- so the wearing
+// course is laid in bays with a gap between them, and the dark build-up underneath shows through.
+//
+// Asphalt gets one bay the length of the road and a gap of nothing, so the same loop serves both and
+// pays nothing for the surface it does not need.
+//
+// **A joint is a close-up detail and there is no fixing that.**  Three centimeters is about what a
+// sealed expansion joint measures, and on a road seen from fifteen meters that is a fifth of a pixel --
+// which point sampling misses altogether rather than dimming. Widening it enough to survive at that
+// distance would mean a joint eight centimeters across, which is not a joint. So it reads from a car's
+// length away and not from across a field, which is also true of the real thing.
+function RoadBaysOf(variant, length) -> number {
+    switch (mod(floor(variant), 3)) {
+        case 2 { return max(1, floor(length / 4.5)) }
+        default { return 1 }
+    }
+}
+
+function RoadJointOf(variant) -> number {
+    switch (mod(floor(variant), 3)) {
+        case 2 { return 0.03 }
+        default { return 0 }
+    }
+}
+
+// -- A carriageway ---------------------------------------------------------------------------------
+
+// The carriageway itself -- body, wearing course and the silt in the channels -- with no markings on it.
+// `Road` adds those; a `Junction` is this and nothing else, because markings stop at a junction.
+primitive RoadDeck(length, width, variant) -> group {
+    half = width * 0.5
+    crown = half * 0.025
+    strips = floor(width / 0.5)
+    step = width / strips
+    bays = RoadBaysOf(variant, length)
+    bayLength = length / bays
+    joint = RoadJointOf(variant)
+
+    return group {
+        // The build-up, with its top at the channel so nothing pokes through the wearing course above.
+        cube {
+            material RoadBase
+            scale [length * 0.5, 0.07, half]
+            translate Y -crown - 0.07
+        }
+
+        // **The wearing course is `parallelogram`s and not cubes, and that is not a saving -- it is the
+        // only way the pattern comes out right.**  A pattern is worked out in the surface's own space, so
+        // a strip built as a cube scaled [30, 0.06, 0.25] stretches its granite thirty times along the
+        // road and squashes it to a quarter across: the first version of this rendered a set of long
+        // longitudinal streaks and not one crack anywhere.  A parallelogram is given a corner and two
+        // edges and carries no transform at all, so its pattern is in world coordinates -- which also
+        // makes the cracks run *continuously across the strip seams* instead of each strip holding its
+        // own stretched copy of the same patch.
+        for strip in [0, strips - 1] {
+            for bay in [0, bays - 1] {
+                // **Each strip is tilted to the camber rather than laid flat at its own height**, so
+                // consecutive strips meet exactly along their shared edge and the surface is continuous.
+                // Flat strips leave a vertical step at every seam, and neither way of hiding that works:
+                // butting them shows the dark build-up through the step, and overlapping them by a
+                // centimeter makes the higher strip's edge a lip that casts a thin shadow down the road.
+                // A parallelogram takes two edge *vectors*, so giving the second one a Y component costs
+                // nothing and removes the step instead of covering it.
+                parallelogram {
+                    material RoadSurfaceAt(variant, abs((strip + 0.5) * step - half) / half)
+                    at [bay * bayLength - length * 0.5,
+                        -crown * (abs(strip * step - half) / half)
+                               * (abs(strip * step - half) / half),
+                        strip * step - half]
+                    sides [bayLength - joint, 0, 0],
+                          [0,
+                           -crown * (abs((strip + 1) * step - half) / half)
+                                  * (abs((strip + 1) * step - half) / half)
+                           + crown * (abs(strip * step - half) / half)
+                                   * (abs(strip * step - half) / half),
+                           step]
+                }
+            }
+        }
+
+        // The silt against each curb, laid on the channel rather than instead of it.
+        for side in [0, 1] {
+            parallelogram {
+                material RoadEdgeDirt
+                at [-length * 0.5, -crown * 0.90 + 0.002,
+                    (half - width * 0.055) * (1 - side * 2) - width * 0.055]
+                sides [length, 0, 0], [0, 0, width * 0.110]
+            }
+        }
+    }
+}
+
+primitive Road(length, width, season = 'summer', variant = 1) -> group {
+    half = width * 0.5
+    crown = half * 0.025
+
+    return group {
+        object RoadDeck(length, width, variant)
+
+        // A dashed line down the middle, and a solid one in each channel.  The dashes are two meters in
+        // six, which is close enough to what a road actually carries that the eye stops counting.
+        for dash in [0, floor(length / 6) - 1] {
+            cube {
+                material RoadPaint
+                scale [1.0, 0.003, 0.055]
+                translate [(dash + 0.5) * 6 - length * 0.5, 0.002, 0]
+            }
+        }
+        for side in [0, 1] {
+            cube {
+                material RoadPaint
+                scale [length * 0.5, 0.003, 0.055]
+                translate [0, -crown * 0.60 + 0.002,
+                           (half - width * 0.10) * (1 - side * 2)]
+            }
+        }
+
+        object RoadWinter(season, length, width)
+    }
+}
+
+// -- A junction ------------------------------------------------------------------------------------
+
+// Where a side road opens off a main one.  `width` is the main road's width and `opening` is how far
+// along it the mouth reaches -- which is the side road's width plus its two corner radii.
+//
+// **A junction is a piece of main road, not a shape of its own.**  The main road's camber runs straight
+// through and the side road ramps up to meet it, which is what a real side turning does; the alternative
+// is to invent a surface that drains both ways at once, and then neither road's channel lines up with
+// it. So this is the same deck with the markings left off, and a scene lays road either side of it:
+//
+//     object Road(30, 7)     { translate X -19 }
+//     object Junction(7, 8)
+//     object Road(30, 7)     { translate X  19 }
+//
+// Markings stop at a junction, which is why this carries none. The side road's own `Road` provides its.
+primitive Junction(width, opening, season = 'summer', variant = 1) -> group {
+    return group {
+        object RoadDeck(opening, width, variant)
+        object RoadWinter(season, opening, width)
+    }
+}
+
+// -- A curb ----------------------------------------------------------------------------------------
+
+// Laid along X with its face at z = 0, so it goes at the edge of a carriageway: `translate Z half`.
+primitive Curb(length, season = 'summer', variant = 1) -> group {
+    return group {
+        // A plain body for the buried part and the cut ends, and the two faces that show as
+        // parallelograms so their stone is in world space -- see the note in `Road`.
+        cube {
+            material RoadBase
+            scale [length * 0.5, 0.165, 0.075]
+            translate [0, 0.125 - 0.165, 0.075]
+        }
+        parallelogram {
+            material RoadCurbStone
+            at [-length * 0.5, 0.1252, 0]
+            sides [length, 0, 0], [0, 0, 0.15]
+        }
+        parallelogram {
+            material RoadCurbStone
+            at [-length * 0.5, 0.125, -0.0002]
+            sides [length, 0, 0], [0, -0.26, 0]
+        }
+        object RoadWinter(season, length, 0.001)
+    }
+}
+
+// -- A pavement ------------------------------------------------------------------------------------
+
+// A footway in real slabs rather than a slab with joints painted on it, because the joints are what a
+// pavement *is* -- and a joint with a little depth in it catches a shadow that a painted line cannot.
+primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
+    along = floor(length / 1.2)
+    across = floor(width / 1.2)
+    stepAlong = length / along
+    stepAcross = width / across
+
+    return group {
+        // The bed the slabs sit on, so the joints between them are dark rather than transparent.
+        cube {
+            material RoadEdgeDirt
+            scale [length * 0.5, 0.06, width * 0.5]
+            translate Y 0.125 - 0.06 - 0.045
+        }
+        for row in [0, along - 1] {
+            for column in [0, across - 1] {
+                cube {
+                    material RoadSlab
+                    scale [stepAlong * 0.5 - 0.012, 0.024, stepAcross * 0.5 - 0.012]
+                    translate [(row + 0.5) * stepAlong - length * 0.5,
+                               0.125 - 0.024,
+                               (column + 0.5) * stepAcross - width * 0.5]
+                }
+            }
+        }
+
+        object RoadWinter(season, length, width * 0.42)
+    }
+}
+
+// -- A rounded corner ------------------------------------------------------------------------------
+
+// A quarter circle of curb, for the corner where two roads meet.  It is what actually makes a junction
+// read: two straight curb runs mitred at a right angle look like a drawing, and a radius looks like a
+// street.  The arc runs from `+X` round to `+Z` with its center of curvature at the origin, so the
+// pavement is on the inside of it and the road outside -- which is the way round a street corner is.
+//
+// **Its origin is the center of curvature, not the corner**, and that is the thing to get right.  For a
+// pavement corner at `(cx, cz)` with the road on the `+X` and `+Z` sides of it, the center sits a radius
+// *diagonally inside* the pavement at `(cx - r, cz - r)`, and the arc then meets the two straight runs
+// at `(cx - r, cz)` and `(cx, cz - r)` -- so those runs have to stop a radius short of the corner.  Put
+// the origin on the corner itself and the arc swings away into the pavement, leaving a gap at both ends;
+// that is what the first version of the junction scene did.
+//
+// `cos` and `sin` take radians while every transform here is written in degrees, and the language settles
+// that with a postfix `degrees` operator (`°` also works) -- so the angle stays in degrees throughout and
+// is marked at the point it reaches the trigonometry.  It binds to its immediate operand, so a computed
+// angle needs its own parentheses: `cos((a * b) degrees)`, not `cos(a * b degrees)`.
+//
+// The face has to end up pointing away from the center, and working out which turn does that is worth
+// spelling out: `Curb` runs along X with its exposed face looking towards -Z, and under `rotate Y θ`
+// local -Z lands on `(-sin θ, 0, -cos θ)`. Setting that equal to the outward normal `(cos a, 0, sin a)`
+// gives `θ = -90 - a`, which is what the loop uses.
+primitive CurbCorner(radius, season = 'summer', variant = 1) -> group {
+    segments = max(4, floor(radius * 3))
+    // The chord of one segment, and half the angle it turns through.
+    turn = 90 / segments
+    chord = 2 * radius * sin((turn * 0.5) degrees)
+
+    return group {
+        for segment in [0, segments - 1] {
+            object Curb(chord, season, variant) {
+                rotate Y (-90 - (segment + 0.5) * turn)
+                translate [radius * cos(((segment + 0.5) * turn) degrees),
+                           0,
+                           radius * sin(((segment + 0.5) * turn) degrees)]
+            }
+        }
+    }
+}
+
+// -- A crossing ------------------------------------------------------------------------------------
+
+// A zebra, laid on a carriageway of the same width.  `depth` is how far along the road it reaches, which
+// is how wide the crossing is to walk over.
+//
+// **The bars run along the road, not across it**, which surprises people who have not looked lately: you
+// walk across a zebra between its stripes, and the stripes are parallel to the traffic. That turns out
+// to be the same geometry the carriageway is already built from -- a bar is one strip of it painted -- so
+// each bar picks up the camber for free by being tilted exactly as the strip beneath it is.
+primitive Crossing(width, depth, season = 'summer') -> group {
+    half = width * 0.5
+    crown = half * 0.025
+    strips = floor(width / 0.5)
+    step = width / strips
+
+    return group {
+        for strip in [0, strips - 1] {
+            // Every other strip, so the bars and the gaps come out the same width -- which on a road
+            // built in half-meter strips is the half meter a real zebra uses.
+            if (mod(strip, 2) == 0) {
+                parallelogram {
+                    material RoadPaint
+                    at [-depth * 0.5,
+                        -crown * (abs(strip * step - half) / half)
+                               * (abs(strip * step - half) / half) + 0.003,
+                        strip * step - half]
+                    sides [depth, 0, 0],
+                          [0,
+                           -crown * (abs((strip + 1) * step - half) / half)
+                                  * (abs((strip + 1) * step - half) / half)
+                           + crown * (abs(strip * step - half) / half)
+                                   * (abs(strip * step - half) / half),
+                           step]
+                }
+            }
+        }
+    }
+}

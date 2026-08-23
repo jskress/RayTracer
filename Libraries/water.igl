@@ -23,14 +23,14 @@
 //
 // **The price, which is worth knowing before the first render.**  Real waves are real detail, and
 // detail at a distance aliases.  Left to one sample a pixel, water going away from the camera turns
-// to grey mush around the horizon -- each pixel is averaging some normals that mirror the sky and
+// to gray mush around the horizon -- each pixel is averaging some normals that mirror the sky and
 // some that look into the dark, and the average of those is neither.  Measured on a horizon-filling
 // ocean at 400x300: 1.5 seconds with no anti-aliasing and a mush band, 31 seconds at `-a adaptive:3`
 // and clean.  **Water wants anti-aliasing.**  That is not a fault in the water; it is the honest cost
 // of the waves being there, and the same bill comes due for any surface with fine detail in it.
 //
 // **Give it something to reflect.**  Water is mostly a mirror, and a mirror in an empty room shows an
-// empty room.  A flat background colour makes water look like paint, whatever else is right about it.
+// empty room.  A flat background color makes water look like paint, whatever else is right about it.
 // A sky with structure -- a gradient, or better one of the skies from the `daylight` library -- is
 // what turns the surface into water.
 

@@ -3,7 +3,7 @@
 //     import 'buildings'   { House, Row, Tower }
 //     import 'trees'       { Elm, Birch }
 //     import 'undergrowth' { Grass, Tuft }
-import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
+//     import 'roads'       { Road, Curb }
 //     import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
 //
 // That earlier scene raises eleven buildings out of one loop and no two alike, and it is about the two
@@ -48,6 +48,8 @@ import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
 import 'buildings'   { House, Row, Tower }
 import 'trees'       { Elm, Birch }
 import 'undergrowth' { Grass, Tuft }
+import 'roads'       { Road, Curb }
+import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
 
 context {
     parallel pixel scanner
@@ -96,12 +98,16 @@ plane {
     }
 }
 
-// The road, laid a hair above the verge so it does not fight it for the same points.
-cube {
-    material { pigment [0.26, 0.26, 0.27]  ambient 0.05  specular 0.04  shininess 12 }
-    scale [40, 0.02, 3.2]
-    translate [0, 0.02, -8.0]
-}
+// The road, from the library rather than as a slab of gray.  It arrives cambered, worn where the wheels
+// run, dirty in the channels, and with a line down the middle.
+//
+// **It is lifted by its own crown.**  A cambered road dips below its crown everywhere except along the
+// middle, and the verge here is a `plane` at y = 0 -- so laid at the library's own datum the verge would
+// cut straight through the carriageway and leave only a strip of it showing.  Lifting the whole road by
+// the crown puts its *channels* at the verge instead, which is where a road meets a verge anyway.
+object Road(80, 6.4, 'summer', 1)  { translate [0, 0.08, -8.0] }
+object Curb(80)                    { translate Z -4.8 }
+object Curb(80)                    { rotate Y 180  translate Z -11.2 }
 
 // -- The near side of the street ------------------------------------------------------------------
 
@@ -145,7 +151,7 @@ for patch in [0, 6] {
     }
 }
 
-// Tufts at the kerb, where the mower does not reach.  They sit a little clear of the road's edge, on
+// Tufts at the curb, where the mower does not reach.  They sit a little clear of the road's edge, on
 // the grass side of it.
 for i in [0, 7] {
     object Tuft(0.34 + random(i, 31, 5) * 0.22, 'summer', i + 40) {

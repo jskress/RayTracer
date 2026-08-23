@@ -1289,7 +1289,7 @@ public class TestShippedLibraries
         // buildings library's windows had on the far wall.
         //
         // The glass is the one thing here that is dark and clearly cooler than it is warm: the paint is
-        // bright, the tyres are near-black and neutral, and the ground is gray.  So counting the cool
+        // bright, the tires are near-black and neutral, and the ground is gray.  So counting the cool
         // dark pixels counts glass.
         File.Copy(
             Shipped.First(path => Path.GetFileName(path) == "vehicles.igl"),
@@ -1518,6 +1518,99 @@ public class TestShippedLibraries
             background [0.5, 0.6, 0.8]
             object Track(30)
             object {{piece}}(11.6, '{{season}}')
+            """);
+
+        return Render(scene);
+    }
+
+    /// <summary>
+    /// What the roads library holds out, written down here rather than read out of the library.
+    /// </summary>
+    private static readonly string[] RoadPieces =
+        ["Road", "Curb", "Pavement", "Junction", "CurbCorner", "Crossing"];
+
+    [TestMethod]
+    public void TestEveryRoadPieceBuilds()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "roads.igl"),
+            Path.Combine(_directory, "roads.igl"), true);
+
+        foreach (string piece in RoadPieces)
+        foreach (string season in (string[]) ["summer", "winter"])
+        foreach (int variant in (int[]) [0, 1, 2])
+        {
+            Assert.IsNull(Lay(piece, season, variant),
+                $"{piece} should build in {season} as variant {variant}");
+        }
+    }
+
+    [TestMethod]
+    public void TestTheThreeRoadSurfacesAreActuallyDifferent()
+    {
+        // A variant that changes nothing is a lie in the documentation, and this one promises a good
+        // deal: new asphalt nearly black, worn asphalt grayed, concrete pale.  So the three are not
+        // merely required to differ -- they are required to come out in that *order*, brightest last,
+        // which is the part that would break quietly if a color map were nudged.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "roads.igl"),
+            Path.Combine(_directory, "roads.igl"), true);
+
+        List<double> brightness = [];
+
+        foreach (int variant in (int[]) [0, 1, 2])
+        {
+            Assert.IsNull(Lay("Road", "summer", variant), $"variant {variant} should lay");
+
+            Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            double total = 0;
+            int counted = 0;
+
+            // The middle of the picture, which is carriageway and nothing else.
+            for (int x = picture.Width / 3; x < picture.Width * 2 / 3; x++)
+            for (int y = picture.Height / 2; y < picture.Height * 3 / 4; y++)
+            {
+                total += picture.GetPixel(x, y).Red;
+                counted++;
+            }
+
+            brightness.Add(total / counted);
+        }
+
+        Assert.IsTrue(brightness[0] < brightness[1] - 0.01,
+            $"new asphalt came out at {brightness[0]:F3} against worn at {brightness[1]:F3}, and new " +
+            "asphalt is meant to be the darker of the two by a clear margin");
+        Assert.IsTrue(brightness[1] < brightness[2] - 0.01,
+            $"worn asphalt came out at {brightness[1]:F3} against concrete at {brightness[2]:F3}, and " +
+            "concrete is meant to be the palest surface the library offers");
+    }
+
+    /// <summary>
+    /// Lays one piece of road and hands back whatever stopped it.
+    /// </summary>
+    private string Lay(string piece, string season, int variant)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        // `Pavement` and `Road` take a width; `Curb` does not.
+        // The pieces do not all take the same shape of call, and that is deliberate rather than untidy:
+        // a curb has a length and no width, a corner has a radius, and a crossing has no variant of its
+        // own because road paint is road paint.
+        string call = piece switch
+        {
+            "Curb" => $"Curb(30, '{season}', {variant})",
+            "CurbCorner" => $"CurbCorner(2.5, '{season}', {variant})",
+            "Crossing" => $"Crossing(7, 3.5, '{season}')",
+            "Junction" => $"Junction(7, 8, '{season}', {variant})",
+            _ => $"{piece}(30, 7, '{season}', {variant})"
+        };
+
+        File.WriteAllText(scene, $$"""
+            import 'roads' { {{piece}} }
+            context { angles are degrees  no gamma }
+            camera { location [0, 6, -13]  look at [0, 0, 0]  field of view 44 }
+            point light { location [-10, 14, -14] }
+            background [0.5, 0.6, 0.8]
+            object {{call}}
             """);
 
         return Render(scene);
