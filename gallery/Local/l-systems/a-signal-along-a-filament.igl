@@ -9,7 +9,7 @@
 // Each cell works out its new value from the two either side of it, and that expression is the
 // discrete diffusion equation: a cell moves a quarter of the way toward the average of its
 // neighbours.  There is no way to write it without parameters in the context -- knowing that a
-// neighbour is *there* tells you nothing about how much it holds.
+// neighbor is *there* tells you nothing about how much it holds.
 //
 // The five rods are the same filament after nought, two, six, twelve and twenty steps, from the far
 // side to the near.  Every one begins as a thin thread with a single fat cell in the middle; each

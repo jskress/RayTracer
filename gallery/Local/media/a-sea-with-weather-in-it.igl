@@ -42,7 +42,7 @@
 // in the water itself.
 //
 // **On the cost, which is the honest price of real waves.**  Detail at a distance aliases: at one
-// sample a pixel the far water turns to grey mush, since each pixel is averaging normals that mirror
+// sample a pixel the far water turns to gray mush, since each pixel is averaging normals that mirror
 // the bright sky against normals that look down into the dark, and the mean of those is neither. This
 // renders with anti-aliasing for that reason and for no other.
 

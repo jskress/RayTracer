@@ -16,7 +16,7 @@ import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
 // turns it into a place is entirely the stuff underneath: a bed of stones with sloping shoulders, wooden
 // sleepers half buried in it, and two rails whose heads are wiped bright by traffic while everything
 // below them rusts.  That last one does more at this distance than any detail on the engine -- from
-// here a railway *is* two bright threads on a dark bed, and painted one colour the whole line
+// here a railway *is* two bright threads on a dark bed, and painted one color the whole line
 // disappears into the ballast it sits on.
 //
 // **Everything stands on the ballast, not on the ground.**  Rail top is y = 0 in the trains library and
@@ -136,11 +136,11 @@ object Oak(10, Season, 5)    { translate [34, -0.64, 33] }
 //
 // Each is a shell the ray passes through with a `medium` inside, and each is `no shadow`: a scattering
 // medium that also casts one has to be walked along every shadow ray as well, which is a great deal of
-// work for a soft grey patch on the ballast.
+// work for a soft gray patch on the ballast.
 //
 // The chimney stands at x 3.75 and its copper cap tops out at y 3.885, which is where all of this has
 // to start.  Those are the engine's own numbers read back out of the library: the chimney sits 2.05 m
-// from the nose, and the engine is turned end for end and centred, so 5.8 - 2.05 puts it there.
+// from the nose, and the engine is turned end for end and centered, so 5.8 - 2.05 puts it there.
 
 SteamShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
 
@@ -180,7 +180,7 @@ sphere {
                 // **A plume has to be wide where it is dense.**  The first version narrowed to 0.13 of
                 // unit space at the cap and faded to a tenth by the top, so the dense part had almost
                 // no depth to look through and the wide part had almost nothing in it: what rendered
-                // was a thin grey streak with a gap between it and the chimney.  Widening the base and
+                // was a thin gray streak with a gap between it and the chimney.  Widening the base and
                 // slowing the fade is the whole fix.
                 density function {
                     max(0, (1 - (y + 1) * 0.43)

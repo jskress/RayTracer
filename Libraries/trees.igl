@@ -412,7 +412,7 @@ primitive TreeFoliage(species, season, id, variant, twig) -> group {
             return group {
                 for leaf in [0, count - 1] {
                     object TreeBlade(species) {
-                        // No two leaves on a tree are the same green.  A canopy of one flat colour
+                        // No two leaves on a tree are the same green.  A canopy of one flat color
                         // reads as a single painted object however good the shapes are, and varying
                         // it per leaf costs nothing at all.
                         material {

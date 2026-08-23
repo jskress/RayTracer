@@ -7,7 +7,7 @@ namespace Tests;
 /// <summary>
 /// These tests cover the traversal a shadow query uses, which looks along only a stretch of the ray.
 /// <para>
-/// The whole of its licence to skip anything is that a shadow query throws away every crossing behind
+/// The whole of its license to skip anything is that a shadow query throws away every crossing behind
 /// the point it started from and every crossing at or past the light.  So the one thing worth testing
 /// is that it returns <b>exactly</b> what an ordinary query would have returned once those are thrown
 /// away -- no more, and above all no less.  Every test here is therefore differential against the

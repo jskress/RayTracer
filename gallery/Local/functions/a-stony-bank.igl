@@ -10,7 +10,7 @@
 // props on it.
 //
 // **A rock is a shape problem before it is anything else.**  What gives one away is a silhouette that
-// is too regular -- a sphere reads as a ball from every angle, and colouring the surface does not
+// is too regular -- a sphere reads as a ball from every angle, and coloring the surface does not
 // repair it, because the outline is what the eye checks first.  So the boulders here are
 // *isosurfaces*: a ball with noise taken out of its radius, which gives an outline irregular in the
 // way stone is.  The price is that an isosurface has to be marched along the ray rather than solved
@@ -23,7 +23,7 @@
 // and rather more than three hundred cobbles.
 //
 // **It is winter, and the word does something different to each library.**  The birches are bare.  The
-// grass is straw-coloured and lying down.  The brambles are down to their arches.  And the stone takes
+// grass is straw-colored and lying down.  The brambles are down to their arches.  And the stone takes
 // snow -- in patches, sunk into the rock rather than sat on it, because a smooth white dome laid over
 // a rough stone announces that the two were made by different hands.
 //

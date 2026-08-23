@@ -63,7 +63,7 @@ VehicleBlue = material { pigment [0.13, 0.20, 0.42]  specular 0.85  shininess 20
 VehicleWhite = material { pigment [0.80, 0.80, 0.79]  specular 0.85  shininess 200  reflective 0.14 }
 VehicleGreen = material { pigment [0.13, 0.28, 0.19]  specular 0.85  shininess 200  reflective 0.16 }
 VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.14 }
-VehicleGrey = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.18 }
+VehicleGray = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.18 }
 
 VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.34 }
 VehicleTire = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
@@ -83,7 +83,7 @@ primitive VehiclePaint(variant) -> material {
         case 2 { return material VehicleWhite }
         case 3 { return material VehicleGreen }
         case 4 { return material VehicleSand }
-        default { return material VehicleGrey }
+        default { return material VehicleGray }
     }
 }
 
@@ -143,7 +143,7 @@ primitive VehicleSnowOn(season, wide, deep, where) -> group {
 //
 // **This is the best return on two surfaces anywhere in the library**, and the reason is silhouette.
 // Everything else on a vehicle is inside its outline -- lamps, plates, a grille all lie flush or
-// recessed, so they colour the face without changing the shape of it. A mirror sticks out. It is the
+// recessed, so they color the face without changing the shape of it. A mirror sticks out. It is the
 // one thing that breaks the smooth line of a body, and a body with an unbroken line reads as a
 // pressed-metal toy however well painted it is.
 primitive VehicleMirror(size, variant = 1) -> group {
@@ -255,7 +255,7 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
             translate [length * 0.075, length * 0.235, -wide * 0.50]
         }
 
-        // An exhaust, off centre at the back, because they never come out of the middle.
+        // An exhaust, off center at the back, because they never come out of the middle.
         tube {
             material VehicleChrome
             radius length * 0.010 at [-length * 0.470, length * 0.098, -wide * 0.24]
@@ -374,7 +374,7 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
 
     return group {
         // The chassis, which is what the cab and the bed both stand on.
-        cube { material VehicleGrey  scale [length * 0.48, length * 0.014, wide * 0.40]
+        cube { material VehicleGray  scale [length * 0.48, length * 0.014, wide * 0.40]
                translate Y deck - length * 0.014 }
 
         // The cab.

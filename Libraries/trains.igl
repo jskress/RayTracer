@@ -57,7 +57,7 @@
 // **No dome.**  Almost every other engine has a steam dome standing up on the barrel, and a GWR taper
 // boiler does not -- the regulator is in the smokebox.  Leaving it off is the sort of absence that only
 // works if it is deliberate: the boiler top runs clean from the chimney to the safety valve, and that
-// clean line is most of what makes the class recognisable.
+// clean line is most of what makes the class recognizable.
 //
 // **Copper and brass, in two places only.**  The chimney cap and the safety valve bonnet.  Every other
 // bright thing on the engine is lining, and lining is thin.  Put polish anywhere else and it stops
@@ -73,7 +73,7 @@
 
 // Crimson lake, and glossy, for the reason the road vehicles are: the highlight travelling along a
 // boiler is most of what says cold wet metal.  The ambient is set down on purpose -- left at the
-// default, locomotive black comes back as a mid grey and the crimson as a dusty pink, which is the
+// default, locomotive black comes back as a mid gray and the crimson as a dusty pink, which is the
 // trap `daylight`'s notes describe.
 TrainCrimson = material {
     pigment [0.295, 0.048, 0.052]
@@ -83,7 +83,7 @@ TrainBlack = material {
     pigment [0.038, 0.038, 0.042]
     specular 0.55  shininess 170  reflective 0.11  ambient 0.035  brilliance 1.3
 }
-// The smokebox and chimney live in the fire's draught and never hold a shine the boiler does.
+// The smokebox and chimney live in the fire's draft and never hold a shine the boiler does.
 TrainSmokebox = material {
     pigment [0.052, 0.050, 0.048]
     specular 0.22  shininess 60  ambient 0.040
@@ -172,7 +172,7 @@ TrainBallast = material {
         scale 0.032
     }
     // Darker than it looks like it should be, for the reason the rock library records: crushed stone
-    // returns about a fifth of the light it gets, and a grey mixed brighter than that stops reading as
+    // returns about a fifth of the light it gets, and a gray mixed brighter than that stops reading as
     // stone and starts reading as pale plastic.  The first version of this map topped out at 0.300 and
     // came back looking like exposed-aggregate paving.
     specular 0.04  shininess 9  ambient 0.06  brilliance 1.25
@@ -219,11 +219,11 @@ primitive TrainWheel(radius, half, spokes, paint) -> group {
 
 // A driver is a wheel with a crank pin standing out of it, caught at the angle the rods are frozen in.
 //
-// The pin's offset is given as two numbers rather than as a radius and an angle, and that is on purpose:
-// transforms in this library are written in degrees, `cos` and `sin` take radians, and a library that
-// mixed the two would work or not work depending on a `context` block in someone else's scene.  Two
-// offsets need no trigonometry, and the caller works them out once for all three axles -- which it has
-// to do anyway, since a coupling rod is only straight if every pin is at the same angle.
+// The pin's offset is given as two numbers rather than as a radius and an angle, because the caller has
+// to work those two numbers out once for all three axles regardless: a coupling rod is only straight if
+// every pin sits at the same angle, so the offset is a property of the engine and not of the wheel.
+// (Trigonometry here would have been fine either way -- a postfix `degrees` operator keeps an angle in
+// the degrees the transforms use right up to the point it reaches `cos`.)
 primitive TrainDriver(radius, half, pinX, pinY, paint) -> group {
     return group {
         object TrainWheel(radius, half, 20, paint)
@@ -285,14 +285,14 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
     driverHalf = 0.055 * m
     bogieR = 0.457 * m
     wheelZ = 0.752 * m          // standard gauge, plus the tire
-    boilerY = 2.59 * m          // boiler centre above the rail
+    boilerY = 2.59 * m          // boiler center above the rail
     plateY = 1.55 * m           // the running plate
     rodZ = 0.88 * m
     cylZ = 0.92 * m
     cylY = 1.30 * m
 
     // The crank pins, all three at the same angle so the coupling rod between them is straight.  A
-    // 0.34 m crank caught forty degrees past bottom dead centre.
+    // 0.34 m crank caught forty degrees past bottom dead center.
     pinX = 0.260 * m
     pinY = 0.219 * m
 
@@ -304,7 +304,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
         // -- The boiler.  One lathe turns the smokebox, the shoulder behind it and the coned barrel,
         // -- which is the Great Western signature and the reason this is a revolved profile rather
         // -- than a stack of cylinders.  It is turned about Y and laid along X afterwards.
-        // The smokebox, which is never painted -- it lives in the fire's draught.
+        // The smokebox, which is never painted -- it lives in the fire's draft.
         lathe {
             path {
                 move to 0, 0
@@ -317,7 +317,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
             rotate Z -90
             translate [1.35 * m, boilerY, 0]
         }
-        // The barrel, and this is the one shape the whole engine is recognised by: it cones outwards
+        // The barrel, and this is the one shape the whole engine is recognized by: it cones outwards
         // towards the firebox.  A first attempt sleeved a straight crimson cylinder over a tapered
         // lathe, which threw the taper away and left a sausage; the paint has to be a turning of its
         // own so it keeps the cone.
@@ -646,7 +646,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
         object TrainSnowOn(season, 0.880 * m, 1.345 * m, [10.42 * m, 3.905 * m, 0])
 
         // Built nose-at-the-origin running towards +X in its own numbers, which puts the nose at the
-        // *left* once it is centred -- so it faced -X, the opposite of what this library promises and
+        // *left* once it is centered -- so it faced -X, the opposite of what this library promises and
         // of what `vehicles` does.  Turning it end for end first is the fix; the engine is symmetric
         // across Z so the turn costs nothing else.
         rotate Y 180

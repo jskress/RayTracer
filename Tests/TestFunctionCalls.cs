@@ -187,7 +187,7 @@ public class TestFunctionCalls
     }
 
     /// <summary>
-    /// This tests the functions whose behaviour is a choice rather than a given, since those are the
+    /// This tests the functions whose behavior is a choice rather than a given, since those are the
     /// ones that could be wrong.  The rest are one-line calls into <c>Math</c> and are covered by
     /// <see cref="TestFunctionCatalog.TestEveryDeclaredFunctionIsWellFormed"/>.
     /// </summary>

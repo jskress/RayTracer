@@ -67,9 +67,9 @@
 //
 // **And they are darker than they look like they should be.**  Dry granite sits near a fifth of the
 // light it receives, and basalt lower; the old middle tone of 0.32 was closer to concrete.  Under a
-// warm daylight sky a too-bright grey does not read as pale stone, it reads as pale *plastic*, and
+// warm daylight sky a too-bright gray does not read as pale stone, it reads as pale *plastic*, and
 // takes the sun's color with it -- which is where the yellow came from.
-RockGrey = pigment granite with seed 7 {
+RockGray = pigment granite with seed 7 {
     [0.06, color [0.085, 0.082, 0.078],
      0.16, color [0.135, 0.130, 0.122],
      0.22, color [0.185, 0.178, 0.166],
@@ -81,11 +81,11 @@ RockGrey = pigment granite with seed 7 {
 // **Rock has almost no highlight, and what it has is not gathered.**  A tenth of specular at a
 // shininess of 22 is a soft, collected sheen, and a collected sheen sliding over a smoothly shaded
 // form is the strongest plastic cue there is -- it says *coated*.  Stone is scattering light off a
-// surface rough at a scale far below anything modelled here, so what it gives back is broad and dim.
+// surface rough at a scale far below anything modeled here, so what it gives back is broad and dim.
 // The ambient comes down with it: a sixth of the light arriving from nowhere in particular was lifting
 // the crevices to the same tone as the faces, which flattens exactly the shading that says *rough*.
 RockStone = material {
-    pigment RockGrey
+    pigment RockGray
     specular 0.03
     shininess 9
     ambient 0.06
@@ -204,7 +204,7 @@ primitive Cobble(size, season = 'summer', variant = 1) -> group {
 
 // -- Scree ---------------------------------------------------------------------------------------
 
-// An area of cobbles, `across` units on a side and centred where it is put.
+// An area of cobbles, `across` units on a side and centered where it is put.
 //
 // Counted on a grid and then thrown nearly a whole cell off it, exactly as the grass is, and for the
 // same reason: a lattice is very easy to notice and impossible to unsee.  They are gathered into

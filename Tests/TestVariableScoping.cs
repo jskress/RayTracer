@@ -13,7 +13,7 @@ namespace Tests;
 /// Until now the answer was "all of them from everywhere": the class that holds a scene's names could
 /// nest one set inside another and never did, only one ever being built for a whole render.  A group's
 /// loop counter was therefore written into the scene at large and left lying about after the group had
-/// finished with it.  These pin the behaviour that replaces that, because the functions this is
+/// finished with it.  These pin the behavior that replaces that, because the functions this is
 /// groundwork for cannot be written at all until a call can have names of its own.
 /// </para>
 /// </summary>

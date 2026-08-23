@@ -99,7 +99,7 @@ FireLogBark = material {
          0.288, color [0.198, 0.153, 0.114],
          0.507, color [0.248, 0.196, 0.148]]
         // A log here is about a sixth of a unit across, and bark furrows on a log that size run a
-        // centimetre or two apart -- twenty or thirty cells round the circumference.  At 0.075 the
+        // centimeter or two apart -- twenty or thirty cells round the circumference.  At 0.075 the
         // cells came out a third of the log's diameter each and it read as a pineapple.
         scale 0.022
     }
@@ -262,32 +262,32 @@ primitive Embers(size, variant = 1) -> group {
 // meant and cannot swing the wrong end.
 primitive FireLogs(size, variant = 1) -> group {
     return group {
-        // The bed: a couple lying across each other, off centre, which is what the leaning ones rest
+        // The bed: a couple lying across each other, off center, which is what the leaning ones rest
         // against and what holds the coals up off the cold ground.
         for lying in [0, 1] {
             long = size * (0.92 + random(lying, 90, variant) * 0.3)
             thick = size * (0.072 + random(lying, 96, variant) * 0.022)
-            turn = (34 + lying * 68 + random(lying, 88, variant) * 26) * π / 180
+            turn = 34 + lying * 68 + random(lying, 88, variant) * 26
             off = size * (0.04 + random(lying, 89, variant) * 0.12)
 
             tube {
                 material FireLogBark
-                radius thick at [-long * 0.5 * cos(turn), thick, -long * 0.5 * sin(turn) + off]
-                radius thick * 0.86 at [long * 0.5 * cos(turn), thick, long * 0.5 * sin(turn) + off]
+                radius thick at [-long * 0.5 * cos(turn degrees), thick, -long * 0.5 * sin(turn degrees) + off]
+                radius thick * 0.86 at [long * 0.5 * cos(turn degrees), thick, long * 0.5 * sin(turn degrees) + off]
             }
         }
 
         // The lean: bases out on the ground, tips gathered over the middle but not all at one point,
         // since four logs meeting exactly would read as a tripod rather than as a fire.
         for log in [0, 4] {
-            around = (log * 72 + 14 + random(log, 93, variant) * 46) * π / 180
+            around = log * 72 + 14 + random(log, 93, variant) * 46
             reach = size * (0.34 + random(log, 91, variant) * 0.18)
             top = size * (0.40 + random(log, 94, variant) * 0.22)
             thick = size * (0.056 + random(log, 95, variant) * 0.030)
 
             tube {
                 material FireLogBark
-                radius thick at [reach * cos(around), thick * 0.8, reach * sin(around)]
+                radius thick at [reach * cos(around degrees), thick * 0.8, reach * sin(around degrees)]
                 radius thick * 0.84 at [size * (random(log, 99, variant) - 0.5) * 0.18, top, size * (random(log, 100, variant) - 0.5) * 0.18]
             }
         }

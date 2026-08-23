@@ -102,7 +102,7 @@ public class TestTubeDegenerateCurves
     public void TestASegmentOfNoLengthIsNamedForWhatItIs()
     {
         // A segment whose points all coincide has no direction to travel in, so its tangent is the
-        // zero vector.  The continuity check used to take the angle between that and its neighbour,
+        // zero vector.  The continuity check used to take the angle between that and its neighbor,
         // which is an arc-cosine of a NaN -- so it refused the tube while reporting that its
         // segments "bend by about NaN degrees", naming neither the place nor the problem.
         Tube tube = new ()

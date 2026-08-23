@@ -81,17 +81,17 @@ primitive BuildWallOf(variant) -> material {
 
 // The brick pattern is laid out in *inches*: its brick is eight long, three high and four and a half
 // deep, with a half-inch joint, which is a real brick.  So the only thing to work out is how many
-// scene units an inch is, and a two-storey house is twenty feet -- two hundred and forty inches.
+// scene units an inch is, and a two-story house is twenty feet -- two hundred and forty inches.
 // Brick is a real size whatever size the house is, so a taller house gets more courses rather than
-// bigger bricks, which is one of the stronger cues that a thing is built rather than modelled.
+// bigger bricks, which is one of the stronger cues that a thing is built rather than modeled.
 
-// Three bricks to go with the three walls: a yellow stock, a red, and a grey.
+// Three bricks to go with the three walls: a yellow stock, a red, and a gray.
 //
 // The mortar is only a shade lighter than its brick, which is what a wall looks like from across a
 // street rather than from a foot away.
 //
 // It is worth recording what that did *not* fix, since the reasoning that led to it was wrong.  These
-// walls read pale grey under the gallery's sky, and the theory was that a joint takes up a fifth of a
+// walls read pale gray under the gallery's sky, and the theory was that a joint takes up a fifth of a
 // wall's face, so mortar much lighter than the brick would average the whole wall towards it.
 // Darkening all three mortars moved the walls by **one part in two hundred and fifty-five** -- nothing.
 // What makes a sky-lit wall pale is the sky's own light filling in the channels the brick is dark in:
@@ -169,7 +169,7 @@ primitive BuildBrickOf(variant, height, sx, sy, sz, ny = 0, nz = 0) -> material 
 // brick.  Painting all three a cream was measured at gallery distance and the yellow stock house came
 // back with a gable of 131, 127, 108 over a wall of 126, 126, 107 -- the boarding had simply vanished,
 // while the same cream over red brick stood 30 clear.  A pale brick has no room left above it, so its
-// boarding goes dark instead; the red keeps its off-white, and the grey a sage that sits 16 below it.
+// boarding goes dark instead; the red keeps its off-white, and the gray a sage that sits 16 below it.
 // One dark, one light, one middling, and each one chosen against what it is over.
 //
 // The `color` casts are load-bearing.  A bare `[r, g, b]` is a tuple, and the `-> color` on the
@@ -331,7 +331,7 @@ primitive BuildHouseShell(height, season, variant, wide, deep) -> group {
             //
             // **The limiting box has to be thin, and it was not.**  The intersection's thickness in Z
             // was set by the diamond's own uniform scale, wide * 0.7071, which for a house six units
-            // high is 1.44 either side: a gable 2.88 thick, centred just outside a face 1.80 out, so
+            // high is 1.44 either side: a gable 2.88 thick, centered just outside a face 1.80 out, so
             // it stood 1.42 clear of the house at both ends.  What that looked like was a solid
             // triangular prism jutting out over the upstairs windows -- and it was there from the
             // first render of this library, unremarked, because a gable seen straight on looks the
@@ -421,7 +421,7 @@ primitive BuildHouseShell(height, season, variant, wide, deep) -> group {
         // a small thing that reads at any distance, because it is the one horizontal line on a roof
         // otherwise made of two slopes going the other way.
         // The apex sits at wide * 1.12 above the wall top, not wide * 1.0: each slope runs
-        // wide * 0.80 along its own 45 degrees from a centre at wide * 0.56, which reaches
+        // wide * 0.80 along its own 45 degrees from a center at wide * 0.56, which reaches
         // 0.56 + 0.80 * cos(45) = 1.13.  Set at 1.0 the cap was inside the roof and showed nothing.
         cube { material BuildTrim  scale [wide * 0.07, wide * 0.07, deep * 1.16]
                rotate Z 45
@@ -452,7 +452,7 @@ primitive House(height, season = 'summer', variant = 1) -> group {
         // drawing and not in a street.  What makes a doorway is the things around it: a surround
         // standing proud of the render, a step to meet the ground, and a head over the top.  All
         // three project, and projecting is the whole point -- each throws a small shadow, and it is
-        // those shadows rather than the colour that say a hole was made in a wall.
+        // those shadows rather than the color that say a hole was made in a wall.
         // Set so the foot of the door lands on top of the plinth, at height * 0.06, rather than
         // 0.18 below it.  The door always started inside the plinth; nothing showed while it was a
         // flat panel, but a step at the foot of it then had nowhere to sit and read as a nub.
@@ -509,10 +509,10 @@ primitive Row(houses, season = 'summer', variant = 1) -> group {
 primitive Tower(height, season = 'summer', variant = 1) -> group {
     wide = height * (0.15 + random(variant, 71) * 0.06)
     deep = wide * (0.72 + random(variant, 72) * 0.4)
-    // A storey is a storey whatever the building is: a taller tower has *more* floors, not taller
+    // A story is a story whatever the building is: a taller tower has *more* floors, not taller
     // ones.  Deriving the count from the height as a fraction gave every tower the same eight.
     floors = max(3, floor(height / 2.2))
-    storey = height / floors
+    story = height / floors
     bays = 2 + floor(random(variant, 73) * 3)
 
     return group {
@@ -531,8 +531,8 @@ primitive Tower(height, season = 'summer', variant = 1) -> group {
             for bay in [0, bays - 1] {
                 across = (bay - (bays - 1) * 0.5) * wide * 1.6 / bays
 
-                object BuildWindow(wide * 0.5 / bays, storey * 0.26, deep * 0.05) {
-                    translate [across, level * storey + storey * 0.45, -deep]
+                object BuildWindow(wide * 0.5 / bays, story * 0.26, deep * 0.05) {
+                    translate [across, level * story + story * 0.45, -deep]
                 }
             }
         }

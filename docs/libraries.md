@@ -298,12 +298,12 @@ percentiles, and the speckle arrives.
 
 **Stone is darker than it seems it should be.**  Dry granite returns about a fifth of the light that
 falls on it, and basalt less; the old middle tone of 0.32 was concrete.  Under a warm sky a too-bright
-grey does not read as pale stone but as pale *plastic*, and it takes the sun's color with it — which is
+gray does not read as pale stone but as pale *plastic*, and it takes the sun's color with it — which is
 where the yellow cast came from.
 
 **A gathered highlight is the strongest plastic cue there is.**  `specular 0.10` at `shininess 22` is a
 soft collected sheen, and a collected sheen sliding across a smoothly shaded form says *coated*.  Stone
-scatters off a surface rough far below the scale of anything modelled, so what comes back is broad and
+scatters off a surface rough far below the scale of anything modeled, so what comes back is broad and
 dim: `specular 0.03` at `shininess 9`.  The ambient came down with it, from 0.16 to 0.06 — a sixth of
 the light arriving from nowhere in particular was lifting the crevices to the same tone as the faces,
 flattening the very shading that says *rough*.
@@ -337,7 +337,7 @@ their ends meeting in the middle and their far ends radiating like the spokes of
 28° off the ground besides.  A leaning log is the other way about, so each is now given its two ends
 directly rather than rotated into place: it says what is meant, and it cannot swing the wrong end.
 
-**Bark, not a flat brown.**  A log of one uniform colour is a dowel — nothing about its surface says
+**Bark, not a flat brown.**  A log of one uniform color is a dowel — nothing about its surface says
 wood, so the eye reads the shape alone, and the shape of a tube is a tube.  The bark is a
 [`crackle`](pigments-and-patterns.md#continuous-patterns) pigment, which is a web of cracks between cells and
 therefore exactly the right pattern, with its stops set at crackle's own percentiles rather than spread
@@ -431,7 +431,7 @@ invisible from any camera standing on the ground, and a season that cannot be se
 ignored.
 
 **A wall made of something, and not all of the same something.**  A house wears brick — one of three, a
-yellow stock, a red or a grey, picked by its variant along with everything else — and its gable is
+yellow stock, a red or a gray, picked by its variant along with everything else — and its gable is
 boarded and painted above it.  That is what houses do, and it also puts a change of texture exactly
 where the wall stops, which does more for the top of a facade than either material does alone.  A
 `Tower` gets neither; a block in render or concrete is what a block is, and it keeps the two kinds of
@@ -514,10 +514,10 @@ step at the foot.  The downpipe is the cheapest of them and possibly the most va
 line on a face otherwise made of horizontal courses, and the eye finds it at any distance.
 
 On a vehicle it meant **wing mirrors** above all.  Everything else on a car lies flush or recessed —
-lamps, plates, a grille all colour the face without changing its outline — and a mirror is the one
+lamps, plates, a grille all color the face without changing its outline — and a mirror is the one
 thing that breaks the line of the body.  A body with an unbroken line reads as a pressed-metal toy
 however well it is painted.  Then a **grille** with bars in a sunken recess, since a nose of paint and
-two lamps reads as blank, **number plates**, and an **exhaust** off centre at the back, because they
+two lamps reads as blank, **number plates**, and an **exhaust** off center at the back, because they
 never come out of the middle.
 
 ##### What makes a box into a car
@@ -582,7 +582,7 @@ far less work, and gives itself away at exactly the place a seascape is looking:
 plane is still a straight line.
 
 **It wants anti-aliasing, and that is the bill for the waves being real.**  Real detail at a distance
-aliases.  At one sample a pixel, water going away from the camera turns to grey mush near the horizon,
+aliases.  At one sample a pixel, water going away from the camera turns to gray mush near the horizon,
 because each pixel is averaging some normals that mirror the sky and some that look down into the
 dark, and the average of those is neither.  Measured on a horizon-filling ocean at 400×300: **1.5
 seconds with a mush band, 31 seconds at `-a adaptive:3` and clean.**  The same bill comes due for any
@@ -620,6 +620,133 @@ this.  Push the shear past about a third of a wavelength and the surface stops l
 folding into overlapping sheets, which is a mess rather than a breaker.  That wants a different
 surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
 an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
+
+#### Roads
+
+```
+import 'roads' { Road, Curb, Pavement }
+
+object Road(80, 7)
+object Curb(80)        { translate Z 3.5 }
+object Pavement(80, 3) { translate Z 5.2 }
+```
+
+| | |
+| --- | --- |
+| `Road` | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
+| `Curb` | A curb run, for the edge of a carriageway. |
+| `Pavement` | A footway in slabs, for behind the curb. |
+| `Junction` | The mouth where a side road opens off a main one. |
+| `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
+| `Crossing` | A zebra, laid on a carriageway of the same width. |
+
+**The first two numbers are a length and a width**, because a road is the one thing in these libraries
+that genuinely has two sizes and no sensible ratio between them.  The two after them mean what they
+always mean, **what time of year** and **which one of that kind**.
+
+**These run along `X`**, like the [vehicles](#vehicles) and the [trains](#trains).
+
+**The road surface is `y = 0`** and everything else hangs below it, which is exactly where `vehicles`
+puts the bottom of its tires — so a car dropped on a road at the same origin stands on it.  It does mean
+a `plane` at `y = 0` is the wrong ground for a street: put the verge a little lower, around `-0.12`, and
+let the curb stand out of it.
+
+The variant picks the surface, and here that is a bigger choice than a color: `0` is new asphalt, nearly
+black; `1` is worn asphalt, grayed and cracked; `2` is concrete, pale and laid in bays.
+
+##### What makes a slab into a road
+
+A road is the flattest thing in any of these scenes, so it has the least to work with.
+
+**Camber.**  A road is crowned so water runs off it, by about one part in forty — far too little to see
+directly, and most of what stops a carriageway reading as a sheet of paper, because the crown catches
+light differently from the channels.
+
+**Wheel tracks.**  Traffic polishes two bands in each lane and leaves the crown, the lane middles and the
+channels matte.  This is the strongest cue that a road is *used*, and it wants to be a **small**
+difference over a wide band: giving the tracks three times the surround's specular reads as two stripes
+painted down the road.
+
+**Dirt at the edges.**  Nothing sweeps the last half meter against a curb.  A road the same color from
+edge to edge reads as newly laid whatever its surface says.
+
+**Asphalt is much darker than it looks.**  New asphalt returns about a twentieth of the light falling on
+it, which is darker than almost anyone mixes it — and the [rocks](#rocks) lesson applies exactly.
+
+##### The surface is `parallelogram`s, and that is not a saving
+
+This is the part worth reading if you are going to build anything long and thin.
+
+A pattern is [worked out in the surface's own space](pigments-and-patterns.md#patterns-live-in-the-surfaces-space).
+A strip of carriageway built as a cube scaled `[30, 0.06, 0.25]` therefore stretches its granite thirty
+times along the road and squashes it to a quarter across — the first version of this rendered long
+longitudinal streaks and not one crack anywhere.  A [`parallelogram`](surfaces.md#parallelogram) is given
+a corner and two edge vectors and carries **no transform at all**, so its pattern is in world
+coordinates.  That also makes the cracks run continuously across the strip seams, which compensating a
+cube's scale would not.
+
+**Each strip is tilted rather than laid flat.**  A parallelogram takes edge *vectors*, so giving the
+second one a `Y` component puts the strip on the camber's slope and lets consecutive strips meet exactly.
+Flat strips leave a vertical step at every seam and neither way of hiding one works: butting them shows
+the dark build-up through the step, and overlapping them by a centimeter turns the higher edge into a lip
+that casts a thin shadow down the road.
+
+**A joint is a gap, not a line laid on top.**  Concrete is laid in bays, so the wearing course is laid in
+bays with a gap between them and the build-up shows through.  A dark cube across the road cannot do it —
+a cube is flat and the road is crowned, so it sits *under* the surface across most of the width and pokes
+out only near the channels.  Asphalt gets one bay the length of the road and a gap of nothing, so the
+same loop serves both.
+
+##### Cracks are the rare end of `crackle`, and where that end is matters twice
+
+`crackle` climbs from nought at its seed points towards the cell walls, so darkening only near the top
+paints the walls and leaves a sparse net of lines over an even surface.  Spread the same map evenly over
+nought to one and the whole road becomes dark crazy paving.  But the top is lower and narrower than it
+looks, and this went wrong in both directions before it came right:
+
+- Measured over sixty thousand points, crackle's 95th percentile is **0.508** and its 99th is **0.666**.
+  Dark tones at 0.68 and 0.82 are therefore *past the end of the distribution*, and rendered a road with
+  no cracks in it at all.
+- Moved to 0.56, they picked out only crackle's **vertices**, where three cells meet, and rendered as
+  scattered dots.  Whole walls need a wider band: 0.46 is about the 91st percentile.
+- And the cells have to be small.  The top few per cent of crackle is a *ring* around every wall, so at
+  55 cm cells those rings render as dark blobs; only at 20 cm do they read as cracking.
+
+##### Joining two roads
+
+**A junction is a piece of main road, not a shape of its own.**  The main road's camber runs straight
+through it and the side road ramps up to meet it, which is what a real side turning does — the
+alternative is to invent a surface draining both ways at once, and then neither road's channel lines up
+with it.  So `Junction` is the same carriageway with the markings left off, because markings stop at a
+junction, and a scene lays road either side of it:
+
+```
+object Road(30, 7)     { translate X -19 }
+object Junction(7, 8)
+object Road(30, 7)     { translate X  19 }
+```
+
+**`CurbCorner`'s origin is its center of curvature, not the corner.**  This is the one thing here that is
+easy to get wrong.  For a pavement corner at `(cx, cz)` with road on its `+X` and `+Z` sides, the center
+sits a radius *diagonally inside* the pavement at `(cx - r, cz - r)`, and the arc meets the straight runs
+at `(cx - r, cz)` and `(cx, cz - r)` — so those runs stop a radius short of the corner.  Put the origin on
+the corner itself and the arc swings away into the pavement, leaving a gap at both ends.
+
+Two straight curbs mitred at a right angle look like a drawing; a radius looks like a street.  It is a
+loop of short straight `Curb` runs turned around the arc, and the turn that points each face outward is
+`-90 - a`: a `Curb` runs along X with its face looking towards `-Z`, and under `rotate Y θ` that face
+lands on `(-sin θ, 0, -cos θ)`, which equals the outward normal `(cos a, 0, sin a)` exactly there.
+
+**A crossing's bars run along the road, not across it**, which surprises people who have not looked
+lately — you walk across a zebra *between* its stripes.  That turns out to be the geometry the
+carriageway is already built from, so a bar is one strip of it painted, and picks up the camber for free
+by being tilted exactly as the strip beneath it.
+
+##### Winter on a road is not winter on a roof
+
+**The traffic clears the tracks and nothing clears the rest.**  So snow lies along the crown, where no
+wheel runs, and banks up in the channels where it is thrown.  A road under snow with a clean unbroken
+white surface is a road nobody has driven since it fell.
 
 #### Trains
 
@@ -679,7 +806,7 @@ straight crimson cylinder over a tapered lathe throws the taper away and leaves 
 **No dome.**  Almost every other engine has a steam dome standing on the barrel and a Great Western taper
 boiler does not, because the regulator is in the smokebox.  Leaving it off only works if it is deliberate:
 the boiler top runs clean from the chimney to the safety valve, and that clean line is most of what makes
-the class recognisable.
+the class recognizable.
 
 **Copper and brass, in two places only.**  The chimney cap and the safety valve bonnet.  Everything else
 bright on the engine is lining, and lining is thin.  Put polish anywhere else and it stops looking like a

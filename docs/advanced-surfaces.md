@@ -592,7 +592,7 @@ heightfield {
         }
     }
 
-    // The field is built over the unit square, so centre it and then give it its extent.
+    // The field is built over the unit square, so center it and then give it its extent.
     translate [-0.5, 0, -0.5]
     scale [7, 1.6, 7]
 }
