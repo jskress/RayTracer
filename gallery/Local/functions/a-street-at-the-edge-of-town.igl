@@ -3,7 +3,8 @@
 //     import 'buildings'   { House, Row, Tower }
 //     import 'trees'       { Elm, Birch }
 //     import 'undergrowth' { Grass, Tuft }
-//     import 'daylight'    { HazyAfternoon, HazyAfternoonLight }
+import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
+//     import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
 //
 // That earlier scene raises eleven buildings out of one loop and no two alike, and it is about the two
 // small things in the language that let a loop vary what it makes.  It says of its own buildings that
@@ -47,7 +48,6 @@
 import 'buildings'   { House, Row, Tower }
 import 'trees'       { Elm, Birch }
 import 'undergrowth' { Grass, Tuft }
-import 'daylight'    { HazyAfternoon, HazyAfternoonLight }
 
 context {
     parallel pixel scanner
@@ -69,14 +69,19 @@ camera {
 
 // The sun is round on the near side, which is what lights a frontage.  Swing the azimuth and the whole
 // street turns to shadow -- a facade is only a facade while something is falling on it.
-background physical sky {
-    sun elevation 30
-    sun azimuth 36
-    turbidity 3.4
-    brightness 3
-}
+//
+// **The azimuth is given here and the rest of the sky is not**, which is the split `daylight` makes: the
+// hour and the air belong to the sky's name, and which way the sun lies belongs to whoever framed the
+// shot.  These houses face -Z, so it takes an azimuth within ninety degrees of nought to light a
+// frontage at all; 36 puts the sun round on the near side and far enough off the camera's axis to rake.
+//
+// This scene used to write the whole sky out, because no stock sky in that library stood anywhere near
+// here -- and it used to *import* `HazyAfternoon` and never use it, which read as though a sky at
+// azimuth 220 were the one in force.  `SoftAfternoon` is now that missing sky, and it is these very
+// numbers: the library learned them from this scene.
+background SoftAfternoonFrom(36)
 
-sky light { samples 32 }
+light SoftAfternoonLight
 
 // The verge.
 plane {

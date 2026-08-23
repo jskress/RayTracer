@@ -62,6 +62,8 @@ light GoldenHourLight
 | --- | --- |
 | `ClearMorning` | Mid-morning, sun well up, air washed clean. |
 | `ClearNoon` | Overhead and unforgiving; shadows fall almost straight down. |
+| `ClearAfternoon` | Mid to late afternoon, sun well down but nowhere near going. |
+| `SoftAfternoon` | The same hour with more in the air, and a softer edge to every shadow. |
 | `GoldenHour` | An hour before sunset, long shadows and a warmth in the light. |
 | `Sunset` | The sun on the horizon, most of its light gone red on the way. |
 | `HazyAfternoon` | Hot and thick, every edge softened and the blue washed out. |
@@ -101,9 +103,36 @@ compass does with `-Z` for north:
 | `180` | `+Z` |
 | `270` | `-X` |
 
-The six run from `110` to `268`, which is the half of the compass between `+X` and `-X` passing
-through `+Z` — morning on one side, evening on the other, and none of them behind you.  So face what
-you want lit toward `+Z`, or write a sky of your own with the azimuth you need:
+The stock azimuths run from `110` to `268`, which is the half of the compass between `+X` and `-X`
+passing through `+Z` — morning on one side, evening on the other, and none of them behind you.
+
+**So each sky also comes as a `…From(azimuth)`, and that is the one to reach for.**
+
+```
+import 'daylight' { ClearAfternoonFrom, ClearAfternoonLight }
+
+background ClearAfternoonFrom(40)
+light ClearAfternoonLight
+```
+
+The reason there is a whole second set of names is worth stating, because it is a real distinction and
+not a convenience.  Elevation is the hour, turbidity is the air and brightness is the exposure — all
+three are properties of the *day*, and belong to a sky's name.  Azimuth is not: it is a property of the
+**composition**, set by which way the subject faces and where the camera stands.  Welding it into a name
+means the name only serves scenes that happen to face the right way, and since every stock azimuth here
+faces `+Z` while the [buildings](#buildings) face `-Z` and the [vehicles](#vehicles) and
+[trains](#trains) face `+X`, that was every scene in the gallery.  They all wrote their own skies
+instead, which is what this section used to advise — and the library stopped growing as a result.
+`ClearAfternoon` and `SoftAfternoon` are two skies that came back out of those hand-written ones.
+
+**Which azimuth?**  Point it at the face you want lit and swing it thirty or forty degrees off, so the
+light rakes across the subject rather than flattening it.  For something facing `-Z` that is an azimuth
+around `30` to `50`; for something facing `+X`, subtract ninety.  A sun directly behind the camera lights
+everything and models nothing.
+
+`Overcast` and `Dusk` have no `…From` because they have no sun in them; there is nothing for an azimuth
+to mean.  And writing a sky out by hand is of course still there when you want an hour the library does
+not have:
 
 ```
 MyMorning = pigment physical sky { sun elevation 30  sun azimuth 20  turbidity 2.2  brightness 3 }
@@ -591,6 +620,103 @@ this.  Push the shear past about a third of a wavelength and the surface stops l
 folding into overlapping sheets, which is a mess rather than a breaker.  That wants a different
 surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
 an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
+
+#### Trains
+
+```
+import 'trains' { Locomotive, Tender, Track }
+
+object Track(60)
+object Locomotive(11.6)
+object Tender(8.05) { translate X -10.35 }
+```
+
+| | |
+| --- | --- |
+| `Locomotive` | A Great Western 4-6-0: coned boiler, copper-capped chimney, three coupled drivers on rods. |
+| `Tender` | The six-wheeled tender that runs behind it, coal heaped above the coping. |
+| `Track` | A length of line: rails on sleepers on ballast, at standard gauge. |
+
+**The first number is a length**, as it is for the road [vehicles](#vehicles) and for the same reason —
+an engine is described by how long it is, not how tall.  For `Track` it is how much line you want.  The
+other two numbers mean what they mean everywhere, **what time of year** and **which one of that kind**.
+
+**These face `+X`**, like the road vehicles, so an engine runs to the right in a camera looking the usual
+way and a line laid left to right needs no turning.
+
+**Rail top is `y = 0`.**  Everything the engine is made of is measured up from the rail it stands on, and
+the sleepers and ballast hang below.  An engine and a length of track therefore drop into a scene at the
+same origin and simply fit — but it means a `plane` at `y = 0` is the wrong floor for a railway.  Put the
+ground a little lower, around `-0.64`, and let the bed stand out of it.
+
+What it is a model of is 5972 *Olton Hall* in the crimson she was painted for the films, with the
+nameplates she wears there.  The dimensions are the prototype's, to the nearest fraction that matters:
+six-foot drivers, a coupled wheelbase of fifteen feet six, standard gauge, thirteen feet from rail to
+chimney top.  They are written in **meters**, by the same trick the [brick](#buildings) uses with inches
+— one line fixes how long a meter is for this engine and everything after it is a real measurement, so
+changing the length keeps the proportions without turning every number into a fraction of a fraction.
+
+##### What makes a box into a locomotive
+
+Five things, and the first two are worth more than the rest together.
+
+**Spokes.**  A locomotive wheel is mostly air, and a solid disc reads as a toy at any size.  The rim is a
+`difference` of two cylinders and the spokes are a `for` loop of thin bars turned about the axis, twenty
+to a driver.  What that buys is not only the wheel: it is the striped *shadow*, and the daylight coming
+through the frames under the boiler.
+
+**Rods.**  Spoked wheels alone still read as a cart.  What says *engine* is the coupling rod tying all
+three drivers together and the main rod reaching back from the cylinder, because those are the only parts
+whose whole purpose is that the thing moves.  They are [`tube`s](advanced-surfaces.md#tube) — two points
+and a radius, no angles to work out — flattened along one axis, since a rod is forged flat and a round one
+reads as plumbing.
+
+**A boiler that tapers.**  This is the Great Western signature and it is nearly free: one
+[`lathe`](advanced-surfaces.md#lathe) turns the barrel as a single revolved profile.  A parallel boiler is
+a tube; a coned one is a locomotive.  It has to be the *paint* that is turned, though — sleeving a
+straight crimson cylinder over a tapered lathe throws the taper away and leaves a sausage.
+
+**No dome.**  Almost every other engine has a steam dome standing on the barrel and a Great Western taper
+boiler does not, because the regulator is in the smokebox.  Leaving it off only works if it is deliberate:
+the boiler top runs clean from the chimney to the safety valve, and that clean line is most of what makes
+the class recognisable.
+
+**Copper and brass, in two places only.**  The chimney cap and the safety valve bonnet.  Everything else
+bright on the engine is lining, and lining is thin.  Put polish anywhere else and it stops looking like a
+locomotive and starts looking like a fairground ride.
+
+##### The bed is the railway
+
+At any distance a railway *is* two bright threads on a dark bed, and the bed is worth as much care as the
+engine standing on it.
+
+**A rail is two colors.**  The head is wiped bright by every wheel that passes and the web below it rusts.
+Painted one color the whole line vanishes into the ballast it sits on.
+
+**The ballast is one extruded trapezoid**, wide at the bottom and narrower at the top, with each top corner
+taken off by a `quad`.  It began as two flattened cubes stacked one on the other, which gives a stepped
+profile no heap of stones has.  Its top sits far enough below the sleeper tops to leave them about half
+proud — at a tenth proud, which is where it started, the bed reads as a slab with planks laid on it rather
+than as stone packed around them.
+
+**Gravel wants a pattern with cells in it**, not a noise, and which way round to map it is the whole
+question.  [`crackle`](pigments-and-patterns.md#continuous-patterns) is nought at its seed points and
+climbs towards the cell walls, so the seeds are the middles of the stones and the walls are the gaps
+between them.  Mapped dark-to-light in the obvious direction that paints the *gaps* pale, and a bed of
+crushed rock comes out as a white net drawn over dark ground — a mosaic, not gravel.  It wants the other
+way about: pale at nought where a stone face catches the light, dark at the top where the shadows are.
+
+And the stops are percentiles, not an even spread.  Measured over sixty thousand points, crackle runs 0 to
+1 but its median is **0.158** and only a hundredth of it is above **0.666**, so an even map leaves
+practically the whole bed in its darkest two tones.  This is the same trap the [rocks](#rocks) fell into,
+and the reason to measure a pattern before mapping it.
+
+##### Winter on an engine is not winter on a house
+
+The season had to be thought about here rather than copied.  **A boiler in steam is hot**, so nothing lies
+on the barrel, the smokebox or the chimney.  What carries snow is everything the fire never reaches: the
+buffer beam, the front platform, the cab roof and the tender.  An engine caught in snow with a white
+boiler is an engine nobody has lit, which is a different picture from the one a winter scene wants.
 
 ### Where Libraries Live
 

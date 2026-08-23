@@ -925,6 +925,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/an-engine-on-the-line.png">
+      <img alt="An Engine on the Line" height="120" src="Local/functions/an-engine-on-the-line.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/an-engine-on-the-line.igl">An Engine on the Line</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/bare-wood.png">
       <img alt="Bare Wood" height="120" src="Local/functions/bare-wood.png" width="160"/>
     </a></td>
