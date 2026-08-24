@@ -639,6 +639,10 @@ object Pavement(80, 3) { translate Z 5.2 }
 | `Junction` | The mouth where a side road opens off a main one. |
 | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
 | `Crossing` | A zebra, laid on a carriageway of the same width. |
+| `Crossroads` | Where two roads cross, with a stop line across each side arm. |
+| `Roundabout` | An island with a carriageway round it. |
+| `CurbArc` | A curb along part of a circle, for where a ring has to be broken. |
+| `CurbRing` | A whole circle of curb, for a roundabout's island. |
 
 **The first two numbers are a length and a width**, because a road is the one thing in these libraries
 that genuinely has two sizes and no sensible ratio between them.  The two after them mean what they
@@ -741,6 +745,57 @@ lands on `(-sin θ, 0, -cos θ)`, which equals the outward normal `(cos a, 0, si
 lately — you walk across a zebra *between* its stripes.  That turns out to be the geometry the
 carriageway is already built from, so a bar is one strip of it painted, and picks up the camber for free
 by being tilted exactly as the strip beneath it.
+
+##### Crossings of two roads, and roundabouts
+
+`Crossroads` is a `Junction` with two arms instead of one, and adds the thing that makes a crossing of
+two roads read as a junction rather than as a hole where the markings stop: a **stop line** across each
+side arm.  Its deck reaches a corner radius past the side road on each side, so there is carriageway under
+the four rounded corners.
+
+Those corners have to be written out rather than looped, and it is worth saying why, because a loop is the
+obvious thing to reach for.  For a main road of width `w` crossing a side road of width `v` with radius
+`r`, the four centers are at `(±(v/2 + r), ±(w/2 + r))` — and unless the two roads happen to be the same
+width those are *not* symmetric under a quarter turn, so rotating one placement by ninety degrees does not
+land on the next.
+
+`Roundabout` is the island plus the circulating carriageway.  The carriageway is `disc`s, which is the same
+trick the straight road plays with `parallelogram`s: a disc takes a center, a normal and a radius, and an
+`inner radius` makes it an annulus — so it carries no transform and its pattern is in world coordinates
+rather than stretched round the ring.  Three concentric annuli give the worn band where traffic actually
+circulates, and since they are flat and share their radii exactly they abut with no seam at all.
+
+**It is flat, and that is deliberate.**  A real roundabout has a crossfall and there is no honest way to
+put one here: a disc is planar by definition, and stacking concentric rings at descending heights brings
+back exactly the vertical-step seams the straight road had to be tilted to avoid — and a disc, unlike a
+parallelogram, cannot be tilted without becoming an ellipse.  A crossfall over six meters is fifteen
+centimeters, which is worth less than a ring of dark seams.
+
+**There is no curb round the outside of it**, because a roundabout's outer curb is broken at every entry
+and a full ring lays curb straight across each approach, walling the roads off.  Teaching the primitive
+about arms would mean telling it how many, how wide and at what angles, and it would still be wrong for
+the roundabout whose arms are not evenly spaced.  So the scene lays `CurbArc`s between its own entries,
+the same division of labor `Junction` uses:
+
+```
+object Roundabout(4.5, 6)
+for arm in [0, 3] {
+    object CurbArc(10.5, 21 + arm * 90, 48, 1)
+}
+```
+
+`CurbArc`'s `facing` is `0` for a face pointing away from the center — an island, with the road outside —
+and `1` for a face pointing towards it, with the road inside.  `CurbCorner` is this over ninety degrees
+and `CurbRing` over the whole circle, and both are *calls* to it rather than second copies of the loop:
+they started as copies, drifted immediately, and a test that renders a corner against a ninety-degree arc
+and compares them pixel for pixel caught it on its first run.
+
+One more thing about arcs.  **The segment count goes as the square root of the radius, not the radius.**
+The gap a chord leaves is `r · (1 − cos(turn/2))`, so holding that fixed makes the segment angle scale as
+one over root `r`.  A rule linear in the radius over-segments a big arc and under-segments a small one —
+and the small one is where it shows, since a tight corner is what a camera gets close to.  At four
+segments per unit of radius a four-and-a-half meter island came out visibly polygonal: twenty-degree
+segments bulge nearly seven centimeters off the circle, which is half a curb's width.
 
 ##### Winter on a road is not winter on a roof
 
