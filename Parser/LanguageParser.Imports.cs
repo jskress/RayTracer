@@ -20,6 +20,13 @@ public partial class LanguageParser
     /// the other ninety-eight.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// The libraries currently being read, innermost last.  A library may import another, so this is
+    /// what keeps a cycle from becoming a recursion that ends in a stack overflow: the message a scene
+    /// author gets should name the loop, not the call depth.
+    /// </summary>
+    private readonly List<string> _importing = [];
+
     private void HandleImports()
     {
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "importClause");
@@ -94,6 +101,21 @@ public partial class LanguageParser
         // kept back from the scene without taking it from the library's own exports as well.
         _context.InstructionContext = library;
 
+        // A library that imports its way back to one already open would otherwise recurse until the
+        // stack gave out.  The whole chain is named, because which two libraries close the loop is the
+        // only thing that tells an author where to cut it.
+        if (_importing.Contains(path))
+        {
+            throw new TokenException(
+                "Libraries import each other in a loop: " +
+                string.Join(" -> ", _importing.Append(path).Select(Path.GetFileName)) + ".")
+            {
+                Token = fileToken
+            };
+        }
+
+        _importing.Add(path);
+
         PushEntry(path);
 
         try
@@ -110,12 +132,31 @@ public partial class LanguageParser
                 }
 
                 HandleIncludes();
+
+                // A library may import another, and this is the line that lets it.  Without it an
+                // `import` inside a library reaches the general clause set, which does not hold one,
+                // and the author is told they have written an "unsupported object type".
+                //
+                // What the nested import does with what it finds falls out of the machinery already
+                // here rather than needing anything new.  Its own `ImportInstruction` is added to
+                // whatever context is current, which while this loop runs is the *outer library's* --
+                // so the inner library's values arrive when the outer one is executed.  And its
+                // primitives are pruned from the parser's table on the way out unless the outer library
+                // asked for them, which is right: a call of a primitive is *read* rather than looked up
+                // later, so by then the outer library's own primitives already hold what they need.
+                HandleImports();
+
+                if (CurrentParser.IsAtEnd())
+                    continue;
+
                 _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
             }
         }
         finally
         {
             _context.InstructionContext = scene;
+
+            _importing.RemoveAt(_importing.Count - 1);
         }
 
         // Everything the library holds, whichever sort it is.  A value and a thing arrive as

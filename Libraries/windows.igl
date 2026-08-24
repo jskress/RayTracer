@@ -1,0 +1,199 @@
+// Windows, for the buildings library and for any wall a scene builds itself.
+//
+//     import 'windows' { Sash, Casement, Shutters }
+//
+//     object Sash(0.5, 0.8, 0.05)
+//     object Casement(0.5, 0.8, 0.05) { translate X 2 }
+//     object Shutters(0.5, 0.8, 0.05) { translate X 4 }
+//
+// | `Sash`     | Two sashes stacked, with a meeting rail across and glazing bars up each. |
+// | `Casement` | Side-hung leaves either side of a mullion, with a transom near the head. |
+// | `Shutters` | A pair of louvred leaves, to flank a window that is already there. |
+//
+// **These are placed with their middle on the face of the wall**, so the glass falls behind it and the
+// frame and sill stand in front.  `-Z` is outward, which is the direction a building faces -- so the
+// wall's outer face is `z = 0` and **anything at positive Z is buried inside the wall**.  So the three
+// depths have to be stacked in order, and the order is the whole trick: the frame stands proud at
+// `-1.0d`, the glazing bars sit recessed in the reveal at about `-0.5d`, and the glass sits just behind
+// them at `-0.3d`.  Put the glass in front of the bars and it hides every one of them, which is how the
+// first version of this rendered a sash as one blank sheet; put it at positive Z and the wall hides the
+// glass instead, which is how the second one rendered an empty hole.  A wall is a cube scaled `[wide, tall, deep]`, so a window in it goes at
+// `translate [across, up, -deep]` and needs no arithmetic beyond that.
+//
+// **The three numbers are half-sizes**, matching the cube a wall is made of: `wide` is half the opening's
+// width, `tall` half its height, and `deep` half the wall's thickness.  That is not the convention the
+// rest of these libraries use -- everywhere else a number is a whole size -- and it is this way because a
+// window's every part is placed relative to a wall built the same way.
+//
+// -- What makes a hole in a wall into a window -----------------------------------------------------
+//
+// The `buildings` library says a window needs three things: glass set back, a frame standing proud, and
+// a sill that overhangs and throws a small shadow.  All of that is still true and still here.  What this
+// library adds is the fourth thing, which only matters once a camera comes close:
+//
+// **A window is divided.**  A single sheet of glass in a frame reads as a shop window at best and a
+// mirror at worst.  What says *window* is the bars across it -- a meeting rail halfway up a sash, a
+// mullion down the middle of a casement -- because those are what set the scale of the whole building.
+// A pane is about the size of a pane whatever the house is, so the number of them tells the eye how big
+// the wall behind them is, and a wall with one enormous pane has no size at all.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Window` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+
+// -- What a window is made of ----------------------------------------------------------------------
+
+// Glass is dark and a little reflective rather than transparent, which is what a window looks like from
+// outside in daylight: what you see is the sky it reflects, not the room behind it.
+WindowGlass = material {
+    pigment [0.075, 0.095, 0.115]
+    specular 0.58  shininess 150  reflective 0.22  ambient 0.04
+}
+
+// A shade lighter, for glass with a room's worth of nothing behind it -- the upper lights of a stair
+// window, say, where there is no curtain to darken it.
+WindowGlassPale = material {
+    pigment [0.105, 0.125, 0.148]
+    specular 0.60  shininess 160  reflective 0.26  ambient 0.05
+}
+
+// Three paints, so a street does not come out as one window repeated.
+WindowWhite = material { pigment [0.855, 0.845, 0.820]  specular 0.22  shininess 44  ambient 0.08 }
+WindowCream = material { pigment [0.800, 0.775, 0.700]  specular 0.20  shininess 40  ambient 0.08 }
+WindowGreen = material { pigment [0.215, 0.275, 0.235]  specular 0.24  shininess 48  ambient 0.06 }
+
+// A sill is stone, not paint, and that difference is worth having: it is the one part of a window that
+// gets rained on and the one part that is not the same color as the frame.
+WindowSill = material { pigment [0.640, 0.625, 0.590]  specular 0.10  shininess 22  ambient 0.07 }
+
+WindowShutter = material { pigment [0.255, 0.300, 0.255]  specular 0.16  shininess 32  ambient 0.06 }
+
+WindowSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
+
+primitive WindowFrameOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material WindowWhite }
+        case 1 { return material WindowCream }
+        default { return material WindowGreen }
+    }
+}
+
+// -- The parts every window has --------------------------------------------------------------------
+
+// The frame, the sill and the reveal, which is everything except how the glass is divided.  Both window
+// types are this plus their own bars, which is why it is one primitive rather than copied into each --
+// the curb arcs in `roads` are a standing reminder of what two copies of one thing do.
+primitive WindowSurround(wide, tall, deep, variant) -> group {
+    return group {
+        // The head, across the top and a little wider than the opening.
+        cube { material WindowFrameOf(variant)
+               scale [wide * 1.18, tall * 0.09, deep]  translate Y tall * 1.09 }
+        // The sill: wider still, and reaching further out than anything else, which is what throws the
+        // shadow that sells the whole thing.
+        cube { material WindowSill
+               scale [wide * 1.30, tall * 0.10, deep * 2.2]  translate Y -tall * 1.10 }
+        // The jambs.
+        cube { material WindowFrameOf(variant)
+               scale [wide * 0.10, tall, deep]  translate X -wide * 1.10 }
+        cube { material WindowFrameOf(variant)
+               scale [wide * 0.10, tall, deep]  translate X wide * 1.10 }
+    }
+}
+
+// Snow on a sill, which is the one ledge on a wall flat enough to hold any.
+primitive WindowSnow(season, wide, tall, deep) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                cube {
+                    material WindowSnowCap
+                    scale [wide * 1.28, tall * 0.022, deep * 2.1]
+                    translate [0, -tall * 0.99, -deep * 0.1]
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- A sash window ---------------------------------------------------------------------------------
+
+// Two sashes, one above the other, with the meeting rail where they overlap and two glazing bars up
+// each.  Six panes over six, which is the commonest window there has ever been.
+primitive Sash(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
+
+        object WindowSurround(wide, tall, deep, variant)
+
+        // The meeting rail, thicker than a glazing bar because two sashes overlap there.
+        cube { material WindowFrameOf(variant)
+               scale [wide, tall * 0.055, deep * 0.18]  translate Z -deep * 0.50 }
+
+        // Two bars up each sash, which makes three lights across.
+        for bar in [0, 1] {
+            cube { material WindowFrameOf(variant)
+                   scale [wide * 0.030, tall, deep * 0.18]
+                   translate [wide * (bar * 2 - 1) * 0.333, 0, -deep * 0.50] }
+        }
+        // And one across the middle of each sash, for six panes over six.
+        for half in [0, 1] {
+            cube { material WindowFrameOf(variant)
+                   scale [wide, tall * 0.026, deep * 0.18]
+                   translate [0, tall * (half * 2 - 1) * 0.5, -deep * 0.50] }
+        }
+
+        object WindowSnow(season, wide, tall, deep)
+    }
+}
+
+// -- A casement window -----------------------------------------------------------------------------
+
+// Two leaves hung at their outer edges, meeting on a mullion down the middle, with a transom across near
+// the head and a small light above it.  Fewer, larger panes than a sash, which is what makes the two read
+// as different windows rather than as the same window twice.
+primitive Casement(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
+        // The light above the transom is paler: there is rarely anything hung across it.
+        cube { material WindowGlassPale
+               scale [wide, tall * 0.22, deep * 0.24]  translate [0, tall * 0.78, -deep * 0.06] }
+
+        object WindowSurround(wide, tall, deep, variant)
+
+        // The mullion, which stops at the transom rather than running the whole height.
+        cube { material WindowFrameOf(variant)
+               scale [wide * 0.055, tall * 0.78, deep * 0.18]
+               translate [0, -tall * 0.22, -deep * 0.50] }
+        // The transom.
+        cube { material WindowFrameOf(variant)
+               scale [wide, tall * 0.045, deep * 0.18]  translate [0, tall * 0.56, -deep * 0.50] }
+
+        object WindowSnow(season, wide, tall, deep)
+    }
+}
+
+// -- Shutters --------------------------------------------------------------------------------------
+
+// A pair of louvred leaves, folded back against the wall either side of a window that is already there.
+// They are their own primitive rather than an option on the windows, because whether a window has them
+// is a matter of where the building is and not of what sort of window it is.
+primitive Shutters(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        for side in [0, 1] {
+            group {
+                cube { material WindowShutter
+                       scale [wide * 0.52, tall * 1.02, deep * 0.7] }
+                // The louvres: enough of them to read as louvres and no more.  They are laid on the
+                // face rather than cut into it, which at the size a shutter is drawn is the same thing.
+                for slat in [0, 5] {
+                    cube { material WindowShutter
+                           scale [wide * 0.46, tall * 0.055, deep * 0.35]
+                           translate [0, (slat - 2.5) * tall * 0.30, -deep * 0.8] }
+                }
+                translate [wide * 1.72 * (side * 2 - 1), 0, -deep * 0.2]
+            }
+        }
+    }
+}

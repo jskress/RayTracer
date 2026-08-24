@@ -983,7 +983,12 @@ public class TestShippedLibraries
             object {{call}}
             """);
 
-        return Render(scene, 110, 84);
+        // Big enough to resolve a pane of glass.  At 110 by 84 a building is fifty pixels tall and a
+        // window a couple, which was fine while a window was one dark sheet -- but the windows library
+        // divides them with glazing bars, and six panes across two pixels average out to the color of
+        // the frame.  The glass then counts as nothing and a test that looks for it reports a building
+        // with no windows on either side.
+        return Render(scene, 320, 240);
     }
 
     /// <summary>
@@ -1673,5 +1678,134 @@ public class TestShippedLibraries
         return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
     }
 
+
+    /// <summary>
+    /// What the windows and doors libraries hold out, written down rather than read out of them.
+    /// </summary>
+    private static readonly string[] Openings =
+        ["Sash", "Casement", "Shutters", "Door", "GlazedDoor", "DoubleDoor", "Fanlight"];
+
+    [TestMethod]
+    public void TestEveryOpeningBuilds()
+    {
+        foreach (string name in (string[]) ["windows.igl", "doors.igl"])
+        {
+            File.Copy(
+                Shipped.First(path => Path.GetFileName(path) == name),
+                Path.Combine(_directory, name), true);
+        }
+
+        foreach (string opening in Openings)
+        foreach (string season in (string[]) ["summer", "winter"])
+        foreach (int variant in (int[]) [0, 1, 2, 3])
+            Assert.IsNull(Fit(opening, season, variant), $"{opening} should fit in {season} as {variant}");
+    }
+
+    [TestMethod]
+    public void TestASashsGlassShowsAndItsBarsDivideIt()
+    {
+        // The one fault these libraries are prone to, and it does not look like a fault -- it looks like
+        // the geometry was never made.  The depths have to stack: glass deepest, bars in front of it,
+        // frame in front of those.  Wrong one way and the glass hides the bars; wrong the other and the
+        // wall hides the glass.
+        //
+        // **Two earlier versions of this test passed in both broken states**, which is worse than having
+        // no test.  Counting dark pixels caught the shadow the sill throws; counting where a row crosses
+        // the picture's midpoint caught the jambs and the sill's edge.  Scanning a whole picture for one
+        // feature keeps finding everything except that feature.
+        //
+        // So the glass is *marked* instead.  The test owns its copy of the library, so it paints the
+        // glass magenta and then looks at nothing else: magenta appearing at all means the wall is not
+        // hiding it, and magenta appearing in three separate runs along a row means two glazing bars are
+        // standing in front of it dividing it into three lights.
+        string library = Path.Combine(_directory, "windows.igl");
+
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "windows.igl"), library, true);
+
+        // The *whole* material is replaced, not just its pigment.  Appending `ambient 1` after the
+        // pigment does nothing, because the material's own `ambient 0.04` comes later in the block and
+        // wins -- which rendered the marked glass almost black and had this test reporting no glass at
+        // all when the geometry was perfectly correct.
+        File.WriteAllText(library, File.ReadAllText(library).Replace(
+            """
+            WindowGlass = material {
+                pigment [0.075, 0.095, 0.115]
+                specular 0.58  shininess 150  reflective 0.22  ambient 0.04
+            }
+            """.Replace("\n            ", "\n").Trim(),
+            "WindowGlass = material { pigment [1, 0, 1]  ambient 1  diffuse 0  specular 0 }"));
+
+        Assert.DoesNotContain("0.075, 0.095, 0.115", File.ReadAllText(library),
+            "the glass material was not replaced, so this test would prove nothing");
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'windows' { Sash }
+            context { angles are degrees  no gamma }
+            camera { location [0, 1.05, -2.4]  look at [0, 1.05, 0]  field of view 40 }
+            point light { location [-4, 5, -6] }
+            background [0, 0, 0]
+            cube { material { pigment [0.55, 0.5, 0.44] }  scale [1.2, 0.9, 0.14]  translate Y 1.0 }
+            object Sash(0.30, 0.46, 0.14) { translate [0, 1.05, -0.14] }
+            """);
+
+        Assert.IsNull(Render(scene, 220, 170), "the sash should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int magenta = 0;
+        int mostRuns = 0;
+
+        for (int y = 0; y < picture.Height; y++)
+        {
+            int runs = 0;
+            bool inRun = false;
+
+            for (int x = 0; x < picture.Width; x++)
+            {
+                Color pixel = picture.GetPixel(x, y);
+                bool isGlass = pixel.Red > 0.6 && pixel.Blue > 0.6 && pixel.Green < 0.3;
+
+                if (isGlass)
+                    magenta++;
+
+                if (isGlass && !inRun)
+                    runs++;
+
+                inRun = isGlass;
+            }
+
+            mostRuns = Math.Max(mostRuns, runs);
+        }
+
+        Assert.IsTrue(magenta > 100,
+            $"only {magenta} pixels of glass are visible; the wall is hiding it, which is what happens " +
+            "when the glass is placed at positive Z");
+        Assert.IsTrue(mostRuns >= 3,
+            $"the glass shows as {mostRuns} run(s) across its widest row; a sash has two glazing bars " +
+            "standing in front of it, so it should show as three.  One run means the glass is in front " +
+            "of the bars and hiding them");
+    }
+
+    /// <summary>
+    /// Fits one opening into a plain wall and hands back whatever stopped it.
+    /// </summary>
+    private string Fit(string opening, string season, int variant)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string library = opening is "Sash" or "Casement" or "Shutters" ? "windows" : "doors";
+
+        File.WriteAllText(scene, $$"""
+            import '{{library}}' { {{opening}} }
+            context { angles are degrees  no gamma }
+            camera { location [0, 1.05, -3] look at [0, 1.05, 0]  field of view 44 }
+            point light { location [-4, 5, -6] }
+            background [0.5, 0.6, 0.8]
+            cube { material { pigment [0.55, 0.5, 0.44] }  scale [1.2, 0.9, 0.14]  translate Y 1.0 }
+            object {{opening}}(0.30, 0.46, 0.14, '{{season}}', {{variant}}) { translate [0, 1.05, -0.14] }
+            """);
+
+        return Render(scene);
+    }
 
 }

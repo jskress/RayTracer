@@ -1,0 +1,260 @@
+// Doors, for the buildings library and for any wall a scene builds itself.
+//
+//     import 'doors' { Door, GlazedDoor, DoubleDoor, Fanlight }
+//
+//     object Door(0.45, 1.0, 0.05)
+//     object GlazedDoor(0.45, 1.0, 0.05) { translate X 2 }
+//     object DoubleDoor(0.70, 1.0, 0.05) { translate X 4 }
+//
+// | `Door`       | A panelled leaf, with a surround up both sides, a head across and a step at the foot. |
+// | `GlazedDoor` | The same, with the upper panels replaced by glass and a bar across it. |
+// | `DoubleDoor` | Two leaves meeting on a centre stile, for something that is not a house. |
+// | `Fanlight`   | A light over a doorway, to sit above one that is already there. |
+//
+// **These follow the same conventions as `windows`**, which they are meant to sit beside: placed with
+// their middle on the face of the wall, `-Z` outward, and all three numbers half-sizes to match the cube
+// a wall is made of.  A door in a wall goes at `translate [across, up, -deep]`.
+//
+// **And the depths stack in the same order, which is the thing to get right.**  The wall's face is
+// `z = 0`, so anything at positive Z is buried inside it.  Working outward from the wall: glass sits
+// deepest, then the glazing bar in front of it, then the leaf itself, then the raised panels on the leaf,
+// then the furniture, and the surround stands proudest of all.  The `windows` library records what
+// happens when that order is got wrong, and it is worth reading before changing any number here.
+//
+// -- What makes a slab into a door -----------------------------------------------------------------
+//
+// The `buildings` library's four things -- a plinth, depth in the opening, an overhang, a top that is
+// not a cut -- are about a whole building.  A door is small enough that only two things matter, and
+// neither is the door.
+//
+// **The step.**  A leaf that meets the ground in a line reads as a painted rectangle.  A step, wider than
+// the opening and standing out from the wall, is what says the door is a way *in* rather than a panel.
+//
+// **The panels.**  A flat leaf is a flat leaf at any size, and one raised panel changes that -- because a
+// panel has a fixed size in the world, so how many of them there are tells the eye how big the door is,
+// and therefore how big the house is.  It is the same argument the `windows` library makes for glazing
+// bars, and it is the reason both libraries exist rather than a plain rectangle serving for either.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Door` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+
+// -- What a door is made of ------------------------------------------------------------------------
+
+// Four paints, and none of them pale: a front door is the one thing on a house that is allowed a color,
+// and the whole point of it is that it is not the color of the wall.
+DoorBlack = material { pigment [0.048, 0.050, 0.056]  specular 0.34  shininess 70  ambient 0.05 }
+DoorRed   = material { pigment [0.310, 0.075, 0.070]  specular 0.32  shininess 66  ambient 0.05 }
+DoorBlue  = material { pigment [0.085, 0.130, 0.210]  specular 0.32  shininess 66  ambient 0.05 }
+DoorGreen = material { pigment [0.075, 0.155, 0.110]  specular 0.32  shininess 66  ambient 0.05 }
+
+// A shade darker than the leaf, for the panels' recesses -- they are in shadow whatever the light does.
+DoorShade = material { pigment [0.030, 0.032, 0.036]  specular 0.20  shininess 40  ambient 0.04 }
+
+DoorGlass = material {
+    pigment [0.090, 0.110, 0.130]
+    specular 0.56  shininess 150  reflective 0.20  ambient 0.05
+}
+
+// The surround is painted stone, the step is stone that is walked on, and the two are not the same tone.
+DoorSurroundStone = material { pigment [0.855, 0.840, 0.815]  specular 0.16  shininess 34  ambient 0.08 }
+DoorStep = material { pigment [0.560, 0.548, 0.522]  specular 0.09  shininess 20  ambient 0.07 }
+
+// Brass, and only on the furniture -- a knob and a letter plate.  It is the one bright thing on a door
+// and it stops being an ornament the moment there is any more of it.
+DoorBrass = material {
+    pigment [0.600, 0.470, 0.150]
+    specular 0.86  shininess 210  reflective 0.28  ambient 0.06  brilliance 1.5
+}
+
+DoorSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
+
+primitive DoorLeafOf(variant) -> material {
+    switch (mod(floor(variant), 4)) {
+        case 0 { return material DoorBlack }
+        case 1 { return material DoorRed }
+        case 2 { return material DoorBlue }
+        default { return material DoorGreen }
+    }
+}
+
+// -- The parts every doorway has -------------------------------------------------------------------
+
+// The surround, the head and the step: everything except the leaf.  One primitive rather than three
+// copies, for the reason the curb arcs in `roads` are one primitive.
+primitive DoorSurround(wide, tall, deep, variant) -> group {
+    return group {
+        // Up both sides and across the head, standing out from the wall.
+        cube { material DoorSurroundStone
+               scale [wide * 0.16, tall * 1.03, deep * 2.0]  translate X -wide * 1.14 }
+        cube { material DoorSurroundStone
+               scale [wide * 0.16, tall * 1.03, deep * 2.0]  translate X wide * 1.14 }
+        cube { material DoorSurroundStone
+               scale [wide * 1.42, tall * 0.055, deep * 2.4]  translate Y tall * 1.03 }
+
+        // The step, wider than the doorway and reaching well out from the wall.  This is the part that
+        // says the door is a way in.
+        cube { material DoorStep
+               scale [wide * 1.55, tall * 0.04, deep * 6.0]
+               translate [0, -tall * 1.02, -deep * 3.0] }
+    }
+}
+
+// The furniture: a knob at hand height and a letter plate below it.  Both sit proud of the leaf.
+primitive DoorFurniture(wide, tall, deep, side) -> group {
+    return group {
+        sphere {
+            material DoorBrass
+            scale [wide * 0.075, wide * 0.075, deep * 0.5]
+            translate [wide * 0.62 * side, -tall * 0.06, -deep * 0.80]
+        }
+        cube {
+            material DoorBrass
+            scale [wide * 0.26, tall * 0.028, deep * 0.10]
+            translate [0, -tall * 0.30, -deep * 0.72]
+        }
+    }
+}
+
+primitive DoorSnow(season, wide, tall, deep) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                cube {
+                    material DoorSnowCap
+                    scale [wide * 1.50, tall * 0.016, deep * 5.6]
+                    translate [0, -tall * 0.98, -deep * 3.0]
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- The leaf and its panels -----------------------------------------------------------------------
+
+// Four raised panels: a short pair above and a tall pair below, which is the commonest arrangement there
+// is.  `upper` says whether the top pair is made, so a glazed door can leave them off and put glass there
+// instead without a second copy of the leaf.
+primitive DoorLeaf(wide, tall, deep, variant, upper) -> group {
+    return group {
+        // **When the upper part is glazed the leaf needs a hole in it, not merely fewer panels.**
+        // Leaving the panels off changes nothing: the leaf is a solid slab and it stands in front of
+        // wherever the glass goes, so a glazed door came out looking exactly like a panelled one with
+        // its top half plain.  A `difference` gives a real opening, and the reveal it leaves is what
+        // makes the glass read as set *into* the door.
+        if (upper == 1) {
+            cube { material DoorLeafOf(variant)
+                   scale [wide, tall, deep * 0.30]  translate Z -deep * 0.25 }
+        }
+        else {
+            difference {
+                cube { scale [wide, tall, deep * 0.30]  translate Z -deep * 0.25 }
+                cube { scale [wide * 0.78, tall * 0.30, deep * 0.9]
+                       translate [0, tall * 0.42, -deep * 0.25] }
+                material DoorLeafOf(variant)
+            }
+        }
+
+        // The lower pair, tall.
+        for column in [0, 1] {
+            cube { material DoorShade
+                   scale [wide * 0.34, tall * 0.34, deep * 0.10]
+                   translate [wide * (column * 2 - 1) * 0.44, -tall * 0.32, -deep * 0.62] }
+        }
+        // And the upper pair, short -- unless glass is going there instead.
+        if (upper == 1) {
+            for column in [0, 1] {
+                cube { material DoorShade
+                       scale [wide * 0.34, tall * 0.24, deep * 0.10]
+                       translate [wide * (column * 2 - 1) * 0.44, tall * 0.42, -deep * 0.62] }
+            }
+        }
+    }
+}
+
+// -- A panelled door -------------------------------------------------------------------------------
+
+primitive Door(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        object DoorLeaf(wide, tall, deep, variant, 1)
+        object DoorSurround(wide, tall, deep, variant)
+        object DoorFurniture(wide, tall, deep, 1)
+        object DoorSnow(season, wide, tall, deep)
+    }
+}
+
+// -- A glazed door ---------------------------------------------------------------------------------
+
+// The upper panels replaced by glass, with one bar across it.  This is the door a shop or a stair hall
+// has, and next to a panelled one it is what stops a terrace reading as the same house repeated.
+primitive GlazedDoor(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        object DoorLeaf(wide, tall, deep, variant, 0)
+
+        // The glass sits deepest of everything, behind the leaf's plane and seen through the opening.
+        cube { material DoorGlass
+               scale [wide * 0.76, tall * 0.29, deep * 0.10]
+               translate [0, tall * 0.42, -deep * 0.02] }
+        // And one bar across it, in front of the glass but still inside the reveal.
+        cube { material DoorLeafOf(variant)
+               scale [wide * 0.76, tall * 0.022, deep * 0.06]
+               translate [0, tall * 0.42, -deep * 0.20] }
+
+        object DoorSurround(wide, tall, deep, variant)
+        object DoorFurniture(wide, tall, deep, 1)
+        object DoorSnow(season, wide, tall, deep)
+    }
+}
+
+// -- A pair of doors -------------------------------------------------------------------------------
+
+// Two leaves meeting on a centre stile.  A house does not have these; a warehouse, a chapel or anything
+// with a yard behind it does, which is most of what makes such a building read as not-a-house.
+primitive DoubleDoor(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        for leaf in [0, 1] {
+            object DoorLeaf(wide * 0.49, tall, deep, variant, 1) {
+                translate X wide * 0.505 * (leaf * 2 - 1)
+            }
+        }
+        // The stile where they meet, standing a little proud so the join reads as a join.
+        cube { material DoorLeafOf(variant)
+               scale [wide * 0.030, tall, deep * 0.34]  translate Z -deep * 0.30 }
+
+        object DoorSurround(wide, tall, deep, variant)
+        // A knob on each leaf, near the middle where they meet.
+        object DoorFurniture(wide * 0.49, tall, deep, 1)  { translate X -wide * 0.505 }
+        object DoorFurniture(wide * 0.49, tall, deep, -1) { translate X wide * 0.505 }
+        object DoorSnow(season, wide, tall, deep)
+    }
+}
+
+// -- A fanlight ------------------------------------------------------------------------------------
+
+// A light over a doorway, with bars radiating from the middle of its foot.  It sits above a door that is
+// already there, the way `Shutters` sits beside a window, because whether a doorway has one is a matter
+// of when the house was built and not of what sort of door it has.
+primitive Fanlight(wide, tall, deep, season = 'summer', variant = 1) -> group {
+    return group {
+        cube { material DoorGlass
+               scale [wide * 1.16, tall * 0.20, deep * 0.16]
+               translate [0, tall * 1.28, -deep * 0.20] }
+
+        // Five bars, fanned.  They are turned about the middle of the light's foot, which is what makes
+        // it a fan rather than a grid -- and the turn is small, since a fanlight is much wider than it
+        // is tall and a bar near the end lies almost flat.
+        for bar in [0, 4] {
+            cube {
+                material DoorSurroundStone
+                scale [wide * 0.020, tall * 0.20, deep * 0.08]
+                rotate Z ((bar - 2) * 26)
+                translate [0, tall * 1.28, -deep * 0.42]
+            }
+        }
+        cube { material DoorSurroundStone
+               scale [wide * 1.20, tall * 0.030, deep * 2.1]
+               translate [0, tall * 1.48, 0] }
+    }
+}

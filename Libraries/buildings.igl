@@ -51,6 +51,16 @@
 // asked or not, for the reason the other libraries give -- a material is looked up where it is *used*
 // -- so they carry the prefix.
 
+// -- Where the openings come from ------------------------------------------------------------------
+
+// The windows and the doors are their own libraries now, and this one imports them.  That is worth a
+// word, because until recently it was not possible: a library could not import another, and the choice
+// was between a copy of every window here and a `House` that could not have one.  What it buys is that a
+// scene can put the same sash in a wall it built itself, and that a `Tower` and a `House` can differ in
+// their *openings* rather than only in their proportions.
+import 'windows' { Sash, Casement }
+import 'doors'   { Door, GlazedDoor }
+
 // -- What buildings are made of --------------------------------------------------------------------
 
 BuildWall = material { pigment [0.74, 0.70, 0.62]  specular 0.05  shininess 16 }
@@ -59,12 +69,10 @@ BuildWallCool = material { pigment [0.62, 0.63, 0.61]  specular 0.06  shininess 
 BuildTrim = material { pigment [0.90, 0.88, 0.84]  specular 0.12  shininess 30 }
 BuildRoof = material { pigment [0.30, 0.26, 0.25]  specular 0.10  shininess 20 }
 BuildRoofRed = material { pigment [0.42, 0.24, 0.18]  specular 0.10  shininess 20 }
-BuildGlass = material { pigment [0.09, 0.12, 0.15]  specular 0.55  shininess 140  reflective 0.22 }
 // Brick, and a shade off the walls: a chimney built of the same render as the house reads as a lump of
 // the house rather than as a chimney.
 BuildChimney = material { pigment [0.34, 0.24, 0.20]  specular 0.03  shininess 8  ambient 0.10 }
 
-BuildDoor = material { pigment [0.28, 0.18, 0.14]  specular 0.20  shininess 40 }
 BuildSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.25  shininess 50 }
 
 // Three walls and two roofs, so a row does not come out as one house repeated.  Which one a building
@@ -232,52 +240,28 @@ primitive BuildRoofOf(variant) -> material {
     }
 }
 
-// -- A window ----------------------------------------------------------------------------------
+// -- An opening --------------------------------------------------------------------------------
 
-// An opening set back into the wall, a frame standing proud *around* it, and a sill under it that
-// reaches further out than anything else and throws the small shadow that sells the whole thing.
+// Which window a building wears, and which door, is its variant's business -- the same way its walls and
+// its roof are.  A sash and a casement are different windows rather than the same one twice, so a row of
+// houses that differ in nothing else still differ here.
 //
-// It is placed with its middle on the face of the wall, so the glass falls behind and the frame in
-// front.
-primitive BuildWindow(wide, tall, deep) -> group {
-    return group {
-        cube { material BuildGlass  scale [wide, tall, deep]  translate Z -deep * 1.4 }
-
-        cube { material BuildTrim  scale [wide * 1.18, tall * 0.09, deep]  translate Y tall * 1.09 }
-        cube { material BuildTrim  scale [wide * 1.30, tall * 0.10, deep * 2.2]
-               translate Y -tall * 1.10 }
-        cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X -wide * 1.10 }
-        cube { material BuildTrim  scale [wide * 0.10, tall, deep]  translate X wide * 1.10 }
+// The three numbers are half-sizes, which is what `windows` and `doors` both take: they are placed
+// against a wall built as a cube, so they measure the way the cube does.
+primitive BuildOpening(wide, tall, deep, season, variant) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 0 { return group { object Sash(wide, tall, deep, season, variant) } }
+        default { return group { object Casement(wide, tall, deep, season, variant) } }
     }
 }
 
-// A doorway: the leaf itself, a surround standing proud of it on three sides, a head across the top
-// and a step at the foot.  The proportions echo `BuildWindow` on purpose -- a house whose door is
-// trimmed differently from its windows reads as two houses.
-primitive BuildDoorway(wide, tall, deep) -> group {
-    return group {
-        cube { material BuildDoor  scale [wide, tall, deep]  translate Z -deep * 0.5 }
-
-        // The surround: up both sides and across the head, standing out from the wall.
-        cube { material BuildTrim  scale [wide * 0.16, tall * 1.03, deep * 2.0]
-               translate X -wide * 1.14 }
-        cube { material BuildTrim  scale [wide * 0.16, tall * 1.03, deep * 2.0]
-               translate X wide * 1.14 }
-        cube { material BuildTrim  scale [wide * 1.42, tall * 0.055, deep * 2.4]
-               translate Y tall * 1.03 }
-
-        // The step, wider than the doorway and standing on the ground, which is what stops the door
-        // looking as though it opens onto a wall.
-        cube { material BuildTrim  scale [wide * 1.55, tall * 0.04, deep * 6.0]
-               translate [0, -tall * 1.02, -deep * 3.0] }
+primitive BuildEntry(wide, tall, deep, season, variant) -> group {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return group { object GlazedDoor(wide, tall, deep, season, variant) } }
+        default { return group { object Door(wide, tall, deep, season, variant) } }
     }
 }
 
-// -- A house -----------------------------------------------------------------------------------
-
-// The snow that lies on a pitched roof, which is nothing at all for three seasons of the four.  It is
-// two slabs laid on the two slopes, a shade proud of them, so what shows is a white edge along the
-// ridge and the eaves rather than a white roof.
 primitive BuildRoofSnow(season, wide, deep, height) -> group {
     switch (season) {
         case 'winter' {
@@ -440,10 +424,10 @@ primitive House(height, season = 'summer', variant = 1) -> group {
         for side in [0, 1] {
             across = (side - 0.5) * wide * 0.90
 
-            object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+            object BuildOpening(wide * 0.13, walls * 0.20, deep * 0.06, season, variant) {
                 translate [across, walls * 0.55, -deep]
             }
-            object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+            object BuildOpening(wide * 0.13, walls * 0.20, deep * 0.06, season, variant) {
                 translate [across, walls * 1.45, -deep]
             }
         }
@@ -456,7 +440,7 @@ primitive House(height, season = 'summer', variant = 1) -> group {
         // Set so the foot of the door lands on top of the plinth, at height * 0.06, rather than
         // 0.18 below it.  The door always started inside the plinth; nothing showed while it was a
         // flat panel, but a step at the foot of it then had nowhere to sit and read as a nub.
-        object BuildDoorway(wide * 0.11, walls * 0.30, deep * 0.03) {
+        object BuildEntry(wide * 0.11, walls * 0.30, deep * 0.03, season, variant) {
             translate [0, walls * 0.30 + height * 0.06, -deep]
         }
 
@@ -483,16 +467,18 @@ primitive Row(houses, season = 'summer', variant = 1) -> group {
                 for side in [0, 1] {
                     across = (side - 0.5) * wide * 0.90
 
-                    object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                    object BuildOpening(wide * 0.13, walls * 0.20, deep * 0.06, season, variant) {
                         translate [across, walls * 0.55, -deep]
                     }
-                    object BuildWindow(wide * 0.13, walls * 0.20, deep * 0.06) {
+                    object BuildOpening(wide * 0.13, walls * 0.20, deep * 0.06, season, variant) {
                         translate [across, walls * 1.45, -deep]
                     }
                 }
 
-                cube { material BuildDoor  scale [wide * 0.11, walls * 0.30, deep * 0.03]
-                       translate [0, walls * 0.36, -deep] }
+                object BuildEntry(wide * 0.11, walls * 0.30, deep * 0.03, season,
+                                  variant + house) {
+                    translate [0, walls * 0.36, -deep]
+                }
 
                 translate X house * wide * 2 - (houses - 1) * wide
             }
@@ -531,7 +517,7 @@ primitive Tower(height, season = 'summer', variant = 1) -> group {
             for bay in [0, bays - 1] {
                 across = (bay - (bays - 1) * 0.5) * wide * 1.6 / bays
 
-                object BuildWindow(wide * 0.5 / bays, story * 0.26, deep * 0.05) {
+                object BuildOpening(wide * 0.5 / bays, story * 0.26, deep * 0.05, season, variant) {
                     translate [across, level * story + story * 0.45, -deep]
                 }
             }

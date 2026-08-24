@@ -634,6 +634,74 @@ folding into overlapping sheets, which is a mess rather than a breaker.  That wa
 surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
 an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
 
+#### Windows and Doors
+
+```
+import 'windows' { Sash, Casement, Shutters }
+import 'doors'   { Door, GlazedDoor, DoubleDoor, Fanlight }
+
+object Sash(0.30, 0.46, 0.14)  { translate [-1.9, 1.05, -0.14] }
+object Door(0.28, 0.62, 0.14)  { translate [0, 0.64, -0.14] }
+```
+
+| | |
+| --- | --- |
+| `Sash` | Two sashes stacked, with a meeting rail across and glazing bars up each. |
+| `Casement` | Side-hung leaves either side of a mullion, with a transom near the head. |
+| `Shutters` | A pair of louvred leaves, to flank a window that is already there. |
+| `Door` | A panelled leaf, with a surround up both sides, a head across and a step at the foot. |
+| `GlazedDoor` | The same, with the upper panels replaced by glass and a bar across it. |
+| `DoubleDoor` | Two leaves meeting on a centre stile. |
+| `Fanlight` | A light over a doorway, to sit above one already there. |
+
+**These are placed with their middle on the face of the wall**, so a wall built as a cube scaled
+`[wide, tall, deep]` takes an opening at `translate [across, up, -deep]` and needs no arithmetic beyond
+that.  **All three numbers are half-sizes**, matching that cube — which is not the convention the rest of
+these libraries use, and is this way because every part of an opening is placed relative to a wall built
+the same way.
+
+**[`buildings`](#buildings) imports both of them**, which is what these libraries are chiefly for: a
+`House` and a `Tower` now differ in their *openings* as well as their proportions, and a scene can put the
+same sash into a wall it built itself.  That was impossible until recently — a library could not import
+another, and the choice was between a copy of every window inside `buildings` and a house that could not
+have one.
+
+##### The depths have to stack in order
+
+This is the whole difficulty of an opening, and it went wrong in both directions before it came right.
+
+`-Z` is outward, so the wall's face is `z = 0` and **anything at positive Z is buried inside the wall**.
+Working outward from there:
+
+| | span | |
+| --- | --- | --- |
+| glass | −0.30d … +0.20d | deepest, seen through the opening |
+| glazing bars | −0.68d … −0.32d | recessed in the reveal, in front of the glass |
+| frame, panels | −0.72d … −0.52d | on the face |
+| surround, sill | −1.0d … +1.0d | standing proud of everything |
+
+Put the glass in front of the bars and it hides every one of them — a sash renders as a single blank
+sheet.  Put it at positive Z instead and the wall hides the glass, so the window renders as an empty hole.
+Both of those look like the geometry is missing rather than misplaced, which is what makes them hard to
+diagnose from the picture alone.
+
+**And a glazed door needs a hole, not merely fewer panels.**  Leaving the upper panels off changes
+nothing, because the leaf is a solid slab standing in front of wherever the glass goes: the door comes
+out looking exactly like a panelled one with a plain top half.  It takes a `difference` to make a real
+opening, and the reveal that leaves is what makes the glass read as set *into* the door.
+
+##### What makes a hole in a wall into a window
+
+The [buildings](#buildings) library says an opening needs glass set back, a frame standing proud, and a
+sill that overhangs and throws a shadow.  All of that still holds.  What these libraries add is the
+fourth thing, which only matters once a camera comes close:
+
+**An opening is divided.**  A single sheet of glass reads as a shop window at best and a mirror at worst;
+a flat door leaf reads as a painted rectangle.  What says *window* is the bars across it, and what says
+*door* is a raised panel — because a pane and a panel are each about a fixed size in the world, so how
+many of them there are tells the eye how big the wall behind them is.  A wall with one enormous pane has
+no size at all.
+
 #### Roads
 
 ```
