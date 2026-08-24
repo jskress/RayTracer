@@ -360,7 +360,8 @@ public class TestShippedLibraries
     /// the same reason the tree species are: a test that learns the names from the thing it is testing
     /// cannot notice a rename.
     /// </summary>
-    private static readonly string[] Plants = ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender"];
+    private static readonly string[] Plants =
+        ["Grass", "GrassCircle", "Tuft", "Boxwood", "Bramble", "Lavender"];
 
     /// <summary>
     /// How big to ask for each, since these are not all measured in the same thing: the first number
@@ -1527,7 +1528,10 @@ public class TestShippedLibraries
     /// What the roads library holds out, written down here rather than read out of the library.
     /// </summary>
     private static readonly string[] RoadPieces =
-        ["Road", "Curb", "Pavement", "Junction", "CurbCorner", "Crossing"];
+    [
+        "Road", "Curb", "Pavement", "Junction", "CurbCorner", "Crossing",
+        "Crossroads", "Roundabout", "CurbArc", "CurbRing", "ParkingLot"
+    ];
 
     [TestMethod]
     public void TestEveryRoadPieceBuilds()
@@ -1601,6 +1605,11 @@ public class TestShippedLibraries
             "CurbCorner" => $"CurbCorner(2.5, '{season}', {variant})",
             "Crossing" => $"Crossing(7, 3.5, '{season}')",
             "Junction" => $"Junction(7, 8, '{season}', {variant})",
+            "Crossroads" => $"Crossroads(7, 6, 1.5, '{season}', {variant})",
+            "Roundabout" => $"Roundabout(4.5, 6, '{season}', {variant})",
+            "CurbArc" => $"CurbArc(6, 20, 50, 1, '{season}', {variant})",
+            "CurbRing" => $"CurbRing(4.5, 0, '{season}', {variant})",
+            "ParkingLot" => $"ParkingLot(13, 14, '{season}', {variant})",
             _ => $"{piece}(30, 7, '{season}', {variant})"
         };
 
@@ -1615,5 +1624,54 @@ public class TestShippedLibraries
 
         return Render(scene);
     }
+
+    [TestMethod]
+    public void TestACurbCornerIsExactlyTheNinetyDegreeCaseOfAnArc()
+    {
+        // The library says `CurbCorner` is the ninety-degree case of `CurbArc`, and says it to explain
+        // why both exist.  A claim like that rots the moment one of them is touched and the other is not,
+        // and nothing about a picture of a curb would make the drift obvious -- so the two are rendered
+        // and held against each other pixel for pixel.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "roads.igl"),
+            Path.Combine(_directory, "roads.igl"), true);
+
+        Canvas corner = CurbPicture("CurbCorner(2.5)");
+        Canvas arc = CurbPicture("CurbArc(2.5, 0, 90, 0)");
+
+        Assert.AreEqual(corner.Width, arc.Width);
+        Assert.AreEqual(corner.Height, arc.Height);
+
+        for (int x = 0; x < corner.Width; x++)
+        for (int y = 0; y < corner.Height; y++)
+        {
+            Assert.AreEqual(corner.GetPixel(x, y).Red, arc.GetPixel(x, y).Red, 1e-9,
+                $"a corner and a ninety-degree arc differ at ({x},{y}); one of them has been changed " +
+                "without the other, and the library claims they are the same thing");
+        }
+    }
+
+    /// <summary>
+    /// Renders one piece of curb from straight above and hands back the picture.
+    /// </summary>
+    private Canvas CurbPicture(string call)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'roads' { Curb, CurbCorner, CurbArc }
+            context { angles are degrees  no gamma }
+            camera { location [1.2, 7, 1.2]  look at [1.2, 0, 1.2]  up [1, 0, 0]
+                     field of view 44 }
+            point light { location [-6, 9, -8] }
+            background [0, 0, 0]
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene), $"{call} should build");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
 
 }

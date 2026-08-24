@@ -1,0 +1,197 @@
+// A roundabout, and the four roads that made it necessary.
+//
+//     import 'roads'       { Road, Curb, CurbArc, Roundabout, ParkingLot }
+//     import 'buildings'   { House, Row, Tower }
+//     import 'vehicles'    { Car, Van, Truck }
+//     import 'undergrowth' { Grass, GrassCircle, Tuft }
+//     import 'daylight'    { LateAfternoonFrom, LateAfternoonLight }
+//
+// The other two town scenes are about a road as a *stretch*: something with a length, running past
+// things.  This one is about the harder half of a road network, which is what happens where two of them
+// have to occupy the same ground.  Almost everything interesting in the `roads` library is here rather
+// than there, and nearly all of it is about **coverage** -- about there being no bare ground anywhere a
+// vehicle could drive.
+//
+// **A straight road meeting a circle has to be pushed inside it.**  The arms end at
+// `sqrt(13^2 - 3.5^2)`, which is 12.52 and not 13: at 13 a road touches the circle along its center line
+// only and leaves a sixty-centimeter crescent of grass at each corner.  Pushed in, its two *corners*
+// land on the circle and its middle overlaps into the carriageway, which costs nothing -- the
+// carriageway is flat at nought and the road's camber falls away from it, so the carriageway wins.
+//
+// **A roundabout's outer curb is broken at every entry**, so it cannot be one ring.  The mouth of a
+// seven-meter arm on a thirteen-meter circle subtends `asin(3.5 / 13)`, a little under sixteen degrees
+// either side of the arm, so the four `CurbArc`s run from eighteen degrees and sweep fifty-five.  Change
+// the arm width and those two numbers change with it; that is why the library does not try to work them
+// out for you.
+//
+// **The traffic circulates**, and a vehicle on a circle has to be turned to the tangent.  These face
+// `+X`, and a car at `a` degrees round a counter-clockwise roundabout is turned by `-90 - a` -- which is
+// the same expression the curb arcs use for their own segments, and for the same reason.
+
+Season = 'summer'
+
+import 'roads'       { Road, Curb, CurbArc, Roundabout, ParkingLot }
+import 'buildings'   { House, Row, Tower }
+import 'vehicles'    { Car, Van, Truck }
+import 'undergrowth' { Grass, GrassCircle, Tuft }
+import 'daylight'    { LateAfternoonFrom, LateAfternoonLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Where Four Roads Meet'
+        author 'J. Stephen Kress'
+        description 'A roundabout, its four arms, and the town that grew around it.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [46, 36, -53]
+    look at [-1, 0.5, 2]
+    field of view 46
+}
+
+// The sun round on the near side and well down.  `LateAfternoon` stands at twenty degrees, which throws
+// a shadow 2.7 times an object's height -- against 1.5 at `ClearAfternoon`'s thirty-four, which is barely
+// more raking than noon, and 6.3 at `GoldenHour`'s nine, which would lay the tower's shadow clean across
+// the far side of the picture.
+background LateAfternoonFrom(38)
+
+light LateAfternoonLight
+
+// The verge, set below the road so the curbs stand out of it.
+plane {
+    material {
+        pigment granite with seed 19 {
+            [0.06, color [0.118, 0.142, 0.082],
+             0.16, color [0.148, 0.178, 0.102],
+             0.22, color [0.172, 0.208, 0.119],
+             0.30, color [0.202, 0.242, 0.139],
+             0.41, color [0.242, 0.288, 0.166]]
+            scale 1.7
+        }
+        specular 0.03  shininess 8
+    }
+    translate Y -0.13
+}
+
+// -- The junction ----------------------------------------------------------------------------------
+
+object Roundabout(6, 7, Season, 1)
+
+// The island is paved, because paving is something `roads` owns and grass is not -- so the grass goes on
+// here, which is what its notes suggest.  `GrassCircle` takes a diameter, so twelve is exactly the
+// island, and the disc beneath is simply the soil the grass grows out of rather than a way of hiding a
+// square patch's shortcomings.  (It was that, once: before `undergrowth` had a round patch the best a
+// square could do was sit inside the circle and leave the edge bare.)
+disc {
+    material {
+        pigment granite with seed 23 {
+            [0.06, color [0.105, 0.140, 0.062],
+             0.16, color [0.132, 0.172, 0.078],
+             0.22, color [0.152, 0.198, 0.090],
+             0.30, color [0.178, 0.230, 0.105],
+             0.41, color [0.212, 0.272, 0.125]]
+            scale 0.9
+        }
+        specular 0.03  shininess 8
+    }
+    center [0, 0.126, 0]  normal [0, 1, 0]
+    radius 6
+}
+object GrassCircle(12, Season, 7, 0.45, 0.8) { translate Y 0.127 }
+
+// The four arms, each pushed inside the circle so its corners meet it.
+object Road(50, 7, Season, 1) { translate X 37.52 }
+object Road(50, 7, Season, 1) { rotate Y 180  translate X -37.52 }
+object Road(50, 7, Season, 1) { rotate Y 90   translate Z 37.52 }
+object Road(50, 7, Season, 1) { rotate Y -90  translate Z -37.52 }
+
+// The outer curb, in four arcs with a gap left at each arm.
+for arm in [0, 3] {
+    object CurbArc(13, 18 + arm * 90, 55, 1, Season, 1)
+}
+
+// And a curb down both sides of each arm, starting clear of the mouth.
+for arm in [0, 3] {
+    object Curb(48, Season, 1) { translate [36.5, 0, 3.5]  rotate Y (arm * -90) }
+    object Curb(48, Season, 1) { rotate Y 180  translate [36.5, 0, -3.5]  rotate Y (arm * -90) }
+}
+
+// -- The traffic -----------------------------------------------------------------------------------
+
+// Three circulating, turned to the tangent at 9.5 -- the middle of the carriageway.
+object Car(4.4, Season, 1)   { rotate Y -125  translate [7.78, 0, 5.45] }
+object Van(5.7, Season, 3)   { rotate Y -240  translate [-8.23, 0, 4.75] }
+object Car(4.5, Season, 0)   { rotate Y -350  translate [-1.65, 0, -9.36] }
+
+// And four waiting or leaving on the arms.
+object Truck(8.6, Season, 5) { rotate Y 180  translate [22, 0, 1.7] }
+object Car(4.4, Season, 2)   { translate [18.5, 0, -1.7] }
+object Car(4.4, Season, 4)   { rotate Y 90   translate [1.7, 0, -20] }
+object Van(5.6, Season, 6)   { rotate Y -90  translate [-1.7, 0, 21.5] }
+
+// -- The town round it -----------------------------------------------------------------------------
+
+// Set back from each corner, and each turned to face the junction -- a building at +X faces -X.
+object Row(4, Season, 2)     { rotate Y 90   translate [21, 0, 15] }
+object House(4.4, Season, 0) { rotate Y -90  translate [-20, 0, -14] }
+object House(4.0, Season, 5) { rotate Y -90  translate [-20, 0, -20.5] }
+object House(4.2, Season, 3) { translate [17, 0, -19] }
+object House(3.8, Season, 1) { translate [24, 0, -19.5] }
+
+// **A `Tower` carries its windows on its -Z face only**, so which way it is turned decides whether it has
+// any.  This one was turned a half circle to face the roundabout, which put its blank back to a camera
+// that looks towards +Z -- thirteen meters of featureless wall.  Turned by -48 it faces the junction
+// *and* shows its front, because the junction and the camera happen to lie the same way from here.
+// **And three of them have to be spread across the camera's view, not merely across the ground.**  The
+// second one first stood at (-28, 24), which is a bearing of 133.9 from the camera against the first's
+// 132.1 -- under two degrees apart, and a tower subtends about one and a quarter, so it was simply
+// hidden behind it.  These three are twelve degrees apart, which separates them.
+object Tower(13, Season, 3)  { rotate Y -48  translate [-19, 0, 20] }
+object Tower(10, Season, 6)  { rotate Y -40  translate [-27, 0, 12] }
+object Tower(11, Season, 1)  { rotate Y -62  translate [-12, 0, 27] }
+
+// The lot the three of them share, in the corner where a patch of grass used to be.  Fourteen deep and
+// not nine: the bays come out at `depth * 0.42` up to a limit of five meters, so a shallow lot gets
+// shallow bays and a car parked in one hangs out of it.
+object ParkingLot(13, 14, Season, 1) { rotate Y -20  translate [-14, 0, 12] }
+
+// Three cars in it, nosed in.  They are placed in the lot's own coordinates and then carried onto it by
+// the same turn and shift the lot itself gets, which is easier to get right than working out where each
+// bay ends up.  A car faces +X, so facing it into a bay on the far side is a turn of -90.
+for parked in [0, 2] {
+    object Car(4.3 + parked * 0.15, Season, parked * 3 + 2) {
+        rotate Y -90  translate [(parked - 1) * 5.2, 0, 4.5]
+        rotate Y -20  translate [-14, 0, 12]
+    }
+}
+
+// -- What grows in the corners --------------------------------------------------------------------
+
+// **`Grass` lays a square**, and a square dropped near a circle gets inside it: eleven across, centered
+// at (13, 13), puts its nearest corner 10.6 from the middle of a roundabout whose carriageway reaches 13,
+// so the first version of this had foliage growing across the road.  At (17, 17) the nearest corner sits
+// at 16.3 and it stays on the verge, clear of the arms as well.
+// Three corners of grass, not four -- the fourth is the complex and its lot.  Written out rather than
+// looped, because the one to leave out is a *particular* corner and a loop that skips an index is harder
+// to read than three lines that say where they are.
+object Grass(11, Season, 1, 0.5, 0.65) { translate [ 17, 0,  17] }
+object Grass(11, Season, 3, 0.5, 0.65) { translate [-17, 0, -17] }
+object Grass(11, Season, 4, 0.5, 0.65) { translate [ 17, 0, -17] }
+
+// Tufts right up against the outer curb -- but only in the four gaps *between* the arms.  Ringed evenly
+// at every fifteen degrees, twelve of twenty-four of them stood in an arm's mouth, which is grass growing
+// where the traffic goes.  The mouth is a little under sixteen degrees either side of each arm, so these
+// start twenty degrees round and stop short of the next one.
+for gap in [0, 3] {
+    for tuft in [0, 5] {
+        object Tuft(0.4 + random(gap * 8 + tuft, 61) * 0.45, Season, gap * 8 + tuft + 90) {
+            translate [13.5 + random(gap * 8 + tuft, 62) * 1.5, -0.13, 0]
+            rotate Y (gap * 90 + 20 + tuft * 10)
+        }
+    }
+}

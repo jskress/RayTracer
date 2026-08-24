@@ -1,6 +1,7 @@
 // The road the buildings stand along and the vehicles stand on.
 //
 //     import 'roads' { Road, Curb, Pavement, Junction, CurbCorner, Crossing }
+//     import 'roads' { Crossroads, Roundabout, CurbArc, CurbRing }
 //
 //     object Road(80, 7)
 //     object Curb(80)     { translate Z 4.1 }
@@ -12,6 +13,11 @@
 // | `Junction`   | The mouth where a side road opens off a main one. |
 // | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
 // | `Crossing`   | A zebra, laid on a carriageway of the same width. |
+// | `Crossroads` | Where two roads cross, with a stop line across each side arm. |
+// | `Roundabout` | An island with a carriageway round it. |
+// | `CurbArc`    | A curb along part of a circle, for where a ring has to be broken. |
+// | `CurbRing`   | A whole circle of curb, for a roundabout's island. |
+// | `ParkingLot` | A rectangle of asphalt with bays marked on it. |
 //
 // **The first two numbers are a length and a width**, because a road is the one thing in these
 // libraries that genuinely has two sizes and no sensible ratio between them.  The two after them mean
@@ -490,12 +496,98 @@ primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
     }
 }
 
+// -- A parking lot ---------------------------------------------------------------------------------
+
+// A rectangle of asphalt with bays marked on it: `width` across, `depth` back, two rows of bays against
+// the long edges with an aisle between them.  Flat and at y = 0, like everything else here, so a car set
+// down on it stands on it.
+//
+// The surface is a single `parallelogram` for the reason the carriageway's strips are: it carries no
+// transform, so its asphalt is in world coordinates instead of being stretched across the lot.
+//
+// Bays are two and a half meters wide and five deep, which is what a bay is; the count comes from the
+// width rather than the other way about, so a lot is whatever size the scene needs and the bays divide
+// it evenly.
+primitive ParkingLot(width, depth, season = 'summer', variant = 1) -> group {
+    bays = max(1, floor(width / 2.5))
+    bayWidth = width / bays
+    bayDepth = min(5, depth * 0.42)
+
+    return group {
+        cube {
+            material RoadBase
+            scale [width * 0.5, 0.07, depth * 0.5]
+            translate Y -0.07
+        }
+        parallelogram {
+            material RoadPlainOf(variant)
+            at [-width * 0.5, 0, -depth * 0.5]
+            sides [width, 0, 0], [0, 0, depth]
+        }
+        // The silt along the edges, where nothing sweeps -- the same thing the carriageway's channels get.
+        for side in [0, 1] {
+            parallelogram {
+                material RoadEdgeDirt
+                at [-width * 0.5, 0.002, (depth * 0.5 - 0.4) * (1 - side * 2) - 0.4]
+                sides [width, 0, 0], [0, 0, 0.8]
+            }
+        }
+        // The bay lines: one more line than there are bays, since a row of n bays has n + 1 sides.
+        for row in [0, 1] {
+            for line in [0, bays] {
+                cube {
+                    material RoadPaint
+                    scale [0.055, 0.003, bayDepth * 0.5]
+                    translate [line * bayWidth - width * 0.5, 0.003,
+                               (depth * 0.5 - bayDepth * 0.5) * (1 - row * 2)]
+                }
+            }
+        }
+
+        object RoadWinter(season, width, depth)
+    }
+}
+
+// -- An arc of curb --------------------------------------------------------------------------------
+
+// A curb along part of a circle: `from` is where it starts, in degrees measured from +X towards +Z, and
+// `sweep` is how far round it goes.  `CurbCorner` is the ninety-degree case of this and `CurbRing` the
+// whole circle; this is what you want wherever the circle is *broken*, which round a roundabout is at
+// every entry.
+primitive CurbArc(radius, from, sweep, facing, season = 'summer', variant = 1) -> group {
+    // How many segments it takes to keep the chords within about a centimeter of the true circle.  The
+    // count goes as the **square root** of the radius, not the radius: the gap a chord leaves is
+    // `r * (1 - cos(turn / 2))`, so holding it fixed makes the segment angle scale as one over root r.
+    // A rule linear in the radius therefore over-segments a big arc and under-segments a small one --
+    // and a small one is where it shows, since a tight corner is what a camera gets close to.
+    segments = max(3, floor(sweep * sqrt(radius) / 14))
+    turn = sweep / segments
+    chord = 2 * radius * sin((turn * 0.5) degrees)
+
+    return group {
+        for segment in [0, segments - 1] {
+            object Curb(chord * 1.04, season, variant) {
+                rotate Y ((facing * 2 - 1) * 90 - from - (segment + 0.5) * turn)
+                translate [radius * cos((from + (segment + 0.5) * turn) degrees),
+                           0,
+                           radius * sin((from + (segment + 0.5) * turn) degrees)]
+            }
+        }
+    }
+}
+
 // -- A rounded corner ------------------------------------------------------------------------------
 
-// A quarter circle of curb, for the corner where two roads meet.  It is what actually makes a junction
-// read: two straight curb runs mitred at a right angle look like a drawing, and a radius looks like a
-// street.  The arc runs from `+X` round to `+Z` with its center of curvature at the origin, so the
-// pavement is on the inside of it and the road outside -- which is the way round a street corner is.
+// A quarter circle of curb, for the corner where two roads meet.  It is what makes a junction read: two
+// straight curb runs mitred at a right angle look like a drawing, and a radius looks like a street.  The
+// arc runs from `+X` round to `+Z` with its center of curvature at the origin, so the pavement is on the
+// inside of it and the road outside -- which is the way round a street corner is.
+//
+// **This is exactly `CurbArc` over ninety degrees, and is written as a call to it** rather than as a
+// second loop.  It was a second loop first, and the two drifted immediately -- different segment counts,
+// and only one of them overlapping its chords -- while the comment here claimed they were the same thing.
+// A test that renders both and compares them pixel for pixel caught that on its first run.  A claim like
+// that is better made true by construction than checked.
 //
 // **Its origin is the center of curvature, not the corner**, and that is the thing to get right.  For a
 // pavement corner at `(cx, cz)` with the road on the `+X` and `+Z` sides of it, the center sits a radius
@@ -514,20 +606,8 @@ primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
 // local -Z lands on `(-sin θ, 0, -cos θ)`. Setting that equal to the outward normal `(cos a, 0, sin a)`
 // gives `θ = -90 - a`, which is what the loop uses.
 primitive CurbCorner(radius, season = 'summer', variant = 1) -> group {
-    segments = max(4, floor(radius * 3))
-    // The chord of one segment, and half the angle it turns through.
-    turn = 90 / segments
-    chord = 2 * radius * sin((turn * 0.5) degrees)
-
     return group {
-        for segment in [0, segments - 1] {
-            object Curb(chord, season, variant) {
-                rotate Y (-90 - (segment + 0.5) * turn)
-                translate [radius * cos(((segment + 0.5) * turn) degrees),
-                           0,
-                           radius * sin(((segment + 0.5) * turn) degrees)]
-            }
-        }
+        object CurbArc(radius, 0, 90, 0, season, variant)
     }
 }
 
@@ -567,5 +647,178 @@ primitive Crossing(width, depth, season = 'summer') -> group {
                 }
             }
         }
+    }
+}
+
+// -- A ring of curb --------------------------------------------------------------------------------
+
+// A full circle of curb, which a roundabout needs twice: once round the island with its face outward,
+// and once round the outside of the carriageway with its face inward.
+//
+// This is `CurbArc` over the whole 360, and is a call to it for the reason `CurbCorner` is: a second copy
+// of the loop drifts from the first, and did.
+primitive CurbRing(radius, facing, season = 'summer', variant = 1) -> group {
+    return group {
+        object CurbArc(radius, 0, 360, facing, season, variant)
+    }
+}
+
+// -- A four-way intersection -----------------------------------------------------------------------
+
+// Where two roads cross.  Like `Junction`, this is a piece of the main road rather than a shape of its
+// own: the main road's camber runs through it and both side arms ramp up to meet it.  What it adds over
+// a `Junction` is the pair of **stop lines**, one across each side arm, and those are most of what makes
+// a crossing of two roads read as a junction rather than as a hole where the markings stop.
+//
+//     object Road(30, 7)              { translate X -19.5 }
+//     object Crossroads(7, 6, 1.5)
+//     object Road(30, 7)              { translate X  19.5 }
+//     object Road(30, 6) { rotate Y 90  translate Z -19.5 }
+//     object Road(30, 6) { rotate Y 90  translate Z  19.5 }
+//
+// The deck reaches a corner radius past the side road on each side, so there is carriageway under the
+// rounded corners; the four `CurbCorner`s go at the same radius, each centered a radius diagonally
+// inside its own pavement corner.
+//
+// **Each side arm has to reach the main road's own edge**, at `mainWidth / 2`, and not stop where the
+// corner radius begins.  Stopping at the radius leaves a strip of bare ground as wide as that radius
+// running right across the mouth, which is what the first junction scene here did.
+primitive Crossroads(mainWidth, sideWidth, radius, season = 'summer', variant = 1) -> group {
+    half = mainWidth * 0.5
+    crown = half * 0.025
+    opening = sideWidth + radius * 2
+
+    return group {
+        object RoadDeck(opening, mainWidth, variant)
+
+        // A stop line across each side arm, laid just outside the mouth so it reads as belonging to the
+        // arm rather than to the crossing.  Solid, and wider than a lane line, which is what a stop line
+        // is: it is the one marking a driver is meant to stop *at* rather than follow.
+        for arm in [0, 1] {
+            cube {
+                material RoadPaint
+                scale [sideWidth * 0.5, 0.003, 0.10]
+                translate [0, -crown * 0.35 + 0.002, (half + 0.10) * (1 - arm * 2)]
+            }
+        }
+
+        // **The four corner fillets**, without which there is bare ground at every corner of the
+        // junction.  The side arms reach the main road's edge and no further, so beyond that edge the
+        // only thing paved is whatever lies *outside* the curb arc -- and that is a square of side
+        // `radius` with a quarter circle bitten out of it, which is a `difference` of a cube and a
+        // cylinder.  It is not a sliver: against a 1.5 m radius the gap is nearly a meter wide where it
+        // meets the main road, narrowing to nothing at the far end of the arc.
+        //
+        // Flat, at about the main road's channel: these are a meter and a half across, and the two or
+        // three centimeters they miss the camber by at their edges is not something a camera resolves.
+        //
+        // The shape is symmetric under a quarter turn, so one shape turned four ways serves -- but the
+        // *placement* is not, since `sideWidth` and `mainWidth` are different numbers, so the two signs
+        // are worked out per corner.  Turn 0 lands the shape in +X/+Z, turn 90 in +X/-Z, 180 in -X/-Z
+        // and 270 in -X/+Z, which is what the two `floor`s below spell out.
+        for corner in [0, 3] {
+            difference {
+                cube { scale [radius * 0.5, 0.03, radius * 0.5]
+                       translate [radius * 0.5, 0, radius * 0.5] }
+                cylinder { min Y -1  max Y 1
+                           scale [radius, 0.5, radius]
+                           translate [radius, 0, radius] }
+                material RoadPlainOf(variant)
+                rotate Y (corner * 90)
+                translate [(1 - 2 * floor(corner * 0.5)) * sideWidth * 0.5,
+                           -crown * 0.9,
+                           (1 - 2 * floor(mod(corner + 1, 4) * 0.5)) * half]
+            }
+        }
+
+        object RoadWinter(season, opening, mainWidth)
+    }
+}
+
+// -- A roundabout ----------------------------------------------------------------------------------
+
+// An island with a carriageway round it.  `radius` is to the island's curb face and `width` is how wide
+// the circulating carriageway is, so the whole thing measures `radius + width` from the middle.
+//
+// **The carriageway is `disc`s, and that is the same trick the straight road plays with
+// `parallelogram`s.**  A disc is given a center, a normal and a radius, and an `inner radius` makes it
+// an annulus -- so it carries no transform, and its pattern is in world coordinates rather than
+// stretched round the ring.  Three concentric annuli give the worn band where the traffic actually
+// circulates, and because they are all flat and share their radii exactly they abut with no seam at all.
+//
+// **It is flat, and that is a deliberate simplification.**  A real roundabout has a crossfall, and there
+// is no honest way to put one here: a disc is planar by definition, and stacking concentric rings at
+// descending heights brings back exactly the vertical-step seams that the straight road had to be tilted
+// to avoid -- and a disc, unlike a parallelogram, cannot be tilted without becoming an ellipse.  A
+// crossfall over six meters is fifteen centimeters, which is worth less than a ring of dark seams.
+//
+// The island is paved rather than planted, because paving is something this library owns and grass is
+// not.  A scene wanting a green one can lay `undergrowth`'s `Grass` over the top of it.
+primitive Roundabout(radius, width, season = 'summer', variant = 1) -> group {
+    return group {
+        // The circulating carriageway, in three rings: the middle one is where the wheels go.
+        disc {
+            material RoadPlainOf(variant)
+            center [0, 0, 0]  normal [0, 1, 0]
+            radius radius + width * 0.28
+            inner radius radius
+        }
+        disc {
+            material RoadTrackOf(variant)
+            center [0, 0, 0]  normal [0, 1, 0]
+            radius radius + width * 0.72
+            inner radius radius + width * 0.28
+        }
+        disc {
+            material RoadPlainOf(variant)
+            center [0, 0, 0]  normal [0, 1, 0]
+            radius radius + width
+            inner radius radius + width * 0.72
+        }
+        // The silt that collects against the outer curb, where nothing sweeps.
+        disc {
+            material RoadEdgeDirt
+            center [0, 0.002, 0]  normal [0, 1, 0]
+            radius radius + width
+            inner radius radius + width * 0.93
+        }
+        // The build-up under it all.
+        cylinder {
+            material RoadBase
+            min Y -1  max Y 1
+            scale [radius + width, 0.035, radius + width]
+            translate Y -0.035
+        }
+
+        // The island: a curb round it facing out, and paving inside that at the curb's own height.
+        //
+        // **The paving stops at the curb's inner edge, not past its face.**  An outward-facing curb has
+        // its body on the *inside* -- that is what makes the face the outside of the island -- so paving
+        // taken out to `radius + 0.15` covers the curb completely, which is how the first version of this
+        // came out with no visible curb at all.  `radius - 0.15` meets the body's inner edge instead.
+        object CurbRing(radius, 0, season, variant)
+        disc {
+            material RoadSlab
+            center [0, 0.125, 0]  normal [0, 1, 0]
+            radius radius - 0.15
+        }
+        // **There is no curb round the outside, and that is on purpose.**  A roundabout's outer curb is
+        // broken at every entry, so a full ring lays a curb straight across each approach and walls the
+        // roads off -- which is what the first version of this did.  Teaching this primitive about arms
+        // would mean telling it how many there are, how wide, and at what angles, and it would still be
+        // wrong for the roundabout whose arms are not evenly spaced.  So the scene lays `CurbArc`s
+        // between its own entries, which is the same division of labor `Junction` uses:
+        //
+        //     object Roundabout(4.5, 6)
+        //     for arm in [0, 3] {
+        //         object CurbArc(10.5, 21 + arm * 90, 48, 1)
+        //     }
+        //
+        // **And a straight road meeting a circle has to be pushed inside it.**  Ended at the outer
+        // radius, a road touches the circle along its center line only, leaving a crescent of bare
+        // ground at each corner -- 60 cm of it for a seven-meter road on a 10.5 m circle.  The end
+        // belongs at `sqrt(outer * outer - halfWidth * halfWidth)`, where the road's two *corners* land
+        // on the circle and its middle overlaps into the annulus.  The overlap is harmless: the annulus
+        // is flat at nought and the road's camber falls away from it, so the annulus wins there.
     }
 }

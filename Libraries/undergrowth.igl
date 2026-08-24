@@ -160,7 +160,10 @@ primitive Tuft(height = 0.3, season = 'summer', variant = 1) -> group {
 //
 // The tufts are counted on a grid and then thrown nearly a whole cell off it, which is what stops the
 // grid from being the thing you see.  A lattice is very easy to notice and impossible to unsee.
-primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
+// The patch both `Grass` and `GrassCircle` are made of, laid out square and then cut to shape by a test
+// on each tuft.  One loop rather than two, because two copies of a loop this fiddly drift apart -- the
+// curb arcs in `roads` proved that within an afternoon.
+primitive UnderPatch(across, season, variant, height, density, circular) -> group {
     step = height * 0.63 / density
     last = across / step - 1
     across8 = 8
@@ -179,17 +182,21 @@ primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 
                         for column in [0, across8 - 1] {
                             here = blockRow * across8 + row
                             over = blockColumn * across8 + column
+                            // Worked out once, because the round test needs the *jittered* position:
+                            // testing the grid position instead would let a tuft's jitter carry it
+                            // outside the circle it was chosen to be inside.
+                            px = over * step - across / 2 +
+                                 (random(here, over, variant + 1) - 0.5) * step * 1.8
+                            pz = here * step - across / 2 +
+                                 (random(here, over, variant + 2) - 0.5) * step * 1.8
 
                             // The last block on each side hangs over the edge, so its overhang is
                             // simply not made.  An area asked for is the area you get.
-                            if (here <= last && over <= last) {
+                            if (here <= last and over <= last and
+                                (circular == 0 or px * px + pz * pz <= across * across * 0.25)) {
                                 object Tuft(height * (0.75 + random(here, over, variant) * 0.5),
                                             season, variant * 7919 + here * 512 + over) {
-                                    translate [over * step - across / 2 +
-                                                   (random(here, over, variant + 1) - 0.5) * step * 1.8,
-                                               0,
-                                               here * step - across / 2 +
-                                                   (random(here, over, variant + 2) - 0.5) * step * 1.8]
+                                    translate [px, 0, pz]
                                 }
                             }
                         }
@@ -197,6 +204,30 @@ primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 
                 }
             }
         }
+    }
+}
+
+// A square patch: `across` is the length of its side.
+primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
+    return group {
+        object UnderPatch(across, season, variant, height, density, 0)
+    }
+}
+
+// A round one: `across` is its **diameter**, so it fits the same number as the square would -- a patch
+// asked for eight across is eight across either way.
+//
+// This exists because a square is the wrong shape surprisingly often.  Anything laid against a circle --
+// a roundabout's island, a pond, a tree's drip line -- has a square patch either overhanging it at the
+// corners or leaving a ring of bare ground inside it, and there is no size that does neither: a square's
+// corners are always 1.41 times its half-width out.  The obvious repair is to intersect the square patch
+// with a cylinder, and that does not work at all: a patch of any size is hundreds of separate tufts, and
+// a `CsgSurface` -- unlike a `Group` -- has no bounded traversal for a shadow query, so every shadow ray
+// walks every tuft with no distance pruning.  Under a sky light a modest one had not finished rendering
+// after ten minutes.  Testing each tuft as it is placed costs nothing at all.
+primitive GrassCircle(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
+    return group {
+        object UnderPatch(across, season, variant, height, density, 1)
     }
 }
 
