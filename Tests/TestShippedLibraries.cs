@@ -360,7 +360,8 @@ public class TestShippedLibraries
     /// the same reason the tree species are: a test that learns the names from the thing it is testing
     /// cannot notice a rename.
     /// </summary>
-    private static readonly string[] Plants = ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender"];
+    private static readonly string[] Plants =
+        ["Grass", "GrassCircle", "Tuft", "Boxwood", "Bramble", "Lavender"];
 
     /// <summary>
     /// How big to ask for each, since these are not all measured in the same thing: the first number
@@ -1529,7 +1530,7 @@ public class TestShippedLibraries
     private static readonly string[] RoadPieces =
     [
         "Road", "Curb", "Pavement", "Junction", "CurbCorner", "Crossing",
-        "Crossroads", "Roundabout", "CurbArc", "CurbRing"
+        "Crossroads", "Roundabout", "CurbArc", "CurbRing", "ParkingLot"
     ];
 
     [TestMethod]
@@ -1608,6 +1609,7 @@ public class TestShippedLibraries
             "Roundabout" => $"Roundabout(4.5, 6, '{season}', {variant})",
             "CurbArc" => $"CurbArc(6, 20, 50, 1, '{season}', {variant})",
             "CurbRing" => $"CurbRing(4.5, 0, '{season}', {variant})",
+            "ParkingLot" => $"ParkingLot(13, 14, '{season}', {variant})",
             _ => $"{piece}(30, 7, '{season}', {variant})"
         };
 
@@ -1670,5 +1672,6 @@ public class TestShippedLibraries
 
         return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
     }
+
 
 }

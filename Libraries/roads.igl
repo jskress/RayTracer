@@ -17,6 +17,7 @@
 // | `Roundabout` | An island with a carriageway round it. |
 // | `CurbArc`    | A curb along part of a circle, for where a ring has to be broken. |
 // | `CurbRing`   | A whole circle of curb, for a roundabout's island. |
+// | `ParkingLot` | A rectangle of asphalt with bays marked on it. |
 //
 // **The first two numbers are a length and a width**, because a road is the one thing in these
 // libraries that genuinely has two sizes and no sensible ratio between them.  The two after them mean
@@ -492,6 +493,58 @@ primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
         }
 
         object RoadWinter(season, length, width * 0.42)
+    }
+}
+
+// -- A parking lot ---------------------------------------------------------------------------------
+
+// A rectangle of asphalt with bays marked on it: `width` across, `depth` back, two rows of bays against
+// the long edges with an aisle between them.  Flat and at y = 0, like everything else here, so a car set
+// down on it stands on it.
+//
+// The surface is a single `parallelogram` for the reason the carriageway's strips are: it carries no
+// transform, so its asphalt is in world coordinates instead of being stretched across the lot.
+//
+// Bays are two and a half meters wide and five deep, which is what a bay is; the count comes from the
+// width rather than the other way about, so a lot is whatever size the scene needs and the bays divide
+// it evenly.
+primitive ParkingLot(width, depth, season = 'summer', variant = 1) -> group {
+    bays = max(1, floor(width / 2.5))
+    bayWidth = width / bays
+    bayDepth = min(5, depth * 0.42)
+
+    return group {
+        cube {
+            material RoadBase
+            scale [width * 0.5, 0.07, depth * 0.5]
+            translate Y -0.07
+        }
+        parallelogram {
+            material RoadPlainOf(variant)
+            at [-width * 0.5, 0, -depth * 0.5]
+            sides [width, 0, 0], [0, 0, depth]
+        }
+        // The silt along the edges, where nothing sweeps -- the same thing the carriageway's channels get.
+        for side in [0, 1] {
+            parallelogram {
+                material RoadEdgeDirt
+                at [-width * 0.5, 0.002, (depth * 0.5 - 0.4) * (1 - side * 2) - 0.4]
+                sides [width, 0, 0], [0, 0, 0.8]
+            }
+        }
+        // The bay lines: one more line than there are bays, since a row of n bays has n + 1 sides.
+        for row in [0, 1] {
+            for line in [0, bays] {
+                cube {
+                    material RoadPaint
+                    scale [0.055, 0.003, bayDepth * 0.5]
+                    translate [line * bayWidth - width * 0.5, 0.003,
+                               (depth * 0.5 - bayDepth * 0.5) * (1 - row * 2)]
+                }
+            }
+        }
+
+        object RoadWinter(season, width, depth)
     }
 }
 

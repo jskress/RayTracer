@@ -71,6 +71,18 @@ ClearAfternoonLight = sky light { samples 32 }
 SoftAfternoon = pigment physical sky { sun elevation 30  sun azimuth 215  turbidity 3.4  brightness 3 }
 SoftAfternoonLight = sky light { samples 32 }
 
+// Late afternoon proper: the sun well down and the shadows long, but an hour or so short of turning
+// gold.  The library jumped from thirty degrees straight to nine, and thirty is barely more raking than
+// noon while nine throws a shadow six times an object's height across everything behind it.  Twenty is
+// the hour a scene usually means by "raking".
+//
+// **It carries more `brightness` than the others**, 3.5 against 3, and that is not a thumb on the scale:
+// a sun twenty degrees up delivers less light than one at thirty-four, measurably so -- the same scene
+// lost a fifth of its mean brightness moving between them -- and opening up to compensate is what anyone
+// photographing at that hour does.
+LateAfternoon = pigment physical sky { sun elevation 20  sun azimuth 212  turbidity 2.9  brightness 3.5 }
+LateAfternoonLight = sky light { samples 32 }
+
 // -- Hazier days -----------------------------------------------------------------------------------
 
 // A hot afternoon in summer, the air thick enough to soften every edge and pale the blue overhead.
@@ -169,4 +181,8 @@ primitive HazyAfternoonFrom(azimuth) -> pigment {
 
 primitive WinterSunFrom(azimuth) -> pigment {
     return physical sky { sun elevation 14  sun azimuth azimuth  turbidity 2  brightness 3 }
+}
+
+primitive LateAfternoonFrom(azimuth) -> pigment {
+    return physical sky { sun elevation 20  sun azimuth azimuth  turbidity 2.9  brightness 3.5 }
 }

@@ -63,6 +63,7 @@ light GoldenHourLight
 | `ClearMorning` | Mid-morning, sun well up, air washed clean. |
 | `ClearNoon` | Overhead and unforgiving; shadows fall almost straight down. |
 | `ClearAfternoon` | Mid to late afternoon, sun well down but nowhere near going. |
+| `LateAfternoon` | Later still: shadows long, but an hour short of turning gold. |
 | `SoftAfternoon` | The same hour with more in the air, and a softer edge to every shadow. |
 | `GoldenHour` | An hour before sunset, long shadows and a warmth in the light. |
 | `Sunset` | The sun on the horizon, most of its light gone red on the way. |
@@ -198,6 +199,7 @@ picture of some trees from a picture of somewhere.
 | | |
 | --- | --- |
 | `Grass` | An area of it, covered edge to edge.  The first number is how far across, not how tall. |
+| `GrassCircle` | The same cut to a circle, the first number being its diameter. |
 | `Tuft` | One clump on its own, for putting somewhere in particular. |
 | `Boxwood` | A dense clipped dome.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
 | `Bramble` | Arching canes with leaves along them; berries in autumn, bare canes in winter. |
@@ -206,6 +208,17 @@ picture of some trees from a picture of somewhere.
 **The first three numbers mean what they mean everywhere else** — how big, what time of year, and
 which one of that kind — so a scene that has planted an autumn stand can plant autumn undergrowth
 beneath it without learning a second set of habits.  Only the first is ever required.
+
+**A square is the wrong shape surprisingly often**, which is why `GrassCircle` exists.  Anything laid
+against a circle — a roundabout's island, a pond, a tree's drip line — has a square patch either
+overhanging it at the corners or leaving a ring of bare ground inside it, and no size does neither: a
+square's corners are always 1.41 times its half-width out from the middle.
+
+The obvious repair is to intersect a square patch with a cylinder, and that does not work at all.  A
+patch of any size is hundreds of separate tufts, and a `CsgSurface` — unlike a `Group` — has no bounded
+traversal for a shadow query, so every shadow ray walks every tuft with no distance pruning whatever.
+Under a sky light a modest patch had not finished rendering after **ten minutes**.  Testing each tuft
+against the circle as it is placed costs nothing, which is what this does.
 
 **What a season does differs by plant**, as it does in a garden.  Grass goes tawny and then to pale
 straw, and lies down as well as changing color.  A bramble turns, fruits, and finally stands as bare
@@ -643,6 +656,7 @@ object Pavement(80, 3) { translate Z 5.2 }
 | `Roundabout` | An island with a carriageway round it. |
 | `CurbArc` | A curb along part of a circle, for where a ring has to be broken. |
 | `CurbRing` | A whole circle of curb, for a roundabout's island. |
+| `ParkingLot` | A rectangle of asphalt with bays marked on it. |
 
 **The first two numbers are a length and a width**, because a road is the one thing in these libraries
 that genuinely has two sizes and no sensible ratio between them.  The two after them mean what they
@@ -796,6 +810,17 @@ one over root `r`.  A rule linear in the radius over-segments a big arc and unde
 and the small one is where it shows, since a tight corner is what a camera gets close to.  At four
 segments per unit of radius a four-and-a-half meter island came out visibly polygonal: twenty-degree
 segments bulge nearly seven centimeters off the circle, which is half a curb's width.
+
+##### Parking
+
+`ParkingLot(width, depth)` is a rectangle of asphalt with two rows of bays against its long edges and an
+aisle between them.  Bays are 2.5 m wide and 5 m deep, which is what a bay is, and the count comes from
+the width rather than the other way about — so a lot is whatever size the scene needs and the bays divide
+it evenly.
+
+One thing to watch: the bay depth is `depth * 0.42` up to a limit of five meters, so a **shallow lot gets
+shallow bays** and a car parked in one hangs out the back of it.  Nine meters deep gives 3.8 m bays, which
+a 4.4 m car overhangs by more than half a meter; fourteen gives the full five.
 
 ##### Winter on a road is not winter on a roof
 
