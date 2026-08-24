@@ -446,4 +446,134 @@ public class TestImports
             File.Delete(installed);
         }
     }
+    // -- A library importing another library ---------------------------------------------------------
+
+    [TestMethod]
+    public void TestALibraryMayImportAnotherLibrary()
+    {
+        // The whole point of the change: a curated library should be able to build on another rather
+        // than carry its own copy of it.  Before this, an `import` inside a library reached the general
+        // clause set -- which does not hold one -- and the author was told they had written an
+        // "unsupported object type", which says nothing about what is actually wrong.
+        Write("inner.igl", """
+            InnerBlue = color [0.2, 0.3, 0.9]
+            InnerPaint = material { pigment InnerBlue }
+
+            primitive InnerBall(size) -> group {
+                return group { sphere { material InnerPaint  scale size } }
+            }
+            """);
+        Write("outer.igl", """
+            import 'inner' { InnerBall, InnerPaint }
+
+            primitive OuterPair(size) -> group {
+                return group {
+                    object InnerBall(size) { translate X -size }
+                    object InnerBall(size) { translate X  size }
+                }
+            }
+            """);
+
+        Render("""
+            import 'outer' { OuterPair }
+            object OuterPair(0.6)
+            """);
+    }
+
+    [TestMethod]
+    public void TestAnInnerLibrarysNamesDoNotReachTheScene()
+    {
+        // The filtering has to keep working through a layer.  A scene that imports the outer library
+        // asked for nothing out of the inner one, so nothing of the inner one's should be spellable --
+        // otherwise importing anything would quietly drag a whole tree of names into scope.
+        Write("inner.igl", """
+            InnerPaint = material { pigment [0.2, 0.3, 0.9] }
+
+            primitive InnerBall(size) -> group {
+                return group { sphere { material InnerPaint  scale size } }
+            }
+            """);
+        Write("outer.igl", """
+            import 'inner' { InnerBall }
+
+            primitive OuterPair(size) -> group {
+                return group { object InnerBall(size) }
+            }
+            """);
+
+        string error = ErrorFromRendering("""
+            import 'outer' { OuterPair }
+            object InnerBall(0.6)
+            """);
+
+        Assert.IsNotNull(error, "the inner library's primitive should not be in the scene's scope");
+        Assert.Contains("InnerBall", error);
+        // And specifically because the *scene* does not have the name -- not because the outer library
+        // failed to parse, which is the other way this test can go green while proving nothing.  Before
+        // nested imports worked at all, asserting only that the message mentioned `InnerBall` passed.
+        Assert.Contains("this scene has declared", error);
+    }
+
+    [TestMethod]
+    public void TestLibrariesThatImportEachOtherAreReportedRatherThanRecursed()
+    {
+        // Two libraries naming each other used to be a stack overflow, which tells an author nothing.
+        // The message names the whole chain, because which pair closes the loop is the only thing that
+        // says where to cut it.
+        Write("ringA.igl", """
+            import 'ringB' { RingB }
+            primitive RingA(size) -> group { return group { object RingB(size) } }
+            """);
+        Write("ringB.igl", """
+            import 'ringA' { RingA }
+            primitive RingB(size) -> group { return group { sphere { scale size } } }
+            """);
+
+        string error = ErrorFromRendering("""
+            import 'ringA' { RingA }
+            object RingA(0.6)
+            """);
+
+        Assert.IsNotNull(error, "a loop of imports should be reported");
+        Assert.Contains("loop", error);
+        Assert.Contains("ringA.igl", error);
+        Assert.Contains("ringB.igl", error);
+    }
+
+    [TestMethod]
+    public void TestALibraryMayImportOneThatImportsAnother()
+    {
+        // Two layers rather than one, since a chain is where a fix that only handles a single level
+        // shows itself.
+        Write("bottom.igl", """
+            BottomPaint = material { pigment [0.9, 0.4, 0.2] }
+            primitive BottomBall(size) -> group {
+                return group { sphere { material BottomPaint  scale size } }
+            }
+            """);
+        Write("middle.igl", """
+            import 'bottom' { BottomBall }
+            primitive MiddlePair(size) -> group {
+                return group {
+                    object BottomBall(size) { translate X -size }
+                    object BottomBall(size) { translate X  size }
+                }
+            }
+            """);
+        Write("top.igl", """
+            import 'middle' { MiddlePair }
+            primitive TopRow(size) -> group {
+                return group {
+                    object MiddlePair(size)
+                    object MiddlePair(size) { translate Z size * 3 }
+                }
+            }
+            """);
+
+        Render("""
+            import 'top' { TopRow }
+            object TopRow(0.4)
+            """);
+    }
+
 }
