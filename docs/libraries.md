@@ -477,6 +477,19 @@ reaching round; a pattern is a lattice cut by the wall's faces, so courses line 
 round a house and the bond does not interlock where two walls meet.  At the distance a building is seen
 from that is invisible, and it is the reason to reach for a pattern here rather than for geometry.
 
+**Frame a brick building near, or expect bands.**  A pattern is sampled at the point a ray hits, with no
+filtering over the area a pixel covers, so once a brick course falls below a pixel the lattice beats
+against the sample spacing.  Perspective makes that spacing vary smoothly across a wall, so the beat does
+too, and a distant terrace comes back covered in broad *curved* bands rather than in brick.  A course is
+about three and a half inches; at a distance giving nine pixels to the meter that is 0.8 of a pixel, which
+is where it starts.
+
+Antialiasing does not rescue it — the bands are low-frequency, and extra samples within a pixel average
+away fine noise rather than a slow beat.  It is also the worst case for the adaptive sampler, which finds
+real, unresolvable disagreement over every wall and subdivides all of it: `adaptive:3:0.1` on the night
+street ran past a hundred times the un-antialiased cost, against the 22x a normal scene pays.  The gallery's
+daylight scenes have no bands because they stand their houses close, which is the whole of the remedy.
+
 For the boarding the useful trick is that `linear Y gradient` is a **sawtooth** — it climbs from nought
 to one over each unit and starts again — so one unit is one board and the color map is a cross-section
 of it: bright at the proud bottom edge, receding up the face, dark in the last tenth where the board
@@ -633,6 +646,100 @@ this.  Push the shear past about a third of a wavelength and the surface stops l
 folding into overlapping sheets, which is a mess rather than a breaker.  That wants a different
 surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
 an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
+
+#### Outdoor Lights
+
+```
+import 'outdoor-lights' { StreetLamp, WallLantern, BollardLight }
+
+object StreetLamp(5)                    // dark
+object StreetLamp(5, 'summer', 2, 1)    // burning
+```
+
+| | |
+| --- | --- |
+| `StreetLamp` | A column with a lantern on it: a period one, or a modern cobra head. |
+| `WallLantern` | A lantern on a bracket, for the wall of a building. |
+| `BollardLight` | A knee-high post with a lit band, for a path or a forecourt. |
+
+The first three numbers mean what they mean everywhere — **how tall**, **what time of year**, and **which
+one of that kind**.  There is a fourth here, and it is the interesting one.
+
+##### `lit` is off by default, and that is arithmetic
+
+A lamp lights a scene the way [`fire`](#fire)'s flames do: an emissive `medium` inside a shell, marked
+`gives light`.  That is the honest way to do it, because the thing you can see and the thing doing the
+lighting are then the same object and cannot disagree.
+
+It is also **eleven times the cost of a point light** — one lamp took 2.49 million scene rays against a
+point light's 218 thousand on the same scene, and four lamps took 9.65 million.  It scales with how many
+are *burning*.  Most scenes with street lamps in them are daylight scenes where the lamps are off, and
+those should pay nothing, so an unlit lamp is only geometry.
+
+##### Brightness is free; smoothness is not
+
+Two knobs, and it is worth knowing which does what, because guessing gets it backwards.
+
+**Density is the brightness, and it costs nothing.**  Measured on the ground under a five-meter lamp:
+
+| density | ground (of 255) | render time |
+| --- | --- | --- |
+| ×2,000 | 61.6 | 12.5s |
+| ×10,000 | 128.1 | 12.1s |
+| ×50,000 | 244.3 | 12.0s |
+
+There is no ceiling — it climbs until the ground blows out — and the time does not move, because density
+is a number in a function.  It scales as roughly the *square root* of the number, so five times the
+density buys twice the light; the numbers therefore get large and look alarming, and large numbers are
+free.  The library ships ×6000, which lights a house front across a pavement rather than just a pool of
+ground under the column.
+
+**`samples` is not a second brightness knob.**  Tripling it from 24 to 72 moved that same measurement
+from 61.6 to 59.1 — nothing, within the noise it exists to reduce — and tripled the render time.  It buys
+smoothness; only density buys light.
+
+##### What a light cannot do here
+
+**A light cannot live inside a fixture.**  `point light` inside a `group` is a parse error: a light is
+only valid at a scene's top level.  So there is no hybrid where a primitive carries a visible globe *and*
+a cheap point light doing the real work — for anything self-contained it is emissive or nothing.  If a
+scene wants a hard-edged key light it has to place one itself, and then it is that scene's job to keep it
+agreeing with the fitting it is pretending to come from.
+
+One consequence worth expecting: an emissive globe is an **area** source, so its shadows are soft.  That
+is more truthful than a point light's hard edge, and it does mean a lamp-lit scene looks gentler than a
+studio one.
+
+##### Turn the ambient down, and check what it was worth
+
+Every material carries an `ambient` — the fraction of its own color it shows with no light on it, standing
+in for bounced light the renderer does not trace.  In a daylight scene that is a small, sensible fudge.  In
+a scene lit by these lamps it is competing with the thing you built, so a night scene should say so:
+
+```
+context { scale ambient by 0 }
+```
+
+That reaches every material at once, including the ones a library named for itself, which a scene has no
+other way to touch — see [The Context Block](context.md#ambient).
+
+Then measure what it was actually worth, because the guess is usually wrong.  In
+`gallery/Local/functions/a-street-after-dark.igl` the answer is: almost nothing.  Of what lights the house
+fronts, the lamps are about 98%, the sky light about 2%, and every material's own ambient a little over
+half of one percent.  The reading that sent me looking was the opposite of that, and it came of removing
+the sky light and finding the picture got *brighter* — which it does, but for an unrelated reason.  A scene
+with no sky light in it gives every material that never mentions ambient 0.1 rather than 0, and that flip
+gains more than losing the sky costs.  Change one thing at a time.
+
+##### A lantern has to be mostly glass
+
+The period `StreetLamp` was a single tapered `lathe` first, which is a handsome shape and completely
+opaque — the globe sat inside it and the light had nowhere to go, so a *lit* lamp rendered as a dark blob
+on a pole.  It is now a base, a cap and four corner posts, with the glass left as the gap between them.
+The same trap waits for any fitting built as a solid of revolution.
+
+And an unlit fitting needs pale glass, not dark.  A globe left dark reads as a hole in the lamp, which is
+the commonest way an unlit fixture goes wrong.
 
 #### Windows and Doors
 

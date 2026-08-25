@@ -65,6 +65,19 @@ public partial class LanguageParser
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            // `scale ambient by <term>`.  `ToCmd` joins a second word only after `apply`, `no`, `bounded`,
+            // `with` or `gives`, so this arrives as plain "scale" -- and `scale` is not a word to add to
+            // that list, since it is also the transform keyword and ToCmd serves those too.  The second
+            // word is read directly instead, exactly as `medium samples` reads its own.
+            case "scale":
+                updater.AmbientScaleResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = value => value < 0
+                        ? "Ambient cannot be scaled by less than nothing."
+                        : null
+                };
+                break;
             case "medium":
                 if (clause.Text(1) == "bounces")
                 {

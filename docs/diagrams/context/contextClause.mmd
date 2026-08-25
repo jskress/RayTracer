@@ -3,4 +3,6 @@ title "The context block"
 
 context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians" )
         | "apply" "gamma" | "no" ( "gamma" | "shadows" )
+        | "scale" "ambient" "by" expression
+        | "medium" ( "samples" | "bounces" ) expression
         | ( "width" | "height" | "gamma" ) number } "}" ;

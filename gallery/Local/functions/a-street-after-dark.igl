@@ -1,0 +1,147 @@
+// The street the other town scenes show by day, after the lamps come on.
+//
+//     import 'outdoor-lights' { StreetLamp, BollardLight }
+//     import 'buildings'      { House, Row }
+//     import 'roads'          { Road, Curb, Pavement }
+//     import 'vehicles'       { Car, Van }
+//     import 'daylight'       { Dusk, DuskLight }
+//
+// Every other scene in this gallery is lit by the sky.  This one is lit by objects standing in it, which
+// is a different thing entirely and worth one scene to show.
+//
+// **The lamps are the light.**  There is no `light` clause here except the sky's, and the sky at this
+// hour is doing very little -- what falls on the road, the pavement and the fronts of the houses comes
+// out of the lanterns themselves.  Each is an emissive `medium` inside a shell marked `gives light`, so
+// the thing you can see burning and the thing doing the lighting are one object and cannot disagree
+// about where the light is or what colour it is.
+//
+// **Which costs, and is why `lit` is a number you have to pass.**  A burning lamp runs about eleven
+// times a point light: measured, one is 2.49 million scene rays against 218 thousand.  The seven burning
+// here -- five columns and two bollards -- are the whole of this scene's expense, and an unlit one is
+// only geometry, so the daylight scenes that share these libraries pay nothing for lamps standing dark
+// in them.
+//
+// **The period lamps are sodium and the modern one is white**, which is the difference between a street
+// lit in 1970 and one lit now.  Putting both in one street is a small lie that most streets tell: they
+// are relit a few lamps at a time, and a run of orange with one white among it is what that looks like.
+
+Season = 'summer'
+
+import 'outdoor-lights' { StreetLamp, BollardLight }
+import 'buildings'      { House, Row }
+import 'roads'          { Road, Curb, Pavement }
+import 'vehicles'       { Car, Van }
+import 'undergrowth'    { Grass }
+import 'daylight'       { Dusk, DuskLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // A plume of light is walked along the same way a plume of smoke is, and sixteen steps bands it.
+    medium samples 28
+    // Every material in the libraries this scene draws on names its own ambient -- eighty of them, mostly
+    // between 0.03 and 0.10.  It is a stand-in for bounced light, and it owes nothing to any light source,
+    // so a surface wearing it glows at that fraction of its own color whatever the hour.  A scene set at
+    // night wants none of that, and `scale ambient by` is how it says so without editing a library.
+    //
+    // Worth being straight about what that buys here, which is very little: the house fronts measure 85.7
+    // at full ambient and 85.2 with it off.  The lamps are doing essentially all the work -- see the note
+    // on the sky light below.  This stays because it is the right setting for the hour, not because it
+    // rescued the picture.
+    scale ambient by 0
+    info {
+        title 'A Street After Dark'
+        author 'J. Stephen Kress'
+        description 'The lamps come on over a street the other scenes show by day.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [17, 4.4, -13]
+    look at [-6, 2.4, 1.5]
+    field of view 52
+}
+
+background Dusk
+
+// Very little of it -- enough that a shadow is not a hole, and no more.  A night scene whose shadows are
+// pure black reads as a scene with objects missing rather than as a scene at night.
+//
+// **And `DuskLight`'s own colour has to be pulled right down.**  The library ships it at [0.9, 0.92, 1],
+// which is a sky doing real work -- reasonable for the hour it is named for, and far too much here: it
+// lit the road and the house fronts evenly.  A scene lit by objects has to let the sky lose.
+//
+// **And the lamps beat both of them comfortably.**  Switching the ambient off and taking this light out
+// as well leaves the house fronts at 83.7, against 85.2 with the sky and 85.7 with everything.  So of what
+// lights those walls the lamps are about 98%, this sky about 2%, and every material's own ambient a little
+// over half of one percent.  That is the arrangement a scene lit by its own fixtures ought to have.
+//
+// It is worth measuring rather than assuming.  An earlier reading here had the ambient dominating, and it
+// came of removing the sky light and finding the scene got *brighter*.  It does -- but not because ambient
+// was carrying the picture.  A scene with no sky light in it gives every material that never mentions
+// ambient 0.1 rather than 0, and that flip gains more than losing this light costs.
+light DuskLight { samples 18  color [0.075, 0.095, 0.155] }
+
+// The verge, dark and only just catching the sky.
+plane {
+    material { pigment [0.105, 0.118, 0.088]  specular 0.03  ambient 0.02 }
+    translate Y -0.13
+}
+
+// -- The street ------------------------------------------------------------------------------------
+
+object Road(70, 7, Season, 1)
+object Curb(70, Season, 1)                { translate Z 3.5 }
+object Curb(70, Season, 1) { rotate Y 180  translate Z -3.5 }
+object Pavement(70, 3.2, Season, 1)       { translate Z 5.3 }
+object Pavement(70, 3.2, Season, 1)       { translate Z -5.3 }
+
+// -- The lamps -------------------------------------------------------------------------------------
+
+// Four period columns down the far pavement, and one modern head on the near side -- the one lamp on
+// this street that has been replaced.
+for lamp in [0, 3] {
+    object StreetLamp(5, Season, 0, 1) { translate [lamp * 13 - 20, 0, 4.6] }
+}
+object StreetLamp(5.4, Season, 1, 1) { rotate Y 180  translate [6, 0, -4.6] }
+
+// A pair of bollards where a path leaves the pavement.
+object BollardLight(0.95, Season, 0, 1) { translate [-13.5, 0, 6.6] }
+object BollardLight(0.95, Season, 0, 1) { translate [-11.0, 0, 6.6] }
+
+// -- What the lamps are standing in front of -------------------------------------------------------
+
+object Row(4, Season, 2)      { translate [-9, 0, 12.5] }
+object House(4.4, Season, 0)  { translate [10, 0, 12] }
+object House(4.0, Season, 5)  { translate [17, 0, 12.5] }
+object House(4.2, Season, 3)  { rotate Y 180  translate [-14, 0, -12] }
+object House(3.8, Season, 1)  { rotate Y 180  translate [-6, 0, -12.5] }
+
+// -- The traffic, parked ---------------------------------------------------------------------------
+
+object Car(4.4, Season, 1) { translate [-2, 0, -2.2] }
+object Van(5.6, Season, 3) { rotate Y 180  translate [12, 0, 2.2] }
+object Car(4.5, Season, 4) { translate [-16, 0, -2.2] }
+
+// A little grass behind each pavement, dark at this hour and there mostly so the ground is not bare.
+//
+// **Behind, and the arithmetic has to be done rather than eyeballed.**  `Grass` takes the width of a
+// *square* patch centred on where it is put, and the strip actually clear here is long and thin, so this
+// is a run of small patches rather than one big square.  A pavement is 3.2 wide laid at 5.3, which puts
+// its back edge at 6.9; the far side has the houses to stay out of as well, standing at 12 and reaching
+// `height * 0.30` either way, so its clear strip is only the 3.8 between 6.9 and 10.7.  Patches of 3.2
+// at 8.6 sit inside both.
+//
+// The first cut of this scene put one patch of *fourteen* on each side at 9.5, which reaches seven
+// either way: it lay across the paving and out over the curb into the gutter, and the far one was
+// almost entirely outside the frame, paying for tufts nothing could see.
+for patch in [0, 7] {
+    object Grass(3.2, Season, patch + 1, 0.4, 0.5) {
+        translate [patch * 2.4 - 19, -0.13, -8.6]
+    }
+    object Grass(3.2, Season, patch + 2, 0.4, 0.5) {
+        translate [patch * 2.4 - 16, -0.13, 8.6]
+    }
+}

@@ -96,6 +96,39 @@ numbers that reach the file, so a material's color can be reasoned about directl
 on, the picture generally looks better on an ordinary screen.  Neither is wrong; they answer
 different questions.
 
+### Ambient
+
+`ambient` is the fraction of its own color a surface shows regardless of any light reaching
+it.  It stands in for bounced light this renderer does not trace: without it, everything an
+actual light misses would be pure black, and a shadow would read as a hole rather than as a
+shadow.  Each material either names its own or takes what the scene settles on it — see
+[Materials](materials.md).
+
+That is a reasonable default for a scene lit like daylight, and quite wrong for one lit by a
+candle or a street lamp, where the fudge is the same size as the light.  A scene can turn the
+whole lot up or down at once:
+
+```
+context { scale ambient by 0.25 }
+```
+
+Every material's ambient is multiplied by that number, whether the material named the value
+itself or was given the default.  This is the only way to reach the ones that named their
+own, which matters most when the materials come from a library: a scene using `buildings`,
+`roads` and `vehicles` inherits some eighty explicit ambient values it did not write and
+should not have to edit.
+
+`scale ambient by 0` removes the stand-in altogether, leaving only light that was actually
+traced.  Sensible for a night scene with its own lamps in it, and a good way to see how much
+of a picture the fudge was really carrying — usually less than you would guess.
+`gallery/Local/functions/a-street-after-dark.igl` does exactly that, and records the
+measurement in a comment: its lamps turn out to be doing about 98% of the work.
+
+There is a related default worth knowing.  A material that never mentions ambient is given
+0.1, unless the scene contains a [sky light](lights.md), in which case it is given 0 — a sky
+light delivers the surrounding light for real, so the stand-in for it would be counted twice.
+Both are settled before this scaling is applied.
+
 ### Scanners
 
 A scanner decides how the work of tracing pixels is handed out.

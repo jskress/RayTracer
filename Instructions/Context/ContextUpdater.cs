@@ -44,6 +44,11 @@ public class ContextUpdater : Instruction
     public Resolver<int> MediumSamplesResolver { get; set; }
 
     /// <summary>
+    /// What to multiply every material's ambient by once the scene is whole.
+    /// </summary>
+    public Resolver<double> AmbientScaleResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many turns of a path through a medium are followed.
     /// </summary>
     public Resolver<int> MediumBouncesResolver { get; set; }
@@ -78,6 +83,7 @@ public class ContextUpdater : Instruction
         SuppressAllShadowsResolver.AssignTo(context, target => target.SuppressAllShadows, context, variables);
         WidthResolver.AssignTo(context, target => target.Width, context, variables);
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
+        AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         HeightResolver.AssignTo(context, target => target.Height, context, variables);
         GammaResolver.AssignTo(context, target => target.Gamma, context, variables);

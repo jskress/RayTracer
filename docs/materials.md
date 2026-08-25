@@ -56,6 +56,11 @@ away — which is also why a surface in deep shadow still shows a little of its 
 Raise it and the surface looks flat and self-lit; drop it to zero and anything unlit goes
 completely black.
 
+A scene may turn every material's ambient up or down at once with
+`context { scale ambient by ... }`, which is how a scene lit by lamps of its own gets out from
+under a fudge sized for daylight — including the ambient named by materials it imported from a
+library.  See [The Context Block](context.md#ambient).
+
 **`diffuse`** is the ordinary business of a surface catching light: brightest where it faces
 the light square-on, falling away as it turns aside.  This is what gives a sphere its
 roundness.

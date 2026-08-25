@@ -1,0 +1,299 @@
+// The lights a street has, as against the ones a room has.
+//
+//     import 'outdoor-lights' { StreetLamp, WallLantern, BollardLight }
+//
+//     object StreetLamp(5)
+//     object StreetLamp(5, 'summer', 2, 1) { translate X 8 }   // the 1 lights it
+//     object WallLantern(0.9)              { translate X -6 }
+//
+// | `StreetLamp`   | A column with a lantern on it: a period one, or a modern cobra head. |
+// | `WallLantern`  | A lantern on a bracket, for the wall of a building. |
+// | `BollardLight` | A knee-high post with a lit band, for a path or a forecourt. |
+//
+// **The first number is a height**, as it is everywhere but the vehicles.  The two after it mean what
+// they always mean, **what time of year** and **which one of that kind**.
+//
+// -- The fourth number, and why it is off by default -----------------------------------------------
+//
+// **`lit` decides whether the lamp is actually burning**, and it is `0` unless you say otherwise.
+//
+// That is not timidity, it is arithmetic.  A lamp here lights a scene the way the `fire` library's flames
+// do -- an emissive `medium` inside a shell, marked `gives light` -- and that is the honest way to do it,
+// because the thing you can see and the thing doing the lighting are then the same object and cannot
+// disagree.  It is also *eleven times* the cost of a plain point light, measured: one lamp took 2.49
+// million scene rays against a point light's 218 thousand on the same scene, and four lamps took 9.65
+// million.  It scales with how many are burning.
+//
+// Most scenes that have street lamps in them are daylight scenes where the lamps are off, and those
+// should pay nothing.  So an unlit lamp is only geometry, and a scene that wants a lit street asks for
+// one and knows what it is asking for.
+//
+// -- What is here for the library and not for you --------------------------------------------------
+//
+// Everything beginning with `Lamp` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+
+// -- What a lamp is made of ------------------------------------------------------------------------
+
+LampIron = material { pigment [0.085, 0.088, 0.092]  specular 0.34  shininess 70  ambient 0.05 }
+LampPaint = material { pigment [0.130, 0.155, 0.140]  specular 0.30  shininess 60  ambient 0.05 }
+LampAlloy = material { pigment [0.320, 0.330, 0.345]  specular 0.55  shininess 120  reflective 0.14  ambient 0.06 }
+
+// The glass of a lantern that is not burning: pale, dusty, and not a mirror.  A dark globe reads as a
+// hole in the lamp, which is the commonest way an unlit fitting goes wrong.
+LampGlassCold = material {
+    pigment [0.520, 0.520, 0.505]
+    specular 0.44  shininess 110  reflective 0.10  ambient 0.10
+}
+
+// The shell an emissive medium lives in -- see `fire`, which does the same thing with flames.
+LampShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
+
+// Sodium, which is what a street was lit by for most of a century, and a colder modern white.
+LampSodium = pigment [1.00, 0.78, 0.42]
+LampWhite = pigment [1.00, 0.96, 0.88]
+
+LampSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
+
+primitive LampGlowOf(variant) -> pigment {
+    switch (mod(floor(variant), 2)) {
+        case 0 { return LampSodium }
+        default { return LampWhite }
+    }
+}
+
+// -- The burning part ------------------------------------------------------------------------------
+
+// The light itself: a shell with an emissive medium in it, told to light what is around rather than only
+// itself.  When `lit` is nought this is nothing at all, which is the whole point of the parameter.
+//
+// The density falls from the middle to the edge rather than being flat, so the globe has a bright heart
+// and a soft edge instead of reading as a painted ball.  It is `no shadow` because a lamp that shades
+// itself is a lamp that does not work.
+primitive LampFlame(size, lit, variant, samples) -> group {
+    switch (floor(lit)) {
+        case 0 { return group { } }
+        default {
+            return group {
+                sphere {
+                    material LampShell {
+                        interior {
+                            ior 1.0
+                            medium {
+                                emission pigment LampGlowOf(variant)
+                                // **Times two thousand**, and that number was measured rather than
+                                // guessed.  What a medium gives back is its emission times its density
+                                // times how far the ray travelled through it, and a lamp's globe is a
+                                // few tenths of a unit across -- so a density peaking at one integrates
+                                // to a fraction of a lamp and lights nothing at all.  It is the same
+                                // compensation `fire` makes for its coal bed.
+                                //
+                                // It does not scale the way you would expect.  Measured on the ground
+                                // under a five-meter lamp: x30 gave 9 of 255, x150 gave 19, x400 gave
+                                // 30 and x2000 gives 62.  That is roughly the square root of the
+                                // density, not the density -- so buying twice the light costs four or
+                                // five times the number, and there is no point being timid with it.
+                                //
+                                // And `samples` is *not* another way to get there.  Tripling it to 72
+                                // moved the same measurement from 61.6 to 59.1 -- nothing, within the
+                                // noise it is there to reduce -- while tripling the render time.  It
+                                // buys smoothness; only the density buys light.
+                                density function {
+                                    max(0, 1 - sqrt(x * x + y * y + z * z)) * 6000
+                                }
+                            }
+                        }
+                    }
+                    no shadow
+                    gives light samples samples
+                    scale size
+                }
+            }
+        }
+    }
+}
+
+// And the globe you see, which is the cold glass when the lamp is out and nothing when it is burning --
+// the emissive shell is doing that job then, and two spheres in the same place would fight.
+primitive LampGlobe(size, lit) -> group {
+    switch (floor(lit)) {
+        case 0 {
+            return group {
+                sphere { material LampGlassCold  scale size }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+primitive LampSnow(season, wide, where) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                superellipsoid {
+                    material LampSnowCap
+                    east 0.4  north 0.35
+                    scale [wide, wide * 0.22, wide]
+                    translate where
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- A street lamp ---------------------------------------------------------------------------------
+
+// Variant 0 is a period cast column with a lantern on top; variant 1 is a modern tapered column with a
+// cobra head on an outreach arm.  They are different lamps rather than the same lamp twice, which is
+// what a variant is for -- and between them they cover about a century and a half of street.
+primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 0 {
+            return group {
+                // The base, the column and the collar under the lantern.
+                cylinder { material LampIron  min Y 0  max Y 1
+                           scale [height * 0.055, height * 0.06, height * 0.055] }
+                tube {
+                    material LampIron
+                    radius height * 0.030 at [0, height * 0.05, 0]
+                    radius height * 0.018 at [0, height * 0.90, 0]
+                }
+                cylinder { material LampIron  min Y 0  max Y 1
+                           scale [height * 0.035, height * 0.015, height * 0.035]
+                           translate Y height * 0.90 }
+
+                // **The lantern is a base, a cap and four corner posts, not a closed case.**  It was
+                // a single tapered lathe first, which is a handsome shape and completely opaque: the
+                // globe sat inside it and the light had nowhere to go, so a lit lamp rendered as a dark
+                // blob on a pole.  A lantern is mostly glass, and the honest way to say so here is to
+                // build only the parts that are not.
+                lathe {
+                    path {
+                        move to 0, 0
+                        line to 0.062, 0
+                        line to 0.070, 0.022
+                        line to 0.046, 0.034
+                        line to 0, 0.036
+                    }
+                    material LampIron
+                    scale height
+                    translate Y height * 0.915
+                }
+                lathe {
+                    path {
+                        move to 0, 0
+                        line to 0.058, 0
+                        line to 0.072, 0.012
+                        line to 0.030, 0.052
+                        line to 0, 0.058
+                    }
+                    material LampIron
+                    scale height
+                    translate Y height * 1.020
+                }
+                for post in [0, 3] {
+                    cube {
+                        material LampIron
+                        scale [height * 0.005, height * 0.043, height * 0.005]
+                        translate [height * 0.050, height * 0.995, 0]
+                        rotate Y (post * 90)
+                    }
+                }
+
+                object LampGlobe(height * 0.044, lit) { translate Y height * 0.995 }
+                object LampFlame(height * 0.050, lit, variant, 24) { translate Y height * 0.995 }
+                object LampSnow(season, height * 0.045, [0, height * 1.076, 0])
+            }
+        }
+        default {
+            return group {
+                cylinder { material LampAlloy  min Y 0  max Y 1
+                           scale [height * 0.050, height * 0.045, height * 0.050] }
+                tube {
+                    material LampAlloy
+                    radius height * 0.026 at [0, height * 0.04, 0]
+                    radius height * 0.016 at [0, height * 0.94, 0]
+                }
+                // The outreach arm, which is what makes a modern lamp lean over the road.
+                tube {
+                    material LampAlloy
+                    radius height * 0.015 at [0, height * 0.94, 0]
+                    quad radius height * 0.014 at [height * 0.10, height * 1.00, 0]
+                         radius height * 0.013 at [height * 0.22, height * 1.01, 0]
+                }
+                // The cobra head.
+                superellipsoid {
+                    material LampAlloy
+                    east 0.45  north 0.35
+                    scale [height * 0.085, height * 0.022, height * 0.038]
+                    translate [height * 0.29, height * 1.005, 0]
+                }
+
+                object LampGlobe(height * 0.030, lit)
+                    { scale [1, 0.55, 1]  translate [height * 0.29, height * 0.988, 0] }
+                object LampFlame(height * 0.040, lit, variant, 24)
+                    { translate [height * 0.29, height * 0.985, 0] }
+                object LampSnow(season, height * 0.070, [height * 0.29, height * 1.030, 0])
+            }
+        }
+    }
+}
+
+// -- A wall lantern --------------------------------------------------------------------------------
+
+// A lantern on a bracket, for the wall of a building.  It faces `-Z` like everything that goes on a wall,
+// so it is placed the same way a window is.
+primitive WallLantern(size, season = 'summer', variant = 1, lit = 0) -> group {
+    return group {
+        // The back plate and the bracket reaching out from the wall.
+        cube { material LampIron
+               scale [size * 0.16, size * 0.22, size * 0.05]  translate Z -size * 0.05 }
+        tube {
+            material LampIron
+            radius size * 0.045 at [0, size * 0.14, -size * 0.06]
+            quad radius size * 0.040 at [0, size * 0.30, -size * 0.20]
+                 radius size * 0.035 at [0, size * 0.26, -size * 0.44]
+        }
+
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.20, 0
+                line to 0.26, 0.11
+                line to 0.19, 0.52
+                line to 0.28, 0.56
+                line to 0.11, 0.70
+                line to 0, 0.72
+            }
+            material LampIron
+            scale size * 0.5
+            translate [0, -size * 0.10, -size * 0.44]
+        }
+
+        object LampGlobe(size * 0.17, lit) { translate [0, size * 0.02, -size * 0.44] }
+        object LampFlame(size * 0.20, lit, variant, 20) { translate [0, size * 0.02, -size * 0.44] }
+    }
+}
+
+// -- A bollard light -------------------------------------------------------------------------------
+
+// Knee high, with a lit band under a cap.  These edge a path or a forecourt, and being low they are the
+// one outdoor light that shows what the ground is made of.
+primitive BollardLight(height, season = 'summer', variant = 1, lit = 0) -> group {
+    return group {
+        cylinder { material LampAlloy  min Y 0  max Y 1
+                   scale [height * 0.13, height * 0.44, height * 0.13]
+                   translate Y height * 0.44 }
+        // The cap, overhanging so the band beneath it is in shadow when the lamp is out.
+        cylinder { material LampAlloy  min Y -1  max Y 1
+                   scale [height * 0.17, height * 0.045, height * 0.17]
+                   translate Y height * 0.955 }
+
+        object LampGlobe(height * 0.115, lit)
+            { scale [1, 0.85, 1]  translate Y height * 0.845 }
+        object LampFlame(height * 0.130, lit, variant, 16)
+            { scale [1, 0.85, 1]  translate Y height * 0.845 }
+        object LampSnow(season, height * 0.16, [0, height * 1.005, 0])
+    }
+}

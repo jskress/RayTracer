@@ -1,4 +1,5 @@
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -15,8 +16,16 @@ public class RenderInstruction : Instruction
     /// <summary>
     /// The material to use for surfaces that asked to inherit their material but the
     /// inheritance never happened.
+    /// <para>
+    /// A fresh one each time rather than one shared instance, because this material is *written to*
+    /// below -- its ambient is settled, and then scaled by whatever the scene asked for.  Settling with
+    /// `??=` would survive being shared, since it happens once and stays; scaling would not, and a
+    /// second render in the same process would scale what the first had already scaled.  That never
+    /// shows from a command line, which renders one picture per process, and it shows immediately in a
+    /// test suite or a batch.
+    /// </para>
     /// </summary>
-    private static readonly Material OrphanMaterial = new ()
+    private static Material NewOrphanMaterial => new ()
     {
         Pigment = new SolidPigment(Colors.Gray40)
     };
@@ -169,10 +178,26 @@ public class RenderInstruction : Instruction
         // its own ambient keeps it either way.
         double whenUnsaid = scene.Lights.OfType<SkyLight>().Any() ? 0 : 0.1;
 
+        // And then the scene may turn the whole lot up or down.  This is applied here, once the settling
+        // above has run, so it reaches the materials that named their own ambient as well as the ones
+        // that said nothing -- which is the entire point of it, since a curated library says something
+        // almost everywhere and a scene-wide *value* could never reach those.
+        //
+        // Once per material rather than once per surface, and that is belt and braces rather than a fix
+        // for anything observed: a `MaterialResolver` clones itself for each surface it dresses, so no
+        // two surfaces hold the same `Material` today and multiplying per surface would be harmless.
+        // It is written this way because `*=` compounds where the `??=` above does not -- if materials
+        // ever come to be shared, scaling per surface would quietly darken a row of houses more than a
+        // single house from the very same number, and nothing would report it.
+        HashSet<Material> scaled = context.AmbientScale.Near(1) ? null : [];
+
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
-            surface.Material ??= OrphanMaterial;
+            surface.Material ??= NewOrphanMaterial;
             surface.Material.Ambient ??= whenUnsaid;
+
+            if (scaled is not null && scaled.Add(surface.Material))
+                surface.Material.Ambient *= context.AmbientScale;
 
             Pigment pigment = surface.Material.Pigment;
 
