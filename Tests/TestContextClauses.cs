@@ -127,4 +127,146 @@ public class TestContextClauses
 
         Assert.AreEqual(2.6, context.Gamma, 1e-9, "the command line should have won");
     }
+    // -- scale ambient by ----------------------------------------------------------------------------
+
+    /// <summary>
+    /// Renders a scene of `count` spheres that all share one material, and reports how bright the side
+    /// of them facing away from the only light came out -- which is ambient and nothing else.
+    /// </summary>
+    private double ShadedSide(string contextBody, int count, bool orphan = false)
+    {
+        string path = Path.Combine(_directory, "scene.igl");
+        string output = Path.Combine(_directory, "out.png");
+        // An `orphan` sphere names no material at all, which is what puts it on the shared fallback
+        // material rather than on one of its own.
+        string wearing = orphan ? "" : "material Shared  ";
+        string spheres = string.Join("\n", Enumerable.Range(0, count)
+            // Centred on the origin whatever the count, so the *middle* sphere is in the same place in
+            // both scenes and the same patch of picture is measuring the same thing.
+            .Select(index => $"sphere {{ {wearing}translate [{index * 2.4 - (count - 1) * 1.2}, 1, 0] }}"));
+
+        File.WriteAllText(path,
+            $"context {{ no gamma {contextBody} }}\n" +
+            "camera { location [0, 1.4, -6]  look at [0, 1, 0]  field of view 44 }\n" +
+            "background [0, 0, 0]\n" +
+            // One light, well off to the left, so the right of each sphere is in its own shadow.
+            "point light { location [-14, 3, -3]  color [0.5, 0.5, 0.5] }\n" +
+            "Shared = material { pigment [0.8, 0.8, 0.8]  ambient 0.30 }\n" +
+            spheres);
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            Assert.IsNotNull(renderer, $"the scene did not parse: {captured}");
+
+            renderer.Render(new RenderOptions { OutputFileName = output, Width = 160, Height = 120 });
+
+            Canvas image = new ImageFile(output).Load()[0];
+            double total = 0;
+            int counted = 0;
+
+            // The right-hand half of the middle sphere, which the light never reaches.
+            for (int x = image.Width / 2; x < image.Width / 2 + 18; x++)
+            for (int y = 50; y < 78; y++)
+            {
+                total += image.GetPixel(x, y).Red;
+                counted++;
+            }
+
+            return total / counted;
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+    }
+
+    [TestMethod]
+    public void TestAmbientMayBeScaledForTheWholeScene()
+    {
+        // Ambient stands in for light this renderer does not trace, and a scene lit by objects in it --
+        // a street at night, a room with one lamp -- wants far less of that stand-in than the materials
+        // assume.  A scene-wide *value* could not do it: it would only settle materials that said
+        // nothing, and a curated library names its own ambient almost everywhere.  So this multiplies.
+        double full = ShadedSide("", 1);
+        double half = ShadedSide("scale ambient by 0.5", 1);
+        double none = ShadedSide("scale ambient by 0", 1);
+
+        Assert.IsTrue(full > none + 0.05,
+            $"the shaded side measured {full:F4} unscaled and {none:F4} at zero; scaling is doing nothing");
+
+        // Linear, and checked as such: halving the multiplier should halve what ambient contributes,
+        // which is what is left after taking away the part the light itself is responsible for.
+        double fullPart = full - none;
+        double halfPart = half - none;
+
+        Assert.AreEqual(fullPart * 0.5, halfPart, fullPart * 0.12,
+            $"ambient contributed {fullPart:F4} unscaled and {halfPart:F4} at a half; the second should " +
+            "be half the first");
+    }
+
+    [TestMethod]
+    public void TestScalingAmbientDoesNotCompoundAcrossRenders()
+    {
+        // A surface that names no material at all falls back on one the renderer keeps as a *static*,
+        // so every orphan in every scene rendered by this process is wearing the very same object.
+        // Settling its ambient with `??=` is safe on a shared thing -- it happens once and stays -- but
+        // *multiplying* it is not, and a second render would scale what the first already scaled.
+        //
+        // Nothing catches this from a command line, where one process renders one picture.  It bites a
+        // test suite, and it would bite any batch or animation.
+        double first = ShadedSide("scale ambient by 0.5", 1, orphan: true);
+        double second = ShadedSide("scale ambient by 0.5", 1, orphan: true);
+
+        Assert.AreEqual(first, second, 1e-9,
+            $"the same scene rendered twice measured {first:F4} then {second:F4}; the scaling is " +
+            "compounding on the material shared between renders");
+    }
+
+    [TestMethod]
+    public void TestAmbientCannotBeScaledByLessThanNothing()
+    {
+        string path = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(path,
+            "context { scale ambient by -1 }\n" +
+            "camera { location [0, 0, -4]  look at [0, 0, 1] }\n" +
+            "point light { location [0, 3, -3] }\n" +
+            "sphere { }");
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            // The term is resolved when the instruction runs, not when it parses, so the complaint
+            // arrives at render time rather than at parse time.
+            renderer?.Render(new RenderOptions
+            {
+                OutputFileName = Path.Combine(_directory, "out.png"), Width = 40, Height = 40
+            });
+        }
+        catch (Exception exception)
+        {
+            Console.Write(exception);
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        Assert.Contains("Ambient cannot be scaled by less than nothing", captured.ToString());
+    }
+
+
 }

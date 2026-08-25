@@ -94,6 +94,19 @@ public class RenderContext
     public int MediumSamples { get; set; } = 16;
 
     /// <summary>
+    /// What every material's ambient is multiplied by once the scene is whole.
+    /// <para>
+    /// Ambient stands in for light that has bounced about the scene, which this renderer does not trace.
+    /// A scene may want less of that stand-in than the materials in it assume -- a street at night is lit
+    /// by its lamps, and every surface glowing at a fixed fraction of its own color is the one thing that
+    /// stops it looking like night.  A multiplier is what reaches those materials: the alternative, a
+    /// scene-wide ambient *value*, could only settle the ones that said nothing, and a curated library
+    /// says something almost everywhere.
+    /// </para>
+    /// </summary>
+    public double AmbientScale { get; set; } = 1;
+
+    /// <summary>
     /// This property holds how many further turns of a light's path through a medium are followed past
     /// the first.  It is nothing by default, so that a scene says when it wants the cost: what a thick
     /// medium does to light it has already turned once is most of what it does, but it is also most of

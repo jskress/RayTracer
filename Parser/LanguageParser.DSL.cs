@@ -256,10 +256,19 @@ public partial class LanguageParser
             medium > [ samples | bounces ] ?? 'Expecting "samples" or "bounces" to follow "medium" here.' >
             _expression
         }
+        // Ambient stands in for light this renderer does not trace, and every material either names its
+        // own or takes what the scene settles on it.  This turns the whole lot up or down at once, which
+        // is the only way to reach the ones that named their own.
+        scaleAmbientClause:
+        {
+            scale > ambient ?? 'Expecting "ambient" to follow "scale" here.' >
+            by ?? 'Expecting "by" to follow "scale ambient" here.' >
+            _expression
+        }
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | contextPropertyClause
+            settingOffClause | mediumSamplesClause | scaleAmbientClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // Camera clauses.

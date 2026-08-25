@@ -1808,4 +1808,105 @@ public class TestShippedLibraries
         return Render(scene);
     }
 
+    /// <summary>
+    /// What the outdoor lights library holds out, written down rather than read out of it.
+    /// </summary>
+    private static readonly string[] Lamps = ["StreetLamp", "WallLantern", "BollardLight"];
+
+    [TestMethod]
+    public void TestEveryLampStandsLitAndUnlit()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "outdoor-lights.igl"),
+            Path.Combine(_directory, "outdoor-lights.igl"), true);
+
+        foreach (string lamp in Lamps)
+        foreach (string season in (string[]) ["summer", "winter"])
+        foreach (int variant in (int[]) [0, 1])
+        foreach (int lit in (int[]) [0, 1])
+            Assert.IsNull(Erect(lamp, season, variant, lit), $"{lamp} should stand ({season}, {lit})");
+    }
+
+    [TestMethod]
+    public void TestALitLampActuallyLightsTheGroundAndAnUnlitOneDoesNot()
+    {
+        // The whole promise of this library, and the one thing about it that could break silently.  A
+        // lamp is emissive rather than a light -- an emitting medium inside a shell marked `gives
+        // light` -- so there is nothing in the scene to fail loudly if that stops working.  The fitting
+        // would go on rendering perfectly and simply stop lighting anything.
+        //
+        // So the same lamp is stood over the same ground in a scene with no light of its own, twice, and
+        // the ground is required to be far brighter with it burning than with it out.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "outdoor-lights.igl"),
+            Path.Combine(_directory, "outdoor-lights.igl"), true);
+
+        double dark = GroundUnder(0);
+        double lit = GroundUnder(1);
+
+        // The numbers are small because the pool of light is a small part of the frame -- what matters
+        // is that one of them is flatly zero and the other is not.
+        Assert.IsTrue(dark < 0.005,
+            $"the ground under an unlit lamp measured {dark:F4}; nothing should be lighting it");
+        Assert.IsTrue(lit > 0.015,
+            $"the ground under a lit lamp measured {lit:F4} against {dark:F4} unlit -- the lamp is not " +
+            "lighting anything, which is what happens when its shell stops giving light or its lantern " +
+            "closes over its own globe");
+    }
+
+    /// <summary>
+    /// Stands one lamp over a plain floor in a scene with no light in it, and reports how bright the
+    /// floor came out directly beneath it.
+    /// </summary>
+    private double GroundUnder(int lit)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'outdoor-lights' { StreetLamp }
+            context { angles are degrees  no gamma  medium samples 24 }
+            // Angled rather than straight down: a camera looking along its own up vector is degenerate,
+            // and renders black, which reads exactly like a lamp that is not lighting anything.
+            camera { location [4, 6, -5]  look at [0, 0.4, 0]  field of view 44 }
+            background [0, 0, 0]
+            plane { material { pigment [0.6, 0.6, 0.6]  ambient 0 } }
+            object StreetLamp(5, 'summer', 1, {{lit}})
+            """);
+
+        Assert.IsNull(Render(scene, 120, 90), $"a lamp with lit = {lit} should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        double total = 0;
+
+        // The whole picture: there is nothing in it but the floor and one lamp, so its mean is the
+        // floor's brightness to within the small area the column covers -- and that area is the same
+        // whether the lamp is burning or not, which is what makes the two readings comparable.
+        for (int x = 0; x < picture.Width; x++)
+        for (int y = 0; y < picture.Height; y++)
+            total += picture.GetPixel(x, y).Red;
+
+        return total / (picture.Width * picture.Height);
+    }
+
+    /// <summary>
+    /// Erects one lamp and hands back whatever stopped it.
+    /// </summary>
+    private string Erect(string lamp, string season, int variant, int lit)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        double size = lamp == "StreetLamp" ? 5 : lamp == "BollardLight" ? 1 : 1.4;
+
+        File.WriteAllText(scene, $$"""
+            import 'outdoor-lights' { {{lamp}} }
+            context { angles are degrees  no gamma  medium samples 12 }
+            camera { location [6, 4, -8]  look at [0, 2, 0]  field of view 46 }
+            point light { location [-6, 9, -9] }
+            background [0.1, 0.1, 0.14]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{lamp}}({{size}}, '{{season}}', {{variant}}, {{lit}})
+            """);
+
+        return Render(scene, 60, 45);
+    }
+
 }
