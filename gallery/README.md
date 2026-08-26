@@ -933,6 +933,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/a-room-after-dark.png">
+      <img alt="A Room After Dark" height="120" src="Local/functions/a-room-after-dark.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/a-room-after-dark.igl">A Room After Dark</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/where-four-roads-meet.png">
       <img alt="Where Four Roads Meet" height="120" src="Local/functions/where-four-roads-meet.png" width="160"/>
     </a></td>
