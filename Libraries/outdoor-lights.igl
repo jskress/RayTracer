@@ -88,11 +88,22 @@ primitive LampFlame(size, lit, variant, samples) -> group {
                                 // to a fraction of a lamp and lights nothing at all.  It is the same
                                 // compensation `fire` makes for its coal bed.
                                 //
-                                // It does not scale the way you would expect.  Measured on the ground
-                                // under a five-meter lamp: x30 gave 9 of 255, x150 gave 19, x400 gave
-                                // 30 and x2000 gives 62.  That is roughly the square root of the
-                                // density, not the density -- so buying twice the light costs four or
-                                // five times the number, and there is no point being timid with it.
+                                // **The light is linear in this number, and what you see is not.**
+                                // That distinction was got wrong here first time and is worth keeping
+                                // straight.  `VolumeLight` delivers emission times the amount of stuff
+                                // over the inverse square, and the amount of stuff is the density --
+                                // no square root anywhere in it.
+                                //
+                                // But a scene is gamma-corrected unless it says `no gamma`, and gamma
+                                // 2.2 puts a linear radiance on screen as its 1/2.2 power, which is
+                                // 0.45 -- near enough a square root that it reads as one.  Measured
+                                // both ways over four doublings of the density, the exponent came out
+                                // 0.93 with `no gamma` and 0.43 with correction on.
+                                //
+                                // So for the ordinary corrected picture the rule of thumb holds: five
+                                // times the number buys about twice the light, and there is no point
+                                // being timid with it.  Just do not carry that rule into a scene that
+                                // has turned gamma off, where the number does exactly what it says.
                                 //
                                 // And `samples` is *not* another way to get there.  Tripling it to 72
                                 // moved the same measurement from 61.6 to 59.1 -- nothing, within the

@@ -689,10 +689,27 @@ Two knobs, and it is worth knowing which does what, because guessing gets it bac
 | ×50,000 | 244.3 | 12.0s |
 
 There is no ceiling — it climbs until the ground blows out — and the time does not move, because density
-is a number in a function.  It scales as roughly the *square root* of the number, so five times the
-density buys twice the light; the numbers therefore get large and look alarming, and large numbers are
+is a number in a function.  The numbers therefore get large and look alarming, and large numbers are
 free.  The library ships ×6000, which lights a house front across a pavement rather than just a pool of
 ground under the column.
+
+**The light is linear in that number; what you see is not.**  This is worth keeping straight, because the
+table above looks like a square root and this section used to say it was one.  A volume light delivers
+emission times the amount of emitting stuff over the inverse square, and the amount of stuff *is* the
+density — there is no square root in it.  What bends the curve is
+[gamma](context.md#gamma): a scene is corrected unless it says `no gamma`, and gamma 2.2 puts a linear
+radiance on screen as its 1/2.2 power, which is 0.45 — near enough a square root to pass for one.
+
+Measured over four doublings of the density, on the same scene rendered both ways:
+
+| | exponent |
+| --- | --- |
+| `no gamma` | 0.75 → 0.86 → 0.92 → **0.93**, converging on 1 |
+| corrected (the default) | 0.38 → 0.40 → 0.42 → **0.43**, converging on 1/2.2 |
+
+So for an ordinary corrected picture the rule of thumb is sound — five times the number buys about twice
+the light.  Just do not carry it into a scene that has turned gamma off, where the number does exactly
+what it says.
 
 **`samples` is not a second brightness knob.**  Tripling it from 24 to 72 moved that same measurement
 from 61.6 to 59.1 — nothing, within the noise it exists to reduce — and tripled the render time.  It buys
