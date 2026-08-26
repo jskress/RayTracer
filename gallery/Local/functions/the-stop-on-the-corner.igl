@@ -1,0 +1,101 @@
+// A pavement with everything on it that a pavement has, on a cold morning.
+//
+//     import 'street-furniture' { Bench, LitterBin, Bollard, Railing, PostBox, BusShelter, CycleStand }
+//
+// The other town scenes are about what a street is *made* of -- its carriageway, its curbs, its houses.
+// This one is about what is *put* on it afterwards, which is the difference between a street that has
+// been modelled and one that looks lived in.
+//
+// **Winter, because that is the season that costs something to get right.**  Snow settles on the
+// horizontal and nowhere else, so every flat thing here wears a cap and every round or upright thing
+// does not.  Getting that wrong in either direction is what makes a snowy render look like a scene
+// dusted with icing sugar: snow on the sides of a bollard, or a bench roof left bare.
+//
+// **Everything faces `-Z`, and this pavement is the far one.**  A bench, a shelter and a post box all
+// have fronts, and they all point the same way as a window does.  Putting them on the *far* pavement is
+// therefore the cheap arrangement -- they face the road, and the camera, without a rotation between
+// them.  The near pavement would want `rotate Y 180` on every one.
+
+Season = 'winter'
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'The Stop on the Corner'
+        author 'J. Stephen Kress'
+        description 'Everything a pavement carries, on a cold morning.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'street-furniture' { Bench, LitterBin, Bollard, Railing, PostBox, BusShelter, CycleStand }
+import 'roads'          { Road, Curb, Pavement }
+import 'buildings'      { House, Row }
+import 'vehicles'       { Car }
+import 'outdoor-lights' { StreetLamp }
+import 'daylight'       { WinterSunFrom, WinterSunLight }
+
+camera {
+    location [8.9, 2.05, 2.35]
+    look at [-2.6, 1.18, 6.65]
+    field of view 50
+}
+
+// A low winter sun raking across the pavement.  The stock `WinterSun` puts its sun at azimuth 160,
+// which is on the +Z side and therefore behind everything here -- the furniture faces -Z, as it all
+// does.  `WinterSunFrom` takes the direction at the call site for exactly this reason, and 40 lights
+// the fronts while still throwing the long shadows a low sun should.
+background WinterSunFrom(40)
+light WinterSunLight
+
+// -- The street itself ------------------------------------------------------------------------------
+
+// The verge the whole thing stands on, under the paving and beyond it.
+plane { material { pigment [0.86, 0.88, 0.92]  specular 0.05  ambient 0.08 }  translate Y -0.13 }
+
+object Road(70, 7, Season, 1)
+object Curb(70, Season, 1)                { translate Z 3.5 }
+object Curb(70, Season, 1) { rotate Y 180  translate Z -3.5 }
+object Pavement(70, 3.2, Season, 1)       { translate Z 5.3 }
+object Pavement(70, 3.2, Season, 1)       { translate Z -5.3 }
+
+// Something to be a street rather than a road: a terrace set back behind the far pavement.
+object Row(4, Season, 2)     { translate [-7.5, 0, 11.5] }
+object House(4.6, Season, 0) { translate [4.2, 0, 11.0] }
+
+// Unlit, because it is the middle of the morning.  An unlit lamp is only geometry and costs nothing.
+object StreetLamp(5, Season, 0, 0) { translate [8.5, 0, 4.5] }
+
+object Car(4.4, Season, 2) { rotate Y 180  translate [-4.6, 0, 2.1] }
+
+// -- What the pavement carries ----------------------------------------------------------------------
+
+// The stop itself, set against the back of the pavement so nobody waiting stands in the way.
+object BusShelter(3.6, Season, 1) { translate [-2.6, 0, 6.2] }
+
+// A bench out in the open beside it, which is where people sit when the shelter is full or wet.
+object Bench(1.8, Season, 0) { translate [0.1, 0, 6.0] }
+
+// The pair that always turn up together, one at each end of the seating.
+object LitterBin(1.0, Season, 0) { translate [2.9, 0, 6.2] }
+object LitterBin(1.05, Season, 1) { translate [-5.0, 0, 6.35] }
+
+// A pillar box on the corner, and a wall box would want a wall.
+object PostBox(1.45, Season, 0) { translate [4.0, 0, 6.15] }
+
+// Guard rail along the curb, holding people back from the carriageway until the crossing.
+object Railing(9.0, Season, 1) { translate [1.0, 0, 4.15] }
+
+// Stands, at the back of the pavement where a bicycle is out of the way.  They were first put on the
+// far side of the pillar box, where the box hid all three of them -- a thing worth checking for any
+// small item, since nothing announces that it has been occluded.
+for stand in [0, 1] {
+    object CycleStand(0.72, Season, 1) { translate [1.6 - stand * 0.85, 0, 6.7] }
+}
+
+// And bollards where the pavement meets the side road, which is what stops a car cutting the corner.
+for post in [0, 2] {
+    object Bollard(0.95, Season, 0) { translate [-6.9 - post * 1.5, 0, 4.3] }
+}

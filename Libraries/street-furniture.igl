@@ -1,0 +1,514 @@
+// What stands on a pavement once the pavement itself is built: the things a street is furnished with,
+// as against the road it is made of or the lamps that light it.
+//
+//     import 'street-furniture' { Bench, LitterBin, Bollard, Railing, PostBox, BusShelter, CycleStand }
+//
+//     object Bench(1.8)                    { translate [0, 0, 5] }
+//     object LitterBin(1.0, 'winter')      { translate [3, 0, 5] }
+//     object Railing(6.0)                  { translate [0, 0, 3.6] }
+//
+// | `Bench`      | Slatted seat on cast ends, for a pavement or a park. |
+// | `LitterBin`  | A bin on a post, or a tapered drum on the ground. |
+// | `Bollard`    | A short post that stops a car and not a person. |
+// | `Railing`    | A run of pedestrian guard rail, posts and bars. |
+// | `PostBox`    | A pillar box, or a smaller wall-mounted one. |
+// | `BusShelter` | A roof, three glazed sides and a bench under it. |
+// | `CycleStand` | A hoop to lean a bicycle against. |
+//
+// **The first number is a size** -- a length for the things that run along a pavement (`Bench`,
+// `Railing`, `BusShelter`), and a height for the things that stand on it.  The two after it are what
+// they always are: **what time of year** and **which one of that kind**.
+//
+// -- Everything here faces `-Z` ----------------------------------------------------------------------
+//
+// A bench has a front, a post box has a slot and a shelter has an open side, and all three face `-Z`,
+// which is the same way a window or a `WallLantern` faces.  So a bench put on the far pavement of a
+// street running along X wants `rotate Y 180`, and one on the near pavement wants no rotation at all.
+// The things with no front -- a bollard, a bin, a cycle stand -- do not care.
+//
+// -- Season -------------------------------------------------------------------------------------------
+//
+// Snow settles on the horizontal, and that is the whole of what `'winter'` does here: a bench's slats, a
+// bin's lid, the flat of a bollard, the crown of a pillar box and the top of a wall box, a railing's top
+// rail, and the roof of a shelter.  The `CycleStand` is the one thing that gets none, and deliberately:
+// it is a round tube 70 across, which in life holds a line of snow about a pencil wide, and modelling
+// that is a lot of geometry to put somewhere nobody will look.
+//
+// It is the same trick `outdoor-lights` and `roads` use, written again rather than imported, because
+// importing a street-lamp library to borrow one snow cap would bring a street lamp with it.
+//
+// -- What is here for the library and not for you -----------------------------------------------------
+//
+// Everything beginning with `Street` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+
+// -- What street furniture is made of ------------------------------------------------------------------
+
+// Cast iron, painted, and painted a long time ago.  Nearly black rather than black: a true black post
+// has no shape at all in a photograph, and neither has one here.
+StreetIron = material {
+    pigment [0.078, 0.082, 0.086]
+    specular 0.34  shininess 70  ambient 0.05
+}
+
+// The green a park bench is, and the dark red a pillar box is not far off either.
+StreetGreen = material {
+    pigment [0.098, 0.150, 0.115]
+    specular 0.30  shininess 60  ambient 0.05
+}
+StreetRed = material {
+    pigment [0.400, 0.055, 0.055]
+    specular 0.36  shininess 80  ambient 0.06
+}
+
+// Galvanised steel, which is what a modern bollard or a shelter frame is: pale, and duller than it
+// looks in a catalogue once it has stood outside for a winter.
+StreetSteel = material {
+    pigment [0.400, 0.415, 0.430]
+    specular 0.50  shininess 110  reflective 0.12  ambient 0.06
+}
+
+// Hardwood slats, weathered.  A bench reads as a bench from its *slats* before anything else, so these
+// want to be a different colour from the frame rather than a different shade of it.
+StreetTeak = material {
+    pigment [0.300, 0.205, 0.125]
+    specular 0.18  shininess 40  ambient 0.06
+}
+
+// Toughened glass for a shelter: scratched, filmed and slightly green, the way a panel that has stood
+// out in the weather is.
+//
+// The number is about **how much a shelter should dim what is behind it**, and not, as I first wrote
+// here, about whether the glass is visible at all.  That claim was worth testing and did not survive it:
+// against a dark object behind the panel, 0.74 reads 39.7 and 0.95 reads 48.1, and even stripping the
+// specular and the reflection as well only reaches 50.4 -- against 90.1 for the open sky beside the
+// shelter.  The panel never becomes a hole, because `filter` goes on tinting whatever crosses it.  So
+// this is a composition choice rather than a rescue.
+StreetGlass = material {
+    pigment [0.72, 0.80, 0.76]
+    specular 0.55  shininess 180  reflective 0.10
+    transparency 0.74  ambient 0.05
+    interior { ior Glass  filter 0.55 }
+}
+
+StreetSnow = material {
+    pigment [0.90, 0.92, 0.96]  specular 0.24  shininess 50  ambient 0.10
+}
+
+primitive StreetFrameOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material StreetIron }
+        case 1 { return material StreetSteel }
+        default { return material StreetGreen }
+    }
+}
+
+// -- Snow ---------------------------------------------------------------------------------------------
+
+// A slab of snow lying on something flat.  `wide` and `deep` are the thing it lies on, and it is a
+// superellipsoid rather than a cube so its edges are rounded the way settled snow is.
+primitive StreetSnowSlab(season, wide, deep, thick, where) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                superellipsoid {
+                    material StreetSnow
+                    east 0.35  north 0.30
+                    scale [wide, thick, deep]
+                    translate where
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// The same for something round.
+primitive StreetSnowCap(season, radius, thick, where) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                superellipsoid {
+                    material StreetSnow
+                    east 0.40  north 0.35
+                    scale [radius, thick, radius]
+                    translate where
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// -- A bench ------------------------------------------------------------------------------------------
+
+// Slatted seat and back on two cast ends.  `length` is how long it is; everything else follows from a
+// real bench, which is about 450 to the seat and 850 to the top of the back whatever its length.
+//
+// The slats are the whole of it.  A bench modelled as two solid slabs reads as a block of wood on legs;
+// the gaps between slats are what the eye recognises, and they cost four cubes to get.
+primitive Bench(length, season = 'summer', variant = 1) -> group {
+    seat = 0.45
+    tall = 0.85
+    deep = 0.58
+    slat = deep * 0.155
+
+    return group {
+        // The two ends, each an upright that carries the seat and leans back above it.
+        for side in [0, 1] {
+            across = (side * 2 - 1) * (length * 0.5 - 0.06)
+
+            group {
+                material StreetFrameOf(variant)
+
+                // Foot, front leg, back leg.
+                cube { scale [0.035, 0.022, deep * 0.46]  translate [across, 0.022, 0] }
+                cube { scale [0.028, seat * 0.5, 0.030]
+                       translate [across, seat * 0.5, -deep * 0.40] }
+                cube { scale [0.028, seat * 0.5, 0.030]
+                       translate [across, seat * 0.5, deep * 0.36] }
+                // The rail under the seat, and the arm above it.
+                cube { scale [0.024, 0.020, deep * 0.44]  translate [across, seat - 0.02, 0] }
+                cube { scale [0.024, 0.018, deep * 0.30]
+                       translate [across, seat + 0.21, -deep * 0.10] }
+                cube { scale [0.024, 0.105, 0.024]
+                       translate [across, seat + 0.105, -deep * 0.38] }
+                // The back upright, raked.
+                cube {
+                    scale [0.026, (tall - seat) * 0.55, 0.026]
+                    rotate X -8
+                    translate [across, seat + (tall - seat) * 0.5, deep * 0.34]
+                }
+            }
+        }
+
+        // Five slats across the seat and three up the back.
+        for plank in [0, 4] {
+            cube {
+                material StreetTeak
+                scale [length * 0.5 - 0.02, 0.014, slat * 0.5]
+                translate [0, seat + 0.014, (plank - 2) * deep * 0.195]
+            }
+        }
+        for plank in [0, 2] {
+            cube {
+                material StreetTeak
+                scale [length * 0.5 - 0.02, slat * 0.5, 0.013]
+                rotate X -8
+                translate [0, seat + 0.10 + plank * (tall - seat - 0.13) * 0.5,
+                           deep * 0.315 + plank * 0.021]
+            }
+        }
+
+        object StreetSnowSlab(season, length * 0.5 - 0.02, deep * 0.46, 0.018,
+                              [0, seat + 0.030, 0])
+    }
+}
+
+// -- A litter bin ---------------------------------------------------------------------------------------
+
+// Two of them: a drum on the ground, and a smaller one hung on a post.  `height` is to the top of the
+// bin itself, post included where there is one.
+//
+// The aperture is what says "bin" rather than "barrel", and it has to be an actual hole -- a dark band
+// painted on reads as a stripe.  It is a `difference` against a box, which is cheap here because the
+// bin is a lathe of a dozen segments rather than anything expensive.
+primitive LitterBin(height, season = 'summer', variant = 1) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 1 {
+            // Hung on a post: a half-drum against an upright, which is what a lamp column carries.
+            return group {
+                cylinder {
+                    material StreetFrameOf(variant)  min Y 0  max Y 1
+                    scale [height * 0.035, height * 0.98, height * 0.035]
+                }
+                difference {
+                    cylinder {
+                        material StreetFrameOf(variant)  min Y -1  max Y 1
+                        scale [height * 0.155, height * 0.20, height * 0.155]
+                        translate Y height * 0.62
+                    }
+                    cube {
+                        scale [height * 0.13, height * 0.055, height * 0.20]
+                        translate [0, height * 0.755, -height * 0.10]
+                    }
+                }
+                object StreetSnowCap(season, height * 0.15, height * 0.016,
+                                     [0, height * 0.828, 0])
+            }
+        }
+        default {
+            // A drum standing on the ground, tapering slightly so it does not read as a bucket.
+            return group {
+                difference {
+                    lathe {
+                        path {
+                            move to 0, 0
+                            line to 0.86, 0
+                            line to 0.96, 0.16
+                            line to 1.00, 2.10
+                            line to 0.92, 2.32
+                            line to 0, 2.36
+                        }
+                        material StreetFrameOf(variant)
+                        // Scaled across and up separately, and that is not fussiness.  The path is
+                        // drawn to a radius of one and a height of 2.36, so scaling it *uniformly*
+                        // ties the bin's width to its height -- a metre-tall bin came out 840 across,
+                        // which is a water butt.  A real one is about 450.
+                        scale [height * 0.225, height * 0.424, height * 0.225]
+                    }
+                    cube {
+                        scale [height * 0.30, height * 0.055, height * 0.46]
+                        translate [0, height * 0.84, -height * 0.20]
+                    }
+                }
+                // Sized off the rim, not off the height.  This was `height * 0.38` while the drum
+                // itself was still being scaled uniformly at 0.42; narrowing the drum to 0.225 and
+                // leaving the cap alone left a disc half again as wide as the bin, floating over it
+                // like a table top.  A cap has to be re-measured whenever the thing under it moves.
+                object StreetSnowCap(season, height * 0.200, height * 0.020,
+                                     [0, height * 0.990, 0])
+            }
+        }
+    }
+}
+
+// -- A bollard ------------------------------------------------------------------------------------------
+
+// The plain kind, which stops a car and not a person.  `outdoor-lights` has one that glows; this one
+// does not, and most bollards do not.
+primitive Bollard(height, season = 'summer', variant = 1) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 1 {
+            // A galvanised tube with a domed cap, which is the modern one.
+            return group {
+                cylinder {
+                    material StreetSteel  min Y 0  max Y 1
+                    scale [height * 0.085, height * 0.97, height * 0.085]
+                }
+                sphere {
+                    material StreetSteel
+                    scale [height * 0.085, height * 0.055, height * 0.085]
+                    translate Y height * 0.97
+                }
+                object StreetSnowCap(season, height * 0.075, height * 0.020,
+                                     [0, height * 1.010, 0])
+            }
+        }
+        default {
+            // Cast iron, waisted, with a collar and a ball on top -- the one outside a town hall.
+            return group {
+                lathe {
+                    path {
+                        move to 0, 0
+                        line to 1.00, 0
+                        line to 1.00, 0.20
+                        quad 0.74, 0.55 to 0.66, 1.60
+                        line to 0.82, 1.74
+                        line to 0.66, 1.88
+                        quad 0.80, 2.20 to 0.44, 2.38
+                        line to 0, 2.42
+                    }
+                    material StreetIron
+                    // Across and up separately, for the reason the bin gives.  A bollard is about 200
+                    // across whatever its height; uniform scaling made this one 780, which is a stump.
+                    scale [height * 0.105, height * 0.413, height * 0.105]
+                }
+                object StreetSnowCap(season, height * 0.050, height * 0.016,
+                                     [0, height * 0.985, 0])
+            }
+        }
+    }
+}
+
+// -- A railing ------------------------------------------------------------------------------------------
+
+// Pedestrian guard rail: the run of it that keeps people off a crossing until the crossing.  `length` is
+// how far it runs along X.
+//
+// **The rhythm is what reads**, not the bars.  At the distance a railing is ever seen the individual
+// bars are a texture; what tells you it is a railing rather than a wall is that the posts repeat on a
+// regular pitch and the top rail runs unbroken over them.  So the pitch is worked out from the length
+// rather than fixed, and the rail is one cube for the whole run.
+primitive Railing(length, season = 'summer', variant = 1) -> group {
+    tall = 1.10
+    bays = max(1, floor(length / 2.0))
+    pitch = length / bays
+
+    return group {
+        group {
+            material StreetFrameOf(variant)
+
+            // The top rail and the mid rail, each running the whole length.
+            cube { scale [length * 0.5, 0.030, 0.022]  translate Y tall - 0.030 }
+            cube { scale [length * 0.5, 0.018, 0.016]  translate Y tall * 0.42 }
+
+            // The posts, one more than there are bays so both ends are closed.
+            for post in [0, bays] {
+                cube {
+                    scale [0.030, tall * 0.5, 0.030]
+                    translate [post * pitch - length * 0.5, tall * 0.5, 0]
+                }
+            }
+
+            // The bars between them, on a pitch of about 120 whatever the bay works out to.
+            for bay in [0, bays - 1] {
+                bars = max(2, floor(pitch / 0.12))
+
+                for bar in [1, bars - 1] {
+                    cube {
+                        scale [0.008, (tall - 0.06) * 0.5, 0.008]
+                        translate [bay * pitch - length * 0.5 + bar * pitch / bars,
+                                   (tall - 0.06) * 0.5, 0]
+                    }
+                }
+            }
+        }
+
+        object StreetSnowSlab(season, length * 0.5, 0.026, 0.014, [0, tall + 0.008, 0])
+    }
+}
+
+// -- A post box -----------------------------------------------------------------------------------------
+
+// A pillar box, or the smaller sort bolted to a wall.  The slot faces `-Z`, so a box on the near side of
+// a street wants no rotation and one across the road wants `rotate Y 180`.
+//
+// The aperture has to be a real hole for the reason the litter bin's does: a dark rectangle painted on
+// the front reads as a label, and a hole reads as a slot.
+primitive PostBox(height, season = 'summer', variant = 1) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 1 {
+            // The wall-mounted one: a shallow box with a slot and a hood over it.
+            return group {
+                difference {
+                    cube {
+                        material StreetRed
+                        scale [height * 0.34, height * 0.42, height * 0.16]
+                        translate [0, height * 0.42, -height * 0.16]
+                    }
+                    cube {
+                        scale [height * 0.20, height * 0.030, height * 0.10]
+                        translate [0, height * 0.66, -height * 0.30]
+                    }
+                }
+                cube {
+                    material StreetRed
+                    scale [height * 0.23, height * 0.020, height * 0.045]
+                    translate [0, height * 0.715, -height * 0.335]
+                }
+                // On the top of the box and on the hood over its slot, which are the two flat things
+                // a wall box offers the weather.
+                object StreetSnowSlab(season, height * 0.32, height * 0.15, height * 0.018,
+                                      [0, height * 0.845, -height * 0.16])
+                object StreetSnowSlab(season, height * 0.22, height * 0.042, height * 0.012,
+                                      [0, height * 0.740, -height * 0.335])
+            }
+        }
+        default {
+            // The pillar: a fluted drum with a domed crown, and across and up scaled apart for the
+            // reason the bin and the bollard give.
+            return group {
+                difference {
+                    lathe {
+                        path {
+                            move to 0, 0
+                            line to 1.02, 0
+                            line to 1.02, 0.14
+                            line to 0.96, 0.26
+                            line to 0.96, 2.02
+                            line to 1.04, 2.10
+                            quad 1.02, 2.42 to 0.62, 2.56
+                            quad 0.30, 2.66 to 0, 2.68
+                        }
+                        material StreetRed
+                        scale [height * 0.215, height * 0.373, height * 0.215]
+                    }
+                    cube {
+                        scale [height * 0.115, height * 0.022, height * 0.30]
+                        translate [0, height * 0.655, -height * 0.20]
+                    }
+                }
+                // On the dome, not on the widest part of the box.  The crown narrows fast above the
+                // shoulder -- 0.45 of the path radius at the height this sits at, against 1.04 lower
+                // down -- so a cap measured off the drum overhangs the dome like a dinner plate.
+                object StreetSnowCap(season, height * 0.075, height * 0.016,
+                                     [0, height * 0.986, 0])
+            }
+        }
+    }
+}
+
+// -- A cycle stand --------------------------------------------------------------------------------------
+
+// The hoop you lean a bicycle against, which is a single bent tube and nothing else.  `width` is how far
+// apart its feet are.
+primitive CycleStand(width, season = 'summer', variant = 1) -> group {
+    tall = width * 1.05
+
+    return group {
+        tube {
+            material StreetFrameOf(variant)
+            radius width * 0.035 at [-width * 0.5, 0, 0]
+            quad radius width * 0.035 at [-width * 0.5, tall, 0]
+                 radius width * 0.035 at [0, tall, 0]
+            quad radius width * 0.035 at [width * 0.5, tall, 0]
+                 radius width * 0.035 at [width * 0.5, 0, 0]
+        }
+    }
+}
+
+// -- A bus shelter ----------------------------------------------------------------------------------------
+
+// A roof, three glazed sides and a bench under it, open towards `-Z`.  `length` is how far it runs.
+//
+// **The glass is the difficulty, and it is the same one the lampshade had.**  A shelter is mostly panel,
+// and a panel that is perfectly clear renders as a hole -- the frame appears to stand in mid-air with
+// nothing between its posts.  What makes glass read as glass at this distance is that it is slightly
+// tinted, slightly reflective and not quite transparent, so it picks up the sky and dims what is behind
+// it.  `StreetGlass` is 0.74 through rather than 0.95 for that reason.
+primitive BusShelter(length, season = 'summer', variant = 1) -> group {
+    tall = 2.40
+    deep = 1.40
+
+    return group {
+        group {
+            material StreetFrameOf(variant)
+
+            // Four corner posts.
+            for post in [0, 3] {
+                cube {
+                    scale [0.045, tall * 0.5, 0.045]
+                    translate [(mod(post, 2) * 2 - 1) * (length * 0.5 - 0.045), tall * 0.5,
+                               (floor(post / 2) * 2 - 1) * (deep * 0.5 - 0.045)]
+                }
+            }
+            // The roof, oversailing a little at the front so it keeps the rain off someone standing.
+            cube {
+                scale [length * 0.5, 0.045, deep * 0.5 + 0.10]
+                translate [0, tall + 0.045, -0.10]
+            }
+        }
+
+        // The back panel and the two ends.
+        parallelogram {
+            material StreetGlass
+            at [-length * 0.5 + 0.05, 0.30, deep * 0.5 - 0.05]
+            sides [length - 0.10, 0, 0], [0, tall - 0.42, 0]
+        }
+        for side in [0, 1] {
+            parallelogram {
+                material StreetGlass
+                at [(side * 2 - 1) * (length * 0.5 - 0.05), 0.30, deep * 0.5 - 0.05]
+                sides [0, 0, -deep + 0.10], [0, tall - 0.42, 0]
+            }
+        }
+
+        // Something to sit on, which is the whole reason anybody waits in one.
+        object Bench(length * 0.62, 'summer', variant)
+            { rotate Y 180  translate [0, 0, deep * 0.5 - 0.34] }
+
+        object StreetSnowSlab(season, length * 0.5, deep * 0.5 + 0.10, 0.030,
+                              [0, tall + 0.10, -0.10])
+    }
+}
