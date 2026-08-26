@@ -741,6 +741,79 @@ The same trap waits for any fitting built as a solid of revolution.
 And an unlit fitting needs pale glass, not dark.  A globe left dark reads as a hole in the lamp, which is
 the commonest way an unlit fixture goes wrong.
 
+#### Indoor Lights
+
+```
+import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+
+object TableLamp(0.55)                        // lit, unlike a street lamp
+object FloorLamp(1.65, 2)  { translate X 2 }
+object Pendant(0.85)       { translate Y 2.6 }
+```
+
+| | |
+| --- | --- |
+| `TableLamp` | A base with a shade on it, for a table or a sideboard. |
+| `FloorLamp` | The same light on a stem, standing on the floor. |
+| `Pendant` | A shade or an opal globe on a flex, hanging from the ceiling. |
+| `Sconce` | A bowl against a wall, throwing its light up it. |
+
+The first number is a size and the second is which one of that kind — but there is **no season**, so
+`variant` is the *second* number here where the outdoor fittings take it third.  Nothing indoors knows
+what month it is, and a parameter that never means anything is worse than one that is missing.
+
+##### `lit` is on by default, which is the opposite of outdoors
+
+[`outdoor-lights`](#outdoor-lights) ships its lamps dark because most scenes with a street lamp in them
+are daylight scenes where the lamp is off and should cost nothing.  Indoors that runs backwards: a room
+is a room because something in it is lit, and an interior with every fitting dark is not a scene of a
+room at night, it is a scene of nothing at all.
+
+It costs the same eleven times a point light, and it still scales with how many are burning, so light a
+room with one or two and leave the rest as dark glass.
+
+##### A bulb is a bulb, whatever it is screwed into
+
+Every fitting here uses the **same** bulb — one radius, written down once — rather than one scaled to
+its own size, and that is not tidiness.  What a volume light delivers goes as the *volume* of the
+emitting stuff, so a bulb sized as a fraction of its fitting makes a floor lamp several times a table
+lamp and a pendant several times again, from the very same density.  The first cut of this library did
+exactly that, and the pendant and the sconce blew out while the table lamp sat at a third of them.
+
+The compensation is exact, if you ever need it: hold `density × radius³` constant and the light
+delivered does not move.  Measured on a wall with the three pairings ×52,000 at 0.030, ×15,400 at 0.045
+and ×6,500 at 0.060, it read 22.2, 21.8 and 21.7.
+
+##### The shade is the whole difficulty, and it is not what you would guess
+
+A lantern's problem is that it must be mostly *glass* — build one as a solid of revolution and the globe
+sits inside something opaque, lighting nothing.  A lampshade is that problem asking for the opposite
+answer, because a shade is *supposed* to block the light sideways.  It is open top and bottom, and what
+a table lamp really does is throw two cones, one at the ceiling and one at the table.
+
+So a shade here is a real open-ended `conic` with a translucent material.  `transparency` is how much
+crosses it and `interior { filter }` is what colour that comes out, and a shadow ray obeys both.
+Measured on a wall beside a lamp, it is exactly linear: 0.07, 0.18 and 0.40 gave 1.95, 4.95 and 10.92,
+while the wall *above* held at 64.2 throughout — the up-cone leaves by the open top and does not care
+what the linen does.
+
+**What `transparency` does not do is make the shade glow**, which is the obvious guess and is wrong.
+Set the linen to 0.001 — opaque in all but name — and the shade still reads 220 of 255.  An open surface
+is lit from *either* side here, so the bulb inside lights the shade and what you see from outside is
+that shading, not the bulb through it.  That is a gift rather than a nuisance: the glow costs nothing
+and is not a knob, so `transparency` can be chosen purely for how much light should reach the room.
+
+The same fact is why a `Pendant`'s opal globe works at all.  A globe *encloses* its bulb, so every ray
+out of it crosses the glass; it lights the room because opal is translucent and a shadow ray is dimmed
+rather than stopped.  Build the same globe out of anything opaque and the fitting goes dark.
+
+##### A ring around a shade has to be narrower than the shade
+
+The floor lamp wore a gallery ring at its waist, at `height * 0.105`, where the shade measures about
+0.135 across — so it hooped straight out through the linen and rendered as a bright wire laid across
+the middle of the lamp.  It is a finial on top now.  Anything wrapped around a tapered surface has to be
+measured against that surface *at that height*, not against the widest part of it.
+
 #### Windows and Doors
 
 ```

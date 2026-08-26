@@ -1,0 +1,413 @@
+// The lights a room has, as against the ones a street has.
+//
+//     import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+//
+//     object TableLamp(0.55)                       // lit, because a room light usually is
+//     object FloorLamp(1.6, 2)  { translate X 2 }
+//     object Pendant(0.9)       { translate Y 2.6 }   // hangs from where you put it
+//     object Sconce(0.30)       { translate [1, 1.7, 0] }
+//
+// | `TableLamp` | A base with a shade on it, for a table or a sideboard. |
+// | `FloorLamp` | The same light on a stem, standing on the floor. |
+// | `Pendant`   | A shade or a globe on a flex, hanging from the ceiling. |
+// | `Sconce`    | A half shade against a wall, throwing its light up it. |
+//
+// **The first number is a size**, as it is everywhere but the vehicles -- a height for the two that
+// stand, the drop from the ceiling for a `Pendant`, and how tall the fitting is for a `Sconce`.
+// **The second is which one of that kind**, as it always is.
+//
+// There is no season here.  Nothing indoors knows what month it is, and a parameter that never means
+// anything is worse than one that is missing, so these take `variant` where the outdoor fittings take
+// `season` and it is the *second* number rather than the third.
+//
+// -- `lit` is on by default here, and that is the opposite of outdoors --------------------------------
+//
+// `outdoor-lights` ships its lamps dark, because most scenes with a street lamp in them are daylight
+// scenes where the lamp is off and should cost nothing.  Indoors that reasoning runs backwards: a room
+// is a room because something in it is lit, and an interior with every fitting dark is not a scene of a
+// room at night, it is a scene of nothing at all.  So `lit` is `1` unless you say otherwise.
+//
+// It is not free.  A fitting here lights the way `fire`'s flames and the street lamps do -- an emissive
+// `medium` inside a shell, marked `gives light` -- which is the honest way, because the thing you can
+// see glowing and the thing doing the lighting are one object and cannot disagree.  It also costs about
+// eleven times a plain point light, and it scales with how many are burning.  Four fittings alight in
+// one room is four times that, so light a room with one or two and let the rest be dark glass.
+//
+// -- The shade is the whole difficulty ----------------------------------------------------------------
+//
+// A lantern's problem is that it must be mostly *glass*: build one as a solid of revolution and the
+// globe sits inside something opaque, lighting nothing.  A lampshade is the same problem asking for the
+// opposite answer, because a shade is *supposed* to block the light -- sideways.  It is open at the top
+// and the bottom, and what a table lamp actually does is throw two cones, one at the ceiling and one at
+// the table, with the shade itself glowing softly between them.
+//
+// So the shade here is a real open-ended cone with a translucent material on it.  `transparency` is what
+// gets through and `interior { filter }` is what colour it comes out, and a shadow ray obeys both, so
+// the light that crosses the shade arrives dimmed and warmed while the light out of the ends arrives
+// whole.  Measured on a wall beside a lamp, that part is exactly linear in the number: 0.07, 0.18 and
+// 0.40 gave 1.95, 4.95 and 10.92, while the wall *above* stayed at 64.2 throughout, the up-cone coming
+// out of the open top and not caring what the linen does.
+//
+// **What the transparency does not do is make the shade glow**, which is worth knowing because it is the
+// obvious guess and it is wrong.  Set the linen to 0.001 -- opaque in all but name -- and the shade still
+// reads 220 of 255.  An open surface here is lit from *either* side, so the bulb inside lights the shade
+// and what you see from outside is that shading, not the bulb through it.  Which is a gift: the glow
+// costs nothing and is not a knob, so `transparency` can be chosen entirely for how much light should
+// cross to the room, and 0.28 is a linen that lights the wall it stands against.
+//
+// -- What is here for the library and not for you -----------------------------------------------------
+//
+// Everything beginning with `Room` is the machinery, carrying the prefix for the reason the other
+// libraries give: a material is looked up where it is *used*, so these arrive whether you asked or not.
+// The prefix differs from `outdoor-lights`' `Lamp` so that a scene may import both.
+
+// -- What a fitting is made of ------------------------------------------------------------------------
+
+RoomBrass = material {
+    pigment [0.60, 0.46, 0.20]
+    specular 0.62  shininess 150  reflective 0.16  ambient 0.06
+}
+RoomBronze = material {
+    pigment [0.20, 0.16, 0.12]
+    specular 0.44  shininess 90  reflective 0.10  ambient 0.05
+}
+RoomSteel = material {
+    pigment [0.42, 0.44, 0.46]
+    specular 0.58  shininess 130  reflective 0.20  ambient 0.06
+}
+RoomCeramic = material {
+    pigment [0.78, 0.74, 0.68]
+    specular 0.40  shininess 70  ambient 0.08
+}
+
+// The flex, and the rose it comes out of.  A cord reads as a cord because it is nearly black, not
+// because it is thick.
+RoomFlex = material { pigment [0.09, 0.09, 0.10]  specular 0.20  shininess 30  ambient 0.04 }
+
+// -- The shade ----------------------------------------------------------------------------------------
+
+// Linen over a frame: pale, and about half of what falls on it gets through, warmed on the way.  Those
+// two numbers are what make a shade a shade rather than a bucket -- see the note at the top.
+RoomLinen = material {
+    pigment [0.92, 0.86, 0.74]
+    specular 0.06  shininess 12  ambient 0.10
+    transparency 0.28
+    interior { ior 1.0  filter 0.85 }
+}
+
+// A darker shade, for a fitting meant to throw its light rather than spread it.
+RoomShadeDark = material {
+    pigment [0.34, 0.26, 0.19]
+    specular 0.10  shininess 20  ambient 0.06
+    transparency 0.16
+    interior { ior 1.0  filter 0.90 }
+}
+
+// Opal glass, which is what a pendant globe is: more of it gets through than linen, and it scatters
+// rather than colours.
+RoomOpal = material {
+    pigment [0.95, 0.94, 0.90]
+    specular 0.30  shininess 80  ambient 0.12
+    transparency 0.62
+    interior { ior 1.05  filter 0.30 }
+}
+
+primitive RoomShadeOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoomLinen }
+        case 1 { return material RoomLinen }
+        default { return material RoomShadeDark }
+    }
+}
+
+primitive RoomMetalOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoomBrass }
+        case 1 { return material RoomSteel }
+        default { return material RoomBronze }
+    }
+}
+
+// -- The burning part ----------------------------------------------------------------------------------
+
+// Tungsten, and a colder modern lamp.  A room lit by the first is the one people mean by "warm".
+RoomTungsten = pigment [1.00, 0.82, 0.56]
+RoomCool = pigment [0.94, 0.96, 1.00]
+
+primitive RoomGlowOf(variant) -> pigment {
+    switch (mod(floor(variant), 3)) {
+        case 1 { return RoomCool }
+        default { return RoomTungsten }
+    }
+}
+
+// **A bulb is a bulb**, and this is the number that says so.  Every fitting here uses the same one
+// rather than a bulb sized as a fraction of itself, and that is not tidiness -- it is the only way the
+// fittings can agree about how bright they are.  What a volume light delivers goes as the *volume* of
+// the emitting stuff, so a bulb scaled to its fitting makes a floor lamp several times a table lamp and
+// a pendant several times again, from the same density.  The first cut of this library did exactly that
+// and the pendant and the sconce blew out while the table lamp sat at a third of them.  Three centimetres
+// of radius is about a real bulb, and it fits inside the smallest shade here with room to spare.
+RoomBulbSize = 0.030
+
+// The shell an emissive medium lives in.
+RoomShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
+
+// The bulb: a shell with an emissive medium in it, told to light what is around rather than only itself.
+// When `lit` is nought it is nothing at all.
+//
+// **The density constant is not the street lamps'**, and it cannot be.  What a volume light delivers
+// goes as the emission times the *volume* of the stuff, and a bulb is a tenth the radius of a lantern's
+// globe -- a thousandth the volume.  A room is also a tenth the size of a street, which the inverse
+// square hands back, but not all of it.  The number below was measured on a wall two units off, not
+// guessed from the outdoor one.
+primitive RoomBulb(size, lit, variant, samples) -> group {
+    switch (floor(lit)) {
+        case 0 { return group { } }
+        default {
+            return group {
+                sphere {
+                    material RoomShell {
+                        interior {
+                            ior 1.0
+                            medium {
+                                emission pigment RoomGlowOf(variant)
+                                density function {
+                                    max(0, 1 - sqrt(x * x + y * y + z * z)) * 52000
+                                }
+                            }
+                        }
+                    }
+                    no shadow
+                    gives light samples samples
+                    scale size
+                }
+            }
+        }
+    }
+}
+
+// The bulb you can see when the fitting is out: pale glass, never dark.  A dark bulb reads as a hole in
+// the fitting, which is the commonest way an unlit one goes wrong.
+RoomBulbCold = material {
+    pigment [0.86, 0.86, 0.83]
+    specular 0.40  shininess 110  ambient 0.10
+}
+
+primitive RoomColdBulb(size, lit) -> group {
+    switch (floor(lit)) {
+        case 0 { return group { sphere { material RoomBulbCold  scale size } } }
+        default { return group { } }
+    }
+}
+
+// A shade, as a real open-ended surface of revolution: `low` across at the bottom, `high` at the top,
+// `tall` from one to the other, sitting with its bottom rim on Y nought.
+//
+// A conic's radius *is* its distance from the origin along Y, so the section from -low to -high is
+// already the frustum wanted -- wider below, narrower above -- and scaling Y stretches it to the height
+// asked for without touching either radius.  `open` is what leaves the ends as holes, and the ends are
+// where the light gets out.
+primitive RoomShade(low, high, tall, variant) -> group {
+    return group {
+        conic {
+            material RoomShadeOf(variant)
+            min Y -low  max Y -high
+            open
+            scale [1, tall / (low - high), 1]
+            translate Y low * tall / (low - high)
+        }
+    }
+}
+
+// -- A table lamp ---------------------------------------------------------------------------------------
+
+// A base with a shade on it, standing on whatever you put it on.  `height` is the whole fitting, foot to
+// the top of the shade.
+primitive TableLamp(height, variant = 1, lit = 1) -> group {
+    shadeTall = height * 0.38
+    shadeLow = height * 0.30
+    shadeHigh = height * 0.20
+
+    return group {
+        // The foot, and the turned body above it.
+        cylinder {
+            material RoomMetalOf(variant)  min Y 0  max Y 1
+            scale [height * 0.15, height * 0.025, height * 0.15]
+        }
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.90, 0
+                quad 1.00, 0.55 to 0.55, 1.10
+                line to 0.34, 2.00
+                line to 0.30, 2.60
+                line to 0, 2.62
+            }
+            material RoomCeramic
+            scale height * 0.14
+            translate Y height * 0.025
+        }
+        // The stem above the body, which is what the shade appears to sit on.
+        cylinder {
+            material RoomMetalOf(variant)  min Y 0  max Y 1
+            scale [height * 0.012, height * 0.24, height * 0.012]
+            translate Y height * 0.38
+        }
+
+        object RoomColdBulb(RoomBulbSize, lit) { translate Y height * 0.76 }
+        object RoomBulb(RoomBulbSize, lit, variant, 20) { translate Y height * 0.76 }
+
+        object RoomShade(shadeLow, shadeHigh, shadeTall, variant)
+            { translate Y height - shadeTall }
+    }
+}
+
+// A bowl: the shade's trick the other way up, `low` across at the bottom and `high` at the top, so it
+// throws its light at the ceiling instead of at the floor.  A conic's radius is its distance from the
+// origin along Y, so this is the section from `low` to `high` on the *positive* side where the shade
+// takes the negative one.
+primitive RoomBowl(low, high, tall, variant) -> group {
+    return group {
+        conic {
+            material RoomMetalOf(variant)
+            min Y low  max Y high
+            open
+            scale [1, tall / (high - low), 1]
+            translate Y -low * tall / (high - low)
+        }
+    }
+}
+
+// -- A floor lamp -----------------------------------------------------------------------------------
+
+// The same light on a stem.  `height` is the whole fitting, and a standard lamp is mostly stem: the
+// shade is about a fifth of it, where a table lamp's is nearer two fifths, which is the difference
+// between the two silhouettes more than any detail is.
+primitive FloorLamp(height, variant = 1, lit = 1) -> group {
+    shadeTall = height * 0.20
+    shadeLow = height * 0.16
+    shadeHigh = height * 0.11
+
+    return group {
+        // A foot wide enough to look like it would not go over.
+        lathe {
+            path {
+                move to 0, 0
+                line to 1.00, 0
+                line to 0.96, 0.16
+                quad 0.40, 0.22 to 0.16, 0.42
+                line to 0, 0.44
+            }
+            material RoomMetalOf(variant)
+            scale height * 0.11
+        }
+        cylinder {
+            material RoomMetalOf(variant)  min Y 0  max Y 1
+            scale [height * 0.011, height * 0.82, height * 0.011]
+            translate Y height * 0.04
+        }
+        // A finial on top, which is what stops it looking like a stick with a hat.  It goes *above* the
+        // shade rather than around it: a ring at the shade's waist has to be narrower than the shade is
+        // there, and the first cut of this was `height * 0.105` against a shade measuring about 0.135 --
+        // so it hooped straight out through the linen and read as a bright wire across the middle.
+        sphere {
+            material RoomMetalOf(variant)
+            scale height * 0.014
+            translate Y height + height * 0.010
+        }
+
+        object RoomColdBulb(RoomBulbSize, lit) { translate Y height * 0.895 }
+        object RoomBulb(RoomBulbSize, lit, variant, 20) { translate Y height * 0.895 }
+
+        object RoomShade(shadeLow, shadeHigh, shadeTall, variant)
+            { translate Y height - shadeTall }
+    }
+}
+
+// -- A pendant --------------------------------------------------------------------------------------
+
+// Hangs from wherever you put it, which is the ceiling, and reaches `drop` below it.  Unlike everything
+// else here its origin is at the *top*: a ceiling is a plane you already know the height of, and having
+// to work out where a fitting's foot would be in order to hang it is exactly the sum a library should
+// be doing for you.
+//
+// Variant 1 is an opal globe rather than a shade, and it is worth knowing why that works at all: a globe
+// encloses its bulb completely, so every ray out of it crosses the glass.  It lights the room because
+// opal is *translucent* -- `transparency 0.62` -- and a shadow ray is dimmed by that rather than stopped.
+// Build the same globe out of anything opaque and the fitting goes dark, which is the trap the street
+// lanterns fell into from the other side.
+// The part that differs between a pendant with a shade and one with a globe.  It is a primitive of its
+// own because a `switch` chooses what a primitive *gives back*, so it cannot sit inside a `group` that is
+// already being returned -- the choice has to be made one level up and the result dropped in.
+primitive RoomPendantLight(drop, variant, lit) -> group {
+    switch (mod(floor(variant), 2)) {
+        case 1 {
+            return group {
+                sphere { material RoomOpal  scale drop * 0.22 }
+                object RoomColdBulb(RoomBulbSize, lit)
+                object RoomBulb(RoomBulbSize, lit, variant, 22)
+            }
+        }
+        default {
+            return group {
+                object RoomColdBulb(RoomBulbSize, lit) { translate Y drop * 0.02 }
+                object RoomBulb(RoomBulbSize, lit, variant, 22) { translate Y drop * 0.02 }
+                object RoomShade(drop * 0.30, drop * 0.19, drop * 0.26, variant)
+                    { translate Y -drop * 0.22 }
+            }
+        }
+    }
+}
+
+primitive Pendant(drop, variant = 1, lit = 1) -> group {
+    return group {
+        // The rose against the ceiling, and the flex down from it.
+        cylinder {
+            material RoomMetalOf(variant)  min Y -1  max Y 0
+            scale [drop * 0.10, drop * 0.035, drop * 0.10]
+        }
+        cylinder {
+            material RoomFlex  min Y -1  max Y 0
+            scale [drop * 0.010, drop * 0.72, drop * 0.010]
+            translate Y -drop * 0.03
+        }
+
+        object RoomPendantLight(drop, variant, lit) { translate Y -drop * 0.78 }
+    }
+}
+
+// -- A sconce ---------------------------------------------------------------------------------------
+
+// A bowl on a wall, throwing its light up it -- an uplighter, which is the wall fitting that actually
+// lights a room rather than merely marking a place on the wall.  It faces `-Z` like everything that goes
+// on a wall, so it is placed the way a window or a `WallLantern` is, and `size` is how tall it stands.
+primitive Sconce(size, variant = 1, lit = 1) -> group {
+    return group {
+        // The back plate against the wall, and the arm out to the bowl.
+        lathe {
+            path {
+                move to 0, 0
+                line to 0.44, 0
+                quad 0.50, 0.30 to 0.40, 0.62
+                line to 0, 0.66
+            }
+            material RoomMetalOf(variant)
+            scale [size * 0.42, size * 0.62, size * 0.10]
+            rotate X -90
+        }
+        cube {
+            material RoomMetalOf(variant)
+            scale [size * 0.05, size * 0.05, size * 0.24]
+            translate [0, 0, -size * 0.22]
+        }
+
+        object RoomColdBulb(RoomBulbSize, lit) { translate [0, size * 0.20, -size * 0.42] }
+        object RoomBulb(RoomBulbSize, lit, variant, 18) { translate [0, size * 0.20, -size * 0.42] }
+
+        // The bottom hole is narrower than the bulb on purpose: an uplighter that leaks downwards
+        // is a downlighter with extra steps.
+        object RoomBowl(size * 0.06, size * 0.36, size * 0.34, variant)
+            { translate [0, size * 0.01, -size * 0.42] }
+    }
+}

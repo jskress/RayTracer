@@ -1,0 +1,142 @@
+// The other half of the pair: `a-street-after-dark` is a street lit by the lamps standing in it, and
+// this is a room lit by the fittings standing in it.
+//
+//     import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+//
+// **There is no light clause in this scene at all.**  Not a sky, not a point light, nothing -- every
+// photon here leaves an emissive medium inside one of four fittings.  That is the whole reason the
+// scene exists, and it is also why it is worth reading the numbers rather than trusting the picture:
+// a room lit this way looks plausible long before it is right.
+//
+// **The dark is the subject.**  A lamp-lit room is mostly not lit.  The instinct is to add fittings
+// until every corner reads, and that turns a room at night into a room with the big light on, which is
+// a different and much duller picture.  Three burning fittings and one dark one is the whole of it, and
+// the far corner is *supposed* to disappear.
+//
+// **Ambient has to get out of the way, and here it genuinely does.**  Every material this scene names
+// carries its own ambient, and at full strength each one glows at that fraction of its own colour
+// whether or not a lamp reaches it -- which is exactly what stops a night interior reading as night.
+// Unlike the street scene, where the same clause turned out to be worth half a percent because the
+// lamps were doing 98% of the work, here it earns its place.  Measured on the shadowed left-hand wall:
+// **16.5 at full ambient, 11.8 at the quarter this scene asks for, and 9.5 with it off altogether** --
+// so two fifths of that wall was the fudge rather than the lamps.  The lit wall behind the sideboard
+// runs 71.4 / 57.0 / 51.2 over the same three, and the floor at the front barely moves at 39.8 / 37.6 /
+// 36.8, which is the shape to expect: the stand-in matters most exactly where no lamp reaches.
+//
+// A quarter rather than nought, because the far corner still has to be a corner.  An interior with its
+// ambient at zero has shadows that are holes, and a hole reads as missing geometry rather than as dark.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // A shade is walked the same way a plume of smoke is, and too few steps bands it.
+    medium samples 28
+    scale ambient by 0.25
+    info {
+        title 'A Room After Dark'
+        author 'J. Stephen Kress'
+        description 'A room lit by nothing but the four fittings standing in it.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+
+camera {
+    location [2.45, 1.62, -3.15]
+    look at [-0.35, 1.05, 0.9]
+    field of view 56
+}
+
+background [0, 0, 0]
+
+// -- The room ---------------------------------------------------------------------------------------
+
+// A wall's normal decides whether it is lit, and a wall turned the wrong way renders black however well
+// the lamps work -- which looks exactly like lamps that do not.  `rotate X -90` faces a back wall into
+// the room; `rotate X 90` faces it into the masonry.  This cost a render to learn.
+Plaster = material { pigment [0.74, 0.71, 0.64]  specular 0.03  ambient 0.10 }
+Boards = material {
+    pigment brick {
+        [0.20, 0.13, 0.08], [0.30, 0.20, 0.12]
+        scale [0.9, 4, 0.12]
+    }
+    specular 0.16  shininess 40  ambient 0.06
+}
+Rug = material { pigment [0.34, 0.16, 0.15]  specular 0.04  ambient 0.08 }
+Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.22  shininess 45  ambient 0.06 }
+Cloth = material { pigment [0.30, 0.30, 0.27]  specular 0.05  ambient 0.07 }
+
+plane { material Boards }                                    // the floor
+plane { material Plaster  rotate X -90  translate Z 2.2 }    // the wall the sideboard stands against
+plane { material Plaster  rotate Z 90   translate X 2.9 }    // the wall on the right
+plane { material Plaster  rotate X 180  translate Y 2.55 }   // the ceiling
+
+parallelogram {
+    material Rug
+    at [-2.2, 0.004, -0.9]
+    sides [3.5, 0, 0], [0, 0, 2.4]
+}
+
+// -- What is in it ----------------------------------------------------------------------------------
+
+// A sideboard, which is a box on short legs and needs to be no more than that at this distance.
+cube { material Oak  scale [0.62, 0.32, 0.24]  translate [1.35, 0.52, 1.90] }
+for foot in [0, 3] {
+    cube {
+        material Oak
+        scale [0.05, 0.20, 0.05]
+        translate [1.35 + (mod(foot, 2) * 2 - 1) * 0.54, 0.20,
+                   1.90 + (floor(foot / 2) * 2 - 1) * 0.17]
+    }
+}
+
+// An armchair: a seat, a back, and two arms.  Cubes, because a chair reads from its proportions long
+// before it reads from its upholstery, and this one is mostly in shadow.
+cube { material Cloth  scale [0.40, 0.09, 0.38]  translate [-1.30, 0.40, 0.55] }
+cube { material Cloth  scale [0.40, 0.38, 0.09]  translate [-1.30, 0.68, 0.98] }
+cube { material Cloth  scale [0.09, 0.20, 0.38]  translate [-1.68, 0.60, 0.55] }
+cube { material Cloth  scale [0.09, 0.20, 0.38]  translate [-0.92, 0.60, 0.55] }
+for foot in [0, 3] {
+    cube {
+        material Oak
+        scale [0.045, 0.16, 0.045]
+        translate [-1.30 + (mod(foot, 2) * 2 - 1) * 0.33, 0.16,
+                   0.55 + (floor(foot / 2) * 2 - 1) * 0.31]
+    }
+}
+
+// A low table under the pendant, so the pendant has something to be over.
+cube { material Oak  scale [0.44, 0.022, 0.30]  translate [0.15, 0.42, 0.30] }
+for foot in [0, 3] {
+    cube {
+        material Oak
+        scale [0.035, 0.21, 0.035]
+        translate [0.15 + (mod(foot, 2) * 2 - 1) * 0.38, 0.21,
+                   0.30 + (floor(foot / 2) * 2 - 1) * 0.24]
+    }
+}
+
+// -- The fittings, which are the whole of the light -------------------------------------------------
+
+// On the sideboard, and the warm one -- this is the lamp the room is built around.
+object TableLamp(0.56, 0, 1) { translate [1.35, 0.84, 1.90] }
+
+// Behind the armchair, reading over its shoulder the way a standard lamp is meant to.
+object FloorLamp(1.58, 0, 1) { translate [-1.85, 0, 1.35] }
+
+// Over the low table.  The drop is measured from the ceiling, which is what its origin is for: a
+// pendant is the one fitting here whose origin is at its *top*, so it hangs from where it is put
+// rather than needing its foot worked out first.
+object Pendant(0.78, 0, 1) { translate [0.15, 2.55, 0.30] }
+
+// And one that is *not* lit, on the back wall directly over the sideboard.  An unlit fitting is only
+// geometry and costs nothing, and a room where every fitting burns is a room with the big light on.
+//
+// Where it stands is the point.  An unlit fitting in a dark corner is not a restrained choice, it is an
+// invisible one -- so this one is put where the table lamp's up-cone washes the wall, and what you see
+// is a fixture being lit by another fixture.  Its glass is pale rather than dark for the same reason:
+// an unlit globe painted dark reads as a hole in the fitting.
+
+object Sconce(0.32, 1, 0) { translate [1.35, 1.66, 2.19] }

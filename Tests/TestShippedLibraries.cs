@@ -1909,4 +1909,153 @@ public class TestShippedLibraries
         return Render(scene, 60, 45);
     }
 
+    /// <summary>
+    /// What the indoor lights library holds out, written down rather than read out of it.
+    /// </summary>
+    private static readonly string[] Fittings = ["TableLamp", "FloorLamp", "Pendant", "Sconce"];
+
+    [TestMethod]
+    public void TestEveryIndoorFittingStandsLitAndUnlit()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "indoor-lights.igl"),
+            Path.Combine(_directory, "indoor-lights.igl"), true);
+
+        foreach (string fitting in Fittings)
+        foreach (int variant in (int[]) [0, 1, 2])
+        foreach (int lit in (int[]) [0, 1])
+            Assert.IsNull(Fit(fitting, variant, lit), $"{fitting} should stand ({variant}, {lit})");
+    }
+
+    [TestMethod]
+    public void TestALitFittingLightsTheRoomAndAnUnlitOneDoesNot()
+    {
+        // The same promise the street lamps make, and the same silent way of breaking it: a fitting is
+        // emissive rather than a light, so nothing in the scene fails loudly when it stops lighting.
+        // It would go on rendering perfectly and simply leave the room black.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "indoor-lights.igl"),
+            Path.Combine(_directory, "indoor-lights.igl"), true);
+
+        double dark = RoomUnder(0);
+        double lit = RoomUnder(1);
+
+        Assert.IsTrue(dark < 0.005,
+            $"the floor under an unlit lamp measured {dark:F4}; nothing should be lighting it");
+        Assert.IsTrue(lit > 0.02,
+            $"the floor under a lit lamp measured {lit:F4} against {dark:F4} unlit -- the fitting is " +
+            "not lighting anything, which is what happens when its shell stops giving light or its " +
+            "shade closes over its own bulb");
+    }
+
+    [TestMethod]
+    public void TestAShadeSendsFarMoreLightPastItsEndsThanThroughItsSide()
+    {
+        // This is the whole design of the library, and neither half of it is safe on its own.
+        //
+        // A shade is *supposed* to block: what makes a lamp read as a lamp is the cone it throws at the
+        // ceiling and the pool it throws on the floor, with the wall beside it left comparatively dark.
+        // Build the shade out of anything clear and that shape is gone -- the fitting becomes a bare
+        // bulb in a room and lights everything evenly.
+        //
+        // But it must not block *everything* either.  Linen is not tin, and a shade that passes nothing
+        // sideways leaves a hard-edged pool with black around it, which reads as a spotlight rather than
+        // as a lamp.  So the side is required to be lit, and required to be much dimmer than the top.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "indoor-lights.igl"),
+            Path.Combine(_directory, "indoor-lights.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'indoor-lights' { TableLamp }
+            context { angles are degrees  no gamma  medium samples 20 }
+            camera { location [0, 1.25, -2.6]  look at [0, 1.25, 0] }
+            background [0, 0, 0]
+            // The wall faces the camera.  Turned the other way it renders black however well the lamp
+            // works, which looks exactly like a lamp that does not.
+            plane {
+                material { pigment [0.75, 0.75, 0.75]  specular 0  ambient 0 }
+                rotate X -90  translate Z 0.35
+            }
+            object TableLamp(0.60) { translate [0, 0.95, 0] }
+            """);
+
+        Assert.IsNull(Render(scene, 300, 300), "the lamp should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        double above = Patch(picture, 130, 170, 45, 75);
+        double beside = Patch(picture, 40, 70, 140, 170);
+
+        Assert.IsTrue(beside > 0.002,
+            $"the wall beside the shade measured {beside:F4}; linen is not tin, and a shade that " +
+            "passes nothing sideways leaves a spotlight rather than a lamp");
+        Assert.IsTrue(above > beside * 3,
+            $"the wall above the shade measured {above:F4} against {beside:F4} beside it -- a shade " +
+            "has to block far more than it passes, or the fitting is only a bare bulb");
+    }
+
+    /// <summary>
+    /// The mean brightness of one rectangle of a picture.
+    /// </summary>
+    private static double Patch(Canvas picture, int fromX, int toX, int fromY, int toY)
+    {
+        double total = 0;
+
+        for (int x = fromX; x < toX; x++)
+        for (int y = fromY; y < toY; y++)
+            total += picture.GetPixel(x, y).Red;
+
+        return total / ((toX - fromX) * (toY - fromY));
+    }
+
+    /// <summary>
+    /// Stands one table lamp over a plain floor in a room with no light of its own, and reports how
+    /// bright the floor came out.
+    /// </summary>
+    private double RoomUnder(int lit)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'indoor-lights' { TableLamp }
+            context { angles are degrees  no gamma  medium samples 20 }
+            camera { location [1.1, 1.2, -1.9]  look at [0, 0.4, 0]  field of view 50 }
+            background [0, 0, 0]
+            plane { material { pigment [0.6, 0.6, 0.6]  ambient 0 } }
+            object TableLamp(0.60, 1, {{lit}}) { translate Y 0.02 }
+            """);
+
+        Assert.IsNull(Render(scene, 120, 90), $"a fitting with lit = {lit} should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+
+        return Patch(picture, 0, picture.Width, 0, picture.Height);
+    }
+
+    /// <summary>
+    /// Stands one fitting in a room and hands back whatever stopped it.
+    /// </summary>
+    private string Fit(string fitting, int variant, int lit)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        // A pendant hangs from where it is put; everything else stands there.
+        double size = fitting == "FloorLamp" ? 1.5 : fitting == "Sconce" ? 0.34 : 0.6;
+        string place = fitting == "Pendant"
+            ? "translate Y 2.6"
+            : fitting == "Sconce" ? "translate [0, 1.7, 1.19]" : "translate Y 0.02";
+
+        File.WriteAllText(scene, $$"""
+            import 'indoor-lights' { {{fitting}} }
+            context { angles are degrees  no gamma  medium samples 12 }
+            camera { location [1.6, 1.5, -3.2]  look at [0, 1.1, 0]  field of view 50 }
+            background [0, 0, 0]
+            plane { material { pigment [0.6, 0.6, 0.6]  ambient 0.05 } }
+            plane { material { pigment [0.6, 0.6, 0.6]  ambient 0.05 }  rotate X -90  translate Z 1.2 }
+            object {{fitting}}({{size}}, {{variant}}, {{lit}}) { {{place}} }
+            """);
+
+        return Render(scene, 60, 45);
+    }
+
 }
