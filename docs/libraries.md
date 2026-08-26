@@ -741,6 +741,80 @@ The same trap waits for any fitting built as a solid of revolution.
 And an unlit fitting needs pale glass, not dark.  A globe left dark reads as a hole in the lamp, which is
 the commonest way an unlit fixture goes wrong.
 
+#### Street Furniture
+
+```
+import 'street-furniture' { Bench, LitterBin, Bollard, Railing, PostBox, BusShelter, CycleStand }
+
+object Bench(1.8)                { translate [0, 0, 5] }
+object LitterBin(1.0, 'winter')  { translate [3, 0, 5] }
+object Railing(9.0)              { translate [0, 0, 3.6] }
+```
+
+| | |
+| --- | --- |
+| `Bench` | Slatted seat on cast ends, for a pavement or a park. |
+| `LitterBin` | A bin on a post, or a tapered drum on the ground. |
+| `Bollard` | A short post that stops a car and not a person. |
+| `Railing` | A run of pedestrian guard rail, posts and bars. |
+| `PostBox` | A pillar box, or a smaller wall-mounted one. |
+| `BusShelter` | A roof, three glazed sides and a bench under it. |
+| `CycleStand` | A hoop to lean a bicycle against. |
+
+The first number is a **length** for the things that run along a pavement — `Bench`, `Railing`,
+`BusShelter` — and a **height** for the things that stand on it.  The two after it are the usual pair,
+what time of year and which one of that kind.
+
+This is what goes on a pavement after [`roads`](#roads) has built one and [`outdoor-lights`](#outdoor-lights)
+has lit it, and it is the difference between a street that has been modelled and one that looks lived in.
+
+##### Everything with a front faces `-Z`
+
+A bench, a shelter and a post box all have fronts, and they point the way a
+[window](#windows-and-doors) does.  So the *far* pavement of a street running along X is the cheap side
+to furnish — everything faces the road, and the camera, with no rotation — while the near pavement wants
+`rotate Y 180` on every piece.  A bollard, a bin and a cycle stand have no front and do not care.
+
+##### Scale a lathe across and up separately
+
+A turned shape — a bin, a bollard, a pillar box — is a `lathe` whose path is drawn to a radius of one and
+whatever height it needs.  Scaling that **uniformly** ties the thing's width to its height, and street
+furniture is exactly the family where that is wrong: a bin, a bollard and a post are each about the same
+width whatever height you ask for.  A metre-tall bin scaled uniformly came out **840 across**, which is a
+water butt, and a bollard came out **780**, which is a stump.  Real ones are about 450 and 200.
+
+```
+scale [height * 0.225, height * 0.424, height * 0.225]
+```
+
+##### An aperture has to be a hole
+
+A litter bin's opening and a post box's slot are cut with a `difference` against a box rather than
+painted on with a darker pigment.  A dark rectangle on the front of a red drum reads as a *label*; a hole
+reads as a slot, because it has an edge that catches the light on one side and not the other.  It costs
+one subtraction on a shape that is a dozen segments to begin with.
+
+##### What a shelter's glass number actually decides
+
+`StreetGlass` is 0.74 through, slightly green and slightly reflective.  It is worth saying what that
+number is *not* for, because the obvious guess is wrong and this section first said it: a clearer panel
+does **not** render as a hole.  Measured against a dark object standing behind the shelter, the panel
+reads 39.7 at 0.74 and 48.1 at 0.95, and stripping its specular and its reflection as well only reaches
+50.4 — against 90.1 for the open sky beside it.  `filter` goes on tinting whatever crosses the glass, so
+the panel stays visible however clear you make it.
+
+What the number decides is **how much a shelter dims what is behind it**, which is a composition choice.
+0.74 is a panel you read the street through rather than one you look past.
+
+##### Snow settles on the horizontal and nowhere else
+
+`'winter'` puts a cap on a bench's slats, a bin's lid, the flat of a bollard, the crown of a pillar box
+and the top of a wall box, a railing's top rail, and a shelter's roof.  The `CycleStand` gets none, and
+deliberately: it is a round tube 70 across, which in life holds a line of snow about a pencil wide, and
+modelling that is a lot of geometry to put where nobody will look.  Getting this wrong in either
+direction — snow down the sides of a bollard, or a shelter roof left bare — is what makes a snowy render
+look dusted with icing sugar rather than snowed on.
+
 #### Indoor Lights
 
 ```

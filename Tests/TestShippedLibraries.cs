@@ -2058,4 +2058,168 @@ public class TestShippedLibraries
         return Render(scene, 60, 45);
     }
 
+    /// <summary>
+    /// What the street furniture library holds out, written down rather than read out of it.
+    /// </summary>
+    private static readonly string[] Furniture =
+        ["Bench", "LitterBin", "Bollard", "Railing", "PostBox", "BusShelter", "CycleStand"];
+
+    [TestMethod]
+    public void TestEveryPieceOfStreetFurnitureStandsInBothSeasons()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "street-furniture.igl"),
+            Path.Combine(_directory, "street-furniture.igl"), true);
+
+        foreach (string piece in Furniture)
+        foreach (string season in (string[]) ["summer", "winter"])
+        foreach (int variant in (int[]) [0, 1, 2])
+            Assert.IsNull(Stand(piece, season, variant), $"{piece} should stand ({season}, {variant})");
+    }
+
+    [TestMethod]
+    public void TestWinterPutsSnowOnTopOfAThingAndNotDownItsSides()
+    {
+        // Both halves matter and neither is safe alone.
+        //
+        // If nothing settles, `'winter'` is a parameter that does nothing and a snowy street renders as
+        // a summer one -- the failure a season is there to prevent.
+        //
+        // If it settles *everywhere*, which is what painting the whole piece white would do, the result
+        // is worse than nothing: it reads as a scene dusted in icing sugar rather than snowed on,
+        // because real snow lies on the horizontal and is shrugged off everything else. So the top is
+        // required to change a great deal and the side is required to barely change at all.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "street-furniture.igl"),
+            Path.Combine(_directory, "street-furniture.igl"), true);
+
+        (double summerTop, double summerSide) = Bollard("summer");
+        (double winterTop, double winterSide) = Bollard("winter");
+
+        Assert.IsTrue(winterTop > summerTop + 0.25,
+            $"the top of the bollard measured {summerTop:F4} in summer and {winterTop:F4} in winter; " +
+            "nothing settled on it, so the season is doing nothing");
+        Assert.IsTrue(Math.Abs(winterSide - summerSide) < 0.05,
+            $"the side of the bollard measured {summerSide:F4} in summer and {winterSide:F4} in " +
+            "winter -- snow lies on the horizontal, and a piece whitened all over reads as icing " +
+            "sugar rather than as snow");
+    }
+
+    [TestMethod]
+    public void TestATurnedPieceIsAboutAsWideAsTheRealThing()
+    {
+        // A `lathe` is drawn to a radius of one and whatever height it needs, so scaling it *uniformly*
+        // ties its width to its height -- and a bin, a bollard and a post are each about the same width
+        // whatever height they are asked for. This shipped wrong: a metre-tall bin came out 840 across,
+        // which is a water butt, and it looked entirely reasonable next to nothing.
+        //
+        // So the silhouette is measured. A litter bin is about 450 across for a metre of height; the
+        // bounds here are wide enough that a redesign will not trip them and narrow enough that
+        // uniform scaling, which would give 0.84, does.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "street-furniture.igl"),
+            Path.Combine(_directory, "street-furniture.igl"), true);
+
+        double across = SilhouetteWidth("LitterBin", 1.0);
+
+        Assert.IsTrue(across is > 0.32 and < 0.58,
+            $"a litter bin a metre tall measured {across:F3} across; a real one is about 0.45, and " +
+            "0.84 is what scaling its lathe uniformly would give");
+    }
+
+    /// <summary>
+    /// Renders one piece head-on against a bright background and reports how wide its silhouette is,
+    /// in the same units the piece was asked for.
+    /// </summary>
+    private double SilhouetteWidth(string piece, double height)
+    {
+        // A square picture of a known slice of the world, looked at down -Z from far enough that the
+        // perspective across the piece is small: 8 units of camera distance across 2 units of view.
+        const int Pixels = 400;
+        const double Across = 2.0;
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'street-furniture' { {{piece}} }
+            context { angles are degrees  no gamma }
+            camera { location [0, {{height / 2}}, -8]  look at [0, {{height / 2}}, 0]  field of view 14.25 }
+            background [1, 1, 1]
+            point light { location [0, 6, -8] }
+            object {{piece}}({{height}}, 'summer', 0)
+            """);
+
+        Assert.IsNull(Render(scene, Pixels, Pixels), $"{piece} should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int leftmost = Pixels;
+        int rightmost = -1;
+
+        for (int x = 0; x < Pixels; x++)
+        for (int y = 0; y < Pixels; y++)
+        {
+            // Anything not the white background is the piece.
+            if (picture.GetPixel(x, y).Red >= 0.9)
+                continue;
+
+            leftmost = Math.Min(leftmost, x);
+            rightmost = Math.Max(rightmost, x);
+        }
+
+        Assert.IsTrue(rightmost > leftmost, $"{piece} rendered as nothing at all");
+
+        return (rightmost - leftmost + 1) * Across / Pixels;
+    }
+
+    /// <summary>
+    /// Stands one cast-iron bollard and reports how bright its crown and its shaft came out.  The iron
+    /// is nearly black, so anything that settles on it shows plainly.
+    /// </summary>
+    private (double Top, double Side) Bollard(string season)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'street-furniture' { Bollard }
+            context { angles are degrees  no gamma }
+            // Looking down on it a little, so the crown is in the picture as well as the shaft.
+            camera { location [0, 1.75, -1.5]  look at [0, 0.60, 0]  field of view 42 }
+            background [0.15, 0.16, 0.18]
+            plane { material { pigment [0.30, 0.30, 0.30]  ambient 0.05 } }
+            point light { location [-3, 5, -4] }
+            object Bollard(0.95, '{{season}}', 0)
+            """);
+
+        Assert.IsNull(Render(scene, 200, 200), $"a bollard in {season} should render");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+
+        // The crown, and a stretch of the shaft well below it.  Both were found by rendering the two
+        // seasons and asking where they actually differ, rather than by guessing at the geometry: the
+        // cap occupies x 94..105, y 63..70 and nothing else in the picture changes at all.
+        return (Patch(picture, 94, 106, 63, 71), Patch(picture, 92, 110, 100, 140));
+    }
+
+    /// <summary>
+    /// Stands one piece of furniture and hands back whatever stopped it.
+    /// </summary>
+    private string Stand(string piece, string season, int variant)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        // The three that run along a pavement are given a length; the rest a height.
+        double size = piece is "Bench" or "Railing" or "BusShelter" ? 3.0
+            : piece == "CycleStand" ? 0.72 : 1.1;
+
+        File.WriteAllText(scene, $$"""
+            import 'street-furniture' { {{piece}} }
+            context { angles are degrees  no gamma }
+            camera { location [3.4, 2.6, -5.2]  look at [0, 0.9, 0]  field of view 50 }
+            background [0.55, 0.62, 0.72]
+            plane { material { pigment [0.55, 0.54, 0.52]  ambient 0.08 } }
+            point light { location [-4, 7, -6] }
+            object {{piece}}({{size}}, '{{season}}', {{variant}})
+            """);
+
+        return Render(scene, 60, 45);
+    }
+
 }
