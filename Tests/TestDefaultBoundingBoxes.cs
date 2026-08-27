@@ -315,6 +315,231 @@ public class TestDefaultBoundingBoxes
         }
     }
 
+    [TestMethod]
+    public void TestABlobIsInsideItsBox()
+    {
+        // One component on its own: the box is its influence ball, which is a good deal larger than
+        // the surface, since the surface sits where the field has fallen to the threshold.
+        AssertNothingEscapes(BlobOf(new BlobSphereComponent
+        {
+            Center = Point.Zero, Radius = 2, Strength = 1
+        }), 5);
+
+        // Two reaching for each other, where the surface swells out into a neck between them and is
+        // in places further out than either component alone would put it.
+        AssertNothingEscapes(BlobOf(
+            new BlobSphereComponent { Center = new Point(-1.4, 0, 0), Radius = 2, Strength = 1 },
+            new BlobSphereComponent { Center = new Point(1.4, 0, 0), Radius = 2, Strength = 1 }), 6);
+
+        // A cylinder, whose primitives are a body and two caps and whose box must hold all three.
+        AssertNothingEscapes(BlobOf(new BlobCylinderComponent
+        {
+            Start = new Point(-2, -0.5, 0.7), End = new Point(2, 1, -0.7), Radius = 1, Strength = 1
+        }), 6);
+
+        // And the two together, off the origin, so a box quietly centred on nothing would show.
+        AssertNothingEscapes(BlobOf(
+            new BlobSphereComponent { Center = new Point(2, 1.5, -1), Radius = 1.6, Strength = 1 },
+            new BlobCylinderComponent
+            {
+                Start = new Point(2, 1.5, -1), End = new Point(-1, -1, 1), Radius = 0.7,
+                Strength = 2
+            }), 7);
+
+        // The same shapes at a threshold near nothing, which pushes the surface out to within a few
+        // percent of the influence radius.  This is the case that actually tests the box -- see
+        // BlobOf's own note on why the ones above do not press hard.
+        AssertNothingEscapes(BlobOf(1e-4,
+            new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 }), 5);
+        AssertNothingEscapes(BlobOf(1e-4,
+            new BlobCylinderComponent
+            {
+                Start = new Point(-2, -0.5, 0.7), End = new Point(2, 1, -0.7), Radius = 1,
+                Strength = 1
+            }), 6);
+
+        AssertEveryCrossingIsInsideTheBox(BlobOf(1e-4,
+            new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 }), 5);
+        AssertEveryCrossingIsInsideTheBox(BlobOf(1e-4,
+            new BlobCylinderComponent
+            {
+                Start = new Point(-2, -0.5, 0.7), End = new Point(2, 1, -0.7), Radius = 1,
+                Strength = 1
+            }), 6);
+    }
+
+    [TestMethod]
+    public void TestATransformedBlobComponentIsInsideItsBox()
+    {
+        // A stretched component reaches further than its own radius, and along an axis its radius
+        // knows nothing about.  A box built before the transform rather than after would fall short
+        // exactly here.
+        AssertNothingEscapes(BlobOf(1e-4, new BlobSphereComponent
+        {
+            Center = Point.Zero, Radius = 1.5, Strength = 1, Transform = Transforms.Scale(2.5, 1, 1)
+        }), 7);
+
+        // And turned, so the reach is along no axis at all and the box has to be the one around
+        // where the corners land.
+        AssertNothingEscapes(BlobOf(1e-4, new BlobSphereComponent
+        {
+            Center = Point.Zero, Radius = 1.5, Strength = 1,
+            Transform = Transforms.RotateAroundZ(Math.PI / 5, true) * Transforms.Scale(2.5, 1, 1)
+        }), 7);
+
+        // A shear, which is the transform that tells an inverse from its transpose -- and moves a
+        // box's corners furthest from where a scale would put them.
+        AssertNothingEscapes(BlobOf(1e-4, new BlobCylinderComponent
+        {
+            Start = new Point(-1.5, 0, 0), End = new Point(1.5, 0, 0), Radius = 0.8, Strength = 1,
+            Transform = Transforms.Shear(0.7, 0, 0, 0, 0, 0)
+        }), 7);
+
+        // And the sharper check on each of the three, since a transformed box is the one most easily
+        // built a little too small.
+        AssertEveryCrossingIsInsideTheBox(BlobOf(1e-4, new BlobSphereComponent
+        {
+            Center = Point.Zero, Radius = 1.5, Strength = 1, Transform = Transforms.Scale(2.5, 1, 1)
+        }), 7);
+        AssertEveryCrossingIsInsideTheBox(BlobOf(1e-4, new BlobSphereComponent
+        {
+            Center = Point.Zero, Radius = 1.5, Strength = 1,
+            Transform = Transforms.RotateAroundZ(Math.PI / 5, true) * Transforms.Scale(2.5, 1, 1)
+        }), 7);
+        AssertEveryCrossingIsInsideTheBox(BlobOf(1e-4, new BlobCylinderComponent
+        {
+            Start = new Point(-1.5, 0, 0), End = new Point(1.5, 0, 0), Radius = 0.8, Strength = 1,
+            Transform = Transforms.Shear(0.7, 0, 0, 0, 0, 0)
+        }), 7);
+    }
+
+    [TestMethod]
+    public void TestABlobThatReachesForeverHasNoBox()
+    {
+        // A plane component is a slab running to the horizon, so there is no finite box to give and
+        // a blob holding one must say so rather than hand back one holding its other components.
+        // Answering with a box here would make the blob vanish everywhere outside it.
+        Blob withAPlane = BlobOf(
+            new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 },
+            new BlobPlaneComponent
+            {
+                Point = Point.Zero, Normal = Directions.Up, Radius = 1, Strength = 1
+            });
+
+        withAPlane.PrepareForRendering();
+
+        Assert.IsNull(withAPlane.BoundingBox);
+
+        // And a threshold at nothing makes the whole of space solid, since the field beyond every
+        // component is nought and nought clears it.
+        Blob withNoThreshold = BlobOf(
+            new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 });
+
+        withNoThreshold.Threshold = 0;
+
+        withNoThreshold.PrepareForRendering();
+
+        Assert.IsNull(withNoThreshold.BoundingBox);
+    }
+
+    /// <summary>
+    /// This method insists that every point of the surface a great many rays can find lies inside
+    /// the box.
+    /// <para>
+    /// **This asks a sharper question than the ray-versus-box comparison does**, and it was added
+    /// because that comparison could not see a box short by half a percent.  To notice a shortfall
+    /// that small by comparing answers, a ray has to be aimed into the thin shell between where the
+    /// box stops and where the surface stops -- and a sweep of seventy steps across the whole scene
+    /// steps over a shell that thin almost every time.  Asking instead where the crossings *landed*
+    /// needs no such luck: thousands of crossings spread over the surface reach very nearly its
+    /// widest point on every axis, so a box that stops short of it is caught at once.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The surface to try.</param>
+    /// <param name="from">How far off to fire the rays from.</param>
+    private static void AssertEveryCrossingIsInsideTheBox(Surface surface, double from)
+    {
+        surface.PrepareForRendering();
+
+        BoundingBox box = surface.BoundingBox;
+
+        Assert.IsNotNull(box, "this surface should have worked out a box for itself");
+
+        Point low = box.Minimum;
+        Point high = box.Maximum;
+        int found = 0;
+
+        for (int index = 0; index < Rays * 4; index++)
+        {
+            Ray ray = RayNumber(index, from);
+            List<Intersection> crossings = [];
+
+            surface.AddIntersections(ray, crossings);
+
+            foreach (Intersection crossing in crossings)
+            {
+                Point where = ray.At(crossing.Distance);
+
+                found++;
+
+                Assert.IsTrue(
+                    where.X >= low.X && where.X <= high.X &&
+                    where.Y >= low.Y && where.Y <= high.Y &&
+                    where.Z >= low.Z && where.Z <= high.Z,
+                    $"ray {index} crossed the surface at {where}, which is outside the box running " +
+                    $"{low} to {high}");
+            }
+        }
+
+        Assert.IsTrue(found > 1000,
+            $"only {found} crossings were found, which is too few to have tested the box at all");
+    }
+
+    /// <summary>
+    /// This method builds a blob from the given components, at a threshold that puts its surface
+    /// well inside their influence.
+    /// </summary>
+    /// <param name="components">The components to build it from.</param>
+    /// <returns>The blob.</returns>
+    private static Blob BlobOf(params IBlobComponent[] components)
+    {
+        return BlobOf(0.125, components);
+    }
+
+    /// <summary>
+    /// This method builds a blob from the given components at the given threshold.
+    /// <para>
+    /// **The threshold is what decides how hard these tests press.**  A component's box is its
+    /// influence, and the surface sits where the field has fallen to the threshold -- so at an
+    /// ordinary threshold the surface is well inside the box and a box short by a tenth still holds
+    /// it.  Shrinking the box on purpose proved exactly that: the transformed cases did not notice.
+    /// A threshold near nothing pushes the surface out to nearly the influence radius, and only then
+    /// is the box being asked a real question.  At the ordinary 0.125 the surface stands at 70.7% of
+    /// the influence radius and a quarter could be shaved off the box before anything noticed; at
+    /// 1e-4 it stands at 97.7% and a shortfall of a few percent is caught.
+    /// </para>
+    /// <para>
+    /// **Do not push it further than that.**  The falloff is a *cube*, so it has a TRIPLE root at the
+    /// influence radius, and a threshold near nothing puts the surface right on top of it -- where the
+    /// error in locating a root scales as the cube root of the threshold and the solver starts
+    /// reporting crossings out beyond the influence entirely, at points where the field is exactly
+    /// nought.  A threshold of 1e-9 does this reliably, and it looks exactly like a box that is too
+    /// small.  Two and a bit percent of slack is inherent anyway: the box *is* the influence, and the
+    /// surface always lies strictly within it.
+    /// </para>
+    /// </summary>
+    /// <param name="threshold">The threshold to build it at.</param>
+    /// <param name="components">The components to build it from.</param>
+    /// <returns>The blob.</returns>
+    private static Blob BlobOf(double threshold, params IBlobComponent[] components)
+    {
+        Blob blob = new () { Threshold = threshold };
+
+        blob.Components.AddRange(components);
+
+        return blob;
+    }
+
     /// <summary>
     /// This method insists that one ray finds the surface the same number of times whether it is asked
     /// through the box or straight.

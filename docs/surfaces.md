@@ -295,8 +295,11 @@ into a surface, without cutting it — a `difference` would leave a crease exact
 want one.
 
 Two things to know about it. The plane is **infinite**, like the `plane` surface, so a blob holding
-one is a solid slab that reaches to the horizon and hides whatever is behind it. And a blob has no
-bounding box, so nothing is lost by that; but nothing prunes it either.
+one is a solid slab that reaches to the horizon and hides whatever is behind it. And it costs the
+blob its bounding box: every other blob works out a box from its components' reach and is skipped by
+any ray that misses it, which is worth several times over on a scene holding many of them, but no
+finite box holds a slab that runs to the horizon. Use one where you want the floor, not as a way of
+tilting a small blob's flat side.
 
 ##### Components may be transformed
 

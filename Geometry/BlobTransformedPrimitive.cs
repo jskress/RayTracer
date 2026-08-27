@@ -25,6 +25,7 @@ public class BlobTransformedPrimitive : IBlobPrimitive
     public double RadiusSquared => _primitive.RadiusSquared;
 
     private readonly IBlobPrimitive _primitive;
+    private readonly Matrix _transform;
     private readonly Matrix _inverse;
     private readonly Matrix _inverseTransposed;
 
@@ -36,6 +37,7 @@ public class BlobTransformedPrimitive : IBlobPrimitive
     public BlobTransformedPrimitive(IBlobPrimitive primitive, Matrix transform)
     {
         _primitive = primitive;
+        _transform = transform;
         _inverse = transform.Invert();
         _inverseTransposed = _inverse.Transpose();
     }
@@ -61,6 +63,18 @@ public class BlobTransformedPrimitive : IBlobPrimitive
     public (double T0, double T1, double T2) GetDistanceSquaredCoefficients(Ray ray)
     {
         return _primitive.GetDistanceSquaredCoefficients(ToComponentSpace(ray));
+    }
+
+    /// <summary>
+    /// This method returns a box holding every point this primitive has any influence over, which is
+    /// the box the wrapped one gives, carried through the transform.  A turned or sheared box no
+    /// longer lies square to the axes, so what comes back is the box around where its corners land --
+    /// larger than the shape needs, and larger is the safe way to be wrong.
+    /// </summary>
+    /// <returns>The box holding this primitive's influence, or <c>null</c>, if it is endless.</returns>
+    public BoundingBox GetBoundingBox()
+    {
+        return _primitive.GetBoundingBox()?.TransformedBy(_transform);
     }
 
     /// <summary>
