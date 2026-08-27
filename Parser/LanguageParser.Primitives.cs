@@ -209,6 +209,7 @@ public partial class LanguageParser
             "patch" => ParsePatchClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
+            "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
             "sweep" => ParseSweepClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
@@ -309,6 +310,8 @@ public partial class LanguageParser
                 "latheEntryClause", HandleLatheEntryClause, validate: false),
             "blob" => ParseObjectResolver<BlobResolver>(
                 "blobEntryClause", HandleBlobEntryClause, validate: false),
+            "swells" => ParseObjectResolver<SwellsResolver>(
+                "swellsEntryClause", HandleSwellsEntryClause, validate: false),
             "tube" => ParseObjectResolver<TubeResolver>(
                 "tubeEntryClause", HandleTubeEntryClause, validate: false),
             "sweep" => ParseObjectResolver<SweepResolver>(
@@ -360,6 +363,7 @@ public partial class LanguageParser
             "patch" => "startPatchClause",
             "lathe" => "startLatheClause",
             "blob" => "startBlobClause",
+            "swells" => "startSwellsClause",
             "tube" => "startTubeClause",
             "sweep" => "startSweepClause",
             "extrusion" => "startExtrusionClause",

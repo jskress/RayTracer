@@ -96,12 +96,12 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'susceptibility', 'svg', 'sweep', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
+            'superellipsoid', 'surface', 'surfaces', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes',
             'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'waves', 'width', 'with', 'wood',
+            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'width', 'with', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -840,6 +840,31 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Swell clauses.
+        swellTrainEntryClause:
+        [
+            { amplitude > _expression } |
+            { steepness > _expression } |
+            { wavelength > _expression } |
+            { direction > _expression } |
+            { phase > _expression }
+        ] ?? 'Expecting a wave train property here.'
+        startSwellsClause:
+        {
+            swells > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "swells" here.'
+        }
+        swellsEntryClause:
+        [
+            { width > _expression } |
+            { depth > _expression } |
+            { accuracy > _expression } |
+            { wave > openBrace ?? 'Expecting an open brace after "wave" here.' } |
+            surfaceEntryClause
+        ]
+
         // Tube clauses.
         tubePointClause:
         {
@@ -1175,6 +1200,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1240,6 +1266,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1285,6 +1312,7 @@ public partial class LanguageParser
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
+            startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1378,7 +1406,7 @@ public partial class LanguageParser
                 startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
-                startBlobClause | startTubeClause | startSweepClause | startTextClause |
+                startBlobClause | startSwellsClause | startTubeClause | startSweepClause | startTextClause |
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
@@ -1411,7 +1439,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | patch | lathe | blob | tube | sweep | extrusion | text | lsystem |
+                isosurface | patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { generic > shape } | { object > file } |
                 pigment | material | interior | medium
@@ -1516,6 +1544,7 @@ public partial class LanguageParser
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |
+            startSwellsClause         => 'HandleStartSwellsClause' |
             startTubeClause           => 'HandleStartTubeClause' |
             startSweepClause          => 'HandleStartSweepClause' |
             startTextClause           => 'HandleStartTextClause' |
