@@ -59,6 +59,7 @@ public partial class LanguageParser
             "extrusion" => ParseExtrusionClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
+            "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
             "sweep" => ParseSweepClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),

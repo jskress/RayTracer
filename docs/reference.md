@@ -282,6 +282,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `startBranch` | L-system turtle: push a branch point. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `steepness` | Swells: how tall a wave train is against its wavelength. | [Surfaces](surfaces.md#swells) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -291,6 +292,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `susceptibility` | L-system control: how readily segments bend toward the tropism. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `swells` | Surface: a body of water carrying wave trains. | [Surfaces](surfaces.md#swells) |
 | `switch` | Picks among any number of answers by a value. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -326,7 +328,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `vertical` | Text layout: vertical placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `view` | The third word of `field of view`. | [Cameras](cameras.md#field-of-view) |
 | `warning` | Info: a warning. | [Context](context.md#image-information) |
-| `wave` | Shaping: bends a pattern's value by a wave shape. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
+| `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
+| `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `width` | Context: image width in pixels. | [Context](context.md#image-size) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |

@@ -386,6 +386,65 @@ strength = threshold / (1 - (d / radius)^2)^3
 
 That is how to make two components blend over a longer distance without either of them growing.
 
+#### Swells
+
+A body of water: a stretch of surface carrying one or more trains of waves, lying in the X/Z plane
+with its rest level at `y = 0`.
+
+```
+swells {
+    width 400  depth 400
+    wave { steepness 0.22  wavelength 20  direction [0.92, 0, 0.39]  phase 1.0 }
+    wave { steepness 0.14  wavelength 13  direction [-0.42, 0, 0.91]  phase 2.3 }
+    wave { steepness 0.07  wavelength 4.1  direction [0.71, 0, -0.70]  phase 3.7 }
+    material SeaWater
+}
+```
+
+`width` and `depth` are how far the water reaches along X and Z, centered on the origin.  Make them
+larger than the picture needs rather than smaller: a box costs almost nothing to enlarge, and one cut
+too small ends in a straight edge in mid-water that reads as a cliff.
+
+##### The waves are not sines, and that is the point
+
+Each `wave` is a train: how steep it is, how far apart its crests are, which way it runs, and where in
+its cycle it starts.  A handful crossing at angles is what gives water its unrepeating look; one alone
+is too regular to read as anything but corrugated iron.
+
+**The crests are drawn up and the troughs are flattened out, and neither is a knob you set.**  Water
+does not go up and down as a wave passes — each piece of it travels in a *circle*, so it bunches up
+under a crest and spreads out under a trough.  What that traces is a trochoid, not a sine, and the
+asymmetry comes out of the motion rather than out of an exponent tuned by eye.
+
+`steepness` is the one number that decides the shape: the height of a train against how tightly its
+crests are spaced.
+
+| `steepness` | what it looks like |
+|---|---|
+| 0 | a plain sine |
+| 0.1 – 0.2 | an easy swell |
+| 0.3 – 0.45 | a working sea; real waves break around 0.45 |
+| 1.0 | the crest closes to a cusp — the wave breaking |
+
+Past 1 the water would fold over itself and there would no longer be a single height at a place, so
+that is the ceiling.  Real water never gets there: it breaks at about 0.45, so the whole useful range
+sits well inside what this can draw.
+
+You may give a `wave` an `amplitude` instead of a `steepness` if you would rather say how tall it is
+outright, but not both — each says the same thing and they would disagree.  Steepness is usually the
+one to write, because it means the same at every scale: a swell of 0.2 reads as the same water whether
+its crests are a foot apart or fifty.
+
+##### Against writing the same thing as a field
+
+An [isosurface](advanced-surfaces.md#isosurface) can be given a sum of sines and will draw water of a
+sort — the `water` library does exactly that, and shipped before this surface existed.  Two things are
+different here.  The shape is the true one rather than a sine sharpened by a power and leaned over by
+a shear, both of which have to be tuned and neither of which can flatten a trough while it draws up a
+crest.  And it is *faster*: measured on the same sea at 400x300, **1.30 seconds against 3.84**, because
+a surface that knows what it is can say where the water can possibly reach far more cheaply than a walk
+over an arbitrary expression can.
+
 ### Shapes
 
 These are flat.  They have a front and a back but no inside, so a
