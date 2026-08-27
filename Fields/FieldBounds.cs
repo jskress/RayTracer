@@ -21,7 +21,16 @@ namespace RayTracer.Fields;
 /// </summary>
 public static class FieldBounds
 {
-    private static readonly Dictionary<string, Func<FieldRange[], FieldRange>> Rules = new ()
+    /// <summary>
+    /// This delegate is how a rule is called: over a *span* of argument ranges rather than an array,
+    /// so that a caller need not put anything on the heap to ask one.  A marcher asks for a bound
+    /// millions of times a frame and every call node in the tree was allocating an array to do it.
+    /// </summary>
+    /// <param name="arguments">The ranges of the function's arguments.</param>
+    /// <returns>The range the function could produce over them.</returns>
+    public delegate FieldRange BoundRule(ReadOnlySpan<FieldRange> arguments);
+
+    private static readonly Dictionary<string, BoundRule> Rules = new ()
     {
         // The ones that only ever climb, over the whole of their domain.
         { "exp", u => Climbing(u[0], Math.Exp) },
@@ -94,12 +103,27 @@ public static class FieldBounds
     /// <param name="name">The name of the function.</param>
     /// <param name="arguments">The ranges of what it is being called with.</param>
     /// <returns>The range it could produce.</returns>
-    public static FieldRange RangeFor(string name, FieldRange[] arguments)
+    /// <summary>
+    /// This method looks up the rule for a named function once, so that a caller asking about the same
+    /// function over and over need not go through the dictionary -- and go through it keyed by a
+    /// *string* -- on every one of the millions of times a marcher asks.
+    /// </summary>
+    /// <param name="name">The function to find the rule for.</param>
+    /// <returns>The rule, or <c>null</c>, if there is none and the answer must be "anywhere".</returns>
+    public static BoundRule RuleFor(string name)
     {
-        if (arguments.Any(argument => argument.IsAnywhere))
-            return FieldRange.Anywhere;
+        return Rules.GetValueOrDefault(name);
+    }
 
-        return Rules.TryGetValue(name, out Func<FieldRange[], FieldRange> rule)
+    public static FieldRange RangeFor(string name, ReadOnlySpan<FieldRange> arguments)
+    {
+        foreach (FieldRange argument in arguments)
+        {
+            if (argument.IsAnywhere)
+                return FieldRange.Anywhere;
+        }
+
+        return Rules.TryGetValue(name, out BoundRule rule)
             ? rule(arguments)
             : FieldRange.Anywhere;
     }
@@ -131,7 +155,7 @@ public static class FieldBounds
     /// </summary>
     /// <param name="arguments">The ranges of the three coordinates noise is being asked at.</param>
     /// <returns>The range noise could take over that box.</returns>
-    private static FieldRange Noise(FieldRange[] arguments)
+    private static FieldRange Noise(ReadOnlySpan<FieldRange> arguments)
     {
         double radius = 0.5 * Math.Sqrt(
             arguments[0].Width * arguments[0].Width +
@@ -238,7 +262,36 @@ public static class FieldBounds
     /// gain.  An even whole power is a valley with its bottom at nought; an odd one only ever climbs;
     /// anything else is left alone unless what is being raised is known to be positive.
     /// </summary>
-    private static FieldRange Power(FieldRange[] arguments)
+    /// <summary>
+    /// These three are the raising-to-a-power forms of the shapes below, taking the exponent itself
+    /// rather than a function of it.  Written as a lambda, `number => Math.Pow(number, power)` closes
+    /// over the exponent, and a closure means an allocation -- one for the captured value and one for
+    /// the delegate -- on every call, of which a sea makes tens of millions.
+    /// </summary>
+    /// <param name="range">The range being raised.</param>
+    /// <param name="power">The exponent.</param>
+    /// <returns>The range the result could take.</returns>
+    private static FieldRange Climbing(FieldRange range, double power)
+    {
+        return FieldRange.Covering(Math.Pow(range.Low, power), Math.Pow(range.High, power));
+    }
+
+    private static FieldRange Falling(FieldRange range, double power)
+    {
+        return FieldRange.Covering(Math.Pow(range.High, power), Math.Pow(range.Low, power));
+    }
+
+    private static FieldRange Valley(FieldRange range, double bottom, double power)
+    {
+        FieldRange ends = FieldRange.Covering(
+            Math.Pow(range.Low, power), Math.Pow(range.High, power));
+
+        return range.Contains(bottom)
+            ? new FieldRange(Math.Pow(bottom, power), ends.High)
+            : ends;
+    }
+
+    private static FieldRange Power(ReadOnlySpan<FieldRange> arguments)
     {
         FieldRange value = arguments[0];
         FieldRange exponent = arguments[1];
@@ -251,16 +304,27 @@ public static class FieldBounds
         if (power == Math.Floor(power) && power >= 0)
         {
             return power % 2 == 0
-                ? Valley(value, 0, number => Math.Pow(number, power))
-                : Climbing(value, number => Math.Pow(number, power));
+                ? Valley(value, 0, power)
+                : Climbing(value, power);
         }
 
-        // A fractional or negative power of a negative number is not a number, and a negative power of
-        // something that could be nought runs away to infinity.
+        // A fractional power of a negative number is not a number.  Nought itself is fine for a
+        // *positive* power -- nought to the 2.8 is nought -- and the difference matters more than it
+        // looks: a base that merely touches nought is exactly what `pow(0.5 + 0.5 * sin(x), s)`
+        // produces at every trough, which is how water is written.  Refusing to bound those gave up
+        // on 15% of every `pow` asked about in a sea, and a bound that gives up prunes nothing, so
+        // the marcher went on halving spans it could have discarded whole.
+        if (power > 0)
+        {
+            return value.Low < 0
+                ? FieldRange.Anywhere
+                : Climbing(value, power);
+        }
+
+        // A negative power of something that could be nought runs away to infinity, so nought is not
+        // allowed here.
         return value.Low <= 0
             ? FieldRange.Anywhere
-            : power > 0
-                ? Climbing(value, number => Math.Pow(number, power))
-                : Falling(value, number => Math.Pow(number, power));
+            : Falling(value, power);
     }
 }

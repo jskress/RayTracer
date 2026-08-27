@@ -28,12 +28,18 @@ public class FieldCall : FieldExpression
     public FieldExpression[] Arguments { get; }
 
     private readonly Token _errorToken;
+    private readonly FieldBounds.BoundRule _rule;
 
     private FieldCall(FunctionSignature signature, FieldExpression[] arguments, Token errorToken)
     {
         Signature = signature;
         Arguments = arguments;
         _errorToken = errorToken;
+
+        // Looked up once, here, rather than on every bound.  A marcher asks for a bound millions of
+        // times per frame, and every call node in the tree was going through a dictionary keyed by
+        // the function's *name* to find the very same rule each time.
+        _rule = FieldBounds.RuleFor(signature.Name);
     }
 
     /// <summary>
@@ -115,8 +121,23 @@ public class FieldCall : FieldExpression
     /// </summary>
     public override FieldRange Bound(FieldRange x, FieldRange y, FieldRange z)
     {
-        return FieldBounds.RangeFor(
-            Signature.Name,
-            Arguments.Select(argument => argument.Bound(x, y, z)).ToArray());
+        if (_rule is null)
+            return FieldRange.Anywhere;
+
+        // On the stack, not the heap.  This runs once per call node per bound, and a bound runs
+        // millions of times a frame.
+        Span<FieldRange> arguments = stackalloc FieldRange[Arguments.Length];
+
+        for (int index = 0; index < arguments.Length; index++)
+        {
+            FieldRange argument = Arguments[index].Bound(x, y, z);
+
+            if (argument.IsAnywhere)
+                return FieldRange.Anywhere;
+
+            arguments[index] = argument;
+        }
+
+        return _rule(arguments);
     }
 }
