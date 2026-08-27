@@ -1,0 +1,94 @@
+// A blob whose components each bring something of their own: a color, a shape they were stretched
+// into, and -- underneath it all -- a plane.
+//
+// The plane component is the floor.  It is a real component of the blob, not a separate surface, so
+// the two ellipsoids do not sit *on* it, they melt *into* it: the fillet where each one meets the
+// floor is the same smooth joint two spheres make with each other, and no `difference` could give
+// it.  Being a plane it is infinite, which is why there is no checkered ground in this scene -- the
+// blob itself reaches to the horizon.
+//
+// The colors are the components' own, mixed by how much of the field each one owns at the point
+// being colored.  So the floor's checker runs into the red across exactly the width of the fillet,
+// and the green bond hands over to the red ball at one end and the yellow one at the other, each
+// across its own.  Nothing about the transition is painted; it is where the shape changes over.
+//
+// The floor's pigment is a pattern rather than a flat color on purpose: what a component brings is a
+// *pigment*, not a shade, so a checker mixes into its neighbours exactly as a solid would.  It is
+// also worth looking at where the checker meets the horizon -- the squares there are far finer than
+// a pixel, and they settle into an even tone instead of beating into arcs, which is the footprint
+// filtering rather than anything this scene asks for.
+//
+// The bond carries a strength of 1.825 where the balls carry 1, for the reason set out in
+// `blob.igl`: a component's field falls off as the *cube* of its bracket, so the same radius comes
+// out thinner than the squared falloff used to give.
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Blob Components'
+        author 'J. Stephen Kress'
+        description 'A blob whose components carry their own pigments, transforms and a plane.'
+        copyright true
+        software __software__
+    }
+}
+camera {
+    location [-0.5, 3.0, -9.0]
+    look at [0, 0.62, 0.05]
+    field of view 38
+}
+// A sky the color of the slab, so the horizon the infinite plane makes does not run into white.
+background [0.62, 0.68, 0.78]
+point light {
+    location [-7, 9, -7]
+}
+point light {
+    location [6, 5, -8]
+    color [0.22, 0.22, 0.28]
+}
+blob {
+    threshold 0.3
+
+    // The floor, and the thing everything else settles into.
+    plane {
+        at [0, 0.15, 0]
+        normal [0, 1, 0]
+        radius 0.5
+        strength 1
+        pigment checker { [0.13, 0.19, 0.32], [0.27, 0.35, 0.52]  scale 1.1 }
+    }
+
+    // Two balls stretched into ellipsoids.  Each is built at the origin, shaped, and then moved --
+    // a transform carries the whole of a component's space, so shaping one already placed would
+    // move it as well.
+    sphere {
+        radius 1.15
+        strength 1
+        scale [1.35, 0.85, 1.1]
+        translate [-2.1, 0.75, 0]
+        pigment [0.60, 0.07, 0.05]
+    }
+    sphere {
+        radius 1.15
+        strength 1
+        scale [0.85, 1.35, 1.1]
+        translate [2.1, 0.85, 0]
+        pigment [0.80, 0.58, 0.04]
+    }
+
+    // And a bond between them, which takes a color from each end as it goes.
+    cylinder {
+        from [-2.1, 0.75, 0]
+        to [2.1, 0.85, 0]
+        radius 0.42
+        strength 1.825
+        pigment [0.06, 0.36, 0.16]
+    }
+
+    // No `reflective` here, deliberately: a reflective blob shows a small artifact at a concave
+    // fillet, which has nothing to do with components and is noted separately.
+    material {
+        specular 0.35
+        shininess 60
+    }
+}

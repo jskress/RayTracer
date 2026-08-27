@@ -11,16 +11,21 @@ public class TestBlob
     /// <summary>
     /// A single sphere component is radially symmetric, so it should behave exactly like a
     /// plain Sphere of the isosurface's own radius.  With strength = 1, radius = 2 and
-    /// threshold = 0.25, solving strength * (1 - d^2/R^2)^2 = threshold for the smaller
+    /// threshold = 0.125, solving strength * (1 - d^2/R^2)^3 = threshold for the smaller
     /// root gives d = R / sqrt(2) = sqrt(2) -- so this blob should intersect identically to
     /// a Sphere scaled by sqrt(2), for the same ray, hit for hit.
+    /// <para>
+    /// The threshold is an eighth rather than a quarter because the falloff is cubed rather than
+    /// squared: an eighth is what puts the isosurface at the same half-way-in radius the quarter
+    /// used to.  These tests are about the blob agreeing with a sphere, not about any one number.
+    /// </para>
     /// </summary>
     [TestMethod]
     public void TestSingleSphereComponentMatchesPlainSphere()
     {
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components = { new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 } }
         };
         Sphere sphere = new () { Transform = Transforms.Scale(Math.Sqrt(2)) };
@@ -51,7 +56,7 @@ public class TestBlob
     {
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components = { new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 } }
         };
         Ray ray = new (new Point(-10, 0, 0), Directions.Right);
@@ -84,7 +89,7 @@ public class TestBlob
         BlobSphereComponent right = new () { Center = new Point(1, 0, 0), Radius = 2, Strength = 1 };
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components = { left, right }
         };
         Ray ray = new (new Point(-10, 0, 0), Directions.Right);
@@ -111,7 +116,7 @@ public class TestBlob
 
     /// <summary>
     /// This is the same density formula the blob primitives use internally
-    /// (strength * (1 - d^2/R^2)^2, zero beyond the influence radius), reproduced
+    /// (strength * (1 - d^2/R^2)^3, zero beyond the influence radius), reproduced
     /// independently here so the merge test above isn't just checking the code against
     /// itself.
     /// </summary>
@@ -124,7 +129,7 @@ public class TestBlob
 
         double normalized = 1 - distanceSquared / radiusSquared;
 
-        return strength * normalized * normalized;
+        return strength * normalized * normalized * normalized;
     }
 
     /// <summary>
@@ -139,7 +144,7 @@ public class TestBlob
     {
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components =
             {
                 new BlobCylinderComponent
@@ -178,7 +183,7 @@ public class TestBlob
     {
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components =
             {
                 new BlobCylinderComponent
@@ -210,7 +215,7 @@ public class TestBlob
     {
         Blob blob = new ()
         {
-            Threshold = 0.25,
+            Threshold = 0.125,
             Components =
             {
                 new BlobSphereComponent { Center = Point.Zero, Radius = 2, Strength = 1 },

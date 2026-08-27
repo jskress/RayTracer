@@ -4,11 +4,18 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This interface represents a single low-level shape (a sphere, or one piece of a
-/// cylinder) that contributes one quartic term to a blob's field along any given ray.  The
+/// cylinder) that contributes one sextic term to a blob's field along any given ray.  The
 /// field this primitive contributes, as a function of the squared distance from its
-/// characteristic point (a sphere's center) or line (a cylinder's axis), is the classic
-/// metaball falloff:  density(d^2) = strength * (1 - d^2 / R^2)^2 for d &lt;= R, and zero
-/// beyond it.
+/// characteristic point (a sphere's center) or line (a cylinder's axis), is the metaball
+/// falloff:  density(d^2) = strength * (1 - d^2 / R^2)^3 for d &lt;= R, and zero beyond it.
+/// <para>
+/// **The bracket is cubed rather than squared, and that is the whole reason a joint looks
+/// right.**  Squared, the falloff's second derivative jumps where two components meet, and a
+/// curvature break reads to the eye as a crease -- the "hips" where a bond met a ball.  Cubing
+/// it makes the field twice differentiable, so the shading normal turns smoothly through the
+/// join.  No choice of radius or strength can stand in for this; those only move a curvature
+/// break about, they do not remove one.
+/// </para>
 /// </summary>
 public interface IBlobPrimitive
 {

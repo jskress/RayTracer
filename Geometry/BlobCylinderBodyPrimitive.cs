@@ -18,9 +18,7 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
     private readonly Point _start;
     private readonly Vector _axisUnit;
     private readonly double _axisLength;
-    private readonly double _c0;
-    private readonly double _c1;
-    private readonly double _c2;
+
 
     /// <summary>
     /// This constructs a cylinder body primitive spanning from <paramref name="start"/> to
@@ -40,7 +38,7 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
         Strength = strength;
         RadiusSquared = radius * radius;
 
-        (_c0, _c1, _c2) = BlobFieldMath.GetDensityCoefficients(strength, RadiusSquared);
+
     }
 
     /// <summary>
@@ -125,8 +123,8 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
         if (distanceSquared > RadiusSquared)
             return null;
 
-        double density = _c0 * distanceSquared * distanceSquared + _c1 * distanceSquared + _c2;
-        double gradientScale = -2.0 * _c0 * distanceSquared - _c1;
+        (double density, double gradientScale) = BlobFieldMath.GetDensityAt(
+            Strength, RadiusSquared, distanceSquared);
 
         return (density, perpendicular * gradientScale);
     }

@@ -16,9 +16,7 @@ public class BlobSpherePrimitive : IBlobPrimitive
 
     private readonly Point _center;
     private readonly Vector _clipNormal;
-    private readonly double _c0;
-    private readonly double _c1;
-    private readonly double _c2;
+
 
     /// <summary>
     /// This constructs a sphere primitive.  When <paramref name="clipNormal"/> is given,
@@ -37,7 +35,7 @@ public class BlobSpherePrimitive : IBlobPrimitive
         Strength = strength;
         RadiusSquared = radius * radius;
 
-        (_c0, _c1, _c2) = BlobFieldMath.GetDensityCoefficients(strength, RadiusSquared);
+
     }
 
     /// <summary>
@@ -95,8 +93,8 @@ public class BlobSpherePrimitive : IBlobPrimitive
         if (distanceSquared > RadiusSquared || (_clipNormal != null && relative.Dot(_clipNormal) > 0))
             return null;
 
-        double density = _c0 * distanceSquared * distanceSquared + _c1 * distanceSquared + _c2;
-        double gradientScale = -2.0 * _c0 * distanceSquared - _c1;
+        (double density, double gradientScale) = BlobFieldMath.GetDensityAt(
+            Strength, RadiusSquared, distanceSquared);
 
         return (density, relative * gradientScale);
     }

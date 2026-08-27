@@ -273,6 +273,34 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
+    /// This property reports how far off itself this surface needs a ray to start, as a multiple of
+    /// the usual nudge.
+    /// <para>
+    /// A ray cast *from* a surface -- toward a light, or as a reflection -- starts from the hit point
+    /// moved a millionth of a unit along the normal, and that nudge is the whole of what keeps the
+    /// surface from blocking its own light.  A millionth is ample for a shape whose crossing is
+    /// written down in closed form, since the point is then as exact as the arithmetic allows.  It is
+    /// not always enough for one whose crossing has to be *solved for*: the solver's error can exceed
+    /// the nudge, leaving the point fractionally inside, and every ray leaving it starts within the
+    /// solid.  Such a surface says so here.
+    /// </para>
+    /// </summary>
+    public virtual double SelfOffsetScale => 1;
+
+    /// <summary>
+    /// This method is called once the surface is certain to have a material, and before that
+    /// material's pigment is given its chance to get ready.  It is where a surface that wants a hand
+    /// in its own pigment may take one -- a blob whose components carry colors of their own wraps
+    /// the material's pigment here, so that the mixing happens inside the ordinary pigment lookup
+    /// and nothing along the shading path need know a blob from a sphere.
+    /// <para>
+    /// It cannot be done when the surface prepares itself, which runs earlier: a surface that was
+    /// never given a material does not have one yet at that point.
+    /// </para>
+    /// </summary>
+    public virtual void MaterialIsSettled() {}
+
+    /// <summary>
     /// This method may be overridden to produce a default bounding box for this
     /// shape.
     /// If the user specified one, it will not be replaced and this method

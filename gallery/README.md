@@ -525,6 +525,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/blob-components.png">
+      <img alt="Blob Components" height="120" src="Local/surfaces/blob-components.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/blob-components.igl">Blob Components</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/surfaces/tube.png">
       <img alt="Tube Test" height="120" src="Local/surfaces/tube.png" width="160"/>
     </a></td>
