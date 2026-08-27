@@ -533,6 +533,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/swells.png">
+      <img alt="Swells" height="120" src="Local/surfaces/swells.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/swells.igl">Swells</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/surfaces/tube.png">
       <img alt="Tube Test" height="120" src="Local/surfaces/tube.png" width="160"/>
     </a></td>
