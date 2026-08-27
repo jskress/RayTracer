@@ -25,12 +25,6 @@ public class BlobCylinderComponentResolver : BlobComponentResolver<BlobCylinderC
     public Resolver<double> RadiusResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the strength property of our cylinder
-    /// component.
-    /// </summary>
-    public Resolver<double> StrengthResolver { get; set; }
-
-    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a
     /// cylinder component.
     /// </summary>

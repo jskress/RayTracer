@@ -3,7 +3,12 @@ using MathNet.Numerics;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.General;
 using RayTracer.Geometry;
+using RayTracer.Instructions;
+using RayTracer.Instructions.Pigments;
+using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Transforms;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
 
@@ -488,5 +493,97 @@ public class TestBlobComponents
         Assert.AreEqual(1, new Sphere().SelfOffsetScale,
             "every shape with a closed-form crossing must keep the offset it has always had, or " +
             "every scene in the gallery shifts");
+    }
+
+    /// <summary>
+    /// **Every sort of component must actually receive the properties they share.**  Strength,
+    /// pigment and transform are resolved once in the base and read back out of it, and this asks
+    /// each sort of component in turn whether all three arrived.
+    /// <para>
+    /// What it does *not* catch, and it is worth saying so rather than letting the next reader
+    /// assume otherwise: a component resolver that declares one of these properties over again,
+    /// hiding the base's.  One did, and the compiler warned about it.  This test cannot see such a
+    /// thing because it assigns through the base -- which is exactly what the parser does too, and
+    /// exactly why the hiding was harmless rather than a silent loss.  The build warning is the
+    /// guard there; this is the guard for the properties genuinely going astray.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestTheSharedPropertiesReachEverySortOfComponent()
+    {
+        Pigment pigment = new SolidPigment(Colors.Red);
+        Matrix transform = Transforms.Scale(2, 3, 4);
+
+        BlobSphereComponent sphere = (BlobSphereComponent) Resolved(
+            new BlobSphereComponentResolver { RadiusResolver = Literal(1.0) }, pigment, transform);
+        BlobCylinderComponent cylinder = (BlobCylinderComponent) Resolved(
+            new BlobCylinderComponentResolver
+            {
+                StartResolver = new LiteralResolver<Point> { Value = Point.Zero },
+                EndResolver = new LiteralResolver<Point> { Value = new Point(1, 0, 0) },
+                RadiusResolver = Literal(1.0)
+            }, pigment, transform);
+        BlobPlaneComponent plane = (BlobPlaneComponent) Resolved(
+            new BlobPlaneComponentResolver
+            {
+                NormalResolver = new LiteralResolver<Vector> { Value = Directions.Up },
+                RadiusResolver = Literal(1.0)
+            }, pigment, transform);
+
+        foreach (IBlobComponent component in (IBlobComponent[]) [sphere, cylinder, plane])
+        {
+            string what = component.GetType().Name;
+
+            Assert.AreEqual(7.25, component.Strength, 1e-12, $"{what} lost its strength");
+            Assert.AreSame(pigment, component.Pigment, $"{what} lost its pigment");
+            Assert.AreSame(transform, component.Transform, $"{what} lost its transform");
+        }
+    }
+
+    /// <summary>
+    /// This method gives a component resolver the properties every component shares -- the way the
+    /// parser does, through the base -- and resolves it.
+    /// </summary>
+    private static IBlobComponent Resolved<TComponent>(
+        BlobComponentResolver<TComponent> resolver, Pigment pigment, Matrix transform)
+        where TComponent : BlobComponent, new()
+    {
+        resolver.StrengthResolver = Literal(7.25);
+        resolver.PigmentResolver = new TestPigmentResolver { Pigment = pigment };
+        resolver.TransformResolver = new TestTransformResolver { Matrix = transform };
+
+        return (IBlobComponent) resolver.ResolveToObject(new RenderContext(), new Variables());
+    }
+
+    /// <summary>
+    /// This method wraps a constant in a resolver.
+    /// </summary>
+    private static Resolver<double> Literal(double value)
+    {
+        return new LiteralResolver<double> { Value = value };
+    }
+
+    /// <summary>
+    /// A pigment resolver that hands back the pigment it was given.
+    /// </summary>
+    private class TestPigmentResolver : IPigmentResolver
+    {
+        public Pigment Pigment { get; init; }
+
+        public Pigment ResolveToPigment(RenderContext context, Variables variables) => Pigment;
+
+        public object ResolveToObject(RenderContext context, Variables variables) => Pigment;
+
+        public object Clone() => this;
+    }
+
+    /// <summary>
+    /// A transform resolver that hands back the matrix it was given.
+    /// </summary>
+    private class TestTransformResolver : TransformResolver
+    {
+        public Matrix Matrix { get; init; }
+
+        public override Matrix Resolve(RenderContext context, Variables variables) => Matrix;
     }
 }
