@@ -103,6 +103,25 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
     }
 
     /// <summary>
+    /// This method returns a box holding every point this primitive has any influence over, which is
+    /// the tube of its influence radius about the axis.  Both ends are grown by the whole radius in
+    /// every direction, which over-reaches along the axis by that much -- the safe way to be wrong.
+    /// </summary>
+    /// <returns>The box holding this primitive's influence.</returns>
+    public BoundingBox GetBoundingBox()
+    {
+        double radius = Math.Sqrt(RadiusSquared);
+        Vector corner = new (radius, radius, radius);
+        Point end = _start + _axisUnit * _axisLength;
+
+        return new BoundingBox()
+            .Add(_start - corner)
+            .Add(_start + corner)
+            .Add(end - corner)
+            .Add(end + corner);
+    }
+
+    /// <summary>
     /// This method evaluates this primitive's contribution to the field and its gradient at
     /// the given point.
     /// </summary>

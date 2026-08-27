@@ -79,6 +79,22 @@ public class BlobSpherePrimitive : IBlobPrimitive
     }
 
     /// <summary>
+    /// This method returns a box holding every point this primitive has any influence over, which
+    /// is the ball of its influence radius.  A cap's half-space clip is deliberately not taken into
+    /// account: the whole ball is a larger box than the half needs, and larger is the safe way to be
+    /// wrong.
+    /// </summary>
+    /// <returns>The box holding this primitive's influence.</returns>
+    public BoundingBox GetBoundingBox()
+    {
+        double radius = Math.Sqrt(RadiusSquared);
+
+        return new BoundingBox()
+            .Add(_center - new Vector(radius, radius, radius))
+            .Add(_center + new Vector(radius, radius, radius));
+    }
+
+    /// <summary>
     /// This method evaluates this primitive's contribution to the field and its gradient at
     /// the given point.
     /// </summary>

@@ -405,6 +405,46 @@ public class Blob : Surface
     }
 
     /// <summary>
+    /// This method works out a box holding the whole blob, which is the boxes of everything that
+    /// contributes to its field, put together.
+    /// <para>
+    /// The influence radius is what bounds it rather than the visible size: the field is exactly
+    /// nothing beyond a component's influence, so wherever the surface ends up it cannot lie outside
+    /// the influence of everything making it.  Components of negative strength are counted in as
+    /// well, which cannot be necessary -- a component that only subtracts can never push the surface
+    /// outward -- but it makes the box larger rather than smaller, and larger is the safe way to be
+    /// wrong.
+    /// </para>
+    /// <para>
+    /// Two cases have no box to give.  A <see cref="BlobPlaneComponent"/> reaches to the horizon, so
+    /// a blob holding one is unbounded exactly as a <see cref="Plane"/> is.  And a threshold at or
+    /// below nothing makes the whole of space solid, since the field out beyond everything is nought
+    /// and nought clears the threshold -- an odd thing to write, but it must not be answered with a
+    /// box that holds only the components.
+    /// </para>
+    /// </summary>
+    /// <returns>The box holding this blob, or <c>null</c>, if it has no finite one.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        if (Threshold <= 0)
+            return null;
+
+        BoundingBox box = new ();
+
+        foreach ((_, IBlobPrimitive primitive) in _primitives)
+        {
+            BoundingBox theirs = primitive.GetBoundingBox();
+
+            if (theirs is null)
+                return null;
+
+            box.Add(theirs);
+        }
+
+        return box.IsEmpty ? null : box;
+    }
+
+    /// <summary>
     /// A blob's crossings are solved for rather than written down, so a ray leaving one needs to
     /// start further off itself than the usual nudge puts it.  Without this the surface shadows
     /// itself in speckles wherever the light grazes along it -- the underside of a bond, or a slab

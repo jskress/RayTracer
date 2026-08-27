@@ -50,6 +50,20 @@ public interface IBlobPrimitive
     (double T0, double T1, double T2) GetDistanceSquaredCoefficients(Ray ray);
 
     /// <summary>
+    /// This method returns a box holding every point this primitive has any influence over, or
+    /// <c>null</c>, if its influence reaches forever.
+    /// <para>
+    /// The influence radius is the right extent to use and not the visible size, because the field
+    /// is exactly nothing beyond it: whatever surface the blob ends up with cannot lie outside the
+    /// influence of everything that makes it.  It is an over-estimate, which is the safe direction
+    /// -- a box too large costs a ray a test it did not need, while a box too small makes the
+    /// surface vanish in patches at whatever angle the box falls short.
+    /// </para>
+    /// </summary>
+    /// <returns>The box holding this primitive's influence, or <c>null</c>, if it is endless.</returns>
+    BoundingBox GetBoundingBox();
+
+    /// <summary>
     /// This method evaluates this primitive's contribution to the field and its gradient at
     /// the given point.
     /// </summary>

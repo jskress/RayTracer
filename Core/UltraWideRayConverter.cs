@@ -18,6 +18,7 @@ public class UltraWideRayConverter : PixelToRayConverter
 {
     private readonly double _halfHorizontal;
     private readonly double _halfVertical;
+    private readonly double _spread;
 
     public UltraWideRayConverter(
         RenderContext context, double fieldOfView, Matrix transform, CameraSampler sampler)
@@ -25,6 +26,14 @@ public class UltraWideRayConverter : PixelToRayConverter
     {
         _halfHorizontal = fieldOfView / 2;
         _halfVertical = _halfHorizontal / Aspect;
+
+        // How much of the sky one pixel covers.  Across the frame a pixel turns the ray by the
+        // field of view over the width, and up it by the vertical field over the height -- and those
+        // come to the same number, since the vertical field is the horizontal one divided by the very
+        // aspect that relates the two.  Nearer the top and bottom the horizontal turn shrinks by the
+        // cosine of the latitude, so this is the wider of the two everywhere, which is the side to
+        // err on.
+        _spread = _halfHorizontal * 2.0 / Width;
     }
 
     /// <summary>
@@ -47,6 +56,6 @@ public class UltraWideRayConverter : PixelToRayConverter
         Point origin = InverseTransform * Point.Zero;
         Vector direction = (InverseTransform * new Point(dirX, dirY, dirZ) - origin).Unit;
 
-        return new Ray(origin, direction, sampleIndex);
+        return new Ray(origin, direction, sampleIndex, _spread);
     }
 }

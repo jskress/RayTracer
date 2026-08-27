@@ -364,6 +364,115 @@ public class TestDocumentation
             string.Join("\n  ", unknown.Distinct()));
     }
 
+    /// <summary>
+    /// Every figure must be listed in <c>docs/images/figures/sources.txt</c>, with the scene that
+    /// makes it and the size to make it at.
+    /// <para>
+    /// The figures are renders, and nothing about them is checked by building or testing -- so when
+    /// the renderer's output changes they go stale in silence, and the documentation shows pictures
+    /// of an older ray tracer.  Twenty-five were found stale at once, twenty-two of them dating from
+    /// the pattern footprint filtering in PR #121, which changed every scene holding a pattern.
+    /// </para>
+    /// <para>
+    /// **This test cannot see that a figure has gone stale**, and it is worth being plain about
+    /// that: knowing would mean rendering all of them, which is far too slow to sit in a test run.
+    /// What it can do is keep the *means* of noticing from rotting -- so that a figure added without
+    /// a source, a scene renamed out from under one, or a picture re-rendered at the wrong size is
+    /// caught, and re-rendering the lot is one loop, spelled out at the top of that file.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryFigureNamesTheSceneThatMakesIt()
+    {
+        string figures = Path.Combine(DocsDirectory, "images", "figures");
+        string manifest = Path.Combine(figures, "sources.txt");
+
+        Assert.IsTrue(File.Exists(manifest),
+            $"{manifest} is missing, so nothing records which scene makes which figure");
+
+        Dictionary<string, (string Scene, int Width, int Height)> listed = [];
+        List<string> problems = [];
+
+        foreach (string line in File.ReadAllLines(manifest))
+        {
+            string text = line.Trim();
+
+            if (text.Length == 0 || text.StartsWith('#'))
+                continue;
+
+            string[] parts = text.Split('|');
+
+            if (parts.Length != 4 || !int.TryParse(parts[2], out int width) ||
+                !int.TryParse(parts[3], out int height))
+            {
+                problems.Add($"  {text} -- should read figure|scene|width|height");
+
+                continue;
+            }
+
+            listed[parts[0]] = (parts[1], width, height);
+        }
+
+        foreach ((string figure, (string scene, int width, int height)) in listed)
+        {
+            string picture = Path.Combine(figures, figure);
+
+            if (!File.Exists(picture))
+            {
+                problems.Add($"  {figure} is listed but there is no such picture");
+
+                continue;
+            }
+
+            (int actualWidth, int actualHeight) = SizeOfPng(picture);
+
+            if (actualWidth != width || actualHeight != height)
+            {
+                problems.Add(
+                    $"  {figure} is listed as {width}x{height} but is really " +
+                    $"{actualWidth}x{actualHeight}");
+            }
+
+            if (scene.Length > 0 && !File.Exists(Path.Combine(RepositoryRoot, scene)))
+                problems.Add($"  {figure} names {scene}, which is not there");
+        }
+
+        foreach (string picture in Directory.EnumerateFiles(figures, "*.png"))
+        {
+            string figure = Path.GetFileName(picture);
+
+            if (!listed.ContainsKey(figure))
+            {
+                problems.Add(
+                    $"  {figure} is not listed, so nothing records how to make it again");
+            }
+        }
+
+        Assert.AreEqual(0, problems.Count,
+            "the figures and the file that records how to make them do not agree:\n" +
+            string.Join("\n", problems.Order()));
+    }
+
+    /// <summary>
+    /// This method reads a PNG's width and height straight out of its header, which saves bringing
+    /// an image library into a test that only wants two numbers.  They sit in the IHDR chunk, four
+    /// bytes each, most significant byte first.
+    /// </summary>
+    /// <param name="path">The picture to measure.</param>
+    /// <returns>Its width and height.</returns>
+    private static (int Width, int Height) SizeOfPng(string path)
+    {
+        byte[] header = new byte[24];
+
+        using (FileStream stream = File.OpenRead(path))
+            Assert.AreEqual(24, stream.ReadAtLeast(header, 24, false), $"{path} is not a PNG");
+
+        int Number(int at) => (header[at] << 24) | (header[at + 1] << 16) |
+                              (header[at + 2] << 8) | header[at + 3];
+
+        return (Number(16), Number(20));
+    }
+
     [TestMethod]
     public void TestEveryExampleSceneStillRenders()
     {

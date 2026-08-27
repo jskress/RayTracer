@@ -94,6 +94,17 @@ public class BlobPlanePrimitive : IBlobPrimitive
     }
 
     /// <summary>
+    /// This method reports that a plane's influence has no box, because a slab reaching to the
+    /// horizon has no finite one to give.  A blob holding one is unbounded, exactly as the
+    /// <see cref="Plane"/> surface and an endless <see cref="Cylinder"/> are.
+    /// </summary>
+    /// <returns>Always <c>null</c>.</returns>
+    public BoundingBox GetBoundingBox()
+    {
+        return null;
+    }
+
+    /// <summary>
     /// This method evaluates this primitive's contribution to the field and its gradient at the
     /// given point.
     /// </summary>
