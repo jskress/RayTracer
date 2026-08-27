@@ -1,0 +1,71 @@
+# Which scene makes which figure, and at what size.
+#
+# The figures under `docs/images/figures` are renders, and nothing about them is checked by
+# building or testing the renderer -- so when the renderer's output changes, they go stale
+# silently and the documentation quietly shows pictures of an older ray tracer.  That is not
+# hypothetical: twenty-five of them were found stale at once, twenty-two of those dating from
+# the pattern footprint filtering in PR #121, which changed every scene holding a pattern.
+#
+# This file is what makes them re-renderable.  To bring them all up to date:
+#
+#   while IFS='|' read -r fig scene w h; do
+#       case "$fig" in '#'*|'') continue;; esac
+#       [ -n "$scene" ] && dotnet run -- -i "$scene" -o "docs/images/figures/$fig" -w "$w" -h "$h"
+#   done < docs/images/figures/sources.txt
+#
+# `Tests/TestDocumentation` holds this file to the figures: every figure must be listed, every
+# scene listed must exist, and every size must match the picture it names.  What no test can do
+# is notice that a listed figure has gone stale -- that needs the render itself, so run the loop
+# above whenever a change reaches how anything is drawn.
+#
+# A figure with no scene beside it cannot be made from the repository alone; the reason is
+# written above it.
+#
+# One thing to know before committing the results: re-rendering a figure changes its *bytes* even
+# when it does not change a single pixel, because a scene's `info` block is written into the file.
+# Running the loop therefore leaves every figure looking modified.  Compare the pixels and put back
+# the ones that did not really change, or the commit claims to have redrawn pictures it did not
+# touch -- twelve of thirty-seven, the time this was written.
+#
+# figure|scene|width|height
+adv-extrusion.png|docs/examples/advanced/extrusion.igl|320|240
+adv-generic-shape.png|docs/examples/advanced/generic-shape.igl|320|240
+adv-height-field.png|docs/examples/advanced/height-field.igl|340|250
+adv-isosurface.png|docs/examples/advanced/isosurface.igl|320|240
+adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
+adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260
+adv-sweep.png|docs/examples/advanced/sweep.igl|320|240
+adv-text.png|docs/examples/advanced/text.igl|320|240
+adv-tube.png|docs/examples/advanced/tube.igl|320|240
+blobs.png|docs/examples/surfaces/blobs.igl|600|200
+cam-fisheye.png|gallery/Local/cameras/fisheye.igl|400|300
+camera-fov-100.png|docs/examples/cameras/fov-100.igl|300|225
+camera-fov-30.png|docs/examples/cameras/fov-30.igl|300|225
+camera-fov-60.png|docs/examples/cameras/fov-60.igl|300|225
+context-settings.png|docs/examples/context/settings.igl|400|300
+csg-difference-swapped.png|docs/examples/surfaces/csg-difference-swapped.igl|260|220
+csg-difference.png|docs/examples/surfaces/csg-difference.igl|260|220
+csg-intersection.png|docs/examples/surfaces/csg-intersection.igl|260|220
+csg-union.png|docs/examples/surfaces/csg-union.igl|260|220
+first-scene.png|docs/examples/getting-started/first.igl|400|300
+image-maps.png|docs/examples/pigments/image-maps.igl|640|210
+lib-textures.png|gallery/POVRay/library-textures.igl|400|300
+light-area.png|docs/examples/lights/area-light.igl|400|300
+light-distant.png|docs/examples/lights/distant-light.igl|400|300
+light-point.png|docs/examples/lights/point-light.igl|400|300
+light-spot.png|docs/examples/lights/spot-light.igl|400|300
+material-finishes.png|docs/examples/materials/finishes.igl|640|240
+pattern-combining.png|docs/examples/pigments/combining.igl|660|190
+pattern-maps.png|docs/examples/pigments/maps.igl|600|190
+pattern-nested.png|docs/examples/pigments/nested.igl|600|200
+pattern-sampler.png|docs/examples/pigments/patterns.igl|660|180
+pattern-turbulence.png|docs/examples/pigments/turbulence.igl|600|200
+pattern-waves.png|docs/examples/pigments/waves.igl|640|180
+superellipsoids.png|docs/examples/surfaces/superellipsoids.igl|600|220
+surface-primitives.png|docs/examples/surfaces/primitives.igl|640|300
+surface-shapes.png|docs/examples/surfaces/shapes.igl|620|220
+transform-order.png|docs/examples/transforms/order.igl|420|420
+
+# An icon comes from a FontAwesome zip that has to be installed with `libraries --fa-zip`, so
+# this one cannot be rendered from a fresh clone.
+path-icon.png||400|300
