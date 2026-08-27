@@ -29,8 +29,32 @@ public class DentsPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
+        return Evaluate(point, Footprint.None);
+    }
+
+    /// <summary>
+    /// This method is the same, told how much of the surface the ray covers.
+    /// <para>
+    /// Dents is a single layer of noise cubed, and the average of a cube is not the cube of an average, so once a ray covers
+    /// more than a unit there is nothing left to resolve and the honest answer is what the noise
+    /// comes to on average.  It is eased into rather than switched to, so that no seam shows where
+    /// the change happens.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The derived pattern value.</returns>
+    public override double Evaluate(Point point, Footprint footprint)
+    {
+        double worth = LayeredNoise.WorthSummingAt(1, footprint?.Width ?? 0);
+
+        if (worth <= 0)
+            return NoiseGenerator.AverageCubedValue;
+
         double noise = NoiseGenerator.ForSeed(Seed).Noise(point);
 
-        return noise * noise * noise;
+        double value = noise * noise * noise;
+
+        return worth * value + (1 - worth) * NoiseGenerator.AverageCubedValue;
     }
 }

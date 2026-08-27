@@ -33,9 +33,9 @@ public class Turbulence : LayeredNoise
     /// </summary>
     /// <param name="point">The point a pattern was asked about.</param>
     /// <returns>The point it should be sampled at instead.</returns>
-    public Point Warp(Point point)
+    public Point Warp(Point point, double width = 0)
     {
-        Vector displacement = GenerateVector(point);
+        Vector displacement = GenerateVector(point, width);
 
         return new Point(
             point.X + displacement.X * Amplitude.X,

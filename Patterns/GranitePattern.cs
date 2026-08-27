@@ -29,15 +29,51 @@ public class GranitePattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
+        return Evaluate(point, Footprint.None);
+    }
+
+    /// <summary>
+    /// This method is the same, leaving out the layers finer than the patch a ray covers.
+    /// <para>
+    /// Granite sums its own layers rather than going through <see cref="LayeredNoise"/>, so the
+    /// judgement about which are worth summing has to be made here -- but it is the same judgement,
+    /// borrowed from there, so that every kind of noise fades out the same way.  Its grain is
+    /// sampled at four times the point and doubles five times over, so the finest layer draws things
+    /// about a hundred and twenty-eighth of a unit across: far below what a pixel holds at any
+    /// distance, and the first thing to start shimmering.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The derived pattern value.</returns>
+    public override double Evaluate(Point point, Footprint footprint)
+    {
+        double width = footprint?.Width ?? 0;
         Vector vector1 = new Vector(point) * 4;
         double noise = 0;
         double frequency = 1;
 
         for (int count = 0; count < 6; count++)
         {
-            Vector vector2 = vector1 * frequency;
-            double number = Math.Abs(0.5 - NoiseGenerator.ForSeed(Seed).Noise(
-                new Point(vector2.X, vector2.Y, vector2.Z)));
+            double worth = LayeredNoise.WorthSummingAt(1 / (4 * frequency), width);
+            double number;
+
+            if (worth <= 0)
+            {
+                // Still worth what it is worth on average.  Dropping a layer outright instead took
+                // this pattern *further* from a supersampled truth than no filtering at all -- 6.28
+                // against 3.11 -- because what is rectified about its middle does not average to
+                // nothing.  See NoiseGenerator.AverageRectifiedValue.
+                number = NoiseGenerator.AverageRectifiedValue;
+            }
+            else
+            {
+                Vector vector2 = vector1 * frequency;
+
+                number = Math.Abs(0.5 - NoiseGenerator.ForSeed(Seed).Noise(
+                    new Point(vector2.X, vector2.Y, vector2.Z)));
+                number = worth * number + (1 - worth) * NoiseGenerator.AverageRectifiedValue;
+            }
 
             noise += number / frequency;
             frequency *= 2;

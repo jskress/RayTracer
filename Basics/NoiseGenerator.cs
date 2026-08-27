@@ -13,6 +13,39 @@ namespace RayTracer.Basics;
 /// </summary>
 public class NoiseGenerator
 {
+    /// <summary>
+    /// This is what <see cref="Noise"/> comes to on average, and it is here because fading a layer
+    /// of noise out is not the same as dropping it.
+    /// <para>
+    /// This generator's noise runs in [0, 1] rather than about zero -- see the note on
+    /// <see cref="Noise"/> -- so every layer of a sum carries a standing contribution as well as its
+    /// wobble.  Leaving a layer out because it is too fine to see therefore takes away that
+    /// contribution too, and the whole sum shifts.  Measured on a granite wall, band-limiting that
+    /// faded toward *nought* scored twice as far from a supersampled truth as no filtering at all:
+    /// it swapped a shimmer for a stain.  A layer has to fade toward its own average instead.
+    /// </para>
+    /// <para>
+    /// Measured over 64,000 samples on a lattice deliberately out of step with the noise's own.
+    /// </para>
+    /// </summary>
+    public const double AverageValue = 0.4935;
+
+    /// <summary>
+    /// This is what <c>Noise</c> *cubed* comes to on average, which is the shape dents sums.  It is
+    /// its own number and not the cube of <see cref="AverageValue"/>: cubing is not a linear thing
+    /// to do, so the average of the cube and the cube of the average are different, and using the
+    /// wrong one leaves a stain exactly where the filtering takes hold.
+    /// </summary>
+    public const double AverageCubedValue = 0.1500;
+
+    /// <summary>
+    /// This is what <c>|0.5 - Noise|</c> comes to on average, which is the shape granite and its
+    /// kin sum rather than the noise itself.  Rectifying it that way is what makes it billow, and it
+    /// is also what gives each layer a standing contribution of its own -- a different one, since
+    /// folding the noise about its middle is not a linear thing to do to it.
+    /// </summary>
+    public const double AverageRectifiedValue = 0.1182;
+
     private const int TableSize = 256;
 
     /// <summary>

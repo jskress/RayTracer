@@ -64,6 +64,25 @@ public class BlendedPigment : Pigment
     }
 
     /// <summary>
+    /// This method is the same, carrying the patch down to every pigment in the blend, so that a
+    /// pattern layered inside one is filtered like any other.
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">The patch around it, in this pigment's own space.</param>
+    /// <returns>The appropriate color.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint)
+    {
+        if (footprint is null || footprint.IsEmpty)
+            return GetColorFor(point);
+
+        List<Color> colors = Pigments
+            .Select(p => p.GetTransformedColorFor(point, footprint))
+            .ToList();
+
+        return Layer ? Colors.Layer(colors) : Colors.Average(colors);
+    }
+
+    /// <summary>
     /// This method returns whether the given pigmentation matches this one.
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>

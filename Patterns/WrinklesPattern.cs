@@ -29,9 +29,28 @@ public class WrinklesPattern : Pattern, INoiseConsumer
     /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
+        return Evaluate(point, Footprint.None);
+    }
+
+    /// <summary>
+    /// This method is the same, leaving out the layers finer than the patch a ray covers -- each
+    /// faded toward what the noise comes to on average rather than toward nothing, since this
+    /// noise sits about a half and not about zero.  Wrinkles sums ten layers of its own rather than
+    /// coming through <see cref="LayeredNoise"/>, so the judgement is borrowed from there to keep
+    /// every kind of noise fading out the same way.
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The derived pattern value.</returns>
+    public override double Evaluate(Point point, Footprint footprint)
+    {
+        double width = footprint?.Width ?? 0;
         NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
         Vector vector = new (point);
-        double value = generator.Noise(point);
+        double first = LayeredNoise.WorthSummingAt(1, width);
+        double value = first <= 0
+            ? NoiseGenerator.AverageValue
+            : first * generator.Noise(point) + (1 - first) * NoiseGenerator.AverageValue;
         double lambda = 2;
         double omega = 0.5;
 
@@ -39,9 +58,19 @@ public class WrinklesPattern : Pattern, INoiseConsumer
         // first sample above.
         for (int i = 1; i < 10; i++)
         {
-            Vector work = vector * lambda;
+            double worth = LayeredNoise.WorthSummingAt(1 / lambda, width);
 
-            value += omega * generator.Noise(new Point(work.X, work.Y, work.Z));
+            if (worth <= 0)
+            {
+                value += omega * NoiseGenerator.AverageValue;
+            }
+            else
+            {
+                Vector work = vector * lambda;
+                double noise = generator.Noise(new Point(work.X, work.Y, work.Z));
+
+                value += omega * (worth * noise + (1 - worth) * NoiseGenerator.AverageValue);
+            }
 
             // Each octave doubles the frequency: 2, 4, 8, 16...  This used to add 2 rather
             // than multiply by it, which walked the octaves up arithmetically (2, 4, 6, 8...)

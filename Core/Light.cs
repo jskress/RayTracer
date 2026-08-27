@@ -158,14 +158,17 @@ public abstract class Light : NamedThing
     /// in full view of the light, black, if something opaque stands in the way, and something in
     /// between if what stands in the way lets light through.</param>
     /// <returns>The resulting color.</returns>
+    /// <param name="footprint">How much of the surface the ray that found this point covers there,
+    /// so that a pattern too fine to resolve is averaged rather than sampled at a point.  Nothing,
+    /// for a caller with no footprint to give, which asks the pigment for a point as before.</param>
     public Color ApplyPhong(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        Color lightReaching)
+        Color lightReaching, Footprint footprint = null)
     {
         Material material = surface.Material ?? Material.Default;
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
-        Color pigmentColor = material.Pigment.GetColorFor(surface, point);
+        Color pigmentColor = material.Pigment.GetColorFor(surface, point, footprint);
         Color color = pigmentColor * ColorFor(sample);
         Vector vector = sample.Direction;
 

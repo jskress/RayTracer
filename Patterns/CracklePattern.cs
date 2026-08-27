@@ -35,6 +35,13 @@ public class CracklePattern : Pattern, INoiseConsumer
     /// </summary>
     /// <param name="point">The point from which the pattern value is to be derived.</param>
     /// <returns>The derived pattern value.</returns>
+    /// <summary>
+    /// Crackle scatters one feature point to a unit cell, so a cell is the whole of its scale --
+    /// there are no finer layers under it the way there are in granite.  Once a ray covers more than
+    /// a cell, the cells it covers are averaged over the patch rather than one of them picked.
+    /// </summary>
+    protected override double FinestDetail => 1;
+
     public override double Evaluate(Point point)
     {
         int cellX = (int) Math.Floor(point.X);
