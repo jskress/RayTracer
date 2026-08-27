@@ -236,7 +236,7 @@ poles.  The scene is
 
 #### Blob
 
-A set of spheres and cylinders that melt into one another rather than merely overlapping.
+A set of spheres, cylinders and planes that melt into one another rather than merely overlapping.
 Each contributes a field that falls off with distance, and the surface is drawn where the
 total crosses a `threshold`.
 
@@ -273,6 +273,115 @@ raising it shrinks them apart again.
 
 A negative `strength` works the other way, pressing a dent into its neighbors rather than
 adding to them — see `gallery/Local/surfaces/blob-negative-strength.igl`.
+
+##### A plane component
+
+The third sort of component is a plane, given a point it passes through and the direction it faces.
+Where a sphere's influence is a ball and a cylinder's is a tube, a plane's is a *slab*: an infinite
+sheet of field, thickest at the plane and falling to nothing at its `radius` on either side.
+
+```
+blob {
+    threshold 0.3
+    plane  { at [0, 0.4, 0]  normal [0, 1, 0]  radius 0.55  strength 1 }
+    sphere { center [-1.5, 0.7, 0]  radius 1.1  strength 1 }
+    sphere { center [ 1.5, 0.7, 0]  radius 1.1  strength 1 }
+}
+```
+
+That is a floor with two domes settling into it, joined to it by the same smooth fillet a sphere and
+a cylinder join by. It is what a plane component is *for*: giving a blob a flat side, or merging one
+into a surface, without cutting it — a `difference` would leave a crease exactly where you did not
+want one.
+
+Two things to know about it. The plane is **infinite**, like the `plane` surface, so a blob holding
+one is a solid slab that reaches to the horizon and hides whatever is behind it. And a blob has no
+bounding box, so nothing is lost by that; but nothing prunes it either.
+
+##### Components may be transformed
+
+A component may carry its own transforms, which is what turns a sphere into an ellipsoid and a
+cylinder into an elliptical or leaning bond:
+
+```
+blob {
+    threshold 0.3
+    sphere { radius 1.2  strength 1  scale [1.6, 0.5, 1]  translate [-2, 0.8, 0] }
+    sphere { radius 1.2  strength 1  scale [0.6, 1.5, 1]  translate [ 2, 0.8, 0] }
+}
+```
+
+**The transform moves the whole of the component's space, `center` included**, exactly as a transform
+on a surface does. So the idiom is the one used everywhere else: leave the component at the origin,
+shape it, and then `translate` it where it goes. Writing `center [-2, 0.8, 0]  scale [1.6, 0.5, 1]`
+scales the center too, and the component lands at −3.2 rather than −2.
+
+Any transform will do — `rotate`, `shear` and `matrix` as much as `scale`. What cannot be had this
+way is a *taper*: a cone is not a stretched cylinder, and a component whose radius varies along its
+length would take the field out of the polynomial the solver depends on. A chain of ellipsoids is the
+way to fake one.
+
+##### Components may carry their own pigments
+
+A component may name a `pigment`, and where components overlap their colors mix in the proportion
+each contributes to the field there:
+
+```
+blob {
+    threshold 0.3
+    sphere   { center [-2, 0.6, 0]  radius 1.2  strength 1      pigment Red }
+    sphere   { center [ 2, 0.6, 0]  radius 1.2  strength 1      pigment Blue }
+    cylinder { from [-2, 0.6, 0]  to [2, 0.6, 0]  radius 0.5  strength 1.825  pigment Yellow }
+}
+```
+
+So the color changes over exactly where the shape does: a ball melting into a bond takes the bond's
+color across the same fillet it takes the bond's shape across. On the components above that gradient
+runs about half a unit — tight enough to read as an edge that is soft rather than as a wash.
+
+A component that names no pigment goes on being colored by the blob's own material, so you can give
+one component a color and leave the rest alone. And a component of negative `strength` shapes the
+blob without voting on its color: it has no color to contribute, and letting it weigh in would mean
+mixing colors in negative proportions.
+
+You still need a `material` on the blob for everything a pigment does not cover — `specular`,
+`reflective`, `transparency` and the rest are the blob's, not a component's.
+
+##### Why a joint comes out smooth, and what `radius` and `strength` each do
+
+Each component's field falls off as `strength * (1 - d^2 / R^2)^3`, and the **cube** is load-bearing.
+It puts a triple root at the influence radius, so the field arrives there with its value, its slope
+*and* its curvature all at nothing.
+
+The obvious falloff is the *square* of that bracket, which is what most metaball implementations use
+and what this one used to.  It brings value and slope to nothing but not curvature, and where one
+component's influence ends part way across another, that step in curvature lands on the visible
+surface.  The eye reads a step in curvature as a line, much as it reads a Mach band, so a bond met
+its ball in a visible hip.  No arrangement of `radius` and `strength` removes that — widening the
+bond moves the hip onto the ball, and widening the ball moves it back — because it is the falloff
+and not the arrangement that is discontinuous.  A cubic is the lowest order that can put three zeros
+in one place; a quadratic has only two to give.
+
+It costs a degree.  The field along a ray is a sextic rather than a quartic, so its roots are found
+rather than written down — which measured as no difference worth reporting on the gallery's own blob
+scene.
+
+**`radius` is still doing two jobs**, and it is worth knowing which.  It sets how far a component's
+influence reaches, and it also — with `strength` and the blob's `threshold` — decides how big the
+component comes out.  For a lone component the visible half-size is
+
+```
+d = radius * sqrt(1 - cbrt(threshold / strength))
+```
+
+so to keep a component the same size while giving it a wider reach, raise its `radius` and drop its
+`strength` to
+
+```
+strength = threshold / (1 - (d / radius)^2)^3
+```
+
+That is how to make two components blend over a longer distance without either of them growing.
 
 ### Shapes
 

@@ -50,7 +50,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `apply` | Context: `apply gamma`. | [Context](context.md#gamma) |
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
-| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`. | [Cameras](cameras.md#placing-a-camera) |
+| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point. | [Cameras](cameras.md#placing-a-camera) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
@@ -76,7 +76,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `by` | Follows `bounded by`, `scale ambient by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
-| `center` | Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `center` | Blob sphere: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
@@ -198,7 +198,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
 | `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`, `no center`. | [Surfaces](surfaces.md#no-shadow) |
 | `noise` | Mottling: dims a color by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
-| `normal` | Roughens a surface: a pattern that tilts the normal. | [Materials](materials.md#roughening-the-surface) |
+| `normal` | Roughens a surface: a pattern that tilts the normal; a blob plane: which way it faces. | [Materials](materials.md#roughening-the-surface) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
@@ -220,13 +220,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Medium: `phase rayleigh`, which shape of scattering it follows.  Also shaping: slides a pattern's value before the wave. | [Scene Files](scene-files.md#scattering) |
 | `physical` | `physical sky`: a sky derived from what the air does to sunlight. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
-| `pigment` | Material: what colors the surface. | [Materials](materials.md#the-color) |
+| `pigment` | Material: what colors the surface; also a blob component's own color. | [Materials](materials.md#the-color) |
 | `pipes` | L-system control: draw edges as pipes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pitchDown` | L-system turtle: pitch down. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pitchUp` | L-system turtle: pitch up. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pixel` | Context: the `parallel pixel scanner`. | [Context](context.md#scanners) |
 | `planar` | Pattern/image map: value from a plane; also `planar` image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `plane` | Surface: an infinite flat plane. | [Surfaces](surfaces.md#plane) |
+| `plane` | Surface: an infinite flat plane (also a blob component). | [Surfaces](surfaces.md#plane) |
 | `point` | A `point light`; also `point at` and a `focal point`. | [Lights](lights.md#point-lights) |
 | `points` | Patch/triangle: the control or corner points. | [Surfaces](surfaces.md#patch) |
 | `poly` | Wave shape: a polynomial of a given power. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |

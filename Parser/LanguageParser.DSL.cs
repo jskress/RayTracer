@@ -805,15 +805,25 @@ public partial class LanguageParser
         [
             { center > _expression } |
             { radius > _expression } |
-            { strength > _expression }
-        ] ?? 'Expecting a sphere component property here.'
+            { strength > _expression } |
+            pigment
+        ]
         blobCylinderEntryClause:
         [
             { from > _expression } |
             { to > _expression } |
             { radius > _expression } |
-            { strength > _expression }
-        ] ?? 'Expecting a cylinder component property here.'
+            { strength > _expression } |
+            pigment
+        ]
+        blobPlaneEntryClause:
+        [
+            { at > _expression } |
+            { normal > _expression } |
+            { radius > _expression } |
+            { strength > _expression } |
+            pigment
+        ]
         startBlobClause:
         {
             blob > [
@@ -826,6 +836,7 @@ public partial class LanguageParser
             { threshold > _expression } |
             { sphere > openBrace ?? 'Expecting an open brace after "sphere" here.' } |
             { cylinder > openBrace ?? 'Expecting an open brace after "cylinder" here.' } |
+            { plane > openBrace ?? 'Expecting an open brace after "plane" here.' } |
             surfaceEntryClause
         ]
 

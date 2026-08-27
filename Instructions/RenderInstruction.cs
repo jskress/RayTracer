@@ -199,6 +199,9 @@ public class RenderInstruction : Instruction
             if (scaled is not null && scaled.Add(surface.Material))
                 surface.Material.Ambient *= context.AmbientScale;
 
+            // Now that the surface certainly has a material, it gets its say over the pigment on it.
+            surface.MaterialIsSettled();
+
             Pigment pigment = surface.Material.Pigment;
 
             pigment.Seed ??= surface.Seed;

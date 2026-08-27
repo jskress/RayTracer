@@ -6,6 +6,11 @@
 // across its depth, instead of a flat, symmetric silhouette.  The light is placed off to the
 // side (rather than near the camera) so it rakes across the crater instead of flattening
 // its shadows, and the carving component's strength is bumped up for a more visible dent.
+//
+// That strength was -1.6 while a component's field fell off as the *square* of its bracket.  The
+// falloff is cubed now, so every component reaches less far for the same numbers and the same -1.6
+// left barely a dimple.  -3.2 puts the crater back where it was.  Nothing about the scene's
+// intention changed; it is the same dent asked for in the units the blob now speaks.
 
 context {
     parallel pixel scanner
@@ -51,7 +56,7 @@ blob {
     sphere {
         center [0, 0.95, 0]
         radius 1.1
-        strength -1.6
+        strength -3.2
     }
     material {
         pigment [0.85, 0.35, 0.25]

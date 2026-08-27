@@ -138,7 +138,7 @@ public class Intersection : IComparable<Intersection>
             Inside = !Inside;
         }
 
-        Vector adjustment = Normal * DoubleExtensions.Epsilon;
+        Vector adjustment = Normal * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale);
 
         OverPoint = Point + adjustment;
         UnderPoint = Point - adjustment;

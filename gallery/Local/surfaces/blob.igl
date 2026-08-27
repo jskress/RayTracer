@@ -29,9 +29,18 @@ plane {
     }
 }
 
-// A little "molecule": three sphere components at the corners of a triangle, joined by
-// three cylinder components (the "bonds"), all sharing strength/radius so they blend into
-// one smooth, seamless surface.
+// A little "molecule": three sphere components at the corners of a triangle, joined by three
+// cylinder components (the "bonds").
+//
+// The bonds carry a strength of 1.825 where the balls carry 1, and the odd-looking number is the
+// bonds being put back the width they used to be.  A component's field falls off as the *cube* of
+// its bracket, which reaches less far than the square it was once written as, so the same
+// `radius 0.45  strength 1` came out at 0.259 across where it had been 0.303.  Solving
+// `strength = threshold / (1 - (d/radius)^2)^3` for the width it had gives 1.8257.
+//
+// Nothing about the joints depends on this.  They are smooth because of the cubed falloff, which
+// brings a component's value, slope *and* curvature to nothing together at its influence radius --
+// see the note on blobs in docs/surfaces.md.  This number is only about how thick a bond looks.
 blob {
     threshold 0.3
     sphere {
@@ -53,19 +62,19 @@ blob {
         from [-1.6, 0, -0.9]
         to [1.6, 0, -0.9]
         radius 0.45
-        strength 1
+        strength 1.825
     }
     cylinder {
         from [1.6, 0, -0.9]
         to [0, 0, 1.8]
         radius 0.45
-        strength 1
+        strength 1.825
     }
     cylinder {
         from [0, 0, 1.8]
         to [-1.6, 0, -0.9]
         radius 0.45
-        strength 1
+        strength 1.825
     }
     material {
         pigment [0.85, 0.35, 0.25]

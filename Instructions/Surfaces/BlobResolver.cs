@@ -43,7 +43,7 @@ public class BlobResolver : SurfaceResolver<Blob>, IValidatable
     public string Validate()
     {
         return ComponentResolvers is null || ComponentResolvers.Count == 0
-            ? "A blob needs at least one sphere or cylinder component."
+            ? "A blob needs at least one sphere, cylinder or plane component."
             : null;
     }
 
