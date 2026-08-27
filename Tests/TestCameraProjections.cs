@@ -148,4 +148,131 @@ public class TestCameraProjections
         Assert.IsTrue(first.Origin.Matches(other.Origin), "an aperture should not spread the origin");
         Assert.IsTrue(first.Direction.Matches(other.Direction), "nor bend the ray");
     }
+
+    /// <summary>
+    /// **Every projection must say how fast its rays spread, and none did but two.**  A ray carries
+    /// how much of the world one pixel covers so that a pattern can be filtered for that patch
+    /// rather than sampled at a point; a ray that says nothing is point-sampled, and a brick wall
+    /// seen through such a camera beats into arcs the way it used to through all of them.
+    /// <para>
+    /// This is written over every projection there is, found by asking the assembly rather than by
+    /// listing them, so that a projection added later cannot quietly join without one.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryProjectionSaysHowFastItsRaysSpread()
+    {
+        RenderContext context = Context();
+
+        foreach (PixelToRayConverter converter in EveryProjection(context))
+        {
+            Ray ray = converter.GetRayForPixel(Middle, Middle);
+            string name = converter.GetType().Name;
+
+            // Orthographic rays run parallel, so they never widen -- what they carry instead is the
+            // width they have all along.
+            Assert.IsTrue(ray.Spread > 0 || ray.BaseRadius > 0,
+                $"{name} makes rays that cover nothing, so every pattern it sees is point sampled");
+            Assert.IsTrue(ray.RadiusAt(10) > 0, $"{name} covers nothing ten units out");
+        }
+    }
+
+    /// <summary>
+    /// **The spread must match the sky a pixel really covers**, and this measures that rather than
+    /// trusting the arithmetic: it takes the ray for a pixel and the rays for its neighbours to the
+    /// right and below, and asks what angle actually lies between them.
+    /// <para>
+    /// The rule is one-sided, deliberately.  A spread narrower than the truth leaves detail
+    /// unfiltered and the aliasing it was built to stop comes back, so falling short is a fault.
+    /// Running over merely blurs a little, which is the same trade the footprint itself makes in
+    /// taking the longer of its two edges, so it is allowed -- within reason.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestTheSpreadMatchesWhatAPixelActuallyCovers()
+    {
+        RenderContext context = Context();
+
+        foreach (PixelToRayConverter converter in EveryProjection(context))
+        {
+            string name = converter.GetType().Name;
+
+            // An orthographic camera's rays run parallel; there is no angle between neighbours to
+            // measure, and its width is carried as a base radius instead.
+            if (converter is OrthographicRayConverter)
+                continue;
+
+            int measured = 0;
+
+            for (int y = 10; y < Size - 10; y += 17)
+            {
+                for (int x = 10; x < Size - 10; x += 17)
+                {
+                    Ray here = converter.GetRayForPixel(x, y);
+                    double across = AngleBetween(here, converter.GetRayForPixel(x + 1, y));
+                    double down = AngleBetween(here, converter.GetRayForPixel(x, y + 1));
+                    double covered = Math.Max(across, down);
+
+                    // A fisheye's frame has corners outside its circle, and every pixel out there is
+                    // sent the same way to fetch the background.  Neighbours that point identically
+                    // have no angle between them to measure against -- and right at the rim, where
+                    // one neighbour is inside the circle and the next is not, the "angle between
+                    // them" is the whole width of that seam rather than anything a pixel covers.
+                    //
+                    // Half a radian is the cutoff: the widest of these projections turns a ray by
+                    // about 0.03 of one per pixel at this size, so nothing near half can be a
+                    // footprint, and nothing a footprint should be is thrown away by it.
+                    if (covered == 0 || covered > 0.5)
+                        continue;
+
+                    measured++;
+
+                    Assert.IsTrue(here.Spread >= covered * 0.999,
+                        $"{name} at pixel ({x}, {y}) reports a spread of {here.Spread:G6} where the " +
+                        $"next pixel along is {covered:G6} away, so it is filtering less than the " +
+                        "pixel actually covers and the aliasing comes back");
+                    Assert.IsTrue(here.Spread <= covered * 4,
+                        $"{name} at pixel ({x}, {y}) reports a spread of {here.Spread:G6} against a " +
+                        $"real {covered:G6}, which blurs far more than the pixel warrants");
+                }
+            }
+
+            Assert.IsTrue(measured > 30,
+                $"only {measured} pixels of {name} had neighbours to measure against, which is too " +
+                "few to have tested it");
+        }
+    }
+
+    /// <summary>
+    /// This method returns the angle between two rays' directions.
+    /// </summary>
+    private static double AngleBetween(Ray first, Ray second)
+    {
+        return Math.Acos(Math.Clamp(first.Direction.Dot(second.Direction), -1, 1));
+    }
+
+    /// <summary>
+    /// This method returns one of every projection there is, found by asking the assembly for every
+    /// converter rather than by naming them, so that one added later is covered without anyone
+    /// remembering to add it here.
+    /// </summary>
+    private static IEnumerable<PixelToRayConverter> EveryProjection(RenderContext context)
+    {
+        List<Type> kinds = typeof(PixelToRayConverter).Assembly
+            .GetTypes()
+            .Where(type => type.IsSubclassOf(typeof(PixelToRayConverter)) && !type.IsAbstract)
+            .OrderBy(type => type.Name)
+            .ToList();
+
+        Assert.IsTrue(kinds.Count >= 6,
+            $"only {kinds.Count} projections were found, so this test is not looking where it thinks");
+
+        foreach (Type kind in kinds)
+        {
+            yield return kind == typeof(SphericalRayConverter)
+                ? new SphericalRayConverter(context, Matrix.Identity, Pinhole())
+                : (PixelToRayConverter) Activator.CreateInstance(
+                    kind, context, Math.PI / 2, Matrix.Identity, Pinhole());
+        }
+    }
 }

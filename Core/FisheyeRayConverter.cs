@@ -17,12 +17,24 @@ namespace RayTracer.Core;
 public class FisheyeRayConverter : PixelToRayConverter
 {
     private readonly double _halfFieldOfView;
+    private readonly double _spread;
 
     public FisheyeRayConverter(
         RenderContext context, double fieldOfView, Matrix transform, CameraSampler sampler)
         : base(context, transform, sampler)
     {
         _halfFieldOfView = fieldOfView / 2;
+
+        // How much of the sky one pixel covers, which is what lets a pattern be filtered for the
+        // patch it really answers for rather than sampled at a point.
+        //
+        // The circle is fitted to the *shorter* side, so a pixel is the same width in the frame's own
+        // coordinates whichever way it is measured, and the reach from the middle of the circle out
+        // to its edge is half the field of view.  So a pixel subtends that fraction of it.  The ring
+        // direction is never wider than the radial one -- moving sideways at a distance r from the
+        // middle turns the ray by sin(theta)/r, and sin(theta)/theta is never above one -- so the
+        // radial figure serves for both, and errs toward blurring rather than aliasing.
+        _spread = _halfFieldOfView * 2.0 / Math.Min(Width, Height);
     }
 
     /// <summary>
@@ -47,7 +59,7 @@ public class FisheyeRayConverter : PixelToRayConverter
         {
             Vector away = (InverseTransform * new Point(0, 0, 1) - origin).Unit;
 
-            return new Ray(origin, away, sampleIndex);
+            return new Ray(origin, away, sampleIndex, _spread);
         }
 
         // How far a pixel lies from the middle is how far its ray tips away from straight ahead;
@@ -60,6 +72,6 @@ public class FisheyeRayConverter : PixelToRayConverter
 
         Vector direction = (InverseTransform * new Point(dirX, dirY, dirZ) - origin).Unit;
 
-        return new Ray(origin, direction, sampleIndex);
+        return new Ray(origin, direction, sampleIndex, _spread);
     }
 }

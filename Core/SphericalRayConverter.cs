@@ -16,8 +16,20 @@ namespace RayTracer.Core;
 /// </summary>
 public class SphericalRayConverter : PixelToRayConverter
 {
+    private readonly double _acrossTheWidth;
+    private readonly double _upTheHeight;
+
     public SphericalRayConverter(RenderContext context, Matrix transform, CameraSampler sampler)
-        : base(context, transform, sampler) {}
+        : base(context, transform, sampler)
+    {
+        // How much of the sky one pixel covers.  A whole turn is spread across the width and a half
+        // turn up the height, so unless the picture is twice as wide as it is high those two are not
+        // the same, and the wider of them is the one to filter by.  The width figure is also the one
+        // that varies: a pixel near a pole covers far less longitude than one at the equator, by the
+        // cosine of the latitude, which is why it is finished off per pixel below.
+        _acrossTheWidth = 2.0 * Math.PI / Width;
+        _upTheHeight = Math.PI / Height;
+    }
 
     /// <summary>
     /// This method is used to generate a ray for the pixel at the given location.
@@ -41,6 +53,8 @@ public class SphericalRayConverter : PixelToRayConverter
         Point origin = InverseTransform * Point.Zero;
         Vector direction = (InverseTransform * new Point(dirX, dirY, dirZ) - origin).Unit;
 
-        return new Ray(origin, direction, sampleIndex);
+        return new Ray(
+            origin, direction, sampleIndex,
+            Math.Max(_acrossTheWidth * Math.Abs(cosLatitude), _upTheHeight));
     }
 }
