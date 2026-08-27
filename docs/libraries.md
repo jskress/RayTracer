@@ -600,52 +600,68 @@ phase, so two bodies of water in one scene are not the same water twice.
 
 ##### What makes a surface into water
 
-**The waves are really there.**  This is an [isosurface](advanced-surfaces.md#isosurface), so the
-silhouette against the horizon is as rough as the middle of the picture, the shadows are wave-shaped,
-and what the water refracts is bent by the slope it actually has.  A
+**The waves are really there.**  This is a [`swells`](surfaces.md#swells) surface, so the silhouette
+against the horizon is as rough as the middle of the picture, the shadows are wave-shaped, and what the
+water refracts is bent by the slope it actually has.  A
 [`normal` block](materials.md#roughening-the-surface) on a flat plane gets a similar look head-on for
 far less work, and gives itself away at exactly the place a seascape is looking: at the horizon a flat
 plane is still a straight line.
 
-**It wants anti-aliasing, and that is the bill for the waves being real.**  Real detail at a distance
-aliases.  At one sample a pixel, water going away from the camera turns to gray mush near the horizon,
-because each pixel is averaging some normals that mirror the sky and some that look down into the
-dark, and the average of those is neither.  Measured on a horizon-filling ocean at 400×300: **1.5
-seconds with a mush band, 31 seconds at `-a adaptive:3` and clean.**  The same bill comes due for any
-surface with fine detail in it.
+**The shape is water's own, and it is no longer tuned.**  Each piece of water travels in a *circle* as
+a wave passes, so it bunches up under a crest and spreads out under a trough.  The crests draw up and
+the troughs flatten out because of that, and the crests lean into the direction they travel for the
+same reason — one cause, not three effects to be dialled in separately.
+
+This library used to say all three by hand: a `crest` for height, a `sharpness` that raised a rectified
+sine to a power, and a `lean` that sheared the field sideways by its own height.  Each had to be found
+by eye, and the sharpening had a flaw that could not be tuned out — **a number near nought raised to a
+power is much nearer nought over a broad stretch**, so sharpening a crest necessarily flattened the
+trough with it, and at `rough` the troughs came out as dead-flat leaf-shaped patches that read as a
+fault in the renderer.  Mixing two thirds sharpened with one third plain held that at bay.  None of it
+is needed now.
+
+**One number says how rough the water is**: `steepness`, the height of a wave against how far apart its
+crests are.  Real waves break at about 0.45; a trochoid closes to a cusp at 1.0, steeper than the sea
+ever gets.  The five trains a body of water carries are set from it, falling from the swell's own
+steepness to under a third of it — a real sea is closer to *equally* steep at every scale, and the
+first attempt here let the ripples fall away as fast as their length, which left a sea of bare rolling
+swell far smoother than the sine water it replaced.
+
+**The budget is what tells this apart from a sum of sines.**  The trains must add to less than one, or
+the water would fold over itself and there would no longer be a single height at a place.  The sine
+water this replaces added to **1.068** — steeper than water can actually be, which a sine allows only
+because it has no breaking point to run into.  These add to 0.775 at their roughest, and no further:
+the surface gets dearer to draw the nearer the total comes to one, since what it prunes with loosens
+as `1 / (1 - steepness)`.
+
+**It is faster than the sines were**, which is not what anyone would guess of a surface that has to
+solve for its own shape.  A field written as a sum of sines is bounded by walking its expression tree;
+a surface that knows what it is can say where the water could possibly reach in closed form.  The same
+scene at 400×300:
+
+| state | as sines | as swells |
+|---|---|---|
+| `glassy` | 1.48s | **0.70s** |
+| `calm` | 2.24s | **1.08s** |
+| `breezy` | 2.79s | **1.47s** |
+| `choppy` | 3.83s | **2.18s** |
+| `rough` | 3.89s | **3.07s** |
+
+**It still wants anti-aliasing, and that is the bill for the waves being real.**  Real detail at a
+distance aliases.  At one sample a pixel, water going away from the camera turns to gray mush near the
+horizon, because each pixel is averaging some normals that mirror the sky and some that look down into
+the dark, and the average of those is neither.  On the `choppy` scene above at `-a adaptive:3`: **93
+seconds against 2.18**.  That multiple is worse than the sine water's, because a truer crest is sharper
+and gives the sampler more to find — but the wall-clock is better all the same, since the same setting
+cost the sines **135 seconds**.
 
 **Give it something to reflect.**  Water is mostly a mirror, and a mirror in an empty room shows an
 empty room — a flat background color makes water look like paint whatever else is right about it.  A
 gradient will do; one of [the skies](#daylight) does it better.
 
-**The crests are sharpened, and the sharpening had to be pulled back.**  A plain sine is as round on
-top as underneath and reads as a swimming pool however tall it is made; real swell is peaked above and
-broad below, because the water at a crest is moving forward and bunches there.  Raising a rectified
-sine to a power imitates that — but it flattens the trough while it sharpens the crest, necessarily,
-since a number near nought raised to a power is much nearer nought over a broad stretch either side of
-the bottom.  Pure sharpening therefore paid for its ridges with dead-flat plateaus lying in the
-troughs, which at `rough` looked like smooth leaf-shaped patches and read as a fault in the renderer.
-Each swell term is now about two thirds sharpened and one third plain, which keeps the crests drawn up
-and gives the troughs their curve back.
-
-**The crests lean, and getting there needed no new machinery.**  A true trochoid displaces the
-surface *sideways* as well as up, so each crest tilts in the direction it travels: steep in front,
-broad behind.  A height written as `y - f(x, z)` looks unable to do that, since every point is
-directly above where it started — but an implicit surface need not be a graph.  Shear the field's own
-horizontal argument by its height, `f(x - lean·y, z)`, and it leans.  It is the same marched
-isosurface as before.
-
-Measured on a single train of crest 1.6 and wavelength 20, by solving the implicit equation directly:
-the crest height stays at **1.6000 exactly** while the two faces diverge, the ratio of back slope to
-front going 1.00, 0.68, 0.43 as the shear rises.  That is a trochoid's signature — asymmetric, and no
-shorter for it.  Each state carries its own lean, given as a fraction of a wavelength so it means the
-same thing at every scale.  It costs about 1.6× to march.
-
-**What a lean is not.**  A wave that actually *breaks* — a crest folding over into a tube — is not
-this.  Push the shear past about a third of a wavelength and the surface stops leaning and starts
-folding into overlapping sheets, which is a mess rather than a breaker.  That wants a different
-surface: a Gerstner wave proper, whose parameterisation inverts by Newton in four to six steps, giving
-an implicit surface with an exact silhouette and no tessellation.  Worked out, not built.
+**What this still will not do.**  A wave that actually *breaks* — a crest folding over into a tube — is
+past where this can go.  Turning the shape round to ask what stands at a place needs there to be one
+answer, and past a steepness of one there is more than one.  The cusp at 1.0 is the nearest it comes.
 
 #### Outdoor Lights
 
