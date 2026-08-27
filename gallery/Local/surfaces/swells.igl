@@ -1,0 +1,86 @@
+// Water where the shape of the waves is the point.
+//
+// The camera sits about a foot above the surface, which is where a trochoid shows what it is: the
+// crests come up to points against the sky, the troughs run long and flat between them, and every
+// crest leans the way it is travelling.  None of that is dialled in.  Each piece of water travels in
+// a circle as a wave passes, so it bunches under a crest and spreads under a trough, and the shape
+// falls out of the motion.  A sine is as round on top as underneath and reads as corrugated iron
+// however tall it is made.
+//
+// Five trains, at a steepness that falls away as their crests draw closer together -- but not too
+// fast.  A real sea is nearly as steep at the small scales as at the large, and the first version of
+// the water library got that wrong: ripples too flat left nothing but rolling swell.
+//
+// The steepnesses here add to 0.72.  At one a trochoid closes to a cusp, which is the wave breaking
+// and the point past which there is no longer a single height above a place -- so that is the ceiling
+// for this surface, and the cost of drawing it climbs as the total approaches it.  Real waves break
+// at about 0.45, so nothing here is near the edge.
+//
+// The buoys are for scale and for something to be reflected: water is mostly a mirror, and a mirror
+// with nothing to show reads as paint.
+//
+// **Rendered with `-a adaptive:1:0.5`**, and the committed picture is that one.  Real waves are real
+// detail and detail at a distance aliases, so the middle distance comes out grainy at one sample a
+// pixel.  It costs about six times the plain render -- twenty seconds against two minutes -- and
+// nothing in the repository would otherwise say so, which is why it is said here.
+import 'water' { SeaWater }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Swells'
+        author 'J. Stephen Kress'
+        description 'Trochoidal waves seen from water level, where their shape shows.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.0, -18]
+    look at [-1.2, 0.98, 42]
+    field of view 44
+}
+
+// Low and to the side, so the crests catch the light on one face and fall away on the other.
+point light {
+    location [-26, 11, 150]
+    color [2.3, 2.14, 1.82]
+}
+
+// The sky is what the water has to mirror, so it is given something to be: a warm band low down
+// where the sun is, cooling and deepening overhead.  A flat colour here makes water look like paint,
+// whatever else is right about it.
+background linear Y gradient {
+    [0.0, [0.99, 0.90, 0.74],
+     0.16, [0.94, 0.89, 0.80],
+     0.34, [0.74, 0.82, 0.92],
+     0.66, [0.40, 0.60, 0.90],
+     1.0, [0.13, 0.31, 0.74]]
+}
+
+swells {
+    width 9000  depth 9000
+
+    wave { steepness 0.24   wavelength 17     direction [0.94, 0, 0.34]   phase 1.0 }
+    wave { steepness 0.18   wavelength 11.7   direction [-0.38, 0, 0.93]  phase 2.3 }
+    wave { steepness 0.145  wavelength 3.4    direction [0.72, 0, -0.69]  phase 3.7 }
+    wave { steepness 0.105  wavelength 1.6    direction [0.28, 0, 0.96]   phase 5.1 }
+    wave { steepness 0.07   wavelength 0.88   direction [-0.86, 0, -0.51] phase 7.3 }
+
+    material SeaWater
+    translate Z 4200
+}
+
+Buoy = material {
+    pigment [0.72, 0.18, 0.12]
+    specular 0.6
+    shininess 90
+    reflective 0.06
+}
+
+cylinder { min Y 0  max Y 1  material Buoy  scale [0.34, 2.4, 0.34]  translate [5.2, -1.1, 26] }
+cylinder { min Y 0  max Y 1  material Buoy  scale [0.26, 2.2, 0.26]  translate [-8.5, -1.1, 46] }
+cylinder { min Y 0  max Y 1  material Buoy  scale [0.2, 2.0, 0.2]  translate [11, -1.1, 62] }
