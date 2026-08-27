@@ -184,9 +184,37 @@ public readonly struct FieldRange
     /// </summary>
     public static FieldRange operator *(FieldRange left, FieldRange right)
     {
+        // **Multiplying by a plain number is most of what a field does**, since every constant it
+        // holds is an exact range, and that case wants two products and a possible swap rather than
+        // four products, four checks for nothing-at-all and six comparisons.  A marcher asks for
+        // millions of bounds a frame and each walks the whole tree, so the difference tells.
+        if (right.IsExact)
+            return Scaled(left, right.Low);
+
+        if (left.IsExact)
+            return Scaled(right, left.Low);
+
         return Covering(
             left.Low * right.Low, left.Low * right.High,
             left.High * right.Low, left.High * right.High);
+    }
+
+    /// <summary>
+    /// This method multiplies a range by a plain number.  A negative one turns the range over, which
+    /// is the whole of what has to be thought about here.
+    /// </summary>
+    /// <param name="range">The range to scale.</param>
+    /// <param name="by">The number to scale it by.</param>
+    /// <returns>The scaled range.</returns>
+    private static FieldRange Scaled(FieldRange range, double by)
+    {
+        double low = range.Low * by;
+        double high = range.High * by;
+
+        if (double.IsNaN(low) || double.IsNaN(high))
+            return Anywhere;
+
+        return low <= high ? new FieldRange(low, high) : new FieldRange(high, low);
     }
 
     /// <summary>
