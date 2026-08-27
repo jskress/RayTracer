@@ -69,9 +69,72 @@ public class PigmentSet
     /// <returns>The appropriate color for the value.</returns>
     public Color GetColorFor(Point point, int index)
     {
+        return GetColorFor(point, index, null);
+    }
+
+    /// <summary>
+    /// This method is the same, carrying the patch down to whichever pigment is chosen.
+    /// <para>
+    /// It matters because a pigment in a set may be a pattern in its own right -- a brick whose
+    /// brick is granite -- and without this the filtering would stop one level down, leaving the
+    /// inner pattern to shimmer inside a wall that had been perfectly settled around it.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="index">The index of the desired color.</param>
+    /// <param name="footprint">The patch around the point.</param>
+    /// <returns>The appropriate color for the value.</returns>
+    public Color GetColorFor(Point point, int index, Footprint footprint)
+    {
         (_, Pigment pigment) = _pigments.GetByIndex(index);
 
-        return pigment.GetTransformedColorFor(point);
+        return footprint is null || footprint.IsEmpty
+            ? pigment.GetTransformedColorFor(point)
+            : pigment.GetTransformedColorFor(point, footprint);
+    }
+
+    /// <summary>
+    /// This method resolves an index that may fall *between* two of the discrete pigments, mixing
+    /// them in that proportion.
+    /// <para>
+    /// A lattice pattern normally answers with a whole number -- brick, or mortar -- and when it
+    /// does, this hands back exactly what asking for that index would have handed back, down to the
+    /// arithmetic.  It answers with a fraction only when it has been asked about a patch of surface
+    /// wide enough to hold some of each, and then the fraction is how much of the patch is the
+    /// second one.  Which is the honest color for that patch: a wall too far off to show its courses
+    /// is not brick and it is not mortar, it is the two of them mixed in the proportion they cover.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="value">The index, which may lie between two pigments.</param>
+    /// <returns>The appropriate color.</returns>
+    public Color GetBlendedColorFor(Point point, double value)
+    {
+        return GetBlendedColorFor(point, value, null);
+    }
+
+    /// <summary>
+    /// This method is the same, carrying the patch down to the pigments it mixes.
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="value">The index, which may lie between two pigments.</param>
+    /// <param name="footprint">The patch around the point.</param>
+    /// <returns>The appropriate color.</returns>
+    public Color GetBlendedColorFor(Point point, double value, Footprint footprint)
+    {
+        int index = (int) value;
+        double fraction = value - index;
+
+        // The whole-number case is the one nearly every ray takes, and it must come out bit for bit
+        // as it did before any of this: no second lookup, no arithmetic on the color.
+        if (fraction <= 0)
+            return GetColorFor(point, index, footprint);
+
+        Color firstColor = GetColorFor(point, index, footprint);
+        Color secondColor = GetColorFor(point, index + 1, footprint);
+        double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
+
+        return (firstColor + (secondColor - firstColor) * fraction).WithAlpha(alpha);
     }
 
     /// <summary>
@@ -81,6 +144,18 @@ public class PigmentSet
     /// <param name="value">The value to get the color for.</param>
     /// <returns>The appropriate color for the value.</returns>
     public Color GetColorFor(Point point, double value)
+    {
+        return GetColorFor(point, value, null);
+    }
+
+    /// <summary>
+    /// This method is the same, carrying the patch down to the pigments it interpolates between.
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="value">The value to get the color for.</param>
+    /// <param name="footprint">The patch around the point.</param>
+    /// <returns>The appropriate color for the value.</returns>
+    public Color GetColorFor(Point point, double value, Footprint footprint)
     {
         // If we have no pigments, just go with black.
         if (_pigments.IsEmpty)
@@ -92,7 +167,9 @@ public class PigmentSet
         // belonging to a different stop entirely.
         int index = _pigments.GetIndexByValue(value);
         (double start, Pigment firstPigment) = _pigments.GetByIndex(index);
-        Color firstColor = firstPigment.GetTransformedColorFor(point);
+        Color firstColor = footprint is null || footprint.IsEmpty
+            ? firstPigment.GetTransformedColorFor(point)
+            : firstPigment.GetTransformedColorFor(point, footprint);
 
         // If we're banded or on the last entry, then we have our color.
         if (Banded || index >= _pigments.Count - 1)
@@ -103,7 +180,9 @@ public class PigmentSet
         // The break values live in [0, 1), so the value has to be brought into that same
         // interval before it's measured against them.
         double fraction = (Spectrum<Pigment>.Normalize(value) - start) / (end - start);
-        Color secondColor = secondPigment.GetTransformedColorFor(point);
+        Color secondColor = footprint is null || footprint.IsEmpty
+            ? secondPigment.GetTransformedColorFor(point)
+            : secondPigment.GetTransformedColorFor(point, footprint);
         double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 
         return (firstColor + (secondColor - firstColor) * fraction).WithAlpha(alpha);

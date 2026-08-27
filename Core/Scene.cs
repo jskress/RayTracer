@@ -820,7 +820,8 @@ public class Scene : NamedThing, IDisposable
             return light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, GetLightReaching(
-                    intersection.OverPoint, only.Direction, only.Distance, intersection.TimeIndex));
+                    intersection.OverPoint, only.Direction, only.Distance, intersection.TimeIndex),
+                intersection.Footprint);
         }
 
         Color sum = Colors.Black;
@@ -833,7 +834,8 @@ public class Scene : NamedThing, IDisposable
             sum += light.ApplyPhong(
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, GetLightReaching(
-                    intersection.OverPoint, sample.Direction, sample.Distance, intersection.TimeIndex));
+                    intersection.OverPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
+                intersection.Footprint);
         }
 
         return sum * (1.0 / count);
@@ -1014,8 +1016,13 @@ public class Scene : NamedThing, IDisposable
         if (remaining < 1 || reflective == 0)
             return Colors.Black;
 
+        // The cone goes on widening past the mirror, so what is seen in a reflection is filtered for
+        // how far the light really travelled rather than for how far it is from the glass.  A curved
+        // mirror also focuses or spreads the cone, which this does not attempt -- that wants full ray
+        // differentials, and a flat mirror is the case that turns up.
         Ray reflectedRay = new (
-            intersection.OverPoint, intersection.Reflect, intersection.TimeIndex);
+            intersection.OverPoint, intersection.Reflect, intersection.TimeIndex,
+            intersection.ConeSpread, intersection.ConeTravelled);
         Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
 
         // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
@@ -1068,7 +1075,8 @@ public class Scene : NamedThing, IDisposable
                            intersection.Eye * ratio;
         Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
 
-        Ray refractedRay = new (point, direction, intersection.TimeIndex);
+        Ray refractedRay = new (point, direction, intersection.TimeIndex,
+            intersection.ConeSpread, intersection.ConeTravelled);
         Color color = GetColorFor(refractedRay, remaining - 1) * transparency;
 
         // Transparency says how much light gets through; the filter says what color it comes out.

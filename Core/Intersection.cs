@@ -80,6 +80,25 @@ public class Intersection : IComparable<Intersection>
     /// <summary>
     /// This property exposes the reflectance for this intersection.
     /// </summary>
+    /// <summary>
+    /// This property holds how fast the ray that found this point was widening, so that anything
+    /// born of it can carry on at the same rate.
+    /// </summary>
+    public double ConeSpread { get; private set; }
+
+    /// <summary>
+    /// This property holds how far the light had come by the time it got here, which is where a
+    /// reflected or refracted ray starts counting from.
+    /// </summary>
+    public double ConeTravelled { get; private set; }
+
+    /// <summary>
+    /// This property holds how much of the surface this ray covers where it lands -- see
+    /// <see cref="RayTracer.Basics.Footprint"/>.  A pattern is asked for the colour of this patch
+    /// rather than of the one point at its middle.
+    /// </summary>
+    public Footprint Footprint { get; private set; } = Footprint.None;
+
     public double Reflectance => GetReflectance();
 
     public Intersection(Surface surface, double distance)
@@ -126,6 +145,18 @@ public class Intersection : IComparable<Intersection>
         Reflect = ray.Direction.Reflect(Normal);
 
         (N1, N2) = intersections.FindIndicesOfRefraction(this, environmentIndexOfRefraction);
+
+        // How much of the surface this ray is answerable for.  It is worked out here, where the
+        // distance and the normal are both to hand, and it is what lets a pattern answer for a patch
+        // instead of for a point.  A ray that was never told it spreads gives a footprint of nothing,
+        // which is every ray that existed before this did.
+        Footprint = Footprint.For(ray.RadiusAt(Distance), ray.Direction, Normal);
+
+        // Kept so that a ray born here -- off a mirror, or through glass -- can go on widening from
+        // the width this one had reached, rather than starting again from nothing.  A wall seen in a
+        // mirror across a room is as far from the eye as the light has travelled to reach it.
+        ConeSpread = ray.Spread;
+        ConeTravelled = ray.Travelled + Distance;
 
         if (Inside)
             Normal = -Normal;

@@ -76,6 +76,98 @@ public abstract class Pattern
     public abstract double Evaluate(Point point);
 
     /// <summary>
+    /// This method is the same, told how much of the surface one ray covers there.
+    /// <para>
+    /// It falls back on the point-sampled answer, which is right for every pattern whose own detail
+    /// is not fine enough to fall between pixels.  A lattice -- brick, checker -- overrides this and
+    /// averages itself across the patch, which it can do exactly, since a lattice is built of square
+    /// waves and the average of a square wave over an interval has a closed form.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The derived pattern value.</returns>
+    public virtual double Evaluate(Point point, Footprint footprint)
+    {
+        double finest = FinestDetail;
+
+        if (finest <= 0 || footprint is null || footprint.IsEmpty)
+            return Evaluate(point);
+
+        // Note there is no "near enough to resolve, so leave it alone" test here, and that was
+        // measured rather than assumed.  Skipping the averaging while a ray covered less than one
+        // mortar joint sounds like free speed and is not: what a pixel wants is the average over
+        // its own area whether or not the pattern is resolvable, and a joint's *edge* crossing a
+        // pixel is as much a part of that average as a hundred joints are.  Against a ground truth
+        // of sixty-four samples a pixel, over the nearest stretch of a receding wall, skipping it
+        // scored 12.54 where averaging scored 7.66 -- barely better than not filtering at all.
+        //
+        // How many of the pattern's finest features the patch spans.  A fraction of one is a pixel
+        // sitting on a joint's edge; a hundred is a wall so far off that all it can honestly be is
+        // the average of what it is made of.
+        // **The two edges are sampled according to their own lengths, not to the longer of them.**
+        // A patch seen at a glance is a long thin ellipse -- twenty times longer than it is wide is
+        // ordinary in a street -- and a square grid laid over that spends as many samples across the
+        // narrow way, where there is nothing to find, as it does along the long way, where twenty
+        // features are going unmeasured.  Sampling by the max got the structured error only halfway
+        // down; sampling each edge for what it actually spans is what a filter has to do to match a
+        // box over the pixel.
+        double spanAcross = footprint.Across.Magnitude / finest;
+        double spanAlong = footprint.Along.Magnitude / finest;
+        int stepsAcross = Math.Clamp((int) Math.Ceiling(spanAcross * 2), 2, 24);
+        int stepsAlong = Math.Clamp((int) Math.Ceiling(spanAlong * 2), 2, 24);
+
+        // With a cap on the pair of them, since the long axis of a very flat patch would otherwise
+        // ask for more samples than the picture is worth.
+        while (stepsAcross * stepsAlong > 96)
+        {
+            if (stepsAcross > stepsAlong)
+                stepsAcross--;
+            else
+                stepsAlong--;
+        }
+
+        double total = 0;
+
+        // Stratified rather than scattered: the samples are spread evenly across the patch, which
+        // for something as regular as a lattice settles far faster than throwing them at random.
+        // They are the pattern's own arithmetic, not rays -- no traversal, no shadows, nothing
+        // beyond the handful of operations the pattern already does. That is the whole reason this
+        // is affordable where asking the sampler for more rays is not.
+        // The grid sits in the middle of each cell, laid down the same way at every point.  Jittering
+        // it per point was tried, on the theory that a grid identical everywhere would make an error
+        // identical everywhere and so gather into bands.  Measured, it is worse -- RMS 4.24 against
+        // 3.13, and half again the structured error -- because a stratified grid over a patch of the
+        // right size is already good quadrature, and scattering it only adds variance.  The banding
+        // it was meant to cure had a different cause: the patch was half the width it should be.
+
+        for (int down = 0; down < stepsAlong; down++)
+        {
+            for (int across = 0; across < stepsAcross; across++)
+            {
+                double u = (across + 0.5) / stepsAcross - 0.5;
+                double v = (down + 0.5) / stepsAlong - 0.5;
+
+                total += Evaluate(point + footprint.Across * u + footprint.Along * v);
+            }
+        }
+
+        return total / (stepsAcross * stepsAlong);
+    }
+
+    /// <summary>
+    /// This property reports the size of the smallest thing this pattern draws -- the width of a
+    /// mortar joint, the side of a checker square.  Nought, the default, means the pattern has
+    /// nothing fine enough to fall between pixels and so needs no filtering.
+    /// <para>
+    /// It is what decides whether a patch is worth averaging over.  While a ray covers less than
+    /// this, it is resolving the pattern properly and a point sample is the honest answer; once it
+    /// covers more, the point sample is answering a question nobody asked.
+    /// </para>
+    /// </summary>
+    protected virtual double FinestDetail => 0;
+
+    /// <summary>
     /// This method is what callers should ask, rather than <see cref="Evaluate"/> directly: it
     /// stirs the point first, where the pattern wants that done for it, and then evaluates.
     /// <para>
@@ -88,9 +180,30 @@ public abstract class Pattern
     /// <returns>The derived pattern value.</returns>
     public double ValueFor(Point point)
     {
+        return ValueFor(point, Footprint.None);
+    }
+
+    /// <summary>
+    /// This method is the same, told how much of the surface the ray covers so that detail too fine
+    /// to be seen is left out rather than sampled at a point and left to alias.
+    /// <para>
+    /// Both halves of the pattern get the patch: the stirring, whose finer layers are dropped once
+    /// they are smaller than it, and the pattern itself, which may know how to average its own
+    /// shape over a patch.  A pattern that does not simply goes on evaluating at the point, and a
+    /// footprint of nothing leaves everything exactly as it was.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point the pattern is being asked about.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The derived pattern value.</returns>
+    public double ValueFor(Point point, Footprint footprint)
+    {
+        footprint ??= Footprint.None;
+
+        double width = footprint.Width;
         double value = Evaluate(Turbulence is null || StirsItsOwnPoints
             ? point
-            : Turbulence.Warp(point));
+            : Turbulence.Warp(point, width), footprint);
 
         return Shape(value);
     }

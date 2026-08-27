@@ -114,6 +114,27 @@ public abstract class Pigment
     }
 
     /// <summary>
+    /// This method accepts a point, and how much of the surface the ray that found it covers, and
+    /// produces the color for that whole patch rather than for the one point.
+    /// <para>
+    /// A pigment that has nothing to filter -- a solid color, an image -- inherits the point-sampled
+    /// answer and is none the wiser.  Only the ones with detail fine enough to disappear between
+    /// pixels need do anything with the patch.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The surface to get the color for.</param>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The appropriate color for that patch of the surface.</returns>
+    public Color GetColorFor(Surface surface, Point point, Footprint footprint)
+    {
+        return footprint is null || footprint.IsEmpty
+            ? GetTransformedColorFor(surface.WorldToSurface(point))
+            : GetTransformedColorFor(
+                surface.WorldToSurface(point), surface.WorldToSurface(footprint));
+    }
+
+    /// <summary>
     /// This method is used to transform the given point, relative to the pigment's
     /// pattern, and return the appropriate color for it.
     /// </summary>
@@ -127,11 +148,39 @@ public abstract class Pigment
     }
 
     /// <summary>
+    /// This method carries both the point and the patch around it into the pigment's own space and
+    /// asks for the color there.
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="footprint">The patch around it, in the same space as the point.</param>
+    /// <returns>The appropriate color for that patch.</returns>
+    public Color GetTransformedColorFor(Point point, Footprint footprint)
+    {
+        return GetColorFor(InverseTransform * point, footprint.TransformedBy(InverseTransform));
+    }
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
     public abstract Color GetColorFor(Point point);
+
+    /// <summary>
+    /// This method accepts a point and the patch of space around it, and produces a color.
+    /// <para>
+    /// It falls back on the point-sampled answer, which is right for every pigment that has no fine
+    /// detail of its own to lose.  A pigment that *does* -- one built on a pattern -- overrides this
+    /// and filters itself over the patch.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">The patch around it, in this pigment's own space.</param>
+    /// <returns>The appropriate color.</returns>
+    public virtual Color GetColorFor(Point point, Footprint footprint)
+    {
+        return GetColorFor(point);
+    }
 
     /// <summary>
     /// This property reports whether this pigment might hand back a color that lets light through

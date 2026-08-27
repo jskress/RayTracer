@@ -419,6 +419,29 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
+    /// This method carries a footprint from the world's coordinate system into the surface's, the
+    /// same way and by the same transforms <see cref="WorldToSurface"/> carries a point.
+    /// <para>
+    /// It has to walk the same chain of parents: a patch measured in the world means nothing to a
+    /// pattern until it has been carried into the space that pattern thinks in, and a surface inside
+    /// two groups has had two transforms applied to it before its own.
+    /// </para>
+    /// </summary>
+    /// <param name="footprint">The footprint to convert.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
+    /// <returns>The converted footprint.</returns>
+    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0)
+    {
+        if (footprint is null || footprint.IsEmpty)
+            return Footprint.None;
+
+        if (Parent != null)
+            footprint = Parent.WorldToSurface(footprint, timeIndex);
+
+        return footprint.TransformedBy(InverseTransformAt(timeIndex));
+    }
+
+    /// <summary>
     /// This method handles converting the given point from the surface's coordinate system to the
     /// world's, which is <see cref="WorldToSurface"/> walked the other way.
     /// <para>

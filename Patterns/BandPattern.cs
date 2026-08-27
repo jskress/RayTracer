@@ -22,6 +22,13 @@ public abstract class BandPattern : Pattern
     /// <param name="point">The point from which the pattern value is to be derived.</param>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <returns>The derived pattern value.</returns>
+    /// <summary>
+    /// A band is a unit wide, so a unit is the whole of its detail.  Anything finer than this in a
+    /// picture is past what a pixel can hold, and is averaged over the patch a ray covers rather
+    /// than sampled at its middle -- see <see cref="Pattern.Evaluate"/>.
+    /// </summary>
+    protected override double FinestDetail => 1;
+
     public override double Evaluate(Point point)
     {
         double value = BandType switch

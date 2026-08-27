@@ -65,8 +65,12 @@ public class PerspectiveRayConverter : PixelToRayConverter
             Point pinholePixel = InverseTransform * new Point(worldX, worldY, -1);
             Point pinholeOrigin = InverseTransform * Point.Zero;
 
+            // The spread is the pixel's own size, which is what makes this a cone rather than a
+            // line: the pixels lie one unit out, so a pixel `PixelSize` across subtends that many
+            // radians.  It carries the width a pattern needs and nothing else -- the geometry of
+            // this ray is untouched, and this path is still the one a scene with no lens stays on.
             return new Ray(
-                pinholeOrigin, (pinholePixel - pinholeOrigin).Unit, sampleIndex);
+                pinholeOrigin, (pinholePixel - pinholeOrigin).Unit, sampleIndex, PixelSize);
         }
 
         // The ray through the middle of the lens crosses the focal plane at the focal distance
@@ -84,6 +88,6 @@ public class PerspectiveRayConverter : PixelToRayConverter
             worldX * focalDistance, worldY * focalDistance, -focalDistance);
         Point origin = InverseTransform * new Point(lensX, lensY, 0);
 
-        return new Ray(origin, (target - origin).Unit, sampleIndex);
+        return new Ray(origin, (target - origin).Unit, sampleIndex, PixelSize);
     }
 }

@@ -70,6 +70,23 @@ public class MottledPigment : Pigment
     }
 
     /// <summary>
+    /// This method is the same, told how much of the surface the ray covers, so that mottling too
+    /// fine to be seen is faded out rather than left to shimmer.
+    /// <para>
+    /// Both halves get the patch: the wrapped pigment, which may be a pattern with detail of its
+    /// own, and the noise doing the dimming, whose finer layers are dropped once they are smaller
+    /// than the patch.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">The patch around it, in this pigment's own space.</param>
+    /// <returns>The appropriate color.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint)
+    {
+        return Pigment.GetColorFor(point, footprint) * Noise.Generate(point, footprint?.Width ?? 0);
+    }
+
+    /// <summary>
     /// This method returns whether the given pigmentation matches this one.
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>

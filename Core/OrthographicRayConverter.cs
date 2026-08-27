@@ -17,6 +17,12 @@ namespace RayTracer.Core;
 /// </summary>
 public class OrthographicRayConverter : PixelToRayConverter
 {
+    /// <summary>
+    /// This property notes how much world one pixel covers.  Parallel rays never converge, so this
+    /// is the footprint at every distance rather than an angle to widen by.
+    /// </summary>
+    private double PixelSize => _halfWidth * 2 / Width;
+
     private readonly double _halfWidth;
     private readonly double _halfHeight;
 
@@ -56,7 +62,8 @@ public class OrthographicRayConverter : PixelToRayConverter
             Point origin = InverseTransform * new Point(worldX, worldY, 0);
             Point ahead = InverseTransform * new Point(worldX, worldY, -1);
 
-            return new Ray(origin, (ahead - origin).Unit, sampleIndex);
+            return new Ray(origin, (ahead - origin).Unit, sampleIndex,
+                baseRadius: PixelSize * 0.5);
         }
 
         // The lens gathers a parallel camera the same way it does a perspective one: each sample
@@ -71,6 +78,7 @@ public class OrthographicRayConverter : PixelToRayConverter
         Point lensOrigin = InverseTransform * new Point(worldX + lensX, worldY + lensY, 0);
         Point target = InverseTransform * new Point(worldX, worldY, -focalDistance);
 
-        return new Ray(lensOrigin, (target - lensOrigin).Unit, sampleIndex);
+        return new Ray(lensOrigin, (target - lensOrigin).Unit, sampleIndex,
+            baseRadius: PixelSize * 0.5);
     }
 }

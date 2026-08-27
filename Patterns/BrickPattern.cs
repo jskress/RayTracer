@@ -30,6 +30,13 @@ public class BrickPattern : Pattern
     public double MortarSize { get; set; } = 0.5;
 
     /// <summary>
+    /// The finest thing a brick wall draws is its mortar joint, and that is what starts to alias
+    /// first: a course is a few inches and a joint half of one, so a wall is still showing its
+    /// courses long after its joints have stopped being resolvable.
+    /// </summary>
+    protected override double FinestDetail => MortarSize;
+
+    /// <summary>
     /// This method is used to determine an appropriate value, typically between 0 and 1,
     /// for the given point.
     /// </summary>

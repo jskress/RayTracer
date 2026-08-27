@@ -57,11 +57,30 @@ public class PatternPigment : Pigment
 
     public override Color GetColorFor(Point point)
     {
-        double value = Pattern.ValueFor(point);
+        return GetColorFor(point, Footprint.None);
+    }
+
+    /// <summary>
+    /// This method produces the color for a patch of the pattern rather than for a point of it.
+    /// <para>
+    /// A pattern that hands back a *number* is filtered by the pattern itself and the number is
+    /// looked up as usual.  A pattern that picks *which pigment* -- a brick choosing brick or mortar
+    /// -- cannot be: an averaged index means nothing, since half way between the first pigment and
+    /// the second is not a color, it is a pigment that does not exist.  Such a pattern hands back a
+    /// fractional index instead, and the pigment set mixes the two it lies between in that
+    /// proportion, which is what a half-brick-half-mortar patch really looks like.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <returns>The appropriate color.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint)
+    {
+        double value = Pattern.ValueFor(point, footprint);
 
         return Pattern.DiscretePigmentsNeeded > 0
-            ? PigmentSet.GetColorFor(point, (int) value)
-            : PigmentSet.GetColorFor(point, value);
+            ? PigmentSet.GetBlendedColorFor(point, value, footprint)
+            : PigmentSet.GetColorFor(point, value, footprint);
     }
 
     /// <summary>
