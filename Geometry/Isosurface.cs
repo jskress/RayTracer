@@ -102,7 +102,11 @@ public class Isosurface : Surface
         // reported is scaled back to the ray's own parameter at the end.
         double length = ray.Direction.Magnitude;
 
-        if (length.Near(0))
+        // Everything below works with a unit direction and scales the answer back by this length,
+        // so the only ray that cannot be followed is one with no direction at all.  Refusing every
+        // direction shorter than a millionth instead made the surface disappear once it was scaled
+        // past a million.
+        if (length == 0)
             return;
 
         Ray localRay = new (ray.Origin, ray.Direction.Unit, ray.TimeIndex);

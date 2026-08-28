@@ -52,9 +52,31 @@ public class Conic : ExtrudedSurface
         if (discriminant < 0)
             return;
 
-        if (a.Near(0) && !b.Near(0))
-            intersections.Add(new Intersection(this, -c / (2 * b)));
-        else if (!a.Near(0))
+        // See the note in Cylinder.AddIntersections: `a` carries the square of the ray's own
+        // direction, so it must be judged against that and not against a fixed number.  Here it
+        // goes to nothing when the ray runs along one of the cone's own slants.
+        double directionSquared = ray.Direction.Dot(ray.Direction);
+        double directionY = ray.Direction.Y;
+        double originSquared = ray.Origin.X * ray.Origin.X + ray.Origin.Y * ray.Origin.Y +
+                               ray.Origin.Z * ray.Origin.Z;
+
+        if (a.IsNegligibleSquaredBeside(directionSquared))
+        {
+            if (!(b * b).IsNegligibleSquaredBeside(originSquared * directionSquared))
+            {
+                // A ray along a slant meets the cone once.  That crossing is subject to the cone's
+                // truncation just as the pair below are; left unchecked, as it was, this branch
+                // reported hits well outside MinimumY..MaximumY -- a phantom surface hanging in
+                // space above a cut-off cone.  Exactly parallel is a measure-zero set of
+                // directions, so nothing showed it until the test above went wrong at scale.
+                double distance = -c / (2 * b);
+                double y = ray.Origin.Y + distance * directionY;
+
+                if (y > MinimumY && y < MaximumY)
+                    intersections.Add(new Intersection(this, distance));
+            }
+        }
+        else
         {
             a *= 2;
             b = -b;
@@ -76,7 +98,7 @@ public class Conic : ExtrudedSurface
                 intersections.Add(new Intersection(this, t1));
         }
 
-        if (Closed && !ray.Direction.Y.Near(0))
+        if (Closed && !(directionY * directionY).IsNegligibleSquaredBeside(directionSquared))
             AddCappedIntersections(ray, intersections);
     }
 

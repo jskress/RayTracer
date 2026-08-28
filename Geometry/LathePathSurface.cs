@@ -64,7 +64,10 @@ public class LathePathSurface
     /// <returns>An enumeration of the intersections found with this segment.</returns>
     public IEnumerable<Intersection> GetIntersections(Surface surface, Ray ray)
     {
-        return Math.Abs(ray.Direction.Y) < DoubleExtensions.Epsilon
+        // Whether the ray counts as horizontal is a question about its angle, not about the size
+        // of its Y component, which shrinks as the lathe is scaled up.
+        return (ray.Direction.Y * ray.Direction.Y)
+            .IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction))
             ? GetIntersectionsForHorizontalRay(surface, ray)
             : GetIntersectionsForGeneralRay(surface, ray);
     }

@@ -49,7 +49,11 @@ public class BlobSpherePrimitive : IBlobPrimitive
     {
         (double t0, double t1, double t2) = GetDistanceSquaredCoefficients(ray);
 
-        if (t2.Near(0))
+        // T2 is the square of the ray's own direction, so the only degenerate case is a ray with
+        // no direction at all.  Compared against a fixed millionth it instead discarded every ray
+        // whose direction was shorter than a thousandth, which is what a blob scaled past a
+        // thousand hands it -- the whole surface simply stopped being there.
+        if (t2.IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction)))
             return null;
 
         double discriminant = t1 * t1 - t2 * (t0 - RadiusSquared);
@@ -132,8 +136,10 @@ public class BlobSpherePrimitive : IBlobPrimitive
         double a = relativeOrigin.Dot(_clipNormal);
         double b = ray.Direction.Dot(_clipNormal);
 
-        // We keep only where a + b*t <= 0.
-        if (b.Near(0))
+        // We keep only where a + b*t <= 0.  B is the ray's direction against the clipping plane's
+        // normal, so it is judged against the size of both.
+        if ((b * b).IsNegligibleSquaredBeside(
+                _clipNormal.Dot(_clipNormal) * ray.Direction.Dot(ray.Direction)))
             return a <= 0 ? (enter, exit) : null;
 
         double boundary = -a / b;

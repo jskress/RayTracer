@@ -1,0 +1,160 @@
+# How every picture in the gallery is rendered.
+#
+# Each scene under `gallery/` keeps its render beside it, and those renders are the first thing
+# anyone sees of this ray tracer.  Nothing about them is checked by building or testing, so when
+# the renderer's output changes they go stale in silence.  Worse, a picture whose command line was
+# never written down cannot be made again at all: `a-street-after-dark` is antialiased and its
+# scene does not say so, so re-rendering it "correctly" would have quietly thrown away its smooth
+# edges -- which is how a sweep came to report ninety-five thousand changed pixels that no change
+# had caused.
+#
+# Three scenes were also found carrying pictures their own scene files no longer produced.  This
+# file is what makes all of that recoverable.  To bring the whole gallery up to date:
+#
+#   while IFS='|' read -r scene w h flags; do
+#       case "$scene" in '#'*|'') continue;; esac
+#       out="${scene%.igl}.png"
+#       dotnet run -- -i "$scene" -o "/tmp/$(basename "$out")" -w "$w" -h "$h" $flags \
+#           && mv "/tmp/$(basename "$out")" "$out"
+#   done < gallery/sources.txt
+#
+# It renders to a scratch path and moves the result into place, deliberately: a render that fails
+# part way must not be allowed to leave a tracked picture truncated or missing.  Expect roughly an
+# hour for the lot on an idle machine.
+#
+# `Tests/TestGallery` holds this file to the gallery: every scene keeping a picture must be listed,
+# every scene listed must exist, and every size must match the picture beside it.  What no test can
+# do is notice that a picture has gone stale -- that needs the render -- so run the loop above
+# after anything that changes how things are drawn.
+#
+# One thing to know before committing the results: re-rendering changes a picture's *bytes* even
+# when not one pixel moves, because the scene's `info` block is written into the file.  Commit only
+# the ones whose pixels actually changed.
+#
+# scene|width|height|flags
+gallery/Local/cameras/fisheye.igl|800|600|
+gallery/Local/cameras/focal-blur.igl|800|600|
+gallery/Local/cameras/motion-blur.igl|800|600|
+gallery/Local/functions/a-block-of-buildings.igl|800|600|
+gallery/Local/functions/a-corner-of-a-field.igl|800|600|
+gallery/Local/functions/a-fire-in-the-open.igl|800|600|
+gallery/Local/functions/a-road-through-town.igl|800|600|
+gallery/Local/functions/a-room-after-dark.igl|800|600|-a adaptive:1:0.5
+gallery/Local/functions/a-stand-of-trees.igl|800|600|
+gallery/Local/functions/a-stony-bank.igl|800|600|
+gallery/Local/functions/a-street-after-dark.igl|800|600|-a adaptive:1:0.5
+gallery/Local/functions/a-street-at-the-edge-of-town.igl|800|600|
+gallery/Local/functions/an-engine-on-the-line.igl|800|600|
+gallery/Local/functions/bare-wood.igl|800|600|
+gallery/Local/functions/four-seasons.igl|800|600|
+gallery/Local/functions/recursive-trees.igl|800|600|
+gallery/Local/functions/shape-vocabulary.igl|800|600|
+gallery/Local/functions/spiral-stair.igl|800|600|
+gallery/Local/functions/the-angle-a-plant-uses.igl|800|600|
+gallery/Local/functions/the-stop-on-the-corner.igl|800|600|-a adaptive:1:0.5
+gallery/Local/functions/where-four-roads-meet.igl|800|600|
+gallery/Local/l-systems/a-signal-along-a-filament.igl|800|600|
+gallery/Local/l-systems/axial.igl|800|600|
+gallery/Local/l-systems/bending-under-weight.igl|800|600|
+gallery/Local/l-systems/berry-tree.igl|800|600|
+gallery/Local/l-systems/bush.igl|800|600|
+gallery/Local/l-systems/context-sensitive.igl|800|600|
+gallery/Local/l-systems/fruit-tree.igl|800|600|
+gallery/Local/l-systems/hilbert.igl|800|600|
+gallery/Local/l-systems/leaf-tree.igl|800|600|
+gallery/Local/l-systems/lengths-that-are-not-whole.igl|800|600|
+gallery/Local/l-systems/materials.igl|800|600|
+gallery/Local/l-systems/pipes-vs-tubes.igl|800|600|
+gallery/Local/l-systems/snowflake-2.igl|800|600|
+gallery/Local/l-systems/snowflake.igl|800|600|
+gallery/Local/lights/area-light.igl|800|600|
+gallery/Local/lights/candle-by-its-own-light.igl|800|600|
+gallery/Local/lights/candle.igl|800|600|
+gallery/Local/lights/lights.igl|800|600|
+gallery/Local/lights/physical-sky.igl|800|600|
+gallery/Local/lights/sky-light.igl|800|600|
+gallery/Local/lights/times-of-day.igl|800|600|
+gallery/Local/materials/clarity.igl|800|600|
+gallery/Local/materials/finish.igl|800|600|
+gallery/Local/materials/image-map.igl|800|600|
+gallery/Local/materials/metallic.igl|800|600|
+gallery/Local/materials/noise.igl|800|600|
+gallery/Local/materials/normals.igl|800|600|
+gallery/Local/materials/stained-glass.igl|800|600|
+gallery/Local/media/a-sea-with-weather-in-it.igl|800|600|
+gallery/Local/media/density.igl|800|600|
+gallery/Local/media/medium.igl|800|600|
+gallery/Local/media/multiple-scattering.igl|800|600|
+gallery/Local/media/pattern-density.igl|800|600|
+gallery/Local/media/scattering.igl|800|600|
+gallery/Local/media/sunlit-cloud.igl|800|600|
+gallery/Local/paths/extrusions/extrusion.igl|800|600|
+gallery/Local/paths/extrusions/extrusion2.igl|800|600|
+gallery/Local/paths/extrusions/lathe-drinking-glass.igl|800|600|
+gallery/Local/paths/extrusions/lathe-trophy.igl|800|600|
+gallery/Local/paths/extrusions/lathe.igl|800|600|
+gallery/Local/paths/icons-complex.igl|800|600|
+gallery/Local/paths/icons.igl|800|600|
+gallery/Local/paths/power-cord.igl|800|600|
+gallery/Local/paths/sweep-conduit.igl|800|600|
+gallery/Local/paths/sweep-scale.igl|800|600|
+gallery/Local/paths/sweep-side.igl|800|600|
+gallery/Local/paths/sweep.igl|800|600|
+gallery/Local/paths/text-lathe.igl|800|600|
+gallery/Local/paths/text-path.igl|800|600|
+gallery/Local/paths/text.igl|800|600|
+gallery/Local/solar-system/all.igl|800|600|
+gallery/Local/solar-system/inner.igl|800|600|
+gallery/Local/solar-system/outer.igl|800|600|
+gallery/Local/surfaces/blob-components.igl|800|600|
+gallery/Local/surfaces/blob-negative-strength.igl|800|600|
+gallery/Local/surfaces/blob.igl|800|600|
+gallery/Local/surfaces/disc.igl|800|600|
+gallery/Local/surfaces/egg.igl|800|600|
+gallery/Local/surfaces/generic-shape.igl|800|600|
+gallery/Local/surfaces/heightfield.igl|800|600|
+gallery/Local/surfaces/island-from-a-function.igl|800|600|
+gallery/Local/surfaces/island.igl|800|600|
+gallery/Local/surfaces/isosurface-noise.igl|800|600|
+gallery/Local/surfaces/isosurfaces.igl|800|600|
+gallery/Local/surfaces/patch.igl|800|600|
+gallery/Local/surfaces/superellipsoid-concave.igl|800|600|
+gallery/Local/surfaces/superellipsoid.igl|800|600|
+gallery/Local/surfaces/swells.igl|800|600|
+gallery/Local/surfaces/the-utah-teapot.igl|800|600|
+gallery/Local/surfaces/torus.igl|800|600|
+gallery/Local/surfaces/tube.igl|800|600|
+gallery/POVRay/first.igl|800|600|
+gallery/POVRay/library-textures.igl|800|600|
+gallery/challenge-book/chapter-10/blend.igl|800|600|
+gallery/challenge-book/chapter-10/crackle.igl|800|600|
+gallery/challenge-book/chapter-10/gradients.igl|800|600|
+gallery/challenge-book/chapter-10/patterns.igl|800|600|
+gallery/challenge-book/chapter-10/patterns2.igl|800|600|
+gallery/challenge-book/chapter-10/patterns3.igl|800|600|
+gallery/challenge-book/chapter-10/patterns4.igl|800|600|
+gallery/challenge-book/chapter-10/patterns5.igl|800|600|
+gallery/challenge-book/chapter-10/planet.igl|800|600|
+gallery/challenge-book/chapter-10/stripes.igl|800|600|
+gallery/challenge-book/chapter-10/wood.igl|800|600|
+gallery/challenge-book/chapter-11/lake.igl|800|600|
+gallery/challenge-book/chapter-11/reflections.igl|800|600|
+gallery/challenge-book/chapter-12/cube.igl|800|600|
+gallery/challenge-book/chapter-12/room.igl|800|600|
+gallery/challenge-book/chapter-13/circulars.igl|800|600|
+gallery/challenge-book/chapter-14/hex.igl|800|600|
+gallery/challenge-book/chapter-14/pointy-thing.igl|800|600|
+gallery/challenge-book/chapter-15/object-file-no-normals.igl|800|600|
+gallery/challenge-book/chapter-15/object-file-with-normals.igl|800|600|
+gallery/challenge-book/chapter-15/parallelogram.igl|800|600|
+gallery/challenge-book/chapter-15/smooth-triangle.igl|800|600|
+gallery/challenge-book/chapter-15/triangle.igl|800|600|
+gallery/challenge-book/chapter-16/csg.igl|800|600|
+gallery/challenge-book/chapter-16/csg2.igl|800|600|
+gallery/challenge-book/chapter-16/dice.igl|800|600|
+gallery/challenge-book/chapter-6/black.igl|800|600|
+gallery/challenge-book/chapter-6/transparent.igl|800|600|
+gallery/challenge-book/chapter-7/no-shadows.igl|800|600|
+gallery/challenge-book/chapter-8/shadows.igl|800|600|
+gallery/challenge-book/chapter-9/floor.igl|800|600|
+gallery/challenge-book/cover.igl|800|800|
