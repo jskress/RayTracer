@@ -218,6 +218,120 @@ public class TestImageFile
         }
     }
 
+    /// <summary>
+    /// **Everything written must be readable, and nothing may be written as a palette.**  Those are
+    /// the two rules the writer has to keep, and they are easy to break by accident: left to choose
+    /// for itself, Magick.NET's PNG writer will shrink a low-color-variety image to a palette or a
+    /// gray encoding, and an image read back from a palette is not the image that was written --
+    /// its colors have become indices into a table.
+    /// <para>
+    /// So every combination the writer can produce is saved, checked for the container it was meant
+    /// to get, and read back through our own loader to see that it came home.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryImageWrittenCanBeReadAndNoneIsAPalette()
+    {
+        foreach (int depth in new[] { 8, 16 })
+        {
+            foreach (bool opaque in new[] { true, false })
+            {
+                foreach (bool grayscale in new[] { true, false })
+                {
+                    string what = $"{depth} bits, {(opaque ? "opaque" : "transparent")}, " +
+                                  $"{(grayscale ? "gray" : "color")}";
+                    string path = Path.Combine(
+                        Path.GetTempPath(), $"raytracer-round-{Guid.NewGuid():N}.png");
+
+                    try
+                    {
+                        RenderContext context = new ()
+                        {
+                            BitsPerChannel = depth, ApplyGamma = false, Grayscale = grayscale
+                        };
+                        Canvas canvas = new (2, 1);
+                        Color first = new (0.3, 0.6, 0.9);
+                        Color second = opaque ? new Color(1, 0.25, 0.5) : new Color(1, 0.25, 0.5, 0.5);
+
+                        canvas.SetColor(first, 0, 0);
+                        canvas.SetColor(second, 1, 0);
+
+                        new ImageFile(path).Save(canvas, context);
+
+                        using (MagickImage written = new (path))
+                        {
+                            Assert.AreNotEqual(ColorType.Palette, written.ColorType,
+                                $"{what}: a palette was written");
+                            Assert.AreNotEqual(ColorType.PaletteAlpha, written.ColorType,
+                                $"{what}: a palette was written");
+
+                            ColorType expected = grayscale
+                                ? opaque ? ColorType.Grayscale : ColorType.GrayscaleAlpha
+                                : opaque ? ColorType.TrueColor : ColorType.TrueColorAlpha;
+
+                            Assert.AreEqual(expected, written.ColorType, $"{what}: wrong container");
+                            Assert.AreEqual((uint) depth, written.Depth, $"{what}: wrong depth");
+                        }
+
+                        // And back again, through the loader the rest of the renderer uses.
+                        Canvas reloaded = new ImageFile(path).Load()[0];
+
+                        Assert.AreEqual(2, reloaded.Width, $"{what}: width");
+                        Assert.AreEqual(1, reloaded.Height, $"{what}: height");
+
+                        foreach ((Color was, int x) in new[] { (first, 0), (second, 1) })
+                        {
+                            Color wanted = grayscale ? was.AsGray() : was;
+                            Color got = reloaded.GetPixel(x, 0);
+
+                            AssertColorsClose(wanted, got);
+
+                            Assert.AreEqual(was.Alpha, got.Alpha, 0.01, $"{what}: alpha at {x}");
+                        }
+                    }
+                    finally
+                    {
+                        if (File.Exists(path))
+                            File.Delete(path);
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// A gray image really is gray -- the writer weighs each color down to the one value that stands
+    /// for its brightness, rather than leaving three channels that merely happen to agree.
+    /// </summary>
+    [TestMethod]
+    public void TestAGrayImageHasNoColorLeftInIt()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"raytracer-gray-{Guid.NewGuid():N}.png");
+
+        try
+        {
+            Canvas canvas = new (1, 1);
+
+            canvas.SetColor(new Color(0.9, 0.2, 0.1), 0, 0);
+
+            new ImageFile(path).Save(canvas,
+                new RenderContext { ApplyGamma = false, Grayscale = true });
+
+            Color loaded = new ImageFile(path).Load()[0].GetPixel(0, 0);
+
+            Assert.AreEqual(loaded.Red, loaded.Green, 1e-6, "red and green should agree");
+            Assert.AreEqual(loaded.Green, loaded.Blue, 1e-6, "green and blue should agree");
+
+            // 0.9 * 0.299 + 0.2 * 0.587 + 0.1 * 0.114 -- the weights the eye wants, not a mean.
+            Assert.AreEqual(0.398, loaded.Red, 0.01, "the gray should be the weighted brightness");
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+    }
+
     [TestMethod]
     public void TestSaveWithImageInformationDoesNotThrow()
     {

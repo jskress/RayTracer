@@ -84,7 +84,7 @@ public partial class LanguageParser
             'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
-            'grain', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
@@ -269,8 +269,16 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | antiAliasingClause | scaleAmbientClause |
-            contextPropertyClause
+            colorDepthClause | grayscale | contextPropertyClause
         ] ?? 'Expecting a context property here.'
+
+        // How much of each channel reaches the file, and whether any of it is color at all.  These
+        // decide what the image on disk can hold, so a scene that wants sixteen bits -- or wants no
+        // color -- can say so rather than depending on being rendered with the right flags.
+        colorDepthClause:
+        {
+            color > depth ?? 'Expecting "depth" to follow "color" here.' > _expression
+        }
 
         // How hard to work at the edges within a pixel.  This belongs with the scanner and the
         // medium samples rather than with anything a scene is made of, and a scene that needs it

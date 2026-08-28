@@ -145,6 +145,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `gives` | Surface: `gives light`, so the glowing stuff inside it lights the scene. | [Surfaces](surfaces.md#a-surface-that-gives-light) |
 | `gradient` | Pattern: a smooth ramp of color. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
+| `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `group` | Gathers surfaces so a transform moves them together. | [Surfaces](surfaces.md#groups) |
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
