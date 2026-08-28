@@ -1,0 +1,123 @@
+// An island: a height field wearing four pigments by altitude, standing in a sea of swells.
+//
+// `island-from-a-function.igl` is the same island said the other way -- an isosurface whose land is a
+// function rather than a picture.  That one needs no height map beside it and its edge against the
+// sky is exact rather than faceted; this one is several times quicker to draw.  Both are worth
+// having, and the pair is the point.
+//
+// **The colours are chosen by height, and the mechanism is the ordinary pigment map.**  A pattern
+// pigment holds a *set of pigments* rather than a set of colours, so a `linear Y gradient` can hand
+// out granite at the peak, bozo scrub below it, and sand at the waterline -- each with its own
+// texture, not merely its own hue.  Nothing here is a feature of the height field; the same map would
+// band any surface.
+//
+// **`scale [1, 0.25, 1]` on the pigment is not decoration, and leaving it off is the trap.**  A height
+// field multiplies every height it reads by a quarter, so its own space runs from 0 to 0.25 rather
+// than 0 to 1.  A gradient left alone therefore sweeps only a quarter of itself over the whole hill,
+// and everything comes out in whichever band happens to be first.  Scaled, the stops below read as
+// plain fractions of the terrain's own height, whatever it is later scaled to in the world.
+//
+// **The stops are measured, not guessed.**  Terrain is not evenly distributed in height -- an island
+// especially, since it falls away to the sea all round -- so bands chosen by eye put the snowline in
+// the wrong place.  These come from the height map's own percentiles above the waterline: snow over
+// the top 7% of the land, rock the next 23%, and the green belt more than half of it.
+//
+// **Rendered with `-a adaptive:1:0.5`**, and the committed picture is that one: ten seconds becomes
+// a minute and a half, and the sea and the terrain's edges both want it.  Nothing in the repository would
+// otherwise record which scenes need a flag beyond the defaults, so it is recorded here.
+//
+// The height map was made with fractal noise: seven octaves of random values, each at twice the
+// frequency and half the amplitude of the one before, bicubically resampled to 512 square and summed;
+// multiplied by a radial falloff so the land drops below the sea at every edge; then raised to the
+// power 1.45 to deepen the valleys.  The falloff is what makes it an island rather than a terrain with
+// a visible cliff where the height field's own side wall would otherwise show.
+import 'water' { SeaWater }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Island'
+        author 'J. Stephen Kress'
+        description 'A height field banded by altitude, from snow to sand, standing in the sea.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [50, 26, -84]
+    look at [50, 5.0, 46]
+    field of view 38
+}
+
+point light {
+    location [-150, 105, -95]
+    color [1.62, 1.54, 1.38]
+}
+
+background linear Y gradient {
+    [0.0, [0.88, 0.86, 0.80],
+     0.10, [0.78, 0.82, 0.86],
+     0.30, [0.58, 0.72, 0.90],
+     0.62, [0.34, 0.56, 0.88],
+     1.0, [0.12, 0.30, 0.72]]
+}
+
+// Four grounds.  Each is a pattern rather than a flat colour, so that a slope carries some grain of
+// its own and the bands do not read as paint.
+sand  = pigment granite { [0, [0.85, 0.79, 0.62], 1, [0.74, 0.66, 0.50]]  scale 2.2 }
+grass = pigment bozo    { [0, [0.17, 0.33, 0.13], 1, [0.38, 0.49, 0.26]]  scale 7 }
+rock  = pigment granite { [0, [0.55, 0.53, 0.52], 1, [0.32, 0.31, 0.32]]  scale 1.6 }
+snow  = pigment granite { [0, [0.97, 0.98, 1.00], 1, [0.88, 0.90, 0.95]]  scale 1.2 }
+
+heightfield {
+    image 'images/island.png'
+    scale [100, 48, 100]
+    material {
+        // The stops are fractions of the terrain's own height, which is what the scale below buys.
+        // Each band is held by a pair of stops and then blended into the next over a short run, so a
+        // snowline looks like a snowline rather than like a long fade.
+        pigment linear Y gradient {
+            [0.0, sand, 0.13, sand, 0.17, grass, 0.40, grass, 0.46, rock, 0.64, rock, 0.70, snow]
+            scale [1, 0.25, 1]
+        }
+    }
+}
+
+// The sea, wide enough that its own edge falls below the horizon rather than showing as a line
+// across it.  Its level is where the sand band was set to begin.
+//
+// **Ten trains fanned around one wind, rather than a few crossing at right angles.**  The first
+// version of this used two long trains 92 degrees apart, and it read as corrugated iron: two crossing
+// sinusoids give long parallel crests at even spacing, and no amount of small ripples laid over the
+// top disguises it.  A real sea spreads its energy over a *fan* of directions about the wind, and
+// what that produces is short-crested water -- crests that build, break up and reform over a few
+// wavelengths instead of running to the horizon.
+//
+// So the same total steepness is spread over ten trains within about fifty degrees of each other,
+// falling from the long swell to the chop.  Two things matter beyond the count.  The bearings are all
+// different and none is square to another, or pairs of them beat into a plaid.  And the wavelengths
+// are in no simple ratio -- 71, 58.3, 46.7, 33.1 and so on rather than halves -- so the pattern takes
+// far longer to repeat than the picture is wide.
+//
+// Nothing shorter than a couple of units is worth adding here: at this distance those are under a
+// pixel, so they buy no texture and cost the sampler a great deal of aliasing to clean up.
+swells {
+    width 400000  depth 400000
+
+    wave { steepness 0.050  wavelength  71.0  direction [ 0.998, 0,  0.070]  phase 1.00 }
+    wave { steepness 0.046  wavelength  58.3  direction [ 0.921, 0,  0.391]  phase 2.10 }
+    wave { steepness 0.040  wavelength  46.7  direction [ 0.951, 0, -0.309]  phase 3.35 }
+    wave { steepness 0.038  wavelength  33.1  direction [ 0.755, 0,  0.656]  phase 4.20 }
+    wave { steepness 0.036  wavelength  25.3  direction [ 0.988, 0,  0.156]  phase 5.05 }
+    wave { steepness 0.034  wavelength  17.9  direction [ 0.839, 0, -0.545]  phase 6.40 }
+    wave { steepness 0.032  wavelength  11.3  direction [ 0.530, 0,  0.848]  phase 7.15 }
+    wave { steepness 0.030  wavelength   7.1  direction [ 0.978, 0, -0.208]  phase 8.30 }
+    wave { steepness 0.028  wavelength   4.3  direction [ 0.105, 0,  0.995]  phase 9.05 }
+    wave { steepness 0.026  wavelength   2.6  direction [ 0.485, 0, -0.875]  phase 10.40 }
+
+    material SeaWater
+    translate [50, 1.2, 50]
+}

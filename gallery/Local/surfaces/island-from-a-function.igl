@@ -1,0 +1,138 @@
+// The same island as `island.igl`, said a different way: here the land is a *function* rather than a
+// picture, and an isosurface rather than a mesh of triangles.
+//
+// **What that buys, and it is the reason to have both.**  The scene describes the whole island; there
+// is no height map beside it, and changing a number changes the land rather than sending you back to
+// whatever drew the image.  And the surface is marched rather than tessellated, so its edge against
+// the sky is exact -- the place terrain gives itself away is its silhouette, and that is precisely
+// where a mesh shows the edges of its triangles.
+//
+// **What it costs.**  A marched surface is several times dearer to draw than a mesh of the same land,
+// and the price is per octave: every one of the six below is another noise lookup on every step of
+// every ray.  `island.igl` is the one to copy for a large terrain; this is the one to copy for a
+// close, hard-edged one.
+//
+// ---------------------------------------------------------------------------------------------
+//
+// **The land.**  Fractal noise -- six octaves, each at twice the frequency and a bit over half the
+// amplitude of the one before -- multiplied by a radial falloff that carries the ground below the sea
+// at the edges.  The falloff is what makes it an island rather than a terrain with a hard edge; the
+// `pow(..., 1.30)` afterwards deepens the valleys and leaves the ridges where they are.
+//
+// It is one expression because it must be: a surface needs the slope of what it is given, so a field
+// cannot be built up over several statements.  Octaves are only a sum, so that is no hardship.
+//
+// **The colours are chosen by height**, exactly as in `island.igl`: a `linear Y gradient` holding a
+// *set of pigments* rather than a set of colours, so each band brings its own grain.
+//
+// `scale [1, 22, 1]` makes those stops read as fractions of the island's height.  Note that
+// `island.igl` needs `scale [1, 0.25, 1]` for the same job -- **because a height field quietly
+// multiplies its heights by a quarter, and an isosurface does not.**  An isosurface stands in plain
+// world coordinates, so the scale here is simply how tall the island is.
+//
+// The bands themselves were not guessed.  The terrain was rendered once with a `banded` map of five
+// flat colours to see where its heights actually fell, and the stops set from that.  Terrain is not
+// evenly distributed in height and eyeballed stops put the snowline in the wrong place.
+//
+// **Rendered with `-a adaptive:1:0.5`**, which is the committed picture: the sea and the crags both
+// want it.  Nothing else in the repository records which scenes need a flag beyond the defaults.
+import 'water' { SeaWater }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Island From A Function'
+        author 'J. Stephen Kress'
+        description 'The same island as a marched isosurface: no height map, and an exact silhouette.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 30, -108]
+    look at [0, 7, 6]
+    field of view 38
+}
+
+point light {
+    location [-150, 105, -95]
+    color [1.62, 1.54, 1.38]
+}
+
+background linear Y gradient {
+    [0.0, [0.88, 0.86, 0.80],
+     0.10, [0.78, 0.82, 0.86],
+     0.30, [0.58, 0.72, 0.90],
+     0.62, [0.34, 0.56, 0.88],
+     1.0, [0.12, 0.30, 0.72]]
+}
+
+sand  = pigment granite { [0, [0.85, 0.79, 0.62], 1, [0.74, 0.66, 0.50]]  scale 2.2 }
+grass = pigment bozo    { [0, [0.17, 0.33, 0.13], 1, [0.38, 0.49, 0.26]]  scale 7 }
+rock  = pigment granite { [0, [0.55, 0.53, 0.52], 1, [0.32, 0.31, 0.32]]  scale 1.6 }
+snow  = pigment granite { [0, [0.97, 0.98, 1.00], 1, [0.88, 0.90, 0.95]]  scale 1.2 }
+
+isosurface {
+    function {
+        y - 44 * pow(clamp(1 - sqrt(x * x + z * z) / 44, 0, 1), 1.05) * pow(
+              0.4400 * noise(0.055 * x, 0, 0.055 * z)
+            + 0.2400 * noise(0.110 * x, 0, 0.110 * z)
+            + 0.1400 * noise(0.220 * x, 0, 0.220 * z)
+            + 0.0850 * noise(0.440 * x, 0, 0.440 * z)
+            + 0.0500 * noise(0.880 * x, 0, 0.880 * z)
+            + 0.0280 * noise(1.760 * x, 0, 1.760 * z)
+        , 1.30)
+    }
+    bounded by [-44, -0.5, -44], [44, 44.5, 44]
+    material {
+        pigment linear Y gradient {
+            [0.0, sand, 0.115, sand, 0.155, grass, 0.52, grass, 0.60, rock, 0.80, rock, 0.87, snow]
+            scale [1, 22, 1]
+        }
+
+        // Ground is not glossy.  The crags turn far more sharply than a mesh of the same land does,
+        // so the default highlight catches on every one of them and the whole island reads as
+        // plastic; the mesh version never showed it.
+        specular 0.08
+        shininess 12
+    }
+}
+
+// The sea, wide enough that its own edge falls below the horizon rather than showing as a line
+// across it.  Its level is where the sand band was set to begin.
+//
+// **Ten trains fanned around one wind, rather than a few crossing at right angles.**  The first
+// version of this used two long trains 92 degrees apart, and it read as corrugated iron: two crossing
+// sinusoids give long parallel crests at even spacing, and no amount of small ripples laid over the
+// top disguises it.  A real sea spreads its energy over a *fan* of directions about the wind, and
+// what that produces is short-crested water -- crests that build, break up and reform over a few
+// wavelengths instead of running to the horizon.
+//
+// So the same total steepness is spread over ten trains within about fifty degrees of each other,
+// falling from the long swell to the chop.  Two things matter beyond the count.  The bearings are all
+// different and none is square to another, or pairs of them beat into a plaid.  And the wavelengths
+// are in no simple ratio -- 71, 58.3, 46.7, 33.1 and so on rather than halves -- so the pattern takes
+// far longer to repeat than the picture is wide.
+//
+// Nothing shorter than a couple of units is worth adding here: at this distance those are under a
+// pixel, so they buy no texture and cost the sampler a great deal of aliasing to clean up.
+swells {
+    width 400000  depth 400000
+
+    wave { steepness 0.050  wavelength  71.0  direction [ 0.998, 0,  0.070]  phase 1.00 }
+    wave { steepness 0.046  wavelength  58.3  direction [ 0.921, 0,  0.391]  phase 2.10 }
+    wave { steepness 0.040  wavelength  46.7  direction [ 0.951, 0, -0.309]  phase 3.35 }
+    wave { steepness 0.038  wavelength  33.1  direction [ 0.755, 0,  0.656]  phase 4.20 }
+    wave { steepness 0.036  wavelength  25.3  direction [ 0.988, 0,  0.156]  phase 5.05 }
+    wave { steepness 0.034  wavelength  17.9  direction [ 0.839, 0, -0.545]  phase 6.40 }
+    wave { steepness 0.032  wavelength  11.3  direction [ 0.530, 0,  0.848]  phase 7.15 }
+    wave { steepness 0.030  wavelength   7.1  direction [ 0.978, 0, -0.208]  phase 8.30 }
+    wave { steepness 0.028  wavelength   4.3  direction [ 0.105, 0,  0.995]  phase 9.05 }
+    wave { steepness 0.026  wavelength   2.6  direction [ 0.485, 0, -0.875]  phase 10.40 }
+
+    material SeaWater
+    translate Y 2.1
+}
