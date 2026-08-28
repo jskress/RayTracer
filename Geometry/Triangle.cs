@@ -53,8 +53,20 @@ public class Triangle : Surface
         }
     }
 
+    /// <summary>
+    /// How nearly a ray must run along a triangle before it is treated as missing it: the cosine of
+    /// the angle between them.
+    /// </summary>
+    private const double ParallelTolerance = 1e-12;
+
     private Vector _e1;
     private Vector _e2;
+
+    /// <summary>
+    /// The square of twice the triangle's area, which is what tells a ray running *along* the
+    /// triangle from one merely meeting a small triangle.
+    /// </summary>
+    private double _crossSquared;
     private Vector _normal;
 
     /// <summary>
@@ -71,7 +83,10 @@ public class Triangle : Surface
         {
             _e1 = point2 - point1;
             _e2 = point3 - point1;
-            _normal = _e2.Cross(_e1).Unit;
+            Vector cross = _e2.Cross(_e1);
+
+            _normal = cross.Unit;
+            _crossSquared = cross.Dot(cross);
         }
     }
 
@@ -86,7 +101,22 @@ public class Triangle : Surface
         Vector dirCrossE2 = ray.Direction.Cross(_e2);
         double determinant = _e1.Dot(dirCrossE2);
 
-        if (determinant.Near(0))
+        // **This has to be judged against the size of the things going into it, not against a fixed
+        // number.**  The determinant is the ray's direction times twice the triangle's area times the
+        // cosine of the angle between them, so it goes small for three quite different reasons: the
+        // ray running along the triangle -- which is the one worth refusing -- or the triangle being
+        // small, or the ray's direction being short, which is what a surface scaled up does to it,
+        // since the ray is carried into the surface's own space to be tested.
+        //
+        // Judged absolutely, a mesh quietly lost its triangles as it grew.  A height field's are a
+        // fraction of a unit across to begin with: a 256-square one gives a determinant of 1.5e-5
+        // against a threshold of 1e-6, so scaling the terrain by a hundred -- which every terrain
+        // wants, being built in a unit cube -- pushed it under and the triangles stopped being hit
+        // at all.  It showed as a mountain that went black in patches and then altogether, which
+        // reads as a lighting fault rather than as missing geometry.  The same happened at any scale
+        // once the image was fine enough: a 1024-square one is under the threshold on its own.
+        if (determinant * determinant <=
+            _crossSquared * ray.Direction.Dot(ray.Direction) * ParallelTolerance * ParallelTolerance)
             return;
 
         double f = 1 / determinant;
