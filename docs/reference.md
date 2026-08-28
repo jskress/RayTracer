@@ -147,7 +147,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `group` | Gathers surfaces so a transform moves them together. | [Surfaces](surfaces.md#groups) |
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
-| `heightfield` | Surface: an image read as terrain. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
+| `heightfield` | Surface: terrain, from an image or a function. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |

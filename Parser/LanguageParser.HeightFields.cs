@@ -53,6 +53,18 @@ public partial class LanguageParser
                 case "image":
                     resolver.ImageReferenceResolver = ParseImageReference(clause);
                     break;
+                case "function":
+                    resolver.FunctionResolver = new FieldExpressionResolver { Term = clause.Term() };
+                    break;
+                case "samples":
+                    resolver.SamplesResolver = new TermResolver<int>
+                    {
+                        Term = clause.Term(),
+                        Validator = samples => samples < 2
+                            ? "A height field needs at least two samples in each direction."
+                            : null
+                    };
+                    break;
                 case "clip":
                     resolver.ClipResolver = new TermResolver<double> { Term = clause.Term() };
                     break;

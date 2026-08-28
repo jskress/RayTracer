@@ -1,0 +1,84 @@
+// A sea of sand: a height field whose land is written down rather than drawn.
+//
+// The two islands beside this one are the other two ways to make terrain here -- `island.igl` reads
+// its heights from a picture, and `island-from-a-function.igl` marches an isosurface.  This is the
+// third: a **function height field**, which is described like the isosurface and meshed like the
+// picture.  Nothing sits beside this file; the desert is nine lines of arithmetic.
+//
+// **The function is evaluated over the unit square**, so `x` and `z` run from 0 to 1 whatever the
+// field is later scaled to, and every frequency below is "cycles across the whole desert".
+//
+// **What it answers is the height outright.**  A height field made from an *image* quietly
+// multiplies its heights by a quarter; a function's are taken as they are.  That is the one
+// difference between the two forms worth carrying in your head, and it is why this scene needs no
+// `scale [1, 0.25, 1]` anywhere.
+//
+// ---------------------------------------------------------------------------------------------
+//
+// **The dunes.**  A wave in Z would give parallel ridges and read as corrugated iron -- which is
+// exactly how the first draft looked.  Three things fix it, and all three are needed:
+//
+//   * the phase is **wandered by noise in X**, which bends each crest instead of shifting them all
+//     together.  The frequency of that noise matters more than its size: warped at 2 cycles across
+//     the desert it merely slides the whole pattern, and at 14 it bends crests over about the
+//     distance between them, which is what the eye reads as a dune;
+//   * the amplitude is **modulated and clamped to nought**, so ridges rise, run for a while and die
+//     away rather than crossing the field from edge to edge;
+//   * the dunes ride on a **broad rolling sand sheet**, so the ground beneath them is not a plane.
+//
+// `pow(..., 3.2)` on the raised sine is what makes a dune shape of it: broad troughs and a narrow
+// crest, rather than a sine's symmetrical hump.
+//
+// **A fine grain was tried and removed.**  A `0.02 * noise(52x, 0, 52z)` ripple sits below a pixel
+// at this distance, so it adds no texture and gives the sampler a great deal of aliasing to clean
+// up -- the same lesson the water scenes teach about wave trains too small to see.
+//
+// **`samples 2000` is not extravagance.**  A height field is built of *flat* triangles, so a smooth
+// surface shows the edges of them as a fine diamond pattern wherever the light rakes across it, and
+// dunes are the worst case there is for that: smooth, and lit at a graze.  At 1100 the hatching is
+// plain on the sunlit slopes; at 2000 it is nearly gone.  Terrain with crags in it -- the islands --
+// hides this happily at a quarter of the grid, so do not read this number as one terrain needs.
+//
+// **The sun stands at 20 degrees, and lower is worse.**  At 10 degrees the shadows are longer than
+// the gap between dunes, so every trough fills in solid black; at 20 they reach about as far as the
+// next dune and the troughs stay legible.  The azimuth is 45 degrees off the way the dunes run:
+// straight down them the light is flat, straight across it is a silhouette.
+//
+// **Rendered with `-a adaptive:1:0.5`**, which is the committed picture; see `gallery/sources.txt`.
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Dunes'
+        author 'J. Stephen Kress'
+        description 'A desert of wind-blown sand, written as nine lines of arithmetic.'
+        copyright true
+        software __software__
+    }
+}
+
+camera { location [-165, 170, -250]  look at [55, 0, 95]  field of view 46 }
+
+background physical sky { sun elevation 20  sun azimuth 50  turbidity 3.2  brightness 3.2 }
+sky light { samples 28 }
+
+// Sand carries on past the dune field, so its far edge is not the horizon.
+plane { material { pigment [0.86, 0.63, 0.36]  specular 0.03  shininess 8 } }
+
+heightfield {
+    function {
+        // The sand sheet the dunes stand on.
+          0.42 * (0.50 * noise(2.2 * x, 0, 2.2 * z)
+                + 0.25 * noise(4.6 * x, 0, 4.6 * z)
+                + 0.12 * noise(9.4 * x, 0, 9.4 * z))
+        // The dunes: a wave across the wind, its crests bent and its ridges fading in and out.
+        + 0.58 * pow(0.5 + 0.5 * sin(110 * z
+                + 10.0 * noise(14.0 * x, 0, 2.4 * z)
+                +  4.0 * noise(30.0 * x, 0, 6.0 * z)), 3.2)
+              * clamp(1.8 * noise(9.0 * x, 0, 5.0 * z) - 0.20, 0, 1)
+    }
+    samples 2000
+    material { pigment [0.86, 0.63, 0.36]  specular 0.04  shininess 8 }
+    translate [-0.5, 0, -0.5]
+    scale [1400, 26, 1400]
+}

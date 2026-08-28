@@ -655,14 +655,14 @@ public partial class LanguageParser
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "isosurface" here.'
         }
-        isosurfaceFunctionClause:
+        fieldFunctionClause:
         {
             function > openBrace ?? 'Expecting an open brace to follow "function" here.' >
             _expression > closeBrace ?? 'Expecting a close brace to end the function here.'
         }
         isosurfaceEntryClause:
         [
-            isosurfaceFunctionClause |
+            fieldFunctionClause |
             { threshold > _expression } |
             { accuracy > _expression } |
             surfaceEntryClause
@@ -1085,7 +1085,8 @@ public partial class LanguageParser
         }
         heightFieldEntryClause:
         [
-            imageClause | { clip > _expression } | open | surfaceEntryClause
+            imageClause | fieldFunctionClause | { samples > _expression } |
+            { clip > _expression } | open | surfaceEntryClause
         ]
         
         // Triangle clauses.

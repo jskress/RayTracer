@@ -1,4 +1,5 @@
 railroad-ebnf-beta
 title "A height field"
 
-heightfield = "heightfield" "{" { image | "clip" number | "open" | property } "}" ;
+heightfield = "heightfield" "{" { image | "function" "{" expression "}" | "samples" number
+            | "clip" number | "open" | property } "}" ;
