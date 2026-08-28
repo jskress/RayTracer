@@ -3,13 +3,16 @@
 # Each scene under `gallery/` keeps its render beside it, and those renders are the first thing
 # anyone sees of this ray tracer.  Nothing about them is checked by building or testing, so when
 # the renderer's output changes they go stale in silence.  Worse, a picture whose command line was
-# never written down cannot be made again at all: `a-street-after-dark` is antialiased and its
-# scene does not say so, so re-rendering it "correctly" would have quietly thrown away its smooth
-# edges -- which is how a sweep came to report ninety-five thousand changed pixels that no change
-# had caused.
+# never written down cannot be made again at all: six of the scenes below are antialiased, and a
+# sweep that rendered them without their flag reported hundreds of thousands of changed pixels that
+# no change had caused.
 #
-# Three scenes were also found carrying pictures their own scene files no longer produced.  This
-# file is what makes all of that recoverable.  To bring the whole gallery up to date:
+# **That mistake was made, and it did damage before it was caught.**  Three of those six were
+# declared stale on the strength of such a comparison and re-rendered without their flag, which
+# replaced good pictures with worse ones; three of them said `-a adaptive:1:0.5` in a comment at the
+# top of the scene file all along, and the sweep had simply never read them.  A picture that will not
+# reproduce is a question, not a verdict -- and this file is the answer to it, so that the question
+# stops being asked.  To bring the whole gallery up to date:
 #
 #   while IFS='|' read -r scene w h flags; do
 #       case "$scene" in '#'*|'') continue;; esac
@@ -110,17 +113,18 @@ gallery/Local/surfaces/blob-components.igl|800|600|
 gallery/Local/surfaces/blob-negative-strength.igl|800|600|
 gallery/Local/surfaces/blob.igl|800|600|
 gallery/Local/surfaces/disc.igl|800|600|
+gallery/Local/surfaces/dunes.igl|800|600|-a adaptive:1:0.5
 gallery/Local/surfaces/egg.igl|800|600|
 gallery/Local/surfaces/generic-shape.igl|800|600|
 gallery/Local/surfaces/heightfield.igl|800|600|
-gallery/Local/surfaces/island-from-a-function.igl|800|600|
-gallery/Local/surfaces/island.igl|800|600|
+gallery/Local/surfaces/island-from-a-function.igl|800|600|-a adaptive:1:0.5
+gallery/Local/surfaces/island.igl|800|600|-a adaptive:1:0.5
 gallery/Local/surfaces/isosurface-noise.igl|800|600|
 gallery/Local/surfaces/isosurfaces.igl|800|600|
 gallery/Local/surfaces/patch.igl|800|600|
 gallery/Local/surfaces/superellipsoid-concave.igl|800|600|
 gallery/Local/surfaces/superellipsoid.igl|800|600|
-gallery/Local/surfaces/swells.igl|800|600|
+gallery/Local/surfaces/swells.igl|800|600|-a adaptive:1:0.5
 gallery/Local/surfaces/the-utah-teapot.igl|800|600|
 gallery/Local/surfaces/torus.igl|800|600|
 gallery/Local/surfaces/tube.igl|800|600|

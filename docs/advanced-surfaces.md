@@ -572,7 +572,8 @@ The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text
 
 ### Height Field
 
-An image read as terrain: how bright each pixel is says how high the ground stands there.
+Terrain as a grid of heights, one for each point of a square: either **drawn**, as an image whose
+brightness says how high the ground stands, or **described**, as a function of where you are.
 
 ![A height field](images/figures/adv-height-field.png)
 
@@ -598,14 +599,74 @@ heightfield {
 }
 ```
 
-The field is built over the unit square in X and Z with heights from 0 to 1, so it is nearly
-always translated to center it and then scaled to whatever size the scene wants.
+The field is built over the unit square in X and Z, so it is nearly always translated to center it
+and then scaled to whatever size the scene wants.
+
+> **An image's heights run from 0 to 0.25, not from 0 to 1.**  A picture's brightness is quartered
+> on its way in, so a height field made from a white pixel stands a quarter of a unit tall.  This
+> matters most when a pigment is mapped by altitude: a `linear Y gradient` has a period of one in the
+> surface's own space, so left alone it sweeps a quarter of itself across the whole hill and
+> everything lands in whichever band comes first.  `scale [1, 0.25, 1]` on the *pigment* makes its
+> stops read as plain fractions of the terrain's height.  **A function's heights are not quartered**
+> — what it answers is the height — so the same pigment over the two forms wants different scaling.
 
 | Property | What it does |
 | --- | --- |
 | `image` | The picture to read.  A path or a web address. |
+| `function` | An expression giving the height, in place of an image. |
+| `samples` | How many points across a function is sampled at.  256 by default. |
 | `clip` | Ignore anything below a given height, cutting the terrain off. |
 | `open` | Leave the sides and underside off. |
+
+A field takes its heights from an `image` or from a `function`, never both.  `samples` belongs to
+the function form — a picture brings its own size with it — and `clip` to the image form, since a
+picture's pixels cannot be reached from the scene while a function can simply say `max(..., 0)`.
+Saying otherwise is refused rather than quietly ignored.
+
+#### Terrain from a function
+
+The same shape written out instead of drawn.  Inside the braces, `x` and `z` run from 0 to 1 across
+the square, and what the expression answers is the height:
+
+```
+heightfield {
+    // Ridged multifractal: three octaves, each half as tall and twice as fine as the one before.
+    function {
+        0.30 * (1 - abs(2 * noise(x *  3, 0, z *  3) - 1)) +
+        0.15 * (1 - abs(2 * noise(x *  6, 0, z *  6) - 1)) +
+        0.07 * (1 - abs(2 * noise(x * 12, 0, z * 12) - 1))
+    }
+    samples 400
+
+    translate [-0.5, 0, -0.5]
+    scale [30, 30, 30]
+}
+```
+
+This is the third way to make terrain here, and the three are worth telling apart.  An **image**
+needs a picture beside the scene, and is the only one that can carry real-world elevation data.  A
+**function height field** needs nothing but the scene, and is a mesh, so it is fast.  An
+[isosurface](#isosurface) written as `y - f(x, z)` describes the same terrain but is *marched*
+rather than meshed: slower, and its silhouette is exact where a mesh shows facets against the sky.
+
+Being a mesh, a function height field costs what its grid costs, and `samples` is the dial: a
+400-point grid is 318,000 triangles.  Raise it until the facets stop showing along the skyline,
+which is where a mesh gives itself away, and no further.
+
+Measured on the same island written both ways, at 400x300:
+
+| | Time |
+| --- | --- |
+| Height field, `samples 256` | 1.4s |
+| Height field, `samples 512` | 3.6s |
+| Isosurface, `y - f(x, z)` | 7.2s |
+
+So the mesh is two to five times quicker, and the gap widens as the grid coarsens.  What the
+isosurface buys for that is an exact silhouette and a shape that need not be a height at all.
+
+An overhang is beyond all three: there is one height for each point on the ground.  Only the
+isosurface can be made to lean out over itself, and then only by writing it as a genuine volume
+rather than as a height.
 
 The image may be a **web address**, as it may for an
 [image pigment](pigments-and-patterns.md#image-pigments), and `uncached` before `image` works

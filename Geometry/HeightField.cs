@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.Fields;
 using RayTracer.ImageIO;
 
 namespace RayTracer.Geometry;
@@ -14,12 +15,30 @@ namespace RayTracer.Geometry;
 public class HeightField : Group
 {
     /// <summary>
-    /// This property holds the information for the image to use.
+    /// This property holds the information for the image to use.  A height field takes its heights
+    /// either from this or from <see cref="Function"/>, and must be given exactly one of them.
     /// </summary>
     public ImageReference ImageReference { get; set; }
 
     /// <summary>
-    /// This property notes the level, if any, at which the height field is clipped.
+    /// This property holds the function whose value gives the height, when the terrain is described
+    /// rather than drawn.  It is evaluated over the same unit square the image covers, so <c>x</c>
+    /// and <c>z</c> each run from 0 to 1 and whatever the function answers is the height outright --
+    /// there is no quarter-scaling here, unlike the image form, which is a difference worth knowing
+    /// when a pigment is mapped by altitude across the two.
+    /// </summary>
+    public FieldExpression Function { get; set; }
+
+    /// <summary>
+    /// This property holds how many points across the function is sampled at, in each direction.  An
+    /// image brings its own size with it and ignores this.
+    /// </summary>
+    public int Samples { get; set; } = 256;
+
+    /// <summary>
+    /// This property notes the level, if any, at which the height field is clipped.  It belongs to
+    /// the image form: a picture's pixels cannot be reached from the scene, so a floor has to be
+    /// applied here, where a function can simply say <c>max(..., 0)</c> for itself.
     /// </summary>
     public double Clip { get; set; } = -1;
 
@@ -28,7 +47,17 @@ public class HeightField : Group
     /// </summary>
     public bool Closed { get; set; } = true;
 
-    private Canvas _canvas;
+    // The heights of every grid point, worked out once up front.  Each one is read by up to four of
+    // the triangles around it, and having both sources land here is what lets everything below this
+    // point be written once rather than twice.
+    private double[,] _heights;
+    private int _columns;
+    private int _rows;
+
+    // The level an open field's flat triangles are dropped at.  That is the clip for a picture,
+    // whose pixels the scene cannot reach; for a function there is no such level, since the author
+    // writes whatever floor they want into the expression and every height they ask for is meant.
+    private double _floor;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -36,11 +65,14 @@ public class HeightField : Group
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        // First, load the image and ensure it's a gray scale.
-        _canvas = ImageReference.Canvas.ToGrayScale();
+        // First, work out the height at every point of the grid, from whichever source we were given.
+        if (Function is null)
+            ReadHeightsFromTheImage();
+        else
+            ReadHeightsFromTheFunction();
 
-        if (_canvas.Width < 2 || _canvas.Height < 2)
-            throw new Exception("Height field needs to be at least 2 pixels in both dimensions.");
+        if (_columns < 2 || _rows < 2)
+            throw new Exception("Height field needs to be at least 2 points in both dimensions.");
 
         // Next, we need to create all our triangles.
         CreateTriangles();
@@ -50,12 +82,67 @@ public class HeightField : Group
     }
 
     /// <summary>
+    /// This method reads the heights out of our image, as a gray scale, and applies any clip level
+    /// we carry.  The quarter-scaling is applied here and only here: a height field made from a
+    /// picture has always stood a quarter as tall as the picture is bright, and every scene built on
+    /// one is composed around that.
+    /// </summary>
+    private void ReadHeightsFromTheImage()
+    {
+        Canvas canvas = ImageReference.Canvas.ToGrayScale();
+
+        _columns = canvas.Width;
+        _rows = canvas.Height;
+        _floor = Clip;
+
+        if (_columns < 2 || _rows < 2)
+            return;
+
+        _heights = new double[_columns, _rows];
+
+        for (int y = 0; y < _rows; y++)
+        {
+            for (int x = 0; x < _columns; x++)
+                _heights[x, y] = ApplyClip(canvas.GetPixel(x, y).Red);
+        }
+    }
+
+    /// <summary>
+    /// This method works out the heights by asking our function for one at every point of the grid.
+    /// <para>
+    /// The function sees the same unit square the image covers, so it is written in the terrain's own
+    /// coordinates and scaled into the world afterwards like anything else.  It is handed a Y of
+    /// nought, since a height is a thing of two dimensions; a function that uses Y will simply see it
+    /// as a constant.
+    /// </para>
+    /// </summary>
+    private void ReadHeightsFromTheFunction()
+    {
+        _columns = _rows = Samples;
+        _floor = double.NegativeInfinity;
+
+        if (_columns < 2)
+            return;
+
+        FieldFunction function = FieldFunction.Compile(Function);
+        double step = 1.0 / (Samples - 1);
+
+        _heights = new double[_columns, _rows];
+
+        for (int y = 0; y < _rows; y++)
+        {
+            for (int x = 0; x < _columns; x++)
+                _heights[x, y] = function.Evaluate(x * step, 0, y * step);
+        }
+    }
+
+    /// <summary>
     /// This method creates all our needed triangles to represent the height field.
     /// </summary>
     private void CreateTriangles()
     {
-        double scaleX = 1.0 / (_canvas.Width - 1);
-        double scaleY = 1.0 / (_canvas.Height - 1);
+        double scaleX = 1.0 / (_columns - 1);
+        double scaleY = 1.0 / (_rows - 1);
         int count = CreateSurfaceTriangles(scaleX, scaleY);
 
         if (Closed)
@@ -98,9 +185,9 @@ public class HeightField : Group
         // three runs each and no overlap between them.  Worth knowing that the same comparison at
         // 200x150 came out the other way round -- at a render of about a second, building the tree and
         // starting the process cost more than the tracing they were being compared through.
-        for (int y = 0; y < _canvas.Height - 1; y++)
+        for (int y = 0; y < _rows - 1; y++)
         {
-            for (int x = 0; x < _canvas.Width - 1; x++)
+            for (int x = 0; x < _columns - 1; x++)
                 count += AddSurfaceTriangles(this, x, y, sx, sy);
         }
 
@@ -125,17 +212,17 @@ public class HeightField : Group
         double z2 = (y + 1) * sy;
         int count = 0;
 
-        double y1 = ApplyClip(_canvas.GetPixel(x, y).Red);
-        double y2 = ApplyClip(_canvas.GetPixel(x + 1, y).Red);
-        double y3 = ApplyClip(_canvas.GetPixel(x + 1, y + 1).Red);
-        double y4 = ApplyClip(_canvas.GetPixel(x, y + 1).Red);
+        double y1 = _heights[x, y];
+        double y2 = _heights[x + 1, y];
+        double y3 = _heights[x + 1, y + 1];
+        double y4 = _heights[x, y + 1];
 
         Point point1 = new Point(x1, y1, z1);
         Point point2 = new Point(x2, y2, z1);
         Point point3 = new Point(x2, y3, z2);
         Point point4 = new Point(x1, y4, z2);
 
-        if (Closed || y1 > Clip || y2 > Clip || y3 > Clip)
+        if (Closed || y1 > _floor || y2 > _floor || y3 > _floor)
         {
             group.Add(new Triangle
             {
@@ -146,7 +233,7 @@ public class HeightField : Group
             count++;
         }
 
-        if (Closed || y1 > Clip || y3 > Clip || y4 > Clip)
+        if (Closed || y1 > _floor || y3 > _floor || y4 > _floor)
         {
             group.Add(new Triangle
             {
@@ -178,15 +265,15 @@ public class HeightField : Group
     /// <returns>The number of triangles created.</returns>
     private int CreateWallTriangles(double sx, double sy)
     {
-        int maxX = _canvas.Width - 1;
-        int maxY = _canvas.Height - 1;
+        int maxX = _columns - 1;
+        int maxY = _rows - 1;
         int count = 0;
         Group front = new Group();
         Group back = new Group();
         Group left = new Group();
         Group right = new Group();
 
-        for (int x = 0; x < _canvas.Width - 1; x++)
+        for (int x = 0; x < _columns - 1; x++)
         {
             AddWallTriangles(front, x + 1, 0, x, 0, sx, sy);
             AddWallTriangles(back, x, maxY, x + 1, maxY, sx, sy);
@@ -194,7 +281,7 @@ public class HeightField : Group
             count += 4;
         }
 
-        for (int y = 0; y < _canvas.Height - 1; y++)
+        for (int y = 0; y < _rows - 1; y++)
         {
             AddWallTriangles(left, 0, y, 0, y + 1, sx, sy);
             AddWallTriangles(right, maxX, y + 1, maxX, y, sx, sy);
@@ -225,8 +312,8 @@ public class HeightField : Group
     {
         double x1 = px1 * sx;
         double x2 = px2 * sx;
-        double y1 = ApplyClip(_canvas.GetPixel(px1, py1).Red);
-        double y2 = ApplyClip(_canvas.GetPixel(px2, py2).Red);
+        double y1 = _heights[px1, py1];
+        double y2 = _heights[px2, py2];
         double z1 = py1 * sy;
         double z2 = py2 * sy;
 

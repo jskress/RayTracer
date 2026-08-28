@@ -533,6 +533,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/dunes.png">
+      <img alt="Dunes" height="120" src="Local/surfaces/dunes.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/dunes.igl">Dunes</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/surfaces/island.png">
       <img alt="Island" height="120" src="Local/surfaces/island.png" width="160"/>
     </a></td>
