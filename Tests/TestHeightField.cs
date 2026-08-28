@@ -48,6 +48,11 @@ public class TestHeightField
         return new VariableTerm(new IdToken(name));
     }
 
+    private static Term Multiply(Term left, Term right)
+    {
+        return new BinaryMultiplyOperation(left, right);
+    }
+
     /// <summary>
     /// Gathers every corner of every triangle the field built.
     /// </summary>
@@ -156,6 +161,128 @@ public class TestHeightField
 
             Assert.AreEqual(2 * (samples - 1) * (samples - 1), field.Surfaces.OfType<Triangle>().Count(),
                 $"a {samples}-point grid should make two triangles for each of its squares");
+        }
+    }
+
+    /// <summary>
+    /// Asked to be smooth, the terrain carries a normal at every grid point taken from the slope of
+    /// the ground either side of it -- so the triangles meeting there agree about which way the
+    /// surface faces, which is the whole of the difference between smooth and faceted.
+    /// <para>
+    /// The function is <c>x squared</c>, whose slope is <c>2x</c>, and a central difference of a
+    /// quadratic is exact -- so this can be held to the real answer rather than to a tolerance
+    /// chosen to make it pass.  The points along the X edges have a neighbour on one side only and
+    /// take a one-sided difference, which is not exact, so they are left out.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestSmoothNormalsFollowTheSlopeOfTheGround()
+    {
+        HeightField field = new ()
+        {
+            Function = Expression(Multiply(Named("x"), Named("x"))),
+            Samples = 21, Closed = false, Smooth = true
+        };
+
+        field.PrepareForRendering();
+
+        List<SmoothTriangle> triangles = field.Surfaces.OfType<SmoothTriangle>().ToList();
+
+        Assert.IsTrue(triangles.Count > 0, "a smooth field should be made of smooth triangles");
+
+        int checked_ = 0;
+
+        foreach (SmoothTriangle triangle in triangles)
+        {
+            foreach ((Point point, Vector normal) in new[]
+                     {
+                         (triangle.Point1, triangle.Normal1),
+                         (triangle.Point2, triangle.Normal2),
+                         (triangle.Point3, triangle.Normal3)
+                     })
+            {
+                // The edges in X take a one-sided difference, which a quadratic defeats.
+                if (point.X < 1e-9 || point.X > 1 - 1e-9)
+                    continue;
+
+                Vector expected = new Vector(-2 * point.X, 1, 0).Unit;
+
+                Assert.AreEqual(expected.X, normal.X, 1e-9, $"normal X at x = {point.X}");
+                Assert.AreEqual(expected.Y, normal.Y, 1e-9, $"normal Y at x = {point.X}");
+                Assert.AreEqual(expected.Z, normal.Z, 1e-9, $"normal Z at x = {point.X}");
+
+                checked_++;
+            }
+        }
+
+        Assert.IsTrue(checked_ > 100, $"only {checked_} normals were actually checked");
+    }
+
+    /// <summary>
+    /// Smoothing is off unless it is asked for, and that is not a detail: turning it on changes the
+    /// shading of every height field ever written, so the default has to leave them alone.
+    /// </summary>
+    [TestMethod]
+    public void TestTerrainIsFacetedUnlessSmoothIsAskedFor()
+    {
+        HeightField field = new ()
+        {
+            Function = Expression(Multiply(Named("x"), Named("x"))), Samples = 8, Closed = false
+        };
+
+        field.PrepareForRendering();
+
+        Assert.IsTrue(field.Surfaces.OfType<Triangle>().Any(), "there should be terrain");
+        Assert.IsFalse(field.Surfaces.OfType<SmoothTriangle>().Any(),
+            "nothing should be smoothed unless the scene asked for it");
+    }
+
+    /// <summary>
+    /// **Smoothing is not a thing of the function form.**  The normals come from the sampled grid,
+    /// and a picture fills that grid exactly as a function does -- an image height field facets in
+    /// just the same way and is helped just as much.  What keeps this off by default is that it
+    /// changes existing pictures, not that it does not apply.
+    /// </summary>
+    [TestMethod]
+    public void TestAnImageIsSmoothedToo()
+    {
+        HeightField field = new ()
+        {
+            ImageReference = new ImageReference
+            {
+                ImageName = "terrain.png",
+                SourceDirectory = Path.Combine(
+                    TestDocumentation.RepositoryRoot, "docs", "examples", "advanced")
+            },
+            Closed = false, Smooth = true
+        };
+
+        field.PrepareForRendering();
+
+        Assert.IsTrue(field.Surfaces.OfType<SmoothTriangle>().Any(),
+            "a height field read from a picture should smooth like any other");
+    }
+
+    /// <summary>
+    /// The walls below the terrain stay faceted, because they really are flat.  Smoothing them would
+    /// round off the sides of the block the terrain sits on, which is not a shape anything means.
+    /// </summary>
+    [TestMethod]
+    public void TestTheWallsAreNotSmoothed()
+    {
+        HeightField field = new ()
+        {
+            Function = Expression(Multiply(Named("x"), Named("x"))),
+            Samples = 8, Closed = true, Smooth = true
+        };
+
+        field.PrepareForRendering();
+
+        // The terrain goes straight into the field; the four walls are each their own group.
+        foreach (Group wall in field.Surfaces.OfType<Group>())
+        {
+            Assert.IsFalse(wall.Surfaces.OfType<SmoothTriangle>().Any(),
+                "a wall is flat, and should be left flat");
         }
     }
 

@@ -47,10 +47,23 @@ public class HeightField : Group
     /// </summary>
     public bool Closed { get; set; } = true;
 
+    /// <summary>
+    /// This property notes whether the terrain is shaded as the smooth thing it stands for, rather
+    /// than as the flat triangles it is really made of.
+    /// <para>
+    /// It is off by default, and deliberately: turning it on changes the shading of every height
+    /// field ever written, so it is asked for rather than assumed.  Terrain with crags in it hides
+    /// its faceting well enough that the flat form is no hardship; a smooth surface lit at a graze
+    /// -- dunes are the worst case -- shows every triangle it owns.
+    /// </para>
+    /// </summary>
+    public bool Smooth { get; set; }
+
     // The heights of every grid point, worked out once up front.  Each one is read by up to four of
     // the triangles around it, and having both sources land here is what lets everything below this
     // point be written once rather than twice.
     private double[,] _heights;
+    private Vector[,] _normals;
     private int _columns;
     private int _rows;
 
@@ -143,6 +156,10 @@ public class HeightField : Group
     {
         double scaleX = 1.0 / (_columns - 1);
         double scaleY = 1.0 / (_rows - 1);
+
+        if (Smooth)
+            WorkOutNormals(scaleX, scaleY);
+
         int count = CreateSurfaceTriangles(scaleX, scaleY);
 
         if (Closed)
@@ -162,6 +179,45 @@ public class HeightField : Group
         }
         
         Terminal.Out($"Height field created {count} triangles.", OutputLevel.Chatty);
+    }
+
+    /// <summary>
+    /// This method works out the normal at every point of the grid, from the slope of the ground
+    /// either side of it.
+    /// <para>
+    /// For a surface <c>y = h(x, z)</c> the normal is <c>(-dh/dx, 1, -dh/dz)</c>, and a central
+    /// difference across the neighbouring points is what makes the triangles meeting at a point
+    /// agree about which way it faces -- which is the whole of the difference between a smooth
+    /// surface and a faceted one.  The points along the edges have a neighbour on one side only, so
+    /// they take a one-sided difference.
+    /// </para>
+    /// <para>
+    /// This is done from the sampled grid rather than from the function that may have made it, and
+    /// on purpose: the grid is what the triangles are actually built from, so normals taken from it
+    /// describe the surface being drawn.  It also means the image form and the function form get
+    /// this by the same route.
+    /// </para>
+    /// </summary>
+    /// <param name="sx">The distance between grid points in the X direction.</param>
+    /// <param name="sy">The distance between grid points in the Z direction.</param>
+    private void WorkOutNormals(double sx, double sy)
+    {
+        _normals = new Vector[_columns, _rows];
+
+        for (int y = 0; y < _rows; y++)
+        {
+            for (int x = 0; x < _columns; x++)
+            {
+                int left = Math.Max(x - 1, 0);
+                int right = Math.Min(x + 1, _columns - 1);
+                int back = Math.Max(y - 1, 0);
+                int front = Math.Min(y + 1, _rows - 1);
+                double slopeX = (_heights[right, y] - _heights[left, y]) / ((right - left) * sx);
+                double slopeZ = (_heights[x, front] - _heights[x, back]) / ((front - back) * sy);
+
+                _normals[x, y] = new Vector(-slopeX, 1, -slopeZ).Unit;
+            }
+        }
     }
 
     /// <summary>
@@ -224,27 +280,47 @@ public class HeightField : Group
 
         if (Closed || y1 > _floor || y2 > _floor || y3 > _floor)
         {
-            group.Add(new Triangle
-            {
-                Point1 = point1,
-                Point2 = point2,
-                Point3 = point3
-            });
+            group.Add(TriangleFor(point1, point2, point3, x, y, x + 1, y, x + 1, y + 1));
             count++;
         }
 
         if (Closed || y1 > _floor || y3 > _floor || y4 > _floor)
         {
-            group.Add(new Triangle
-            {
-                Point1 = point1,
-                Point2 = point3,
-                Point3 = point4
-            });
+            group.Add(TriangleFor(point1, point3, point4, x, y, x + 1, y + 1, x, y + 1));
             count++;
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// This method makes one triangle of the terrain, carrying the normals of the grid points it
+    /// stands on when the terrain is to be shaded smooth.  Only the terrain is smoothed; the walls
+    /// below it are flat because they really are flat.
+    /// </summary>
+    private Triangle TriangleFor(
+        Point point1, Point point2, Point point3,
+        int x1, int y1, int x2, int y2, int x3, int y3)
+    {
+        if (!Smooth)
+        {
+            return new Triangle
+            {
+                Point1 = point1,
+                Point2 = point2,
+                Point3 = point3
+            };
+        }
+
+        return new SmoothTriangle
+        {
+            Point1 = point1,
+            Point2 = point2,
+            Point3 = point3,
+            Normal1 = _normals[x1, y1],
+            Normal2 = _normals[x2, y2],
+            Normal3 = _normals[x3, y3]
+        };
     }
 
     /// <summary>

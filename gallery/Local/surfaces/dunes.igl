@@ -33,11 +33,15 @@
 // at this distance, so it adds no texture and gives the sampler a great deal of aliasing to clean
 // up -- the same lesson the water scenes teach about wave trains too small to see.
 //
-// **`samples 2000` is not extravagance.**  A height field is built of *flat* triangles, so a smooth
-// surface shows the edges of them as a fine diamond pattern wherever the light rakes across it, and
-// dunes are the worst case there is for that: smooth, and lit at a graze.  At 1100 the hatching is
-// plain on the sunlit slopes; at 2000 it is nearly gone.  Terrain with crags in it -- the islands --
-// hides this happily at a quarter of the grid, so do not read this number as one terrain needs.
+// **`smooth` is why this is 1100 samples and not 2000.**  A height field is built of *flat*
+// triangles, so without it a smooth surface shows the edges of them as a fine diamond pattern
+// wherever the light rakes across -- and dunes are the worst case there is: smooth, and lit at a
+// graze.  Flat, this scene wanted 2000 samples before the hatching went; smooth, 1100 is cleaner
+// still and renders in rather less than half the time.
+//
+// Smoothing costs nothing to compute, and it *only shades*: the shadow edges are real geometry, and
+// they are what still wants a grid this fine.  Terrain with crags in it -- the islands -- hides its
+// faceting well enough that it never asked for this.
 //
 // **The sun stands at 20 degrees, and lower is worse.**  At 10 degrees the shadows are longer than
 // the gap between dunes, so every trough fills in solid black; at 20 they reach about as far as the
@@ -77,7 +81,8 @@ heightfield {
                 +  4.0 * noise(30.0 * x, 0, 6.0 * z)), 3.2)
               * clamp(1.8 * noise(9.0 * x, 0, 5.0 * z) - 0.20, 0, 1)
     }
-    samples 2000
+    samples 1100
+    smooth
     material { pigment [0.86, 0.63, 0.36]  specular 0.04  shininess 8 }
     translate [-0.5, 0, -0.5]
     scale [1400, 26, 1400]
