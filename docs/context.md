@@ -154,11 +154,31 @@ to happen in a predictable order.
 
 ### Anti-Aliasing
 
-Antialiasing is set from the command line rather than from the context block, with
-`-a`/`--antialias`; see
-[Command Line Options](getting-started.md#how-big-and-how-good), which also covers the
-threshold — how far two samples within one pixel must disagree before the sampler looks
-closer, and the number to reach for when a detailed scene is taking too long.
+A scene may say how hard to work at the edges within a pixel:
+
+```
+context {
+    antialiasing depth 1
+    antialiasing threshold 0.5
+}
+```
+
+| Written | What it does |
+| --- | --- |
+| `antialiasing depth` | How many times the sampler may look further into a pixel. |
+| `antialiasing threshold` | How far two samples must disagree before it does. |
+
+Either one on its own turns the adaptive sampler on, since neither number means anything
+without it; `depth` alone leaves the threshold at its usual value, which is the common case.
+Nothing said means no antialiasing at all, which is what makes it worth saying.
+
+**A scene that needs antialiasing should say so here rather than rely on being rendered with
+the right flag.**  `-a`/`--antialias` on the command line still overrules whatever the scene
+asked for — see [Command Line Options](getting-started.md#how-big-and-how-good) — but a scene
+that only ever said it on a command line has not really recorded it: the next person to render
+it, or a sweep that re-renders the whole gallery, gets a picture with the edges left rough and
+no indication that anything was lost.  That is not hypothetical; it is how three gallery images
+came to be replaced with worse ones.
 
 ### Image Size
 

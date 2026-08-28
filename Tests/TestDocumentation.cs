@@ -460,7 +460,7 @@ public class TestDocumentation
     /// </summary>
     /// <param name="path">The picture to measure.</param>
     /// <returns>Its width and height.</returns>
-    internal static (int Width, int Height) SizeOfPng(string path)
+    private static (int Width, int Height) SizeOfPng(string path)
     {
         byte[] header = new byte[24];
 

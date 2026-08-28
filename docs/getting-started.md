@@ -143,6 +143,12 @@ for within the chosen scene, so two scenes may each have a camera of the same na
 Antialiasing is written either as `off`, or as `adaptive` with a depth: `adaptive:5`, or
 just `5`, which means the same.  Bare `-a` with nothing after it means `adaptive:5`.
 
+A scene may also ask for antialiasing itself, with
+[`antialiasing depth`](context.md#anti-aliasing) in its context block, and one that needs it
+should — this flag then overrules whatever it asked for, and saying nothing leaves it alone.
+A scene whose antialiasing lives only in the command line that once rendered it has not really
+recorded it.
+
 The adaptive sampler fires five rays per pixel in the pattern of the pips on the "five" side
 of a die.  Where the corners disagree with the center by enough to notice, it splits that
 corner and looks closer.  This repeats down to the depth you allow.  A pixel in the middle

@@ -27,6 +27,10 @@
 // ambient at zero has shadows that are holes, and a hole reads as missing geometry rather than as dark.
 
 context {
+    // The edges in this one want the sampler; said here rather than only on a command line, so
+    // that anything re-rendering the scene gets the picture it is supposed to.
+    antialiasing depth 1
+    antialiasing threshold 0.5
     parallel pixel scanner
     angles are degrees
     // A shade is walked the same way a plume of smoke is, and too few steps bands it.

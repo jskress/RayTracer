@@ -46,6 +46,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `angle` | L-system control: the turn angle. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `angles` | `angles are degrees`/`radians`. | [Context](context.md#angles) |
 | `anisotropy` | Medium: which way it prefers to turn light. | [Scene Files](scene-files.md#scattering) |
+| `antialiasing` | Context: `antialiasing depth`/`threshold`. | [Context](context.md#anti-aliasing) |
 | `aperture` | Camera: lens radius; larger blurs more. | [Cameras](cameras.md#depth-of-field) |
 | `apply` | Context: `apply gamma`. | [Context](context.md#gamma) |
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |

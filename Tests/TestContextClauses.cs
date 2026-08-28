@@ -1,3 +1,4 @@
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Options;
@@ -127,6 +128,114 @@ public class TestContextClauses
 
         Assert.AreEqual(2.6, context.Gamma, 1e-9, "the command line should have won");
     }
+    // -- antialiasing --------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Antialiasing is the scene's to ask for and the command line's to overrule, and the middle
+    /// case is the one that matters: a command line that says nothing on the subject must leave the
+    /// scene's own setting standing.  It did not, and that is how a sweep came to re-render three
+    /// gallery pictures without the antialiasing they were made with.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMaySettleItsOwnAntiAliasing()
+    {
+        RenderContext context = new ();
+
+        context.ApplyOptions(new RenderOptions(), 0);
+
+        Assert.AreEqual("off", context.AntiAliasing.ToString(),
+            "said nowhere, there should be no antialiasing");
+
+        context = new RenderContext();
+        context.AntiAliasing.AdaptiveDepth = 1;
+
+        context.ApplyOptions(new RenderOptions(), 0);
+
+        Assert.AreEqual("adaptive:1", context.AntiAliasing.ToString(),
+            "the scene's antialiasing should have survived a command line that said nothing");
+
+        context = new RenderContext();
+        context.AntiAliasing.AdaptiveDepth = 1;
+
+        context.ApplyOptions(new RenderOptions { AntiAliasingText = "adaptive:4" }, 0);
+
+        Assert.AreEqual("adaptive:4", context.AntiAliasing.ToString(),
+            "the command line should have won");
+
+        // And it must be able to win by turning the thing off, which is why "said nothing" cannot
+        // simply be spelled "off".
+        context = new RenderContext();
+        context.AntiAliasing.AdaptiveDepth = 1;
+
+        context.ApplyOptions(new RenderOptions { AntiAliasingText = "off" }, 0);
+
+        Assert.AreEqual("off", context.AntiAliasing.ToString(),
+            "the command line should be able to turn it off again");
+    }
+
+    /// <summary>
+    /// And the setting reaches the picture: a scene asking for antialiasing renders differently from
+    /// one that does not.  The subject is a sphere against a background, so the only thing to
+    /// antialias is its edge.
+    /// </summary>
+    [TestMethod]
+    public void TestAntiAliasingAskedForInASceneReachesThePicture()
+    {
+        Canvas plain = RenderedWith("");
+        Canvas smoothed = RenderedWith("antialiasing depth 2");
+        int different = 0;
+
+        for (int y = 0; y < plain.Height; y++)
+        {
+            for (int x = 0; x < plain.Width; x++)
+            {
+                if (!plain.GetPixel(x, y).Red.Near(smoothed.GetPixel(x, y).Red, 1e-6))
+                    different++;
+            }
+        }
+
+        Assert.IsTrue(different > 20,
+            $"only {different} pixels changed; the scene's antialiasing did not reach the render");
+    }
+
+    /// <summary>
+    /// The threshold on its own asks for the sampler too, since the number means nothing without it.
+    /// </summary>
+    [TestMethod]
+    public void TestTheThresholdAloneAsksForTheSampler()
+    {
+        RenderContext context = new ();
+
+        context.AntiAliasing.AdaptiveThreshold = 0.5;
+
+        Assert.AreEqual("adaptive:5:0.5", context.AntiAliasing.ToString());
+    }
+
+    /// <summary>
+    /// Renders a sphere against a plain background with the given context body, and hands back the
+    /// image.
+    /// </summary>
+    private Canvas RenderedWith(string contextBody)
+    {
+        string path = Path.Combine(_directory, $"aa-{contextBody.Length}.igl");
+        string output = Path.Combine(_directory, $"aa-{contextBody.Length}.png");
+
+        File.WriteAllText(path,
+            $"context {{ no gamma  width 80  height 60  {contextBody} }}\n" +
+            "camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 60 }\n" +
+            "point light { location [-5, 5, -5] }\n" +
+            "background [0, 0, 0]\n" +
+            "sphere { material { pigment White } }\n");
+
+        ImageRenderer renderer = new LanguageParser(path).Parse();
+
+        Assert.IsNotNull(renderer, "the scene did not parse");
+
+        renderer.Render(new RenderOptions { OutputFileName = output });
+
+        return new ImageFile(output).Load()[0];
+    }
+
     // -- scale ambient by ----------------------------------------------------------------------------
 
     /// <summary>
