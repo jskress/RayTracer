@@ -63,16 +63,31 @@ public class Blob : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
+        // The ray is followed with a direction of unit length, and what is found is scaled back to
+        // the ray's own parameter at the end -- the same thing the isosurface and the
+        // superellipsoid do, and for a sharper reason here.  The field along a ray is a sextic, so
+        // its sixth-power coefficient carries the direction to the sixth power; carrying a world
+        // ray into the space of a blob scaled by a hundred spread the seven coefficients across
+        // eighteen orders of magnitude, which is past what a companion matrix can hold.  The
+        // solver stopped returning roots at all and the blob simply was not there.  With the
+        // direction unit, the polynomial is identical at every scale, so there is nothing left for
+        // a tolerance to get wrong.
+        double length = ray.Direction.Magnitude;
+
+        if (length == 0)
+            return;
+
+        Ray unitRay = new (ray.Origin, ray.Direction / length, ray.TimeIndex);
         List<(double Enter, double Exit, double[] Polynomial)> active = [];
 
         foreach ((_, IBlobPrimitive primitive) in _primitives)
         {
-            (double Enter, double Exit)? interval = primitive.GetBoundingInterval(ray);
+            (double Enter, double Exit)? interval = primitive.GetBoundingInterval(unitRay);
 
             if (interval == null)
                 continue;
 
-            (double t0, double t1, double t2) = primitive.GetDistanceSquaredCoefficients(ray);
+            (double t0, double t1, double t2) = primitive.GetDistanceSquaredCoefficients(unitRay);
             (double d0, double d1, double d2, double d3) = BlobFieldMath.GetDensityCoefficients(
                 primitive.Strength, primitive.RadiusSquared);
             double[] polynomial = BlobFieldMath.GetFieldPolynomial(t0, t1, t2, d0, d1, d2, d3);
@@ -105,7 +120,7 @@ public class Blob : Surface
             double intervalEnd = index + 1 < events.Count ? events[index + 1].T : t;
 
             if (intervalEnd > t)
-                SolveInterval(ray, coefficients, t, intervalEnd, intersections);
+                SolveInterval(unitRay, coefficients, t, intervalEnd, length, intersections);
         }
     }
 
@@ -117,12 +132,20 @@ public class Blob : Surface
     /// <param name="coefficients">The field polynomial's coefficients, in ascending order.</param>
     /// <param name="intervalStart">The start of the sub-interval to accept roots in.</param>
     /// <param name="intervalEnd">The end of the sub-interval to accept roots in.</param>
+    /// <param name="length">The length of the ray's own direction, which the roots found against
+    /// the unit direction are scaled back by.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
     private void SolveInterval(
-        Ray ray, double[] coefficients, double intervalStart, double intervalEnd,
+        Ray ray, double[] coefficients, double intervalStart, double intervalEnd, double length,
         List<Intersection> intersections)
     {
-        if (coefficients.All(coefficient => coefficient.Near(0)))
+        // Only a polynomial that is nothing at all has nothing to solve.  Asked coefficient by
+        // coefficient against a fixed number, this would also throw away a perfectly good
+        // polynomial whose coefficients merely happened to be small.  The unit direction above
+        // keeps them at a sane size, so this no longer decides anything on its own; it is written
+        // relatively because there is no reason for it to be the thing that breaks if a caller
+        // ever hands this a ray whose direction is not unit.
+        if (LargestOf(coefficients) == 0)
             return;
 
         foreach (double t in RealRootsOf(coefficients, intervalStart, intervalEnd))
@@ -130,7 +153,7 @@ public class Blob : Surface
             if (t >= intervalStart - DoubleExtensions.Epsilon &&
                 t <= intervalEnd + DoubleExtensions.Epsilon &&
                 IsGenuineRoot(coefficients, t))
-                intersections.Add(new Intersection(this, Polished(coefficients, t)));
+                intersections.Add(new Intersection(this, Polished(coefficients, t) / length));
         }
     }
 
@@ -270,8 +293,20 @@ public class Blob : Surface
             return RootsByBisection(coefficients, intervalStart, intervalEnd);
         }
 
+        // Whether a root is real is a question about its imaginary part beside its own size: the
+        // worse the polynomial's conditioning, the more dust a genuinely real root comes back
+        // carrying, and dust grows with the root rather than staying at some fixed size.  The
+        // absolute term is kept as a floor, for roots at or near nought.  Nothing is let through
+        // unchecked -- SolveInterval puts every root that survives this through IsGenuineRoot,
+        // which weighs it against the size of its own terms.
+        //
+        // This was not what made a scaled blob vanish, though it looked a likely candidate: the
+        // solver was returning no real roots because it was returning nothing but zeros, and only
+        // the unit direction above fixes that.  Left as it is because it is the right shape.
         return roots
-            .Where(root => root.Imaginary.Near(0))
+            .Where(root => Math.Abs(root.Imaginary) <=
+                           Math.Abs(root.Real) * DoubleExtensions.RelativeTolerance +
+                           DoubleExtensions.Epsilon)
             .Select(root => root.Real);
     }
 
@@ -363,6 +398,22 @@ public class Blob : Surface
     }
 
     /// <summary>
+    /// This method returns the size of the largest coefficient, which is what the others are
+    /// judged against wherever one of them has to be told apart from nothing.
+    /// </summary>
+    /// <param name="coefficients">The field polynomial's coefficients, in ascending order.</param>
+    /// <returns>The largest coefficient by magnitude.</returns>
+    private static double LargestOf(double[] coefficients)
+    {
+        double largest = 0;
+
+        foreach (double coefficient in coefficients)
+            largest = Math.Max(largest, Math.Abs(coefficient));
+
+        return largest;
+    }
+
+    /// <summary>
     /// This method returns a radius that every real root of the polynomial is known to lie within,
     /// by Cauchy's bound: one plus the largest of the trailing coefficients divided by the leading
     /// one.  A leading coefficient of nought would make that meaningless, so the highest one that
@@ -372,9 +423,12 @@ public class Blob : Surface
     /// <returns>A radius containing every root.</returns>
     private static double BoundOnRootsOf(double[] coefficients)
     {
+        double largestCoefficient = LargestOf(coefficients);
         int leading = coefficients.Length - 1;
 
-        while (leading > 0 && coefficients[leading].Near(0))
+        // Whether the leading coefficient is big enough to divide by is a question about the sizes
+        // of the coefficients beside it, not about a fixed number.
+        while (leading > 0 && coefficients[leading].IsNegligibleBeside(largestCoefficient))
             leading--;
 
         if (leading == 0)

@@ -201,7 +201,14 @@ public class BicubicPatch : Surface
 
         t = u = v = 0;
 
-        if (determinant.Near(0))
+        // The same test, and the same correction, as Triangle.AddIntersections: the determinant is
+        // |direction| * 2 * area * cos(angle), so it goes small for three reasons and only the ray
+        // running along the triangle is worth refusing.  A patch is torn into small triangles by
+        // subdivision, which makes it more exposed to this than a mesh, not less.
+        Vector crossEdges = e2.Cross(e1);
+
+        if ((determinant * determinant).IsNegligibleSquaredBeside(
+                crossEdges.Dot(crossEdges) * ray.Direction.Dot(ray.Direction)))
             return false;
 
         double f = 1 / determinant;

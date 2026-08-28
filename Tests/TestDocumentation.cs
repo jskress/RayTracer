@@ -28,7 +28,7 @@ public class TestDocumentation
     /// <summary>
     /// Walks up from wherever the tests are running to find the root of the repository.
     /// </summary>
-    private static string RepositoryRoot
+    internal static string RepositoryRoot
     {
         get
         {
@@ -460,7 +460,7 @@ public class TestDocumentation
     /// </summary>
     /// <param name="path">The picture to measure.</param>
     /// <returns>Its width and height.</returns>
-    private static (int Width, int Height) SizeOfPng(string path)
+    internal static (int Width, int Height) SizeOfPng(string path)
     {
         byte[] header = new byte[24];
 

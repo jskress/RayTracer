@@ -199,7 +199,15 @@ public class BoundingBox
         double min;
         double max;
 
-        if (Math.Abs(direction) >= DoubleExtensions.Epsilon)
+        // Dividing by a small direction is not a hazard -- it simply gives the large distance the
+        // ray really does have to travel to cross this pair of planes -- so there is nothing to
+        // guard against here beyond an exactly zero direction, where the infinities are what the
+        // arithmetic wants anyway.  Refusing to divide below a fixed number, as this once did,
+        // declared a merely slow axis to be a parallel one and answered with infinities instead:
+        // for a ray outside the slab those are both the same sign, which reports a miss.  A ray's
+        // direction shrinks as the surface it is being tested against is scaled up, so that
+        // dropped boxes -- and the geometry inside them -- out of a scaled scene.
+        if (direction != 0)
         {
             min = minNumerator / direction;
             max = maxNumerator / direction;

@@ -17,7 +17,12 @@ public class Plane : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        if (ray.Direction.Y.Near(0))
+        // A ray misses the plane only when it runs along it, and that is a question about the
+        // ray's angle, not about the size of its Y component -- which shrinks with the plane's
+        // own scale.  Judged absolutely, a scaled-up floor lost its horizon.
+        double directionY = ray.Direction.Y;
+
+        if ((directionY * directionY).IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction)))
             return;
 
         double distance = -ray.Origin.Y / ray.Direction.Y;

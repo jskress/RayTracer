@@ -47,7 +47,16 @@ public class Cylinder : ExtrudedSurface
         if (discriminant < 0)
             return;
 
-        if (!a.Near(0))
+        // Only a ray running along the wall -- parallel to the axis -- has no crossing to find,
+        // and `a` is the square of the ray's own direction times the square of the sine of its
+        // angle to the axis.  Judged against a fixed number instead, it also refuses a ray whose
+        // direction is merely short, which is exactly what carrying a world ray into the space of
+        // a scaled-up cylinder produces: at a scale of 100 the wall was lost for every ray within
+        // 5.7 degrees of the axis, so a pipe or a well seen near end-on showed only its caps.
+        double directionSquared = ray.Direction.Dot(ray.Direction);
+        double directionY = ray.Direction.Y;
+
+        if (!a.IsNegligibleSquaredBeside(directionSquared))
         {
             a *= 2;
             b = -b;
@@ -69,7 +78,7 @@ public class Cylinder : ExtrudedSurface
                 intersections.Add(new Intersection(this, t1));
         }
 
-        if (Closed && !ray.Direction.Y.Near(0))
+        if (Closed && !(directionY * directionY).IsNegligibleSquaredBeside(directionSquared))
             AddCappedIntersections(ray, intersections);
     }
 

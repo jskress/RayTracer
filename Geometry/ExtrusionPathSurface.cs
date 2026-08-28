@@ -70,15 +70,24 @@ public class ExtrusionPathSurface
     /// if the intersection is too low or too high for this surface.</returns>
     private double GetRayDistance(Ray ray, TwoDPoint point)
     {
-        bool xIsZero = ray.Direction.X.Near(0);
-        bool zIsZero = ray.Direction.Z.Near(0);
+        // The ray is projected on to the X/Z plane, so it can be followed along whichever of the
+        // two axes it travels faster in -- and only a ray straight up or down travels along
+        // neither.  Both tests are made against the ray's own direction, since a scaled-up
+        // extrusion shrinks the direction it is carried in with and would otherwise call an
+        // ordinary slanted ray vertical.  Dividing by the larger component also keeps the most
+        // precision, where taking X whenever it was not quite zero threw some away.
+        double directionX = ray.Direction.X;
+        double directionZ = ray.Direction.Z;
+        double directionSquared = ray.Direction.Dot(ray.Direction);
+        bool useX = Math.Abs(directionX) >= Math.Abs(directionZ);
+        double larger = useX ? directionX : directionZ;
 
-        if (xIsZero && zIsZero)
+        if ((larger * larger).IsNegligibleSquaredBeside(directionSquared))
             return double.NaN;
 
-        double distance = !xIsZero
-            ? (point.X - ray.Origin.X) / ray.Direction.X
-            : (point.Y - ray.Origin.Z) / ray.Direction.Z;
+        double distance = useX
+            ? (point.X - ray.Origin.X) / directionX
+            : (point.Y - ray.Origin.Z) / directionZ;
         double y = ray.Origin.Y + distance * ray.Direction.Y;
 
         return y < _minimumY || y > _maximumY ? double.NaN : distance;

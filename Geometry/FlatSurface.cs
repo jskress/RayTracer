@@ -57,7 +57,12 @@ public abstract class FlatSurface : Surface
     {
         double denominator = Normal.Dot(ray.Direction);
 
-        if (denominator.Near(0))
+        // The denominator is |normal| * |direction| * the cosine of the angle between them, so it
+        // goes small for three reasons and only one of them -- the ray running along the surface --
+        // is worth refusing.  The others are a short ray direction, which is what carrying a world
+        // ray into a scaled-up surface's own space produces, and a normal that is not unit length.
+        if ((denominator * denominator).IsNegligibleSquaredBeside(
+                Normal.Dot(Normal) * ray.Direction.Dot(ray.Direction)))
             return null;
 
         // The distance is returned even when it is negative, putting the hit behind the ray's

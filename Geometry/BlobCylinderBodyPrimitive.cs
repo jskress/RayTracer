@@ -52,7 +52,12 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
     {
         (double t0, double t1, double t2) = GetDistanceSquaredCoefficients(ray);
 
-        if (t2.Near(0))
+        // T2 is the square of the ray's own direction times the square of the sine of its angle to
+        // the bond's axis, so it must be judged against that direction and not against a fixed
+        // number -- the same correction as Cylinder.AddIntersections, for the same reason.
+        double directionSquared = ray.Direction.Dot(ray.Direction);
+
+        if (t2.IsNegligibleSquaredBeside(directionSquared))
             return null;
 
         double discriminant = t1 * t1 - t2 * (t0 - RadiusSquared);
@@ -68,7 +73,7 @@ public class BlobCylinderBodyPrimitive : IBlobPrimitive
         double originAxial = (ray.Origin - _start).Dot(_axisUnit);
         double directionAxial = ray.Direction.Dot(_axisUnit);
 
-        if (directionAxial.Near(0))
+        if ((directionAxial * directionAxial).IsNegligibleSquaredBeside(directionSquared))
             return originAxial >= 0 && originAxial <= _axisLength ? (enter, exit) : null;
 
         double axialEnter = -originAxial / directionAxial;
