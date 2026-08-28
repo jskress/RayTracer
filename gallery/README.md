@@ -533,6 +533,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/island.png">
+      <img alt="Island" height="120" src="Local/surfaces/island.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/island.igl">Island</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/island-from-a-function.png">
+      <img alt="Island From A Function" height="120" src="Local/surfaces/island-from-a-function.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/island-from-a-function.igl">Island From A Function</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/surfaces/swells.png">
       <img alt="Swells" height="120" src="Local/surfaces/swells.png" width="160"/>
     </a></td>
