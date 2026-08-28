@@ -75,7 +75,7 @@ public partial class LanguageParser
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
-            'anisotropy', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
+            'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'baseline', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
@@ -268,8 +268,20 @@ public partial class LanguageParser
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | scaleAmbientClause | contextPropertyClause
+            settingOffClause | mediumSamplesClause | antiAliasingClause | scaleAmbientClause |
+            contextPropertyClause
         ] ?? 'Expecting a context property here.'
+
+        // How hard to work at the edges within a pixel.  This belongs with the scanner and the
+        // medium samples rather than with anything a scene is made of, and a scene that needs it
+        // needs to be able to say so: said only on the command line, it is lost the moment anything
+        // renders the scene without repeating it.
+        antiAliasingClause:
+        {
+            antialiasing >
+            [ depth | threshold ] ?? 'Expecting "depth" or "threshold" to follow "antialiasing" here.' >
+            _expression
+        }
 
         // Camera clauses.
         // The word before "camera", if any, names the projection: nothing for the ordinary

@@ -100,6 +100,29 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "antialiasing":
+                if (clause.Text(1) == "threshold")
+                {
+                    updater.AntiAliasingThresholdResolver = new TermResolver<double>
+                    {
+                        Term = term,
+                        Validator = value => value is <= 0 or > 1
+                            ? "The antialiasing threshold must be more than nought and no more " +
+                              "than one."
+                            : null
+                    };
+
+                    break;
+                }
+
+                updater.AntiAliasingDepthResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 0
+                        ? "A pixel cannot be looked into fewer than no times."
+                        : null
+                };
+                break;
             case "width":
                 updater.WidthResolver = new TermResolver<int>
                 {

@@ -23,6 +23,34 @@ public class AliasingOption
     }
 
     /// <summary>
+    /// This property holds how deeply the adaptive sampler subdivides a pixel.  Setting it asks for
+    /// adaptive super sampling, since a depth means nothing without it.
+    /// </summary>
+    public int AdaptiveDepth
+    {
+        get => _adaptiveSuperSamplingDepth;
+        set
+        {
+            _type = AdaptiveSuperSampling;
+            _adaptiveSuperSamplingDepth = value;
+        }
+    }
+
+    /// <summary>
+    /// This property holds how different two samples must be before the sampler looks closer.
+    /// Setting it asks for adaptive super sampling, for the same reason.
+    /// </summary>
+    public double AdaptiveThreshold
+    {
+        get => _adaptiveThreshold;
+        set
+        {
+            _type = AdaptiveSuperSampling;
+            _adaptiveThreshold = value;
+        }
+    }
+
+    /// <summary>
     /// This method is used to configure this option based on what the end user specifies.
     /// </summary>
     /// <param name="text">The text the user specified.</param>

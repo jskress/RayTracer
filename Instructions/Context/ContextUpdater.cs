@@ -54,6 +54,17 @@ public class ContextUpdater : Instruction
     public Resolver<int> MediumBouncesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how deeply the sampler looks into a pixel.
+    /// </summary>
+    public Resolver<int> AntiAliasingDepthResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how different two samples must be before the sampler
+    /// looks closer.
+    /// </summary>
+    public Resolver<double> AntiAliasingThresholdResolver { get; set; }
+
+    /// <summary>
     /// This property provides the resolver, if any, for setting the image height property
     /// in the rendering context.
     /// </summary>
@@ -85,6 +96,13 @@ public class ContextUpdater : Instruction
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
+
+        // These land on the context's own aliasing option rather than on the context, since asking
+        // for either of them is what asks for the sampler at all.
+        AntiAliasingDepthResolver.AssignTo(
+            context.AntiAliasing, target => target.AdaptiveDepth, context, variables);
+        AntiAliasingThresholdResolver.AssignTo(
+            context.AntiAliasing, target => target.AdaptiveThreshold, context, variables);
         HeightResolver.AssignTo(context, target => target.Height, context, variables);
         GammaResolver.AssignTo(context, target => target.Gamma, context, variables);
 

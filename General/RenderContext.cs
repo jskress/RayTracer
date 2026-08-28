@@ -82,7 +82,7 @@ public class RenderContext
     /// <summary>
     /// This property holds the antialiasing option for the ray tracer.
     /// </summary>
-    public AliasingOption AntiAliasing { get; set; }
+    public AliasingOption AntiAliasing { get; set; } = new();
 
     /// <summary>
     /// This property holds how many places along a ray's crossing of a medium the scene's lamps are
@@ -169,7 +169,13 @@ public class RenderContext
 
         BitsPerChannel = options.BitsPerChannel;
         Grayscale = options.Grayscale;
-        AntiAliasing = options.AntiAliasing;
+
+        // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
+        // alone unless `-a` was actually given, which is why the option is null until it is: a
+        // scene that says it wants antialiasing must not have it taken away by a command line that
+        // said nothing on the subject, or a sweep that renders the gallery strips every picture of
+        // it without a word.
+        AntiAliasing = options.AntiAliasing ?? AntiAliasing;
         Ticks = seconds * 1_000 + fraction;
         SceneName = options.SceneName;
         CameraName = options.CameraName;

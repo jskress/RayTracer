@@ -1034,3 +1034,27 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
 </table>
+
+## Re-rendering these
+
+Every scene here renders its own picture from its own file, at its own size and with whatever
+antialiasing it needs — so bringing the whole gallery back up to date takes no options and no
+list of which scene wants what:
+
+```bash
+for scene in $(find gallery -name '*.igl'); do
+    picture="${scene%.igl}.png"
+    [ -f "$picture" ] || continue
+    dotnet run -- -i "$scene" -o "/tmp/$(basename "$picture")" \
+        && mv "/tmp/$(basename "$picture")" "$picture"
+done
+```
+
+It renders to a scratch path and moves the result into place deliberately: a render that fails
+part way must not leave a tracked picture truncated or missing.  Expect roughly an hour for the
+lot on an idle machine, most of it `a-street-after-dark`.
+
+Nothing checks these for staleness — that would mean rendering them all — so run this after any
+change to how things are drawn.  Re-rendering alters a picture's *bytes* even when no pixel
+moves, because the scene's `info` block is written into the file, so commit only the ones whose
+pixels actually changed.

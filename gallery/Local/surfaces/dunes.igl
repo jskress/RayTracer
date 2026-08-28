@@ -48,8 +48,12 @@
 // next dune and the troughs stay legible.  The azimuth is 45 degrees off the way the dunes run:
 // straight down them the light is flat, straight across it is a silhouette.
 //
-// **Rendered with `-a adaptive:1:0.5`**, which is the committed picture; see `gallery/sources.txt`.
+// **The antialiasing this wants is set in the context block below**, so the scene renders as its
+// picture whoever renders it and with whatever command line.
 context {
+    // Sand meeting sky, and every shadow edge, want the sampler.
+    antialiasing depth 1
+    antialiasing threshold 0.5
     parallel pixel scanner
     angles are degrees
     info {

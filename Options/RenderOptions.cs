@@ -226,14 +226,17 @@ public class RenderOptions
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public string AntiAliasingText
     {
-        get => AntiAliasing.ToString();
-        set => AntiAliasing.Configure(value);
+        get => AntiAliasing?.ToString();
+        set => (AntiAliasing ??= new AliasingOption()).Configure(value);
     }
 
     /// <summary>
     /// This property holds the antialiasing option for the ray tracer.
     /// </summary>
-    public AliasingOption AntiAliasing { get; } = new();
+    // Null until `-a` is given, so that `RenderContext.ApplyOptions` can tell "the user asked for
+    // no antialiasing" from "the user said nothing about antialiasing" and leave the scene's own
+    // setting standing in the second case.
+    public AliasingOption AntiAliasing { get; private set; }
 
     [Option('p', "progress", Required = false,
         HelpText = "Sets how progress is reported: bar (the default), tool or none.")]

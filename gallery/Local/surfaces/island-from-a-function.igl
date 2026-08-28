@@ -39,6 +39,10 @@
 import 'water' { SeaWater }
 
 context {
+    // The edges in this one want the sampler; said here rather than only on a command line, so
+    // that anything re-rendering the scene gets the picture it is supposed to.
+    antialiasing depth 1
+    antialiasing threshold 0.5
     parallel pixel scanner
     angles are degrees
     no gamma
