@@ -36,6 +36,11 @@ public class HeightFieldResolver : SurfaceResolver<HeightField>, IValidatable
     public Resolver<bool> ClosedResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether the terrain is shaded smooth.
+    /// </summary>
+    public Resolver<bool> SmoothResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an
     /// extruded surface.
     /// </summary>
@@ -48,6 +53,7 @@ public class HeightFieldResolver : SurfaceResolver<HeightField>, IValidatable
         FunctionResolver.AssignTo(value, target => target.Function, context, variables);
         SamplesResolver.AssignTo(value, target => target.Samples, context, variables);
         ClosedResolver.AssignTo(value, target => target.Closed, context, variables);
+        SmoothResolver.AssignTo(value, target => target.Smooth, context, variables);
         ClipResolver.AssignTo(value, target => target.Clip, context, variables);
 
         base.SetProperties(context, variables, value);

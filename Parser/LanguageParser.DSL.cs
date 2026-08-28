@@ -1086,7 +1086,7 @@ public partial class LanguageParser
         heightFieldEntryClause:
         [
             imageClause | fieldFunctionClause | { samples > _expression } |
-            { clip > _expression } | open | surfaceEntryClause
+            { clip > _expression } | open | smooth | surfaceEntryClause
         ]
         
         // Triangle clauses.

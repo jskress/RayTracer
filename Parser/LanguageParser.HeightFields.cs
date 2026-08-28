@@ -71,6 +71,9 @@ public partial class LanguageParser
                 case "open":
                     resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
                     break;
+                case "smooth":
+                    resolver.SmoothResolver = new LiteralResolver<bool> { Value = true };
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "height field");
                     break;

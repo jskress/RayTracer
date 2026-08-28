@@ -617,6 +617,7 @@ and then scaled to whatever size the scene wants.
 | `samples` | How many points across a function is sampled at.  256 by default. |
 | `clip` | Ignore anything below a given height, cutting the terrain off. |
 | `open` | Leave the sides and underside off. |
+| `smooth` | Shade the terrain as the smooth surface it stands for. |
 
 A field takes its heights from an `image` or from a `function`, never both.  `samples` belongs to
 the function form — a picture brings its own size with it — and `clip` to the image form, since a
@@ -671,6 +672,26 @@ rather than as a height.
 The image may be a **web address**, as it may for an
 [image pigment](pigments-and-patterns.md#image-pigments), and `uncached` before `image` works
 here too.
+
+#### `smooth`, and when a terrain wants it
+
+A height field is a mesh of **flat** triangles, so a surface that is meant to be smooth shows the
+edges of every one of them — a fine diamond hatching wherever the light rakes across it.  `smooth`
+gives each grid point a normal taken from the slope of the ground either side of it, so the
+triangles meeting there agree about which way the surface faces.
+
+It costs nothing to compute, and it applies to both forms — the normals come from the sampled grid,
+and a picture fills that grid exactly as a function does.  It is **off by default only because
+turning it on changes the shading of every height field already written**, not because it is
+particular to one form or the other.
+
+Reach for it when the land is smooth and the light is low; the `dunes` scene in the gallery is the
+worst case there is, and it needed 2000 samples flat against 1100 smooth for a better picture in
+less than half the time.  Rugged terrain — the two island scenes — hides its faceting well enough
+never to ask.
+
+What `smooth` does **not** do is change the geometry: the silhouette against the sky, and the edge
+of every shadow, are still the mesh's own outline.  Those are what a finer grid still buys.
 
 A height field cannot make an overhang or a cave: there is exactly one height for each point
 on the ground, because there is exactly one pixel.  That is the limit of the technique rather
