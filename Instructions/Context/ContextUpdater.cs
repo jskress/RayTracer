@@ -54,6 +54,16 @@ public class ContextUpdater : Instruction
     public Resolver<int> MediumBouncesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many bits of each color channel reach the file.
+    /// </summary>
+    public Resolver<int> BitsPerChannelResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for whether the image is written without color.
+    /// </summary>
+    public Resolver<bool> GrayscaleResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how deeply the sampler looks into a pixel.
     /// </summary>
     public Resolver<int> AntiAliasingDepthResolver { get; set; }
@@ -96,6 +106,8 @@ public class ContextUpdater : Instruction
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
+        BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
+        GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
 
         // These land on the context's own aliasing option rather than on the context, since asking
         // for either of them is what asks for the sampler at all.

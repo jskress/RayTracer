@@ -167,8 +167,12 @@ public class RenderContext
         if (options.NoShadows)
             SuppressAllShadows = true;
 
-        BitsPerChannel = options.BitsPerChannel;
-        Grayscale = options.Grayscale;
+        BitsPerChannel = options.BitsPerChannel ?? BitsPerChannel;
+
+        // Grayscale is a switch, so it goes the way `no gamma` and `no shadows` do above: giving it
+        // forces it on, and leaving it off says nothing about what the scene asked for.
+        if (options.Grayscale)
+            Grayscale = true;
 
         // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
         // alone unless `-a` was actually given, which is why the option is null until it is: a

@@ -154,7 +154,9 @@ public class RenderOptions
 
     [Option('c', "bits-per-channel", Required = false,
         HelpText = "The number of bits to use for each channel in colors in the image output file.")]
-    public int BitsPerChannel
+    // Null until `-c` is given, so that `RenderContext.ApplyOptions` can leave a depth the scene
+    // settled on alone rather than putting the default back over the top of it.
+    public int? BitsPerChannel
     {
         get => field;
         // ReSharper disable once UnusedMember.Global
@@ -165,7 +167,7 @@ public class RenderOptions
 
             field = value;
         }
-    } = 8;
+    }
 
     [Option('g', "gamma", Required = false,
         HelpText = "The gamma correction to apply to colors in the image output file.")]

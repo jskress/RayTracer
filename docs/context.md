@@ -180,6 +180,36 @@ it, or a sweep that re-renders the whole gallery, gets a picture with the edges 
 no indication that anything was lost.  That is not hypothetical; it is how three gallery images
 came to be replaced with worse ones.
 
+### Color Depth and Grayscale
+
+What reaches the image file, as opposed to what was rendered:
+
+```
+context {
+    color depth 16
+    grayscale
+}
+```
+
+| Written | What it does |
+| --- | --- |
+| `color depth` | How many bits each channel gets in the file: `8` or `16`. |
+| `grayscale` | Write the image without color. |
+
+Eight bits is the default and is what a screen shows.  Sixteen is worth asking for when the
+image is going to be worked on afterwards — graded, or stretched in contrast — because that is
+where the banding an eight-bit file hides would start to show.  The PNG is written at the depth
+asked for, so the file holds exactly the precision it was given rather than padding one into
+the other.
+
+A gray image is written in a gray container rather than as three equal channels, which is
+smaller and says what it holds.  What is never written is a **palette**: a palette turns the
+colors into indices into a table, and an image read back from one is not the image that was
+written.
+
+`-c`/`--bits-per-channel` and `--grayscale` on the command line still overrule what a scene
+asks for; saying nothing leaves it alone.
+
 ### Image Size
 
 A scene may fix the size of the image it wants:

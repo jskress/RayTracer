@@ -1,3 +1,4 @@
+using ImageMagick;
 using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -128,6 +129,77 @@ public class TestContextClauses
 
         Assert.AreEqual(2.6, context.Gamma, 1e-9, "the command line should have won");
     }
+    // -- color depth and grayscale -------------------------------------------------------------------
+
+    /// <summary>
+    /// What reaches the file is the scene's to settle and the command line's to overrule, the same
+    /// way antialiasing is.  Both of these used to be assigned over the top of whatever the scene
+    /// had said, which meant a scene could not have kept them even had it been able to say them.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMaySettleWhatReachesTheFile()
+    {
+        RenderContext context = new ();
+
+        context.ApplyOptions(new RenderOptions(), 0);
+
+        Assert.AreEqual(8, context.BitsPerChannel, "said nowhere, eight bits is the usual depth");
+        Assert.IsFalse(context.Grayscale, "and an image has its color");
+
+        context = new RenderContext { BitsPerChannel = 16, Grayscale = true };
+
+        context.ApplyOptions(new RenderOptions(), 0);
+
+        Assert.AreEqual(16, context.BitsPerChannel,
+            "the scene's channel depth should have survived a silent command line");
+        Assert.IsTrue(context.Grayscale, "and so should its having asked for no color");
+
+        context = new RenderContext { BitsPerChannel = 16 };
+
+        context.ApplyOptions(new RenderOptions { BitsPerChannel = 8 }, 0);
+
+        Assert.AreEqual(8, context.BitsPerChannel, "the command line should have won");
+
+        // Grayscale is a switch, so it goes one way only -- exactly as `no gamma` and `no shadows`
+        // do.  Asking for it on the command line turns it on; not asking says nothing.
+        context = new RenderContext();
+
+        context.ApplyOptions(new RenderOptions { Grayscale = true }, 0);
+
+        Assert.IsTrue(context.Grayscale, "the command line should be able to ask for no color");
+    }
+
+    /// <summary>
+    /// And both reach the file the scene is written to.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatTheSceneSaysReachesTheImageFile()
+    {
+        string path = Path.Combine(_directory, "written.igl");
+        string output = Path.Combine(_directory, "written.png");
+
+        File.WriteAllText(path,
+            "context { width 20  height 15  color depth 16  grayscale }\n" +
+            "camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 60 }\n" +
+            "point light { location [-5, 5, -5] }\n" +
+            "sphere { material { pigment [0.9, 0.2, 0.1] } }\n");
+
+        ImageRenderer renderer = new LanguageParser(path).Parse();
+
+        Assert.IsNotNull(renderer, "the scene did not parse");
+
+        renderer.Render(new RenderOptions { OutputFileName = output });
+
+        using MagickImage written = new (output);
+
+        Assert.AreEqual(16u, written.Depth, "the scene asked for sixteen bits");
+
+        // Which of the two gray containers it gets depends on whether anything in the picture is
+        // less than opaque, which is not what this test is about; that it is gray at all is.
+        Assert.IsTrue(written.ColorType is ColorType.Grayscale or ColorType.GrayscaleAlpha,
+            $"the scene asked for no color and got {written.ColorType}");
+    }
+
     // -- antialiasing --------------------------------------------------------------------------------
 
     /// <summary>

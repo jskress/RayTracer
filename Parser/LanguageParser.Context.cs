@@ -65,6 +65,9 @@ public partial class LanguageParser
             case "no.shadows":
                 updater.SuppressAllShadowsResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "grayscale":
+                updater.GrayscaleResolver = new LiteralResolver<bool> { Value = true };
+                break;
             // `scale ambient by <term>`.  `ToCmd` joins a second word only after `apply`, `no`, `bounded`,
             // `with` or `gives`, so this arrives as plain "scale" -- and `scale` is not a word to add to
             // that list, since it is also the transform keyword and ToCmd serves those too.  The second
@@ -97,6 +100,15 @@ public partial class LanguageParser
                     Term = term,
                     Validator = value => value < 1
                         ? "A medium must be sampled in at least one place."
+                        : null
+                };
+                break;
+            case "color":
+                updater.BitsPerChannelResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value is not 8 and not 16
+                        ? "A color channel must be either 8 or 16 bits deep."
                         : null
                 };
                 break;

@@ -32,35 +32,34 @@ public class ImageFile
         using IPixelCollection<float> pixels = image.GetPixels();
         Canvas canvas = new Canvas((int) image.Width, (int) image.Height);
 
+        // Which channel is which is read from the image rather than guessed from how many there
+        // are.  Counting them is not enough: an opaque eight-bit gray PNG comes back with two
+        // channels, and the second of them is `Index` rather than `Alpha` -- so a reader that
+        // assumes two channels means gray-plus-alpha takes something that is not alpha for it, and
+        // an opaque image loads as very nearly invisible.  That is exactly what happened to the
+        // gray images this renderer had only just started writing.
+        List<PixelChannel> channels = image.Channels.ToList();
+        int alphaChannel = channels.IndexOf(PixelChannel.Alpha);
+        int colorChannels = channels.Count(
+            channel => channel is not (PixelChannel.Alpha or PixelChannel.Index));
+
         foreach (IPixel<float> pixel in pixels)
         {
             float[] values = pixel.ToArray();
-            float red, green, blue, alpha = 0;
+            float red, green, blue;
 
-            switch (pixel.Channels)
+            if (colorChannels < 3)
+                red = green = blue = values[0] / 65535;
+            else
             {
-                case 1:
-                    red = green = blue = values[0] / 65535;
-                    break;
-                case 2:
-                    red = green = blue = values[0] / 65535;
-                    alpha = values[1] / 65535;
-                    break;
-                default:
-                {
-                    red = values[0] / 65535;
-                    green = values[1] / 65535;
-                    blue = values[2] / 65535;
-
-                    if (pixel.Channels > 3)
-                        alpha = values[3] / 65535;
-                    break;
-                }
+                red = values[0] / 65535;
+                green = values[1] / 65535;
+                blue = values[2] / 65535;
             }
 
-            Color color = pixel.Channels is 2 or > 3
-                ? new Color(red, green, blue, alpha)
-                : new Color(red, green, blue);
+            Color color = alphaChannel < 0
+                ? new Color(red, green, blue)
+                : new Color(red, green, blue, values[alphaChannel] / 65535);
 
             canvas.SetColor(color, pixel.X, pixel.Y);
         }
@@ -115,7 +114,20 @@ public class ImageFile
         foreach (IPixel<float> pixel in pixels)
         {
             Color color = canvas.GetPixel(pixel.X, pixel.Y);
-            (int red, int green, int blue, int alpha) = color.ToChannelValues(context);
+            int red, green, blue, alpha;
+
+            // Asked for a gray image, each color is weighted down to the one value that stands for
+            // its brightness here, rather than the canvas being converted in place -- the canvas
+            // belongs to the caller and may be wanted again.
+            if (context.Grayscale)
+            {
+                (int gray, int grayAlpha) = color.ToGrayValue(context);
+
+                red = green = blue = gray;
+                alpha = grayAlpha;
+            }
+            else
+                (red, green, blue, alpha) = color.ToChannelValues(context);
 
             if (alpha < context.MaxColorChannelValue)
                 anyTransparency = true;
@@ -149,9 +161,19 @@ public class ImageFile
         // the second.
         if (MagickFormatInfo.Create(new FileInfo(_fileName))?.Format == MagickFormat.Png)
         {
+            // A gray image is written in a gray container rather than as three equal channels, which
+            // is both smaller and honest about what it holds.  `Load` already reads one- and
+            // two-channel images, so this still comes back as what was written -- which is the rule
+            // every branch here has to meet.  What is never written is a palette: a palette turns
+            // the colors into indices into a table, and an image read back from one is not the
+            // image that was written.
+            ColorType colorType = context.Grayscale
+                ? anyTransparency ? ColorType.GrayscaleAlpha : ColorType.Grayscale
+                : anyTransparency ? ColorType.TrueColorAlpha : ColorType.TrueColor;
+
             image.Write(_fileName, new PngWriteDefines
             {
-                ColorType = anyTransparency ? ColorType.TrueColorAlpha : ColorType.TrueColor,
+                ColorType = colorType,
                 BitDepth = (uint) context.BitsPerChannel
             });
         }
