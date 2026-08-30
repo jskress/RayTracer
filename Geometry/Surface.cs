@@ -58,6 +58,13 @@ public abstract class Surface : NamedThing
     public BoundingBox BoundingBox { get; set; }
 
     /// <summary>
+    /// This property holds what the scene said about where this surface goes in terms of the things
+    /// beside it, rather than in numbers, or <c>null</c> when it was simply put somewhere.  See
+    /// <see cref="Placement"/> for why it is carried rather than worked out where it was written.
+    /// </summary>
+    public List<Placement> Placements { get; set; }
+
+    /// <summary>
     /// This property holds how many places the stuff inside this surface is looked at from when
     /// it lights the scene, or <c>null</c> when it does not light the scene at all.
     /// <para>
@@ -246,14 +253,39 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="surface">The child to place.</param>
     /// <returns>The box it occupies here, or <c>null</c> if it has none.</returns>
-    protected static BoundingBox BoxAround(Surface surface)
+    /// <summary>
+    /// This method returns the region this surface really occupies, rather than the slightly generous
+    /// one the ray tester is given.
+    /// <para>
+    /// **A surface built out of others has to work this out rather than unpad its own box.**  A group
+    /// or a CSG takes its box from the boxes of its children, and those were padded before they were
+    /// gathered -- so taking one whisker back off the outside leaves every child's whisker inside it,
+    /// each already stretched by whatever transform carried it up.  The only answer that holds at
+    /// every scale is to ask the children the same question all the way down.
+    /// </para>
+    /// </summary>
+    /// <returns>The region this surface occupies, or <c>null</c> if it is unbounded.</returns>
+    internal virtual BoundingBox TrueBoundingBox()
+    {
+        return BoundingBox?.WithoutPadding();
+    }
+
+    internal static BoundingBox BoxAround(Surface surface, bool trueExtent = false)
     {
         BoundingBox box = new ();
 
         foreach (Matrix transform in surface.TransformsThroughShutter)
         {
             if (surface.BoundingBox != null)
-                box.Add(surface.BoundingBox.TransformedBy(transform));
+            {
+                // Taken back to the surface's real extent, and taken back *here* rather than
+                // afterward, since the padding goes on before the transform and is stretched by it.
+                BoundingBox mine = trueExtent
+                    ? surface.TrueBoundingBox()
+                    : surface.BoundingBox;
+
+                box.Add(mine.TransformedBy(transform));
+            }
             else if (surface is Triangle triangle)
             {
                 box.Add(transform * triangle.Point1);

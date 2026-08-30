@@ -72,6 +72,11 @@ public class RenderInstruction : Instruction
         foreach (Surface surface in scene.Surfaces)
             surface.PrepareForRendering(sampleTimes);
 
+        // The things standing at the top of a scene are siblings as much as the children of a group
+        // are, so anything put in terms of its neighbours is settled for them here.  A group does the
+        // same for its own children, from inside its preparation just above.
+        PlacementSettler.Settle(scene.Surfaces);
+
         // Two things can only be settled once the scene is whole, since each depends on the company it
         // keeps rather than on anything written beside it.
         SettleTheSky(context, scene);

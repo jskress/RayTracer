@@ -38,6 +38,10 @@ public class Group : Surface
         foreach (Surface surface in Surfaces)
             surface.PrepareForRendering(SampleTimes);
 
+        // Anything put in terms of the things beside it is settled here, between the children knowing
+        // their own boxes and this group deciding anything on the strength of where they stand.
+        PlacementSettler.Settle(Surfaces);
+
         if (Material is not null)
         {
             foreach (Surface surface in new SurfaceIterator(Surfaces).Surfaces)
@@ -99,11 +103,31 @@ public class Group : Surface
     /// <returns>A default bounding box, if any, for the surface.</returns>
     protected override BoundingBox GetDefaultBoundingBox()
     {
+        return BoxOfChildren(false);
+    }
+
+    /// <summary>
+    /// This method returns the region this group really covers, which is the same gathering of its
+    /// children with each of them asked for its own real extent.
+    /// </summary>
+    /// <returns>The region the group occupies, or <c>null</c> if any child is unbounded.</returns>
+    internal override BoundingBox TrueBoundingBox()
+    {
+        return BoxOfChildren(true);
+    }
+
+    /// <summary>
+    /// This method gathers the boxes of this group's children into one.
+    /// </summary>
+    /// <param name="trueExtent">Whether to ask each child what it really covers.</param>
+    /// <returns>The gathered box, or <c>null</c> if any child is unbounded.</returns>
+    private BoundingBox BoxOfChildren(bool trueExtent)
+    {
         BoundingBox box = new ();
 
         foreach (Surface surface in Surfaces)
         {
-            BoundingBox child = BoxAround(surface);
+            BoundingBox child = BoxAround(surface, trueExtent);
 
             if (child is null)
             {

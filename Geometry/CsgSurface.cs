@@ -86,8 +86,28 @@ public class CsgSurface : Surface
     /// <returns>The box this combination sits in, or <c>null</c> if it has none.</returns>
     protected override BoundingBox GetDefaultBoundingBox()
     {
-        BoundingBox left = BoxAround(Left);
-        BoundingBox right = BoxAround(Right);
+        return BoxOfChildren(false);
+    }
+
+    /// <summary>
+    /// This method returns the region this shape really covers, which is the same combining of its
+    /// two sides with each of them asked for its own real extent.
+    /// </summary>
+    /// <returns>The region the shape occupies, or <c>null</c> if it is unbounded.</returns>
+    internal override BoundingBox TrueBoundingBox()
+    {
+        return BoxOfChildren(true);
+    }
+
+    /// <summary>
+    /// This method combines the boxes of the two sides the way this shape's operation does.
+    /// </summary>
+    /// <param name="trueExtent">Whether to ask each side what it really covers.</param>
+    /// <returns>The combined box, or <c>null</c> where the operation leaves it unbounded.</returns>
+    private BoundingBox BoxOfChildren(bool trueExtent)
+    {
+        BoundingBox left = BoxAround(Left, trueExtent);
+        BoundingBox right = BoxAround(Right, trueExtent);
 
         switch (Operation)
         {

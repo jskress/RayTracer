@@ -160,6 +160,34 @@ public class TestTransformClauses
     }
 
     [TestMethod]
+    public void TestAPropertyStandingBetweenTwoTransformsKeepsBoth()
+    {
+        // **A silent, long-standing fault, found while building relative placement.**  A run of
+        // transform clauses written together is parsed as one run, and anything else a surface
+        // carries ends that run and begins another.  The second run was *assigned* over the first
+        // rather than added to it, so everything before the interruption was quietly thrown away.
+        //
+        // Nothing errored and nothing looked broken: the picture was a perfectly good sphere, in the
+        // wrong place and the wrong size.  That is the whole reason this needs a test rather than a
+        // reader -- `scale 0.5  no shadow  translate [2, 1, 0]` reads exactly like what it means.
+        Canvas together = Render("scale 0.5\ntranslate [2, 1, 0]", out string plainError);
+
+        Assert.IsNull(plainError, $"the plain form should render: {plainError}");
+
+        foreach (string between in new[] { "no shadow", "named 'ball'", "no shadow\nnamed 'ball'" })
+        {
+            Canvas interrupted = Render(
+                $"scale 0.5\n{between}\ntranslate [2, 1, 0]", out string error);
+
+            Assert.IsNull(error, $"a surface with {between} between its transforms should render");
+            Assert.AreEqual(0, PixelsThatDiffer(together, interrupted),
+                $"a surface with \"{between}\" standing between its transforms came out somewhere " +
+                "other than one with the same transforms written together; the transforms before " +
+                "the interruption are being thrown away");
+        }
+    }
+
+    [TestMethod]
     public void TestAMatrixParses()
     {
         // The bug this guards: the grammar hands the clause the brackets and the fifteen commas

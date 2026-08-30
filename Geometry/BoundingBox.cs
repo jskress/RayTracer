@@ -131,6 +131,33 @@ public class BoundingBox
     }
 
     /// <summary>
+    /// This method returns a copy of this box with the padding taken back off it.
+    /// <para>
+    /// **The padding is an acceleration detail and must not escape as a measurement.**  Every box is
+    /// grown by a whisker once it is worked out, so that a ray grazing a surface is not turned away
+    /// by arithmetic; but anything asking this box where a surface actually *ends* -- placing one
+    /// thing against another, say -- would be told a place a whisker outside it.  Worse, the padding
+    /// goes on in the surface's own space and is then carried through its transform, so a thing
+    /// scaled by a hundred reports itself a hundred times too generous.  A gap nobody can see at one
+    /// scale is a gap of a whole unit at another.
+    /// </para>
+    /// </summary>
+    /// <returns>This box, as it was before it was padded.</returns>
+    internal BoundingBox WithoutPadding()
+    {
+        BoundingBox box = new ()
+        {
+            _xMin = _xMin, _yMin = _yMin, _zMin = _zMin,
+            _xMax = _xMax, _yMax = _yMax, _zMax = _zMax,
+            IsEmpty = IsEmpty
+        };
+
+        box.Expand(-Padding);
+
+        return box;
+    }
+
+    /// <summary>
     /// This method adjusts the extents of the bounding box by some amount.  The defailt is
     /// a small fraction to help make sure we don't miss any intersections.
     /// </summary>

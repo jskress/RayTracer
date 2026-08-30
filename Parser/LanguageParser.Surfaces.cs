@@ -28,11 +28,21 @@ public partial class LanguageParser
     private void HandleTransformOnlyEntryClause<TObject>(SurfaceResolver<TObject> resolver)
         where TObject : Surface, new()
     {
-        Instructions.Transforms.TransformResolver transformResolver = ParseTransformClause();
+        // **The transforms already gathered are handed back in, rather than replaced.**  A run of
+        // transform clauses written together is parsed as one, but any other property standing among
+        // them ends that run and starts a new one -- so assigning here threw away everything before
+        // the interruption.  `cube { scale [1, 0.02, 0.6]  no shadow  translate Y 0.18 }` quietly
+        // lost its scale, and nothing said so.  The same is true of `named`, of a `material`, and of
+        // anything else a surface may carry between two transforms.
+        int gathered = resolver.TransformResolver?.TransformCreators.Count ?? 0;
+        Instructions.Transforms.TransformResolver transformResolver =
+            ParseTransformClause(resolver.TransformResolver);
 
         // A `{*}` (zero-or-more) transform clause "succeeds" with an empty resolver even
-        // when nothing was actually consumed, so a null check alone isn't enough here.
-        if (transformResolver == null || transformResolver.TransformCreators.Count == 0)
+        // when nothing was actually consumed, so a null check alone isn't enough here -- and now that
+        // what comes back may already hold earlier transforms, "empty" has to mean "no bigger than it
+        // was" rather than "holding nothing".
+        if (transformResolver == null || transformResolver.TransformCreators.Count == gathered)
             throw CreateUnexpectedInputException("Expecting a valid property here.");
 
         resolver.TransformResolver = transformResolver;
@@ -91,6 +101,38 @@ public partial class LanguageParser
         {
             case "named":
                 resolver.NameResolver = new TermResolver<string> { Term = term };
+                break;
+            case "on":
+            case "under":
+            case "behind":
+            case "left":
+            case "right":
+            case "front":
+            case "align.left":
+            case "align.right":
+            case "align.top":
+            case "align.bottom":
+            case "align.front":
+            case "align.back":
+            case "centered":
+                if (field == "centered" && clause.Expressions.Count > 1)
+                {
+                    throw new TokenException(
+                        "A thing centered on another cannot also be given a distance; there is no " +
+                        "direction for it to go in.")
+                    {
+                        Token = clause.Tokens[0]
+                    };
+                }
+
+                (resolver.PlacementResolvers ??= []).Add(new PlacementResolver
+                {
+                    Relation = RelationFor(field),
+                    NameResolver = new TermResolver<string> { Term = term },
+                    OffsetResolver = clause.Expressions.Count > 1
+                        ? new TermResolver<double> { Term = clause.Term(1) }
+                        : null
+                });
                 break;
             case "with.seed":
                 resolver.SeedResolver = new TermResolver<int?> { Term = term };
@@ -165,4 +207,26 @@ public partial class LanguageParser
 
         return resolver;
     }
+
+    /// <summary>
+    /// This method returns the relation a placement word names.
+    /// </summary>
+    /// <param name="word">The word the scene wrote.</param>
+    /// <returns>The relation it names.</returns>
+    private static PlacementRelation RelationFor(string word) => word switch
+    {
+        "on" => PlacementRelation.Atop,
+        "under" => PlacementRelation.Under,
+        "left" => PlacementRelation.LeftOf,
+        "right" => PlacementRelation.RightOf,
+        "front" => PlacementRelation.FrontOf,
+        "align.left" => PlacementRelation.AlignLeft,
+        "align.right" => PlacementRelation.AlignRight,
+        "align.top" => PlacementRelation.AlignTop,
+        "align.bottom" => PlacementRelation.AlignBottom,
+        "align.front" => PlacementRelation.AlignFront,
+        "align.back" => PlacementRelation.AlignBack,
+        "centered" => PlacementRelation.CenteredOn,
+        _ => PlacementRelation.Behind
+    };
 }
