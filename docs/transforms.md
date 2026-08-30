@@ -181,6 +181,115 @@ group {
 Build first, place second.  Trying to write each leg already in its final position is how
 scenes become impossible to adjust.
 
+### Placing One Thing Against Another
+
+Every position so far has been a number, and a number is often the wrong thing to have to know.  Where
+a lamp goes depends on how tall the table turned out to be, and if the table is a library primitive
+whose height is worked out from its own arguments, nobody wants to be the one holding that arithmetic.
+
+So a surface may be told where to go in terms of another surface instead:
+
+```
+cube   { scale [2, 0.5, 1.2]  translate Y 0.5  named 'table' }
+sphere { scale 0.4  on 'table' }
+```
+
+The ball ends up sitting on the table, touching it, centered over it.  Nothing had to know how tall the
+table was, and if the table changes the ball follows.
+
+The thing being placed against must carry a [name](#naming-a-transform); that is what `named` is for
+here.
+
+| Relation | Where it puts the thing |
+| --- | --- |
+| `on 'x'` | On top of it, touching. |
+| `under 'x'` | Beneath it, touching. |
+| `left of 'x'` | Beside it, on the `-X` side. |
+| `right of 'x'` | Beside it, on the `+X` side. |
+| `front of 'x'` | In front of it, toward `-Z`. |
+| `behind 'x'` | Behind it, toward `+Z`. |
+
+**Contact is not the only thing you may want to say.**  A relation above puts one thing *against*
+another; sometimes what is wanted is one edge *level with* another edge, touching or not.  A table leg
+goes under the top and lined up with its end — and `left of` will not say that, because `left of` means
+beside, which puts the leg off the edge and in mid-air.
+
+```
+cube { scale [1.5, 0.1, 1.0]  translate Y 1  named 'top' }
+cube { scale [0.1, 0.45, 0.1]  under 'top'  align left with 'top' }
+```
+
+| Relation | Where it puts the thing |
+| --- | --- |
+| `align left with 'x'` | Its `-X` edge level with that one's. |
+| `align right with 'x'` | Its `+X` edge level with that one's. |
+| `align top with 'x'` | Its `+Y` edge level with that one's. |
+| `align bottom with 'x'` | Its `-Y` edge level with that one's. |
+| `align front with 'x'` | Its `-Z` edge level with that one's. |
+| `align back with 'x'` | Its `+Z` edge level with that one's. |
+
+**Any of them may be given a distance**, and it means the thing you would mean.  After a contact it
+is a *gap* — away from what you are against; after an alignment it is an *inset* — toward the middle
+of what you lined up with:
+
+```
+cube { scale [0.78, 0.02, 0.44]  under 'top'  by 0.25 }        // a shelf slung clear of the top
+cube { scale [0.05, 0.4, 0.05]   under 'top'
+       align left with 'top'  by 0.08                          // a leg standing in from the corner
+       align front with 'top'  by 0.08 }
+```
+
+**And what the directions nobody claimed are centered on can be chosen.**  By default they are
+centered on whatever was named first, which is right nearly always — a lamp `on 'table'` wants to be
+over the middle of the table.  When it is not, `centered on` settles no direction of its own and only
+says which thing the rest are measured from:
+
+```
+cube { scale [0.4, 0.02, 0.3]  align bottom with 'leg'  centered on 'top' }
+```
+
+That shelf takes its height from the legs' feet and its place from the middle of the table.  Being
+centered on two things at once is an error, and so is giving it a distance — it points nowhere for a
+distance to be along.
+
+The two kinds compose: one says which side of a thing you are on, the other says lined up how.  They
+count the same way for everything below — each settles one direction, and telling one direction both
+an alignment and a contact is the same contradiction as telling it two contacts.
+
+**Each relation settles one direction, and the rest are centered.**  Saying a lamp goes on a table
+says where it stands vertically and nothing whatever about the other two, so the middle of the table is
+both the obvious answer and the only one that does not demand a second number.  Give a second relation
+and it takes its own direction over, leaving anything still unclaimed centered on the first thing
+named:
+
+```
+sphere { scale 0.3  on 'table'  named 'lamp' }
+cube   { scale 0.25  on 'table'  right of 'lamp' }
+```
+
+Two relations for the same direction is an error rather than a race — a surface can be told one thing
+per direction.
+
+**A chain is ordinary, and the order you write it in does not matter.**  A lamp on a table on a rug
+resolves the rug first, then the table, then the lamp, however they are written down; a circle of
+placements is reported as one, naming the ring.
+
+**Placement is between things in the same group.**  Two surfaces in one group share a coordinate
+system, so the arithmetic is a subtraction and — this is the part that matters — the answer keeps
+meaning the same thing when the group is later turned or moved.  A placement reaching into another
+group would be worked out in a space that the group's own transform is about to change.
+
+**The directions are the world's, not the thing's.**  `left of` means `-X`, whatever way the surface
+it names happens to be turned.  A thing is placed by the box it occupies, and a box is square with the
+axes; there is no such thing here as the left-hand side of a rotated chair.
+
+`gallery/Local/surfaces/two-numbers-and-a-room.igl` is a whole room built this way: two numbers say
+how high the table stands and how high the shelf hangs, and everything else — four legs, a stack of
+books, a lamp in three pieces, the crate on the floor — follows from those two.
+
+**A surface with no bounds cannot take part.**  An infinite `plane` occupies no region a placement
+could be worked out from, at either end of the relation, and says so rather than guessing.
+
 ### Setting a Surface Moving
 
 A `motion` block takes the same transforms but means something different by them: not where

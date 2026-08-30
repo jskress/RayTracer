@@ -1,0 +1,166 @@
+// Everything in this room is told what it stands on, and almost nothing is told where it is.
+//
+// A position is usually the wrong thing to have to know.  Where a lamp goes depends on how tall the
+// table turned out to be; where a table's legs go depends on how big its top is; where the second
+// book in a stack goes depends on how thick the first one was.  Every one of those is *arithmetic*,
+// and doing it by hand means doing it again every time anything changes.
+//
+// So a surface may be placed against another instead:
+//
+//     cube   { scale [0.85, 0.03, 0.5]  translate Y 0.75  named 'top' }
+//     cube   { scale [0.04, 0.36, 0.04]  under 'top'  align left with 'top'  align front with 'top' }
+//     sphere { scale [0.085, 0.055, 0.085]  on 'top'  named 'bowl' }
+//
+// **There are two numbers in this scene that say where something is**, and they are the two genuine
+// decisions: how high the table stands, and how high the shelf is hung.  Everything else -- four
+// legs, a rail, three books in a stack, a lamp in three pieces, a saucer, the mug on it, a sheet of
+// paper, a crate, four things on a shelf, a low shelf between the legs, and both walls -- follows
+// from those two.  Change the table's height and the legs stretch to the floor, the books ride up
+// with it, and the shelf between the legs stays where it was, because it is measured from the floor
+// end rather than the top.
+//
+// **Any relation may be given a distance, and it means what a person would mean.**  After a contact
+// it is a gap -- `under 'top' by 0.3` hangs a shelf clear of the top rather than burying it in it.
+// After an alignment it is an inset -- `align left with 'top' by 0.05` sets a leg in from the corner
+// rather than out past it.  Written as one rule, half of them would go the wrong way and a shelf
+// slung under a table would rise into it.
+//
+// **The two kinds of relation are not the same question, and the legs are where that shows.**  A
+// *contact* puts one thing against another: `on`, `under`, `left of`, `right of`, `front of`,
+// `behind`.  An *alignment* puts one edge level with the matching edge: `align left with`, and the
+// same for right, top, bottom, front and back.  A leg goes `under` the top -- a contact -- and
+// `align left with` it, because `left of` means *beside*, which would hang the leg off the edge in
+// mid-air.  No arrangement of contacts alone will place a table leg.
+//
+// **Placement is between things in the same group**, which is what lets a placement go on meaning
+// the same thing after the group it lives in is turned or moved.  And the relations are the world's:
+// `left of` means -X whichever way the thing it names is facing, because a thing is placed by the box
+// it occupies and a box is square with the axes.
+//
+// The one thing here that is *not* placed is the light.  A lamp cannot hold a real light -- see
+// `gallery/Local/functions/a-room-after-dark.igl` for what that costs and what to do instead -- so
+// the light stands at a position of its own, inside the shade.
+//
+// **And the ambient has to be turned down for any of the lamp to show.**  A light that thins with
+// distance is competing with a floor of flat ambient light that does not, and at the default the
+// ambient simply wins: the room comes out evenly lit and the lamp reads as a decoration.
+
+context {
+    angles are degrees
+    parallel pixel scanner
+    scale ambient by 0.2
+    info {
+        title 'Two Numbers and a Room'
+        author 'J. Stephen Kress'
+        description 'A lamplit table where almost nothing was given a position.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [1.45, 1.24, -1.62]
+    look at [0.10, 0.86, 0.08]
+    field of view 46
+}
+
+// The lamp is the light, so it stands where the lamp does and thins with distance the way a lamp
+// does -- which is what puts a pool on the table and leaves the corner to the fills.
+point light { location [0.30, 1.09, 0]  color [2.6, 2.10, 1.42]  fade distance 1.1  fade power 2 }
+point light { location [-1.9, 2.2, -2.5]  color [0.075, 0.085, 0.115] }
+point light { location [2.3, 1.5, -2.7]  color [0.045, 0.055, 0.085] }
+
+// -- The room ------------------------------------------------------------------------------------
+
+// The floor is a slab rather than a plane, and that is not a detail: a plane goes on forever, so it
+// occupies no region another surface could be placed against.  As a slab it can carry the walls.
+cube { scale [3, 0.05, 3]  named 'floor'
+       material { pigment [0.44, 0.35, 0.26]  specular 0.03 } }
+
+cube { scale [3, 1.35, 0.04]  on 'floor'  align back with 'floor'  named 'wall'
+       material { pigment [0.74, 0.71, 0.65]  specular 0 } }
+cube { scale [0.04, 1.35, 3]  on 'floor'  align left with 'floor'
+       material { pigment [0.70, 0.67, 0.61]  specular 0 } }
+
+// -- The shelf -----------------------------------------------------------------------------------
+
+// The second of the two numbers.  Where it sits against the wall, and everything standing on it, are
+// said rather than measured.
+cube { scale [0.42, 0.018, 0.11]  front of 'wall'  translate Y 1.12  named 'shelf'
+       material { pigment [0.44, 0.29, 0.16] } }
+cube { scale [0.03, 0.10, 0.075]  on 'shelf'  named 'tome'
+       material { pigment [0.30, 0.24, 0.40] } }
+cube { scale [0.028, 0.095, 0.072]  on 'shelf'  right of 'tome'  named 'tome2'
+       material { pigment [0.48, 0.36, 0.20] } }
+cube { scale [0.026, 0.085, 0.070]  on 'shelf'  right of 'tome2'
+       material { pigment [0.22, 0.38, 0.36] } }
+sphere { scale [0.055, 0.05, 0.055]  on 'shelf'  left of 'tome'
+         material { pigment [0.55, 0.42, 0.30] } }
+
+// -- The table -----------------------------------------------------------------------------------
+
+// The first of the two numbers, and the only thing about this table anybody decided.
+cube { scale [0.85, 0.03, 0.5]  translate Y 0.75  named 'top'
+       material { pigment [0.46, 0.30, 0.17] } }
+
+// Four legs, each under the top and lined up with one of its corners -- and each set in from that
+// corner by the same small amount, which is what `by` after an alignment means.  A leg flush with
+// the corner is a thing nobody builds.
+cube { scale [0.04, 0.36, 0.04]  under 'top'
+       align left with 'top'  by 0.05  align front with 'top'  by 0.05
+       material { pigment [0.38, 0.24, 0.13] } }
+cube { scale [0.04, 0.36, 0.04]  under 'top'
+       align right with 'top'  by 0.05  align front with 'top'  by 0.05
+       material { pigment [0.38, 0.24, 0.13] } }
+cube { scale [0.04, 0.36, 0.04]  under 'top'
+       align left with 'top'  by 0.05  align back with 'top'  by 0.05
+       material { pigment [0.38, 0.24, 0.13] } }
+cube { scale [0.04, 0.36, 0.04]  under 'top'
+       align right with 'top'  by 0.05  align back with 'top'  by 0.05  named 'leg'
+       material { pigment [0.38, 0.24, 0.13] } }
+
+// A shelf down between the legs.  It takes its height from a leg's foot and its place from the
+// middle of the table -- which is what `centered on` is for: without it the shelf would be middled
+// on the leg it was measured against, and sit out at the corner.
+cube { scale [0.72, 0.012, 0.40]  align bottom with 'leg'  by 0.12  centered on 'top'
+       material { pigment [0.40, 0.26, 0.14] } }
+
+// -- What is on the table ------------------------------------------------------------------------
+
+// The bowl goes in the middle, and everything else is placed against the *bowl* rather than against
+// the table's edges.  That is the difference between a thing standing on a table and a thing
+// standing beside one: `left of 'top'` would put the books on the floor.
+sphere { scale [0.085, 0.055, 0.085]  on 'top'  named 'bowl'
+         material { pigment [0.60, 0.58, 0.52] } }
+
+cube { scale [0.16, 0.022, 0.115]  on 'top'  left of 'bowl'  named 'book1'
+       material { pigment [0.24, 0.32, 0.52] } }
+cube { scale [0.15, 0.020, 0.108]  on 'book1'  named 'book2'
+       material { pigment [0.56, 0.26, 0.22] } }
+cube { scale [0.135, 0.018, 0.10]  on 'book2'
+       material { pigment [0.30, 0.40, 0.28] } }
+
+// The lamp, in three pieces, each one standing on the one below.
+cylinder { scale [0.075, 0.010, 0.075]  on 'top'  right of 'bowl'  named 'base'
+           material { pigment [0.28, 0.26, 0.24] } }
+cylinder { scale [0.010, 0.115, 0.010]  on 'base'  named 'stem'
+           material { pigment [0.28, 0.26, 0.24] } }
+conic { min Y -1  max Y -0.42  open  scale [0.095, 0.10, 0.095]  on 'stem'
+        material { pigment [0.98, 0.92, 0.72]  ambient 0.75 } }
+
+cylinder { scale [0.048, 0.008, 0.048]  on 'top'  right of 'base'  named 'saucer'
+           material { pigment [0.80, 0.78, 0.72] } }
+cylinder { scale [0.032, 0.038, 0.032]  on 'saucer'
+           material { pigment [0.72, 0.34, 0.26] } }
+
+cube { scale [0.105, 0.002, 0.075]  on 'top'  front of 'bowl'  named 'paper'
+       material { pigment [0.92, 0.90, 0.84] } }
+cylinder { scale [0.005, 0.06, 0.005]  rotate Z 90  rotate Y 24  on 'paper'
+           material { pigment [0.20, 0.22, 0.28] } }
+
+// -- And one thing on the floor --------------------------------------------------------------------
+
+cube { scale [0.22, 0.17, 0.16]  on 'floor'  front of 'wall'  named 'crate'
+       material { pigment [0.50, 0.38, 0.22] } }
+cube { scale [0.10, 0.012, 0.075]  on 'crate'
+       material { pigment [0.35, 0.44, 0.30] } }

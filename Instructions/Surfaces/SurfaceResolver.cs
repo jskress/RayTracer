@@ -40,6 +40,12 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public BoundingBoxResolver BoundingBoxResolver { get; set; }
 
     /// <summary>
+    /// This property holds what the scene said about where this surface goes in terms of the things
+    /// beside it, in the order it said them.
+    /// </summary>
+    public List<PlacementResolver> PlacementResolvers { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for our surface's transform.
     /// </summary>
     public TransformResolver TransformResolver { get; set; }
@@ -73,6 +79,16 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
+
+        // A placement cannot be turned into a position here: it is a statement about the region
+        // another surface occupies, and nothing has been built yet, let alone measured.  So the
+        // request is carried onto the surface and settled once the whole group is standing.
+        if (PlacementResolvers is not null)
+        {
+            value.Placements = PlacementResolvers
+                .Select(placement => placement.Resolve(context, variables))
+                .ToList();
+        }
 
         // A motion is handed over as a recipe rather than a matrix, since how far through it to go
         // cannot be known until the camera says how many instants it will look at, which is settled
