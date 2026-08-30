@@ -2222,4 +2222,236 @@ public class TestShippedLibraries
         return Render(scene, 60, 45);
     }
 
+    // -- Plans -----------------------------------------------------------------------------------
+
+    /// <summary>
+    /// The plan the buried-window tests are built on, written as a scene would write it.
+    /// <para>
+    /// A long range, and a cross wing whose flank runs out from under one of the range's windows.  The
+    /// range covers x -3..3 and z -15..15; the cross wing, turned a quarter, covers x 1.5..11.5 and
+    /// z -1.6..7.6.  The range's right wall carries three windows, at z -8, 0 and 8: one well clear of
+    /// the cross wing, one swallowed whole, and one straddling its edge.
+    /// </para>
+    /// </summary>
+    private const string LongRange = "list(   6, 4.4, 30,  0,   0, 0, FaceFront)";
+    private const string CrossWing = "list( 9.2, 3.4, 10, 90, 6.5, 3, NoDoor)";
+
+    /// <summary>
+    /// Raises a plan and hands back the picture, looked at from over the inside corner where the two
+    /// wings meet.  Wings given as one plan know what the other swallows; given a plan apiece they do
+    /// not, and that pair is what the buried-window tests compare.
+    /// </summary>
+    private Canvas Planned(
+        string wings, bool together, string where = "[21, 7.5, 23]", string at = "[4.5, 2.6, 6.5]")
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+        string raised = together
+            ? $"object Plan(list({wings.Replace(";", ", ")}))"
+            : string.Join("\n", wings.Split(";").Select(wing => $"object Plan(list({wing}))"));
+
+        File.WriteAllText(scene, $$"""
+            import 'plans' { Plan, NoDoor, FaceFront }
+            context { angles are degrees  no gamma }
+            camera { location {{where}}  look at {{at}}  field of view 46 }
+            point light { location [16, 26, 22] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{raised}}
+            """);
+
+        Assert.IsNull(Render(scene, 360, 260), "the plan should build");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// Copies the plans library into the working directory, so that these test the one in the
+    /// repository rather than whatever is installed.
+    /// </summary>
+    private void UsePlans()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "plans.igl"),
+            Path.Combine(_directory, "plans.igl"), true);
+    }
+
+    [TestMethod]
+    public void TestAPlanTellsABuriedSpotFromAnOpenOne()
+    {
+        // The whole library rests on one question -- is this spot out in the open, or inside another
+        // wing -- so that question is asked directly here, at spots worked out by hand from the two
+        // rectangles, rather than inferred from a picture of a house.
+        //
+        // The two spots either side of z = 8 are the ones that matter, and they are why this is a
+        // table rather than a single case: the cross wing's flank ends at z = 7.6, so a window centred
+        // on 8 and reaching 0.66 either way has one end buried and one end in daylight.  Ask about its
+        // middle alone and the answer is a confident, wrong "open".
+        UsePlans();
+
+        (double X, double Z, bool Open, string Why)[] spots =
+        [
+            (3.066, -8.66, true,  "past the cross wing, at the near end of the far window"),
+            (3.066, -7.34, true,  "past the cross wing, at the far end of the far window"),
+            (3.066, -0.66, false, "one end of the window the cross wing swallows whole"),
+            (3.066,  0.66, false, "the other end of it"),
+            (3.066,  7.34, false, "the buried end of the window straddling the cross wing's flank"),
+            (3.066,  8.66, true,  "the daylit end of that same window"),
+            (3.066, 20.00, true,  "beyond the end of both wings"),
+            (-3.066, 0.00, true,  "the range's other wall, which nothing stands against")
+        ];
+
+        // A sphere per spot, put down only where the library says there is daylight, against the same
+        // row written out with the spheres it should have -- so the comparison is of pictures that are
+        // either identical or not, and no color has to be recognised.
+        string asked = string.Join("\n", spots.Select((spot, at) =>
+            $"if (OpenAir(plan, {spot.X}, {spot.Z}) == 1) {{ sphere {{ scale 0.8  translate X {at * 2 - 7} }} }}"));
+        string expected = string.Join("\n", spots
+            .Select((spot, at) => (spot, at))
+            .Where(pair => pair.spot.Open)
+            .Select(pair => $"sphere {{ scale 0.8  translate X {pair.at * 2 - 7} }}"));
+
+        Assert.IsFalse(Differs(Probed(asked), Probed(expected)),
+            "the library disagrees with the spots worked out by hand: " +
+            string.Join("; ", spots.Select(spot =>
+                $"({spot.X}, {spot.Z}) should be {(spot.Open ? "open" : "buried")} -- {spot.Why}")));
+    }
+
+    /// <summary>
+    /// Renders a row of probe spheres, whichever way they were arrived at.
+    /// </summary>
+    private Canvas Probed(string body)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'plans' { OpenAir }
+            context { angles are degrees  no gamma }
+            camera { location [0, 0, -30]  look at [0, 0, 0]  field of view 40 }
+            point light { location [-6, 8, -10] }
+            background [0.5, 0.6, 0.8]
+            plan = list({{LongRange}}, {{CrossWing}})
+            group {
+            {{body}}
+            }
+            """);
+
+        Assert.IsNull(Render(scene, 300, 120), "the probe scene should build");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestAWingLosesTheWindowsTheWingNextDoorBuries()
+    {
+        // The same two wings twice: once as one plan, where each knows what the other swallows, and
+        // once as a plan apiece, where neither does.
+        //
+        // The camera is over the inside corner, and that is not decoration.  A window buried *whole*
+        // sits inside solid masonry and shows nothing either way, so a picture framed anywhere else
+        // comes out identical whether or not the library does its job -- which is exactly what the
+        // first version of this test did, and it passed on a library that was leaving the wrong
+        // windows in.  What shows here is the one the cross wing's flank runs out from under: half
+        // swallowed, half hanging in the corner with its sill in mid-air.
+        UsePlans();
+
+        Assert.IsTrue(
+            Differs(Planned($"{LongRange};{CrossWing}", true),
+                    Planned($"{LongRange};{CrossWing}", false)),
+            "two wings raised as one plan look exactly like two wings that know nothing of each " +
+            "other; the windows at the join are not being left out");
+    }
+
+    [TestMethod]
+    public void TestAPlanRaisesEveryWingInIt()
+    {
+        // A plan walks its list, and the wing it hands to each turn has to be *that* turn's wing.  This
+        // is the one thing the library gained when the language grew a list, and it is the one thing
+        // that is invisible when it goes wrong: a plan that handed every turn the same wing raises a
+        // building each time and draws them all in the same place, which reads as one building rather
+        // than as a mistake.
+        //
+        // Three houses, standing well apart so that none of them buries anything of another's, built
+        // once as one plan and once as a plan apiece.  Those have to come out the same picture.  They
+        // are far apart on purpose: this is about the walk and not about the burying, and the camera
+        // is pulled back far enough to hold all three, since a wing left out of shot is a wing this
+        // cannot speak for -- which is how the first version of this test came to pass on a plan that
+        // raised its first wing three times.
+        UsePlans();
+
+        const string Three = "list(6, 4.4, 10, 0, -16, 0, FaceFront);" +
+                             "list(5, 3.6,  8, 0,   0, 0, FaceFront);" +
+                             "list(7, 5.0, 12, 0,  17, 0, FaceFront)";
+
+        Assert.IsFalse(
+            Differs(Planned(Three, true, "[0, 16, -52]", "[0, 3, 0]"),
+                    Planned(Three, false, "[0, 16, -52]", "[0, 3, 0]")),
+            "three wings named in one plan do not look like the same three raised one at a time; " +
+            "the plan is not walking its list and giving each turn its own wing");
+    }
+
+    [TestMethod]
+    public void TestAPlanPutsEachWingWhereItSays()
+    {
+        // Four of the seven numbers a wing is written with are its size, and three place it.  A number
+        // a scene may pass has to be a number that does something, and `x` and `z` are the two that
+        // would go unnoticed if they did not: the picture would still be a building.
+        UsePlans();
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        Canvas[] pictures = new Canvas[2];
+
+        foreach (int at in new[] { 0, 1 })
+        {
+            File.WriteAllText(scene, $$"""
+                import 'plans' { Plan, FaceFront }
+                context { angles are degrees  no gamma }
+                camera { location [0, 9, -26]  look at [0, 4, 0]  field of view 46 }
+                point light { location [-9, 20, -12] }
+                background [0.5, 0.6, 0.8]
+                plane { material { pigment [0.3, 0.3, 0.3] } }
+                object Plan(list(list(6, 4.4, 10, 0, {{at * 5}}, {{at * 3}}, FaceFront)))
+                """);
+
+            Assert.IsNull(Render(scene, 320, 240), "the plan should build");
+
+            pictures[at] = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        }
+
+        Assert.IsTrue(Differs(pictures[0], pictures[1]),
+            "a wing told to stand somewhere else stood in the same place; the plan's x and z are " +
+            "not reaching the geometry");
+    }
+
+    [TestMethod]
+    public void TestAPlanTurnsEachWingTheWayItSays()
+    {
+        // And the third of the three that place a wing.  A turn is the one a scene is most likely to
+        // get away with writing and never notice, since a wing turned a half looks much like a wing
+        // that is not -- so this asks for a quarter, which changes the silhouette outright.
+        UsePlans();
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        Canvas[] pictures = new Canvas[2];
+
+        foreach (int at in new[] { 0, 1 })
+        {
+            File.WriteAllText(scene, $$"""
+                import 'plans' { Plan, NoDoor }
+                context { angles are degrees  no gamma }
+                camera { location [0, 9, -26]  look at [0, 4, 0]  field of view 46 }
+                point light { location [-9, 20, -12] }
+                background [0.5, 0.6, 0.8]
+                plane { material { pigment [0.3, 0.3, 0.3] } }
+                object Plan(list(list(6, 4.4, 10, {{at * 90}}, 0, 0, NoDoor)))
+                """);
+
+            Assert.IsNull(Render(scene, 320, 240), "the plan should build");
+
+            pictures[at] = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        }
+
+        Assert.IsTrue(Differs(pictures[0], pictures[1]),
+            "a wing turned a quarter looks exactly like one that was not turned at all; the plan's " +
+            "turn is not reaching the geometry");
+    }
 }

@@ -656,6 +656,40 @@ The first surface in a `difference` is the one the others are taken out of, so a
 would make which surface that is depend on a number not known until the picture is drawn.  A CSG that
 wants a run of things puts a group inside it, which is what was meant anyway.
 
+#### Walking a list
+
+A range counts, which serves when the things being made differ only by *how far along* they are.
+When they differ in ways a number cannot carry, write them down as a **list** and walk that
+instead:
+
+```
+balls = list(
+    list(-2.0, 0.5),
+    list( 0.0, 0.8),
+    list( 2.0, 0.4)
+)
+
+for ball in balls {
+    sphere { scale item(ball, 1)  translate [item(ball, 0), 0, 0] }
+}
+```
+
+`list(...)` gathers whatever it is given; `count(...)` says how many; `item(list, n)` gives one
+back, counting from nought.  They are ordinary [functions](scene-files.md#lists), not syntax of
+their own — a call already takes any number of values, so nothing needed adding to the language to
+write one.
+
+**A list holds lists**, and that is the point of it rather than a curiosity.  It is how the example
+above writes three *things with fields* — a place and a size each — which no tuple can do:
+`[x, y, z]` holds four numbers at the most and is a point by the time it is read.
+
+`by`, which counts a range along, means nothing to a list and is refused rather than ignored.
+
+A range and a list may begin alike, and both are still read correctly.  A range says whether each
+end is in or out the way mathematics does, so `(0, 3]` opens with a parenthesis — and so does a list
+written as `(balls)`.  Which one it is is not settled until the comma either arrives or does not,
+and the loop waits that long before deciding.
+
 ### Choosing What to Make
 
 Wherever surfaces are listed, an `if` decides whether to make some of them:

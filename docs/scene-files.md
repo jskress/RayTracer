@@ -871,6 +871,34 @@ sphere { translate c }
 So the rule of thumb is simply to say what you mean when it helps — when you need arithmetic,
 or when the reader would otherwise have to guess.
 
+### Lists
+
+A value may be a **list** of other values, which is how a scene writes down several of something and
+hands the set to one place:
+
+```
+sizes  = list(0.4, 0.7, 1.0)
+places = list(list(-2, 0), list(0, 1), list(2, 0))
+```
+
+| | |
+| --- | --- |
+| `list(...)` | Gathers whatever it is given into one value. |
+| `count(list)` | How many values it holds. |
+| `item(list, n)` | The value at place `n`, counting from nought. |
+
+These are ordinary functions rather than syntax of their own, and that was deliberate: a call
+already parses with any number of values between its parentheses, so `list(a, b, c)` needed nothing
+added to the language.  Brackets could not have served — `[x, y, z]` is a point by the time it is
+read, and giving the same brackets a second meaning at five values and up would make the meaning of
+a three-value one depend on where it was written.
+
+**A list holds any value, a list included.**  That is what lets a scene write a *record* — a list of
+lists, each one a thing with several fields — without the language needing a record of its own.  A
+tuple cannot serve: it holds four numbers at the most, and there is no way to take one apart again.
+
+Walking a list is what [`for`](surfaces.md#walking-a-list) does with one.
+
 ### Functions of Your Own
 
 Beyond the [built-in functions](#expressions), a scene may write its own:

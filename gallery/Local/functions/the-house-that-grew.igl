@@ -1,0 +1,140 @@
+// A house is not a box, and the shape it is not a box in is its **plan**.
+//
+//     import 'plans' { Plan, NoDoor, FaceFront }
+//     import 'trees' { Elm, Oak, Birch }
+//     import 'undergrowth' { Grass, Tuft }
+//     import 'daylight' { SoftAfternoonFrom, SoftAfternoonLight }
+//
+// `a-street-at-the-edge-of-town` raises eleven buildings and every one of them is a rectangle seen from
+// above, because that is all `buildings` can make.  Real buildings turn corners.  They turn them because
+// they were not built all at once: a range, then a cross wing, then a kitchen thrown out at the back,
+// then a lean-to at the far gable and a porch tucked into the angle.  The house here is those five
+// pieces, and the barn behind it is two more.
+//
+// **A plan is a list of wings, and that is the whole of the interface.**  Each wing is seven numbers --
+// how big, which way it is turned, where it stands, and where its door is -- so a plan reads as a table:
+//
+//     object Plan(list(
+//         //  wide  tall  deep  turn      x      z  door
+//         list( 7.5,  5.4,   15,    0,     0,     0, NoDoor),
+//         list( 6.5,  5.0,   11,   90,   5.5,    -3, FaceFront)
+//     ))
+//
+// There is nothing in the library for two wings, or three, or five.  The count belongs to the plan, and
+// a [list](../../../docs/scene-files.md#lists) is what lets it -- which is why this scene exists at all.
+// Before the language had one, a plan had to be written out at the call site and unioned by hand.
+//
+// **The roof is free, and that is why a building is made of wings rather than of an outline.**  Given
+// any outline the walls are easy -- an extrusion with a second run nested inside it is a wall of real
+// thickness.  It is the *roof* that is hard: a pitch over an arbitrary polygon means computing its
+// straight skeleton, which is a real algorithm and an unforgiving one.  Two gabled wings crossing need
+// none of it.  The union of their two prisms **is** the valley, exactly, for nothing.  Every valley in
+// this picture came that way.
+//
+// **What to actually look at is the windows.**  Follow the porch in the middle round to where it meets
+// the cross wing behind it.  The wall there runs out from under the porch part of the way through an
+// opening, and the opening is *gone* -- while the windows further along the same wall, where there is
+// daylight, are all still there.  That is the one thing this library does that unioning two houses
+// cannot: every window, before it is placed, works out where its two ends stand in the world, a hair
+// proud of their wall, and asks the plan whether either spot is inside another wing.
+//
+// **Both ends, and not the middle**, which is the difference between a clean inside corner and half a
+// window growing out of a wall.  A window is only half a window wide either side of its middle, so a
+// wing whose flank runs out from under an opening leaves that opening half swallowed -- and asking
+// about the middle alone answers *yes* or *no* to a question whose real answer is *partly*.  Comment
+// the plan apart into five plans of one wing each and the half windows come back, sliced open and
+// hanging in the join with their sills in mid-air.  Nothing else in the picture changes.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'plans'       { Plan, NoDoor, FaceFront }
+import 'trees'       { Elm, Oak, Birch }
+import 'undergrowth' { Grass, Tuft }
+import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'The House That Grew'
+        author 'J. Stephen Kress'
+        description 'A house of five wings and a barn of two, on an afternoon at the end of summer.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [23, 10.5, -31]
+    look at [-3, 5.4, 3]
+    field of view 44
+}
+
+// The sun round on the near side, which is what lights a frontage.
+//
+// **It matters which side of forty-five it is.**  The gable ends here look along -Z and the long walls
+// along +X, so a sun at 40 falls equally on both and the corner between them disappears -- which is
+// what the first version of this scene did, and it read as a drawing rather than as a building.  At 25
+// the gables take the light and the long walls fall away, so the porch and the cross wing behind it are
+// lit exactly where there is something to look at.
+background SoftAfternoonFrom(25)
+
+light SoftAfternoonLight
+
+// The field the house stands in.
+plane {
+    material {
+        pigment bozo {
+            turbulence 0.4
+            [0, color [0.29, 0.35, 0.21], 1, color [0.37, 0.43, 0.26]]
+            scale 5
+        }
+        ambient 0.05
+        specular 0.02
+    }
+}
+
+// -- The house -------------------------------------------------------------------------------------
+
+// Five wings, in the order they would have been built.  The turns are quarters because a building that
+// grew turned square corners; the plan takes any angle, and a farmyard is simply not where you find one.
+object Plan(list(
+    //  wide  tall  deep  turn      x      z  door
+    list( 7.5,  5.4,   15,    0,     0,     0, NoDoor),      // the main range
+    list( 6.5,  5.0,   11,   90,   5.5,    -3, FaceFront),   // the cross wing, and the way in
+    list(   5,  4.2,    8,   90,    -6,     3, NoDoor),      // the kitchen, thrown out at the back
+    list( 4.5,  3.6,    6,    0,   2.5,   9.5, NoDoor),      // a lean-to at the far gable
+    list(   4,  3.4,    5,    0,   3.5,    -8, NoDoor)       // the porch, in the angle
+), 'summer', 1)
+
+// -- The barn --------------------------------------------------------------------------------------
+
+// A plan of two, which is here to say how big the house is.  A house with nothing beside it is a house
+// of whatever size you assume.
+object Plan(list(
+    list(   9,  6.5,   22,   90,   -22,    10, NoDoor),
+    list(   6,  4.8,    9,    0,   -16,     3, FaceFront)
+), 'summer', 5)
+
+// -- What grows around it --------------------------------------------------------------------------
+
+object Oak(12.5, 'summer', 11) { translate [23, 0, 24] }
+object Elm(11.0, 'summer', 4)  { translate [-3, 0, 24] }
+object Elm(9.0,  'summer', 9)  { translate [-30, 0, 20] }
+object Birch(6.6, 'summer', 6) { translate [-26, 0, -6] }
+
+// Rough grass across the front, jittered in both directions.  A patch every so many units, jittered
+// only across, still reads as a row of patches.
+for patch in [0, 6] {
+    object Grass(3.8, 'summer', 20 + patch, 0.32) {
+        translate [patch * 4.4 - 16, 0, -14 + random(patch, 41, 5) * 3]
+    }
+}
+
+for i in [0, 11] {
+    object Tuft(0.26 + random(i, 31, 5) * 0.30, 'summer', i + 40) {
+        translate [-18 + random(i, 32, 5) * 34, 0, -14 + random(i, 33, 5) * 7]
+    }
+}

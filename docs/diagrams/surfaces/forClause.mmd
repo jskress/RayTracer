@@ -1,5 +1,6 @@
 railroad-ebnf-beta
 title "Repeating things"
 
-for = ( "for" name "in" | "over" ) interval [ "by" expression ] "{" { surface } "}" ;
+for = ( "for" name "in" ( interval | list ) | "over" interval ) [ "by" expression ]
+    "{" { surface } "}" ;
 interval = ( "[" | "(" ) expression "," expression ( "]" | ")" ) ;

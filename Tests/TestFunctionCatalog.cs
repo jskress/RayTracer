@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
+using RayTracer.General;
 using RayTracer.Terms;
 
 namespace Tests;
@@ -220,7 +221,7 @@ public class TestFunctionCatalog
         Type[] usableTypes =
         [
             typeof(double), typeof(bool), typeof(string), typeof(Vector), typeof(Point),
-            typeof(Color), typeof(Matrix), typeof(NumberTuple)
+            typeof(Color), typeof(Matrix), typeof(NumberTuple), typeof(Sequence)
         ];
         List<string> problems = [];
 
@@ -236,8 +237,28 @@ public class TestFunctionCatalog
                 if (signature.ParameterCount == 0)
                     problems.Add($"{signature} takes no arguments.");
 
-                foreach (Type type in signature.ParameterTypes.Where(type => !usableTypes.Contains(type)))
+                // A form whose last parameter soaks up the rest takes an array, and what a scene
+                // hands it is the values themselves -- so it is the element type that has to be one
+                // a scene can supply.  An element type of `object` is how a form says it takes any
+                // value at all, which `list` does and is the point of it.
+                int fixedCount = signature.TakesAnyNumber
+                    ? signature.ParameterCount - 1
+                    : signature.ParameterCount;
+
+                foreach (Type type in signature.ParameterTypes.Take(fixedCount)
+                             .Where(type => !usableTypes.Contains(type)))
                     problems.Add($"{signature} takes a {type.Name}, which no scene can supply.");
+
+                if (signature.TakesAnyNumber)
+                {
+                    Type element = signature.ParameterTypes[^1].GetElementType();
+
+                    if (element != typeof(object) && !usableTypes.Contains(element))
+                    {
+                        problems.Add(
+                            $"{signature} gathers {element?.Name}, which no scene can supply.");
+                    }
+                }
 
                 string shape = signature.ToString();
 

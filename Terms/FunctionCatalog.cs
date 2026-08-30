@@ -21,7 +21,7 @@ public class FunctionCatalog
     /// <summary>
     /// This property holds the catalog of functions the DSL itself uses.
     /// </summary>
-    public static FunctionCatalog Instance { get; } = new (typeof(MathFunctions));
+    public static FunctionCatalog Instance { get; } = new (typeof(MathFunctions), typeof(SequenceFunctions));
 
     /// <summary>
     /// This property reports the name of every function in the catalog.
@@ -94,12 +94,26 @@ public class FunctionCatalog
     /// <param name="name">The name of the function called.</param>
     /// <param name="argumentCount">The number of values the call supplies.</param>
     /// <returns>What is wrong with the call, or <c>null</c> if nothing is.</returns>
+    /// <summary>
+    /// This method reports whether a form can take the number of values a call supplies.  A form
+    /// whose last parameter soaks up the rest takes anything from its fixed count upward.
+    /// </summary>
+    /// <param name="form">The form to consider.</param>
+    /// <param name="argumentCount">How many values the call supplies.</param>
+    /// <returns><c>true</c>, if the form could take them.</returns>
+    private static bool Fits(FunctionSignature form, int argumentCount)
+    {
+        return form.TakesAnyNumber
+            ? argumentCount >= form.LeastCount
+            : form.ParameterCount == argumentCount;
+    }
+
     public string CheckCall(string name, int argumentCount)
     {
         if (!_signatures.TryGetValue(name, out List<FunctionSignature> forms))
             return $"There is no function named '{name}'.";
 
-        return forms.Any(form => form.ParameterCount == argumentCount)
+        return forms.Any(form => Fits(form, argumentCount))
             ? null
             : $"The function '{name}' does not take {ArgumentText(argumentCount)}; it takes " +
               $"{ArgumentText(forms.Select(form => form.ParameterCount))}.";
@@ -174,7 +188,7 @@ public class FunctionCatalog
             return new FunctionMatch(problem);
 
         List<FunctionSignature> candidates = _signatures[name]
-            .Where(form => form.ParameterCount == arguments.Length)
+            .Where(form => Fits(form, arguments.Length))
             .ToList();
 
         FunctionMatch match = MatchAgainst(candidates, arguments, true) ??
