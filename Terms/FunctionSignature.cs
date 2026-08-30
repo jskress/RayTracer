@@ -45,6 +45,18 @@ public class FunctionSignature
     public int ParameterCount => ParameterTypes.Length;
 
     /// <summary>
+    /// This property notes whether the last thing this takes soaks up every value left over -- a
+    /// C# <c>params</c> array.  A form written that way takes any number of values from its fixed
+    /// ones upward, which is what lets a function like <c>list</c> be written at all.
+    /// </summary>
+    public bool TakesAnyNumber { get; }
+
+    /// <summary>
+    /// This property holds how many values a call must supply at the least.
+    /// </summary>
+    public int LeastCount => TakesAnyNumber ? ParameterCount - 1 : ParameterCount;
+
+    /// <summary>
     /// This property notes that the function has no place in a field: not that it merely lacks a rule
     /// for its slope, but that asking it about a place in space means nothing.
     /// </summary>
@@ -54,9 +66,88 @@ public class FunctionSignature
     {
         Name = name;
         Method = method;
-        ParameterTypes = method.GetParameters()
+        ParameterInfo[] parameters = method.GetParameters();
+
+        ParameterTypes = parameters
             .Select(parameter => parameter.ParameterType)
             .ToArray();
+        TakesAnyNumber = parameters.Length > 0 &&
+                         parameters[^1].IsDefined(typeof(ParamArrayAttribute), false);
+    }
+
+    /// <summary>
+    /// This method binds a call to a form whose last parameter soaks up whatever is left.  The fixed
+    /// values are matched one for one as they always are; everything after them is gathered into the
+    /// array the method wants, each element converted the same way a fixed value would be.
+    /// </summary>
+    /// <param name="arguments">The values the call supplied.</param>
+    /// <param name="exactly">Whether the values must already be of the types wanted.</param>
+    /// <param name="bound">The values to hand the method, when this returns <c>true</c>.</param>
+    /// <returns><c>true</c>, if the call fits this form.</returns>
+    private bool TryBindAnyNumber(object[] arguments, bool exactly, out object[] bound)
+    {
+        bound = null;
+
+        if (arguments.Length < LeastCount)
+            return false;
+
+        object[] values = new object[ParameterCount];
+
+        for (int index = 0; index < LeastCount; index++)
+        {
+            if (!TryConvert(arguments[index], ParameterTypes[index], exactly, out values[index]))
+                return false;
+        }
+
+        Type elementType = ParameterTypes[^1].GetElementType()!;
+        Array rest = Array.CreateInstance(elementType, arguments.Length - LeastCount);
+
+        for (int index = LeastCount; index < arguments.Length; index++)
+        {
+            if (!TryConvert(arguments[index], elementType, exactly, out object value))
+                return false;
+
+            rest.SetValue(value, index - LeastCount);
+        }
+
+        values[^1] = rest;
+        bound = values;
+
+        return true;
+    }
+
+    /// <summary>
+    /// This method converts one value to the type a parameter wants, either as it already is or
+    /// through the DSL's conversions.
+    /// </summary>
+    /// <param name="argument">The value the call supplied.</param>
+    /// <param name="parameterType">The type wanted.</param>
+    /// <param name="exactly">Whether the value must already be of that type.</param>
+    /// <param name="value">The converted value, when this returns <c>true</c>.</param>
+    /// <returns><c>true</c>, if the value fits.</returns>
+    private static bool TryConvert(
+        object argument, Type parameterType, bool exactly, out object value)
+    {
+        value = null;
+
+        if (argument is not null && parameterType.IsInstanceOfType(argument))
+        {
+            value = argument;
+
+            return true;
+        }
+
+        if (exactly)
+            return false;
+
+        (CoercionResult coercion, object converted) = TypeConversions.Coerce(argument, parameterType);
+
+        if (coercion != CoercionResult.OfProperType)
+            return false;
+
+        value = converted;
+
+        return true;
     }
 
     /// <summary>
@@ -73,6 +164,9 @@ public class FunctionSignature
     internal bool TryBind(object[] arguments, bool exactly, out object[] bound)
     {
         bound = null;
+
+        if (TakesAnyNumber)
+            return TryBindAnyNumber(arguments, exactly, out bound);
 
         if (arguments.Length != ParameterCount)
             return false;

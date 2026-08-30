@@ -164,6 +164,36 @@ public partial class LanguageParser
             closeBrace ?? 'Expecting a close brace here.'
         }
         namedClause: { named > _expression }
+        // The range a loop counts through.  This is a rule apart from `intervalClause`, which `over`
+        // uses, and the difference is that **this one carries no hard errors of its own**.
+        //
+        // A "for" may be given a range or a list, and the two can begin alike: a range says whether
+        // each end is in or out the way mathematics does, so `(0, 5]` opens with a parenthesis, and
+        // so does a parenthesised expression such as `(balls)`.  Telling them apart therefore means
+        // trying the range and, when the comma never arrives, letting the expression be tried
+        // instead -- and a rule that stops with an error of its own can never be backtracked out of.
+        // Falling out quietly is the whole job of this rule; the message for what fits neither is on
+        // the alternation above.
+        loopRangeClause:
+        [
+            // A square bracket is unambiguous -- nothing else a loop accepts begins with one, since a
+            // list is never written in brackets -- so this form can say plainly what is wrong with a
+            // range that is malformed, rather than falling through and being complained about as a
+            // tuple.
+            {
+                openBracket > _expression >
+                comma ?? 'Expecting a comma here.' > _expression >
+                [ closeBracket | rightParen ] ?? 'Expecting a close bracket or right parenthesis here.'
+            } |
+            // A left parenthesis is not unambiguous, and this is the form that must therefore fall
+            // out quietly: `(0, 5]` is a range and `(balls)` is a list, and which one it is is not
+            // known until the comma either arrives or does not.
+            {
+                leftParen > _expression >
+                comma > _expression >
+                [ closeBracket | rightParen ]
+            }
+        ]
         intervalClause:
         {
             [ leftParen | openBracket ] > _expression >
@@ -1250,7 +1280,9 @@ public partial class LanguageParser
         startForClause:
         {
             for > [ _identifier | _keyword ] ?? 'Expecting a name for the count to follow "for" here.' >
-            in ?? 'Expecting "in" and a range to follow the name here.' > intervalClause >
+            in ?? 'Expecting "in" and a range or a list to follow the name here.' >
+            [ loopRangeClause | _expression ]
+                ?? 'Expecting a range such as [0, 5], or a list, to follow "in" here.' >
             { by > _expression }{?} >
             openBrace ?? 'Expecting an open brace to follow the range here.'
         }

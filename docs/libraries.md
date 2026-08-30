@@ -45,7 +45,7 @@ tracer, and the shipped ones are a starting point rather than something imposed.
 
 #### Daylight
 
-The one that ships today is `daylight`, and it exists because the sky in this ray tracer is a real
+The first of them was `daylight`, and it exists because the sky in this ray tracer is a real
 one — it works out the color of every part of the dome from the way air scatters sunlight.  That is
 what makes it look right, and it is also what makes it awkward, because the numbers it wants are the
 ones nobody can guess.  Nobody knows what turbidity they want.  Everybody knows what a clear morning
@@ -494,6 +494,86 @@ For the boarding the useful trick is that `linear Y gradient` is a **sawtooth** 
 to one over each unit and starts again — so one unit is one board and the color map is a cross-section
 of it: bright at the proud bottom edge, receding up the face, dark in the last tenth where the board
 above laps over.  The drop back to nought *is* the board line, and there is nothing to smooth out.
+
+#### Plans
+
+Buildings that turn a corner, rather than buildings that are boxes.  A **wing** is one rectangular
+block with its own ridge; a **plan** is a list of wings, and the library raises the building from it.
+
+```
+import 'plans' { Plan, NoDoor, FaceFront }
+
+object Plan(list(
+    //  wide  tall  deep  turn      x      z  door
+    list( 3.4,  4.4,  5.6,    0,     0,     0, FaceFront),
+    list( 3.0,  3.9,  4.6,   90,   3.0,   1.4, NoDoor)
+))
+```
+
+| | |
+| --- | --- |
+| `Plan` | A whole building, from a list of wings. |
+| `Wing` | One block of it: walls, gables, a roof, and windows wherever the plan leaves daylight. |
+| `FaceFront`, `FaceBack` | The two gable ends, at `-Z` and `+Z` in the wing's own axes. |
+| `FaceLeft`, `FaceRight` | The two long eaves sides, at `-X` and `+X`. |
+| `NoDoor` | For a wing with no way in of its own. |
+
+`Plan(wings, season, variant)`, and only the list is required.
+
+**A wing is seven numbers in a list**, which is what makes a plan a table you can read down.  `wide`
+is gable to gable, `deep` runs with the ridge, and `tall` is to the eaves with the ridge above them;
+the sizes are the whole block, not half of it.  `turn` is degrees about `Y`, so a wing turned `90` has
+its ridge running east and west.  `x` and `z` are where its middle stands.  `door` names the one face
+the way in goes on, or `NoDoor`.
+
+There is deliberately nothing here for two wings, three wings and so on.  The count belongs to the
+plan rather than to the library, and a [list](scene-files.md#lists) is what lets it.
+
+##### The windows are measured, not declared
+
+Windows belong where there is daylight, and a wall buried in the wing next door must not have any.
+Union two of [`buildings`](#buildings)' houses and the geometry comes out right while the windows
+stare into the join — which is what this library exists to fix.
+
+It fixes it by **asking**.  Every window, before it is placed, works out where its two ends stand in
+the world, a hair proud of their wall, and asks the plan whether either of those spots is inside
+another wing.  If either is, the window is left out.  So a wall that is half swallowed keeps the
+windows on the half that shows and loses only the ones at the join, which is what a real building does
+and what a whole-wall rule cannot do.
+
+**Both ends, rather than the middle.**  A window is half a window wide either side of its middle, so a
+wing whose flank runs out from under an opening leaves that opening half swallowed — and asking about
+the middle alone answers *yes* or *no* to a question whose real answer is *partly*.  Asking at both
+ends turns partly into no, and that is the difference between a clean inside corner and half a window
+growing out of a wall.
+
+**And a hair proud of the wall, rather than out past the sill.**  Standing off the wall at all is what
+makes a wall built flat against the next wing count as buried; asked on the wall itself it would be a
+coin toss.  But standing off by the whole depth of the sill asks about a spot the window does not
+reach, and passes exactly the window whose glass is buried and whose sill just clears the wing next
+door.
+
+The test is a **plan view** and says nothing about height: a wing swallows whatever stands in it,
+whether or not it is tall enough to.  That is the conservative way round — a window left out is a bare
+wall, a window left in is a window looking into masonry.
+
+`gallery/Local/functions/the-house-that-grew.igl` is this working: a house of five wings, with the
+comparison spelled out in its own comments — break the plan into five plans of one wing each and the
+half windows come back, sliced open and hanging in the join.
+
+The **door** is taken as written rather than measured.  A door is a decision about how a building is
+entered, and a plan that asks for one in a buried wall is better answered with a door in a strange
+place than with a house that silently has no way in.
+
+##### Why wings, and not any outline you like
+
+Given any outline, the walls are easy: an [extrusion](advanced-surfaces.md#extrusion) of the
+plan, with a second run nested inside it, is a wall of real thickness and costs nothing to write.
+
+It is the **roof** that is hard.  A pitched roof over an arbitrary polygon means computing its
+straight skeleton, which is a real algorithm and an unforgiving one.  Two gabled wings crossing need
+none of it: the union of their two prisms **is** the valley, exactly and for free.  And since a
+building that turns a corner is built as wings and drawn as wings, nothing is given up by saying so.
 
 #### Vehicles
 

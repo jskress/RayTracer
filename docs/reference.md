@@ -633,16 +633,16 @@ or vectors; ask for a form that does not exist and the error names the ones that
 
 | | | | |
 | --- | --- | --- | --- |
-| `abs` | `cross` | `max` | `sinh` |
-| `acos` | `distance` | `min` | `smoothstep` |
-| `asin` | `dot` | `mod` | `sqrt` |
-| `atan` | `exp` | `noise` | `tan` |
-| `atan2` | `floor` | `normalize` | `tanh` |
-| `cbrt` | `length` | `pow` | `toDegrees` |
-| `ceil` | `lerp` | `random` | `trunc` |
-| `clamp` | `log` | `round` |  |
-| `cos` | `log10` | `sign` |  |
-| `cosh` | `magnitude` | `sin` |  |
+| `abs` | `count` | `log` | `round` |
+| `acos` | `cross` | `log10` | `sign` |
+| `asin` | `distance` | `magnitude` | `sin` |
+| `atan` | `dot` | `max` | `sinh` |
+| `atan2` | `exp` | `min` | `smoothstep` |
+| `cbrt` | `floor` | `mod` | `sqrt` |
+| `ceil` | `item` | `noise` | `tan` |
+| `clamp` | `length` | `normalize` | `tanh` |
+| `cos` | `lerp` | `pow` | `toDegrees` |
+| `cosh` | `list` | `random` | `trunc` |
 
 #### Colors
 

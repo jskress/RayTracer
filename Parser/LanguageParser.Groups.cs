@@ -217,6 +217,38 @@ public partial class LanguageParser
             reader.NextToken(); // The "in" keyword.
         }
 
+        // A range is written between brackets or parentheses; anything else after "in" is a list to
+        // walk.  The two are told apart by the very first token, which is why a list is never written
+        // with brackets of its own -- see SequenceFunctions.
+        Token ahead = reader.PeekToken();
+
+        if (counterName is not null &&
+            !BounderToken.OpenBracket.Matches(ahead) && !BounderToken.LeftParen.Matches(ahead))
+        {
+            SurfaceLoop walk = new ()
+            {
+                ErrorToken = clause.Tokens[0],
+                CounterName = counterName,
+                Source = (Term) reader.NextExpression()
+            };
+
+            // "by" counts a range along and means nothing to a list, so it is refused rather than
+            // quietly ignored -- a step written here is a misunderstanding worth answering.
+            if (reader.HasMoreTokens && !BounderToken.OpenBrace.Matches(reader.PeekToken()))
+            {
+                throw new TokenException(
+                    "A loop walking a list has no step to take; \"by\" belongs to a loop counting " +
+                    "through a range.")
+                {
+                    Token = reader.PeekToken()
+                };
+            }
+
+            walk.SurfaceResolvers = ParseSurfaceList("a \"for\"");
+
+            return walk;
+        }
+
         Token startToken = reader.NextToken();
         bool startIsOpen = BounderToken.LeftParen.Matches(startToken);
         Term start = (Term) reader.NextExpression();

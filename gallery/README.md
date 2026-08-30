@@ -949,6 +949,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/the-house-that-grew.png">
+      <img alt="The House That Grew" height="120" src="Local/functions/the-house-that-grew.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/the-house-that-grew.igl">The House That Grew</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/a-road-through-town.png">
       <img alt="A Road Through Town" height="120" src="Local/functions/a-road-through-town.png" width="160"/>
     </a></td>

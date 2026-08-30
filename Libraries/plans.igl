@@ -1,0 +1,257 @@
+// Buildings with a plan, rather than buildings that are boxes.
+//
+// `buildings` makes a house, a row and a tower, and every one of them is a rectangle seen from
+// above.  Real buildings turn corners: an L with a back wing, a T with a cross gable, a U around a
+// yard.  This library makes those, out of **wings** -- a wing being one rectangular block with its
+// own ridge -- gathered into a **plan**.
+//
+// **Why wings rather than an outline.**  Given any outline at all, the walls are easy: an
+// `extrusion` of the plan, with a second run nested inside it, is a wall of real thickness and
+// costs nothing to write.  It is the *roof* that is hard, because putting a pitched roof over an
+// arbitrary polygon means computing its straight skeleton, which is a real algorithm and an
+// unforgiving one.  Two gabled wings crossing need none of it: the union of their two prisms
+// **is** the valley, exactly and for free.  Since a building that turns a corner is built as wings
+// anyway, and drawn that way, nothing is given up by saying so.
+//
+// **The hard part is knowing which walls are outside walls.**  Windows belong where there is
+// daylight; a wall buried in the wing next door must not have any.  Union two of `buildings`'
+// houses and you get the geometry right and windows staring into the join -- which is what this
+// library exists to fix.  It fixes it by measuring rather than by being told: every window, before
+// it is placed, asks whether the spot just outside it is out in the open or inside another wing,
+// and is left out if it is.  So a wall that is half swallowed keeps the windows on the half that
+// shows, which is what a real house does and what a whole-wall rule cannot do.
+//
+//     object Plan(list(
+//         //  wide  tall  deep  turn      x      z  door
+//         list(   6,  4.4,   10,    0,     0,     0, FaceFront),
+//         list(   5,  3.9,    8,   90,   5.5,    -3, NoDoor)
+//     ))
+//
+// That is the whole interface: a plan is a list of wings, written as a table, and the library works
+// out the rest.
+import 'buildings' { BuildHouseShell, BuildOpening, BuildEntry }
+
+// -- Which way a wing faces ----------------------------------------------------------------------
+
+// A wing's four faces, named in its own axes so they still mean something after it is turned.  The
+// two gable ends face along Z, the two long eaves sides along X.  These name where the door goes,
+// which is the one thing about a wing that is a decision rather than a measurement.
+NoDoor    = 0
+FaceFront = 1     // -Z, a gable end
+FaceBack  = 2     // +Z, the other gable end
+FaceLeft  = 4     // -X, one of the long sides
+FaceRight = 8     // +X, the other
+
+// -- A wing, written down ------------------------------------------------------------------------
+
+// A wing is seven numbers in a list: how big it is, which way it is turned, where it stands, and
+// where its door is.  They are read through these rather than by their places, so that a plan can
+// be read without counting commas.
+//
+// `wide` is gable to gable, `deep` runs with the ridge, `tall` is to the eaves and the ridge above
+// them.  `turn` is degrees about Y, so a wing turned 90 has its ridge running east and west.  `x`
+// and `z` are where its middle stands.
+function WingWide(wing) -> number { return item(wing, 0) }
+function WingTall(wing) -> number { return item(wing, 1) }
+function WingDeep(wing) -> number { return item(wing, 2) }
+function WingTurn(wing) -> number { return item(wing, 3) }
+function WingX(wing)    -> number { return item(wing, 4) }
+function WingZ(wing)    -> number { return item(wing, 5) }
+function WingDoor(wing) -> number { return item(wing, 6) }
+
+// -- Turning between a wing's frame and the world ------------------------------------------------
+
+// Where a direction of a wing's own points once the wing is turned.  This is `rotate Y` written out,
+// and it has to be written out because a window has to be reasoned about before it is placed, and by
+// the time the transform has run there is nothing left to ask.
+function TurnedX(turn, x, z) -> number { return x * cos(turn degrees) + z * sin(turn degrees) }
+function TurnedZ(turn, x, z) -> number { return z * cos(turn degrees) - x * sin(turn degrees) }
+
+// And back the other way: where a spot in the world falls in a given wing's own frame.
+function UnturnedX(wing, x, z) -> number {
+    return (x - WingX(wing)) * cos(WingTurn(wing) degrees) -
+           (z - WingZ(wing)) * sin(WingTurn(wing) degrees)
+}
+function UnturnedZ(wing, x, z) -> number {
+    return (x - WingX(wing)) * sin(WingTurn(wing) degrees) +
+           (z - WingZ(wing)) * cos(WingTurn(wing) degrees)
+}
+
+// -- Whether a spot is out in the open -----------------------------------------------------------
+
+// Whether a spot in the world stands within a wing's footprint.  This is a plan view and says
+// nothing about height: a wing swallows what stands in it whether or not it is tall enough to,
+// which is the conservative way round -- a window left out is a bare wall, a window left in is a
+// window looking into masonry.
+function InsideWing(wing, x, z) -> number {
+    return abs(UnturnedX(wing, x, z)) < WingWide(wing) * 0.5 and
+           abs(UnturnedZ(wing, x, z)) < WingDeep(wing) * 0.5 ? 1 : 0
+}
+
+// Whether a spot is inside none of the wings, asked of the wings from `at` on.  A plan is a list and
+// this has to visit all of it, so it is written the only way the language walks a list inside an
+// expression: it calls itself with the next one along, and the arm that does so is not taken once
+// the end is reached.
+function OpenAirFrom(wings, x, z, at) -> number {
+    return at >= count(wings) ? 1 :
+           InsideWing(item(wings, at), x, z) == 1 ? 0 :
+           OpenAirFrom(wings, x, z, at + 1)
+}
+
+// Whether a spot is out in the open, asked of a whole plan.
+//
+// A wing does not have to be left out of its own test.  Every spot asked about here is a little way
+// *proud* of the wall it belongs to, so it already stands outside its own wing's footprint, and a
+// wing that swallowed its own windows would be one that overlapped itself.
+function OpenAir(wings, x, z) -> number { return OpenAirFrom(wings, x, z, 0) }
+
+// -- One face's worth of windows -----------------------------------------------------------------
+
+// A row of windows along one face, two storeys of them, spaced so a long wall gets more than a short
+// one, and each one placed only where there is daylight.
+//
+// The face is dressed lying along X and facing -Z, and the caller turns the whole wing to wherever
+// it belongs -- so the windows go down in the wing's own frame, as they always did.  What is new is
+// that the *decision* is made in the world, which is the only place the question means anything, so
+// the face is handed its own world frame alongside: where its middle stands, which way it runs, and
+// which way it looks.
+primitive WingWindows(reach, walls, unit, season, variant, wings, face) -> group {
+    // One window to about every two and a half window-widths of wall, and never fewer than one.
+    slots = max(1, floor(reach / (unit * 2.5)))
+
+    return group {
+        for slot in [0, slots - 1] {
+            at = (slot + 0.5) / slots * reach * 2 - reach
+
+            // Where this window's two ends look out, in the world: along the face to each end of the
+            // opening, then a hair proud of the wall.
+            //
+            // **Both ends, because one is not enough.**  A window is only ever half a window wide
+            // from the middle, so a wall that runs out from under the wing next door part of the way
+            // through an opening leaves that opening half swallowed -- and asking about the middle
+            // alone answers *yes* or *no* to a question whose real answer is *partly*.  Asking at
+            // both ends turns partly into no, which is the way round that never shows a half window
+            // growing out of a wall.
+            //
+            // **And a hair proud of the wall rather than out past the sill.**  Standing off at all is
+            // what makes a wall built flat against the next wing count as buried, which on the wall
+            // itself would be a coin toss.  But standing off by the whole depth of the sill would ask
+            // about a spot the wall's own window does not reach, and a window whose glass is buried
+            // and whose sill just clears the wing next door is exactly the one worth losing.
+            reveal = unit * 0.05
+            endX = item(face, 2) * unit * 0.5
+            endZ = item(face, 3) * unit * 0.5
+            spotX = item(face, 0) + at * item(face, 2) + item(face, 4) * reveal
+            spotZ = item(face, 1) + at * item(face, 3) + item(face, 5) * reveal
+
+            if (OpenAir(wings, spotX - endX, spotZ - endZ) == 1 and
+                OpenAir(wings, spotX + endX, spotZ + endZ) == 1) {
+                object BuildOpening(unit * 0.5, walls * 0.20, unit * 0.22, season, variant) {
+                    translate [at, walls * 0.55, 0]
+                }
+                object BuildOpening(unit * 0.5, walls * 0.20, unit * 0.22, season, variant) {
+                    translate [at, walls * 1.45, 0]
+                }
+            }
+        }
+    }
+}
+
+// -- One wing ------------------------------------------------------------------------------------
+
+// One rectangular block with its own ridge, standing where its entry in the plan says, dressed
+// wherever the rest of the plan leaves it daylight.
+//
+// It is handed the whole plan as well as its own entry, because which of its windows it may have is
+// not a question about it alone.  Handed a plan of one, it is simply a house with windows all round.
+primitive Wing(wing, wings, season, variant) -> group {
+    // The shell wants half-extents, the way a cube's scale does.
+    across = WingWide(wing) * 0.5
+    along  = WingDeep(wing) * 0.5
+    height = WingTall(wing)
+    turn   = WingTurn(wing)
+    walls  = height * 0.50
+    // What a window is scaled against.  Taken from the height rather than from the face it sits on,
+    // so that every window in a building is the same size whatever wall it is in -- which is what
+    // makes a long wing read as a long wing rather than as a near one.
+    unit   = height * 0.30
+
+    // Each face's frame in the world: its middle, the way it runs, and the way it looks.  Built here
+    // rather than inside the windows because this is where the wing's turn and place are known.
+    front = list(WingX(wing) + TurnedX(turn, 0, -along), WingZ(wing) + TurnedZ(turn, 0, -along),
+                 TurnedX(turn, 1, 0), TurnedZ(turn, 1, 0),
+                 TurnedX(turn, 0, -1), TurnedZ(turn, 0, -1))
+    back  = list(WingX(wing) + TurnedX(turn, 0, along), WingZ(wing) + TurnedZ(turn, 0, along),
+                 TurnedX(turn, -1, 0), TurnedZ(turn, -1, 0),
+                 TurnedX(turn, 0, 1), TurnedZ(turn, 0, 1))
+    left  = list(WingX(wing) + TurnedX(turn, -across, 0), WingZ(wing) + TurnedZ(turn, -across, 0),
+                 TurnedX(turn, 0, -1), TurnedZ(turn, 0, -1),
+                 TurnedX(turn, -1, 0), TurnedZ(turn, -1, 0))
+    right = list(WingX(wing) + TurnedX(turn, across, 0), WingZ(wing) + TurnedZ(turn, across, 0),
+                 TurnedX(turn, 0, 1), TurnedZ(turn, 0, 1),
+                 TurnedX(turn, 1, 0), TurnedZ(turn, 1, 0))
+
+    return group {
+        object BuildHouseShell(height, season, variant, across, along)
+
+        // The gable ends, which look along Z and are `across` wide.
+        object WingWindows(across * 0.72, walls, unit, season, variant, wings, front) {
+            translate Z -along
+        }
+        object WingWindows(across * 0.72, walls, unit, season, variant, wings, back) {
+            rotate Y 180  translate Z along
+        }
+
+        // The long sides, which look along X and run `along` deep.
+        object WingWindows(along * 0.80, walls, unit, season, variant, wings, left) {
+            rotate Y 90  translate X -across
+        }
+        object WingWindows(along * 0.80, walls, unit, season, variant, wings, right) {
+            rotate Y -90  translate X across
+        }
+
+        // The way in, on whichever face was asked for.  This one is taken as written rather than
+        // measured: a door is a decision about how the building is entered, and a plan that asks for
+        // one in a buried wall is better answered with a door in a strange place than with a house
+        // that silently has no way in.
+        if (WingDoor(wing) == FaceFront) {
+            object BuildEntry(unit * 0.42, walls * 0.30, unit * 0.12, season, variant) {
+                translate [0, walls * 0.30 + height * 0.06, -along]
+            }
+        }
+        if (WingDoor(wing) == FaceBack) {
+            object BuildEntry(unit * 0.42, walls * 0.30, unit * 0.12, season, variant) {
+                rotate Y 180  translate [0, walls * 0.30 + height * 0.06, along]
+            }
+        }
+        if (WingDoor(wing) == FaceLeft) {
+            object BuildEntry(unit * 0.42, walls * 0.30, unit * 0.12, season, variant) {
+                rotate Y 90  translate [-across, walls * 0.30 + height * 0.06, 0]
+            }
+        }
+        if (WingDoor(wing) == FaceRight) {
+            object BuildEntry(unit * 0.42, walls * 0.30, unit * 0.12, season, variant) {
+                rotate Y -90  translate [across, walls * 0.30 + height * 0.06, 0]
+            }
+        }
+
+        // Where the plan puts it.  Turn first, then move: the plan's `x` and `z` are where the wing
+        // ends up, not where it started.
+        rotate Y turn
+        translate [WingX(wing), 0, WingZ(wing)]
+    }
+}
+
+// -- A whole building ----------------------------------------------------------------------------
+
+// A building, from a list of wings.
+//
+// There is deliberately nothing here for two wings, three wings and so on: the count belongs to the
+// plan rather than to the library, and a list is what lets it.
+primitive Plan(wings, season = 'summer', variant = 1) -> group {
+    return group {
+        for wing in wings {
+            object Wing(wing, wings, season, variant)
+        }
+    }
+}

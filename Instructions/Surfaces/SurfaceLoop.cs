@@ -27,6 +27,12 @@ public class SurfaceLoop : SurfaceListEntry
     public string CounterName { get; init; }
 
     /// <summary>
+    /// This property holds the sequence to walk, when the loop was written to walk one rather than
+    /// to count.  A loop has one or the other and never both.
+    /// </summary>
+    public Term Source { get; init; }
+
+    /// <summary>
     /// This property holds where the count starts.
     /// </summary>
     public Term Start { get; init; }
@@ -76,6 +82,13 @@ public class SurfaceLoop : SurfaceListEntry
     public override void AddSurfacesTo(
         RenderContext context, Variables variables, Action<Surface> add)
     {
+        if (Source is not null)
+        {
+            WalkTheSequence(context, variables, add);
+
+            return;
+        }
+
         double start = Start.GetValue<double>(variables);
         double end = End.GetValue<double>(variables);
         double step = Step?.GetValue<double>(variables) ?? 1;
@@ -117,6 +130,41 @@ public class SurfaceLoop : SurfaceListEntry
 
             if (CounterName is not null)
                 scope.SetValue(CounterName, index);
+
+            AddAllTo(context, scope, SurfaceResolvers, add);
+        }
+    }
+
+    /// <summary>
+    /// This method runs the loop over the values of a sequence, giving the name to each in turn.
+    /// <para>
+    /// It is the same shape as counting through a range, and deliberately so: the same scope for each
+    /// turn, the same name seen by the same body.  What differs is only where the name's value comes
+    /// from -- one of the things written down, rather than the next number along.
+    /// </para>
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The variables that are currently in scope.</param>
+    /// <param name="add">What to hand each surface the loop makes.</param>
+    private void WalkTheSequence(
+        RenderContext context, Variables variables, Action<Surface> add)
+    {
+        if (Source.GetValue(variables) is not Sequence sequence)
+        {
+            throw new TokenException(
+                "A loop written with \"in\" and no range walks a list, and this is not one; " +
+                "write \"list(...)\", or a range such as \"[0, 5]\".")
+            {
+                Token = ErrorToken
+            };
+        }
+
+        foreach (object value in sequence.Values)
+        {
+            Variables scope = new (variables);
+
+            if (CounterName is not null)
+                scope.SetValue(CounterName, value);
 
             AddAllTo(context, scope, SurfaceResolvers, add);
         }
