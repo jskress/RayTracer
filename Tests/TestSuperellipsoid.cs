@@ -82,7 +82,7 @@ public class TestSuperellipsoid
     public void TestSurfaceNormalOnTheDegenerateSphereMatchesTheClosedForm()
     {
         Superellipsoid superellipsoid = Create(1, 1);
-        Vector normal = superellipsoid.SurfaceNormaAt(new Point(1, 0, 0), null);
+        Vector normal = superellipsoid.SurfaceNormalAt(new Point(1, 0, 0), null);
 
         Assert.IsTrue(Directions.Right.Matches(normal));
     }
@@ -138,7 +138,7 @@ public class TestSuperellipsoid
     public void TestSurfaceNormalOnTheOctahedronFace()
     {
         Superellipsoid superellipsoid = Create(2, 2);
-        Vector normal = superellipsoid.SurfaceNormaAt(new Point(1.0 / 3, 1.0 / 3, 1.0 / 3), null);
+        Vector normal = superellipsoid.SurfaceNormalAt(new Point(1.0 / 3, 1.0 / 3, 1.0 / 3), null);
         double component = 1 / Math.Sqrt(3);
 
         Assert.IsTrue(1.0.Near(normal.Magnitude));

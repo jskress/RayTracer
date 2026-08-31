@@ -67,7 +67,7 @@ public class TestBlob
 
         Intersection hit = intersections.OrderBy(i => i.Distance).First();
         Point point = ray.At(hit.Distance);
-        Vector normal = blob.SurfaceNormaAt(point, hit);
+        Vector normal = blob.SurfaceNormalAt(point, hit);
         Vector expected = new Vector(point).Unit;
 
         Assert.IsTrue(expected.Matches(normal));

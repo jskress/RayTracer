@@ -54,7 +54,7 @@ public class TestTubeSegment
 
         Intersection hit = intersections.OrderBy(i => i.Distance).First();
         Point point = ray.At(hit.Distance);
-        Vector normal = segment.SurfaceNormaAt(point, hit);
+        Vector normal = segment.SurfaceNormalAt(point, hit);
 
         Assert.IsTrue(new Vector(1, 0, 0).Matches(normal.Unit));
     }

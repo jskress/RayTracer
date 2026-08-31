@@ -161,14 +161,16 @@ public abstract class Light : NamedThing
     /// <param name="footprint">How much of the surface the ray that found this point covers there,
     /// so that a pattern too fine to resolve is averaged rather than sampled at a point.  Nothing,
     /// for a caller with no footprint to give, which asks the pigment for a point as before.</param>
+    /// <param name="portal">The instance this point was found through, when the surface is a shape
+    /// shared among several places, so that its pattern is read in the right space.</param>
     public Color ApplyPhong(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        Color lightReaching, Footprint footprint = null)
+        Color lightReaching, Footprint footprint = null, Surface portal = null)
     {
         Material material = surface.Material ?? Material.Default;
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
-        Color pigmentColor = material.Pigment.GetColorFor(surface, point, footprint);
+        Color pigmentColor = material.Pigment.GetColorFor(surface, point, footprint, portal);
         Color color = pigmentColor * ColorFor(sample);
         Vector vector = sample.Direction;
 

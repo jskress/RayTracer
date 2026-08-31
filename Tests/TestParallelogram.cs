@@ -122,6 +122,6 @@ public class TestParallelogram
         ];
 
         foreach (Point point in points)
-            Assert.IsTrue(square.Normal.Matches(square.SurfaceNormaAt(point, null)));
+            Assert.IsTrue(square.Normal.Matches(square.SurfaceNormalAt(point, null)));
     }
 }

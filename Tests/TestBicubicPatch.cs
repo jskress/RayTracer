@@ -91,7 +91,7 @@ public class TestBicubicPatch
         // The normal's direction (like Triangle's) follows from the winding of the control
         // points rather than always facing back toward the camera -- with U increasing along X
         // and V increasing along Y here, U cross V points along +Z.
-        Vector patchNormal = patch.SurfaceNormaAt(ray.At(patchHits[0].Distance), patchHits[0]);
+        Vector patchNormal = patch.SurfaceNormalAt(ray.At(patchHits[0].Distance), patchHits[0]);
 
         Assert.IsTrue(Directions.In.Matches(patchNormal));
     }
@@ -135,8 +135,8 @@ public class TestBicubicPatch
         Assert.IsTrue(moderateHits[0].Distance.Near(fineHits[0].Distance, 0.05));
         Assert.IsTrue(fineHits[0].Distance.Near(veryFineHits[0].Distance, 0.0001));
 
-        Vector fineNormal = fine.SurfaceNormaAt(ray.At(fineHits[0].Distance), fineHits[0]);
-        Vector veryFineNormal = veryFine.SurfaceNormaAt(ray.At(veryFineHits[0].Distance), veryFineHits[0]);
+        Vector fineNormal = fine.SurfaceNormalAt(ray.At(fineHits[0].Distance), fineHits[0]);
+        Vector veryFineNormal = veryFine.SurfaceNormalAt(ray.At(veryFineHits[0].Distance), veryFineHits[0]);
 
         Assert.IsTrue((fineNormal - veryFineNormal).Magnitude < 0.0001);
     }
@@ -154,7 +154,7 @@ public class TestBicubicPatch
 
         // With this grid's winding (U along X, V along Y), U cross V points toward +Z, the same
         // direction the dome itself bulges -- see TestFlatPatchMatchesParallelogram's comment.
-        Vector normal = dome.SurfaceNormaAt(ray.At(intersections[0].Distance), intersections[0]);
+        Vector normal = dome.SurfaceNormalAt(ray.At(intersections[0].Distance), intersections[0]);
 
         Assert.IsTrue(normal.Z > 0, "The dome's normal should point the same way it bulges.");
         Assert.IsTrue(1.0.Near(normal.Magnitude));

@@ -92,7 +92,7 @@ public abstract class FlatSurface : Surface
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
+    public override Vector SurfaceNormalAt(Point point, Intersection intersection)
     {
         return Normal;
     }

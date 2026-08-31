@@ -28,7 +28,7 @@ public class SurfaceIterator
     /// <returns>An enumerator over our surfaces, in a top-down order.</returns>
     private IEnumerable<Surface> GetSurfaces()
     {
-        return GetSurfaces(_surfaces);
+        return GetSurfaces(_surfaces, []);
     }
 
     /// <summary>
@@ -37,22 +37,36 @@ public class SurfaceIterator
     /// </summary>
     /// <param name="surfaces">The collection of surfaces to iterate over.</param>
     /// <returns>An enumerator over our surfaces, in a top-down order.</returns>
-    private static IEnumerable<Surface> GetSurfaces(IEnumerable<Surface> surfaces)
+    private static IEnumerable<Surface> GetSurfaces(
+        IEnumerable<Surface> surfaces, HashSet<Surface> shared)
     {
         foreach (Surface surface in surfaces)
         {
             switch (surface)
             {
                 case Group group:
-                    foreach (Surface child in GetSurfaces(group.Surfaces))
+                    foreach (Surface child in GetSurfaces(group.Surfaces, shared))
                         yield return child;
                     break;
                 case CsgSurface csgSurface:
-                    foreach (Surface child in GetSurfaces([csgSurface.Left, csgSurface.Right]))
+                    foreach (Surface child in GetSurfaces([csgSurface.Left, csgSurface.Right], shared))
                         yield return child;
                     break;
                 case Tube { Root: not null } tube:
-                    foreach (Surface child in GetSurfaces([tube.Root]))
+                    foreach (Surface child in GetSurfaces([tube.Root], shared))
+                        yield return child;
+                    break;
+
+                // **A shared shape has to be walked, and walked exactly once.**  Everything that
+                // settles a surface before rendering -- its material, the scene's ambient scaling, the
+                // seed its pigment is sown with -- is done by walking the scene this way, and a shape
+                // standing behind an instance was reached by none of it.  Its surfaces came out
+                // unseeded and undressed, and the picture was quietly a little different.
+                //
+                // Once, because the shape is one shape however many instances point at it, and
+                // handing it out again per instance would settle it over and over.
+                case Instance instance when shared.Add(instance.Prototype):
+                    foreach (Surface child in GetSurfaces([instance.Prototype], shared))
                         yield return child;
                     break;
             }

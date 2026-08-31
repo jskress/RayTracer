@@ -6,6 +6,8 @@ using RayTracer.Pixels;
 using RayTracer.Renderer;
 using RayTracer.Scanners;
 
+using RayTracer.Geometry;
+
 namespace RayTracer.General;
 
 /// <summary>
@@ -13,6 +15,16 @@ namespace RayTracer.General;
 /// </summary>
 public class RenderContext
 {
+    /// <summary>
+    /// This property holds the shapes built once and stood in many places, by what was asked for.
+    /// <para>
+    /// **It belongs to the render rather than to the primitive**, so that nothing built for one
+    /// picture is handed to the next -- a shape carries the state it was got ready with, and a second
+    /// render would find it already prepared and never notice.
+    /// </para>
+    /// </summary>
+    internal Dictionary<string, Surface> SharedShapes { get; } = new ();
+
     /// <summary>
     /// This property reports the width of the target image.
     /// </summary>

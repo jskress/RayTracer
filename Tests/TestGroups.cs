@@ -190,7 +190,7 @@ public class TestGroups
         outer.Add(inner);
         inner.Add(sphere);
 
-        Vector normal = sphere.NormaAt(new Point(1.7321, 1.1547, -5.5774), null);
+        Vector normal = sphere.NormalAt(new Point(1.7321, 1.1547, -5.5774), null);
         Vector expected = new (0.285704, 0.428543, -0.857161);
 
         Assert.IsTrue(expected.Matches(normal));

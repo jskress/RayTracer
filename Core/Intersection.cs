@@ -20,6 +20,19 @@ public class Intersection : IComparable<Intersection>
     public double Distance { get; }
 
     /// <summary>
+    /// This holds the instance this hit was found through, or <c>null</c> when the surface stands in
+    /// the scene in its own right.
+    /// <para>
+    /// **This is what makes shared geometry possible at all.**  Everything that carries a point or a
+    /// normal between the world and a surface walks <see cref="Surface.Parent"/>, and a surface has
+    /// exactly one parent -- so a shape reachable from a dozen places has no answer to "whereabouts
+    /// am I".  The hit itself knows, because it came through one particular instance; that instance
+    /// is recorded here on the way out, and the walk picks it up where the parents run out.
+    /// </para>
+    /// </summary>
+    public Surface Portal { get; set; }
+
+    /// <summary>
     /// This holds the point of intersection.
     /// </summary>
     public Point Point { get; private set; }
@@ -129,7 +142,7 @@ public class Intersection : IComparable<Intersection>
         Point = ray.At(Distance);
         Eye = -ray.Direction;
         TimeIndex = ray.TimeIndex;
-        Normal = Surface.NormaAt(Point, this);
+        Normal = Surface.NormalAt(Point, this);
         Inside = Normal.Dot(Eye) < 0;
 
         if (ShouldFlipInsideForOut)
@@ -211,11 +224,22 @@ public class Intersection : IComparable<Intersection>
         // come out in never depends on the order they went in.  Without this the comparison is only
         // partial, and a partial comparison handed to an unstable sort means the picture depends on how
         // the geometry happened to be walked -- see Surface.Ordinal for what that cost.
-        if (ReferenceEquals(Surface, other.Surface))
+        if (!ReferenceEquals(Surface, other.Surface))
+        {
+            return Surface is null ? -1
+                : other.Surface is null ? 1
+                : Surface.Ordinal.CompareTo(other.Surface.Ordinal);
+        }
+
+        // The same shape -- but a shared shape stands in more than one place, and two crossings of it
+        // in two of those places are two different things.  Comparing the shape alone calls them
+        // equal, which hands an unstable sort a tie it cannot break and makes the picture depend on
+        // the order the geometry happened to be walked.
+        if (ReferenceEquals(Portal, other.Portal))
             return 0;
 
-        return Surface is null ? -1
-            : other.Surface is null ? 1
-            : Surface.Ordinal.CompareTo(other.Surface.Ordinal);
+        return Portal is null ? -1
+            : other.Portal is null ? 1
+            : Portal.Ordinal.CompareTo(other.Portal.Ordinal);
     }
 }

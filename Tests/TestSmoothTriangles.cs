@@ -67,7 +67,7 @@ public class TestSmoothTriangles
     {
         SmoothTriangleIntersection intersection = new (
             _smoothTriangle, 1, 0.45, 0.25);
-        Vector normal = _smoothTriangle.NormaAt(Point.Zero, intersection);
+        Vector normal = _smoothTriangle.NormalAt(Point.Zero, intersection);
         Vector expected = new (-0.5547, 0.83205, 0);
 
         Assert.IsTrue(expected.Matches(normal));

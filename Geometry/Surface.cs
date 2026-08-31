@@ -58,6 +58,18 @@ public abstract class Surface : NamedThing
     public BoundingBox BoundingBox { get; set; }
 
     /// <summary>
+    /// This property notes that this surface is shared among instances and has already been made
+    /// ready.
+    /// <para>
+    /// **This is not a general "already prepared" flag, and it must not become one.**  Getting a
+    /// surface ready twice is otherwise perfectly allowed -- a caller may change something and ask
+    /// again, and a test does exactly that -- but a *shared* shape is reached once by every instance
+    /// pointing at it, and the second time round its box would be padded a second time.
+    /// </para>
+    /// </summary>
+    internal bool SharedAndReady { get; set; }
+
+    /// <summary>
     /// This property holds what the scene said about where this surface goes in terms of the things
     /// beside it, rather than in numbers, or <c>null</c> when it was simply put somewhere.  See
     /// <see cref="Placement"/> for why it is carried rather than worked out where it was written.
@@ -435,13 +447,14 @@ public abstract class Surface : NamedThing
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public Vector NormaAt(Point point, Intersection intersection)
+    public Vector NormalAt(Point point, Intersection intersection)
     {
         // Asked without an intersection to go on -- as a caller testing the geometry alone may do
         // -- there is no particular instant meant, so the surface is taken where it starts.
         int timeIndex = intersection?.TimeIndex ?? 0;
-        Point surfacePoint = WorldToSurface(point, timeIndex);
-        Vector normal = SurfaceNormaAt(surfacePoint, intersection);
+        Surface portal = intersection?.Portal;
+        Point surfacePoint = WorldToSurface(point, timeIndex, portal);
+        Vector normal = SurfaceNormalAt(surfacePoint, intersection);
 
         // Any roughening happens here, in surface space, which is the same footing the pigment is
         // evaluated on.  Doing it before the normal is carried out to the world means a surface
@@ -450,7 +463,7 @@ public abstract class Surface : NamedThing
         if (Material?.SurfaceNormal is not null)
             normal = Material.SurfaceNormal.PerturbAt(normal, surfacePoint);
 
-        return NormalToWorld(normal, timeIndex);
+        return NormalToWorld(normal, timeIndex, portal);
     }
 
     /// <summary>
@@ -461,7 +474,7 @@ public abstract class Surface : NamedThing
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public abstract Vector SurfaceNormaAt(Point point, Intersection intersection);
+    public abstract Vector SurfaceNormalAt(Point point, Intersection intersection);
 
     /// <summary>
     /// This method handles converting a given point from the world's coordinate system to
@@ -470,10 +483,12 @@ public abstract class Surface : NamedThing
     /// <param name="point">The point to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
     /// <returns>The converted point.</returns>
-    public Point WorldToSurface(Point point, int timeIndex = 0)
+    public Point WorldToSurface(Point point, int timeIndex = 0, Surface portal = null)
     {
         if (Parent != null)
-            point = Parent.WorldToSurface(point, timeIndex);
+            point = Parent.WorldToSurface(point, timeIndex, portal);
+        else if (portal != null)
+            point = portal.WorldToSurface(point, timeIndex);
 
         return InverseTransformAt(timeIndex) * point;
     }
@@ -490,13 +505,15 @@ public abstract class Surface : NamedThing
     /// <param name="footprint">The footprint to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
     /// <returns>The converted footprint.</returns>
-    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0)
+    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0, Surface portal = null)
     {
         if (footprint is null || footprint.IsEmpty)
             return Footprint.None;
 
         if (Parent != null)
-            footprint = Parent.WorldToSurface(footprint, timeIndex);
+            footprint = Parent.WorldToSurface(footprint, timeIndex, portal);
+        else if (portal != null)
+            footprint = portal.WorldToSurface(footprint, timeIndex);
 
         return footprint.TransformedBy(InverseTransformAt(timeIndex));
     }
@@ -529,13 +546,15 @@ public abstract class Surface : NamedThing
     /// <param name="normal">The normal to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
     /// <returns>The converted normal.</returns>
-    public Vector NormalToWorld(Vector normal, int timeIndex = 0)
+    public Vector NormalToWorld(Vector normal, int timeIndex = 0, Surface portal = null)
     {
         normal = TransposedInverseTransformAt(timeIndex) * normal;
         normal = normal.Clean().Unit;
 
         if (Parent != null)
-            normal = Parent.NormalToWorld(normal, timeIndex);
+            normal = Parent.NormalToWorld(normal, timeIndex, portal);
+        else if (portal != null)
+            normal = portal.NormalToWorld(normal, timeIndex);
 
         return normal;
     }
