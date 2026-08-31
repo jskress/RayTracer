@@ -56,6 +56,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public TransformResolver MotionResolver { get; set; }
 
     /// <summary>
+    /// This property notes whether this resolver would give the surface a material of its own.
+    /// </summary>
+    public bool SetsMaterial => MaterialResolver is not null;
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value as a surface.
     /// </summary>
     /// <param name="context">The current render context.</param>

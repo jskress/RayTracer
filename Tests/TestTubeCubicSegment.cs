@@ -135,7 +135,7 @@ public class TestTubeCubicSegment
 
         Intersection hit = intersections.OrderBy(i => i.Distance).First();
         Point point = ray.At(hit.Distance);
-        Vector normal = segment.SurfaceNormaAt(point, hit);
+        Vector normal = segment.SurfaceNormalAt(point, hit);
 
         Assert.IsTrue(Directions.Up.Matches(normal.Unit));
     }

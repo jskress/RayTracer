@@ -162,11 +162,14 @@ public class CsgSurface : Surface
         intersections.RemoveAll(
             intersection =>
             {
-                bool leftHit = IsOrIncludes(Left, intersection.Surface);
+                // What stands in this shape's tree is the *instance*, when the crossing came through
+                // one -- the shape it points at is shared and lives outside the tree altogether.
+                Surface hit = intersection.Portal ?? intersection.Surface;
+                bool leftHit = IsOrIncludes(Left, hit);
                 bool result = !IsIntersectionAllowed(leftHit, inLeft, inRight);
 
                 if (!result && Operation == CsgOperation.Difference &&
-                    IsOrIncludes(Right, intersection.Surface))
+                    IsOrIncludes(Right, hit))
                     intersection.ShouldFlipInsideForOut = true;
 
                 if (leftHit)
@@ -217,7 +220,7 @@ public class CsgSurface : Surface
     /// <param name="point">The point at which the normal should be determined.</param>
     /// <param name="intersection">The intersection information.</param>
     /// <returns>The normal to the surface at the given point.</returns>
-    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
+    public override Vector SurfaceNormalAt(Point point, Intersection intersection)
     {
         return Directions.Up;
     }

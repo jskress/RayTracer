@@ -150,22 +150,22 @@ public class TestSpheres
         Vector vector = new (1, 0, 0);
         double value = Math.Sqrt(3) / 3;
 
-        Assert.IsTrue(vector.Matches(sphere.NormaAt(point, null)));
+        Assert.IsTrue(vector.Matches(sphere.NormalAt(point, null)));
 
         point = new Point(0, 1, 0);
         vector = new Vector(0, 1, 0);
 
-        Assert.IsTrue(vector.Matches(sphere.NormaAt(point, null)));
+        Assert.IsTrue(vector.Matches(sphere.NormalAt(point, null)));
 
         point = new Point(0, 0, 1);
         vector = new Vector(0, 0, 1);
 
-        Assert.IsTrue(vector.Matches(sphere.NormaAt(point, null)));
+        Assert.IsTrue(vector.Matches(sphere.NormalAt(point, null)));
 
         point = new Point(value, value, value);
         vector = new Vector(value, value, value);
 
-        Assert.IsTrue(vector.Matches(sphere.NormaAt(point, null)));
+        Assert.IsTrue(vector.Matches(sphere.NormalAt(point, null)));
         Assert.IsTrue(vector.Matches(vector.Unit));
     }
 
@@ -175,7 +175,7 @@ public class TestSpheres
         Sphere sphere = new () { Transform = Transforms.Translate(0, 1, 0) };
         Point point = new (0, 1.70711, -0.70711);
         Vector vector = new (0, 0.707107, -0.707107);
-        Vector normal = sphere.NormaAt(point, null);
+        Vector normal = sphere.NormalAt(point, null);
         double value = Math.Sqrt(2) / 2;
 
         Assert.IsTrue(vector.Matches(normal));
@@ -186,7 +186,7 @@ public class TestSpheres
                         Transforms.RotateAroundZ(Math.PI / 5)
         };
         point = new Point(0, value, -value);
-        normal = sphere.NormaAt(point, null);
+        normal = sphere.NormalAt(point, null);
         vector = new Vector(0, 0.970143, -0.242536);
 
         Assert.IsTrue(vector.Matches(normal));

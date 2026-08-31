@@ -1,4 +1,8 @@
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Terms;
@@ -53,8 +57,7 @@ public class PrimitiveCallResolver : ISurfaceResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
-        Surface made = ((ISurfaceResolver) recipe).ResolveToSurface(context, scope);
+        Surface made = BuildOrShare(context, primitive, given);
 
         // And now whatever the call itself said, in the names the call was written among -- which is
         // how a loop may place a row of these by saying `translate X step` after the call.
@@ -97,5 +100,167 @@ public class PrimitiveCallResolver : ISurfaceResolver
     public object ResolveToObject(RenderContext context, Variables variables)
     {
         return ResolveToSurface(context, variables);
+    }
+
+    /// <summary>
+    /// This method makes what the call asked for, sharing one shape among every call that asked for
+    /// exactly the same thing.
+    /// <para>
+    /// **What makes this safe is that a primitive's body cannot see the caller.**  Its scope is built
+    /// on where the primitive was *declared*, so the only things that can change what the body makes
+    /// are the values it was given -- and the one function that could have smuggled state in,
+    /// <c>random</c>, is keyed by its arguments too.  Two calls with the same values therefore make
+    /// the same shape, and one of them will do for both.
+    /// </para>
+    /// <para>
+    /// The first call is wrapped the same way as every other, rather than being kept as the shape
+    /// itself.  Nothing then depends on which call happened to come first.
+    /// </para>
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="primitive">The primitive being called.</param>
+    /// <param name="given">The values the call supplied.</param>
+    /// <returns>The surface for this call.</returns>
+    private Surface BuildOrShare(RenderContext context, UserPrimitive primitive, object[] given)
+    {
+        // **Only a primitive that gives back a group may be shared, and the reason is the block a call
+        // may carry.**  That block is laid over whatever the call made, by a resolver that knows the
+        // primitive's declared kind -- and it begins by checking the surface *is* that kind, giving up
+        // quietly when it is not.  An instance is not a sphere, so a call of a sphere-making primitive
+        // would have had its own `translate` dropped without a word, and two of the thing would stand
+        // in the same place.  A group can hold an instance, so the call is handed a group as it always
+        // was and the sharing hides inside it.
+        //
+        // That is no great loss: a primitive that makes anything worth building once makes a group.
+        string key = primitive.Kind == "group" && !(Extras?.SetsMaterial ?? false)
+            ? KeyFor(primitive, given)
+            : null;
+
+        if (key is not null && context.SharedShapes.TryGetValue(key, out Surface already))
+            return new Group().Add(new Instance { Prototype = already });
+
+        Surface built = Build(context, primitive, given);
+
+        if (key is null || !MayBeShared(built))
+            return built;
+
+        context.SharedShapes[key] = built;
+
+        return new Group().Add(new Instance { Prototype = built });
+    }
+
+    /// <summary>
+    /// This method runs the primitive's body and hands back what it made.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="primitive">The primitive being called.</param>
+    /// <param name="given">The values the call supplied.</param>
+    /// <returns>The surface the body made.</returns>
+    private Surface Build(RenderContext context, UserPrimitive primitive, object[] given)
+    {
+        (IObjectResolver recipe, Variables scope) = primitive.ChooseFor(given, ErrorToken);
+
+        return ((ISurfaceResolver) recipe).ResolveToSurface(context, scope);
+    }
+
+    /// <summary>
+    /// This method reports whether a shape just built may stand in more than one place.
+    /// <para>
+    /// Each of these is a thing that would be *wrong* rather than merely unshared, and each is
+    /// checked on the shape itself rather than guessed at from the call.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The shape to consider.</param>
+    /// <returns><c>true</c>, if it may be shared.</returns>
+    private static bool MayBeShared(Surface surface) => surface switch
+    {
+        // A shape reachable from two places has no one place to be, and a light made of the stuff
+        // inside it has to be somewhere.
+        _ when surface.GivesLightSamples is not null => false,
+
+        // The medium inside a thing is looked up by carrying a point into the *containing* surface's
+        // space, and that lookup has no hit to take a portal from.
+        _ when surface.Material?.Interior?.Medium is not null => false,
+
+        // Where a thing stands changes while the shutter is open, and an instance would have to carry
+        // its own motion as well as the shape's.
+        _ when surface.Moves => false,
+
+        // Both of these would need a hit to remember two instances rather than one; see Instance.
+        Instance => false,
+
+        Group group => group.Surfaces.All(MayBeShared),
+        CsgSurface csg => MayBeShared(csg.Left) && MayBeShared(csg.Right),
+        _ => true
+    };
+
+    /// <summary>
+    /// This method returns what a call asked for, written down, or <c>null</c> when it cannot be
+    /// written down faithfully.
+    /// <para>
+    /// **Anything not recognised means no sharing, rather than a guess.**  Two different things whose
+    /// text happens to match would be one shape standing for both, which is the one way this could go
+    /// wrong quietly -- so the type is written down beside the value, and a value of a kind not
+    /// listed here refuses the key outright.
+    /// </para>
+    /// </summary>
+    /// <param name="primitive">The primitive being called.</param>
+    /// <param name="given">The values the call supplied.</param>
+    /// <returns>A key for the call, or <c>null</c> if one cannot be made.</returns>
+    private static string KeyFor(UserPrimitive primitive, object[] given)
+    {
+        StringBuilder key = new ();
+
+        key.Append(RuntimeHelpers.GetHashCode(primitive)).Append(':').Append(primitive.Name);
+
+        foreach (object value in given)
+        {
+            if (!TryWriteDown(value, key))
+                return null;
+        }
+
+        return key.ToString();
+    }
+
+    /// <summary>
+    /// This method writes one value into a key, if it is of a kind that can be written faithfully.
+    /// </summary>
+    /// <param name="value">The value to write down.</param>
+    /// <param name="key">The key being built.</param>
+    /// <returns><c>true</c>, if the value could be written down.</returns>
+    private static bool TryWriteDown(object value, StringBuilder key)
+    {
+        key.Append('|').Append(value?.GetType().Name ?? "nothing").Append('=');
+
+        switch (value)
+        {
+            case null:
+                return true;
+            case double number:
+                key.Append(number.ToString("R", CultureInfo.InvariantCulture));
+                return true;
+            case bool flag:
+                key.Append(flag);
+                return true;
+            case string text:
+                key.Append(text.Length).Append(':').Append(text);
+                return true;
+            case NumberTuple tuple:
+                key.Append(tuple);
+                return true;
+            case Sequence sequence:
+                key.Append(sequence.Count).Append('(');
+
+                foreach (object held in sequence.Values)
+                {
+                    if (!TryWriteDown(held, key))
+                        return false;
+                }
+
+                key.Append(')');
+                return true;
+            default:
+                return false;
+        }
     }
 }

@@ -158,6 +158,6 @@ public class TestDisc
         ];
 
         foreach (Point point in points)
-            Assert.IsTrue(disc.Normal.Matches(disc.SurfaceNormaAt(point, null)));
+            Assert.IsTrue(disc.Normal.Matches(disc.SurfaceNormalAt(point, null)));
     }
 }

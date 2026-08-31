@@ -32,7 +32,10 @@ public static class IntersectionExtensions
     public static (double N1, double N2) FindIndicesOfRefraction(
         this List<Intersection> intersections, Intersection hit, double environment = 1)
     {
-        List<Surface> containers = [];
+        // **A shape and the place it is standing in**, because a shared shape gives the same surface
+        // for every instance of it: a ray entering one glass ball and then another would otherwise
+        // read as entering and *leaving* the one ball, and come out the far side unrefracted.
+        List<(Surface Surface, Surface Portal)> containers = [];
         double n1 = 0;
         double n2 = 0;
 
@@ -41,18 +44,20 @@ public static class IntersectionExtensions
             if (intersection == hit)
                 n1 = containers.IsEmpty()
                     ? environment
-                    : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
+                    : (containers.Last().Surface.Material ?? Material.Default).Interior.IndexOfRefraction;
 
-            if (containers.Contains(intersection.Surface))
-                containers.Remove(intersection.Surface);
+            (Surface, Surface) inside = (intersection.Surface, intersection.Portal);
+
+            if (containers.Contains(inside))
+                containers.Remove(inside);
             else
-                containers.Add(intersection.Surface);
+                containers.Add(inside);
 
             if (intersection == hit)
             {
                 n2 = containers.IsEmpty()
                     ? environment
-                    : (containers.Last().Material ?? Material.Default).Interior.IndexOfRefraction;
+                    : (containers.Last().Surface.Material ?? Material.Default).Interior.IndexOfRefraction;
 
                 break;
             }

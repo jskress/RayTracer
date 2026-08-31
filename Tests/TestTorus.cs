@@ -122,7 +122,7 @@ public class TestTorus
 
         foreach ((Point point, Vector expected) in cases)
         {
-            Vector normal = torus.SurfaceNormaAt(point, null);
+            Vector normal = torus.SurfaceNormalAt(point, null);
 
             Assert.IsTrue(expected.Matches(normal));
         }

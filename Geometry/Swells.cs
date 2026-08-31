@@ -235,7 +235,7 @@ public class Swells : Surface
     /// <param name="point">The point to find the normal at, in surface space.</param>
     /// <param name="intersection">The crossing this is for.</param>
     /// <returns>The normal there.</returns>
-    public override Vector SurfaceNormaAt(Point point, Intersection intersection)
+    public override Vector SurfaceNormalAt(Point point, Intersection intersection)
     {
         return _field.NormalAt(point.X, point.Z);
     }

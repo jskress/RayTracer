@@ -108,9 +108,9 @@ public abstract class Pigment
     /// <param name="surface">The surface to get the color for.</param>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
-    public Color GetColorFor(Surface surface, Point point)
+    public Color GetColorFor(Surface surface, Point point, Surface portal = null)
     {
-        return GetTransformedColorFor(surface.WorldToSurface(point));
+        return GetTransformedColorFor(surface.WorldToSurface(point, 0, portal));
     }
 
     /// <summary>
@@ -126,12 +126,14 @@ public abstract class Pigment
     /// <param name="point">The point to produce a color for.</param>
     /// <param name="footprint">How much of the surface the ray covers there.</param>
     /// <returns>The appropriate color for that patch of the surface.</returns>
-    public Color GetColorFor(Surface surface, Point point, Footprint footprint)
+    public Color GetColorFor(
+        Surface surface, Point point, Footprint footprint, Surface portal = null)
     {
         return footprint is null || footprint.IsEmpty
-            ? GetTransformedColorFor(surface.WorldToSurface(point))
+            ? GetTransformedColorFor(surface.WorldToSurface(point, 0, portal))
             : GetTransformedColorFor(
-                surface.WorldToSurface(point), surface.WorldToSurface(footprint));
+                surface.WorldToSurface(point, 0, portal),
+                surface.WorldToSurface(footprint, 0, portal));
     }
 
     /// <summary>

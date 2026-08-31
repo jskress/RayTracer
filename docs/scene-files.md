@@ -1079,6 +1079,43 @@ including the two-word ones (`smooth triangle`, `generic shape`, `object file`).
 A call's block need not repeat what the body already said.  It is laid *over* what the primitive made,
 so it holds only what that call wished to change.
 
+#### One Shape, Many Places
+
+Calling a primitive twice with the same values builds its shape **once** and stands it in both places.
+Nothing needs saying for this, and nothing in a scene changes: it is what the language does now.
+
+```
+for leaf in [0, 200] {
+    object Blade('oak') { rotate Y leaf * 13  translate Y leaf * 0.04 }
+}
+```
+
+That builds one blade, not two hundred and one.  A wood of twenty-four elms takes less than half the
+time it used to, and holds a great deal less.
+
+**What makes this safe is that a body cannot see its caller.**  A primitive's names are its parameters
+and whatever was in scope where it was *written* — never where it was called from — and `random` is
+keyed by what it is given.  So two calls with the same values genuinely make the same thing, and one
+of them will do for both.
+
+**Variety costs nothing here, because variety comes from arguments.**  Two trees of different variants
+are different calls and get shapes of their own; it is the *leaves* on them, which take only a species,
+that are the same thing ten thousand times over.  If you want a thing to differ, give the primitive
+something that differs — which is what you were doing anyway.
+
+Sharing is quietly declined, and the call gets a shape of its own, when:
+
+| | |
+| --- | --- |
+| the call's block sets a `material` | a shared shape carries its own, and this one would be ignored |
+| the shape `gives light` | a light made of a thing's stuff has to be somewhere in particular |
+| the shape holds a `medium` | what is inside a thing is looked up through the thing itself |
+| the shape has `motion` | where it stands changes while the shutter is open |
+| the primitive gives back something other than a `group` | a group can hold a shared shape; a sphere cannot |
+
+None of these is anything to work around.  They are the cases where one shape in two places would mean
+something different from two shapes, and there the two shapes are what you get.
+
 ### Choosing Inside a Body
 
 A function or a primitive may **choose** which of two answers it gives:

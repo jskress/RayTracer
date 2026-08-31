@@ -167,7 +167,7 @@ public class TestTube
 
         Intersection hit = intersections.OrderBy(i => i.Distance).First();
         Point point = ray.At(hit.Distance);
-        Vector normal = hit.Surface.NormaAt(point, hit);
+        Vector normal = hit.Surface.NormalAt(point, hit);
 
         Assert.IsTrue(new Vector(1, 0, 0).Matches(normal.Unit));
     }

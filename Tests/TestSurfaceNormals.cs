@@ -153,7 +153,7 @@ public class TestSurfaceNormals
         Point point = new Point(0, 0, -1);
 
         Assert.IsTrue(
-            DegreesBetween(plain.NormaAt(point, null), rough.NormaAt(point, null)) > 1,
+            DegreesBetween(plain.NormalAt(point, null), rough.NormalAt(point, null)) > 1,
             "the material's roughening did not reach the surface");
     }
 }

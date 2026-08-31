@@ -144,7 +144,7 @@ public class TestSwells
         Assert.AreEqual(1, found.Count);
 
         Point where = ray.At(found[0].Distance);
-        Vector normal = water.SurfaceNormaAt(where, found[0]);
+        Vector normal = water.SurfaceNormalAt(where, found[0]);
 
         Assert.IsTrue(normal.Matches(water.Field.NormalAt(where.X, where.Z)));
         Assert.AreEqual(1, normal.Magnitude, 1e-9);

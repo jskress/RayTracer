@@ -128,7 +128,7 @@ public class TestIsosurface
             new Point(1.1547, 1.1547, 1.1547)
         })
         {
-            Vector normal = isosurface.SurfaceNormaAt(point, null);
+            Vector normal = isosurface.SurfaceNormalAt(point, null);
             Vector expected = new Vector(point.X, point.Y, point.Z).Unit;
 
             Assert.IsTrue(normal.Matches(expected),

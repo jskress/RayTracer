@@ -755,7 +755,7 @@ public class Scene : NamedThing, IDisposable
         // question is asked at this point rather than of the material as a whole.
         double transparency = material.PigmentMayTransmit
             ? material.TransparencyFor(
-                material.Pigment.GetColorFor(intersection.Surface, intersection.Point))
+                material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal))
             : material.Transparency;
 
         if (material.Reflective > 0 && (material.Transparency > 0 || material.PigmentMayTransmit))
@@ -821,7 +821,7 @@ public class Scene : NamedThing, IDisposable
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, GetLightReaching(
                     intersection.OverPoint, only.Direction, only.Distance, intersection.TimeIndex),
-                intersection.Footprint);
+                intersection.Footprint, intersection.Portal);
         }
 
         Color sum = Colors.Black;
@@ -835,7 +835,7 @@ public class Scene : NamedThing, IDisposable
                 intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, GetLightReaching(
                     intersection.OverPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
-                intersection.Footprint);
+                intersection.Footprint, intersection.Portal);
         }
 
         return sum * (1.0 / count);
@@ -907,7 +907,7 @@ public class Scene : NamedThing, IDisposable
                 ? ray.At(intersection.Distance)
                 : null;
             Color surfaceColor = needsPigment
-                ? material.Pigment.GetColorFor(intersection.Surface, where)
+                ? material.Pigment.GetColorFor(intersection.Surface, where, intersection.Portal)
                 : null;
             double transparency = surfaceColor is null
                 ? material.Transparency
@@ -933,7 +933,7 @@ public class Scene : NamedThing, IDisposable
                 // That is a caustic, and finding it means tracing forward from the light.
                 if (interior.Refracts)
                 {
-                    Vector normal = intersection.Surface.NormaAt(where, intersection);
+                    Vector normal = intersection.Surface.NormalAt(where, intersection);
 
                     reaching *= 1 - interior.GetReflectanceAt(
                         ray.Direction.Dot(normal), Environment.IndexOfRefraction);
@@ -1031,7 +1031,7 @@ public class Scene : NamedThing, IDisposable
         // highlight has to settle for.
         if (material.Metallic != 0)
         {
-            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point);
+            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal);
 
             color *= material.GetMetallicTint(pigmentColor, intersection.Eye.Dot(intersection.Normal));
         }
@@ -1054,7 +1054,7 @@ public class Scene : NamedThing, IDisposable
         // it is sampled and has its say.  Sampled once here and reused for the filter below, since
         // both want the surface's color at the very same point.
         Color pigmentColor = material.PigmentMayTransmit || material.Interior.Filter > 0
-            ? material.Pigment.GetColorFor(intersection.Surface, intersection.Point)
+            ? material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal)
             : null;
         double transparency = pigmentColor is null
             ? material.Transparency

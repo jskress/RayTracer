@@ -151,19 +151,19 @@ public class TestEgg
     {
         Egg egg = CreateBottomBiggerEgg();
 
-        Assert.IsTrue(Directions.Down.Matches(egg.SurfaceNormaAt(new Point(0, -1.5, 0), null)));
-        Assert.IsTrue(Directions.Up.Matches(egg.SurfaceNormaAt(new Point(0, 2.4, 0), null)));
+        Assert.IsTrue(Directions.Down.Matches(egg.SurfaceNormalAt(new Point(0, -1.5, 0), null)));
+        Assert.IsTrue(Directions.Up.Matches(egg.SurfaceNormalAt(new Point(0, 2.4, 0), null)));
     }
 
     [TestMethod]
     public void TestSurfaceNormalOnTheConnectingCollarIsUnitLength()
     {
         // The collar's normal formula is algebraically different from the caps' (see
-        // Egg.SurfaceNormaAt), so this confirms it still produces a proper unit vector,
+        // Egg.SurfaceNormalAt), so this confirms it still produces a proper unit vector,
         // roughly pointing away from the egg's own axis, at a point known to lie on it.
         Egg egg = CreateBottomBiggerEgg();
         Point point = new (1.5, 0, 0);
-        Vector normal = egg.SurfaceNormaAt(point, null);
+        Vector normal = egg.SurfaceNormalAt(point, null);
 
         Assert.IsTrue(1.0.Near(normal.Magnitude));
         Assert.IsTrue(normal.X > 0);

@@ -16,9 +16,9 @@ public class TestTriangles
             Point2 = new Point(-1, 0, 0),
             Point3 = new Point(1, 0, 0)
         };
-        Vector n1 = triangle.SurfaceNormaAt(new Point(0, 0.5, 0), null);
-        Vector n2 = triangle.SurfaceNormaAt(new Point(-0.5, 0.75, 0), null);
-        Vector n3 = triangle.SurfaceNormaAt(new Point(0.5, 0.25, 0), null);
+        Vector n1 = triangle.SurfaceNormalAt(new Point(0, 0.5, 0), null);
+        Vector n2 = triangle.SurfaceNormalAt(new Point(-0.5, 0.75, 0), null);
+        Vector n3 = triangle.SurfaceNormalAt(new Point(0.5, 0.25, 0), null);
 
         Assert.IsTrue(n1.Matches(n2));
         Assert.IsTrue(n1.Matches(n3));
