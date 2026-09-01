@@ -13,6 +13,12 @@ namespace RayTracer.Geometry;
 public abstract class FlatSurface : Surface
 {
     /// <summary>
+    /// This surface is a sheet: it encloses nothing, so its normal points whichever way it was
+    /// written rather than naming an outside.  See <see cref="Surface.IsASheet"/>.
+    /// </summary>
+    public override bool IsASheet => true;
+
+    /// <summary>
     /// This property holds the surface's normal, which is constant across its whole plane.
     /// </summary>
     public Vector Normal { get; protected set; }

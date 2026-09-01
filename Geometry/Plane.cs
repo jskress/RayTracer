@@ -6,6 +6,14 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class represents a plane.  By definition, it is the xz plane.
+/// <para>
+/// **A plane is a solid and not a sheet**, whatever it looks like.  It divides space in two and its
+/// normal names which half is outside, exactly as a sphere's does: outside is the side the normal
+/// points to and inside is the other.  That is what lets it stand in a
+/// <see cref="CsgSurface"/> -- a difference can carve with a plane -- and it is why it reports the
+/// one crossing a half-space has rather than the pair a bounded solid does.  See
+/// <see cref="Surface.IsASheet"/>.
+/// </para>
 /// </summary>
 public class Plane : Surface
 {

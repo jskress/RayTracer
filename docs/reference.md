@@ -33,11 +33,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
-| `X` | Names the X axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
-| `Y` | Names the Y axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
-| `Z` | Names the Z axis, in a transform, a linear gradient or an axis value. | [Transforms](transforms.md#rotate) |
+| `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
+| `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
+| `Z` | Names the Z axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Z expression. | [Transforms](transforms.md#rotate) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
-| `accuracy` | Isosurface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
+| `accuracy` | Isosurface or parametric surface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -223,6 +223,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
+| `parametric` | A surface whose points are written out in terms of two parameters. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `patch` | Shape: a bicubic (16-point) surface patch. | [Surfaces](surfaces.md#patch) |
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
@@ -326,12 +327,14 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |
 | `uSteps` | Area light: samples across U. | [Lights](lights.md#area-lights) |
 | `uncached` | Image pigment: re-read the image rather than share a cached copy. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `under` | Places a surface beneath another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `union` | CSG: everything in any child. | [Surfaces](surfaces.md#combining-surfaces) |
 | `up` | Camera: which way is up. | [Cameras](cameras.md#placing-a-camera) |
+| `v` | Parametric surface: the span the second parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `vSteps` | Patch: how finely it is diced across V. | [Surfaces](surfaces.md#patch) |
 | `vector` | Casts a tuple to a vector. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `vertical` | Text layout: vertical placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |

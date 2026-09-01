@@ -501,6 +501,96 @@ a function can now say for itself — `noise(p) + noise(2p) / 2 + noise(4p) / 4`
 The complete scene is
 [`docs/examples/advanced/isosurface.igl`](examples/advanced/isosurface.igl).
 
+### Parametric
+
+The other way of writing a shape down as arithmetic.  An [isosurface](#isosurface) says where a
+shape *is* — everywhere a function of `x`, `y` and `z` comes out at nought.  A parametric surface
+says what a shape is *made of*: two parameters, `u` and `v`, run over the spans you give them, and
+three expressions say where the point at each place goes.
+
+![A parametric surface](images/figures/adv-parametric.png)
+
+```
+parametric {
+    u [0, 6.283185307179586]
+    v [0, 18.849555921538759]
+
+    X { 0.09 * exp(0.14 * v) * cos(v) * (1 + 0.50 * cos(u)) }
+    Y { 0.09 * exp(0.14 * v) * 0.50 * sin(u) }
+    Z { 0.09 * exp(0.14 * v) * sin(v) * (1 + 0.50 * cos(u)) }
+}
+```
+
+That one is a nautilus: `u` goes once round the tube, `v` three times round the spiral, and
+`exp(0.14 ⋅ v)` makes every turn the same amount bigger than the one inside it — which is the rule a
+shell really grows by, and the reason it comes out looking like one rather than like a coil of pipe.
+
+The two sorts suit different shapes, and it is worth knowing which you want.  An isosurface is at
+home with shapes described by a *rule about space* — a blend of two solids, a field that repeats, a
+thing defined by distance.  A parametric surface is at home with shapes that are *swept, wound or
+grown*: shells, horns, twisted columns, and sculptural forms that are easy to walk around and hard
+to state as a rule. Ask yourself whether you would sooner describe your shape by a test a point
+passes, or by a tour over its surface.
+
+Nothing here is ever turned into triangles.  A rectangle of `u` and `v` is bounded by asking the
+three expressions what they can come to over it, which gives a box the whole of that piece must lie
+inside; a ray missing that box misses every point of it, and the piece is put down unopened.  Where
+a piece is small enough to hold just one crossing, the crossing is then solved for exactly.  So the
+surface is as smooth as it is written to be, however close you go.
+
+#### A parametric surface is a sheet
+
+It has no inside.  A shell looks solid and is not, so a parametric surface cannot be filled,
+refracted through, or usefully put in a [CSG](surfaces.md#combining-surfaces) — the same as a
+[generic shape](#generic-shape), a disc or a parallelogram.  Light it from both sides and both sides
+are lit, and it does not matter which way round you wrote it.
+
+#### The properties
+
+| Property | What it does |
+| --- | --- |
+| `u`, `v` | The spans the two parameters run over, written `[start, end]`.  Both are required. |
+| `X`, `Y`, `Z` | The arithmetic giving a point's three coordinates.  All three are required. |
+| `accuracy` | How closely a crossing is pinned down, in the surface's own units.  A ten-thousandth by default. |
+
+The spans are what make the shape end.  A sheet is only drawn over the parameters you give, so
+halving the span of `v` above leaves you a shell of half as many turns, and there is no other way to
+stop it — the arithmetic itself would happily wind on forever.
+
+#### What the expressions may hold
+
+The same arithmetic an [isosurface's function](#what-a-function-may-hold) may hold, with the same two
+exclusions: no vectors or tuples, and `mod` rather than `%`.  Any name the scene has given a number
+to may be used, and is read once, when the scene is prepared.
+
+**Write `u` and `v`, and not `x`, `y` or `z`.**  Those three are how the arithmetic underneath names
+what a function is of, and `u` is lowered into the first of them — so writing `x` inside one of these
+expressions silently means the same thing as `u`, and `z` means nought.  Neither is what anybody
+means by it, and it cannot be told apart afterwards to warn you about.
+
+#### What it costs
+
+More than a shape that can be solved for.  A ball written out as a parametric surface takes about
+fifteen times what the [sphere](surfaces.md#sphere) primitive takes, for the same picture — so write
+what you mean, and reach for this only for shapes nothing else here gives you.
+
+The cost is in the narrowing rather than in the arithmetic, and **what drives it is how much of the
+sheet a coarse piece can cover**.  A piece spanning a wide range of `v` on the shell above covers
+every turn of the spiral at once, so nothing can be put down until the turns come apart.  That makes
+the number of turns, rather than the size or the arithmetic, the thing to watch — the same shell
+drawn over one turn to six, at 220×165:
+
+| Turns | 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Seconds | 0.05 | 0.08 | 0.18 | 0.71 | 2.4 | 4.8 |
+
+Three turns is free and six is not, so if a surface of yours is slower than you expect, look for a
+parameter that sweeps the sheet back over itself and see whether the shape can be had with fewer
+passes.
+
+The complete scene is
+[`docs/examples/advanced/parametric.igl`](examples/advanced/parametric.igl).
+
 ### Generic Shape
 
 An arbitrary closed 2D path, left flat rather than given thickness.  Where an extrusion makes a

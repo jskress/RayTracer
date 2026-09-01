@@ -332,6 +332,28 @@ public abstract class Surface : NamedThing
     public virtual double SelfOffsetScale => 1;
 
     /// <summary>
+    /// This property reports whether the surface is a sheet: a thing with two faces and no inside.
+    /// <para>
+    /// **What it settles is which side a ray leaving the surface starts on.**  For a solid, the nudge
+    /// that keeps a point from blocking its own light goes along the surface's own normal, and that is
+    /// right: the normal names the outside.  A sheet has no outside, so its normal points whichever
+    /// way it happened to be written, and half the sheets ever written point away from whoever is
+    /// looking.  Nudging along that normal puts the point *behind* the sheet, and the shadow ray then
+    /// leaves from under the very thing it is standing on and finds it in the way.  The surface goes
+    /// black, and it goes black for no reason its author could see -- reversing one sign in the
+    /// arithmetic lights it perfectly.
+    /// </para>
+    /// <para>
+    /// So a sheet's lights and bounces set off from a step towards whoever is looking instead --
+    /// <see cref="Intersection.LitPoint"/>, which is a point of its own rather than a change to the
+    /// over point, since that one still has to name the far side for anything refracting through.
+    /// This says nothing about shading, which already turns the normal to face the eye; it is only
+    /// about which side a ray leaving the surface starts on.
+    /// </para>
+    /// </summary>
+    public virtual bool IsASheet => false;
+
+    /// <summary>
     /// This method is called once the surface is certain to have a material, and before that
     /// material's pigment is given its chance to get ready.  It is where a surface that wants a hand
     /// in its own pigment may take one -- a blob whose components carry colors of their own wraps

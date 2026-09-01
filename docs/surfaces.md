@@ -451,6 +451,15 @@ These are flat.  They have a front and a back but no inside, so a
 [difference](#combining-surfaces) has nothing to carve out of one and a
 [blob](#blob) cannot be built from them.
 
+Having no inside, they are lit from **either** side, and it makes no difference which way round you
+write one.  That is worth saying because which way a flat shape faces is not something you choose so
+much as something you fall into: a triangle faces the way the order of its three points implies, and
+a generic shape the way its path runs.  Turn any of these around and it goes on looking the same.
+
+A [plane](#plane) is flat too but is **not** one of these.  It divides space in two, and its normal
+names which half is outside — so it has an inside in the way these do not, which is exactly why a
+[difference](#combining-surfaces) can carve with one.
+
 ![The flat shapes](images/figures/surface-shapes.png)
 
 A disc with an inner radius, a parallelogram, a triangle and a bicubic patch.  The scene is

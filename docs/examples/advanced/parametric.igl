@@ -1,0 +1,38 @@
+// A parametric surface: a sheet whose every point is written down, rather than a shape named and
+// then adjusted.  Two parameters, u and v, run over the spans given, and the three expressions say
+// where the point at each place on the sheet goes.  This one is a nautilus -- u goes round the tube
+// and v winds along the spiral, and the whole thing grows by a constant factor each turn, which is
+// what makes it a shell rather than a coil of pipe.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0.4, 2.4, -4.0]
+    look at [0, 0, 0]
+    field of view 42
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+    translate [0, -1.15, 0]
+}
+
+parametric {
+    // Once round the tube, and three times round the spiral.
+    u [0, 6.283185307179586]
+    v [0, 18.849555921538759]
+
+    // exp(0.14 ⋅ v) is the growth: every turn is the same amount bigger than the one inside it, which
+    // is the rule a shell actually grows by.  The (1 + 0.5 ⋅ cos(u)) swings the tube out and back.
+    X { 0.09 * exp(0.14 * v) * cos(v) * (1 + 0.50 * cos(u)) }
+    Y { 0.09 * exp(0.14 * v) * 0.50 * sin(u) }
+    Z { 0.09 * exp(0.14 * v) * sin(v) * (1 + 0.50 * cos(u)) }
+
+    material {
+        pigment color [0.90, 0.80, 0.64]
+        specular 0.5
+        shininess 120
+    }
+}

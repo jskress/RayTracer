@@ -32,6 +32,7 @@ adv-extrusion.png|docs/examples/advanced/extrusion.igl|320|240
 adv-generic-shape.png|docs/examples/advanced/generic-shape.igl|320|240
 adv-height-field.png|docs/examples/advanced/height-field.igl|340|250
 adv-isosurface.png|docs/examples/advanced/isosurface.igl|320|240
+adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
 adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260
 adv-sweep.png|docs/examples/advanced/sweep.igl|320|240

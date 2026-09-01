@@ -28,6 +28,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartEggClause), HandleStartEggClause)
             .On(nameof(HandleStartSuperellipsoidClause), HandleStartSuperellipsoidClause)
             .On(nameof(HandleStartIsosurfaceClause), HandleStartIsosurfaceClause)
+            .On(nameof(HandleStartParametricClause), HandleStartParametricClause)
             .On(nameof(HandleStartPatchClause), HandleStartPatchClause)
             .On(nameof(HandleStartExtrusionClause), HandleStartExtrusionClause)
             .On(nameof(HandleStartLatheClause), HandleStartLatheClause)

@@ -22,6 +22,12 @@ namespace RayTracer.Geometry;
 /// </summary>
 public class BicubicPatch : Surface
 {
+    /// <summary>
+    /// This surface is a sheet: it encloses nothing, so its normal points whichever way it was
+    /// written rather than naming an outside.  See <see cref="Surface.IsASheet"/>.
+    /// </summary>
+    public override bool IsASheet => true;
+
     /// <summary>If a subpatch's flatness is measured below this, its own recursion stops.</summary>
     private const double PlaneEpsilon = 1.0e-10;
 
