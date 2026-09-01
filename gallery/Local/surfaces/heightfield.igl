@@ -32,7 +32,10 @@ plane {
 }
 
 heightfield {
-    image 'https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png'
+    // We could use the following, but it occasionally errors out with a 429.
+    // image 'https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png'
+    // So, we use a local copy instead:
+    image '../solar-system/images/moonscape.png'
     material {
         pigment Gray75
     }

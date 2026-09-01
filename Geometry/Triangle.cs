@@ -12,6 +12,18 @@ namespace RayTracer.Geometry;
 public class Triangle : Surface
 {
     /// <summary>
+    /// This surface is a sheet: it encloses nothing, so its normal points whichever way the order of
+    /// its three points implies rather than naming an outside.  See <see cref="Surface.IsASheet"/>.
+    /// <para>
+    /// **This holds even where triangles are used as the facets of something closed** -- a sweep's
+    /// caps, a height field, an L-system's shapes.  Such a hull does have an outside, but no single
+    /// facet knows it, and the facet is what is asked: a cap was shading itself darker than the same
+    /// cap wound the other way.
+    /// </para>
+    /// </summary>
+    public override bool IsASheet => true;
+
+    /// <summary>
     /// This property provides the first point of the triangle.
     /// </summary>
     public Point Point1

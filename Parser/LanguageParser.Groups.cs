@@ -122,6 +122,10 @@ public partial class LanguageParser
                 case "isosurface":
                     resolver.SurfaceResolvers.Add(ParseIsosurfaceClause(clause));
                     break;
+
+                case "parametric":
+                    resolver.SurfaceResolvers.Add(ParseParametricClause(clause));
+                    break;
                 case "patch":
                     resolver.SurfaceResolvers.Add(ParsePatchClause(clause));
                     break;

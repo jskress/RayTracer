@@ -63,6 +63,7 @@ public partial class LanguageParser
             "tube" => ParseTubeClause(clause),
             "sweep" => ParseSweepClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
+            "parametric" => ParseParametricClause(clause),
             "heightfield" => ParseHeightFieldClause(clause),
             "text" => ParseTextClause(clause),
             // ReSharper disable once StringLiteralTypo

@@ -955,12 +955,13 @@ reason workings cannot.
 whatever names the calling scene happens to have lying about.  That is what makes a library of them
 safe to rely on.
 
-**One restriction.**  A function may be used inside a `density function { }` or an
-[isosurface](advanced-surfaces.md#isosurface) **only if its body is a single `return`** — nothing
-worked out along the way, and no [choice](#choosing-inside-a-body).  Those compile their arithmetic
-down and, for an isosurface, differentiate it to find surface normals — which can be done by folding a
-plain expression in, and cannot be done at all once there is a small procedure to fold in instead.  You
-will be told plainly if you cross that line.
+**One restriction.**  A function may be used inside a `density function { }`, an
+[isosurface](advanced-surfaces.md#isosurface) or a [parametric surface](advanced-surfaces.md#parametric)
+**only if its body is a single `return`** — nothing worked out along the way, and no
+[choice](#choosing-inside-a-body).  Those compile their arithmetic down and, for the two surfaces,
+differentiate it to find surface normals — which can be done by folding a plain expression in, and
+cannot be done at all once there is a small procedure to fold in instead.  You will be told plainly if
+you cross that line.
 
 ### Things of Your Own
 

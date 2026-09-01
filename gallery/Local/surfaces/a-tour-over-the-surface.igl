@@ -1,0 +1,68 @@
+// Three parametric surfaces.  An isosurface says where a shape *is* -- everywhere a function of x, y
+// and z comes out at nought -- and is at home with shapes described by a rule about space.  These say
+// what a shape is *made of*: two parameters run over the spans given, and three expressions say where
+// the point at each place on the sheet goes.  That suits the shapes you would sooner describe by a
+// tour over the surface than by a test a point passes -- things swept, wound or grown.
+//
+// None of the three is turned into triangles.  A rectangle of u and v is bounded by asking the three
+// expressions what they can come to over it, which gives a box the whole of that piece must lie
+// inside; a ray missing the box misses every point of the piece.  Where a piece is small enough to
+// hold one crossing, the crossing is solved for exactly, so the curves stay curves however close you
+// go.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.9, -8.0]
+    look at [0, 0.05, 0]
+    field of view 44
+}
+
+point light { location [-7, 9, -8] }
+point light { location [8, 4, -5]  color [0.32, 0.33, 0.38] }
+
+plane {
+    material { pigment checker { color [0.55, 0.56, 0.60], color [0.20, 0.21, 0.26] scale 1.2 } }
+    translate [0, -1.2, 0]
+}
+
+// A Mobius strip: u goes once round the ring while the band turns through half a turn, which is why
+// its two faces are one face.  There is no way to say this as a rule about space -- it is a sheet,
+// and only a tour over it will do.
+parametric {
+    u [0, 6.283185307179586]
+    v [-0.35, 0.35]
+    X { (1 + v * cos(u / 2)) * cos(u) }
+    Y { v * sin(u / 2) }
+    Z { (1 + v * cos(u / 2)) * sin(u) }
+    material { pigment color [0.75, 0.35, 0.30]  specular 0.5  shininess 150 }
+    scale 0.85
+    rotate X -50
+    translate [-2.6, 0.05, 0]
+}
+
+// A nautilus: u goes round the tube and v three times round the spiral, and exp(0.14 ⋅ v) makes every
+// turn the same amount bigger than the one inside it.  That constant factor is the rule a shell really
+// grows by, and it is the whole difference between a shell and a coil of pipe.
+parametric {
+    u [0, 6.283185307179586]
+    v [0, 18.849555921538759]
+    X { 0.085 * exp(0.14 * v) * cos(v) * (1 + 0.50 * cos(u)) }
+    Y { 0.085 * exp(0.14 * v) * 0.50 * sin(u) }
+    Z { 0.085 * exp(0.14 * v) * sin(v) * (1 + 0.50 * cos(u)) }
+    material { pigment color [0.90, 0.80, 0.64]  specular 0.5  shininess 120 }
+    translate [0, -0.55, 0]
+}
+
+// A fluted horn.  A lathe would give the flare, since that is a curve spun about an axis, but not the
+// flutes: the 2.2 ⋅ v inside the cosine turns them as the horn rises, so no one profile is spun to
+// make this.  Six flutes, because of the 6 ⋅ u.
+parametric {
+    u [0, 6.283185307179586]
+    v [0, 1.8]
+    X { 0.07 * exp(1.15 * v) * (1 + 0.14 * cos(6 * u + 2.2 * v)) * cos(u) }
+    Y { v }
+    Z { 0.07 * exp(1.15 * v) * (1 + 0.14 * cos(6 * u + 2.2 * v)) * sin(u) }
+    material { pigment color [0.58, 0.70, 0.80]  specular 0.6  shininess 200 }
+    scale 1.3
+    translate [2.5, -1.2, 0]
+}

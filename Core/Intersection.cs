@@ -48,6 +48,13 @@ public class Intersection : IComparable<Intersection>
     public Point UnderPoint { get; private set; }
 
     /// <summary>
+    /// This holds the point a light, or a bounce, sets off from.  It is the over point for anything
+    /// with an inside, and a step towards the eye for a sheet met from behind, whose over point lies
+    /// behind it.  See where it is worked out for why the over point cannot serve both.
+    /// </summary>
+    public Point LitPoint { get; private set; }
+
+    /// <summary>
     /// This property holds the eye vector at this point of intersection.
     /// </summary>
     public Vector Eye { get; private set; }
@@ -155,6 +162,27 @@ public class Intersection : IComparable<Intersection>
 
         OverPoint = Point + adjustment;
         UnderPoint = Point - adjustment;
+
+        // Where a light, or a bounce, sets off from.  For everything with an inside this is simply the
+        // over point; for a sheet met from behind it is a step towards the eye instead.
+        //
+        // **It has to be a separate point, and not the over point written differently.**  A sheet's
+        // normal points whichever way its author wrote it (see Surface.IsASheet), so half of all
+        // sheets face away from whoever is looking, and the over point of one of those lies *behind*
+        // it -- from where a shadow ray finds the very surface it is standing on and the sheet renders
+        // black.  But the over and under points are also the two sides a ray refracting through
+        // something sets off from, and a refracted ray must carry on *through* the sheet, which is the
+        // opposite side from the eye.  Moving the over point to serve the light broke transparency
+        // through a pane in three tests at once; one point cannot do both jobs.
+        //
+        // **Towards the eye, rather than along the normal reversed.**  The normal here is the shading
+        // normal, so a bump or a ripple has already tilted it; on a rippled plane seen at a graze it
+        // tilts near the tangent, where either sign of it lifts the point hardly at all and the wrong
+        // sign buries it.  Reversing the normal cost a rippled plane a whole band of its light.  The
+        // eye is the one direction that is on the right side however far the normal has been bent.
+        LitPoint = Surface.IsASheet && Inside
+            ? Point + Eye * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale)
+            : OverPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
         (N1, N2) = intersections.FindIndicesOfRefraction(this, environmentIndexOfRefraction);

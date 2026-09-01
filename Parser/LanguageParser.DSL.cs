@@ -90,7 +90,7 @@ public partial class LanguageParser
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
-            'open', 'or', 'orthographic', 'over', 'panoramic', 'parallel', 'parallelogram', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'open', 'or', 'orthographic', 'over', 'panoramic', 'parallel', 'parallelogram', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -100,7 +100,7 @@ public partial class LanguageParser
             'superellipsoid', 'surface', 'surfaces', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes',
-            'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
+            'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'width', 'with', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
@@ -738,6 +738,36 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Parametric surface clauses.  The three coordinates are each fenced in braces for the
+        // same reason an isosurface's function is: each is a whole shape's worth of arithmetic and
+        // reads better set apart than trailing after a word.
+        //
+        // **The coordinates are the upper-case axis words the language already has**, and that is
+        // worth more than a tidier look: inside these expressions the *lower-case* x, y and z are a
+        // field's own names for what it is a function of, so `X { ... }` and `x` being different
+        // things is exactly the distinction a reader needs.  Spelling the clauses in lower case would
+        // have needed a second set of keywords differing from the first only in case.
+        startParametricClause:
+        {
+            parametric > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "parametric" here.'
+        }
+        parametricPartClause:
+        {
+            [ X | Y | Z ] >
+            openBrace ?? 'Expecting an open brace to follow the coordinate here.' >
+            _expression > closeBrace ?? 'Expecting a close brace to end the coordinate here.'
+        }
+        parametricEntryClause:
+        [
+            parametricPartClause |
+            { [ u | v ] > intervalClause } |
+            { accuracy > _expression } |
+            surfaceEntryClause
+        ]
+
         // Patch clauses.
         startPatchClause:
         {
@@ -1267,6 +1297,7 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startIsosurfaceClause     => 'isosurface' |
+            startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1335,6 +1366,7 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startIsosurfaceClause     => 'isosurface' |
+            startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1381,6 +1413,7 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startIsosurfaceClause     => 'isosurface' |
+            startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
             startLatheClause => 'lathe' |
@@ -1483,7 +1516,8 @@ public partial class LanguageParser
                 startLsystemClause | startHeightFieldClause | startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
-                startPatchClause | startIsosurfaceClause | startObjectFileClause | startObjectClause |
+                startPatchClause | startIsosurfaceClause | startParametricClause |
+                startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
         }
@@ -1512,7 +1546,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
+                isosurface | parametric | patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { generic > shape } | { object > file } |
                 pigment | material | interior | medium
@@ -1613,6 +1647,7 @@ public partial class LanguageParser
             startEggClause            => 'HandleStartEggClause' |
             startSuperellipsoidClause => 'HandleStartSuperellipsoidClause' |
             startIsosurfaceClause     => 'HandleStartIsosurfaceClause' |
+            startParametricClause     => 'HandleStartParametricClause' |
             startPatchClause          => 'HandleStartPatchClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |

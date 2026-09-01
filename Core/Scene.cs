@@ -815,12 +815,12 @@ public class Scene : NamedThing, IDisposable
 
         if (count == 1)
         {
-            LightSample only = light.SampleToward(intersection.OverPoint, 0, intersection.Normal);
+            LightSample only = light.SampleToward(intersection.LitPoint, 0, intersection.Normal);
 
             return light.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
+                intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, GetLightReaching(
-                    intersection.OverPoint, only.Direction, only.Distance, intersection.TimeIndex),
+                    intersection.LitPoint, only.Direction, only.Distance, intersection.TimeIndex),
                 intersection.Footprint, intersection.Portal);
         }
 
@@ -829,12 +829,12 @@ public class Scene : NamedThing, IDisposable
         for (int index = 0; index < count; index++)
         {
             LightSample sample = light.SampleToward(
-                intersection.OverPoint, index, intersection.Normal);
+                intersection.LitPoint, index, intersection.Normal);
 
             sum += light.ApplyPhong(
-                intersection.OverPoint, intersection.Eye, intersection.Normal, intersection.Surface,
+                intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, GetLightReaching(
-                    intersection.OverPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
+                    intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
                 intersection.Footprint, intersection.Portal);
         }
 
@@ -1021,7 +1021,7 @@ public class Scene : NamedThing, IDisposable
         // mirror also focuses or spreads the cone, which this does not attempt -- that wants full ray
         // differentials, and a flat mirror is the case that turns up.
         Ray reflectedRay = new (
-            intersection.OverPoint, intersection.Reflect, intersection.TimeIndex,
+            intersection.LitPoint, intersection.Reflect, intersection.TimeIndex,
             intersection.ConeSpread, intersection.ConeTravelled);
         Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
 

@@ -206,6 +206,7 @@ public partial class LanguageParser
             "egg" => ParseEggClause(clause),
             "superellipsoid" => ParseSuperellipsoidClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
+            "parametric" => ParseParametricClause(clause),
             "patch" => ParsePatchClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
@@ -304,6 +305,8 @@ public partial class LanguageParser
                 "superellipsoidEntryClause", HandleSuperellipsoidEntryClause, validate: false),
             "isosurface" => ParseObjectResolver<IsosurfaceResolver>(
                 "isosurfaceEntryClause", HandleIsosurfaceEntryClause, validate: false),
+            "parametric" => ParseObjectResolver<ParametricResolver>(
+                "parametricEntryClause", HandleParametricEntryClause, validate: false),
             "patch" => ParseObjectResolver<BicubicPatchResolver>(
                 "patchEntryClause", HandlePatchEntryClause, validate: false),
             "lathe" => ParseObjectResolver<LatheResolver>(
@@ -360,6 +363,7 @@ public partial class LanguageParser
             "egg" => "startEggClause",
             "superellipsoid" => "startSuperellipsoidClause",
             "isosurface" => "startIsosurfaceClause",
+            "parametric" => "startParametricClause",
             "patch" => "startPatchClause",
             "lathe" => "startLatheClause",
             "blob" => "startBlobClause",

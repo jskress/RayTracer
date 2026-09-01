@@ -140,6 +140,8 @@ public partial class LanguageParser
                 return ParseObjectFileClause(clause);
             case IsosurfaceResolver:
                 return ParseIsosurfaceClause(clause);
+            case ParametricResolver:
+                return ParseParametricClause(clause);
             case CsgSurfaceResolver:
                 return ParseCsgClause(clause);
             case GroupResolver:

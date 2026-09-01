@@ -23,6 +23,11 @@ namespace RayTracer.Geometry;
 /// sampled from differences of the field, and the range the water can reach over a box is a closed
 /// form rather than a walk over an expression tree.
 /// </para>
+/// <para>
+/// **It is a body of water and so a solid, not a sheet**: its normal names the air above as the
+/// outside and the water below as the inside, the same way a <see cref="Plane"/> does.  A ray
+/// refracting into it is going *into* something.  See <see cref="Surface.IsASheet"/>.
+/// </para>
 /// </summary>
 public class Swells : Surface
 {
