@@ -107,4 +107,21 @@ public class Parallelogram : FlatSurface
             ? new Intersection(this, distance)
             : null;
     }
+    /// <summary>
+    /// This method returns the box the parallelogram lies in, which is its four corners.
+    /// <para>
+    /// Adding all four rather than the near and far ones is what makes this right for a shape leaning
+    /// any which way: a side may run backwards along an axis, and then the corner that is furthest
+    /// along it is not the one the arithmetic would guess.
+    /// </para>
+    /// </summary>
+    /// <returns>The box the parallelogram lies in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        return new BoundingBox()
+            .Add(Point)
+            .Add(Point + Side1)
+            .Add(Point + Side2)
+            .Add(Point + Side1 + Side2);
+    }
 }

@@ -88,6 +88,27 @@ public class Superellipsoid : Surface
     }
 
     /// <summary>
+    /// This method returns the box the shape lies in, which is the unit box and is exact.
+    /// <para>
+    /// Every term of <c>(|x|^(2/e) + |y|^(2/e))^(e/n) + |z|^(2/n) = 1</c> is positive, so no term may
+    /// exceed one and no coordinate may exceed one either -- and each is reached, at the points on
+    /// the axes.  So this is tight as well as safe, whatever the two exponents are.
+    /// </para>
+    /// <para>
+    /// The padded <c>_localBox</c> above is *not* this box: that one is the domain the ray sampling
+    /// searches and is deliberately generous, while this one is what the renderer prunes against and
+    /// gets the standard padding applied to it from outside.
+    /// </para>
+    /// </summary>
+    /// <returns>The box the shape lies in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        return new BoundingBox()
+            .Add(new Point(-1, -1, -1))
+            .Add(new Point(1, 1, 1));
+    }
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the superellipsoid
     /// and, if so, where.
     /// </summary>
