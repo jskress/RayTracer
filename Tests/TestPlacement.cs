@@ -386,6 +386,68 @@ public class TestPlacement
     }
 
     /// <summary>
+    /// This tests that something with nothing in it is simply not placed, rather than refused.
+    /// <para>
+    /// **An empty box is not the same as no box at all.**  Every library in this project writes a
+    /// snow cap as a primitive that gives back an empty group out of season, so if placing one were
+    /// refused, `on` could only ever be used for things that are there all year -- which is most of
+    /// what a scene wants to place.  A plane, which has *no* box rather than an empty one, is a real
+    /// mistake and stays refused; the test below says so.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAnEmptyThingIsSimplyNotPlaced()
+    {
+        const string Body = """
+                            primitive Cap(season) -> group {
+                                switch (season) {
+                                    case 'winter' { return group { sphere { scale 0.3 } } }
+                                    default { return group { } }
+                                }
+                            }
+                            group {
+                                cube { scale 0.5  material { pigment [0.8, 0.5, 0.3] }  named 'post' }
+                                object Cap('summer') { on 'post' }
+                            }
+
+                            """;
+
+        // It renders at all, which is the whole point -- and it draws the same picture as the scene
+        // without the empty thing in it, so nothing was moved on its account either.
+        Canvas withEmpty = Rendered(Body);
+        Canvas without = Rendered("""
+                                  group {
+                                      cube { scale 0.5  material { pigment [0.8, 0.5, 0.3] }  named 'post' }
+                                  }
+
+                                  """);
+
+        Assert.IsNotNull(withEmpty, "an empty thing being placed should not stop the render");
+
+        for (int y = 0; y < withEmpty.Height; y++)
+        {
+            for (int x = 0; x < withEmpty.Width; x++)
+            {
+                Assert.IsTrue(withEmpty.GetPixel(x, y).Matches(without.GetPixel(x, y)),
+                    $"placing nothing changed the picture at ({x}, {y})");
+            }
+        }
+    }
+
+    /// <summary>
+    /// This tests that something endless is still refused when it is the thing being *placed*, which
+    /// is the other side of the test above: an empty thing is nothing to place, but a plane is a
+    /// region nobody can put anywhere, and quietly doing nothing with it would hide a real mistake.
+    /// </summary>
+    [TestMethod]
+    public void TestSomethingWithNoBoundsCannotItselfBePlaced()
+    {
+        StringAssert.Contains(
+            WhatWentWrong("cube { scale 0.5  named 'post' }\nplane { on 'post' }\n"),
+            "cannot be placed this way");
+    }
+
+    /// <summary>
     /// A material that shows a probe clearly against the anchor it is placed against.
     /// </summary>
     private const string Probe = "material { pigment [0.2, 0.5, 0.8] }";

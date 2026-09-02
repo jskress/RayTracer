@@ -137,7 +137,7 @@ primitive LampGlobe(size, lit) -> group {
     }
 }
 
-primitive LampSnow(season, wide, where) -> group {
+primitive LampSnow(season, wide) -> group {
     switch (season) {
         case 'winter' {
             return group {
@@ -145,7 +145,6 @@ primitive LampSnow(season, wide, where) -> group {
                     material LampSnowCap
                     east 0.4  north 0.35
                     scale [wide, wide * 0.22, wide]
-                    translate where
                 }
             }
         }
@@ -202,6 +201,7 @@ primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
                     material LampIron
                     scale height
                     translate Y height * 1.020
+                    named 'roof'
                 }
                 for post in [0, 3] {
                     cube {
@@ -214,7 +214,7 @@ primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
 
                 object LampGlobe(height * 0.044, lit) { translate Y height * 0.995 }
                 object LampFlame(height * 0.050, lit, variant, 24) { translate Y height * 0.995 }
-                object LampSnow(season, height * 0.045, [0, height * 1.076, 0])
+                object LampSnow(season, height * 0.045) { on 'roof' }
             }
         }
         default {
@@ -239,13 +239,14 @@ primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
                     east 0.45  north 0.35
                     scale [height * 0.085, height * 0.022, height * 0.038]
                     translate [height * 0.29, height * 1.005, 0]
+                    named 'hood'
                 }
 
                 object LampGlobe(height * 0.030, lit)
                     { scale [1, 0.55, 1]  translate [height * 0.29, height * 0.988, 0] }
                 object LampFlame(height * 0.040, lit, variant, 24)
                     { translate [height * 0.29, height * 0.985, 0] }
-                object LampSnow(season, height * 0.070, [height * 0.29, height * 1.030, 0])
+                object LampSnow(season, height * 0.070) { on 'hood' }
             }
         }
     }
@@ -299,12 +300,13 @@ primitive BollardLight(height, season = 'summer', variant = 1, lit = 0) -> group
         // The cap, overhanging so the band beneath it is in shadow when the lamp is out.
         cylinder { material LampAlloy  min Y -1  max Y 1
                    scale [height * 0.17, height * 0.045, height * 0.17]
-                   translate Y height * 0.955 }
+                   translate Y height * 0.955
+                   named 'cap' }
 
         object LampGlobe(height * 0.115, lit)
             { scale [1, 0.85, 1]  translate Y height * 0.845 }
         object LampFlame(height * 0.130, lit, variant, 16)
             { scale [1, 0.85, 1]  translate Y height * 0.845 }
-        object LampSnow(season, height * 0.16, [0, height * 1.005, 0])
+        object LampSnow(season, height * 0.16) { on 'cap' }
     }
 }
