@@ -79,4 +79,27 @@ public class Disc : FlatSurface
             ? new Intersection(this, distance)
             : null;
     }
+    /// <summary>
+    /// This method returns the box the disc lies in, worked out from where it is, which way it faces
+    /// and how big it is.
+    /// <para>
+    /// A circle of radius <c>r</c> facing <c>n</c> reaches <c>r * sqrt(1 - n.i^2)</c> along each axis
+    /// <c>i</c>: none at all along the way it faces, the whole radius across it.  That is exact rather
+    /// than a cube of side <c>2r</c>, which for a disc lying flat would be a box mostly full of
+    /// nothing.
+    /// </para>
+    /// </summary>
+    /// <returns>The box the disc lies in.</returns>
+    protected override BoundingBox GetDefaultBoundingBox()
+    {
+        Vector facing = Normal;
+        Vector reach = new (
+            Radius * Math.Sqrt(Math.Max(0, 1 - facing.X * facing.X)),
+            Radius * Math.Sqrt(Math.Max(0, 1 - facing.Y * facing.Y)),
+            Radius * Math.Sqrt(Math.Max(0, 1 - facing.Z * facing.Z)));
+
+        return new BoundingBox()
+            .Add(new Point(Center.X - reach.X, Center.Y - reach.Y, Center.Z - reach.Z))
+            .Add(new Point(Center.X + reach.X, Center.Y + reach.Y, Center.Z + reach.Z));
+    }
 }

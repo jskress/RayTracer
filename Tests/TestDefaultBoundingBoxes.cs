@@ -82,6 +82,75 @@ public class TestDefaultBoundingBoxes
         AssertNothingEscapes(new Egg { BottomRadius = 2, TopRadius = 3.5 }, 9);
     }
 
+    /// <summary>
+    /// A superellipsoid lies inside the unit box whatever its two exponents are, since every term of
+    /// its function is positive and so none of them may exceed one.  The exponents are the thing to
+    /// vary here rather than the size: they are what changes the shape, and a box that held only for
+    /// the round ones would be no box at all.
+    /// </summary>
+    [TestMethod]
+    public void TestASuperellipsoidIsInsideItsBox()
+    {
+        // Nearly a box, nearly a sphere, and the pinched shapes either side of both.
+        foreach ((double east, double north) in new[]
+        {
+            (1.0, 1.0), (0.2, 0.2), (1.8, 1.8), (0.25, 1.75), (1.75, 0.25), (0.4, 0.35)
+        })
+        {
+            AssertNothingEscapes(
+                new Superellipsoid { EastWest = east, NorthSouth = north }, 3);
+        }
+    }
+
+    /// <summary>
+    /// A disc's box turns on which way it faces, so the facings that matter are the ones along an
+    /// axis -- where the box is flat and has no room to spare -- and the ones lying awkwardly between
+    /// two.  An inner radius takes nothing away from the extent.
+    /// </summary>
+    [TestMethod]
+    public void TestADiscIsInsideItsBox()
+    {
+        foreach (Vector facing in new[]
+        {
+            new Vector(0, 1, 0), new Vector(1, 0, 0), new Vector(0, 0, 1),
+            new Vector(1, 1, 0), new Vector(0.3, 1, -0.4), new Vector(-1, -2, 3)
+        })
+        {
+            AssertNothingEscapes(
+                new Disc { Center = new Point(0, 0, 0), Normal = facing, Radius = 1 }, 3);
+            AssertNothingEscapes(
+                new Disc
+                {
+                    Center = new Point(0.4, -0.2, 0.3), Normal = facing,
+                    Radius = 1.2, InnerRadius = 0.5
+                }, 4);
+        }
+    }
+
+    /// <summary>
+    /// A parallelogram is the case where taking the near and far corners is not enough: a side
+    /// running backwards along an axis puts the furthest corner somewhere the arithmetic would not
+    /// guess, so the leaning ones are what is asked about here.
+    /// </summary>
+    [TestMethod]
+    public void TestAParallelogramIsInsideItsBox()
+    {
+        foreach ((Point corner, Vector first, Vector second) in new[]
+        {
+            (new Point(0, 0, 0), new Vector(1, 0, 0), new Vector(0, 1, 0)),
+            // Sides running the other way, which is what a two-corner box gets wrong.
+            (new Point(0.5, 0.5, 0), new Vector(-1.5, 0, 0), new Vector(0, -1.2, 0)),
+            // Leaning in all three directions at once.
+            (new Point(-0.3, 0.2, -0.4), new Vector(1.4, 0.6, -0.5), new Vector(-0.2, 1.1, 0.9)),
+            // Nearly edge on, where the box is thin in one direction and has no room to spare.
+            (new Point(0, 0, 0), new Vector(2, 0.01, 0), new Vector(0, 0.01, 2))
+        })
+        {
+            AssertNothingEscapes(
+                new Parallelogram { Point = corner, Side1 = first, Side2 = second }, 4);
+        }
+    }
+
     [TestMethod]
     public void TestAnEndlessCylinderOrConicHasNoBox()
     {
