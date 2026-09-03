@@ -120,7 +120,7 @@ primitive VehicleWheel(radius, width) -> group {
 
 // A drift on one flat surface, which is nothing at all for three seasons of the four.  It is given the
 // middle of the panel and how far it reaches, and lies a shade above it.
-primitive VehicleSnowOn(season, wide, deep, where) -> group {
+primitive VehicleSnowOn(season, wide, deep) -> group {
     switch (season) {
         case 'winter' {
             return group {
@@ -129,7 +129,6 @@ primitive VehicleSnowOn(season, wide, deep, where) -> group {
                     east 0.35
                     north 0.30
                     scale [wide, wide * 0.035, deep]
-                    translate where
                 }
             }
         }
@@ -198,6 +197,7 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
                 rotate X 90
                 translate [-base * 0.5, tire * 1.06, 0]
             }
+            named 'body'
             material VehiclePaint(variant)
         }
 
@@ -217,6 +217,7 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
             north 0.50
             scale [length * 0.245, length * 0.026, wide * 0.435]
             translate [-length * 0.038, length * 0.308, 0]
+            named 'roof'
         }
 
         // A bumper at each end, which is also what keeps the nose from ending in a flat cut.
@@ -268,12 +269,14 @@ primitive Car(length, season = 'summer', variant = 1) -> group {
         object VehicleWheel(tire, wide * 0.070) { translate [-base * 0.5, tire, -track] }
 
         // Snow on the roof, the bonnet and the boot -- the three things on a car that face the sky.
-        object VehicleSnowOn(season, length * 0.235, wide * 0.42,
-                             [-length * 0.038, length * 0.336, 0])
-        object VehicleSnowOn(season, length * 0.130, wide * 0.44,
-                             [length * 0.330, length * 0.222, 0])
-        object VehicleSnowOn(season, length * 0.090, wide * 0.44,
-                             [-length * 0.370, length * 0.222, 0])
+        // The roof is its own shape, so its snow simply sits on it.  The other two lie on the lower
+        // body, which is one shape with a flat top: the height comes from that, and the ends are set
+        // in from the body's own ends rather than measured from the middle of the car.
+        object VehicleSnowOn(season, length * 0.235, wide * 0.42) { on 'roof' }
+        object VehicleSnowOn(season, length * 0.130, wide * 0.44)
+            { on 'body'  align right with 'body' by length * 0.040 }
+        object VehicleSnowOn(season, length * 0.090, wide * 0.44)
+            { on 'body'  align left with 'body' by length * 0.040 }
 
         rotate Y (random(variant, 81) - 0.5) * 3
     }
@@ -312,6 +315,7 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
                 translate [-base * 0.5, tire * 1.02, 0]
             }
             material VehiclePaint(variant)
+            named 'shell'
         }
 
         // The windscreen, which carries on round onto both sides of the cab.  It has to stand a hair
@@ -354,8 +358,8 @@ primitive Van(length, season = 'summer', variant = 1) -> group {
         object VehicleWheel(tire, wide * 0.080) { translate [-base * 0.5, tire, track] }
         object VehicleWheel(tire, wide * 0.080) { translate [-base * 0.5, tire, -track] }
 
-        object VehicleSnowOn(season, length * 0.44, wide * 0.46,
-                             [-length * 0.030, tall * 2 + length * 0.078, 0])
+        object VehicleSnowOn(season, length * 0.44, wide * 0.46)
+            { on 'shell'  align left with 'shell' by length * 0.030 }
 
         rotate Y (random(variant, 82) - 0.5) * 3
     }
@@ -392,6 +396,7 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
                 translate [length * 0.340, tire * 0.90, 0]
             }
             material VehiclePaint(variant)
+            named 'cab'
         }
 
         superellipsoid {
@@ -419,6 +424,7 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
             north 0.25
             scale [length * 0.215, length * 0.075, wide * 0.40]
             translate [-length * 0.175, deck + length * 0.090, 0]
+            named 'load'
         }
 
         cube { material VehicleChrome  scale [length * 0.010, length * 0.014, wide * 0.46]
@@ -452,10 +458,8 @@ primitive Truck(length, season = 'summer', variant = 1) -> group {
             }
         }
 
-        object VehicleSnowOn(season, length * 0.150, wide * 0.46,
-                             [length * 0.325, tall * 2 + deck, 0])
-        object VehicleSnowOn(season, length * 0.215, wide * 0.38,
-                             [-length * 0.175, deck + length * 0.170, 0])
+        object VehicleSnowOn(season, length * 0.150, wide * 0.46) { on 'cab' }
+        object VehicleSnowOn(season, length * 0.215, wide * 0.38) { on 'load' }
 
         rotate Y (random(variant, 83) - 0.5) * 3
     }

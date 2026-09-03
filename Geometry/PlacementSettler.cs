@@ -144,7 +144,16 @@ internal static class PlacementSettler
     {
         BoundingBox mine = Surface.BoxAround(surface, true);
 
-        if (mine is null || mine.IsEmpty)
+        // Nothing to place, so there is nothing to do.  **An empty box is not the same as no box at
+        // all**, and the difference matters here: a primitive that gives back an empty group out of
+        // season -- a snow cap in summer, which is how every library in this project writes one -- has
+        // nothing to put anywhere, and refusing it would mean `on` could only ever be used for things
+        // that are there all year.  A plane has *no* box, which is a real mistake, and is still
+        // refused below.
+        if (mine is { IsEmpty: true })
+            return;
+
+        if (mine is null)
         {
             throw new Exception(
                 $"The thing placed {surface.Placements[0]} occupies no region a placement could be " +

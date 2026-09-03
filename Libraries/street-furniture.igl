@@ -107,7 +107,7 @@ primitive StreetFrameOf(variant) -> material {
 
 // A slab of snow lying on something flat.  `wide` and `deep` are the thing it lies on, and it is a
 // superellipsoid rather than a cube so its edges are rounded the way settled snow is.
-primitive StreetSnowSlab(season, wide, deep, thick, where) -> group {
+primitive StreetSnowSlab(season, wide, deep, thick) -> group {
     switch (season) {
         case 'winter' {
             return group {
@@ -115,7 +115,6 @@ primitive StreetSnowSlab(season, wide, deep, thick, where) -> group {
                     material StreetSnow
                     east 0.35  north 0.30
                     scale [wide, thick, deep]
-                    translate where
                 }
             }
         }
@@ -124,7 +123,7 @@ primitive StreetSnowSlab(season, wide, deep, thick, where) -> group {
 }
 
 // The same for something round.
-primitive StreetSnowCap(season, radius, thick, where) -> group {
+primitive StreetSnowCap(season, radius, thick) -> group {
     switch (season) {
         case 'winter' {
             return group {
@@ -132,7 +131,6 @@ primitive StreetSnowCap(season, radius, thick, where) -> group {
                     material StreetSnow
                     east 0.40  north 0.35
                     scale [radius, thick, radius]
-                    translate where
                 }
             }
         }
@@ -182,13 +180,18 @@ primitive Bench(length, season = 'summer', variant = 1) -> group {
             }
         }
 
-        // Five slats across the seat and three up the back.
-        for plank in [0, 4] {
-            cube {
-                material StreetTeak
-                scale [length * 0.5 - 0.02, 0.014, slat * 0.5]
-                translate [0, seat + 0.014, (plank - 2) * deep * 0.195]
+        // Five slats across the seat, gathered so that the snow has something to sit on.  A loop can
+        // perfectly well name what it makes -- `named $'Slat_${plank}'` -- but the snow lies across
+        // the whole seat rather than on any one slat, so what wants the name is the seat itself.
+        group {
+            for plank in [0, 4] {
+                cube {
+                    material StreetTeak
+                    scale [length * 0.5 - 0.02, 0.014, slat * 0.5]
+                    translate [0, seat + 0.014, (plank - 2) * deep * 0.195]
+                }
             }
+            named 'seat'
         }
         for plank in [0, 2] {
             cube {
@@ -200,8 +203,7 @@ primitive Bench(length, season = 'summer', variant = 1) -> group {
             }
         }
 
-        object StreetSnowSlab(season, length * 0.5 - 0.02, deep * 0.46, 0.018,
-                              [0, seat + 0.030, 0])
+        object StreetSnowSlab(season, length * 0.5 - 0.02, deep * 0.46, 0.018) { on 'seat' }
     }
 }
 
@@ -232,9 +234,9 @@ primitive LitterBin(height, season = 'summer', variant = 1) -> group {
                         scale [height * 0.13, height * 0.055, height * 0.20]
                         translate [0, height * 0.755, -height * 0.10]
                     }
+                    named 'drum'
                 }
-                object StreetSnowCap(season, height * 0.15, height * 0.016,
-                                     [0, height * 0.828, 0])
+                object StreetSnowCap(season, height * 0.15, height * 0.016) { on 'drum' }
             }
         }
         default {
@@ -261,13 +263,13 @@ primitive LitterBin(height, season = 'summer', variant = 1) -> group {
                         scale [height * 0.30, height * 0.055, height * 0.46]
                         translate [0, height * 0.84, -height * 0.20]
                     }
+                    named 'drum'
                 }
-                // Sized off the rim, not off the height.  This was `height * 0.38` while the drum
-                // itself was still being scaled uniformly at 0.42; narrowing the drum to 0.225 and
-                // leaving the cap alone left a disc half again as wide as the bin, floating over it
-                // like a table top.  A cap has to be re-measured whenever the thing under it moves.
-                object StreetSnowCap(season, height * 0.200, height * 0.020,
-                                     [0, height * 0.990, 0])
+                // Still sized off the rim, because nothing works that out for you -- but no longer
+                // *positioned* off it.  This cap was once left at `height * 0.38` while the drum was
+                // renarrowed to 0.225, and sat over the bin like a table top; `on` takes the height
+                // from the drum, so that half of the fault cannot happen again.
+                object StreetSnowCap(season, height * 0.200, height * 0.020) { on 'drum' }
             }
         }
     }
@@ -290,9 +292,9 @@ primitive Bollard(height, season = 'summer', variant = 1) -> group {
                     material StreetSteel
                     scale [height * 0.085, height * 0.055, height * 0.085]
                     translate Y height * 0.97
+                    named 'dome'
                 }
-                object StreetSnowCap(season, height * 0.075, height * 0.020,
-                                     [0, height * 1.010, 0])
+                object StreetSnowCap(season, height * 0.075, height * 0.020) { on 'dome' }
             }
         }
         default {
@@ -313,9 +315,9 @@ primitive Bollard(height, season = 'summer', variant = 1) -> group {
                     // Across and up separately, for the reason the bin gives.  A bollard is about 200
                     // across whatever its height; uniform scaling made this one 780, which is a stump.
                     scale [height * 0.105, height * 0.413, height * 0.105]
+                    named 'column'
                 }
-                object StreetSnowCap(season, height * 0.050, height * 0.016,
-                                     [0, height * 0.985, 0])
+                object StreetSnowCap(season, height * 0.050, height * 0.016) { on 'column' }
             }
         }
     }
@@ -338,6 +340,7 @@ primitive Railing(length, season = 'summer', variant = 1) -> group {
     return group {
         group {
             material StreetFrameOf(variant)
+            named 'frame'
 
             // The top rail and the mid rail, each running the whole length.
             cube { scale [length * 0.5, 0.030, 0.022]  translate Y tall - 0.030 }
@@ -365,7 +368,7 @@ primitive Railing(length, season = 'summer', variant = 1) -> group {
             }
         }
 
-        object StreetSnowSlab(season, length * 0.5, 0.026, 0.014, [0, tall + 0.008, 0])
+        object StreetSnowSlab(season, length * 0.5, 0.026, 0.014) { on 'frame' }
     }
 }
 
@@ -391,18 +394,20 @@ primitive PostBox(height, season = 'summer', variant = 1) -> group {
                         scale [height * 0.20, height * 0.030, height * 0.10]
                         translate [0, height * 0.66, -height * 0.30]
                     }
+                    named 'box'
                 }
                 cube {
                     material StreetRed
                     scale [height * 0.23, height * 0.020, height * 0.045]
                     translate [0, height * 0.715, -height * 0.335]
+                    named 'hood'
                 }
                 // On the top of the box and on the hood over its slot, which are the two flat things
                 // a wall box offers the weather.
-                object StreetSnowSlab(season, height * 0.32, height * 0.15, height * 0.018,
-                                      [0, height * 0.845, -height * 0.16])
-                object StreetSnowSlab(season, height * 0.22, height * 0.042, height * 0.012,
-                                      [0, height * 0.740, -height * 0.335])
+                object StreetSnowSlab(season, height * 0.32, height * 0.15, height * 0.018)
+                    { on 'box' }
+                object StreetSnowSlab(season, height * 0.22, height * 0.042, height * 0.012)
+                    { on 'hood' }
             }
         }
         default {
@@ -428,12 +433,13 @@ primitive PostBox(height, season = 'summer', variant = 1) -> group {
                         scale [height * 0.115, height * 0.022, height * 0.30]
                         translate [0, height * 0.655, -height * 0.20]
                     }
+                    named 'crown'
                 }
-                // On the dome, not on the widest part of the box.  The crown narrows fast above the
-                // shoulder -- 0.45 of the path radius at the height this sits at, against 1.04 lower
-                // down -- so a cap measured off the drum overhangs the dome like a dinner plate.
-                object StreetSnowCap(season, height * 0.075, height * 0.016,
-                                     [0, height * 0.986, 0])
+                // Sized for the dome and not for the widest part of the box.  The crown narrows fast
+                // above the shoulder -- 0.45 of the path radius up here against 1.04 lower down -- so
+                // a cap measured off the drum overhangs the dome like a dinner plate.  `on` settles
+                // the height; the radius is still a judgement.
+                object StreetSnowCap(season, height * 0.075, height * 0.016) { on 'crown' }
             }
         }
     }
@@ -487,7 +493,14 @@ primitive BusShelter(length, season = 'summer', variant = 1) -> group {
             cube {
                 scale [length * 0.5, 0.045, deep * 0.5 + 0.10]
                 translate [0, tall + 0.045, -0.10]
+                named 'roof'
             }
+
+            // In here beside the roof rather than outside beside the frame, because a placement is
+            // against something standing in the same group -- and because the frame's middle is not
+            // the roof's: the roof oversails at the front, so snow centered on the frame would sit
+            // back from where the roof actually is.
+            object StreetSnowSlab(season, length * 0.5, deep * 0.5 + 0.10, 0.030) { on 'roof' }
         }
 
         // The back panel and the two ends.
@@ -508,7 +521,5 @@ primitive BusShelter(length, season = 'summer', variant = 1) -> group {
         object Bench(length * 0.62, 'summer', variant)
             { rotate Y 180  translate [0, 0, deep * 0.5 - 0.34] }
 
-        object StreetSnowSlab(season, length * 0.5, deep * 0.5 + 0.10, 0.030,
-                              [0, tall + 0.10, -0.10])
     }
 }

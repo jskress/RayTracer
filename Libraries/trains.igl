@@ -258,7 +258,7 @@ primitive TrainRod(x1, y1, x2, y2, wide, thick, z) -> tube {
 // smokebox or the chimney -- an engine caught in snow with a white boiler is an engine that is cold and
 // out of use, which is not what a scene wants.  What does carry snow is everything the fire never
 // reaches: the buffer beam, the front platform, the cab roof and the tender.
-primitive TrainSnowOn(season, alongHalf, acrossHalf, where) -> group {
+primitive TrainSnowOn(season, alongHalf, acrossHalf) -> group {
     switch (season) {
         case 'winter' {
             return group {
@@ -266,7 +266,6 @@ primitive TrainSnowOn(season, alongHalf, acrossHalf, where) -> group {
                     material TrainSnowCap
                     east 0.35  north 0.30
                     scale [alongHalf, alongHalf * 0.055, acrossHalf]
-                    translate where
                 }
             }
         }
@@ -477,6 +476,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
             east 0.22  north 0.85
             scale [0.940 * m, 0.105 * m, 1.415 * m]
             translate [10.44 * m, 3.80 * m, 0]
+            named 'cabRoof'
         }
 
         // -- The running plate, with a valance under its edge to give it a shadow line.
@@ -499,6 +499,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
             material TrainBlack
             scale [0.575 * m, 0.030 * m, 0.900 * m]
             translate [0.725 * m, 1.30 * m, 0]
+            named 'platform'
         }
         cube {
             material TrainBlack
@@ -642,8 +643,8 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
         }
 
         // Snow lies where the fire never reaches, and nowhere else -- see the note above.
-        object TrainSnowOn(season, 0.575 * m, 0.900 * m, [0.725 * m, 1.330 * m, 0])
-        object TrainSnowOn(season, 0.880 * m, 1.345 * m, [10.42 * m, 3.905 * m, 0])
+        object TrainSnowOn(season, 0.575 * m, 0.900 * m) { on 'platform' }
+        object TrainSnowOn(season, 0.880 * m, 1.345 * m) { on 'cabRoof' }
 
         // Built nose-at-the-origin running towards +X in its own numbers, which puts the nose at the
         // *left* once it is centered -- so it faced -X, the opposite of what this library promises and
@@ -695,6 +696,7 @@ primitive Tender(length, season = 'summer', variant = 1) -> group {
             east 0.75  north 0.62
             scale [2.30 * m, 0.520 * m, 1.175 * m]
             translate [4.62 * m, 2.940 * m, 0]
+            named 'coal'
         }
         // Gold lining along the tank side, which is most of what the livery is.
         for side in [0, 1] {
@@ -743,7 +745,7 @@ primitive Tender(length, season = 'summer', variant = 1) -> group {
             }
         }
 
-        object TrainSnowOn(season, 2.30 * m, 1.175 * m, [4.62 * m, 3.470 * m, 0])
+        object TrainSnowOn(season, 2.30 * m, 1.175 * m) { on 'coal' }
 
         // Turned end for end for the engine's reason, which also puts this tender's open coping end
         // towards +X -- the side the engine is on.
