@@ -80,6 +80,22 @@ public partial class LanguageParser
             case "superellipsoid":
                 resolver.SurfaceResolvers.Add(ParseSuperellipsoidClause(clause));
                 break;
+
+            case "paraboloid":
+                resolver.SurfaceResolvers.Add(ParseParaboloidClause(clause));
+                break;
+
+            case "hyperboloid":
+                resolver.SurfaceResolvers.Add(ParseHyperboloidClause(clause));
+                break;
+
+            case "saddle":
+                resolver.SurfaceResolvers.Add(ParseSaddleClause(clause));
+                break;
+
+            case "quadric":
+                resolver.SurfaceResolvers.Add(ParseQuadricClause(clause));
+                break;
             case "isosurface":
                 resolver.SurfaceResolvers.Add(ParseIsosurfaceClause(clause));
                 break;

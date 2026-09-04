@@ -205,6 +205,10 @@ public partial class LanguageParser
             "torus" => ParseTorusClause(clause),
             "egg" => ParseEggClause(clause),
             "superellipsoid" => ParseSuperellipsoidClause(clause),
+            "paraboloid" => ParseParaboloidClause(clause),
+            "hyperboloid" => ParseHyperboloidClause(clause),
+            "saddle" => ParseSaddleClause(clause),
+            "quadric" => ParseQuadricClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),
             "patch" => ParsePatchClause(clause),
@@ -303,6 +307,14 @@ public partial class LanguageParser
                 "eggEntryClause", HandleEggEntryClause, validate: false),
             "superellipsoid" => ParseObjectResolver<SuperellipsoidResolver>(
                 "superellipsoidEntryClause", HandleSuperellipsoidEntryClause, validate: false),
+            "paraboloid" => ParseObjectResolver<ParaboloidResolver>(
+                "extrudedSurfaceEntryClause", HandleParaboloidEntryClause, validate: false),
+            "hyperboloid" => ParseObjectResolver<HyperboloidResolver>(
+                "extrudedSurfaceEntryClause", HandleHyperboloidEntryClause, validate: false),
+            "saddle" => ParseObjectResolver<SaddleResolver>(
+                "saddleEntryClause", HandleSaddleEntryClause, validate: false),
+            "quadric" => ParseObjectResolver<QuadricResolver>(
+                "quadricEntryClause", HandleQuadricEntryClause, validate: false),
             "isosurface" => ParseObjectResolver<IsosurfaceResolver>(
                 "isosurfaceEntryClause", HandleIsosurfaceEntryClause, validate: false),
             "parametric" => ParseObjectResolver<ParametricResolver>(
@@ -362,6 +374,10 @@ public partial class LanguageParser
             "torus" => "startTorusClause",
             "egg" => "startEggClause",
             "superellipsoid" => "startSuperellipsoidClause",
+            "paraboloid" => "startParaboloidClause",
+            "hyperboloid" => "startHyperboloidClause",
+            "saddle" => "startSaddleClause",
+            "quadric" => "startQuadricClause",
             "isosurface" => "startIsosurfaceClause",
             "parametric" => "startParametricClause",
             "patch" => "startPatchClause",

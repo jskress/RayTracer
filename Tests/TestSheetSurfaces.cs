@@ -117,11 +117,15 @@ public class TestSheetSurfaces
         HashSet<string> sheets =
         [
             "Disc", "Parallelogram", "GenericShape", "Triangle", "SmoothTriangle",
-            "BicubicPatch", "Parametric"
+            "BicubicPatch", "Parametric",
+            // Cut to a rectangle, a saddle is a finite four-cornered surface with nothing inside it,
+            // exactly as a patch is.  Endless it would divide space and be a half-space, which is
+            // what `Quadric` gives anyone who wants that.
+            "Saddle"
         ];
         HashSet<string> solids =
         [
-            "Plane", "Swells",
+            "Plane", "Swells", "Paraboloid", "Hyperboloid", "Quadric",
             "Sphere", "Cube", "Cylinder", "Conic", "Torus", "Egg", "Superellipsoid", "Blob",
             "Isosurface", "Extrusion", "Lathe", "Tube", "TubeSegment", "TubeQuadSegment",
             "TubeCubicSegment", "CsgSurface", "Group", "Instance", "HeightField", "LSystem",
