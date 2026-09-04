@@ -1,0 +1,106 @@
+// A parabolic reflector, which is the shape's whole reason for being: every ray arriving along its
+// axis leaves through one point.
+//
+// **What that buys you here is worth being exact about.**  This is a Whitted tracer, so it does not
+// carry light from a lamp off a mirror and onto something else -- that is a caustic, and it needs a
+// kind of light transport the engine deliberately does not have.  A dish here will not light a room
+// by bouncing a lamp into it.  What it *does* render is the other half of the same optics: a bowl
+// shows the world in front of it drawn together and turned over.  The whole floor between the dish
+// and the camera arrives inside a circle a fraction of its size, and the horizon -- a straight line
+// everywhere else in the picture -- comes back as a curve running round the rim.
+//
+// The dish is aimed at the viewer rather than at the sky, and that is the one liberty taken here: a
+// real one points up, where there is nothing to gather but an even blue.  Everything else is what
+// the surface does on its own.
+//
+// It is a `paraboloid`, which takes no numbers of its own -- the unit bowl `x² + z² = y` plus a
+// scale is every paraboloid there is, so what is written below is only how wide, how deep and where.
+// Drawn as a `lathe` of sampled points it would be an approximation with a faceted silhouette; here
+// it is the surface itself, and the feed sits at the focus its scale puts it at.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.1, -11.2]
+    look at [0, 1.8, 0]
+    field of view 44
+}
+
+// A low sun, so the ground has some modelling in it to be gathered.
+point light { location [-9, 7, -11]  color [1, 0.96, 0.88] }
+point light { location [8, 5, -6]    color [0.26, 0.30, 0.38] }
+
+background linear Y bouncing gradient {
+    [0, [0.30, 0.44, 0.68], 0.55, [0.62, 0.74, 0.88], 1, [0.80, 0.86, 0.92]]
+}
+
+// Ground, with enough pattern in it that the gathering is legible rather than a smear.
+plane {
+    material {
+        pigment checker {
+            [0.34, 0.40, 0.28], [0.50, 0.56, 0.40]
+            scale 1.1
+        }
+        specular 0.05
+    }
+    translate Y -0.6
+}
+
+// Two markers, one either side.  **Only the red one comes back in the bowl**, smaller and turned
+// over, and that is not an oversight: a dish gathers what it faces and nothing else.  Turned as this
+// one is, it takes in the ground away to its left and the red marker standing on it, while the
+// yellow marker -- the same size, the same distance, on the other side -- is simply not in front of
+// it.  A flat mirror of the same width would have caught both.
+sphere { scale 0.52  translate [-2.8, -0.10, -1.0]  material { pigment [0.82, 0.28, 0.22]  specular 0.4  shininess 90 } }
+sphere { scale 0.52  translate [2.8, -0.10, -1.0]   material { pigment [0.95, 0.78, 0.26]  specular 0.4  shininess 90 } }
+
+// The dish.  Tilted back so the camera looks into it rather than at its rim.
+group {
+    paraboloid {
+        max Y 1
+        material {
+            pigment [0.05, 0.06, 0.07]
+            specular 0.8  shininess 300
+            reflective 0.94
+        }
+        scale [2.2, 0.62, 2.2]
+    }
+
+    // The feed at the focus, on its struts.  For x² + z² = y the focus sits at a quarter, which the
+    // vertical scale carries to 0.375 -- the one number in the scene that is worked out rather than
+    // chosen, and it is what the whole shape is for.
+    sphere {
+        material { pigment [0.72, 0.70, 0.66]  specular 0.6  shininess 200 }
+        scale [0.14, 0.20, 0.14]
+        translate Y 1.95
+    }
+    for strut in [0, 2] {
+        cylinder {
+            material { pigment [0.55, 0.54, 0.52] }
+            min Y 0  max Y 1
+            scale [0.022, 1.5, 0.022]
+            translate [1.6, 0.55, 0]
+            rotate Y (strut * 120)
+        }
+    }
+
+    // Turned in azimuth as well as tilted.  Square on, a bowl this shallow shows a circular
+    // rim and reads as a flat disc with a picture painted on it; turned, the rim comes back as an
+    // ellipse and the eye can see it is a bowl.
+    rotate X -96
+    rotate Y 38
+    translate Y 2.1
+}
+
+// The mount: a mast and a foot, plain, so nothing competes with the bowl.
+cylinder {
+    material { pigment [0.42, 0.43, 0.45]  specular 0.3 }
+    min Y 0  max Y 1
+    scale [0.13, 1.75, 0.13]
+    translate Y -0.6
+}
+cylinder {
+    material { pigment [0.38, 0.39, 0.41] }
+    min Y 0  max Y 1
+    scale [0.55, 0.12, 0.55]
+    translate Y -0.6
+}

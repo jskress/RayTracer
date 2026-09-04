@@ -234,6 +234,111 @@ match: a low `east` with a high `north` gives a square cross-section drawn to po
 poles.  The scene is
 [`docs/examples/surfaces/superellipsoids.igl`](examples/surfaces/superellipsoids.igl).
 
+#### Paraboloid
+
+A bowl: the surface where `x² + z² = y`, opening upward with its nose at the origin.  Like a
+cylinder it takes no numbers of its own — scaling gives every opening rate there is — only where it
+starts and stops.
+
+| Property | What it does |
+| --- | --- |
+| `min Y` | Where it starts.  Nought by default, which is its nose. |
+| `max Y` | Where it stops.  One by default. |
+| `open` | Leaves the ends off, so the bowl is a shell rather than a solid. |
+
+```
+paraboloid {
+    max Y 1.6
+}
+```
+
+**A paraboloid gathers everything arriving along its axis to a single point.**  That is what a dish,
+a headlamp reflector, a telescope mirror and a solar collector all are, and it is why the shape is
+worth having exactly rather than approximated by a [lathe](advanced-surfaces.md#lathe) of sampled
+points.  It is also the shape a spun liquid settles into.
+
+Worth being plain about what that does and does not buy you here.  A `reflective` dish shows the
+world **inverted and drawn together** — point it at a landscape and you see the landscape gathered
+into it, which is the focusing you can actually watch.  What this renderer does *not* do is carry
+light from a lamp off a mirror and onto something else: that is a caustic, and it needs a kind of
+light transport this engine deliberately does not have.  So a dish makes a convincing reflector and
+will not light a room by bouncing a lamp into it.
+
+#### Hyperboloid
+
+A waisted surface of revolution: `x² + z² - y² = 1`, narrowest at the origin and flaring away above
+and below.  It takes the same three properties a paraboloid does, and no numbers of its own.
+
+```
+hyperboloid {
+    min Y -1
+    max Y 1
+}
+```
+
+A cooling tower is this shape, and so is a waisted stool, a wastepaper basket and the middle of a
+turned baluster.  It is also what a straight line sweeps when spun about an axis it does not meet,
+which is why concrete ones are built from straight reinforcing bars.
+
+Only the one-sheet form is offered here.  The two-sheet kind — a pair of opposed bowls — is a rare
+thing in a scene, and [`quadric`](#quadric) gives it to anyone who wants it.
+
+#### Saddle
+
+A hyperbolic paraboloid: `y = x² - z²`, rising along X and falling along Z, cut to a rectangle.
+
+| Property | What it does |
+| --- | --- |
+| `width` | How far it reaches along X.  Two by default. |
+| `depth` | How far it reaches along Z.  Two by default. |
+
+```
+saddle {
+    width 2.2
+    depth 2.2
+}
+```
+
+This is the doubly-curved roof shell that reads as modern the moment it appears, and it is built
+from straight members in both directions, since the surface is ruled twice over.  A crisp packet is
+one, and so is the seat it is named for.
+
+Like the other [flat shapes](#shapes) it has a front and a back and no inside, so a
+[difference](#combining-surfaces) cannot carve with one.  That follows from cutting it to a
+rectangle: left endless it would divide space in two, which is what [`quadric`](#quadric) gives.
+
+#### Quadric
+
+Any surface of the second degree, written as its ten coefficients:
+
+    Ax² + By² + Cz² + Dxy + Exz + Fyz + Gx + Hy + Iz + J = 0
+
+| Property | What it does |
+| --- | --- |
+| `squares` | The coefficients of `x²`, `y²` and `z²`. |
+| `cross` | The coefficients of `xy`, `xz` and `yz`. |
+| `linear` | The coefficients of `x`, `y` and `z`. |
+| `constant` | The term with no variable in it. |
+| `bounded by` | **Required.**  The region the surface is looked for in. |
+
+```
+quadric {
+    // A two-sheet hyperboloid: x² + z² - y² = -1.
+    squares [1, -1, 1]
+    constant 1
+    bounded by [-2, -2.4, -2], [2, 2.4, 2]
+}
+```
+
+**This is the escape hatch rather than the front door.**  Ten numbers with no picture attached is a
+poor way to ask for a shape, and the named forms above — along with the
+[sphere](#sphere), [cylinder and conic](#cylinder-and-conic) that came long before them — are what a
+scene should reach for.  What this adds is the rest of the family: the two-sheet hyperboloid, an
+elliptic or hyperbolic cylinder, a cone about an axis of its own, a pair of planes.
+
+`bounded by` is required for the reason an [isosurface](advanced-surfaces.md#isosurface) requires
+it: most quadrics are endless, and nothing about ten coefficients says where to stop looking.
+
 #### Blob
 
 A set of spheres, cylinders and planes that melt into one another rather than merely overlapping.

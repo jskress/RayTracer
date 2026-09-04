@@ -90,14 +90,14 @@ public partial class LanguageParser
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
-            'open', 'or', 'orthographic', 'over', 'panoramic', 'parallel', 'parallelogram', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'specular', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
+            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
@@ -701,6 +701,52 @@ public partial class LanguageParser
         ]
 
         // Superellipsoid clauses.
+        // -- The named quadrics.  Each is the unit form of its family: scaling covers every shape
+        // -- there is, so none of them asks for a number the way a torus asks for its two radii.
+        startParaboloidClause:
+        {
+            paraboloid > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "paraboloid" here.'
+        }
+        startHyperboloidClause:
+        {
+            hyperboloid > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "hyperboloid" here.'
+        }
+        startSaddleClause:
+        {
+            saddle > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "saddle" here.'
+        }
+        saddleEntryClause:
+        [
+            { width > _expression } |
+            { depth > _expression } |
+            surfaceEntryClause
+        ]
+        startQuadricClause:
+        {
+            quadric > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "quadric" here.'
+        }
+        // The ten coefficients, in the four groups they fall into naturally rather than as one run of
+        // numbers: the squared terms, the cross terms, the linear terms and the constant.
+        quadricEntryClause:
+        [
+            { squares > _expression } |
+            { cross > _expression } |
+            { linear > _expression } |
+            { constant > _expression } |
+            surfaceEntryClause
+        ]
         startSuperellipsoidClause:
         {
             superellipsoid > [
@@ -1296,6 +1342,10 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startParaboloidClause     => 'paraboloid' |
+            startHyperboloidClause    => 'hyperboloid' |
+            startSaddleClause         => 'saddle' |
+            startQuadricClause        => 'quadric' |
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
@@ -1365,6 +1415,10 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startParaboloidClause     => 'paraboloid' |
+            startHyperboloidClause    => 'hyperboloid' |
+            startSaddleClause         => 'saddle' |
+            startQuadricClause        => 'quadric' |
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
@@ -1412,6 +1466,10 @@ public partial class LanguageParser
             startTorusClause => 'torus' |
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
+            startParaboloidClause     => 'paraboloid' |
+            startHyperboloidClause    => 'hyperboloid' |
+            startSaddleClause         => 'saddle' |
+            startQuadricClause        => 'quadric' |
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
@@ -1517,6 +1575,8 @@ public partial class LanguageParser
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
                 startPatchClause | startIsosurfaceClause | startParametricClause |
+                startParaboloidClause | startHyperboloidClause | startSaddleClause |
+                startQuadricClause |
                 startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
@@ -1546,7 +1606,8 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | parametric | patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
+                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric |
+                patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { generic > shape } | { object > file } |
                 pigment | material | interior | medium
@@ -1646,6 +1707,10 @@ public partial class LanguageParser
             startTorusClause          => 'HandleStartTorusClause' |
             startEggClause            => 'HandleStartEggClause' |
             startSuperellipsoidClause => 'HandleStartSuperellipsoidClause' |
+            startParaboloidClause     => 'HandleStartParaboloidClause' |
+            startHyperboloidClause    => 'HandleStartHyperboloidClause' |
+            startSaddleClause         => 'HandleStartSaddleClause' |
+            startQuadricClause        => 'HandleStartQuadricClause' |
             startIsosurfaceClause     => 'HandleStartIsosurfaceClause' |
             startParametricClause     => 'HandleStartParametricClause' |
             startPatchClause          => 'HandleStartPatchClause' |

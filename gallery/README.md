@@ -821,6 +821,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/what-a-dish-gathers.png">
+      <img alt="What A Dish Gathers" height="120" src="Local/surfaces/what-a-dish-gathers.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/what-a-dish-gathers.igl">What A Dish Gathers</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/surfaces-of-the-second-degree.png">
+      <img alt="Surfaces Of The Second Degree" height="120" src="Local/surfaces/surfaces-of-the-second-degree.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/surfaces-of-the-second-degree.igl">Surfaces Of The Second Degree</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/media/medium.png">
       <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
     </a></td>

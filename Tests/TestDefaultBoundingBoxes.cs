@@ -88,6 +88,48 @@ public class TestDefaultBoundingBoxes
     /// vary here rather than the size: they are what changes the shape, and a box that held only for
     /// the round ones would be no box at all.
     /// </summary>
+    /// <summary>
+    /// A bowl's radius is the square root of its height, so its box is widest at the top and its
+    /// bottom is the narrow end -- the opposite way round from a conic, which is the easy thing to
+    /// get backwards here.
+    /// </summary>
+    [TestMethod]
+    public void TestAParaboloidIsInsideItsBox()
+    {
+        AssertNothingEscapes(new Paraboloid { MinimumY = 0, MaximumY = 1 }, 3);
+        AssertNothingEscapes(new Paraboloid { MinimumY = 0, MaximumY = 4 }, 6);
+        AssertNothingEscapes(new Paraboloid { MinimumY = 1, MaximumY = 3 }, 5);
+        AssertNothingEscapes(new Paraboloid { MinimumY = 0, MaximumY = 2, Closed = false }, 4);
+    }
+
+    /// <summary>
+    /// A waisted surface is widest at whichever end lies further from its waist, which is the same
+    /// shape of mistake a conic offers and is worth asking about the same way.
+    /// </summary>
+    [TestMethod]
+    public void TestAHyperboloidIsInsideItsBox()
+    {
+        AssertNothingEscapes(new Hyperboloid { MinimumY = -1, MaximumY = 1 }, 4);
+        AssertNothingEscapes(new Hyperboloid { MinimumY = -3, MaximumY = 3 }, 8);
+        // Wholly to one side of the waist, where the widest end is not the further-from-origin one
+        // by accident but by arithmetic.
+        AssertNothingEscapes(new Hyperboloid { MinimumY = 1, MaximumY = 2.5 }, 6);
+        AssertNothingEscapes(new Hyperboloid { MinimumY = -2, MaximumY = 0, Closed = false }, 6);
+    }
+
+    /// <summary>
+    /// A saddle rises along X and falls along Z, so its box is not symmetric about nought in Y: the
+    /// top comes from its width and the bottom from its depth, and a box that used one for both
+    /// would clip a corner off whichever is larger.
+    /// </summary>
+    [TestMethod]
+    public void TestASaddleIsInsideItsBox()
+    {
+        AssertNothingEscapes(new Saddle { Width = 2, Depth = 2 }, 4);
+        AssertNothingEscapes(new Saddle { Width = 4, Depth = 1 }, 6);
+        AssertNothingEscapes(new Saddle { Width = 1, Depth = 4 }, 6);
+    }
+
     [TestMethod]
     public void TestASuperellipsoidIsInsideItsBox()
     {
