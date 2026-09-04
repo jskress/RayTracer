@@ -142,6 +142,64 @@ public class TestPigmentClauses
         Assert.IsNull(ErrorFrom("pigment wood { [0, Red, 1, Blue] }"));
     }
 
+    /// <summary>
+    /// This tests that a brick's sizes may stand on either side of its colors.
+    /// <para>
+    /// They are read by hand rather than being offered by the pigment's entry clause, so they are
+    /// only seen where something looks for them -- and looking only *before* the colors made the
+    /// natural order fail with "Expecting a close brace here", an error saying nothing about
+    /// `brick size` existing or where it belongs.  The three orders must all be accepted, and must
+    /// all give the same picture: accepting them is no use if only one of them takes effect.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestABricksSizesMayStandEitherSideOfItsColors()
+    {
+        const string Sizes = "brick size [0.5, 0.2, 0.25]  mortar size 0.06";
+
+        (Canvas before, string beforeError) = BallWearing(
+            $"pigment brick {{ {Sizes}  Gray50, Firebrick }}", 24);
+        (Canvas after, string afterError) = BallWearing(
+            $"pigment brick {{ Gray50, Firebrick  {Sizes} }}", 24);
+        (Canvas split, string splitError) = BallWearing(
+            "pigment brick { brick size [0.5, 0.2, 0.25]  Gray50, Firebrick  mortar size 0.06 }", 24);
+
+        Assert.IsNull(beforeError, $"sizes before the colors: {beforeError}");
+        Assert.IsNull(afterError, $"sizes after the colors: {afterError}");
+        Assert.IsNull(splitError, $"sizes either side of the colors: {splitError}");
+
+        for (int y = 0; y < before.Height; y++)
+        {
+            for (int x = 0; x < before.Width; x++)
+            {
+                Assert.IsTrue(after.GetPixel(x, y).Matches(before.GetPixel(x, y)),
+                    $"sizes after the colors gave a different picture at ({x}, {y})");
+                Assert.IsTrue(split.GetPixel(x, y).Matches(before.GetPixel(x, y)),
+                    $"sizes either side of the colors gave a different picture at ({x}, {y})");
+            }
+        }
+
+        // And the sizes must actually be doing something, or the test above would hold just as well
+        // with all three of them ignored.
+        (Canvas plain, _) = BallWearing("pigment brick { Gray50, Firebrick }", 24);
+        bool anyDifferent = false;
+
+        for (int y = 0; y < before.Height && !anyDifferent; y++)
+        {
+            for (int x = 0; x < before.Width; x++)
+            {
+                if (!plain.GetPixel(x, y).Matches(before.GetPixel(x, y)))
+                {
+                    anyDifferent = true;
+
+                    break;
+                }
+            }
+        }
+
+        Assert.IsTrue(anyDifferent, "the sizes changed nothing, so nothing here was really tested");
+    }
+
     [TestMethod]
     public void TestAnImagePigmentMayBeAskedForUncached()
     {

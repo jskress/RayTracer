@@ -84,7 +84,7 @@ a pattern in both.  Each nested pattern keeps its own scale and turbulence, so t
 have nothing to do with one another.  The scene is
 [`docs/examples/pigments/nested.igl`](examples/pigments/nested.igl).
 
-`brick` takes two extra settings, and they must be written **before** the colors:
+`brick` takes two extra settings, which may be written before or after the colors:
 
 ```
 pigment brick {

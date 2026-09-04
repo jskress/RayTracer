@@ -1063,7 +1063,7 @@ public partial class LanguageParser
             kern > _expression > comma ?? 'Expecting a comma here.' > _expression >
             comma ?? 'Expecting a comma here.' > _expression
         }
-        KerningClause:
+        kerningClause:
         {
             kerning > openBrace ?? 'Expecting an open brace to follow "kerning" here.' >
             kerningPairClause{*} > closeBrace ?? 'Expecting a close brace here.'
@@ -1507,7 +1507,7 @@ public partial class LanguageParser
             [ _identifier | _keyword ] > assignment >
             [
                 pigment |
-                { material > startThingClause } | { transform > startthingClause } |
+                { material > startThingClause } | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |

@@ -207,14 +207,22 @@ public partial class LanguageParser
         Resolver<int?> seedResolver, Clause clause)
     {
         (IPatternResolver resolver, int discretePigmentsNeeded) = ParsePatternClause(clause);
+        Resolver<PigmentSet> pigmentSetResolver = discretePigmentsNeeded == 0
+            ? ParsePigmentMapClause()
+            : ParsePigmentListClause(discretePigmentsNeeded);
+
+        // A brick's sizes may stand after its colors as well as before them.  They are read by hand
+        // rather than offered by the entry clause, so they are only seen where something looks for
+        // them, and looking only before the colors made the natural order an error.  Reading them
+        // here as well costs one clause test on the pattern that has them and nothing on the rest.
+        if (resolver is BrickPatternResolver brick)
+            ReadBrickSizesInto(brick);
 
         return new PatternPigmentResolver
         {
             SeedResolver = seedResolver,
             PatternResolver = resolver,
-            PigmentSetResolver = discretePigmentsNeeded == 0
-                ? ParsePigmentMapClause()
-                : ParsePigmentListClause(discretePigmentsNeeded),
+            PigmentSetResolver = pigmentSetResolver,
             TransformResolver = ParseTransformClause()
         };
     }

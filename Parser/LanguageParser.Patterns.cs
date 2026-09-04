@@ -168,6 +168,26 @@ public partial class LanguageParser
     private BrickPatternResolver ParseBrickPattern()
     {
         BrickPatternResolver resolver = new ();
+
+        ReadBrickSizesInto(resolver);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method reads any brick and mortar sizes standing at the current place into the resolver
+    /// given, and stops at the first thing that is not one.
+    /// <para>
+    /// **It is called on both sides of the colors**, which is why it is a method of its own.  The
+    /// sizes are read by hand rather than being alternatives in the pigment's entry clause, so they
+    /// are only seen where something asks for them; asking in one place only meant that writing them
+    /// after the colors -- which is where anyone would write them -- failed with "Expecting a close
+    /// brace here", an error that says nothing about `brick size` existing or where it belongs.
+    /// </para>
+    /// </summary>
+    /// <param name="resolver">The brick resolver to read sizes into.</param>
+    private void ReadBrickSizesInto(BrickPatternResolver resolver)
+    {
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "brickSizeClause");
 
         while (clause != null)
@@ -179,8 +199,6 @@ public partial class LanguageParser
 
             clause = LanguageDsl.ParseClause(CurrentParser, "brickSizeClause");
         }
-
-        return resolver;
     }
 
     /// <summary>
