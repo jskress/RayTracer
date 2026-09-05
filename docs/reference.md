@@ -78,6 +78,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brightness` | `physical sky`: what the whole sky and its sun are multiplied by. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, `scale ambient by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient) |
+| `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `center` | Blob sphere: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -177,7 +178,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ior` | Interior: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors) |
 | `isosurface` | A surface made by a function of x, y and z rather than by a shape. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `italic` | Font style: slanted. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `iterations` | Julia set: how many times the iteration is applied. | [Surfaces](advanced-surfaces.md#julia) |
 | `jitter` | Area light: `no jitter` turns off sample dithering. | [Lights](lights.md#area-lights) |
+| `julia` | Surface: a quaternion Julia set. | [Surfaces](advanced-surfaces.md#julia) |
 | `kern` | Text: one kerning pair. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `kerning` | Text: a block of kerning pairs. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `lathe` | Surface: a profile spun about the Y axis. | [Advanced Surfaces](advanced-surfaces.md#lathe) |
@@ -274,6 +277,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `scanner` | Context: which scanning strategy renders the image. | [Context](context.md#scanners) |
 | `scattering` | Medium: how much light it turns aside per unit of distance. | [Scene Files](scene-files.md#scattering) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |
+| `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
 | `seed` | Fixes the random start of a pattern, light or camera. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |

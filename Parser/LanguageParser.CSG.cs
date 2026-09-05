@@ -103,6 +103,14 @@ public partial class LanguageParser
                     resolver.SurfaceResolvers.Add(ParseParaboloidClause(clause));
                     break;
 
+                case "sdf":
+                    resolver.SurfaceResolvers.Add(ParseSdfClause(clause));
+                    break;
+
+                case "julia":
+                    resolver.SurfaceResolvers.Add(ParseJuliaClause(clause));
+                    break;
+
                 case "hyperboloid":
                     resolver.SurfaceResolvers.Add(ParseHyperboloidClause(clause));
                     break;

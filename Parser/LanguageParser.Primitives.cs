@@ -206,6 +206,8 @@ public partial class LanguageParser
             "egg" => ParseEggClause(clause),
             "superellipsoid" => ParseSuperellipsoidClause(clause),
             "paraboloid" => ParseParaboloidClause(clause),
+            "sdf" => ParseSdfClause(clause),
+            "julia" => ParseJuliaClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),
@@ -309,6 +311,10 @@ public partial class LanguageParser
                 "superellipsoidEntryClause", HandleSuperellipsoidEntryClause, validate: false),
             "paraboloid" => ParseObjectResolver<ParaboloidResolver>(
                 "extrudedSurfaceEntryClause", HandleParaboloidEntryClause, validate: false),
+            "sdf" => ParseObjectResolver<SignedDistanceSurfaceResolver>(
+                "sdfEntryClause", HandleSdfEntryClause, validate: false),
+            "julia" => ParseObjectResolver<JuliaFractalResolver>(
+                "juliaEntryClause", HandleJuliaEntryClause, validate: false),
             "hyperboloid" => ParseObjectResolver<HyperboloidResolver>(
                 "extrudedSurfaceEntryClause", HandleHyperboloidEntryClause, validate: false),
             "saddle" => ParseObjectResolver<SaddleResolver>(
@@ -375,6 +381,8 @@ public partial class LanguageParser
             "egg" => "startEggClause",
             "superellipsoid" => "startSuperellipsoidClause",
             "paraboloid" => "startParaboloidClause",
+            "sdf" => "startSdfClause",
+            "julia" => "startJuliaClause",
             "hyperboloid" => "startHyperboloidClause",
             "saddle" => "startSaddleClause",
             "quadric" => "startQuadricClause",
