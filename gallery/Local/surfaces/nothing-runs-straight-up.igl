@@ -172,5 +172,11 @@ tapered text {
     // puts the chisel on a slope worth seeing.
     scale [0.5, 2.6, 0.5]
     rotate X -90
-    translate [0.15, 0, -1.3]
+
+    // The lift is not decoration.  A glyph is tapered about its own middle, so a taper over 1
+    // grows it in every direction from that middle -- downward past the baseline as much as
+    // upward -- and a letter left standing at nought sinks its front face into the floor, which
+    // takes the foot of the E with it.  The drop is half the cap height times what the taper adds,
+    // so a cap of about 0.35 at a taper of 1.5 wants a little under a tenth of a unit back.
+    translate [0.15, 0.09, -1.3]
 }

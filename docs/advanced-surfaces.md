@@ -821,6 +821,12 @@ two ends: any that did would also read the letters backwards.
 Much over about 1.5 and the letters start to grow into one another, since each spreads about its
 own middle into whatever gap the layout left.
 
+**A taper over 1 also grows each glyph downward.**  It spreads about the glyph's own middle, so the
+widest face reaches below the baseline by as much as it reaches above the cap — and text stood on a
+floor at nought sinks that face into it, taking the foot of an `E` or the tail of an `R` with it.
+Lift the text by about half the cap height times what the taper adds: at a cap of 0.35 and a taper
+of 1.5, a little under a tenth of a unit.
+
 **Each glyph is tapered about its own middle, not about the scene's Y axis.**  That is the one
 place this differs from an extrusion, and it has to: a line of text is laid out along X, so every
 letter but the first sits well off the axis a taper draws towards.  Tapering them where they stand
