@@ -134,6 +134,8 @@ public partial class LanguageParser
                 return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:
                 return ParseExtrusionClause(clause);
+            case TaperedTextSolidResolver:
+                return ParseTaperedTextClause(clause, tokenOffset: 0);
             case TextSolidResolver:
                 return ParseTextClause(clause);
             case LSystemResolver:

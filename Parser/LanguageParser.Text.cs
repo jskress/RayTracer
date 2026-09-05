@@ -42,6 +42,54 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method is used to handle the beginning of a tapered text block.
+    /// </summary>
+    /// <param name="clause">The clause that starts the text.</param>
+    private void HandleStartTaperedTextClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Text");
+
+        TaperedTextSolidResolver resolver = ParseTaperedTextClause(clause);
+
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
+    }
+
+    /// <summary>
+    /// This method is used to create a text resolver from a tapered text block.
+    /// </summary>
+    /// <param name="clause">The clause that starts the text.</param>
+    /// <param name="tokenOffset">How many words of the block's own start are in this clause; an
+    /// `object` reference carries none of them.</param>
+    private TaperedTextSolidResolver ParseTaperedTextClause(Clause clause, int tokenOffset = 1)
+    {
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<TaperedTextSolidResolver>(
+                "taperedTextEntryClause", HandleTaperedTextEntryClause),
+            "taperedTextEntryClause", HandleTaperedTextEntryClause, tokenOffset);
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a tapered text block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleTaperedTextEntryClause(Clause clause)
+    {
+        TaperedTextSolidResolver resolver = (TaperedTextSolidResolver) _context.CurrentTarget;
+
+        HandleEntryClause(resolver, clause, clause =>
+        {
+            if (ToCmd(clause) == "taper")
+                resolver.TaperResolver = new TermResolver<double> { Term = clause.Term() };
+            else
+                HandleTextProperty(clause, resolver);
+        });
+    }
+
+    /// <summary>
     /// This method is used to handle an item clause of a text block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
@@ -49,30 +97,40 @@ public partial class LanguageParser
     {
         TextSolidResolver resolver = (TextSolidResolver) _context.CurrentTarget;
 
-        HandleEntryClause(resolver, clause, clause =>
+        HandleEntryClause(resolver, clause, clause => HandleTextProperty(clause, resolver));
+    }
+
+    /// <summary>
+    /// This method is used to handle one of text's own properties.  It runs inside
+    /// <c>HandleEntryClause</c>, which takes the clauses every surface shares -- a material, a
+    /// transform, a name -- first.  Those do not all carry a word to read, so a clause must not be
+    /// asked what it says until they have had it.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="resolver">The resolver to update.</param>
+    private void HandleTextProperty(Clause clause, TextSolidResolver resolver)
+    {
+        switch (ToCmd(clause))
         {
-            switch (ToCmd(clause))
-            {
-                case "text":
-                    resolver.TextResolver = new TermResolver<string> { Term = clause.Term() };
-                    break;
-                case "font":
-                    ParseTextFontClause(resolver, clause);
-                    break;
-                case "layout":
-                    resolver.LayoutSettingsResolver = ParseTextLayoutSettingsClause();
-                    break;
-                case "kerning":
-                    resolver.KerningResolver = ParseKerningClause(clause);
-                    break;
-                case "open":
-                    resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
-                    break;
-                default:
-                    HandleSurfaceClause(clause, resolver, "text");
-                    break;
-            }
-        });
+            case "text":
+                resolver.TextResolver = new TermResolver<string> { Term = clause.Term() };
+                break;
+            case "font":
+                ParseTextFontClause(resolver, clause);
+                break;
+            case "layout":
+                resolver.LayoutSettingsResolver = ParseTextLayoutSettingsClause();
+                break;
+            case "kerning":
+                resolver.KerningResolver = ParseKerningClause(clause);
+                break;
+            case "open":
+                resolver.ClosedResolver = new LiteralResolver<bool> { Value = false };
+                break;
+            default:
+                HandleSurfaceClause(clause, resolver, "text");
+                break;
+        }
     }
 
     /// <summary>

@@ -13,6 +13,8 @@ namespace Tests;
 [TestClass]
 public class TestTaperedExtrusion
 {
+    internal static double TaperUnderTest = 1.0;
+
     /// <summary>
     /// This builds a square outline two units across, centered on the origin.
     /// </summary>
@@ -173,6 +175,58 @@ public class TestTaperedExtrusion
         Assert.AreEqual(2, distances.Length, $"Got [{string.Join(", ", distances)}]");
         Assert.IsTrue(distances[0].Near(-0.75), $"Behind-origin crossing at {distances[0]}.");
         Assert.IsTrue(distances[1].Near(0.75), $"Ahead crossing at {distances[1]}.");
+    }
+
+    /// <summary>
+    /// An outline of curves has to taper too, and no other test here touches one: a square is four
+    /// straight runs, and a straight run is the one case the 2D solver answers without going near
+    /// its curve arithmetic.
+    /// <para>
+    /// The shape is a quadratic curve from (-1, 0) through a control at (0, 2) to (1, 0), which is
+    /// exactly the parabola z = 1 - x*x, closed by the straight run back along z = 0.  A ray fired
+    /// across it at z = 0.3 meets only the curve, twice, and away from either of its ends -- where
+    /// the two runs meet, both report the same crossing, which is true of an ordinary extrusion as
+    /// well and would hide a wrong answer behind a right-looking count.  Scaled by s about the
+    /// origin, those crossings sit at s * sqrt(1 - 0.3 / s), so both tapers can be checked against
+    /// arithmetic rather than against a number read off a picture.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestACurvedOutlineTapers()
+    {
+        foreach ((double taper, double scale) in new[] { (1.0, 1.0), (0.5, 0.75) })
+        {
+            Extrusion extrusion = new Extrusion
+            {
+                Path = new GeneralPath()
+                    .MoveTo(-1, 0)
+                    .QuadTo(0, 2, 1, 0)
+                    .ClosePath(),
+                MinimumY = 0,
+                MaximumY = 2,
+                Taper = taper
+            };
+
+            extrusion.PrepareForRendering();
+
+            Ray ray = new Ray(new Point(-5, 1, 0.3), Directions.Right);
+            List<Intersection> intersections = [];
+
+            extrusion.AddIntersections(ray, intersections);
+
+            double[] distances = intersections
+                .Select(intersection => intersection.Distance)
+                .Order()
+                .ToArray();
+            double reach = scale * Math.Sqrt(1 - 0.3 / scale);
+
+            Assert.AreEqual(2, distances.Length,
+                $"At a taper of {taper}, got [{string.Join(", ", distances)}]");
+            Assert.IsTrue(distances[0].Near(5 - reach),
+                $"At a taper of {taper}, near wall at {distances[0]}, wanted {5 - reach}.");
+            Assert.IsTrue(distances[1].Near(5 + reach),
+                $"At a taper of {taper}, far wall at {distances[1]}, wanted {5 + reach}.");
+        }
     }
 
     /// <summary>

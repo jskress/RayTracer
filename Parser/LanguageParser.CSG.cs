@@ -156,6 +156,9 @@ public partial class LanguageParser
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;
+                case "taperedText":
+                    resolver.SurfaceResolvers.Add(ParseTaperedTextClause(clause));
+                    break;
                 // ReSharper disable once StringLiteralTypo
                 case "lsystem":
                     resolver.SurfaceResolvers.Add(ParseLSystemClause(clause));

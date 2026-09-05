@@ -1,0 +1,43 @@
+// Tapered text: the letters are scaled as they are given depth, so each comes out chiselled --
+// full size on the face you read and drawn in behind it.
+//
+// A text solid is a group of extrusions, one per glyph, so the taper is the same one an extrusion
+// takes.  What is not the same is what it is measured from: a line of letters is laid out along X,
+// so all but the first sit well off the Y axis a taper draws towards.  Each glyph is therefore
+// tapered about its own middle, and the word stays a word.
+context { angles are degrees  no gamma }
+
+camera {
+    location [1.5, 1.7, -5.6]
+    look at [0, 0.15, 0]
+    field of view 33
+}
+
+point light { location [-6, 8, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+    translate [0, -1.9, 0]
+}
+
+tapered text {
+    taper 0.45
+
+    text 'CUT'
+    font 'Merriweather'
+
+    layout {
+        horizontal position center
+        vertical position center
+    }
+
+    material {
+        pigment color [0.85, 0.7, 0.25]
+        specular 0.6
+        shininess 200
+    }
+
+    // Text is built lying flat, so stand it up before placing it.
+    rotate X -90
+}

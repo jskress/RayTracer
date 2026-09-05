@@ -1,4 +1,6 @@
-// Three things made the same way: a flat outline, carried up and scaled as it goes.
+// Three things and a word, all made the same way: a flat outline, carried up and scaled as it
+// goes.  The obelisk and the pot are drawn with straight runs, the lantern with curves, and the
+// word with the outlines of its own letters -- a taper asks nothing of an outline either way.
 //
 // That is all `tapered extrusion` adds to an [extrusion](../../../docs/advanced-surfaces.md).  The
 // outline is drawn once, at the size it has at the bottom, and `taper` says what is left of that
@@ -39,19 +41,25 @@ Brick = material { pigment color [0.48, 0.30, 0.26]  specular 0.15 }
 // The bulb the lantern is built around.  One light, inside the shell, doing all the work.
 point light { location [0, 0.55, 0]  color [1, 0.92, 0.72] }
 
-// A six-sided paper lantern, drawn in to two thirds by the top and left open at both ends.  With
+// A six-panel paper lantern, drawn in to two thirds by the top and left open at both ends.  With
 // no caps it is a shell, and both faces of every panel take the light.
+//
+// Its outline is six quadratic curves rather than six straight runs, each bulging out to 1.15 of
+// the radius its ends sit at, the way paper does between the ribs it is stretched over.  A taper
+// asks nothing of the outline, so curves come through it as readily as lines do -- each panel
+// stays a curve all the way up, and only its size changes.
 tapered extrusion {
     taper 0.66
     open
 
     path {
         move to 1, 0
-        line to 0.5, 0.866
-        line to -0.5, 0.866
-        line to -1, 0
-        line to -0.5, -0.866
-        line to 0.5, -0.866
+        quad 1.2419, 0.717 to 0.5, 0.866
+        quad 0, 1.434 to -0.5, 0.866
+        quad -1.2419, 0.717 to -1, 0
+        quad -1.2419, -0.717 to -0.5, -0.866
+        quad 0, -1.434 to 0.5, -0.866
+        quad 1.2419, -0.717 to 1, 0
         close
     }
 
@@ -139,4 +147,19 @@ group {
 
     rotate Y 18
     translate [-2.0, 0, -0.2]
+}
+
+// Text tapers the same way, since a text solid is a group of extrusions and nothing more.  One
+// difference matters: a line of letters is laid out along X, so all but the first sit well off the
+// Y axis, and tapering them where they stand would draw them all towards one point and leave a
+// starburst rather than a word.  Each glyph is therefore tapered about its own middle, and comes
+// out chiselled -- full size where it meets the ground and drawn in to a ridge at the top.
+tapered text {
+    taper 0.3
+    text 'TAPER'
+    font 'Merriweather'
+    layout { horizontal position center }
+    material Stone
+    scale 0.5
+    translate [0.15, 0.01, -1.75]
 }

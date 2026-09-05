@@ -227,8 +227,9 @@ tapered extrusion {
 }
 ```
 
-Everything an [extrusion](#extrusion) takes, this takes too — several runs, holes, `min Y` and
-`max Y`, `open`.  A taper of 1 is no taper at all and gives back exactly an extrusion; a taper of
+Everything an [extrusion](#extrusion) takes, this takes too — several runs, holes, curves, `min Y`
+and `max Y`, `open`.  A taper asks nothing of the outline: quadratic and cubic runs come through it
+exactly as straight ones do, staying curves the whole way up while only their size changes.  A taper of 1 is no taper at all and gives back exactly an extrusion; a taper of
 0 brings the outline to a single point, closing the top into an apex, and there is no top cap
 there to be left off.  A taper below 0 is refused, since an outline cannot be scaled through
 nothing and out the other side.
@@ -788,6 +789,39 @@ first time a scene asks for it.  [Managing Fonts](fonts.md) covers the catalog, 
 a face Google does not have.
 
 The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text.igl).
+
+### Tapered Text
+
+`tapered text` scales each glyph as it is given depth, the same way
+[`tapered extrusion`](#tapered-extrusion) scales an outline as it rises — which is no coincidence,
+since a text solid *is* a group of extrusions, one per glyph.  The letters come out chiselled: full
+size on the face you read, drawn in behind it.
+
+![Tapered text](images/figures/adv-tapered-text.png)
+
+```
+tapered text {
+    taper 0.45
+    text 'CUT'
+    font 'Merriweather'
+    rotate X -90
+}
+```
+
+Everything ordinary [text](#text) takes, this takes too.  `taper` means what it means for an
+extrusion: what is left of the glyph's size at the far face, with 1 leaving the letters alone and 0
+bringing each to a ridge.  Over 1 spreads them, so the letters are widest at the back.
+
+**Each glyph is tapered about its own middle, not about the scene's Y axis.**  That is the one
+place this differs from an extrusion, and it has to: a line of text is laid out along X, so every
+letter but the first sits well off the axis a taper draws towards.  Tapering them where they stand
+would pull them all in towards one point and leave a starburst rather than a word.
+
+How thick the letters are decides how steep the chisel is, since the taper is spread over that
+depth — so scaling Z before standing the text up changes the bevel as well as the depth.
+
+The complete scene is
+[`docs/examples/advanced/tapered-text.igl`](examples/advanced/tapered-text.igl).
 
 ### Height Field
 
