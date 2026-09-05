@@ -90,7 +90,8 @@ public partial class LanguageParser
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
-            'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
+            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
             'refraction', 'regular', 'render', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -747,6 +748,33 @@ public partial class LanguageParser
             { constant > _expression } |
             surfaceEntryClause
         ]
+        // -- Shapes found by sphere tracing ----------------------------------------------------
+        // Both are walked by stepping along the ray by however much room the shape reports, so both
+        // ask that the answer really is a distance.  See `isosurface` for the marcher that takes any
+        // function at all and cannot miss a crossing, at the price of being slower.
+        startSdfClause:
+        {
+            sdf > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "sdf" here.'
+        }
+        sdfEntryClause:
+        [
+            fieldFunctionClause | { accuracy > _expression } | surfaceEntryClause
+        ]
+        startJuliaClause:
+        {
+            julia > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "julia" here.'
+        }
+        juliaEntryClause:
+        [
+            { c > _expression } | { iterations > _expression } |
+            { accuracy > _expression } | surfaceEntryClause
+        ]
         startSuperellipsoidClause:
         {
             superellipsoid > [
@@ -1343,6 +1371,8 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startParaboloidClause     => 'paraboloid' |
+            startSdfClause            => 'sdf' |
+            startJuliaClause          => 'julia' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -1416,6 +1446,8 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startParaboloidClause     => 'paraboloid' |
+            startSdfClause            => 'sdf' |
+            startJuliaClause          => 'julia' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -1467,6 +1499,8 @@ public partial class LanguageParser
             startEggClause => 'egg' |
             startSuperellipsoidClause => 'superellipsoid' |
             startParaboloidClause     => 'paraboloid' |
+            startSdfClause            => 'sdf' |
+            startJuliaClause          => 'julia' |
             startHyperboloidClause    => 'hyperboloid' |
             startSaddleClause         => 'saddle' |
             startQuadricClause        => 'quadric' |
@@ -1576,7 +1610,7 @@ public partial class LanguageParser
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
                 startPatchClause | startIsosurfaceClause | startParametricClause |
                 startParaboloidClause | startHyperboloidClause | startSaddleClause |
-                startQuadricClause |
+                startQuadricClause | startSdfClause | startJuliaClause |
                 startObjectFileClause | startObjectClause |
                 startCsgClause | startGroupClause
             ]
@@ -1606,7 +1640,7 @@ public partial class LanguageParser
             [
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
-                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric |
+                isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
                 patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { generic > shape } | { object > file } |
@@ -1708,6 +1742,8 @@ public partial class LanguageParser
             startEggClause            => 'HandleStartEggClause' |
             startSuperellipsoidClause => 'HandleStartSuperellipsoidClause' |
             startParaboloidClause     => 'HandleStartParaboloidClause' |
+            startSdfClause            => 'HandleStartSdfClause' |
+            startJuliaClause          => 'HandleStartJuliaClause' |
             startHyperboloidClause    => 'HandleStartHyperboloidClause' |
             startSaddleClause         => 'HandleStartSaddleClause' |
             startQuadricClause        => 'HandleStartQuadricClause' |

@@ -108,6 +108,10 @@ public partial class LanguageParser
                 return ParseSuperellipsoidClause(clause);
             case ParaboloidResolver:
                 return ParseParaboloidClause(clause);
+            case SignedDistanceSurfaceResolver:
+                return ParseSdfClause(clause);
+            case JuliaFractalResolver:
+                return ParseJuliaClause(clause);
             case HyperboloidResolver:
                 return ParseHyperboloidClause(clause);
             case SaddleResolver:

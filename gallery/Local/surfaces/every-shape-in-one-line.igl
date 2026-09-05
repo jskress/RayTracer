@@ -1,0 +1,71 @@
+// Four shapes, each written as a single piece of arithmetic that says how far away its surface is.
+//
+// That is all a `sdf` asks for: a **signed distance function**, negative inside the shape, nought on
+// it, positive outside.  Nothing here is built out of anything -- there are no parts, no paths and no
+// control points, only a measurement, and the shape is wherever that measurement comes to nought.
+//
+// **The reason it is worth a surface of its own is that distances compose.**  Two shapes joined is
+// the smaller of their distances; the part in common is the larger; one cut out of the other is the
+// larger of the first and the negated second.  And because those are distances rather than choices,
+// any of them can be *softened*: the third shape here is two balls joined by a smooth minimum, which
+// blends them into one another over a width the scene names.  That is a fillet for a line of
+// arithmetic, and it is the reason the fillet surface this project once considered was not needed.
+//
+// The fourth is one ball, drawn everywhere at once: folding the point with `mod` before measuring
+// repeats the shape forever for the cost of the one.
+//
+// **And it is quick, which is the other half of the point.**  Knowing the nearest surface is a
+// quarter of a unit away means a quarter of a unit can be crossed without meeting anything, so the
+// ray strides through open space and shortens only as it closes in.  Written as `isosurface`s -- which
+// know nothing about their function beyond what can be bounded, and must creep -- these same four
+// take **19 seconds** at 800x400.  Here they take **half a second**, and the two pictures differ in
+// three pixels in a thousand, all of them on a silhouette.
+context { angles are degrees  no gamma }
+
+camera { location [0, 3.6, -8.5]  look at [0, 0, 0]  field of view 44 }
+
+point light { location [-7, 9, -8] }
+point light { location [6, 4, -5]  color [0.3, 0.3, 0.36] }
+
+plane { material { pigment checker { Gray45, Gray65  scale 0.8 } }  translate Y -1.3 }
+
+Skin = material { pigment [0.78, 0.55, 0.35]  specular 0.4  shininess 90 }
+
+// A rounded box: push the point out into the corner region, measure how far it got, and take off the
+// rounding radius.  The rounding is the `- 0.18`, and costs nothing.
+sdf {
+    function { sqrt(max(abs(x) - 0.5, 0)² + max(abs(y) - 0.35, 0)² + max(abs(z) - 0.5, 0)²) - 0.18 }
+    bounded by [-1, -0.8, -1], [1, 0.8, 1]
+    material Skin
+    translate [-3.3, 0, 0]
+}
+
+// A torus: the distance to a circle of radius 0.55, less the tube's own radius.
+sdf {
+    function { sqrt((sqrt(x² + z²) - 0.55)² + y²) - 0.22 }
+    bounded by [-1, -0.4, -1], [1, 0.4, 1]
+    material Skin
+    translate [-1.1, 0, 0]
+}
+
+// Two balls joined by a smooth minimum rather than a plain one.  A plain `min` leaves the crease
+// where the two meet; this blends them over a width of 0.55, and there is no crease at all.
+sdf {
+    function {
+        min(sqrt((x + 0.34)² + y² + z²) - 0.40, sqrt((x - 0.34)² + y² + z²) - 0.40) -
+        (max(0.55 - abs((sqrt((x + 0.34)² + y² + z²) - 0.40) -
+                        (sqrt((x - 0.34)² + y² + z²) - 0.40)), 0) / 0.55)² * 0.55 / 4
+    }
+    bounded by [-1.1, -0.7, -0.7], [1.1, 0.7, 0.7]
+    material Skin
+    translate [1.3, 0, 0]
+}
+
+// One ball, everywhere.  `mod` folds space into cells before the distance is measured, so the same
+// shape is drawn in every cell and the scene holds one of it.
+sdf {
+    function { sqrt((mod(x, 0.7) - 0.35)² + y² + (mod(z, 0.7) - 0.35)²) - 0.22 }
+    bounded by [-1.05, -0.25, -1.05], [1.05, 0.25, 1.05]
+    material Skin
+    translate [3.4, 0, 0]
+}

@@ -56,6 +56,8 @@ public partial class LanguageParser
             "egg" => ParseEggClause(clause),
             "superellipsoid" => ParseSuperellipsoidClause(clause),
             "paraboloid" => ParseParaboloidClause(clause),
+            "sdf" => ParseSdfClause(clause),
+            "julia" => ParseJuliaClause(clause),
             "hyperboloid" => ParseHyperboloidClause(clause),
             "saddle" => ParseSaddleClause(clause),
             "quadric" => ParseQuadricClause(clause),

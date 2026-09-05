@@ -450,6 +450,92 @@ here.  A function using it is refused for that reason rather than for being unus
 `gallery/Local/surfaces/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
 twisted column above, and a ball blended smoothly into a cylinder.
 
+### Signed Distance Surface
+
+A shape written as arithmetic that answers, for any point, **how far the nearest surface is** —
+negative inside, nought on it, positive outside.
+
+```
+sdf {
+    function { sqrt((sqrt(x² + z²) - 0.55)² + y²) - 0.22 }
+    bounded by [-1, -0.4, -1], [1, 0.4, 1]
+}
+```
+
+That one is a torus, written as the distance to a circle less the tube's radius.
+
+**Why this and not an [isosurface](#isosurface), which would draw the same torus?**  Because a
+distance can be walked along.  Knowing the nearest surface is a quarter of a unit away means a
+quarter of a unit can be crossed without meeting anything, whatever direction is taken — so the ray
+moves in long strides through open space and shortens only as it closes in.  An isosurface knows
+nothing about its function beyond what it can bound, and has to creep.  The four shapes in
+`gallery/Local/surfaces/every-shape-in-one-line.igl` take **19 seconds** as isosurfaces and **half a
+second** as these, for the same picture — a little under forty times, measured at 800x400.
+
+**What it asks in return is that the function really is a distance.**  Sphere tracing steps by
+whatever the function reports, so one that grows faster than distance does will report more room than
+there is and the march will step clean through the surface.  `x² + y² + z² - 1` is such a function —
+a value rather than a distance, growing twice as fast at the surface — and drawn this way it comes
+out with pieces missing.  Write `sqrt(x² + y² + z²) - 1` instead, or use an isosurface, which takes
+anything at all and cannot miss a crossing.
+
+| Property | What it does |
+| --- | --- |
+| `function` | The arithmetic giving the distance. |
+| `accuracy` | How closely a crossing is pinned down.  A ten-thousandth by default. |
+| `bounded by` | **Required**, for the reason an isosurface requires it. |
+
+#### What distances buy you
+
+Distances **compose**, and that is the whole attraction:
+
+| | |
+| --- | --- |
+| two shapes joined | `min(a, b)` |
+| the part in common | `max(a, b)` |
+| one cut out of the other | `max(a, -b)` |
+
+And because those are distances rather than choices, any of them can be *softened*.  A smooth
+minimum blends two shapes into each other over a width you name — a fillet for a line of arithmetic:
+
+```
+min(a, b) - (max(k - abs(a - b), 0) / k)² * k / 4
+```
+
+Rounding a shape is subtracting a radius from its distance.  Hollowing it is taking the absolute
+value and subtracting a thickness.  Repeating it forever is `mod` on the point before measuring, so
+one shape is drawn everywhere for the cost of one.
+
+### Julia
+
+A quaternion Julia set: the points that stay bounded when `q → q² + c` is applied over and over.
+
+```
+julia {
+    c [-0.2, 0.6, 0.2, 0]
+    iterations 10
+}
+```
+
+**There is no equation to solve here.**  Every other surface in this guide can be asked where a ray
+meets it; this one cannot, because whether a point belongs is settled by iterating until the answer
+runs away.  What can be had instead is an *estimate* of how far the surface is, which is enough to
+walk a ray by — the same marching the [signed distance surface](#signed-distance-surface) uses.
+
+| Property | What it does |
+| --- | --- |
+| `c` | The quaternion added each time round, as four numbers.  This **is** the shape. |
+| `iterations` | How many times to apply it.  Ten by default; above twenty is hard to see. |
+| `accuracy` | How closely a crossing is pinned down. |
+
+Unlike most surfaces here it needs its numbers: move `c` and you get a different object, not the same
+one resized, so there is nothing a transform could stand in for.  It needs no `bounded by` — every
+set of this form lies inside a ball of radius two, so it knows its own extent.
+
+A quaternion has four parts and space has three, so what is drawn is a **slice**: the fourth part of
+the point is held at nought.  Changing `c`'s fourth number moves the shape through the object it is a
+slice of, which is a good deal more interesting than it sounds.
+
 #### Rough surfaces, with `noise`
 
 A function may call [`noise`](scene-files.md#functions), which is what makes a surface genuinely

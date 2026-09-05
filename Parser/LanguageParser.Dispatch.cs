@@ -28,6 +28,8 @@ public partial class LanguageParser
             .On(nameof(HandleStartEggClause), HandleStartEggClause)
             .On(nameof(HandleStartSuperellipsoidClause), HandleStartSuperellipsoidClause)
             .On(nameof(HandleStartParaboloidClause), HandleStartParaboloidClause)
+            .On(nameof(HandleStartSdfClause), HandleStartSdfClause)
+            .On(nameof(HandleStartJuliaClause), HandleStartJuliaClause)
             .On(nameof(HandleStartHyperboloidClause), HandleStartHyperboloidClause)
             .On(nameof(HandleStartSaddleClause), HandleStartSaddleClause)
             .On(nameof(HandleStartQuadricClause), HandleStartQuadricClause)
