@@ -114,6 +114,9 @@ public partial class LanguageParser
             case "patch":
                 resolver.SurfaceResolvers.Add(ParsePatchClause(clause));
                 break;
+            case "bilinearPatch":
+                resolver.SurfaceResolvers.Add(ParseBilinearPatchClause(clause));
+                break;
             case "extrusion":
                 resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
                 break;

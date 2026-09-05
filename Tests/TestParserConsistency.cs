@@ -158,9 +158,12 @@ public class TestParserConsistency
         // Its two-word kinds are written as a first word and a guard on the second, so both halves
         // turn up separately and neither is the kind.
         handled.UnionWith(new[]
-            { "smoothtriangle", "genericshape", "objectfile", "taperedextrusion", "taperedtext" });
+        {
+            "smoothtriangle", "genericshape", "objectfile", "taperedextrusion", "taperedtext",
+            "bilinearpatch"
+        });
         handled.ExceptWith(new[]
-            { "smooth", "generic", "object", "tapered", "triangle", "file", "shape" });
+            { "smooth", "generic", "object", "tapered", "bilinear", "triangle", "file", "shape" });
         handled.Add("triangle");
 
         AssertSame(expected, handled, "what may stand in a group and what may be named");

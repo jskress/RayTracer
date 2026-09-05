@@ -76,7 +76,7 @@ public partial class LanguageParser
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
-            'align', 'back', 'baseline', 'behind', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
+            'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
@@ -850,6 +850,22 @@ public partial class LanguageParser
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "patch" here.'
         }
+        startBilinearPatchClause:
+        {
+            bilinear > patch > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "patch" here.'
+        }
+        bilinearPatchEntryClause:
+        [
+            {
+                points > _expression > comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression
+            } |
+            surfaceEntryClause
+        ]
         patchEntryClause:
         [
             {
@@ -1401,6 +1417,7 @@ public partial class LanguageParser
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
+            startBilinearPatchClause => 'bilinearPatch' |
             startExtrusionClause => 'extrusion' |
             startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
@@ -1478,6 +1495,7 @@ public partial class LanguageParser
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
+            startBilinearPatchClause => 'bilinearPatch' |
             startExtrusionClause => 'extrusion' |
             startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
@@ -1533,6 +1551,7 @@ public partial class LanguageParser
             startIsosurfaceClause     => 'isosurface' |
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
+            startBilinearPatchClause => 'bilinearPatch' |
             startExtrusionClause => 'extrusion' |
             startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
@@ -1638,7 +1657,8 @@ public partial class LanguageParser
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
-                startPatchClause | startIsosurfaceClause | startParametricClause |
+                startPatchClause | startBilinearPatchClause | startIsosurfaceClause |
+                startParametricClause |
                 startParaboloidClause | startHyperboloidClause | startSaddleClause |
                 startQuadricClause | startSdfClause | startJuliaClause |
                 startObjectFileClause | startObjectClause |
@@ -1674,6 +1694,7 @@ public partial class LanguageParser
                 patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
+                { bilinear > patch } |
                 { generic > shape } | { object > file } |
                 pigment | material | interior | medium
             ] ?? 'Expecting the kind of surface this gives back here.' >
@@ -1781,6 +1802,7 @@ public partial class LanguageParser
             startIsosurfaceClause     => 'HandleStartIsosurfaceClause' |
             startParametricClause     => 'HandleStartParametricClause' |
             startPatchClause          => 'HandleStartPatchClause' |
+            startBilinearPatchClause => 'HandleStartBilinearPatchClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
             startTaperedExtrusionClause => 'HandleStartTaperedExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |

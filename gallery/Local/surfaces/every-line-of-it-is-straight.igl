@@ -1,0 +1,56 @@
+// A ribbon with a full turn in it, and not one curve anywhere in the thing.
+//
+// It is twenty-four `bilinear patch`es laid end to end.  A patch is given four corners and fills in
+// between them by mixing them along one direction and then the other, so every line of constant "u"
+// -- and every line of constant "v" -- across it is **straight**.  Four corners in a plane give a
+// flat quadrilateral; lift one out of that plane and the surface warps, and yet it is still woven
+// out of nothing but straight lines.  What curves here is the eye's reading of the silhouette and
+// the shading, not the geometry.
+//
+// Each pair of patches shares an edge exactly, since the corners are computed rather than drawn, so
+// the ribbon has no seams in it to catch the light.
+//
+// **It is solved rather than walked.**  Setting the surface equal to a point on the ray and taking
+// the distance out leaves a quadratic in one parameter, so a crossing costs one square root -- no
+// subdivision, no marching, no tolerance to tune.  That also means a ray can meet a patch *twice*,
+// which a straight line really can do to a saddle, and both crossings are reported.
+context { angles are degrees  no gamma }
+
+camera {
+    location [3.9, 3.3, -6.0]
+    look at [0, 0.85, 0]
+    field of view 44
+}
+
+point light { location [-5, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -5]   color [0.4, 0.4, 0.46] }
+
+plane {
+    material { pigment checker { color [0.34, 0.33, 0.36], color [0.24, 0.23, 0.26]  scale 1.1 } }
+}
+
+Ribbon = material { pigment color [0.85, 0.45, 0.3]  specular 0.5  shininess 80 }
+
+// A full turn, shared out over the twenty-four steps: 2*pi/24 of a turn at each.
+Turn = 0.2618
+Half = 0.62
+Step = 0.25
+Rise = 1.15
+
+for i in [0, 23] {
+    a = i * Turn
+    b = (i + 1) * Turn
+    za = i * Step - 3
+    zb = (i + 1) * Step - 3
+
+    // The four corners go round the quadrilateral rather than across it: out along this step's
+    // edge, on to the next step, back across it, and home.  Given in any other order they would
+    // describe a bow tie, and nothing would say so.
+    bilinear patch {
+        points [cos(a) * Half, Rise + sin(a) * Half, za],
+               [-cos(a) * Half, Rise - sin(a) * Half, za],
+               [-cos(b) * Half, Rise - sin(b) * Half, zb],
+               [cos(b) * Half, Rise + sin(b) * Half, zb]
+        material Ribbon
+    }
+}

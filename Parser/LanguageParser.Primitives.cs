@@ -214,6 +214,7 @@ public partial class LanguageParser
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),
             "patch" => ParsePatchClause(clause),
+            "bilinear patch" => ParseBilinearPatchClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
             "swells" => ParseSwellsClause(clause),
@@ -329,6 +330,8 @@ public partial class LanguageParser
                 "parametricEntryClause", HandleParametricEntryClause, validate: false),
             "patch" => ParseObjectResolver<BicubicPatchResolver>(
                 "patchEntryClause", HandlePatchEntryClause, validate: false),
+            "bilinear patch" => ParseObjectResolver<BilinearPatchResolver>(
+                "bilinearPatchEntryClause", HandleBilinearPatchEntryClause, validate: false),
             "lathe" => ParseObjectResolver<LatheResolver>(
                 "latheEntryClause", HandleLatheEntryClause, validate: false),
             "blob" => ParseObjectResolver<BlobResolver>(
@@ -395,6 +398,7 @@ public partial class LanguageParser
             "isosurface" => "startIsosurfaceClause",
             "parametric" => "startParametricClause",
             "patch" => "startPatchClause",
+            "bilinear patch" => "startBilinearPatchClause",
             "lathe" => "startLatheClause",
             "blob" => "startBlobClause",
             "swells" => "startSwellsClause",

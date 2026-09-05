@@ -618,6 +618,38 @@ triangle {
 A bicubic patch: a curved quadrilateral pulled into shape by a four-by-four grid of control
 points.  `gallery/Local/surfaces/patch.igl` is the example to read.
 
+#### Bilinear Patch
+
+The warped quadrilateral four corners span — the one shape in this group that need not be flat.
+Give it four corners **in order around the quadrilateral** and it fills in between them.
+
+![Bilinear patches](images/figures/surface-bilinear-patch.png)
+
+Four corners in a plane, one corner lifted, and two opposite corners lifted.  The scene is
+[`docs/examples/advanced/bilinear-patch.igl`](examples/advanced/bilinear-patch.igl).
+
+```
+bilinear patch {
+    points [-1, -1, 0], [1, -1, 0], [1, 1, -1.3], [-1, 1, 0]
+}
+```
+
+Put all four corners in one plane and you have a flat quadrilateral, which is what a
+[parallelogram](#parallelogram) already draws — and the two agree exactly where they overlap.  Lift
+one corner out of that plane and the surface warps into the saddle between them, which is what makes
+it worth having: a sail, a flag, a warped panel, a twisted ribbon.
+
+**The corners go round the quadrilateral, not across it.**  Given in the wrong order they describe a
+bow tie, which is a real surface but rarely the wanted one, and nothing will warn you.
+
+Every line of constant `u` and every line of constant `v` across a bilinear patch is **straight**,
+so the surface is woven out of two families of straight lines even where no part of it is flat.
+That is also why it is exact rather than approximated: writing the surface equal to a point on a ray
+leaves a quadratic, so a patch is solved in one square root instead of being subdivided the way a
+[bicubic patch](#patch) or a [parametric surface](advanced-surfaces.md#parametric) must be.  A ray
+can meet one **twice** — a straight line can cut a saddle in two places — and both crossings are
+reported.
+
 ### Groups
 
 A group contains surfaces so they may be transformed and, if desired, have a material applied
