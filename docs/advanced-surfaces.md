@@ -794,14 +794,14 @@ The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text
 
 `tapered text` scales each glyph as it is given depth, the same way
 [`tapered extrusion`](#tapered-extrusion) scales an outline as it rises — which is no coincidence,
-since a text solid *is* a group of extrusions, one per glyph.  The letters come out chiselled:
-widest on the face you read, sloping away behind it.
+since a text solid *is* a group of extrusions, one per glyph.  Each letter here is narrow on the
+face you read and flares away behind it, its walls sloping out in plain view.
 
 ![Tapered text](images/figures/adv-tapered-text.png)
 
 ```
 tapered text {
-    taper 1.3
+    taper 0.55
     text 'CUT'
     font 'Merriweather'
     rotate X -90
@@ -812,20 +812,19 @@ Everything ordinary [text](#text) takes, this takes too, and `taper` means what 
 extrusion: what is left of the outline at the `max Y` end.
 
 **Which end that is, once the text is standing up, is the opposite of what you may expect.**
-Standing text up with `rotate X -90` turns the `max Y` end towards the reader, so it is a taper
-**over 1** that puts the widest face forward — the raised, chiselled look above.  A taper under 1
-turns the letters the other way about, narrow at the front and flaring away behind, which is a
-perfectly good effect but not that one.  There is no rotation that stands text up *and* swaps the
-two ends: any that did would also read the letters backwards.
+Standing text up with `rotate X -90` turns the `max Y` end towards the reader.  So a taper **under
+1**, as above, puts the *narrow* face forward and leaves every letter's slope facing you — which is
+what you want when the taper is the thing being shown.  A taper **over 1** turns it round: the
+widest face comes forward and hides its own slope behind it, which is the handsomer raised,
+chiselled letter.  There is no rotation that stands text up *and* swaps the two ends; any that did
+would read the letters backwards.
 
-Much over about 1.5 and the letters start to grow into one another, since each spreads about its
-own middle into whatever gap the layout left.
-
-**A taper over 1 also grows each glyph downward.**  It spreads about the glyph's own middle, so the
-widest face reaches below the baseline by as much as it reaches above the cap — and text stood on a
-floor at nought sinks that face into it, taking the foot of an `E` or the tail of an `R` with it.
-Lift the text by about half the cap height times what the taper adds: at a cap of 0.35 and a taper
-of 1.5, a little under a tenth of a unit.
+Two things to know about going over 1.  Much past about 1.5 and the letters start to grow into one
+another, since each spreads about its own middle into whatever gap the layout left.  And that same
+spreading reaches **below the baseline** as far as it reaches above the cap, so text stood on a
+floor at nought sinks its widest face into it, taking the foot of an `E` or the tail of an `R` with
+it — lift the text by about half the cap height times what the taper adds.  Under 1 neither applies:
+the letters draw in from their middles, and the full-size end at the back is what rests on the floor.
 
 **Each glyph is tapered about its own middle, not about the scene's Y axis.**  That is the one
 place this differs from an extrusion, and it has to: a line of text is laid out along X, so every

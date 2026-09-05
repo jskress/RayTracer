@@ -155,13 +155,13 @@ group {
 // Y axis, and tapering them where they stand would draw them all towards one point and leave a
 // starburst rather than a word.  Each glyph is therefore tapered about its own middle.
 //
-// The taper is over 1, which for standing text is what a chiselled letter wants.  A taper says
-// what is left of the outline at the "max Y" end, and standing the text up turns that end towards
-// the reader -- so it is a taper over 1 that puts the widest face forward and slopes it away.
-// Much over about 1.5 and the letters begin to grow into one another, each spreading about its own
-// middle into the gap the layout left.
+// The taper is under 1, which is what puts it where it can be seen.  A taper says what is left of
+// the outline at the "max Y" end, and standing the text up turns that end towards the reader -- so
+// under 1 the narrow face is the near one and every letter's walls slope outward and away, in
+// plain view.  Over 1 turns it round: the widest face comes forward and hides its own slope behind
+// it, which is the handsomer raised, chiselled letter but shows nothing of what a taper does.
 tapered text {
-    taper 1.5
+    taper 0.65
     text 'TAPER'
     font 'Merriweather'
     layout { horizontal position center }
@@ -173,10 +173,9 @@ tapered text {
     scale [0.5, 2.6, 0.5]
     rotate X -90
 
-    // The lift is not decoration.  A glyph is tapered about its own middle, so a taper over 1
-    // grows it in every direction from that middle -- downward past the baseline as much as
-    // upward -- and a letter left standing at nought sinks its front face into the floor, which
-    // takes the foot of the E with it.  The drop is half the cap height times what the taper adds,
-    // so a cap of about 0.35 at a taper of 1.5 wants a little under a tenth of a unit back.
-    translate [0.15, 0.09, -1.3]
+    // No lift is wanted here.  A glyph is tapered about its own middle, so under 1 it draws in
+    // from that middle and the full-size end -- the one at the back -- is what rests on the floor.
+    // Over 1 it would be the other way about, the near face reaching below the baseline as far as
+    // it reaches above the cap, and the word would need lifting clear.
+    translate [0.15, 0, -1.3]
 }
