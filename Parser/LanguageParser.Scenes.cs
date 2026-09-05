@@ -117,6 +117,9 @@ public partial class LanguageParser
             case "extrusion":
                 resolver.SurfaceResolvers.Add(ParseExtrusionClause(clause));
                 break;
+            case "taperedExtrusion":
+                resolver.SurfaceResolvers.Add(ParseTaperedExtrusionClause(clause));
+                break;
             case "lathe":
                 resolver.SurfaceResolvers.Add(ParseLatheClause(clause));
                 break;
@@ -134,6 +137,9 @@ public partial class LanguageParser
                 break;
             case "text":
                 resolver.SurfaceResolvers.Add(ParseTextClause(clause));
+                break;
+            case "taperedText":
+                resolver.SurfaceResolvers.Add(ParseTaperedTextClause(clause));
                 break;
             // ReSharper disable once StringLiteralTypo
             case "lsystem":

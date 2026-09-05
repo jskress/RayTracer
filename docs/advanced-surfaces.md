@@ -202,6 +202,50 @@ drawn flat in X and Y, so an extrusion comes out lying down; `rotate X -90` stan
 The complete scene is
 [`docs/examples/advanced/extrusion.igl`](examples/advanced/extrusion.igl).
 
+### Tapered Extrusion
+
+`tapered extrusion` is the same shape with the outline scaled as it rises rather than carried
+straight up.  The word `taper` says what the outline has been scaled to by the top; the bottom is
+always the size it was drawn.  Below, one outline — a square — at no taper, at 0.45, and at 0.
+
+![A tapered extrusion](images/figures/adv-tapered-extrusion.png)
+
+```
+tapered extrusion {
+    taper 0.45
+
+    path {
+        move to -0.5, -0.5
+        line to 0.5, -0.5
+        line to 0.5, 0.5
+        line to -0.5, 0.5
+        close
+    }
+
+    min Y 0
+    max Y 2.3
+}
+```
+
+Everything an [extrusion](#extrusion) takes, this takes too — several runs, holes, curves, `min Y`
+and `max Y`, `open`.  A taper asks nothing of the outline: quadratic and cubic runs come through it
+exactly as straight ones do, staying curves the whole way up while only their size changes.  A taper of 1 is no taper at all and gives back exactly an extrusion; a taper of
+0 brings the outline to a single point, closing the top into an apex, and there is no top cap
+there to be left off.  A taper below 0 is refused, since an outline cannot be scaled through
+nothing and out the other side.
+
+The scaling is **about the Y axis**, not about the outline's own middle, so where the outline sits
+in relation to the origin decides what it draws towards.  An outline around the origin narrows
+into itself; one drawn off to the side leans over as it narrows, which is a way of getting a lean
+without a shear.
+
+Because the walls lean, so do their normals — a tapered post catches the light differently down
+its sides than a straight one does, which is most of what makes it read as tapered rather than
+merely as narrower at the top.
+
+The complete scene is
+[`docs/examples/advanced/tapered-extrusion.igl`](examples/advanced/tapered-extrusion.igl).
+
 ### Lathe
 
 A path spun about the Y axis.  The path is the silhouette of one side of the finished object,
@@ -745,6 +789,53 @@ first time a scene asks for it.  [Managing Fonts](fonts.md) covers the catalog, 
 a face Google does not have.
 
 The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text.igl).
+
+### Tapered Text
+
+`tapered text` scales each glyph as it is given depth, the same way
+[`tapered extrusion`](#tapered-extrusion) scales an outline as it rises — which is no coincidence,
+since a text solid *is* a group of extrusions, one per glyph.  Each letter here is narrow on the
+face you read and flares away behind it, its walls sloping out in plain view.
+
+![Tapered text](images/figures/adv-tapered-text.png)
+
+```
+tapered text {
+    taper 0.55
+    text 'CUT'
+    font 'Merriweather'
+    rotate X -90
+}
+```
+
+Everything ordinary [text](#text) takes, this takes too, and `taper` means what it means for an
+extrusion: what is left of the outline at the `max Y` end.
+
+**Which end that is, once the text is standing up, is the opposite of what you may expect.**
+Standing text up with `rotate X -90` turns the `max Y` end towards the reader.  So a taper **under
+1**, as above, puts the *narrow* face forward and leaves every letter's slope facing you — which is
+what you want when the taper is the thing being shown.  A taper **over 1** turns it round: the
+widest face comes forward and hides its own slope behind it, which is the handsomer raised,
+chiselled letter.  There is no rotation that stands text up *and* swaps the two ends; any that did
+would read the letters backwards.
+
+Two things to know about going over 1.  Much past about 1.5 and the letters start to grow into one
+another, since each spreads about its own middle into whatever gap the layout left.  And that same
+spreading reaches **below the baseline** as far as it reaches above the cap, so text stood on a
+floor at nought sinks its widest face into it, taking the foot of an `E` or the tail of an `R` with
+it — lift the text by about half the cap height times what the taper adds.  Under 1 neither applies:
+the letters draw in from their middles, and the full-size end at the back is what rests on the floor.
+
+**Each glyph is tapered about its own middle, not about the scene's Y axis.**  That is the one
+place this differs from an extrusion, and it has to: a line of text is laid out along X, so every
+letter but the first sits well off the axis a taper draws towards.  Tapering them where they stand
+would pull them all in towards one point and leave a starburst rather than a word.
+
+How thick the letters are decides how steep the chisel is, since the taper is spread over that
+depth — so scaling Z before standing the text up changes the bevel as well as the depth.
+
+The complete scene is
+[`docs/examples/advanced/tapered-text.igl`](examples/advanced/tapered-text.igl).
 
 ### Height Field
 

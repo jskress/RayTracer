@@ -98,7 +98,7 @@ public partial class LanguageParser
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
@@ -916,6 +916,17 @@ public partial class LanguageParser
             { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
             extrudedSurfaceEntryClause
         ]
+        startTaperedExtrusionClause:
+        {
+            tapered > extrusion > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "extrusion" here.'
+        }
+        taperedExtrusionEntryClause:
+        [
+            { taper > _expression } | extrusionEntryClause
+        ]
 
         // Spline clauses.  These mirror the path clauses above, except a spline's points
         // are full 3D triples rather than 2D pairs.
@@ -1149,6 +1160,17 @@ public partial class LanguageParser
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "text" here.'
         }
+        startTaperedTextClause:
+        {
+            tapered > text > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "text" here.'
+        }
+        taperedTextEntryClause:
+        [
+            { taper > _expression } | textEntryClause
+        ]
         textEntryClause:
         [
             { text > _expression } | fontClause |
@@ -1380,12 +1402,14 @@ public partial class LanguageParser
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
+            startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
+            startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
@@ -1455,12 +1479,14 @@ public partial class LanguageParser
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
+            startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
+            startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
@@ -1508,12 +1534,14 @@ public partial class LanguageParser
             startParametricClause     => 'parametric' |
             startPatchClause => 'patch' |
             startExtrusionClause => 'extrusion' |
+            startTaperedExtrusionClause => 'taperedExtrusion' |
             startLatheClause => 'lathe' |
             startBlobClause => 'blob' |
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
+            startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
             startHeightFieldClause => 'heightField' |
             startTriangleClause => 'triangle' |
@@ -1603,9 +1631,11 @@ public partial class LanguageParser
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
-                startConicClause | startTorusClause | startExtrusionClause | startLatheClause |
+                startConicClause | startTorusClause | startExtrusionClause |
+                startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startSweepClause | startTextClause |
-                startLsystemClause | startHeightFieldClause | startTriangleClause |
+                startTaperedTextClause | startLsystemClause | startHeightFieldClause |
+                startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
                 startGenericShapeClause | startEggClause | startSuperellipsoidClause |
                 startPatchClause | startIsosurfaceClause | startParametricClause |
@@ -1643,7 +1673,8 @@ public partial class LanguageParser
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
                 patch | lathe | blob | swells | tube | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
-                { smooth > triangle } | { generic > shape } | { object > file } |
+                { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
+                { generic > shape } | { object > file } |
                 pigment | material | interior | medium
             ] ?? 'Expecting the kind of surface this gives back here.' >
             openBrace ?? 'Expecting an open brace to follow the kind here.'
@@ -1751,12 +1782,14 @@ public partial class LanguageParser
             startParametricClause     => 'HandleStartParametricClause' |
             startPatchClause          => 'HandleStartPatchClause' |
             startExtrusionClause      => 'HandleStartExtrusionClause' |
+            startTaperedExtrusionClause => 'HandleStartTaperedExtrusionClause' |
             startLatheClause          => 'HandleStartLatheClause' |
             startBlobClause           => 'HandleStartBlobClause' |
             startSwellsClause         => 'HandleStartSwellsClause' |
             startTubeClause           => 'HandleStartTubeClause' |
             startSweepClause          => 'HandleStartSweepClause' |
             startTextClause           => 'HandleStartTextClause' |
+            startTaperedTextClause => 'HandleStartTaperedTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
             startHeightFieldClause    => 'HandleStartHeightFieldClause' |
             startTriangleClause       => 'HandleStartTriangleClause' |

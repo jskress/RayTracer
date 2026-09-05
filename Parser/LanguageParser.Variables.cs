@@ -63,6 +63,8 @@ public partial class LanguageParser
             "quadric" => ParseQuadricClause(clause),
             "patch" => ParsePatchClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
+            "tapered" when second == "extrusion" => ParseTaperedExtrusionClause(clause),
+            "tapered" when second == "text" => ParseTaperedTextClause(clause),
             "lathe" => ParseLatheClause(clause),
             "blob" => ParseBlobClause(clause),
             "swells" => ParseSwellsClause(clause),

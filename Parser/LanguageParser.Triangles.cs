@@ -81,12 +81,12 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a smooth triangle block.
     /// </summary>
-    private SmoothTriangleResolver ParseSmoothTriangleClause(Clause clause)
+    private SmoothTriangleResolver ParseSmoothTriangleClause(Clause clause, int tokenOffset = 1)
     {
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<SmoothTriangleResolver>(
                 "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause),
-            "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause, tokenOffset: 1);
+            "smoothTriangleEntryClause", HandleSmoothTriangleEntryClause, tokenOffset);
     }
 
     /// <summary>

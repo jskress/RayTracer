@@ -1,0 +1,181 @@
+// Three things and a word, all made the same way: a flat outline, carried up and scaled as it
+// goes.  The obelisk and the pot are drawn with straight runs, the lantern with curves, and the
+// word with the outlines of its own letters -- a taper asks nothing of an outline either way.
+//
+// That is all `tapered extrusion` adds to an [extrusion](../../../docs/advanced-surfaces.md).  The
+// outline is drawn once, at the size it has at the bottom, and `taper` says what is left of that
+// size at the top.  Under 1 draws it in, over 1 spreads it, and 0 brings it to a single point.
+//
+// **The scaling is about the Y axis, not about the outline's own middle**, which is the part worth
+// knowing.  Every outline here is drawn around the origin, so each of these narrows into itself and
+// stands straight; one drawn off to the side would narrow *towards the axis* instead and come out
+// leaning, without any shear.  A taper is not simply "smaller at the top".
+//
+// The lantern is the case that pays for itself.  It is `open`, so it is a shell with nothing
+// inside it but the bulb, and a surface with no inside is lit from both of its faces -- so the
+// panel a ray sees from out here is lit by the flame behind it, and the shade glows without being
+// transparent at all.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0.4, 3.0, -8.2]
+    look at [0.1, 1.25, 0]
+    field of view 46
+}
+
+point light { location [-8, 9, -9]  color [1.35, 1.30, 1.22] }
+point light { location [7, 5, -6]   color [0.45, 0.46, 0.54] }
+
+plane {
+    material {
+        pigment checker { color [0.30, 0.28, 0.26], color [0.24, 0.22, 0.21]  scale 1.4 }
+        specular 0.1
+    }
+}
+
+Paper = material { pigment color [0.95, 0.82, 0.55]  ambient 0.35  specular 0.15 }
+Clay  = material { pigment color [0.72, 0.36, 0.24]  specular 0.25  shininess 40 }
+Stone = material { pigment color [0.70, 0.68, 0.62]  specular 0.2  shininess 30 }
+Brick = material { pigment color [0.48, 0.30, 0.26]  specular 0.15 }
+
+// The bulb the lantern is built around.  One light, inside the shell, doing all the work.
+point light { location [0, 0.55, 1.3]  color [1, 0.92, 0.72] }
+
+// A six-panel paper lantern, drawn in to two thirds by the top and left open at both ends.  With
+// no caps it is a shell, and both faces of every panel take the light.
+//
+// Its outline is six quadratic curves rather than six straight runs, each bulging out to 1.15 of
+// the radius its ends sit at, the way paper does between the ribs it is stretched over.  A taper
+// asks nothing of the outline, so curves come through it as readily as lines do -- each panel
+// stays a curve all the way up, and only its size changes.
+tapered extrusion {
+    taper 0.66
+    open
+
+    path {
+        move to 1, 0
+        quad 1.2419, 0.717 to 0.5, 0.866
+        quad 0, 1.434 to -0.5, 0.866
+        quad -1.2419, 0.717 to -1, 0
+        quad -1.2419, -0.717 to -0.5, -0.866
+        quad 0, -1.434 to 0.5, -0.866
+        quad 1.2419, -0.717 to 1, 0
+        close
+    }
+
+    min Y 0.12  max Y 1.35
+    scale [0.62, 1, 0.62]
+    material Paper
+    rotate Y 12
+    translate [0, 0, 1.3]
+}
+
+// A flower pot: the same idea turned round, with a taper over 1 so the outline spreads as it
+// rises.  Open, again, because a pot with a lid is a jar.
+tapered extrusion {
+    taper 1.45
+    open
+
+    path {
+        move to 0.9239, 0.3827
+        line to 0.3827, 0.9239
+        line to -0.3827, 0.9239
+        line to -0.9239, 0.3827
+        line to -0.9239, -0.3827
+        line to -0.3827, -0.9239
+        line to 0.3827, -0.9239
+        line to 0.9239, -0.3827
+        close
+    }
+
+    min Y 0  max Y 0.75
+    scale [0.5, 1, 0.5]
+    material Clay
+    rotate Y 20
+    translate [2.1, 0, -0.3]
+}
+
+// The soil, sized to what the pot's outline has grown to at the rim.
+sphere {
+    material { pigment color [0.20, 0.15, 0.12] }
+    scale [0.60, 0.22, 0.60]
+    translate [2.1, 0.70, -0.3]
+}
+
+// An obelisk, which is two tapers stacked rather than one: a shaft drawn in only slightly, and a
+// pyramidion at a taper of 0 sitting on top of it.  A single taper of 0 over the whole height
+// would be a pyramid, not an obelisk -- the shaft has to stay nearly upright for the point to read
+// as a cap on it.  The pyramidion's outline is sized to what the shaft's has shrunk to by the top,
+// which is the shaft's own half-width times its taper.
+group {
+    // The shaft: half a unit out on each side, scaled to 0.62, so 0.31 across at the foot and
+    // 0.31 * 0.78 = 0.242 at the top.
+    tapered extrusion {
+        taper 0.78
+
+        path {
+            move to -0.5, -0.5
+            line to 0.5, -0.5
+            line to 0.5, 0.5
+            line to -0.5, 0.5
+            close
+        }
+
+        min Y 0  max Y 2
+        scale [0.62, 1, 0.62]
+        material Stone
+    }
+
+    // The cap.  Its outline is scaled to 0.4836, being twice the 0.242 the shaft ends at, so the
+    // two meet without a step.  A taper of 0 closes it to a point, and there is no top cap to
+    // leave off -- at nought the outline has no size left to cap.
+    tapered extrusion {
+        taper 0
+
+        path {
+            move to -0.5, -0.5
+            line to 0.5, -0.5
+            line to 0.5, 0.5
+            line to -0.5, 0.5
+            close
+        }
+
+        min Y 0  max Y 0.42
+        scale [0.4836, 1, 0.4836]
+        material Stone
+        translate [0, 2, 0]
+    }
+
+    rotate Y 18
+    translate [-2.0, 0, -0.2]
+}
+
+// Text tapers the same way, since a text solid is a group of extrusions and nothing more.  One
+// difference matters: a line of letters is laid out along X, so all but the first sit well off the
+// Y axis, and tapering them where they stand would draw them all towards one point and leave a
+// starburst rather than a word.  Each glyph is therefore tapered about its own middle.
+//
+// The taper is under 1, which is what puts it where it can be seen.  A taper says what is left of
+// the outline at the "max Y" end, and standing the text up turns that end towards the reader -- so
+// under 1 the narrow face is the near one and every letter's walls slope outward and away, in
+// plain view.  Over 1 turns it round: the widest face comes forward and hides its own slope behind
+// it, which is the handsomer raised, chiselled letter but shows nothing of what a taper does.
+tapered text {
+    taper 0.65
+    text 'TAPER'
+    font 'Merriweather'
+    layout { horizontal position center }
+    material Stone
+    // The Y here is the letters' depth, before the text is stood up.  Scaled evenly, letters half
+    // the size would be half as deep too, and the taper -- spread across that depth -- would fall
+    // away so sharply that the bevel faced the reader almost flat.  Giving them their depth back
+    // puts the chisel on a slope worth seeing.
+    scale [0.5, 2.6, 0.5]
+    rotate X -90
+
+    // No lift is wanted here.  A glyph is tapered about its own middle, so under 1 it draws in
+    // from that middle and the full-size end -- the one at the back -- is what rests on the floor.
+    // Over 1 it would be the other way about, the near face reaching below the baseline as far as
+    // it reaches above the cap, and the word would need lifting clear.
+    translate [0.15, 0, -1.3]
+}

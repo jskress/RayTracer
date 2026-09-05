@@ -31,12 +31,12 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from an object file block.
     /// </summary>
-    private ObjectFileResolver ParseObjectFileClause(Clause clause)
+    private ObjectFileResolver ParseObjectFileClause(Clause clause, int tokenOffset = 1)
     {
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<ObjectFileResolver>(
                 "objectFileEntryClause", HandleObjectFileEntryClause),
-            "objectFileEntryClause", HandleObjectFileEntryClause, tokenOffset: 1);
+            "objectFileEntryClause", HandleObjectFileEntryClause, tokenOffset);
     }
 
     /// <summary>
@@ -130,8 +130,12 @@ public partial class LanguageParser
                 return ParseTubeClause(clause);
             case SweepResolver:
                 return ParseSweepClause(clause);
+            case TaperedExtrusionResolver:
+                return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:
                 return ParseExtrusionClause(clause);
+            case TaperedTextSolidResolver:
+                return ParseTaperedTextClause(clause, tokenOffset: 0);
             case TextSolidResolver:
                 return ParseTextClause(clause);
             case LSystemResolver:
@@ -143,13 +147,13 @@ public partial class LanguageParser
             case DiscResolver:
                 return ParseDiscClause(clause);
             case GenericShapeResolver:
-                return ParseGenericShapeClause(clause);
+                return ParseGenericShapeClause(clause, tokenOffset: 0);
             case TriangleResolver:
                 return ParseTriangleClause(clause);
             case SmoothTriangleResolver:
-                return ParseSmoothTriangleClause(clause);
+                return ParseSmoothTriangleClause(clause, tokenOffset: 0);
             case ObjectFileResolver:
-                return ParseObjectFileClause(clause);
+                return ParseObjectFileClause(clause, tokenOffset: 0);
             case IsosurfaceResolver:
                 return ParseIsosurfaceClause(clause);
             case ParametricResolver:

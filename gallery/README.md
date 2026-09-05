@@ -853,6 +853,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/nothing-runs-straight-up.png">
+      <img alt="Nothing Runs Straight Up" height="120" src="Local/surfaces/nothing-runs-straight-up.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/nothing-runs-straight-up.igl">Nothing Runs Straight Up</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/media/medium.png">
       <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
     </a></td>

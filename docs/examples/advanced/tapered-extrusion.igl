@@ -1,0 +1,72 @@
+// A tapered extrusion: the same flat path, but scaled as it rises rather than carried straight
+// up.  Three posts of one outline -- a square -- show what the taper does: left, no taper at all,
+// which is an ordinary extrusion; middle, drawn in to just under half; right, all the way to a
+// point.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 4.9, -8.5]
+    look at [0, 0.95, 0]
+    field of view 40
+}
+
+point light { location [-6, 9, -8]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -4]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment checker { color [0.6,0.6,0.64], color [0.2,0.2,0.25] scale 1.2 } }
+}
+
+Post = material { pigment color [0.85, 0.55, 0.3]  specular 0.5  shininess 70 }
+
+// Each post is drawn from the same outline: a square, half a unit out from the middle on every
+// side.  The taper scales about the Y axis, so an outline drawn around the origin, as this one
+// is, narrows straight into itself rather than leaning over as it narrows.
+
+// No taper: the walls run straight up, which is what an extrusion has always done.
+extrusion {
+    path {
+        move to -0.5, -0.5
+        line to 0.5, -0.5
+        line to 0.5, 0.5
+        line to -0.5, 0.5
+        close
+    }
+    min Y 0  max Y 2.3
+    material Post
+    rotate Y 25
+    translate [-1.9, 0, 0]
+}
+
+// Drawn in to 0.45 of its size by the top.  The walls lean, and so do their normals -- the light
+// falls across them differently from the straight post beside it.
+tapered extrusion {
+    taper 0.45
+    path {
+        move to -0.5, -0.5
+        line to 0.5, -0.5
+        line to 0.5, 0.5
+        line to -0.5, 0.5
+        close
+    }
+    min Y 0  max Y 2.3
+    material Post
+    rotate Y 25
+}
+
+// A taper of nought brings the outline to a single point, so the top closes into an apex and
+// there is no top cap to speak of.
+tapered extrusion {
+    taper 0
+    path {
+        move to -0.5, -0.5
+        line to 0.5, -0.5
+        line to 0.5, 0.5
+        line to -0.5, 0.5
+        close
+    }
+    min Y 0  max Y 2.3
+    material Post
+    rotate Y 25
+    translate [1.9, 0, 0]
+}

@@ -59,6 +59,60 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method is used to handle the beginning of a tapered extrusion block.
+    /// </summary>
+    /// <param name="clause">The clause that starts the extrusion.</param>
+    private void HandleStartTaperedExtrusionClause(Clause clause)
+    {
+        VerifyDefaultSceneUsage(clause, "Extrusion");
+
+        TaperedExtrusionResolver resolver = ParseTaperedExtrusionClause(clause);
+
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
+    }
+
+    /// <summary>
+    /// This method is used to create the instruction set from a tapered extrusion block.
+    /// </summary>
+    /// <param name="clause">The clause that starts the extrusion.</param>
+    private TaperedExtrusionResolver ParseTaperedExtrusionClause(Clause clause, int tokenOffset = 1)
+    {
+        return GetSurfaceResolver(
+            clause, () => ParseObjectResolver<TaperedExtrusionResolver>(
+                "taperedExtrusionEntryClause", HandleTaperedExtrusionEntryClause),
+            "taperedExtrusionEntryClause", HandleTaperedExtrusionEntryClause, tokenOffset);
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a tapered extrusion block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleTaperedExtrusionEntryClause(Clause clause)
+    {
+        TaperedExtrusionResolver resolver = (TaperedExtrusionResolver) _context.CurrentTarget;
+
+        HandleEntryClause(resolver, clause, clause =>
+        {
+            switch (clause.Text())
+            {
+                case "taper":
+                    resolver.TaperResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                case "path":
+                    resolver.GeneralPathResolver = ParseGeneralPathClause();
+                    break;
+                default:
+                    HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
+                    break;
+            }
+        });
+    }
+
+    /// <summary>
     /// This method is used to create the instruction set from a path block.
     /// </summary>
     private GeneralPathResolver ParseGeneralPathClause()
