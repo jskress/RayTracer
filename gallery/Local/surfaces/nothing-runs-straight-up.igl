@@ -39,7 +39,7 @@ Stone = material { pigment color [0.70, 0.68, 0.62]  specular 0.2  shininess 30 
 Brick = material { pigment color [0.48, 0.30, 0.26]  specular 0.15 }
 
 // The bulb the lantern is built around.  One light, inside the shell, doing all the work.
-point light { location [0, 0.55, 0]  color [1, 0.92, 0.72] }
+point light { location [0, 0.55, 1.3]  color [1, 0.92, 0.72] }
 
 // A six-panel paper lantern, drawn in to two thirds by the top and left open at both ends.  With
 // no caps it is a shell, and both faces of every panel take the light.
@@ -67,6 +67,7 @@ tapered extrusion {
     scale [0.62, 1, 0.62]
     material Paper
     rotate Y 12
+    translate [0, 0, 1.3]
 }
 
 // A flower pot: the same idea turned round, with a taper over 1 so the outline spreads as it
@@ -152,14 +153,24 @@ group {
 // Text tapers the same way, since a text solid is a group of extrusions and nothing more.  One
 // difference matters: a line of letters is laid out along X, so all but the first sit well off the
 // Y axis, and tapering them where they stand would draw them all towards one point and leave a
-// starburst rather than a word.  Each glyph is therefore tapered about its own middle, and comes
-// out chiselled -- full size where it meets the ground and drawn in to a ridge at the top.
+// starburst rather than a word.  Each glyph is therefore tapered about its own middle.
+//
+// The taper is over 1, which for standing text is what a chiselled letter wants.  A taper says
+// what is left of the outline at the "max Y" end, and standing the text up turns that end towards
+// the reader -- so it is a taper over 1 that puts the widest face forward and slopes it away.
+// Much over about 1.5 and the letters begin to grow into one another, each spreading about its own
+// middle into the gap the layout left.
 tapered text {
-    taper 0.3
+    taper 1.5
     text 'TAPER'
     font 'Merriweather'
     layout { horizontal position center }
     material Stone
-    scale 0.5
-    translate [0.15, 0.01, -1.75]
+    // The Y here is the letters' depth, before the text is stood up.  Scaled evenly, letters half
+    // the size would be half as deep too, and the taper -- spread across that depth -- would fall
+    // away so sharply that the bevel faced the reader almost flat.  Giving them their depth back
+    // puts the chisel on a slope worth seeing.
+    scale [0.5, 2.6, 0.5]
+    rotate X -90
+    translate [0.15, 0, -1.3]
 }

@@ -794,23 +794,32 @@ The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text
 
 `tapered text` scales each glyph as it is given depth, the same way
 [`tapered extrusion`](#tapered-extrusion) scales an outline as it rises — which is no coincidence,
-since a text solid *is* a group of extrusions, one per glyph.  The letters come out chiselled: full
-size on the face you read, drawn in behind it.
+since a text solid *is* a group of extrusions, one per glyph.  The letters come out chiselled:
+widest on the face you read, sloping away behind it.
 
 ![Tapered text](images/figures/adv-tapered-text.png)
 
 ```
 tapered text {
-    taper 0.45
+    taper 1.3
     text 'CUT'
     font 'Merriweather'
     rotate X -90
 }
 ```
 
-Everything ordinary [text](#text) takes, this takes too.  `taper` means what it means for an
-extrusion: what is left of the glyph's size at the far face, with 1 leaving the letters alone and 0
-bringing each to a ridge.  Over 1 spreads them, so the letters are widest at the back.
+Everything ordinary [text](#text) takes, this takes too, and `taper` means what it means for an
+extrusion: what is left of the outline at the `max Y` end.
+
+**Which end that is, once the text is standing up, is the opposite of what you may expect.**
+Standing text up with `rotate X -90` turns the `max Y` end towards the reader, so it is a taper
+**over 1** that puts the widest face forward — the raised, chiselled look above.  A taper under 1
+turns the letters the other way about, narrow at the front and flaring away behind, which is a
+perfectly good effect but not that one.  There is no rotation that stands text up *and* swaps the
+two ends: any that did would also read the letters backwards.
+
+Much over about 1.5 and the letters start to grow into one another, since each spreads about its
+own middle into whatever gap the layout left.
 
 **Each glyph is tapered about its own middle, not about the scene's Y axis.**  That is the one
 place this differs from an extrusion, and it has to: a line of text is laid out along X, so every

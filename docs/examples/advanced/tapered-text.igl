@@ -1,14 +1,19 @@
 // Tapered text: the letters are scaled as they are given depth, so each comes out chiselled --
-// full size on the face you read and drawn in behind it.
+// widest on the face you read and drawn in behind it.
 //
 // A text solid is a group of extrusions, one per glyph, so the taper is the same one an extrusion
 // takes.  What is not the same is what it is measured from: a line of letters is laid out along X,
 // so all but the first sit well off the Y axis a taper draws towards.  Each glyph is therefore
 // tapered about its own middle, and the word stays a word.
+//
+// The taper here is over 1, which is what a raised chiselled letter wants.  A taper says what is
+// left of the outline at the "max Y" end, and standing text up with `rotate X -90` turns that end
+// towards the reader -- so it is a taper *over* 1 that puts the widest face forward.  Under 1 the
+// letters flare away from the reader instead, which is a fine effect but not this one.
 context { angles are degrees  no gamma }
 
 camera {
-    location [1.5, 1.7, -5.6]
+    location [2.0, 2.1, -7.4]
     look at [0, 0.15, 0]
     field of view 33
 }
@@ -22,7 +27,7 @@ plane {
 }
 
 tapered text {
-    taper 0.45
+    taper 1.3
 
     text 'CUT'
     font 'Merriweather'
