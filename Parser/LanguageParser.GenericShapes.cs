@@ -29,12 +29,12 @@ public partial class LanguageParser
     /// <summary>
     /// This method is used to create the instruction set from a generic shape block.
     /// </summary>
-    private GenericShapeResolver ParseGenericShapeClause(Clause clause)
+    private GenericShapeResolver ParseGenericShapeClause(Clause clause, int tokenOffset = 1)
     {
         return GetSurfaceResolver(
             clause, () => ParseObjectResolver<GenericShapeResolver>(
                 "genericShapeEntryClause", HandleGenericShapeEntryClause),
-            "genericShapeEntryClause", HandleGenericShapeEntryClause, tokenOffset: 1);
+            "genericShapeEntryClause", HandleGenericShapeEntryClause, tokenOffset);
     }
 
     /// <summary>
