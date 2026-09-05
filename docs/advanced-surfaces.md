@@ -202,6 +202,49 @@ drawn flat in X and Y, so an extrusion comes out lying down; `rotate X -90` stan
 The complete scene is
 [`docs/examples/advanced/extrusion.igl`](examples/advanced/extrusion.igl).
 
+### Tapered Extrusion
+
+`tapered extrusion` is the same shape with the outline scaled as it rises rather than carried
+straight up.  The word `taper` says what the outline has been scaled to by the top; the bottom is
+always the size it was drawn.  Below, one outline — a square — at no taper, at 0.45, and at 0.
+
+![A tapered extrusion](images/figures/adv-tapered-extrusion.png)
+
+```
+tapered extrusion {
+    taper 0.45
+
+    path {
+        move to -0.5, -0.5
+        line to 0.5, -0.5
+        line to 0.5, 0.5
+        line to -0.5, 0.5
+        close
+    }
+
+    min Y 0
+    max Y 2.3
+}
+```
+
+Everything an [extrusion](#extrusion) takes, this takes too — several runs, holes, `min Y` and
+`max Y`, `open`.  A taper of 1 is no taper at all and gives back exactly an extrusion; a taper of
+0 brings the outline to a single point, closing the top into an apex, and there is no top cap
+there to be left off.  A taper below 0 is refused, since an outline cannot be scaled through
+nothing and out the other side.
+
+The scaling is **about the Y axis**, not about the outline's own middle, so where the outline sits
+in relation to the origin decides what it draws towards.  An outline around the origin narrows
+into itself; one drawn off to the side leans over as it narrows, which is a way of getting a lean
+without a shear.
+
+Because the walls lean, so do their normals — a tapered post catches the light differently down
+its sides than a straight one does, which is most of what makes it read as tapered rather than
+merely as narrower at the top.
+
+The complete scene is
+[`docs/examples/advanced/tapered-extrusion.igl`](examples/advanced/tapered-extrusion.igl).
+
 ### Lathe
 
 A path spun about the Y axis.  The path is the silhouette of one side of the finished object,

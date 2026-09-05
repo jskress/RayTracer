@@ -130,6 +130,8 @@ public partial class LanguageParser
                 return ParseTubeClause(clause);
             case SweepResolver:
                 return ParseSweepClause(clause);
+            case TaperedExtrusionResolver:
+                return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:
                 return ParseExtrusionClause(clause);
             case TextSolidResolver:

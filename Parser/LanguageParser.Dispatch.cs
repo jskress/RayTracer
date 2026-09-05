@@ -37,6 +37,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartParametricClause), HandleStartParametricClause)
             .On(nameof(HandleStartPatchClause), HandleStartPatchClause)
             .On(nameof(HandleStartExtrusionClause), HandleStartExtrusionClause)
+            .On(nameof(HandleStartTaperedExtrusionClause), HandleStartTaperedExtrusionClause)
             .On(nameof(HandleStartLatheClause), HandleStartLatheClause)
             .On(nameof(HandleStartBlobClause), HandleStartBlobClause)
             .On(nameof(HandleStartSwellsClause), HandleStartSwellsClause)

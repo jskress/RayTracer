@@ -220,6 +220,7 @@ public partial class LanguageParser
             "tube" => ParseTubeClause(clause),
             "sweep" => ParseSweepClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
+            "tapered extrusion" => ParseTaperedExtrusionClause(clause),
             "text" => ParseTextClause(clause),
             "lsystem" => ParseLSystemClause(clause),
             "heightfield" => ParseHeightFieldClause(clause),
@@ -339,6 +340,8 @@ public partial class LanguageParser
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
                 "extrusionEntryClause", HandleExtrusionEntryClause, validate: false),
+            "tapered extrusion" => ParseObjectResolver<TaperedExtrusionResolver>(
+                "taperedExtrusionEntryClause", HandleTaperedExtrusionEntryClause, validate: false),
             "text" => ParseObjectResolver<TextSolidResolver>(
                 "textEntryClause", HandleTextEntryClause, validate: false),
             "lsystem" => ParseObjectResolver<LSystemResolver>(
@@ -395,6 +398,7 @@ public partial class LanguageParser
             "tube" => "startTubeClause",
             "sweep" => "startSweepClause",
             "extrusion" => "startExtrusionClause",
+            "tapered extrusion" => "startTaperedExtrusionClause",
             "text" => "startTextClause",
             "lsystem" => "startLsystemClause",
             "heightfield" => "startHeightFieldClause",
