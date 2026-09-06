@@ -118,6 +118,8 @@ public partial class LanguageParser
                 return ParseSaddleClause(clause);
             case QuadricResolver:
                 return ParseQuadricClause(clause);
+            case BilinearPatchResolver:
+                return ParseBilinearPatchClause(clause, tokenOffset: 0);
             case BicubicPatchResolver:
                 return ParsePatchClause(clause);
             case LatheResolver:

@@ -861,6 +861,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/surfaces/every-line-of-it-is-straight.png">
+      <img alt="Every Line Of It Is Straight" height="120" src="Local/surfaces/every-line-of-it-is-straight.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/surfaces/every-line-of-it-is-straight.igl">Every Line Of It Is Straight</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/media/medium.png">
       <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>
     </a></td>

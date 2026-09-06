@@ -1,0 +1,65 @@
+// Corner normals on a bilinear patch, and what they are for.
+//
+// Both sheets are the same sixteen patches, laid out over the same wave.  The left one lets each
+// patch work its normal out from its own four corners, so the shading is right within a patch and
+// steps at every seam -- sixteen little panels rather than one sheet.  The right one hands each
+// patch the wave's true normal at each of its corners; where two patches meet they were given the
+// same normal there, so they agree along the whole shared edge and the sheet shades as one surface.
+//
+// It changes the shading only.  Both sheets are exactly the same shape, and the silhouette at the
+// edge of each is the same jointed outline -- which is the honest limit of the trick: it smooths a
+// seam that catches the light, not one that shows against the sky.
+context { angles are degrees  no gamma }
+camera { location [0, 3.5, -3.2]  look at [0, -0.05, 0]  field of view 46 }
+point light { location [-5, 7, -7]  color [1, 0.97, 0.93] }
+point light { location [6, 3, -4]   color [0.35, 0.35, 0.4] }
+plane { material { pigment [0.3, 0.3, 0.34] }  translate Y -1 }
+
+Cloth = material { pigment color [0.8, 0.5, 0.32]  specular 0.5  shininess 70 }
+
+Cells = 4
+Wide = 0.5
+Amp = 0.26
+K = 2.2
+
+// Left: each patch works its normal out from its own four corners, so every seam shows.
+for i in [0, 3] {
+    for j in [0, 3] {
+        ax = (i - 2) * Wide
+        bx = (i - 1) * Wide
+        az = (j - 2) * Wide
+        bz = (j - 1) * Wide
+
+        bilinear patch {
+            points [ax, Amp * sin(K * ax) * cos(K * az), az],
+                   [bx, Amp * sin(K * bx) * cos(K * az), az],
+                   [bx, Amp * sin(K * bx) * cos(K * bz), bz],
+                   [ax, Amp * sin(K * ax) * cos(K * bz), bz]
+            material Cloth
+            translate [-1.15, 0, 0]
+        }
+    }
+}
+
+// Right: the same patches, each also given the true normal at its four corners.
+for i in [0, 3] {
+    for j in [0, 3] {
+        ax = (i - 2) * Wide
+        bx = (i - 1) * Wide
+        az = (j - 2) * Wide
+        bz = (j - 1) * Wide
+
+        bilinear patch {
+            points [ax, Amp * sin(K * ax) * cos(K * az), az],
+                   [bx, Amp * sin(K * bx) * cos(K * az), az],
+                   [bx, Amp * sin(K * bx) * cos(K * bz), bz],
+                   [ax, Amp * sin(K * ax) * cos(K * bz), bz]
+            normals [0 - Amp * K * cos(K * ax) * cos(K * az), 1, Amp * K * sin(K * ax) * sin(K * az)],
+                    [0 - Amp * K * cos(K * bx) * cos(K * az), 1, Amp * K * sin(K * bx) * sin(K * az)],
+                    [0 - Amp * K * cos(K * bx) * cos(K * bz), 1, Amp * K * sin(K * bx) * sin(K * bz)],
+                    [0 - Amp * K * cos(K * ax) * cos(K * bz), 1, Amp * K * sin(K * ax) * sin(K * bz)]
+            material Cloth
+            translate [1.15, 0, 0]
+        }
+    }
+}
