@@ -1005,6 +1005,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/functions/the-wind-gets-into-everything.png">
+      <img alt="The Wind Gets Into Everything" height="120" src="Local/functions/the-wind-gets-into-everything.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/functions/the-wind-gets-into-everything.igl">The Wind Gets Into Everything</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/functions/a-street-at-the-edge-of-town.png">
       <img alt="A Street at the Edge of Town" height="120" src="Local/functions/a-street-at-the-edge-of-town.png" width="160"/>
     </a></td>

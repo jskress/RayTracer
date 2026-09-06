@@ -743,6 +743,65 @@ gradient will do; one of [the skies](#daylight) does it better.
 past where this can go.  Turning the shape round to ask what stands at a place needs there to be one
 answer, and past a steepness of one there is more than one.  The cusp at 1.0 is the nearest it comes.
 
+#### Cloth
+
+```
+import 'cloth' { Flag, Canvas }
+
+object Flag(1.8, 1.1, 'wind') { material Canvas  translate [0, 1.6, 0] }
+```
+
+| | |
+| --- | --- |
+| `Flag` | Held along its left edge, free at the other three, folds growing outward. |
+| `Banner` | Held along its top edge and hanging; also what to reach for for a curtain. |
+| `Sheet` | A loose horizontal cloth: a sheet, the top of a tablecloth, a tarpaulin. |
+| `SheetRise` | How high a `Sheet`'s ripples stand, for putting something down on top of one. |
+| `Canvas` | Heavy cotton duck, almost entirely matte. |
+| `Silk` | Light enough to see a little light through, with a sheen. |
+| `Cotton` | Plain sheeting, matte and pale — for when the cloth is not the subject. |
+
+The states run `still`, `breeze`, `wind`, `gale`, and each sets three things: how deep the folds are,
+how many of them there are, and how far they lean as they cross the cloth. **The lean is what stops
+it reading as corrugated iron** — folds that run straight and parallel are what a roofing sheet does,
+not what cloth does.
+
+**How deep the folds go is a fraction of the cloth's short side, not a distance.** That is what lets a
+hand flag and a stadium banner both look right without being told which they are; waves that grow
+deeper without growing longer look like a scale model of themselves, which is the same trap
+[water](#water) sets.
+
+Each takes its size in scene units, then a state and a `variant`. The variant moves the folds along,
+so two flags flying on the same day are not the same flag twice.
+
+**Each is built where it is held**, so nothing has to be lined up by hand: a `Flag`'s held edge runs
+up the Y axis from the origin with the cloth reaching along +X, so a mast is a cylinder at the origin
+and nothing else; a `Banner` hangs from the origin along +X, so a beam to hang it from is where you
+put it.
+
+**A `Sheet`'s lowest point is at `y = 0`, not its middle**, so it is laid on a table by translating it
+to the table's top and nothing more. A ripple written the obvious way swings equally either side of
+nought, and half of a cloth laid that way is *inside* whatever it is lying on — which shows as the
+table coming through the cloth in patches. `SheetRise(across, along, state)` gives how high the
+ripples reach above that, for standing something on the cloth.
+
+##### What makes a surface into cloth
+
+**The folds are really there.** Each of these is a [`parametric`](advanced-surfaces.md#parametric)
+surface, so the wave is in the geometry: the edge against the sky undulates, the shadow it throws is
+fold-shaped, and a light behind it falls on the folds it actually has. A
+[`normal` block](materials.md#roughening-the-surface) on a flat rectangle gets a similar look head-on
+and gives itself away at the silhouette, which is where the eye goes first.
+
+**Cloth is lit from both sides, and that is worth having rather than working around.** These surfaces
+enclose nothing, so a sun behind a flag lights the face you are looking at. That is what thin fabric
+does, and it is most of what separates a flag from a painted sheet of metal.
+
+**What is not here is cloth that knows what it is lying on.** A tablecloth draped over a table takes
+its shape from the table, and nothing here looks at the scene around it. `Sheet` will sit on a flat
+top convincingly; a cloth falling over the *edge* of something, or caught on a corner, is not a wave
+and this library does not pretend otherwise.
+
 #### Outdoor Lights
 
 ```
