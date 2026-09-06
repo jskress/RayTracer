@@ -255,11 +255,12 @@ public class TestDocumentation
     [TestMethod]
     public void TestTheGalleryIndexPutsEverySceneUnderTheRightHeading()
     {
-        // The index is in three parts, one per directory the gallery is kept in, and a row added under
-        // the wrong heading is worse than one left out: it is there, it works, its picture shows, and
-        // it is quietly filed as somebody else's work.  Ten had drifted before this test existed --
-        // each one appended after the last, and the last had been wrong for some time.
-        Dictionary<string, string> headings = new ()
+        // The index is a set of collapsible sections, one per directory the gallery is kept in and,
+        // within the local one, one per folder beneath it.  A row added under the wrong section is
+        // worse than one left out: it is there, it works, its picture shows, and it is quietly filed
+        // as somebody else's work.  Ten had drifted before this test existed -- each one appended
+        // after the last, and the last had been wrong for some time.
+        Dictionary<string, string> top = new ()
         {
             { "Ray Tracer Challenge Book", "challenge-book/" },
             { "Stuff Invented Here", "Local/" },
@@ -267,16 +268,32 @@ public class TestDocumentation
         };
         string[] lines = File.ReadAllLines(Path.Combine(RepositoryRoot, "gallery", "README.md"));
         List<string> misfiled = [];
-        string under = null;
+        string expected = null;
 
         foreach (string line in lines)
         {
-            if (line.StartsWith("### "))
-            {
-                under = line[4..].Trim();
+            Match summary = Regex.Match(line, @"<summary><b>([^<]+)</b>");
 
-                Assert.IsTrue(headings.ContainsKey(under),
-                    $"the gallery index has a heading nothing knows about: {under}");
+            if (summary.Success)
+            {
+                string named = summary.Groups[1].Value.Trim();
+
+                // A section under the local one names a folder beneath it, and names it by the same
+                // words with the spaces closed up -- so "Scene Building" is `Local/scene-building`.
+                // Deriving it rather than keeping a second list is what stops the two drifting: a
+                // section renamed without its folder fails here.
+                if (top.TryGetValue(named, out string directory))
+                    expected = directory;
+                else
+                {
+                    string folder = named.ToLowerInvariant().Replace(' ', '-');
+
+                    expected = $"Local/{folder}/";
+
+                    Assert.IsTrue(
+                        Directory.Exists(Path.Combine(RepositoryRoot, "gallery", "Local", folder)),
+                        $"the gallery index has a section, \"{named}\", with no folder to match it");
+                }
 
                 continue;
             }
@@ -287,11 +304,11 @@ public class TestDocumentation
             {
                 string pointedAt = points.Groups[1].Value;
 
-                if (under is null || pointedAt.StartsWith("http") ||
-                    pointedAt.StartsWith(headings[under]))
+                if (expected is null || pointedAt.StartsWith("http") ||
+                    pointedAt.StartsWith(expected))
                     continue;
 
-                misfiled.Add($"{pointedAt} is filed under \"{under}\"");
+                misfiled.Add($"{pointedAt} is filed under \"{expected}\"");
             }
         }
 

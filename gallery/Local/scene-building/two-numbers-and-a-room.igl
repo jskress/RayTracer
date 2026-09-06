@@ -38,7 +38,7 @@
 // it occupies and a box is square with the axes.
 //
 // The one thing here that is *not* placed is the light.  A lamp cannot hold a real light -- see
-// `gallery/Local/functions/a-room-after-dark.igl` for what that costs and what to do instead -- so
+// `gallery/Local/interiors/a-room-after-dark.igl` for what that costs and what to do instead -- so
 // the light stands at a position of its own, inside the shade.
 //
 // **And the ambient has to be turned down for any of the lamp to show.**  A light that thins with

@@ -283,7 +283,7 @@ group would be worked out in a space that the group's own transform is about to 
 it names happens to be turned.  A thing is placed by the box it occupies, and a box is square with the
 axes; there is no such thing here as the left-hand side of a rotated chair.
 
-`gallery/Local/surfaces/two-numbers-and-a-room.igl` is a whole room built this way: two numbers say
+`gallery/Local/scene-building/two-numbers-and-a-room.igl` is a whole room built this way: two numbers say
 how high the table stands and how high the shelf hangs, and everything else — four legs, a stack of
 books, a lamp in three pieces, the crate on the floor — follows from those two.
 
