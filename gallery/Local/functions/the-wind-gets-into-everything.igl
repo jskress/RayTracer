@@ -1,0 +1,69 @@
+// A market stall on a breezy afternoon, and every soft thing in it is from one library.
+//
+// There are three ways to hang a cloth here and the `cloth` library has one primitive for each.  The
+// flag is held along its left edge and free at the other three, so its folds grow outward from the
+// pole.  The valance under the beam is held along its *top* edge, so its folds grow downward and it
+// hangs.  The cloth over the trestle is held nowhere at all, so its ripples run right to the edges.
+// Each is asked for by the state of the air -- 'wind' for the flag, 'breeze' for the valance, 'still'
+// for the table -- rather than by a wavelength and an amplitude nobody could guess.
+//
+// **The folds are real, and that is the whole argument for doing it this way.**  Each cloth is a
+// `parametric` surface, so the wave is in the geometry rather than in the shading: look at the
+// bottom edge of the valance against the sky behind it, or at the shadow the table cloth throws on
+// the ground.  A flat rectangle with a `normal` block would match this head-on and give itself away
+// at exactly those two places.
+//
+// **Cloth is lit from both sides**, which these surfaces get for nothing by enclosing nothing.  It
+// does not show in this picture and it is worth saying so: the sun here is in front of the stall,
+// off to the left, so every cloth in it is lit on the face you can see.  What the property buys is
+// the *other* arrangement -- a flag with the sun behind it goes on reading as cloth, lit through,
+// where a solid would turn into a silhouette.
+//
+// The sky comes from the `daylight` library, aimed with `ClearAfternoonFrom(318)` so the light rakes
+// across the stall's face rather than flattening it.  A sun behind the camera lights everything and
+// models nothing, which is the same mistake as lighting a portrait with a torch held at your nose.
+context { angles are degrees }
+import 'cloth' { Flag, Banner, Sheet, SheetRise, Canvas, Cotton, Silk }
+import 'daylight' { ClearAfternoonFrom, ClearAfternoonLight }
+
+camera { location [3.7, 2.5, -4.7]  look at [0.0, 1.45, 0.15]  field of view 48 }
+background ClearAfternoonFrom(318)
+light ClearAfternoonLight
+
+plane { material { pigment checker { color [0.42,0.40,0.37], color [0.34,0.33,0.31]  scale 0.6 } } }
+
+Timber = material { pigment color [0.42, 0.30, 0.20]  specular 0.15 }
+Awning = material { pigment color [0.74, 0.26, 0.20]  specular 0.08  shininess 6 }
+Ensign = material { pigment color [0.20, 0.34, 0.52]  specular 0.08  shininess 6 }
+
+// The stall: two posts and a beam across them.
+cylinder { min Y 0  max Y 2.35  scale [0.045, 1, 0.045]  material Timber  translate [-1.6, 0, 0.5] }
+cylinder { min Y 0  max Y 2.35  scale [0.045, 1, 0.045]  material Timber  translate [ 1.6, 0, 0.5] }
+cube { material Timber  scale [1.68, 0.045, 0.045]  translate [0, 2.35, 0.5] }
+
+// The valance hanging off the beam's front edge.
+object Banner(3.2, 0.8, 'wind', 5) { material Awning  translate [-1.6, 2.34, 0.46] }
+
+// The trestle table and its cloth.
+cube { material Timber  scale [1.25, 0.035, 0.5]  translate [0, 0.78, 0] }
+cylinder { min Y 0  max Y 0.78  scale [0.04, 1, 0.04]  material Timber  translate [-1.05, 0, -0.35] }
+cylinder { min Y 0  max Y 0.78  scale [0.04, 1, 0.04]  material Timber  translate [ 1.05, 0, -0.35] }
+cylinder { min Y 0  max Y 0.78  scale [0.04, 1, 0.04]  material Timber  translate [-1.05, 0, 0.35] }
+cylinder { min Y 0  max Y 0.78  scale [0.04, 1, 0.04]  material Timber  translate [ 1.05, 0, 0.35] }
+
+object Sheet(2.5, 1.05, 'still', 4) { material Cotton  translate [-1.25, 0.815, -0.52] }
+
+// A bolt of silk laid out on the cloth, and something to weigh it down.
+object Sheet(0.8, 0.45, 'breeze', 9) {
+    material Silk
+    translate [-0.85, 0.815 + SheetRise(2.5, 1.05, 'still'), -0.2]
+}
+
+// The flag over the whole thing.
+cylinder { min Y 0  max Y 2.85  scale [0.035, 1, 0.035]  material Timber  translate [-2.5, 0, 0.7] }
+object Flag(1.5, 0.88, 'wind', 3) { material Ensign  translate [-2.5, 1.9, 0.7] }
+
+// Crates, to give the ground something to stand on it.
+cube { material Timber  scale [0.28, 0.24, 0.24]  rotate Y 14   translate [-1.95, 0.24, -0.25] }
+cube { material Timber  scale [0.26, 0.22, 0.22]  rotate Y -22  translate [-2.35, 0.22, 0.35] }
+cube { material Timber  scale [0.24, 0.20, 0.20]  rotate Y 6    translate [-1.98, 0.68, -0.22] }

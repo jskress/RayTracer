@@ -1,0 +1,185 @@
+// Cloth you can name.
+//
+// A piece of hanging fabric is a wave you have to write down, and nobody knows what wave they want.
+// What everybody knows is what a flag looks like in a stiff breeze, and what one looks like on a
+// still day.  So this library holds cloth by the state of the air around it:
+//
+//     import 'cloth' { Flag, Canvas }
+//
+//     object Flag(1.8, 1.1, 'wind') { material Canvas  translate [0, 0.7, 0] }
+//
+// **The cloth is real geometry, not a lit lie.**  Each of these is a `parametric` surface, so the
+// wave is actually in the surface: the edge against the sky undulates, the shadow it throws is
+// wave-shaped, and a light behind it falls on the folds it really has.  Tilting the normal of a flat
+// rectangle gets a similar look head-on and gives itself away at the silhouette, which is where the
+// eye looks first.
+//
+// **Cloth is lit from both sides, and that is worth having rather than working around.**  These
+// surfaces enclose nothing, so a lamp or a sun behind one lights the face you are looking at.  That
+// is what thin fabric does, and it is most of why a flag with the sun behind it reads as cloth
+// rather than as painted metal.
+//
+// **What is not here: cloth that knows what it is lying on.**  A tablecloth draped over a table
+// takes its shape from the table, and nothing here looks at the scene around it.  `Sheet` gives a
+// rippled horizontal cloth that will sit on a flat top convincingly; a cloth falling over the *edge*
+// of something, or caught on a corner, is not a wave and this library will not fake one.
+
+// ---------------------------------------------------------------------------------------------
+// The states, from a dead calm to a gale.  Each is three numbers: how deep the folds are, how many
+// of them there are, and how far they lean.
+// ---------------------------------------------------------------------------------------------
+
+// How deep the folds are, as a fraction of the cloth's *short* side.  A fraction rather than a
+// distance is what lets a hand flag and a stadium banner both look right without being told which
+// they are: waves that grow deeper without growing longer read as a scale model of themselves.
+function ClothSway(state) -> number {
+    switch (state) {
+        case 'still'  { return 0.045 }
+        case 'breeze' { return 0.105 }
+        case 'wind'   { return 0.185 }
+        case 'gale'   { return 0.260 }
+        default { return 0.105 }
+    }
+}
+
+// How many full folds run across the cloth's free length.  These stay low on purpose: a flag with
+// many small ripples reads as corrugated iron, which is the same mistake a sea makes when its waves
+// are too short for its size.
+function ClothFolds(state) -> number {
+    switch (state) {
+        case 'still'  { return 1.15 }
+        case 'breeze' { return 1.75 }
+        case 'wind'   { return 2.55 }
+        case 'gale'   { return 3.30 }
+        default { return 1.75 }
+    }
+}
+
+// How far the line of a fold tilts as it crosses the cloth.  Without this the folds run straight and
+// parallel, which is what a corrugated sheet does and not what cloth does; the lean is what turns a
+// row of ridges into something that looks like it is being blown.
+function ClothLean(state) -> number {
+    switch (state) {
+        case 'still'  { return 0.35 }
+        case 'breeze' { return 0.80 }
+        case 'wind'   { return 1.30 }
+        case 'gale'   { return 1.85 }
+        default { return 0.80 }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The cloths.  Each takes its size in scene units, a state, and a variant that moves the folds along
+// so that two flags on the same day are not the same flag twice.
+// ---------------------------------------------------------------------------------------------
+
+// A flag, held along its left edge and free at the other three.  It is built with that held edge at
+// the origin, running up the Y axis, and the cloth reaching out along +X -- so a mast at the origin
+// is a cylinder and nothing has to be lined up by hand.
+//
+// **The folds grow from the hoist outward**, which is the whole shape of a flag: the held edge cannot
+// move at all, the free edge moves most, and the power of 1.4 between them is what keeps the middle
+// from looking like a hinge.
+primitive Flag(length, height, state = 'breeze', variant = 1) -> parametric {
+    deep = ClothSway(state) * min(length, height)
+    folds = ClothFolds(state) * 6.283185
+    lean = ClothLean(state)
+    phase = variant * 1.7
+
+    return parametric {
+        u [0, length]
+        v [0, height]
+
+        X { u }
+        Y { v }
+        Z { deep * pow(u / length, 1.4) * sin(folds * u / length + lean * v / height + phase) }
+    }
+}
+
+// A banner, held along its top edge and hanging.  Built with that edge at the origin along +X and
+// the cloth hanging down -Y, so it can be hung from a beam by translating it and nothing else.
+//
+// The folds grow downward for the same reason a flag's grow outward, and they run *down* the cloth
+// rather than across it: a hanging banner ripples in vertical columns, which is what gravity leaves
+// once the wind has had its say.
+primitive Banner(width, drop, state = 'breeze', variant = 1) -> parametric {
+    deep = ClothSway(state) * min(width, drop)
+    folds = ClothFolds(state) * 6.283185
+    lean = ClothLean(state)
+    phase = variant * 2.3
+
+    return parametric {
+        u [0, width]
+        v [0, drop]
+
+        X { u }
+        Y { 0 - v }
+        Z { deep * pow(v / drop, 1.4) * sin(folds * u / width + lean * v / drop + phase) }
+    }
+}
+
+// How high a `Sheet`'s ripples stand above the surface it is lying on, in scene units.  Worked out
+// from the same numbers the sheet is, so that it cannot drift away from the cloth it describes: this
+// is what to add to `y` to stand something *on* the cloth rather than in it.
+function SheetRise(across, along, state) -> number {
+    return ClothSway(state) * min(across, along) * 0.55 * 3.24
+}
+
+// A loose horizontal cloth: a sheet, a tablecloth's top, a tarpaulin.  Held nowhere, so the ripples
+// run right to the edges, and made of two waves crossing rather than one -- a single wave gives
+// parallel ridges, which reads as a ploughed field rather than as fabric.
+//
+// **Its lowest point is at y = 0, not its middle**, so it is laid on a table by translating it to the
+// table's top and nothing more.  A wave written the obvious way swings equally either side of nought,
+// and half of a cloth laid that way is *inside* whatever it is lying on -- which shows as the table
+// coming through the cloth in patches, and looks exactly as wrong as it is.
+primitive Sheet(across, along, state = 'breeze', variant = 1) -> parametric {
+    deep = ClothSway(state) * min(across, along) * 0.55
+    folds = ClothFolds(state) * 6.283185
+    phase = variant * 3.1
+
+    return parametric {
+        u [0, across]
+        v [0, along]
+
+        X { u }
+        Y { deep * (1 + sin(folds * u / across + phase)) +
+            deep * 0.62 * (1 + sin(folds * 0.73 * v / along - phase * 1.4)) }
+        Z { v }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The cloths themselves.  Each is a whole material, meant to be handed to one of the surfaces above.
+// ---------------------------------------------------------------------------------------------
+
+// Heavy cotton duck: a flag, an awning, a sail.  Almost entirely diffuse, because a woven surface
+// scatters in every direction; what little specular there is is broad rather than tight, since cloth
+// has no flat facets to give a sharp highlight.
+Canvas = material {
+    pigment color [0.86, 0.84, 0.78]
+    specular 0.08
+    shininess 6
+}
+
+// Silk: light enough to see through a little, with a sheen that runs along the weave.  The
+// transparency is what makes it silk rather than painted paper -- a fold that lets a little light
+// past reads as thin, and thinness is the whole of what tells these fabrics apart.
+//
+// There is no `interior` on it, so nothing is bent on the way through.  That is right for cloth: a
+// sheet with no thickness to speak of has nothing to refract in, and giving it a glass-like index
+// would bend the view through it as though it were a window pane.
+Silk = material {
+    pigment color [0.80, 0.72, 0.86]
+    specular 0.35
+    shininess 60
+    transparency 0.22
+}
+
+// Plain cotton sheeting: matte, and pale without being white.  This is the one to reach for when the
+// cloth is not the subject of the picture.
+Cotton = material {
+    pigment color [0.90, 0.89, 0.86]
+    specular 0.05
+    shininess 4
+}
