@@ -98,28 +98,169 @@ public class TestShippedLibraries
         // leans on something the library forgot to define, fails here rather than in somebody's scene.
         foreach (string library in Shipped)
         {
-            string[] names = Regex
-                .Matches(File.ReadAllText(library), @"(?m)^([A-Za-z_][A-Za-z0-9_]*)\s*=")
-                .Select(match => match.Groups[1].Value)
-                .Distinct()
-                .Order()
-                .ToArray();
+            string[] names = NamesDefinedIn(library);
 
             Assert.IsNotEmpty(names, $"{Path.GetFileName(library)} defines nothing");
 
-            string scene = Path.Combine(_directory, "scene.igl");
+            // Both ways a library is reached.  A scene may keep one beside it, and that is the case
+            // this test used to check; but the way a *shipped* library is actually used is from
+            // somewhere else entirely, and a library that leant on being beside the scene -- one
+            // naming an image by a relative path, say -- would pass the first and fail the second.
+            AssertEveryNameImports(library, names, beside: true);
+            AssertEveryNameImports(library, names, beside: false);
+        }
+    }
 
+    /// <summary>
+    /// **What a documented example runs, and why this exists.**  Importing a name is not the same as
+    /// using it.  A value is worked out as the library is read, so a broken one fails on import and
+    /// the test above catches it; a `function` and a `primitive` are not -- they carry their body
+    /// until something calls them, so one leaning on a name that is not there imports perfectly well
+    /// and fails in the scene that first calls it.  Measured, not assumed: pointing `Flag`'s body at
+    /// a function that does not exist leaves every import test passing.
+    /// <para>
+    /// So the bodies are reached the only way they can be, by calling them -- and what calls them is
+    /// the example each library's documentation shows, which has to work anyway.  It keeps the
+    /// documentation honest in the same motion.
+    /// </para>
+    /// <para>
+    /// **What it still does not reach**, and the number is worth knowing rather than assuming: a
+    /// definition no documented example calls.  Breaking `Flag`'s body fails this test, because the
+    /// cloth example flies a flag; breaking `SheetRise`'s does not, because nothing shown calls it.
+    /// Closing that gap the rest of the way would mean calling every primitive with arguments of the
+    /// right shape, which nothing here can guess -- so what a library shows is what a library is held
+    /// to.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryExampleTheLibraryDocumentationShowsStillRuns()
+    {
+        string page = Path.Combine(RepositoryRoot, "docs", "libraries.md");
+        HashSet<string> shipped = Shipped
+            .Select(Path.GetFileNameWithoutExtension)
+            .ToHashSet();
+
+        foreach (string library in Shipped)
             File.Copy(library, Path.Combine(_directory, Path.GetFileName(library)), true);
+
+        int ran = 0;
+
+        foreach (string example in ScenesShownIn(page))
+        {
+            string named = Regex.Match(example, "^import '([^']+)'").Groups[1].Value;
+
+            // The page also shows a library of the reader's own making, and the ones brought across
+            // from POV-Ray, neither of which ships here.
+            if (!shipped.Contains(named))
+                continue;
+
+            string scene = Path.Combine(_directory, "example.igl");
+
             File.WriteAllText(scene,
-                $"import '{Path.GetFileNameWithoutExtension(library)}' {{ {string.Join(", ", names)} }}\n" +
-                "camera { location [0, 1, -5]  look at [0, 0, 0] }\n" +
-                "point light { location [-5, 5, -5] }\n" +
-                "sphere { material { pigment Red } }\n");
+                "camera { location [0, 2, -8]  look at [0, 0.5, 0] }\n" +
+                "point light { location [-5, 8, -7] }\n" + example + "\n");
 
             string error = Render(scene);
 
-            Assert.IsNull(error, $"{Path.GetFileName(library)}: {error}");
+            Assert.IsNull(error, $"the '{named}' example in libraries.md no longer runs: {error}");
+
+            ran++;
         }
+
+        Assert.IsTrue(ran >= 15,
+            $"only {ran} documented examples were found to run, which is too few to be reading the " +
+            "page properly");
+    }
+
+    /// <summary>
+    /// The scene examples a documentation page shows: its plain fenced blocks -- not the ones marked
+    /// as shell commands -- that begin by importing something.
+    /// </summary>
+    private static IEnumerable<string> ScenesShownIn(string page)
+    {
+        List<string> lines = [];
+        bool inside = false;
+        bool plain = false;
+
+        foreach (string line in File.ReadAllLines(page))
+        {
+            if (line.StartsWith("```"))
+            {
+                if (inside)
+                {
+                    string block = string.Join("\n", lines);
+
+                    if (plain && block.TrimStart().StartsWith("import '"))
+                        yield return block;
+
+                    lines.Clear();
+                    inside = false;
+                }
+                else
+                {
+                    inside = true;
+                    plain = line.Trim() == "```";
+                }
+
+                continue;
+            }
+
+            if (inside)
+                lines.Add(line);
+        }
+    }
+
+    /// <summary>
+    /// Every name a library holds out, whichever sort it is.
+    /// <para>
+    /// **All three sorts, which is the point.**  This used to look only for <c>Name =</c>, so it saw
+    /// the values and things a library defines and none of its primitives or functions.  That is a
+    /// weaker check for those two than it looks -- a primitive's body is not read until it is called,
+    /// so this says only that the name is there to be had, and
+    /// <see cref="TestEveryExampleTheLibraryDocumentationShowsStillRuns"/> is what reaches the body.
+    /// </para>
+    /// </summary>
+    private static string[] NamesDefinedIn(string library)
+    {
+        string text = File.ReadAllText(library);
+
+        // Only at the start of a line, so that an assignment inside a primitive's body -- which is
+        // a local of that primitive and not a name the library holds out -- is passed over.
+        return Regex.Matches(text, @"(?m)^([A-Za-z_][A-Za-z0-9_]*)\s*=")
+            .Concat(Regex.Matches(text, @"(?m)^(?:primitive|function)\s+([A-Za-z_][A-Za-z0-9_]*)"))
+            .Select(match => match.Groups[1].Value)
+            .Distinct()
+            .Order()
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Writes a scene that asks a library for every name at once and checks that it renders, with the
+    /// library either beside the scene or in a directory of its own.
+    /// </summary>
+    private void AssertEveryNameImports(string library, string[] names, bool beside)
+    {
+        string name = Path.GetFileNameWithoutExtension(library);
+        string where = beside ? "beside the scene" : "away from the scene";
+        string sceneDirectory = Path.Combine(_directory, beside ? "beside" : "scene");
+        string libraryDirectory = beside ? sceneDirectory : Path.Combine(_directory, "libraries");
+
+        Directory.CreateDirectory(sceneDirectory);
+        Directory.CreateDirectory(libraryDirectory);
+        File.Copy(library, Path.Combine(libraryDirectory, Path.GetFileName(library)), true);
+
+        string scene = Path.Combine(sceneDirectory, "scene.igl");
+        string asked = beside ? name : $"../libraries/{name}";
+
+        File.WriteAllText(scene,
+            $"import '{asked}' {{ {string.Join(", ", names)} }}\n" +
+            "camera { location [0, 1, -5]  look at [0, 0, 0] }\n" +
+            "point light { location [-5, 5, -5] }\n" +
+            "sphere { material { pigment Red } }\n");
+
+        string error = Render(scene);
+
+        Assert.IsNull(error, $"{Path.GetFileName(library)}, {where}: {error}");
     }
 
     [TestMethod]
