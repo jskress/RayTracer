@@ -43,6 +43,7 @@ public class BilinearPatch : Surface
     private Point _p10;
     private Point _p11;
     private Point _p01;
+    private double _span;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to perform any
@@ -57,6 +58,14 @@ public class BilinearPatch : Surface
         _p10 = Corners[1];
         _p11 = Corners[2];
         _p01 = Corners[3];
+
+        // How big the patch is, in the units its own coefficients come out in.  It depends on the
+        // corners alone, so it is worked out once here rather than for every ray.
+        Vector e10 = _p10 - _p00;
+        Vector e11 = _p11 - _p10;
+        Vector e00 = _p01 - _p00;
+
+        _span = e10.Dot(e10) + e00.Dot(e00) + e11.Dot(e11);
     }
 
     /// <summary>
@@ -101,17 +110,26 @@ public class BilinearPatch : Surface
         if (discriminant < 0)
             return;
 
+        // All three coefficients are a pair of the patch's own edges multiplied together and then by
+        // the ray's direction, so this is the size they are measured against.  It has to be: a fixed
+        // number would call `c` nought for any patch small enough, and "small enough" is not small --
+        // a patch a hundredth of a unit across has edges whose product is already below the usual
+        // tolerance before the ray is even considered.  Measured on a field of them, that mistake
+        // shows as a dense black speckle over the whole surface.
+        double coefficientScale = _span * _span * ray.Direction.Dot(ray.Direction);
+
         double root = Math.Sqrt(discriminant);
         double u1;
         double u2;
 
-        // With c at nought the quadratic is really a linear equation, which is what a ray meeting
-        // a patch whose corners are all in one plane gives.  Solving it as a quadratic anyway
-        // would divide by that nought; there is only the one crossing, so the second root is put
-        // out of range rather than computed.
-        if (c.Near(0))
+        // With c at nought the quadratic is really a linear equation.  That is the case of a patch
+        // with no warp in it at all -- a parallelogram, where the fourth corner is exactly where the
+        // other three put it -- and not, as it might seem, of any patch whose corners share a plane.
+        // Solving it as a quadratic anyway would divide by that nought; there is only the one
+        // crossing, so the second root is put out of range rather than computed.
+        if ((c * c).IsNegligibleSquaredBeside(coefficientScale))
         {
-            u1 = b.Near(0) ? -1 : -a / b;
+            u1 = (b * b).IsNegligibleSquaredBeside(coefficientScale) ? -1 : -a / b;
             u2 = -1;
         }
         else

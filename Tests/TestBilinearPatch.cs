@@ -254,6 +254,64 @@ public class TestBilinearPatch
     }
 
     /// <summary>
+    /// The same saddle, shrunk until the solver has to think about how big it is.
+    /// <para>
+    /// Nothing else here would notice a solver that gave up on small patches, because everything
+    /// else is a unit or two across.  The quadratic's three coefficients are each a pair of the
+    /// patch's own edges multiplied together, so they fall with the *square* of its size: at a
+    /// two-thousandth of a unit the leading one is under a millionth for **any** direction at all,
+    /// and a solver testing it against a fixed number takes every such patch for one with no warp in
+    /// it, solving a straight line where there is a curve.
+    /// </para>
+    /// <para>
+    /// The ray has to lean.  Dropped straight down on this patch the leading coefficient is exactly
+    /// nought -- the warp runs along Z, and a vertical ray has nothing along it -- so the straight
+    /// line really is the right answer and a vertical ray cannot tell the two apart.  This one comes
+    /// in at a slant, and its crossing is worked out from the surface's own equation.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAPatchSmallEnoughToLoseItsCoefficients()
+    {
+        const double size = 0.0005;
+
+        BilinearPatch patch = new BilinearPatch
+        {
+            Corners =
+            [
+                new Point(-size, 0, -size),
+                new Point(size, 0, -size),
+                new Point(size, size, size),
+                new Point(-size, 0, size)
+            ]
+        };
+
+        patch.PrepareForRendering();
+
+        Ray ray = new Ray(
+            new Point(-0.003, 0.002, -0.003),
+            new Vector(0.6337242505, -0.4436069754, 0.6337242505));
+        List<Intersection> intersections = [];
+
+        patch.AddIntersections(ray, intersections);
+
+        Assert.IsTrue(intersections.Count > 0, "The small patch was not crossed at all.");
+
+        foreach (Intersection intersection in intersections)
+        {
+            Point point = ray.At(intersection.Distance);
+
+            // Scaling every corner by "size" scales the surface with them, so the height is that
+            // fraction of what the unit saddle stands at.
+            double height = size * HeightAt(point.X / size, point.Z / size);
+
+            Assert.IsTrue(Math.Abs(point.Y - height) < 1e-12,
+                $"A crossing at {point} stands {point.Y} high where the patch is {height} -- the " +
+                "solver put it somewhere the ray does not go.");
+        }
+    }
+
+    /// <summary>
     /// Every point of the patch is a mix of its corners with weights that are never negative, so
     /// the box around those corners holds all of it.
     /// </summary>
