@@ -15,6 +15,12 @@ public class BilinearPatchResolver : SurfaceResolver<BilinearPatch>, IValidatabl
     public Resolver<Point>[] CornerResolvers { get; set; }
 
     /// <summary>
+    /// This property holds the resolvers for the normals at the patch's four corners, or
+    /// <c>null</c> when the scene did not give any.
+    /// </summary>
+    public Resolver<Vector>[] NormalResolvers { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a bilinear
     /// patch.
     /// </summary>
@@ -26,6 +32,13 @@ public class BilinearPatchResolver : SurfaceResolver<BilinearPatch>, IValidatabl
         if (CornerResolvers is not null)
         {
             value.Corners = CornerResolvers
+                .Select(resolver => resolver.Resolve(context, variables))
+                .ToArray();
+        }
+
+        if (NormalResolvers is not null)
+        {
+            value.CornerNormals = NormalResolvers
                 .Select(resolver => resolver.Resolve(context, variables))
                 .ToArray();
         }

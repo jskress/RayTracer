@@ -52,17 +52,28 @@ public partial class LanguageParser
 
         HandleEntryClause(resolver, clause, clause =>
         {
-            if (clause.Text() == "points")
+            switch (clause.Text())
             {
-                resolver.CornerResolvers = Enumerable.Range(0, 4)
-                    .Select(index => (Resolver<Point>) new TermResolver<Point>
-                    {
-                        Term = clause.Term(index)
-                    })
-                    .ToArray();
+                case "points":
+                    resolver.CornerResolvers = Enumerable.Range(0, 4)
+                        .Select(index => (Resolver<Point>) new TermResolver<Point>
+                        {
+                            Term = clause.Term(index)
+                        })
+                        .ToArray();
+                    break;
+                case "normals":
+                    resolver.NormalResolvers = Enumerable.Range(0, 4)
+                        .Select(index => (Resolver<Vector>) new TermResolver<Vector>
+                        {
+                            Term = clause.Term(index)
+                        })
+                        .ToArray();
+                    break;
+                default:
+                    HandleSurfaceClause(clause, resolver, "patch");
+                    break;
             }
-            else
-                HandleSurfaceClause(clause, resolver, "patch");
         });
     }
 }

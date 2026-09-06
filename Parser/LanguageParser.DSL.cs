@@ -864,6 +864,11 @@ public partial class LanguageParser
                 comma ?? 'Expecting a comma here.' > _expression >
                 comma ?? 'Expecting a comma here.' > _expression
             } |
+            {
+                normals > _expression > comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression >
+                comma ?? 'Expecting a comma here.' > _expression
+            } |
             surfaceEntryClause
         ]
         patchEntryClause:

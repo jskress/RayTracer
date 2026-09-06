@@ -73,6 +73,37 @@ public class TestBilinearPatchClauses
             "not enough of a difference to say the corner arrived.");
     }
 
+    /// <summary>
+    /// A scene may hand the patch a normal for each corner, and they have to reach it: the same
+    /// patch shaded by its own shape and by normals leaning elsewhere cannot look the same.
+    /// </summary>
+    [TestMethod]
+    public void TestTheCornerNormalsAreCarried()
+    {
+        int plain = Shaded($"bilinear patch {{ {Lifted} }}");
+        int shaded = Shaded($$"""
+                          bilinear patch {
+                              {{Lifted}}
+                              normals [-0.6, 1, -0.6], [0.6, 1, -0.6], [0.6, 1, 0.6], [-0.6, 1, 0.6]
+                          }
+                          """);
+
+        Assert.IsTrue(plain > 0, "The plain patch was not lit at all.");
+        Assert.AreNotEqual(plain, shaded,
+            $"Both covered {plain} lit pixels, so the normals changed nothing.");
+    }
+
+    [TestMethod]
+    public void TestASceneMayWriteCornerNormals()
+    {
+        Assert.IsNull(ErrorFrom($$"""
+                                  bilinear patch {
+                                      {{Lifted}}
+                                      normals [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0]
+                                  }
+                                  """));
+    }
+
     [TestMethod]
     public void TestANamedPatchCanBeUsedAgain()
     {
@@ -83,15 +114,28 @@ public class TestBilinearPatchClauses
     }
 
     /// <summary>
+    /// Renders one patch under real light and counts how many pixels come out bright.  Flat ambient
+    /// light would not do here: it takes no notice of which way a surface faces, so a normal could
+    /// arrive and change nothing that could be counted.
+    /// </summary>
+    private int Shaded(string body) =>
+        Counted(body, "  material { pigment [1, 0.6, 0.3]  ambient 0.05  diffuse 0.9 } }");
+
+    /// <summary>
     /// Renders one patch seen from straight above and counts how many pixels it covers.
     /// </summary>
-    private int Lit(string body)
+    private int Lit(string body) =>
+        Counted(body, "  material { pigment [1, 0.6, 0.3]  ambient 1  diffuse 0  specular 0 } }");
+
+    /// <summary>
+    /// Renders one patch from straight above with the given material and counts the bright pixels.
+    /// </summary>
+    private int Counted(string body, string material)
     {
         string path = Path.Combine(_directory, "scene.igl");
         string output = Path.Combine(_directory, "out.png");
         int closing = body.LastIndexOf('}');
-        string lit = body[..closing] +
-                     "  material { pigment [1, 0.6, 0.3]  ambient 1  diffuse 0  specular 0 } }";
+        string lit = body[..closing] + material;
 
         File.WriteAllText(path,
             "context { no gamma }\n" +

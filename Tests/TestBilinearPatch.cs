@@ -312,6 +312,161 @@ public class TestBilinearPatch
     }
 
     /// <summary>
+    /// Given a normal at each corner, the patch shades by blending them -- so at a corner it must
+    /// give back that corner's own normal, near enough.  This is what catches the corners and the
+    /// normals being paired up in the wrong order, which is otherwise invisible: any order gives a
+    /// smooth-looking result, just the wrong one.
+    /// </summary>
+    [TestMethod]
+    public void TestEachCornerKeepsItsOwnNormal()
+    {
+        Vector[] normals =
+        [
+            new Vector(-1, 4, -1).Unit,
+            new Vector(3, 4, -1).Unit,
+            new Vector(3, 4, 2).Unit,
+            new Vector(-1, 4, 2).Unit
+        ];
+        BilinearPatch patch = new BilinearPatch
+        {
+            Corners =
+            [
+                new Point(-1, 0, -1),
+                new Point(1, 0, -1),
+                new Point(1, 0, 1),
+                new Point(-1, 0, 1)
+            ],
+            CornerNormals = normals
+        };
+
+        patch.PrepareForRendering();
+
+        (double X, double Z)[] corners = [(-1, -1), (1, -1), (1, 1), (-1, 1)];
+
+        for (int index = 0; index < 4; index++)
+        {
+            // Just inside the corner rather than on it, so the crossing is unambiguously the
+            // patch's own.
+            Ray ray = new Ray(
+                new Point(corners[index].X * 0.998, 4, corners[index].Z * 0.998), Directions.Down);
+            List<Intersection> intersections = [];
+
+            patch.AddIntersections(ray, intersections);
+
+            Assert.AreEqual(1, intersections.Count, $"Corner {index} was not crossed.");
+
+            Vector normal = patch.NormalAt(ray.At(intersections[0].Distance), intersections[0]);
+            double along = Math.Abs(normal.Dot(normals[index]));
+
+            Assert.IsTrue(along > 0.999,
+                $"At corner {index} the normal was {normal}, which lies {along} along the " +
+                $"{normals[index]} that corner was given.");
+        }
+    }
+
+    /// <summary>
+    /// What corner normals are actually for: two patches meeting along an edge, each handed the
+    /// same normals at the two corners they share, must agree about the normal all the way along
+    /// it -- so a sheet built of several of them shades as one surface rather than showing a crease
+    /// at every seam.
+    /// <para>
+    /// The two are warped differently on purpose.  Left to work their normals out from their own
+    /// shapes they disagree sharply at the seam, and the test checks that too: a pair that agreed
+    /// anyway would prove nothing about the blending.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestNormalsMakeNeighbouringPatchesAgree()
+    {
+        Point sharedNear = new Point(1, 0, -1);
+        Point sharedFar = new Point(1, 0.5, 1);
+        Vector normalNear = new Vector(0.1, 1, -0.2).Unit;
+        Vector normalFar = new Vector(-0.3, 1, 0.15).Unit;
+
+        BilinearPatch Build(Point[] corners, Vector[] normals)
+        {
+            BilinearPatch patch = new BilinearPatch { Corners = corners, CornerNormals = normals };
+
+            patch.PrepareForRendering();
+
+            return patch;
+        }
+
+        Point[] leftCorners =
+            [new Point(-1, 0, -1), sharedNear, sharedFar, new Point(-1, 0, 1)];
+        Point[] rightCorners =
+            [sharedNear, new Point(3, 0.6, -1), new Point(3, 0, 1), sharedFar];
+        Vector[] leftNormals =
+            [new Vector(0.4, 1, -0.1).Unit, normalNear, normalFar, new Vector(-0.2, 1, 0.4).Unit];
+        Vector[] rightNormals =
+            [normalNear, new Vector(-0.5, 1, 0.3).Unit, new Vector(0.25, 1, -0.4).Unit, normalFar];
+
+        const double z = 0.2;
+        const double nudge = 0.002;
+
+        Vector Sample(BilinearPatch patch, double x)
+        {
+            Ray ray = new Ray(new Point(x, 5, z), Directions.Down);
+            List<Intersection> intersections = [];
+
+            patch.AddIntersections(ray, intersections);
+
+            Assert.AreEqual(1, intersections.Count, $"Nothing was crossed at x={x}.");
+
+            return patch.NormalAt(ray.At(intersections[0].Distance), intersections[0]);
+        }
+
+        Vector smoothLeft = Sample(Build(leftCorners, leftNormals), 1 - nudge);
+        Vector smoothRight = Sample(Build(rightCorners, rightNormals), 1 + nudge);
+        Vector plainLeft = Sample(Build(leftCorners, null), 1 - nudge);
+        Vector plainRight = Sample(Build(rightCorners, null), 1 + nudge);
+
+        double smoothAgreement = Math.Abs(smoothLeft.Dot(smoothRight));
+        double plainAgreement = Math.Abs(plainLeft.Dot(plainRight));
+
+        Assert.IsTrue(plainAgreement < 0.99,
+            $"The two patches agree to {plainAgreement} without normals, so this pair cannot show " +
+            "that giving them any made a difference.");
+        Assert.IsTrue(smoothAgreement > 0.9999,
+            $"Across the seam the normals lie {smoothAgreement} along one another, which is not " +
+            $"the one surface: {smoothLeft} against {smoothRight}.");
+    }
+
+    /// <summary>
+    /// Corner normals change the shading and nothing else.  The patch keeps the shape its corners
+    /// give it, so every crossing stays exactly where it was.
+    /// </summary>
+    [TestMethod]
+    public void TestNormalsDoNotMoveTheSurface()
+    {
+        BilinearPatch plain = Saddle();
+        BilinearPatch shaded = new BilinearPatch
+        {
+            Corners = plain.Corners,
+            CornerNormals =
+            [
+                new Vector(0.3, 1, -0.2).Unit,
+                new Vector(-0.4, 1, 0.1).Unit,
+                new Vector(0.2, 1, 0.5).Unit,
+                new Vector(-0.1, 1, -0.3).Unit
+            ]
+        };
+
+        shaded.PrepareForRendering();
+
+        Ray ray = new Ray(new Point(0.35, 5, -0.2), Directions.Down);
+        List<Intersection> fromPlain = [];
+        List<Intersection> fromShaded = [];
+
+        plain.AddIntersections(ray, fromPlain);
+        shaded.AddIntersections(ray, fromShaded);
+
+        Assert.AreEqual(fromPlain.Count, fromShaded.Count);
+        Assert.AreEqual(fromPlain[0].Distance, fromShaded[0].Distance,
+            "Giving the patch normals moved where the ray crosses it.");
+    }
+
+    /// <summary>
     /// Every point of the patch is a mix of its corners with weights that are never negative, so
     /// the box around those corners holds all of it.
     /// </summary>

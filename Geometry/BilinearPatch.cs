@@ -23,6 +23,10 @@ namespace RayTracer.Geometry;
 /// products of the edges rather than by expanding the polynomial, and picks the root pair the way
 /// a stable quadratic solver does so that the small root keeps its precision.
 /// </para>
+/// <para>
+/// A patch may also be handed a normal for each corner, in which case it shades by blending those
+/// rather than by its own shape -- see <see cref="CornerNormals"/>.
+/// </para>
 /// </summary>
 public class BilinearPatch : Surface
 {
@@ -39,6 +43,24 @@ public class BilinearPatch : Surface
     /// </summary>
     public Point[] Corners { get; set; }
 
+    /// <summary>
+    /// This property provides the normals at the four corners, in the same order, or <c>null</c>
+    /// for a patch that works its normal out from its own shape.
+    /// <para>
+    /// Given them, the normal at a crossing is these four blended by where in the patch it fell --
+    /// the same trick a <see cref="SmoothTriangle"/> plays with the three it carries.  What it buys
+    /// is continuity *between* patches: a sheet made of several of them, with the ones meeting at a
+    /// corner all handed the same normal there, shades as one surface instead of as a set of
+    /// separate panels with visible creases along their shared edges.
+    /// </para>
+    /// <para>
+    /// It changes the shading only.  The patch keeps the shape its corners give it, so a silhouette
+    /// and a shadow still follow the real surface -- which is why this smooths a seam that catches
+    /// the light and not one that shows against the sky.
+    /// </para>
+    /// </summary>
+    public Vector[] CornerNormals { get; set; }
+
     private Point _p00;
     private Point _p10;
     private Point _p11;
@@ -53,6 +75,9 @@ public class BilinearPatch : Surface
     {
         if (Corners is not { Length: 4 })
             throw new Exception("A bilinear patch requires exactly four corner points.");
+
+        if (CornerNormals is not null && CornerNormals.Length != 4)
+            throw new Exception("A bilinear patch's normals must be one for each of its corners.");
 
         _p00 = Corners[0];
         _p10 = Corners[1];
@@ -200,6 +225,15 @@ public class BilinearPatch : Surface
     /// <returns>The normal to the patch there.</returns>
     private Vector NormalAt(double u, double v)
     {
+        // Blended the same way the surface itself is: each corner counts for as much as it is near.
+        if (CornerNormals is not null)
+        {
+            return (CornerNormals[0] * ((1 - u) * (1 - v)) +
+                    CornerNormals[1] * (u * (1 - v)) +
+                    CornerNormals[2] * (u * v) +
+                    CornerNormals[3] * ((1 - u) * v)).Unit;
+        }
+
         Vector alongU = (_p10 - _p00) * (1 - v) + (_p11 - _p01) * v;
         Vector alongV = (_p01 - _p00) * (1 - u) + (_p11 - _p10) * u;
 

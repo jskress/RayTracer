@@ -642,6 +642,38 @@ it worth having: a sail, a flag, a warped panel, a twisted ribbon.
 **The corners go round the quadrilateral, not across it.**  Given in the wrong order they describe a
 bow tie, which is a real surface but rarely the wanted one, and nothing will warn you.
 
+##### Shading a sheet of patches
+
+A patch may also be given a normal at each corner, in the same order, and it then shades by blending
+those four rather than by its own shape — the same trick a [smooth triangle](#triangle-and-smooth-triangle) plays with
+the three it carries.
+
+![Corner normals on bilinear patches](images/figures/surface-bilinear-normals.png)
+
+The same sixteen patches over the same wave: on the left each works its normal out from its own
+corners, on the right each was handed the wave's true normal at each corner.  The scene is
+[`docs/examples/advanced/bilinear-patch-normals.igl`](examples/advanced/bilinear-patch-normals.igl).
+
+```
+bilinear patch {
+    points  [-1, 0, -1], [1, 0, -1], [1, 0.4, 1], [-1, 0, 1]
+    normals [0, 1, 0], [0, 1, 0], [-0.4, 1, 0.4], [0, 1, 0]
+}
+```
+
+**What this buys is continuity between patches, not within one.**  A single patch shades perfectly
+well on its own; it is a *sheet* of them that gives itself away, because each works out its normal
+from its own four corners and two neighbours disagree along the edge they share.  Give the patches
+meeting at a corner the same normal there and they agree all the way along, so a sail, a flag or a
+piece of cloth built from several reads as one surface.
+
+**It changes the shading and nothing else.**  The patch keeps the shape its corners give it, so
+silhouettes and shadows still follow the real surface — which is the honest limit of the trick: it
+smooths a seam that catches the light, not one that shows against the sky.
+
+`normals` is optional, and a patch without it works its own out, so nothing need be said for a
+single patch standing alone.
+
 Every line of constant `u` and every line of constant `v` across a bilinear patch is **straight**,
 so the surface is woven out of two families of straight lines even where no part of it is flat.
 That is also why it is exact rather than approximated: writing the surface equal to a point on a ray
