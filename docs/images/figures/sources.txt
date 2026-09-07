@@ -31,6 +31,7 @@
 adv-extrusion.png|docs/examples/advanced/extrusion.igl|320|240
 adv-tapered-extrusion.png|docs/examples/advanced/tapered-extrusion.igl|320|240
 adv-tapered-text.png|docs/examples/advanced/tapered-text.igl|320|240
+adv-ribbon.png|docs/examples/advanced/ribbon.igl|320|240
 surface-bilinear-patch.png|docs/examples/advanced/bilinear-patch.igl|320|240
 surface-bilinear-normals.png|docs/examples/advanced/bilinear-patch-normals.igl|320|240
 adv-generic-shape.png|docs/examples/advanced/generic-shape.igl|320|240

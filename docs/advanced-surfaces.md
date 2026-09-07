@@ -246,6 +246,45 @@ merely as narrower at the top.
 The complete scene is
 [`docs/examples/advanced/tapered-extrusion.igl`](examples/advanced/tapered-extrusion.igl).
 
+### Ribbon
+
+A flat strand of a given width, running through a series of points — a blade of grass, a strap, a
+length of tape, a leaf of a palm.
+
+![A ribbon](images/figures/adv-ribbon.png)
+
+A blade of grass, the same path as a [`tube`](#tube) for comparison, and a length of tape given a
+half turn.  The scene is [`docs/examples/advanced/ribbon.igl`](examples/advanced/ribbon.igl).
+
+```
+ribbon {
+    width 0.045 at [0, 0, 0]
+    width 0.026 at [0.10, 0.38, 0]
+    width 0.002 at [0.36, 0.55, 0]
+}
+```
+
+**It is the flat answer to the `tube`'s round one**, and which you want is decided by whether the
+thing has a face.  A stem, a wire or a cane is a rod: it looks the same from every side, and a tube
+is right.  A blade of grass is not — turned edge-on it very nearly disappears, and that flicker as
+blades turn is most of what a field of grass looks like.  A rod cannot do it, having no edge to turn.
+
+**Which way it faces is worked out, not asked for.**  The strip is laid along a path that does not
+spin on straight runs nor flip where the path bends the other way, so a ribbon written without
+thinking about it comes out flat rather than wrung.  What that leaves you is the *starting* face,
+which follows from the path itself — turn the whole surface to aim it, and use `twist` to turn it
+along its own length.  `twist` is in radians, and is spread evenly from the first point to the last,
+so `3.14159` is the half turn on the right above.
+
+**It is a strip of [bilinear patches](surfaces.md#bilinear-patch)**, one between each pair of points,
+each handed the normals of the points it spans so the strip shades as one surface with no crease at
+the joins.  That is why it is affordable in quantity where a [`sweep`](#sweep) is not: a sweep lofts
+a profile with two dozen tessellation steps a segment, which is fine for one pipe and not for forty
+thousand blades of grass.
+
+Two or more points are needed, and the widths are the whole width of the strip rather than a radius —
+unlike a tube, which takes half of one.
+
 ### Lathe
 
 A path spun about the Y axis.  The path is the silhouette of one side of the finished object,

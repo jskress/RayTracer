@@ -70,6 +70,7 @@ public partial class LanguageParser
             "blob" => ParseBlobClause(clause),
             "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
+            "ribbon" => ParseRibbonClause(clause),
             "sweep" => ParseSweepClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),

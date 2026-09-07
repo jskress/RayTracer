@@ -1,0 +1,54 @@
+// A ribbon: a flat strand of a given width, running through a series of points.
+//
+// Left, a blade of grass -- the shape the surface exists for.  Middle, the same path as a `tube` of
+// the same size, for the comparison that matters: a tube is a rod, so it looks the same from every
+// side, where a blade turned edge-on very nearly disappears.  Right, a length of tape given a half
+// turn along its length, which is what `twist` does.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0.75, 0.55, -1.5]
+    look at [0.05, 0.33, 0]
+    field of view 44
+}
+
+point light { location [-3, 5, -5]  color [1, 0.97, 0.93] }
+point light { location [4, 2, -3]   color [0.35, 0.35, 0.42] }
+
+plane {
+    material { pigment checker { color [0.30, 0.30, 0.33], color [0.24, 0.24, 0.27]  scale 0.35 } }
+}
+
+Green = material { pigment color [0.36, 0.55, 0.22]  specular 0.3  shininess 40 }
+Tape = material { pigment color [0.85, 0.55, 0.28]  specular 0.35  shininess 50 }
+
+// A blade of grass, arching over and tapering to a point.
+ribbon {
+    material Green
+    width 0.045 at [0, 0, 0]
+    width 0.038 at [0.03, 0.20, 0]
+    width 0.026 at [0.10, 0.38, 0]
+    width 0.013 at [0.21, 0.50, 0]
+    width 0.002 at [0.36, 0.55, 0]
+    rotate Y -55
+    translate [-0.42, 0, 0]
+}
+
+// The same path as a tube, for comparison.
+tube {
+    material Green
+    radius 0.022 at [0, 0, 0]
+    quad radius 0.013 at [0.10, 0.38, 0]  radius 0.001 at [0.36, 0.55, 0]
+    translate [-0.02, 0, 0]
+}
+
+// A length of tape with a half turn in it.
+ribbon {
+    material Tape
+    width 0.09 at [0, 0, 0]
+    width 0.09 at [0, 0.18, 0]
+    width 0.09 at [0, 0.36, 0]
+    width 0.09 at [0, 0.54, 0]
+    twist 3.14159
+    translate [0.42, 0, 0]
+}

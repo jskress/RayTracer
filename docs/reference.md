@@ -265,6 +265,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
+| `ribbon` | Surface: a flat strand of a given width running through a series of points. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `right` | Text layout: right-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -341,6 +342,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |
 | `uSteps` | Area light: samples across U. | [Lights](lights.md#area-lights) |
