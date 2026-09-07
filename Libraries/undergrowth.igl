@@ -98,31 +98,36 @@ function UnderBladeBend(season) -> number {
 
 // -- Grass -----------------------------------------------------------------------------------------
 
-// One length of blade: a tapering rod, leaning over.  It is a tube rather than a cone for the
-// reason everything else here is -- a tube ends in a hemisphere, so the upper length leaves the
-// lower one without a flat disc showing at the bend.
-primitive UnderBladePart(season, tall, wide, lean) -> group {
-    return group {
-        tube {
-            material UnderBladeSkin(season)
-            radius wide at [0, 0, 0]
-            radius wide * 0.35 at [0, tall, 0]
-            rotate Z lean
-        }
-    }
-}
+// A blade of grass: one `ribbon`, arching over and tapering to a point.
+//
+// **It was two tubes until the ribbon surface existed, and the difference is not the count.**  A tube
+// is a rod, and a rod looks the same from every side; a real blade is flat, so it flashes broad as it
+// turns towards you and very nearly vanishes as it turns edge-on.  That flicker across a field is
+// most of what grass looks like, and a rod cannot do it at all -- it has no edge to turn.
+//
+// The arch is a circular arc, which is what lets the shape be written down rather than fitted: bend a
+// length `tall` through a total angle, and it lies on a circle of radius `tall / angle`.  So each
+// point is that circle at its own fraction of the way round, and the whole blade is five of them.
+//
+// **The twist is not decoration either.**  Without it every blade is flat-on or edge-on along its
+// whole length at once, and a tuft reads as a set of cut-out shapes; a little turn along the length
+// means each blade catches the light somewhere and loses it somewhere else, which is what a blade
+// does when it grows.
+primitive UnderBlade(season, tall, wide, bend, over, turn) -> ribbon {
+    lean = (bend + over) * 0.01745
+    r = tall / lean
+    w = wide * 2.6
 
-// A blade, which arches because its upper length carries on from where the lower one left off and
-// bends further.  One straight length reads as a spike; it is the second that makes it grass.
-primitive UnderBlade(season, tall, wide, bend, over, turn) -> group {
-    lower = tall * 0.58
+    return ribbon {
+        material UnderBladeSkin(season)
 
-    return group {
-        object UnderBladePart(season, lower, wide, bend)
-        object UnderBladePart(season, tall - lower, wide * 0.45, over) {
-            translate Y lower * 0.97
-            rotate Z bend
-        }
+        width w              at [r * (1 - cos(lean * 0.00)), r * sin(lean * 0.00), 0]
+        width w * 0.94       at [r * (1 - cos(lean * 0.30)), r * sin(lean * 0.30), 0]
+        width w * 0.76       at [r * (1 - cos(lean * 0.58)), r * sin(lean * 0.58), 0]
+        width w * 0.46       at [r * (1 - cos(lean * 0.82)), r * sin(lean * 0.82), 0]
+        width w * 0.04       at [r * (1 - cos(lean * 1.00)), r * sin(lean * 1.00), 0]
+
+        twist 0.7
         rotate Y turn
     }
 }
