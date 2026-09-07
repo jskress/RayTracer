@@ -66,36 +66,10 @@ public class Group : Surface
     /// </summary>
     private void ArrangeChildren()
     {
-        List<(Surface Surface, BoundingBox Box)> placed = [];
-
-        _unbounded = null;
-
-        foreach (Surface surface in Surfaces)
-        {
-            BoundingBox box = BoxAround(surface);
-
-            if (box is null)
-                (_unbounded ??= []).Add(surface);
-            else if (!box.IsEmpty)
-                placed.Add((surface, box));
-
-            // A child with an empty box occupies no region at all -- an empty group -- so it can be
-            // hit by nothing and is left out of both lists.
-        }
-
-        _hierarchy = BoundingVolumeHierarchy.Build(placed);
-
-        // Whatever was not worth arranging is walked the old way.  Below the threshold the walk is
-        // faster than any search of it, and this is the common case by count: most groups an author
-        // writes hold two or three things.
-        _walked = _hierarchy is null
-            ? placed.Select(entry => entry.Surface).ToList()
-            : null;
+        _arranged.Arrange(Surfaces);
     }
 
-    private BoundingVolumeHierarchy _hierarchy;
-    private List<Surface> _walked;
-    private List<Surface> _unbounded;
+    private readonly ArrangedSurfaces _arranged = new ();
 
     /// <summary>
     /// This method is used to produce a default bounding box for this shape.
@@ -167,23 +141,7 @@ public class Group : Surface
     {
         List<Intersection> ours = [];
 
-        if (_hierarchy is not null)
-            _hierarchy.IntersectWithin(ray, ours, maxDistance);
-        else
-        {
-            foreach (Surface surface in _walked ?? Surfaces)
-                surface.IntersectWithin(ray, ours, maxDistance);
-        }
-
-        if (_unbounded is not null)
-        {
-            // The planes and endless cylinders, which have no box to be ruled out by, so they are
-            // asked about every ray however short a stretch of it is wanted.  About half the crossings
-            // a shadow ray throws away come from exactly here, and that is the ceiling on what any
-            // amount of box pruning can save.
-            foreach (Surface surface in _unbounded)
-                surface.IntersectWithin(ray, ours, maxDistance);
-        }
+        _arranged.IntersectWithin(ray, ours, maxDistance, Surfaces);
 
         intersections.AddRange(ours);
     }
@@ -192,22 +150,10 @@ public class Group : Surface
     {
         List<Intersection> ours = [];
 
-        if (_hierarchy is not null)
-            _hierarchy.Intersect(ray, ours);
-        else
-        {
-            // With nothing arranged, this group was never prepared for rendering -- as happens in a
-            // test that builds a group and asks it about a ray directly.  Walking what is there is
-            // the honest answer.
-            foreach (Surface surface in _walked ?? Surfaces)
-                surface.Intersect(ray, ours);
-        }
-
-        if (_unbounded is not null)
-        {
-            foreach (Surface surface in _unbounded)
-                surface.Intersect(ray, ours);
-        }
+        // With nothing arranged, this group was never prepared for rendering -- as happens in a test
+        // that builds a group and asks it about a ray directly.  Walking what is there is the honest
+        // answer, and that is what handing the children over here arranges for.
+        _arranged.Intersect(ray, ours, Surfaces);
 
         ours.Sort();
 

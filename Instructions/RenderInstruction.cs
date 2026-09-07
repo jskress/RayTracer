@@ -82,6 +82,12 @@ public class RenderInstruction : Instruction
         SettleTheSky(context, scene);
         FinalizeSurfaceData(context, scene, scene.Surfaces);
 
+        // Last of all, and only now: the scene's own surfaces are sorted for searching.  It waits
+        // until here because a box cannot be drawn round a surface before the surface knows its shape,
+        // and one placed in terms of its neighbours does not stand where it will until they are
+        // settled -- both of which have just happened above.
+        scene.ArrangeSurfaces();
+
         // The sky is a pigment as much as any surface's is, and no surface owns it, so nothing else
         // would hand it its chance to get ready.  Without this, a sky read from an image never loads
         // the image.
