@@ -458,10 +458,10 @@ names which one you wrote.
 it, so you can see it, and by itself nothing carries that light to the surfaces around it.  Saying
 [`gives light`](surfaces.md#a-surface-that-gives-light) on the surface the medium fills is what changes
 that: the stuff inside then lights the room, casts shadows and colors them, with nothing to place
-beside it.  [`gallery/Local/functions/a-fire-in-the-open.igl`](../gallery/Local/functions/a-fire-in-the-open.igl)
+beside it.  [`gallery/Local/countryside/a-fire-in-the-open.igl`](../gallery/Local/countryside/a-fire-in-the-open.igl)
 is a scene with no light written in it at all.
 
-A scene may still prefer a lamp of its own — [`candle.igl`](../gallery/Local/lights/candle.igl) does,
+A scene may still prefer a lamp of its own — [`candle.igl`](../gallery/Local/interiors/candle.igl) does,
 because it is a demonstration of [`fade distance`](lights.md), and a volume light has its falloff built
 in and takes no fade at all.
 

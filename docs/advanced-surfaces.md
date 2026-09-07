@@ -144,7 +144,7 @@ lathe {
 }
 ```
 
-`gallery/Local/paths/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
+`gallery/Local/extrusions/text-lathe.igl` takes that further — the `i` spun into a ring, then cut down to a
 quarter turn with a [CSG](surfaces.md#combining-surfaces) intersection.
 
 ### Extrusion
@@ -291,7 +291,7 @@ high up it sits.  Anything round and symmetrical — a glass, a vase, a bottle, 
 piece — is quicker to write this way than any other.
 
 The complete scene is [`docs/examples/advanced/lathe.igl`](examples/advanced/lathe.igl), and
-`gallery/Local/paths/extrusions/` has several more.
+`gallery/Local/extrusions/` has several more.
 
 ### Sweep
 
@@ -491,7 +491,7 @@ Two things a function may not hold, both of which say so plainly if you write th
 needs the slope of its function to know which way it faces, and that one has no slope written down
 here.  A function using it is refused for that reason rather than for being unusable.
 
-`gallery/Local/surfaces/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
+`gallery/Local/equations/isosurfaces.igl` puts three of these side by side — a gyroid clipped to a ball, the
 twisted column above, and a ball blended smoothly into a cylinder.
 
 ### Signed Distance Surface
@@ -513,7 +513,7 @@ distance can be walked along.  Knowing the nearest surface is a quarter of a uni
 quarter of a unit can be crossed without meeting anything, whatever direction is taken — so the ray
 moves in long strides through open space and shortens only as it closes in.  An isosurface knows
 nothing about its function beyond what it can bound, and has to creep.  The four shapes in
-`gallery/Local/surfaces/every-shape-in-one-line.igl` take **19 seconds** as isosurfaces and **half a
+`gallery/Local/equations/every-shape-in-one-line.igl` take **19 seconds** as isosurfaces and **half a
 second** as these, for the same picture — a little under forty times, measured at 800x400.
 
 **What it asks in return is that the function really is a distance.**  Sphere tracing steps by
@@ -624,7 +624,7 @@ by definition:
 function { y + 0.1 - 0.95 ⋅ (noise(2.2 * x, 1.3 * y, 2.2 * z) - 0.5) }
 ```
 
-`gallery/Local/surfaces/isosurface-noise.igl` renders all three.  One layer of noise is smooth and rolling; for
+`gallery/Local/equations/isosurface-noise.igl` renders all three.  One layer of noise is smooth and rolling; for
 the finer detail of real stone or bark, add layers of it, each finer and fainter than the last, which
 a function can now say for itself — `noise(p) + noise(2p) / 2 + noise(4p) / 4`.
 

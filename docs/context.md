@@ -121,7 +121,7 @@ should not have to edit.
 `scale ambient by 0` removes the stand-in altogether, leaving only light that was actually
 traced.  Sensible for a night scene with its own lamps in it, and a good way to see how much
 of a picture the fudge was really carrying — usually less than you would guess.
-`gallery/Local/functions/a-street-after-dark.igl` does exactly that, and records the
+`gallery/Local/towns/a-street-after-dark.igl` does exactly that, and records the
 measurement in a comment: its lamps turn out to be doing about 98% of the work.
 
 There is a related default worth knowing.  A material that never mentions ambient is given

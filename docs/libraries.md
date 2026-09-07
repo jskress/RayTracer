@@ -557,7 +557,7 @@ The test is a **plan view** and says nothing about height: a wing swallows whate
 whether or not it is tall enough to.  That is the conservative way round — a window left out is a bare
 wall, a window left in is a window looking into masonry.
 
-`gallery/Local/functions/the-house-that-grew.igl` is this working: a house of five wings, with the
+`gallery/Local/towns/the-house-that-grew.igl` is this working: a house of five wings, with the
 comparison spelled out in its own comments — break the plan into five plans of one wing each and the
 half windows come back, sliced open and hanging in the join.
 
@@ -896,7 +896,7 @@ That reaches every material at once, including the ones a library named for itse
 other way to touch — see [The Context Block](context.md#ambient).
 
 Then measure what it was actually worth, because the guess is usually wrong.  In
-`gallery/Local/functions/a-street-after-dark.igl` the answer is: almost nothing.  Of what lights the house
+`gallery/Local/towns/a-street-after-dark.igl` the answer is: almost nothing.  Of what lights the house
 fronts, the lamps are about 98%, the sky light about 2%, and every material's own ambient a little over
 half of one percent.  The reading that sent me looking was the opposite of that, and it came of removing
 the sky light and finding the picture got *brighter* — which it does, but for an unrelated reason.  A scene
