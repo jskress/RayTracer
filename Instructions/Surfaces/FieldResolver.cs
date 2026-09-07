@@ -42,9 +42,9 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<bool> CopiesResolver { get; set; }
 
     /// <summary>
-    /// This property holds the name the scene gave to a copy's number, or <c>null</c> if it named
-    /// none.  It is what makes copies worth asking for: the number is set for each of them in turn,
-    /// so anything the copy is built from may differ by it.
+    /// This property holds the name the scene gave to a copy's number, written as `index in
+    /// &lt;name&gt;`, or <c>null</c> if it named none.  It is what makes copies worth asking for: the
+    /// number is set for each of them in turn, so anything the copy is built from may differ by it.
     /// </summary>
     public string CopyNumberName { get; set; }
 
@@ -75,7 +75,7 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     /// Where the scene named a copy's number, the number is set in a scope of its own before the copy
     /// is built -- a scope, and not the field's own names, so that a name the field was written among
     /// is not quietly overwritten and does not outlive the field.  This is what a loop's counter does,
-    /// and it is the whole of what makes `copies` worth more than an instance.
+    /// and it is the whole of what makes `index` worth more than an instance.
     /// </para>
     /// </summary>
     /// <param name="context">The current render context.</param>

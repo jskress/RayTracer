@@ -436,4 +436,42 @@ public class TestInstances
             }
         }
     }
+
+    /// <summary>
+    /// The rule that decides whether one shape may stand in many places.  It has two callers now --
+    /// a primitive's own sharing and a field's -- so it is worth asking in its own terms rather than
+    /// only through what those two do with the answer.
+    /// <para>
+    /// **Every shape here is one that has not been prepared**, because that is when both callers
+    /// ask: they have just built the thing and are deciding what to do with it.  That is why motion
+    /// is looked for at <c>MotionAt</c> rather than only at <c>Moves</c>, which is not settled until
+    /// a surface is readied -- asking <c>Moves</c> alone was a guard that could never fire.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestWhatMayNotBeShared()
+    {
+        Assert.IsTrue(Instance.MayBeShared(new Sphere()),
+            "An ordinary shape may stand in many places.");
+        Assert.IsTrue(Instance.MayBeShared(new Group().Add(new Sphere())),
+            "So may a group of ordinary shapes.");
+
+        Assert.IsFalse(Instance.MayBeShared(null),
+            "Nothing at all cannot be shared.");
+        Assert.IsFalse(Instance.MayBeShared(new Instance { Prototype = new Sphere() }),
+            "An instance cannot itself be shared; only the nearer of the two is remembered.");
+        Assert.IsFalse(Instance.MayBeShared(
+                new Group().Add(new Instance { Prototype = new Sphere() })),
+            "Nor may a group holding one, which is exactly what a group primitive gives back.");
+        Assert.IsFalse(Instance.MayBeShared(new Sphere { GivesLightSamples = 4 }),
+            "A shape that is a light has to be somewhere.");
+        Assert.IsFalse(Instance.MayBeShared(
+                new Sphere { MotionAt = _ => Transforms.Translate(1, 0, 0) }),
+            "A shape that moves stands somewhere different at each instant.");
+        Assert.IsFalse(Instance.MayBeShared(new Sphere
+            {
+                Material = new Material { Interior = new Interior { Medium = new Medium() } }
+            }),
+            "The stuff inside a shape is found by carrying a point into what contains it.");
+    }
 }

@@ -79,14 +79,14 @@ public partial class LanguageParser
                 case "jitter":
                     resolver.JitterResolver = new TermResolver<double> { Term = clause.Term() };
                     break;
-                case "copies":
+                case "index":
+                    // The whole clause or none of it: naming the number is the only reason to write
+                    // it, since a shape that cannot be shared is copied anyway -- the field asks the
+                    // shape rather than the scene.  See Instance.MayBeShared.  So `in <name>` is
+                    // required by the grammar, and what follows it is a copy's own number, named the
+                    // way a loop names its counter.
                     resolver.CopiesResolver = new LiteralResolver<bool> { Value = true };
-
-                    // A name after it is what a copy's number is called, the way a loop names its
-                    // counter.  Without one, each place still gets its own surface -- which is only
-                    // worth asking for if something else about it differs.
-                    if (clause.Tokens.Count > 1)
-                        resolver.CopyNumberName = clause.Tokens[1].Text;
+                    resolver.CopyNumberName = clause.Tokens[2].Text;
 
                     break;
                 default:

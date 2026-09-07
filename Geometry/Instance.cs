@@ -58,6 +58,47 @@ public class Instance : Surface
     }
 
     /// <summary>
+    /// This method reports whether a shape may stand in more than one place.
+    /// <para>
+    /// Each of the things that says no would be *wrong* rather than merely unshared, and each is
+    /// checked on the shape itself rather than guessed at from whoever is asking.  A caller that is
+    /// told no must build the shape again for each place it stands.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The shape to consider.</param>
+    /// <returns><c>true</c>, if it may be shared.</returns>
+    public static bool MayBeShared(Surface surface) => surface switch
+    {
+        null => false,
+
+        // A shape reachable from two places has no one place to be, and a light made of the stuff
+        // inside it has to be somewhere.
+        _ when surface.GivesLightSamples is not null => false,
+
+        // The medium inside a thing is looked up by carrying a point into the *containing* surface's
+        // space, and that lookup has no hit to take a portal from.
+        _ when surface.Material?.Interior?.Medium is not null => false,
+
+        // Where a thing stands changes while the shutter is open, and an instance would have to carry
+        // its own motion as well as the shape's.
+        //
+        // **Both callers ask before the shape has been prepared**, having only just built it, and
+        // `Moves` is not set until preparation works out where the shape stands at each instant.  So
+        // the question is put to `MotionAt`, which is there from the moment the shape is made; asking
+        // `Moves` alone was a guard that could never fire.
+        _ when surface.Moves || surface.MotionAt is not null => false,
+
+        // Both of these would need a hit to remember two instances rather than one, which is what
+        // PrepareSurfaceForRendering refuses outright.  Answering here lets a caller build its own
+        // copies quietly instead of ending the render with a complaint no scene can act on.
+        Instance => false,
+
+        Group group => group.Surfaces.All(MayBeShared),
+        CsgSurface csg => MayBeShared(csg.Left) && MayBeShared(csg.Right),
+        _ => true
+    };
+
+    /// <summary>
     /// This method reports whether a shape holds an instance anywhere inside it.
     /// </summary>
     /// <param name="surface">The shape to look through.</param>

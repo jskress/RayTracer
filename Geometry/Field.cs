@@ -24,6 +24,11 @@ namespace RayTracer.Geometry;
 /// instance is the same geometry; a scene that needs each its own way says so, and pays to build
 /// each of them.
 /// </para>
+/// <para>
+/// **A shape that may not be shared is copied whether or not the scene asked for copies**, since
+/// that is the shape's to refuse rather than the author's to get right.  See
+/// <see cref="Instance.MayBeShared"/> for what refuses and why.
+/// </para>
 /// </summary>
 public class Field : Group
 {
@@ -64,7 +69,7 @@ public class Field : Group
 
     /// <summary>
     /// This property notes that each place is to get its own surface, built for it, rather than an
-    /// instance of one shared shape.
+    /// instance of one shared shape.  A scene asks for this by writing `index in <name>`.
     /// </summary>
     public bool Copies { get; set; }
 
@@ -83,8 +88,35 @@ public class Field : Group
             throw new Exception("A field's spacing must be greater than nought.");
 
         Random random = new Random(Seed ?? DefaultSeed);
-        Surface shared = Copies ? null : Prototype(0);
+        Surface shared = null;
+        Surface first = null;
         int number = 0;
+
+        if (!Copies)
+        {
+            // Built to be shared -- but not every shape may be, and asking is not fussiness.  A
+            // shape holding a light, or a medium, or one that moves has no single place to be; and
+            // an instance of a shape that is itself an instance cannot say which of the two a point
+            // lies in, which the instance refuses outright rather than getting quietly wrong.
+            //
+            // **That last is the ordinary case, not an exotic one.**  A primitive that gives back a
+            // group hands out a group holding an instance, and most primitives worth calling give
+            // back a group.  A field of one used to end the render complaining about shapes holding
+            // shapes, which is true of the internals and no help at all to whoever wrote the scene.
+            Surface candidate = Prototype(0);
+
+            if (Instance.MayBeShared(candidate))
+                shared = candidate;
+            else
+            {
+                // It is made already, so it stands at the first place rather than being thrown away,
+                // and the numbering carries on from it.  Nothing much is lost by the refusal: where
+                // the shape came from a primitive, that primitive does its own sharing underneath,
+                // so what is built again here is the wrapper and not the geometry.
+                first = candidate;
+                number = 1;
+            }
+        }
 
         Surfaces.Clear();
 
@@ -112,9 +144,17 @@ public class Field : Group
                 if (!Outline.Contains(new TwoDPoint(x, z)))
                     continue;
 
-                Surface copy = shared is null
-                    ? Prototype(number++)
-                    : new Instance { Prototype = shared };
+                Surface copy;
+
+                if (shared is not null)
+                    copy = new Instance { Prototype = shared };
+                else if (first is not null)
+                {
+                    copy = first;
+                    first = null;
+                }
+                else
+                    copy = Prototype(number++);
 
                 copy.Transform = Transforms.Translate(x, 0, z) * copy.Transform;
 

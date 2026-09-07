@@ -280,16 +280,16 @@ that is one thing in many places over an area, and none of it needing a loop.
 | `of` | The name of the surface to fill it with. |
 | `spacing` | How far apart the copies stand, before any jitter. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
-| `copies` | Give each place its own surface, rather than an instance of one shape; a name after it is what that copy's number is called. |
+| `index in <name>` | Name each copy's number, and give each place its own surface rather than an instance of one shape.  The `in <name>` is not optional. |
 
 **The copies are *instances* by default**, and that is the right way round: an
 instance's saving is in the *building* rather than the testing, which is exactly this case — one
 tuft of grass built once and stood in two thousand places costs one tuft to make.  What an instance
 cannot do is let each differ, since every one is the same geometry.  A scene that needs each its own
-way says `copies` and pays to build each of them.
+way says `index in <name>` and pays to build each of them.
 
-**`copies` is worth asking for only when something differs**, and what differs is the copy's own
-number.  Name it after `copies` — the way a loop names its counter — hand it to a primitive, and let
+**`index` is worth asking for only when something differs**, and what differs is the copy's own
+number.  Name it with `in` — the way a loop names its counter — hand it to a primitive, and let
 the primitive's arithmetic do the rest:
 
 ```
@@ -303,13 +303,22 @@ field {
     within Verge
     spacing 0.07
     jitter 0.9
-    copies n
+    index in n
 }
 ```
 
-Without a number, copies are the same geometry built over and over — strictly worse than an
-instance, which builds it once.  The number is set in a scope of its own for each copy, so it does
-not overwrite a name the field was written among and does not outlive the field.
+The number is set in a scope of its own for each copy, so it does not overwrite a name the field was
+written among and does not outlive the field.
+
+**A shape that cannot stand in two places is copied whether you ask or not.**  Anything holding a
+light, anything with a medium inside it, anything that moves while the shutter is open, and
+anything that is already an instance — which is what a primitive returning a group hands out —
+is built afresh at each place.  The field works that out from the shape rather than from what the
+scene said, so there is nothing to remember and nothing to get wrong.
+
+So the clause is all of it or none of it: `index` has to name a number, because naming one is the
+only thing left for it to do.  Asking for copies of a shape that *may* be shared would build the
+same geometry over and over, which is strictly worse than one instance of it.
 
 **`of` takes a name or a call.**  A named surface is the same shape everywhere, which is what an
 instance wants; a call of a primitive is what lets each copy be its own.

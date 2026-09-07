@@ -174,12 +174,15 @@ primitive UnderPatch(across, season, variant, height, density, circular) -> grou
     across8 = 8
 
     return group {
-        // Gathered into blocks of eight by eight rather than left as one long list, and that is not
-        // tidiness -- it is the whole of what makes an area of grass affordable.  A group hands a ray
-        // a bounding box, and if the ray gets in, the group then asks *every* child.  One flat group
-        // of two thousand tufts is two thousand questions for every ray that reaches the ground, and
-        // a sky light asks a great many rays.  Two layers turns that into thirty-odd blocks plus the
-        // sixty-four inside whichever ones were hit.
+        // Gathered into blocks of eight by eight rather than left as one long list.  This used to
+        // be the whole of what made an area of grass affordable: a group asked *every* child, so one
+        // flat group of two thousand tufts was two thousand questions for every ray that reached the
+        // ground, and a sky light asks a great many rays.
+        //
+        // A group now arranges its own children into a hierarchy, which builds much the same shape
+        // this does by hand, and the two measure the same.  The blocking is left alone because it
+        // costs nothing and rewriting it would change every grass image, but it is no longer what
+        // makes this affordable and it is not a pattern to copy into anything new.
         for blockRow in [0, last / across8] {
             for blockColumn in [0, last / across8] {
                 group {

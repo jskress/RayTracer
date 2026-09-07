@@ -79,7 +79,7 @@ public partial class LanguageParser
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
-            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls', 'copies',
+            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
@@ -1135,7 +1135,9 @@ public partial class LanguageParser
                 leftParen{?}
             } |
             { spacing > _expression } | { jitter > _expression } |
-            { copies > [ _identifier | _keyword ]{?} } |
+            { index > in ?? 'Expecting "in" to follow "index" here.' >
+                [ _identifier | _keyword ]
+                ?? 'Expecting a name for the copy number to follow "in" here.' } |
             surfaceEntryClause
         ]
 

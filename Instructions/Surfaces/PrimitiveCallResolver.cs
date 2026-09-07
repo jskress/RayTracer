@@ -141,7 +141,7 @@ public class PrimitiveCallResolver : ISurfaceResolver
 
         Surface built = Build(context, primitive, given);
 
-        if (key is null || !MayBeShared(built))
+        if (key is null || !Instance.MayBeShared(built))
             return built;
 
         context.SharedShapes[key] = built;
@@ -162,37 +162,6 @@ public class PrimitiveCallResolver : ISurfaceResolver
 
         return ((ISurfaceResolver) recipe).ResolveToSurface(context, scope);
     }
-
-    /// <summary>
-    /// This method reports whether a shape just built may stand in more than one place.
-    /// <para>
-    /// Each of these is a thing that would be *wrong* rather than merely unshared, and each is
-    /// checked on the shape itself rather than guessed at from the call.
-    /// </para>
-    /// </summary>
-    /// <param name="surface">The shape to consider.</param>
-    /// <returns><c>true</c>, if it may be shared.</returns>
-    private static bool MayBeShared(Surface surface) => surface switch
-    {
-        // A shape reachable from two places has no one place to be, and a light made of the stuff
-        // inside it has to be somewhere.
-        _ when surface.GivesLightSamples is not null => false,
-
-        // The medium inside a thing is looked up by carrying a point into the *containing* surface's
-        // space, and that lookup has no hit to take a portal from.
-        _ when surface.Material?.Interior?.Medium is not null => false,
-
-        // Where a thing stands changes while the shutter is open, and an instance would have to carry
-        // its own motion as well as the shape's.
-        _ when surface.Moves => false,
-
-        // Both of these would need a hit to remember two instances rather than one; see Instance.
-        Instance => false,
-
-        Group group => group.Surfaces.All(MayBeShared),
-        CsgSurface csg => MayBeShared(csg.Left) && MayBeShared(csg.Right),
-        _ => true
-    };
 
     /// <summary>
     /// This method returns what a call asked for, written down, or <c>null</c> when it cannot be

@@ -98,7 +98,6 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `context` | The block of render-wide settings. | [Context](context.md#angles) |
 | `controls` | L-system: how the string is drawn (pipes, tubes, sizes). | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `copyright` | Info: a copyright notice. | [Context](context.md#image-information) |
-| `copies` | A `field` gives each place its own surface instead of an instance of one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `crackle` | Pattern: cracked-cell (Worley) noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `cross` | Quadric: the coefficients of `xy`, `xz` and `yz`. | [Surfaces](surfaces.md#quadric) |
 | `csg` | Combines surfaces by a named set operation. | [Surfaces](surfaces.md#combining-surfaces) |
@@ -168,10 +167,10 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
-| `in` | Follows a `for` loop's count: `for i in [0, 11]`. | [Surfaces](surfaces.md#repeating-things) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`. | [Surfaces](surfaces.md#repeating-things) |
 | `else` | The other way out of an `if`, optional where surfaces are listed. | [Surfaces](surfaces.md#choosing-what-to-make) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
-| `index` | Interior: `index of refraction`, written out. | [Materials](materials.md#transparency-and-interiors) |
+| `index` | Interior: `index of refraction`, written out.  A `field`: `index in n` names each copy's number. | [Materials](materials.md#transparency-and-interiors), [Advanced Surfaces](advanced-surfaces.md#field) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: hand the surrounding material down unchanged. | [Materials](materials.md#naming-and-reusing) |
 | `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |

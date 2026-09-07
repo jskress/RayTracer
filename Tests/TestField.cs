@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
+using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Renderer;
@@ -273,6 +274,247 @@ public class TestField
                 Assert.IsFalse(captured.ToString().Contains("Error"),
                     $"An outline {what} did not work: {captured}");
             }
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    /// <summary>
+    /// A field asked for instances still copies a shape that may not be shared, since that is the
+    /// shape's to refuse rather than the author's to get right.
+    /// <para>
+    /// **This is the ordinary case rather than a corner of one.**  A primitive that gives back a
+    /// group hands out a group holding an instance, and an instance of *that* cannot say which of
+    /// the two a point lies in -- so a field of any group primitive used to stop the render with a
+    /// complaint about shapes holding shapes, which is true of the internals and no use at all to
+    /// whoever wrote the scene.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAShapeThatMayNotBeSharedIsCopiedAnyway()
+    {
+        Field field = new ()
+        {
+            Outline = Square(),
+            Spacing = 0.5,
+            Prototype = _ => new Group().Add(new Instance { Prototype = new Sphere() })
+        };
+
+        field.PrepareForRendering();
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+        Assert.IsFalse(field.Surfaces.Any(surface => surface is Instance),
+            "A shape that may not be shared should have been copied, not instanced.");
+    }
+
+    /// <summary>
+    /// The shape built to be shared is kept as the first copy when sharing is refused, rather than
+    /// thrown away and built again.  The numbers are what show it: an extra build would put a second
+    /// nought at the front of them.
+    /// </summary>
+    [TestMethod]
+    public void TestTheRefusedShapeBecomesTheFirstCopy()
+    {
+        List<int> asked = [];
+        Field field = new ()
+        {
+            Outline = Square(),
+            Spacing = 0.5,
+            Prototype = number =>
+            {
+                asked.Add(number);
+
+                return new Group().Add(new Instance { Prototype = new Sphere() });
+            }
+        };
+
+        field.PrepareForRendering();
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+        CollectionAssert.AreEqual(Enumerable.Range(0, 16).ToArray(), asked,
+            $"The copies were built as [{string.Join(", ", asked)}].");
+    }
+
+    /// <summary>
+    /// The clause that asks for copies, from the scene's side.  `index` on its own asks for them;
+    /// `index in n` asks for them and says what each one's number is called.
+    /// <para>
+    /// The case that must *not* pass is the one that proves where the name comes from: a prototype
+    /// reaching for `n` in a field that never wrote `index in n` has nothing to reach for, and the
+    /// scene should say so.  Without that, a clause that quietly bound nothing would pass every
+    /// other test here.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayNameTheCopyNumber()
+    {
+        Assert.IsNull(ErrorFrom($$"""
+                                  {{Ball}}
+                                  field { of Ball(n)  {{Outline}}  spacing 0.5  index in n }
+                                  """), "A field should be able to name its copy number.");
+
+        string bare = ErrorFrom($$"""
+                                  {{Ball}}
+                                  field { of Ball(0)  {{Outline}}  spacing 0.5  index }
+                                  """);
+
+        Assert.IsNotNull(bare,
+            "`index` naming nothing is the clause without its point, and should have been " +
+            "refused.");
+        Assert.IsTrue(bare.Contains("\"in\""),
+            $"The complaint should say what is missing, but said: {bare}");
+
+        Assert.IsNull(ErrorFrom($$"""
+                                  primitive Lump(n) -> group {
+                                      return group { sphere { scale 0.1 } }
+                                  }
+                                  field { of Lump(0)  {{Outline}}  spacing 0.5 }
+                                  """),
+            "A field of a group primitive should just work; it used to stop the render.");
+
+        string missing = ErrorFrom($$"""
+                                     {{Ball}}
+                                     field { of Ball(n)  {{Outline}}  spacing 0.5 }
+                                     """);
+
+        Assert.IsNotNull(missing,
+            "With no `index in n` there is nothing named n, and the scene should have said so.");
+        Assert.IsTrue(missing.Contains("'n'"),
+            $"The complaint should name n, but said: {missing}");
+    }
+
+    /// <summary>
+    /// Naming the number is not enough; it has to *vary*.  A clause that bound n to nought for every
+    /// copy would raise no complaint and make no difference, so the two fields here differ in one
+    /// thing only -- whether the ball's size is read from the copy number or fixed at the number
+    /// nought -- and the numbered one must cover more of the picture.
+    /// </summary>
+    [TestMethod]
+    public void TestTheNamedNumberVariesFromCopyToCopy()
+    {
+        int numbered = Lit($$"""
+                             {{Ball}}
+                             field { of Ball(n)  {{Outline}}  spacing 0.5  index in n }
+                             """);
+        int uniform = Lit($$"""
+                            {{Ball}}
+                            field { of Ball(0)  {{Outline}}  spacing 0.5 }
+                            """);
+
+        Assert.IsTrue(uniform > 0, "The uniform field covered nothing at all.");
+        Assert.IsTrue(numbered > uniform * 1.5,
+            $"Numbered copies covered {numbered} pixels against {uniform} for copies all built " +
+            "from nought, which is not enough of a difference to say the number varied.");
+    }
+
+    /// <summary>
+    /// A ball whose size is read from whatever it is handed, so that a copy's number shows up as
+    /// something a picture can be measured for.
+    /// </summary>
+    private const string Ball = """
+                                primitive Ball(n) -> sphere {
+                                    return sphere {
+                                        scale 0.05 + n * 0.011
+                                        material { pigment [1, 0.6, 0.3]  ambient 1  diffuse 0  specular 0 }
+                                    }
+                                }
+                                """;
+
+    private const string Outline =
+        "within { move to -1, -1  line to 1, -1  line to 1, 1  line to -1, 1  close }";
+
+    /// <summary>
+    /// Renders a small scene lit flat and counts how many pixels its surfaces cover.
+    /// </summary>
+    private int Lit(string body)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"field-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            string scene = Path.Combine(directory, "scene.igl");
+            string output = Path.Combine(directory, "out.png");
+
+            File.WriteAllText(scene,
+                "context { no gamma }\n" +
+                "camera { location [0, 3, -5]  look at [0, 0, 0]  field of view 40 }\n" +
+                "point light { location [-4, 6, -6] }\n" + body + "\n");
+
+            new LanguageParser(scene).Parse().Render(new RenderOptions
+            {
+                OutputFileName = output, Width = 100, Height = 100
+            });
+
+            Canvas canvas = new ImageFile(output).Load()[0];
+            int count = 0;
+
+            for (int y = 0; y < canvas.Height; y++)
+            {
+                for (int x = 0; x < canvas.Width; x++)
+                {
+                    if (canvas.GetPixel(x, y).Red > 0.15)
+                        count++;
+                }
+            }
+
+            return count;
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    /// <summary>
+    /// Renders a small scene and hands back the error that stopped it, or <c>null</c>.
+    /// </summary>
+    private string ErrorFrom(string body)
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"field-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            string scene = Path.Combine(directory, "scene.igl");
+
+            File.WriteAllText(scene,
+                "camera { location [0, 3, -5]  look at [0, 0, 0] }\n" +
+                "point light { location [-4, 6, -6] }\n" + body + "\n");
+
+            StringWriter captured = new ();
+            TextWriter was = Console.Out;
+
+            Console.SetOut(captured);
+
+            try
+            {
+                ImageRenderer renderer = new LanguageParser(scene).Parse();
+
+                renderer?.Render(new RenderOptions
+                {
+                    OutputFileName = Path.ChangeExtension(scene, ".png"), Width = 8, Height = 6
+                });
+            }
+            catch (Exception exception)
+            {
+                // A scene the parser accepts may still come apart when it is run, and that arrives
+                // as an exception rather than as a printed complaint.  Reaching for a name nothing
+                // has set is exactly that sort, so both have to be caught here.
+                return exception.Message;
+            }
+            finally
+            {
+                Console.SetOut(was);
+            }
+
+            string said = captured.ToString();
+
+            return said.Contains("Error") ? said.Trim() : null;
         }
         finally
         {
