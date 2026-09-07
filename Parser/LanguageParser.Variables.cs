@@ -39,6 +39,8 @@ public partial class LanguageParser
         IObjectResolver resolver = type switch
         {
             "pigment" => ParsePigmentClause(),
+            // An outline is a value like any other now, so that a primitive may be handed one.
+            "path" => ParseGeneralPathClause(),
             "material" => GetMaterialResolver(clause),
             "interior" => GetInteriorResolver(clause),
             "medium" => GetMediumResolver(clause),
@@ -71,6 +73,7 @@ public partial class LanguageParser
             "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
             "ribbon" => ParseRibbonClause(clause),
+            "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),

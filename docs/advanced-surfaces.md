@@ -246,6 +246,99 @@ merely as narrower at the top.
 The complete scene is
 [`docs/examples/advanced/tapered-extrusion.igl`](examples/advanced/tapered-extrusion.igl).
 
+### Field
+
+An area of the X/Z plane, given by a 2D outline, filled with copies of one surface.
+
+```
+Blade = ribbon { width 0.03 at [0, 0, 0]  width 0.002 at [0.16, 0.36, 0] }
+
+field {
+    of Blade
+    spacing 0.09
+    jitter 0.9
+
+    within {
+        move to -4, -1.6
+        quad 0, 2.6 to 4, -1.6
+        quad 0, 0.2 to -4, -1.6
+        close
+    }
+}
+```
+
+**What it buys is an area of any shape.**  A patch of grass cut to a verge, a border, an island in a
+roundabout — before this there were two shapes to be had, a square and a circle, and a scene wanting
+anything else had to write a loop and a containment test of its own.
+
+It is not only for grass.  Balls in a pit, a stand of trees, soldiers drawn up in ranks — anything
+that is one thing in many places over an area, and none of it needing a loop.
+
+| | |
+| --- | --- |
+| `within` | The outline to fill, in the X/Z plane. |
+| `of` | The name of the surface to fill it with. |
+| `spacing` | How far apart the copies stand, before any jitter. |
+| `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
+| `copies` | Give each place its own surface, rather than an instance of one shape; a name after it is what that copy's number is called. |
+
+**The copies are *instances* by default**, and that is the right way round: an
+instance's saving is in the *building* rather than the testing, which is exactly this case — one
+tuft of grass built once and stood in two thousand places costs one tuft to make.  What an instance
+cannot do is let each differ, since every one is the same geometry.  A scene that needs each its own
+way says `copies` and pays to build each of them.
+
+**`copies` is worth asking for only when something differs**, and what differs is the copy's own
+number.  Name it after `copies` — the way a loop names its counter — hand it to a primitive, and let
+the primitive's arithmetic do the rest:
+
+```
+primitive Blade(n) -> ribbon {
+    tall = 0.24 + random(n, 1) * 0.30
+    …
+}
+
+field {
+    of Blade(n)
+    within Verge
+    spacing 0.07
+    jitter 0.9
+    copies n
+}
+```
+
+Without a number, copies are the same geometry built over and over — strictly worse than an
+instance, which builds it once.  The number is set in a scope of its own for each copy, so it does
+not overwrite a name the field was written among and does not outlive the field.
+
+**`of` takes a name or a call.**  A named surface is the same shape everywhere, which is what an
+instance wants; a call of a primitive is what lets each copy be its own.
+
+**A lattice is very easy to see and impossible to unsee.**  `jitter` defaults to nought, which gives
+ranks and files — right for soldiers, wrong for grass.  Anything meant to look natural wants most of
+a cell of it, around `0.8` to `1`.  The jitter is repeatable: `with seed` decides it, so the same
+scene gives the same field every time and two fields beside each other need not be the same one
+twice.
+
+**The outline may be written out, named, or handed in.**  An outline is a value like a material, so
+it can be given a name and used in more than one field — and, more to the point, **passed to a
+primitive**, which is what lets a library offer an area of any shape instead of the one or two it
+happens to have built in:
+
+```
+Verge = path { move to -4, -1.4  quad 0, 2.4 to 4, -1.4  quad 0, 0.1 to -4, -1.4  close }
+
+primitive Sward(outline, step, wobble) -> field {
+    return field { of Blade  within outline  spacing step  jitter wobble }
+}
+
+object Sward(Verge, 0.09, 0.9)
+```
+
+**Each copy is tested where it has been moved to, not where the grid put it.**  Testing the grid
+point instead would let a copy's jitter carry it outside the very outline it was chosen for, which
+shows along every edge.
+
 ### Ribbon
 
 A flat strand of a given width, running through a series of points — a blade of grass, a strap, a

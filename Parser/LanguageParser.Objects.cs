@@ -132,6 +132,8 @@ public partial class LanguageParser
                 return ParseTubeClause(clause);
             case RibbonResolver:
                 return ParseRibbonClause(clause);
+            case FieldResolver:
+                return ParseFieldClause(clause);
             case SweepResolver:
                 return ParseSweepClause(clause);
             case TaperedExtrusionResolver:

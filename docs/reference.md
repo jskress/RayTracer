@@ -98,6 +98,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `context` | The block of render-wide settings. | [Context](context.md#angles) |
 | `controls` | L-system: how the string is drawn (pipes, tubes, sizes). | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `copyright` | Info: a copyright notice. | [Context](context.md#image-information) |
+| `copies` | A `field` gives each place its own surface instead of an instance of one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `crackle` | Pattern: cracked-cell (Worley) noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `cross` | Quadric: the coefficients of `xy`, `xz` and `yz`. | [Surfaces](surfaces.md#quadric) |
 | `csg` | Combines surfaces by a named set operation. | [Surfaces](surfaces.md#combining-surfaces) |
@@ -295,6 +296,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
+| `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -360,6 +362,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `width` | Context: image width in pixels. | [Context](context.md#image-size) |
+| `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `wood` | Pattern: concentric growth rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `wrinkles` | Pattern: crumpled noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

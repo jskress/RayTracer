@@ -44,6 +44,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartSwellsClause), HandleStartSwellsClause)
             .On(nameof(HandleStartTubeClause), HandleStartTubeClause)
             .On(nameof(HandleStartRibbonClause), HandleStartRibbonClause)
+            .On(nameof(HandleStartFieldClause), HandleStartFieldClause)
             .On(nameof(HandleStartSweepClause), HandleStartSweepClause)
             .On(nameof(HandleStartTextClause), HandleStartTextClause)
             .On(nameof(HandleStartTaperedTextClause), HandleStartTaperedTextClause)

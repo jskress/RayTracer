@@ -136,7 +136,10 @@ public class TestSheetSurfaces
             // A ribbon is a strip of sheets and never answers a ray itself -- what does is one of the
             // patches inside it, and those say they are sheets.  It sits here with `Sweep` and
             // `TextSolid` for the same reason: what a holder says about itself is never asked.
-            "Ribbon"
+            "Ribbon",
+            // A field is a holder too: it fills an outline with copies of something else, and what
+            // answers a ray is whichever of those it hit.
+            "Field"
         ];
 
         List<string> undecided = [];

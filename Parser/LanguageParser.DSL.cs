@@ -79,7 +79,7 @@ public partial class LanguageParser
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
-            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
+            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls', 'copies',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
@@ -97,12 +97,12 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
+            'specular', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'width', 'with', 'wood',
+            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -1111,6 +1111,34 @@ public partial class LanguageParser
             discontinuous | surfaceEntryClause
         ]
 
+        // Field clauses.
+        startPathClause:
+        {
+            path > openBrace ?? 'Expecting an open brace to follow "path" here.'
+        }
+        startFieldClause:
+        {
+            field > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "field" here.'
+        }
+        fieldEntryClause:
+        [
+            {
+                within > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "within" here.'
+            } |
+            {
+                of > [ _identifier | _keyword ]
+                    ?? 'Expecting a surface name, or a call of a primitive, to follow "of" here.' >
+                leftParen{?}
+            } |
+            { spacing > _expression } | { jitter > _expression } |
+            { copies > [ _identifier | _keyword ]{?} } |
+            surfaceEntryClause
+        ]
+
         // Ribbon clauses.
         startRibbonClause:
         {
@@ -1451,6 +1479,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
@@ -1530,6 +1559,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
@@ -1587,6 +1617,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
@@ -1674,14 +1705,14 @@ public partial class LanguageParser
         {
             [ _identifier | _keyword ] > assignment >
             [
-                pigment |
+                pigment | startPathClause |
                 { material > startThingClause } | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
-                startBlobClause | startSwellsClause | startTubeClause | startRibbonClause |
+                startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startFieldClause |
                 startSweepClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
@@ -1721,7 +1752,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | sweep | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | field | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -1840,6 +1871,7 @@ public partial class LanguageParser
             startSwellsClause         => 'HandleStartSwellsClause' |
             startTubeClause           => 'HandleStartTubeClause' |
             startRibbonClause => 'HandleStartRibbonClause' |
+            startFieldClause => 'HandleStartFieldClause' |
             startSweepClause          => 'HandleStartSweepClause' |
             startTextClause           => 'HandleStartTextClause' |
             startTaperedTextClause => 'HandleStartTaperedTextClause' |

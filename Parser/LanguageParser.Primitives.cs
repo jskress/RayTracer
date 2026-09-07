@@ -220,6 +220,7 @@ public partial class LanguageParser
             "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
             "ribbon" => ParseRibbonClause(clause),
+            "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "tapered extrusion" => ParseTaperedExtrusionClause(clause),
@@ -343,6 +344,8 @@ public partial class LanguageParser
                 "tubeEntryClause", HandleTubeEntryClause, validate: false),
             "ribbon" => ParseObjectResolver<RibbonResolver>(
                 "ribbonEntryClause", HandleRibbonEntryClause, validate: false),
+            "field" => ParseObjectResolver<FieldResolver>(
+                "fieldEntryClause", HandleFieldEntryClause, validate: false),
             "sweep" => ParseObjectResolver<SweepResolver>(
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
@@ -407,6 +410,7 @@ public partial class LanguageParser
             "swells" => "startSwellsClause",
             "tube" => "startTubeClause",
             "ribbon" => "startRibbonClause",
+            "field" => "startFieldClause",
             "sweep" => "startSweepClause",
             "extrusion" => "startExtrusionClause",
             "tapered extrusion" => "startTaperedExtrusionClause",
