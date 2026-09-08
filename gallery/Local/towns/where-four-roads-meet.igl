@@ -3,7 +3,7 @@
 //     import 'roads'       { Road, Curb, CurbArc, Roundabout, ParkingLot }
 //     import 'buildings'   { House, Row, Tower }
 //     import 'vehicles'    { Car, Van, Truck }
-//     import 'undergrowth' { Grass, GrassCircle, Tuft }
+//     import 'undergrowth' { Grass, Tuft }
 //     import 'daylight'    { LateAfternoonFrom, LateAfternoonLight }
 //
 // The other two town scenes are about a road as a *stretch*: something with a length, running past
@@ -33,7 +33,7 @@ Season = 'summer'
 import 'roads'       { Road, Curb, CurbArc, Roundabout, ParkingLot }
 import 'buildings'   { House, Row, Tower }
 import 'vehicles'    { Car, Van, Truck }
-import 'undergrowth' { Grass, GrassCircle, Tuft }
+import 'undergrowth' { Grass, Tuft }
 import 'daylight'    { LateAfternoonFrom, LateAfternoonLight }
 
 context {
@@ -83,10 +83,10 @@ plane {
 object Roundabout(6, 7, Season, 1)
 
 // The island is paved, because paving is something `roads` owns and grass is not -- so the grass goes on
-// here, which is what its notes suggest.  `GrassCircle` takes a diameter, so twelve is exactly the
-// island, and the disc beneath is simply the soil the grass grows out of rather than a way of hiding a
-// square patch's shortcomings.  (It was that, once: before `undergrowth` had a round patch the best a
-// square could do was sit inside the circle and leave the edge bare.)
+// here, which is what its notes suggest.  The outline is the island, drawn once as a circle, and the
+// disc beneath is simply the soil the grass grows out of rather than a way of hiding a square patch's
+// shortcomings.  (It was that, once: before a patch could be given a shape, the best a square could do
+// was sit inside the circle and leave the edge bare.)
 disc {
     material {
         pigment granite with seed 23 {
@@ -102,7 +102,22 @@ disc {
     center [0, 0.126, 0]  normal [0, 1, 0]
     radius 6
 }
-object GrassCircle(12, Season, 7, 0.45, 0.8) { translate Y 0.127 }
+// A circle of radius six, in eight arcs.  Each control point sits at 6/cos(22.5) out, which is where
+// the two end tangents cross -- put it on the circle instead and the "circle" comes out visibly small.
+Island = path {
+    move to 6, 0
+    quad 6, 2.485 to 4.243, 4.243
+    quad 2.485, 6 to 0, 6
+    quad -2.485, 6 to -4.243, 4.243
+    quad -6, 2.485 to -6, 0
+    quad -6, -2.485 to -4.243, -4.243
+    quad -2.485, -6 to 0, -6
+    quad 2.485, -6 to 4.243, -4.243
+    quad 6, -2.485 to 6, 0
+    close
+}
+
+object Grass(Island, Season, 7, 0.45, 0.8) { translate Y 0.127 }
 
 // The four arms, each pushed inside the circle so its corners meet it.
 object Road(50, 7, Season, 1) { translate X 37.52 }
@@ -179,9 +194,24 @@ for parked in [0, 2] {
 // Three corners of grass, not four -- the fourth is the complex and its lot.  Written out rather than
 // looped, because the one to leave out is a *particular* corner and a loop that skips an index is harder
 // to read than three lines that say where they are.
-object Grass(11, Season, 1, 0.5, 0.65) { translate [ 17, 0,  17] }
-object Grass(11, Season, 3, 0.5, 0.65) { translate [-17, 0, -17] }
-object Grass(11, Season, 4, 0.5, 0.65) { translate [ 17, 0, -17] }
+//
+// **A corner is the shape between two roads, and now it is drawn as one.**  It runs down the edge of
+// one arm, round the outside of the roundabout, and back out along the edge of the next, so the grass
+// meets the carriageway all the way rather than standing off it as a square did.  One outline serves
+// all three: the quadrant it is drawn in is turned to the other two.
+Corner = path {
+    move to 4.2, 27
+    line to 4.2, 13.7
+    quad 7.61, 12.655 to 10.133, 10.133
+    quad 12.655, 7.61 to 13.7, 4.2
+    line to 27, 4.2
+    line to 27, 27
+    close
+}
+
+object Grass(Corner, Season, 1, 0.5, 0.65)
+object Grass(Corner, Season, 3, 0.5, 0.65) { rotate Y 180 }
+object Grass(Corner, Season, 4, 0.5, 0.65) { rotate Y 90 }
 
 // Tufts right up against the outer curb -- but only in the four gaps *between* the arms.  Ringed evenly
 // at every fifteen degrees, twelve of twenty-four of them stood in an arm's mouth, which is grass growing

@@ -2,7 +2,9 @@
 //
 //     import 'undergrowth' { Grass, Boxwood }
 //
-//     object Grass(8)
+//     Lawn = path { move to -4, -4  line to 4, -4  line to 4, 4  line to -4, 4  close }
+//
+//     object Grass(Lawn)
 //     object Boxwood(1.2, 'winter') { translate X 3 }
 //
 // The `trees` library gives a scene its trees and leaves it standing on a flat green plane.  This one
@@ -15,7 +17,7 @@
 // habits.  Only the first is ever required.  `Grass` takes two more after those, and they come after
 // rather than among them precisely so that the first three mean what they mean everywhere else.
 //
-// | `Grass` | An area of it, covered edge to edge.  The first number is how far across. |
+// | `Grass` | An area of it, filling any outline you draw. |
 // | `Tuft` | One clump on its own, for putting somewhere in particular. |
 // | `Boxwood` | A dense clipped dome.  Evergreen, and takes snow in winter. |
 // | `Bramble` | Arching canes with leaves along them; berries in autumn, bare in winter. |
@@ -30,14 +32,15 @@
 // -- A word about what grass costs -----------------------------------------------------------------
 //
 // It is the one thing here that can make a scene slow, and it is worth being plain about why rather
-// than letting it be discovered.  A blade of grass is two cones; a tuft is a dozen blades; an area of
-// it is a tuft every fifth of a unit in both directions.  So `Grass(8)` is on the order of twenty
-// thousand surfaces, which this ray tracer handles perfectly well -- a group hands a ray a bounding
-// box and the ray never looks inside -- but it is twenty thousand rather than twenty.
+// than letting it be discovered.  A blade of grass is a ribbon of four patches; a tuft is ten blades;
+// an area of it is a tuft every fifth of a unit in both directions.  So a lawn eight units square is
+// on the order of seventy thousand surfaces, which this ray tracer handles perfectly well -- a group
+// hands a ray a bounding box and the ray never looks inside -- but it is seventy thousand rather than
+// seventy.
 //
 // The last number is what to turn when that matters:
 //
-//     object Grass(8, 'summer', 1, 0.3, 0.5)     // half as many tufts, a quarter the surfaces
+//     object Grass(Lawn, 'summer', 1, 0.3, 0.5)  // half as many tufts, a quarter the surfaces
 //
 // Halving it quarters the count, since the tufts thin out in both directions at once.  Grass seen from
 // across a field does not need what grass seen from a foot away needs.
@@ -161,81 +164,32 @@ primitive Tuft(height = 0.3, season = 'summer', variant = 1) -> group {
     }
 }
 
-// An area of it, `across` units on a side and centered where it is put.
+// An area of it, filling whatever outline it is given.  The outline is read on the X/Z plane, so a
+// patch is the shape you draw, standing where you draw it.
 //
-// The tufts are counted on a grid and then thrown nearly a whole cell off it, which is what stops the
-// grid from being the thing you see.  A lattice is very easy to notice and impossible to unsee.
-// The patch both `Grass` and `GrassCircle` are made of, laid out square and then cut to shape by a test
-// on each tuft.  One loop rather than two, because two copies of a loop this fiddly drift apart -- the
-// curb arcs in `roads` proved that within an afternoon.
-primitive UnderPatch(across, season, variant, height, density, circular) -> group {
-    step = height * 0.63 / density
-    last = across / step - 1
-    across8 = 8
-
-    return group {
-        // Gathered into blocks of eight by eight rather than left as one long list.  This used to
-        // be the whole of what made an area of grass affordable: a group asked *every* child, so one
-        // flat group of two thousand tufts was two thousand questions for every ray that reached the
-        // ground, and a sky light asks a great many rays.
-        //
-        // A group now arranges its own children into a hierarchy, which builds much the same shape
-        // this does by hand, and the two measure the same.  The blocking is left alone because it
-        // costs nothing and rewriting it would change every grass image, but it is no longer what
-        // makes this affordable and it is not a pattern to copy into anything new.
-        for blockRow in [0, last / across8] {
-            for blockColumn in [0, last / across8] {
-                group {
-                    for row in [0, across8 - 1] {
-                        for column in [0, across8 - 1] {
-                            here = blockRow * across8 + row
-                            over = blockColumn * across8 + column
-                            // Worked out once, because the round test needs the *jittered* position:
-                            // testing the grid position instead would let a tuft's jitter carry it
-                            // outside the circle it was chosen to be inside.
-                            px = over * step - across / 2 +
-                                 (random(here, over, variant + 1) - 0.5) * step * 1.8
-                            pz = here * step - across / 2 +
-                                 (random(here, over, variant + 2) - 0.5) * step * 1.8
-
-                            // The last block on each side hangs over the edge, so its overhang is
-                            // simply not made.  An area asked for is the area you get.
-                            if (here <= last and over <= last and
-                                (circular == 0 or px * px + pz * pz <= across * across * 0.25)) {
-                                object Tuft(height * (0.75 + random(here, over, variant) * 0.5),
-                                            season, variant * 7919 + here * 512 + over) {
-                                    translate [px, 0, pz]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// A square patch: `across` is the length of its side.
-primitive Grass(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
-    return group {
-        object UnderPatch(across, season, variant, height, density, 0)
-    }
-}
-
-// A round one: `across` is its **diameter**, so it fits the same number as the square would -- a patch
-// asked for eight across is eight across either way.
+// **A square is the wrong shape surprisingly often**, and for a long time the choice was a square or a
+// circle.  Anything laid against anything else -- a verge along a road, an island in a roundabout, the
+// ground a building does not stand on -- was a patch overhanging its neighbor at the corners or leaving
+// bare ground short of it, and for a square there is no size that does neither: its corners are always
+// 1.41 times its half-width out.  A patch is now cut to the ground it actually covers.
 //
-// This exists because a square is the wrong shape surprisingly often.  Anything laid against a circle --
-// a roundabout's island, a pond, a tree's drip line -- has a square patch either overhanging it at the
-// corners or leaving a ring of bare ground inside it, and there is no size that does neither: a square's
-// corners are always 1.41 times its half-width out.  The obvious repair is to intersect the square patch
-// with a cylinder, and that does not work at all: a patch of any size is hundreds of separate tufts, and
-// a `CsgSurface` -- unlike a `Group` -- has no bounded traversal for a shadow query, so every shadow ray
-// walks every tuft with no distance pruning.  Under a sky light a modest one had not finished rendering
-// after ten minutes.  Testing each tuft as it is placed costs nothing at all.
-primitive GrassCircle(across, season = 'summer', variant = 1, height = 0.3, density = 1) -> group {
-    return group {
-        object UnderPatch(across, season, variant, height, density, 1)
+// The obvious way to cut one to shape would be to intersect it with something, and that does not work
+// at all: a patch is hundreds of separate tufts, and a `CsgSurface` -- unlike a `Group` -- has no
+// bounded traversal for a shadow query, so every shadow ray walks every tuft with no distance pruning.
+// Under a sky light a modest one had not finished rendering after ten minutes.  Deciding each tuft as
+// it is placed costs nothing at all, which is what a `field` does.
+//
+// The tufts stand on a grid and are then thrown nearly a whole cell off it, which is what stops the
+// grid from being the thing you see.  A lattice is very easy to notice and impossible to unsee.  Each
+// tuft takes its height and its own arrangement of blades from its number within the patch, so no two
+// are the same and the patch does not repeat.
+primitive Grass(shape, season = 'summer', variant = 1, height = 0.3, density = 1) -> field {
+    return field {
+        of Tuft(height * (0.75 + random(variant, n, 1) * 0.5), season, variant * 7919 + n)
+        within shape
+        spacing height * 0.63 / density
+        jitter 1.8
+        index in n
     }
 }
 

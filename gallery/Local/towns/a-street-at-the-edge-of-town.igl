@@ -140,16 +140,22 @@ object Birch(4.2, 'summer', 2) { translate [4.2, 0, -3.6] }
 
 // Grass on the verge between the houses and the road.
 //
-// A verge is a *strip*, and `Grass` does not make one: its number is how far across a patch reaches in
-// both directions at once, so `Grass(9)` is a nine-by-nine square centered where it is put.  Two of
-// those laid along a frontage reach four and a half units back from their line, which put grass across
-// the whole carriageway.  A run of narrow patches shoulder to shoulder is how a strip is asked for, and
-// it costs less than the two squares did, since a strip is a good deal less ground than a field.
-for patch in [0, 6] {
-    object Grass(3.4, 'summer', 21 + patch) {
-        translate [patch * 3.4 - 12, 0, -2.85]
-    }
+// A verge is a *strip*, and it is asked for as one.  The curb edge is straight, because a curb is; the
+// edge against the houses wanders, because nothing there is mown to a line.
+//
+// This was seven narrow squares shoulder to shoulder, which is what a strip cost when a patch could
+// only be a square centered where it was put -- two proper ones laid along the frontage reached four
+// and a half units back from their line and put grass across the whole carriageway.
+Verge = path {
+    move to -13.7, -1.15
+    line to 10.1, -1.15
+    line to 10.1, -3.9
+    quad 3.0, -4.8 to -3.5, -4.1
+    quad -9.0, -3.5 to -13.7, -4.4
+    close
 }
+
+object Grass(Verge, 'summer', 21)
 
 // Tufts at the curb, where the mower does not reach.  They sit a little clear of the road's edge, on
 // the grass side of it.

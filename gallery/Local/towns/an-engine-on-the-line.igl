@@ -89,23 +89,43 @@ object Track(78)
 object Locomotive(11.6, Season)
 object Tender(8.05, Season) { translate X -10.35 }
 
-// Grass either side of the line, and **`Grass` lays a square**: the number it takes is the side of the
-// patch, not its length along one axis.  Asking for one seventy-four across to line a
-// seventy-eight-unit track put grass over the rails and the sleepers both -- which reads as a line
-// nobody has used in ten years -- and made forty-four thousand tufts doing it.  Narrow patches strung
-// along the line cover the same ground, keep off a bed that gets tamped every few years, and cost about
-// a quarter as much.
-for patch in [0, 7] {
-    object Grass(9, Season, patch + 1, 0.52, 0.7) {
-        translate [(patch - 3.5) * 9, -0.64, -7.2]
-    }
-    object Grass(9, Season, patch + 20, 0.58, 0.6) {
-        translate [(patch - 3.5) * 9, -0.64, -16.4]
-    }
-    object Grass(9, Season, patch + 40, 0.55, 0.6) {
-        translate [(patch - 3.5) * 9, -0.64, 7.4]
-    }
+// Grass either side of the line, kept off the bed itself -- ballast that gets tamped every few years
+// does not grow anything, and grass over the rails and sleepers reads as a line nobody has used in ten
+// years.  The edge against the ballast wanders, because that is where the shoulder runs out rather
+// than a line anyone drew.
+//
+// This was twenty-four square patches strung along the track in three rows.  A square was all a patch
+// could be, so lining a seventy-eight-unit track meant either a row of them or one square seventy-four
+// across -- which covered the line as well as the sides of it, and made forty-four thousand tufts
+// doing it.
+Lineside = path {
+    move to -40, 2.9
+    quad -18, 3.9 to 4, 3.1
+    quad 24, 2.4 to 40, 3.3
+    line to 40, 12.4
+    line to -40, 12.4
+    close
 }
+
+Farside = path {
+    move to -40, -2.7
+    line to 40, -2.7
+    line to 40, -21.5
+    line to -40, -21.5
+    close
+
+    // A bare strip where the cess and the drain run, which is kept clear.
+    move to -40, -11.4
+    quad -14, -12.4 to 8, -11.6
+    quad 26, -11.0 to 40, -11.9
+    line to 40, -13.6
+    quad 26, -12.7 to 8, -13.3
+    quad -14, -14.1 to -40, -13.1
+    close
+}
+
+object Grass(Lineside, Season, 41, 0.55, 0.6) { translate Y -0.64 }
+object Grass(Farside, Season, 1, 0.54, 0.62)  { translate Y -0.64 }
 
 // Taller tufts right on the shoulder, where the ballast runs out and nothing tamps it.
 for tuft in [0, 25] {

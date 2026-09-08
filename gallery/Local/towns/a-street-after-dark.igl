@@ -131,21 +131,33 @@ object Car(4.5, Season, 4) { translate [-16, 0, -2.2] }
 
 // A little grass behind each pavement, dark at this hour and there mostly so the ground is not bare.
 //
-// **Behind, and the arithmetic has to be done rather than eyeballed.**  `Grass` takes the width of a
-// *square* patch centred on where it is put, and the strip actually clear here is long and thin, so this
-// is a run of small patches rather than one big square.  A pavement is 3.2 wide laid at 5.3, which puts
-// its back edge at 6.9; the far side has the houses to stay out of as well, standing at 12 and reaching
-// `height * 0.30` either way, so its clear strip is only the 3.8 between 6.9 and 10.7.  Patches of 3.2
-// at 8.6 sit inside both.
+// **Behind, and the arithmetic still has to be done rather than eyeballed** -- but it is now done once,
+// in the outline, rather than worked backwards into a run of squares.  A pavement is 3.2 wide laid at
+// 5.3, which puts its back edge at 6.9; the far side has the houses to stay out of as well, standing at
+// 12 and reaching `height * 0.30` either way, so the strip actually clear over there is only the 3.8
+// between 6.9 and 10.7.  Each verge is drawn to sit inside what it has.
 //
-// The first cut of this scene put one patch of *fourteen* on each side at 9.5, which reaches seven
-// either way: it lay across the paving and out over the curb into the gutter, and the far one was
-// almost entirely outside the frame, paying for tufts nothing could see.
-for patch in [0, 7] {
-    object Grass(3.2, Season, patch + 1, 0.4, 0.5) {
-        translate [patch * 2.4 - 19, -0.13, -8.6]
-    }
-    object Grass(3.2, Season, patch + 2, 0.4, 0.5) {
-        translate [patch * 2.4 - 16, -0.13, 8.6]
-    }
+// It was a run of eight small patches a side, because a patch could only be a square centred on where
+// it was put and the clear ground is long and thin.  Before that it was one square of *fourteen* a
+// side at 9.5, which reaches seven either way: it lay across the paving and out over the curb into the
+// gutter, and the far one was almost entirely outside the frame, paying for tufts nothing could see.
+NearVerge = path {
+    move to -20.6, -10.2
+    line to -0.6, -10.2
+    line to -0.6, -7.2
+    quad -8.0, -6.6 to -14.0, -7.3
+    line to -20.6, -7.0
+    close
 }
+
+FarVerge = path {
+    move to -17.6, 7.0
+    line to 2.4, 7.0
+    line to 2.4, 10.2
+    quad -5.0, 9.6 to -11.0, 10.3
+    line to -17.6, 10.0
+    close
+}
+
+object Grass(NearVerge, Season, 1, 0.4, 0.5) { translate Y -0.13 }
+object Grass(FarVerge, Season, 2, 0.4, 0.5)  { translate Y -0.13 }
