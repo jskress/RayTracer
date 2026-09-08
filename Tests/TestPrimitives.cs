@@ -553,4 +553,181 @@ public class TestPrimitives
             "a combination placed by a call should be the same as one written out where it stands");
     }
 
+    /// <summary>
+    /// A material may be handed to a primitive, the way an outline may.
+    /// <para>
+    /// The two calls differ in nothing but the material given, so the two spheres must come back
+    /// different colors.  Checking that the scene merely *ran* would pass on a primitive that ignored
+    /// what it was given and painted both the same.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAPrimitiveMayBeGivenAMaterial()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            Ruby = material { pigment [0.9, 0.1, 0.1]  ambient 1  diffuse 0  specular 0 }
+            Jade = material { pigment [0.1, 0.9, 0.1]  ambient 1  diffuse 0  specular 0 }
+            primitive Ball(coat) -> group { return group { sphere { scale 2  material coat } } }
+            object Ball(Ruby) { translate X -3 }
+            object Ball(Jade) { translate X  3 }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+
+        Color left = Reddest(image, 0, image.Width / 2);
+        Color right = Reddest(image, image.Width / 2, image.Width);
+
+        Assert.IsTrue(left.Red > 0.5 && left.Green < 0.4,
+            $"the sphere given the red material came back {left}");
+        Assert.IsTrue(right.Green > 0.5 && right.Red < 0.4,
+            $"the sphere given the green material came back {right}");
+    }
+
+    /// <summary>
+    /// And it may have a fallback, like any other parameter.
+    /// </summary>
+    [TestMethod]
+    public void TestAMaterialParameterMayHaveADefault()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            Ruby = material { pigment [0.9, 0.1, 0.1]  ambient 1  diffuse 0  specular 0 }
+            primitive Ball(coat = Ruby) -> group { return group { sphere { scale 2  material coat } } }
+            object Ball()
+            """);
+
+        Assert.IsNull(error, error);
+
+        Color middle = Reddest(image, 0, image.Width);
+
+        Assert.IsTrue(middle.Red > 0.5 && middle.Green < 0.4,
+            $"the sphere took its fallback material and came back {middle}");
+    }
+
+    /// <summary>
+    /// **Only a parameter is read late, and this is the test that says so.**
+    /// <para>
+    /// Reading any unknown name as a term would work just as well for the case above and would
+    /// quietly undo the import filter: a scene that asked a library for two names out of five has the
+    /// other three pruned from the parser's own table, and a name looked up when the scene runs
+    /// instead would find them anyway, the values themselves all going over whole.  So a name that is
+    /// not a parameter must still be refused while parsing, and a typo is the cheapest way to ask.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAMaterialNameThatIsNotAParameterIsStillResolvedEarly()
+    {
+        // The primitive is never called, so a name read *late* would never be looked up at all and
+        // the scene would render perfectly well.  Only resolving it while the body is read can fail
+        // here, which is what makes this tell the two apart -- a plain typo does not, since that is
+        // refused either way and only the moment and the wording differ.
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            Ruby = material { pigment [0.9, 0.1, 0.1] }
+            primitive Never() -> group { return group { sphere { material Rubi } } }
+            sphere { scale 2  material Ruby }
+            """);
+
+        Assert.IsNull(image, "a material name that is not a parameter should be refused while parsing");
+        Assert.IsTrue(error.Contains("Rubi"), $"the complaint should name it: {error}");
+    }
+
+    /// <summary>
+    /// The most colored pixel in a band of the picture, which is how a sphere's color is read back
+    /// without having to know exactly where it landed.
+    /// </summary>
+    private static Color Reddest(Canvas image, int from, int to)
+    {
+        Color best = new (0, 0, 0);
+
+        for (int x = from; x < to; x++)
+        {
+            for (int y = 0; y < image.Height; y++)
+            {
+                Color pixel = image.GetPixel(x, y);
+
+                if (pixel.Red + pixel.Green + pixel.Blue > best.Red + best.Green + best.Blue)
+                    best = pixel;
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>
+    /// Every shape that takes an outline takes the *name* of one, which is what lets a primitive be
+    /// handed the shape it is to make.
+    /// <para>
+    /// Each is drawn twice, once with the outline written out where it stands and once handed in, and
+    /// the two are compared by what they cover.  A named outline that arrived empty would raise no
+    /// complaint at all and simply draw nothing, so "it ran" is not an answer here.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryShapeThatTakesAnOutlineMayBeHandedOne()
+    {
+        const string Runs = """
+            move to 0.1, -1
+            line to 0.8, -1
+            quad 1.0, -0.2 to 0.6, 0.35
+            quad 0.35, 0.75 to 0.5, 1
+            line to 0.1, 1
+            close
+            """;
+        const string Flat = "material { pigment [1, 0.6, 0.3]  ambient 1  diffuse 0  specular 0 }";
+        const string Spline = "spline { move to 0, -1.2, 0  quad 0.4, 0, 0.3 to 0, 1.2, 0 }";
+
+        foreach ((string what, string keyword, string extra) in new[]
+                 {
+                     ("a lathe", "path", ""),
+                     ("a sweep", "profile", Spline),
+                     ("a generic shape", "path", "")
+                 })
+        {
+            string shape = what == "a lathe" ? "lathe" : what == "a sweep" ? "sweep" : "generic shape";
+            int written = Covered($$"""
+                {{Staging}}
+                {{shape}} { {{keyword}} { {{Runs}} }  {{extra}}  {{Flat}}  scale 2 }
+                """, what + ", written out");
+            int handed = Covered($$"""
+                {{Staging}}
+                Outline = path { {{Runs}} }
+                primitive Make(shape) -> group {
+                    return group { {{shape}} { {{keyword}} shape  {{extra}}  {{Flat}}  scale 2 } }
+                }
+                object Make(Outline)
+                """, what + ", handed in");
+
+            Assert.IsTrue(written > 0, $"{what} written out covered nothing at all");
+            Assert.AreEqual(written, handed,
+                $"{what} covered {handed} pixels when handed its outline against {written} " +
+                "with the same one written out");
+        }
+    }
+
+    /// <summary>
+    /// Renders a scene and counts how many pixels its surfaces cover.
+    /// </summary>
+    private int Covered(string scene, string what)
+    {
+        (Canvas image, string error) = Render(scene);
+
+        Assert.IsNull(error, $"{what}: {error}");
+        Assert.IsNotNull(image, what);
+
+        int count = 0;
+
+        for (int x = 0; x < image.Width; x++)
+        {
+            for (int y = 0; y < image.Height; y++)
+            {
+                if (image.GetPixel(x, y).Red > 0.15)
+                    count++;
+            }
+        }
+
+        return count;
+    }
 }

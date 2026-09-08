@@ -1051,6 +1051,38 @@ a medium filling them must be one that has an answer over an endless span; a med
 need not.  The check therefore travels with the *use*, so the same named medium may be refused in one
 place and accepted in another.
 
+**A primitive may be handed more than numbers.**  An outline and a material are both values a scene
+can name, and either may be a parameter — which is what lets one recipe serve cases that differ only
+in what they are cut to or what they are painted with:
+
+```
+Verge = path { move to -9, -1  line to 9, -1  line to 9, 1  line to -9, 1  close }
+Brass = material { pigment [0.72, 0.58, 0.18]  specular 0.6  shininess 120 }
+
+primitive Stud(coat) -> group {
+    return group { sphere { scale 0.12  material coat } }
+}
+
+primitive Studs(outline, coat) -> field {
+    return field { of Stud(coat)  within outline  spacing 0.5 }
+}
+
+object Studs(Verge, Brass)
+```
+
+Every shape that takes an outline takes the name of one: a
+[field](advanced-surfaces.md#field)'s `within`, and the `path` of an
+[extrusion](advanced-surfaces.md#extrusion), a [lathe](advanced-surfaces.md#lathe) or a
+[generic shape](advanced-surfaces.md#generic-shape) — and a [sweep](advanced-surfaces.md#sweep)'s
+`profile`, which is the same thing under another word. Each accepts the block written out where it
+stands or the name of one drawn earlier.
+
+A material named at a *use* is normally settled while the file is read, which is how a scene that
+imported two names out of a library is stopped from writing a third. A parameter is the exception,
+having no value until the primitive is called, so a material name that is one of the enclosing
+primitive's parameters — and only then — is looked up when the scene runs instead.  A mistyped
+material name is still refused where it is written.
+
 **A primitive may hold smaller ones**, and functions too — a fence knows how to make a post, and
 nobody else needs to:
 

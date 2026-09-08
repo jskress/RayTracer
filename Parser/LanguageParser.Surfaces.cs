@@ -138,7 +138,7 @@ public partial class LanguageParser
                 resolver.SeedResolver = new TermResolver<int?> { Term = term };
                 break;
             case "material":
-                resolver.MaterialResolver = GetMaterialResolver(clause);
+                resolver.MaterialResolver = GetMaterialResolverForUse(clause);
                 break;
             case "no.shadow":
                 resolver.NoShadowResolver = new LiteralResolver<bool> { Value = true };

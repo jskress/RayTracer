@@ -187,7 +187,9 @@ and its siblings do arrive.  They carry the prefix so they will not collide with
 ```
 import 'undergrowth' { Grass, Boxwood, Lavender }
 
-object Grass(10)
+Lawn = path { move to -5, -5  line to 5, -5  line to 5, 5  line to -5, 5  close }
+
+object Grass(Lawn)
 object Boxwood(1.2, 'winter')    { translate X 3 }
 object Lavender(0.8, 'summer', 4) { translate X -3 }
 ```
@@ -198,27 +200,31 @@ picture of some trees from a picture of somewhere.
 
 | | |
 | --- | --- |
-| `Grass` | An area of it, covered edge to edge.  The first number is how far across, not how tall. |
-| `GrassCircle` | The same cut to a circle, the first number being its diameter. |
+| `Grass` | An area of it, filling any outline you draw. |
 | `Tuft` | One clump on its own, for putting somewhere in particular. |
 | `Boxwood` | A dense clipped dome.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
 | `Bramble` | Arching canes with leaves along them; berries in autumn, bare canes in winter. |
 | `Lavender` | A mound of fine stems, in flower through the summer and cut back by winter. |
 
-**The first three numbers mean what they mean everywhere else** — how big, what time of year, and
+**The first three arguments mean what they mean everywhere else** — how big, what time of year, and
 which one of that kind — so a scene that has planted an autumn stand can plant autumn undergrowth
-beneath it without learning a second set of habits.  Only the first is ever required.
+beneath it without learning a second set of habits.  Only the first is ever required.  For `Grass`
+"how big" is an outline rather than a number, since an area has a shape as well as a size.
 
-**A square is the wrong shape surprisingly often**, which is why `GrassCircle` exists.  Anything laid
-against a circle — a roundabout's island, a pond, a tree's drip line — has a square patch either
-overhanging it at the corners or leaving a ring of bare ground inside it, and no size does neither: a
-square's corners are always 1.41 times its half-width out from the middle.
+**A square is the wrong shape surprisingly often**, and for a long while the choice was a square or a
+circle.  Anything laid against anything else — a verge along a road, a roundabout's island, the ground
+a building does not stand on — had a patch overhanging its neighbor at the corners or leaving bare
+ground short of it, and for a square no size does neither: its corners are always 1.41 times its
+half-width out from the middle.  So `Grass` takes the shape it is to fill.
 
-The obvious repair is to intersect a square patch with a cylinder, and that does not work at all.  A
-patch of any size is hundreds of separate tufts, and a `CsgSurface` — unlike a `Group` — has no bounded
-traversal for a shadow query, so every shadow ray walks every tuft with no distance pruning whatever.
-Under a sky light a modest patch had not finished rendering after **ten minutes**.  Testing each tuft
-against the circle as it is placed costs nothing, which is what this does.
+The outline is read on the X/Z plane, and holes in it are holes in the grass — which is how you keep a
+sward off a scree, or off the footings of a building.
+
+The obvious repair, before this, was to intersect a square patch with something, and that does not work
+at all.  A patch of any size is hundreds of separate tufts, and a `CsgSurface` — unlike a `Group` — has
+no bounded traversal for a shadow query, so every shadow ray walks every tuft with no distance pruning
+whatever.  Under a sky light a modest patch had not finished rendering after **ten minutes**.  Deciding
+each tuft as it is placed costs nothing, which is what a `field` does.
 
 **What a season does differs by plant**, as it does in a garden.  Grass goes tawny and then to pale
 straw, and lies down as well as changing color.  A bramble turns, fruits, and finally stands as bare
@@ -233,13 +239,12 @@ picture reads immediately, and costs *less*, since taller tufts stand further ap
 like static, make it taller before you make it denser.
 
 **Grass is the one thing here that can make a scene slow**, and it is worth saying so plainly rather
-than leaving it to be discovered.  A blade is two tubes, a tuft is a dozen blades, and an area of it
-is a tuft every fifth of a unit in both directions — so `Grass(8)` is on the order of twenty thousand
-surfaces.  That is a number this ray tracer handles perfectly well, but it is twenty thousand rather
-than twenty, and the reason it is affordable is worth knowing: the tufts are gathered into blocks of
-sixty-four and the blocks into one group.  A group that a ray gets inside asks *every* child, so one
-flat list of two thousand tufts is two thousand questions per ray; two layers makes it thirty-odd.
-Measured on one patch, flattening it is the same picture and **four times the wait**.
+than leaving it to be discovered.  A blade is a ribbon of four patches, a tuft is ten blades, and an
+area of it is a tuft every fifth of a unit in both directions — so a lawn eight units square is on the
+order of seventy thousand surfaces.  That is a number this ray tracer handles perfectly well, but it
+is seventy thousand rather than seventy.  What makes it affordable is that a group arranges its own
+children into a hierarchy, so a ray that reaches the ground asks about a handful of boxes rather than
+every tuft in the patch.
 
 A [sky light](materials.md) is the other half of any grass bill.  It works by looking at the dome from
 many directions at every point it lights, and every one of those looks has to get out through the
@@ -250,7 +255,7 @@ is used costs less than it sounds — grass has no large flat surface for the gr
 precisely so the first three keep their meaning:
 
 ```
-object Grass(8, 'summer', 1, 0.3, 0.5)     // half as many tufts, a quarter the surfaces
+object Grass(Lawn, 'summer', 1, 0.3, 0.5)  // half as many tufts, a quarter the surfaces
 ```
 
 Halving the last one quarters the count, since the tufts thin out in both directions at once.  Grass
@@ -261,8 +266,10 @@ seen from across a field does not need what grass seen from a foot away needs.
 ```
 import 'rocks' { Boulder, Scree }
 
+Slope = path { move to -3, 1  line to 3, 1  line to 3, 7  line to -3, 7  close }
+
 object Boulder(1.2)
-object Scree(6, 'winter')        { translate Z 4 }
+object Scree(Slope, 'winter')
 ```
 
 The other two libraries grow things.  This one is what they grow among, and it is the last thing a
@@ -272,7 +279,7 @@ piece of ground needs before it stops looking swept.
 | --- | --- |
 | `Boulder` | One big weathered stone, lumpy all over.  The expensive one — see below. |
 | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
-| `Scree` | An area of cobbles, thrown down thickly.  The first number is how far across. |
+| `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
 
 **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
 the four are the same stone; in winter snow lies on top of it, as it gathers on the fir and the
@@ -293,6 +300,11 @@ rather than weathered stone, and measured about four times a sphere rather than 
 
 That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
 for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
+
+**`Scree` fills an outline, exactly as `Grass` does**, and for the same reason: stone runs out where a
+slope runs out, not along a line at right angles to another line.  Draw the outline for a heap and
+draw a hole in the grass to match, a little smaller, and the stones run in under the grass at the
+edge instead of leaving a bare ring between them.
 
 ##### What makes a shape into stone
 

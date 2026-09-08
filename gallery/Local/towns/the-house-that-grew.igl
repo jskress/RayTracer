@@ -125,13 +125,19 @@ object Elm(11.0, 'summer', 4)  { translate [-3, 0, 24] }
 object Elm(9.0,  'summer', 9)  { translate [-30, 0, 20] }
 object Birch(6.6, 'summer', 6) { translate [-26, 0, -6] }
 
-// Rough grass across the front, jittered in both directions.  A patch every so many units, jittered
-// only across, still reads as a row of patches.
-for patch in [0, 6] {
-    object Grass(3.8, 'summer', 20 + patch, 0.32) {
-        translate [patch * 4.4 - 16, 0, -14 + random(patch, 41, 5) * 3]
-    }
+// Rough grass across the front, as one band with an edge that wanders.  It was a row of square
+// patches jittered along their line, and a row of patches jittered only across still reads as a row
+// of patches -- the eye finds the rhythm whatever the offsets do.
+Front = path {
+    move to -18.5, -16.5
+    line to 13.0, -16.5
+    quad 9.0, -12.0 to 3.5, -10.6
+    quad -4.0, -9.0 to -11.0, -10.4
+    quad -15.5, -11.2 to -18.5, -10.0
+    close
 }
+
+object Grass(Front, 'summer', 20, 0.32)
 
 for i in [0, 11] {
     object Tuft(0.26 + random(i, 31, 5) * 0.30, 'summer', i + 40) {

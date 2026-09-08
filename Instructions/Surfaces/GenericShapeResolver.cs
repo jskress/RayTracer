@@ -1,5 +1,6 @@
 using RayTracer.General;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
 using RayTracer.Instructions.Surfaces.Extrusions;
 
 namespace RayTracer.Instructions.Surfaces;
@@ -12,7 +13,7 @@ public class GenericShapeResolver : SurfaceResolver<GenericShape>, IValidatable
     /// <summary>
     /// This property holds the resolver for the path property on a generic shape.
     /// </summary>
-    public GeneralPathResolver PathResolver { get; set; }
+    public Resolver<GeneralPath> PathResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a

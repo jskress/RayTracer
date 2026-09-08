@@ -28,13 +28,12 @@
 // real garden in October is not uniformly autumnal; it is a few things changing among a lot of things
 // that are not, and a library that made everything turn together would look painted.
 //
-// **The grass is where the cost is**, and it is worth knowing why.  Every blade is two tubes, so the
-// sward here is a bit over forty thousand surfaces against a couple of thousand for everything else.
-// It renders at all because of how those forty thousand are stacked: the tufts are gathered into
-// blocks of sixty-four and the blocks into one group, so a ray that reaches the ground asks about
-// thirty-odd boxes rather than two thousand.  Left flat it is the same picture and several times the
-// wait.  The last number to `Grass` is what to turn down when a draft needs to be quick -- halving it
-// quarters the count.
+// **The grass is where the cost is**, and it is worth knowing why.  Every blade is a ribbon of four
+// patches, so the sward here is some tens of thousands of surfaces against a couple of thousand for
+// everything else.  It renders at all because of how those are stacked: a group arranges its own
+// children into a hierarchy, so a ray that reaches the ground asks about a handful of boxes rather
+// than every tuft in the field.  The last number to `Grass` is what to turn down when a draft needs
+// to be quick -- halving it quarters the count, since the tufts thin in both directions at once.
 //
 // The sky light is the other half of the bill and is turned down here too, for a reason worth knowing:
 // a sky light works by looking at the dome from many directions at every point it lights, and every
@@ -93,7 +92,38 @@ plane {
 
 Season = 'summer'
 
-object Grass(19, Season, 1, 0.75, 0.85) { translate Z -4 }
+// The field, cut to its own corner rather than laid down as a square.  Its far edge follows the
+// bramble hedge, which is what a hedge is; the near right is the corner of the title, and outside it
+// the headland is bare, as a headland is.  A square patch put a straight edge across the foreground
+// and ran the grass on through the hedge and out the other side.
+Field = path {
+    move to -12, -3.4
+    line to 4.2, -3.4
+    quad 8.2, -2.8 to 8.6, 0.8
+    quad 8.4, 4.6 to 3.4, 6.4
+    quad -3.5, 8.2 to -12, 7.2
+    close
+}
+
+object Grass(Field, Season, 1, 0.75, 0.85)
+
+// The next field over, past the hedge, shorter and thinner because it is far enough away that no one
+// can tell -- and because without it the ground back there is a flat green plane, which is the one
+// thing grass is here to stop.
+//
+// It reaches only as far as the hedge hides.  Lifting the camera to show off the corner put the far
+// edge of this in shot with bare ground beyond it, which is a worse fault than the one it fixed:
+// grass has to stop somewhere, and the trick is to stop it where nothing is looking.
+Beyond = path {
+    move to -22, -30
+    line to 22, -30
+    line to 22, -4.6
+    quad 4, -3.4 to -6, -4.8
+    line to -22, -4.4
+    close
+}
+
+object Grass(Beyond, Season, 4, 0.30, 0.45)
 
 // Two trees, well back, because the field is the subject and they are what it is a corner of.
 object Oak(9, Season, 3)    { translate [-4.5, 0, -7] }

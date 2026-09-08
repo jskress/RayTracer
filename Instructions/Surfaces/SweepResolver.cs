@@ -1,5 +1,6 @@
 using RayTracer.General;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
 using RayTracer.Instructions.Surfaces.Extrusions;
 
 namespace RayTracer.Instructions.Surfaces;
@@ -12,7 +13,7 @@ public class SweepResolver : SurfaceResolver<Sweep>, IValidatable
     /// <summary>
     /// This property holds the resolver for the sweep's 2D cross-section.
     /// </summary>
-    public GeneralPathResolver ProfileResolver { get; set; }
+    public Resolver<GeneralPath> ProfileResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the 3D path the profile is lofted along.

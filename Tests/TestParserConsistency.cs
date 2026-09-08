@@ -152,6 +152,9 @@ public class TestParserConsistency
         handled.ExceptWith(new[]
         {
             "pigment", "material", "interior", "transform", "medium",
+            // An outline is a value a scene may name, so that a primitive can be handed one; it is
+            // not a surface and has no place in what may stand in a group.
+            "path",
             "light", "point", "distant", "spot", "area", "sky"
         });
 

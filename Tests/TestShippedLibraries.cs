@@ -502,18 +502,24 @@ public class TestShippedLibraries
     /// cannot notice a rename.
     /// </summary>
     private static readonly string[] Plants =
-        ["Grass", "GrassCircle", "Tuft", "Boxwood", "Bramble", "Lavender"];
+        ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender"];
 
     /// <summary>
-    /// How big to ask for each, since these are not all measured in the same thing: the first number
-    /// to <c>Grass</c> is how far across a patch reaches, and to everything else it is a height.
+    /// How big to ask for each, since these are not all measured in the same thing: what <c>Grass</c>
+    /// is given is the outline it fills, and everything else is given a height.
     /// </summary>
     private static string SizeOf(string plant) => plant switch
     {
-        "Grass" => "2",
+        "Grass" => "GrassOutline",
         "Tuft" => "0.5",
         _ => "1.1"
     };
+
+    /// <summary>
+    /// The outline <c>Grass</c> is handed, which nothing else needs.
+    /// </summary>
+    private const string GrassOutline =
+        "GrassOutline = path { move to -1, -1  line to 1, -1  line to 1, 1  line to -1, 1  close }";
 
     /// <summary>
     /// Grows one plant in one season, and hands back whatever stopped it.
@@ -532,6 +538,7 @@ public class TestShippedLibraries
             point light { location [-4, 6, -5] }
             background [0.5, 0.6, 0.8]
             plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{(plant == "Grass" ? GrassOutline : "")}}
             object {{call}}
             """);
 
@@ -642,7 +649,8 @@ public class TestShippedLibraries
                 point light { location [-3, 6, -3] }
                 background [0.5, 0.5, 0.5]
                 plane { material { pigment [0.5, 0.5, 0.5] } }
-                object Grass(4, '{{season}}', 1)
+                Field = path { move to -2, -2  line to 2, -2  line to 2, 2  line to -2, 2  close }
+                object Grass(Field, '{{season}}', 1)
                 """);
 
             Assert.IsNull(Render(scene, 110, 110), $"grass should render in {season}");
@@ -688,7 +696,8 @@ public class TestShippedLibraries
                 point light { location [-4, 6, -5] }
                 background [0.5, 0.6, 0.8]
                 plane { material { pigment [0.9, 0.1, 0.1] } }
-                object Grass(3, 'summer', 1, 0.3, {{density}})
+                Field = path { move to -1.5, -1.5  line to 1.5, -1.5  line to 1.5, 1.5  line to -1.5, 1.5  close }
+                object Grass(Field, 'summer', 1, 0.3, {{density}})
                 """);
 
             Assert.IsNull(Render(scene, 120, 90), $"grass at a density of {density} should render");
@@ -749,7 +758,7 @@ public class TestShippedLibraries
     private string Quarry(string stone, string season)
     {
         string scene = Path.Combine(_directory, "scene.igl");
-        string size = stone == "Scree" ? "1.6" : "1";
+        string size = stone == "Scree" ? "Heap" : "1";
         string call = season is null
             ? $"{stone}({size})"
             : $"{stone}({size}, '{season}', 3)";
@@ -761,6 +770,7 @@ public class TestShippedLibraries
             point light { location [-4, 6, -5] }
             background [0.5, 0.6, 0.8]
             plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{(stone == "Scree" ? Heap : "")}}
             object {{call}}
             """);
 
@@ -768,12 +778,18 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// The outline <c>Scree</c> is handed, which the single stones do not need.
+    /// </summary>
+    private const string Heap =
+        "Heap = path { move to -0.8, -0.8  line to 0.8, -0.8  line to 0.8, 0.8  line to -0.8, 0.8  close }";
+
+    /// <summary>
     /// Makes one stone of one variant in one season and hands back the picture.
     /// </summary>
     private Canvas StoneIn(string stone, string season, int variant)
     {
         string scene = Path.Combine(_directory, "scene.igl");
-        string size = stone == "Scree" ? "1.6" : "1";
+        string size = stone == "Scree" ? "Heap" : "1";
 
         File.WriteAllText(scene, $$"""
             import 'rocks' { {{stone}} }
@@ -782,6 +798,7 @@ public class TestShippedLibraries
             point light { location [-4, 6, -5] }
             background [0.5, 0.6, 0.8]
             plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{(stone == "Scree" ? Heap : "")}}
             object {{stone}}({{size}}, '{{season}}', {{variant}})
             """);
 

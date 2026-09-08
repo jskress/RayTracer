@@ -41,6 +41,23 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// The parameter names of every primitive whose body is currently being read, innermost last.  A
+    /// primitive may be declared inside another, so this is a stack rather than one list.
+    /// </summary>
+    private readonly List<List<string>> _primitiveParameters = [];
+
+    /// <summary>
+    /// This method reports whether a name is a parameter of some primitive being declared right now,
+    /// and so is a name that will not have a value until that primitive is called.
+    /// </summary>
+    /// <param name="name">The name to consider.</param>
+    /// <returns><c>true</c>, if the name is a parameter of a declaration in progress.</returns>
+    private bool IsAPrimitiveParameter(string name)
+    {
+        return _primitiveParameters.Any(names => names.Contains(name));
+    }
+
+    /// <summary>
     /// This method reads a whole primitive declaration, which is the same work whether it stands at
     /// the top of a file or inside another primitive.
     /// </summary>
@@ -67,7 +84,23 @@ public partial class LanguageParser
         _primitives[name] = new UserPrimitive(
             name, parameterNames, defaults, kindName, new FunctionBody(), null);
 
-        FunctionBody body = ParsePrimitiveBody(name, kindName);
+        // The names this body may use that nothing can look up yet.  A material named at a *use* needs
+        // to know whether it is one of these, since a parameter has no value until the primitive is
+        // called and so cannot be resolved while the body is being read.  Nothing else may take that
+        // road: a name that is not a parameter goes on being looked up now, which is what keeps an
+        // import able to hold a material back.
+        _primitiveParameters.Add(parameterNames);
+
+        FunctionBody body;
+
+        try
+        {
+            body = ParsePrimitiveBody(name, kindName);
+        }
+        finally
+        {
+            _primitiveParameters.RemoveAt(_primitiveParameters.Count - 1);
+        }
 
         _primitives.Clear();
 
@@ -219,6 +252,8 @@ public partial class LanguageParser
             "blob" => ParseBlobClause(clause),
             "swells" => ParseSwellsClause(clause),
             "tube" => ParseTubeClause(clause),
+            "ribbon" => ParseRibbonClause(clause),
+            "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "tapered extrusion" => ParseTaperedExtrusionClause(clause),
@@ -340,6 +375,10 @@ public partial class LanguageParser
                 "swellsEntryClause", HandleSwellsEntryClause, validate: false),
             "tube" => ParseObjectResolver<TubeResolver>(
                 "tubeEntryClause", HandleTubeEntryClause, validate: false),
+            "ribbon" => ParseObjectResolver<RibbonResolver>(
+                "ribbonEntryClause", HandleRibbonEntryClause, validate: false),
+            "field" => ParseObjectResolver<FieldResolver>(
+                "fieldEntryClause", HandleFieldEntryClause, validate: false),
             "sweep" => ParseObjectResolver<SweepResolver>(
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
@@ -403,6 +442,8 @@ public partial class LanguageParser
             "blob" => "startBlobClause",
             "swells" => "startSwellsClause",
             "tube" => "startTubeClause",
+            "ribbon" => "startRibbonClause",
+            "field" => "startFieldClause",
             "sweep" => "startSweepClause",
             "extrusion" => "startExtrusionClause",
             "tapered extrusion" => "startTaperedExtrusionClause",

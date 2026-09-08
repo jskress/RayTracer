@@ -153,6 +153,12 @@ public partial class LanguageParser
                 case "tube":
                     resolver.SurfaceResolvers.Add(ParseTubeClause(clause));
                     break;
+                case "ribbon":
+                    resolver.SurfaceResolvers.Add(ParseRibbonClause(clause));
+                    break;
+                case "field":
+                    resolver.SurfaceResolvers.Add(ParseFieldClause(clause));
+                    break;
                 case "sweep":
                     resolver.SurfaceResolvers.Add(ParseSweepClause(clause));
                     break;

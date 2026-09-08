@@ -167,10 +167,10 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
-| `in` | Follows a `for` loop's count: `for i in [0, 11]`. | [Surfaces](surfaces.md#repeating-things) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`. | [Surfaces](surfaces.md#repeating-things) |
 | `else` | The other way out of an `if`, optional where surfaces are listed. | [Surfaces](surfaces.md#choosing-what-to-make) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
-| `index` | Interior: `index of refraction`, written out. | [Materials](materials.md#transparency-and-interiors) |
+| `index` | Interior: `index of refraction`, written out.  A `field`: `index in n` names each copy's number. | [Materials](materials.md#transparency-and-interiors), [Advanced Surfaces](advanced-surfaces.md#field) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: hand the surrounding material down unchanged. | [Materials](materials.md#naming-and-reusing) |
 | `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |
@@ -265,6 +265,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `regular` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `render` | Names which scene and camera to render. | [Scene Files](scene-files.md#the-render-command) |
 | `return` | The answer a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
+| `ribbon` | Surface: a flat strand of a given width running through a series of points. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `right` | Text layout: right-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `ripples` | Pattern: concentric rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -294,6 +295,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
+| `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -341,6 +343,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |
 | `uSteps` | Area light: samples across U. | [Lights](lights.md#area-lights) |
@@ -358,6 +361,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `width` | Context: image width in pixels. | [Context](context.md#image-size) |
+| `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `wood` | Pattern: concentric growth rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `wrinkles` | Pattern: crumpled noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

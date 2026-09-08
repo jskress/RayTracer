@@ -1,5 +1,6 @@
 using RayTracer.General;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
 
 namespace RayTracer.Instructions.Surfaces.Extrusions;
 
@@ -11,7 +12,7 @@ public class ExtrusionResolver : ExtrudedSurfaceResolver<Extrusion>
     /// <summary>
     /// This property holds the resolver for the path property on an extrusion.
     /// </summary>
-    public GeneralPathResolver GeneralPathResolver { get; set; }
+    public Resolver<GeneralPath> GeneralPathResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an

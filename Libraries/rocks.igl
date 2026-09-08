@@ -2,20 +2,22 @@
 //
 //     import 'rocks' { Boulder, Scree }
 //
+//     Slope = path { move to -3, -3  line to 3, -3  line to 3, 3  line to -3, 3  close }
+//
 //     object Boulder(1.2)
-//     object Scree(6, 'winter') { translate Z 4 }
+//     object Scree(Slope, 'winter')
 //
 // The `trees` and `undergrowth` libraries grow things.  This one is what they grow among, and it is
 // the last thing a piece of ground needs before it stops looking swept.
 //
 // | `Boulder` | One big weathered stone, lumpy all over.  The expensive one -- see below. |
 // | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
-// | `Scree` | An area of cobbles, thrown down thickly. |
+// | `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
 //
-// The three numbers mean what they mean in the other libraries -- **how big**, **what time of year**,
-// and **which one of that kind** -- and only the first is ever required.  For `Boulder` and `Cobble`
-// the size is roughly how far across the stone is; for `Scree` it is how far the area reaches, since
-// an area is not a stone.
+// The first three arguments mean what they mean in the other libraries -- **how big**, **what time of
+// year**, and **which one of that kind** -- and only the first is ever required.  For `Boulder` and
+// `Cobble` the size is roughly how far across the stone is; for `Scree` it is the outline the stones
+// fill, since an area has a shape as well as a size and a heap of stone is never square.
 //
 // **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
 // the four are the same stone; in winter snow lies on top of it, in the same way it gathers on the fir
@@ -204,42 +206,35 @@ primitive Cobble(size, season = 'summer', variant = 1) -> group {
 
 // -- Scree ---------------------------------------------------------------------------------------
 
-// An area of cobbles, `across` units on a side and centered where it is put.
-//
-// Counted on a grid and then thrown nearly a whole cell off it, exactly as the grass is, and for the
-// same reason: a lattice is very easy to notice and impossible to unsee.  They are gathered into
-// blocks of sixty-four for the same reason too -- a group that a ray gets inside asks *every* child,
-// so a flat list of a thousand stones is a thousand questions for every ray that reaches the ground.
-primitive Scree(across, season = 'summer', variant = 1, size = 0.3, density = 1) -> group {
-    step = size * 1.25 / density
-    last = across / step - 1
-    block = 8
+// One stone of a scree, lifted so that it sits *into* the ground rather than on it.  How far to lift
+// it depends on how big this particular stone came out, so it happens here rather than where the
+// field puts it -- a field stands its copies on the plane and knows nothing about what they are.
+primitive RockScreeStone(n, season, variant, size) -> group {
+    stone = size * (0.55 + random(variant, n, 1) * 0.75)
 
     return group {
-        for blockRow in [0, last / block] {
-            for blockColumn in [0, last / block] {
-                group {
-                    for row in [0, block - 1] {
-                        for column in [0, block - 1] {
-                            here = blockRow * block + row
-                            over = blockColumn * block + column
+        object Cobble(stone, season, variant * 6421 + n) { translate Y stone * 0.16 }
+    }
+}
 
-                            if (here <= last && over <= last) {
-                                stone = size * (0.55 + random(here, over, variant) * 0.75)
-
-                                object Cobble(stone, season,
-                                              variant * 6421 + here * 512 + over) {
-                                    translate [over * step - across / 2 +
-                                                   (random(here, over, variant + 1) - 0.5) * step * 1.7,
-                                               stone * 0.16,
-                                               here * step - across / 2 +
-                                                   (random(here, over, variant + 2) - 0.5) * step * 1.7]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+// An area of cobbles, filling whatever outline it is given.  The outline is read on the X/Z plane, so
+// a scree is the shape you draw, lying where you draw it.
+//
+// The stones stand on a grid and are then thrown nearly a whole cell off it, exactly as the grass is
+// and for the same reason: a lattice is very easy to notice and impossible to unsee.  Each takes its
+// size and its shape from its number within the heap, so no two are alike.
+//
+// **This was a square, and squares are why a heap of stone never sat against anything.**  Scree runs
+// out where a slope runs out; it does not stop along a line at right angles to another line.  It was
+// also gathered by hand into blocks of sixty-four, which used to be what made it affordable -- a group
+// that a ray got inside asked *every* child.  A group arranges its own children now, so a field of
+// them costs what the blocking used to and says a great deal less.
+primitive Scree(shape, season = 'summer', variant = 1, size = 0.3, density = 1) -> field {
+    return field {
+        of RockScreeStone(n, season, variant, size)
+        within shape
+        spacing size * 1.25 / density
+        jitter 1.7
+        index in n
     }
 }
