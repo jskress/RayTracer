@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 105 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 106 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1104,9 +1104,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Countryside</b> &mdash; 8 images &middot; trees, ground, weather and fire</summary>
+<summary><b>Countryside</b> &mdash; 9 images &middot; trees, ground, weather and fire</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/countryside/one-palm-island.png">
+      <img alt="One Palm Island" height="120" src="Local/countryside/one-palm-island.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/countryside/one-palm-island.igl">One Palm Island</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/countryside/the-margin-of-a-field.png">
       <img alt="The Margin of a Field" height="120" src="Local/countryside/the-margin-of-a-field.png" width="160"/>
