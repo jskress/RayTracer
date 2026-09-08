@@ -266,8 +266,10 @@ seen from across a field does not need what grass seen from a foot away needs.
 ```
 import 'rocks' { Boulder, Scree }
 
+Slope = path { move to -3, 1  line to 3, 1  line to 3, 7  line to -3, 7  close }
+
 object Boulder(1.2)
-object Scree(6, 'winter')        { translate Z 4 }
+object Scree(Slope, 'winter')
 ```
 
 The other two libraries grow things.  This one is what they grow among, and it is the last thing a
@@ -277,7 +279,7 @@ piece of ground needs before it stops looking swept.
 | --- | --- |
 | `Boulder` | One big weathered stone, lumpy all over.  The expensive one — see below. |
 | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
-| `Scree` | An area of cobbles, thrown down thickly.  The first number is how far across. |
+| `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
 
 **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
 the four are the same stone; in winter snow lies on top of it, as it gathers on the fir and the
@@ -298,6 +300,11 @@ rather than weathered stone, and measured about four times a sphere rather than 
 
 That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
 for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
+
+**`Scree` fills an outline, exactly as `Grass` does**, and for the same reason: stone runs out where a
+slope runs out, not along a line at right angles to another line.  Draw the outline for a heap and
+draw a hole in the grass to match, a little smaller, and the stones run in under the grass at the
+edge instead of leaving a bare ring between them.
 
 ##### What makes a shape into stone
 

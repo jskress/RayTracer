@@ -109,8 +109,31 @@ Bank = path {
 object Grass(Bank, Season, 1, 0.62, 0.55)
 
 // The scree that gives the bank its name, banked up where the ground would fall away.
-object Scree(9, Season, 2, 0.34, 0.85) { translate [-1.5, 0, 1.5] }
-object Scree(6, Season, 3, 0.26, 0.8)  { translate [4.0, 0, -1.0] }
+//
+// **These are the same two figures the sward has holes for**, drawn a little larger so the stones run
+// in under the grass at the edge rather than leaving a ring of bare ground between the two.  They are
+// written out twice because a hole has to be a subpath of the outline it is a hole in, and there is no
+// way to hand one outline to another; keeping the numbers together here is the next best thing.
+ScreeBig = path {
+    move to -5.7, 1.5
+    quad -5.4, 5.0 to -1.5, 5.7
+    quad 2.4, 5.0 to 2.7, 1.5
+    quad 2.4, -2.0 to -1.5, -2.7
+    quad -5.4, -2.0 to -5.7, 1.5
+    close
+}
+
+ScreeSmall = path {
+    move to 1.0, -1.0
+    quad 1.2, 1.6 to 4.0, 2.0
+    quad 6.8, 1.6 to 7.0, -1.0
+    quad 6.8, -3.6 to 4.0, -4.0
+    quad 1.2, -3.6 to 1.0, -1.0
+    close
+}
+
+object Scree(ScreeBig, Season, 2, 0.34, 0.85)
+object Scree(ScreeSmall, Season, 3, 0.26, 0.8)
 
 // The three you actually look at.
 object Boulder(2.4, Season, 4) { translate [-3.4, 0.42, 0.5] }

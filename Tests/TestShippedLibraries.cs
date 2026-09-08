@@ -758,7 +758,7 @@ public class TestShippedLibraries
     private string Quarry(string stone, string season)
     {
         string scene = Path.Combine(_directory, "scene.igl");
-        string size = stone == "Scree" ? "1.6" : "1";
+        string size = stone == "Scree" ? "Heap" : "1";
         string call = season is null
             ? $"{stone}({size})"
             : $"{stone}({size}, '{season}', 3)";
@@ -770,6 +770,7 @@ public class TestShippedLibraries
             point light { location [-4, 6, -5] }
             background [0.5, 0.6, 0.8]
             plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{(stone == "Scree" ? Heap : "")}}
             object {{call}}
             """);
 
@@ -777,12 +778,18 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// The outline <c>Scree</c> is handed, which the single stones do not need.
+    /// </summary>
+    private const string Heap =
+        "Heap = path { move to -0.8, -0.8  line to 0.8, -0.8  line to 0.8, 0.8  line to -0.8, 0.8  close }";
+
+    /// <summary>
     /// Makes one stone of one variant in one season and hands back the picture.
     /// </summary>
     private Canvas StoneIn(string stone, string season, int variant)
     {
         string scene = Path.Combine(_directory, "scene.igl");
-        string size = stone == "Scree" ? "1.6" : "1";
+        string size = stone == "Scree" ? "Heap" : "1";
 
         File.WriteAllText(scene, $$"""
             import 'rocks' { {{stone}} }
@@ -791,6 +798,7 @@ public class TestShippedLibraries
             point light { location [-4, 6, -5] }
             background [0.5, 0.6, 0.8]
             plane { material { pigment [0.3, 0.3, 0.3] } }
+            {{(stone == "Scree" ? Heap : "")}}
             object {{stone}}({{size}}, '{{season}}', {{variant}})
             """);
 
