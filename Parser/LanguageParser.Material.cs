@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using Lex.Tokens;
+using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
@@ -64,6 +65,43 @@ public partial class LanguageParser
             ParseObjectResolver("materialEntryClause", HandleMaterialEntryClause, resolver);
 
         return resolver;
+    }
+
+    /// <summary>
+    /// The same, at a place where a material is being *used* rather than declared.
+    /// <para>
+    /// That is the one place a name may turn out to be a primitive's parameter, which has no value
+    /// while the body is being parsed and so cannot be looked up then.  Every other form settles at
+    /// parse time and is left to do so: a material written out, an `inherited`, one being extended,
+    /// a call of a material primitive, and a name the scene has already written a material for.
+    /// Only a name that is none of those is read as a term instead.
+    /// </para>
+    /// <para>
+    /// **Only a parameter takes that road**, and the reason is the import filter.  A scene that
+    /// imports two names out of a library has the rest pruned from the parser's own table, which is
+    /// what stops it writing one it did not ask for; a name read as a term instead would sail past
+    /// that, since the values themselves all go over whole.  So the question asked here is not "is
+    /// this name unknown" but "is this name a parameter" -- which a mistyped one is not, so a typo is
+    /// still caught while parsing.
+    /// </para>
+    /// </summary>
+    /// <param name="clause">The clause that tells us how to get the material resolver.</param>
+    /// <returns>The proper resolver.</returns>
+    private Resolver<Material> GetMaterialResolverForUse(Clause clause)
+    {
+        Token token = clause.Tokens[1];
+        Token next = CurrentParser.PeekNextToken();
+
+        if (!BounderToken.OpenBrace.Matches(token) &&
+            token.Text != "inherited" &&
+            clause.Tokens.Count == 2 &&
+            (next is null || !BounderToken.LeftParen.Matches(next)) &&
+            IsAPrimitiveParameter(token.Text))
+        {
+            return new TermResolver<Material> { Term = new VariableTerm(token) };
+        }
+
+        return GetMaterialResolver(clause);
     }
 
     /// <summary>

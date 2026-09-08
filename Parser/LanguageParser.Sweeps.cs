@@ -53,7 +53,7 @@ public partial class LanguageParser
             switch (clause.Text())
             {
                 case "profile":
-                    resolver.ProfileResolver = ParseGeneralPathClause();
+                    resolver.ProfileResolver = GetPathResolver(clause);
                     break;
                 case "spline":
                     resolver.SplineResolver = ParseSplineClause();

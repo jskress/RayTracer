@@ -934,7 +934,10 @@ public partial class LanguageParser
         }
         extrusionEntryClause:
         [
-            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            {
+                path > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "path" here.'
+            } |
             extrudedSurfaceEntryClause
         ]
         startTaperedExtrusionClause:
@@ -1002,7 +1005,10 @@ public partial class LanguageParser
         }
         latheEntryClause:
         [
-            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            {
+                path > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "path" here.'
+            } |
             surfaceEntryClause
         ]
 
@@ -1172,7 +1178,10 @@ public partial class LanguageParser
         }
         sweepEntryClause:
         [
-            { profile > openBrace ?? 'Expecting an open brace after "profile" here.' } |
+            {
+                profile > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "profile" here.'
+            } |
             {
                 discontinuous{?} > spline >
                 openBrace ?? 'Expecting an open brace after "spline" here.'
@@ -1192,7 +1201,10 @@ public partial class LanguageParser
         }
         genericShapeEntryClause:
         [
-            { path > openBrace ?? 'Expecting an open brace after "path" here.' } |
+            {
+                path > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "path" here.'
+            } |
             surfaceEntryClause
         ]
 

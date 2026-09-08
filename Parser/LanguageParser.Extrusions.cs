@@ -1,5 +1,7 @@
 using Lex.Clauses;
+using Lex.Tokens;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces.Extrusions;
 using RayTracer.Instructions.Transforms;
@@ -52,7 +54,7 @@ public partial class LanguageParser
         HandleEntryClause(resolver, clause, clause =>
         {
             if (clause.Text() == "path")
-                resolver.GeneralPathResolver = ParseGeneralPathClause();
+                resolver.GeneralPathResolver = GetPathResolver(clause);
             else
                 HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
         });
@@ -103,13 +105,33 @@ public partial class LanguageParser
                     resolver.TaperResolver = new TermResolver<double> { Term = clause.Term() };
                     break;
                 case "path":
-                    resolver.GeneralPathResolver = ParseGeneralPathClause();
+                    resolver.GeneralPathResolver = GetPathResolver(clause);
                     break;
                 default:
                     HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
                     break;
             }
         });
+    }
+
+    /// <summary>
+    /// This method reads the outline a shape is to use: written out where it stands, or the name of
+    /// one the scene has already drawn.
+    /// <para>
+    /// A name is read as a term rather than looked up now, because it may be a primitive's parameter
+    /// -- which has no value until the primitive is called.  That is the same road a field's `within`
+    /// takes, and it is safe for an outline in a way it would not be for a material: an outline is a
+    /// plain value, and values are not among the things an import prunes from the parser's own table,
+    /// so nothing is being slipped past here.
+    /// </para>
+    /// </summary>
+    /// <param name="clause">The clause that opens the outline.</param>
+    /// <returns>The proper resolver.</returns>
+    private Resolver<GeneralPath> GetPathResolver(Clause clause)
+    {
+        return BounderToken.OpenBrace.Matches(clause.Tokens[1])
+            ? ParseGeneralPathClause()
+            : new TermResolver<GeneralPath> { Term = new VariableTerm(clause.Tokens[1]) };
     }
 
     /// <summary>

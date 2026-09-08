@@ -199,6 +199,20 @@ extrusion {
 [cylinder](surfaces.md#cylinder-and-conic), and `open` leaves the two ends off.  A path is
 drawn flat in X and Y, so an extrusion comes out lying down; `rotate X -90` stands it up.
 
+**`path` takes the name of an outline as readily as the block.**  A scene that draws one shape and
+raises it to several thicknesses says it once:
+
+```
+Star = path { move to 0, 1  /* ... */  close }
+
+extrusion { path Star  min Y -0.18  max Y 0.18 }
+extrusion { path Star  min Y -0.60  max Y 0.60  translate X 2 }
+```
+
+That is also what lets a primitive be handed the shape it is to extrude, an outline being a value
+like any other — see [Things of Your Own](scene-files.md#things-of-your-own).  A lathe's and a
+generic shape's `path`, and a sweep's `profile`, all take a name the same way.
+
 The complete scene is
 [`docs/examples/advanced/extrusion.igl`](examples/advanced/extrusion.igl).
 

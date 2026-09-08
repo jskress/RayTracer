@@ -50,7 +50,7 @@ public partial class LanguageParser
         HandleEntryClause(resolver, clause, clause =>
         {
             if (clause.Text() == "path")
-                resolver.GeneralPathResolver = ParseGeneralPathClause();
+                resolver.GeneralPathResolver = GetPathResolver(clause);
             else
                 HandleSurfaceClause(clause, resolver, "lathe");
         });

@@ -193,4 +193,44 @@ public class TestTaperedExtrusionClauses
 
         return said.Contains("Error") ? said : null;
     }
+
+    /// <summary>
+    /// An extrusion may be given the *name* of an outline as well as one written out where it stands,
+    /// which is what lets a primitive be handed the shape it is to extrude.
+    /// <para>
+    /// The two are rendered and compared rather than merely run: a named outline that arrived empty
+    /// would raise no complaint and draw nothing, and "it did not error" would not notice.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestAnExtrusionMayBeGivenANamedOutline()
+    {
+        int written = Lit($$"""
+                          extrusion {
+                              {{Square}}
+                              min Y -1  max Y 1
+                          }
+                          """);
+        int named = Lit($$"""
+                        Outline = {{Square}}
+                        extrusion {
+                            path Outline
+                            min Y -1  max Y 1
+                        }
+                        """);
+        int given = Lit($$"""
+                        Outline = {{Square}}
+                        primitive Post(shape) -> group {
+                            return group { extrusion { path shape  min Y -1  max Y 1 } }
+                        }
+                        object Post(Outline) {
+                        }
+                        """);
+
+        Assert.IsTrue(written > 0, "the outline written out covered nothing at all");
+        Assert.AreEqual(written, named,
+            $"a named outline covered {named} pixels against {written} for the same one written out");
+        Assert.AreEqual(written, given,
+            $"an outline handed to a primitive covered {given} pixels against {written}");
+    }
 }
