@@ -350,7 +350,14 @@ public class TestShippedLibraries
     /// every scene that imports them, so changing one should be a failure and not a shrug.
     /// </para>
     /// </summary>
-    private static readonly string[] Species = ["Elm", "Oak", "Birch", "Fir"];
+    private static readonly string[] Species =
+        ["Elm", "Oak", "Birch", "Fir", "Pine", "Willow", "Poplar", "Maple", "Palm"];
+
+    /// <summary>
+    /// The ones that do not answer the season the way a broadleaf does.  A fir and a pine keep
+    /// their needles and take snow; a palm ignores the word altogether.
+    /// </summary>
+    private static readonly string[] Evergreens = ["Fir", "Pine"];
 
     [TestMethod]
     public void TestEveryTreeGrowsInEverySeason()
@@ -389,18 +396,35 @@ public class TestShippedLibraries
             // needles, so spring, summer and autumn are the same tree -- and it takes snow, so winter
             // is not.  Both halves matter: a fir that differed in autumn would have lost its needles,
             // and one that did not differ in winter would have lost its snow.
-            if (tree == "Fir")
+            // A palm makes no promise about the season at all -- it sheds and grows fronds the year
+            // round -- so every season must come out *identical*, winter included.  This is the only
+            // one held that way, and it is worth holding: a palm that quietly answered the word would
+            // be a palm that had picked up a broadleaf's habits.
+            if (tree == "Palm")
+            {
+                Canvas always = Picture(tree, "summer");
+
+                foreach (string season in new[] { "autumn", "spring", "winter" })
+                {
+                    Assert.IsFalse(Differs(always, Picture(tree, season)),
+                        $"a palm takes no notice of the season and should look the same in {season}");
+                }
+
+                continue;
+            }
+
+            if (Evergreens.Contains(tree))
             {
                 Canvas evergreen = Picture(tree, "summer");
 
                 foreach (string season in new[] { "autumn", "spring" })
                 {
                     Assert.IsFalse(Differs(evergreen, Picture(tree, season)),
-                        $"a fir keeps its needles and should look the same in {season}");
+                        $"a {tree} keeps its needles and should look the same in {season}");
                 }
 
                 Assert.IsTrue(Differs(evergreen, Picture(tree, "winter")),
-                    "a fir should carry snow in winter");
+                    $"a {tree} should carry snow in winter");
 
                 continue;
             }
@@ -502,7 +526,7 @@ public class TestShippedLibraries
     /// cannot notice a rename.
     /// </summary>
     private static readonly string[] Plants =
-        ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender"];
+        ["Grass", "Tuft", "Boxwood", "Bramble", "Lavender", "Fern", "Reed", "Stalk"];
 
     /// <summary>
     /// How big to ask for each, since these are not all measured in the same thing: what <c>Grass</c>
