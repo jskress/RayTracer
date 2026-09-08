@@ -9,10 +9,16 @@
 // A tree takes how tall it should stand, what time of year it is, and which of itself you want.  Only
 // the first is required, so the common case is one number.
 //
-// | Elm   | Reaching, the limbs sweeping up and out. |
-// | Oak   | Heavy and broad, throwing its weight sideways. |
-// | Birch | Slender, pale-barked, dividing into finer twigs than the others. |
-// | Fir   | A conifer: one trunk the whole height, rings of branches coming off it. |
+// | Elm    | Reaching, the limbs sweeping up and out. |
+// | Oak    | Heavy and broad, throwing its weight sideways. |
+// | Birch  | Slender, pale-barked, dividing into finer twigs than the others. |
+// | Fir    | A conifer: one trunk the whole height, rings of branches coming off it. |
+// | Pine   | The other conifer: a long clear trunk with the whole crown at the top. |
+// | Willow | Arching limbs with curtains of foliage hanging from along them. |
+// | Poplar | The narrow one, for a windbreak or an avenue. |
+// | Maple  | Broad like an oak but lighter, with the biggest leaves here. |
+// | Palm   | A bare leaning trunk with the whole crown in one fountain at the top. |
+// | Snag   | A dead tree, standing.  Bare in every season, because that is what dead means. |
 //
 // **Height is what you would measure**, near enough -- `Elm(9)` stands about nine units high, which is
 // worth saying because the obvious alternative is for the number to mean the trunk, and then nobody can
@@ -52,6 +58,9 @@ function TreeShrink(species) -> number {
         case 'elm' { return 0.76 }
         case 'oak' { return 0.70 }
         case 'birch' { return 0.78 }
+        case 'willow' { return 0.80 }
+        case 'poplar' { return 0.83 }
+        case 'maple' { return 0.73 }
         default { return 0.74 }
     }
 }
@@ -62,6 +71,9 @@ function TreeTaper(species) -> number {
         case 'fir' { return 0.14 }
         case 'oak' { return 0.66 }
         case 'birch' { return 0.55 }
+        case 'willow' { return 0.58 }
+        case 'poplar' { return 0.74 }
+        case 'maple' { return 0.64 }
         default { return 0.62 }
     }
 }
@@ -73,6 +85,9 @@ function TreeLean(species) -> number {
         case 'elm' { return 26 }
         case 'oak' { return 44 }
         case 'birch' { return 20 }
+        case 'willow' { return 30 }
+        case 'poplar' { return 13 }
+        case 'maple' { return 38 }
         default { return 32 }
     }
 }
@@ -81,6 +96,9 @@ function TreeLean(species) -> number {
 function TreeTurn(species) -> number {
     switch (species) {
         case 'oak' { return 132 }
+        case 'willow' { return 126 }
+        case 'poplar' { return 104 }
+        case 'maple' { return 124 }
         default { return 118 }
     }
 }
@@ -90,6 +108,9 @@ function TreeVary(species) -> number {
     switch (species) {
         case 'oak' { return 0.38 }
         case 'birch' { return 0.18 }
+        case 'willow' { return 0.30 }
+        case 'poplar' { return 0.13 }
+        case 'maple' { return 0.32 }
         default { return 0.28 }
     }
 }
@@ -103,6 +124,9 @@ function TreeDepth(species) -> number {
         // further gain that is real but much smaller.  Five is the knee of that curve.
         case 'birch' { return 6 }
         case 'oak' { return 5 }
+        case 'willow' { return 6 }
+        case 'poplar' { return 6 }
+        case 'maple' { return 5 }
         default { return 5 }
     }
 }
@@ -112,6 +136,9 @@ function TreeLeaf(species) -> number {
     switch (species) {
         case 'oak' { return 0.26 }
         case 'birch' { return 0.10 }
+        case 'willow' { return 0.19 }
+        case 'poplar' { return 0.16 }
+        case 'maple' { return 0.29 }
         default { return 0.19 }
     }
 }
@@ -133,6 +160,9 @@ function TreeGreen(species) -> color {
     switch (species) {
         case 'oak' { return color [0.20, 0.36, 0.14] }
         case 'birch' { return color [0.38, 0.55, 0.24] }
+        case 'willow' { return color [0.42, 0.52, 0.26] }
+        case 'poplar' { return color [0.30, 0.46, 0.20] }
+        case 'maple' { return color [0.22, 0.42, 0.16] }
         default { return color [0.24, 0.44, 0.17] }
     }
 }
@@ -141,6 +171,12 @@ TreeElmBark = material { pigment [0.44, 0.34, 0.26]  specular 0.10  shininess 18
 TreeOakBark = material { pigment [0.35, 0.29, 0.23]  specular 0.08  shininess 14 }
 TreeBirchBark = material { pigment [0.82, 0.80, 0.74]  specular 0.16  shininess 30 }
 TreeFirBark = material { pigment [0.30, 0.22, 0.17]  specular 0.06  shininess 12 }
+TreeWillowBark = material { pigment [0.38, 0.33, 0.27]  specular 0.09  shininess 16 }
+TreePoplarBark = material { pigment [0.52, 0.50, 0.44]  specular 0.12  shininess 22 }
+TreeMapleBark = material { pigment [0.33, 0.30, 0.28]  specular 0.08  shininess 15 }
+TreeSnagBark = material { pigment [0.55, 0.52, 0.47]  specular 0.14  shininess 26 }
+TreePalmBark = material { pigment [0.47, 0.41, 0.32]  specular 0.10  shininess 16 }
+TreePalmLeaf = material { pigment [0.24, 0.42, 0.19]  specular 0.20  shininess 34  ambient 0.20 }
 TreeNeedles = material { pigment [0.14, 0.30, 0.18]  specular 0.22  shininess 40  ambient 0.24 }
 TreeSnow = material { pigment [0.93, 0.94, 0.97]  specular 0.30  shininess 60 }
 
@@ -149,6 +185,10 @@ primitive TreeBark(species) -> material {
         case 'oak' { return material TreeOakBark }
         case 'birch' { return material TreeBirchBark }
         case 'fir' { return material TreeFirBark }
+        case 'willow' { return material TreeWillowBark }
+        case 'poplar' { return material TreePoplarBark }
+        case 'maple' { return material TreeMapleBark }
+        case 'snag' { return material TreeSnagBark }
         default { return material TreeElmBark }
     }
 }
@@ -393,6 +433,9 @@ function TreeLeaves(species) -> number {
     switch (species) {
         case 'birch' { return 10 }
         case 'oak' { return 12 }
+        case 'willow' { return 17 }
+        case 'poplar' { return 15 }
+        case 'maple' { return 12 }
         default { return 14 }
     }
 }
@@ -403,7 +446,71 @@ function TreeLeaves(species) -> number {
 // already runs along the twig.  That means a leaf needs no frame arithmetic to point the right way:
 // pitching it away from the axis and spinning it about that axis is enough, and the whole spray then
 // travels with the limb wherever the limb was turned to.
-primitive TreeFoliage(species, season, id, variant, twig) -> group {
+// What hangs off a willow, and the reason the willow needed anything new at all.
+//
+// **A weeping shape is foliage, not branching**, and this was established the hard way.  Leaning the
+// limbs over changes the silhouette hardly at all, because what the eye reads at this distance is
+// where the *leaves* are, and they were a compact cluster at each limb tip -- a rounded tree whichever
+// way the wood points.  So a willow's limb ends in strands instead: a thin twig hanging below where it
+// started, leaves down its length, swinging further out the further down it goes.
+//
+// **And the limbs must sweep UP for it to work**, which is the part worth writing down.  A strand
+// hangs along its own -Y, and its own Y is whatever direction the limb it grew from points.  Limbs
+// bent over past level therefore fling their strands sideways and upward -- the first attempt made a
+// spiked ball rather than a tree.  Upswept limbs keep the frame near-vertical, so hanging means down.
+// This is the same fact `undergrowth`'s blades rely on and the reason a lean of 30 is right here.
+primitive TreeWeep(season, id, variant, drop) -> group {
+    strands = 9
+    swing = drop * 0.20
+
+    // **Each strand starts somewhere of its own.**  Seven of them from one point renders a teepee --
+    // a ring of poles converging on an apex, which is exactly what the first version of this looked
+    // like and nothing at all like foliage.
+    start = drop * 0.16
+    green = TreeWillowLeaf(season)
+
+    return group {
+        for strand in [0, strands - 1] {
+            group {
+                tube {
+                    material TreeWillowBark
+                    radius drop * 0.0022 at [0, 0, 0]
+                    quad radius drop * 0.0014 at [swing * 0.25, -drop * 0.52, 0]
+                         radius drop * 0.0008 at [swing, -drop, 0]
+                }
+
+                for leaf in [0, 11] {
+                    along = (leaf + 1) / 16
+                    object TreeBlade('willow') {
+                        material {
+                            pigment green * (0.74 + random(id, strand * 11 + leaf, variant + 3) * 0.48)
+                            specular 0.10  shininess 22  ambient 0.26
+                        }
+                        // Narrow, because a willow leaf is: the blade is scaled harder across than
+                        // along rather than being a smaller leaf of the same shape.
+                        scale [TreeLeaf('willow') * 0.62, TreeLeaf('willow') * 2.1, TreeLeaf('willow')]
+                        // Barely tipped, and this was the difference between foliage and a cloud of
+                        // dashes.  A blade is drawn flat with its length up the Y axis, so laying it
+                        // over -- which is right for a leaf held out from a twig -- turns it edge-on
+                        // to anyone looking from the side, and a curtain of edges is a curtain of
+                        // thin lines.  A hanging leaf hangs face outward.
+                        rotate X 6 + random(id, strand * 11 + leaf, variant + 4) * 22
+                        rotate Y random(id, strand * 11 + leaf, variant + 5) * 360
+                        translate [swing * along * along, -drop * along, 0]
+                    }
+                }
+
+                rotate Y strand * 360 / strands +
+                         random(id, strand, variant + 6) * 40
+                translate [(random(id, strand, variant + 7) - 0.5) * start,
+                           (random(id, strand, variant + 8) - 0.5) * start * 0.7,
+                           (random(id, strand, variant + 9) - 0.5) * start]
+            }
+        }
+    }
+}
+
+primitive TreeCluster(species, season, id, variant, twig) -> group {
     count = TreeLeaves(species)
 
     switch (season) {
@@ -480,6 +587,12 @@ primitive TreeFoliage(species, season, id, variant, twig) -> group {
     }
 }
 
+// What a limb ends in.  Most trees end in a cluster; a willow hangs, in every season it has leaves
+// at all.  Winter is nobody's exception -- a bare tree is bare whatever kind it is.
+primitive TreeFoliage(species, season, id, variant, twig) -> group {
+    return group { object TreeCluster(species, season, id, variant, twig) }
+}
+
 // How far a limb wanders off the straight line between its ends, as a fraction of its own length.
 // A fir is nearly nothing -- a conifer's leader and boughs run true -- where a broadleaf sweeps.
 function TreeSweep(species) -> number {
@@ -487,6 +600,9 @@ function TreeSweep(species) -> number {
         case 'fir' { return 0.05 }
         case 'birch' { return 0.22 }
         case 'oak' { return 0.34 }
+        case 'willow' { return 0.30 }
+        case 'poplar' { return 0.09 }
+        case 'maple' { return 0.31 }
         default { return 0.30 }
     }
 }
@@ -623,6 +739,9 @@ function TreeStand(species) -> number {
     switch (species) {
         case 'oak' { return 1.060 }
         case 'birch' { return 1.120 }
+        case 'poplar' { return 1.100 }
+        case 'maple' { return 1.139 }
+        case 'snag' { return 1.099 }
         default { return 1.148 }
     }
 }
@@ -730,6 +849,285 @@ primitive TreeBough(season, length, id, variant) -> group {
 // that is half as wide as it is tall reads as a bush.  It asks for no species because it is about
 // firs and nothing else; the other three shape helpers take one because they genuinely differ.
 function TreeFirSpread() -> number { return 0.30 }
+
+// A willow, built its own way -- as a fir is, and for the same kind of reason: the recursive limb
+// machinery cannot make one.
+//
+// **Three attempts failed before this, each for its own reason, and they are worth knowing.**  Leaning
+// the limbs over changed nothing, because a limb still ended in a compact leaf cluster and what the
+// eye reads at tree distance is where the leaves are.  Hanging the curtains on a ring around the crown
+// put them in the air with no wood above them -- they hung from nothing and looked it.  And laying each
+// hanging leaf over, which is right for a leaf held out from a twig, turned every one of them edge-on
+// to a viewer at the side, so a curtain of leaves rendered as a curtain of thin lines.
+//
+// So the wood here is drawn out by hand, which means its curve is *known*: a curtain hangs from a point
+// on the very arc the tube was made from.  That is the whole difference.
+
+// One arch of willow wood, rising from its own origin and reaching out, with curtains along it.
+primitive WillowSpray(season, reach, rise, thick, hangs, id, variant) -> group {
+    return group {
+        tube {
+            material TreeWillowBark
+            radius thick at [0, 0, 0]
+            quad radius thick * 0.50 at [reach * 0.30, rise * 0.96, 0]
+                 radius thick * 0.17 at [reach, rise * 0.84, 0]
+        }
+
+        if (season != 'winter') {
+            for hang in [0, hangs - 1] {
+                along = 0.28 + hang * 0.68 / (hangs - 1)
+                middle = 2 * (1 - along) * along
+                last = along * along
+
+                object TreeWeep(season, id * 17 + hang, variant,
+                                rise * (0.30 + along * 0.46) *
+                                    (0.82 + random(id, hang, variant + 21) * 0.36)) {
+                    translate [middle * reach * 0.30 + last * reach,
+                               middle * rise * 0.96 + last * rise * 0.84,
+                               0]
+                }
+            }
+        }
+    }
+}
+
+// A limb: one arch, with two smaller ones leaving it partway along.  A single unbroken curve reads as
+// an umbrella rib; wood that divides reads as a tree.
+primitive WillowLimb(season, reach, rise, thick, id, variant) -> group {
+    return group {
+        object WillowSpray(season, reach, rise, thick, 9, id, variant)
+
+        for child in [0, 1] {
+            // Where on the parent's arc this one leaves it -- the same quadratic, so the join is a
+            // join and not a near miss.
+            at = 0.40 + child * 0.28
+            middle = 2 * (1 - at) * at
+            last = at * at
+
+            object WillowSpray(season, reach * 0.44, rise * 0.38, thick * 0.40, 5,
+                               id * 7 + child + 1, variant) {
+                rotate Y (child * 2 - 1) * (28 + random(id, child, variant + 41) * 22)
+                translate [middle * reach * 0.30 + last * reach,
+                           middle * rise * 0.96 + last * rise * 0.84,
+                           0]
+            }
+        }
+    }
+}
+
+primitive Willow(height, season = 'summer', variant = 1) -> group {
+    limbs = 6
+    fork = height * 0.30
+    lean = height * 0.026
+    stand = 1.301
+
+    return group {
+        // Thick at the ground and tapering hard.  It also leans, and not only because a willow's
+        // does: three points dead in line give a tube no plane to frame itself in and the solver
+        // does not converge.
+        tube {
+            material TreeWillowBark
+            radius height * 0.030 at [0, 0, 0]
+            quad radius height * 0.021 at [lean * 0.35, fork * 0.55, 0]
+                 radius height * 0.016 at [lean, fork, 0]
+        }
+
+        for limb in [0, limbs - 1] {
+            object WillowLimb(season,
+                              height * 0.38 * (0.78 + random(limb, 31, variant) * 0.44),
+                              (height - fork) / stand * (0.80 + random(limb, 32, variant) * 0.34),
+                              height * 0.011, limb, variant) {
+                rotate Y limb * 360 / limbs + random(limb, 33, variant) * 34
+                // **Onto the top of the trunk, which leans.**  Turned first and moved second, so
+                // every limb starts exactly where the wood ends however far round it is turned --
+                // the other order rings them about the axis and leaves a visible step at the fork.
+                translate [lean, fork, 0]
+            }
+        }
+    }
+}
+
+// A poplar: the narrow one.  Limbs held close to the leader and hardly sweeping at all, which is the
+// whole of a columnar silhouette -- the shape a windbreak or an avenue is made of.
+primitive Poplar(height, season = 'summer', variant = 1) -> group {
+    return group {
+        object TreeLimb('poplar', season, TreeDepth('poplar'), TreeTrunk('poplar', height), height * 0.019, 0, 1, variant)
+    }
+}
+
+// A maple: broad like an oak but not so heavy, and the biggest leaves in the library -- which is what
+// makes its autumn read from further off than the others.
+primitive Maple(height, season = 'summer', variant = 1) -> group {
+    return group {
+        object TreeLimb('maple', season, TreeDepth('maple'), TreeTrunk('maple', height), height * 0.036, 0, 1, variant)
+    }
+}
+
+// A dead tree, standing.  Bare in every season, because that is what dead means -- the leaf clusters
+// are asked for in winter whatever the scene said, and winter is the season that grows none.  Pale,
+// too: bark falls off a snag and what is left is weathered wood rather than bark.
+//
+// **A snag is worth having for the same reason a bare birch is.**  A stand of trees where every one
+// is alive and in leaf reads as planted; one dead trunk among them reads as woodland.
+primitive Snag(height, variant = 1) -> group {
+    return group {
+        object TreeLimb('snag', 'winter', TreeDepth('snag'), TreeTrunk('snag', height), height * 0.034, 0, 1, variant)
+    }
+}
+
+// A pine: the same conifer parts as a fir, put together the other way round.
+//
+// A fir is a cone to the ground.  A pine sheds its lower branches as it grows, so what stands is a
+// long clear trunk with the whole crown at the top -- which is why the two read as different trees at
+// any distance even though a needle is a needle and the wood is the same wood.  Its boughs come off
+// much closer to level, too; a fir's sweep up.
+// -- Palm ------------------------------------------------------------------------------------------
+
+// What a willow's hanging leaves are, by season.  Winter never reaches here -- a willow grows no
+// curtains at all then -- but the other three must each look like themselves: a test held autumn
+// against summer and found them identical, because the curtains had been taking one green all year.
+function TreeWillowLeaf(season) -> color {
+    switch (season) {
+        case 'summer' { return color [0.40, 0.50, 0.25] }
+        case 'autumn', 'fall' { return color [0.62, 0.51, 0.19] }
+        default { return color [0.56, 0.66, 0.33] }
+    }
+}
+
+// One leaflet of a palm frond: a narrow strap growing out along +Z and drooping as it goes, so it
+// needs no turning to hang -- which is the lesson the willow taught.  Grown along Z rather than the
+// usual Y because a palm frond is a flat feather and its leaflets leave the rachis *sideways*.
+primitive TreePalmLeaflet(long, wide) -> ribbon {
+    return ribbon {
+        material TreePalmLeaf
+
+        width wide        at [0, 0, 0]
+        width wide * 0.96 at [0, -long * 0.03, long * 0.30]
+        width wide * 0.82 at [0, -long * 0.13, long * 0.60]
+        width wide * 0.52 at [0, -long * 0.30, long * 0.85]
+        width wide * 0.08 at [0, -long * 0.52, long * 0.98]
+
+        twist 0.15
+    }
+}
+
+// One frond: a rachis arcing up and then well down, with leaflets in pairs along it, longest in the
+// middle as a feather is.
+//
+// **Each pair is turned to the rachis's own tangent**, worked out from the same quadratic the tube was
+// made from -- `2(1-t)(P1-P0) + 2t(P2-P1)`, whose angle is `atan2`.  Leaflets left at a fixed angle
+// stand square to the frond near the base and cut across it at the tip, which reads as a mistake even
+// when you cannot say what is wrong.
+primitive TreePalmFrond(long, id, variant) -> group {
+    pairs = 15
+    midX = long * 0.42
+    midY = long * 0.30
+    tipX = long * 0.92
+    tipY = -long * 0.20
+
+    return group {
+        tube {
+            material TreePalmBark
+            radius long * 0.017 at [0, 0, 0]
+            quad radius long * 0.010 at [midX, midY, 0]
+                 radius long * 0.004 at [tipX, tipY, 0]
+        }
+
+        for pair in [0, pairs - 1] {
+            along = (pair + 1) / (pairs + 1)
+            middle = 2 * (1 - along) * along
+            last = along * along
+
+            // Longest about a third of the way out and shortest at both ends.
+            fat = 4 * along * (1 - along)
+            leaf = long * 0.32 * (0.34 + 0.66 * fat)
+            slope = toDegrees(atan2(2 * (1 - along) * midY + 2 * along * (tipY - midY),
+                                    2 * (1 - along) * midX + 2 * along * (tipX - midX)))
+
+            for side in [0, 1] {
+                object TreePalmLeaflet(leaf, leaf * 0.085) {
+                    // Swept back toward the base, the way a feather's barbs lie.
+                    rotate Y side * 180 - (1 - 2 * side) *
+                                          (22 + random(id, pair, variant) * 16)
+                    rotate Z slope
+                    translate [middle * midX + last * tipX,
+                               middle * midY + last * tipY,
+                               0]
+                }
+            }
+        }
+    }
+}
+
+// A palm: a bare leaning trunk with the whole of its foliage in one crown at the top.  **No other tree
+// here is shaped anything like it** -- the broadleaves divide all the way out, the conifers are whorls
+// on a leader, and the willow hangs.  A palm is a pole with a fountain on it.
+//
+// The season says nothing: a palm sheds and grows fronds the year round rather than by the calendar,
+// and it is taken so a scene may pass it along with everything else.
+primitive Palm(height, season = 'summer', variant = 1) -> group {
+    fronds = 11
+
+    // Measured against Elm's own mean, as every tree here is: an upright frond reaches above the top
+    // of the trunk, so the whole plant is built against a shade less than the height asked for.
+    high = height * 0.890
+    tall = high * 0.72
+    lean = high * 0.06
+
+    return group {
+        tube {
+            material TreePalmBark
+            radius high * 0.027 at [0, 0, 0]
+            quad radius high * 0.022 at [lean * 0.45, tall * 0.55, 0]
+                 radius high * 0.019 at [lean, tall, 0]
+        }
+
+        for frond in [0, fronds - 1] {
+            object TreePalmFrond(high * 0.60 * (0.80 + random(frond, 51, variant) * 0.40),
+                                 frond, variant) {
+                rotate Z -4 + random(frond, 52, variant) * 62
+                rotate Y frond * 360 / fronds + random(frond, 53, variant) * 26
+                // Onto the top of the trunk, which leans -- turned first and moved second, so no
+                // frond starts beside the wood it is supposed to leave.
+                translate [lean, tall, 0]
+            }
+        }
+    }
+}
+
+primitive Pine(height, season = 'summer', variant = 1) -> group {
+    whorls = 6
+
+    // Everything below is built against `tall` rather than the height asked for, and the ratio is
+    // measured rather than reasoned: the highest thing on a pine is not the top of its trunk but the
+    // needles on the topmost bough, which overshoot it by an amount no arithmetic here predicts.
+    tall = height / 1.180
+    bare = tall * 0.56
+
+    // **The crown is hung below the top of the trunk, not scaled to it.**  A fir multiplies its whorl
+    // heights by a factor, which works there because the factor is nearly one; doing the same here
+    // simply lifted the whole crown off the top of the tree and made every variant exactly as tall as
+    // every other, since nothing random reaches higher than the topmost whorl.
+    crown = tall * 0.93
+
+    return group {
+        object TreeWood('fir', tall * 0.97, tall * 0.026, 0, variant)
+
+        for whorl in [0, whorls - 1] {
+            for branch in [0, 4] {
+                object TreeBough(season,
+                    tall * 0.34 * (1 - whorl * 0.5 / whorls) *
+                        (0.85 + random(whorl, branch, variant) * 0.3),
+                    whorl * 7 + branch + 400, variant) {
+                    rotate Z -72 - random(whorl, branch, variant + 1) * 18
+                    rotate Y branch * 72 + whorl * 41 +
+                             random(whorl, branch, variant + 2) * 22
+                    translate Y bare + (crown - bare) * whorl / (whorls - 1)
+                }
+            }
+        }
+    }
+}
 
 primitive Fir(height, season = 'summer', variant = 1) -> group {
     // A fir keeps its needles the year round, so three of the four seasons look alike here.  Winter

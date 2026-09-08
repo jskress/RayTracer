@@ -22,6 +22,10 @@
 // | `Boxwood` | A dense clipped dome.  Evergreen, and takes snow in winter. |
 // | `Bramble` | Arching canes with leaves along them; berries in autumn, bare in winter. |
 // | `Lavender` | A mound of fine stems, in flower through the summer. |
+// | `Fern` | Fronds arching from one crown.  A woodland floor without them reads as a lawn. |
+// | `Reed` | Tall stiff blades and a seed head; `Reeds` fills an outline with them. |
+// | `Stalk` | One stalk of wheat with its ear; `Wheat` fills an outline in drills. |
+// | `Wildflower` | A stem, a nodding ring of petals and a heart.  The tint is yours to give. |
 //
 // **The seasons are the same words**: 'summer', 'autumn' (or 'fall'), 'winter', or anything else for
 // spring.  What each does differs by plant, as it does in a garden.  Grass goes tawny and then to pale
@@ -69,6 +73,24 @@ UnderLavStem = material { pigment [0.44, 0.48, 0.36]  specular 0.10  shininess 2
 UnderLavFlower = material { pigment [0.45, 0.31, 0.63]  specular 0.22  shininess 45  ambient 0.20 }
 UnderLavFaded = material { pigment [0.50, 0.46, 0.44]  specular 0.10  shininess 20  ambient 0.20 }
 UnderSnowWhite = material { pigment [0.93, 0.94, 0.97]  specular 0.30  shininess 60 }
+UnderFernFrond = material { pigment [0.17, 0.33, 0.16]  specular 0.14  shininess 28  ambient 0.19 }
+UnderFernTurned = material { pigment [0.44, 0.36, 0.16]  specular 0.10  shininess 20  ambient 0.20 }
+UnderFernNew = material { pigment [0.34, 0.52, 0.26]  specular 0.18  shininess 32  ambient 0.20 }
+UnderFernDead = material { pigment [0.40, 0.31, 0.22]  specular 0.08  shininess 16  ambient 0.20 }
+UnderFernStem = material { pigment [0.30, 0.34, 0.19]  specular 0.10  shininess 20 }
+UnderReedBlade = material { pigment [0.31, 0.42, 0.22]  specular 0.16  shininess 30  ambient 0.20 }
+UnderReedNew = material { pigment [0.38, 0.52, 0.25]  specular 0.20  shininess 34  ambient 0.20 }
+UnderReedHead = material { pigment [0.34, 0.24, 0.16]  specular 0.12  shininess 22  ambient 0.20 }
+UnderWheatStalk = material { pigment [0.62, 0.58, 0.34]  specular 0.14  shininess 26  ambient 0.22 }
+UnderWheatEar = material { pigment [0.72, 0.62, 0.32]  specular 0.20  shininess 34  ambient 0.22 }
+UnderWheatGreen = material { pigment [0.42, 0.52, 0.24]  specular 0.16  shininess 28  ambient 0.21 }
+UnderWheatNew = material { pigment [0.36, 0.54, 0.26]  specular 0.20  shininess 32  ambient 0.21 }
+UnderWheatStubble = material { pigment [0.55, 0.51, 0.38]  specular 0.10  shininess 20  ambient 0.22 }
+UnderWheatEarGreen = material { pigment [0.50, 0.58, 0.26]  specular 0.18  shininess 30  ambient 0.21 }
+UnderWheatEarNew = material { pigment [0.44, 0.56, 0.28]  specular 0.20  shininess 32  ambient 0.21 }
+UnderWheatEarSpent = material { pigment [0.60, 0.55, 0.40]  specular 0.12  shininess 22  ambient 0.22 }
+UnderFlowerStem = material { pigment [0.26, 0.38, 0.20]  specular 0.12  shininess 24  ambient 0.19 }
+UnderFlowerHeart = material { pigment [0.72, 0.62, 0.20]  specular 0.30  shininess 50  ambient 0.22 }
 
 // What color the grass is, which is the whole of what a season does to it.
 primitive UnderBladeSkin(season) -> material {
@@ -116,6 +138,69 @@ function UnderBladeBend(season) -> number {
 // whole length at once, and a tuft reads as a set of cut-out shapes; a little turn along the length
 // means each blade catches the light somewhere and loses it somewhere else, which is what a blade
 // does when it grows.
+primitive UnderCoat(kind, season) -> material {
+    switch (kind) {
+        case 'fern' {
+            switch (season) {
+                case 'winter' { return material UnderFernDead }
+                case 'autumn', 'fall' { return material UnderFernTurned }
+                // Spring fronds are fresh and light; summer's have hardened off.  These were the
+                // same colour until a test held one season against the other.
+                case 'summer' { return material UnderFernFrond }
+                default { return material UnderFernNew }
+            }
+        }
+        case 'reed' {
+            switch (season) {
+                case 'winter' { return material UnderBladeStraw }
+                case 'autumn', 'fall' { return material UnderBladeTawny }
+                case 'summer' { return material UnderReedBlade }
+                // New growth, as with the fern: spring and summer were one colour until a test put
+                // them side by side.  **Every arm of a season switch has to answer for itself**, and
+                // a `default` that quietly serves two of them is the way that goes wrong.
+                default { return material UnderReedNew }
+            }
+        }
+        default {
+            switch (season) {
+                case 'autumn', 'fall' { return material UnderWheatStalk }
+                case 'winter' { return material UnderWheatStubble }
+                case 'summer' { return material UnderWheatGreen }
+                default { return material UnderWheatNew }
+            }
+        }
+    }
+}
+
+// And its ear, which ripens on the same clock.
+primitive UnderWheatGrain(season) -> material {
+    switch (season) {
+        case 'autumn', 'fall' { return material UnderWheatEar }
+        case 'winter' { return material UnderWheatEarSpent }
+        case 'summer' { return material UnderWheatEarGreen }
+        default { return material UnderWheatEarNew }
+    }
+}
+
+primitive UnderStrap(kind, season, tall, wide, bend, over, turn) -> ribbon {
+    lean = (bend + over) * 0.01745
+    r = tall / lean
+    w = wide * 2.6
+
+    return ribbon {
+        material UnderCoat(kind, season)
+
+        width w              at [r * (1 - cos(lean * 0.00)), r * sin(lean * 0.00), 0]
+        width w * 0.94       at [r * (1 - cos(lean * 0.30)), r * sin(lean * 0.30), 0]
+        width w * 0.76       at [r * (1 - cos(lean * 0.58)), r * sin(lean * 0.58), 0]
+        width w * 0.46       at [r * (1 - cos(lean * 0.82)), r * sin(lean * 0.82), 0]
+        width w * 0.04       at [r * (1 - cos(lean * 1.00)), r * sin(lean * 1.00), 0]
+
+        twist 0.7
+        rotate Y turn
+    }
+}
+
 primitive UnderBlade(season, tall, wide, bend, over, turn) -> ribbon {
     lean = (bend + over) * 0.01745
     r = tall / lean
@@ -534,6 +619,232 @@ primitive Lavender(height, season = 'summer', variant = 1) -> group {
                 translate [(random(variant, stem, 54) - 0.5) * height * 0.42, 0,
                            (random(variant, stem, 55) - 0.5) * height * 0.42]
             }
+        }
+    }
+}
+
+// -- Fern ------------------------------------------------------------------------------------------
+
+// One frond: a stem arching up and over, with leaflets in pairs down its length, smaller toward the
+// tip.  The leaflets sit at points on the stem's *own* curve, evaluated from the same quadratic the
+// tube was made from, so they grow out of it rather than near it.
+primitive UnderFrond(season, long, id, variant) -> group {
+    leaflets = 13
+
+    // The rachis: up steeply, then arching over.  It used to run out to 0.86 of its length while
+    // rising only 0.56, which is an elevation of 33 degrees -- a frond lying down rather than a fern
+    // standing up, and the reason a crown of seven of them read as a doily on the ground.
+    tipX = long * 0.58
+    tipY = long * 0.60
+    midX = long * 0.14
+    midY = long * 0.85
+
+    return group {
+        tube {
+            material UnderFernStem
+            radius long * 0.015 at [0, 0, 0]
+            quad radius long * 0.009 at [midX, midY, 0]
+                 radius long * 0.003 at [tipX, tipY, 0]
+        }
+
+        for pair in [0, leaflets - 1] {
+            along = (pair + 1) / (leaflets + 1)
+            middle = 2 * (1 - along) * along
+            last = along * along
+            leaf = long * 0.26 * (1 - along * 0.68)
+
+            for side in [0, 1] {
+                // **Out to one side of the rachis, not merely turned on the spot.**  A strap grows
+                // along its own +Y and `turn` only spins it about that axis, so both of a pair used
+                // to stand in the same place wearing different faces -- a caterpillar, not a frond.
+                // Laying it over about X sends it out along Z, which is across the rachis.
+                object UnderStrap('fern', season, leaf, leaf * 0.13, 18, 28,
+                                  random(id, pair, variant) * 30) {
+                    rotate X (side * 2 - 1) * (70 + random(id, pair, variant + 1) * 14)
+                    translate [middle * midX + last * tipX,
+                               middle * midY + last * tipY,
+                               0]
+                }
+            }
+        }
+    }
+}
+
+// A fern: fronds from one crown, arching out and over.  **The shape nothing else here had** --
+// everything else is a blade, a dome, an arching cane or a mound of stems, and a woodland floor
+// without ferns reads as a lawn under trees.
+primitive Fern(height = 0.6, season = 'summer', variant = 1) -> group {
+    fronds = 7
+
+    return group {
+        for frond in [0, fronds - 1] {
+            // Measured: a frond arches over, so it stands about three quarters of its own length
+            // and is built a third again as long to reach the height asked for.
+            object UnderFrond(season, height * 1.314 * (0.84 + random(frond, 11, variant) * 0.34),
+                              frond, variant) {
+                // Barely tilted out.  The frond's own curve does the arching now, so tipping it
+                // over as well simply laid the plant down again.
+                rotate Z -1 - random(frond, 12, variant) * 7
+                rotate Y frond * 360 / fronds + random(frond, 13, variant) * 40
+            }
+        }
+    }
+}
+
+// -- Reeds -----------------------------------------------------------------------------------------
+
+// One reed: a few tall stiff blades and a seed head on the tallest.  Stiffer and far taller than
+// grass, which is the whole difference -- a reed stands where water stood.
+primitive Reed(height = 1.8, season = 'summer', variant = 1) -> group {
+    // Measured: the head overshoots the tallest blade, so a reed built to the height asked for stands about a ninth over it.
+    tall = height * 0.898
+    blades = 5
+
+    return group {
+        for blade in [0, blades - 1] {
+            tall = tall * (0.68 + random(blade, 21, variant) * 0.40)
+
+            object UnderStrap('reed', season, tall, tall * 0.022, 4, 9,
+                              random(blade, 22, variant) * 360) {
+                translate [(random(blade, 23, variant) - 0.5) * tall * 0.10, 0,
+                           (random(blade, 24, variant) - 0.5) * tall * 0.10]
+            }
+        }
+
+        // The head, on a stem of its own, which is what says reed rather than tall grass.
+        group {
+            tube {
+                material UnderReedHead
+                radius tall * 0.010 at [0, 0, 0]
+                quad radius tall * 0.008 at [tall * 0.010, tall * 0.55, 0]
+                     radius tall * 0.007 at [tall * 0.026, tall * 0.96, 0]
+            }
+            sphere {
+                material UnderReedHead
+                scale [tall * 0.026, tall * 0.10, tall * 0.026]
+                translate [tall * 0.028, tall * 1.02, 0]
+            }
+            rotate Y random(1, 25, variant) * 360
+        }
+    }
+}
+
+// An area of them, filling whatever outline it is given -- a margin, a ditch, the shallow end of a
+// pond.  The same arrangement `Grass` uses.
+primitive Reeds(shape, season = 'summer', variant = 1, height = 1.8, density = 1) -> field {
+    return field {
+        of Reed(height * (0.78 + random(variant, n, 1) * 0.44), season, variant * 5477 + n)
+        within shape
+        spacing height * 0.30 / density
+        jitter 1.5
+        index in n
+    }
+}
+
+// -- Wheat -----------------------------------------------------------------------------------------
+
+// One stalk with its ear, which ripens: green in spring, greening still in summer, straw and gold in
+// autumn, and grey stubble in winter.
+//
+// **It was straw the year round until a test held one season against another.**  The reasoning was
+// that a crop is cut rather than turned -- true, but a crop is *green* for most of the time it is
+// standing, and a scene wanting a ripe field can say `'autumn'` and get one.
+primitive Stalk(height = 1.1, season = 'summer', variant = 1) -> group {
+    grains = 9
+
+    return group {
+        tube {
+            material UnderCoat('wheat', season)
+            radius height * 0.011 at [0, 0, 0]
+            quad radius height * 0.009 at [height * 0.02, height * 0.50, 0]
+                 radius height * 0.007 at [height * 0.07, height * 0.78, 0]
+        }
+
+        for leaf in [0, 1] {
+            object UnderStrap('wheat', season, height * 0.34, height * 0.020, 22, 34,
+                              leaf * 170 + random(leaf, 31, variant) * 40) {
+                translate [0, height * (0.22 + leaf * 0.24), 0]
+            }
+        }
+
+        // The ear: grains up a short spike, each a little ellipsoid, tapering to the top.
+        group {
+            for grain in [0, grains - 1] {
+                up = grain / (grains - 1)
+
+                sphere {
+                    material UnderWheatGrain(season)
+                    scale height * 0.030 * (1 - up * 0.45)
+                    scale [1, 1.7, 1]
+                    translate [0, height * 0.80 + up * height * 0.19,
+                               height * 0.012 * (1 - 2 * (grain % 2))]
+                }
+            }
+            translate [height * 0.07, 0, 0]
+            rotate Y random(2, 32, variant) * 360
+        }
+    }
+}
+
+// A field of it, in drills.  **Give this a jitter near nought**: a crop is drilled, and the rows are
+// the whole look of one -- which is the opposite of what grass wants from the same clause.
+primitive Wheat(shape, season = 'summer', variant = 1, height = 1.1, density = 1) -> field {
+    return field {
+        of Stalk(height * (0.88 + random(variant, n, 1) * 0.24), season, variant * 8623 + n)
+        within shape
+        spacing height * 0.13 / density
+        jitter 0.35
+        index in n
+    }
+}
+
+// -- Wildflowers -----------------------------------------------------------------------------------
+
+// One flower: a stem, a ring of petals and a heart.  The tint is handed in as a color, because a
+// color is an ordinary value and a material is not -- a material may be named in an expression but a
+// material-making primitive may not be called in one.
+primitive Wildflower(height = 0.34, tint = [0.78, 0.72, 0.30], variant = 1) -> group {
+    // Measured: the petals sit above the stem head, so the flower stands taller than its stem.
+    tall = height * 0.852
+    petals = 6
+
+    // Cast once, because a tuple cannot be scaled and a scene will hand this a bare triple as often
+    // as a color.
+    paint = color tint
+
+    return group {
+        tube {
+            material UnderFlowerStem
+            radius tall * 0.022 at [0, 0, 0]
+            quad radius tall * 0.018 at [tall * 0.03, tall * 0.52, 0]
+                 radius tall * 0.014 at [tall * 0.09, tall * 0.90, 0]
+        }
+
+        object UnderStrap('wheat', 'summer', tall * 0.30, tall * 0.045, 26, 38,
+                          random(1, 41, variant) * 360) {
+            translate [0, tall * 0.24, 0]
+        }
+
+        group {
+            for petal in [0, petals - 1] {
+                parallelogram {
+                    material {
+                        pigment paint * (0.86 + random(petal, 42, variant) * 0.28)
+                        specular 0.22  shininess 40  ambient 0.24
+                    }
+                    at [0, 0, 0]
+                    sides [tall * 0.34, tall * 0.07, 0], [0, tall * 0.04, tall * 0.13]
+                    rotate Y petal * 360 / petals
+                }
+            }
+            sphere {
+                material UnderFlowerHeart
+                scale tall * 0.060
+            }
+            // Nodding, so the face shows to anyone not directly above it.  A ring of flat petals
+            // seen exactly edge-on is a line, which is what the first of these looked like.
+            rotate Z -34
+            translate [tall * 0.09, tall * 0.90, 0]
         }
     }
 }

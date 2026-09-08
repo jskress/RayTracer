@@ -1,0 +1,101 @@
+// The whole island is a squashed ball, and the joke is that nothing else is needed.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'One Palm Island'
+        author 'J. Stephen Kress'
+        description 'A sand bar barely above the water, one leaning palm, and ferns in its shade.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'trees'       { Palm }
+import 'undergrowth' { Fern }
+import 'water'       { Water, SeaWater }
+import 'daylight'    { ClearMorning, ClearMorningLight }
+import 'rocks'       { Cobble }
+
+camera {
+    location [17, 4.6, -27]
+    look at [0, 5.4, 0]
+    field of view 42
+}
+
+// A morning sun, which puts the light toward +X -- the side the camera stands on, so the trunk and
+// the fronds show lit faces rather than their own shadows.
+background ClearMorning
+light ClearMorningLight { samples 20 }
+
+// -- The sea ---------------------------------------------------------------------------------------
+
+// Calm, because a comic-strip island is never in a storm -- and because a rough sea would hide the
+// one thing the picture is about under its own spray of geometry.
+// **Nine thousand units across, and that is not a typo.**  The library says to make it larger than
+// the picture needs; what it does not say, and what two tries here found out, is *how much* larger.
+// A sheet of water always ends somewhere, and from a camera a few units above the surface that end
+// lands within a fraction of a degree of the horizon however far off it is -- so it draws as a hard
+// band right where the eye goes.  260 across put a black stripe over the sky; 900 moved it not at
+// all.  The gallery's own sea scene uses 9000, and that is the number that works.
+object Water(9000, 9000, 'calm', 3) { material SeaWater }
+
+// -- The island ------------------------------------------------------------------------------------
+
+// **A squashed ball, sunk until only its cap is dry.**  There is no island surface and there does not
+// need to be one: a sphere scaled flat and dropped below the water leaves exactly the low sand dome
+// this wants, and the waterline is wherever the two happen to cross rather than a line anyone drew.
+//
+// The scale is done in one clause and the sinking in the next, so the dome keeps its shape -- scaling
+// after translating would have squashed the offset too.
+sphere {
+    material {
+        pigment granite with seed 31 {
+            [0.14, color [0.74, 0.66, 0.48],
+             0.38, color [0.80, 0.72, 0.53],
+             0.66, color [0.86, 0.79, 0.60]]
+            scale 2.2
+        }
+        ambient 0.26  specular 0.06  shininess 12
+    }
+    scale [11, 2.6, 9]
+    translate [0, -1.85, 0]
+}
+
+// -- What is on it ---------------------------------------------------------------------------------
+
+// The palm, leaning as a palm does, and set a little off the middle: dead centre reads as a diagram.
+object Palm(11.5, 'summer', 4) { translate [-1.4, 0.5, 0.6] }
+
+// Ferns in its shade, on the side of the dome that still has some height to it.
+for fern in [0, 8] {
+    object Fern(1.35 + random(fern, 11, 3) * 0.85, 'summer', fern + 2) {
+        translate [-4.8 + random(fern, 12, 3) * 7.0,
+                   0.42 + random(fern, 13, 3) * 0.14,
+                   -2.6 + random(fern, 14, 3) * 5.0]
+    }
+}
+
+// Coconuts, without which this is merely a tree on some sand.
+group {
+    for nut in [0, 2] {
+        sphere {
+            material { pigment [0.34, 0.24, 0.15]  specular 0.24  shininess 30  ambient 0.20 }
+            scale 0.30
+            rotate Y nut * 120 + 40
+            translate [0.62, 7.05, 0]
+        }
+    }
+    translate [-1.4, 0.5, 0.6]
+}
+
+// A few stones at the tideline, because a bar of clean sand and nothing else reads as a model of an
+// island rather than an island.
+for stone in [0, 7] {
+    object Cobble(0.16 + random(stone, 21, 5) * 0.22, 'summer', stone + 3) {
+        translate [-9.5 + random(stone, 22, 5) * 19.0,
+                   0.06,
+                   -6.5 + random(stone, 23, 5) * 13.0]
+    }
+}
