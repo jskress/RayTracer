@@ -1,0 +1,147 @@
+// Eight kinds of plant, and not one of them says where a single leaf goes.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'The Margin of a Field'
+        author 'J. Stephen Kress'
+        description 'A pond, a willow over it, reeds at the water and wheat beyond the bank.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'trees'       { Willow, Poplar, Maple, Snag }
+import 'undergrowth' { Grass, Reeds, Wheat, Fern, Wildflower }
+import 'daylight'    { ClearMorning, ClearMorningLight }
+
+Season = 'summer'
+
+camera {
+    location [0, 10.5, -25]
+    look at [0, 5.0, 9]
+    field of view 44
+}
+
+background ClearMorning
+// A sky light, turned down: every one of its looks at the dome has to get out through the crop.
+light ClearMorningLight { samples 12 }
+
+// The ground, and the water lying in the low part of it.
+plane {
+    material {
+        // Green rather than earth-colored, and that is a composition decision rather than a
+        // finish: the ground runs back a long way past the crop, and bare soil out to the horizon
+        // reads as an empty plate.  Pasture reads as the next field over.
+        pigment granite with seed 19 {
+            [0.10, color [0.24, 0.28, 0.16],
+             0.34, color [0.29, 0.33, 0.19],
+             0.62, color [0.34, 0.38, 0.22]]
+            scale 3.4
+        }
+        ambient 0.22  specular 0.03
+    }
+}
+
+disc {
+    material {
+        pigment [0.13, 0.17, 0.19]
+        specular 0.7  shininess 260  reflective 0.45
+        ambient 0.10
+    }
+    center [-7, 0.06, 4]  normal [0, 1, 0]
+    radius 4.6
+}
+
+// -- The three fields, which are the same clause at three settings ---------------------------------
+
+// Reeds stand in the wet ground round the water, so their outline is a ring with the pond cut out of
+// it.  A hole in a path is a hole in the planting.
+ReedBed = path {
+    move to -12.6, 4
+    quad -12.2, 9.4 to -7, 9.8
+    quad -1.6, 9.2 to -1.4, 4
+    quad -1.8, -1.2 to -7, -1.6
+    quad -12.2, -1.0 to -12.6, 4
+    close
+
+    move to -11.6, 4
+    quad -11.3, 8.4 to -7, 8.7
+    quad -2.7, 8.3 to -2.5, 4
+    quad -2.8, -0.3 to -7, -0.6
+    quad -11.3, -0.2 to -11.6, 4
+    close
+}
+
+object Reeds(ReedBed, Season, 3, 1.9, 0.7)
+
+// The crop, drilled.  **Almost no jitter**, because the rows are the whole look of a crop -- which is
+// the opposite of what the reeds behind it and the grass in front of it want from the same clause.
+Drill = path {
+    move to -15, 11
+    line to 15, 11
+    line to 15, 29
+    line to -15, 29
+    close
+}
+
+// **Asked for autumn rather than the scene's season**, and deliberately: wheat ripens, so it is
+// green through spring and summer and only straw-and-gold when it is ready to cut.  A green crop
+// beside green pasture is one green field; a ripe one is the band that makes this picture.
+object Wheat(Drill, 'autumn', 5, 1.15, 0.55)
+
+// The bank between the water and the crop, which is where anything that is neither gets to grow.
+Bank = path {
+    move to -1.2, 1.5
+    quad 4, 0.9 to 9.5, 1.8
+    line to 11, 8.6
+    quad 5, 9.4 to -1.0, 8.8
+    close
+}
+
+object Grass(Bank, Season, 7, 0.42, 0.75)
+
+// Wildflowers through the same bank, and the one place this library takes a color rather than a
+// season: no two of a bank of them are alike, so the tint has to come from the copy's own number.
+primitive Bloom(n) -> group {
+    return group {
+        object Wildflower(0.30 + random(n, 71, 3) * 0.26,
+                          [0.42 + random(n, 72, 3) * 0.48,
+                           0.30 + random(n, 73, 3) * 0.30,
+                           0.34 + random(n, 74, 3) * 0.52], n)
+    }
+}
+
+field {
+    of Bloom(n)
+    within Bank
+    spacing 0.62
+    jitter 0.9
+    index in n
+}
+
+// -- What stands in it ----------------------------------------------------------------------------
+
+// The willow leans over the water, which is where a willow goes.
+object Willow(8.6, Season, 2) { translate [-6.4, 0, -1.0] }
+
+// Ferns in its shade, which is where a fern goes: nothing else here grows in the dark.
+for fern in [0, 4] {
+    object Fern(1.1 + random(fern, 81, 4) * 0.7, Season, fern + 2) {
+        translate [-11.0 + random(fern, 82, 4) * 5.0, 0,
+                   -4.8 + random(fern, 83, 4) * 4.2]
+    }
+}
+
+// A dead one standing in the crop, because a stand where everything is alive reads as planted.
+object Snag(7.2, 4) { translate [6.5, 0, 7.5] }
+
+// And a windbreak along the far side, which is what a poplar is for.
+for tree in [0, 3] {
+    object Poplar(10 + random(tree, 91, 5) * 2.5, Season, tree + 1) {
+        translate [tree * 7.8 - 11.5, 0, 30]
+    }
+}
+
+object Maple(8.5, Season, 3) { translate [9.8, 0, 3] }

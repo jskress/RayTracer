@@ -155,6 +155,12 @@ object Elm(8, 'winter', 4)       { translate X -12 }
 | `Oak` | Heavy and broad, throwing its weight sideways. |
 | `Birch` | Slender, pale-barked, dividing into finer twigs than the others. |
 | `Fir` | A conifer: one trunk the whole height, with rings of branches coming off it.  Evergreen, so spring, summer and autumn are the same tree -- but ask one for winter and snow gathers along its boughs. |
+| `Pine` | The other conifer, and the other way round: a long clear trunk with the whole crown at the top.  A fir is a cone to the ground; a pine sheds its lower branches as it grows. |
+| `Willow` | Arching limbs with curtains of foliage hanging from along them. |
+| `Poplar` | The narrow one.  Limbs held close to the leader, for a windbreak or an avenue. |
+| `Maple` | Broad like an oak but lighter, and the biggest leaves here — which is what makes its autumn read from further off than the others. |
+| `Palm` | A bare leaning trunk with the whole of its foliage in one fountain at the top. |
+| `Snag` | A dead tree, standing.  Bare in every season, because that is what dead means. |
 
 Three numbers, of which only the first is required: **how tall**, **what time of year**, and **which
 tree of that kind**.
@@ -164,6 +170,17 @@ because the obvious alternative is for the number to mean the trunk, and then no
 
 **The season is a word**: `'summer'`, `'autumn'` (or `'fall'`), `'winter'`, or anything else for
 spring.  A winter tree has no leaves at all and shows the shape they were hanging on.
+
+Three of them say nothing with it, and each for its own reason.  A `Palm` sheds and grows fronds the
+year round rather than by the calendar; a `Snag` is dead, and dead is bare in January and July alike;
+and a `Fir` does what an evergreen does, which is three seasons the same and snow in the fourth.  They
+all take the word anyway, so a scene that sets its season in one place can hand it to everything.
+
+**Six of these eight are the same recipe with different numbers** — how far a limb leans, how much it
+sweeps, how fast it shrinks, how big a leaf is.  Two are not: a fir and a pine are a leader with whorls
+of boughs, and a willow is limbs drawn out by hand with curtains hung from points on their own curves.
+A weeping shape cannot be had from the recursive machinery at all, because that machinery never tells
+anyone where a limb went, and a curtain has to know.
 
 **The variant is which tree of that kind you want.**  The same numbers always grow the same tree, down
 to the last twig — today, next year, and in every frame of an animation.  Change it and you get a
@@ -205,6 +222,10 @@ picture of some trees from a picture of somewhere.
 | `Boxwood` | A dense clipped dome.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
 | `Bramble` | Arching canes with leaves along them; berries in autumn, bare canes in winter. |
 | `Lavender` | A mound of fine stems, in flower through the summer and cut back by winter. |
+| `Fern` | Fronds rising from one crown and arching over.  A woodland floor without them reads as a lawn under trees. |
+| `Reed` | Tall stiff blades and a seed head, for a margin or a ditch.  `Reeds` fills an outline with them. |
+| `Stalk` | One stalk of wheat with its ear.  `Wheat` fills an outline with them, in drills. |
+| `Wildflower` | A stem, a nodding ring of petals and a heart.  The tint is a color you hand it. |
 
 **The first three arguments mean what they mean everywhere else** — how big, what time of year, and
 which one of that kind — so a scene that has planted an autumn stand can plant autumn undergrowth
@@ -260,6 +281,33 @@ object Grass(Lawn, 'summer', 1, 0.3, 0.5)  // half as many tufts, a quarter the 
 
 Halving the last one quarters the count, since the tufts thin out in both directions at once.  Grass
 seen from across a field does not need what grass seen from a foot away needs.
+
+**Three of these fill an outline, and the jitter is what tells them apart.**  `Grass` and `Reeds` want
+most of a cell of it, because a lattice is the one thing that gives an area of either away.  `Wheat`
+wants almost none: a crop is *drilled*, and the rows are the whole look of one.  The same clause, at
+opposite ends of its range.
+
+```
+Verge = path { move to -9, -1  line to 9, -1  line to 9, 2  line to -9, 2  close }
+Drill = path { move to -9, 4  line to 9, 4  line to 9, 16  line to -9, 16  close }
+
+object Reeds(Verge, 'summer', 3, 1.7)
+object Wheat(Drill, 'summer', 5, 1.1)
+```
+
+**A wildflower takes a color rather than a season**, which is the one place this library breaks its own
+habit.  It has to: the point of a bank of them is that no two are the same, and that means the tint
+comes from the copy's own number — so a `field` of them reads
+[`index in n`](advanced-surfaces.md#field) and hands the number on to whatever mixes the color.
+
+```
+primitive Bloom(n) -> group {
+    return group { object Wildflower(0.3 + random(n, 1) * 0.2,
+                                     [0.5 + random(n, 2) * 0.4, 0.3, 0.4 + random(n, 3) * 0.5], n) }
+}
+
+field { of Bloom(n)  within Verge  spacing 0.4  jitter 0.9  index in n }
+```
 
 #### Rocks
 
