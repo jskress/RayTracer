@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 103 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 104 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -976,9 +976,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Scene Building</b> &mdash; 5 images &middot; the language's own ways of saying a thing once</summary>
+<summary><b>Scene Building</b> &mdash; 6 images &middot; the language's own ways of saying a thing once</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/scene-building/the-hollow-square.png">
+      <img alt="The Hollow Square" height="120" src="Local/scene-building/the-hollow-square.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/scene-building/the-hollow-square.igl">The Hollow Square</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/scene-building/two-numbers-and-a-room.png">
       <img alt="Two Numbers and a Room" height="120" src="Local/scene-building/two-numbers-and-a-room.png" width="160"/>
