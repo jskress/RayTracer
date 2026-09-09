@@ -55,6 +55,22 @@ internal static class TubeCurveMath
             resultantSamples[i] = SylvesterResultant(gAtT, dgduAtT);
         }
 
+        // Only the resultant's roots carry any information; its overall magnitude carries
+        // none.  That magnitude, though, is a Sylvester determinant, so it scales like the
+        // size of the matrix (11th power of the segment's own coefficients, for a cubic) --
+        // an entirely ordinary curve lands around 1e-11 while another, no better
+        // conditioned, lands around 1e-3.  Rescaling the samples against their own largest
+        // leaves every root exactly where it was and puts the reconstruction on a footing
+        // the relative trimming below can actually judge; without it, a whole curve's worth
+        // of perfectly good roots gets discarded as numerical noise.
+        double largestSample = resultantSamples.Select(Math.Abs).Max();
+
+        if (largestSample == 0)
+            yield break;
+
+        for (int i = 0; i < sampleCount; i++)
+            resultantSamples[i] /= largestSample;
+
         double[] resultantCoefficients = SolveVandermonde(sampleSs, resultantSamples);
 
         foreach (double s in RealRoots(resultantCoefficients))

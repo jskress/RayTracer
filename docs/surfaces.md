@@ -201,13 +201,29 @@ torus {
 
 #### Egg
 
-An ovoid, which also needs two radii: the radius across, and the radius along the axis.
+Two spheres about the Y axis, joined by a smooth fillet.  It also takes two radii, and they are
+the radii of those two spheres: the **bottom** one, centered on the origin, and the **top** one,
+centered on the bottom sphere's own north pole.
 
 ```
 egg {
-    radii 0.55, 0.85
+    radii 0.55, 0.4
 }
 ```
+
+**Which makes it the way to get a teardrop.**  Give the top sphere a small radius and the shape
+comes to a point — very nearly, since the tip is rounded at exactly that radius — and turning the
+whole thing over gives a falling drop rather than a standing one:
+
+```
+egg { radii 0.42, 0.07 }                // a teardrop, point up
+egg { radii 0.42, 0.07  rotate Z 180 }  // and point down
+```
+
+Two equal radii give an ordinary lopsided ovoid, which is what an egg looks like.  For a tip that is
+genuinely sharp, or a drop with a waist or a shoulder partway up, draw the profile and use a
+[lathe](advanced-surfaces.md#lathe) instead — a lathe meets its axis at whatever angle you draw,
+where an egg's tip can only ever be as sharp as its smaller sphere.
 
 #### Superellipsoid
 

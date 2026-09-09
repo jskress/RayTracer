@@ -37,6 +37,33 @@ public class TestTubeDegenerateCurves
     }
 
     /// <summary>
+    /// Builds a one-cubic-segment tube of <i>constant</i> radius, and the constant radius is not
+    /// incidental: a straight run whose radius tapers still presents the envelope solve a real
+    /// tangency to find, so it comes out solid whether or not the straightness test does its job.
+    /// Only a straight run of even thickness -- where every point of the cylinder touches endlessly
+    /// many of the spheres, and the solve has nothing to fasten on -- shows the fault.  Tapering
+    /// these radii, which is what the quad helper above does, hid it completely.
+    /// </summary>
+    private static Tube Cubic(Point start, Point control1, Point control2, Point end)
+    {
+        Tube tube = new ()
+        {
+            Start = new TubeControlPoint { Center = start, Radius = 0.1 }
+        };
+
+        tube.Segments.Add(new TubeSegmentSpec
+        {
+            Control1 = new TubeControlPoint { Center = control1, Radius = 0.1 },
+            Control2 = new TubeControlPoint { Center = control2, Radius = 0.1 },
+            End = new TubeControlPoint { Center = end, Radius = 0.1 }
+        });
+
+        tube.PrepareForRendering();
+
+        return tube;
+    }
+
+    /// <summary>
     /// Counts how many times a ray fired across the middle of a segment actually hits it.  A tube
     /// that has lost its body still has its end spheres, so asking "did anything render" is not
     /// enough -- the ray has to cross the middle, where only the body can be.
@@ -96,6 +123,54 @@ public class TestTubeDegenerateCurves
             Assert.IsTrue(HitsAcrossTheMiddle(tube, start, end) > 0,
                 $"a quad with its control at {fraction} of the way rendered no body");
         }
+    }
+
+    /// <summary>
+    /// The cubic form of the same fault, and it is worse, because collapsing the differences is not
+    /// what makes a cubic straight.  Its second and third differences vanish only when the controls
+    /// are collinear <i>and evenly spaced</i>; put them at 0.33 and 0.67 of a straight run instead of
+    /// at exact thirds and the segment is still a dead straight line whose coefficients are not
+    /// nought.  It took the curved road and lost its body.
+    /// <para>
+    /// **A scene that computes its control points rather than typing them lands on those numbers
+    /// every time** -- putting handles a third of the way along each chord is what a spline generator
+    /// does -- so this is the ordinary case, not a contrived one.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestACubicWhoseControlsAreCollinearStillHasABody()
+    {
+        foreach ((double first, double second) in
+                 new[] { (1.0 / 3, 2.0 / 3), (0.33, 0.67), (0.12, 0.45), (0.5, 0.75) })
+        {
+            Point start = new (0, 0, 0);
+            Point end = new (0, 2, 0);
+            Tube tube = Cubic(
+                start, new Point(0, 2 * first, 0), new Point(0, 2 * second, 0), end);
+
+            Assert.IsTrue(HitsAcrossTheMiddle(tube, start, end) > 0,
+                $"a cubic with its controls at {first} and {second} of the way rendered no body");
+        }
+    }
+
+    /// <summary>
+    /// And the fix must not flatten a curve that only looks straight from one side: these controls
+    /// sit off the line, so the segment has to stay a curve and be found where the curve is rather
+    /// than where the chord is.
+    /// </summary>
+    [TestMethod]
+    public void TestACubicThatReallyBendsIsStillCurved()
+    {
+        Tube tube = Cubic(
+            new Point(0, 0, 0), new Point(1.2, 0.5, 0),
+            new Point(1.2, 1.5, 0), new Point(0, 2, 0));
+        Ray ray = new (new Point(0.9, 1, -5), Directions.In);
+        List<Intersection> intersections = [];
+
+        tube.AddIntersections(ray, intersections);
+
+        Assert.IsTrue(intersections.Count > 0,
+            "a genuinely bent cubic was flattened to a straight line");
     }
 
     [TestMethod]
