@@ -149,16 +149,41 @@ public class Tube : Surface
 
     /// <summary>
     /// This method reports whether a cubic segment is really a straight line, which it is when both
-    /// of the differences that give it its shape have collapsed.
+    /// of its control points lie on the line from its start to its end.
+    /// <para>
+    /// **The question is where the control points *are*, not what the polynomial's coefficients come
+    /// to.**  This asked the latter once -- whether the second and third differences had collapsed --
+    /// and those vanish only when the controls are collinear *and evenly spaced*.  Put them at 0.33
+    /// and 0.67 of a straight run instead of at exact thirds and the curve is still a perfectly
+    /// straight line, but its coefficients are not nought, so it took the curved road and vanished:
+    /// two end spheres and no body.  Nothing said so, and a scene that computes its control points
+    /// rather than typing them will land on those numbers every time.
+    /// </para>
     /// </summary>
     private static bool IsStraight(Point start, Point control1, Point control2, Point end)
     {
         Vector span = end - start;
-        Vector second = (start - control1) + (control2 - control1);
-        Vector third = (end - start) - 3 * (control2 - control1);
-        double limit = span.Magnitude * StraightTolerance;
+        double length = span.Magnitude;
 
-        return second.Magnitude <= limit && third.Magnitude <= limit;
+        if (length == 0)
+            return true;
+
+        Vector along = span / length;
+        double limit = length * StraightTolerance;
+
+        return OffTheLine(start, along, control1) <= limit &&
+               OffTheLine(start, along, control2) <= limit;
+    }
+
+    /// <summary>
+    /// This method returns how far a control point sits off the line a segment spans, measured square
+    /// to that line so that sliding a control point *along* it counts for nothing.
+    /// </summary>
+    private static double OffTheLine(Point start, Vector along, Point control)
+    {
+        Vector offset = control - start;
+
+        return (offset - along * offset.Dot(along)).Magnitude;
     }
 
     /// <summary>
