@@ -152,7 +152,7 @@ public class Blob : Surface
         {
             if (t >= intervalStart - DoubleExtensions.Epsilon &&
                 t <= intervalEnd + DoubleExtensions.Epsilon &&
-                IsGenuineRoot(coefficients, t))
+                IsGenuineRoot(coefficients, t, Threshold))
                 intersections.Add(new Intersection(this, Polished(coefficients, t) / length));
         }
     }
@@ -234,8 +234,10 @@ public class Blob : Surface
     /// </summary>
     /// <param name="coefficients">The field polynomial's coefficients, in ascending order.</param>
     /// <param name="t">The value to check.</param>
+    /// <param name="threshold">The field level the surface is drawn at, which is what the polynomial
+    /// stands at where nothing is in range -- and so what an impostor is worth.</param>
     /// <returns><c>true</c>, if the polynomial really does vanish there.</returns>
-    public static bool IsGenuineRoot(double[] coefficients, double t)
+    public static bool IsGenuineRoot(double[] coefficients, double t, double threshold)
     {
         double value = 0;
         double scale = 0;
@@ -250,7 +252,19 @@ public class Blob : Surface
 
         // A genuine root leaves the terms cancelling to nothing beside their own sizes; one of these
         // impostors leaves the whole of the constant standing.
-        return Math.Abs(value) <= scale * 1e-6;
+        //
+        // **The relative test alone loosens with distance, and lets them back in.**  `scale` is the
+        // sum of the terms' own sizes, and a sextic's terms grow as the sixth power of how far along
+        // the ray it is asked -- so a tolerance written as a millionth of `scale` is a millionth of
+        // something enormous by the time a ray has run a few tens of units.  An impostor stands at
+        // the whole threshold, and past some distance the whole threshold is under the tolerance.
+        // That is what made a blob speckle only when the camera drew back: with the shape held at one
+        // size on screen and in one place in the world, and nothing changed but the length of the
+        // ray, a knight showed no bad roots at 1.3 units and a cloud of them at 6.6 -- including
+        // pixels *outside* its own outline, which is what says these were never surface points.
+        //
+        // So the value must also be small against the threshold, which no distance can inflate.
+        return Math.Abs(value) <= Math.Min(scale * 1e-6, Math.Abs(threshold) * 0.25);
     }
 
     /// <summary>
