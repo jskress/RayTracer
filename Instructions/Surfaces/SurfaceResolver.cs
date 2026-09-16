@@ -112,7 +112,24 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     /// <returns>A clone of this resolver.</returns>
     public virtual object Clone()
     {
-        return MemberwiseClone();
+        SurfaceResolver<TValue> resolver = (SurfaceResolver<TValue>) MemberwiseClone();
+
+        // **The two members parsing MUTATES, rather than assigns, have to be copies.**  A run of
+        // transform clauses is handed the resolver it already has so that the run accumulates
+        // instead of replacing what came before it, and a placement appends to its own list -- so a
+        // shallow copy leaves every use of one named surface writing into the same transform.
+        //
+        // What that looked like: `object ear { translate A }` and `object ear { translate B }` put
+        // BOTH ears at A + B, one inside the other, so the pair of them read as a single ear in the
+        // wrong place -- and with the two translations roughly opposite, as a pair of ears usually
+        // is, the sum landed nowhere near the head and neither ear could be found at all.  Using
+        // the shape once was fine, which is what made it look like a problem with the second use.
+        //
+        // Every other member here is assigned wholesale by the parser, so those may be shared.
+        resolver.TransformResolver = (TransformResolver) TransformResolver?.Clone();
+        resolver.PlacementResolvers = PlacementResolvers is null ? null : [..PlacementResolvers];
+
+        return resolver;
     }
 
     /// <summary>
