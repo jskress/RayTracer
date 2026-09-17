@@ -1,0 +1,531 @@
+// Things that fly, and the ground they leave from.
+//
+//     import 'aircraft' { Airliner, LightPlane, Helicopter }
+//
+//     object Airliner(40)
+//     object LightPlane(8)   { translate Z 40 }
+//     object Helicopter(14)  { translate Z -40 }
+//
+// | `Airliner` | Swept wings, two engines on pylons, a fin and a tailplane, and a row of windows. |
+// | `LightPlane` | High wing on a strut, a propeller, and gear that does not go away. |
+// | `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
+//
+// **The first number is a length**, as it is for the [vehicles](#vehicles) and the
+// [vessels](#vessels), because that is how an aeroplane is described -- a forty-metre airliner, not
+// one thirteen metres tall.  These are in **meters** and they **face `+X`**, like everything else here
+// that goes somewhere.
+//
+// -- The wheels are on `y = 0`, even when the wheels are not there -------------------------------------
+//
+// The [vessels](#vessels) put their waterline at nought because a hull has no face it rests on.  An
+// aeroplane does have one -- it stands on its wheels -- so that is what sits at nought here, the same
+// as a chair's feet and a building's footings.
+//
+// **And it stays at nought with the gear up.**  `gear 0` takes the legs away and leaves everything
+// else exactly where it was, so a scene can put an aircraft on a runway, raise the gear, and fly it by
+// translating in `Y` alone.  Retracting the gear by *lowering* the aircraft onto its belly would be
+// the other way to read it, and it would mean every flying scene had to know a number it should not
+// have to care about.
+//
+// -- What makes a solid into an aircraft --------------------------------------------------------------
+//
+// The same question the [buildings](#buildings) and the [vehicles](#vehicles) ask.  Four things, and
+// none of them is the fuselage.
+//
+// **A wing is thin, and that is almost all of it.**  The first instinct is to make a wing you can see;
+// a real one is a couple of percent of its own chord in thickness, and anything you can comfortably see
+// edge-on reads as a plank.  Thin, swept, and with a few degrees of dihedral -- the upward cant that
+// makes the pair into a shallow V rather than a crossbar -- and the shape is right before any detail is
+// on it.
+//
+// **The taper is worth two panels.**  A constant-chord wing is a board.  An inner panel with a wide
+// chord and an outer one with a narrow one is two shapes and reads as a taper, which is what the eye
+// is actually looking for.
+//
+// **Engines hang below and ahead of the wing.**  A nacelle set flush into a wing is a bump; what makes
+// it an engine is that it is slung under on a pylon and its intake is *forward* of the leading edge.
+//
+// **And the windows are what make it an airliner rather than a missile.**  One row of them down the
+// side gives the fuselage a scale that nothing else does -- without them a tube with wings could be
+// four metres long or forty, and the eye has no way to tell.
+
+// -- What aircraft are made of ------------------------------------------------------------------------
+
+AircraftWhite = material {
+    pigment [0.88, 0.88, 0.86]
+    specular 0.55  shininess 150  ambient 0.16  reflective 0.06
+}
+
+AircraftBlue = material {
+    pigment [0.10, 0.20, 0.42]
+    specular 0.60  shininess 170  ambient 0.11  reflective 0.08
+}
+
+AircraftRed = material {
+    pigment [0.48, 0.10, 0.11]
+    specular 0.58  shininess 165  ambient 0.11  reflective 0.07
+}
+
+// Bare metal, for a cowling or a spinner.  Dark, for the reason the [furniture](#furniture)'s steel is:
+// a metal gets its brightness from what it reflects, and one painted as light as it looks goes white
+// under a working light and takes every edge with it.
+AircraftMetal = material {
+    pigment [0.34, 0.35, 0.37]
+    specular 0.72  shininess 200  ambient 0.11  reflective 0.26
+}
+
+AircraftGlass = material {
+    pigment [0.06, 0.09, 0.13]
+    specular 0.80  shininess 220  ambient 0.08  reflective 0.30
+}
+
+AircraftTire = material {
+    pigment [0.07, 0.07, 0.08]
+    specular 0.10  shininess 20  ambient 0.06
+}
+
+// One of the liveries by variant.
+primitive AircraftPaint(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material AircraftWhite }
+        case 1 { return material AircraftBlue }
+        default { return material AircraftRed }
+    }
+}
+
+// -- A wing -------------------------------------------------------------------------------------------
+
+// One wing panel, as a thin plate given sweep and dihedral.  `side` is -1 or 1 for which wing, `chord`
+// is fore and aft, `span` is how far out it reaches from `at`, `sweep` is degrees the leading edge is
+// raked back and `rise` is degrees of dihedral.
+//
+// **It is built lying flat and then turned**, which is the only way the two angles compose properly: a
+// panel swept first and canted second sweeps in the plane it is going to end up in, which is what a
+// real wing does.  Canting first and sweeping second rakes the tip backward *and downward* and the
+// aeroplane comes out looking like it is falling over.
+//
+// **Both panels are built on `+Z` and the left one is mirrored, and `side` appears once.**  Folding it
+// into the angles as well -- `rotate Y (-side * sweep)` and then `scale [1, 1, side]` -- negates the
+// sweep twice on the left wing, so one side rakes back and the other rakes *forward*.  The aeroplane
+// still looks like an aeroplane from almost everywhere; it is only from above that the wings read as a
+// Z rather than a V, and by then you have stopped looking for it.  The mirror is what puts a panel on
+// the left, and the angles must not know which side they are on.
+primitive AircraftPanel(side, chord, thick, span, sweep, rise) -> group {
+    return group {
+        superellipsoid {
+            east 0.22  north 0.42
+            scale [chord / 2, thick / 2, span / 2]
+            translate Z span / 2
+            rotate Y -sweep
+            rotate X -rise
+            scale [1, 1, side]
+        }
+    }
+}
+
+// -- Airliner -----------------------------------------------------------------------------------------
+
+// A twin-engined narrow-body.  `long` is overall, so forty is about a 737.  `gear 0` puts the legs away.
+//
+// **Both wing panels are rooted at the same place**, which is how the taper is had without a line of
+// trigonometry.  The inner panel is short and wide in the chord and the outer one long and narrow with
+// a shade more sweep; because they turn about the same root, the outer one's tip ends up further back
+// and further out, and near the root it hides inside the inner one.  What comes out is a swept wing
+// that narrows toward the tip, from two shapes and no arithmetic about where the first one ended.
+primitive Airliner(long = 40, gear = 1, variant = 1) -> group {
+    across = long * 0.048                       // the fuselage's radius
+    // **High enough for an engine to fit under the wing**, which is the number that decides all the
+    // others.  At 0.062 of the length -- which is about what a 737 really stands at -- a nacelle slung
+    // under a low wing ends up *below the ground*, and the first render came back with the pylons
+    // hanging over nothing.  Real airliners are that low and solve it by flattening the nacelle; a
+    // library is better off standing a little taller and keeping the shapes honest.
+    stand = long * 0.085                        // and how high its axis rides over the ground
+    root = -long * 0.03                         // where the wings are joined on
+    seats = floor(long * 0.70)                  // how many windows fit down the side
+
+    return group {
+        // The fuselage: a blunt nose, a parallel middle, and a long fine tail, the same three shapes
+        // the [vessels](#vessels)' submarine is and for the same reason.
+        group {
+            sphere { scale [long * 0.10, across, across]  translate [long * 0.40, stand, 0] }
+            cylinder {
+                min Y (-long * 0.30)  max Y (long * 0.40)
+                scale [across, 1, across]
+                rotate Z -90
+                translate Y stand
+            }
+            sphere { scale [long * 0.20, across, across]  translate [-long * 0.30, stand, 0] }
+            material AircraftPaint(variant)
+        }
+
+        // The wings, low on the fuselage, and the tail.
+        group {
+            for side in [0, 1] {
+                object AircraftPanel(side * 2 - 1, long * 0.175, long * 0.018, long * 0.16, 20, 5) {
+                    translate [root, stand - across * 0.72, 0]
+                }
+                object AircraftPanel(side * 2 - 1, long * 0.078, long * 0.011, long * 0.45, 27, 6) {
+                    translate [root, stand - across * 0.72, 0]
+                }
+                object AircraftPanel(side * 2 - 1, long * 0.075, long * 0.010, long * 0.17, 26, 7) {
+                    translate [-long * 0.435, stand + across * 0.30, 0]
+                }
+            }
+
+            // the fin, which is a panel canted all the way over
+            object AircraftPanel(1, long * 0.115, long * 0.012, long * 0.155, 38, 90) {
+                translate [-long * 0.415, stand + across * 0.75, 0]
+            }
+
+            material AircraftPaint(variant)
+        }
+
+        // The engines, slung under the wings and ahead of them.
+        group {
+            for side in [0, 1] {
+                cylinder {
+                    min Y (-long * 0.055)  max Y (long * 0.055)
+                    scale [long * 0.031, 1, long * 0.031]
+                    rotate Z -90
+                    translate [long * 0.045, stand - across * 1.02, (side * 2 - 1) * long * 0.165]
+                }
+                // the pylon up to the wing
+                cube {
+                    scale [long * 0.035, across * 0.22, long * 0.006]
+                    translate [long * 0.020, stand - across * 0.86, (side * 2 - 1) * long * 0.165]
+                }
+            }
+            material AircraftPaint(variant)
+        }
+
+        // the intakes, which are what keep the nacelles from reading as tanks
+        group {
+            for side in [0, 1] {
+                cylinder {
+                    min Y 0  max Y (long * 0.012)
+                    scale [long * 0.027, 1, long * 0.027]
+                    rotate Z -90
+                    translate [long * 0.098, stand - across * 1.02, (side * 2 - 1) * long * 0.165]
+                }
+            }
+            material AircraftMetal
+        }
+
+        // **A row of windows, which is the only thing here that gives the fuselage a scale.**  Without
+        // them a tube with wings could be four metres long or forty and nothing in the picture says
+        // which.  They sit a little proud of the skin, up where a window actually is rather than on
+        // the widest part of the side.
+        group {
+            for seat in [0, seats - 1] {
+                for side in [0, 1] {
+                    superellipsoid {
+                        east 0.40  north 0.40
+                        scale [long * 0.0055, long * 0.0075, long * 0.004]
+                        translate [long * 0.30 - seat * long * 0.0175,
+                                   stand + across * 0.42,
+                                   (side * 2 - 1) * across * 0.92]
+                    }
+                }
+            }
+            // and the flight deck, which is a different shape and further forward
+            superellipsoid {
+                east 0.35  north 0.50
+                scale [long * 0.022, long * 0.010, across * 0.80]
+                translate [long * 0.395, stand + across * 0.50, 0]
+            }
+            material AircraftGlass
+        }
+
+        // The gear.  Everything above stays where it is when this is not drawn.
+        group {
+            if (gear > 0) {
+                cylinder {
+                    min Y 0  max Y (stand - across * 0.95)
+                    scale [long * 0.006, 1, long * 0.006]
+                    translate [long * 0.315, 0, 0]
+                }
+                for side in [0, 1] {
+                    cylinder {
+                        min Y 0  max Y (stand - across * 0.80)
+                        scale [long * 0.008, 1, long * 0.008]
+                        translate [-long * 0.045, 0, (side * 2 - 1) * long * 0.055]
+                    }
+                }
+            }
+            material AircraftMetal
+        }
+
+        group {
+            if (gear > 0) {
+                cylinder {
+                    min Y (-long * 0.007)  max Y (long * 0.007)
+                    scale [long * 0.017, 1, long * 0.017]
+                    rotate X 90
+                    translate [long * 0.315, long * 0.017, 0]
+                }
+                for side in [0, 1] {
+                    for pair in [0, 1] {
+                        cylinder {
+                            min Y (-long * 0.009)  max Y (long * 0.009)
+                            scale [long * 0.023, 1, long * 0.023]
+                            rotate X 90
+                            translate [-long * 0.045, long * 0.023,
+                                       (side * 2 - 1) * long * 0.055 + (pair * 2 - 1) * long * 0.011]
+                        }
+                    }
+                }
+            }
+            material AircraftTire
+        }
+    }
+}
+
+// -- Light plane --------------------------------------------------------------------------------------
+
+// A high-wing single, the shape of almost every aeroplane anybody learns to fly in.  `long` is overall,
+// so eight is about a Cessna 172.
+//
+// **The wing is on top and the strut is what says so.**  A high wing drawn without one reads as a
+// parasol balanced on a fuselage -- there is visibly nothing holding it up, and the eye notices even
+// when it could not tell you what is missing.  One strut a side, from the bottom of the fuselage out
+// to half span, and the aeroplane stops looking like a model of itself.
+primitive LightPlane(long = 8, gear = 1, variant = 1) -> group {
+    across = long * 0.078                       // the cabin's half-width
+    stand = long * 0.145                         // how high its axis rides
+    high = stand + across * 0.95                // and where the wing sits on top of it
+    span = long * 0.62
+
+    return group {
+        group {
+            // a stubby fuselage with a long tapering tail
+            sphere { scale [long * 0.13, across, across]  translate [long * 0.30, stand, 0] }
+            cylinder {
+                min Y (-long * 0.06)  max Y (long * 0.30)
+                scale [across, 1, across]
+                rotate Z -90
+                translate Y stand
+            }
+            sphere { scale [long * 0.44, across * 0.62, across * 0.62]
+                     translate [-long * 0.06, stand + across * 0.30, 0] }
+            material AircraftPaint(variant)
+        }
+
+        // the wing, straight and barely canted, as a trainer's is
+        group {
+            for side in [0, 1] {
+                object AircraftPanel(side * 2 - 1, long * 0.185, long * 0.020, span, 1, 2) {
+                    translate [long * 0.145, high, 0]
+                }
+                object AircraftPanel(side * 2 - 1, long * 0.105, long * 0.012, long * 0.20, 8, 4) {
+                    translate [-long * 0.415, stand + across * 0.45, 0]
+                }
+            }
+            object AircraftPanel(1, long * 0.150, long * 0.014, long * 0.17, 28, 90) {
+                translate [-long * 0.395, stand + across * 0.55, 0]
+            }
+            material AircraftPaint(variant)
+        }
+
+        // the struts, and the cabin glass
+        group {
+            for side in [0, 1] {
+                // **A strut has to actually reach**, from the bottom of the fuselage out to half
+                // span.  Tilted a token thirteen degrees it lay almost flat under the wing, joining
+                // nothing to nothing: the wing still floated and the strut read as a rod someone had
+                // left there.  Twenty-four is the angle that spans the gap these numbers leave.
+                cube {
+                    scale [long * 0.010, long * 0.006, long * 0.165]
+                    rotate X ((side * 2 - 1) * -24)
+                    translate [long * 0.150, (high + stand - across * 0.6) / 2,
+                               (side * 2 - 1) * long * 0.150]
+                }
+            }
+            material AircraftMetal
+        }
+
+        // **Glass sits above the axis, or it is a stripe.**  Sized to the fuselage and centred on it,
+        // a canopy wraps all the way round and reads as a band of paint -- which is exactly what the
+        // first render of both of these came back as.  Held to the upper half and let out a shade
+        // wider than the skin, the same shape reads as a windscreen with side windows behind it.
+        superellipsoid {
+            east 0.30  north 0.45
+            scale [long * 0.088, across * 0.46, across * 1.01]
+            translate [long * 0.160, stand + across * 0.44, 0]
+            material AircraftGlass
+        }
+
+        // the cowling, the spinner and two blades
+        group {
+            cylinder {
+                min Y (long * 0.395)  max Y (long * 0.435)
+                scale [across * 0.78, 1, across * 0.78]
+                rotate Z -90
+                translate Y stand
+            }
+            material AircraftMetal
+        }
+        group {
+            sphere { scale [long * 0.030, across * 0.32, across * 0.32]
+                     translate [long * 0.450, stand, 0] }
+            for blade in [0, 1] {
+                superellipsoid {
+                    east 0.30  north 0.60
+                    scale [long * 0.006, long * 0.115, long * 0.022]
+                    rotate X (blade * 180 + 8)
+                    translate [long * 0.448, stand, 0]
+                }
+            }
+            material AircraftMetal
+        }
+
+        // Fixed gear, because a trainer's does not go away.
+        group {
+            if (gear > 0) {
+                cylinder {
+                    min Y 0  max Y (stand - across * 0.55)
+                    scale [long * 0.010, 1, long * 0.010]
+                    translate [long * 0.335, 0, 0]
+                }
+                for side in [0, 1] {
+                    cube {
+                        scale [long * 0.012, long * 0.008, long * 0.085]
+                        rotate X ((side * 2 - 1) * -32)
+                        translate [long * 0.020, stand - across * 0.75,
+                                   (side * 2 - 1) * long * 0.070]
+                    }
+                }
+            }
+            material AircraftMetal
+        }
+        group {
+            if (gear > 0) {
+                cylinder {
+                    min Y (-long * 0.010)  max Y (long * 0.010)
+                    scale [long * 0.030, 1, long * 0.030]
+                    rotate X 90
+                    translate [long * 0.335, long * 0.030, 0]
+                }
+                for side in [0, 1] {
+                    cylinder {
+                        min Y (-long * 0.012)  max Y (long * 0.012)
+                        scale [long * 0.038, 1, long * 0.038]
+                        rotate X 90
+                        translate [long * 0.020, long * 0.038, (side * 2 - 1) * long * 0.135]
+                    }
+                }
+            }
+            material AircraftTire
+        }
+    }
+}
+
+// -- Helicopter ---------------------------------------------------------------------------------------
+
+// A light single, on skids.  `long` is the fuselage and boom together, not counting the rotor, so
+// fourteen is about a JetRanger.
+//
+// **The rotor disc is wider than the aircraft is long**, which is the proportion everybody gets wrong
+// from memory.  A JetRanger is a shade over eleven metres nose to tail and its rotor is over ten across,
+// so the blades reach nearly to the nose and well past the tail.  Drawn to the size instinct suggests
+// it looks like a toy, and no amount of detail on the cabin repairs it.
+primitive Helicopter(long = 14, variant = 1) -> group {
+    // **The cabin is smaller than it feels like it should be.**  At 0.155 of the length it came out
+    // four metres wide on a fourteen-metre aircraft and swallowed the rotor whole -- the blades looked
+    // stubby when they were in fact the right length.  A light single's cabin is about two and a half
+    // metres across, and getting that down is what let the rotor read at the size it always was.
+    body = long * 0.090                         // the cabin's half-width
+    stand = long * 0.080                        // how high the cabin floor rides on its skids
+    mast = stand + body * 2.55                  // and where the rotor turns
+    blade = long * 0.40                         // how far one blade reaches
+
+    return group {
+        group {
+            // the cabin: an egg, which is what a light helicopter's is
+            superellipsoid {
+                east 0.65  north 0.72
+                scale [long * 0.200, body * 1.10, body]
+                translate [long * 0.250, stand + body * 1.05, 0]
+            }
+
+            // the boom, tapering back to the fin
+            cylinder {
+                min Y (-long * 0.42)  max Y (long * 0.14)
+                scale [body * 0.30, 1, body * 0.30]
+                rotate Z -90
+                translate [0, stand + body * 1.35, 0]
+            }
+
+            object AircraftPanel(1, long * 0.105, long * 0.012, long * 0.150, 30, 90) {
+                translate [-long * 0.380, stand + body * 1.55, 0]
+            }
+            object AircraftPanel(-1, long * 0.075, long * 0.010, long * 0.090, 20, 90) {
+                translate [-long * 0.380, stand + body * 1.55, 0]
+            }
+
+            material AircraftPaint(variant)
+        }
+
+        superellipsoid {
+            east 0.55  north 0.62
+            scale [long * 0.110, body * 0.70, body * 1.02]
+            translate [long * 0.350, stand + body * 1.22, 0]
+            material AircraftGlass
+        }
+
+        // The mast, the hub and four blades.
+        group {
+            cylinder {
+                min Y (stand + body * 1.90)  max Y mast
+                scale [long * 0.016, 1, long * 0.016]
+                translate [long * 0.145, 0, 0]
+            }
+            sphere { scale [long * 0.030, long * 0.022, long * 0.030]
+                     translate [long * 0.145, mast, 0] }
+            for arm in [0, 3] {
+                superellipsoid {
+                    east 0.25  north 0.55
+                    scale [long * 0.030, long * 0.004, blade / 2]
+                    translate Z blade / 2
+                    rotate Y (arm * 90)
+                    translate [long * 0.145, mast, 0]
+                }
+            }
+            material AircraftMetal
+        }
+
+        // and the tail rotor, which is what keeps it from spinning
+        group {
+            for arm in [0, 1] {
+                superellipsoid {
+                    east 0.25  north 0.55
+                    scale [long * 0.018, long * 0.003, long * 0.090]
+                    translate Z long * 0.090
+                    rotate X (arm * 180 + 24)
+                    translate [-long * 0.430, stand + body * 2.10, body * 0.34]
+                }
+            }
+            material AircraftMetal
+        }
+
+        // The skids: two tubes on two hoops.
+        group {
+            for side in [0, 1] {
+                cylinder {
+                    min Y (-long * 0.16)  max Y (long * 0.20)
+                    scale [long * 0.014, 1, long * 0.014]
+                    rotate Z -90
+                    translate [long * 0.175, long * 0.014, (side * 2 - 1) * body * 1.05]
+                }
+                for hoop in [0, 1] {
+                    cube {
+                        scale [long * 0.012, stand / 2, long * 0.010]
+                        rotate Z ((side * 2 - 1) * 0)
+                        translate [long * 0.175 + (hoop * 2 - 1) * long * 0.105, stand / 2,
+                                   (side * 2 - 1) * body * 1.05]
+                    }
+                }
+            }
+            material AircraftMetal
+        }
+    }
+}
