@@ -1564,19 +1564,25 @@ should not change with its size, but it means the head cannot be re-proportioned
 #### Furniture
 
 ```
-import 'furniture' { DiningTable, Armchair, Sideboard, Desk, LowTable, FurnitureWalnut }
+import 'furniture' { DiningTable, DiningChair, Armchair, Sofa, Bookcase, FurnitureWalnut }
 
 object DiningTable(60)                       // five feet, and thirty inches to the top
 object DiningTable(36, 36, FurnitureWalnut)  // a square one, in walnut
+object DiningChair() { translate Z 26 }      // one to sit at it on, facing the table
 object Armchair()                            // a chair is its own size
+object Sofa(78)                              // and a sofa is six and a half feet of one
+object Bookcase(36, 60)                      // three feet across, five up, and full of books
 ```
 
 | | |
 | --- | --- |
 | `DiningTable` | A table to eat at: top, apron and four legs. |
+| `DiningChair` | One to sit at it on. |
 | `LowTable` | The low one in front of a sofa. |
 | `Sideboard` | A carcase on short legs, to stand against a wall. |
 | `Armchair` | A seat, a back, two arms and four feet. |
+| `Sofa` | The armchair, gone long, with cushions. |
+| `Bookcase` | Sides, shelves, and as many books as fit. |
 | `Desk` | A table to work at, with a pedestal of drawers under one end. |
 | `FurnitureOak` | The pale, open-grained wood most furniture in a room is. |
 | `FurnitureWalnut` | Darker, for a piece meant to sit apart from the rest. |
@@ -1603,6 +1609,12 @@ Getting this wrong is what makes a rendered room feel like a doll's house withou
 say why.  The heights are the real ones and they are worth knowing, because they are not guesses: a
 dining table and a desk are both **thirty inches**, a low table is **eighteen**, a sideboard is
 **thirty-two**, and a chair seat is **seventeen**, which is the height of the back of a knee.
+
+The one exception is the dining chair, whose seat is at **eighteen** — a chair you eat at is drawn up
+to a thirty-inch table and a chair you sit back in is not.  An inch is the whole difference between
+them and it is the right inch.  The bookcase is the other exception, and the opposite one: its height
+*is* an argument, because a bookcase is the only thing in a room built to the wall it stands against
+rather than to the person using it.
 
 ##### Scale the library into the scene, not the scene into the library
 
@@ -1671,6 +1683,50 @@ top face; only their tops are where the chair's outline needs them.
 **The base is a block, not a slab on legs.**  Drawn as a thin seat floating between two arms, an
 armchair reads as three separate boards and the eye looks straight through where the upholstery should
 be.  A chair is a solid thing with a seat on top of it, and the feet only lift it off the floor.
+
+##### A chair's back posts are its back legs
+
+In one piece, from the floor to the top rail.  That is how a chair is actually made, and it is the
+only way it holds together in a render: back legs that stop under the seat, with a separate back stood
+on top of them, read as a stool with a board behind it.  The eye picks the join up even where it
+cannot see it, because nothing else in a room has that break in it.
+
+##### What a sofa needs that an armchair does not is cushions
+
+An armchair's seat is one cushion's worth wide, so a single upholstered block reads as one.  Stretch
+that block to six and a half feet and it reads as a bench with padding on it — there is nothing in it
+to say how many people it is for.  The cushions say so, and it is the **gaps between them** that do
+the saying, which is why they are separate shapes with real gaps rather than lines cut into one.  The
+count follows the length: `floor(long / 30)`, with two as the floor.
+
+Everything else about the sofa is the armchair at another length — the same seat at seventeen, the
+same arms at twenty-four, the same back at thirty-one.  A sofa is not a taller chair; it is a wider
+one.
+
+##### A bookcase's shelves are counted, not measured
+
+A shelf wants about a foot over it, so the count is what divides into the height and the spacing is
+whatever that leaves.  Asking for a fixed twelve inches instead leaves a short remainder under the lid
+on almost every height, and a bookcase with one stunted shelf at the top looks like a mistake, because
+it is one.
+
+The books are one cube each, stood at an even pitch with uneven widths, so the gaps come out irregular
+without anything having to work out where one book ends and the next begins.  Their heights and colors
+come from `random` rather than from arithmetic on the index, because arithmetic on an index repeats,
+and a repeat down a shelf is the one thing that says at a glance these are not books.  Pass `books 0`
+for an empty case.
+
+##### The sideboard and the bookcase face `+Z`, and getting that wrong is invisible
+
+Both are carcases with a front and a blank back, and both are built facing `+Z` — so a piece standing
+against a wall that is *also* at `+Z` needs `rotate Y 180`.  Left out, the doors face the plaster and
+the room gets the back.
+
+This shipped, in two scenes, and it is worth saying why it survived a review: **it does not look
+wrong.**  A backwards sideboard is not upside down or floating or the wrong color; it is a plain
+wooden panel where the piece's only detail should have been, and a plain wooden panel is exactly what
+a great deal of furniture looks like.  Nothing in the picture says anything is missing.  The check is
+to go and find the detail you know you drew, rather than to look for something out of place.
 
 ##### A leg is placed by picking the corner apart, not by turning it
 
