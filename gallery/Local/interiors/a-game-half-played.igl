@@ -1,0 +1,163 @@
+// A game half played, on a board on a dining table.
+//
+// The board and its squares are the `chess` library's own -- this is what a set looks like if you
+// ask for one and say nothing about it -- and only the men are dressed: marble for White and jade
+// for Black.  Which is the point of the material being an argument rather than a block on the call:
+// the thirteen white men on the board are thirteen calls of six shapes, and the shapes are built
+// once between them.
+//
+// **A unit here is a king, and a king is 95mm.**  So the board comes out 483mm across, which is
+// what a tournament board is, and the table is 1000mm square and 750mm high.  Writing it that way
+// round means the furniture can be checked against a tape measure rather than against the board.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Game Half Played'
+        author 'J. Stephen Kress'
+        description 'A chess set from the chess library, on a dining table, mid-game.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'chess' { Board, Pawn, Rook, Knight, Bishop, Queen, King, ChessAt }
+
+camera {
+    location [3.9, 6.6, -8.2]
+    look at [0.15, -0.5, 0.15]
+    field of view 42
+}
+
+point light { location [-6, 13, -7] }
+point light { location [ 9, 7, -2]  color [0.24, 0.23, 0.20] }
+point light { location [ 0, 5,  9]  color [0.16, 0.16, 0.19] }
+
+background [0.10, 0.11, 0.14]
+
+// -- What the men are made of --------------------------------------------------------------------
+
+// Pale marble, veined rather than plain: a white piece with one flat color on it loses its own
+// modelling under a light, and the turned rings stop reading at all.
+Marble = material {
+    pigment marble {
+        turbulence { amplitude 0.55  octaves 4 }
+        [0, [0.93, 0.91, 0.87], 0.42, [0.86, 0.84, 0.79],
+         0.74, [0.68, 0.67, 0.64], 1, [0.93, 0.91, 0.87]]
+        scale [0.38, 0.38, 0.38]
+        rotate Y 24
+    }
+    specular 0.44  shininess 130  ambient 0.20  reflective 0.04
+}
+
+// Jade for the other side.  Dark enough to read as the black men across a board -- the point of a
+// dark side is that you know at a glance whose it is -- but green rather than black, and veined, so
+// the turning still shows.  A true black piece goes to silhouette and loses its shape entirely.
+Jade = material {
+    pigment marble {
+        turbulence { amplitude 0.65  octaves 4 }
+        [0, [0.042, 0.125, 0.088], 0.40, [0.022, 0.078, 0.054],
+         0.72, [0.068, 0.170, 0.118], 1, [0.042, 0.125, 0.088]]
+        scale [0.32, 0.32, 0.32]
+        rotate Y -40
+    }
+    specular 0.58  shininess 170  ambient 0.11  reflective 0.05
+}
+
+// -- The table ---------------------------------------------------------------------------------
+
+// Walnut, darker than the board's own oak border so the board reads as a thing set down on the
+// table rather than as part of it.
+Walnut = material {
+    pigment wood {
+        turbulence { amplitude 0.4  octaves 3 }
+        [0, [0.26, 0.15, 0.09], 0.5, [0.19, 0.11, 0.06],
+         0.8, [0.13, 0.07, 0.04], 1, [0.26, 0.15, 0.09]]
+        scale [0.12, 0.12, 6]
+        rotate Y 90
+    }
+    specular 0.34  shininess 60  ambient 0.10  reflective 0.05
+}
+
+// A square dining table: 1000mm across, 750mm to the top, which is 10.5 and 7.9 in kings.
+union {
+    // **The top's surface is at -0.10, not at 0.**  The board's own underside is at -0.10 and its
+    // squares reach up to 0, so a table surfaced at 0 does not carry the board -- it occupies the
+    // same space as it, and two faces in one plane speckle against each other wherever they meet.
+    cube { scale [5.26, 0.23, 5.26]  translate [0, -0.33, 0] }
+
+    // the apron under it, set in from the edge
+    difference {
+        cube { scale [4.95, 0.30, 4.95]  translate [0, -0.86, 0] }
+        cube { scale [4.62, 0.40, 4.62]  translate [0, -0.86, 0] }
+    }
+
+    // four square legs
+    group {
+        for corner in [0, 3] {
+            cube {
+                scale [0.29, 3.56, 0.29]
+                translate [4.60, -4.42, 4.60]
+                rotate Y (corner * 90)
+            }
+        }
+    }
+
+    material Walnut
+}
+
+// The floor, well below the table and dark enough to keep the eye on the board.
+plane {
+    material {
+        pigment [0.14, 0.12, 0.11]
+        specular 0.10  shininess 20  ambient 0.16
+    }
+    translate Y -7.9
+}
+
+// -- The board -----------------------------------------------------------------------------------
+
+object Board(8)
+
+// -- White, playing up the board ---------------------------------------------------
+object Rook(1.0, Marble) { translate [ChessAt(8, 0), 0, ChessAt(8, 0)] }
+object Rook(1.0, Marble) { translate [ChessAt(8, 5), 0, ChessAt(8, 0)] }
+object Knight(1.0, Marble) { rotate Y 180  translate [ChessAt(8, 5), 0, ChessAt(8, 2)] }
+object Bishop(1.0, Marble) { translate [ChessAt(8, 2), 0, ChessAt(8, 3)] }
+object Queen(1.0, Marble) { translate [ChessAt(8, 3), 0, ChessAt(8, 0)] }
+object King(1.0, Marble) { translate [ChessAt(8, 4), 0, ChessAt(8, 0)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 0), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 1), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 2), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 4), 0, ChessAt(8, 3)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 5), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 6), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Marble) { translate [ChessAt(8, 7), 0, ChessAt(8, 1)] }
+
+// -- Black ------------------------------------------------------------------------
+object Rook(1.0, Jade) { translate [ChessAt(8, 0), 0, ChessAt(8, 7)] }
+object Rook(1.0, Jade) { translate [ChessAt(8, 5), 0, ChessAt(8, 7)] }
+object Knight(1.0, Jade) { translate [ChessAt(8, 5), 0, ChessAt(8, 5)] }
+object Bishop(1.0, Jade) { translate [ChessAt(8, 1), 0, ChessAt(8, 6)] }
+object Queen(1.0, Jade) { translate [ChessAt(8, 3), 0, ChessAt(8, 7)] }
+object King(1.0, Jade) { translate [ChessAt(8, 6), 0, ChessAt(8, 7)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 0), 0, ChessAt(8, 6)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 1), 0, ChessAt(8, 5)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 2), 0, ChessAt(8, 6)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 4), 0, ChessAt(8, 4)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 5), 0, ChessAt(8, 6)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 6), 0, ChessAt(8, 6)] }
+object Pawn(1.0, Jade) { translate [ChessAt(8, 7), 0, ChessAt(8, 6)] }
+
+// -- Taken, set down beside the board ----------------------------------------------
+//
+// Three each, which is what the position on the board is missing: a knight, a bishop and
+// a pawn apiece.  They stand on the cloth rather than the board, so they are placed in
+// table coordinates and not by `ChessAt`.
+object Knight(1.0, Jade)   { rotate Y 205  translate [ 3.30, -0.10, -1.45] }
+object Bishop(1.0, Jade)   { translate [ 3.36, -0.10, -0.42] }
+object Pawn(1.0, Jade)   { translate [ 3.28, -0.10,  0.62] }
+object Knight(1.0, Marble) { rotate Y 160  translate [-3.30, -0.10, -1.40] }
+object Bishop(1.0, Marble) { translate [-3.36, -0.10, -0.38] }
+object Pawn(1.0, Marble) { translate [-3.28, -0.10,  0.66] }

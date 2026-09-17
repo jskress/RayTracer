@@ -1184,7 +1184,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Interiors</b> &mdash; 3 images &middot; rooms, and light indoors</summary>
+<summary><b>Interiors</b> &mdash; 4 images &middot; rooms, and light indoors</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1209,6 +1209,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/interiors/a-room-after-dark.igl">A Room After Dark</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/interiors/a-game-half-played.png">
+      <img alt="A Game Half Played" height="120" src="Local/interiors/a-game-half-played.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/interiors/a-game-half-played.igl">A Game Half Played</a>
     </td>
   </tr>
 </table>
