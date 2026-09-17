@@ -1564,7 +1564,9 @@ should not change with its size, but it means the head cannot be re-proportioned
 #### Furniture
 
 ```
-import 'furniture' { DiningTable, DiningChair, Armchair, Sofa, Bookcase, FurnitureWalnut }
+import 'furniture' {
+    DiningTable, DiningChair, Armchair, Sofa, Bookcase, KitchenRun, Bed, FurnitureWalnut
+}
 
 object DiningTable(60)                       // five feet, and thirty inches to the top
 object DiningTable(36, 36, FurnitureWalnut)  // a square one, in walnut
@@ -1572,6 +1574,8 @@ object DiningChair() { translate Z 26 }      // one to sit at it on, facing the 
 object Armchair()                            // a chair is its own size
 object Sofa(78)                              // and a sofa is six and a half feet of one
 object Bookcase(36, 60)                      // three feet across, five up, and full of books
+object KitchenRun(96, 2)                     // eight feet, with a sink in the third unit
+object Bed(60)                               // a queen; 38 is a twin and 76 a king
 ```
 
 | | |
@@ -1584,6 +1588,16 @@ object Bookcase(36, 60)                      // three feet across, five up, and 
 | `Sofa` | The armchair, gone long, with cushions. |
 | `Bookcase` | Sides, shelves, and as many books as fit. |
 | `Desk` | A table to work at, with a pedestal of drawers under one end. |
+| `KitchenRun` | A length of base cabinets under one continuous counter. |
+| `WallCabinets` | The ones that hang over it. |
+| `Range` | A cooker, flush with the counter. |
+| `Refrigerator` | The tallest thing in a kitchen. |
+| `Bed` | Frame, headboard, mattress, cover and two pillows. |
+| `Wardrobe` | A tall carcase with two doors and a cornice. |
+| `Dresser` | A chest of drawers. |
+| `Nightstand` | The little one beside the bed. |
+| `FurnitureStone` | A counter. |
+| `FurnitureSteel` | What the appliances are. |
 | `FurnitureOak` | The pale, open-grained wood most furniture in a room is. |
 | `FurnitureWalnut` | Darker, for a piece meant to sit apart from the rest. |
 | `FurnitureLinen` | What a chair is covered in. |
@@ -1684,6 +1698,69 @@ top face; only their tops are where the chair's outline needs them.
 armchair reads as three separate boards and the eye looks straight through where the upholstery should
 be.  A chair is a solid thing with a seat on top of it, and the feet only lift it off the floor.
 
+##### A kitchen is a run, not a set of pieces
+
+Everywhere else in this library a call gives you one thing you could carry.  `KitchenRun` gives you a
+length of wall, because that is what a kitchen is sold and fitted as — and because a counter is the
+one surface in a house that is deliberately continuous.  Units butt up under a single slab and the
+joins are meant not to show.  Asking for cabinets one at a time and laying a counter over them is how
+a kitchen is *built*, but it puts the scene author in the business of making the seams line up, and
+the first seam that does not is the one thing in the render that says this is not a kitchen.
+
+The standard heights are standard everywhere and worth not guessing at: a counter is **thirty-six
+inches** and **twenty-four deep**, wall cabinets hang with their bottoms **eighteen inches above it**
+— fifty-four off the floor — and are **twelve deep**, so you can stand at the counter without meeting
+them.  A range sits flush at thirty-six.
+
+`KitchenRun`'s second argument is which unit holds the sink, counting from the left from zero, or `-1`
+for a run without one.  The counter is a `difference` either way: **a `group` holding an `if` is a
+legal thing to subtract and an empty one subtracts nothing**, so the run does not need two spellings
+of its counter for the two cases.  Note that only *surfaces* may stand inside an `if` — a material, a
+transform or a name belongs to the group around it.
+
+##### A metal has to be dark
+
+`FurnitureSteel` started out a light gray, which is roughly what stainless looks like to the eye.
+Under a working light it went to white and took every edge on the appliance with it: the door lines,
+the handles and the oven front all disappeared into one blank panel.
+
+**Its reflectivity is what makes it metal, not its color**, and the color has to be dark enough to
+leave the reflection somewhere to go.  That is also the only reason an appliance is recognizable
+across a room — it carries a dim, distorted picture of that room on its door.
+
+##### A door reveal has to be deep enough to cast a shadow
+
+The same lesson in a different place.  Cabinet fronts stand proud of their carcase and the gaps
+between them are what say there is more than one door; at first those gaps were 0.8 inches and a
+run of four units rendered as a single wooden slab.  The gap has to be wide enough, and the front
+proud enough, to put a shadow line in it — and the light has to come from the side, because a kitchen
+lit from overhead has no shadow in any of its reveals and reads as a painted wall.
+
+##### The bed's mattress is white and only the cover takes the cloth
+
+Drawn all one material — which is what passing `cloth` for the whole bed gives you — a made bed comes
+back as a single rounded slab with two lumps at one end.  The cover is there; it is just the same
+color as what it lies on, so nothing in the picture says the bed is made rather than bare.  Bedding is
+white anyway, and it is the one place in this library where a fixed material is more right than an
+argument.
+
+`Bed`'s arguments are `(wide, cloth, coat)`, the same order every upholstered piece here uses, and it
+is worth reading twice: handed a walnut as the second, a bed renders perfectly happily with a plank
+for a coverlet.  The mattress's exponents are also small — 0.16, not the 0.28 the first attempt used,
+which came out rounded like something inflatable.  A mattress is a box whose edges have been softened.
+
+The width is the mattress size — 38 is a twin, 54 a full, 60 a queen, 76 a king — and the length is
+eighty whichever you ask for, because a bed is made longer only for taller people and not for wider
+ones.  The mattress top is at **twenty-five**, and the nightstand is **twenty-five** too: the one
+dimension in this library taken from another piece rather than from a person, so that what is on it
+can be reached from the bed without sitting up.
+
+##### A wardrobe needs a cornice and a bookcase does not
+
+A carcase that stops dead at its top edge looks unfinished at seventy-two inches in a way it does not
+at a sideboard's thirty-two, because the top is above the eye and what you see is the underside of
+nothing.  The overhang is what makes it read as a wardrobe rather than as a very tall cupboard.
+
 ##### A chair's back posts are its back legs
 
 In one piece, from the floor to the top rail.  That is how a chair is actually made, and it is the
@@ -1716,11 +1793,13 @@ come from `random` rather than from arithmetic on the index, because arithmetic 
 and a repeat down a shelf is the one thing that says at a glance these are not books.  Pass `books 0`
 for an empty case.
 
-##### The sideboard and the bookcase face `+Z`, and getting that wrong is invisible
+##### Everything with a front faces `+Z`, and getting that wrong is invisible
 
-Both are carcases with a front and a blank back, and both are built facing `+Z` — so a piece standing
-against a wall that is *also* at `+Z` needs `rotate Y 180`.  Left out, the doors face the plaster and
-the room gets the back.
+The sideboard, the bookcase, the wardrobe, the kitchen run and its wall cabinets are all carcases with
+a front and a blank back, and all are built facing `+Z` — so a piece standing against a wall that is
+*also* at `+Z` needs `rotate Y 180`.  The bed follows the same rule from the other end: its headboard
+is its back, at `-Z`, so the wall goes behind it.  Left out, the fronts face the plaster and the room
+gets the back.
 
 This shipped, in two scenes, and it is worth saying why it survived a review: **it does not look
 wrong.**  A backwards sideboard is not upside down or floating or the wrong color; it is a plain

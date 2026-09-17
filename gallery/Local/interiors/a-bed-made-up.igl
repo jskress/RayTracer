@@ -1,0 +1,120 @@
+// A bedroom with the bed made and nobody in it.
+//
+// **The bedding is what the scene is for.**  Everything else here is carcases -- a wardrobe, a chest,
+// two nightstands -- and they are boxes with doors on, which this library has been doing since the
+// sideboard.  The bed is the piece that is not a box: a mattress, a cover turned down short of the
+// pillows, and two pillows, all of them superellipsoids because nothing about bedding has an edge.
+//
+// **And the mattress is white while the cover takes the color.**  Made all one material the bed comes
+// back as a single rounded slab with two lumps at one end -- the cover is there, it is just the same
+// color as what it lies on, so nothing says the bed is made rather than bare.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    angles are degrees
+    info {
+        title 'A Bed Made Up'
+        author 'J. Stephen Kress'
+        description 'A bedroom, its bed made, in the light from one window.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'furniture' { Bed, Wardrobe, Dresser, Nightstand, FurnitureWalnut }
+import 'daylight' { ClearMorning }
+
+camera {
+    location [72, 76, 138]
+    look at [8, 32, -52]
+    field of view 62
+}
+
+background ClearMorning
+
+// The window, in the right-hand wall and low enough to reach across the bed.
+area light {
+    location [146, 30, -74]
+    axisU [0, 0, 52]
+    axisV [0, 46, 0]
+    steps 6
+    color [1.16, 1.10, 0.97]
+}
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.79, 0.77, 0.73]  specular 0.02  ambient 0.12 }
+
+plane {
+    material {
+        pigment brick {
+            [0.40, 0.27, 0.16], [0.47, 0.33, 0.20]
+            scale [26, 60, 1.111]
+        }
+        specular 0.10  shininess 32  ambient 0.11
+    }
+}
+plane { material Plaster  rotate X 90   translate Z -84 }
+plane { material Plaster  rotate Z -90  translate X -142 }
+plane { material Plaster  rotate X 180  translate Y 102 }
+
+// A rug, which in a bedroom runs out from under the bed rather than sitting in the middle of the room.
+parallelogram {
+    material { pigment [0.30, 0.24, 0.22]  specular 0.02  ambient 0.13 }
+    at [-62, 0.05, -70]
+    sides [128, 0, 0], [0, 0, 104]
+}
+
+// -- What is in it ------------------------------------------------------------------------------------
+
+// **`Bed`'s second argument is the cloth and its third is the wood**, which is the order every
+// upholstered piece in this library uses and is worth reading twice.  Handed a walnut as the second,
+// the bed renders perfectly happily with a plank for a coverlet -- a wood pattern stretched over a
+// rounded superellipsoid, which is not a thing the eye has a name for and so takes a moment to spot.
+Coverlet = material {
+    pigment [0.34, 0.31, 0.39]
+    specular 0.05  shininess 12  ambient 0.15
+}
+
+// A queen, its headboard against the wall.  The frame is eighty-two long, so a center at -42 puts the
+// headboard on the plaster at -84 -- and the headboard is at -Z, the same way round as every other
+// back in this library.
+object Bed(60, Coverlet, FurnitureWalnut) { translate [0, 0, -42] }
+
+// One each side, at the head, and at the height of the mattress beside them.
+object Nightstand() { translate [-44, 0, -74] }
+object Nightstand() { translate [ 44, 0, -74] }
+
+// The wardrobe takes the far corner and the chest the near one, both against the same wall the bed is,
+// because that is the wall with nothing else on it.
+object Wardrobe(48) { translate [-108, 0, -72] }
+object Dresser(54) { translate [84, 0, -75] }
+
+// A lamp on one of the nightstands: a shade is a tapered shape, and two cylinders make the rest of it.
+group {
+    cylinder { min Y 0  max Y 0.6  scale [2.6, 1, 2.6]  translate [44, 25, -74] }
+    cylinder { min Y 0  max Y 7    scale [0.45, 1, 0.45]  translate [44, 25.6, -74] }
+    material { pigment [0.30, 0.28, 0.26]  specular 0.40  shininess 90  ambient 0.11 }
+}
+// **The shade is a `conic` taken from its lower branch.**  A conic's radius is its height, so the
+// half above the origin widens upward and the half below widens downward -- and a lampshade is wider
+// at the bottom.  Clipped to y in [-4.6, -3.2] it is a ring 4.6 across falling to 3.2, and scaling Y
+// by five stretches that inch and a half into the seven the shade wants.  (`tapered` is not this: it
+// is a tapered *extrusion*, which carries a 2D outline, and asking for one here is an error.)
+conic {
+    min Y -4.6  max Y -3.2
+    open
+    scale [1, 5, 1]
+    material { pigment [0.86, 0.83, 0.74]  specular 0.05  ambient 0.34 }
+    translate [44, 54, -74]
+}
+
+// And a book left on the other one.
+cube {
+    material { pigment [0.28, 0.17, 0.15]  specular 0.10  ambient 0.11 }
+    scale [3.1, 0.55, 4.2]
+    rotate Y 14
+    translate [-44, 25.55, -74]
+}
