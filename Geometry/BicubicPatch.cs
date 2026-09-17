@@ -74,7 +74,15 @@ public class BicubicPatch : Surface
         if (Flatness <= 0)
             throw new Exception("A patch's flatness must be positive.");
 
-        _root = BuildNode(ControlPoints, 0, 1, 0, 1, 0);
+        // **The tree is built to ONE depth for the whole patch.**  Stopping each branch as soon as
+        // its own subpatch is flat enough is cheaper, and it is what this was ported from, but it
+        // leaves neighbouring leaves at different depths: across a shared edge, one side is a single
+        // straight chord and the other is two, and between them lies a sliver that no leaf covers.
+        // A ray through the sliver misses a surface it is pointed straight at.  So the flatness test
+        // now decides how deep the WHOLE patch goes rather than where each branch stops, which keeps
+        // the adaptivity that matters -- a flat patch is still one leaf, a curved one still runs to
+        // its step cap -- while making every leaf meet its neighbours exactly.
+        _root = BuildNode(ControlPoints, 0, 1, 0, 1, 0, RequiredDepth(ControlPoints, 0));
     }
 
     /// <summary>
@@ -302,17 +310,59 @@ public class BicubicPatch : Surface
     }
 
     /// <summary>
+    /// This method works out how deep the subdivision has to go before every subpatch at that
+    /// depth is flat enough (or the step caps stop it), which is the depth the whole tree is then
+    /// built to.  It walks the same splits <see cref="BuildNode"/> does and takes the deepest
+    /// answer any branch gives, so one awkward corner pulls the rest of the patch down with it --
+    /// which is the price of every leaf meeting its neighbours along a shared edge.
+    /// </summary>
+    /// <param name="patch">The 4x4 grid of control points to measure.</param>
+    /// <param name="depth">How far down this subpatch already is.</param>
+    /// <returns>The depth at which this subpatch, and everything under it, stops.</returns>
+    private int RequiredDepth(Point[,] patch, int depth)
+    {
+        bool uLimited = depth >= USteps;
+        bool vLimited = depth >= VSteps;
+
+        if (IsFlatEnough(patch) || (uLimited && vLimited))
+            return depth;
+
+        if (!uLimited && !vLimited)
+        {
+            (Point[,] left, Point[,] right) = SplitU(patch);
+            (Point[,] lowerLeft, Point[,] upperLeft) = SplitV(left);
+            (Point[,] lowerRight, Point[,] upperRight) = SplitV(right);
+
+            return Math.Max(
+                Math.Max(RequiredDepth(lowerLeft, depth + 1), RequiredDepth(upperLeft, depth + 1)),
+                Math.Max(RequiredDepth(lowerRight, depth + 1), RequiredDepth(upperRight, depth + 1)));
+        }
+
+        if (uLimited)
+        {
+            (Point[,] bottom, Point[,] top) = SplitV(patch);
+
+            return Math.Max(RequiredDepth(bottom, depth + 1), RequiredDepth(top, depth + 1));
+        }
+
+        (Point[,] leftHalf, Point[,] rightHalf) = SplitU(patch);
+
+        return Math.Max(RequiredDepth(leftHalf, depth + 1), RequiredDepth(rightHalf, depth + 1));
+    }
+
+    /// <summary>
     /// This method builds one node of the subdivision tree, splitting further (in "u", "v", or
     /// both, depending on which axis limits have already been reached) until the subpatch is
     /// flat enough or both axis limits have been reached, whichever comes first.
     /// </summary>
-    private PatchNode BuildNode(Point[,] patch, double u0, double u1, double v0, double v1, int depth)
+    private PatchNode BuildNode(
+        Point[,] patch, double u0, double u1, double v0, double v1, int depth, int target)
     {
         (Point center, double radiusSquared) = ComputeBoundingSphere(patch);
         bool uLimited = depth >= USteps;
         bool vLimited = depth >= VSteps;
 
-        if (IsFlatEnough(patch) || (uLimited && vLimited))
+        if (depth >= target || (uLimited && vLimited))
         {
             return new LeafNode
             {
@@ -335,23 +385,31 @@ public class BicubicPatch : Surface
 
             children =
             [
-                BuildNode(lowerLeft, u0, um, v0, vm, depth + 1),
-                BuildNode(upperLeft, u0, um, vm, v1, depth + 1),
-                BuildNode(lowerRight, um, u1, v0, vm, depth + 1),
-                BuildNode(upperRight, um, u1, vm, v1, depth + 1)
+                BuildNode(lowerLeft, u0, um, v0, vm, depth + 1, target),
+                BuildNode(upperLeft, u0, um, vm, v1, depth + 1, target),
+                BuildNode(lowerRight, um, u1, v0, vm, depth + 1, target),
+                BuildNode(upperRight, um, u1, vm, v1, depth + 1, target)
             ];
         }
         else if (uLimited)
         {
             (Point[,] bottom, Point[,] top) = SplitV(patch);
 
-            children = [BuildNode(bottom, u0, u1, v0, vm, depth + 1), BuildNode(top, u0, u1, vm, v1, depth + 1)];
+            children =
+            [
+                BuildNode(bottom, u0, u1, v0, vm, depth + 1, target),
+                BuildNode(top, u0, u1, vm, v1, depth + 1, target)
+            ];
         }
         else
         {
             (Point[,] left, Point[,] right) = SplitU(patch);
 
-            children = [BuildNode(left, u0, um, v0, v1, depth + 1), BuildNode(right, um, u1, v0, v1, depth + 1)];
+            children =
+            [
+                BuildNode(left, u0, um, v0, v1, depth + 1, target),
+                BuildNode(right, um, u1, v0, v1, depth + 1, target)
+            ];
         }
 
         return new InteriorNode { Center = center, RadiusSquared = radiusSquared, Children = children };
