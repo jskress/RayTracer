@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 107 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 108 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1257,6 +1257,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/marine/a-working-morning.igl">A Working Morning</a>
+    </td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><b>Aviation</b> &mdash; 1 image &middot; what flies, and the field it leaves from</summary>
+
+<table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/aviation/first-light-at-the-field.png">
+      <img alt="First Light at the Field" height="120" src="Local/aviation/first-light-at-the-field.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/aviation/first-light-at-the-field.igl">First Light at the Field</a>
     </td>
   </tr>
 </table>
