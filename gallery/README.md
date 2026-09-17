@@ -1184,7 +1184,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Interiors</b> &mdash; 6 images &middot; rooms, and light indoors</summary>
+<summary><b>Interiors</b> &mdash; 7 images &middot; rooms, and light indoors</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1233,6 +1233,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/interiors/a-kitchen-at-seven.igl">A Kitchen at Seven</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/interiors/a-bed-made-up.png">
+      <img alt="A Bed Made Up" height="120" src="Local/interiors/a-bed-made-up.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/interiors/a-bed-made-up.igl">A Bed Made Up</a>
     </td>
   </tr>
 </table>
