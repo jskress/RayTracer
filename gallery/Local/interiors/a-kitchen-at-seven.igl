@@ -1,0 +1,124 @@
+// A kitchen with the morning coming in sideways.
+//
+// **Everything here faces `+Z`, so the wall is at `-Z` and the camera stands in the room.**  That is
+// the `furniture` library's convention for anything with a front and a back, and a kitchen is the
+// place it matters most: a run of cabinets seen from behind is a wooden slab with nothing on it, and
+// nothing in the picture says so.
+//
+// **The light comes from one side and not from overhead.**  A kitchen lit from above is a showroom
+// photograph; what makes this one a room at seven in the morning is that the light rakes along the
+// run, so the doors and drawers cast the shadows that show they are doors and drawers at all.  Lit
+// flat they are a painted wall.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    angles are degrees
+    info {
+        title 'A Kitchen at Seven'
+        author 'J. Stephen Kress'
+        description 'A fitted kitchen with the morning coming in from one side.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'furniture' {
+    KitchenRun, WallCabinets, Range, Refrigerator, DiningTable, DiningChair,
+    FurnitureOak, FurnitureStone
+}
+import 'daylight' { ClearMorning }
+
+camera {
+    location [104, 74, 142]
+    look at [-14, 36, -56]
+    field of view 56
+}
+
+background ClearMorning
+
+// The window, standing where one would be in the right-hand wall.  Six steps for the reason the
+// morning room's needs them: a wide source sampled too coarsely bands its own penumbra.
+area light {
+    location [116, 32, -66]
+    axisU [0, 0, 54]
+    axisV [0, 44, 0]
+    steps 6
+    color [1.06, 1.02, 0.92]
+}
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.80, 0.79, 0.75]  specular 0.02  ambient 0.12 }
+
+// A tiled floor, which is what a kitchen has: `brick` squared off rather than laid long.  The pattern's
+// own brick is 8 by 3 by 4.5, so twelve-inch tiles want 12/8 across and 12/4.5 along.
+plane {
+    material {
+        pigment brick {
+            [0.48, 0.45, 0.41], [0.55, 0.52, 0.48]
+            scale [1.5, 40, 2.667]
+        }
+        specular 0.14  shininess 40  ambient 0.13
+    }
+}
+plane { material Plaster  rotate X 90   translate Z -84 }
+plane { material Plaster  rotate Z -90  translate X -112 }
+plane { material Plaster  rotate X 180  translate Y 100 }
+
+// -- The kitchen --------------------------------------------------------------------------------------
+
+// The run, with the sink in its third unit.  Its carcase is twenty-four deep, so a center at -72 puts
+// its back against the wall at -84.
+object KitchenRun(96, 2) { translate [-28, 0, -72] }
+object WallCabinets(96) { translate [-28, 0, -72] }
+
+// The range breaks the run, which is what a range does.  **Nothing hangs over it**: a cooker wants
+// clear air above it, and a row of cabinets carried straight across is the detail that says nobody
+// who cooks drew this kitchen.
+object Range() { translate [34, 0, -71] }
+
+// A short return the other side of it, and the refrigerator closing the left-hand end.
+object KitchenRun(48, -1) { translate [74, 0, -72] }
+object WallCabinets(48) { translate [74, 0, -72] }
+object Refrigerator() { translate [-94, 0, -69] }
+
+// -- And somewhere to eat ------------------------------------------------------------------------------
+
+object DiningTable(42, 42) { translate [-50, 0, 0] }
+object DiningChair() { rotate Y -84  translate [-20, 0, 0] }
+object DiningChair() { rotate Y  94  translate [-80, 0, 0] }
+
+// -- And the things left out on the counter -------------------------------------------------------
+//
+// Three shapes, and they are what stop it being a showroom.  A fitted kitchen with a clear counter is
+// a photograph in a brochure; the difference between that and a kitchen at seven in the morning is
+// that somebody has already been in it.
+
+// a bowl, hollowed from a sphere and cut off level
+difference {
+    sphere { scale [5.5, 3.6, 5.5] }
+    sphere { scale [4.8, 3.2, 4.8]  translate Y 0.8 }
+    cube { scale [7, 4, 7]  translate Y 3.4 }
+    material {
+        pigment [0.58, 0.56, 0.52]
+        specular 0.40  shininess 110  ambient 0.12  reflective 0.04
+    }
+    translate [-58, 39.6, -70]
+}
+
+// and two canisters beside it
+group {
+    for jar in [0, 1] {
+        cylinder {
+            min Y 0  max Y (6.5 + jar * 1.6)
+            material {
+                pigment [0.34 - jar * 0.10, 0.30 - jar * 0.06, 0.26]
+                specular 0.28  shininess 70  ambient 0.12
+            }
+            scale [2.4 - jar * 0.3, 1, 2.4 - jar * 0.3]
+            translate [-4 - jar * 6, 36, -74]
+        }
+    }
+}
