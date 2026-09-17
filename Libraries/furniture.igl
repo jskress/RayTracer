@@ -298,3 +298,207 @@ primitive Desk(long, wide = 28, coat = FurnitureOak) -> group {
         material coat
     }
 }
+
+// -- Dining chair ---------------------------------------------------------------------------------
+
+// Something to sit at the dining table on.  `wide` is across the seat; the seat is at **eighteen**
+// inches and not the seventeen an armchair is, because a chair you eat at is drawn up to a thirty-inch
+// table and a chair you sit back in is not.  An inch is the whole difference and it is the right inch.
+//
+// **The back posts are the back legs**, in one piece from the floor to the top rail.  That is how a
+// chair is actually made, and it is also the only way it holds together: back legs that stop under the
+// seat, with a separate back stood on top of them, read as a stool with a board behind it -- the eye
+// picks up the join even when it cannot see it, because nothing else in a room has that break in it.
+primitive DiningChair(wide = 18, cloth = FurnitureLinen, coat = FurnitureOak) -> group {
+    deep = wide * 0.92
+    post = 0.7                          // half a leg
+    pad = 16.5                          // where the upholstery starts
+    top = 34                            // the top of the back
+
+    return group {
+        group {
+            // the two front legs, which stop under the seat
+            for side in [0, 1] {
+                cube {
+                    scale [post, pad / 2, post]
+                    translate [(side * 2 - 1) * (wide / 2 - post), pad / 2, -(deep / 2 - post)]
+                }
+            }
+
+            // and the two back ones, which do not
+            for side in [0, 1] {
+                cube {
+                    scale [post, top / 2, post]
+                    translate [(side * 2 - 1) * (wide / 2 - post), top / 2, deep / 2 - post]
+                }
+            }
+
+            // the frame the seat sits in
+            cube { scale [wide / 2 - 0.15, 0.55, deep / 2 - 0.15]  translate [0, 15.95, 0] }
+
+            // the top rail, and one slat below it
+            cube { scale [wide / 2 - post, 1.5, 0.45]  translate [0, top - 1.5, deep / 2 - post] }
+            cube { scale [wide / 2 - post, 1.1, 0.40]  translate [0, 26.5, deep / 2 - post] }
+
+            material coat
+        }
+
+        // The seat, which is a pad and so is rounded, like the armchair and for the same reason.
+        superellipsoid {
+            east 0.3  north 0.3
+            scale [wide / 2, 0.9, deep / 2]
+            translate [0, pad + 0.75, 0]
+            material cloth
+        }
+    }
+}
+
+// -- Sofa -----------------------------------------------------------------------------------------
+
+// The armchair, gone long.  `long` is across the arms; the seat is at seventeen and the back at
+// thirty-one, the same as the chair's, because a sofa is not a taller chair -- it is a wider one.
+//
+// **What a sofa needs that a chair does not is cushions**, and the reason is length.  An armchair's
+// seat is one cushion's worth wide, so a single upholstered block reads as one.  Stretch that block to
+// six feet and it reads as a bench with padding on it: there is nothing to say how many people it is
+// for.  The cushions are what say so, and the gaps between them do the saying -- which is why they are
+// separate shapes with real gaps rather than lines cut into one.
+primitive Sofa(long = 78, cloth = FurnitureLinen, coat = FurnitureOak) -> group {
+    deep = 36
+    arm = 3.2                                       // half an arm
+    seats = long < 60 ? 2 : floor(long / 30)
+    span = long - arm * 4                           // the width the cushions have between the arms
+    wide = span / seats                             // and so one cushion's pitch
+
+    return group {
+        group {
+            // the base, whose top is below the seat because the cushions make up the rest
+            superellipsoid {
+                east 0.25  north 0.25
+                scale [long / 2 - 1.5, 3.9, deep / 2]  translate [0, 10.3, 0]
+            }
+
+            // the back, and an arm each side, both sinking into the base as the armchair's do
+            superellipsoid {
+                east 0.25  north 0.25
+                scale [long / 2, 8.4, 2.8]  translate [0, 22.6, deep / 2 - 2.8]
+            }
+            for side in [0, 1] {
+                superellipsoid {
+                    east 0.38  north 0.38
+                    scale [arm, 5.2, deep / 2]
+                    translate [(side * 2 - 1) * (long / 2 - arm), 18.8, 0]
+                }
+            }
+
+            // The seat cushions, each sinking an inch into the base for the reason every other joint
+            // here does: two superellipsoids that merely touch do not meet.
+            for seat in [0, seats - 1] {
+                superellipsoid {
+                    east 0.30  north 0.30
+                    scale [wide / 2 - 0.5, 2.0, deep / 2 - 3.6]
+                    translate [-span / 2 + wide * (seat + 0.5), 15.2, -1.2]
+                }
+            }
+
+            // and one cushion standing against the back behind each of them
+            for seat in [0, seats - 1] {
+                superellipsoid {
+                    east 0.34  north 0.34
+                    scale [wide / 2 - 0.5, 5.4, 1.7]
+                    translate [-span / 2 + wide * (seat + 0.5), 22.4, deep / 2 - 7.0]
+                }
+            }
+
+            material cloth
+        }
+
+        group {
+            for corner in [0, 3] {
+                cube {
+                    scale [1, 3.2, 1]
+                    translate [(corner % 2 * 2 - 1) * (long / 2 - 3), 3.2,
+                               (floor(corner / 2) * 2 - 1) * (deep / 2 - 3)]
+                }
+            }
+            material coat
+        }
+    }
+}
+
+// -- Bookcase -------------------------------------------------------------------------------------
+
+// Sides, a top, a plinth, a back and as many shelves as will fit.  `long` is across and `high` is up,
+// and this is the one piece here whose height *is* an argument -- a bookcase is the only thing in a
+// room that is built to the wall it stands against rather than to the person using it.
+//
+// It faces `+Z`, like the sideboard.
+//
+// **The shelves are counted, not measured.**  A shelf wants about a foot over it, so the count is what
+// divides into the height and the spacing is whatever that leaves -- which is how a bookcase is really
+// built.  Asking for a fixed twelve inches instead leaves a short remainder at the top on almost every
+// height, and a bookcase with one stunted shelf under its lid looks like a mistake, because it is one.
+primitive Bookcase(long = 36, high = 60, books = 1, coat = FurnitureOak) -> group {
+    deep = 11
+    board = 0.375                                   // half a board's thickness
+    plinth = 3
+    shelves = floor((high - plinth) / 12)
+    gap = (high - plinth - board * 2) / shelves     // from one shelf's top to the next
+
+    return group {
+        group {
+            // the two sides, the top, and the plinth the whole thing stands on
+            for side in [0, 1] {
+                cube {
+                    scale [board, (high - plinth) / 2, deep / 2]
+                    translate [(side * 2 - 1) * (long / 2 - board), plinth + (high - plinth) / 2, 0]
+                }
+            }
+            cube { scale [long / 2, board, deep / 2]  translate [0, high - board, 0] }
+            cube { scale [long / 2 - 0.4, plinth / 2, deep / 2 - 0.4]  translate [0, plinth / 2, 0] }
+
+            // the back, which is thin because a bookcase's back is
+            cube {
+                scale [long / 2 - board, (high - plinth) / 2, 0.2]
+                translate [0, plinth + (high - plinth) / 2, -(deep / 2 - 0.2)]
+            }
+
+            // and the shelves, the topmost of which is the underside of the lid and so is not drawn
+            for shelf in [0, shelves - 1] {
+                cube {
+                    scale [long / 2 - board, 0.28, deep / 2 - 0.3]
+                    translate [0, plinth + shelf * gap, 0.3]
+                }
+            }
+
+            material coat
+        }
+
+        // **The books are what make it a bookcase**, and they are cheap: one cube each, stood at an
+        // even pitch with uneven widths, so the gaps come out irregular without anything having to
+        // work out where one book ends and the next begins.  Their heights and colors are `random`
+        // rather than arithmetic on the index, because arithmetic on an index repeats, and a repeat
+        // down a shelf is the one thing that says at a glance these are not books.
+        if (books > 0) {
+            group {
+                for shelf in [0, shelves - 1] {
+                    for book in [0, floor((long - 2.4) / 1.05) - 1] {
+                        cube {
+                            material {
+                                pigment [0.12 + random(shelf, book, 11) * 0.34,
+                                         0.09 + random(shelf, book, 12) * 0.22,
+                                         0.08 + random(shelf, book, 13) * 0.26]
+                                specular 0.10  shininess 25  ambient 0.11
+                            }
+                            scale [0.32 + random(shelf, book, 14) * 0.18,
+                                   4.1 + random(shelf, book, 15) * 1.4, deep / 2 - 1.6]
+                            translate [-(long - 2.4) / 2 + 1.05 * (book + 0.5),
+                                       plinth + shelf * gap + 4.38 + random(shelf, book, 15) * 1.4,
+                                       0.1]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
