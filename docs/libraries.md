@@ -707,6 +707,89 @@ glass is only ever seen as a band beneath it.
 what says *painted metal*.  Drop these to a building's `specular 0.05` and the shape stops reading long
 before the color does.
 
+#### Vessels
+
+```
+import 'vessels' { Sailboat, Trawler, Submarine }
+
+object Sailboat(10)
+object Trawler(22)   { translate Z 30 }
+object Submarine(70) { translate Z -60 }
+```
+
+| | |
+| --- | --- |
+| `Sailboat` | A sloop: hull, fin keel, coachroof, mast and two sails. |
+| `Trawler` | A working boat: hull, bulwarks, wheelhouse and a derrick. |
+| `Submarine` | A teardrop hull, a sail, diving planes and a rudder. |
+| `VesselWhite`, `VesselBlue`, `VesselGreen` | Topsides paint. |
+| `VesselAntifoul` | What a hull is below the waterline. |
+
+**The first number is a length**, as it is for the [vehicles](#vehicles) and for the same reason: a boat
+is a thirty-footer or a sixty-metre trawler, never so many metres tall.  These are in **meters** and
+they **face `+X`**, like the vehicles and the [trains](#trains).
+
+##### The waterline is `y = 0`, and that is the whole of the convention
+
+Every other library here stands its pieces on the ground: a chair's feet are at nought, a building's
+footings are at nought.  A vessel has no such face.  What it has instead is a **waterline** — the level
+it floats at — and that is what sits at nought, so a boat dropped at the origin floats correctly on a
+[`Water`](#water) surface laid at the origin, with no draft to look up and subtract.
+
+The consequence is that **a good deal of each of these is below `y = 0`**, which is the opposite of
+everything else in these libraries.  It is worth knowing before you wonder why a vessel on a plane at
+nought is buried to its deck.  It is not buried.  That is where the water goes.
+
+##### What makes a solid into a hull
+
+A hull is the one shape these libraries had not tried, and none of the obvious surfaces is it.
+
+**A superellipsoid cannot do it**, which is a surprise, because it is what every road vehicle here is
+made of.  Its `east` exponent shapes the waterline plane, and pushing that above one to get a pointed
+bow pinches the *sides* in at the same time, because the exponent cannot tell the ends from the middle.
+What comes out is a four-pointed star, full at forty-five degrees and hollow amidships, which is the
+opposite of a hull in every particular.
+
+**Two ellipsoids crossing are.**  Take two long ellipsoids, push them apart sideways, and keep only what
+both contain: the overlap is a lens, pointed where they cross at the ends and fullest where they are
+furthest apart amidships.  That is a hull's waterline plan exactly, and how far apart they sit is how
+full the ends are — one number doing the job a table of offsets does in a real drawing.  A third
+ellipsoid lying fore and aft gives the keel its rocker; a box takes the deck off level and cuts the
+transom.  Four surfaces and one intersection is a hull.
+
+**The bulwarks are the same hull cut twice.**  A hull stopped level at the deck is a launch; what you
+stand behind in a sea is a wall carried up all round, and its plan has to follow the hull's own curve
+rather than being a box set on top.  Taking a slightly smaller copy of the hull out of a slightly taller
+one leaves a ring of exactly the right shape without any of it being drawn twice.
+
+##### A sail bellies, which is why it is a patch
+
+Three flat triangles will draw a sloop's rig and from a mile off they are honest enough.  But a sail
+is the one part of a boat that is only ever the shape the wind is making, and a flat one reads as
+card — so each is a bicubic [`patch`](surfaces.md#patch) with its four interior control points pushed
+to leeward.  The twelve on the edges stay where the corners put them, so the luff still runs straight
+up the mast and the foot still lies along the boom while the middle bags out between them.
+
+**Its head is a short edge rather than a point.**  A patch is a quadrilateral by nature, so the
+obvious way to get a triangle is to put all four control points of the top row on the masthead.  A
+real mainsail does not come to a point either — it ends in a headboard a foot or so across, which is
+what the halyard pulls on — and giving the top row that width keeps the patch a genuine quadrilateral
+rather than a degenerate one.
+
+These were flat triangles for a while, because a bellied patch rendered with pinholes of sky through
+the cloth.  That turned out to be the patch's own dicing and not anything the sail was doing; see
+[the patch](surfaces.md#patch) for what it was and what fixed it.
+
+##### A submarine is far thinner than it looks in a photograph
+
+Seventy metres by fifteen across is an airship.  A boat that length is about seven wide — a tenth of its
+length, not a quarter — and the first attempt here used 0.115 of the length as the *radius* and came out
+as a blimp.  It is also three shapes and not one: a single ellipsoid stretched to length has its
+greatest girth exactly amidships and tapers from there to both ends, which is a fish.  A real boat has a
+parallel middle body with a blunt bow on one end and a long fine run to the screw on the other, so it is
+a cylinder between two unequal ellipsoids, each sized to meet the cylinder at full girth so the joins do
+not show as rings.
+
 #### Water
 
 ```
