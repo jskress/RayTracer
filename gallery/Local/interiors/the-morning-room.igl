@@ -32,15 +32,15 @@ context {
 }
 
 import 'furniture' {
-    DiningTable, LowTable, Sideboard, Armchair, Desk,
+    DiningTable, DiningChair, LowTable, Sideboard, Armchair, Sofa, Bookcase, Desk,
     FurnitureOak, FurnitureWalnut, FurnitureLinen
 }
 import 'daylight' { ClearMorning }
 
 camera {
-    location [-78, 80, -122]
-    look at [16, 22, 20]
-    field of view 54
+    location [-88, 84, -140]
+    look at [18, 22, 16]
+    field of view 64
 }
 
 background ClearMorning
@@ -121,16 +121,32 @@ parallelogram {
 
 // Against the back wall, in walnut so it reads apart from the oak: its carcase is eighteen deep, so
 // a center at 87 puts its back on the wall at 96.
-object Sideboard(54, FurnitureWalnut) { translate [-30, 0, 87] }
+//
+// **`rotate Y 180`, because the library builds a sideboard facing `+Z`** and this wall is at `+Z`.
+// Left alone its doors face the plaster and the room gets the blank back -- which does not look
+// wrong so much as look like nothing, a flat panel where the piece's only detail should have been.
+object Sideboard(54, FurnitureWalnut) { rotate Y 180  translate [-30, 0, 87] }
 
-// The dining end.  Five and a half feet by three, which seats six.
+// The dining end.  Five and a half feet by three, which seats six -- and four of the six are drawn,
+// because the two at the ends would stand half out of frame and a chair you cannot see is a chair
+// that only costs you render time.
+//
+// **The far pair need no rotation and the near pair need half a turn.**  The library builds a chair
+// facing `-Z`, so a chair on the far side of a table already looks at it; one on the near side has
+// to be turned right round.  Each is also off square by a few degrees, the way a chair that has been
+// sat in is.
 object DiningTable(66, 38) { translate [-48, 0, 30] }
+
+object DiningChair() { rotate Y   -6  translate [-64, 0, 56] }
+object DiningChair() { rotate Y    4  translate [-32, 0, 56] }
+object DiningChair() { rotate Y  186  translate [-64, 0,  4] }
+object DiningChair() { rotate Y  172  translate [-32, 0,  4] }
 
 // The desk goes along the right-hand wall, so it is turned a quarter.  Twenty-eight deep, which after
 // the turn is its width across the room, so a center at 94 puts its back on the wall at 108.
 //
 // The library builds a desk with its pedestal on -X; after `rotate Y -90` that is -Z, the far end.
-object Desk(54, 28, FurnitureWalnut) { rotate Y -90  translate [94, 0, 24] }
+object Desk(54, 28, FurnitureWalnut) { rotate Y -90  translate [94, 0, 54] }
 
 // The sitting end: a chair, turned out of square and toward the light, and a low table in front of it.
 //
@@ -143,8 +159,17 @@ Cloth = material {
     specular 0.06  shininess 12  ambient 0.13
 }
 
-object Armchair(34, Cloth) { rotate Y 46  translate [42, 0, -18] }
-object LowTable(38, 24) { rotate Y 11  translate [4, 0, -36] }
+object Armchair(34, Cloth) { rotate Y 14  translate [16, 0, -4] }
+object LowTable(38, 24) { rotate Y 11  translate [16, 0, -42] }
+
+// The sofa closes the third side of the sitting group, turned across the room to face the low table.
+// It is the piece that needs the most floor, so it gets the one stretch of wall nothing else wants.
+object Sofa(78, Cloth) { rotate Y 96  translate [74, 0, -34] }
+
+// And a bookcase on the back wall.  Eleven inches deep, so a center at 90.5 puts its back on the
+// wall -- and `rotate Y 180` for the same reason the sideboard needs it: a bookcase that faces the
+// plaster is a box.
+object Bookcase(36, 60) { rotate Y 180  translate [46, 0, 90.5] }
 
 // -- And the things left on it -----------------------------------------------------------------------
 //
