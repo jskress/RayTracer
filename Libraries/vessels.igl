@@ -1,0 +1,442 @@
+// Things that float, and one thing that does not want to.
+//
+//     import 'vessels' { Sailboat, Trawler, Submarine }
+//
+//     object Sailboat(10)
+//     object Trawler(22)    { translate Z 30 }
+//     object Submarine(70)  { translate Z -60 }
+//
+// | `Sailboat` | A sloop: hull, fin keel, coachroof, mast and two sails. |
+// | `Trawler` | A working boat: hull, bulwarks, wheelhouse and a derrick. |
+// | `Submarine` | A teardrop hull, a sail, diving planes and a rudder. |
+//
+// **The first number is a length**, as it is for the [vehicles](#vehicles), and for the same reason: a
+// boat is a thirty-footer or a sixty-metre trawler, never so many metres tall.  These are in **meters**.
+//
+// **These face `+X`**, like the vehicles and the trains, so a vessel sails to the right in a camera
+// looking the usual way.  `rotate Y 180` turns it about.
+//
+// -- The waterline is `y = 0`, and that is the whole of the convention --------------------------------
+//
+// Every other library here stands its pieces on the ground: a chair's feet are at nought, a building's
+// footings are at nought.  A vessel has no such face.  What it has instead is a **waterline** -- the
+// level it floats at -- and that is what sits at nought here, so a boat dropped at the origin floats
+// correctly on a [`Water`](#water) surface laid at the origin, with no draft to look up and subtract.
+//
+// The consequence is that **a good deal of each of these is below `y = 0`**, which is the opposite of
+// everything else in these libraries and is worth knowing before you wonder why a vessel on a plane at
+// nought is buried to its deck.  It is not buried.  That is where the water goes.
+//
+// -- What makes a solid into a hull --------------------------------------------------------------------
+//
+// A hull is the one shape these libraries had not tried, and none of the obvious surfaces is it.
+//
+// **A superellipsoid cannot do it.**  It is what every road vehicle here is made of, and the temptation
+// is to stretch one out and call it a boat.  Its `east` exponent shapes the waterline plane, and pushing
+// that above one to get a pointed bow pinches the *sides* in at the same time, because the exponent
+// cannot tell the ends from the middle.  What comes out is a four-pointed star, full at forty-five
+// degrees and hollow amidships, which is the opposite of a hull in every particular.
+//
+// **Two ellipsoids crossing are.**  Take two long ellipsoids, push them apart sideways, and keep only
+// what both contain: the overlap is a lens, pointed where they cross at the ends and at its fullest
+// where they are furthest apart amidships.  That is a hull's waterline plan exactly, and how far apart
+// they sit is how full the ends are -- one number, `full`, doing the job a table of offsets does in a
+// real drawing.
+//
+// A third ellipsoid, lying fore and aft, gives the keel its rocker so the bottom rises toward the ends
+// instead of running flat to a point.  A box takes the deck off level and cuts the transom.  Four
+// surfaces and one intersection is a hull.
+
+// -- What vessels are made of -------------------------------------------------------------------------
+
+// Topsides paint.  Gloss for the reason the [vehicles](#vehicles) give -- the highlight running along
+// a sheerline is most of what says this is a made thing rather than a carved one.
+VesselWhite = material {
+    pigment [0.85, 0.85, 0.82]
+    specular 0.62  shininess 160  ambient 0.13  reflective 0.05
+}
+
+VesselBlue = material {
+    pigment [0.09, 0.15, 0.26]
+    specular 0.66  shininess 180  ambient 0.09  reflective 0.07
+}
+
+VesselGreen = material {
+    pigment [0.07, 0.17, 0.13]
+    specular 0.64  shininess 170  ambient 0.09  reflective 0.06
+}
+
+// **Below the waterline a hull is red**, and it is worth the second material.  Antifouling is the one
+// colour on a boat nobody chooses for looks, and a hull that is one shade from sheer to keel reads as a
+// model of a boat rather than a boat -- most of all in clear water, where the join is what tells you
+// where the surface is.
+VesselAntifoul = material {
+    pigment [0.34, 0.09, 0.07]
+    specular 0.30  shininess 60  ambient 0.08
+}
+
+// One of those by variant.  A `primitive` returning a `material` is how a library picks one, the way
+// the [vehicles](#vehicles) do; a `function` cannot, because a function returns a number.
+primitive VesselPaint(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material VesselWhite }
+        case 1 { return material VesselBlue }
+        default { return material VesselGreen }
+    }
+}
+
+// Teak, laid in strips along the boat.
+//
+// **The rings' axis is lifted to the deck**, for the reason the [furniture](#furniture) grain is: left
+// on the waterline, a deck a metre above it crosses the rings at a slant and the planks come out as
+// wide curved bands rather than as strips running fore and aft.
+VesselDeck = material {
+    pigment wood {
+        turbulence { amplitude 0.22  octaves 2 }
+        [0, [0.46, 0.33, 0.19], 0.5, [0.38, 0.27, 0.15],
+         0.82, [0.28, 0.19, 0.11], 1, [0.46, 0.33, 0.19]]
+        scale [0.055, 0.055, 30]
+        rotate Y 90
+        translate [0, 1.4, 0]
+    }
+    specular 0.18  shininess 40  ambient 0.11
+}
+
+// Canvas.  Barely glossy, because a sail is cloth, and pale rather than white so it still has shading
+// left in it when the sun is on it.
+VesselCanvas = material {
+    pigment [0.88, 0.86, 0.80]
+    specular 0.04  shininess 10  ambient 0.20
+}
+
+VesselSpar = material {
+    pigment [0.72, 0.72, 0.70]
+    specular 0.55  shininess 140  ambient 0.12  reflective 0.10
+}
+
+VesselSteel = material {
+    pigment [0.24, 0.26, 0.27]
+    specular 0.45  shininess 110  ambient 0.10  reflective 0.14
+}
+
+VesselDark = material {
+    pigment [0.10, 0.10, 0.11]
+    specular 0.30  shininess 70  ambient 0.08
+}
+
+// -- The hull ------------------------------------------------------------------------------------------
+
+// The machinery described above.  `long` is overall, `beam` is the width amidships, `draft` is how deep
+// the canoe body goes and `free` how high the deck stands over the water.  `full` is how full the ends
+// are -- 1.05 is a fine-ended yacht and 1.4 a burdensome working boat -- and `stern` is how much of the
+// lens runs out past the transom, so 0 is a boat that comes to a point aft and 0.3 has a broad transom.
+//
+// `deep` picks which half comes back: 1 for the topsides and -1 for everything under water.  They are
+// asked for separately so each can carry its own paint, and cutting the same solid twice is cheaper to
+// write than passing two materials through four surfaces.
+primitive VesselBody(long, beam, draft, free, full = 1.15, stern = 0.22, deep = 1) -> group {
+    ends = long * (1 + stern) / 2               // how long each plan ellipsoid is
+    back = -long * stern / 2                    // and how far aft its middle sits
+    side = beam * full                          // their half-width
+    apart = side - beam / 2                     // and so how far apart they are pushed
+    over = free * 2.2                           // the rocker ellipsoid reaches this high amidships
+    rise = (draft + over) / 2
+    mid = (over - draft) / 2
+
+    // **A primitive returns the kind it declares**, so an intersection goes inside a `group` rather
+    // than being returned as itself.
+    return group {
+        intersection {
+            // the plan: two long ellipsoids crossing, whose overlap is the waterline shape
+            sphere { scale [ends, long, side]  translate [back, 0,  apart] }
+            sphere { scale [ends, long, side]  translate [back, 0, -apart] }
+
+            // the profile: one more lying fore and aft, which gives the keel its rocker
+            sphere { scale [long * 0.72, rise, beam * 6]  translate Y mid }
+
+            // and a box, which takes the deck off level, cuts the transom square, and keeps only the
+            // half of the hull that was asked for
+            cube {
+                scale [long, deep > 0 ? free / 2 : long, beam]
+                translate [long / 2, deep > 0 ? free / 2 : -long, 0]
+            }
+        }
+    }
+}
+
+// -- A sail ------------------------------------------------------------------------------------------
+
+// One triangular sail, given its three corners: `h` is the head at the masthead, `t` the tack at the
+// bottom of the luff and `c` the clew at the far corner.  `belly` is how far it bags to leeward.
+//
+// **A sail bellies, and that is why it is a `patch` and not a triangle.**  Three flat triangles will
+// draw this rig and from a mile off they are honest enough -- but a sail is the one part of a boat
+// that is only ever the shape the wind is making, and a flat one reads as card.  Only the four
+// interior control points are moved to leeward; the twelve on the edges stay where the corners put
+// them, so the luff still runs straight up the mast and the foot still lies along the boom while the
+// middle bags out between them.
+//
+// **The head is a short edge rather than a point.**  A patch is a quadrilateral by nature, so the
+// obvious way to get a triangle is to put all four control points of the top row on the masthead.
+// A real mainsail does not come to a point either -- it ends in a headboard a foot or so across,
+// which is what the halyard pulls on -- and giving the top row that width keeps the patch a genuine
+// quadrilateral rather than a degenerate one.
+//
+// These were flat triangles for a while, because a bellied patch rendered with single pixels of sky
+// scattered through the cloth.  That was an engine fault and not a thing to work around here: the
+// subdivision tree stopped each branch as soon as its own subpatch was flat enough, so neighbouring
+// leaves sat at different depths and left slivers no leaf covered.  It is fixed, and the belly is
+// back.
+primitive VesselSailcloth(hx, hy, tx, ty, cx, cy, belly) -> group {
+    return group {
+        patch {
+            points
+            [hx, hy, 0], [(hx + 0.02 * (cx - hx)), (hy + 0.02 * (cy - hy)), 0], [(hx + 0.04 * (cx - hx)), (hy + 0.04 * (cy - hy)), 0], [(hx + 0.06 * (cx - hx)), (hy + 0.06 * (cy - hy)), 0],
+            [hx + 0.333333 * (tx - hx), hy + 0.333333 * (ty - hy), 0], [(hx + 0.02 * (cx - hx)) + 0.333333 * ((tx + 0.333333 * (cx - tx)) - (hx + 0.02 * (cx - hx))), (hy + 0.02 * (cy - hy)) + 0.333333 * ((ty + 0.333333 * (cy - ty)) - (hy + 0.02 * (cy - hy))), belly], [(hx + 0.04 * (cx - hx)) + 0.333333 * ((tx + 0.666667 * (cx - tx)) - (hx + 0.04 * (cx - hx))), (hy + 0.04 * (cy - hy)) + 0.333333 * ((ty + 0.666667 * (cy - ty)) - (hy + 0.04 * (cy - hy))), belly], [(hx + 0.06 * (cx - hx)) + 0.333333 * ((tx + 1 * (cx - tx)) - (hx + 0.06 * (cx - hx))), (hy + 0.06 * (cy - hy)) + 0.333333 * ((ty + 1 * (cy - ty)) - (hy + 0.06 * (cy - hy))), 0],
+            [hx + 0.666667 * (tx - hx), hy + 0.666667 * (ty - hy), 0], [(hx + 0.02 * (cx - hx)) + 0.666667 * ((tx + 0.333333 * (cx - tx)) - (hx + 0.02 * (cx - hx))), (hy + 0.02 * (cy - hy)) + 0.666667 * ((ty + 0.333333 * (cy - ty)) - (hy + 0.02 * (cy - hy))), belly], [(hx + 0.04 * (cx - hx)) + 0.666667 * ((tx + 0.666667 * (cx - tx)) - (hx + 0.04 * (cx - hx))), (hy + 0.04 * (cy - hy)) + 0.666667 * ((ty + 0.666667 * (cy - ty)) - (hy + 0.04 * (cy - hy))), belly], [(hx + 0.06 * (cx - hx)) + 0.666667 * ((tx + 1 * (cx - tx)) - (hx + 0.06 * (cx - hx))), (hy + 0.06 * (cy - hy)) + 0.666667 * ((ty + 1 * (cy - ty)) - (hy + 0.06 * (cy - hy))), 0],
+            [tx, ty, 0], [(tx + 0.333333 * (cx - tx)), (ty + 0.333333 * (cy - ty)), 0], [(tx + 0.666667 * (cx - tx)), (ty + 0.666667 * (cy - ty)), 0], [(tx + 1 * (cx - tx)), (ty + 1 * (cy - ty)), 0]
+            uSteps 5
+            vSteps 5
+            material VesselCanvas
+        }
+    }
+}
+
+// -- Sailboat --------------------------------------------------------------------------------------
+
+// A sloop: one mast, a mainsail behind it and a headsail in front.  `long` is overall on deck, so ten
+// is a thirty-three footer.
+//
+// **The keel is a separate fin and not part of the hull**, which is how a modern yacht is built and
+// also the only way the numbers work: the canoe body draws well under a metre and the keel three times
+// that, and one shape cannot be both without the middle of the boat being as deep as the keel.
+primitive Sailboat(long = 10, variant = 1) -> group {
+    beam = long * 0.31
+    draft = long * 0.072
+    free = long * 0.105
+    fin = long * 0.165                          // how far the keel reaches below the canoe body
+    mast = long * 1.30                          // masthead over the water
+    foot = long * 0.10                          // where the boom sits over the deck
+    step = long * 0.06                          // and where the mast stands, just forward of middle
+
+    return group {
+        object VesselBody(long, beam, draft, free, 1.06, 0.18,  1) { material VesselPaint(variant) }
+        object VesselBody(long, beam, draft, free, 1.06, 0.18, -1) { material VesselAntifoul }
+
+        // the deck, a shade inside the sheer so the topsides show as a band above the water
+        object VesselBody(long * 0.995, beam * 0.97, draft, free + 0.02, 1.06, 0.18, 1) {
+            material VesselDeck
+            translate Y 0.02
+        }
+
+        // The keel: a fin with a weight on the bottom of it, which is what a fin keel is for.
+        superellipsoid {
+            east 0.30  north 0.85
+            scale [long * 0.115, fin / 2, long * 0.018]
+            translate [-long * 0.02, -(draft + fin / 2) + 0.02, 0]
+            material VesselDark
+        }
+        superellipsoid {
+            east 0.55  north 0.55
+            scale [long * 0.095, long * 0.020, long * 0.022]
+            translate [-long * 0.02, -(draft + fin), 0]
+            material VesselDark
+        }
+
+        // and a rudder aft of it
+        superellipsoid {
+            east 0.30  north 0.80
+            scale [long * 0.035, long * 0.085, long * 0.012]
+            translate [-long * 0.335, -(draft + long * 0.055), 0]
+            material VesselDark
+        }
+
+        // The coachroof, which is what a hull needs before it reads as a boat people go below in.
+        superellipsoid {
+            east 0.35  north 0.50
+            scale [long * 0.21, long * 0.035, beam * 0.33]
+            translate [-long * 0.01, free + long * 0.030, 0]
+            material VesselPaint(variant)
+        }
+
+        // the mast and the boom
+        cylinder {
+            min Y 0  max Y (mast - free)
+            scale [long * 0.010, 1, long * 0.010]
+            translate [step, free, 0]
+            material VesselSpar
+        }
+        cylinder {
+            min Y 0  max Y (long * 0.42)
+            scale [long * 0.008, 1, long * 0.008]
+            rotate Z 90
+            translate [step, free + foot, 0]
+            material VesselSpar
+        }
+
+        // **The sails are triangles and they are the whole silhouette.**  A sloop with its rig struck
+        // is a hull; what is recognizable a mile off is the shape of the cloth, and two flat triangles
+        // carry that shape as well as anything curved would at any distance a boat is usually seen.
+        // the mainsail: head at the masthead, tack at the foot of the mast, clew at the boom's end
+        object VesselSailcloth(step, mast,
+                               step, free + foot,
+                               step - long * 0.42, free + foot,
+                               long * 0.055)
+
+        // and the headsail, tacked down at the stemhead
+        object VesselSailcloth(step, mast,
+                               long * 0.47, free + long * 0.02,
+                               step + long * 0.02, free + long * 0.05,
+                               long * 0.045)
+    }
+}
+
+// -- Trawler ---------------------------------------------------------------------------------------
+
+// A working boat: full-ended, high-sided, with a wheelhouse aft and a derrick over the working deck.
+// `long` is overall, so twenty-two is a middling inshore boat.
+//
+// **Bulwarks, and they are what make it a working boat.**  A hull cut off level at the deck is a
+// launch; what you stand behind in a sea is a wall carried up above the deck all round, and the shape
+// of it has to follow the hull's own curve rather than being a box set on top.  It is the same hull
+// cut twice -- once at the deck and once higher -- with a slightly smaller copy taken out of the
+// middle, which is a ring of exactly the right plan without any of it being drawn twice.
+primitive Trawler(long = 22, variant = 1) -> group {
+    beam = long * 0.30
+    draft = long * 0.115
+    free = long * 0.095
+    rail = long * 0.055                         // how far the bulwark stands over the deck
+    house = long * 0.145                         // and how tall the wheelhouse is
+
+    return group {
+        object VesselBody(long, beam, draft, free, 1.32, 0.30,  1) { material VesselPaint(variant) }
+        object VesselBody(long, beam, draft, free, 1.32, 0.30, -1) { material VesselAntifoul }
+
+        object VesselBody(long * 0.99, beam * 0.96, draft, free + 0.02, 1.32, 0.30, 1) {
+            material VesselDeck
+            translate Y 0.02
+        }
+
+        difference {
+            object VesselBody(long, beam, draft, free + rail, 1.32, 0.30, 1)
+            object VesselBody(long, beam, draft, free + rail + 1, 1.32, 0.30, 1) {
+                // Shrinking X as well as Z is what leaves a bulwark across the transom.  At 0.994 it
+                // came out under three inches thick and read as an open stern; the boat you would
+                // rather be standing in has a foot of timber back there.
+                scale [0.985, 1, 0.90]
+            }
+            group {
+                cube { scale [long, free / 2, beam]  translate [0, free / 2, 0] }
+            }
+            material VesselPaint(variant)
+        }
+
+        // The wheelhouse, aft, with a band of glass round the front of it.
+        group {
+            difference {
+                superellipsoid {
+                    east 0.18  north 0.22
+                    scale [long * 0.115, house / 2, beam * 0.30]
+                    translate [-long * 0.235, free + house / 2, 0]
+                }
+                superellipsoid {
+                    east 0.18  north 0.22
+                    scale [long * 0.105, house * 0.16, beam * 0.32]
+                    translate [-long * 0.235, free + house * 0.66, 0]
+                }
+            }
+            material VesselPaint(variant)
+        }
+        superellipsoid {
+            east 0.18  north 0.22
+            scale [long * 0.108, house * 0.15, beam * 0.295]
+            translate [-long * 0.235, free + house * 0.66, 0]
+            material VesselDark
+        }
+
+        // the mast, and a derrick swung out over the working deck
+        cylinder {
+            min Y 0  max Y (long * 0.30)
+            scale [long * 0.012, 1, long * 0.012]
+            translate [-long * 0.13, free + house, 0]
+            material VesselSpar
+        }
+        cylinder {
+            min Y 0  max Y (long * 0.34)
+            scale [long * 0.009, 1, long * 0.009]
+            rotate Z 62
+            translate [-long * 0.13, free + house + long * 0.04, 0]
+            material VesselSpar
+        }
+    }
+}
+
+// -- Submarine -------------------------------------------------------------------------------------
+
+// A teardrop hull with a sail on it, on the surface.  `long` is overall, so seventy is a small diesel
+// boat and a hundred and ten a large one.
+//
+// **It is three shapes and not one.**  A single ellipsoid stretched to length has its greatest girth
+// exactly amidships and tapers from there to both ends, which is a fish and not a submarine; a boat has
+// a parallel middle body with a blunt bow on one end and a long fine run to the screw on the other.  A
+// cylinder between two unequal ellipsoids is that, and the ellipsoids are sized so each meets the
+// cylinder at full girth, which is what keeps the joins from showing as rings.
+//
+// **It floats low**, as a surfaced boat does: the hull's axis is set below the waterline so only the
+// top of the casing is dry.  Translating the whole thing down puts it under.
+primitive Submarine(long = 70, variant = 1) -> group {
+    // **A submarine is far thinner than it looks in a photograph.**  Seventy metres by fifteen across
+    // is an airship; a boat that length is about seven wide, which is a tenth of its length and not a
+    // quarter.  The first attempt used 0.115 of the length as the RADIUS and came out as a blimp.
+    across = long * 0.055                       // the hull's radius
+    sink = across * 0.55                        // how far the axis sits below the waterline
+    sail = long * 0.075                         // how tall the sail is over the casing
+
+    return group {
+        group {
+            sphere { scale [long * 0.20, across, across]  translate [long * 0.30, -sink, 0] }
+            cylinder {
+                min Y (-long * 0.28)  max Y (long * 0.30)
+                scale [across, 1, across]
+                rotate Z -90
+                translate Y -sink
+            }
+            sphere { scale [long * 0.24, across, across]  translate [-long * 0.26, -sink, 0] }
+            material VesselSteel
+        }
+
+        // The sail, and the planes on it.
+        superellipsoid {
+            east 0.22  north 0.30
+            scale [long * 0.075, sail / 2, across * 0.30]
+            translate [long * 0.10, across - sink + sail / 2 - 0.2, 0]
+            material VesselSteel
+        }
+        superellipsoid {
+            east 0.20  north 0.60
+            scale [long * 0.020, long * 0.0028, long * 0.058]
+            translate [long * 0.10, across - sink + sail * 0.60, 0]
+            material VesselSteel
+        }
+
+        // and the tail: a rudder up, a fin down, and planes across
+        superellipsoid {
+            east 0.22  north 0.60
+            scale [long * 0.045, long * 0.055, long * 0.006]
+            translate [-long * 0.42, -sink + long * 0.045, 0]
+            material VesselSteel
+        }
+        superellipsoid {
+            east 0.22  north 0.60
+            scale [long * 0.045, long * 0.055, long * 0.006]
+            translate [-long * 0.42, -sink - long * 0.045, 0]
+            material VesselSteel
+        }
+        superellipsoid {
+            east 0.22  north 0.60
+            scale [long * 0.045, long * 0.006, long * 0.075]
+            translate [-long * 0.42, -sink, 0]
+            material VesselSteel
+        }
+    }
+}
