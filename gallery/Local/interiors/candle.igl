@@ -63,6 +63,8 @@ context {
     }
 }
 
+import 'furniture' { Desk }
+
 camera {
     location [-1.6, 2.1, -6.4]
     look at [0.2, 0.8, 0.1]
@@ -80,21 +82,39 @@ environment {
     }
 }
 
-// The desk.
-plane {
-    material {
-        pigment wood {
-            turbulence { amplitude 0.6  octaves 2 }
-            [0, [0.24, 0.13, 0.06], 0.12, [0.30, 0.17, 0.08],
-             0.30, [0.46, 0.28, 0.13], 0.92, [0.50, 0.31, 0.15],
-             1, [0.24, 0.13, 0.06]]
-            scale [0.22, 0.22, 7]
-            rotate Y 12
-        }
-        ambient 0.014
-        specular 0.2
-        shininess 45
+// The desk, which is the `furniture` library's, scaled into this scene's units.
+//
+// **A unit here is five and a half inches**, which is what the things standing on the desk say it is:
+// the candle comes out six inches by two and a quarter, the books nine by seven, the cup two and a
+// half across.  They agreed with each other long before there was a library to check them against,
+// and that agreement is what lets a piece of real furniture be dropped in among them.
+Inch = 0.18182
+
+// **The material is written in the desk's units, not in the scene's.**  This is the trap in handing a
+// patterned material to a library primitive: the pattern is read in the *primitive's* own space, so
+// the grain that was set here to fall every 0.22 of a scene unit has to be restated as every 1.21
+// inches, and the ring axis -- which used to sit in the desktop because the desktop was at y = 0 --
+// has to be lifted to thirty, where the desk's top actually is.  Left alone the numbers still render:
+// they just render a desk with almost no grain on it, twenty-nine inches off its own axis.
+Desktop = material {
+    pigment wood {
+        turbulence { amplitude 0.6  octaves 2 }
+        [0, [0.24, 0.13, 0.06], 0.12, [0.30, 0.17, 0.08],
+         0.30, [0.46, 0.28, 0.13], 0.92, [0.50, 0.31, 0.15],
+         1, [0.24, 0.13, 0.06]]
+        scale [1.21, 1.21, 38]
+        rotate Y 12
+        translate [0, 30, 0]
     }
+    ambient 0.014
+    specular 0.2
+    shininess 45
+}
+
+// Sixty by thirty, with its top surface brought to y = 0 so that nothing else in the scene moves.
+object Desk(60, 30, Desktop) {
+    scale Inch
+    translate Y -5.4545
 }
 
 // The candle, and the wick it burns at.

@@ -46,6 +46,7 @@ context {
 }
 
 import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+import 'furniture' { Sideboard, Armchair, LowTable }
 
 camera {
     location [2.45, 1.62, -3.15]
@@ -85,47 +86,29 @@ parallelogram {
 
 // -- What is in it ----------------------------------------------------------------------------------
 
-// A sideboard, which is a box on short legs and needs to be no more than that at this distance.
-cube { material Oak  scale [0.62, 0.32, 0.24]  translate [1.35, 0.52, 1.90] }
-for foot in [0, 3] {
-    cube {
-        material Oak
-        scale [0.05, 0.20, 0.05]
-        translate [1.35 + (mod(foot, 2) * 2 - 1) * 0.54, 0.20,
-                   1.90 + (floor(foot / 2) * 2 - 1) * 0.17]
-    }
-}
+// All three pieces come from the `furniture` library, which is written in inches, so the scene says
+// what an inch is worth in its own units and scales them by it.  **Scaling the library into the
+// scene, rather than rewriting the scene in inches, is the thing to copy** -- this scene's numbers
+// are load-bearing in a way a table's are not, and converting it to inches would quietly rescale the
+// pendant's drop, the lamps' reach and every ambient measurement in the header along with them.
+Inch = 0.0254
 
-// An armchair: a seat, a back, and two arms.  Cubes, because a chair reads from its proportions long
-// before it reads from its upholstery, and this one is mostly in shadow.
-cube { material Cloth  scale [0.40, 0.09, 0.38]  translate [-1.30, 0.40, 0.55] }
-cube { material Cloth  scale [0.40, 0.38, 0.09]  translate [-1.30, 0.68, 0.98] }
-cube { material Cloth  scale [0.09, 0.20, 0.38]  translate [-1.68, 0.60, 0.55] }
-cube { material Cloth  scale [0.09, 0.20, 0.38]  translate [-0.92, 0.60, 0.55] }
-for foot in [0, 3] {
-    cube {
-        material Oak
-        scale [0.045, 0.16, 0.045]
-        translate [-1.30 + (mod(foot, 2) * 2 - 1) * 0.33, 0.16,
-                   0.55 + (floor(foot / 2) * 2 - 1) * 0.31]
-    }
-}
+// **The materials go in as arguments rather than being left to the library's own.**  The library's
+// oak and linen carry ambient 0.12 and 0.16, which are right for a room with a window in it and
+// wrong here: at those values the far corner stops being dark, and the dark is what this scene is
+// about.  The shapes are the library's; what they are made of stays the scene's business.
+object Sideboard(48, Oak) { scale Inch  translate [1.35, 0, 1.95] }
 
-// A low table under the pendant, so the pendant has something to be over.
-cube { material Oak  scale [0.44, 0.022, 0.30]  translate [0.15, 0.42, 0.30] }
-for foot in [0, 3] {
-    cube {
-        material Oak
-        scale [0.035, 0.21, 0.035]
-        translate [0.15 + (mod(foot, 2) * 2 - 1) * 0.38, 0.21,
-                   0.30 + (floor(foot / 2) * 2 - 1) * 0.24]
-    }
-}
+// Facing -Z, out into the room, which is the way the library builds a chair -- its back is on +Z.
+object Armchair(32, Cloth, Oak) { scale Inch  translate [-1.30, 0, 0.55] }
+
+// Under the pendant, so the pendant has something to be over.
+object LowTable(36, 24, Oak) { scale Inch  translate [0.15, 0, 0.30] }
 
 // -- The fittings, which are the whole of the light -------------------------------------------------
 
 // On the sideboard, and the warm one -- this is the lamp the room is built around.
-object TableLamp(0.56, 0, 1) { translate [1.35, 0.84, 1.90] }
+object TableLamp(0.56, 0, 1) { translate [1.35, 0.8128, 1.95] }
 
 // Behind the armchair, reading over its shoulder the way a standard lamp is meant to.
 object FloorLamp(1.58, 0, 1) { translate [-1.85, 0, 1.35] }
