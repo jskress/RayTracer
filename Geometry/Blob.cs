@@ -77,7 +77,44 @@ public class Blob : Surface
         if (length == 0)
             return;
 
-        Ray unitRay = new (ray.Origin, ray.Direction / length, ray.TimeIndex);
+        Vector direction = ray.Direction / length;
+
+        // **And the ray is followed from where it meets this blob, not from where it was fired.**
+        // The direction being unit settles the SCALE of the coefficients; it does nothing about the
+        // size of the parameter they are asked at.  The field along a ray is a sextic, so a term of
+        // it is the sixth power of that parameter -- and the parameter is the whole distance from
+        // the eye.  At 6.6 units that is eighty thousand times what the coefficient is, at 30 units
+        // it is seven hundred million, and the terms have to cancel to nothing at a root.  They
+        // cannot: the digits that would have cancelled are the ones that were lost making the terms
+        // so large, and what comes back is a value that is not on the surface.
+        //
+        // Measured by asking, at every point the solver called a crossing, what the field actually
+        // was there: from 1.3 units away not one point was more than a tenth off the threshold, and
+        // from 6.6 units 2390 of 4519 were -- more than half of them nowhere near the surface they
+        // were supposed to lie on.  That is the speckle, and no tolerance can mend it, because the
+        // answer being judged is already wrong.
+        //
+        // Starting from the box means the parameter measures the distance ACROSS the blob, which is
+        // the size of the thing itself and does not care where the camera is.  The shift is added
+        // back once a root is found.
+        // **A blob holding a plane component has no box at all**, its slab running to the horizon,
+        // and there is then nothing to measure from: such a ray keeps its own origin and is no worse
+        // off than it was.  Everything else -- which is every blob made only of spheres and
+        // cylinders -- gets the shift.
+        BoundingBox box = BoundingBox ?? GetDefaultBoundingBox();
+        double shift = 0;
+
+        if (box is not null)
+        {
+            (double boxIn, double boxOut) = box.GetIntersections(
+                new Ray(ray.Origin, direction, ray.TimeIndex));
+
+            if (!(boxOut > boxIn))
+                return;
+
+            shift = Math.Max(0, boxIn);
+        }
+        Ray unitRay = new (ray.Origin + direction * shift, direction, ray.TimeIndex);
         List<(double Enter, double Exit, double[] Polynomial)> active = [];
 
         foreach ((_, IBlobPrimitive primitive) in _primitives)
@@ -120,7 +157,7 @@ public class Blob : Surface
             double intervalEnd = index + 1 < events.Count ? events[index + 1].T : t;
 
             if (intervalEnd > t)
-                SolveInterval(unitRay, coefficients, t, intervalEnd, length, intersections);
+                SolveInterval(unitRay, coefficients, t, intervalEnd, shift, length, intersections);
         }
     }
 
@@ -132,12 +169,14 @@ public class Blob : Surface
     /// <param name="coefficients">The field polynomial's coefficients, in ascending order.</param>
     /// <param name="intervalStart">The start of the sub-interval to accept roots in.</param>
     /// <param name="intervalEnd">The end of the sub-interval to accept roots in.</param>
+    /// <param name="shift">How far along the ray the parameter is measured from, which is added
+    /// back to every root found.</param>
     /// <param name="length">The length of the ray's own direction, which the roots found against
     /// the unit direction are scaled back by.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
     private void SolveInterval(
-        Ray ray, double[] coefficients, double intervalStart, double intervalEnd, double length,
-        List<Intersection> intersections)
+        Ray ray, double[] coefficients, double intervalStart, double intervalEnd, double shift,
+        double length, List<Intersection> intersections)
     {
         // Only a polynomial that is nothing at all has nothing to solve.  Asked coefficient by
         // coefficient against a fixed number, this would also throw away a perfectly good
@@ -153,7 +192,7 @@ public class Blob : Surface
             if (t >= intervalStart - DoubleExtensions.Epsilon &&
                 t <= intervalEnd + DoubleExtensions.Epsilon &&
                 IsGenuineRoot(coefficients, t, Threshold))
-                intersections.Add(new Intersection(this, Polished(coefficients, t) / length));
+                intersections.Add(new Intersection(this, (Polished(coefficients, t) + shift) / length));
         }
     }
 

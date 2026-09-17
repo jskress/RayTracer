@@ -438,6 +438,54 @@ public class TestBlobComponents
     }
 
     /// <summary>
+    /// **A blob must come out the same however far off the ray was fired from.**  The field along a
+    /// ray is a sextic in the ray's own parameter, and that parameter used to be the whole distance
+    /// from the eye -- so a term of it was that distance to the sixth power, eighty thousand times
+    /// its coefficient at 6.6 units and seven hundred million at 30.  Terms that large cannot cancel
+    /// to nothing at a root, because the digits that would have cancelled are the ones spent making
+    /// them so large, and what came back was a distance that did not put the point on the surface.
+    /// <para>
+    /// Asking, at every point the solver called a crossing, what the field actually was there: from
+    /// 1.3 units not one point was more than a tenth off the threshold, and from 6.6 units 2390 of
+    /// 4519 were.  On screen that is a cloud of dark speckle that thickens as the camera draws back,
+    /// on a shape holding still at one size.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestABlobIsFoundInTheSamePlaceFromAnyDistance()
+    {
+        static double FirstHitFrom(double away)
+        {
+            Blob blob = new ()
+            {
+                Threshold = 0.3,
+                Components =
+                {
+                    new BlobSphereComponent { Center = new Point(-0.5, 0, 0), Radius = 1, Strength = 1 },
+                    new BlobSphereComponent { Center = new Point( 0.5, 0, 0), Radius = 1, Strength = 1 }
+                }
+            };
+            List<Intersection> hits = [];
+
+            blob.PrepareForRendering();
+            blob.Intersect(new Ray(new Point(0, 0, -away), Directions.In), hits);
+
+            Assert.IsTrue(hits.Count > 0, $"the blob was not found at all from {away} away");
+
+            // measured from the blob, not from where the ray started, so the answers are comparable
+            return hits.Select(hit => hit.Distance).Min() - away;
+        }
+
+        double near = FirstHitFrom(3);
+
+        foreach (double away in (double[]) [10, 40, 200, 1000])
+        {
+            Assert.AreEqual(near, FirstHitFrom(away), 1e-9,
+                $"the surface moved when the ray was fired from {away} away instead of 3");
+        }
+    }
+
+    /// <summary>
     /// **A blob must not take the solver's word for it.**  The sweep adds each component's
     /// polynomial as that component switches on and subtracts it as it switches off, and those do
     /// not cancel exactly: over a stretch of ray where nothing is in range, what ought to be the
