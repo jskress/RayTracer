@@ -1,0 +1,62 @@
+// Three vessels on a real sea, and the whole of the scene's arithmetic is that nothing had to be
+// trimmed by hand.
+//
+// **The `vessels` library puts a boat's waterline at `y = 0`** rather than standing it on its keel the
+// way every other library here stands its pieces on the ground.  A vessel has no face it rests on; what
+// it has is the level it floats at.  So each of these is dropped at the origin and translated about in
+// `X` and `Z` only -- no draft looked up, no hull sunk by hand until it looked right -- and the
+// [`Water`](#water) surface is laid at the origin to meet them.
+//
+// **They face `+X`**, like the vehicles and the trains, so a `rotate Y` is the only thing any of them
+// needed to point somewhere else.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    angles are degrees
+    info {
+        title 'A Working Morning'
+        author 'J. Stephen Kress'
+        description 'A trawler, a yacht and a submarine, each floating at the level the library says.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'vessels' { Sailboat, Trawler, Submarine, VesselBlue, VesselGreen }
+import 'water' { Water, SeaWater }
+import 'daylight' { ClearMorning, ClearMorningLight }
+
+camera {
+// **Low, because a sea is only bright at a graze.**  From high up you look *into* the water and it
+// comes back nearly black whatever the sky is doing -- swapping a morning sky for a noon one moved the
+// whole picture by five percent, which is nothing.  What lights a sea is the angle: down at ten metres
+// the swells throw the sky back at you and the same water reads twice as bright.
+    location [30, 10, -44]
+    look at [-2, 2.5, 20]
+    field of view 54
+}
+
+background ClearMorning
+light ClearMorningLight { samples 40 }
+
+// The sea.  A swell rather than a flat plane, because the one thing a boat on glass never looks is
+// afloat -- and because the waterline convention is only worth anything if the water it meets is real.
+//
+// **It has to reach the horizon, and a ray tracer's horizon is at infinity.**  There is no curved
+// earth here, so an eye ray only ever becomes parallel to the water -- which means a finite sheet of
+// sea always stops short, and below the horizon a physical sky has no colour to give.  Nine hundred
+// metres square left an obvious black band under the sky; nine thousand left one black row, at some
+// columns, which is the sort of fault that survives every glance and shows in print.  Forty kilometres
+// puts the edge three hundredths of a degree under the horizon and the row goes away.
+object Water(40000, 40000, 'choppy') { material SeaWater }
+
+// The yacht, close and on the starboard tack.
+object Sailboat(10) { rotate Y 22  translate [-4, 0, -12] }
+
+// The trawler, working, and turned across the picture so her bulwarks and derrick read.
+object Trawler(22) { rotate Y -34  translate [10, 0, 28] }
+
+// And a boat on the surface, a long way off, which is the only place a submarine ever looks large.
+object Submarine(84) { rotate Y 146  translate [-96, 0, 150] }
