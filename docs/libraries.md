@@ -1561,6 +1561,162 @@ blob's crest found by marching rays out from the head until the field crossed it
 control points describe one horse.  That is the right answer for a chess piece, whose proportions
 should not change with its size, but it means the head cannot be re-proportioned by changing a number.
 
+#### Furniture
+
+```
+import 'furniture' { DiningTable, Armchair, Sideboard, Desk, LowTable, FurnitureWalnut }
+
+object DiningTable(60)                       // five feet, and thirty inches to the top
+object DiningTable(36, 36, FurnitureWalnut)  // a square one, in walnut
+object Armchair()                            // a chair is its own size
+```
+
+| | |
+| --- | --- |
+| `DiningTable` | A table to eat at: top, apron and four legs. |
+| `LowTable` | The low one in front of a sofa. |
+| `Sideboard` | A carcase on short legs, to stand against a wall. |
+| `Armchair` | A seat, a back, two arms and four feet. |
+| `Desk` | A table to work at, with a pedestal of drawers under one end. |
+| `FurnitureOak` | The pale, open-grained wood most furniture in a room is. |
+| `FurnitureWalnut` | Darker, for a piece meant to sit apart from the rest. |
+| `FurnitureLinen` | What a chair is covered in. |
+
+**It is written in inches.**  The [trains](#trains) are in meters and the [brick](#buildings) is in
+inches, for the same reason both times: a thing with real dimensions should be written in the units it
+is actually sold in, so the numbers can be checked against a tape measure rather than against each
+other.  Furniture is sold in inches — a sixty-inch table, a seventy-two-inch sofa — so that is what
+these take.  A room comes out a hundred and forty-four units across, which is twelve feet, and reads
+as such.
+
+**A piece stands on `y = 0` and grows upward**, so it drops onto a floor at the origin without a height
+to work out, the same as the [street furniture](#street-furniture) does.
+
+##### The height does not follow the first number
+
+Everywhere else in these libraries the first argument scales the whole thing.  Here it is the size of
+the **top**, and the height is whatever that kind of furniture is.  A table twice as long is not twice
+as tall — it is a table for more people, at the same thirty inches as every other table, because the
+people are the same size.
+
+Getting this wrong is what makes a rendered room feel like a doll's house without anyone being able to
+say why.  The heights are the real ones and they are worth knowing, because they are not guesses: a
+dining table and a desk are both **thirty inches**, a low table is **eighteen**, a sideboard is
+**thirty-two**, and a chair seat is **seventeen**, which is the height of the back of a knee.
+
+##### Scale the library into the scene, not the scene into the library
+
+Every scene in the gallery that uses this library was written before it, in its own units — the chess
+scene counts in kings, the lamp-lit room in meters, the candle scenes in units of five and a half
+inches.  None of them was converted.  Each says what an inch is worth and scales the furniture by it:
+
+```
+Inch = 0.0254                                        // this scene counts in meters
+object Sideboard(48, Oak) { scale Inch  translate [1.35, 0, 1.95] }
+```
+
+**That is the way round to do it, and not merely the lazy one.**  A scene's unit is load-bearing
+wherever the scene has a number that is *per unit* — a light's `fade distance`, a medium's absorption
+and scattering, a `medium samples` count walking a shade.  Converting a scene to suit a library
+rescales all of those silently, and the picture that comes back is lit differently for no reason the
+file admits to.  The candle scenes are the clear case: their whole subject is how far one flame's
+light reaches, and `fade distance 0.7` means nothing once the units move under it.
+
+##### A material handed in is read in the primitive's space
+
+Each piece takes its material as an argument, for the reason [the chess men do](#chess): a call
+carrying its own material *block* cannot be shared, and one handed a material as an argument can.
+
+But there is a second thing about it, and it costs a render to find.  **A pattern in that material is
+evaluated in the primitive's own space, not the scene's** — so a wood grain written to fall every 0.22
+of a scene unit must be restated in inches before it is passed in, and its ring axis, which sat in the
+desktop when the desktop was the plane `y = 0`, must be lifted to thirty where the desk's top actually
+is.  Left alone the old numbers still render.  They just render a desk with almost no grain on it.
+
+##### Which way the grain lies, and where its axis sits
+
+A `wood` pattern is rings about an axis, so any face square to that axis shows them as circles — end
+grain.  Furniture is cut with the grain along the length of a piece, so the rings want to run along
+`X`, and **the axis is `Z` with the radius taken in `X`–`Y`, so turning them along `X` takes a
+`rotate Y 90` and nothing else will do it.**  Stretching `X` instead — `scale [120, 0.5, 0.5]`, which
+looks as though it ought to lie the rings down along `X` — only makes them enormously elongated
+ellipses that are still about `Z`.  It is worth saying because the wrong version *renders*: it is
+wood-colored, it has a hint of figure in it, and there is nothing in the picture that says it is not
+wood.  Measured against the grain it replaced, it had 60% of its contrast.
+
+**And the axis is lifted to `y = 26`, which is the one number in the library that is not a
+dimension.**  Left on the origin it runs along the floor, and a tabletop is then twenty-nine inches off
+it — so the surface crosses the rings almost tangentially and the grain arrives stretched into bands
+inches apart, which reads as a stain rather than as wood.  Lifted to twenty-six the axis runs through
+the pieces themselves: near the middle of a sideboard, just under a table's top.  That is where a
+flat-sawn board's cathedral figure comes from — the arch a plank shows when the saw passed close to
+the heart of the log — and it is the difference between a table that is brown and a table that is
+wooden.
+
+##### The chair is superellipsoids and everything else is cubes
+
+A table really is made of boards with square arrises, so boxes are the honest shape for one.  Stuffing
+has no sharp edge anywhere on it, and a chair drawn in cubes reads as a crate with a cushion on it
+however well proportioned it is.  So the armchair's base, back and arms are `superellipsoid`s with
+small exponents — 0.25 on the base and back, 0.38 on the arms, an arm being the roundest part of a
+chair — while its feet stay cubes.
+
+Two things go wrong on the way, and both are about what rounding takes away:
+
+**Parts that abut must be made to overlap.**  Two cubes meeting face to face are joined; two
+superellipsoids are not, because each curves away from the corner it shares.  An arm resting exactly on
+the seat floats, with daylight under it.  The back and both arms reach three inches *below* the seat's
+top face; only their tops are where the chair's outline needs them.
+
+**The base is a block, not a slab on legs.**  Drawn as a thin seat floating between two arms, an
+armchair reads as three separate boards and the eye looks straight through where the upholstery should
+be.  A chair is a solid thing with a seat on top of it, and the feet only lift it off the floor.
+
+##### A leg is placed by picking the corner apart, not by turning it
+
+The obvious way to put four legs under a top is to draw one and turn it about `Y` through four
+quarters.  **That works only for a square top.**  A quarter turn swaps the two extents, so on a table
+longer than it is wide it puts two legs out past the ends and two in under the middle.  Every piece
+here picks the corner apart instead, which does not care what shape the top is:
+
+```
+for corner in [0, 3] {
+    cube {
+        scale [1.375, 12.5, 1.375]
+        translate [(corner % 2 * 2 - 1) * (long / 2 - 3.375), 12.5,
+                   (floor(corner / 2) * 2 - 1) * (across / 2 - 3.375)]
+    }
+}
+```
+
+This was invisible for as long as both test tables were square.
+
+##### A sky light does nothing in a room with a ceiling
+
+Worth knowing before you furnish a room and wonder why it looks flat.  A [sky light](#daylight) samples
+the hemisphere, and from a point on a floor indoors almost every one of those samples ends on plaster —
+so it costs its samples on every pixel and returns nothing.  The `the-morning-room` scene was written
+with one for two drafts.  Measured on its back wall, out of 166:
+
+| what was taken away | wall |
+| --- | --- |
+| nothing | 166.2 |
+| the `sky light` | 165.9 |
+| that, and the sky background too | 152.0 |
+| the window instead | 76.0 |
+
+The window is worth 90 of it, the sun the sky background infers for itself is worth 14, and **the sky
+light is worth 0.3, which is nothing.**  What lights a room is a window: an area light standing in the
+opening, turned into the room.  Give it more than three steps — nine samples cut a wide penumbra into
+hard-edged bands that cross the plaster and look for all the world like stray geometry.
+
+##### The apron is worth the two cubes it costs
+
+The apron is the rail under a dining table's top that the legs are joined to, set in from the edge.  A
+top on four legs with nothing between them reads as a trestle, and the gap under the edge is the first
+thing the eye uses to tell a table from a board laid across supports.  The low table deliberately has
+none: it is meant to be seen under, and a rail there would close it up.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
