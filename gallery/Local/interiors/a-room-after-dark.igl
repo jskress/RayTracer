@@ -97,7 +97,11 @@ Inch = 0.0254
 // oak and linen carry ambient 0.12 and 0.16, which are right for a room with a window in it and
 // wrong here: at those values the far corner stops being dark, and the dark is what this scene is
 // about.  The shapes are the library's; what they are made of stays the scene's business.
-object Sideboard(48, Oak) { scale Inch  translate [1.35, 0, 1.95] }
+// **`rotate Y 180`, because the library builds a sideboard facing `+Z`** and the wall this one
+// stands against is at `+Z` too.  Without it the doors face the plaster and the room gets the
+// blank back, which is not obviously wrong in a render -- it is just a flat panel where the
+// piece's only detail should have been.
+object Sideboard(48, Oak) { rotate Y 180  scale Inch  translate [1.35, 0, 1.95] }
 
 // Facing -Z, out into the room, which is the way the library builds a chair -- its back is on +Z.
 object Armchair(32, Cloth, Oak) { scale Inch  translate [-1.30, 0, 0.55] }
