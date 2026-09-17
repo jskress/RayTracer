@@ -1,16 +1,29 @@
 // What a room is furnished with: the things people sit at, eat off and put things on.
 //
-//     import 'furniture' { DiningTable, Armchair, FurnitureOak }
+//     import 'furniture' { DiningTable, Armchair, KitchenRun, Bed, FurnitureOak }
 //
 //     object DiningTable(60)                   // five feet, and thirty inches to the top
 //     object DiningTable(36, 36, FurnitureOak) // a square one
 //     object Armchair()                        // the default is a chair's own size
+//     object KitchenRun(96, 2)                 // eight feet, with a sink in the third unit
+//     object Bed(60)                           // a queen; 38 is a twin and 76 a king
 //
 // | `DiningTable` | A table to eat at: top, apron and four legs. |
+// | `DiningChair` | One to sit at it on. |
 // | `LowTable` | The low one in front of a sofa. |
 // | `Sideboard` | A carcase on short legs, to stand against a wall. |
 // | `Armchair` | A seat, a back, two arms and four feet. |
+// | `Sofa` | The armchair, gone long, with cushions. |
+// | `Bookcase` | Sides, shelves, and as many books as fit. |
 // | `Desk` | A table to work at, with a pedestal of drawers under one end. |
+// | `KitchenRun` | A length of base cabinets under one continuous counter. |
+// | `WallCabinets` | The ones that hang over it. |
+// | `Range` | A cooker, flush with the counter. |
+// | `Refrigerator` | The tallest thing in a kitchen. |
+// | `Bed` | Frame, headboard, mattress, cover and two pillows. |
+// | `Wardrobe` | A tall carcase with two doors and a cornice. |
+// | `Dresser` | A chest of drawers. |
+// | `Nightstand` | The little one beside the bed. |
 //
 // -- Three things that hold for everything here ---------------------------------------------------
 //
@@ -89,6 +102,30 @@ FurnitureWalnut = material {
 FurnitureLinen = material {
     pigment [0.55, 0.50, 0.44]
     specular 0.06  shininess 12  ambient 0.16
+}
+
+// Stone, for a kitchen counter.  Speckled rather than plain, because a plain counter reads as
+// plastic: what says stone is that the grain is finer than anything else in the room.
+FurnitureStone = material {
+    pigment granite {
+        [0, [0.13, 0.12, 0.12], 0.42, [0.21, 0.20, 0.19],
+         0.74, [0.34, 0.32, 0.30], 1, [0.13, 0.12, 0.12]]
+        scale [2.2, 2.2, 2.2]
+    }
+    specular 0.55  shininess 140  ambient 0.11  reflective 0.06
+}
+
+// Steel, for the things in a kitchen that are not made of wood.
+//
+// **Its reflectivity is what makes it metal, not its color, and its color has to be DARK.**  The
+// first try was a light gray -- roughly what stainless looks like to the eye -- and under a working
+// light it went to white and took every edge on the appliance with it: the door lines, the handles
+// and the oven front all disappeared into one blank panel.  A metal is dark and gets its brightness
+// back from what it reflects, which is also the only reason an appliance is recognizable across a
+// room: it carries a dim, distorted picture of that room on its door.
+FurnitureSteel = material {
+    pigment [0.30, 0.31, 0.33]
+    specular 0.70  shininess 190  ambient 0.10  reflective 0.24
 }
 
 // -- Dining table ---------------------------------------------------------------------------------
@@ -500,5 +537,390 @@ primitive Bookcase(long = 36, high = 60, books = 1, coat = FurnitureOak) -> grou
                 }
             }
         }
+    }
+}
+
+// -- The kitchen ----------------------------------------------------------------------------------
+//
+// **A kitchen is a run, not a set of pieces.**  Everywhere else in this library a call gives you one
+// thing you could carry.  Here a call gives you a length of wall, because that is what a kitchen is
+// sold and fitted as, and because a counter is the one surface in a house that is deliberately
+// continuous -- units butt up under a single slab and the joins are meant not to show.  Asking for
+// cabinets one at a time and laying a counter over them is how a kitchen is *built*, but it puts the
+// scene author in the business of making the seams line up, and the first seam that does not is the
+// one thing in the render that says this is not a kitchen.
+//
+// The standard heights, which are standard everywhere and worth not guessing at: a counter is
+// **thirty-six inches** and **twenty-four deep**, wall cabinets hang with their bottoms **eighteen
+// inches above it** -- fifty-four off the floor -- and are **twelve deep**, so you can stand at the
+// counter without meeting them.  A range sits flush at thirty-six.
+
+// A run of base cabinets under one continuous counter.  `long` is how far it runs; `sink` is which
+// unit holds the sink, counting from the left from zero, or -1 for a run without one.
+primitive KitchenRun(long = 96, sink = -1, coat = FurnitureOak, top = FurnitureStone) -> group {
+    deep = 24
+    counter = 36                                    // the top surface
+    kick = 4                                        // the height of the recess it stands on
+    units = floor(long / 24 + 0.5) < 1 ? 1 : floor(long / 24 + 0.5)
+    wide = long / units
+    at = -long / 2 + wide * (sink + 0.5)            // the middle of the sink's unit
+    bowl = wide / 2 - 3 > 13 ? 13 : wide / 2 - 3    // and half the bowl it will take
+
+    return group {
+        group {
+            // the carcase, standing on a recessed kick so the run does not look like a wall
+            cube { scale [long / 2, (counter - 1.5 - kick) / 2, deep / 2]
+                   translate [0, kick + (counter - 1.5 - kick) / 2, 0] }
+            cube { scale [long / 2, kick / 2, deep / 2 - 3]  translate [0, kick / 2, -1.5] }
+
+            // a drawer over a door in each unit, standing proud of the carcase as fronts do
+            group {
+                for unit in [0, units - 1] {
+                    difference {
+                        cube { scale [wide / 2 - 0.75, 2.6, 0.55]
+                               translate [-long / 2 + wide * (unit + 0.5), 30.9, deep / 2 + 0.55] }
+                        cube { scale [wide / 2 - 2.2, 0.35, 0.3]
+                               translate [-long / 2 + wide * (unit + 0.5), 30.9, deep / 2 + 1.2] }
+                    }
+                    cube { scale [wide / 2 - 0.75, 10.8, 0.55]
+                           translate [-long / 2 + wide * (unit + 0.5), 16.2, deep / 2 + 0.55] }
+                }
+            }
+
+            material coat
+        }
+
+        // **The counter is a difference whether or not there is a sink in it.**  A `group` holding an
+        // `if` is a legal thing to subtract and an empty one subtracts nothing, so the run does not
+        // need two spellings of its counter for the two cases.
+        difference {
+            cube { scale [long / 2, 0.75, deep / 2]  translate [0, counter - 0.75, 0] }
+            group {
+                if (sink >= 0) {
+                    cube { scale [bowl, 2, 8]  translate [at, counter - 0.75, 1] }
+                }
+            }
+            material top
+        }
+
+        group {
+            if (sink >= 0) {
+                // the bowl, hung under the hole, and a faucet standing behind it
+                difference {
+                    cube { scale [bowl, 4.75, 8]  translate [at, counter - 5.5, 1] }
+                    cube { scale [bowl - 0.5, 4.5, 7.5]  translate [at, counter - 5, 1] }
+                }
+                cylinder {
+                    min Y 0  max Y 10
+                    scale [0.5, 1, 0.5]  translate [at, counter, -9]
+                }
+                cylinder {
+                    min Y 0  max Y 5.5
+                    scale [0.35, 1, 0.35]  rotate X 90  translate [at, counter + 9.5, -9]
+                }
+            }
+
+            // **The material belongs to the group and not inside the `if`.**  Only surfaces may stand
+            // in one; a material, a transform or a name is the surrounding group's business.
+            material FurnitureSteel
+        }
+    }
+}
+
+// The cabinets over it: `long` is the run they hang along, and they hang themselves -- their bottoms
+// at fifty-four, which is eighteen inches of backsplash over a thirty-six-inch counter.
+primitive WallCabinets(long = 96, coat = FurnitureOak) -> group {
+    deep = 12
+    foot = 54                                       // where the bottoms hang
+    high = 30
+    units = floor(long / 24 + 0.5) < 1 ? 1 : floor(long / 24 + 0.5)
+    wide = long / units
+
+    return group {
+        union {
+            cube { scale [long / 2, high / 2, deep / 2]  translate [0, foot + high / 2, 0] }
+
+            group {
+                for unit in [0, units - 1] {
+                    difference {
+                        cube { scale [wide / 2 - 0.75, high / 2 - 0.8, 0.55]
+                               translate [-long / 2 + wide * (unit + 0.5), foot + high / 2, deep / 2 + 0.55] }
+                        cube { scale [wide / 2 - 2.4, high / 2 - 2.6, 0.3]
+                               translate [-long / 2 + wide * (unit + 0.5), foot + high / 2, deep / 2 + 1.2] }
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// A range: thirty inches across and flush with the counter at thirty-six, with four burners on it and
+// an oven under it.  The back panel is what tells it apart from a cabinet at any distance.
+primitive Range(coat = FurnitureSteel) -> group {
+    wide = 30
+    deep = 26
+
+    return group {
+        union {
+            cube { scale [wide / 2, 16, deep / 2]  translate [0, 20, 0] }
+
+            // the oven door, and its handle across the front
+            difference {
+                cube { scale [wide / 2 - 0.6, 9, 0.5]  translate [0, 17, deep / 2 + 0.5] }
+                cube { scale [wide / 2 - 4, 6, 0.4]  translate [0, 17, deep / 2 + 1.1] }
+            }
+            cylinder {
+                min Y 0  max Y (wide - 5)
+                scale [0.55, 1, 0.55]  rotate Z 90
+                // **`rotate Z 90` sends the cylinder's length down -X**, so it is centered by
+                // translating the POSITIVE half-length, not the negative one.  Getting the sign
+                // wrong here put the handle a whole range's width off to one side, lying across the
+                // counter beside it, which reads as a rail rather than as a mistake.
+                translate [(wide - 5) / 2, 27.5, deep / 2 + 1.8]
+            }
+
+            // the back panel, which is the shape that says range rather than cupboard
+            cube { scale [wide / 2, 4, 0.75]  translate [0, 40, -(deep / 2 - 0.75)] }
+
+            // four burners
+            group {
+                for burner in [0, 3] {
+                    cylinder {
+                        min Y 0  max Y 0.4
+                        scale [3.6, 1, 3.6]
+                        translate [(burner % 2 * 2 - 1) * 7, 36, (floor(burner / 2) * 2 - 1) * 6]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// A refrigerator: thirty-four across, sixty-eight up, thirty deep, with the freezer on top.  It is the
+// tallest thing in a kitchen and the only one that is not part of a run, so it reads as furniture.
+primitive Refrigerator(coat = FurnitureSteel) -> group {
+    wide = 34
+    high = 68
+    deep = 30
+    split = 46                                      // where the freezer door ends and the other starts
+
+    return group {
+        union {
+            cube { scale [wide / 2, high / 2, deep / 2]  translate [0, high / 2, 0] }
+
+            // the two doors, given away by the line between them
+            cube { scale [wide / 2 - 0.3, (high - split - 1.5) / 2, 0.5]
+                   translate [0, split + 1 + (high - split - 1.5) / 2, deep / 2 + 0.5] }
+            cube { scale [wide / 2 - 0.3, (split - 3) / 2, 0.5]
+                   translate [0, 2 + (split - 3) / 2, deep / 2 + 0.5] }
+
+            // and a handle beside each, the length of the door it opens
+            group {
+                for door in [0, 1] {
+                    cylinder {
+                        min Y 0  max Y (door > 0 ? high - split - 6 : split - 8)
+                        scale [0.55, 1, 0.55]
+                        translate [wide / 2 - 3.5,
+                                   door > 0 ? split + 4 : 5,
+                                   deep / 2 + 1.9]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// -- The bedroom ----------------------------------------------------------------------------------
+
+// A bed.  `wide` is across the mattress -- 38 is a twin, 54 a full, 60 a queen, 76 a king -- and the
+// length is eighty whichever you ask for, because a bed is made longer only for taller people and not
+// for wider ones.  The mattress top is at **twenty-five**, which is a seat's height plus the bedding.
+//
+// **The headboard is at `-Z`, so the wall goes behind it**, the same way round as the sideboard and
+// the bookcase.  You get out of it toward `+Z`.
+primitive Bed(wide = 60, cloth = FurnitureLinen, coat = FurnitureOak) -> group {
+    long = 80
+    deck = 15                                       // the platform the mattress lies on
+
+    return group {
+        group {
+            // the headboard, and the frame around the deck
+            cube { scale [wide / 2 + 1.5, 12, 1]  translate [0, 36, -(long / 2 + 1)] }
+            difference {
+                cube { scale [wide / 2 + 1, (deck - 6) / 2 + 1, long / 2 + 1]
+                       translate [0, 6 + (deck - 6) / 2, 0] }
+                cube { scale [wide / 2, deck, long / 2]  translate [0, 6 + (deck - 6) / 2 + 2, 0] }
+            }
+
+            group {
+                for corner in [0, 3] {
+                    cube {
+                        scale [1.2, 3, 1.2]
+                        translate [(corner % 2 * 2 - 1) * (wide / 2 - 0.5), 3,
+                                   (floor(corner / 2) * 2 - 1) * (long / 2 - 0.5)]
+                    }
+                }
+            }
+
+            material coat
+        }
+
+        // **The mattress and the pillows are white and only the cover takes the `cloth`.**  Drawn all
+        // one material -- which is what `cloth` for the whole bed gives you -- a made bed comes back
+        // as a single rounded slab: the cover is there, it is just the same color as what it lies on,
+        // so nothing in the picture says the bed is made rather than bare.  Bedding is white anyway,
+        // and it is the one place in this library where a fixed material is more right than an
+        // argument.
+        group {
+            // **The mattress sinks into the deck rather than resting on it**, for the reason every
+            // rounded thing in this library does: a superellipsoid curves away from the corner it
+            // shares, so one laid exactly on the frame floats at its edges.
+            //
+            // Its exponents are small.  At 0.28 it came out rounded like something inflatable; a
+            // mattress is a box whose edges have been softened, and 0.16 is that.
+            superellipsoid {
+                east 0.16  north 0.16
+                scale [wide / 2, 5.5, long / 2]  translate [0, 19.5, 0]
+            }
+
+            for side in [0, 1] {
+                superellipsoid {
+                    east 0.45  north 0.45
+                    scale [wide / 4 - 1.5, 2.4, 6.5]
+                    translate [(side * 2 - 1) * (wide / 4), 27, -(long / 2 - 8)]
+                }
+            }
+
+            material {
+                pigment [0.84, 0.83, 0.79]
+                specular 0.05  shininess 10  ambient 0.17
+            }
+        }
+
+        // the cover, turned down short of the pillows, and wider than the mattress so it hangs over
+        superellipsoid {
+            east 0.30  north 0.30
+            scale [wide / 2 + 1.8, 4.0, long / 2 - 12]  translate [0, 23.8, 9]
+            material cloth
+        }
+    }
+}
+
+// A wardrobe: seventy-two up, twenty-four deep, two doors and a cornice.  It faces `+Z`.
+//
+// **The cornice is the whole of why it reads as a wardrobe** and not as a very tall cupboard.  A
+// carcase that stops dead at its top edge looks unfinished at this height in a way it does not at a
+// sideboard's, because the top is above the eye and what you see is the underside of nothing.
+primitive Wardrobe(long = 48, high = 72, coat = FurnitureOak) -> group {
+    deep = 24
+    plinth = 3
+
+    return group {
+        union {
+            cube { scale [long / 2, (high - plinth - 1.4) / 2, deep / 2]
+                   translate [0, plinth + (high - plinth - 1.4) / 2, 0] }
+            cube { scale [long / 2 - 0.6, plinth / 2, deep / 2 - 0.5]  translate [0, plinth / 2, 0] }
+            cube { scale [long / 2 + 0.8, 0.7, deep / 2 + 0.8]  translate [0, high - 0.7, 0] }
+
+            group {
+                for door in [0, 1] {
+                    difference {
+                        cube { scale [long / 4 - 0.6, (high - plinth - 3.4) / 2, 0.4]
+                               translate [(door * 2 - 1) * (long / 4),
+                                          plinth + 0.5 + (high - plinth - 3.4) / 2, deep / 2 + 0.4] }
+                        cube { scale [long / 4 - 2.2, (high - plinth - 8) / 2, 0.3]
+                               translate [(door * 2 - 1) * (long / 4),
+                                          plinth + 0.5 + (high - plinth - 3.4) / 2, deep / 2 + 0.9] }
+                    }
+                    cylinder {
+                        min Y 0  max Y 3
+                        scale [0.3, 1, 0.3]
+                        translate [(door * 2 - 1) * 1.8, high / 2 - 1.5, deep / 2 + 1.2]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// A chest of drawers: thirty-two up and eighteen deep, in three courses.  `rows` says how many.
+primitive Dresser(long = 54, rows = 3, coat = FurnitureOak) -> group {
+    high = 32
+    deep = 18
+    plinth = 2.5
+    course = (high - plinth - 1.2) / rows
+
+    return group {
+        union {
+            cube { scale [long / 2, (high - plinth) / 2, deep / 2]
+                   translate [0, plinth + (high - plinth) / 2, 0] }
+            cube { scale [long / 2 - 0.5, plinth / 2, deep / 2 - 0.4]  translate [0, plinth / 2, 0] }
+
+            // **Each front gets a recessed panel, and that is what makes the drawers visible.**  The
+            // first version stood plain fronts eight tenths of an inch proud with a thin gap between
+            // courses, which is about right for a real chest and renders as a plain box: across a
+            // room that step is a pixel or two and the carcase behind it is lit the same as the front
+            // in front of it.  A cut panel gives every drawer an edge that faces a different way, and
+            // an edge facing a different way is the only thing that survives the distance.
+            group {
+                for row in [0, rows - 1] {
+                    difference {
+                        cube { scale [long / 2 - 0.8, course / 2 - 0.7, 0.6]
+                               translate [0, plinth + course * (row + 0.5), deep / 2 + 0.6] }
+                        cube { scale [long / 2 - 2.8, course / 2 - 2.3, 0.4]
+                               translate [0, plinth + course * (row + 0.5), deep / 2 + 1.3] }
+                    }
+
+                    // two pulls to a drawer, which is what says drawer rather than door
+                    for pull in [0, 1] {
+                        cylinder {
+                            min Y 0  max Y 4.5
+                            scale [0.35, 1, 0.35]  rotate Z 90
+                            translate [(pull * 2 - 1) * (long / 4) + 2.25,
+                                       plinth + course * (row + 0.5), deep / 2 + 1.7]
+                        }
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// A nightstand: eighteen across and twenty-five up, which is the height of the mattress beside it, so
+// what is on it can be reached from the bed without sitting up.  That is the only dimension here
+// derived from another piece rather than from a person.
+primitive Nightstand(coat = FurnitureOak) -> group {
+    wide = 18
+    high = 25
+    deep = 16
+
+    return group {
+        union {
+            cube { scale [wide / 2, 0.5, deep / 2]  translate [0, high - 0.5, 0] }
+            cube { scale [wide / 2 - 0.8, 4, deep / 2 - 0.5]  translate [0, high - 5.2, 0] }
+
+            difference {
+                cube { scale [wide / 2 - 1, 3.2, 0.55]  translate [0, high - 5.2, deep / 2 + 0.55] }
+                cube { scale [wide / 2 - 2.6, 1.7, 0.4]  translate [0, high - 5.2, deep / 2 + 1.1] }
+            }
+
+            cube { scale [wide / 2 - 1.4, 0.35, deep / 2 - 1]  translate [0, 8, 0] }
+
+            group {
+                for corner in [0, 3] {
+                    cube {
+                        scale [0.85, (high - 1) / 2, 0.85]
+                        translate [(corner % 2 * 2 - 1) * (wide / 2 - 0.85), (high - 1) / 2,
+                                   (floor(corner / 2) * 2 - 1) * (deep / 2 - 0.85)]
+                    }
+                }
+            }
+        }
+        material coat
     }
 }
