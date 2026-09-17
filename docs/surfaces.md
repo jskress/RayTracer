@@ -632,7 +632,24 @@ triangle {
 #### Patch
 
 A bicubic patch: a curved quadrilateral pulled into shape by a four-by-four grid of control
-points.  `gallery/Local/shapes/patch.igl` is the example to read.
+points.
+
+A patch has no closed-form ray intersection, so it is diced into flat quads and the ray is tested
+against those.  `uSteps` and `vSteps` cap how many times it may be halved in each direction, and
+`flatness` says how close to a plane a piece has to be before halving it further stops paying.
+
+**`flatness` sets the depth for the whole patch, not for each piece of it.**  That matters, and it is
+not how this started out.  Letting each branch stop as soon as its own piece was flat enough left
+neighbouring quads at different depths: across an edge they shared, one side was a single straight
+chord and the other was two, and in between lay a sliver that no quad covered.  Rays through the
+sliver missed a surface they were pointed straight at, which renders as single pixels of background
+scattered through the middle of the shape.
+
+So the flatness test now decides how deep the whole patch goes.  A flat patch is still a single quad
+and a sharply curved one still runs to its step cap; what has gone is the case in between, where one
+part of a patch stopped early and its neighbour did not.  The price is that one awkward corner pulls
+the rest of the patch down to its depth with it, which is what it costs to have every quad meet its
+neighbours exactly.  `gallery/Local/shapes/patch.igl` is the example to read.
 
 #### Bilinear Patch
 

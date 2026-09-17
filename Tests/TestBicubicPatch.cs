@@ -47,6 +47,90 @@ public class TestBicubicPatch
     }
 
     /// <summary>
+    /// Every ray aimed squarely at the middle of a patch must hit it.
+    /// <para>
+    /// The subdivision tree stops a branch as soon as its subpatch is flat enough, so a gently
+    /// curved patch ends up with neighbouring leaves at DIFFERENT depths: one side of a shared edge
+    /// is a single straight chord and the other is two, and between them lies a sliver the surface
+    /// does not cover.  Rays through the sliver miss a surface they are pointed straight at, which
+    /// renders as single pixels of background scattered through the middle of the shape.
+    /// </para>
+    /// <para>
+    /// These control points are a sail from the `vessels` library, which is where this was found and
+    /// is the shape that shows it: tall, narrow, barely curved, and with its top row drawn almost to
+    /// a point, so the flatness test succeeds at one depth in some places and a deeper one in others.
+    /// A regular dome does NOT show it -- it is either flat enough everywhere at once or curved
+    /// enough to run to the step cap everywhere at once, and both of those are uniform.
+    /// </para>
+    /// <para>
+    /// The rays are fired at the middle of the cloth, well inside its edges, where there is no
+    /// question of a legitimate miss.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestEveryRayAimedAtTheMiddleOfASailShapedPatchHitsIt()
+    {
+        Point[,] points = new Point[4, 4];
+
+        points[0, 0] = new Point(0.6, 13.0, 0);
+        points[0, 1] = new Point(0.516, 12.781, 0);
+        points[0, 2] = new Point(0.432, 12.562, 0);
+        points[0, 3] = new Point(0.348, 12.343, 0);
+        points[1, 0] = new Point(0.6, 9.35, 0);
+        points[1, 1] = new Point(0.0773, 9.204, 0.55);
+        points[1, 2] = new Point(-0.4453, 9.058, 0.55);
+        points[1, 3] = new Point(-0.968, 8.912, 0);
+        points[2, 0] = new Point(0.6, 5.7, 0);
+        points[2, 1] = new Point(-0.3613, 5.627, 0.55);
+        points[2, 2] = new Point(-1.3227, 5.554, 0.55);
+        points[2, 3] = new Point(-2.284, 5.481, 0);
+        points[3, 0] = new Point(0.6, 2.05, 0);
+        points[3, 1] = new Point(-0.8, 2.05, 0);
+        points[3, 2] = new Point(-2.2, 2.05, 0);
+        points[3, 3] = new Point(-3.6, 2.05, 0);
+
+        BicubicPatch patch = new () { ControlPoints = points, USteps = 5, VSteps = 5 };
+
+        patch.PrepareForRendering();
+
+        // A triangle well inside the sail: head, tack and clew each pulled in toward the middle.
+        (double X, double Y) head = (0.52, 12.2);
+        (double X, double Y) tack = (0.42, 2.45);
+        (double X, double Y) clew = (-3.1, 2.4);
+
+        // **The rays come from where a camera was, not straight in.**  Fired perpendicular to the
+        // cloth every one of them hits, because the sliver between two nearly coplanar leaves is
+        // hidden when they overlap in projection.  It opens up when the ray arrives at an angle,
+        // which is the only way a ray ever does arrive in a render.
+        Point eye = new (13, 8, -18);
+
+        int fired = 0;
+        List<(double X, double Y)> missed = [];
+
+        for (int a = 1; a < 240; a++)
+        for (int b = 1; a + b < 240; b++)
+        {
+            double fa = a / 240.0;
+            double fb = b / 240.0;
+            double x = head.X + fa * (tack.X - head.X) + fb * (clew.X - head.X);
+            double y = head.Y + fa * (tack.Y - head.Y) + fb * (clew.Y - head.Y);
+            List<Intersection> intersections = [];
+
+            fired++;
+
+            patch.AddIntersections(
+                new Ray(eye, (new Point(x, y, 0) - eye).Unit), intersections);
+
+            if (intersections.Count == 0)
+                missed.Add((x, y));
+        }
+
+        Assert.AreEqual(0, missed.Count,
+            $"{missed.Count} of {fired} rays fired at the middle of the sail found nothing; " +
+            $"the first was at ({missed.FirstOrDefault().X:F4}, {missed.FirstOrDefault().Y:F4})");
+    }
+
+    /// <summary>
     /// A patch must report a crossing that lies behind the ray's origin, not drop it, so a CSG
     /// built from a closed shell of patches can tell inside from outside for a ray that starts
     /// within it -- as a shadow, reflection or refraction ray, cast from within the shell, does.
