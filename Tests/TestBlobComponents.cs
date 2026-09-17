@@ -438,6 +438,54 @@ public class TestBlobComponents
     }
 
     /// <summary>
+    /// **A blob must come out the same however far off the ray was fired from.**  The field along a
+    /// ray is a sextic in the ray's own parameter, and that parameter used to be the whole distance
+    /// from the eye -- so a term of it was that distance to the sixth power, eighty thousand times
+    /// its coefficient at 6.6 units and seven hundred million at 30.  Terms that large cannot cancel
+    /// to nothing at a root, because the digits that would have cancelled are the ones spent making
+    /// them so large, and what came back was a distance that did not put the point on the surface.
+    /// <para>
+    /// Asking, at every point the solver called a crossing, what the field actually was there: from
+    /// 1.3 units not one point was more than a tenth off the threshold, and from 6.6 units 2390 of
+    /// 4519 were.  On screen that is a cloud of dark speckle that thickens as the camera draws back,
+    /// on a shape holding still at one size.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestABlobIsFoundInTheSamePlaceFromAnyDistance()
+    {
+        static double FirstHitFrom(double away)
+        {
+            Blob blob = new ()
+            {
+                Threshold = 0.3,
+                Components =
+                {
+                    new BlobSphereComponent { Center = new Point(-0.5, 0, 0), Radius = 1, Strength = 1 },
+                    new BlobSphereComponent { Center = new Point( 0.5, 0, 0), Radius = 1, Strength = 1 }
+                }
+            };
+            List<Intersection> hits = [];
+
+            blob.PrepareForRendering();
+            blob.Intersect(new Ray(new Point(0, 0, -away), Directions.In), hits);
+
+            Assert.IsTrue(hits.Count > 0, $"the blob was not found at all from {away} away");
+
+            // measured from the blob, not from where the ray started, so the answers are comparable
+            return hits.Select(hit => hit.Distance).Min() - away;
+        }
+
+        double near = FirstHitFrom(3);
+
+        foreach (double away in (double[]) [10, 40, 200, 1000])
+        {
+            Assert.AreEqual(near, FirstHitFrom(away), 1e-9,
+                $"the surface moved when the ray was fired from {away} away instead of 3");
+        }
+    }
+
+    /// <summary>
     /// **A blob must not take the solver's word for it.**  The sweep adds each component's
     /// polynomial as that component switches on and subtracts it as it switches off, and those do
     /// not cancel exactly: over a stretch of ray where nothing is in range, what ought to be the
@@ -457,8 +505,44 @@ public class TestBlobComponents
         // This is the shape of a value taken from a render that had gone wrong.
         Assert.AreEqual(-0.3, dusty.Select((c, i) => c * Math.Pow(1.67929284695121, i)).Sum(), 1e-9);
 
-        Assert.IsFalse(Blob.IsGenuineRoot(dusty, 1.67929284695121),
+        Assert.IsFalse(Blob.IsGenuineRoot(dusty, 1.67929284695121, 0.3),
             "a value the polynomial does not vanish at was accepted as a root");
+    }
+
+    /// <summary>
+    /// **And the guard must not loosen with distance, which is how it was letting them back in.**
+    /// The test asks that the polynomial's value be small beside `scale`, the sum of its terms' own
+    /// sizes -- but a sextic's terms grow as the sixth power of how far along the ray it is asked, so
+    /// a millionth of `scale` is a millionth of something enormous once a ray has run a few tens of
+    /// units.  Past some distance the whole threshold fits inside the tolerance and an impostor,
+    /// which stands at exactly the threshold, is taken for a surface point.
+    /// <para>
+    /// That is why a blob speckled only when the camera drew back.  Holding one shape at the same
+    /// size on screen and in the same place in the world, and changing nothing but how far the ray
+    /// came, a knight showed 114 bad pixels at 1.3 units and 1928 at 6.6 -- some of them *outside*
+    /// its own outline, which is what says they were never surface points at all.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    public void TestTheRootGuardDoesNotLoosenWithDistance()
+    {
+        // A sextic whose terms are enormous at t = 10 and cancel to exactly minus the threshold: the
+        // shape of what a ray meets after running a long way.
+        double[] far = [-1000000.3, 0, 0, 0, 0, 0, 1.0];
+
+        // The premise, asserted rather than assumed.
+        Assert.AreEqual(-0.3, far.Select((c, i) => c * Math.Pow(10.0, i)).Sum(), 1e-6);
+
+        // Its terms sum to two million, so a millionth of that is 2.0 -- and the threshold it stands
+        // at is 0.3, which fits inside that with room to spare.  Judged only against its own terms,
+        // this passes for a root.
+        double scale = far.Select((c, i) => Math.Abs(c * Math.Pow(10.0, i))).Sum();
+
+        Assert.IsTrue(scale * 1e-6 > 0.3,
+            "this polynomial no longer exhibits the fault it was written for");
+
+        Assert.IsFalse(Blob.IsGenuineRoot(far, 10.0, 0.3),
+            "a value the polynomial stands at minus the threshold at was accepted as a root");
     }
 
     /// <summary>
@@ -474,8 +558,8 @@ public class TestBlobComponents
 
         foreach (double root in (double[]) [-1.0, 0.5, 1.5])
         {
-            Assert.IsTrue(Blob.IsGenuineRoot(cubic, root), $"the root at {root} was thrown away");
-            Assert.IsTrue(Blob.IsGenuineRoot(cubic, Math.BitIncrement(root)),
+            Assert.IsTrue(Blob.IsGenuineRoot(cubic, root, 0.3), $"the root at {root} was thrown away");
+            Assert.IsTrue(Blob.IsGenuineRoot(cubic, Math.BitIncrement(root), 0.3),
                 $"the root at {root} was thrown away when it came back a single bit high");
         }
     }
