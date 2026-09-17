@@ -6,9 +6,12 @@
 // the thirteen white men on the board are thirteen calls of six shapes, and the shapes are built
 // once between them.
 //
-// **A unit here is a king, and a king is 95mm.**  So the board comes out 483mm across, which is
-// what a tournament board is, and the table is 1000mm square and 750mm high.  Writing it that way
-// round means the furniture can be checked against a tape measure rather than against the board.
+// **A unit here is a king, and a king is 95mm.**  So the board comes out 483mm across, which is what
+// a tournament board is.  The table is the `furniture` library's, which is written in inches -- so
+// the scene says what an inch is worth in kings and scales the table by it.  **Scaling the library
+// into the scene, rather than rewriting the scene in inches, is the thing to copy.**  A scene's
+// units are load-bearing wherever it has numbers that are per-unit -- a fade distance, a medium's
+// coefficients -- and converting the scene to suit a library quietly rescales all of them.
 
 context {
     parallel pixel scanner
@@ -23,6 +26,7 @@ context {
 }
 
 import 'chess' { Board, Pawn, Rook, Knight, Bishop, Queen, King, ChessAt }
+import 'furniture' { DiningTable, FurnitureWalnut }
 
 camera {
     location [3.9, 6.6, -8.2]
@@ -67,53 +71,28 @@ Jade = material {
 
 // -- The table ---------------------------------------------------------------------------------
 
-// Walnut, darker than the board's own oak border so the board reads as a thing set down on the
-// table rather than as part of it.
-Walnut = material {
-    pigment wood {
-        turbulence { amplitude 0.4  octaves 3 }
-        [0, [0.26, 0.15, 0.09], 0.5, [0.19, 0.11, 0.06],
-         0.8, [0.13, 0.07, 0.04], 1, [0.26, 0.15, 0.09]]
-        scale [0.12, 0.12, 6]
-        rotate Y 90
-    }
-    specular 0.34  shininess 60  ambient 0.10  reflective 0.05
+// A king is 95mm, which is 3.7402 inches, so an inch is this much of a king.
+Inch = 0.26737
+
+// A forty-inch square dining table, in walnut -- darker than the board's own oak border, so the
+// board reads as a thing set down on the table rather than as part of it.
+//
+// **Its top's surface lands at -0.10, not at 0.**  The board's underside is at -0.10 and its squares
+// reach up to 0, so a table surfaced at 0 does not carry the board -- it occupies the same space as
+// it, and two faces in one plane speckle against each other wherever they meet.  The table is thirty
+// inches to its top, which is 8.021 kings, so putting its foot 8.121 down lands the surface there.
+object DiningTable(40, 40, FurnitureWalnut) {
+    scale Inch
+    translate Y -8.121
 }
 
-// A square dining table: 1000mm across, 750mm to the top, which is 10.5 and 7.9 in kings.
-union {
-    // **The top's surface is at -0.10, not at 0.**  The board's own underside is at -0.10 and its
-    // squares reach up to 0, so a table surfaced at 0 does not carry the board -- it occupies the
-    // same space as it, and two faces in one plane speckle against each other wherever they meet.
-    cube { scale [5.26, 0.23, 5.26]  translate [0, -0.33, 0] }
-
-    // the apron under it, set in from the edge
-    difference {
-        cube { scale [4.95, 0.30, 4.95]  translate [0, -0.86, 0] }
-        cube { scale [4.62, 0.40, 4.62]  translate [0, -0.86, 0] }
-    }
-
-    // four square legs
-    group {
-        for corner in [0, 3] {
-            cube {
-                scale [0.29, 3.56, 0.29]
-                translate [4.60, -4.42, 4.60]
-                rotate Y (corner * 90)
-            }
-        }
-    }
-
-    material Walnut
-}
-
-// The floor, well below the table and dark enough to keep the eye on the board.
+// The floor, which is what the table stands on, and dark enough to keep the eye on the board.
 plane {
     material {
         pigment [0.14, 0.12, 0.11]
         specular 0.10  shininess 20  ambient 0.16
     }
-    translate Y -7.9
+    translate Y -8.121
 }
 
 // -- The board -----------------------------------------------------------------------------------

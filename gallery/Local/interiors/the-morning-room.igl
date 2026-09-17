@@ -1,0 +1,191 @@
+// Everything the `furniture` library has, standing in one room in the morning.
+//
+//     import 'furniture' { DiningTable, LowTable, Sideboard, Armchair, Desk }
+//
+// **The room is written in inches, because the library is.**  It is seventeen feet by fifteen with a
+// nine-foot ceiling, which comes out 204 by 180 by 108 -- numbers that look large until you remember
+// they are inches, and then they are just a room.  This is the one scene here that goes the library's
+// way round; the other three came first, in their own units, and scale the furniture into themselves
+// instead.
+//
+// **Two walls, and the other two are where the light comes from.**  Cutting a window through a wall
+// is a scene's worth of work on its own; leaving the camera-side and the left open does the same job.
+// The light that falls on everything here arrives the way it would through a window wall, from low
+// and to one side, which is what gives the chair its shadow and the tabletops their sheen.
+//
+// **Nothing is square to anything.**  The chair is turned nineteen degrees and the low table eleven,
+// and the reason is worth saying: five pieces all square to the walls read as a showroom rather than
+// a room, because the one thing nobody does with furniture is line it up with the plan.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    angles are degrees
+    info {
+        title 'The Morning Room'
+        author 'J. Stephen Kress'
+        description 'Everything the furniture library has, in one room, in the morning.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'furniture' {
+    DiningTable, LowTable, Sideboard, Armchair, Desk,
+    FurnitureOak, FurnitureWalnut, FurnitureLinen
+}
+import 'daylight' { ClearMorning }
+
+camera {
+    location [-78, 80, -122]
+    look at [16, 22, 20]
+    field of view 54
+}
+
+background ClearMorning
+
+// **A sky light does nothing at all in a ceilinged room, and it is worth having the number.**  A sky
+// light samples the hemisphere, and from a point on this floor almost every one of those samples ends
+// on plaster.  The first render came back flat and grey with no shadow under anything, so the light
+// here is a window instead: an area light standing where the opening would be in the left-hand wall,
+// four feet by three and a half, morning-colored and turned into the room.
+//
+// Measured on the back wall, out of 166:
+//
+// | what was taken away | wall |
+// | --- | --- |
+// | nothing | 166.2 |
+// | `light ClearMorningLight` | 165.9 |
+// | that, and the sky background too | 152.0 |
+// | the window instead | 76.0 |
+//
+// So the window is worth 90 of it, the sun this sky infers for itself is worth 14, and **the sky
+// light clause is worth 0.3, which is nothing** -- it was in this file for two drafts, costing its
+// samples on every pixel, doing no work.  That is why the `daylight` import here brings in the sky
+// and not the light that usually comes with it: the background carries a sun, and indoors the sun
+// through the window is the whole of the daylight.
+area light {
+    location [-92, 30, -24]
+    axisU [0, 0, 48]
+    axisV [0, 42, 0]
+    // **Six steps, not three.**  An area light this large and this close to the walls lays a wide
+    // penumbra, and nine samples cut it into a handful of hard-edged bands -- pale rectangles that
+    // crossed the plaster and the tabletops and looked for all the world like stray geometry.  They
+    // are the light's own steps.  Thirty-six samples cost more and the edges come out as edges; what
+    // is left on the back wall is the dining table's legs, thrown soft by a window four feet wide.
+    steps 6
+    color [0.86, 0.83, 0.75]
+}
+
+// -- The room --------------------------------------------------------------------------------------
+
+// A wall's normal decides whether it is lit at all, so a wall turned the wrong way renders black and
+// looks exactly like a light that is not working.  `rotate X -90` faces a back wall into the room.
+Plaster = material { pigment [0.78, 0.76, 0.70]  specular 0.02  ambient 0.11 }
+
+// Boards, running the length of the room.  `brick` laid thin in one direction is a floor: the joint
+// is the gap between two boards, and the length is what makes it a plank and not a tile.
+//
+// **The scale multiplies the pattern's own brick, which is 8 by 3 by 4.5.**  So these numbers are not
+// the size of a board -- they are what that brick is multiplied by, and asking for `scale [5, ...]`
+// in the hope of five-inch boards lays forty-inch ones instead.  A board five inches across running
+// two hundred along wants 5/4.5 in Z and 200/8 in X, which is what these are.
+Boards = material {
+    pigment brick {
+        [0.44, 0.30, 0.18], [0.52, 0.37, 0.23]
+        scale [25, 60, 1.111]
+    }
+    specular 0.09  shininess 30  ambient 0.10
+}
+
+plane { material Boards }
+plane { material Plaster  rotate X -90  translate Z 96 }
+plane { material Plaster  rotate Z 90   translate X 108 }
+plane { material Plaster  rotate X 180  translate Y 108 }
+
+// A rug under the sitting end, to stop the boards running the whole width of the picture.
+parallelogram {
+    material {
+        pigment granite {
+            [0, [0.30, 0.19, 0.18], 0.55, [0.38, 0.25, 0.23], 1, [0.30, 0.19, 0.18]]
+            scale [3, 3, 3]
+        }
+        specular 0.02  ambient 0.11
+    }
+    at [-34, 0.05, -72]
+    sides [116, 0, 0], [0, 0, 84]
+}
+
+// -- What is in it ---------------------------------------------------------------------------------
+
+// Against the back wall, in walnut so it reads apart from the oak: its carcase is eighteen deep, so
+// a center at 87 puts its back on the wall at 96.
+object Sideboard(54, FurnitureWalnut) { translate [-30, 0, 87] }
+
+// The dining end.  Five and a half feet by three, which seats six.
+object DiningTable(66, 38) { translate [-48, 0, 30] }
+
+// The desk goes along the right-hand wall, so it is turned a quarter.  Twenty-eight deep, which after
+// the turn is its width across the room, so a center at 94 puts its back on the wall at 108.
+//
+// The library builds a desk with its pedestal on -X; after `rotate Y -90` that is -Z, the far end.
+object Desk(54, 28, FurnitureWalnut) { rotate Y -90  translate [94, 0, 24] }
+
+// The sitting end: a chair, turned out of square and toward the light, and a low table in front of it.
+//
+// **The chair is the one piece given a material rather than taking the library's.**  Its own linen is
+// near-white, which is right for a chair in shadow and wrong for the brightest thing in a sunlit room
+// -- it came out as a pale lump with no form in it at all.  A cloth with some color in it holds its
+// modelling, and being the only thing here that is not brown, it is also what the eye goes to.
+Cloth = material {
+    pigment [0.33, 0.37, 0.40]
+    specular 0.06  shininess 12  ambient 0.13
+}
+
+object Armchair(34, Cloth) { rotate Y 46  translate [42, 0, -18] }
+object LowTable(38, 24) { rotate Y 11  translate [4, 0, -36] }
+
+// -- And the things left on it -----------------------------------------------------------------------
+//
+// Five pieces of furniture in an empty room is a showroom.  It takes very little to make it a room
+// instead -- a bowl someone put down, two books that did not get put away -- and none of it is more
+// than a handful of shapes, because none of it is what the picture is about.
+
+// A bowl on the dining table: a sphere hollowed by a smaller one and cut off level.
+difference {
+    sphere { scale [7, 4.6, 7] }
+    sphere { scale [6.1, 4.1, 6.1]  translate Y 1.0 }
+    cube { scale [9, 4, 9]  translate Y 4.4 }
+    material {
+        pigment [0.62, 0.60, 0.55]
+        specular 0.40  shininess 110  ambient 0.12  reflective 0.04
+    }
+    // Its middle is the sphere's middle, so it stands on the table 4.6 up, not 0 up.
+    translate [-44, 34.6, 30]
+}
+
+// Two books on the low table, the top one askew as a read book is.
+cube {
+    material { pigment [0.36, 0.18, 0.16]  specular 0.10  ambient 0.11 }
+    scale [5.2, 0.8, 6.8]
+    rotate Y 11
+    translate [2, 18.8, -36]
+}
+cube {
+    material { pigment [0.21, 0.28, 0.34]  specular 0.10  ambient 0.11 }
+    scale [4.8, 0.7, 6.2]
+    rotate Y 27
+    translate [3, 20.3, -37]
+}
+
+// And a few standing on the sideboard, which is what a sideboard collects.
+group {
+    for book in [0, 3] {
+        cube {
+            material { pigment [0.30 + book * 0.05, 0.22, 0.17 + book * 0.03]  specular 0.10  ambient 0.11 }
+            scale [0.8, 5.4, 3.6]
+            translate [-48 + book * 1.9, 37.4, 84]
+        }
+    }
+}

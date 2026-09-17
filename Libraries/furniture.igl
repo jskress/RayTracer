@@ -1,0 +1,300 @@
+// What a room is furnished with: the things people sit at, eat off and put things on.
+//
+//     import 'furniture' { DiningTable, Armchair, FurnitureOak }
+//
+//     object DiningTable(60)                   // five feet, and thirty inches to the top
+//     object DiningTable(36, 36, FurnitureOak) // a square one
+//     object Armchair()                        // the default is a chair's own size
+//
+// | `DiningTable` | A table to eat at: top, apron and four legs. |
+// | `LowTable` | The low one in front of a sofa. |
+// | `Sideboard` | A carcase on short legs, to stand against a wall. |
+// | `Armchair` | A seat, a back, two arms and four feet. |
+// | `Desk` | A table to work at, with a pedestal of drawers under one end. |
+//
+// -- Three things that hold for everything here ---------------------------------------------------
+//
+// **It is written in inches, and a scene unit IS an inch.**  The [trains](#trains) are in meters and
+// the [brick](#buildings) is in inches, and the reason is the same for both: a thing with real
+// dimensions should be written in the units it is actually sold in, so the numbers can be checked
+// against a tape measure rather than against each other.  Furniture is sold in inches -- a sixty-inch
+// table, a seventy-two-inch sofa -- so that is what these take.  A room is a hundred and forty-four
+// units across, which is twelve feet, and reads as such.
+//
+// **A piece stands on `y = 0` and grows upward**, so it drops onto a floor at the origin without a
+// height to work out, the same as the [street furniture](#street-furniture) does.
+//
+// **The height does not follow the first number.**  Everywhere else in these libraries the first
+// argument scales the whole thing; here it is the size of the *top*, and the height is whatever that
+// kind of furniture is.  A table twice as long is not twice as tall -- it is a table for more people,
+// at the same thirty inches as every other table, because the people are the same size.  Getting this
+// wrong is what makes a rendered room feel like a doll's house without anyone being able to say why.
+//
+// The heights are the real ones, and they are worth knowing because they are not guesses: a dining
+// table and a desk are both **thirty inches**, a low table is **eighteen**, a sideboard is **thirty-
+// two**, and a chair seat is **seventeen**, which is the height of the back of a knee.
+//
+// -- What it is made of ---------------------------------------------------------------------------
+
+// Oak: the pale, open-grained wood most furniture in a room is.
+//
+// **The rings run along X, and that is which way round the grain lies.**  A `wood` pattern is rings
+// about an axis, so any face square to that axis shows them as circles -- end grain.  Left the way
+// it comes, a sideboard's front and a desk's pedestal came out as swirled blotches, which is what
+// the end of a plank looks like and not its face.  Along X the grain runs the length of a piece,
+// which is how furniture is cut, and only the ends show rings.
+//
+// **The axis is Z and the radius is taken in X-Y**, so turning the grain along X takes a `rotate Y
+// 90` and nothing else will do it.  Stretching X instead -- `scale [120, 0.5, 0.5]`, which looks
+// like it ought to lie the rings down along X -- only makes them enormously elongated ellipses that
+// are still about Z, and the grain that comes out is both the wrong way round and almost too faint
+// to see.  It is worth saying because the wrong version renders: it is wood-colored, it has a hint
+// of figure in it, and there is nothing in the picture that says it is not wood.
+//
+// **And the axis is lifted to `y = 26`, which is the one number here that is not a dimension.**  Left
+// on the origin the axis runs along the *floor*, and a tabletop is then twenty-nine inches off it --
+// so the surface crosses the rings almost tangentially, and the grain arrives stretched into bands
+// inches apart that read as a stain rather than as wood.  Lifted to twenty-six the axis runs through
+// the pieces themselves: near the middle of a sideboard, just under a table's top.  That is where a
+// flat-sawn board's cathedral figure comes from -- the arch a plank shows when the saw passed close
+// to the heart of the log -- and it is the difference between a table that is brown and a table that
+// is wooden.
+
+FurnitureOak = material {
+    pigment wood {
+        turbulence { amplitude 0.26  octaves 3 }
+        [0, [0.52, 0.38, 0.23], 0.5, [0.44, 0.31, 0.18],
+         0.82, [0.34, 0.23, 0.13], 1, [0.52, 0.38, 0.23]]
+        scale [0.5, 0.5, 90]
+        rotate Y 90
+        translate [0, 26, 0]
+    }
+    specular 0.30  shininess 50  ambient 0.12  reflective 0.03
+}
+
+// Walnut: darker, for a piece meant to sit apart from the rest of the room.
+FurnitureWalnut = material {
+    pigment wood {
+        turbulence { amplitude 0.30  octaves 3 }
+        [0, [0.27, 0.16, 0.10], 0.5, [0.20, 0.12, 0.07],
+         0.82, [0.14, 0.08, 0.05], 1, [0.27, 0.16, 0.10]]
+        scale [0.45, 0.45, 80]
+        rotate Y 90
+        translate [0, 26, 0]
+    }
+    specular 0.36  shininess 65  ambient 0.10  reflective 0.05
+}
+
+// Linen, for what a chair is covered in.
+FurnitureLinen = material {
+    pigment [0.55, 0.50, 0.44]
+    specular 0.06  shininess 12  ambient 0.16
+}
+
+// -- Dining table ---------------------------------------------------------------------------------
+
+// A table to eat at.  `long` is how far it runs and `wide` how far across -- leave `wide` out for a
+// square one.  Thirty inches to the top.
+//
+// The apron is the rail under the top that the legs are joined to, set in from the edge.  **It is
+// worth the two cubes it costs.**  A top on four legs with nothing between them reads as a trestle,
+// and the gap under the edge is the first thing the eye uses to tell a table from a board laid across
+// supports.
+primitive DiningTable(long, wide = 0, coat = FurnitureOak) -> group {
+    across = wide > 0 ? wide : long
+
+    return group {
+        union {
+            // the top: an inch and a half thick, its surface at thirty
+            cube { scale [long / 2, 0.75, across / 2]  translate [0, 29.25, 0] }
+
+            // the apron: three and a half deep, set in two inches from the edge
+            difference {
+                cube { scale [long / 2 - 2, 1.75, across / 2 - 2]  translate [0, 26.75, 0] }
+                cube { scale [long / 2 - 2.9, 2.2, across / 2 - 2.9]  translate [0, 26.75, 0] }
+            }
+
+            // Four legs, two and three-quarters square, their outer faces under the apron.
+            //
+            // **Turning one leg about Y through four quarters only works for a square top.**  A
+            // quarter turn swaps the two extents, so on a table longer than it is wide it puts two
+            // legs out past the ends and two in under the middle.  The corner is picked apart
+            // instead, which does not care what shape the top is.
+            group {
+                for corner in [0, 3] {
+                    cube {
+                        scale [1.375, 12.5, 1.375]
+                        translate [(corner % 2 * 2 - 1) * (long / 2 - 3.375), 12.5,
+                                   (floor(corner / 2) * 2 - 1) * (across / 2 - 3.375)]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// -- Low table ------------------------------------------------------------------------------------
+
+// The one in front of a sofa: eighteen inches to the top, which is a seat's height and not a table's,
+// because what it is for is reaching down to rather than sitting at.  No apron -- a low table is
+// meant to be seen under, and a rail there would close it up.
+primitive LowTable(long, wide = 0, coat = FurnitureOak) -> group {
+    across = wide > 0 ? wide : long * 0.55
+
+    return group {
+        union {
+            cube { scale [long / 2, 0.5, across / 2]  translate [0, 17.5, 0] }
+
+            group {
+                for corner in [0, 3] {
+                    cube {
+                        scale [0.875, 8.5, 0.875]
+                        translate [(corner % 2 * 2 - 1) * (long / 2 - 2.375), 8.5,
+                                   (floor(corner / 2) * 2 - 1) * (across / 2 - 2.375)]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// -- Sideboard ------------------------------------------------------------------------------------
+
+// A carcase on short legs, against a wall: thirty-two inches to the top and eighteen deep, which is
+// what one is.  **The depth does not follow the length**, for the same reason the height does not: a
+// sideboard is as deep as a person's reach across it, however long the wall it stands along.
+//
+// It faces `+Z`, so its back goes to a wall behind it.
+primitive Sideboard(long, coat = FurnitureOak) -> group {
+    return group {
+        union {
+            // the carcase, from six inches up to thirty-two
+            cube { scale [long / 2, 13, 9]  translate [0, 19, 0] }
+
+            // a plinth rail under it, so it does not read as a box floating on sticks
+            cube { scale [long / 2 - 0.75, 0.9, 8.2]  translate [0, 5.1, 0] }
+
+            group {
+                for corner in [0, 3] {
+                    cube {
+                        scale [1.1, 3, 1.1]
+                        translate [(corner % 2 * 2 - 1) * (long / 2 - 2.2), 3,
+                                   (floor(corner / 2) * 2 - 1) * 7]
+                    }
+                }
+            }
+
+            // two doors, given away by the line between them
+            group {
+                for door in [0, 1] {
+                    difference {
+                        cube { scale [long / 4 - 0.7, 12.2, 0.3]  translate [0, 0, 9.1] }
+                        cube { scale [long / 4, 12.6, 0.16]  translate [0, 0, 9.4] }
+                        translate [(door * 2 - 1) * (long / 4), 19, 0]
+                    }
+                }
+            }
+        }
+        material coat
+    }
+}
+
+// -- Armchair -------------------------------------------------------------------------------------
+
+// A seat, a back, two arms and four feet.  `wide` is across the arms; the seat sits at seventeen
+// inches whatever the chair's width, because that is the height of the back of a knee.
+primitive Armchair(wide = 32, cloth = FurnitureLinen, coat = FurnitureOak) -> group {
+    deep = wide * 0.98
+    inner = wide / 2 - 4
+
+    return group {
+        group {
+            // **The base is a block, not a slab on legs.**  Drawn as a thin seat floating between
+            // two arms, an armchair reads as three separate boards with daylight under them -- the
+            // eye looks straight through where the upholstery should be.  A chair is a solid thing
+            // with a seat on top of it, and the feet only lift it off the floor.
+            //
+            // **And the upholstery is superellipsoids rather than cubes.**  Everything else here is
+            // boxes, because a table really is made of boards with square arrises -- but stuffing
+            // has no sharp edge anywhere on it, and a chair drawn in cubes reads as a crate with a
+            // cushion on it however well proportioned it is.  The exponents are small, which is a
+            // box with its edges taken off: 0.25 on the base and back, and 0.38 on the arms because
+            // an arm is the roundest part of a chair and the part a hand actually goes on.
+            superellipsoid {
+                east 0.25  north 0.25
+                scale [inner + 2, 5.25, deep / 2]  translate [0, 11.75, 0]
+            }
+
+            // The back and the arms **sink into the base** rather than sitting on top of it.  Where
+            // two cubes meeting face to face are joined, two superellipsoids are not: each one
+            // curves away from the corner it shares, so an arm that rested exactly on the seat
+            // floats, with daylight under it.  Both reach three inches below the seat's top face,
+            // where the base has them; only their tops are where the chair's outline needs them.
+            // The back runs the chair's full width for the same reason: ended at the arms' center
+            // line it left a slot of daylight at each shoulder.
+            superellipsoid {
+                east 0.25  north 0.25
+                scale [inner + 4, 8, 2.6]  translate [0, 23, deep / 2 - 2.6]
+            }
+
+            // an arm each side, their tops at twenty-four
+            superellipsoid {
+                east 0.38  north 0.38
+                scale [2, 5, deep / 2]  translate [-(inner + 2), 19, 0]
+            }
+            superellipsoid {
+                east 0.38  north 0.38
+                scale [2, 5, deep / 2]  translate [inner + 2, 19, 0]
+            }
+
+            material cloth
+        }
+
+        group {
+            for corner in [0, 3] {
+                cube {
+                    scale [1, 3.25, 1]
+                    translate [(corner % 2 * 2 - 1) * (wide / 2 - 2.4), 3.25,
+                               (floor(corner / 2) * 2 - 1) * (deep / 2 - 2.4)]
+                }
+            }
+            material coat
+        }
+    }
+}
+
+// -- Desk -----------------------------------------------------------------------------------------
+
+// A table to work at, which is a table with a pedestal of drawers under one end.  Thirty inches, like
+// the dining table, since a desk and a dining table are the same height and always have been.
+//
+// The pedestal is on `-X`; turn the desk if you want it the other way about.
+primitive Desk(long, wide = 28, coat = FurnitureOak) -> group {
+    return group {
+        union {
+            cube { scale [long / 2, 0.625, wide / 2]  translate [0, 29.375, 0] }
+
+            // the pedestal, with three drawer lines cut across its face
+            difference {
+                cube { scale [7.25, 14.375, wide / 2 - 1.2]  translate [-(long / 2 - 8), 14.375, 0] }
+
+                group {
+                    for drawer in [0, 2] {
+                        cube {
+                            scale [7.6, 0.2, 0.16]
+                            translate [-(long / 2 - 8), 8 + drawer * 8, wide / 2 - 1.3]
+                        }
+                    }
+                }
+            }
+
+            // and a leg at the far end, with a rail tying it back to the pedestal
+            cube { scale [1.25, 14.375, 1.25]  translate [long / 2 - 3, 14.375, wide / 2 - 3] }
+            cube { scale [1.25, 14.375, 1.25]  translate [long / 2 - 3, 14.375, -(wide / 2 - 3)] }
+            cube { scale [1, 1.2, wide / 2 - 3]  translate [long / 2 - 3, 27.55, 0] }
+        }
+        material coat
+    }
+}
