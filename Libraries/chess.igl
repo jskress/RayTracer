@@ -1,0 +1,657 @@
+// A set of chessmen, and the board they stand on.
+//
+//     import 'chess' { Pawn, Rook, Knight, Bishop, Queen, King, Board, ChessAt, Ivory, Ebony }
+//
+//     object Board(8)
+//     object King(1.0, Ivory) { translate [ChessAt(8, 4), 0, ChessAt(8, 0)] }
+//     object Pawn(1.0, Ebony) { translate [ChessAt(8, 3), 0, ChessAt(8, 6)] }
+//
+// | `Pawn` | The smallest piece: a ball on a collar. |
+// | `Rook` | A castle: a straight tower with a crenellated top. |
+// | `Knight` | The horse's head -- the one piece that is not turned. |
+// | `Bishop` | A mitre, with the slit cut in it. |
+// | `Queen` | A coronet of points. |
+// | `King` | The tallest, with a cross on top. |
+// | `Board` | Squares, a border, and nothing else. |
+// | `ChessAt` | Where a square's middle is, along one axis. |
+//
+// -- How a set is sized -------------------------------------------------------------------------
+//
+// **The first argument is the set's scale, not the piece's height.**  `King(1.0)` is a king one unit
+// tall, and `Pawn(1.0)` is the pawn that belongs beside it -- about half that.  Every piece carries
+// its own proportion of the set, so a whole set is written with one number repeated, and the pieces
+// come out in the relation to each other that a real set has.  Asking for each piece's own height
+// instead would mean a scene had to know all six ratios to lay out a board that looked right.
+//
+// The proportions are a Staunton set's: taking the king as 1, the queen is 0.83, the bishop 0.74,
+// the knight 0.66, the rook 0.68 and the pawn 0.50.  A square of the board is 0.57 of a king, which
+// is what keeps a rank of pawns from touching.
+//
+// -- How a set is styled ------------------------------------------------------------------------
+//
+// **The colour is an argument, and deliberately not a block on the call.**  Either would work:
+//
+//     object Pawn(1.0, Ebony)                  // this
+//     object Pawn(1.0) { material { ... } }    // or this
+//
+// and the difference is that the second one cannot be shared.  A call carrying its own material block
+// is built afresh every time, because the block is laid over whatever the call made; a material handed
+// in as an *argument* is part of what identifies the call, so the sixteen pawns of a game are built
+// once and stood in sixteen places.
+//
+// **That is a claim about building, not about speed, and on a turned piece it buys nothing
+// measurable.**  Thirty-two pawns drawn both ways came out pixel for pixel identical and within the
+// noise of each other -- 0.456, 0.476, 0.457 seconds against 0.498, 0.460, 0.442 -- because a pawn is
+// two lathes and building one costs nothing worth saving.  Where it should tell is the knight, which
+// is a blob and a swept mesh rather than a turning, and that is worth measuring when there are
+// sixteen of those on a board rather than guessing at it here.
+//
+// So the pieces take their material, and a scene that wants its own may pass anything -- these are
+// only what a set comes in if you do not.
+
+// -- What a set comes in ------------------------------------------------------------------------
+
+// Bone, or the cream plastic that stands in for it.  Not white: a true white piece loses its own
+// modelling under a bright light, and the turned rings on a rook stop reading at all.
+Ivory = material {
+    pigment [0.88, 0.84, 0.74]
+    specular 0.34  shininess 60  ambient 0.20
+}
+
+// The dark side.  Nearly black rather than black, for the same reason the light side is not white --
+// a black piece photographs as a silhouette and the carving goes with it.
+Ebony = material {
+    pigment [0.085, 0.072, 0.065]
+    specular 0.40  shininess 90  ambient 0.06
+}
+
+// -- The foot every piece stands on ---------------------------------------------------------------
+
+// The turned foot, one shape for all six pieces, drawn at the size a king uses.
+//
+// **It is scaled per piece rather than used at one size, and that is not a detail.**  A real set does
+// not give every man the same base: the smaller the piece the wider its foot in proportion, because a
+// pawn wants the same stability out of less height.  Taking base diameter over height, a Staunton
+// king is 0.47 and a pawn 0.68.  One foot at one size would make the king look spindly or the pawn
+// look bloated, depending which you drew it for.  The scales below are what each piece needs to land
+// on its own ratio.
+ChessFootProfile = path {
+    move to 0.000, 0.000
+    line to 0.235, 0.000
+    quad 0.235, 0.024 to 0.212, 0.040
+    quad 0.176, 0.055 to 0.162, 0.078
+    quad 0.175, 0.096 to 0.188, 0.107
+    quad 0.176, 0.124 to 0.150, 0.138
+    line to 0.140, 0.165
+    line to 0.000, 0.165
+    close
+}
+
+// king 1.000, queen 0.865, bishop 0.850, knight 0.857, rook 0.889, pawn 0.723 -- the foot's top is
+// then at 0.165 and 0.140 wide times that scale, and each body below is drawn to sit on it.
+
+// -- Pawn -------------------------------------------------------------------------------------------
+
+// A ball on a collar.  Half a king tall, and the piece there are eight of a side.
+// Foot 0.723: top at 0.119, radius 0.101.
+PawnProfile = path {
+    move to 0.000, 0.119
+    line to 0.101, 0.119
+    quad 0.090, 0.160 to 0.074, 0.196
+    quad 0.060, 0.224 to 0.056, 0.248
+    quad 0.080, 0.258 to 0.088, 0.266
+    quad 0.076, 0.279 to 0.052, 0.286
+    quad 0.044, 0.298 to 0.048, 0.312
+    quad 0.100, 0.348 to 0.100, 0.414
+    quad 0.100, 0.478 to 0.000, 0.500
+    close
+}
+
+primitive Pawn(size, coat = Ivory) -> group {
+    return group {
+        union {
+            lathe { path ChessFootProfile  scale 0.723 }
+            lathe { path PawnProfile }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- Rook -------------------------------------------------------------------------------------------
+
+// A tower, and the only turned piece that is not finished on the lathe: its battlements are cut out
+// afterwards.  Foot 0.889: top at 0.147, radius 0.124.
+RookProfile = path {
+    move to 0.000, 0.147
+    line to 0.124, 0.147
+    quad 0.114, 0.200 to 0.106, 0.272
+    quad 0.102, 0.352 to 0.104, 0.430
+    quad 0.106, 0.478 to 0.118, 0.502
+    line to 0.150, 0.530
+    quad 0.158, 0.540 to 0.158, 0.560
+    line to 0.158, 0.680
+    line to 0.000, 0.680
+    close
+}
+
+// **A `for` cannot be a CSG operand, but a `group` may be, and a group can hold a loop.**  So the
+// four cuts that make eight merlons are written once rather than four times.  Each is a slab laid
+// across the whole diameter, so one cut makes two gaps.
+primitive Rook(size, coat = Ivory) -> group {
+    return group {
+        difference {
+            union {
+                lathe { path ChessFootProfile  scale 0.889 }
+                lathe { path RookProfile }
+            }
+            // **The well has to come out as well as the gaps.**  Four slabs laid across the whole
+            // diameter do remove the middle, but only where they actually overlap -- and between
+            // them they leave thin wedges standing, which read as a knob with spokes around it
+            // sitting in the middle of the tower.  A real rook is hollow at the top, so the middle
+            // is taken out with a cylinder and what is left is a wall with gaps in it.
+            //
+            // Its floor is level with the bottom of the gaps, and that is not arbitrary: sunk any
+            // lower and the ring between the well and the gaps stands proud of it, which reads as a
+            // star of wedges lying in the bottom of the tower.
+            cylinder {
+                min Y 0.630  max Y 0.760
+                scale [0.104, 1, 0.104]
+            }
+
+            group {
+                for cut in [0, 3] {
+                    cube {
+                        scale [0.031, 0.050, 0.40]
+                        rotate Y (cut * 45)
+                        translate [0, 0.680, 0]
+                    }
+                }
+            }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- Bishop -----------------------------------------------------------------------------------------
+
+// The mitre, and the slit cut in its face that tells it from a pawn at a glance.
+// Foot 0.850: top at 0.140, radius 0.119.
+BishopProfile = path {
+    move to 0.000, 0.140
+    line to 0.119, 0.140
+    quad 0.106, 0.186 to 0.086, 0.232
+    quad 0.070, 0.268 to 0.064, 0.300
+    quad 0.090, 0.312 to 0.098, 0.322
+    quad 0.086, 0.336 to 0.058, 0.344
+    quad 0.048, 0.358 to 0.052, 0.376
+    quad 0.108, 0.412 to 0.112, 0.492
+    quad 0.114, 0.556 to 0.074, 0.626
+    quad 0.062, 0.646 to 0.048, 0.660
+    quad 0.062, 0.672 to 0.062, 0.692
+    quad 0.062, 0.714 to 0.040, 0.726
+    quad 0.022, 0.736 to 0.000, 0.740
+    close
+}
+
+primitive Bishop(size, coat = Ivory) -> group {
+    return group {
+        difference {
+            union {
+                lathe { path ChessFootProfile  scale 0.850 }
+                lathe { path BishopProfile }
+            }
+            // the slit, cut down the face and leaning back as a mitre's does
+            cube {
+                scale [0.017, 0.108, 0.120]
+                rotate X -22
+                translate [0, 0.612, -0.046]
+            }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- Queen ------------------------------------------------------------------------------------------
+
+// A coronet of points on a tall body.  Foot 0.865: top at 0.143, radius 0.121.
+QueenProfile = path {
+    move to 0.000, 0.143
+    line to 0.121, 0.143
+    quad 0.108, 0.196 to 0.088, 0.248
+    quad 0.072, 0.290 to 0.066, 0.330
+    quad 0.094, 0.344 to 0.102, 0.356
+    quad 0.090, 0.372 to 0.060, 0.380
+    quad 0.050, 0.396 to 0.054, 0.416
+    quad 0.100, 0.460 to 0.104, 0.540
+    quad 0.106, 0.590 to 0.096, 0.622
+    line to 0.128, 0.652
+    quad 0.138, 0.664 to 0.138, 0.690
+    line to 0.128, 0.720
+    quad 0.120, 0.734 to 0.096, 0.740
+    quad 0.070, 0.748 to 0.062, 0.768
+    quad 0.062, 0.800 to 0.036, 0.812
+    quad 0.020, 0.820 to 0.000, 0.830
+    close
+}
+
+// The coronet is cut rather than built: eight notches taken out of the rim leave eight points.
+primitive Queen(size, coat = Ivory) -> group {
+    return group {
+        difference {
+            union {
+                lathe { path ChessFootProfile  scale 0.865 }
+                lathe { path QueenProfile }
+            }
+            group {
+                for notch in [0, 7] {
+                    sphere {
+                        scale [0.030, 0.058, 0.030]
+                        translate [0.130, 0.752, 0]
+                        rotate Y (notch * 45)
+                    }
+                }
+            }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- King -------------------------------------------------------------------------------------------
+
+// The tallest, and the one that carries a cross.  Foot 1.000: top at 0.165, radius 0.140.
+KingProfile = path {
+    move to 0.000, 0.165
+    line to 0.140, 0.165
+    quad 0.124, 0.228 to 0.102, 0.296
+    quad 0.084, 0.348 to 0.078, 0.396
+    quad 0.108, 0.412 to 0.118, 0.426
+    quad 0.104, 0.446 to 0.070, 0.456
+    quad 0.058, 0.474 to 0.062, 0.498
+    quad 0.114, 0.552 to 0.118, 0.648
+    quad 0.120, 0.706 to 0.110, 0.744
+    line to 0.144, 0.778
+    quad 0.154, 0.792 to 0.154, 0.820
+    line to 0.144, 0.852
+    quad 0.134, 0.866 to 0.104, 0.874
+    quad 0.074, 0.882 to 0.068, 0.900
+    quad 0.052, 0.916 to 0.000, 0.922
+    close
+}
+
+primitive King(size, coat = Ivory) -> group {
+    return group {
+        union {
+            lathe { path ChessFootProfile }
+            lathe { path KingProfile }
+            // the cross: an upright and an arm, squared off
+            cube { scale [0.021, 0.052, 0.021]  translate [0, 0.948, 0] }
+            cube { scale [0.046, 0.018, 0.018]  translate [0, 0.952, 0] }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- Knight -------------------------------------------------------------------------------------
+
+// The horse's head: the one piece that is not turned, and the only one whose shape is carried here
+// as fixed geometry rather than an outline.
+//
+// **Its numbers cannot be re-derived at call time, so the whole thing scales bodily.**  The mane is
+// a sweep whose spline was measured off this particular neck and this particular skull -- the tube's
+// back edge offset by its own radius, then the blob's crest found by marching rays out from the head
+// until the field crossed its threshold.  Those thirty-six control points describe one horse.  Change
+// the neck and the mane floats or sinks, with nothing to warn you.  Scaling all of it together is
+// exactly the case that stays correct, and it is also what a chess piece wants.
+//
+// Sized by measurement rather than guesswork: the head as built stands 4.975 tall between y -1.007
+// and y +3.968, so at 0.1230 it fills the 0.488 between the foot's top and the knight's declared 0.66.
+// The seating is solved rather than eyeballed: the neck's base is the tube's own start sphere, and it
+// is placed so that its cross-section AT the foot's top rim is exactly the rim's radius, 0.120.  Left
+// to a round number it overhung -- the sphere is 0.124 at its widest, so any lower and it flanges out
+// over the foot and swallows the turning underneath.
+
+ChessKnightEar = difference {
+    lathe {
+        path {
+            move to 0, 0
+            quad 1, 0 to 1, 1.5
+            curve 1, 2, 0.6, 2.5 to 0.6, 3
+            quad 0.35, 4 to 0, 4
+        }
+    }
+    lathe {
+        path {
+            move to 0, 0
+            quad 1, 0 to 1, 1.5
+            curve 1, 2, 0.6, 2.5 to 0.6, 3
+            quad 0.35, 4 to 0, 4
+            scale 0.8
+            translate Y 0.3
+        }
+    }
+    cube {
+        scale Y 5
+        translate Z -1.2
+    }
+
+    
+    scale 0.2
+    rotate Y -90
+    rotate Z -15
+}
+
+primitive Knight(size, coat = Ivory) -> group {
+    return group {
+        union {
+            lathe { path ChessFootProfile  scale 0.857 }
+
+            group {
+        blob {
+            threshold 0.3
+        
+            // Nose
+            cylinder {
+                from [-1, 0.25, 0.5]
+                to [1, 0.25, 0.25]
+                radius 0.5
+                strength 1
+            }
+            cylinder {
+                from [-1, 0.25, -0.5]
+                to [1, 0.25, -0.25]
+                radius 0.5
+                strength 1
+            }
+            cylinder {
+                from [-1, 1, 0.5]
+                to [1.1, 0.75, 0.25]
+                radius 0.5
+                strength 1
+            }
+            cylinder {
+                from [-1, 1, -0.5]
+                to [1.1, 0.75, -0.25]
+                radius 0.5
+                strength 1
+            }
+            cylinder {
+                from [-1, 1, 0]
+                to [0.75, 0.5, 0]
+                radius 1
+                strength 1.3
+            }
+    
+            // Snout
+            sphere {
+                center [1.1, 0.5, 0]
+                radius 0.75
+                strength 1
+            }
+            sphere {
+                center [1.1, 0.75, 0.25]
+                radius 0.5
+                strength 1
+            }
+            sphere {
+                center [1.1, 0.75, -0.25]
+                radius 0.5
+                strength 1
+            }
+            // Mouth
+            cylinder {
+                from [1.4, 0.7, -2]
+                to [1.3, 0.7, 2]
+                radius 0.25
+                scale Y 0.6
+                strength -2
+            }
+            // Nostrils
+            sphere {
+                center [1.4, 0.9, 0.25]
+                radius 0.17
+                strength -0.5
+            }
+            sphere {
+                center [1.4, 0.9, -0.25]
+                radius 0.17
+                strength -0.5
+            }
+    
+            // Head
+            sphere {
+                center [-1.4, 0.4, 0]
+                radius 2
+                strength 1
+                scale [0.75, 1, 0.75]
+            }
+            cylinder {
+                from [-2, 3.2, 0]
+                to [1, 2.2, 0]
+                radius 0.4
+                scale Y 0.6
+                strength -0.75
+            }
+        
+            // Eyes
+            sphere {
+                center [-0.9, 1.8, -0.5]
+                radius 0.5
+                strength 0.9
+                scale Y 0.7
+            }
+            sphere {
+                center [-0.9, 1.9, -0.6]
+                radius 0.4
+                strength -1
+                scale Y 0.7
+            }
+            sphere {
+                center [-0.85, 1.34, -0.65]
+                radius 0.25
+                strength 1.1
+            }
+            sphere {
+                center [-0.9, 1.8, 0.5]
+                radius 0.5
+                strength 0.9
+                scale Y 0.7
+            }
+            sphere {
+                center [-0.9, 1.9, 0.6]
+                radius 0.4
+                strength -1
+                scale Y 0.7
+            }
+            sphere {
+                center [-0.85, 1.34, 0.65]
+                radius 0.25
+                strength 1.1
+            }
+    
+            scale 0.7
+            rotate Z -30
+            translate [-0.2, 2, 0]
+        }
+
+        object ChessKnightEar {
+            translate [-0.7, 3.15, -0.5]
+        }
+
+        object ChessKnightEar {
+            translate [-0.7, 3.15, 0.5]
+        }
+
+        tube {
+            radius 1 at [0, 0, 0]
+            curve radius 1 at [0, 1, 0] radius 0.6 at [-0.9, 1, 0] radius 0.5 at [-0.9, 2.2, 0]
+            scale Z 0.75
+        }
+    
+        // The mane: the K-rail-ish crest carried along the back of the neck and up over the skull,
+        // finishing just forward of the ears.  `no center` is what makes the placement work -- a sweep
+        // centres its profile about the 2D origin by default, which would thread the spline through the
+        // middle of the crest and bury half of it; with `no center` the spline is aimed at the profile's
+        // own origin, which sits on the middle of its bottom line, so the spline can ride the surface
+        // and the crest stands proud of it.
+        //
+        // The profile is drawn with its width in Y and its height in X, which looks backwards and is
+        // not: a sweep lofts a profile point as `position + Normal * x + Binormal * y`, and along this
+        // spline the frame comes out Normal ~ (-1, 0, 0) -- outward -- and Binormal ~ (0, 0, 1) --
+        // across.  Drawn the natural way round, the mane lies on its side.
+        //
+        // The spline is the tube's own back edge as far as t = 0.88, then the head's crest from 222 to
+        // 52 degrees about the head mass's centre.  Both were measured rather than guessed: the tube
+        // from its own Bezier, offset by the interpolated radius square to the spine, and the head by
+        // marching rays out from its centre until the blob field crosses its threshold.  Both are
+        // inset 0.03 so the flat bottom bites in rather than floating.
+        sweep {
+            no center
+            profile {
+                move to  0.0000,  0.0000
+                line to  0.0000,  0.2112
+                curve  0.0330,  0.1672,  0.1452,  0.0774 to  0.2992,  0.0686
+                quad  0.3872,  0.0634 to  0.4158,  0.0484
+                quad  0.4400,  0.0282 to  0.4400,  0.0000
+                quad  0.4400, -0.0282 to  0.4158, -0.0484
+                quad  0.3872, -0.0634 to  0.2992, -0.0686
+                curve  0.1452, -0.0774,  0.0330, -0.1672 to  0.0000, -0.2112
+                close
+            }
+            spline {
+                move to -0.8971,  0.1004,  0.0000  scale 0.280
+                quad -0.8865,  0.1573,  0.0000 to -0.8826,  0.1925,  0.0000  scale 0.508
+                quad -0.8787,  0.2277,  0.0000 to -0.8856,  0.2809,  0.0000  scale 0.624
+                quad -0.8925,  0.3341,  0.0000 to -0.9155,  0.4073,  0.0000  scale 0.730
+                quad -0.9386,  0.4806,  0.0000 to -0.9762,  0.5727,  0.0000  scale 0.830
+                quad -1.0138,  0.6647,  0.0000 to -1.0594,  0.7742,  0.0000  scale 0.926
+                quad -1.1049,  0.8838,  0.0000 to -1.1496,  1.0101,  0.0000  scale 1.000
+                quad -1.1942,  1.1363,  0.0000 to -1.2292,  1.2776,  0.0000  scale 1.000
+                quad -1.2641,  1.4189,  0.0000 to -1.2837,  1.5733,  0.0000  scale 1.000
+                quad -1.3032,  1.7276,  0.0000 to -1.2900,  2.0643,  0.0000  scale 1.000
+                quad -1.2769,  2.4010,  0.0000 to -1.2757,  2.4377,  0.0000  scale 1.000
+                quad -1.2746,  2.4744,  0.0000 to -1.2701,  2.5070,  0.0000  scale 1.000
+                quad -1.2656,  2.5395,  0.0000 to -1.2591,  2.5679,  0.0000  scale 1.000
+                quad -1.2526,  2.5964,  0.0000 to -1.2449,  2.6210,  0.0000  scale 1.000
+                quad -1.2373,  2.6457,  0.0000 to -1.2292,  2.6671,  0.0000  scale 1.000
+                quad -1.2211,  2.6886,  0.0000 to -1.2129,  2.7074,  0.0000  scale 1.000
+                quad -1.2047,  2.7263,  0.0000 to -1.1966,  2.7431,  0.0000  scale 1.000
+                quad -1.1884,  2.7599,  0.0000 to -1.1805,  2.7752,  0.0000  scale 1.000
+                quad -1.1726,  2.7905,  0.0000 to -1.1648,  2.8047,  0.0000  scale 1.000
+                quad -1.1570,  2.8190,  0.0000 to -1.1494,  2.8326,  0.0000  scale 1.000
+                quad -1.1417,  2.8462,  0.0000 to -1.1341,  2.8595,  0.0000  scale 1.000
+                quad -1.1264,  2.8728,  0.0000 to -1.1185,  2.8862,  0.0000  scale 1.000
+                quad -1.1106,  2.8995,  0.0000 to -1.1023,  2.9133,  0.0000  scale 1.000
+                quad -1.0939,  2.9270,  0.0000 to -1.0849,  2.9414,  0.0000  scale 1.000
+                quad -1.0758,  2.9559,  0.0000 to -1.0658,  2.9716,  0.0000  scale 1.000
+                quad -1.0559,  2.9874,  0.0000 to -1.0447,  3.0055,  0.0000  scale 1.000
+                quad -1.0335,  3.0236,  0.0000 to -1.0202,  3.0448,  0.0000  scale 1.000
+                quad -1.0069,  3.0660,  0.0000 to -0.9902,  3.0908,  0.0000  scale 1.000
+                quad -0.9735,  3.1156,  0.0000 to -0.9518,  3.1436,  0.0000  scale 1.000
+                quad -0.9302,  3.1717,  0.0000 to -0.9020,  3.2018,  0.0000  scale 0.929
+                quad -0.8738,  3.2318,  0.0000 to -0.8380,  3.2612,  0.0000  scale 0.804
+                quad -0.8022,  3.2905,  0.0000 to -0.7589,  3.3158,  0.0000  scale 0.659
+                quad -0.7157,  3.3411,  0.0000 to -0.6661,  3.3587,  0.0000  scale 0.500
+                quad -0.6166,  3.3763,  0.0000 to -0.5701,  3.3724,  0.0000  scale 0.331
+                quad -0.5235,  3.3685,  0.0000 to -0.4433,  3.3282,  0.0000  scale 0.060
+            }
+            steps 140
+        }
+                scale 0.1230
+                translate [0, 0.1720, 0]
+            }
+        }
+        material coat
+        scale size
+    }
+}
+
+// -- The board ------------------------------------------------------------------------------------
+
+// Squares, a border, and nothing else.
+//
+//     object Board(8, Ivory, Ebony, ChessOak)
+//
+// `across` is how many squares to a side -- eight for chess, ten for draughts on a big board -- and
+// the three materials are the light squares, the dark squares and the border.
+//
+// **A square is 0.57 of a king, and the board is drawn at the same scale the pieces are.**  So a set
+// written at `size 1.0` stands on `Board(8, ...)` without either being scaled: the squares come out
+// 0.57 across, which is what keeps a rank of eight pawns from touching, and a king's 0.47 base has
+// room in the middle of one.  A set at another scale wants the same number on the board.
+//
+// The board's top is at y = 0, so a piece translated to a square sits on it with no height to work
+// out.  `ChessAt` gives the middle of a square along one axis, counting from zero at the near left:
+//
+//     object King(1.0, Ivory) { translate [ChessAt(8, 4), 0, ChessAt(8, 0)] }
+//
+// **It answers one coordinate rather than the point, because a function of your own gives back a
+// number.**  The same formula does for the file and the rank, the board being square, so one
+// function called twice is no worse than a point would have been.
+function ChessAt(across, n) -> number {
+    return (n - (across - 1) / 2) * 0.57
+}
+
+// Oak, for a border that is usually wood and sometimes not.
+ChessOak = material {
+    pigment wood {
+        turbulence { amplitude 0.35  octaves 3 }
+        [0, [0.46, 0.31, 0.17], 0.45, [0.38, 0.25, 0.13], 0.72, [0.29, 0.18, 0.09],
+         1, [0.46, 0.31, 0.17]]
+        scale [0.085, 0.085, 2.6]
+        rotate Y 12
+    }
+    specular 0.30  shininess 45  ambient 0.14
+}
+
+primitive Board(across, light = Ivory, dark = Ebony, border = ChessOak) -> group {
+    return group {
+        // The squares.  **The two colours cannot be one checker pattern here**, however much cheaper
+        // that would be: a pattern carries pigments, and what a board wants styled is the whole
+        // material -- a polished dark square and a matt light one differ in their specular before
+        // they differ in their colour.  So they are laid as separate solids and the `if` picks which
+        // material each gets, which is what `across * across` cubes cost and it is not much.
+        group {
+            for index in [0, across * across - 1] {
+                file = index % across
+                rank = floor(index / across)
+
+                if ((file + rank) % 2 == 0) {
+                    cube {
+                        scale [0.285, 0.03, 0.285]
+                        translate [(file - (across - 1) / 2) * 0.57, -0.03,
+                                   (rank - (across - 1) / 2) * 0.57]
+                        material dark
+                    }
+                }
+                else {
+                    cube {
+                        scale [0.285, 0.03, 0.285]
+                        translate [(file - (across - 1) / 2) * 0.57, -0.03,
+                                   (rank - (across - 1) / 2) * 0.57]
+                        material light
+                    }
+                }
+            }
+        }
+
+        // The border: a frame with the playing area taken out of it, so the squares drop into a well
+        // rather than sitting on a tray.  It reaches lower than they do, which is what gives a board
+        // an edge to pick it up by.
+        difference {
+            cube {
+                scale [across * 0.285 + 0.26, 0.05, across * 0.285 + 0.26]
+                translate [0, -0.05, 0]
+            }
+            cube {
+                scale [across * 0.285, 0.06, across * 0.285]
+                translate [0, -0.04, 0]
+            }
+            material border
+        }
+    }
+}

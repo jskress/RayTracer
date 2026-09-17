@@ -1479,6 +1479,88 @@ on the barrel, the smokebox or the chimney.  What carries snow is everything the
 buffer beam, the front platform, the cab roof and the tender.  An engine caught in snow with a white
 boiler is an engine nobody has lit, which is a different picture from the one a winter scene wants.
 
+#### Chess
+
+```
+import 'chess' { Pawn, Rook, Knight, Bishop, Queen, King, Board, ChessAt, Ivory, Ebony }
+
+object Board(8)
+object King(1.0, Ivory) { translate [ChessAt(8, 4), 0, ChessAt(8, 0)] }
+object Pawn(1.0, Ebony) { translate [ChessAt(8, 3), 0, ChessAt(8, 6)] }
+```
+
+| | |
+| --- | --- |
+| `Pawn` | A ball on a collar. |
+| `Rook` | A tower, its battlements cut out of it afterwards. |
+| `Knight` | The horse's head — the one piece that is not turned. |
+| `Bishop` | A mitre, with the slit cut in its face. |
+| `Queen` | A coronet of points. |
+| `King` | The tallest, carrying a cross. |
+| `Board` | Squares, a border, and nothing else. |
+| `ChessAt` | Where a square's middle is, along one axis. |
+
+**The first number is the set's scale, not the piece's height.**  `King(1.0)` is a king one unit tall
+and `Pawn(1.0)` is the pawn that belongs beside it — about half that.  Each piece carries its own
+proportion, so a whole set is one number repeated and the men come out in the relation to each other
+that a real set has.  Asking for each piece's own height instead would mean a scene had to know all
+six ratios to lay out a board that looked right.  The proportions are a Staunton set's: taking the
+king as 1, the queen is 0.83, the bishop 0.74, the rook 0.68, the knight 0.66 and the pawn 0.50.
+
+**A square is 0.57 of a king, and `Board` is drawn at the scale the pieces are.**  So a set written
+at `size 1.0` stands on `Board(8)` without either being scaled: the squares come out 0.57 across,
+which keeps a rank of eight pawns from touching, and a king's 0.47 base has room in the middle of
+one.  The board's top is at `y = 0`, so a piece translated onto a square needs no height worked out.
+
+##### The color is an argument, and deliberately not a block on the call
+
+Either would work:
+
+```
+object Pawn(1.0, Ebony)                  // this
+object Pawn(1.0) { material { ... } }    // or this
+```
+
+and the difference is that the second one cannot be *shared*.  A call carrying its own material block
+is built afresh every time, because the block is laid over whatever the call made; a material handed
+in as an argument is part of what identifies the call, so the sixteen pawns of a game are built once
+and stood in sixteen places.
+
+**That is a claim about building and not about speed, and on a turned piece it buys nothing
+measurable.**  Thirty-two pawns drawn both ways came out pixel for pixel identical and within the
+noise of each other — 0.456, 0.476, 0.457 seconds against 0.498, 0.460, 0.442 — because a pawn is two
+lathes and building one costs nothing worth saving.  Where it tells is the knight, which is a blob and
+a swept mesh rather than a turning.
+
+##### Every piece stands on the same foot, at its own size
+
+The turned foot is one shape, drawn once at the size a king uses, and **scaled per piece rather than
+used at one size**.  A real set does not give every man the same base: the smaller the piece the wider
+its foot in proportion, because a pawn wants the same stability out of less height.  Taking base
+diameter over height, a Staunton king is 0.47 and a pawn 0.68.  One foot at one size makes the king
+look spindly or the pawn look bloated, depending which you drew it for.
+
+##### The knight is the one that is not turned
+
+Five of the six are outlines on a lathe, which is what a chessman is: a thing made by turning.  The
+knight is a horse's head, and a head is not a solid of revolution.  It is a **blob** — the neck and
+skull as overlapping spheres and cylinders whose fields add — with the ears turned separately and a
+**sweep** laid along the crest for the mane.
+
+Three shapes were tried for the head before the blob, and each failed for a reason worth knowing.
+A **tube** cannot do it: a tube's radius is one number per station, so its face and jaw lines are
+forced to mirror each other about the spine, and a horse's are nothing alike — the face is concave
+where the jaw below it is convex and much deeper.  An **extrusion** cannot do it either: it carries
+one flat outline straight through, so the piece reads as a slab with a rim however the silhouette is
+drawn.  A blob is the shape that has neither constraint, because the fields simply add and the jaw
+owes the top of the head nothing.
+
+**The mane's spline is fixed geometry and scales bodily with the rest.**  It was measured off this
+particular neck and this particular skull — the tube's back edge offset by its own radius, then the
+blob's crest found by marching rays out from the head until the field crossed its threshold — so its
+control points describe one horse.  That is the right answer for a chess piece, whose proportions
+should not change with its size, but it means the head cannot be re-proportioned by changing a number.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
