@@ -1935,6 +1935,90 @@ top on four legs with nothing between them reads as a trestle, and the gap under
 thing the eye uses to tell a table from a board laid across supports.  The low table deliberately has
 none: it is meant to be seen under, and a rail there would close it up.
 
+#### Aircraft
+
+```
+import 'aircraft' { Airliner, LightPlane, Helicopter }
+
+object Airliner(40)
+object LightPlane(8)  { translate Z 40 }
+object Helicopter(14) { translate Z -40 }
+```
+
+| | |
+| --- | --- |
+| `Airliner` | Swept wings, two engines on pylons, a fin and a tailplane, and a row of windows. |
+| `LightPlane` | High wing on a strut, a propeller, and gear that does not go away. |
+| `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
+| `AircraftWhite`, `AircraftBlue`, `AircraftRed` | Liveries. |
+| `AircraftMetal`, `AircraftGlass`, `AircraftTire` | The rest of it. |
+
+**The first number is a length**, as it is for the [vehicles](#vehicles) and the
+[vessels](#vessels) — a forty-metre airliner, not one thirteen metres tall.  These are in **meters**
+and they **face `+X`**.
+
+##### The wheels are on `y = 0`, even when the wheels are not there
+
+The [vessels](#vessels) put their waterline at nought because a hull has no face it rests on.  An
+aeroplane does have one, so it is back to the usual convention: the wheels are at nought, like a
+chair's feet.
+
+**And it stays at nought with the gear up.**  `gear 0` takes the legs away and leaves everything else
+exactly where it was, so a scene can put an aircraft on a runway, raise the gear, and fly it by
+translating in `Y` alone.  Retracting the gear by *lowering* the aircraft onto its belly is the other
+way to read it, and it would mean every flying scene had to know a number it should not have to care
+about.
+
+##### A wing is thin, swept, and made of two panels
+
+The first instinct is to make a wing you can see.  A real one is a couple of percent of its own chord
+in thickness, and anything comfortably visible edge-on reads as a plank.  Thin, swept, and with a few
+degrees of dihedral — the upward cant that makes the pair a shallow V rather than a crossbar — and the
+shape is right before any detail is on it.
+
+**The taper is worth two panels.**  A constant-chord wing is a board.  An inner panel with a wide chord
+and an outer one with a narrow one reads as a taper, which is what the eye is looking for — and
+because **both are rooted at the same place** and the outer one carries a shade more sweep, its tip
+ends up further back and further out on its own.  No arithmetic about where the first panel ended.
+
+##### Mirror the panel; do not also negate its angles
+
+A panel is built on `+Z` and the left one is mirrored with `scale [1, 1, -1]`.  Folding the side into
+the angles as well — `rotate Y (-side * sweep)` *and* then mirroring — negates the sweep twice, so one
+wing rakes back and the other rakes **forward**.
+
+It is worth knowing because of how well it hides.  The aeroplane looks like an aeroplane from almost
+every angle; it is only from above that the wings read as a Z rather than a V, and a swept wing seen
+in three-quarter view looks swept whichever way it actually goes.  I found it by rendering a plan
+view for a different reason.
+
+##### The numbers that are not what they feel like
+
+**An airliner has to stand tall enough for an engine to fit under the wing.**  At 0.062 of its length
+to the fuselage axis — about what a 737 really sits at — a nacelle slung under a low wing ends up
+*below the ground*, and the pylons hang over nothing.  Real 737s are that low and solve it by
+flattening the nacelle; a library is better off standing a little taller and keeping its shapes
+honest.
+
+**A helicopter's rotor is wider than the aircraft is long.**  A JetRanger is a shade over eleven
+metres nose to tail and its rotor is over ten across.  Drawn from instinct the cabin comes out far too
+big — at 0.155 of the length it was four metres wide on a fourteen-metre aircraft — and the blades
+look stubby when they are in fact the right length.  Shrinking the cabin is what fixes the rotor.
+
+##### Two things that read as nothing at all
+
+**Glass has to sit above the axis.**  Sized to the fuselage and centred on it, a canopy wraps all the
+way round and reads as a band of paint.  Held to the upper half and let out a shade wider than the
+skin, the same shape reads as a windscreen with side windows behind it.
+
+**A high wing needs a strut that reaches.**  Tilted a token few degrees it lies flat under the wing,
+joining nothing to nothing: the wing still floats and the strut reads as a rod somebody left there.
+It has to run from the bottom of the fuselage out to half span, at whatever angle that takes.
+
+And the windows are what make an airliner an airliner rather than a missile.  One row down the side
+gives the fuselage a scale nothing else does — without them a tube with wings could be four metres
+long or forty, and the eye has no way to tell.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

@@ -1,0 +1,69 @@
+// An airfield with the sun just up, and one aeroplane already gone.
+//
+// **The `aircraft` library stands everything on its wheels at `y = 0`**, so the three on the ground
+// here are dropped at the origin and moved about in `X` and `Z` only.  The one climbing out is the
+// same call with `gear 0` and a translate in `Y`: raising the gear does not move the aircraft, which
+// is the whole point of putting the datum where the wheels are rather than under the belly.
+//
+// **They face `+X`**, like the vehicles, the trains and the vessels, so the two on the taxiway needed
+// no turning at all and the one in the air needed a roll and a climb and nothing else.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    angles are degrees
+    info {
+        title 'First Light at the Field'
+        author 'J. Stephen Kress'
+        description 'Three aircraft on the ground and one climbing away, at dawn.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'aircraft' { Airliner, LightPlane, Helicopter, AircraftWhite, AircraftBlue, AircraftRed }
+import 'daylight' { ClearMorning, ClearMorningLight }
+
+camera {
+    location [58, 15, -82]
+    look at [-4, 20, 16]
+    field of view 56
+}
+
+background ClearMorning
+light ClearMorningLight { samples 32 }
+
+// -- The field ----------------------------------------------------------------------------------------
+
+// Concrete, laid in bays with the joints showing.  `brick` squared off is a slab: the pattern's own
+// brick is 8 by 3 by 4.5, so five-metre bays want 5/8 across and 5/4.5 along.
+plane {
+    material {
+        pigment brick {
+            [0.40, 0.40, 0.39], [0.44, 0.44, 0.43]
+            scale [0.625, 30, 1.111]
+        }
+        specular 0.06  shininess 24  ambient 0.20
+    }
+}
+
+// -- What is on it ------------------------------------------------------------------------------------
+
+// The airliner, turned onto the taxiway rather than square to the camera, because nothing on an
+// airfield is ever square to anything.
+object Airliner(42, 1, 1) { rotate Y 24  translate [-16, 0, 30] }
+
+// A trainer and a helicopter on the apron, in front of it and much smaller -- which is most of what
+// says how big the airliner is.
+object LightPlane(8, 1, 0) { rotate Y -14  translate [22, 0, -12] }
+object Helicopter(14, 2) { rotate Y 58  translate [-2, 0, -20] }
+
+// And the one that left: gear up, banked away, and climbing.  The same call as the one on the ground
+// with one argument changed and three transforms on it.
+object Airliner(42, 0, 2) {
+    rotate X -22
+    rotate Z 10
+    rotate Y 34
+    translate [-6, 40, 54]
+}
