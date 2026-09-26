@@ -314,4 +314,65 @@ public class TestLathe
             hits.Any(hit => hit.Distance > 0.0001 && hit.Distance < distance),
             "nothing the CSG keeps should stand between a point in the removed quarter and the lamp");
     }
+
+    /// <summary>
+    /// A profile drawn on the negative-X side of the axis revolves to exactly the same surface
+    /// as its mirror image, so it must have exactly the same normals.  Its sloped face here runs
+    /// from radius 2 at the bottom to radius 1 at the top, so it faces outward and up, along
+    /// (2, 1) in (radial, up) terms.  With the radius running negative, the normal used to come
+    /// out reflected -- leaning in toward the axis -- which shaded a sloped face as if it lay in
+    /// its own shadow.  A flat or upright face only came out reversed, which shading repairs, so
+    /// only a slope can tell the two apart.
+    /// </summary>
+    [TestMethod]
+    public void TestProfileOnNegativeSideHasTheSameNormalsAsItsMirror()
+    {
+        foreach (double side in new[] { 1.0, -1.0 })
+        {
+            GeneralPath profile = new GeneralPath()
+                .MoveTo(0, 0)
+                .LineTo(side * 2, 0)
+                .LineTo(side * 1, 2)
+                .LineTo(0, 2)
+                .ClosePath();
+            Lathe lathe = new () { Path = profile };
+            Ray ray = new (new Point(5, 0.8, 0.3), new Vector(-1, 0.05, 0));
+            List<Intersection> intersections = [];
+
+            lathe.PrepareForRendering();
+            lathe.AddIntersections(ray, intersections);
+
+            Intersection first = intersections.OrderBy(intersection => intersection.Distance).First();
+            Point hitPoint = ray.At(first.Distance);
+            Vector radial = new Vector(hitPoint.X, 0, hitPoint.Z).Unit;
+            Vector expectedNormal = (radial * 2 + Directions.Up).Unit;
+            Vector normal = ((PrecomputedNormalIntersection) first).PrecomputedNormal;
+
+            Assert.IsTrue(expectedNormal.Matches(normal), $"the profile drawn with side {side}");
+        }
+    }
+
+    /// <summary>
+    /// A profile that starts on the axis with a level tangent -- a dome -- makes the ray's
+    /// equation all but even in u, so its roots come in near +/- pairs, and a ray that grazes the
+    /// dome nearly doubles each pair as well.  That is the problem the exact solver's eigenvalue
+    /// iteration stalls on, and it threw, taking the whole render down with it.  This is the very
+    /// ray that did so, in the lathe's own space: it passes 2.01 from the axis at a height where
+    /// the dome is only 0.99 across, and its four roots are two complex pairs agreeing to three
+    /// places, so the right answer is a miss.
+    /// </summary>
+    [TestMethod]
+    public void TestDomeGrazingRayDoesNotStallTheRootFinder()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(0, 0.46875)
+            .QuadTo(-2.3362542, 0.46875, -4.625, 0);
+        LathePathSurface dome = new (profile.Segments[0]);
+        Lathe lathe = new () { Path = profile };
+        Ray ray = new (
+            new Point(0.8749999999999982, 0.44634848052473597, -35.05425470658209),
+            new Vector(0.0808888485870876, 9.374057135713709E-05, 2.4986910544096803));
+
+        Assert.AreEqual(0, dome.GetIntersections(lathe, ray).Count());
+    }
 }

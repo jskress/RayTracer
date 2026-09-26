@@ -443,7 +443,8 @@ lathe {
 
 The X of each point is how far that part of the profile stands from the axis and the Y is how
 high up it sits.  Anything round and symmetrical — a glass, a vase, a bottle, a chess
-piece — is quicker to write this way than any other.
+piece — is quicker to write this way than any other.  A profile may be drawn on either side of
+the axis: one at negative X spins into exactly the same solid as its mirror image.
 
 The complete scene is [`docs/examples/advanced/lathe.igl`](examples/advanced/lathe.igl), and
 `gallery/Local/extrusions/` has several more.

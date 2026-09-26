@@ -156,4 +156,32 @@ public class TestTubeQuadSegment
 
         Assert.AreEqual(0, intersections.Count);
     }
+
+    /// <summary>
+    /// A ray square across a symmetric arch, off to one side by the tube's radius, grazes both legs
+    /// at mirrored points, which puts two nearly doubled roots either side of the middle of its
+    /// span -- the shape that stalls the exact solver.  It threw, and took the whole render with
+    /// it.  This ray, found by fuzzing, is one it threw on.  The tube is one radius all along and
+    /// its spine lies in z = 0, so nothing of it reaches past |z| = r; the ray runs 4.8e-5 beyond
+    /// that, so the right answer is a miss.
+    /// </summary>
+    [TestMethod]
+    public void TestRayGrazingBothLegsOfAnArchDoesNotStallTheRootFinder()
+    {
+        const double halfWidth = 2.205738486119424;
+        const double radius = 0.3557620980570847;
+        TubeQuadSegment arch = new ()
+        {
+            Start = new Point(-halfWidth, 0, 0), StartRadius = radius,
+            Control = new Point(0, 1.643882475720664, 0), ControlRadius = radius,
+            End = new Point(halfWidth, 0, 0), EndRadius = radius
+        };
+        Ray ray = new (new Point(-8.617215458358272, 0.2861396690920292, -0.355809933171646), Directions.Right);
+        List<Intersection> intersections = [];
+
+        arch.PrepareForRendering();
+        arch.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(0, intersections.Count);
+    }
 }
