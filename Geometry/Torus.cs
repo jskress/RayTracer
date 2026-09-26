@@ -85,10 +85,31 @@ public class Torus : Surface
             1.0
         ];
         Polynomial polynomial = new (coefficients);
+        (double start, double end) = SpanWithin(
+            MajorRadius + MinorRadius, k2, k1 + _majorSquared + _minorSquared);
 
-        intersections.AddRange(polynomial.Roots()
-            .Where(root => root.Imaginary.Near(0))
-            .Select(root => new Intersection(this, root.Real / length)));
+        // A ray from the torus's centre that grazes its tube makes both +/- pairs of roots double,
+        // which is the exact solver's worst case; the span is where to look if it gives up.
+        intersections.AddRange(RootFinding.RealRootsOf(polynomial, start, end)
+            .Select(root => new Intersection(this, root / length)));
+    }
+
+    /// <summary>
+    /// This method returns the stretch of a ray, with a unit direction, that lies within a given
+    /// distance of the origin: every point of a torus lies within its two radii together of its
+    /// centre, so every root it can have lies in here.
+    /// </summary>
+    /// <param name="reach">The distance from the origin.</param>
+    /// <param name="along">The dot product of the ray's origin and its direction.</param>
+    /// <param name="originSquared">The squared distance of the ray's origin from the origin.</param>
+    /// <returns>The start and end of the stretch, which meet when the ray passes wide.</returns>
+    internal static (double Start, double End) SpanWithin(
+        double reach, double along, double originSquared)
+    {
+        double closest = -along;
+        double half = Math.Sqrt(Math.Max(0, reach * reach - (originSquared - along * along)));
+
+        return (closest - half, closest + half);
     }
 
     /// <summary>

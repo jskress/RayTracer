@@ -351,4 +351,28 @@ public class TestLathe
             Assert.IsTrue(expectedNormal.Matches(normal), $"the profile drawn with side {side}");
         }
     }
+
+    /// <summary>
+    /// A profile that starts on the axis with a level tangent -- a dome -- makes the ray's
+    /// equation all but even in u, so its roots come in near +/- pairs, and a ray that grazes the
+    /// dome nearly doubles each pair as well.  That is the problem the exact solver's eigenvalue
+    /// iteration stalls on, and it threw, taking the whole render down with it.  This is the very
+    /// ray that did so, in the lathe's own space: it passes 2.01 from the axis at a height where
+    /// the dome is only 0.99 across, and its four roots are two complex pairs agreeing to three
+    /// places, so the right answer is a miss.
+    /// </summary>
+    [TestMethod]
+    public void TestDomeGrazingRayDoesNotStallTheRootFinder()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(0, 0.46875)
+            .QuadTo(-2.3362542, 0.46875, -4.625, 0);
+        LathePathSurface dome = new (profile.Segments[0]);
+        Lathe lathe = new () { Path = profile };
+        Ray ray = new (
+            new Point(0.8749999999999982, 0.44634848052473597, -35.05425470658209),
+            new Vector(0.0808888485870876, 9.374057135713709E-05, 2.4986910544096803));
+
+        Assert.AreEqual(0, dome.GetIntersections(lathe, ray).Count());
+    }
 }

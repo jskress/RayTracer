@@ -2,7 +2,6 @@ using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using RayTracer.Basics;
 using RayTracer.Extensions;
-using Complex = System.Numerics.Complex;
 
 namespace RayTracer.Geometry;
 
@@ -73,7 +72,7 @@ internal static class TubeCurveMath
 
         double[] resultantCoefficients = SolveVandermonde(sampleSs, resultantSamples);
 
-        foreach (double s in RealRoots(resultantCoefficients))
+        foreach (double s in RealRoots(resultantCoefficients, -1, 1))
         {
             if (s < -1 || s > 1)
                 continue;
@@ -102,7 +101,7 @@ internal static class TubeCurveMath
     /// <returns><c>true</c>, if the point is on the outer boundary.</returns>
     public static bool IsOnOuterBoundary(double[] f)
     {
-        bool hasInteriorRoot = RealRoots(f).Any(u => u is > DoubleExtensions.Epsilon and < 1 - DoubleExtensions.Epsilon);
+        bool hasInteriorRoot = RealRoots(f, 0, 1).Any(u => u is > DoubleExtensions.Epsilon and < 1 - DoubleExtensions.Epsilon);
 
         return !hasInteriorRoot && Evaluate(f, 0.5) >= 0;
     }
@@ -127,7 +126,7 @@ internal static class TubeCurveMath
         double? best = null;
         double bestResidual = double.MaxValue;
 
-        foreach (double root in RealRoots(p))
+        foreach (double root in RealRoots(p, 0, 1))
         {
             double residual = Math.Abs(Evaluate(check, root));
 
@@ -170,19 +169,26 @@ internal static class TubeCurveMath
     /// degree, so a segment whose true degree is lower ends up with high-order coefficients
     /// that are pure numerical noise -- treating them as genuine leading terms would hand
     /// the companion-matrix solver a wildly ill-conditioned problem for no reason.
+    /// <para>
+    /// Even well trimmed, the solver can give up: a ray square across a symmetric arch that
+    /// grazes both legs at once puts two nearly doubled roots either side of the middle of
+    /// its span, which is what stalls it.  The interval is where the search it falls back to
+    /// looks (see <see cref="RootFinding"/>), so it must hold every root the caller keeps.
+    /// </para>
     /// </summary>
-    public static IEnumerable<double> RealRoots(double[] coefficients)
+    /// <param name="coefficients">The polynomial's coefficients, in ascending order.</param>
+    /// <param name="intervalStart">The start of the interval the fallback searches.</param>
+    /// <param name="intervalEnd">The end of the interval the fallback searches.</param>
+    /// <returns>The real roots that were found.</returns>
+    public static IEnumerable<double> RealRoots(double[] coefficients, double intervalStart, double intervalEnd)
     {
         double[] trimmed = TrimNegligibleTrailingCoefficients(coefficients);
 
         if (trimmed.Length == 0)
             yield break;
 
-        foreach (Complex root in new Polynomial(trimmed).Roots())
-        {
-            if (root.Imaginary.Near(0))
-                yield return root.Real;
-        }
+        foreach (double root in RootFinding.RealRootsOf(new Polynomial(trimmed), intervalStart, intervalEnd))
+            yield return root;
     }
 
     /// <summary>

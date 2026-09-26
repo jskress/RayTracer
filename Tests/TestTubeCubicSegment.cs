@@ -304,4 +304,33 @@ public class TestTubeCubicSegment
                 $"a reported surface point sits {nearest} from the curve, not {radius}");
         }
     }
+
+    /// <summary>
+    /// The cubic form of the arch that stalls the exact solver: a ray square across it, off to one
+    /// side by the tube's radius, grazing both legs at mirrored points.  It threw, and took the
+    /// whole render with it.  This ray, found by fuzzing, is one it threw on.  The tube is one
+    /// radius all along and its spine lies in z = 0, so nothing of it reaches past |z| = r; the
+    /// ray runs 6.3e-6 beyond that, so the right answer is a miss.
+    /// </summary>
+    [TestMethod]
+    public void TestRayGrazingBothLegsOfAnArchDoesNotStallTheRootFinder()
+    {
+        const double halfWidth = 2.81758829896226;
+        const double height = 2.8926987463108724;
+        const double radius = 0.06259002409064678;
+        TubeCubicSegment arch = new ()
+        {
+            Start = new Point(-halfWidth, 0, 0), StartRadius = radius,
+            Control1 = new Point(-halfWidth / 3, height, 0), Control1Radius = radius,
+            Control2 = new Point(halfWidth / 3, height, 0), Control2Radius = radius,
+            End = new Point(halfWidth, 0, 0), EndRadius = radius
+        };
+        Ray ray = new (new Point(-10.45276489688678, 0.23808976891554035, 0.06259628808115661), Directions.Right);
+        List<Intersection> intersections = [];
+
+        arch.PrepareForRendering();
+        arch.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(0, intersections.Count);
+    }
 }

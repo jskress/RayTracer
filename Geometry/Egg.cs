@@ -2,7 +2,6 @@ using MathNet.Numerics;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
-using Complex = System.Numerics.Complex;
 
 namespace RayTracer.Geometry;
 
@@ -186,13 +185,14 @@ public class Egg : Surface
             1.0
         ];
         Polynomial polynomial = new (coefficients);
+        double reach = Math.Sqrt(_majorSquared) + Math.Sqrt(_minorSquared);
+        (double start, double end) = Torus.SpanWithin(reach, k2, k1 + _majorSquared + _minorSquared);
 
-        foreach (Complex root in polynomial.Roots())
+        // As with any torus, a ray the exact solver gives up on -- here, one running up the axis
+        // from the collar's own centre -- falls back to a search of that span.
+        foreach (double root in RootFinding.RealRootsOf(polynomial, start, end))
         {
-            if (!root.Imaginary.Near(0))
-                continue;
-
-            double t = root.Real / length;
+            double t = root / length;
             Point point = ray.At(t);
 
             if (point.Y <= _bottomVertical || point.Y >= _topVertical)

@@ -127,4 +127,25 @@ public class TestTorus
             Assert.IsTrue(expected.Matches(normal));
         }
     }
+
+    /// <summary>
+    /// A ray from a torus's centre makes its quartic even, with its roots in +/- pairs, and one
+    /// that all but grazes the tube nearly doubles both pairs -- the very shape the exact solver's
+    /// eigenvalue iteration stalls on.  It threw, and took the whole render with it.  This ray,
+    /// found by fuzzing, is one it threw on.  From the centre, a ray touches the tube only if it
+    /// rises no more steeply than the minor radius over the major, 0.25 here; this one rises at
+    /// 0.2653, so it passes clear of the tube, and the right answer is a miss.
+    /// </summary>
+    [TestMethod]
+    public void TestRayFromTheCentreDoesNotStallTheRootFinder()
+    {
+        Torus torus = new () { MajorRadius = 1, MinorRadius = 0.25 };
+        Ray ray = new (
+            new Point(0, 0, 0), new Vector(-0.528222451053034, -0.2652588985102271, 0.8066094215694892));
+        List<Intersection> intersections = [];
+
+        torus.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(0, intersections.Count);
+    }
 }

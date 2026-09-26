@@ -1,4 +1,3 @@
-using Complex = System.Numerics.Complex;
 using MathNet.Numerics;
 using RayTracer.Basics;
 using RayTracer.Core;
@@ -95,13 +94,13 @@ public class LathePathSurface
         Polynomial z = oz + dz * t;
         Polynomial equation = x * x + z * z - _radius * _radius;
 
-        foreach (Complex root in equation.Roots())
+        // A profile that starts on the axis with a level tangent -- a dome, the commonest start a
+        // lathe has -- is the exact solver's worst case: r(0) and h'(0) are both nought, so this
+        // comes out all but even in u, with its roots in near +/- pairs, and a ray grazing the dome
+        // nearly doubles each pair as well.  Hence a solve that survives the solver giving up.
+        foreach (double u in RootFinding.RealRootsOf(
+                     equation, -DoubleExtensions.Epsilon, 1 + DoubleExtensions.Epsilon))
         {
-            if (!root.Imaginary.Near(0))
-                continue;
-
-            double u = root.Real;
-
             if (u < -DoubleExtensions.Epsilon || u > 1 + DoubleExtensions.Epsilon)
                 continue;
 
@@ -127,13 +126,9 @@ public class LathePathSurface
     {
         Polynomial heightEquation = _height - ray.Origin.Y;
 
-        foreach (Complex uRoot in heightEquation.Roots())
+        foreach (double u in RootFinding.RealRootsOf(
+                     heightEquation, -DoubleExtensions.Epsilon, 1 + DoubleExtensions.Epsilon))
         {
-            if (!uRoot.Imaginary.Near(0))
-                continue;
-
-            double u = uRoot.Real;
-
             if (u < -DoubleExtensions.Epsilon || u > 1 + DoubleExtensions.Epsilon)
                 continue;
 

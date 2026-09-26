@@ -168,4 +168,33 @@ public class TestEgg
         Assert.IsTrue(1.0.Near(normal.Magnitude));
         Assert.IsTrue(normal.X > 0);
     }
+
+    /// <summary>
+    /// The egg's collar is a torus -- a spindle one -- centred part-way up the axis, and a ray
+    /// running up the axis from that centre doubles both of its quartic's +/- root pairs, which
+    /// stalls the exact solver.  It threw, and took the whole render with it.  This ray, found by
+    /// fuzzing, is one it threw on.  Running up the axis from inside, it must leave through the
+    /// top of the top sphere, at the egg's full height, and -- behind its origin -- through the
+    /// bottom of the bottom one, and meet nothing else.
+    /// </summary>
+    [TestMethod]
+    public void TestRayUpTheAxisFromTheCollarCentreDoesNotStallTheRootFinder()
+    {
+        Egg egg = new () { BottomRadius = 0.7226413543441526, TopRadius = 0.5074446027472973 };
+        Ray ray = new (
+            new Point(0, 0.11408199936974678, 0), new Vector(1.1781924885720173E-10, 1, 4.0499307566603E-10));
+        List<Intersection> intersections = [];
+
+        egg.PrepareForRendering();
+        egg.AddIntersections(ray, intersections);
+
+        double[] heights = intersections
+            .Select(intersection => ray.At(intersection.Distance).Y)
+            .Order()
+            .ToArray();
+
+        Assert.AreEqual(2, heights.Length);
+        Assert.IsTrue((-egg.BottomRadius).Near(heights[0]));
+        Assert.IsTrue((egg.BottomRadius + egg.TopRadius).Near(heights[1]));
+    }
 }
