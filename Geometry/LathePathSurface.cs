@@ -17,6 +17,7 @@ public class LathePathSurface
     private readonly Polynomial _height;
     private readonly Polynomial _radiusDerivative;
     private readonly Polynomial _heightDerivative;
+    private readonly double _side;
 
     public LathePathSurface(IPathSegment segment)
     {
@@ -24,6 +25,11 @@ public class LathePathSurface
         _height = BuildPolynomial(segment.Points, point => point.Y);
         _radiusDerivative = _radius.Differentiate();
         _heightDerivative = _height.Differentiate();
+        // Which side of the axis the segment is drawn on is settled once, by whichever of its
+        // points lies farthest out, rather than hit by hit: a segment that starts on the axis is
+        // allowed a hair beyond its own ends, and there its radius can dip below nought by the
+        // width of a rounding error.
+        _side = segment.Points.MaxBy(point => Math.Abs(point.X)).X < 0 ? -1 : 1;
     }
 
     /// <summary>
@@ -152,9 +158,14 @@ public class LathePathSurface
     private Intersection CreateIntersection(Surface surface, double t, double u, Point point)
     {
         double radiusAtHit = Math.Sqrt(point.X * point.X + point.Z * point.Z);
+        // A profile drawn on the negative-X side of the axis revolves to the same surface as its
+        // mirror image, but its radius, and so the radius slope below, both run negative.  The
+        // radial direction must be turned round to match, or every sloped face's normal comes out
+        // reflected, leaning toward the axis rather than away from it.  (Flat and upright faces
+        // merely come out reversed, which shading repairs on its own, so only slopes show it.)
         Vector radial = radiusAtHit.Near(0)
             ? Directions.Right
-            : new Vector(point.X / radiusAtHit, 0, point.Z / radiusAtHit);
+            : new Vector(_side * point.X / radiusAtHit, 0, _side * point.Z / radiusAtHit);
         double radiusSlope = _radiusDerivative.Evaluate(u);
         double heightSlope = _heightDerivative.Evaluate(u);
         Vector normal = (radial * heightSlope + Directions.Up * -radiusSlope).Unit;
