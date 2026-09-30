@@ -2019,6 +2019,120 @@ And the windows are what make an airliner an airliner rather than a missile.  On
 gives the fuselage a scale nothing else does — without them a tube with wings could be four metres
 long or forty, and the eye has no way to tell.
 
+#### Spacecraft
+
+```
+import 'spacecraft' { Shuttle, Satellite, Enterprise }
+
+object Shuttle(37)
+object Satellite(6)    { translate [0, 0, 60] }
+object Enterprise(289) { translate [0, 0, -600] }
+```
+
+| | |
+| --- | --- |
+| `Shuttle` | An orbiter: double-delta wing, a fin, three engines and a black belly. |
+| `Satellite` | A bus, two solar wings and a dish. |
+| `Enterprise` | A saucer, an engineering hull and two nacelles on pylons. |
+| `SpacecraftTile`, `SpacecraftBelly`, `SpacecraftHull` | What they are made of. |
+| `SpacecraftGlow`, `SpacecraftEmber` | And what glows. |
+
+**The first number is a length**, in **meters**, facing **`+X`**, like the [vehicles](#vehicles), the
+[vessels](#vessels) and the [aircraft](#aircraft).
+
+##### The origin is the middle of the craft, and that is the third answer
+
+Every library here has had to say where nought is.  Furniture stands on the floor, so its feet are at
+nought.  A [vessel](#vessels) has no face it rests on, so its **waterline** is.  An
+[aircraft](#aircraft) does have one, so it is back to the wheels.
+
+**A spacecraft rests on nothing and floats in nothing.**  There is no ground under it and no surface
+through it; the only thing it really has is an attitude.  So the origin is the craft's own middle, on
+its centerline, and what that buys is that `rotate` turns it about itself.  Put the datum anywhere
+else and every roll swings the craft through an arc as well as turning it, and a scene that wants one
+tumbling has to undo the swing by hand.
+
+##### One light and no fill
+
+This is the real difference from every other library here, and it is a lighting problem rather than a
+modeling one.  On the ground, half of what you see is light that has bounced — off the road, off a
+wall, off a sky that is itself a lamp the size of the world.  In orbit there is a sun and there is
+black, and a shape that reads perfectly well on a runway can go to an unreadable silhouette.
+
+So these carry a **higher `ambient` than anything else in these libraries**, which is a cheat and is
+worth naming as one: it stands in for the light a real spacecraft gets from the planet under it, which
+is not nothing — earthshine is bright enough to read by.
+
+**And a glow is a material, not a light.**  A nacelle or an engine bell reads as lit from inside if it
+carries a bright color at `ambient 1`.  Making it a real emitter costs a medium and buys nothing at
+this distance, for the reason the [outdoor lights](#outdoor-lights) give.  It also owes nothing to
+where the sun is, which is the point: an engine that dims when the craft turns away from the light is
+an engine that is not lit.
+
+##### A nose is an ellipsoid, not a superellipsoid
+
+A superellipsoid is the right shape for almost everything else in these libraries because it is a box
+with its edges taken off — and that is exactly what makes it wrong for a nose.  It keeps its section
+all the way to its ends, so a nose built from one is a rounded cylinder butted against a rounded
+cylinder, and reads as two lumps in a row rather than one body that tapers.  An ellipsoid narrows to
+its ends, which is what a nose does.
+
+##### An extrusion's thin axis is `Y`, and the scale happens before the turn
+
+A delta wing is one extrusion and not two swept panels: a delta's leading and trailing edges meet at
+the tip, and no amount of sweep on a constant-chord plate gets there.
+
+An extrusion's path lies in `X`–`Z` and it grows along `Y`, so **a plate on edge is scaled thin in `Y`
+and then stood up** with `rotate X -90`.  Scaling the third number instead looks right — the plate does
+end up thin in `Z` — and makes it a slab as thick as the ship is long.
+
+**And a leaned plate does not reach as far up as it is tall.**  Two turns about `X` compose into one,
+so a pylon leaned out at forty-eight degrees keeps only cos(48) of its height and spends the rest going
+outward.  Built to reach the nacelles it stopped ten meters short of them, ending in mid-air under what
+it was supposed to be holding up.
+
+##### The Enterprise is built to her published dimensions
+
+Five numbers, and between them they fix almost the whole layout:
+
+| | |
+| --- | --- |
+| overall length | 289 m |
+| saucer diameter, which is also her beam | 127 m |
+| height | 72 m |
+| nacelles | 156 m |
+| secondary hull | 100 m long, 30 m through |
+
+Three of the parts are the extremes of the box, so the rest follows.  **The saucer's forward rim is the
+foremost point**, so a 127-meter saucer on a 289-meter ship has its center 81 m forward of the middle.
+**The nacelles are the aftmost point**, so a 156-meter nacelle ends 11.5 m forward of it.  Rendered, the
+model measures 4.01 to one in length against height, against 289/72 = 4.01.
+
+**Almost none of it is where memory puts it.**  The saucer is *forty-four percent of the overall length
+across* — very nearly half the ship in one disc — and drawn by eye it comes out at about half that.  The
+nacelles are longer still at fifty-four percent, so one nacelle is longer than the secondary hull and the
+dorsal together.  And the secondary hull hangs well **aft**: its middle is 34 m behind the ship's own,
+while the saucer's is 81 m ahead of it.
+
+##### Three of her parts are lathes, and that is what puts the rim on the saucer
+
+The saucer, the secondary hull and each nacelle are bodies of revolution.  Built from flattened spheres
+— which is the obvious thing — the saucer comes out a smooth lens with **no rim**, and the rim is most
+of what the eye uses: it is the one hard edge on the whole primary hull, and without it the saucer reads
+as a pebble.  A lathe's profile puts it there for the cost of two points.
+
+The same goes for the secondary hull's **blunt bow and truncated stern**.  An ellipsoid tapers to a point
+at both ends; the real hull swells to full width a third of the way back and is cut off square at the
+hangar, and neither is a thing you can scale a sphere into.
+
+Two traps came with it.  A nacelle's lathe has to **start behind the bussard dome** rather than at the
+nose, or it occupies the same space as the amber dome laid over it and the collectors disappear into the
+hull plating.  And the deflector is **a shallow convex disc, not a hollowed shell** — taking a barely
+smaller sphere out of a sphere leaves an annulus a few centimeters thick, which renders as a ring of
+light with a hole in the middle.
+
+She is a fan model built from published figures, not anyone's official design.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
