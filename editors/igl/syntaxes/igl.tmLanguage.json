@@ -1,0 +1,324 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "IGL",
+  "scopeName": "source.igl",
+  "fileTypes": [
+    "igl"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#import"
+    },
+    {
+      "include": "#declaration"
+    },
+    {
+      "include": "#object"
+    },
+    {
+      "include": "#definition"
+    },
+    {
+      "include": "#calls"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.igl",
+          "begin": "/\\*",
+          "end": "\\*/"
+        },
+        {
+          "name": "comment.line.double-slash.igl",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "escapes": {
+      "name": "constant.character.escape.igl",
+      "match": "\\\\."
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.igl",
+          "begin": "\"\"\"",
+          "end": "\"\"\"",
+          "patterns": [
+            {
+              "include": "#escapes"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.igl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "include": "#escapes"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.igl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "include": "#escapes"
+            }
+          ]
+        }
+      ]
+    },
+    "import": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(include)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "captures": {
+            "1": {
+              "name": "keyword.control.import.igl"
+            }
+          }
+        },
+        {
+          "begin": "(?<![A-Za-z0-9_α-ωΑ-Ω])(import)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.import.igl"
+            }
+          },
+          "end": "(\\})",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.section.braces.end.igl"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#comments"
+            },
+            {
+              "include": "#strings"
+            },
+            {
+              "match": "\\{",
+              "name": "punctuation.section.braces.begin.igl"
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.comma.igl"
+            },
+            {
+              "match": "[A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*",
+              "name": "entity.name.type.module.igl"
+            }
+          ]
+        }
+      ]
+    },
+    "declaration": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(function|primitive)\\s+([A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.igl"
+            },
+            "2": {
+              "name": "entity.name.function.igl"
+            }
+          }
+        },
+        {
+          "match": "(->)\\s*([A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.operator.arrow.igl"
+            },
+            "2": {
+              "name": "support.type.igl"
+            }
+          }
+        }
+      ]
+    },
+    "object": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(object)\\s+([A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*)(?=\\()",
+          "captures": {
+            "1": {
+              "name": "keyword.other.igl"
+            },
+            "2": {
+              "name": "entity.name.function.igl"
+            }
+          }
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(object)\\s+([A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.other.igl"
+            },
+            "2": {
+              "name": "variable.other.object.igl"
+            }
+          }
+        }
+      ]
+    },
+    "definition": {
+      "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])([A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*)\\s*(=)(?!=)",
+      "captures": {
+        "1": {
+          "name": "variable.other.definition.igl"
+        },
+        "2": {
+          "name": "keyword.operator.assignment.igl"
+        }
+      }
+    },
+    "calls": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:smoothstep|magnitude|normalize|toDegrees|distance|length|random|atan2|clamp|count|cross|floor|log10|noise|round|trunc|acos|asin|atan|cbrt|ceil|cosh|item|lerp|list|sign|sinh|sqrt|tanh|abs|cos|dot|exp|log|max|min|mod|pow|sin|tan)(?![A-Za-z0-9_α-ωΑ-Ω])(?=\\()",
+          "name": "support.function.builtin.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])[A-Za-z_α-ωΑ-Ω][A-Za-z0-9_α-ωΑ-Ω]*(?=\\()",
+          "name": "entity.name.function.call.igl"
+        }
+      ]
+    },
+    "numbers": {
+      "match": "(?<![A-Za-z0-9_α-ωΑ-Ω.])(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?",
+      "name": "constant.numeric.igl"
+    },
+    "constants": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:false|null|true)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "constant.language.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:NegativeInfinity|PositiveInfinity|__software__|Identity|π)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.constant.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:LightGoldenrodYellow|SemiSweetChocolate|MediumForestGreen|MediumSpringGreen|MediumAquamarine|BakersChocolate|DarkGreenCopper|MediumGoldenrod|MediumSlateBlue|MediumTurquoise|MediumVioletRed|NewMidnightBlue|VeryLightPurple|BlanchedAlmond|CornflowerBlue|DarkOliveGreen|LightSlateGray|LightSlateGrey|LightSteelBlue|MandarinOrange|MediumSeaGreen|DarkGoldenrod|DarkSlateBlue|DarkSlateGray|DarkSlateGrey|DarkTurquoise|LavenderBlush|LightSeaGreen|PaleGoldenrod|PaleTurquoise|PaleVioletRed|VeryDarkBrown|VeryLightGray|VeryLightGrey|AntiqueWhite|DarkSeaGreen|LemonChiffon|LightSkyBlue|MediumOrchid|MediumPurple|MidnightBlue|CosmicLatte|DarkMagenta|DeepSkyBlue|FloralWhite|ForestGreen|GreenCopper|GreenYellow|HunterGreen|LightPurple|LightSalmon|LightYellow|NavajoWhite|SaddleBrown|SpringGreen|Transparent|YellowGreen|Aquamarine|BlueViolet|BrightGold|Chartreuse|CoolCopper|DarkOrange|DarkOrchid|DarkPurple|DarkSalmon|DarkViolet|DodgerBlue|GhostWhite|LightCoral|LightGreen|MediumBlue|MediumWood|PapayaWhip|PowderBlue|SandyBrown|WhiteSmoke|AliceBlue|BurlyWood|CadetBlue|Chocolate|DarkBrown|DarkGreen|DarkKhaki|DustyRose|Firebrick|Gainsboro|Goldenrod|IndianRed|LawnGreen|LightBlue|LightCyan|LightGray|LightGrey|LightPink|LightWood|LimeGreen|MintCream|MistyRose|OliveDrab|OrangeRed|PaleGreen|PeachPuff|RosyBrown|RoyalBlue|SlateBlue|SlateGray|SlateGrey|SpicyPink|SteelBlue|SummerSky|Turquoise|VioletRed|Cornsilk|DarkBlue|DarkCyan|DarkGray|DarkGrey|DarkWood|DeepPink|Feldspar|Honeydew|Lavender|Moccasin|NavyBlue|NeonBlue|NeonPink|RichBlue|SeaGreen|SeaShell|Bronze2|Crimson|DarkRed|DarkTan|DimGray|DimGrey|Fuchsia|HotPink|Magenta|OldGold|OldLace|Scarlet|SkyBlue|Thistle|Bisque|Bronze|Copper|Gray05|Gray10|Gray15|Gray20|Gray25|Gray30|Gray35|Gray40|Gray45|Gray50|Gray55|Gray60|Gray65|Gray70|Gray75|Gray80|Gray85|Gray90|Gray95|Grey05|Grey10|Grey15|Grey20|Grey25|Grey30|Grey35|Grey40|Grey45|Grey50|Grey55|Grey60|Grey65|Grey70|Grey75|Grey80|Grey85|Grey90|Grey95|Indigo|Maroon|NewTan|Orange|Orchid|Purple|Quartz|Salmon|Sienna|Silver|Tomato|Violet|Yellow|Azure|Beige|Black|Brass|Brown|Coral|Flesh|Green|Ivory|Khaki|Linen|Olive|Wheat|White|Aqua|Blue|Cyan|Gold|Gray|Grey|Lime|Mica|Navy|Peru|Pink|Plum|Snow|Teal|Red|Tan)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.constant.color.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:GrossulariteGarnet|SpessartiteGarnet|FlintGlassLaSFN9|AlmandineGarnet|AndraditeGarnet|DemantoidGarnet|RhodoliteGarnet|TsavoriteGarnet|ChromeDiopside|CrownGlassBaK1|CarbonDioxide|CubicZirconia|FlintGlassF2|NephriteJade|PyropeGarnet|Alexandrite|Chrysoberyl|Labradorite|LapisLazuli|SmokyQuartz|WindowGlass|Andalusite|Aquamarine|Aventurine|Chalcedony|CrownGlass|FlintGlass|Moissanite|Orthoclase|RoseQuartz|Tourmaline|Amazonite|Malachite|Moonstone|Morganite|Spodumene|Tanzanite|TigersEye|Turquoise|Amethyst|Andesine|Corundum|Fluorite|Hydrogen|Kerosene|Prehnite|Sapphire|WaterIce|Apatite|Citrine|Diamond|Emerald|Jadeite|Kunzite|Kyanite|Peridot|Zoisite|Helium|Iolite|Jasper|Quartz|Sphene|Spinel|Vacuum|Zircon|Agate|Amber|Beryl|Coral|Glass|Ivory|Pearl|Topaz|Water|Onyx|Opal|Ruby|Air)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.constant.ior.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:Right|Down|Left|Out|In|Up)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.constant.direction.igl"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:default|return|switch|case|else|for|if|in)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "keyword.control.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:and|not|or)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "keyword.operator.word.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:primitive|function)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "storage.type.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:superellipsoid|parallelogram|intersection|environment|heightfield|hyperboloid|difference|isosurface|paraboloid|parametric|extrusion|materials|cylinder|interior|material|triangle|context|lsystem|pigment|profile|quadric|camera|medium|render|ribbon|saddle|sphere|spline|conic|group|image|julia|lathe|light|patch|plane|scene|sweep|torus|union|blob|cube|disc|font|icon|info|path|poly|text|tube|csg|egg|sdf|sky|sun|svg)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.type.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:cylindrical|triangular|spherical|gradient|toroidal|wrinkles|checker|crackle|granite|hexagon|leopard|mottled|ripples|squares|stripes|marble|planar|radial|square|swells|agate|blend|brick|dents|noise|waves|bozo|wave|wood)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "support.type.pattern.igl"
+        },
+        {
+          "match": "(?<![A-Za-z0-9_α-ωΑ-Ω])(?:completeBranch|susceptibility|discontinuous|antialiasing|orthographic|transparency|description|generations|perspective|productions|startBranch|absorption|anisotropy|background|brightness|brilliance|disclaimer|horizontal|iterations|reflective|refraction|scattering|toVertical|turbulence|turnAround|wavelength|alignment|amplitude|copyright|direction|elevation|frequency|grayscale|inherited|panoramic|pitchDown|rollRight|shininess|steepness|threshold|tightness|transform|translate|turbidity|turnRight|ultraWide|accuracy|aperture|baseline|bilinear|bouncing|centered|commands|constant|controls|diameter|distance|drawLine|emission|flatness|location|metallic|parallel|physical|position|rayleigh|rollLeft|software|specular|strength|surfaces|turnLeft|uncached|vertical|ambient|azimuth|bounces|bounded|clarity|columns|comment|degrees|density|diffuse|distant|fainter|falloff|fisheye|generic|kerning|normals|octaves|pitchUp|radians|regular|samples|scallop|scanner|shadows|shutter|spacing|surface|tapered|tropism|warning|angles|author|banded|behind|bottom|center|factor|filter|height|ignore|italic|jitter|layout|length|linear|matrix|mortar|motion|normal|number|object|points|radius|rotate|serial|shadow|smooth|source|uSteps|vSteps|vector|within|align|angle|apply|axiom|axisU|axisV|black|boxed|close|color|cross|cubic|curve|depth|field|finer|focal|front|gamma|gives|grain|index|inner|layer|named|north|phase|pipes|pixel|point|power|radii|right|scale|shape|shear|sides|steps|taper|title|tubes|twist|under|width|area|back|blur|bold|clip|east|fade|file|from|kern|leaf|left|line|look|move|once|open|over|quad|ramp|rows|seed|sine|size|spot|thin|view|with|are|gap|ior|max|min|top|at|by|no|of|on|to|up|X|Y|Z|c|u|v)(?![A-Za-z0-9_α-ωΑ-Ω])",
+          "name": "keyword.other.igl"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "match": "->",
+          "name": "keyword.operator.arrow.igl"
+        },
+        {
+          "match": "==|!=|<=|>=|<|>|≤|≥|≠",
+          "name": "keyword.operator.comparison.igl"
+        },
+        {
+          "match": "&&|\\|\\||!|∧|∨|¬",
+          "name": "keyword.operator.logical.igl"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.assignment.igl"
+        },
+        {
+          "match": "\\?|:",
+          "name": "keyword.operator.ternary.igl"
+        },
+        {
+          "match": "[+\\-*/%^$]|[−–×⨯÷∕⁄⋅·∙•∗⋆√∛²³⁰¹⁴⁵⁶⁷⁸⁹°]",
+          "name": "keyword.operator.arithmetic.igl"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "match": ",",
+          "name": "punctuation.separator.comma.igl"
+        },
+        {
+          "match": "[{}]",
+          "name": "punctuation.section.braces.igl"
+        },
+        {
+          "match": "[\\[\\]]",
+          "name": "punctuation.section.brackets.igl"
+        },
+        {
+          "match": "[()]",
+          "name": "punctuation.section.parens.igl"
+        }
+      ]
+    }
+  }
+}
