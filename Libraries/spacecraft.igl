@@ -1,0 +1,542 @@
+// Things that fly where there is nothing to fly in.
+//
+//     import 'spacecraft' { Shuttle, Satellite, Enterprise }
+//
+//     object Shuttle(37)
+//     object Satellite(6)     { translate [0, 0, 60] }
+//     object Enterprise(289)  { translate [0, 0, -600] }
+//
+// | `Shuttle` | An orbiter: double-delta wing, a fin, three engines and a black belly. |
+// | `Satellite` | A bus, two solar wings and a dish. |
+// | `Enterprise` | A saucer, an engineering hull and two nacelles on pylons. |
+//
+// **The first number is a length**, as it is for the [vehicles](#vehicles), the [vessels](#vessels)
+// and the [aircraft](#aircraft).  These are in **meters** and they **face `+X`**.
+//
+// -- The origin is the middle of the craft, and that is the third answer -------------------------------
+//
+// Every library here has had to say where nought is.  Furniture stands on the floor, so its feet are at
+// nought.  A [vessel](#vessels) has no face it rests on, so its **waterline** is.  An [aircraft](#aircraft)
+// does have one, so it is back to the wheels.
+//
+// **A spacecraft rests on nothing and floats in nothing.**  There is no ground under it and no surface
+// through it, and the only thing it really has is an attitude -- so the origin here is the craft's own
+// middle, on its centerline, and what that buys is that `rotate` turns it about itself.  Put a datum
+// anywhere else and every roll and pitch swings the craft through an arc as well as turning it, and a
+// scene that wants one tumbling has to undo the swing by hand.
+//
+// -- What makes a solid into a spacecraft -------------------------------------------------------------
+//
+// **There is one light and nothing else.**  This is the real difference from every other library here,
+// and it is a lighting problem rather than a modeling one.  On the ground, half of what you see is
+// light that has bounced -- off the road, off a wall, off the sky, which is itself a lamp the size of
+// the world.  In orbit there is a sun and there is black.  A shape that reads perfectly well on a
+// runway can go to an unreadable silhouette up here, because the side away from the sun has nothing
+// falling on it at all.
+//
+// So these carry a **higher `ambient` than anything else in these libraries**, which is a cheat and is
+// worth naming as one: it stands in for the light a real spacecraft gets from the planet under it,
+// which is not nothing -- earthshine is bright enough to read by.  Take it out and the shadowed half
+// of every one of these disappears.
+//
+// **And a glow is a material, not a light.**  A nacelle or an engine bell reads as lit from inside if
+// it carries a bright color at `ambient 1`; making it a real emitter costs a medium and buys nothing
+// at this distance, for the reason the [outdoor lights](#outdoor-lights) give.
+
+// -- What spacecraft are made of ----------------------------------------------------------------------
+
+// The orbiter's upper surface: ceramic blanket rather than paint, so barely glossy.
+SpacecraftTile = material {
+    pigment [0.84, 0.84, 0.81]
+    specular 0.14  shininess 40  ambient 0.26
+}
+
+// And its belly, which is the black tile that takes the heat coming back down.
+SpacecraftBelly = material {
+    pigment [0.11, 0.11, 0.12]
+    specular 0.22  shininess 60  ambient 0.16
+}
+
+// A starship's hull: pale, and faintly pearlescent rather than shiny.
+SpacecraftHull = material {
+    pigment [0.72, 0.73, 0.76]
+    specular 0.30  shininess 90  ambient 0.28  reflective 0.06
+}
+
+SpacecraftMetal = material {
+    pigment [0.38, 0.39, 0.41]
+    specular 0.70  shininess 190  ambient 0.16  reflective 0.24
+}
+
+// Solar cells: very dark, very blue, and glossy, which is what a panel actually looks like.
+SpacecraftCell = material {
+    pigment [0.05, 0.07, 0.17]
+    specular 0.75  shininess 200  ambient 0.14  reflective 0.14
+}
+
+// Thermal foil, which is the one warm color on most of these.
+SpacecraftFoil = material {
+    pigment [0.72, 0.56, 0.18]
+    specular 0.62  shininess 130  ambient 0.22  reflective 0.18
+}
+
+// **A glow is a material at `ambient 1`.**  It owes nothing to where the sun is, which is the whole
+// point: an engine that dims when the craft turns away from the light is an engine that is not lit.
+SpacecraftGlow = material {
+    pigment [0.42, 0.62, 1.00]
+    specular 0  ambient 1
+}
+
+SpacecraftEmber = material {
+    pigment [1.00, 0.62, 0.30]
+    specular 0  ambient 1
+}
+
+// -- Shuttle ------------------------------------------------------------------------------------------
+
+// An orbiter.  `long` is overall, so thirty-seven is about the real one.
+//
+// **The wing is one extrusion and not two panels.**  A delta is not a swept rectangle -- its leading
+// edge and its trailing edge meet at the tip -- and no amount of sweep on a constant-chord plate gets
+// there.  What it is, exactly, is a flat outline given a little thickness, which is what an `extrusion`
+// is for.  The outline is written at unit size and the whole thing scaled afterward, so the path's
+// numbers stay readable as fractions of the aircraft.
+primitive Shuttle(long = 37, variant = 1) -> group {
+    wide = long * 0.098                         // the fuselage's half-width at the payload bay
+    tall = long * 0.075                         // and its half-height
+
+    return group {
+        // the wing: a double delta, thin, lying in the X-Z plane
+        extrusion {
+            path {
+                move to 0.150, 0
+                line to 0.010, 0.115
+                line to -0.250, 0.320
+                line to -0.370, 0.320
+                line to -0.410, 0.105
+                line to -0.410, -0.105
+                line to -0.370, -0.320
+                line to -0.250, -0.320
+                line to 0.010, -0.115
+                close
+            }
+            min Y -0.5  max Y 0.5
+            scale [long, long * 0.020, long]
+            translate Y (-tall * 0.42)
+            material SpacecraftTile
+        }
+
+        // The fuselage: a nose that tapers, a payload bay that does not, and a wider tail.
+        group {
+            // **The nose is a sphere and not a superellipsoid.**  A superellipsoid is the right shape
+            // for almost everything else in these libraries because it is a box with its edges taken
+            // off -- and that is exactly what makes it wrong here.  It keeps its section all the way
+            // to its ends, so a nose built from one is a rounded cylinder butted against a rounded
+            // cylinder, and reads as two lumps in a row rather than one body that tapers.  An
+            // ellipsoid narrows to its ends, which is what a nose does.
+            sphere {
+                scale [long * 0.185, tall * 0.88, wide * 0.80]
+                translate [long * 0.280, tall * 0.08, 0]
+            }
+            superellipsoid {
+                east 0.35  north 0.40
+                scale [long * 0.245, tall, wide]
+                translate [long * 0.045, 0, 0]
+            }
+            superellipsoid {
+                east 0.40  north 0.45
+                scale [long * 0.075, tall * 1.06, wide * 1.02]
+                translate [-long * 0.235, tall * 0.06, 0]
+            }
+            material SpacecraftTile
+        }
+
+        // **The black belly is a second shape and not a second material on the first.**  A material
+        // follows a whole surface, so painting the underside means there has to BE an underside: a
+        // slightly larger copy of the body, cut off at the waterline, laid under the white one.
+        intersection {
+            group {
+                superellipsoid {
+                    east 0.35  north 0.40
+                    scale [long * 0.300, tall * 1.02, wide * 1.02]
+                    translate [long * 0.010, 0, 0]
+                }
+            }
+            cube { scale [long, tall * 0.55, wide * 2]  translate [0, -tall * 0.55, 0] }
+            material SpacecraftBelly
+        }
+        extrusion {
+            path {
+                move to 0.150, 0
+                line to 0.010, 0.115
+                line to -0.250, 0.320
+                line to -0.370, 0.320
+                line to -0.410, 0.105
+                line to -0.410, -0.105
+                line to -0.370, -0.320
+                line to -0.250, -0.320
+                line to 0.010, -0.115
+                close
+            }
+            min Y -0.5  max Y 0.5
+            scale [long * 0.998, long * 0.009, long * 0.998]
+            translate Y (-tall * 0.52)
+            material SpacecraftBelly
+        }
+
+        // the fin, and the two pods beside it
+        group {
+            extrusion {
+                path {
+                    move to -0.250, 0
+                    line to -0.360, 0.155
+                    line to -0.412, 0.155
+                    line to -0.400, 0
+                    close
+                }
+                min Y -0.5  max Y 0.5
+                scale [long, long * 0.014, long]
+                rotate X -90
+                translate [0, tall * 0.92, 0]
+                material SpacecraftTile
+            }
+            for side in [0, 1] {
+                superellipsoid {
+                    east 0.45  north 0.50
+                    scale [long * 0.070, tall * 0.34, wide * 0.32]
+                    translate [-long * 0.250, tall * 0.62, (side * 2 - 1) * wide * 0.72]
+                }
+            }
+            material SpacecraftTile
+        }
+
+        // Three engine bells at the back, which is the shape everybody actually recognizes.
+        group {
+            for bell in [0, 2] {
+                // **Aft of the body, not inside it.**  At -0.300 of the length these sat within the
+                // tail section entirely and the shuttle came back with no engines at all -- which
+                // does not look wrong, it just looks like a shape nobody finished.
+                conic {
+                    min Y (long * 0.026)  max Y (long * 0.055)
+                    open
+                    scale [1, 1.5, 1]
+                    rotate Z 90
+                    translate [-long * 0.345,
+                               tall * (bell < 1 ? 0.66 : 0.04),
+                               bell < 1 ? 0 : (bell * 2 - 3) * wide * 0.42]
+                }
+            }
+            material SpacecraftMetal
+        }
+    }
+}
+
+// -- Satellite ----------------------------------------------------------------------------------------
+
+// A bus with two wings and a dish.  `long` is the bus, not the span, because the span is mostly empty
+// space and a satellite is described by the box that does the work.
+primitive Satellite(long = 6, variant = 1) -> group {
+    bus = long * 0.32                           // the bus's half-size
+    wing = long * 1.35                          // how far one wing reaches
+
+    return group {
+        superellipsoid {
+            east 0.20  north 0.20
+            scale [bus, bus * 0.92, bus * 0.88]
+            material SpacecraftFoil
+        }
+
+        // the wings, on short booms so they stand clear of the bus
+        group {
+            for side in [0, 1] {
+                cylinder {
+                    min Y 0  max Y (bus * 0.55)
+                    scale [long * 0.022, 1, long * 0.022]
+                    rotate X ((side * 2 - 1) * 90)
+                    translate [0, 0, (side * 2 - 1) * bus * 0.88]
+                }
+            }
+            material SpacecraftMetal
+        }
+        group {
+            for side in [0, 1] {
+                cube {
+                    scale [long * 0.42, long * 0.012, wing / 2]
+                    translate [0, 0, (side * 2 - 1) * (bus * 1.43 + wing / 2)]
+                }
+            }
+            material SpacecraftCell
+        }
+
+        // the dish, which is a sphere with a smaller one taken out of it and the back cut away
+        // **A dish is a shallow bowl, not half a sphere.**  Hemispherical, the outside of it is what
+        // faces the way the dish points, so from in front it reads as a ball on a stick.  Flattened
+        // along its own axis, the rim comes round far enough to show as a rim.
+        difference {
+            sphere { scale [long * 0.13, long * 0.30, long * 0.30] }
+            sphere { scale [long * 0.125, long * 0.285, long * 0.285]  translate X (-long * 0.016) }
+            cube { scale [long * 0.30, long * 0.40, long * 0.40]  translate X (-long * 0.30) }
+            material SpacecraftHull
+            translate [bus * 1.35, 0, 0]
+        }
+        cylinder {
+            min Y 0  max Y (long * 0.26)
+            scale [long * 0.014, 1, long * 0.014]
+            rotate Z -90
+            translate [bus * 1.10, 0, 0]
+            material SpacecraftMetal
+        }
+
+        // and an antenna out the back, so it is not symmetrical
+        cylinder {
+            min Y 0  max Y (long * 0.70)
+            scale [long * 0.010, 1, long * 0.010]
+            rotate Z 90
+            translate [-bus, bus * 0.30, 0]
+            material SpacecraftMetal
+        }
+    }
+}
+
+// -- Enterprise ---------------------------------------------------------------------------------------
+//
+// The ship from the original series, built to her published dimensions rather than to the shape memory
+// supplies.  `long` is overall length; everything else is a fixed fraction of it, so she scales whole.
+//
+//     289 m long        127 m across the saucer        72 m tall
+//     156 m nacelles    100 m secondary hull, 30 m through
+//
+// Those five numbers fix almost the whole layout, because three of the parts are the extremes of the
+// box.  **The saucer's forward rim is the foremost point**, so a 127-meter saucer on a 289-meter ship
+// has its center 81 m forward of the middle.  **The nacelles are the aftmost point**, so a 156-meter
+// nacelle ends 11.5 m forward of the middle.  Nothing here was chosen by eye.
+//
+// -- What memory gets wrong ---------------------------------------------------------------------------
+//
+// **The saucer is far bigger than it feels.**  At 127 m on a 289 m ship it is forty-four percent of the
+// whole length in one disc -- very nearly half the ship -- and drawn from memory it comes out at half
+// that.  **The nacelles are longer too**: 156 m is fifty-four percent of the ship, so a nacelle on its
+// own is longer than the secondary hull and the dorsal together.  And **the secondary hull hangs well
+// aft**, not under the saucer: its middle is 34 m *behind* the ship's own middle while the saucer's is
+// 81 m ahead of it.
+//
+// -- Why three of these are lathes ---------------------------------------------------------------------
+//
+// The saucer, the secondary hull and each nacelle are bodies of revolution, and a `lathe` is what draws
+// one properly.  Built instead from flattened spheres -- which is the obvious thing and is what the
+// first version of this did -- the saucer comes out a smooth lens with no **rim**, and the rim is most
+// of what the eye uses: it is the one hard edge on the whole primary hull, and without it the saucer
+// reads as a pebble.  A lathe's profile puts it there for the cost of two points.
+//
+// The same goes for the secondary hull's **blunt bow and truncated stern**.  An ellipsoid tapers to a
+// point at both ends; the real hull swells to its full width a third of the way back and is cut off
+// square at the hangar, and neither of those is a thing you can scale a sphere into.
+
+// The saucer's outline, from the top of the axis, out over the dome, down the rim and back under to the
+// sensor dome at the bottom.  Written against a radius of one and scaled to the real disc afterwards.
+EnterpriseSaucerProfile = path {
+    move to 0, 0.118
+    line to 0.220, 0.112
+    line to 0.500, 0.084
+    line to 0.760, 0.048
+    line to 0.930, 0.018
+    line to 1.000, 0.009
+    line to 1.000, -0.009
+    line to 0.930, -0.026
+    line to 0.720, -0.050
+    line to 0.420, -0.070
+    line to 0.200, -0.079
+    line to 0.175, -0.104
+    line to 0.100, -0.126
+    line to 0, -0.133
+    close
+}
+
+// The secondary hull: blunt at the deflector, fullest a third back, cut off square at the hangar.
+// Against a half-length of one, so the radius runs to 0.30 for a hull 30 m through and 100 m long.
+EnterpriseHullProfile = path {
+    move to 0, 1.000
+    line to 0.150, 0.985
+    line to 0.245, 0.930
+    line to 0.290, 0.820
+    line to 0.300, 0.600
+    line to 0.298, 0.200
+    line to 0.278, -0.250
+    line to 0.245, -0.620
+    line to 0.210, -0.880
+    line to 0.196, -0.975
+    line to 0, -1.000
+    close
+}
+
+// A nacelle, from the bussard dome at the front to the tapered stern.  Against a half-length of one.
+// **It starts behind the bussard dome, not at the nose.**  Run to 1.000 it occupies the same space as
+// the amber dome laid over it, and two coincident surfaces are two surfaces: the collectors vanished
+// into the hull plating and the nacelles came back plain white at the front.
+EnterpriseNacelleProfile = path {
+    move to 0, 0.930
+    line to 0.115, 0.930
+    line to 0.107, 0.906
+    line to 0.121, 0.888
+    line to 0.121, 0.856
+    line to 0.108, 0.838
+    line to 0.113, 0.812
+    line to 0.115, 0.400
+    line to 0.115, -0.560
+    line to 0.113, -0.840
+    line to 0.103, -0.945
+    line to 0.096, -1.000
+    line to 0, -1.000
+    close
+}
+
+primitive Enterprise(long = 289, variant = 1) -> group {
+    disc = long * 0.2197                        // the saucer's radius -- 63.5 m of 289
+    discAt = long * 0.2803                      // its middle, 81 m forward of the ship's
+    deck = long * 0.0606                        // and the plane it lies in
+
+    hull = long * 0.1730                        // the secondary hull's half-length
+    hullAt = -long * 0.1176                     // its middle, 34 m aft of the ship's
+    hullY = -long * 0.0744                      // and how far under the centerline it hangs
+
+    pod = long * 0.2699                         // a nacelle's half-length -- 78 m of 289
+    podAt = -long * 0.2301
+    podY = long * 0.0952
+    podZ = long * 0.1315
+
+    return group {
+        group {
+            // The primary hull, and the B/C deck and bridge stacked on top of it.
+            lathe {
+                path EnterpriseSaucerProfile
+                scale [disc, disc, disc]
+                translate [discAt, deck, 0]
+            }
+            cylinder {
+                min Y (deck + disc * 0.112)  max Y (deck + disc * 0.185)
+                scale [disc * 0.220, 1, disc * 0.220]
+                translate X discAt
+            }
+            sphere {
+                scale [disc * 0.128, disc * 0.072, disc * 0.128]
+                translate [discAt, deck + disc * 0.185, 0]
+            }
+
+            // **The dorsal, swept back as it drops.**  Its top runs into the saucer and its foot into
+            // the hull, because a strut that merely touches both reads as a strut resting on a hull.
+            extrusion {
+                path {
+                    move to 0.2007, 0.0550
+                    line to 0.0761, -0.0350
+                    line to -0.0346, -0.0350
+                    line to 0.0900, 0.0550
+                    close
+                }
+                min Y -0.5  max Y 0.5
+                scale [long, long * 0.026, long]
+                rotate X -90
+            }
+
+            // the secondary hull, laid along X
+            lathe {
+                path EnterpriseHullProfile
+                scale [hull, hull, hull]
+                rotate Z -90
+                translate [hullAt, hullY, 0]
+            }
+
+            // **The pylons lean out, and a leaned plate keeps only the cosine of its height.**  Each is
+            // drawn standing up and then turned thirty-nine degrees off vertical, which is the angle
+            // that carries its tip the 39 m up and 32 m out that the nacelles are.
+            for side in [0, 1] {
+                extrusion {
+                    path {
+                        move to -0.1557, 0
+                        line to -0.2422, 0.1758
+                        line to -0.3010, 0.1758
+                        line to -0.2422, 0
+                        close
+                    }
+                    min Y -0.5  max Y 0.5
+                    scale [long, long * 0.019, long]
+                    rotate X -90
+                    rotate X ((side * 2 - 1) * 39)
+                    translate [0, -long * 0.0415, (side * 2 - 1) * long * 0.0208]
+                }
+            }
+
+            // and the nacelles themselves
+            for side in [0, 1] {
+                lathe {
+                    path EnterpriseNacelleProfile
+                    scale [pod, pod, pod]
+                    rotate Z -90
+                    translate [podAt, podY, (side * 2 - 1) * podZ]
+                }
+            }
+
+            material SpacecraftHull
+        }
+
+        // -- The parts that are not hull plating ----------------------------------------------------
+
+        // The deflector: a dish recessed in the bow of the secondary hull, and the one warm thing on
+        // her.  It is what tells you which way she is pointing from any distance at all.
+        // **A shallow convex disc, not a hollowed shell.**  Taking a barely smaller sphere out of a
+        // sphere leaves an annulus a few centimeters thick, which renders as a ring of light with a
+        // hole in the middle -- and the deflector is a solid dish that catches the sun across its whole
+        // face.  What makes it read is its being proud of the bow, not its being hollow.
+        sphere {
+            scale [hull * 0.055, hull * 0.220, hull * 0.220]
+            material SpacecraftEmber
+            translate [hullAt + hull * 0.955, hullY, 0]
+        }
+
+        // The bussard collectors at the front of each nacelle, and the glow at the back.
+        group {
+            for side in [0, 1] {
+                lathe {
+                    path {
+                        move to 0, 0.998
+                        line to 0.060, 0.986
+                        line to 0.098, 0.960
+                        line to 0.112, 0.928
+                        line to 0, 0.928
+                        close
+                    }
+                    scale [pod, pod, pod]
+                    rotate Z -90
+                    translate [podAt, podY, (side * 2 - 1) * podZ]
+                }
+            }
+            material SpacecraftEmber
+        }
+        group {
+            for side in [0, 1] {
+                cylinder {
+                    min Y (-pod * 1.002)  max Y (-pod * 0.975)
+                    scale [pod * 0.098, 1, pod * 0.098]
+                    rotate Z -90
+                    translate [podAt, podY, (side * 2 - 1) * podZ]
+                }
+            }
+            material SpacecraftGlow
+        }
+
+        // **Three fins down the outboard face of each nacelle**, which are the detail that stops a
+        // nacelle reading as a length of pipe.  They are on the outer side only, as they are on her.
+        group {
+            for side in [0, 1] {
+                for fin in [0, 2] {
+                    cube {
+                        scale [pod * 0.055, pod * 0.058, pod * 0.014]
+                        rotate X ((side * 2 - 1) * 24)
+                        translate [podAt - pod * (0.10 + fin * 0.24), podY,
+                                   (side * 2 - 1) * (podZ + pod * 0.085)]
+                    }
+                }
+            }
+            material SpacecraftMetal
+        }
+    }
+}
