@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 108 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 109 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1273,6 +1273,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/aviation/first-light-at-the-field.igl">First Light at the Field</a>
+    </td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary><b>Orbit</b> &mdash; 1 image &middot; what flies where there is nothing to fly in</summary>
+
+<table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/high-orbit.png">
+      <img alt="High Orbit" height="120" src="Local/orbit/high-orbit.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/high-orbit.igl">High Orbit</a>
     </td>
   </tr>
 </table>

@@ -1,0 +1,86 @@
+// Three spacecraft over a world, and one hard light.
+//
+// **The `spacecraft` library puts its origin in the middle of each craft**, on the centerline, because
+// a spacecraft rests on nothing and floats in nothing.  What it has instead of a datum is an attitude,
+// and an origin in the middle means `rotate` turns a ship about itself: every one of these is placed
+// with a translate and turned with rotations that do not move it.
+//
+// **There is one light and no fill, which is the whole difficulty of the place.**  On the ground half
+// of what you see is light that has bounced -- off the road, off a wall, off a sky that is itself a
+// lamp the size of the world.  Here there is a sun and there is black.  The library's materials carry
+// a high `ambient` to stand in for the light a real spacecraft gets from the planet under it, which is
+// not nothing; earthshine is bright enough to read by.  Take it out and the shadowed half of every one
+// of these goes to an unreadable silhouette.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    angles are degrees
+    info {
+        title 'High Orbit'
+        author 'J. Stephen Kress'
+        description 'A starship, a shuttle and a satellite over a world, in one hard light.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'spacecraft' { Shuttle, Satellite, Enterprise }
+
+camera {
+// **Below her, not above her.**  From over the saucer the secondary hull, the dorsal and the deflector
+// are all hidden behind the primary hull, and what reads is a disc with two tubes beside it.  Dropped
+// to her own level the whole ship shows, which for a shape this well known is the difference between a
+// portrait and a shape that is nearly right.
+    location [300, 42, -520]
+    look at [-10, -4, 20]
+    field of view 40
+}
+
+// **The starfield is a `granite` pattern and its map had to be measured.**  Granite does not run to
+// one: over sixty thousand samples its median is 0.22, its ninety-ninth percentile 0.49 and its
+// largest value 0.69.  A map with stops at 0.86 and 0.93 -- which is where you would put them if you
+// assumed the pattern filled its range -- is entirely above anything it produces, and the sky comes
+// back perfectly black with no error anywhere to say why.
+background granite {
+    [0, Black, 0.515, Black, 0.552, [0.30, 0.32, 0.40], 0.60, White, 1, White]
+    scale [0.05, 0.05, 0.05]
+}
+
+// The sun: one light, a long way off, and nothing else.
+point light { location [-9000, 5200, -7000]  color [1.10, 1.08, 1.02] }
+
+// -- The world ----------------------------------------------------------------------------------------
+
+// Ocean under broken cloud.  The turbulence is what makes it weather rather than paint.
+//
+// **The pattern is scaled against the UNIT sphere and not against the planet.**  A sphere scaled to
+// three thousand is still a unit sphere in its own space, and a pattern is read there -- so `scale 700`
+// puts the whole world inside one speck of marble and it renders as a flat disc of one color.  A
+// quarter is what gives it weather.
+sphere {
+    material {
+        pigment marble {
+            turbulence { amplitude 0.95  octaves 5 }
+            [0, [0.03, 0.10, 0.26], 0.30, [0.05, 0.17, 0.38],
+             0.52, [0.09, 0.28, 0.44], 0.72, [0.80, 0.84, 0.90],
+             1, [0.03, 0.10, 0.26]]
+            scale [0.22, 0.22, 0.22]
+        }
+        specular 0.18  shininess 60  ambient 0.05
+    }
+    scale [3000, 3000, 3000]
+    translate [-1400, -3450, 2600]
+}
+
+// -- What is over it ----------------------------------------------------------------------------------
+
+// The starship, turned across the picture so the saucer, the hull and both nacelles all read.
+object Enterprise(289) { rotate Y 28  rotate Z 6  translate [0, 0, 0] }
+
+// An orbiter, much nearer the camera, which is what says how big she is.
+object Shuttle(37) { rotate Y -48  rotate X -26  translate [140, -34, -250] }
+
+// And a satellite, nearer still and smaller again.
+object Satellite(6) { rotate Y 64  rotate Z -18  translate [244, 34, -372] }
