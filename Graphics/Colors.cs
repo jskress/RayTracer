@@ -38,6 +38,7 @@ public static class Colors
 	public static readonly Color Coral = new (1, 0.498039, 0.313725);
 	public static readonly Color CornflowerBlue = new (0.392157, 0.584314, 0.929412);
 	public static readonly Color Cornsilk = new (1, 0.972549, 0.862745);
+	public static readonly Color CosmicLatte = new (1, 0.9725490196, 0.9058823529);
 	public static readonly Color Crimson = new (0.862745, 0.078431, 0.235294);
 	public static readonly Color Cyan = new (0, 1, 1);
 	public static readonly Color DarkBlue = new (0, 0, 0.545098);

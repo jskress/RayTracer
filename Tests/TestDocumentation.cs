@@ -565,7 +565,7 @@ public class TestDocumentation
     /// Reads the keyword list out of the grammar specification.  The specification is a private
     /// constant, so this reads the source it lives in rather than reaching into the parser.
     /// </summary>
-    private static List<string> GrammarKeywords()
+    internal static List<string> GrammarKeywords()
     {
         string source = File.ReadAllText(
             Path.Combine(RepositoryRoot, "Parser", "LanguageParser.DSL.cs"));
@@ -636,7 +636,7 @@ public class TestDocumentation
     /// The names of the public static fields of the given type whose value is of type
     /// <typeparamref name="T"/> -- the same reflection the renderer uses to publish them.
     /// </summary>
-    private static HashSet<string> PublicStaticNamesOfType<T>(Type type) => type
+    internal static HashSet<string> PublicStaticNamesOfType<T>(Type type) => type
         .GetFields(BindingFlags.Public | BindingFlags.Static)
         .Where(field => field.FieldType == typeof(T))
         .Select(field => field.Name)

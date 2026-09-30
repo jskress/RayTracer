@@ -1,0 +1,26 @@
+{
+  "name": "igl",
+  "displayName": "IGL",
+  "description": "Syntax highlighting for the ray tracer's .igl scene language.",
+  "version": "1.0.0",
+  "publisher": "jskress",
+  "engines": { "vscode": "^1.60.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "igl",
+        "aliases": ["IGL", "igl"],
+        "extensions": [".igl"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "igl",
+        "scopeName": "source.igl",
+        "path": "./syntaxes/igl.tmLanguage.json"
+      }
+    ]
+  }
+}
