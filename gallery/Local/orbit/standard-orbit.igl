@@ -1,0 +1,72 @@
+// The Enterprise in standard orbit: the ship from the `enterprise` library, over a world, under one sun.
+//
+// **She is the library's whole ship, at her published 289 meters.**  Everything below the camera is
+// set out in meters around her own middle, which is where the library puts her origin, so she is
+// placed with nothing but two turns: a roll of ten degrees and a yaw that shows her three-quarters from
+// ahead and below, the way the series liked to show her passing the camera.
+//
+// **One sun, and a fill off the world under her.**  In orbit the side of a ship away from the sun has
+// nothing falling on it but the light thrown back by the planet below, so that light is here as a dim,
+// warm second light rising from the planet's direction.  It also lifts the glows of the impulse ports
+// and the homing beacon a little, since every light adds its own share of ambient to a glow.
+
+context {
+    parallel pixel scanner
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    angles are degrees
+    info {
+        title 'Standard Orbit'
+        author 'J. Stephen Kress'
+        description 'The Enterprise in orbit over a world, in one sun and the light off the planet.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'enterprise' { Enterprise }
+
+camera {
+    location [4.9, -13.0, -482.6]
+    look at [4.9, -13.0, 0]
+    field of view 30
+}
+
+// The same starfield as High Orbit's: a `granite` pattern whose map was measured, since granite never
+// gets near the top of its range and a map that assumes it does gives a perfectly black sky.
+background granite {
+    [0, Black, 0.515, Black, 0.552, [0.30, 0.32, 0.40], 0.60, White, 1, White]
+    scale [0.05, 0.05, 0.05]
+}
+
+// The sun, low and ahead of her on the left, which lights the underside of the saucer as she passes.
+point light { location [-3663, -2268, -7902]  color [1.08, 1.06, 1.00] }
+
+// And the light off the world: dim, warm, and from below.
+point light { location [0, -60000, 30000]  color [0.20, 0.13, 0.09] }
+
+// -- The world ----------------------------------------------------------------------------------------
+
+// A warm world of rust and ochre under pale cloud, in the series' manner rather than Earth's.  Its limb
+// arcs across the lower third of the picture: it is a long way below and ahead of her, 30 km
+// across in its own radius and 16.7 km from the camera at its nearest, so nothing she
+// does can reach it.  The pattern is scaled against the unit sphere, as High Orbit's is, because that is
+// the space a pattern on a scaled sphere is read in.
+sphere {
+    material {
+        pigment marble {
+            turbulence { amplitude 0.95  octaves 5 }
+            [0, [0.30, 0.11, 0.06], 0.28, [0.52, 0.24, 0.10],
+             0.50, [0.70, 0.46, 0.22], 0.70, [0.90, 0.84, 0.74],
+             1, [0.30, 0.11, 0.06]]
+            scale [0.22, 0.22, 0.22]
+        }
+        specular 0.12  shininess 40  ambient 0.05
+    }
+    scale [30000, 30000, 30000]
+    translate [5, -32434, 33090]
+}
+
+// -- Her ----------------------------------------------------------------------------------------------
+
+object Enterprise(289) { rotate Z 10  rotate Y 55 }

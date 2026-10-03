@@ -1,16 +1,16 @@
-// Three spacecraft over a world, and one hard light.
+// Two spacecraft over a world, and one hard light.
 //
 // **The `spacecraft` library puts its origin in the middle of each craft**, on the centerline, because
 // a spacecraft rests on nothing and floats in nothing.  What it has instead of a datum is an attitude,
-// and an origin in the middle means `rotate` turns a ship about itself: every one of these is placed
-// with a translate and turned with rotations that do not move it.
+// and an origin in the middle means `rotate` turns a craft about itself: each of these is placed with a
+// translate and turned with rotations that do not move it.
 //
 // **There is one light and no fill, which is the whole difficulty of the place.**  On the ground half
 // of what you see is light that has bounced -- off the road, off a wall, off a sky that is itself a
 // lamp the size of the world.  Here there is a sun and there is black.  The library's materials carry
 // a high `ambient` to stand in for the light a real spacecraft gets from the planet under it, which is
-// not nothing; earthshine is bright enough to read by.  Take it out and the shadowed half of every one
-// of these goes to an unreadable silhouette.
+// not nothing; earthshine is bright enough to read by.  Take it out and the shadowed half of each of
+// these goes to an unreadable silhouette.
 
 context {
     parallel pixel scanner
@@ -20,19 +20,15 @@ context {
     info {
         title 'High Orbit'
         author 'J. Stephen Kress'
-        description 'A starship, a shuttle and a satellite over a world, in one hard light.'
+        description 'A shuttle and a satellite over a world, in one hard light.'
         copyright true
         software __software__
     }
 }
 
-import 'spacecraft' { Shuttle, Satellite, Enterprise }
+import 'spacecraft' { Shuttle, Satellite }
 
 camera {
-// **Below her, not above her.**  From over the saucer the secondary hull, the dorsal and the deflector
-// are all hidden behind the primary hull, and what reads is a disc with two tubes beside it.  Dropped
-// to her own level the whole ship shows, which for a shape this well known is the difference between a
-// portrait and a shape that is nearly right.
     location [300, 42, -520]
     look at [-10, -4, 20]
     field of view 40
@@ -76,11 +72,9 @@ sphere {
 
 // -- What is over it ----------------------------------------------------------------------------------
 
-// The starship, turned across the picture so the saucer, the hull and both nacelles all read.
-object Enterprise(289) { rotate Y 28  rotate Z 6  translate [0, 0, 0] }
+// The orbiter, a hundred meters out, banked over the limb so its wing and its black belly both read.
+object Shuttle(37) { rotate Y -48  rotate X -26  translate [244.3, 36.3, -431] }
 
-// An orbiter, much nearer the camera, which is what says how big she is.
-object Shuttle(37) { rotate Y -48  rotate X -26  translate [140, -34, -250] }
-
-// And a satellite, nearer still and smaller again.
-object Satellite(6) { rotate Y 64  rotate Z -18  translate [244, 34, -372] }
+// And a satellite, nearer the camera and up to one side: its wings laid across the picture and tipped
+// toward the camera so their cells catch the light, its dish turned away toward the world.
+object Satellite(6) { rotate Z 60  rotate Y 228  translate [271.7, 48.7, -445.5] }

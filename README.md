@@ -7,6 +7,12 @@ by Jamis Buck.
 This is complete up through the end of the book.  The rest will be stuff I want to add
 (see the to-do lists below).
 
+From the time I completed the book, I've added many more features and improvements.  There
+are also many, many more tests to ensure the engine is working as expected.  Here is a (no
+pun intended) flagship scene from the gallery, fully CSG modeled, no texture trickery:
+
+![The U.S.S. Enterprise](gallery/Local/orbit/standard-orbit.png)
+
 ## Documentation
 
 The scene language and everything the renderer can do are documented in full under
