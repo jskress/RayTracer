@@ -1,3 +1,5 @@
+using RayTracer.Graphics;
+
 namespace RayTracer.Fonts;
 
 /// <summary>
@@ -12,7 +14,8 @@ public enum TextAlignment
 
 /// <summary>
 /// This enumeration defines how the text will be positioned horizontally, relative to the
-/// origin.
+/// origin -- or, for text laid along a path, whether it starts at the path's start, is centered on
+/// its middle, or ends at its end.
 /// </summary>
 public enum HorizontalPosition
 {
@@ -23,7 +26,10 @@ public enum HorizontalPosition
 
 /// <summary>
 /// This enumeration defines how the text will be positioned vertically, relative to the
-/// origin.
+/// origin -- or, for text laid along a path, where the path runs through it.  <c>Top</c> puts the
+/// font's ascender line there and <c>Bottom</c> the last line's descender line, so that every glyph
+/// lies wholly to one side; <c>Baseline</c> sets the first line's baseline there, and <c>Center</c>
+/// the middle of the block.
 /// </summary>
 public enum VerticalPosition
 {
@@ -60,4 +66,10 @@ public class TextLayoutSettings
     /// This property specifies the amount of space, in font "em"s, to put between lines.
     /// </summary>
     public double LineGap { get; set; } = 0.3;
+
+    /// <summary>
+    /// This property holds the path the text is laid along, if it is laid along one rather than in
+    /// straight lines.  See <see cref="GlyphLayout"/>.
+    /// </summary>
+    public GeneralPath Guide { get; set; }
 }

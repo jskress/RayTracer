@@ -41,6 +41,7 @@ adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
 adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260
 adv-sweep.png|docs/examples/advanced/sweep.igl|320|240
+adv-text-along-a-path.png|docs/examples/advanced/text-along-a-path.igl|640|240
 adv-text.png|docs/examples/advanced/text.igl|320|240
 adv-tube.png|docs/examples/advanced/tube.igl|320|240
 blobs.png|docs/examples/surfaces/blobs.igl|600|200

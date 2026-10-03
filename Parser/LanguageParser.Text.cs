@@ -1,6 +1,8 @@
 using Lex.Clauses;
+using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Fonts;
+using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces.Extrusions;
 using RayTracer.Terms;
@@ -235,6 +237,13 @@ public partial class LanguageParser
                 break;
             case "line":
                 resolver.LineGapResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "along":
+                // The path to lay the text along, written out or named; a name is read as a term, as
+                // an extrusion's is, since it may be a primitive's parameter.
+                resolver.GuideResolver = BounderToken.OpenBrace.Matches(clause.Tokens[2])
+                    ? ParseGeneralPathClause()
+                    : new TermResolver<GeneralPath> { Term = new VariableTerm(clause.Tokens[2]) };
                 break;
             default:
                 throw new Exception($"Internal error: unknown text layout property found: {field}.");

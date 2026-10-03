@@ -40,7 +40,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `accuracy` | Isosurface or parametric surface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
-| `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
+| `along` | Text layout: `along path` lays the text along a path rather than a straight line. | [Advanced Surfaces](advanced-surfaces.md#text-along-a-path) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
@@ -61,7 +62,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `back` | With `align`, names the `+Z` edge. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `behind` | Places a surface behind another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight; also the color black. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -69,7 +70,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `blob` | Surface: metaballs that melt together. | [Surfaces](surfaces.md#blob) |
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `bottom` | Text layout: align the block by its bottom. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `bottom` | Text layout: align the block by its bottom, the last line's descender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `bounces` | Medium: how many further turns of a light's path are followed. | [Scene Files](scene-files.md#multiple-scattering) |
 | `bouncing` | Pattern qualifier: a gradient that ramps up then back down. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bounded` | `bounded by`: a box the renderer may use to skip the surface, and the box an isosurface or distance surface is marched inside. | [Surfaces](surfaces.md#bounding), [Advanced Surfaces](advanced-surfaces.md#isosurface) |
@@ -186,7 +187,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `kerning` | Text: a block of kerning pairs. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `lathe` | Surface: a profile spun about the Y axis. | [Advanced Surfaces](advanced-surfaces.md#lathe) |
 | `layer` | Pigment: stack pigments, the front ones showing through where clear. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
-| `layout` | Text: alignment, positioning and line gap. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `layout` | Text: alignment, positioning, line gap, and a path to lay the text along. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `leaf` | L-system: the surface drawn for a leaf. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `length` | L-system control: the step length. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -325,7 +326,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
 | `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, and a decal's `fade from` … `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading) |
-| `top` | Text layout: align the block by its top. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -636,6 +637,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/advanced/textClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/advanced/textClause.svg">
   <img alt="Text" src="images/advanced/textClause.svg">
+</picture>
+
+**A text layout** — How text is set out, in lines or along a path. &nbsp; [_advanced surfaces_](advanced-surfaces.md#laying-out-text)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/layoutClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/layoutClause.svg">
+  <img alt="A text layout" src="images/advanced/layoutClause.svg">
 </picture>
 
 **A height field** — An image read as terrain. &nbsp; [_advanced surfaces_](advanced-surfaces.md#height-field)

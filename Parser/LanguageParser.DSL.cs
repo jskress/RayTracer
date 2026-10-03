@@ -73,7 +73,7 @@ public partial class LanguageParser
         logicalNot: _operator("!")
         conditional: _operator("?")
 
-        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
+        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'along', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
@@ -1260,7 +1260,12 @@ public partial class LanguageParser
                 [ left | center | right | _expression ] } |
             { vertical > position ?? 'Expecting "position" to follow "vertical" here.' >
                 [ top | baseline | center | bottom | _expression ] } |
-            { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression }
+            { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression } |
+            {
+                along > path ?? 'Expecting "path" to follow "along" here.' >
+                [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting a path, or the name of one, to follow "along path" here.'
+            }
         ] ?? 'Expecting a text layout property here.'
         kerningPairClause:
         {

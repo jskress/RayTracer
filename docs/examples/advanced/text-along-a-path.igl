@@ -1,0 +1,69 @@
+// Text laid along a path: painted around a circle, and extruded along a curve.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 8, -4.6]
+    look at [0.2, 0, 0.3]
+    field of view 30
+}
+
+point light { location [-5, 9, -7]  color [1, 0.97, 0.93] }
+point light { location [6, 4, -6]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment color [0.5, 0.5, 0.54]  specular 0.1 }
+}
+
+// A guide is drawn in the text's own units, where a line is one unit tall, and scaled with it.
+// Both arcs run left to right: over the top, the path's left is outward, and under the bottom, its
+// right is.  So the upper text stands on the circle by its bottoms and the lower one hangs from it
+// by its tops, and both end up outside it, reading the right way up.
+over = path { move to -6.8, 0  curve -6.8, 3.756, -3.756, 6.8 to 0, 6.8
+                               curve 3.756, 6.8, 6.8, 3.756 to 6.8, 0 }
+under = path { move to -6.8, 0  curve -6.8, -3.756, -3.756, -6.8 to 0, -6.8
+                                curve 3.756, -6.8, 6.8, -3.756 to 6.8, 0 }
+
+group {
+    material {
+        pigment color [0.9, 0.88, 0.82]
+        specular 0.4  shininess 60
+
+        decal {
+            path { text { text 'UNITED FEDERATION'  font 'Merriweather'
+                          layout { along path over  horizontal position center  vertical position bottom } } }
+            color [0.12, 0.18, 0.45]
+            planar  min Y 0.05  max Y 0.2
+            scale 0.17
+        }
+        decal {
+            path { text { text 'OF PLANETS'  font 'Merriweather'
+                          layout { along path under  horizontal position center  vertical position top } } }
+            color [0.12, 0.18, 0.45]
+            planar  min Y 0.05  max Y 0.2
+            scale 0.17
+        }
+    }
+
+    cylinder { min Y 0  max Y 0.1  scale [1.6, 1, 1.6] }
+
+    translate [-1.9, 0, 0.3]
+}
+
+// Letters extruded along an S, standing on the floor.  Each glyph is laid whole, by its middle, and
+// turned to run with the curve there.
+extrusion {
+    material { pigment color [0.78, 0.57, 0.11]  specular 0.9  shininess 60  metallic 1  reflective 0.2 }
+    path {
+        text {
+            text 'along any path'
+            font 'Merriweather'
+            layout {
+                along path { move to -5, -1.6  curve -1.5, 4.2, 1.5, -4.2 to 5, 1.6 }
+                horizontal position center
+            }
+        }
+        scale 0.36
+    }
+    min Y 0  max Y 0.08
+    translate [2.5, 0, 0.3]
+}

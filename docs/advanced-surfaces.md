@@ -934,7 +934,7 @@ text {
 | --- | --- |
 | `text` | What to write.  `\n` starts a new line. |
 | `font` | Which font face; see [Managing Fonts](fonts.md). |
-| `layout` | Alignment, positioning and the gap between lines. |
+| `layout` | Alignment, positioning, the gap between lines, and a path to lay the text along; see [Laying out text](#laying-out-text). |
 | `open` | Leave the front and back faces off. |
 
 Like an extrusion, text is built lying flat, so it wants standing up.  Scaling Z before that
@@ -945,6 +945,74 @@ first time a scene asks for it.  [Managing Fonts](fonts.md) covers the catalog, 
 a face Google does not have.
 
 The complete scene is [`docs/examples/advanced/text.igl`](examples/advanced/text.igl).
+
+#### Laying out text
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/layoutClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/layoutClause.svg">
+  <img alt="A text layout" src="images/advanced/layoutClause.svg">
+</picture>
+
+A `layout` block says how the text is set out, and every property in it may be left to its
+default.
+
+| Property | Default | What it does |
+| --- | --- | --- |
+| `text alignment` | `left` | How lines of different lengths line up with one another. |
+| `horizontal position` | `left` | Whether the block starts at the origin, is centered on it, or ends at it. |
+| `vertical position` | `baseline` | Where the origin runs through the block: `top` is the font's ascender line, so the whole block hangs below it; `baseline` is the first line's baseline; `center` is the middle of the block; `bottom` is the last line's descender line, so the whole block stands above it. |
+| `line gap` | 0.3 | The space between lines, on top of a line's own height of one unit. |
+| `along path` | — | Lay the text along a path instead of a straight line; see below. |
+
+#### Text along a path
+
+![Text along a path](images/figures/adv-text-along-a-path.png)
+
+Lettering painted around a circle, standing on it above and hanging from it below, and letters
+extruded along a curve.  The scene is
+[`docs/examples/advanced/text-along-a-path.igl`](examples/advanced/text-along-a-path.igl).
+
+`along path` lays the text along any [path](#paths) — a curve, a circle, lines with corners, an
+SVG — written out in place or named.  The text is set out exactly as it would be along a straight
+line, and then each glyph is laid on the path whole, by its middle, and turned to run with the path
+there.  The glyphs keep their shapes; they are not bent.
+
+```
+path {
+    text {
+        text 'UNITED FEDERATION'
+        font 'Merriweather'
+        layout {
+            along path { move to -6.8, 0  curve -6.8, 3.756, -3.756, 6.8 to 0, 6.8
+                         curve 3.756, 6.8, 6.8, 3.756 to 6.8, 0 }
+            horizontal position center
+            vertical position bottom
+        }
+    }
+}
+```
+
+The other layout properties keep their meanings, with the path standing in for the straight line:
+
+* **`vertical position` says where the path runs through the text, and so which side of the path
+  the text is on.**  The text stands on the path's *left*, looking along it the way it was drawn.
+  With `bottom` the path runs under the descenders, so the whole of the text is on its left; with
+  `top` it runs over the tallest letters, so the whole of it is on its right; with `baseline` the
+  letters sit on it and only their descenders cross it, and with `center` they straddle it.  So
+  text runs *outside* a circle across the top if the arc is drawn left to right and the text stands
+  on it by its `bottom` — as above — and outside it across the bottom if that arc is drawn left to
+  right too, and the text hangs from it by its `top`.  Capitals, which have no descenders, sit
+  right on a path by their `baseline`; by their `bottom` they stand a descender's depth off it.
+* **`horizontal position` says where along the path the text goes:** starting at its start
+  (`left`), centered on its middle (`center`) or ending at its end (`right`).
+* **Text that runs past an end of its path carries straight on** in the direction the path was
+  going there.
+
+The path is drawn in the text's own units, where a line is one unit tall, so a circle meant to
+carry text a fifth of a unit tall is drawn five times larger than it will be, and the text and its
+path are scaled down together afterward.  The runs of a path are followed one after another, in the
+order they were drawn, and the gap from one to the next counts for nothing.
 
 ### Tapered Text
 

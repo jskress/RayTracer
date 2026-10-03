@@ -1,0 +1,14 @@
+railroad-ebnf-beta
+title "A text layout"
+
+layout = "layout" "{" { alignment | across | up | gap | along } "}" ;
+
+alignment = "text" "alignment" ( "left" | "center" | "right" ) ;
+
+across = "horizontal" "position" ( "left" | "center" | "right" ) ;
+
+up = "vertical" "position" ( "top" | "baseline" | "center" | "bottom" ) ;
+
+gap = "line" "gap" number ;
+
+along = "along" ( path | "path" name ) ;

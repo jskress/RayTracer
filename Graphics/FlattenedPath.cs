@@ -101,7 +101,7 @@ public class FlattenedPath
     /// <param name="points">The segment's defining points, ends included.</param>
     /// <param name="tolerance">How far a piece may stray from the curve.</param>
     /// <returns>The number of pieces to cut the segment into.</returns>
-    private static int PiecesFor(TwoDPoint[] points, double tolerance)
+    internal static int PiecesFor(TwoDPoint[] points, double tolerance)
     {
         if (points.Length < 3)
             return 1;

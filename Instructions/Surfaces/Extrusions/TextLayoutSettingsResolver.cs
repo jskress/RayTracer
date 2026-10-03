@@ -1,5 +1,6 @@
 using RayTracer.Fonts;
 using RayTracer.General;
+using RayTracer.Graphics;
 
 namespace RayTracer.Instructions.Surfaces.Extrusions;
 
@@ -32,6 +33,11 @@ public class TextLayoutSettingsResolver : ObjectResolver<TextLayoutSettings>
     public Resolver<double> LineGapResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the path the text is laid along, if it is.
+    /// </summary>
+    public Resolver<GeneralPath> GuideResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a text
     /// layout settings.
     /// </summary>
@@ -44,5 +50,8 @@ public class TextLayoutSettingsResolver : ObjectResolver<TextLayoutSettings>
         HorizontalPositionResolver.AssignTo(value, target => target.HorizontalPosition, context, variables);
         VerticalPositionResolver.AssignTo(value, target => target.VerticalPosition, context, variables);
         LineGapResolver.AssignTo(value, target => target.LineGap, context, variables);
+
+        if (GuideResolver is not null)
+            value.Guide = GuideResolver.Resolve(context, variables);
     }
 }
