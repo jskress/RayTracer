@@ -40,11 +40,11 @@ public static class LibrariesCommand
         else if (options.ImportFrom != null)
             ImportLibrary(options);
         else if (options.RemoveLibrary != null)
-            RemoveLibrary(options.RemoveLibrary);
+            RemoveLibrary(LibraryLocator.LibrariesDirectory, options.RemoveLibrary, options.DryRun);
         else if (options.FontAwesomeZip != null)
-            InstallFontAwesomeZip(options.FontAwesomeZip);
+            InstallFontAwesomeZip(options.FontAwesomeZip, FontAwesomeIcons.ZipPath, options.DryRun);
         else if (options.InstallShipped)
-            InstallShippedLibraries(options.Replace);
+            InstallShippedLibraries(LibraryLocator.LibrariesDirectory, options.Replace, options.DryRun);
         else if (options.Povray)
             Terminal.ShowError("--povray only makes sense together with --import.");
         else
@@ -65,9 +65,17 @@ public static class LibrariesCommand
     /// are a starting point, and somebody who has tuned a sky to their liking should not lose it to a
     /// new release of the ray tracer.
     /// </para>
+    /// <para>
+    /// **A dry run writes nothing, not even the directory.**  It says what would be installed, what
+    /// would be replaced and what would be kept, which is the whole use of it: the one thing a person
+    /// asking for <c>--overwrite --dry-run</c> wants to know is what would be overwritten.  Before
+    /// this honored the flag, that combination quietly rewrote every library and reported success.
+    /// </para>
     /// </summary>
+    /// <param name="directory">The library directory to install into.</param>
     /// <param name="overwrite">Whether to replace libraries that are already there.</param>
-    private static void InstallShippedLibraries(bool overwrite)
+    /// <param name="dryRun">Whether to report what would happen without writing anything.</param>
+    internal static void InstallShippedLibraries(string directory, bool overwrite, bool dryRun)
     {
         Assembly assembly = typeof(LibrariesCommand).Assembly;
         string prefix = $"{assembly.GetName().Name}.Libraries.";
@@ -85,7 +93,8 @@ public static class LibrariesCommand
 
         WarnIfTheBuildIsBehindTheSource(assembly, prefix, shipped);
 
-        Directory.CreateDirectory(LibraryLocator.LibrariesDirectory);
+        if (!dryRun)
+            Directory.CreateDirectory(directory);
 
         int written = 0;
         int kept = 0;
@@ -93,14 +102,26 @@ public static class LibrariesCommand
         foreach (string resource in shipped)
         {
             string name = resource[prefix.Length..];
-            string path = Path.Combine(LibraryLocator.LibrariesDirectory, name);
+            string library = Path.GetFileNameWithoutExtension(name);
+            string path = Path.Combine(directory, name);
+            bool exists = File.Exists(path);
 
-            if (File.Exists(path) && !overwrite)
+            if (exists && !overwrite)
             {
-                Terminal.Out($"Keeping the '{Path.GetFileNameWithoutExtension(name)}' you already " +
-                             "have; use '--overwrite' to replace it.");
+                Terminal.Out($"Keeping the '{library}' you already have; use '--overwrite' to replace it.");
 
                 kept++;
+
+                continue;
+            }
+
+            written++;
+
+            if (dryRun)
+            {
+                Terminal.Out(exists
+                    ? $"Would replace the '{library}' you already have."
+                    : $"Would install '{library}'.");
 
                 continue;
             }
@@ -110,14 +131,18 @@ public static class LibrariesCommand
 
             File.WriteAllText(path, reader.ReadToEnd());
 
-            Terminal.Out($"Installed '{Path.GetFileNameWithoutExtension(name)}'.");
-
-            written++;
+            Terminal.Out($"Installed '{library}'.");
         }
 
-        Terminal.Out(written == 0
-            ? $"Nothing to do; all {kept} of them were already there."
-            : $"{written} installed into {LibraryLocator.LibrariesDirectory}.");
+        if (written == 0)
+            Terminal.Out($"Nothing to do; all {kept} of them were already there.");
+        else if (dryRun)
+        {
+            Terminal.Out($"{written} would be installed into {directory}.  Nothing was written, since " +
+                         "--dry-run was given.");
+        }
+        else
+            Terminal.Out($"{written} installed into {directory}.");
     }
 
     /// <summary>
@@ -197,10 +222,13 @@ public static class LibrariesCommand
     /// <summary>
     /// This method installs a FontAwesome zip file, copying it in as the ray tracer's own so that
     /// scenes may use its icons as 2D paths.  The file must look like a FontAwesome zip -- a zip
-    /// holding an <c>svgs</c> folder of icons.
+    /// holding an <c>svgs</c> folder of icons.  A dry run checks the zip and says where it would go,
+    /// and writes nothing.
     /// </summary>
     /// <param name="path">The path of the zip file to install.</param>
-    private static void InstallFontAwesomeZip(string path)
+    /// <param name="target">Where the zip is installed to.</param>
+    /// <param name="dryRun">Whether to report what would happen without writing anything.</param>
+    internal static void InstallFontAwesomeZip(string path, string target, bool dryRun)
     {
         string source = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), path));
 
@@ -214,10 +242,18 @@ public static class LibrariesCommand
                 "'svgs' folder of icons.");
         }
 
-        Directory.CreateDirectory(Path.GetDirectoryName(FontAwesomeIcons.ZipPath)!);
-        File.Copy(source, FontAwesomeIcons.ZipPath, overwrite: true);
+        if (dryRun)
+        {
+            Terminal.Out($"'{Path.GetFileName(source)}' is a FontAwesome zip and would be installed " +
+                         $"at {target}.  Nothing was written, since --dry-run was given.");
 
-        Terminal.Out($"The FontAwesome zip was installed at {FontAwesomeIcons.ZipPath}.");
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+        File.Copy(source, target, overwrite: true);
+
+        Terminal.Out($"The FontAwesome zip was installed at {target}.");
     }
 
     /// <summary>
@@ -577,17 +613,26 @@ public static class LibrariesCommand
     }
 
     /// <summary>
-    /// This method removes a library.
+    /// This method removes a library.  A dry run checks that it is there and says so, and removes
+    /// nothing.
     /// </summary>
+    /// <param name="directory">The library directory to remove it from.</param>
     /// <param name="name">The name of the library to remove.</param>
-    private static void RemoveLibrary(string name)
+    /// <param name="dryRun">Whether to report what would happen without removing anything.</param>
+    internal static void RemoveLibrary(string directory, string name, bool dryRun)
     {
-        string path = Path.Combine(
-            LibraryLocator.LibrariesDirectory,
-            Path.HasExtension(name) ? name : $"{name}.igl");
+        string path = Path.Combine(directory, Path.HasExtension(name) ? name : $"{name}.igl");
 
         if (!File.Exists(path))
-            Terminal.ShowError($"There is no library named '{name}' in {LibraryLocator.LibrariesDirectory}.");
+            Terminal.ShowError($"There is no library named '{name}' in {directory}.");
+
+        if (dryRun)
+        {
+            Terminal.Out($"The library, {Path.GetFileNameWithoutExtension(path)}, would be removed.  " +
+                         "Nothing was removed, since --dry-run was given.");
+
+            return;
+        }
 
         File.Delete(path);
 

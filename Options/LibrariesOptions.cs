@@ -52,7 +52,8 @@ public class LibrariesOptions
     public bool ShowDetails { get; set; }
 
     [Option('n', "dry-run", Required = false,
-        HelpText = "Specifying this will convert and report, but write nothing.")]
+        HelpText = "Specifying this will report what an import, an install, a removal or a FontAwesome " +
+                   "zip would do, but write nothing.")]
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public bool DryRun { get; set; }
 }

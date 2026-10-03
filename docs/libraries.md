@@ -43,6 +43,10 @@ once-only step at first run cannot.
 `--overwrite` replaces it.  So a sky you have tuned to your liking survives a new release of the ray
 tracer, and the shipped ones are a starting point rather than something imposed.
 
+**Add `--dry-run` to find out first.**  It says which libraries would be installed, which would be
+replaced and which kept, and writes nothing — so `--install --overwrite --dry-run` answers the one
+question worth asking before an overwrite: what of yours it would replace.
+
 #### Daylight
 
 The first of them was `daylight`, and it exists because the sky in this ray tracer is a real
@@ -2342,7 +2346,8 @@ RayTracer libraries --remove golds
 ```
 
 The name may be given with or without the `.igl`.  This only removes the library file; a scene
-that still imports from it will fail to find it the next time it is rendered.
+that still imports from it will fail to find it the next time it is rendered.  With `--dry-run` it
+checks that the library is there and removes nothing.
 
 ### FontAwesome Icons
 
