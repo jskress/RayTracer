@@ -1248,9 +1248,11 @@ public partial class LanguageParser
         [
             thin | light | regular | medium | bold | black
         ]
+        // One font or a list of them, separated by commas as CSS separates them: the first that can be
+        // had is the one used, so a face not everyone can have may be named with one anyone can.
         fontClause:
         {
-            font > _expression > fontWeightClause{?} > italic{?}
+            font > _expression > { comma > _expression }{*} > fontWeightClause{?} > italic{?}
         }
         textLayoutEntryClause:
         [

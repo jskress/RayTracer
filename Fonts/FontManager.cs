@@ -31,6 +31,10 @@ public class FontManager
 
     private readonly Dictionary<string, Kerning> _kerning;
 
+    // The faces this run has already failed to find, by name, so that a scene using one font in a
+    // dozen places asks the network for it once rather than a dozen times before falling back.
+    private readonly HashSet<string> _unavailable = [];
+
     private FontManager()
     {
         if (!Directory.Exists(FontsDirectory))
@@ -94,6 +98,83 @@ public class FontManager
     public bool IsKnownTypeFace(FaceIdentifier id)
     {
         return GetFontFace(id, false) != null;
+    }
+
+    /// <summary>
+    /// This method returns the typeface for the first of the given families that can be had, in the
+    /// given weight and style, the way a CSS font list is read.
+    /// <para>
+    /// A face can be had if it is already in the catalog or Google Fonts carries it, in which case it
+    /// is fetched, exactly as for a single name.  So a scene may ask first for a face the user
+    /// installed by hand, which is not everyone's to have -- one whose license allows it to be used
+    /// but not passed on, say -- and name one anyone can fetch to stand in for it.
+    /// </para>
+    /// </summary>
+    /// <param name="familyNames">The families to try, in order of preference.</param>
+    /// <param name="weight">The weight wanted.</param>
+    /// <param name="italic">Whether the italic face is wanted.</param>
+    /// <returns>The typeface of the first family that can be had.</returns>
+    public Typeface GetFirstAvailableTypeFace(IReadOnlyList<string> familyNames, FontWeight weight, bool italic)
+    {
+        return GetFirstAvailableTypeFace(familyNames, weight, italic, id => GetTypeFace(id));
+    }
+
+    /// <summary>
+    /// The same, with what finds each face given rather than assumed, so that the order of trying
+    /// can be checked without a network.
+    /// </summary>
+    /// <param name="familyNames">The families to try, in order of preference.</param>
+    /// <param name="weight">The weight wanted.</param>
+    /// <param name="italic">Whether the italic face is wanted.</param>
+    /// <param name="find">What finds one face, returning it, or <c>null</c> or throwing if it cannot
+    /// be had.</param>
+    /// <returns>The typeface of the first family that can be had.</returns>
+    internal Typeface GetFirstAvailableTypeFace(
+        IReadOnlyList<string> familyNames, FontWeight weight, bool italic, Func<FaceIdentifier, Typeface> find)
+    {
+        List<string> reasons = [];
+        Exception only = null;
+
+        foreach (string familyName in familyNames)
+        {
+            FaceIdentifier id = new () { FamilyName = familyName, Weight = (int) weight, Italic = italic };
+            string name = id.ForDisplay();
+
+            lock (_unavailable)
+            {
+                if (_unavailable.Contains(name))
+                {
+                    reasons.Add($"{name} could not be found earlier in this run");
+
+                    continue;
+                }
+            }
+
+            try
+            {
+                Typeface typeface = find(id);
+
+                if (typeface is not null)
+                    return typeface;
+
+                reasons.Add($"{name} is not in the catalog");
+            }
+            catch (Exception exception)
+            {
+                only = exception;
+
+                reasons.Add($"{name}: {exception.Message}");
+            }
+
+            lock (_unavailable)
+                _unavailable.Add(name);
+        }
+
+        // A single name fails just as it always has, so its message is the one it always gave.
+        if (familyNames.Count == 1 && only is not null)
+            throw only;
+
+        throw new Exception($"None of the fonts asked for could be found.\n    {string.Join("\n    ", reasons)}");
     }
 
     /// <summary>

@@ -200,7 +200,7 @@ public class TestTextPath
         TextPathResolver resolver = new ()
         {
             TextResolver = new LiteralResolver<string> { Value = text },
-            FontFamilyNameResolver = new LiteralResolver<string> { Value = Font }
+            FontFamilyNamesResolver = new LiteralResolver<string[]> { Value = [Font] }
         };
 
         return resolver.Resolve(new RenderContext(), new Variables());

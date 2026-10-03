@@ -16,9 +16,10 @@ public interface ITextContentResolver
     Resolver<string> TextResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the font family name.
+    /// This property holds the resolver for the font families to set the text in, the first that
+    /// can be had being the one used.
     /// </summary>
-    Resolver<string> FontFamilyNameResolver { get; set; }
+    Resolver<string[]> FontFamilyNamesResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the font weight.

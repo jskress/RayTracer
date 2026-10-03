@@ -143,7 +143,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
-| `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#managing-fonts) |
+| `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading) |

@@ -933,7 +933,7 @@ text {
 | Property | What it does |
 | --- | --- |
 | `text` | What to write.  `\n` starts a new line. |
-| `font` | Which font face; see [Managing Fonts](fonts.md). |
+| `font` | Which font face, or a list of them separated by commas, the first that can be had being used; see [Managing Fonts](fonts.md) and [Falling Back to Another Font](fonts.md#falling-back-to-another-font). |
 | `layout` | Alignment, positioning, the gap between lines, and a path to lay the text along; see [Laying out text](#laying-out-text). |
 | `open` | Leave the front and back faces off. |
 

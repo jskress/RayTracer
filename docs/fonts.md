@@ -105,6 +105,28 @@ or the other way about.  Remove the existing one first if that is really what yo
 RayTracer fonts --remove 'Merriweather:Bold'
 ```
 
+### Falling Back to Another Font
+
+A scene may name several fonts, separated by commas as CSS separates them, and the first that
+can be had is the one used:
+
+```
+text {
+    text 'NCC-1701'
+    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+}
+```
+
+A font can be had if it is in your catalog, or if Google Fonts carries it, in which case it is
+fetched just as a single font would be.  A weight and `italic` written after the list apply to
+every font in it.
+
+This is for a face that not everyone has.  A font whose license lets you use it but not pass it
+on can be [imported](#from-a-file-you-already-have) into your own catalog and named first, with
+one anyone can fetch named after it: on your machine the scene uses yours, and anywhere else it
+renders all the same, in the stand-in.  A font that cannot be had is looked for once per render,
+not every time a text names it, and if none of them can be had, the error names each one and why.
+
 ### Inspecting a Face
 
 To see what glyphs a face actually carries:
