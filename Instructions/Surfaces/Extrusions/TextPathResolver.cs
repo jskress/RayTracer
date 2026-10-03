@@ -19,9 +19,10 @@ public class TextPathResolver : ObjectResolver<GeneralPath>, ITextContentResolve
     public Resolver<string> TextResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the font family name.
+    /// This property holds the resolver for the font families to set the text in, the first that
+    /// can be had being the one used.
     /// </summary>
-    public Resolver<string> FontFamilyNameResolver { get; set; }
+    public Resolver<string[]> FontFamilyNamesResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the font weight.
@@ -55,14 +56,14 @@ public class TextPathResolver : ObjectResolver<GeneralPath>, ITextContentResolve
     protected override void SetProperties(RenderContext context, Variables variables, GeneralPath value)
     {
         string text = TextResolver.Resolve(context, variables);
-        string family = FontFamilyNameResolver.Resolve(context, variables);
+        string[] families = FontFamilyNamesResolver.Resolve(context, variables);
         FontWeight weight = FontWeightResolver?.Resolve(context, variables) ?? FontWeight.Regular;
         bool italic = IsItalicResolver?.Resolve(context, variables) ?? false;
         TextLayoutSettings settings =
             LayoutSettingsResolver?.Resolve(context, variables) ?? new TextLayoutSettings();
         Kerning kerning = KerningResolver?.Resolve(context, variables);
 
-        foreach (GeneralPath glyph in TextOutline.Glyphs(family, weight, italic, settings, kerning, text))
+        foreach (GeneralPath glyph in TextOutline.Glyphs(families, weight, italic, settings, kerning, text))
             value.Append(glyph.NormalizeFor3D());
     }
 
@@ -76,6 +77,6 @@ public class TextPathResolver : ObjectResolver<GeneralPath>, ITextContentResolve
         if (TextResolver is null)
             return "The \"text\" property is required.";
 
-        return FontFamilyNameResolver is null ? "The \"font\" property is required." : null;
+        return FontFamilyNamesResolver is null ? "The \"font\" property is required." : null;
     }
 }

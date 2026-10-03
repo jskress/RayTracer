@@ -27,13 +27,25 @@ public static class TextOutline
         string familyName, FontWeight weight, bool italic,
         TextLayoutSettings layoutSettings, Kerning kerningOverrides, string text)
     {
-        FaceIdentifier id = new FaceIdentifier
-        {
-            FamilyName = familyName,
-            Weight = (int) weight,
-            Italic = italic
-        };
-        Typeface typeface = FontManager.Instance.GetTypeFace(id);
+        return Glyphs([familyName], weight, italic, layoutSettings, kerningOverrides, text);
+    }
+
+    /// <summary>
+    /// The same, for a list of font families in order of preference, the first that can be had
+    /// being the one used.
+    /// </summary>
+    /// <param name="familyNames">The font families to try, in order.</param>
+    /// <param name="weight">The weight of the font face to use.</param>
+    /// <param name="italic">Whether to use the italic face.</param>
+    /// <param name="layoutSettings">How the lines are aligned and positioned.</param>
+    /// <param name="kerningOverrides">Kerning pairs that override the font's own, or <c>null</c>.</param>
+    /// <param name="text">The text to lay out.</param>
+    /// <returns>The outline of each laid-out glyph, one general path apiece.</returns>
+    public static List<GeneralPath> Glyphs(
+        IReadOnlyList<string> familyNames, FontWeight weight, bool italic,
+        TextLayoutSettings layoutSettings, Kerning kerningOverrides, string text)
+    {
+        Typeface typeface = FontManager.Instance.GetFirstAvailableTypeFace(familyNames, weight, italic);
         GlyphLayout layout = new GlyphLayout(typeface, layoutSettings, text);
 
         layout.Arrange(kerningOverrides);

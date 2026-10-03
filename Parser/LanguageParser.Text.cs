@@ -142,22 +142,21 @@ public partial class LanguageParser
     /// <param name="clause">The font specification clause to parse.</param>
     private static void ParseTextFontClause(ITextContentResolver resolver, Clause clause)
     {
-        string text = clause.Text(1);
-
-        resolver.FontFamilyNameResolver = new TermResolver<string> { Term = clause.Term() };
-
-        if (text != string.Empty && text != "italic")
+        // The families are the clause's terms, in the order written.  The weight and the style that
+        // follow apply to every one of them, and are found among the clause's words rather than at
+        // a fixed place, since the commas between the families are words of the clause too.
+        resolver.FontFamilyNamesResolver = new FontFamiliesResolver
         {
-            resolver.FontWeightResolver = new LiteralResolver<FontWeight>
-            {
-                Value = Enum.Parse<FontWeight>(text, true)
-            };
+            Terms = clause.Expressions.Cast<Term>().ToList()
+        };
 
-            text = clause.Text(2);
+        foreach (string word in clause.Tokens.Skip(1).Select(token => token.Text))
+        {
+            if (word == "italic")
+                resolver.IsItalicResolver = new LiteralResolver<bool> { Value = true };
+            else if (Enum.TryParse(word, true, out FontWeight weight))
+                resolver.FontWeightResolver = new LiteralResolver<FontWeight> { Value = weight };
         }
-
-        if (text == "italic")
-            resolver.IsItalicResolver = new LiteralResolver<bool> { Value = true };
     }
 
     /// <summary>

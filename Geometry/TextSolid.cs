@@ -16,10 +16,11 @@ public class TextSolid : Group
     public string Text { get; set; }
 
     /// <summary>
-    /// This property holds the name of the font family to use.
+    /// This property holds the names of the font families to use, in order of preference: the first
+    /// that can be had is the one used.
     /// </summary>
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
-    public string FontFamilyName { get; set; }
+    public string[] FontFamilyNames { get; set; }
 
     /// <summary>
     /// This property holds the font weight to use.
@@ -62,7 +63,7 @@ public class TextSolid : Group
     protected override void PrepareSurfaceForRendering()
     {
         List<GeneralPath> glyphs = TextOutline.Glyphs(
-            FontFamilyName, FontWeight, IsItalic, LayoutSettings, KerningOverrides, Text);
+            FontFamilyNames, FontWeight, IsItalic, LayoutSettings, KerningOverrides, Text);
 
         foreach (GeneralPath path in glyphs)
         {

@@ -15,9 +15,10 @@ public class TextSolidResolver : SurfaceResolver<TextSolid>, ITextContentResolve
     public Resolver<string> TextResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the font family name property on a text solid.
+    /// This property holds the resolver for the font families property on a text solid, the first
+    /// that can be had being the one used.
     /// </summary>
-    public Resolver<string> FontFamilyNameResolver { get; set; }
+    public Resolver<string[]> FontFamilyNamesResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the font weight property on a text solid.
@@ -55,7 +56,7 @@ public class TextSolidResolver : SurfaceResolver<TextSolid>, ITextContentResolve
     protected override void SetProperties(RenderContext context, Variables variables, TextSolid value)
     {
         TextResolver.AssignTo(value, target => target.Text, context, variables);
-        FontFamilyNameResolver.AssignTo(value, target => target.FontFamilyName, context, variables);
+        FontFamilyNamesResolver.AssignTo(value, target => target.FontFamilyNames, context, variables);
         FontWeightResolver.AssignTo(value, target => target.FontWeight, context, variables);
         IsItalicResolver.AssignTo(value, target => target.IsItalic, context, variables);
         LayoutSettingsResolver.AssignTo(value, target => target.LayoutSettings, context, variables);
@@ -75,6 +76,6 @@ public class TextSolidResolver : SurfaceResolver<TextSolid>, ITextContentResolve
         if (TextResolver is null)
             return "The \"text\" property is required.";
         
-        return FontFamilyNameResolver is null ? "The \"font\" property is required." : null;
+        return FontFamilyNamesResolver is null ? "The \"font\" property is required." : null;
     }
 }

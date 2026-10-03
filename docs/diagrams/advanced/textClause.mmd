@@ -1,4 +1,8 @@
 railroad-ebnf-beta
 title "A text solid"
 
-text = "text" "{" { "text" string | "font" name | layout | kerning | "open" | property } "}" ;
+text = "text" "{" { "text" string | font | layout | kerning | "open" | property } "}" ;
+
+font = "font" name { "," name } [ weight ] [ "italic" ] ;
+
+weight = "thin" | "light" | "regular" | "medium" | "bold" | "black" ;
