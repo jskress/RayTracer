@@ -105,7 +105,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cubic` | Pattern (and wave shape): cubic-interpolated. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic), [Blob](surfaces.md#blob) |
-| `cylindrical` | Pattern/image map: value around a cylinder; also image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `cylindrical` | Pattern/image map: value around a cylinder; also image mapping, and a decal wrapped around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
+| `decal` | A marking painted over a material's pigment, inside an outline. | [Materials](materials.md#decals) |
 | `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern). | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
@@ -130,7 +131,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there. | [Lights](lights.md#fading-with-distance) |
+| `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `falloff` | Spotlight: the outer cone where light fades out. | [Lights](lights.md#spotlights) |
 | `false` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
@@ -144,7 +145,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `font` | Text: which font face to use. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#managing-fonts) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
-| `from` | Blob cylinder: its start point (also reads in an import). | [Surfaces](surfaces.md#blob) |
+| `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading) |
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
 | `gamma` | Context: the display gamma to correct for. | [Context](context.md#gamma) |
@@ -200,16 +201,16 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `material` | A surface's whole appearance: pigment and finish. | [Materials](materials.md#the-finish) |
 | `materials` | L-system: maps characters or depths to materials. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
-| `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid.  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
+| `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the far end of a decal's reach (`max Y`, `max radius`).  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
 | `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
 | `metallic` | Finish: tints the highlight with the surface color. | [Materials](materials.md#metallic) |
-| `min` | Extrusion: the low Y of the solid (`min Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic) |
+| `min` | Extrusion: the low Y of the solid (`min Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the near end of a decal's reach (`min Y`, `min radius`). | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach) |
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `motion` | Sets a surface moving, for motion blur. | [Transforms](transforms.md#setting-a-surface-moving), [Cameras](cameras.md#motion-blur) |
 | `mottled` | Pigment: a base color mottled by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `move` | Path/spline: lift the pen to a new point; also an L-system turtle move. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
-| `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`, `no center`. | [Surfaces](surfaces.md#no-shadow) |
+| `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`, `no center`, `no fade`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading) |
 | `noise` | Mottling: dims a color by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `normal` | Roughens a surface: a pattern that tilts the normal; a blob plane: which way it faces. | [Materials](materials.md#roughening-the-surface), [Blob](surfaces.md#a-plane-component) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
@@ -241,7 +242,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `pitchDown` | L-system turtle: pitch down. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pitchUp` | L-system turtle: pitch up. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pixel` | Context: the `parallel pixel scanner`. | [Context](context.md#scanners) |
-| `planar` | Pattern/image map: value from a plane; also `planar` image mapping. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `planar` | Pattern/image map: value from a plane; also `planar` image mapping, and a decal carried straight onto a surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `plane` | Surface: an infinite flat plane (also a blob component). | [Surfaces](surfaces.md#plane), [Blob](surfaces.md#a-plane-component) |
 | `point` | A `point light`; also `point at` and a `focal point`. | [Lights](lights.md#point-lights) |
 | `points` | Patch/triangle: the control or corner points. | [Surfaces](surfaces.md#patch) |
@@ -256,7 +257,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `radians` | Angle unit: radians. | [Context](context.md#angles) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
-| `radius` | A radius: sphere blob, disc, spotlight, tube point. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube) |
+| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, and a wrapped decal's reach. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reflective` | Finish: how mirror-like the surface is. | [Materials](materials.md#reflective) |
@@ -297,7 +298,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
-| `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `spot` | A `spot light` (a cone). | [Lights](lights.md#spotlights) |
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -323,9 +324,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
-| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, and a decal's `fade from` … `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading) |
 | `top` | Text layout: align the block by its top. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `toroidal` | Image map: wrap the image around a torus. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
+| `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `transform` | Applies a named transform to a surface. | [Transforms](transforms.md#naming-a-transform) |
@@ -567,6 +568,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/materials/interiorClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/materials/interiorClause.svg">
   <img alt="An interior" src="images/materials/interiorClause.svg">
+</picture>
+
+**A decal** — A marking painted over the pigment: one color inside an outline. &nbsp; [_materials_](materials.md#decals)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/materials/decalClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/materials/decalClause.svg">
+  <img alt="A decal" src="images/materials/decalClause.svg">
 </picture>
 
 #### Pigments and patterns

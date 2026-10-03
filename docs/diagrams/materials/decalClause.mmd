@@ -1,0 +1,12 @@
+railroad-ebnf-beta
+title "A decal"
+
+decal = "decal" "{" { outline | "color" color | projection | reach | fade | transform } "}" ;
+
+outline = path | "path" name ;
+
+projection = "planar" | "cylindrical" | "spherical" | "toroidal" "radius" number ;
+
+reach = ( "min" | "max" ) ( "Y" | "radius" ) number ;
+
+fade = "fade" "from" angle "to" angle | "no" "fade" ;

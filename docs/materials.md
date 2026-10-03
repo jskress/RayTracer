@@ -297,3 +297,121 @@ group {
 
 This saves a great deal of repetition in anything built of many pieces, and it is how a whole
 assembly gets one consistent look.
+
+### Decals
+
+A decal is a marking painted over the pigment: inside an outline it is one color, and outside
+it the surface keeps its own.  Registration numbers, stripes, lettering on a sign, a logo on a
+hull — anything flat that is painted on rather than built.
+
+![Decals](images/figures/material-decals.png)
+
+A stripe and a registration painted across a body made of three parts, and lettering painted on
+a pane of clear glass, which shows again in its shadow.  The scene is
+[`docs/examples/materials/decals.igl`](examples/materials/decals.igl).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/materials/decalClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/materials/decalClause.svg">
+  <img alt="A decal" src="images/materials/decalClause.svg">
+</picture>
+
+```
+material {
+    pigment color White
+
+    decal {
+        path { text { text 'RT-42'  font 'Merriweather' } }
+        color [0.08, 0.08, 0.1]
+        planar
+        min Y 0  max Y 1
+        scale 0.3
+        translate [0.4, 0, -0.4]
+    }
+}
+```
+
+The outline is any [path](advanced-surfaces.md#paths) — lines and curves, an SVG, an icon or a
+run of text — written out in place or named.  The projection says how it is carried onto the
+surface, and the reach says how far it goes.  The transforms place the decal: scale it, turn it
+to face another way, and move it to where it belongs.
+
+#### Projections
+
+![The four projections](images/figures/material-decal-projections.png)
+
+Each projection labeled with its own name.  The scene is
+[`docs/examples/materials/decal-projections.igl`](examples/materials/decal-projections.igl).
+
+A decal has the same four projections an [image map](pigments-and-patterns.md#image-pigments)
+has.  `planar` is what you get if you name none.
+
+| Projection | How the outline is laid on | Its reach is measured |
+| --- | --- | --- |
+| `planar` | Flat in the decal's X–Z plane, as a path is for an extrusion, and carried straight down its Y axis onto whatever it meets. | along Y, with `min Y` and `max Y` |
+| `cylindrical` | Wrapped around the decal's Y axis: across runs around the axis, and up runs along it. | out from the axis, with `min radius` and `max radius` |
+| `spherical` | Wrapped over a sphere about the decal's origin: across runs along the equator, and up runs along a meridian. | out from the center, likewise |
+| `toroidal radius` *R* | Wrapped over a ring of radius *R* about the decal's Y axis: across runs around the ring, and up runs around the tube. | out from the ring, likewise |
+
+The wrapped projections measure across and up as lengths along the surface, at the point's own
+distance from the axis, center or ring.  So an outline lands at its true size whatever the radius
+of what it is wrapped on — a word two units wide is two units of arc on a thin cylinder and on a
+fat one alike — and you never have to say that radius, except for the ring of a `toroidal` one,
+which, like a torus's own, has to be given.  Each is centered on the decal's +X side, reading left
+to right as seen from outside, with up toward +Y; turn the decal to put it somewhere else.
+
+#### Reach
+
+**The reach is required.**  A projection goes on forever, so without one a decal on the top of
+something would come out on the bottom as well, backwards, and a wrapped one would paint every
+surface in its path however near or far.  Set it to take in the face you want painted and nothing
+beyond it.
+
+A planar decal's reach is measured along its projection from where it is placed; a wrapped one's
+is how far out from its axis, center or ring.  Both are in the units of the surface the decal is
+on, and so is a toroidal decal's ring: a `scale` written in the decal sizes the outline, and
+leaves them alone.
+
+Several decals may be written in one material.  They are painted in the order they are written,
+each on top of those before it.  A color with an alpha below 1 lets the surface show through.
+
+**A decal is placed in the space of the surface whose material it is in.**  That is not the
+same as a pattern.  A material on a group is handed down to each part, and a pattern is read in
+the space of whichever part the ray met — so a scaled part shows its pattern scaled.  A decal
+written on the group is read in the group's space on every part of it, which is what lets one
+stripe run straight across a cylinder and the two squashed spheres capping it.  It also means
+that a decal written on a scaled shape is read before that scale, the same as a pattern is.  On
+`sphere { scale 1.5 }`, the sphere in its own space still has a radius of 1, so 1 is the radius
+its decal's reach must take in.  To place a decal in the units you built in, put the material on
+a group around the shape.
+
+The edge of a decal stays crisp at any distance, without needing antialiasing to find it, since
+the outline is drawn rather than looked up in an image.
+
+Paint on glass stops the light, and casts a shadow, provided the glass is clear by way of its
+pigment — `pigment color [1, 1, 1, 0]` — rather than its `transparency`.  A surface's
+`transparency` lets light through whatever its color says, paint included.
+
+#### Fading
+
+A decal fades out where the surface turns away from it.  It is carried straight along its
+projection, so on a face it meets at a steep slant — a planar decal on the side of a box, or a
+cylindrical one on the end of a can — it would otherwise be smeared out across that face, and a
+reach cannot help when the face stands inside it, as a box's sides stand inside the reach of
+paint on its top.  So a decal is at full strength until the surface turns 60° from square to its
+projection, and gone by 75°, fading smoothly in between: paint over a rounded edge thins away
+round the curve, and stops short of a wall.  For a wrapped decal, square means facing straight
+out from its axis, center or ring.  Like the rest of a decal, the angle is measured in the space
+of the surface the material is written on.
+
+Both angles may be moved, and the fade may be turned off:
+
+```
+fade from 30 to 45     // full strength to 30°, gone by 45°
+fade from 45 to 45     // a clean cut at 45°
+no fade                // paint every face the reach takes in, however it is turned
+```
+
+The angles are in the scene's own units, as a `rotate` is, and lie between 0 (square on) and
+90 (edge on).  Turning the fade off is for a decal that is meant to wrap a sharp corner, where the
+smear down the far face is the point.

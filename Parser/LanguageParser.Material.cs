@@ -2,8 +2,11 @@ using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Transforms;
 using RayTracer.Terms;
 
 namespace RayTracer.Parser;
@@ -156,8 +159,92 @@ public partial class LanguageParser
             case "interior":
                 ParseInteriorClause(resolver, clause);
                 break;
+            case "decal":
+                resolver.DecalResolvers.Add(
+                    ParseObjectResolver<DecalResolver>("decalEntryClause", HandleDecalEntryClause));
+                break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
+        }
+    }
+
+    /// <summary>
+    /// This method checks an angle a decal's fade is given.  It is the angle between the surface and
+    /// square on to the decal's projection, so it can only lie between square on and edge on.
+    /// </summary>
+    /// <param name="angle">The angle, in radians.</param>
+    /// <returns>An error message, or <c>null</c>, if all is well.</returns>
+    private static string FadeAngle(double angle)
+    {
+        return angle is < 0 or > Math.PI / 2 + 1e-9
+            ? "A decal's fade is measured from square on, so its angles must lie between 0 and 90 degrees."
+            : null;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a decal block.  Anything that is none of a
+    /// decal's own properties is read as a transform, which places the decal as a transform places a
+    /// surface.
+    /// </summary>
+    /// <param name="clause">The clause to process, or <c>null</c>, if it may be a transform.</param>
+    private void HandleDecalEntryClause(Clause clause)
+    {
+        DecalResolver resolver = (DecalResolver) _context.CurrentTarget;
+
+        if (clause == null)
+        {
+            // Handed back the transforms already gathered, so that a property written between two
+            // of them does not throw away the first; and a transform clause matches nothing quite
+            // happily, so it is how many there are that says whether it read one.
+            int gathered = resolver.TransformResolver?.TransformCreators.Count ?? 0;
+            TransformResolver transforms = ParseTransformClause(resolver.TransformResolver);
+
+            if (transforms == null || transforms.TransformCreators.Count == gathered)
+                throw CreateUnexpectedInputException("Expecting a decal property here.");
+
+            resolver.TransformResolver = transforms;
+
+            return;
+        }
+
+        switch (ToCmd(clause))
+        {
+            case "path":
+                resolver.PathResolver = GetPathResolver(clause);
+                break;
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = clause.Term() };
+                break;
+            case "planar":
+                resolver.Projection = DecalProjection.Planar;
+                break;
+            case "cylindrical":
+                resolver.Projection = DecalProjection.Cylindrical;
+                break;
+            case "spherical":
+                resolver.Projection = DecalProjection.Spherical;
+                break;
+            case "toroidal":
+                resolver.Projection = DecalProjection.Toroidal;
+                resolver.RingRadiusResolver = new TermResolver<double> { Term = clause.Term() };
+                break;
+            case "min":
+                resolver.MinimumResolver = new TermResolver<double> { Term = clause.Term() };
+                resolver.MinimumWord = clause.Text(1);
+                break;
+            case "max":
+                resolver.MaximumResolver = new TermResolver<double> { Term = clause.Term() };
+                resolver.MaximumWord = clause.Text(1);
+                break;
+            case "fade":
+                resolver.FadeFromResolver = new AngleResolver { Term = clause.Term(), Validator = FadeAngle };
+                resolver.FadeToResolver = new AngleResolver { Term = clause.Term(1), Validator = FadeAngle };
+                break;
+            case "no.fade":
+                resolver.NoFade = true;
+                break;
+            default:
+                throw new Exception($"Internal error: unknown decal property found: {clause.Text()}.");
         }
     }
 

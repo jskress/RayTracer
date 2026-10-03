@@ -776,7 +776,7 @@ public class Scene : NamedThing, IDisposable
         // question is asked at this point rather than of the material as a whole.
         double transparency = material.PigmentMayTransmit
             ? material.TransparencyFor(
-                material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal))
+                material.GetColorFor(intersection))
             : material.Transparency;
 
         if (material.Reflective > 0 && (material.Transparency > 0 || material.PigmentMayTransmit))
@@ -927,8 +927,15 @@ public class Scene : NamedThing, IDisposable
             Point where = needsPigment || interior.Refracts
                 ? ray.At(intersection.Distance)
                 : null;
+
+            // A decal fades where the surface turns away from it, so if there are any it needs the
+            // surface's normal too -- which a shadow ray has not worked out, and nothing else here
+            // wants, so it is worked out only then.
             Color surfaceColor = needsPigment
-                ? material.Pigment.GetColorFor(intersection.Surface, where, intersection.Portal)
+                ? material.GetColorFor(
+                    intersection.Surface, where,
+                    material.Decals is null ? null : intersection.Surface.NormalAt(where, intersection),
+                    portal: intersection.Portal)
                 : null;
             double transparency = surfaceColor is null
                 ? material.Transparency
@@ -1051,7 +1058,7 @@ public class Scene : NamedThing, IDisposable
         // highlight has to settle for.
         if (material.Metallic != 0)
         {
-            Color pigmentColor = material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal);
+            Color pigmentColor = material.GetColorFor(intersection);
 
             color *= material.GetMetallicTint(pigmentColor, intersection.Eye.Dot(intersection.Normal));
         }
@@ -1074,7 +1081,7 @@ public class Scene : NamedThing, IDisposable
         // it is sampled and has its say.  Sampled once here and reused for the filter below, since
         // both want the surface's color at the very same point.
         Color pigmentColor = material.PigmentMayTransmit || material.Interior.Filter > 0
-            ? material.Pigment.GetColorFor(intersection.Surface, intersection.Point, intersection.Portal)
+            ? material.GetColorFor(intersection)
             : null;
         double transparency = pigmentColor is null
             ? material.Transparency

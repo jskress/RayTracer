@@ -1,0 +1,84 @@
+// The four ways a decal may be carried onto a surface, each labeled with its own name.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 2.6, -18]
+    look at [0, -0.1, 0]
+    field of view 44
+}
+
+point light { location [-6, 8, -10]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -6]    color [0.3, 0.31, 0.36] }
+
+plane {
+    material { pigment color [0.5, 0.5, 0.54]  specular 0.1 }
+    translate [0, -1.25, 0]
+}
+
+shell = material { pigment color [0.9, 0.9, 0.88]  specular 0.6  shininess 80 }
+
+// Planar: carried straight along the decal's Y axis, turned here to face the camera.  The reach
+// takes in the box's front face and nothing behind it.
+cube {
+    material shell {
+        decal {
+            path { text { text 'planar'  font 'Merriweather'
+                          layout { horizontal position center  vertical position center } } }
+            color [0.7, 0.1, 0.08]
+            planar  min Y 0.9  max Y 1.1
+            scale 0.42
+            rotate X -90
+        }
+    }
+    scale [1.1, 1.1, 1.1]
+    rotate Y 18
+    translate [-5.3, -0.15, 0]
+}
+
+// Cylindrical: wrapped around the decal's Y axis.
+cylinder {
+    material shell {
+        decal {
+            path { text { text 'cylindrical'  font 'Merriweather'
+                          layout { horizontal position center  vertical position center } } }
+            color [0.1, 0.25, 0.65]
+            cylindrical  min radius 0.9  max radius 1.1
+            scale 0.44
+            rotate Y 84             // the decal's +X side, turned toward the camera
+        }
+    }
+    min Y -1.25  max Y 1.0
+    translate [-1.8, 0, 0]
+}
+
+// Spherical: wrapped over a sphere about the decal's origin.
+sphere {
+    material shell {
+        decal {
+            path { text { text 'spherical'  font 'Merriweather'
+                          layout { horizontal position center  vertical position center } } }
+            color [0.1, 0.45, 0.15]
+            spherical  min radius 0.9  max radius 1.1
+            scale 0.44
+            rotate Y 96
+        }
+    }
+    scale 1.15
+    translate [1.8, -0.1, 0]
+}
+
+// Toroidal: wrapped around a ring, across around the ring and up around the tube.
+torus {
+    radii 1.1, 0.45
+    material shell {
+        decal {
+            path { text { text 'toroidal'  font 'Merriweather'
+                          layout { horizontal position center  vertical position center } } }
+            color [0.55, 0.3, 0.05]
+            toroidal radius 1.1  min radius 0.4  max radius 0.5
+            scale 0.3
+            rotate Y 105
+        }
+    }
+    translate [5.3, -0.8, 0]
+}

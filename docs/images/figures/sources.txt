@@ -60,6 +60,8 @@ light-area.png|docs/examples/lights/area-light.igl|400|300
 light-distant.png|docs/examples/lights/distant-light.igl|400|300
 light-point.png|docs/examples/lights/point-light.igl|400|300
 light-spot.png|docs/examples/lights/spot-light.igl|400|300
+material-decal-projections.png|docs/examples/materials/decal-projections.igl|640|240
+material-decals.png|docs/examples/materials/decals.igl|640|240
 material-finishes.png|docs/examples/materials/finishes.igl|640|240
 pattern-combining.png|docs/examples/pigments/combining.igl|660|190
 pattern-maps.png|docs/examples/pigments/maps.igl|600|190
