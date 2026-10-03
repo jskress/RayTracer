@@ -866,4 +866,4 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--fa-zip` | Install a FontAwesome zip, so scenes can use its icons as [2D paths](advanced-surfaces.md#icons). |
 | `-o`, `--overwrite` | Allow an import to replace libraries already there. |
 | `-d`, `--details` | List every definition that could not be converted. |
-| `-n`, `--dry-run` | Convert and report, but write nothing. |
+| `-n`, `--dry-run` | Report what an import, an install, a removal or a FontAwesome zip would do, but write nothing. |

@@ -43,6 +43,10 @@ once-only step at first run cannot.
 `--overwrite` replaces it.  So a sky you have tuned to your liking survives a new release of the ray
 tracer, and the shipped ones are a starting point rather than something imposed.
 
+**Add `--dry-run` to find out first.**  It says which libraries would be installed, which would be
+replaced and which kept, and writes nothing — so `--install --overwrite --dry-run` answers the one
+question worth asking before an overwrite: what of yours it would replace.
+
 #### Daylight
 
 The first of them was `daylight`, and it exists because the sky in this ray tracer is a real
@@ -2022,18 +2026,16 @@ long or forty, and the eye has no way to tell.
 #### Spacecraft
 
 ```
-import 'spacecraft' { Shuttle, Satellite, Enterprise }
+import 'spacecraft' { Shuttle, Satellite }
 
 object Shuttle(37)
-object Satellite(6)    { translate [0, 0, 60] }
-object Enterprise(289) { translate [0, 0, -600] }
+object Satellite(6) { translate [0, 0, 60] }
 ```
 
 | | |
 | --- | --- |
 | `Shuttle` | An orbiter: double-delta wing, a fin, three engines and a black belly. |
 | `Satellite` | A bus, two solar wings and a dish. |
-| `Enterprise` | A saucer, an engineering hull and two nacelles on pylons. |
 | `SpacecraftTile`, `SpacecraftBelly`, `SpacecraftHull` | What they are made of. |
 | `SpacecraftGlow`, `SpacecraftEmber` | And what glows. |
 
@@ -2063,7 +2065,7 @@ So these carry a **higher `ambient` than anything else in these libraries**, whi
 worth naming as one: it stands in for the light a real spacecraft gets from the planet under it, which
 is not nothing — earthshine is bright enough to read by.
 
-**And a glow is a material, not a light.**  A nacelle or an engine bell reads as lit from inside if it
+**And a glow is a material, not a light.**  An engine bell or a window reads as lit from inside if it
 carries a bright color at `ambient 1`.  Making it a real emitter costs a medium and buys nothing at
 this distance, for the reason the [outdoor lights](#outdoor-lights) give.  It also owes nothing to
 where the sun is, which is the point: an engine that dims when the craft turns away from the light is
@@ -2087,51 +2089,79 @@ and then stood up** with `rotate X -90`.  Scaling the third number instead looks
 end up thin in `Z` — and makes it a slab as thick as the ship is long.
 
 **And a leaned plate does not reach as far up as it is tall.**  Two turns about `X` compose into one,
-so a pylon leaned out at forty-eight degrees keeps only cos(48) of its height and spends the rest going
-outward.  Built to reach the nacelles it stopped ten meters short of them, ending in mid-air under what
-it was supposed to be holding up.
+so a plate leaned out at forty-eight degrees keeps only cos(48) of its height and spends the rest going
+outward.  A strut built to reach something above it and leaned stops short of it, ending in mid-air
+under what it was supposed to be holding up.
 
-##### The Enterprise is built to her published dimensions
+The ship that used to be part of this library now has one of her own, built in far more detail:
+see [Enterprise](#enterprise).
 
-Five numbers, and between them they fix almost the whole layout:
+#### Enterprise
+
+```
+import 'enterprise' { Enterprise }
+
+object Enterprise(289) { rotate Y 30 }
+```
 
 | | |
 | --- | --- |
-| overall length | 289 m |
-| saucer diameter, which is also her beam | 127 m |
-| height | 72 m |
-| nacelles | 156 m |
-| secondary hull | 100 m long, 30 m through |
+| `Enterprise` | The starship from the original series: saucer, dorsal, secondary hull, pylons and nacelles. |
+| `EnterpriseSaucer`, `EnterpriseSecondaryHull` | Her two halves, in the plans' own frame. |
+| `EnterpriseNacelle`, `EnterpriseImpulseEngines` | Two of the parts they are built from. |
 
-Three of the parts are the extremes of the box, so the rest follows.  **The saucer's forward rim is the
-foremost point**, so a 127-meter saucer on a 289-meter ship has its center 81 m forward of the middle.
-**The nacelles are the aftmost point**, so a 156-meter nacelle ends 11.5 m forward of it.  Rendered, the
-model measures 4.01 to one in length against height, against 289/72 = 4.01.
+She keeps the [spacecraft](#spacecraft)'s conventions: **the first number is a length**, in
+**meters**, she **faces `+X`**, and her origin is **her own middle**, so she turns about herself and
+stands beside a shuttle at the right size.  289 is the published figure, and `long` scales her whole.
+The second number, `variant`, is there for the same uniformity and does nothing.
 
-**Almost none of it is where memory puts it.**  The saucer is *forty-four percent of the overall length
-across* — very nearly half the ship in one disc — and drawn by eye it comes out at about half that.  The
-nacelles are longer still at fifty-four percent, so one nacelle is longer than the secondary hull and the
-dorsal together.  And the secondary hull hangs well **aft**: its middle is 34 m behind the ship's own,
-while the saucer's is 81 m ahead of it.
+##### Built from the plans, and from the model where they disagree
 
-##### Three of her parts are lathes, and that is what puts the rim on the saucer
+Every part was traced from Franz Joseph's Booklet of General Plans: the saucer's profile and cutaway,
+the secondary hull's profile, top, bottom and rear views and the cutaway of its nose, the dorsal's
+section, and the nacelle's profile, top and bottom.  The traced outlines are fitted, not eyeballed --
+the secondary hull's body lands within about a hundredth of a unit of the drawn outline from the
+deflector housings to the hangar doors -- and each part was checked by laying the drawing over an
+orthographic render of it.
 
-The saucer, the secondary hull and each nacelle are bodies of revolution.  Built from flattened spheres
-— which is the obvious thing — the saucer comes out a smooth lens with **no rim**, and the rim is most
-of what the eye uses: it is the one hard edge on the whole primary hull, and without it the saucer reads
-as a pebble.  A lathe's profile puts it there for the cost of two points.
+**Where the plans and the studio model disagree, the model wins.**  The plans draw no recess for the
+control reactor, and the photographs of the original model show one, with the reactor standing in it
+clear of the floor; the reactor itself, the intercoolers' height, the webs that close them and the
+vents are all taken from the model.
 
-The same goes for the secondary hull's **blunt bow and truncated stern**.  An ellipsoid tapers to a point
-at both ends; the real hull swells to full width a third of the way back and is cut off square at the
-hangar, and neither is a thing you can scale a sphere into.
+##### A material on the object paints the hull, and only the hull
 
-Two traps came with it.  A nacelle's lathe has to **start behind the bussard dome** rather than at the
-nose, or it occupies the same space as the amber dome laid over it and the collectors disappear into the
-hull plating.  And the deflector is **a shallow convex disc, not a hollowed shell** — taking a barely
-smaller sphere out of a sphere leaves an annulus a few centimeters thick, which renders as a ring of
-light with a hole in the middle.
+The plating has no material of its own, so it takes what the scene gives the object -- and every part
+that names its own color keeps it: the deflector's orange, the copper of the inner cups and the
+antenna, the bronze of the Bussard domes, and the matte gray of the vanes, the reactor's recess, the
+vents, the grooves and the nacelles' hoods.
 
-She is a fan model built from published figures, not anyone's official design.
+```
+import 'enterprise' { Enterprise }
+
+object Enterprise(289) {
+    material { pigment [0.80, 0.81, 0.80]  ambient 0.22 }
+}
+```
+
+Unpainted, she is the default white.  Over a planet with one sun, give her a little more `ambient`
+than that or a dim fill from below, for the [spacecraft](#spacecraft)'s reason: in orbit, the side away
+from the sun has nothing falling on it but the light off the world below.
+
+##### A glow counts the lights
+
+The impulse ports and the homing beacon are materials at `ambient 1`, and each shows its own color
+under one white light.  **Every light adds its own ambient**, in proportion to its color, so a second
+light at full strength makes a glow twice as bright -- and a pale glow goes to white -- while a dim
+fill adds only a little.
+
+##### Her own frame
+
+The parts are written in the plans' units with **`+X` aft**, the saucer's axis on `Y` and its rim at
+`y = 0`; in those units the saucer is 12.625 across and the ship 29.61 long.  `Enterprise` turns her
+about, moves her middle to the origin and scales her to meters, so a scene that wants the whole ship
+never sees that frame.  It is there for a scene that wants one part on its own:
+`object EnterpriseNacelle` is a nacelle with its axis on `X` and the pylon's chord at its origin.
 
 ### Where Libraries Live
 
@@ -2342,7 +2372,8 @@ RayTracer libraries --remove golds
 ```
 
 The name may be given with or without the `.igl`.  This only removes the library file; a scene
-that still imports from it will fail to find it the next time it is rendered.
+that still imports from it will fail to find it the next time it is rendered.  With `--dry-run` it
+checks that the library is there and removes nothing.
 
 ### FontAwesome Icons
 
