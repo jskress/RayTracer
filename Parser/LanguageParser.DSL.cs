@@ -73,7 +73,7 @@ public partial class LanguageParser
         logicalNot: _operator("!")
         conditional: _operator("?")
 
-        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'ambient', 'amplitude', 'and',
+        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'along', 'ambient', 'amplitude', 'and',
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
@@ -81,7 +81,7 @@ public partial class LanguageParser
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
-            'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
+            'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
@@ -588,9 +588,44 @@ public partial class LanguageParser
         {
             depth > _expression
         }
+        // A marking painted over the pigment: inside an outline one color, outside the surface's
+        // own.  It is written on the material rather than as a pigment because a decal is read in
+        // the space of the surface the material was written on, and a pigment inside another one is
+        // handed points already in the space of whatever part of a group the ray met.
+        startDecalClause:
+        {
+            decal > openBrace ?? 'Expecting an open brace to follow "decal" here.'
+        }
+        // Anything that matches none of these is tried as a transform, the way a surface's own
+        // block does, so the list carries no complaint of its own.
+        decalEntryClause:
+        [
+            {
+                path > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting an outline, or the name of one, to follow "path" here.'
+            } |
+            { color > _expression } |
+            planar | cylindrical | spherical |
+            {
+                toroidal >
+                radius ?? 'Expecting "radius" and the radius of the ring to follow "toroidal" here.' >
+                _expression
+            } |
+            {
+                [ min | max ] > [ Y | radius ] ?? 'Expecting "Y" or "radius" to follow here.' >
+                _expression
+            } |
+            {
+                fade > from ?? 'Expecting "from" and the angle the fade starts at to follow "fade" here.' >
+                _expression >
+                to ?? 'Expecting "to" and the angle the decal is gone by here.' > _expression
+            } |
+            { no > fade ?? 'Expecting "fade" to follow "no" here.' }
+        ]
         materialEntryClause:
         [
-            pigment | normal | materialValueClause | materialMetallicClause | startInteriorClause
+            pigment | normal | materialValueClause | materialMetallicClause | startInteriorClause |
+            startDecalClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.
@@ -1225,7 +1260,12 @@ public partial class LanguageParser
                 [ left | center | right | _expression ] } |
             { vertical > position ?? 'Expecting "position" to follow "vertical" here.' >
                 [ top | baseline | center | bottom | _expression ] } |
-            { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression }
+            { line > gap ?? 'Expecting "gap" to follow "line" here.' > _expression } |
+            {
+                along > path ?? 'Expecting "path" to follow "along" here.' >
+                [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting a path, or the name of one, to follow "along path" here.'
+            }
         ] ?? 'Expecting a text layout property here.'
         kerningPairClause:
         {

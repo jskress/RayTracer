@@ -76,6 +76,12 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     public SurfaceNormalResolver SurfaceNormalResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolvers for the decals painted over the pigment, in the order they
+    /// were written.
+    /// </summary>
+    public List<DecalResolver> DecalResolvers { get; private set; } = [];
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -112,6 +118,19 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
 
         if (SurfaceNormalResolver != null)
             value.SurfaceNormal = SurfaceNormalResolver.Resolve(context, variables);
+
+        // Decals go on top of any the material already has rather than in place of them, the same as
+        // writing a second one in the same block would, which is what a block laid over a material
+        // made elsewhere wants.  A new list is made every time rather than the old one added to,
+        // since the old one may well be another material's.
+        if (DecalResolvers.Count > 0)
+        {
+            value.Decals =
+            [
+                ..value.Decals ?? [],
+                ..DecalResolvers.Select(resolver => resolver.Resolve(context, variables))
+            ];
+        }
     }
 
     /// <summary>
@@ -120,6 +139,12 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     /// <returns>A clone of this resolver.</returns>
     public object Clone()
     {
-        return MemberwiseClone();
+        MaterialResolver resolver = (MaterialResolver) MemberwiseClone();
+
+        // A material named and then added to is cloned first and has the addition parsed into the
+        // copy, so a list shared with the original would carry the copy's decals back into it.
+        resolver.DecalResolvers = [..DecalResolvers];
+
+        return resolver;
     }
 }

@@ -80,6 +80,12 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     {
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
         MaterialResolver.AssignTo(value, target => target.Material, context, variables);
+
+        // This is the one place a material is written onto a surface rather than handed down to it,
+        // so it is where the material learns which surface it belongs to.  See Material.Anchor.
+        if (MaterialResolver is not null && value.Material is not null)
+            value.Material.Anchor = value;
+
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);

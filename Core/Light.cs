@@ -170,7 +170,7 @@ public abstract class Light : NamedThing
         Material material = surface.Material ?? Material.Default;
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
-        Color pigmentColor = material.Pigment.GetColorFor(surface, point, footprint, portal);
+        Color pigmentColor = material.GetColorFor(surface, point, normal, footprint, portal);
         Color color = pigmentColor * ColorFor(sample);
         Vector vector = sample.Direction;
 

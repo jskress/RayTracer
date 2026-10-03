@@ -22,6 +22,11 @@ public class GlyphLine : IEnumerable<GeneralPath>
 
     private readonly TtfGlyph[] _glyphs;
 
+    /// <summary>
+    /// This property gives the glyphs of the line, each in its place.
+    /// </summary>
+    internal IEnumerable<TtfGlyph> Glyphs => _glyphs;
+
     public GlyphLine(Typeface typeface, string text)
     {
         _glyphs = text.EnumerateRunes()

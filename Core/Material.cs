@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Extensions;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Pigments;
 
@@ -142,6 +143,176 @@ public class Material
     /// </para>
     /// </summary>
     public SurfaceNormal SurfaceNormal { get; set; }
+
+    /// <summary>
+    /// This property holds the surface this material was written on: its <b>anchor</b>.
+    /// <para>
+    /// A group or a combination hands its material down to each of its parts that has none of its
+    /// own, and it hands down the very same object, so one material may be worn by a dozen surfaces
+    /// that each stand in a space of their own.  A pattern is read in the space of whichever part the
+    /// ray met, which is what a brick on a gable wants.  A marking does not: one written on a whole
+    /// saucer has to land in one place on it, not somewhere different on the lathe, the egg and the
+    /// bridge, and at twice the size on whichever of them was scaled.  The anchor is the one space
+    /// every part wearing the material agrees on.
+    /// </para>
+    /// <para>
+    /// It is set where a material is written onto a surface, and never by the handing down: every
+    /// surface a material clause dresses gets a material of its own, so each material has exactly
+    /// one surface it was written on.  It is left empty for a material nothing wrote, such as the
+    /// one a surface with none is given at the last moment, and such a material is read in the
+    /// space of whichever surface wears it.
+    /// </para>
+    /// </summary>
+    public Surface Anchor { get; set; }
+
+    /// <summary>
+    /// This method carries a point from the world into this material's anchor space, for a point
+    /// found on the given surface.  See <see cref="Anchor"/>.
+    /// </summary>
+    /// <param name="surface">The surface the point was found on, which wears this material.</param>
+    /// <param name="point">The point, in the world's coordinate system.</param>
+    /// <param name="portal">The instance the point was found through, if it was.</param>
+    /// <returns>The point, in the space of the surface this material was written on.</returns>
+    public Point WorldToAnchor(Surface surface, Point point, Surface portal = null)
+    {
+        Surface anchor = Anchor ?? surface;
+
+        return anchor.WorldToSurface(point, 0, PortalTo(anchor, surface, portal));
+    }
+
+    /// <summary>
+    /// This method carries a footprint from the world into this material's anchor space, the same
+    /// way <see cref="WorldToAnchor(Surface, Point, Surface)"/> carries a point.
+    /// </summary>
+    /// <param name="surface">The surface the footprint was found on, which wears this material.</param>
+    /// <param name="footprint">The footprint, in the world's coordinate system.</param>
+    /// <param name="portal">The instance it was found through, if it was.</param>
+    /// <returns>The footprint, in the space of the surface this material was written on.</returns>
+    public Footprint WorldToAnchor(Surface surface, Footprint footprint, Surface portal = null)
+    {
+        Surface anchor = Anchor ?? surface;
+
+        return anchor.WorldToSurface(footprint, 0, PortalTo(anchor, surface, portal));
+    }
+
+    /// <summary>
+    /// This method decides whether the walk into the anchor's space goes through the instance a
+    /// point was found through.
+    /// <para>
+    /// **Only when the anchor stands inside the shared shape.**  A shared shape has no parent, so the
+    /// walk from any surface inside it runs out at its top and carries on through the instance, which
+    /// is what places it.  An anchor above the instance -- a group holding it, whose material was
+    /// handed down into the shape -- stands in the scene's own chain and needs no instance to place
+    /// it; carried through one anyway, the point would be moved by the instance's placing a second
+    /// time.  The anchor is inside the shape exactly when it is the surface itself or one of the
+    /// surfaces above it before the chain runs out.
+    /// </para>
+    /// </summary>
+    /// <param name="anchor">The surface the material was written on.</param>
+    /// <param name="surface">The surface the point was found on.</param>
+    /// <param name="portal">The instance the point was found through, if any.</param>
+    /// <returns>The instance to walk through, or <c>null</c>.</returns>
+    private static Surface PortalTo(Surface anchor, Surface surface, Surface portal)
+    {
+        if (portal is null)
+            return null;
+
+        for (Surface walk = surface; walk is not null; walk = walk.Parent)
+        {
+            if (ReferenceEquals(walk, anchor))
+                return portal;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// This property holds the decals painted over the pigment, in the order they were written, each
+    /// going on top of those before it.  It is <c>null</c> for a material with none, which is nearly
+    /// every material, so that asking for a color costs nothing more than it ever did.
+    /// </summary>
+    public List<Decal> Decals { get; set; }
+
+    /// <summary>
+    /// This method returns the color of this material where a ray met a surface wearing it.  See
+    /// <see cref="GetColorFor(Surface, Point, Vector, Footprint, Surface)"/>.
+    /// </summary>
+    /// <param name="intersection">Where the ray met the surface, already prepared.</param>
+    /// <returns>The color there.</returns>
+    public Color GetColorFor(Intersection intersection)
+    {
+        return GetColorFor(
+            intersection.Surface, intersection.Point, intersection.Normal, portal: intersection.Portal);
+    }
+
+    /// <summary>
+    /// This method returns the color of this material at a point on a surface wearing it: the
+    /// pigment's color, with any decals painted over it.
+    /// <para>
+    /// Everything that wants a surface's color asks here rather than of the pigment directly, so
+    /// that lighting, shadows, reflection and refraction all see the same thing -- a decal on a
+    /// window darkens the light through it as well as the window.  The pigment is read in the space
+    /// of the surface the ray met, as it always has been; the decals are read in the anchor's.  See
+    /// <see cref="Anchor"/>.
+    /// </para>
+    /// <para>
+    /// The normal is for the decals alone, which fade out where the surface turns away from the
+    /// way they are carried onto it.  A caller with none to give gets decals that do not fade.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The surface the point was found on, which wears this material.</param>
+    /// <param name="point">The point, in the world's coordinate system.</param>
+    /// <param name="normal">The surface's normal there, in the world's coordinate system, or
+    /// <c>null</c>.  Which way it points does not matter.</param>
+    /// <param name="footprint">How much of the surface the ray covers there, so that a pattern or a
+    /// decal's edge too fine to resolve is averaged rather than sampled, or <c>null</c>.</param>
+    /// <param name="portal">The instance the point was found through, if it was.</param>
+    /// <returns>The color there.</returns>
+    public Color GetColorFor(
+        Surface surface, Point point, Vector normal = null, Footprint footprint = null,
+        Surface portal = null)
+    {
+        Color color = Pigment.GetColorFor(surface, point, footprint, portal);
+
+        if (Decals is null)
+            return color;
+
+        Point there = WorldToAnchor(surface, point, portal);
+        Footprint patch = footprint is null || footprint.IsEmpty
+            ? null
+            : WorldToAnchor(surface, footprint, portal);
+        Vector facing = normal is null ? null : NormalToAnchor(surface, normal, portal);
+
+        foreach (Decal decal in Decals)
+            color = decal.LayerOver(color, there, patch, facing);
+
+        return color;
+    }
+
+    /// <summary>
+    /// This method carries a normal from the world into this material's anchor space.
+    /// <para>
+    /// A normal does not travel as a direction does: under a squash it tilts the other way.  So
+    /// rather than carry it, two directions lying in the surface are carried, by the same road a
+    /// footprint takes, and the normal is rebuilt across them on the far side, where it comes out
+    /// square to the surface whatever was done to it on the way.  It also means the instance a
+    /// point was found through is taken care of exactly as it is for the point.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The surface the normal was found on.</param>
+    /// <param name="normal">The normal, in the world's coordinate system.</param>
+    /// <param name="portal">The instance it was found through, if it was.</param>
+    /// <returns>A normal in the anchor's space, of no particular length.</returns>
+    private Vector NormalToAnchor(Surface surface, Vector normal, Surface portal)
+    {
+        Vector unit = normal.Unit;
+        Vector aside = Math.Abs(unit.X) < 0.9
+            ? unit.Cross(new Vector(1, 0, 0)).Unit
+            : unit.Cross(new Vector(0, 1, 0)).Unit;
+        Footprint frame = WorldToAnchor(surface, new Footprint(aside, unit.Cross(aside)), portal);
+
+        return frame.Across.Cross(frame.Along);
+    }
 
     /// <summary>
     /// This method returns how much light the grain takes away at one particular point, between

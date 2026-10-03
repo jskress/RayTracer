@@ -41,6 +41,7 @@ adv-parametric.png|docs/examples/advanced/parametric.igl|320|240
 adv-lathe.png|docs/examples/advanced/lathe.igl|320|240
 adv-lsystem.png|docs/examples/advanced/lsystem.igl|340|260
 adv-sweep.png|docs/examples/advanced/sweep.igl|320|240
+adv-text-along-a-path.png|docs/examples/advanced/text-along-a-path.igl|640|240
 adv-text.png|docs/examples/advanced/text.igl|320|240
 adv-tube.png|docs/examples/advanced/tube.igl|320|240
 blobs.png|docs/examples/surfaces/blobs.igl|600|200
@@ -60,6 +61,8 @@ light-area.png|docs/examples/lights/area-light.igl|400|300
 light-distant.png|docs/examples/lights/distant-light.igl|400|300
 light-point.png|docs/examples/lights/point-light.igl|400|300
 light-spot.png|docs/examples/lights/spot-light.igl|400|300
+material-decal-projections.png|docs/examples/materials/decal-projections.igl|640|240
+material-decals.png|docs/examples/materials/decals.igl|640|240
 material-finishes.png|docs/examples/materials/finishes.igl|640|240
 pattern-combining.png|docs/examples/pigments/combining.igl|660|190
 pattern-maps.png|docs/examples/pigments/maps.igl|600|190

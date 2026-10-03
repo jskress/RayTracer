@@ -147,6 +147,7 @@ branches, any one of the branches will do.
   - [Roughening the Surface](materials.md#roughening-the-surface)
   - [Naming and Reusing](materials.md#naming-and-reusing)
   - [Materials on a Group](materials.md#materials-on-a-group-or-csg)
+  - [Decals](materials.md#decals)
 - [Advanced Surfaces](advanced-surfaces.md)
   - [Paths](advanced-surfaces.md#paths)
   - [Extrusion](advanced-surfaces.md#extrusion)
