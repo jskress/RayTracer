@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 
 namespace RayTracer.Core;
@@ -59,6 +60,16 @@ public enum DecalProjection
 /// </summary>
 public class Decal
 {
+    /// <summary>
+    /// This property holds the surface the decal was written on, when that is not the anchor of the
+    /// material it is in.  A decal is read in its material's anchor's space (see
+    /// <see cref="Material.Anchor"/>), and nearly always that is where it was written; but a material
+    /// handed down onto one that inherits comes away carrying decals written on two surfaces, so the
+    /// inheriting one's decals are given their own here as they join it.  See
+    /// <see cref="Material.HandedDown"/>.
+    /// </summary>
+    public Surface Anchor { get; set; }
+
     /// <summary>
     /// This property holds the outline that says where the decal paints.
     /// </summary>

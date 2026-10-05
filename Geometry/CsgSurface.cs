@@ -58,8 +58,10 @@ public class CsgSurface : Surface
 
         if (Material is not null)
         {
+            Dictionary<Material, Material> merged = [];
+
             foreach (Surface surface in new SurfaceIterator([Left, Right]).Surfaces)
-                surface.Material ??= Material;
+                surface.Material = Material.HandedDown(surface.Material, Material, merged);
         }
     }
 

@@ -7,11 +7,12 @@ namespace RayTracer.Instructions.Surfaces;
 /// <summary>
 /// This class is used to resolve a material value.
 /// </summary>
-public class MaterialResolver : ObjectResolver<Material>, ICloneable
+public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatable
 {
     /// <summary>
-    /// This property notes whether we want to produce a <c>null</c> material or an actual
-    /// one.
+    /// This property notes that the material is <c>inherited</c>: the surface is to take whatever
+    /// material is handed down to it, rather than one of its own.  With decals, it takes that one
+    /// with the decals painted on top; see <see cref="Material.InheritsAppearance"/>.
     /// </summary>
     public bool SetToNull { get; init; }
 
@@ -88,7 +89,43 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable
     /// <param name="variables">The current set of scoped variables.</param>
     public override Material Resolve(RenderContext context, Variables variables)
     {
-        return SetToNull ? null : base.Resolve(context, variables);
+        if (!SetToNull)
+            return base.Resolve(context, variables);
+
+        // Inherited and no more is no material at all, so the one above is handed down as ever.
+        // Inherited with decals is a material of decals alone, which the one above is handed down
+        // under rather than in place of.
+        return DecalResolvers.Count == 0
+            ? null
+            : new Material
+            {
+                InheritsAppearance = true,
+                Decals = DecalResolvers.Select(resolver => resolver.Resolve(context, variables)).ToList()
+            };
+    }
+
+    /// <summary>
+    /// This method makes sure an inherited material says nothing it would not use.
+    /// <para>
+    /// Everything about an inherited material but its decals comes from the one handed down to it, so
+    /// a pigment or a finish written in one would be quietly thrown away.  That is refused rather
+    /// than allowed to mislead.
+    /// </para>
+    /// </summary>
+    /// <returns>The text of an error message, or <c>null</c>, if all is well.</returns>
+    public string Validate()
+    {
+        bool saysMore = PigmentResolver is not null || AmbientResolver is not null ||
+                        DiffuseResolver is not null || SpecularResolver is not null ||
+                        ShininessResolver is not null || ReflectiveResolver is not null ||
+                        BrillianceResolver is not null || GrainResolver is not null ||
+                        MetallicResolver is not null || TransparencyResolver is not null ||
+                        InteriorResolver is not null || SurfaceNormalResolver is not null;
+
+        return SetToNull && saysMore
+            ? "An inherited material takes everything but its decals from the material handed down " +
+              "to it, so only decals may be written in one."
+            : null;
     }
 
     /// <summary>

@@ -415,3 +415,37 @@ no fade                // paint every face the reach takes in, however it is tur
 The angles are in the scene's own units, as a `rotate` is, and lie between 0 (square on) and
 90 (edge on).  Turning the fade off is for a decal that is meant to wrap a sharp corner, where the
 smear down the far face is the point.
+
+#### Markings that survive a repaint
+
+A part that has a material of its own is passed over when a group hands its material down —
+which is what lets one part of an assembly keep its color while the rest is painted together.  It
+also means that markings written in a part's material would stop that part being repainted from
+outside: a model in a library could carry its lettering, or let a scene choose its paint, but not
+both.
+
+`material inherited` with decals in it is the way to have both:
+
+```
+EnterpriseSaucer = union {
+    material inherited {
+        decal { path { text { text 'NCC-1701'  font 'Federation Starfleet Hull 23rd', 'Orbitron' } }
+                color [0.06, 0.06, 0.07]  planar  min Y 0  max Y 0.6  scale 1.35 }
+    }
+    lathe { … }
+    …
+}
+
+object Enterprise(289) {
+    material { pigment color [0.78, 0.79, 0.80] }    // repaints the hull, lettering and all
+}
+```
+
+On its own, `material inherited` gives a surface no material, so it takes whatever is handed down to
+it.  With decals, it takes whatever is handed down *and paints its decals on top*.  Each decal is
+still read in the space of the surface it was written on, and if the material handed down has decals
+of its own, those stay where they were and the inherited ones go over them.  Handed nothing at all,
+the surface is given what any surface with no material is given, with its decals on top.
+
+Only decals may be written in an inherited material: its color and finish come from above, so a
+pigment or a finish written in one would be thrown away, and is refused instead.
