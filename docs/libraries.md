@@ -2117,24 +2117,38 @@ The second number, `variant`, is there for the same uniformity and does nothing.
 
 ##### Built from the plans, and from the model where they disagree
 
-Every part was traced from Franz Joseph's Booklet of General Plans: the saucer's profile and cutaway,
-the secondary hull's profile, top, bottom and rear views and the cutaway of its nose, the dorsal's
-section, and the nacelle's profile, top and bottom.  The traced outlines are fitted, not eyeballed --
-the secondary hull's body lands within about a hundredth of a unit of the drawn outline from the
-deflector housings to the hangar doors -- and each part was checked by laying the drawing over an
-orthographic render of it.
+Every part was traced from Franz Joseph's *Star Trek Blueprints* (1975), his Booklet of General
+Plans: the saucer's profile, cutaway, top and bottom views, the secondary hull's profile, top, bottom
+and rear views and the cutaway of its nose, the dorsal's section, the pylon, and the nacelle's
+profile, top and bottom.  The traced outlines are fitted, not eyeballed -- the secondary hull's body
+lands within about a hundredth of a unit of the drawn outline from the deflector housings to the
+hangar doors -- and each part was checked by laying the drawing over an orthographic render of it.
 
-**Where the plans and the studio model disagree, the model wins.**  The plans draw no recess for the
-control reactor, and the photographs of the original model show one, with the reactor standing in it
-clear of the floor; the reactor itself, the intercoolers' height, the webs that close them and the
-vents are all taken from the model.
+**Where the plans and the studio model disagree, the model wins.**  The model is the
+[Star Trek Starship Enterprise Studio Model](https://airandspace.si.edu/collection-objects/model-starship-enterprise-television-show-star-trek/nasm_A19740668000)
+(A19740668000, gift of Paramount Pictures Inc.) in the Smithsonian's National Air and Space Museum,
+and its photographs were matched by fitting a camera to each one on points of the ship, so a detail
+seen only in a photograph lands where the photograph puts it.  From them come:
+
+- the recess the control reactor stands in (the plans draw none), the reactor itself, the
+  intercoolers' height, the webs that close them, and the vents;
+- the hood round the hangar doors -- a shell of even thickness -- the ribbed doors, the light above
+  them and the dark wall they stand against;
+- the homing beacon's size and its green, the strip it stands at the end of (FJ draws only its edges)
+  and the red lamp on it, and the lights along the hangar deck's edge;
+- the grilles along the pylons, the vents in the side tabs, the panel under each nacelle, the hatch
+  under the fantail, the darker rib on the saucer, the four lighted panels on top of it, and the
+  landing gear doors underneath;
+- where the markings differ from FJ's, their size and place: the registration under the saucer, and
+  the pennants and registrations on the nacelles.
 
 ##### A material on the object paints the hull, and only the hull
 
 The plating has no material of its own, so it takes what the scene gives the object -- and every part
 that names its own color keeps it: the deflector's orange, the copper of the inner cups and the
-antenna, the bronze of the Bussard domes, and the matte gray of the vanes, the reactor's recess, the
-vents, the grooves and the nacelles' hoods.
+antenna, the bronze of the Bussard domes, the sensor domes, the darker gray of the rib on the saucer,
+and the matte gray of the vanes, the reactor's recess, the vents, the grooves, the nacelles' hoods,
+the pylons' grilles, the tabs' vents and the wall behind the hangar doors.
 
 ```
 import 'enterprise' { Enterprise }
@@ -2144,16 +2158,38 @@ object Enterprise(289) {
 }
 ```
 
-Unpainted, she is the default white.  Over a planet with one sun, give her a little more `ambient`
-than that or a dim fill from below, for the [spacecraft](#spacecraft)'s reason: in orbit, the side away
-from the sun has nothing falling on it but the light off the world below.
+Unpainted, she is the renderer's default gray, 0.40, which shows as 0.66 with gamma on.  Over a planet
+with one sun, give her a little more `ambient` than that or a dim fill from below, for the
+[spacecraft](#spacecraft)'s reason: in orbit, the side away from the sun has nothing falling on it but
+the light off the world below.
+
+##### Her markings survive a repaint
+
+Her name and registration on the saucer, the registration under it, the name along the keel, the
+pennants on the hull and the nacelles with their registrations, and the outlines of the doors,
+panels and hatches are [decals](materials.md#decals), held in a material that inherits --
+`material inherited { decal { .. } }` -- so a material on the object repaints the plating and leaves
+every marking where it is.
+
+The lettering is set in "Federation Starfleet Hull 23rd", a face whose own name table credits it as
+AmarilloUSAF, (c) 1994 Tom C. Lai: shareware, whose terms prohibit passing it on, so it is not part of
+this repository.  To letter her in it, import a copy of your own into the font catalog:
+
+```bash
+RayTracer fonts --import 'Federation Starfleet Hull 23rd' path/to/Federation_Starfleet_Hull_23rd.ttf
+```
+
+Without it the lettering [falls back](fonts.md#falling-back-to-another-font) to Orbitron, which Google
+Fonts carries and the renderer fetches for itself.  Orbitron is the wider of the two, so the lines run
+a little longer in it.
 
 ##### A glow counts the lights
 
-The impulse ports and the homing beacon are materials at `ambient 1`, and each shows its own color
-under one white light.  **Every light adds its own ambient**, in proportion to its color, so a second
-light at full strength makes a glow twice as bright -- and a pale glow goes to white -- while a dim
-fill adds only a little.
+The impulse ports, the homing beacon, the bow light, the running lights above and below, the lighted
+panels, the red lamp on the strip, the hangar's light and the lights along its deck are materials at
+`ambient 1`, and each shows its own color under one white light.  **Every light adds its own
+ambient**, in proportion to its color, so a second light at full strength makes a glow twice as
+bright -- and a pale glow goes to white -- while a dim fill adds only a little.
 
 ##### Her own frame
 

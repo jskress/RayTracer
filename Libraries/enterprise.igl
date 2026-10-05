@@ -16,14 +16,19 @@
 //
 // -- Where the shape comes from -----------------------------------------------------------------------
 //
-// Franz Joseph's Booklet of General Plans: the saucer's profile and cutaway, the secondary hull's
-// profile, top, bottom and rear views and the cutaway of its nose, the dorsal's section, and the
-// nacelle's profile, top and bottom.  Every part was traced from scans of those sheets, which measure
-// 580.4 pixels to one of the model's units -- the reason a few comments below give a fit in pixels.
+// Franz Joseph's *Star Trek Blueprints* (1975), his Booklet of General Plans: the saucer's profile and
+// cutaway, the secondary hull's profile, top, bottom and rear views and the cutaway of its nose, the
+// dorsal's section, and the nacelle's profile, top and bottom.  Every part was traced from scans of
+// those sheets, which measure 580.4 pixels to one of the model's units -- the reason a few comments
+// below give a fit in pixels.
 //
 // **Where the plans and the studio model disagree, the studio model wins.**  The control reactor's
-// recess and the reactor in it, the intercoolers' height, the inset webs under them and the vents are
-// taken from photographs of the original model, not from the plans.
+// recess and the reactor in it, the intercoolers' height, the inset webs under them, the vents, the
+// homing beacon, and the stern -- the hood round the hangar doors, the ribbed doors and the light above
+// them -- are taken from photographs of the original model, not from the plans: the Star Trek Starship
+// Enterprise Studio Model (A19740668000, gift of Paramount Pictures Inc.) in the Smithsonian's National
+// Air and Space Museum, whose photographs are at
+// https://airandspace.si.edu/collection-objects/model-starship-enterprise-television-show-star-trek/nasm_A19740668000
 //
 // -- Her own frame ------------------------------------------------------------------------------------
 //
@@ -37,12 +42,33 @@
 // **The hull plating has no material of its own**, so it takes what the scene gives the object: a
 // material on `object Enterprise(...)` repaints the plating and leaves alone every part that names its
 // color -- the deflector's orange, the copper of the inner cups and the antenna, the bronze of the
-// Bussard domes, and the matte gray of the vanes, the reactor's recess, the vents, the grooves and the
-// nacelles' hoods.  Unpainted, she is the default white.
+// Bussard domes, the sensor domes, the darker gray of the dorsal rib on the saucer, and the matte gray
+// of the vanes, the reactor's recess, the vents, the grooves, the nacelles' hoods, the pylons' grilles,
+// the tabs' vents and the wall behind the hangar doors.  Unpainted, she is the renderer's default gray,
+// 0.40, which shows as 0.66 with gamma on.
 //
-// **A glow is a material at `ambient 1`** -- the impulse ports and the homing beacon -- and its color is
-// the one it shows under one white light.  Every light adds its own ambient, in proportion to its own
-// color: a second light at full strength makes a glow twice as bright, and a dim fill adds a little.
+// **A glow is a material at `ambient 1`** -- the impulse ports, the homing beacon, the bow light, the
+// running lights above and below, the lighted panels, the red lamp on the strip, the hangar's light and
+// the lights along its deck -- and its color is the one it shows under one white light.  Every light
+// adds its own ambient, in proportion to its own color: a second light at full strength makes a glow
+// twice as bright, and a dim fill adds a little.
+//
+// **Her markings are painted over whatever plating she is given.**  They are decals in a material that
+// inherits -- `material inherited { decal { .. } }` -- so a material on the object repaints the plating
+// and leaves the lettering, the pennants and the outlined doors, panels and hatches where they are.
+//
+// -- Her lettering ------------------------------------------------------------------------------------
+//
+// The lettering is laid out from FJ's views of the saucer, the secondary hull and the nacelle, sized to
+// the studio model where the two differ, and set in "Federation Starfleet Hull 23rd", a face whose own
+// name table credits it as AmarilloUSAF, (c) 1994 Tom C. Lai: shareware, whose terms prohibit passing it
+// on, so it is not part of this repository.  To letter her in it, import a
+// copy of your own into the font catalog:
+//
+//     RayTracer fonts --import 'Federation Starfleet Hull 23rd' path/to/Federation_Starfleet_Hull_23rd.ttf
+//
+// Without it the lettering falls back to Orbitron, which Google Fonts carries and the renderer fetches
+// for itself.  Orbitron is the wider of the two, so the lines run a little longer in it.
 
 // -- Her parts, in the plans' frame -------------------------------------------------------------------
 
@@ -143,6 +169,138 @@ EnterpriseImpulseEngines = union {
 }
 
 EnterpriseSaucer = union {
+    // Her name and registration, across the top of the saucer forward of the bridge, as FJ's top view
+    // draws them: both centered on the centerline, reading from starboard to port with the letters'
+    // tops toward the stern.  The paths are in the font's own units, an em to a line, and each decal's
+    // scale makes the capitals the height FJ draws them -- the hull face's capitals are 0.6 of an em.
+    // FJ spaces his letters wider than the face does, so each line is kerned out to his spacing, and
+    // reaches only the saucer's upper skin.
+    material inherited {
+        // The registration stands on an arc about the saucer's center, its feet toward the bow: FJ's
+        // capitals run from radius 3.47 to 4.28, so 0.81 tall, 1.35 to the em, and the arc 3.170 ems
+        // out.  Drawn from starboard round the bow to port, the center is on the path's left, where
+        // the letters stand.  His letters' middles fall 51.4 degrees apart from the first C to the
+        // last digit, which this face matches with 66 more to each pair.
+        decal {
+            path {
+                text {
+                    text 'NCC-1701'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout {
+                        along path { move to 0, 3.1704
+                                     curve -1.7509, 3.1704, -3.1704, 1.7509 to -3.1704, 0
+                                     curve -3.1704, -1.7509, -1.7509, -3.1704 to 0, -3.1704 }
+                        horizontal position center
+                    }
+                    kerning {
+                        kern 'N', 'C', 66  kern 'C', 'C', 66  kern 'C', '-', 66  kern '-', '1', 66
+                        kern '1', '7', 66  kern '7', '0', 66  kern '0', '1', 66
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 0  max Y 0.6
+            scale 1.35
+        }
+        // The name runs straight across, its feet at X = -2.437 and its capitals 0.230 tall, so 0.383
+        // to the em and the line 6.357 ems forward.  Drawn from starboard to port, its left is aft.
+        // FJ's "CONSTITUTION" runs 3.095 from its first letter to its last, which this face matches
+        // with 147 more to each pair.  (The sheet is scanned 0.78 degrees askew, which is taken out
+        // before measuring a straight line on it.)
+        decal {
+            path {
+                text {
+                    text 'U.S.S. ENTERPRISE'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout {
+                        along path { move to -6.3574, 12  line to -6.3574, -12 }
+                        horizontal position center
+                    }
+                    kerning {
+                        kern 'U', '.', 147  kern '.', 'S', 147  kern 'S', '.', 147  kern '.', ' ', 147
+                        kern ' ', 'E', 147  kern 'E', 'N', 147  kern 'N', 'T', 147  kern 'T', 'E', 147
+                        kern 'E', 'R', 147  kern 'R', 'P', 147  kern 'P', 'R', 147  kern 'R', 'I', 147
+                        kern 'I', 'S', 147  kern 'S', 'E', 147
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 0  max Y 0.6
+            scale 0.3833
+        }
+        // The registration underneath, along the beam on both sides, reading in from just inside the rim:
+        // to port as FJ's bottom view draws it, and to starboard as the studio model carries it too,
+        // turned half round so that its N is nearest the rim as well.  It is the studio model's size, which
+        // is larger than FJ's, measured from the photograph of the starboard underside through the same
+        // fitted camera as the landing gear doors: capitals 0.35 tall, 0.583 to the em, centered on the
+        // beam -- so the baseline runs 0.175 off it, forward to port and aft to starboard, where the
+        // letters' tops face the other way -- the N's outer edge 5.533 out, just inside the running
+        // light, and the whole 2.398 long, which this face matches with 36 more to each pair.  Seen from
+        // below, a decal comes out mirrored, so each is turned over; that also points its projection
+        // down, so its reach is measured downward, taking in the underside beneath it (-0.40 to -0.75)
+        // and nothing above.
+        decal {
+            path {
+                text {
+                    text 'NCC-1701'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout { along path { move to -0.3000, 9.5857  line to -0.3000, 0 } }
+                    kerning {
+                        kern 'N', 'C', 36  kern 'C', 'C', 36  kern 'C', '-', 36  kern '-', '1', 36
+                        kern '1', '7', 36  kern '7', '0', 36  kern '0', '1', 36
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 0.4  max Y 0.75
+            scale 0.5833
+            rotate X 180
+        }
+        decal {
+            path {
+                text {
+                    text 'NCC-1701'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout { along path { move to 0.3000, -9.5857  line to 0.3000, 0 } }
+                    kerning {
+                        kern 'N', 'C', 36  kern 'C', 'C', 36  kern 'C', '-', 36  kern '-', '1', 36
+                        kern '1', '7', 36  kern '7', '0', 36  kern '0', '1', 36
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 0.4  max Y 0.75
+            scale 0.5833
+            rotate X 180
+        }
+        // The landing gear doors, as the studio model's makers are said to have called them: a long, curved
+        // triangle flat on the underside either side, forward of the registration, its tip toward the rim
+        // and its short base 2.86 out.  FJ does not draw them; they were placed from the photograph of the
+        // starboard underside, by fitting a camera to it on four points of the ship and reading where its
+        // corners and edges fall on the hull.  They are painted, not built -- the photograph shows a flat
+        // panel with a dark seam round it -- and only their edges are painted, so the plating shows within:
+        // a seam 0.04 wide just outside the outline, in a darker gray, and a border 0.05 wide just inside
+        // it, in the dorsal rib's.  Each is a ring, an outline with an outline inside it, which the even-odd
+        // rule turns into the band between the two.
+        decal {
+            path { move to -2.3393, -4.2590  curve -2.2190, -3.5590, -2.0086, -2.8729 to -1.7234, -2.2223  line to -1.1554, -2.6017  curve -1.5556, -3.1503, -2.0323, -3.6466 to -2.3393, -4.2590  close
+                   move to -2.2710, -4.0710  curve -2.1319, -3.4565, -1.9593, -2.8545 to -1.7060, -2.2820  line to -1.2120, -2.6120  curve -1.5606, -3.0998, -1.9984, -3.5321 to -2.2710, -4.0710  close
+                   move to -2.3393, 4.2590  curve -2.2190, 3.5590, -2.0086, 2.8729 to -1.7234, 2.2223  line to -1.1554, 2.6017  curve -1.5556, 3.1503, -2.0323, 3.6466 to -2.3393, 4.2590  close
+                   move to -2.2710, 4.0710  curve -2.1319, 3.4565, -1.9593, 2.8545 to -1.7060, 2.2820  line to -1.2120, 2.6120  curve -1.5606, 3.0998, -1.9984, 3.5321 to -2.2710, 4.0710  close }
+            color [0.18, 0.18, 0.18]           // the seam, 0.46 as it shows with gamma on
+            planar  min Y 0.4  max Y 1.0
+            rotate X 180
+        }
+        decal {
+            path { move to -2.2710, -4.0710  curve -2.1319, -3.4565, -1.9593, -2.8545 to -1.7060, -2.2820  line to -1.2120, -2.6120  curve -1.5606, -3.0998, -1.9984, -3.5321 to -2.2710, -4.0710  close
+                   move to -2.1431, -3.7496  curve -2.0241, -3.2751, -1.8783, -2.8062 to -1.6841, -2.3568  line to -1.2829, -2.6248  curve -1.5613, -3.0061, -1.8865, -3.3522 to -2.1431, -3.7496  close
+                   move to -2.2710, 4.0710  curve -2.1319, 3.4565, -1.9593, 2.8545 to -1.7060, 2.2820  line to -1.2120, 2.6120  curve -1.5606, 3.0998, -1.9984, 3.5321 to -2.2710, 4.0710  close
+                   move to -2.1431, 3.7496  curve -2.0241, 3.2751, -1.8783, 2.8062 to -1.6841, 2.3568  line to -1.2829, 2.6248  curve -1.5613, 3.0061, -1.8865, 3.3522 to -2.1431, 3.7496  close }
+            color [0.2938, 0.2938, 0.2938]     // the dorsal rib's gray, 0.57 as it shows with gamma on
+            planar  min Y 0.4  max Y 1.0
+            rotate X 180
+        }
+    }
     lathe {
         path {
             move to 0, 0.46875
@@ -247,6 +405,203 @@ EnterpriseSaucer = union {
         scale [0.183, 1, 0.183]
         translate [0.960, 0, 0]
     }
+    // The bow light and the two running lights, at nine, twelve and six o'clock on FJ's top view, on the
+    // flat of the saucer's outer ring.  They are built as the homing beacon is: a collar with a rounded
+    // top edge, the plating's own, and on it a lamp, a low spherical cap.  FJ draws each as two circles,
+    // the collar 0.101 and the lamp 0.053 in radius, centered 6.113 out; they are made half as large
+    // again, 0.1515 and 0.0795, so that they still read at a distance, and the heights keep the
+    // beacon's proportions.  Each keeps the gap FJ leaves between its collar and the rim, 0.0985, so
+    // its center comes in to 6.0625.  The lamps glow as the beacon's does, in the colors such lights
+    // always are: white at the bow, green to starboard and red to port.
+    group {
+        // the bow light
+        lathe {
+            path {
+                move to 0, -0.0100
+                line to 0.1515, -0.0100
+                line to 0.1515, 0.0394
+                curve 0.1515, 0.0612, 0.1338, 0.0788 to 0.1121, 0.0788
+                line to 0, 0.0788
+                close
+            }
+        }
+        lathe {
+            path {
+                move to 0, 0.0743
+                line to 0.0795, 0.0743
+                line to 0.0795, 0.0788
+                curve 0.0608, 0.1038, 0.0312, 0.1185 to 0, 0.1185
+                close
+            }
+            material {
+                pigment [1, 1, 1]
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        translate [-6.0625, 0, 0]
+    }
+    group {
+        // the starboard running light
+        lathe {
+            path {
+                move to 0, -0.0100
+                line to 0.1515, -0.0100
+                line to 0.1515, 0.0394
+                curve 0.1515, 0.0612, 0.1338, 0.0788 to 0.1121, 0.0788
+                line to 0, 0.0788
+                close
+            }
+        }
+        lathe {
+            path {
+                move to 0, 0.0743
+                line to 0.0795, 0.0743
+                line to 0.0795, 0.0788
+                curve 0.0608, 0.1038, 0.0312, 0.1185 to 0, 0.1185
+                close
+            }
+            material {
+                pigment [0.08, 1, 0.3]
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        translate [0, 0, 6.0625]
+    }
+    group {
+        // the port running light
+        lathe {
+            path {
+                move to 0, -0.0100
+                line to 0.1515, -0.0100
+                line to 0.1515, 0.0394
+                curve 0.1515, 0.0612, 0.1338, 0.0788 to 0.1121, 0.0788
+                line to 0, 0.0788
+                close
+            }
+        }
+        lathe {
+            path {
+                move to 0, 0.0743
+                line to 0.0795, 0.0743
+                line to 0.0795, 0.0788
+                curve 0.0608, 0.1038, 0.0312, 0.1185 to 0, 0.1185
+                close
+            }
+            material {
+                pigment [1, 0.08, 0.08]
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        translate [0, 0, -6.0625]
+    }
+    // The running lights underneath, which FJ labels "T/B - P/S": top and bottom, port and starboard.  On
+    // the underside they stand at the beam as on top, the same lights hung the other way up, on the flat
+    // the underside runs level along (-0.5899) just inside the rim's raked face.  FJ draws them 5.822 out;
+    // made half as large again, as the ones on top are, each keeps the gap FJ leaves between its collar
+    // and the underside's edge, so its center comes in to 5.7715.
+    group {
+        // the starboard running light, underneath
+        lathe {
+            path {
+                move to 0, -0.0100
+                line to 0.1515, -0.0100
+                line to 0.1515, 0.0394
+                curve 0.1515, 0.0612, 0.1338, 0.0788 to 0.1121, 0.0788
+                line to 0, 0.0788
+                close
+            }
+        }
+        lathe {
+            path {
+                move to 0, 0.0743
+                line to 0.0795, 0.0743
+                line to 0.0795, 0.0788
+                curve 0.0608, 0.1038, 0.0312, 0.1185 to 0, 0.1185
+                close
+            }
+            material {
+                pigment [0.08, 1, 0.3]
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        rotate X 180
+        translate [0, -0.5899, 5.7715]
+    }
+    group {
+        // the port running light, underneath
+        lathe {
+            path {
+                move to 0, -0.0100
+                line to 0.1515, -0.0100
+                line to 0.1515, 0.0394
+                curve 0.1515, 0.0612, 0.1338, 0.0788 to 0.1121, 0.0788
+                line to 0, 0.0788
+                close
+            }
+        }
+        lathe {
+            path {
+                move to 0, 0.0743
+                line to 0.0795, 0.0743
+                line to 0.0795, 0.0788
+                curve 0.0608, 0.1038, 0.0312, 0.1185 to 0, 0.1185
+                close
+            }
+            material {
+                pigment [1, 0.08, 0.08]
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        rotate X 180
+        translate [0, -0.5899, -5.7715]
+    }
+    group {
+        // Four lighted panels on the flat of the outer ring, where FJ's top view draws four squares: 5.42
+        // out, a pair either side of the centerline at 37.5 degrees round from the bow and 52.5 round from
+        // the stern.  They are made oblong, as the studio model's are -- 0.5 along the circumference and
+        // 0.35 across it, measured from the photograph -- and each is a thin plate let into the plating
+        // with its face a hair proud of it, glowing a warm white.
+        cube {
+            // forward, to starboard
+            scale [0.175, 0.01, 0.25]
+            translate [5.42, -0.007, 0]
+            rotate Y -142.5
+        }
+        cube {
+            // forward, to port
+            scale [0.175, 0.01, 0.25]
+            translate [5.42, -0.007, 0]
+            rotate Y 142.5
+        }
+        cube {
+            // aft, to starboard
+            scale [0.175, 0.01, 0.25]
+            translate [5.42, -0.007, 0]
+            rotate Y -52.5
+        }
+        cube {
+            // aft, to port
+            scale [0.175, 0.01, 0.25]
+            translate [5.42, -0.007, 0]
+            rotate Y 52.5
+        }
+        material {
+            pigment [1, 0.95, 0.85]        // as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
     // The rib that runs aft from the egg to the impulse housing, built from the blueprints the way a
     // shape is recovered from its views: the plan, the profile and the rear view each pushed out into a
     // prism, and the rib is what all three have in common.  Heights are the blueprints' own, above the
@@ -316,6 +671,11 @@ EnterpriseSaucer = union {
             max Y -3.2
             rotate X -90
             rotate Y 90
+        }
+        // a darker gray than the plating, as the studio model's is: a third of the way, as it shows,
+        // from the plating unpainted (0.66 with gamma on) to the nacelles' matte gray (0.40)
+        material {
+            pigment [0.2938, 0.2938, 0.2938]   // 0.57 as it shows with gamma on
         }
     }
     object EnterpriseImpulseEngines {
@@ -1014,42 +1374,283 @@ EnterpriseNacelle = union {
 // rear, bottom and top views, and the hull's top runs aft over the doors as the top view and the profile
 // draw it.
 EnterpriseSecondaryHull = union {
+    // The pennant along either side, as FJ's profile draws it: a red band whose forward block carries a
+    // yellow chevron pointing at the bow, and aft of it three prongs, the middle one running on alone.
+    // The outlines are his ink lines (his coloring inside them is rough), in the profile's own X and Y,
+    // carried straight across the hull, so one decal paints both sides, each the other's mirror image.
+    // The red is the studio model's darker one, measured on the pennant along its nacelle (the one on
+    // the hull lies in the saucer's shadow) against the plating beside it.
+    // The block and chevron lie over the side tabs as much as the hull.  His chevron is not symmetric --
+    // its upper arm is the slimmer -- and it is kept as drawn.
+    material inherited {
+        decal {
+            // the forward block
+            path { move to 5.4534, -3.8163  line to 6.3115, -3.8163  line to 6.4856, -4.1192
+                   line to 5.6245, -4.1192  close }
+            color [0.29, 0.04, 0.06]           // a maroon, (0.57, 0.23, 0.28) as it shows with gamma on
+            planar  min Y -2  max Y 2
+            rotate X -90
+        }
+        decal {
+            // the prongs: three bands and the two slots between them, all five as deep as one another, as
+            // the studio model has them (FJ draws the prongs slimmer than the slots); the slots' rounded
+            // forward ends reach where his do
+            path {
+                move to 6.3594, -3.8163
+                line to 7.8989, -3.8163
+                line to 7.8989, -3.8769
+                line to 6.6145, -3.8769
+                curve 6.5978, -3.8769, 6.5843, -3.8905 to 6.5843, -3.9072
+                curve 6.5843, -3.9239, 6.5978, -3.9375 to 6.6145, -3.9375
+                line to 9.3005, -3.9375
+                line to 9.3005, -3.9981
+                line to 6.6886, -3.9981
+                curve 6.6719, -3.9981, 6.6583, -4.0116 to 6.6583, -4.0284
+                curve 6.6583, -4.0451, 6.6719, -4.0586 to 6.6886, -4.0586
+                line to 7.8989, -4.0586
+                line to 7.8989, -4.1192
+                line to 6.5305, -4.1192
+                close
+            }
+            color [0.29, 0.04, 0.06]
+            planar  min Y -2  max Y 2
+            rotate X -90
+        }
+        decal {
+            // the chevron, over the block and standing out above and below it
+            path { move to 5.8352, -3.7024  line to 5.8913, -3.7024  line to 5.8045, -3.9498
+                   line to 5.8621, -4.1795  line to 5.7500, -4.1795  line to 5.6336, -3.9646  close }
+            color [0.85, 0.55, 0.04]           // a golden yellow, (0.93, 0.76, 0.23) as it shows with gamma on
+            planar  min Y -2  max Y 2
+            rotate X -90
+        }
+        // Her name along the keel, as FJ's bottom view draws it: on the centerline, centered fore and aft
+        // where his line is (X = 8.875), reading from bow to stern seen from below with the letters'
+        // tops to port.  His capitals are 0.0887 tall, so 0.1479 to the em, and the baseline runs half
+        // that to starboard of the centerline so the letters straddle it.  His "CONSTITUTION" runs 1.364
+        // from its first letter to its last, which this face matches with 252 more to each pair -- his
+        // letters are wider than this face's, so these stand further apart.  Seen from below a decal comes
+        // out mirrored, so it is turned over, which points its reach down onto the belly (-4.5 to -6.0).
+        decal {
+            path {
+                text {
+                    text 'U.S.S. ENTERPRISE'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout {
+                        along path { move to 50.0061, -0.3  line to 70.0061, -0.3 }
+                        horizontal position center
+                    }
+                    kerning {
+                        kern 'U', '.', 252  kern '.', 'S', 252  kern 'S', '.', 252  kern '.', ' ', 252
+                        kern ' ', 'E', 252  kern 'E', 'N', 252  kern 'N', 'T', 252  kern 'T', 'E', 252
+                        kern 'E', 'R', 252  kern 'R', 'P', 252  kern 'P', 'R', 252  kern 'R', 'I', 252
+                        kern 'I', 'S', 252  kern 'S', 'E', 252
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 4.5  max Y 6.0
+            scale 0.1479
+            rotate X 180
+        }
+        // A hatch outlined on the floor of the fantail's scoop, on the centerline: a dark line 0.02 wide round a
+        // rectangle 0.68 across and 0.89 long, from 12.66 to 13.55, its fore edge just behind the scoop's front.  FJ does not draw it; it is placed from the photograph of the studio model from below astern,
+        // through a camera fitted to it, on this floor.  Seen from below, it is turned over.
+        decal {
+            path { move to 12.6600, -0.3400  line to 13.5500, -0.3400  line to 13.5500, 0.3400  line to 12.6600, 0.3400  close
+                   move to 12.6800, -0.3200  line to 13.5300, -0.3200  line to 13.5300, 0.3200  line to 12.6800, 0.3200  close }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 4.2  max Y 4.9
+            rotate X 180
+        }
+        // The nacelles' markings, on their outboard sides only, as the studio model has them: the pennant -- a
+        // red block with the yellow chevron at its front, and a long red stripe tapering aft -- then the
+        // registration, then a thin stripe running on toward the hood.  The shapes are FJ's, from his profile
+        // of the nacelle, where the block, the stripe and the thin stripe all lie between the same two lines,
+        // narrowing from 0.29 deep at the block to 0.09 at the end; but the studio model carries the whole of
+        // it 0.70 further aft and 0.13 higher than he draws it (above the nacelle's axis, not on it), with the
+        // first stripe running on to just ahead of the registration, and its registration the size of the
+        // saucer's underside one, which FJ draws larger and wider.  They are written here, in the secondary
+        // hull's frame, rather than on the nacelle, because the port nacelle is the starboard one mirrored, and
+        // a marking carried over with it would read backwards: each side has its own, turned to read from
+        // outboard, reaching only the nacelle's outboard half.
+        // the port nacelle's
+        decal {
+            path { move to 11.0643, 1.2628  line to 11.9469, 1.2488  line to 12.1156, 0.9520  line to 11.2518, 0.9434  close
+                   move to 11.9930, 1.2459  line to 15.5024, 1.2016  line to 15.5024, 0.9935  line to 12.1618, 0.9526  close
+                   move to 18.1144, 1.1724  line to 20.1594, 1.1476  line to 20.1594, 1.0580  line to 18.1144, 1.0316  close }
+            color [0.29, 0.04, 0.06]
+            planar  min Y 4.728  max Y 6.0
+            rotate X -90
+        }
+        decal {
+            path { move to 11.4719, 1.3702  line to 11.2579, 1.1038  line to 11.3699, 0.8935  line to 11.4783, 0.8944  line to 11.4306, 1.0957  line to 11.5230, 1.3680  close }
+            color [0.85, 0.55, 0.04]
+            planar  min Y 4.728  max Y 6.0
+            rotate X -90
+        }
+        decal {
+            path {
+                text {
+                    text 'NCC-1701'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout {
+                        along path { move to 18.7834, 1.5841  line to 38.7834, 1.5841 }
+                        horizontal position center
+                    }
+                    kerning {
+                        kern 'N', 'C', 36  kern 'C', 'C', 36  kern 'C', '-', 36  kern '-', '1', 36
+                        kern '1', '7', 36  kern '7', '0', 36  kern '0', '1', 36
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 4.728  max Y 6.0
+            scale 0.5833
+            rotate X -90
+        }
+        // the starboard nacelle's
+        decal {
+            path { move to -11.0643, 1.2628  line to -11.9469, 1.2488  line to -12.1156, 0.9520  line to -11.2518, 0.9434  close
+                   move to -11.9930, 1.2459  line to -15.5024, 1.2016  line to -15.5024, 0.9935  line to -12.1618, 0.9526  close
+                   move to -18.1144, 1.1724  line to -20.1594, 1.1476  line to -20.1594, 1.0580  line to -18.1144, 1.0316  close }
+            color [0.29, 0.04, 0.06]
+            planar  min Y 4.728  max Y 6.0
+            rotate Y 180  rotate X 90
+        }
+        decal {
+            path { move to -11.4719, 1.3702  line to -11.2579, 1.1038  line to -11.3699, 0.8935  line to -11.4783, 0.8944  line to -11.4306, 1.0957  line to -11.5230, 1.3680  close }
+            color [0.85, 0.55, 0.04]
+            planar  min Y 4.728  max Y 6.0
+            rotate Y 180  rotate X 90
+        }
+        decal {
+            path {
+                text {
+                    text 'NCC-1701'
+                    font 'Federation Starfleet Hull 23rd', 'Orbitron'
+                    layout {
+                        along path { move to -38.7834, 1.5841  line to -18.7834, 1.5841 }
+                        horizontal position center
+                    }
+                    kerning {
+                        kern 'N', 'C', 36  kern 'C', 'C', 36  kern 'C', '-', 36  kern '-', '1', 36
+                        kern '1', '7', 36  kern '7', '0', 36  kern '0', '1', 36
+                    }
+                }
+            }
+            color [0.06, 0.06, 0.07]
+            planar  min Y 4.728  max Y 6.0
+            scale 0.5833
+            rotate Y 180  rotate X 90
+        }
+        // A panel outlined on the underside of each nacelle, as the studio model has it: aft of the pylon,
+        // from just behind it (0.55 aft of the nacelle's middle) to 3.51, and across the bottom from 43 degrees
+        // below the outboard side round to 43 below the inboard, where the pylon meets the nacelle.  From the
+        // side, only its outboard edge shows, a line low on the flank, with its fore edge dropping from it
+        // round under the nacelle.  A dark line 0.015 wide, seen from below and so turned over, reaching only
+        // the nacelles' lower halves.
+        decal {
+            path { move to 12.1274, -4.1053  line to 15.0874, -4.1415  line to 15.0874, -5.3145  line to 12.1274, -5.3507  close
+                   move to 12.1424, -4.1203  line to 15.0724, -4.1565  line to 15.0724, -5.2995  line to 12.1424, -5.3357  close
+                   move to 12.1274, 5.3507  line to 15.0874, 5.3145  line to 15.0874, 4.1415  line to 12.1274, 4.1053  close
+                   move to 12.1424, 5.3357  line to 15.0724, 5.2995  line to 15.0724, 4.1565  line to 12.1424, 4.1203  close }
+            color [0.06, 0.06, 0.07]
+            planar  min Y -0.979  max Y -0.05
+            rotate X 180
+        }
+    }
+
     // The nacelle pylons: each a straight bar whose section is a capsule 1.0045 long fore and aft and
     // 0.2419 thick (straight sides and round ends), as the hull's profile and the rear views draw it.  They rise
     // 43.7 degrees from upright, as the rear views draw them, on a line that passes through the hull's
     // axis, from inside the hull out to the nacelles' centers (the rear view puts those 4.6726 out and
-    // 0.9673 up), where the nacelles will bury their ends.
-    extrusion {
+    // 0.9673 up), where the nacelles will bury their ends.  Along the upper face of each -- the one turned up
+    // and in, toward the dorsal -- run four grilles, as FJ's top view of the pylons draws them and the
+    // studio model has them: recesses 0.012 deep in the matte gray, 0.415 across the middle of the face,
+    // the first starting 1.66 out along the pylon's line, each about 0.88 long with 0.09 between them, the
+    // last a little shorter, at 0.81.
+    difference {
         // the starboard pylon
-        path {
-            move to -0.3813, -0.1210
-            line to 0.3813, -0.1210
-            curve 0.4481, -0.1210, 0.5022, -0.0668 to 0.5022, 0
-            curve 0.5022, 0.0668, 0.4481, 0.1210 to 0.3813, 0.1210
-            line to -0.3813, 0.1210
-            curve -0.4481, 0.1210, -0.5022, 0.0668 to -0.5022, 0
-            curve -0.5022, -0.0668, -0.4481, -0.1210 to -0.3813, -0.1210
-            close
+        extrusion {
+            path {
+                move to -0.3813, -0.1210
+                line to 0.3813, -0.1210
+                curve 0.4481, -0.1210, 0.5022, -0.0668 to 0.5022, 0
+                curve 0.5022, 0.0668, 0.4481, 0.1210 to 0.3813, 0.1210
+                line to -0.3813, 0.1210
+                curve -0.4481, 0.1210, -0.5022, 0.0668 to -0.5022, 0
+                curve -0.5022, -0.0668, -0.4481, -0.1210 to -0.3813, -0.1210
+                close
+            }
+            min Y 0.8500
+            max Y 6.8246
         }
-        min Y 0.8500
-        max Y 6.8246
+        union {
+            // its grilles
+            cube {
+                scale [0.2075, 0.4449, 0.0205]
+                translate [0, 2.1059, -0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4418, 0.0205]
+                translate [0, 3.0776, -0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4399, 0.0205]
+                translate [0, 4.0505, -0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4026, 0.0205]
+                translate [0, 4.9804, -0.1295]
+            }
+            material {
+                pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
+                specular 0
+            }
+        }
         rotate X 43.663
         translate [11.5774, -3.9697, 0]
     }
-    extrusion {
+    difference {
         // the port pylon
-        path {
-            move to -0.3813, -0.1210
-            line to 0.3813, -0.1210
-            curve 0.4481, -0.1210, 0.5022, -0.0668 to 0.5022, 0
-            curve 0.5022, 0.0668, 0.4481, 0.1210 to 0.3813, 0.1210
-            line to -0.3813, 0.1210
-            curve -0.4481, 0.1210, -0.5022, 0.0668 to -0.5022, 0
-            curve -0.5022, -0.0668, -0.4481, -0.1210 to -0.3813, -0.1210
-            close
+        extrusion {
+            path {
+                move to -0.3813, -0.1210
+                line to 0.3813, -0.1210
+                curve 0.4481, -0.1210, 0.5022, -0.0668 to 0.5022, 0
+                curve 0.5022, 0.0668, 0.4481, 0.1210 to 0.3813, 0.1210
+                line to -0.3813, 0.1210
+                curve -0.4481, 0.1210, -0.5022, 0.0668 to -0.5022, 0
+                curve -0.5022, -0.0668, -0.4481, -0.1210 to -0.3813, -0.1210
+                close
+            }
+            min Y 0.8500
+            max Y 6.8246
         }
-        min Y 0.8500
-        max Y 6.8246
+        union {
+            // its grilles
+            cube {
+                scale [0.2075, 0.4449, 0.0205]
+                translate [0, 2.1059, 0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4418, 0.0205]
+                translate [0, 3.0776, 0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4399, 0.0205]
+                translate [0, 4.0505, 0.1295]
+            }
+            cube {
+                scale [0.2075, 0.4026, 0.0205]
+                translate [0, 4.9804, 0.1295]
+            }
+            material {
+                pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
+                specular 0
+            }
+        }
         rotate X -43.663
         translate [11.5774, -3.9697, 0]
     }
@@ -1230,114 +1831,216 @@ EnterpriseSecondaryHull = union {
         translate [0, -3.9531, 0]
     }
 
-    intersection {
-        // the tabs on the nose: three of them, at 3, 6 and 9 o'clock round the deflector's axis, each
-        // 0.5808 wide and centered on its own line through the axis (both views draw them that wide, to
-        // within 0.006).  Their faces stand 1.4283 out at the front of the second housing; their outer
-        // edges flare as the hull's profile (the bottom tab) and the bottom view (the side tabs) draw them, stand
-        // proud of the hull's shoulder, and dive back under the hull's belly and sides
-        lathe {
-            path {
-                move to 0, 4.5968
-                line to 1.4283, 4.5968
-                curve 1.4666, 4.8829, 1.5098, 5.2201 to 1.5400, 5.4859
-                curve 1.5516, 5.5886, 1.5438, 5.7943 to 1.4955, 6.0183
-                line to 0, 6.0183
-                close
+    difference {
+        intersection {
+            // the tabs on the nose: three of them, at 3, 6 and 9 o'clock round the deflector's axis, each
+            // 0.5808 wide and centered on its own line through the axis (both views draw them that wide, to
+            // within 0.006).  Their faces stand 1.4283 out at the front of the second housing; their outer
+            // edges flare as the hull's profile (the bottom tab) and the bottom view (the side tabs) draw them, stand
+            // proud of the hull's shoulder, and dive back under the hull's belly and sides
+            lathe {
+                path {
+                    move to 0, 4.5968
+                    line to 1.4283, 4.5968
+                    curve 1.4666, 4.8829, 1.5098, 5.2201 to 1.5400, 5.4859
+                    curve 1.5516, 5.5886, 1.5438, 5.7943 to 1.4955, 6.0183
+                    line to 0, 6.0183
+                    close
+                }
+                rotate Z -90
+                translate [0, -3.9531, 0]
             }
-            rotate Z -90
-            translate [0, -3.9531, 0]
+            union {
+                cube {
+                    // the bottom tab
+                    scale [2, 1, 0.2904]
+                    translate [5.3, -4.9531, 0]
+                }
+                cube {
+                    // the side tabs
+                    scale [2, 0.2904, 2]
+                    translate [5.3, -3.9531, 0]
+                }
+            }
         }
-        union {
-            cube {
-                // the bottom tab
-                scale [2, 1, 0.2904]
-                translate [5.3, -4.9531, 0]
+
+        difference {
+            // The vents on the side tabs, as the studio model has them: the face of each tab from just behind
+            // its front to just ahead of the pennant, X 4.64 to 5.40, cut with eleven slots 0.018 high and
+            // 0.015 deep across 0.47 of its height, leaving slats between them.  The slots run through both
+            // side tabs at once; taking the tabs' own shape 0.015 smaller out of them leaves only the outer
+            // layer to cut, and gives each slot its floor.
+            union {
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -4.1667, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -4.1240, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -4.0813, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -4.0386, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.9958, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.9531, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.9104, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.8676, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.8249, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.7822, 0]
+                }
+                cube {
+                    scale [0.38, 0.009, 2]
+                    translate [5.02, -3.7395, 0]
+                }
             }
-            cube {
-                // the side tabs
-                scale [2, 0.2904, 2]
-                translate [5.3, -3.9531, 0]
+            lathe {
+                path {
+                    move to 0, 4.5968
+                    line to 1.4133, 4.5968
+                    curve 1.4516, 4.8829, 1.4948, 5.2201 to 1.5250, 5.4859
+                    line to 0, 5.4859
+                    close
+                }
+                rotate Z -90
+                translate [0, -3.9531, 0]
+            }
+            material {
+                pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
+                specular 0
             }
         }
     }
 
-    intersection {
-        tube {
-            // the spine and radius are fitted so the tube's outline lands on the profile's top and bottom
-            // (within 5 px) and on the plan (within 7.5 px).  Aft of the pylon roots (x = 11.08) the plan
-            // narrows more slowly than ahead of them; that kink is the drawing's, hence "discontinuous".
-            discontinuous
+    // The hull's body, hollowed under the hood: aft of x = 14.25 and above the hangar deck, the hull is a shell
+    // 0.06 thick -- the same tube, every radius 0.06 less, taken out of it -- so the hull ends round the doors
+    // in a hood whose edge is the same thickness all the way round, as the studio model's is.
+    difference {
+        intersection {
+            tube {
+                // the spine and radius are fitted so the tube's outline lands on the profile's top and bottom
+                // (within 5 px) and on the plan (within 7.5 px).  Aft of the pylon roots (x = 11.08) the plan
+                // narrows more slowly than ahead of them; that kink is the drawing's, hence "discontinuous".
+                // There the plan is also a little wider than the profile is deep, which no circle can be, so
+                // between the pylon roots and x = 13.6 the radius dips and the spine rises by the same amount,
+                // smoothly, by 0.049 at the fantail's scoop (x = 12.32): the top stays on the profile's line,
+                // the bottom comes up 0.098 to meet the profile's belly where the scoop starts, and the sides
+                // come in from the plan by no more than that 0.049.  Aft of 13.6 the tube is as it was.
+                discontinuous
 
-            radius 1.5271 at [5.6564, -4.0113, 0]
-            curve radius 1.5647 at [6.2020, -4.0718, 0]  radius 1.5706 at [6.7476, -4.0381, 0]  radius 1.5426 at [7.2932, -4.0417, 0]
-            curve radius 1.5102 at [7.9250, -4.0459, 0]  radius 1.4210 at [8.5567, -4.0140, 0]  radius 1.3465 at [9.1885, -3.9834, 0]
-            curve radius 1.2720 at [9.8202, -3.9529, 0]  radius 1.1901 at [10.4520, -3.9224, 0]  radius 1.1543 at [11.0837, -3.9303, 0]
-            radius 1.0263 at [14.6158, -4.0663, 0]
-        }
-
-        lathe {
-            // the nose: the shoulder rolling up from the third housing's corner onto the hull.  Its vertical
-            // sections are circles whose centers fall 0.1 per unit aft (the shear), which is what makes the
-            // drawing's top and bottom shoulders agree to within 2 px.  Aft of the shoulder it flares out
-            // into a sleeve wider than the body, so from there on it cuts nothing.
-            path {
-                move to 0, 5.1999
-                line to 1.3448, 5.1999
-                curve 1.4130, 5.2469, 1.4311, 5.2671 to 1.4559, 5.3291
-                curve 1.5012, 5.4424, 1.5052, 5.4477 to 1.5300, 5.5875
-                curve 1.5422, 5.6564, 2.5844, 5.7254 to 2.5844, 5.8632
-                line to 2.5844, 14.8742
-                line to 0, 14.8742
-                close
+                radius 1.5271 at [5.6564, -4.0113, 0]
+                curve radius 1.5647 at [6.2020, -4.0718, 0]  radius 1.5706 at [6.7476, -4.0381, 0]  radius 1.5426 at [7.2932, -4.0417, 0]
+                curve radius 1.5102 at [7.9250, -4.0459, 0]  radius 1.4210 at [8.5567, -4.0140, 0]  radius 1.3465 at [9.1885, -3.9834, 0]
+                curve radius 1.2720 at [9.8202, -3.9529, 0]  radius 1.1901 at [10.4520, -3.9224, 0]  radius 1.1543 at [11.0837, -3.9303, 0]
+                curve radius 1.1394 at [11.4943, -3.9461, 0]  radius 1.0755 at [11.9050, -3.9129, 0]  radius 1.0607 at [12.3156, -3.9287, 0]
+                curve radius 1.0451 at [12.7437, -3.9452, 0]  radius 1.0786 at [13.1719, -4.0107, 0]  radius 1.0631 at [13.6000, -4.0272, 0]
+                radius 1.0263 at [14.6158, -4.0663, 0]
             }
-            rotate Z -90
-            shear [0, 0, -0.1, 0, 0, 0]
-            translate [0, -3.4581, 0]
-        }
+
+            lathe {
+                // the nose: the shoulder rolling up from the third housing's corner onto the hull.  Its vertical
+                // sections are circles whose centers fall 0.1 per unit aft (the shear), which is what makes the
+                // drawing's top and bottom shoulders agree to within 2 px.  Aft of the shoulder it flares out
+                // into a sleeve wider than the body, so from there on it cuts nothing.
+                path {
+                    move to 0, 5.1999
+                    line to 1.3448, 5.1999
+                    curve 1.4130, 5.2469, 1.4311, 5.2671 to 1.4559, 5.3291
+                    curve 1.5012, 5.4424, 1.5052, 5.4477 to 1.5300, 5.5875
+                    curve 1.5422, 5.6564, 2.5844, 5.7254 to 2.5844, 5.8632
+                    line to 2.5844, 14.8742
+                    line to 0, 14.8742
+                    close
+                }
+                rotate Z -90
+                shear [0, 0, -0.1, 0, 0, 0]
+                translate [0, -3.4581, 0]
+            }
 
             extrusion {
-            // the profile aft: the stern face, the edge where the hangar doors meet the hull, the fantail
-            // sweeping up to the hangar deck, and the underside ahead of it.  With the plan below, this lets
-            // the hull's top run aft over the doors while it still meets the deck where the profile draws it.
-            // The plan is a little wider than the profile is deep just ahead of the fantail, so the body
-            // (which follows the plan) is trimmed flat underneath there by up to 0.1.
-            path {
-                move to 5.0534, -2.1768
-                line to 14.5124, -2.1768
-                line to 14.5124, -3.2105
-                line to 14.4228, -3.3139
-                curve 14.3209, -3.5696, 14.3290, -3.6974 to 14.3194, -3.9686
-                line to 14.3143, -4.1556
-                curve 14.1004, -4.1556, 13.4217, -4.2627 to 13.1513, -4.3687
-                curve 12.9148, -4.4613, 12.7420, -4.5417 to 12.5482, -4.7103
-                curve 12.4154, -4.8259, 12.3572, -4.9725 to 12.3156, -4.9895
-                curve 11.7881, -5.0061, 11.2627, -5.0471 to 10.7391, -5.1127
-                line to 9.8777, -6.1396
-                line to 5.0534, -6.1396
-                close
+                // the profile aft: the stern face, the edge where the hangar doors meet the hull, the fantail
+                // sweeping up to the hangar deck, and the underside ahead of it.  With the plan below, this lets
+                // the hull's top run aft over the doors while it still meets the deck where the profile draws it.
+                // The fantail's rounded step comes down to meet the belly where the tube's own bottom meets the
+                // profile's, and ends level with it, so the two join in a curve and the scoop's fore end rounds
+                // off into the hull; ahead of it this falls away below the hull and cuts nothing.
+                path {
+                    move to 5.0534, -2.1768
+                    line to 14.5124, -2.1768
+                    line to 14.5124, -3.2105
+                    line to 14.4228, -3.3139
+                    curve 14.3209, -3.5696, 14.3290, -3.6974 to 14.3194, -3.9686
+                    line to 14.3143, -4.1556
+                    curve 14.1004, -4.1556, 13.4217, -4.2627 to 13.1513, -4.3687
+                    curve 12.9148, -4.4613, 12.7420, -4.5417 to 12.5482, -4.7103
+                    curve 12.4154, -4.8259, 12.3700, -4.9945 to 12.3000, -4.9945
+                    curve 12.1200, -4.9945, 11.9000, -5.2000 to 11.5500, -5.4500
+                    line to 9.8777, -6.1396
+                    line to 5.0534, -6.1396
+                    close
+                }
+                min Y -2
+                max Y 2
+                rotate X -90
             }
-            min Y -2
-            max Y 2
-            rotate X -90
+
+            extrusion {
+                // the plan aft, as top2 draws it: the stern face straight across the middle, and either side of it
+                // the hull's edge scalloped forward to the hull's corner, so the hull wraps round the doors
+                path {
+                    move to 5.0534, -1.8952
+                    line to 14.2884, -1.8952
+                    line to 14.2884, -1.0407
+                    curve 14.3225, -0.8832, 14.3368, -0.6902 to 14.5055, -0.5720
+                    line to 14.5055, 0.5720
+                    curve 14.3368, 0.6902, 14.3225, 0.8832 to 14.2884, 1.0407
+                    line to 14.2884, 1.8952
+                    line to 5.0534, 1.8952
+                    close
+                }
+                min Y -7
+                max Y -1
+            }
         }
 
-        extrusion {
-            // the plan aft, as top2 draws it: the stern face straight across the middle, and either side of it
-            // the hull's edge scalloped forward to the hull's corner, so the hull wraps round the doors
-            path {
-                move to 5.0534, -1.8952
-                line to 14.2884, -1.8952
-                line to 14.2884, -1.0407
-                curve 14.3225, -0.8832, 14.3368, -0.6902 to 14.5055, -0.5720
-                line to 14.5055, 0.5720
-                curve 14.3368, 0.6902, 14.3225, 0.8832 to 14.2884, 1.0407
-                line to 14.2884, 1.8952
-                line to 5.0534, 1.8952
-                close
+        intersection {
+            tube {
+                // the hollow under the hood: the hull's tube, every radius 0.06 less
+                radius 1.0943 at [11.0837, -3.9303, 0]
+                radius 0.9663 at [14.6158, -4.0663, 0]
             }
-            min Y -7
-            max Y -1
+            cube {
+                // keeps x >= 14.25 and y >= -3.9691, a hair under the deck's top so the two never share a face.
+                // Its forward face is the wall the doors stand against, which is the nacelles' dark gray.
+                scale [1, 1, 2]
+                translate [15.25, -2.9691, 0]
+                material {
+                    pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
+                    specular 0
+                }
+            }
         }
     }
 
@@ -1384,95 +2087,252 @@ EnterpriseSecondaryHull = union {
     }
 
     difference {
-        // the hangar doors: half an ellipsoid sharing the deck's center, its crown tucked under the hull's
-        // top, reaching only 0.1 short of the deck's edge on the centerline, as the top view draws the lip;
-        // kept from just inside the hull aft and from just inside the deck up
+        // The hangar doors: a dome standing on the deck under the hood, as the studio model's are -- half an
+        // ellipsoid 0.89 across either side, 0.76 high and reaching 0.51 aft of the hollow's back wall, which
+        // its center sits on, so it stops 0.1 short of the deck's edge on the centerline and stands clear of
+        // the hood by 0.086 at the sides and 0.137 at the top, where the hangar's light hangs.  It is made of
+        // seven leaves, the grooves between them meridians through its crown, evenly spaced as the rear view
+        // draws them: so they are cut in a unit sphere, 0.03 wide and 0.03 deep, before it is stretched to size.
         intersection {
-            sphere {
-                scale [0.9412, 1.0554, 1.0554]
-                translate [13.8193, -3.9583, 0]
-            }
+            sphere { }
             cube {
-                scale [1, 1, 2]
-                translate [15.3057, -2.9773, 0]
+                // keeps x >= -0.02 (inside the hull) and y >= -0.0113 (inside the deck)
+                scale [2, 2, 2]
+                translate [1.98, 1.9887, 0]
             }
         }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y 25.714
+            }
+            sphere { scale 0.97 }
+        }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y -25.714
+            }
+            sphere { scale 0.97 }
+        }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y 51.429
+            }
+            sphere { scale 0.97 }
+        }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y -51.429
+            }
+            sphere { scale 0.97 }
+        }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y 77.143
+            }
+            sphere { scale 0.97 }
+        }
+        difference {
+            cube {
+                scale [1.2, 1.2, 0.015]
+                rotate Y -77.143
+            }
+            sphere { scale 0.97 }
+        }
+        scale [0.51, 0.76, 0.89]
+        translate [14.25, -3.9686, 0]
+    }
 
-        // the seams between the door leaves: planes through the doors' crown and center, meeting the deck
-        // where the rear view draws the seams (scaled to these doors' width), each a groove 0.01 wide and
-        // 0.014 deep
-        difference {
+    // The hangar's light: a small box hanging under the hood above the doors' crown, its aft face lit along its
+    // upper part.  Its top is buried in the hood's shell, and its foot clears the doors.
+    cube {
+        scale [0.035, 0.08, 0.105]
+        translate [14.435, -3.15, 0]
+    }
+    cube {
+        scale [0.004, 0.0525, 0.095]
+        translate [14.4702, -3.1475, 0]
+        material {
+            pigment [0.96, 0.8, 0.65]       // a warm white, (0.98, 0.90, 0.82) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+
+    // The lights on the deck's aft edge, as the studio model has them: a green bar 0.20 long in the middle,
+    // and either side of it a red bar standing upright (0.165 out) and a red one lying along the edge (0.22
+    // to 0.35 out).  The bars lying along it sit in the edge's upper part and the upright ones run most of
+    // its depth.  Each is a plate 0.004 proud of the edge, following its curve: the deck's own shape a
+    // little larger, trimmed to the light's outline.
+    intersection {
+        cylinder {
+            min Y -4.2
+            max Y -3.9
+            scale [1.0495, 1, 1.0495]
+            translate [13.8193, 0, 0]
+        }
+        cube {
+            scale [0.2, 0.017, 0.10]
+            translate [14.8, -4.027, 0]
+        }
+        material {
+            pigment [0.08, 1, 0.3]         // as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        cylinder {
+            min Y -4.2
+            max Y -3.9
+            scale [1.0495, 1, 1.0495]
+            translate [13.8193, 0, 0]
+        }
+        union {
             cube {
-                scale [1.2, 1.2, 0.005]
-                rotate Y -28.632
-                rotate Z -28.874
-                translate [13.8193, -3.9583, 0]
+                // upright, to port
+                scale [0.2, 0.0475, 0.0175]
+                translate [14.8, -4.0555, -0.165]
             }
-            sphere {
-                scale [0.9275, 1.0416, 1.0416]
-                translate [13.8193, -3.9583, 0]
+            cube {
+                // upright, to starboard
+                scale [0.2, 0.0475, 0.0175]
+                translate [14.8, -4.0555, 0.165]
+            }
+            cube {
+                // lying along the edge, to port
+                scale [0.2, 0.015, 0.0635]
+                translate [14.8, -4.0273, -0.2845]
+            }
+            cube {
+                // lying along the edge, to starboard
+                scale [0.2, 0.015, 0.0635]
+                translate [14.8, -4.0273, 0.2845]
             }
         }
-        difference {
-            cube {
-                scale [1.2, 1.2, 0.005]
-                rotate Y -48.468
-                rotate Z -28.874
-                translate [13.8193, -3.9583, 0]
-            }
-            sphere {
-                scale [0.9275, 1.0416, 1.0416]
-                translate [13.8193, -3.9583, 0]
-            }
-        }
-        difference {
-            cube {
-                scale [1.2, 1.2, 0.005]
-                rotate Y 28.632
-                rotate Z -28.874
-                translate [13.8193, -3.9583, 0]
-            }
-            sphere {
-                scale [0.9275, 1.0416, 1.0416]
-                translate [13.8193, -3.9583, 0]
-            }
-        }
-        difference {
-            cube {
-                scale [1.2, 1.2, 0.005]
-                rotate Y 48.468
-                rotate Z -28.874
-                translate [13.8193, -3.9583, 0]
-            }
-            sphere {
-                scale [0.9275, 1.0416, 1.0416]
-                translate [13.8193, -3.9583, 0]
-            }
+        material {
+            pigment [1, 0.08, 0.08]        // as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
         }
     }
 
     lathe {
-        // the homing beacon's collar: its foot sunk into the hull, whose top slopes under it
+        // the homing beacon's collar, 0.59 across as the studio model's is: its foot sunk into the hull, whose
+        // top slopes under it, but not through the hood's shell, which runs under its aft edge, and its top
+        // level with the strip's, which runs into it
         path {
-            move to 0, -3.0382
-            line to 0.1723, -3.0382
-            line to 0.1723, -2.9935
-            curve 0.1723, -2.9687, 0.1522, -2.9487 to 0.1275, -2.9487
+            move to 0, -3.0620
+            line to 0.2950, -3.0620
+            line to 0.2950, -2.9935
+            curve 0.2950, -2.9687, 0.2749, -2.9487 to 0.2502, -2.9487
             line to 0, -2.9487
             close
         }
         translate [14.1368, 0, 0]
     }
     lathe {
-        // and its lamp: a spherical cap 0.2412 across and 0.0603 high, standing on the collar
+        // and its lamp: a spherical cap 0.49 across and 0.152 high, standing on the collar, and green, both as
+        // the studio model's is, in the starboard running light's green
         path {
             move to 0, -2.9555
-            line to 0.1206, -2.9555
-            line to 0.1206, -2.9487
-            curve 0.0922, -2.9108, 0.0474, -2.8884 to 0.0000, -2.8884
+            line to 0.2450, -2.9555
+            line to 0.2450, -2.9487
+            curve 0.1989, -2.8556, 0.1039, -2.7967 to 0.0000, -2.7967
             close
         }
         translate [14.1368, 0, 0]
+        material {
+            pigment [0.08, 1, 0.3]         // as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+
+    // The strip along the top, from the homing beacon forward until it runs under the dorsal: FJ's top view
+    // draws its two edges either side of the centerline, 0.19 apart, and the studio model has it as a flat
+    // strip standing proud of the hull, 0.035 -- enough to read in a flat light -- with a groove down its
+    // middle, on the hull's centerline, 0.02 wide and 0.02 deep.  It follows the hull's top line -- the
+    // tube's, then the stern's -- and across its width it is flat, which on a hull this round leaves its
+    // edges 0.004 further proud than its middle.  Its foot is buried in the hull, its forward end in the
+    // dorsal and its aft end in the beacon's collar, which stands on it, level with its top.
+    difference {
+        extrusion {
+            path {
+                move to 8.3000, -2.5348
+                line to 8.6000, -2.5582
+                line to 8.9000, -2.5810
+                line to 9.1885, -2.6019
+                line to 9.5000, -2.6241
+                line to 9.8000, -2.6463
+                line to 10.1000, -2.6688
+                line to 10.4000, -2.6914
+                line to 10.7000, -2.7136
+                line to 11.0837, -2.7410
+                line to 13.9000, -2.9486
+                line to 13.9000, -3.1336
+                line to 11.0837, -2.9260
+                line to 10.7000, -2.8986
+                line to 10.4000, -2.8764
+                line to 10.1000, -2.8538
+                line to 9.8000, -2.8313
+                line to 9.5000, -2.8091
+                line to 9.1885, -2.7869
+                line to 8.9000, -2.7660
+                line to 8.6000, -2.7432
+                line to 8.3000, -2.7198
+                close
+            }
+            min Y -0.095
+            max Y 0.095
+            rotate X -90
+        }
+        extrusion {
+            // the groove
+            path {
+                move to 8.2500, -2.3659
+                line to 8.6000, -2.3932
+                line to 8.9000, -2.4160
+                line to 9.1885, -2.4369
+                line to 9.5000, -2.4591
+                line to 9.8000, -2.4813
+                line to 10.1000, -2.5038
+                line to 10.4000, -2.5264
+                line to 10.7000, -2.5486
+                line to 11.0837, -2.5760
+                line to 13.9500, -2.7873
+                line to 13.9500, -2.9723
+                line to 11.0837, -2.7610
+                line to 10.7000, -2.7336
+                line to 10.4000, -2.7114
+                line to 10.1000, -2.6888
+                line to 9.8000, -2.6663
+                line to 9.5000, -2.6441
+                line to 9.1885, -2.6219
+                line to 8.9000, -2.6010
+                line to 8.6000, -2.5782
+                line to 8.2500, -2.5509
+                close
+            }
+            min Y -0.01
+            max Y 0.01
+            rotate X -90
+        }
+    }
+
+    // And on it, a unit forward of the beacon, the small red lamp the studio model carries there: a dome
+    // 0.07 across and 0.044 high.
+    sphere {
+        scale 0.036
+        translate [13.15, -2.8844, 0]
         material {
             pigment [1, 0.08, 0.08]        // as it shows under one white light
             ambient 1
