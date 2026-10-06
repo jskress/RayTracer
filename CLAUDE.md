@@ -27,6 +27,16 @@ Example scenes live under `gallery/` (`gallery/challenge-book`, `gallery/POVRay`
 The `RayTracer.csproj` excludes `Tests/**` from its own compile/resource items; the `Tests`
 project references `RayTracer.csproj` directly. Both projects target `net10.0` with
 `LangVersion` 14, implicit usings enabled and nullable reference types disabled.
+`RayTracer.csproj` sets `Optimize` true in every configuration, so the Debug build (which is what
+renders run from) is as fast as Release -- about four times faster than an unoptimized one. Render
+times recorded before 2026-10-06 were taken unoptimized. To step through code in a debugger,
+rebuild in full both ways -- a plain build sees no file changed and keeps whichever the last compile
+made:
+
+```bash
+dotnet build --no-incremental -p:Optimize=false   # before debugging
+dotnet build --no-incremental                     # afterwards, back to optimized
+```
 
 ## Architecture
 
