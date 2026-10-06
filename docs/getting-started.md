@@ -141,7 +141,7 @@ for within the chosen scene, so two scenes may each have a camera of the same na
 | `-c`, `--bits-per-channel` | 8 | How many bits each color channel gets in the file; `8` or `16`. |
 
 Antialiasing is written either as `off`, or as `adaptive` with a depth: `adaptive:5`, or
-just `5`, which means the same.  Bare `-a` with nothing after it means `adaptive:5`.
+just `5`, which means the same.  `adaptive` alone means `adaptive:5`.
 
 A scene may also ask for antialiasing itself, with
 [`antialiasing depth`](context.md#anti-aliasing) in its context block, and one that needs it

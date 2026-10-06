@@ -224,7 +224,7 @@ public class RenderOptions
     public OutputLevel OutputLevel { get; private set; } = OutputLevel.Normal;
 
     [Option('a', "antialias", Required = false,
-        HelpText = "Sets what sort of antialiasing should be applied to the image being rendered.")]
+        HelpText = "The antialiasing to apply: off, or adaptive[:depth[:threshold]], such as adaptive:3 or adaptive:3:0.2.  The depth is how many times the sampler may look further into a pixel, a whole number (5 if left out); the threshold is how far two samples must disagree before it does, more than 0 and at most 1 (0.1 if left out).  A depth alone, such as 3, means adaptive:3.  Defaults to off, or whatever the scene's context block asks for.")]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public string AntiAliasingText
     {
