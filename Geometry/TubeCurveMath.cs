@@ -1,6 +1,7 @@
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
 
 namespace RayTracer.Geometry;
@@ -320,6 +321,73 @@ internal static class TubeCurveMath
         Vector<double> rhs = Vector<double>.Build.DenseOfArray(ys);
 
         return matrix.Solve(rhs).ToArray();
+    }
+
+    /// <summary>
+    /// This method keeps a crossing at one of a curved segment's seams from being counted twice.
+    /// <para>
+    /// Where the segment's side wall meets one of its end spheres the two are tangent, all the way
+    /// round a circle, and a ray crossing near that circle crosses the boundary there just once.
+    /// Which of the two it crossed is decided twice, though, by different sums: the side wall
+    /// takes a crossing whose curve parameter falls inside the segment, and the end sphere a
+    /// point no sphere along the segment swallows -- where, to keep the end sphere's own root out
+    /// of the reckoning, a sphere within <see cref="DoubleExtensions.Epsilon"/> of the end does
+    /// not count.  In the thin band just past the circle that only such a sphere swallows, both
+    /// say yes, and the one crossing comes back twice: a quarter of all rays aimed within a
+    /// thousandth of the circle did.  A straight segment decides both by the one sum, and never
+    /// does.
+    /// </para>
+    /// <para>
+    /// Alone, a segment shows nothing for it, since the two copies stand at the same place.  But a
+    /// segment is never alone -- it is in its tube's union, and the tube in whatever the scene
+    /// cuts it with -- and those count crossings to tell inside from out.  One counted twice turns
+    /// the rest of the line inside out.  On the Enterprise that was a speck of shade on her lit
+    /// hull: the shadow ray from a point beside a seam took itself to be still inside the hull, so
+    /// the outline the hull is cut to, beyond the point, stood in the light's way.
+    /// </para>
+    /// <para>
+    /// Two crossings in a row that go the same way -- both in, or both out -- cannot both be real,
+    /// so a side wall's crossing and an end sphere's that do, and lie this close together, are the
+    /// same crossing, and the end sphere's copy is dropped.  The copies found stood a billionth of
+    /// the segment's size apart, far inside the tolerance asked for here.
+    /// </para>
+    /// </summary>
+    /// <param name="ray">The ray the crossings were found along, in the segment's own space.</param>
+    /// <param name="intersections">The list the segment has added its crossings to.</param>
+    /// <param name="sideStart">The index of the first crossing the side wall added.</param>
+    /// <param name="capStart">The index of the first crossing the end spheres added; every one
+    /// after it is theirs.</param>
+    /// <param name="tolerance">How close, as a length in the segment's space, two crossings must
+    /// be to count as one.</param>
+    public static void DropDoubledSeamCrossings(
+        Ray ray, List<Intersection> intersections, int sideStart, int capStart, double tolerance)
+    {
+        double length = ray.Direction.Magnitude;
+
+        for (int cap = intersections.Count - 1; cap >= capStart; cap--)
+        {
+            bool capEnters = Enters(ray, intersections[cap]);
+
+            for (int side = sideStart; side < capStart; side++)
+            {
+                if (Math.Abs(intersections[side].Distance - intersections[cap].Distance) * length <= tolerance &&
+                    Enters(ray, intersections[side]) == capEnters)
+                {
+                    intersections.RemoveAt(cap);
+
+                    break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// This method reports whether a ray goes into the segment at the given crossing, rather than
+    /// out of it, which is whether the ray runs against the outward normal there.
+    /// </summary>
+    private static bool Enters(Ray ray, Intersection crossing)
+    {
+        return ray.Direction.Dot(((PrecomputedNormalIntersection) crossing).PrecomputedNormal) < 0;
     }
 
     /// <summary>

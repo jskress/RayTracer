@@ -128,9 +128,17 @@ public class TubeQuadSegment : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
+        int sideStart = intersections.Count;
+
         AddLateralIntersections(ray, intersections);
+
+        int capStart = intersections.Count;
+
         AddCapIntersections(ray, Start, StartRadius, intersections);
         AddCapIntersections(ray, End, EndRadius, intersections);
+
+        // A crossing at a seam, where the side wall meets an end sphere, can be found by both.
+        TubeCurveMath.DropDoubledSeamCrossings(ray, intersections, sideStart, capStart, _scale * 1e-4);
     }
 
     /// <summary>
