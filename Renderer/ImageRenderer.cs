@@ -65,7 +65,7 @@ public class ImageRenderer
     {
         RenderContext context = new ()
         {
-            Progress = CreateProgressReporter(options),
+            Progress = ProgressReporterFor(options, _statistics),
             Statistics = _statistics
         };
         Variables variables = new Variables(_globals);
@@ -90,15 +90,23 @@ public class ImageRenderer
     /// <summary>
     /// This method creates the thing the render will report its progress through.  This is the only
     /// place the choice is made: everything downstream of here knows nothing but the interface.
+    /// <para>
+    /// **`quiet` keeps the bar back.**  It says nothing until the render is done, and the bar, being
+    /// the default, is not something anybody asked for in particular; it used to draw regardless, once
+    /// a render ran past the bar's two seconds.  The tool style is asked for by name, by a program that
+    /// wants its lines, so it reports whatever the output level, as `--stats` does.
+    /// </para>
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>
+    /// <param name="statistics">The counts the tool style reports from.</param>
     /// <returns>The progress reporter to use, or null for no reporting at all.</returns>
-    private IProgressReporter CreateProgressReporter(RenderOptions options)
+    public static IProgressReporter ProgressReporterFor(RenderOptions options, Statistics statistics)
     {
         return options.ProgressStyle switch
         {
+            ProgressStyle.Bar when options.OutputLevel == OutputLevel.Quiet => null,
             ProgressStyle.Bar => new ProgressBar(),
-            ProgressStyle.Tool => new ToolProgressReporter(_statistics),
+            ProgressStyle.Tool => new ToolProgressReporter(statistics),
             _ => null
         };
     }

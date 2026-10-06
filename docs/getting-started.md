@@ -196,7 +196,8 @@ and ignored.
 
 `-l`, `--output-level` takes `quiet`, `normal`, `chatty` or `verbose` — or just their first
 letters, in any case you like.  `normal` draws a progress bar; `quiet` says nothing until
-the render finishes or something goes wrong.
+the render finishes or something goes wrong, and draws no bar.  What is asked for by name still
+comes: the `tool` style's lines and the `--stats` report, both below.
 
 `-p`, `--progress` chooses how progress is reported, and takes `bar`, `tool` or `none` —
 abbreviations and any capitalization are fine here too.
@@ -269,7 +270,7 @@ wherever it is shown, with a line saying which shapes were shown more than once,
 counted by kind.
 
 `tool` keeps its one `statistics` line either way, for the program reading it, and
-`-p none -l quiet --stats` prints the report and nothing else.
+`-l quiet --stats` prints the report and nothing else.
 
 ### Your First Scene
 

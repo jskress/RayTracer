@@ -1,4 +1,6 @@
 using RayTracer.General;
+using RayTracer.Options;
+using RayTracer.Renderer;
 
 namespace Tests;
 
@@ -93,5 +95,45 @@ public class TestProgressBar
         bar.Bump();
         bar.Bump();
         bar.Done();
+    }
+
+    /// <summary>
+    /// `quiet` says nothing until the render is done, and the bar is only the default, not something
+    /// asked for; it used to draw anyway once a render ran past its two seconds.
+    /// </summary>
+    [TestMethod]
+    public void TestQuietDrawsNoBar()
+    {
+        Assert.IsNull(ImageRenderer.ProgressReporterFor(Options("quiet", "bar"), new Statistics()));
+    }
+
+    /// <summary>
+    /// Every other output level draws the bar, as it always has.
+    /// </summary>
+    [TestMethod]
+    public void TestTheOtherLevelsDrawTheBar()
+    {
+        foreach (string level in new[] { "normal", "chatty", "verbose" })
+        {
+            Assert.IsInstanceOfType<ProgressBar>(
+                ImageRenderer.ProgressReporterFor(Options(level, "bar"), new Statistics()), level);
+        }
+    }
+
+    /// <summary>
+    /// The tool style is asked for by name, by a program that wants its lines, so `quiet` leaves it
+    /// reporting; and `none` reports nothing whatever the level.
+    /// </summary>
+    [TestMethod]
+    public void TestQuietLeavesTheToolStyleAndNoneAlone()
+    {
+        Assert.IsInstanceOfType<ToolProgressReporter>(
+            ImageRenderer.ProgressReporterFor(Options("quiet", "tool"), new Statistics()));
+        Assert.IsNull(ImageRenderer.ProgressReporterFor(Options("normal", "none"), new Statistics()));
+    }
+
+    private static RenderOptions Options(string level, string style)
+    {
+        return new RenderOptions { OutputLevelText = level, ProgressStyleText = style };
     }
 }
