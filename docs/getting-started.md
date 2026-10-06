@@ -235,6 +235,42 @@ those two things far more than expected.
 
 `none` reports nothing at all.
 
+`--stats` asks for a report of what the render cost and what its scene held, laid out to read,
+once the render finishes, whatever the progress style.  Here is the gallery's Standard Orbit:
+
+```
+Statistics for standard-orbit.igl
+
+  Image       800 x 600, 480,000 pixels
+  Samples     2,429,235, 5.06 a pixel
+  Rays        4,704,130, 1.94 a sample, 2,429,235 of them from the camera
+  Rendering   22.74 seconds, 206,908 rays a second
+
+  Surfaces    402, of 8 kinds
+      cube       181
+      cylinder    60
+      extrusion   51
+      tube        43  (50 pieces)
+      lathe       32
+      sphere      28
+      torus        4
+      egg          3
+  Combined    35 unions, 66 intersections and 21 differences
+  Lights      2: 2 point lights
+```
+
+The first part is the counts the `statistics` line gives, with the time the rendering itself took.
+The second counts the scene.  A surface is counted as the kind it was written as: a plain group is
+not counted, though everything in it is; a kind built from pieces of its own — a height field, text,
+a tube, a sweep, a ribbon or an L-system — counts once, with the number of pieces it took alongside,
+since that is what it costs to trace; and a field counts once, and its copies too.  Unions,
+intersections and differences count as they were written, a shape shared between instances counts
+wherever it is shown, with a line saying which shapes were shown more than once, and the lights are
+counted by kind.
+
+`tool` keeps its one `statistics` line either way, for the program reading it, and
+`-p none -l quiet --stats` prints the report and nothing else.
+
 ### Your First Scene
 
 A scene needs three things: something to look with, something to look at, and something to

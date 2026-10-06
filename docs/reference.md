@@ -857,6 +857,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `-m`, `--frame` | Render one particular frame of an animation. |
 | `-l`, `--output-level` | How much to print: `quiet`, `normal`, `chatty` or `verbose`. |
 | `-p`, `--progress` | How to report progress: `bar`, `tool` or `none`. |
+| `--stats` | Print a report of what the render cost and what its scene held. |
 
 #### fonts
 

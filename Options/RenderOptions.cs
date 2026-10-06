@@ -254,6 +254,11 @@ public class RenderOptions
     /// </summary>
     public ProgressStyle ProgressStyle { get; private set; } = ProgressStyle.Bar;
 
+    [Option("stats", Required = false,
+        HelpText = "Report what the render cost and what its scene held, once it finishes.")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public bool ReportStatistics { get; set; }
+
     private string _inputFileName;
     private string _outputDirectory;
     private string _outputFileName;

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.General;
@@ -100,7 +101,15 @@ public class RenderInstruction : Instruction
         HangTheSun(scene);
         LightTheGlowingThings(scene);
 
+        // What the scene holds is counted only now that the sky and anything glowing have added the
+        // lights they bring, and the render is timed on its own, without the building before it.
+        context.Statistics?.Describe(scene, context.Width, context.Height);
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
         Canvas = camera.Render(context, scene);
+
+        context.Statistics?.AddRenderTime(stopwatch.Elapsed);
     }
 
     /// <summary>

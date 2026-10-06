@@ -49,6 +49,14 @@ public class CsgSurface : Surface
         }
     }
 
+    /// <summary>
+    /// This property notes that this combination was not written as such, but is one of the links a
+    /// combination of more than two things is built from -- <c>union { a b c }</c> is made as
+    /// <c>(a + b) + c</c>, and the inner one is a link.  Anything counting the combinations a scene
+    /// asked for counts only those that are not links.
+    /// </summary>
+    internal bool IsChainLink { get; init; }
+
     private HashSet<Surface> _leftMembers;
     private HashSet<Surface> _rightMembers;
 

@@ -72,11 +72,19 @@ public class ImageRenderer
 
         _instructionContext.Execute(options, context, variables, frame);
 
-        // The counts are worth having whichever way progress was reported, but only the tool style
-        // has a reader that wants them as text; a person watching the bar has just had the render's
-        // own timing reported to them and does not need this as well.
+        // The tool style's reader is a program, and gets the counts as the one line of key/value text
+        // it has always had.  A person asks for them with `--stats`, and gets them laid out to read,
+        // with what the scene held, however progress was reported.
         if (options.ProgressStyle == ProgressStyle.Tool)
             Terminal.OutLine(_statistics.AsText());
+
+        if (options.ReportStatistics)
+        {
+            Terminal.OutLine("");
+
+            foreach (string line in _statistics.AsReport(Path.GetFileName(options.InputFileName)))
+                Terminal.OutLine(line);
+        }
     }
 
     /// <summary>
