@@ -175,8 +175,15 @@ public class Material
     /// <returns>The point, in the space of the surface this material was written on.</returns>
     public Point WorldToAnchor(Surface surface, Point point, Surface portal = null)
     {
-        Surface anchor = Anchor ?? surface;
+        return ToAnchor(Anchor ?? surface, surface, point, portal);
+    }
 
+    /// <summary>
+    /// This method carries a point from the world into the space of a given anchor, for a point found
+    /// on the given surface.
+    /// </summary>
+    private static Point ToAnchor(Surface anchor, Surface surface, Point point, Surface portal)
+    {
         return anchor.WorldToSurface(point, 0, PortalTo(anchor, surface, portal));
     }
 
@@ -190,8 +197,14 @@ public class Material
     /// <returns>The footprint, in the space of the surface this material was written on.</returns>
     public Footprint WorldToAnchor(Surface surface, Footprint footprint, Surface portal = null)
     {
-        Surface anchor = Anchor ?? surface;
+        return ToAnchor(Anchor ?? surface, surface, footprint, portal);
+    }
 
+    /// <summary>
+    /// The same, for a footprint.
+    /// </summary>
+    private static Footprint ToAnchor(Surface anchor, Surface surface, Footprint footprint, Surface portal)
+    {
         return anchor.WorldToSurface(footprint, 0, PortalTo(anchor, surface, portal));
     }
 
@@ -232,6 +245,65 @@ public class Material
     /// every material, so that asking for a color costs nothing more than it ever did.
     /// </summary>
     public List<Decal> Decals { get; set; }
+
+    /// <summary>
+    /// This property notes that the material is only decals, to be painted over whatever material
+    /// is handed down to the surface wearing it -- what <c>material inherited { decal { .. } }</c>
+    /// makes.
+    /// <para>
+    /// A group hands its material down to every part with none of its own, which is how one
+    /// material dresses a whole assembly, and how a scene repaints a library's model by writing a
+    /// material on the object.  A part with a material of its own is passed over -- so markings
+    /// written in a part's material would stop the scene repainting that part.  A material that
+    /// inherits is not passed over: the part is given the material from above with these decals
+    /// added on top, and a model can carry its markings and still be repainted.  See
+    /// <see cref="HandedDown"/>.  Nothing else in it is ever used.
+    /// </para>
+    /// </summary>
+    public bool InheritsAppearance { get; init; }
+
+    /// <summary>
+    /// This method returns the material a surface ends up with when a material is handed down to it.
+    /// <para>
+    /// A surface with no material takes the one handed down, the very same object, as it always has.
+    /// A surface whose material inherits takes a copy of the one handed down with its own decals
+    /// added on top, and each decal keeps the surface it was written on, so the two sets of markings
+    /// land each in its own place.  Every surface handed the same inheriting material gets the same
+    /// copy, kept in <paramref name="merged"/> for the length of one handing down, so that the parts
+    /// of an assembly still share one material as they would have.  Any other material is kept.
+    /// </para>
+    /// <para>
+    /// The material handed down may itself inherit, when it belongs to a group within a group that
+    /// is yet to hand its own down; the copy then inherits too, and is settled in its turn.
+    /// </para>
+    /// </summary>
+    /// <param name="current">The surface's material, or <c>null</c>.</param>
+    /// <param name="from">The material being handed down.</param>
+    /// <param name="merged">The copies made so far in this handing down, by the material each was
+    /// made for.</param>
+    /// <returns>The material the surface is to have.</returns>
+    public static Material HandedDown(Material current, Material from, Dictionary<Material, Material> merged)
+    {
+        if (current is null)
+            return from;
+
+        if (!current.InheritsAppearance || from is null)
+            return current;
+
+        if (merged.TryGetValue(current, out Material result))
+            return result;
+
+        // A decal knows the surface it was written on from the moment that surface is made, but one
+        // built in code may not; it belongs to the material it came in, so it keeps that one's.
+        foreach (Decal decal in current.Decals ?? [])
+            decal.Anchor ??= current.Anchor;
+
+        result = (Material) from.MemberwiseClone();
+        result.Decals = [..from.Decals ?? [], ..current.Decals ?? []];
+        merged[current] = result;
+
+        return result;
+    }
 
     /// <summary>
     /// This method returns the color of this material where a ray met a surface wearing it.  See
@@ -277,14 +349,31 @@ public class Material
         if (Decals is null)
             return color;
 
-        Point there = WorldToAnchor(surface, point, portal);
-        Footprint patch = footprint is null || footprint.IsEmpty
-            ? null
-            : WorldToAnchor(surface, footprint, portal);
-        Vector facing = normal is null ? null : NormalToAnchor(surface, normal, portal);
+        // Each decal is read in the space of the surface it was written on.  Nearly always that is the
+        // same surface for every decal a material has, so the point is carried there once and kept
+        // for as long as the next decal shares it; a material handed down onto one that inherits it
+        // holds decals from both, and only then is there a second road to take.
+        Surface carriedTo = null;
+        Point there = null;
+        Footprint patch = null;
+        Vector facing = null;
 
         foreach (Decal decal in Decals)
+        {
+            Surface anchor = decal.Anchor ?? Anchor ?? surface;
+
+            if (!ReferenceEquals(anchor, carriedTo))
+            {
+                carriedTo = anchor;
+                there = ToAnchor(anchor, surface, point, portal);
+                patch = footprint is null || footprint.IsEmpty
+                    ? null
+                    : ToAnchor(anchor, surface, footprint, portal);
+                facing = normal is null ? null : NormalToAnchor(anchor, surface, normal, portal);
+            }
+
             color = decal.LayerOver(color, there, patch, facing);
+        }
 
         return color;
     }
@@ -299,17 +388,18 @@ public class Material
     /// point was found through is taken care of exactly as it is for the point.
     /// </para>
     /// </summary>
+    /// <param name="anchor">The surface whose space to carry the normal into.</param>
     /// <param name="surface">The surface the normal was found on.</param>
     /// <param name="normal">The normal, in the world's coordinate system.</param>
     /// <param name="portal">The instance it was found through, if it was.</param>
     /// <returns>A normal in the anchor's space, of no particular length.</returns>
-    private Vector NormalToAnchor(Surface surface, Vector normal, Surface portal)
+    private static Vector NormalToAnchor(Surface anchor, Surface surface, Vector normal, Surface portal)
     {
         Vector unit = normal.Unit;
         Vector aside = Math.Abs(unit.X) < 0.9
             ? unit.Cross(new Vector(1, 0, 0)).Unit
             : unit.Cross(new Vector(0, 1, 0)).Unit;
-        Footprint frame = WorldToAnchor(surface, new Footprint(aside, unit.Cross(aside)), portal);
+        Footprint frame = ToAnchor(anchor, surface, new Footprint(aside, unit.Cross(aside)), portal);
 
         return frame.Across.Cross(frame.Along);
     }

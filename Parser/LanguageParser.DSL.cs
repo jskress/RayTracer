@@ -536,7 +536,7 @@ public partial class LanguageParser
         startMaterialClause:
         {
             material > [
-                openBrace | inherited |
+                openBrace | { inherited > openBrace{?} } |
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }

@@ -122,8 +122,10 @@ public class Tube : Surface
 
             if (Material is not null)
             {
+                Dictionary<Material, Material> merged = [];
+
                 foreach (Surface segment in _segments)
-                    segment.Material ??= Material;
+                    segment.Material = Material.HandedDown(segment.Material, Material, merged);
             }
 
             _root.PrepareForRendering(SampleTimes);

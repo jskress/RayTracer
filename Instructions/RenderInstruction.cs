@@ -77,6 +77,10 @@ public class RenderInstruction : Instruction
         // same for its own children, from inside its preparation just above.
         PlacementSettler.Settle(scene.Surfaces);
 
+        // What casts no shadow is settled only now, when every surface a ray can meet exists -- a
+        // tube builds its segments as it is readied -- and the command line has had its say.
+        ShadowSettler.Settle(scene.Surfaces, context.SuppressAllShadows);
+
         // Two things can only be settled once the scene is whole, since each depends on the company it
         // keeps rather than on anything written beside it.
         SettleTheSky(context, scene);
@@ -201,10 +205,17 @@ public class RenderInstruction : Instruction
         // ever come to be shared, scaling per surface would quietly darken a row of houses more than a
         // single house from the very same number, and nothing would report it.
         HashSet<Material> scaled = context.AmbientScale.Near(1) ? null : [];
+        Dictionary<Material, Material> orphaned = [];
 
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
-            surface.Material ??= NewOrphanMaterial;
+            // A surface with no material gets one of its own; one whose material only adds decals to
+            // whatever it is handed, and was handed nothing, gets the same with its decals on top.
+            if (surface.Material is null)
+                surface.Material = NewOrphanMaterial;
+            else if (surface.Material.InheritsAppearance)
+                surface.Material = Material.HandedDown(surface.Material, NewOrphanMaterial, orphaned);
+
             surface.Material.Ambient ??= whenUnsaid;
 
             if (scaled is not null && scaled.Add(surface.Material))

@@ -1,7 +1,8 @@
 railroad-ebnf-beta
 title "A material"
 
-material = "material" "{" { pigment | normal | finish | metallic | interior | decal } "}" ;
+material = "material" "{" { pigment | normal | finish | metallic | interior | decal } "}"
+         | "material" "inherited" [ "{" { decal } "}" ] ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
          | "transparency" | "brilliance" | "grain" ) number ;

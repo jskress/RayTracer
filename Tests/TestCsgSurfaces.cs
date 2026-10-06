@@ -153,6 +153,170 @@ public class TestCsgSurfaces
     }
 
     /// <summary>
+    /// Once readied, a CSG puts each crossing on a side by looking it up in a list of what stands
+    /// on that side, rather than walking the side.  The list must reach as deep as the walk did: here
+    /// the left side is a group holding a CSG, and the crossings are on a sphere inside that.  A
+    /// crossing put on the wrong side changes what a difference keeps, and whether the right side's
+    /// crossing it keeps is turned inside out.
+    /// </summary>
+    [TestMethod]
+    public void TestReadiedCsgFindsCrossingsDeepInItsSides()
+    {
+        Sphere deep = new ();
+        Cube cube = new ();
+        CsgSurface surface = new ()
+        {
+            Operation = CsgOperation.Difference,
+            Left = new Group()
+                .Add(new Sphere { Transform = Transforms.Translate(0, 5, 0) })
+                .Add(new CsgSurface
+                {
+                    Operation = CsgOperation.Union,
+                    Left = deep,
+                    Right = new Sphere { Transform = Transforms.Translate(0, -5, 0) }
+                }),
+            Right = cube
+        };
+
+        surface.PrepareForRendering();
+
+        List<Intersection> intersections =
+        [
+            new Intersection(deep, 1),
+            new Intersection(cube, 2),
+            new Intersection(deep, 3),
+            new Intersection(cube, 4)
+        ];
+        List<Intersection> original = [..intersections];
+
+        surface.FilterIntersections(intersections);
+
+        Assert.AreEqual(2, intersections.Count);
+        Assert.AreSame(original[0], intersections[0]);
+        Assert.AreSame(original[1], intersections[1]);
+        Assert.IsFalse(intersections[0].ShouldFlipInsideForOut);
+        Assert.IsTrue(intersections[1].ShouldFlipInsideForOut);
+    }
+
+    /// <summary>
+    /// What stands on a side is listed when the CSG is readied, so a side put in afterward must not
+    /// be judged by the list made for the one it replaced.  Both sides are swapped for new shapes
+    /// after readying, and the crossings on the new shapes must still land on the right sides.
+    /// </summary>
+    [TestMethod]
+    public void TestReplacingASideAfterReadyingIsSeen()
+    {
+        CsgSurface surface = new ()
+        {
+            Operation = CsgOperation.Difference,
+            Left = new Sphere(),
+            Right = new Cube()
+        };
+
+        surface.PrepareForRendering();
+
+        Sphere sphere = new ();
+        Cube cube = new ();
+
+        surface.Left = sphere;
+        surface.Right = cube;
+
+        List<Intersection> intersections =
+        [
+            new Intersection(sphere, 1),
+            new Intersection(cube, 2),
+            new Intersection(sphere, 3),
+            new Intersection(cube, 4)
+        ];
+        List<Intersection> original = [..intersections];
+
+        surface.FilterIntersections(intersections);
+
+        Assert.AreEqual(2, intersections.Count);
+        Assert.AreSame(original[0], intersections[0]);
+        Assert.AreSame(original[1], intersections[1]);
+    }
+
+    /// <summary>
+    /// A tube's crossings come from the segments it builds when it is readied, and it builds new
+    /// ones each time, so a CSG must list its sides only after they are ready -- and again whenever
+    /// it is readied again.  The tube runs up the Y axis, 2 in radius, and a cube keeps its x &gt;= 0
+    /// half; a ray coming in along X from x = 5 must meet the tube's wall at x = 2 and then the cut
+    /// face at x = 0, and nothing else.
+    /// </summary>
+    [TestMethod]
+    public void TestTubeInReadiedCsgKeepsTheRightCrossings()
+    {
+        Tube tube = new ()
+        {
+            Start = new TubeControlPoint { Center = new Point(0, -10, 0), Radius = 2 },
+            Segments =
+            {
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 10, 0), Radius = 2 } }
+            }
+        };
+        Cube cube = new ()
+        {
+            Transform = Transforms.Translate(10, 0, 0) * Transforms.Scale(10, 10, 10)
+        };
+        CsgSurface surface = new ()
+        {
+            Operation = CsgOperation.Intersection,
+            Left = tube,
+            Right = cube
+        };
+
+        surface.PrepareForRendering();
+        surface.PrepareForRendering();
+
+        Ray ray = new (new Point(5, 0, 0), Directions.Left);
+        List<Intersection> intersections = [];
+
+        surface.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(2, intersections.Count);
+        Assert.AreEqual(3, intersections[0].Distance, 1e-9);
+        Assert.IsTrue(new SurfaceIterator(tube).Surfaces.Contains(intersections[0].Surface));
+        Assert.AreEqual(5, intersections[1].Distance, 1e-9);
+        Assert.AreSame(cube, intersections[1].Surface);
+    }
+
+    /// <summary>
+    /// A crossing found through an instance stands in the CSG's tree as the instance, not as the
+    /// shared shape behind it, so it is the instance that the list of a side must hold.  A unit
+    /// sphere, shared, has its x &gt;= 0 half cut away by a cube; a ray coming in along X must meet
+    /// the sphere at x = -1, through the instance, and then the cut face at x = 0.
+    /// </summary>
+    [TestMethod]
+    public void TestInstanceInReadiedCsgKeepsTheRightCrossings()
+    {
+        Instance instance = new () { Prototype = new Sphere() };
+        Cube cube = new ()
+        {
+            Transform = Transforms.Translate(10, 0, 0) * Transforms.Scale(10, 10, 10)
+        };
+        CsgSurface surface = new ()
+        {
+            Operation = CsgOperation.Difference,
+            Left = instance,
+            Right = cube
+        };
+
+        surface.PrepareForRendering();
+
+        Ray ray = new (new Point(-5, 0, 0), Directions.Right);
+        List<Intersection> intersections = [];
+
+        surface.AddIntersections(ray, intersections);
+
+        Assert.AreEqual(2, intersections.Count);
+        Assert.AreEqual(4, intersections[0].Distance, 1e-9);
+        Assert.AreSame(instance, intersections[0].Portal);
+        Assert.AreEqual(5, intersections[1].Distance, 1e-9);
+        Assert.AreSame(cube, intersections[1].Surface);
+    }
+
+    /// <summary>
     /// An extrusion built from flat pieces -- its end caps and its walls -- must, like the
     /// analytic solids, report crossings behind a ray's origin so a CSG can tell inside from
     /// outside for a ray that starts within it.  A square profile is extruded into a box

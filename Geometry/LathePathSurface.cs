@@ -69,6 +69,22 @@ public class LathePathSurface
     /// <returns>An enumeration of the intersections found with this segment.</returns>
     public IEnumerable<Intersection> GetIntersections(Surface surface, Ray ray)
     {
+        return GetCrossings(surface, ray).Select(crossing => crossing.Hit);
+    }
+
+    /// <summary>
+    /// This method finds the same intersections as <see cref="GetIntersections"/> does, each with
+    /// how far along the segment it falls: 0 at the segment's start and 1 at its end.  A crossing
+    /// may fall a hair beyond either end, which is how one at a corner the segment shares with its
+    /// neighbor is kept from slipping between the two; the lathe uses this to tell such a crossing
+    /// from one on the segment proper.
+    /// </summary>
+    /// <param name="surface">The surface we are supporting.</param>
+    /// <param name="ray">The 3D ray we are evaluating.</param>
+    /// <returns>An enumeration of the intersections found with this segment, and where along
+    /// it each one falls.</returns>
+    internal IEnumerable<(Intersection Hit, double Along)> GetCrossings(Surface surface, Ray ray)
+    {
         // Whether the ray counts as horizontal is a question about its angle, not about the size
         // of its Y component, which shrinks as the lathe is scaled up.
         return (ray.Direction.Y * ray.Direction.Y)
@@ -85,7 +101,8 @@ public class LathePathSurface
     /// curve, 6 for a cubic curve), solved via MathNet.Numerics' general polynomial root
     /// finder rather than a hand-rolled formula per degree.
     /// </summary>
-    private IEnumerable<Intersection> GetIntersectionsForGeneralRay(Surface surface, Ray ray)
+    private IEnumerable<(Intersection Hit, double Along)> GetIntersectionsForGeneralRay(
+        Surface surface, Ray ray)
     {
         double ox = ray.Origin.X, oy = ray.Origin.Y, oz = ray.Origin.Z;
         double dx = ray.Direction.X, dy = ray.Direction.Y, dz = ray.Direction.Z;
@@ -111,7 +128,7 @@ public class LathePathSurface
             // within the solid -- which a shadow or reflection ray, cast from a surface the lathe
             // sits on, does.  The shading code discards the negative ones itself, so keeping them
             // costs standalone lathes nothing.  This mirrors the analytic sphere, cube and torus.
-            yield return CreateIntersection(surface, distance, u, ray.At(distance));
+            yield return (CreateIntersection(surface, distance, u, ray.At(distance)), u);
         }
     }
 
@@ -122,7 +139,8 @@ public class LathePathSurface
     /// For each valid u, the radius equation becomes an ordinary circle/ray intersection,
     /// quadratic in t regardless of the segment's own degree.
     /// </summary>
-    private IEnumerable<Intersection> GetIntersectionsForHorizontalRay(Surface surface, Ray ray)
+    private IEnumerable<(Intersection Hit, double Along)> GetIntersectionsForHorizontalRay(
+        Surface surface, Ray ray)
     {
         Polynomial heightEquation = _height - ray.Origin.Y;
 
@@ -141,7 +159,7 @@ public class LathePathSurface
 
             foreach (double t in SolveQuadratic(a, b, c))
                 // Hits behind the origin are kept for CSG's sake, as in the general-ray case above.
-                yield return CreateIntersection(surface, t, u, ray.At(t));
+                yield return (CreateIntersection(surface, t, u, ray.At(t)), u);
         }
     }
 

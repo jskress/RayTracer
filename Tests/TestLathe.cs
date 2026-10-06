@@ -375,4 +375,181 @@ public class TestLathe
 
         Assert.AreEqual(0, dome.GetIntersections(lathe, ray).Count());
     }
+
+    /// <summary>
+    /// A solid cylinder, radius 1 from height 0 to 1, entered through its top just inside the rim
+    /// and left through the far wall.  That is two crossings.  Each segment of a profile accepts a
+    /// root a hair beyond its own ends, so as not to lose one to rounding at a corner, and a ray this
+    /// close to the rim passes the side wall's continuation just above the top as well -- so the
+    /// entry used to be reported twice, once by the top and once by the side.  A CSG counts
+    /// crossings to tell inside from outside, and a doubled one turns it inside out.  The ray runs
+    /// 0.3 off the axis, since one through the axis meets the profile's closing segment there.
+    /// </summary>
+    [TestMethod]
+    public void TestEntryThroughACornerCrossesOnce()
+    {
+        Lathe lathe = SolidCylinder(1, 0, 1);
+        Point corner = new (Math.Sqrt((1 - 1e-7) * (1 - 1e-7) - 0.09), 1, 0.3);
+        Vector direction = new Vector(-1, -0.3, 0).Unit;
+        Ray ray = new (corner - direction * 2, direction);
+        List<Intersection> hits = [];
+
+        lathe.PrepareForRendering();
+        lathe.Intersect(ray, hits);
+
+        Assert.AreEqual(2, hits.Count);
+    }
+
+    /// <summary>
+    /// A ray that passes a hair outside a corner never touches the lathe, but it crosses both the
+    /// side wall's continuation and the top's, in one direction and then the other.  Both must go:
+    /// keeping one would turn a CSG's count inside out just as doubling an entry does, and keeping
+    /// both would report a touch where there is none.
+    /// </summary>
+    [TestMethod]
+    public void TestPassingJustOutsideACornerFindsNothing()
+    {
+        Lathe lathe = SolidCylinder(1, 0, 1);
+        Point corner = new (Math.Sqrt((1 + 1e-7) * (1 + 1e-7) - 0.09), 1, 0.3);
+        Vector direction = new Vector(-1, 1, 0).Unit;
+        Ray ray = new (corner - direction * 2, direction);
+        List<Intersection> hits = [];
+
+        lathe.PrepareForRendering();
+        lathe.Intersect(ray, hits);
+
+        Assert.AreEqual(0, hits.Count);
+    }
+
+    /// <summary>
+    /// A ray skimming in almost level crosses the side wall's continuation a hair above the top and
+    /// only enters through the top well inside the rim, so the two lie too far apart to be one
+    /// crossing at the corner.  The first is not a crossing at all, and must not be counted.
+    /// </summary>
+    [TestMethod]
+    public void TestSkimmingInPastACornerCrossesOnce()
+    {
+        Lathe lathe = SolidCylinder(1, 0, 1);
+        Point above = new (Math.Sqrt(1 - 0.09), 1 + 5e-7, 0.3);
+        Vector direction = new Vector(-1, -0.001, 0).Unit;
+        Ray ray = new (above - direction * 2, direction);
+        List<Intersection> hits = [];
+
+        lathe.PrepareForRendering();
+        lathe.Intersect(ray, hits);
+
+        Assert.AreEqual(2, hits.Count);
+    }
+
+    /// <summary>
+    /// Rays swept across a corner a billionth at a time, at several slopes, from well inside it to
+    /// well outside: every one must cross an even number of times, since each enters what it leaves.
+    /// A ray through the corner itself may find both of its crossings there a hair beyond the
+    /// segments that meet, and it is easy to drop both as strays rather than keep one.
+    /// </summary>
+    [TestMethod]
+    public void TestRaysAcrossACornerAlwaysCrossEvenly()
+    {
+        Lathe lathe = SolidCylinder(1, 0, 1);
+
+        lathe.PrepareForRendering();
+
+        foreach (double slope in new[] { -0.3, -1, -3 })
+        {
+            Vector direction = new Vector(-1, slope, 0).Unit;
+
+            for (int step = -60; step <= 60; step++)
+            {
+                double radius = 1 + step * 1e-9;
+                Point corner = new (Math.Sqrt(radius * radius - 0.09), 1 + step * 1e-9, 0.3);
+                Ray ray = new (corner - direction * 2, direction);
+                List<Intersection> hits = [];
+
+                lathe.Intersect(ray, hits);
+
+                Assert.AreEqual(0, hits.Count % 2, $"slope {slope}, {step} billionths from the corner");
+            }
+        }
+    }
+
+    /// <summary>
+    /// A ray straight through a corner finds the crossing there twice, once at the end of each
+    /// segment that meets there, and rounding may put both a hair beyond their segments.  One of the
+    /// two must stay: dropping the first as the second's twin and then the second as a stray, with
+    /// its twin gone, loses the crossing altogether.  A ray that does this cannot be aimed, so the
+    /// two crossings are pushed beyond their ends by hand, as rounding would.
+    /// </summary>
+    [TestMethod]
+    public void TestACornerCrossingFoundBeyondBothSegmentsIsKeptOnce()
+    {
+        Lathe lathe = SolidCylinder(1, 0, 1);
+        Point corner = new (Math.Sqrt(1 - 0.09), 1, 0.3);
+        Vector direction = new Vector(-1, -0.3, 0).Unit;
+        Ray ray = new (corner - direction * 2, direction);
+
+        lathe.PrepareForRendering();
+
+        List<(int Segment, Intersection Hit, double Along)> crossings = lathe.FindCrossings(ray)
+            .Select(crossing => crossing.Along switch
+            {
+                > 0.999999 => (crossing.Segment, crossing.Hit, 1 + 1e-9),
+                < 0.000001 => (crossing.Segment, crossing.Hit, -1e-9),
+                _ => crossing
+            })
+            .ToList();
+
+        Assert.AreEqual(2, crossings.Count(crossing => crossing.Along is < 0 or > 1));
+
+        lathe.SettleCorners(ray, crossings);
+
+        Assert.AreEqual(2, crossings.Count);
+        Assert.AreEqual(1, crossings.Count(crossing => crossing.Hit.Distance.Near(2)));
+    }
+
+    /// <summary>
+    /// The way a doubled crossing at a corner showed itself: a lathe used to trim something it
+    /// wholly encloses -- here a ball inside a cylinder -- let rays that passed just inside its rim
+    /// lose the ball's near side, so they saw its far side from within, a back face lit only by
+    /// ambient light.  On the Enterprise's secondary hull this was a dotted curve of dark specks,
+    /// traced by the rays from the camera that grazed the rim of the wide sleeve its nose lathe
+    /// ends in.
+    /// </summary>
+    [TestMethod]
+    public void TestLatheTrimmingAnEnclosedSolidKeepsItsNearSide()
+    {
+        CsgSurface csg = new ()
+        {
+            Operation = CsgOperation.Intersection,
+            Left = SolidCylinder(2, -2, 2),
+            Right = new Sphere()
+        };
+        Point corner = new (2 - 1e-7, 2, 0);
+        Vector direction = (new Point(0, 0, 0) - corner).Unit;
+        Ray ray = new (corner - direction, direction);
+        List<Intersection> hits = [];
+
+        csg.PrepareForRendering();
+        csg.AddIntersections(ray, hits);
+
+        Intersection first = hits.Where(hit => hit.Distance > 0).OrderBy(hit => hit.Distance).First();
+
+        Assert.IsInstanceOfType<Sphere>(first.Surface);
+        Assert.IsTrue(first.Distance.Near(1 + Math.Sqrt(8) - 1));
+    }
+
+    /// <summary>
+    /// This method returns a lathe that is a solid cylinder about the Y axis, capped at both ends.
+    /// </summary>
+    private static Lathe SolidCylinder(double radius, double bottom, double top)
+    {
+        return new Lathe
+        {
+            Path = new GeneralPath()
+                .MoveTo(0, bottom)
+                .LineTo(radius, bottom)
+                .LineTo(radius, top)
+                .LineTo(0, top)
+                .ClosePath()
+        };
+    }
 }

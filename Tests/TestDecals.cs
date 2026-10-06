@@ -559,6 +559,101 @@ public class TestDecals
     }
 
     // ---------------------------------------------------------------------------------------------
+    // Markings that inherit their material.
+    // ---------------------------------------------------------------------------------------------
+
+    [TestMethod]
+    public void TestAnInheritedMaterialAddsItsDecalsToTheOneHandedDown()
+    {
+        // A model that carries markings and is repainted from outside: the paint comes down from the
+        // outer group, and the markings, written on the inner one, go on top of it.  The inner group
+        // and the part in it share one material afterward, as parts of an assembly always have.
+        Group outer = new ();
+        Group inner = new ();
+        Sphere part = new ();
+
+        inner.Add(part);
+        outer.Add(inner);
+
+        Material paint = new () { Pigment = new SolidPigment(Colors.Blue), Anchor = outer };
+        Decal marking = SquareDecal(Colors.Red, near: -2, far: 2);
+
+        outer.Material = paint;
+        inner.Material = new Material { InheritsAppearance = true, Decals = [marking], Anchor = inner };
+        outer.PrepareForRendering();
+
+        Assert.AreSame(paint.Pigment, part.Material.Pigment, "the part was not given the paint from above");
+        Assert.AreSame(inner.Material, part.Material, "the inner group and its part ended up with different materials");
+        Assert.IsFalse(part.Material.InheritsAppearance, "the material from above was not settled");
+        CollectionAssert.AreEqual(new[] { marking }, part.Material.Decals);
+        Assert.AreSame(inner, marking.Anchor, "the marking lost the surface it was written on");
+        Assert.IsNull(paint.Decals, "the paint from above was given the markings too");
+    }
+
+    [TestMethod]
+    public void TestMarkingsGoOnTopOfThePaintsOwnDecals()
+    {
+        // The paint from above may carry decals of its own; the markings are the more particular,
+        // so they go on top.  And a union hands down as a group does -- the saucer is one.
+        Group inner = new ();
+        Sphere part = new ();
+
+        inner.Add(part);
+
+        CsgSurface outer = new () { Operation = CsgOperation.Union, Left = inner, Right = new Sphere() };
+
+        outer.Material = new Material
+        {
+            Pigment = new SolidPigment(Colors.White),
+            Decals = [SquareDecal(Colors.Green, Transforms.Scale(5), -5, 5)],
+            Anchor = outer
+        };
+        inner.Material = new Material
+        {
+            InheritsAppearance = true, Decals = [SquareDecal(Colors.Red, Transforms.Scale(0.3), -5, 5)], Anchor = inner
+        };
+        outer.PrepareForRendering();
+
+        Assert.IsTrue(Colors.Red.Matches(part.Material.GetColorFor(part, new Point(0, 1, 0))),
+            "the markings went under the paint's own decal");
+        Assert.IsTrue(Colors.Green.Matches(part.Material.GetColorFor(part, new Point(0.8, 0.6, 0))),
+            "the paint's own decal was lost");
+    }
+
+    [TestMethod]
+    public void TestEachDecalIsReadWhereItWasWritten()
+    {
+        // The outer group's own material carries a decal, and the inner group, ten units off, adds
+        // one of its own.  Each must land in the space of the group it was written on: the outer one
+        // a little to the right of the part's top, the inner one a little to the left -- which, read
+        // in the outer group's space instead, would be ten units away and paint nothing here.
+        Group outer = new ();
+        Group inner = new () { Transform = Transforms.Translate(10, 0, 0) };
+        Sphere part = new ();
+
+        inner.Add(part);
+        outer.Add(inner);
+
+        Decal outerMark = SquareDecal(Colors.Red, Transforms.Translate(10.6, 0, 0) * Transforms.Scale(0.2), -5, 5);
+        Decal innerMark = SquareDecal(Colors.Blue, Transforms.Translate(-0.5, 0, 0) * Transforms.Scale(0.3), -5, 5);
+
+        outer.Material = new Material
+        {
+            Pigment = new SolidPigment(Colors.White), Decals = [outerMark], Anchor = outer
+        };
+        inner.Material = new Material { InheritsAppearance = true, Decals = [innerMark], Anchor = inner };
+        outer.PrepareForRendering();
+
+        Material material = part.Material;
+
+        Assert.IsTrue(Colors.Red.Matches(material.GetColorFor(part, new Point(10.6, 0.8, 0))),
+            "the outer group's decal was not read in its own space");
+        Assert.IsTrue(Colors.Blue.Matches(material.GetColorFor(part, new Point(9.5, Math.Sqrt(0.75), 0))),
+            "the inner group's decal was not read in its own space");
+        Assert.IsTrue(Colors.White.Matches(material.GetColorFor(part, new Point(10, 1, 0))));
+    }
+
+    // ---------------------------------------------------------------------------------------------
     // Everything that asks a surface's color.
     // ---------------------------------------------------------------------------------------------
 
@@ -1179,6 +1274,70 @@ public class TestDecals
 
         Assert.IsNotNull(ringless, "a toroidal decal was taken without its ring");
         StringAssert.Contains(ringless, "the radius of the ring");
+    }
+
+    [TestMethod]
+    public void TestAModelCarriesItsMarkingsThroughARepaint()
+    {
+        // A primitive that marks its floor and leaves the paint to whoever uses it, used twice, once
+        // painted blue and once green: each keeps the red square, on its own color.
+        const string marked = """
+            primitive Marked() -> group {
+                return group {
+                    plane {
+                        material inherited {
+                            decal {
+                                path { move to -1, -1  line to 1, -1  line to 1, 1  line to -1, 1  close }
+                                color Red  planar  min Y -1  max Y 1
+                            }
+                        }
+                    }
+                }
+            }
+            """;
+
+        foreach (Color paint in new[] { Colors.Blue, Colors.Green })
+        {
+            Canvas picture = FloorShowing(marked + $$"""
+                object Marked() {
+                    material { pigment color [{{paint.Red}}, {{paint.Green}}, {{paint.Blue}}]  ambient 1  diffuse 0  specular 0 }
+                }
+                """);
+
+            Assert.IsTrue(Colors.Red.Matches(FloorAt(picture, 0, 0)), $"the marking was lost under {paint}");
+            Assert.IsTrue(paint.Matches(FloorAt(picture, 3, 3)), $"the floor was {FloorAt(picture, 3, 3)}, not {paint}");
+        }
+
+        // Painted by nobody, it takes what any unpainted surface does, with its marking on top.  That
+        // material is lit as any is, so the marking is red rather than exactly Red, and it is looked at
+        // off to one side, away from the highlight the light overhead puts in the middle.
+        Canvas unpainted = FloorShowing(marked + "object Marked()");
+        Color mark = FloorAt(unpainted, 0.7, -0.7);
+        Color bare = FloorAt(unpainted, 3, 3);
+
+        Color plain = FloorAt(FloorShowing("plane { }"), 3, 3);
+
+        Assert.IsTrue(mark.Red > 2 * mark.Green && mark.Red > 2 * mark.Blue, $"the marking was {mark} with no paint above it");
+        Assert.IsTrue(plain.Matches(bare), $"the bare floor was {bare}, where an unpainted one is {plain}");
+    }
+
+    [TestMethod]
+    public void TestAnInheritedMaterialHoldsOnlyDecals()
+    {
+        string error = ErrorFrom("""
+            plane {
+                material inherited {
+                    pigment color Red
+                    decal {
+                        path { move to -1, -1  line to 1, -1  line to 1, 1  close }
+                        color Red  min Y -1  max Y 1
+                    }
+                }
+            }
+            """);
+
+        Assert.IsNotNull(error, "an inherited material was allowed a pigment of its own");
+        StringAssert.Contains(error, "only decals may be written in one");
     }
 
     [TestMethod]

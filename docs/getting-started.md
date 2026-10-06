@@ -103,7 +103,7 @@ only.
 
 For some items, there is no way to override what the scene asks for.  For example, if a
 scene's context block contains `no shadows`, there is no command line option to override it
-to say you want gamma support.
+to say you want shadows after all.
 
 #### Where the image goes
 

@@ -96,6 +96,17 @@ numbers that reach the file, so a material's color can be reasoned about directl
 on, the picture generally looks better on an ordinary screen.  Neither is wrong; they answer
 different questions.
 
+### Shadows
+
+| Written | What it does |
+| --- | --- |
+| `no shadows` | Let nothing in the scene cast a shadow. |
+
+Everything is then lit as though nothing stood between it and the lights.  It covers the whole
+scene, wherever in the file the block is written, and `--no-shadows` on the command line does the
+same for a scene that does not ask for it.  To spare a single surface its shadow instead, give it
+[`no shadow`](surfaces.md#no-shadow).
+
 ### Ambient
 
 `ambient` is the fraction of its own color a surface shows regardless of any light reaching

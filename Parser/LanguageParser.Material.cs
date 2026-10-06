@@ -39,8 +39,17 @@ public partial class LanguageParser
         if (BounderToken.OpenBrace.Matches(token))
             return ParseMaterialClause();
 
+        // Inherited, a surface takes the material handed down to it.  With a block, it takes that and
+        // adds decals of its own on top, so a model can carry markings and still be repainted.
         if (token.Text == "inherited")
-            return new MaterialResolver { SetToNull = true };
+        {
+            MaterialResolver inherited = new () { SetToNull = true };
+
+            if (clause.Tokens.Count > 2)
+                ParseObjectResolver("materialEntryClause", HandleMaterialEntryClause, inherited);
+
+            return inherited;
+        }
 
         // A material a scene wrote for itself, called with values.  What follows the call is read as
         // an overlay by the resolver itself, in the caller's names.
