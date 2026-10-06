@@ -242,10 +242,10 @@ once the render finishes, whatever the progress style.  Here is the gallery's St
 ```
 Statistics for standard-orbit.igl
 
-  Image       800 x 600, 480,000 pixels
-  Samples     2,429,235, 5.06 a pixel
-  Rays        4,704,130, 1.94 a sample, 2,429,235 of them from the camera
-  Rendering   22.74 seconds, 206,908 rays a second
+  Image       2732 x 2064, 5,638,848 pixels
+  Samples     29,342,445, 5.20 a pixel
+  Rays        57,283,229, 1.95 a sample, 29,342,445 of them from the camera
+  Rendering   4 minutes and 34.2 seconds, 208,948 rays a second
 
   Surfaces    402, of 8 kinds
       cube       181
