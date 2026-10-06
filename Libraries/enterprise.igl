@@ -42,16 +42,17 @@
 // **The hull plating has no material of its own**, so it takes what the scene gives the object: a
 // material on `object Enterprise(...)` repaints the plating and leaves alone every part that names its
 // color -- the deflector's orange, the copper of the inner cups and the antenna, the bronze of the
-// Bussard domes, the sensor domes, the darker gray of the dorsal rib on the saucer, and the matte gray
-// of the vanes, the reactor's recess, the vents, the grooves, the nacelles' hoods, the pylons' grilles,
-// the tabs' vents and the wall behind the hangar doors.  Unpainted, she is the renderer's default gray,
-// 0.40, which shows as 0.66 with gamma on.
+// Bussard domes, the sensor domes, the darker gray of the dorsal rib on the saucer, the gold of the strips
+// under it, the dark of the unlit windows, and the matte gray of the vanes, the reactor's recess, the
+// vents, the grooves, the nacelles' hoods, the pylons' grilles, the tabs' vents and the wall behind the
+// hangar doors.  Unpainted, she is the renderer's default gray, 0.40, which shows as 0.66 with gamma on.
 //
 // **A glow is a material at `ambient 1`** -- the impulse ports, the homing beacon, the bow light, the
-// running lights above and below, the lighted panels, the red lamp on the strip, the hangar's light and
-// the lights along its deck -- and its color is the one it shows under one white light.  Every light
+// running lights above and below, the lighted panels, the red lamp on the strip, the hangar's light, the
+// lights along its deck and the lit windows -- and its color is the one it shows under one white light.  Every light
 // adds its own ambient, in proportion to its own color: a second light at full strength makes a glow
-// twice as bright, and a dim fill adds a little.
+// twice as bright, and a dim fill adds a little.  The lit windows glow a yellow warm white, as the studio
+// model's photograph.
 //
 // **Her markings are painted over whatever plating she is given.**  They are decals in a material that
 // inherits -- `material inherited { decal { .. } }` -- so a material on the object repaints the plating
@@ -404,6 +405,243 @@ EnterpriseSaucer = union {
         max Y 1.385
         scale [0.183, 1, 0.183]
         translate [0.960, 0, 0]
+    }
+    // The windows on the housing under the bridge, as FJ's top view and profile draw them and the studio model
+    // has them, all lit.  A row of five each side high on the housing, just out from the bridge: 0.15 along
+    // the curve (the aft one 0.11) and 0.08 across it, 1.22 from the bridge's axis -- as far out from the
+    // bridge's wall as FJ's top view draws them out from his -- at 50, 61, 73, 85 and 105 degrees round
+    // from dead ahead.  Below them, round ports each 0.06 across: three along each side and a close pair aft
+    // of them, and a pair on the housing's front either side of the centerline; FJ draws the housing taller
+    // than the cutaway this one is built from, so their heights are his, in proportion to its side.  Each is
+    // cut from the housing made a little fuller, so it lies on the curve, standing a hair proud: the row by
+    // its outline as seen from above, the ports along the housing's own normal.
+    intersection {
+        egg {
+            radii 1.56, 1.17
+            scale 1.003
+            scale X 0.5
+            rotate Z -90
+            translate [-0.2, 0.30775, 0]
+        }
+        union {
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y -40.20  translate [-0.7875, 0.8000, 0.9318] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y -28.70  translate [-0.5859, 0.8000, 1.0701] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y -16.70  translate [-0.3506, 0.8000, 1.1685] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y -5.05  translate [-0.1074, 0.8000, 1.2153] }
+            cube { scale [0.0550, 0.5000, 0.0400]  rotate Y 15.40  translate [0.3240, 0.8000, 1.1762] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y 220.20  translate [-0.7875, 0.8000, -0.9318] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y 208.70  translate [-0.5859, 0.8000, -1.0701] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y 196.70  translate [-0.3506, 0.8000, -1.1685] }
+            cube { scale [0.0750, 0.5000, 0.0400]  rotate Y 185.05  translate [-0.1074, 0.8000, -1.2153] }
+            cube { scale [0.0550, 0.5000, 0.0400]  rotate Y 164.60  translate [0.3240, 0.8000, -1.1762] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        egg {
+            radii 1.56, 1.17
+            scale 1.003
+            scale X 0.5
+            rotate Z -90
+            translate [-0.2, 0.30775, 0]
+        }
+        union {
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 51.05  rotate Y -31.70  translate [-0.9600, 0.6000, 1.2306] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 36.46  rotate Y -3.13  translate [0.0000, 0.7550, 1.3201] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 50.06  rotate Y 5.76  translate [0.4300, 0.6150, 1.4604] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 51.56  rotate Y 8.10  translate [0.5500, 0.6000, 1.4581] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 33.36  rotate Y -78.39  translate [-1.4170, 0.7795, 0.2500] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 51.05  rotate Y -148.30  translate [-0.9600, 0.6000, -1.2306] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 36.46  rotate Y -176.87  translate [0.0000, 0.7550, -1.3201] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 50.06  rotate Y 174.24  translate [0.4300, 0.6150, -1.4604] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 51.56  rotate Y 171.90  translate [0.5500, 0.6000, -1.4581] }
+            cylinder { min Y -0.08  max Y 0.08  scale [0.0300, 1, 0.0300]  rotate X 33.36  rotate Y -101.61  translate [-1.4170, 0.7795, -0.2500] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    // The windows round the saucer's rim and on its underside, where FJ's bottom view and profile draw them
+    // and as large -- all but one group, which is the studio model's.  On the rim's raked face, twice each
+    // side, is a row of four with a fifth below it and a little beyond.  The aft group is FJ's, 129-135
+    // degrees round from dead ahead: 0.12 across and 0.078 tall, high on the face, with the fifth smaller.
+    // The forward group is as the studio model's photograph from below the starboard bow has it, 37-47
+    // degrees round: lower on the face (the row's middle 0.195 below the rim's edge, the fifth's 0.356),
+    // farther apart, and all five 0.172 across and 0.077 tall.  At the bow are three ovals 0.30 across and
+    // 0.27 tall; three more, 0.12 by 0.09, on the flat just inside the rim, 116-119 degrees round; and
+    // further in, on each side a pair and an arc of five, with a row of seven across the centerline ahead of
+    // the lower dome and a row of three outside it.  The photograph shows which are lit -- all but the aft
+    // window of each pair and the outer two of the seven -- and that the middle of each arc is no window but
+    // a strip painted gold (measured against the plating beside it).  It also shows windows where FJ draws
+    // none: round lit ports 0.06 across, six on the underside and two on the rim's face, and a small dark
+    // window between each arc and pair.  Its windows are found by casting its rays back onto the hull
+    // through a camera fitted to it -- corrected, on the rim, by where it puts the saucer's edge -- and
+    // mirrored to port.  Each is a plate cut from the hull's surface moved a hair out -- the rim's face
+    // 0.0044 outward, the underside 0.004 down -- so it follows the curve: the rim's windows by their
+    // outlines seen straight in from outside, the underside's by theirs seen from below.
+    intersection {
+        // the rim's face, its surface 0.0044 further out, and the lit windows on it
+        lathe {
+            path { move to -5.9000, -0.0200  line to -6.3066, -0.0200  line to -6.0514, -0.5150  line to -5.9000, -0.5150  close }
+        }
+        union {
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 38.90  translate [3.9316, -0.1000, 4.8725] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 40.70  translate [4.0827, -0.1000, 4.7466] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 42.40  translate [4.2218, -0.1000, 4.6234] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 44.10  translate [4.3571, -0.1000, 4.4961] }
+            cube { scale [0.0300, 0.0325, 0.1500]  rotate Y 45.20  translate [4.3438, -0.3700, 4.3136] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -42.84  translate [-4.2238, -0.1950, 4.5550] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -45.43  translate [-4.4254, -0.1950, 4.3594] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -48.01  translate [-4.6171, -0.1950, 4.1558] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -50.60  translate [-4.8002, -0.1950, 3.9429] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -52.53  translate [-4.8644, -0.3560, 3.7285] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 141.10  translate [3.9316, -0.1000, -4.8725] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 139.30  translate [4.0827, -0.1000, -4.7466] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 137.60  translate [4.2218, -0.1000, -4.6234] }
+            cube { scale [0.0600, 0.0390, 0.1500]  rotate Y 135.90  translate [4.3571, -0.1000, -4.4961] }
+            cube { scale [0.0300, 0.0325, 0.1500]  rotate Y 134.80  translate [4.3438, -0.3700, -4.3136] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -137.16  translate [-4.2238, -0.1950, -4.5550] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -134.57  translate [-4.4254, -0.1950, -4.3594] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -131.99  translate [-4.6171, -0.1950, -4.1558] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -129.40  translate [-4.8002, -0.1950, -3.9429] }
+            cube { scale [0.0860, 0.0385, 0.1500]  rotate Y -127.47  translate [-4.8644, -0.3560, -3.7285] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.1500, 1, 0.1350]  rotate X 90  rotate Y -90.00  translate [-6.1217, -0.3700, 0.0000] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.1500, 1, 0.1350]  rotate X 90  rotate Y -85.90  translate [-6.1061, -0.3700, 0.4377] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.1500, 1, 0.1350]  rotate X 90  rotate Y -94.10  translate [-6.1061, -0.3700, -0.4377] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.0300, 1, 0.0300]  rotate X 90  rotate Y -55.55  translate [-5.1201, -0.2006, 3.5124] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.0300, 1, 0.0300]  rotate X 90  rotate Y -124.45  translate [-5.1201, -0.2006, -3.5124] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.0300, 1, 0.0300]  rotate X 90  rotate Y -38.47  translate [-3.8177, -0.3408, 4.8047] }
+            cylinder { min Y -0.15  max Y 0.15  scale [0.0300, 1, 0.0300]  rotate X 90  rotate Y -141.53  translate [-3.8177, -0.3408, -4.8047] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        // the underside, its surface 0.004 lower, and the lit windows on it
+        lathe {
+            path {
+                move to -5.9297, -0.4000
+                line to -5.9297, -0.5939
+                line to -5.6000, -0.5939
+                quad -5.4164, -0.5939 to -5.2500, -0.5620
+                quad -4.7624, -0.4687 to -4.3000, -0.4687
+                quad -3.6132, -0.4611 to -3.0000, -0.6432
+                quad -2.5506, -0.7946 to -2.1000, -1.0088
+                quad -1.7238, -1.1752 to -1.3500, -1.3421
+                line to -1.3500, -0.4000
+                close
+            }
+        }
+        union {
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 25.70  translate [2.5499, -0.5700, 5.2983] }
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 27.20  translate [2.6877, -0.5700, 5.2298] }
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 28.65  translate [2.8192, -0.5700, 5.1601] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -4.56  translate [-0.1874, -1.0000, 2.3495] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -11.95  translate [-0.3615, -1.0000, 1.7082] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -6.16  translate [-0.1874, -1.0000, 1.7359] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 5.34  translate [0.1625, -1.0000, 1.7384] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 11.15  translate [0.3376, -1.0000, 1.7130] }
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 154.30  translate [2.5499, -0.5700, -5.2983] }
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 152.80  translate [2.6877, -0.5700, -5.2298] }
+            cube { scale [0.0600, 0.0500, 0.0450]  rotate Y 151.35  translate [2.8192, -0.5700, -5.1601] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -175.44  translate [-0.1874, -1.0000, -2.3495] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -168.05  translate [-0.3615, -1.0000, -1.7082] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -173.84  translate [-0.1874, -1.0000, -1.7359] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 174.66  translate [0.1625, -1.0000, -1.7384] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 168.85  translate [0.3376, -1.0000, -1.7130] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -90.00  translate [-1.7600, -1.0000, 0.0000] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -84.90  translate [-1.7530, -1.0000, 0.1565] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -95.10  translate [-1.7530, -1.0000, -0.1565] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -80.40  translate [-1.7354, -1.0000, 0.2935] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -99.60  translate [-1.7354, -1.0000, -0.2935] }
+            cube { scale [0.0600, 0.5000, 0.0300]  rotate Y -90.00  translate [-2.3800, -1.0000, 0.0000] }
+            cube { scale [0.0600, 0.5000, 0.0300]  rotate Y -86.00  translate [-2.3742, -1.0000, 0.1660] }
+            cube { scale [0.0600, 0.5000, 0.0300]  rotate Y -94.00  translate [-2.3742, -1.0000, -0.1660] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [-1.5053, 0, 1.6059] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [-1.5053, 0, -1.6059] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [-1.2354, 0, 1.0197] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [-1.2354, 0, -1.0197] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [0.6859, 0, 2.0809] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [0.6859, 0, -2.0809] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [1.3289, 0, 2.2352] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [1.3289, 0, -2.2352] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [1.7281, 0, 1.9113] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [1.7281, 0, -1.9113] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [0.8823, 0, 1.6789] }
+            cylinder { min Y -1.5  max Y -0.5  scale [0.0300, 1, 0.0300]  translate [0.8823, 0, -1.6789] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        // the same, and the dark windows on it
+        lathe {
+            path {
+                move to -5.9297, -0.4000
+                line to -5.9297, -0.5939
+                line to -5.6000, -0.5939
+                quad -5.4164, -0.5939 to -5.2500, -0.5620
+                quad -4.7624, -0.4687 to -4.3000, -0.4687
+                quad -3.6132, -0.4611 to -3.0000, -0.6432
+                quad -2.5506, -0.7946 to -2.1000, -1.0088
+                quad -1.7238, -1.1752 to -1.3500, -1.3421
+                line to -1.3500, -0.4000
+                close
+            }
+        }
+        union {
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 4.40  translate [0.1808, -1.0000, 2.3501] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y 175.60  translate [0.1808, -1.0000, -2.3501] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -74.45  translate [-1.6956, -1.0000, 0.4718] }
+            cube { scale [0.0550, 0.5000, 0.0300]  rotate Y -105.55  translate [-1.6956, -1.0000, -0.4718] }
+            cube { scale [0.0450, 0.5000, 0.0225]  rotate Y 0.60  translate [0.0220, -1.0000, 2.0999] }
+            cube { scale [0.0450, 0.5000, 0.0225]  rotate Y 179.40  translate [0.0220, -1.0000, -2.0999] }
+        }
+        material {
+            pigment [0.03, 0.03, 0.035]
+            specular 0.5
+            shininess 120
+        }
+    }
+    intersection {
+        // the same, and the gold strip in the middle of each arc
+        lathe {
+            path {
+                move to -5.9297, -0.4000
+                line to -5.9297, -0.5939
+                line to -5.6000, -0.5939
+                quad -5.4164, -0.5939 to -5.2500, -0.5620
+                quad -4.7624, -0.4687 to -4.3000, -0.4687
+                quad -3.6132, -0.4611 to -3.0000, -0.6432
+                quad -2.5506, -0.7946 to -2.1000, -1.0088
+                quad -1.7238, -1.1752 to -1.3500, -1.3421
+                line to -1.3500, -0.4000
+                close
+            }
+        }
+        union {
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -0.41  translate [-0.0125, -1.0000, 1.7460] }
+            cube { scale [0.0550, 0.5000, 0.0325]  rotate Y -179.59  translate [-0.0125, -1.0000, -1.7460] }
+        }
+        material {
+            pigment [0.77, 0.43, 0.02]      // (0.89, 0.68, 0.17) with gamma on
+        }
     }
     // The bow light and the two running lights, at nine, twelve and six o'clock on FJ's top view, on the
     // flat of the saucer's outer ring.  They are built as the homing beacon is: a collar with a rounded
@@ -1070,23 +1308,25 @@ EnterpriseNacelle = union {
             rotate X 225
     }
 
-    // the intercoolers: a bar on a leg at each end, standing 0.2401 off the body at 45 degrees (2/3 of FJ's height)
-    // either side of the top, the opening under the bar closed by an inset web, with a pin fore and aft
-    // at each leg's foot
+    // the intercoolers: a bar on a leg at each end, at 45 degrees either side of the top, its underside 0.12
+    // off the body (a third of FJ's height), as low as the studio model's sit, the opening under the bar
+    // closed by an inset web; and at its fore end a pin as wide as the bar, half buried in the body, so it
+    // stands 0.071 proud -- a third of the intercooler's height -- running on forward from the leg's foot
+    // (the studio model has none at the aft end, though FJ draws one)
     union {
         extrusion {
             path {
                 move to 7.1003, 0.6608
-                line to 7.1003, 0.9865
-                curve 7.1003, 1.0373, 7.1620, 1.0762 to 7.2381, 1.0758
-                line to 10.0879, 1.0218
-                curve 10.1830, 1.0213, 10.2602, 0.9695 to 10.2602, 0.9060
+                line to 7.1003, 0.8665
+                curve 7.1003, 0.9173, 7.1620, 0.9562 to 7.2381, 0.9558
+                line to 10.0879, 0.9018
+                curve 10.1830, 0.9013, 10.2602, 0.8495 to 10.2602, 0.7860
                 line to 10.2602, 0.6431
                 line to 9.8777, 0.6453
-                line to 9.8777, 0.8771
-                curve 9.8777, 0.9057, 9.8391, 0.9290 to 9.7915, 0.9293
-                line to 7.6551, 0.9793
-                curve 7.5599, 0.9798, 7.4828, 0.9545 to 7.4828, 0.9228
+                line to 9.8777, 0.7571
+                curve 9.8777, 0.7857, 9.8391, 0.8090 to 9.7915, 0.8093
+                line to 7.6551, 0.8593
+                curve 7.5599, 0.8598, 7.4828, 0.8345 to 7.4828, 0.8028
                 line to 7.4828, 0.6587
                 close
             }
@@ -1099,10 +1339,10 @@ EnterpriseNacelle = union {
             // handle's faces on both sides, its edges buried in the legs and the bar so it never reaches past them
             path {
                 move to 7.4656, 0.6588
-                line to 7.4656, 0.9229
-                curve 7.4656, 0.9610, 7.5504, 0.9913 to 7.6551, 0.9908
-                line to 9.7915, 0.9408
-                curve 9.8486, 0.9404, 9.8949, 0.9119 to 9.8949, 0.8771
+                line to 7.4656, 0.8029
+                curve 7.4656, 0.8410, 7.5504, 0.8713 to 7.6551, 0.8708
+                line to 9.7915, 0.8208
+                curve 9.8486, 0.8204, 9.8949, 0.7919 to 9.8949, 0.7571
                 line to 9.8949, 0.6452
                 close
             }
@@ -1113,35 +1353,27 @@ EnterpriseNacelle = union {
         cylinder {
             min Y 6.8711
             max Y 7.1158
-            scale [0.0310, 1, 0.0310]
+            scale [0.0710, 1, 0.0710]
             rotate Z -90
-            translate [0, 0.7323, 0]
+            translate [0, 0.7436, 0]
         }
-        sphere { scale 0.0310 translate [6.8711, 0.7323, 0] }
-        cylinder {
-            min Y 10.2429
-            max Y 10.4618
-            scale [0.0310, 1, 0.0310]
-            rotate Z -90
-            translate [0, 0.7323, 0]
-        }
-        sphere { scale 0.0310 translate [10.4618, 0.7323, 0] }
+        sphere { scale 0.0710 translate [6.8711, 0.7436, 0] }
         rotate X 45
     }
     union {
         extrusion {
             path {
                 move to 7.1003, 0.6608
-                line to 7.1003, 0.9865
-                curve 7.1003, 1.0373, 7.1620, 1.0762 to 7.2381, 1.0758
-                line to 10.0879, 1.0218
-                curve 10.1830, 1.0213, 10.2602, 0.9695 to 10.2602, 0.9060
+                line to 7.1003, 0.8665
+                curve 7.1003, 0.9173, 7.1620, 0.9562 to 7.2381, 0.9558
+                line to 10.0879, 0.9018
+                curve 10.1830, 0.9013, 10.2602, 0.8495 to 10.2602, 0.7860
                 line to 10.2602, 0.6431
                 line to 9.8777, 0.6453
-                line to 9.8777, 0.8771
-                curve 9.8777, 0.9057, 9.8391, 0.9290 to 9.7915, 0.9293
-                line to 7.6551, 0.9793
-                curve 7.5599, 0.9798, 7.4828, 0.9545 to 7.4828, 0.9228
+                line to 9.8777, 0.7571
+                curve 9.8777, 0.7857, 9.8391, 0.8090 to 9.7915, 0.8093
+                line to 7.6551, 0.8593
+                curve 7.5599, 0.8598, 7.4828, 0.8345 to 7.4828, 0.8028
                 line to 7.4828, 0.6587
                 close
             }
@@ -1154,10 +1386,10 @@ EnterpriseNacelle = union {
             // handle's faces on both sides, its edges buried in the legs and the bar so it never reaches past them
             path {
                 move to 7.4656, 0.6588
-                line to 7.4656, 0.9229
-                curve 7.4656, 0.9610, 7.5504, 0.9913 to 7.6551, 0.9908
-                line to 9.7915, 0.9408
-                curve 9.8486, 0.9404, 9.8949, 0.9119 to 9.8949, 0.8771
+                line to 7.4656, 0.8029
+                curve 7.4656, 0.8410, 7.5504, 0.8713 to 7.6551, 0.8708
+                line to 9.7915, 0.8208
+                curve 9.8486, 0.8204, 9.8949, 0.7919 to 9.8949, 0.7571
                 line to 9.8949, 0.6452
                 close
             }
@@ -1168,19 +1400,11 @@ EnterpriseNacelle = union {
         cylinder {
             min Y 6.8711
             max Y 7.1158
-            scale [0.0310, 1, 0.0310]
+            scale [0.0710, 1, 0.0710]
             rotate Z -90
-            translate [0, 0.7323, 0]
+            translate [0, 0.7436, 0]
         }
-        sphere { scale 0.0310 translate [6.8711, 0.7323, 0] }
-        cylinder {
-            min Y 10.2429
-            max Y 10.4618
-            scale [0.0310, 1, 0.0310]
-            rotate Z -90
-            translate [0, 0.7323, 0]
-        }
-        sphere { scale 0.0310 translate [10.4618, 0.7323, 0] }
+        sphere { scale 0.0710 translate [6.8711, 0.7436, 0] }
         rotate X -45
     }
 
@@ -1544,17 +1768,22 @@ EnterpriseSecondaryHull = union {
             scale 0.5833
             rotate Y 180  rotate X 90
         }
-        // A panel outlined on the underside of each nacelle, as the studio model has it: aft of the pylon,
-        // from just behind it (0.55 aft of the nacelle's middle) to 3.51, and across the bottom from 43 degrees
-        // below the outboard side round to 43 below the inboard, where the pylon meets the nacelle.  From the
-        // side, only its outboard edge shows, a line low on the flank, with its fore edge dropping from it
-        // round under the nacelle.  A dark line 0.015 wide, seen from below and so turned over, reaching only
-        // the nacelles' lower halves.
+        // A panel outlined on the underside of each nacelle, as the studio model has it: from 0.167 aft of the
+        // nacelle's middle -- a third of the pylon's width forward of its trailing edge -- to 3.51, and across
+        // the bottom from 43 degrees below the outboard side round to the pylon, which bounds it inboard: its
+        // fore edge runs round the bottom until it meets the pylon's side, and its inboard edge, 43 degrees
+        // below the inboard side, runs aft from the pylon's rounded trailing end.  From the side, its outboard
+        // edge shows as a line low on the flank.  Dark lines 0.015 wide, seen from below and so turned over,
+        // reaching only the nacelles' lower halves.
         decal {
-            path { move to 12.1274, -4.1053  line to 15.0874, -4.1415  line to 15.0874, -5.3145  line to 12.1274, -5.3507  close
-                   move to 12.1424, -4.1203  line to 15.0724, -4.1565  line to 15.0724, -5.2995  line to 12.1424, -5.3357  close
-                   move to 12.1274, 5.3507  line to 15.0874, 5.3145  line to 15.0874, 4.1415  line to 12.1274, 4.1053  close
-                   move to 12.1424, 5.3357  line to 15.0724, 5.2995  line to 15.0724, 4.1565  line to 12.1424, 4.1203  close }
+            path { move to 11.7446, -5.3554  line to 15.0874, -5.3145  line to 15.0874, -5.2995  line to 11.7446, -5.3404  close
+                   move to 15.0724, -5.2995  line to 15.0874, -5.2995  line to 15.0874, -4.1415  line to 15.0724, -4.1415  close
+                   move to 12.0674, -4.1195  line to 15.0724, -4.1565  line to 15.0724, -4.1415  line to 12.0674, -4.1045  close
+                   move to 11.7446, -5.3404  line to 11.7596, -5.3404  line to 11.7596, -4.2337  line to 11.7446, -4.2337  close
+                   move to 11.7446, 5.3554  line to 15.0874, 5.3145  line to 15.0874, 5.2995  line to 11.7446, 5.3404  close
+                   move to 15.0724, 5.2995  line to 15.0874, 5.2995  line to 15.0874, 4.1415  line to 15.0724, 4.1415  close
+                   move to 12.0674, 4.1195  line to 15.0724, 4.1565  line to 15.0724, 4.1415  line to 12.0674, 4.1045  close
+                   move to 11.7446, 5.3404  line to 11.7596, 5.3404  line to 11.7596, 4.2337  line to 11.7446, 4.2337  close }
             color [0.06, 0.06, 0.07]
             planar  min Y -0.979  max Y -0.05
             rotate X 180
@@ -1570,6 +1799,9 @@ EnterpriseSecondaryHull = union {
     // studio model has them: recesses 0.012 deep in the matte gray, 0.415 across the middle of the face,
     // the first starting 1.66 out along the pylon's line, each about 0.88 long with 0.09 between them, the
     // last a little shorter, at 0.81.
+    // On the other, outer face -- turned down and out -- are three dark windows, as FJ's profile draws them
+    // and the studio model has them: 0.114 fore and aft by 0.062 along the pylon, 0.266 forward of its middle,
+    // their centers 2.133, 4.886 and 5.283 up its line, each set 0.01 into the face.
     difference {
         // the starboard pylon
         extrusion {
@@ -1607,6 +1839,26 @@ EnterpriseSecondaryHull = union {
             material {
                 pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
                 specular 0
+            }
+        }
+        union {
+            // its windows, on the outer face: three, dark
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 2.1330, 0.1260]
+            }
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 4.8860, 0.1260]
+            }
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 5.2830, 0.1260]
+            }
+            material {
+                pigment [0.03, 0.03, 0.035]
+                specular 0.5
+                shininess 120
             }
         }
         rotate X 43.663
@@ -1651,6 +1903,26 @@ EnterpriseSecondaryHull = union {
                 specular 0
             }
         }
+        union {
+            // its windows, on the outer face: three, dark
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 2.1330, -0.1260]
+            }
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 4.8860, -0.1260]
+            }
+            cube {
+                scale [0.0570, 0.0310, 0.0150]
+                translate [-0.2660, 5.2830, -0.1260]
+            }
+            material {
+                pigment [0.03, 0.03, 0.035]
+                specular 0.5
+                shininess 120
+            }
+        }
         rotate X -43.663
         translate [11.5774, -3.9697, 0]
     }
@@ -1692,6 +1964,183 @@ EnterpriseSecondaryHull = union {
         max Y 2.3500
         shear [-1.24525, 0, 0, 0, 0, 0]
         translate [7.4586, -2.7500, 0]
+    }
+
+    // The dorsal's windows, on both its sides: FJ's profile draws seventeen, 0.124 long and 0.074 tall, in five
+    // rows, and the studio model has the same rows -- its photograph of the starboard side shows which are lit,
+    // and the port side is taken to match.  Each is a plate cut from the dorsal made a little fuller, so it
+    // follows the dorsal's curved side and stands a hair proud of it.
+    intersection {
+        // the lit windows to starboard
+        tapered extrusion {
+            // the dorsal, 2% fuller across, so a window cut from it stands a hair proud of the dorsal's side
+            taper 1.30129
+            path {
+                move to -1.4004, 0.0000
+                curve -1.4004, 0.0517, -1.3666, 0.1102 to -1.2870, 0.1260
+                curve -1.1270, 0.1577, -0.9470, 0.1821 to -0.7972, 0.1978
+                curve -0.6274, 0.2155, -0.3875, 0.2170 to -0.2559, 0.2199
+                curve 0.0323, 0.2264, 0.2198, 0.2037 to 0.3113, 0.1970
+                curve 0.7434, 0.1654, 0.9470, 0.0976 to 1.4004, 0.0934
+                line to 1.4004, -0.0934
+                curve 0.9470, -0.0976, 0.7434, -0.1654 to 0.3113, -0.1970
+                curve 0.2198, -0.2037, 0.0323, -0.2264 to -0.2559, -0.2199
+                curve -0.3875, -0.2170, -0.6274, -0.2155 to -0.7972, -0.1978
+                curve -0.9470, -0.1821, -1.1270, -0.1577 to -1.2870, -0.1260
+                curve -1.3666, -0.1102, -1.4004, -0.0517 to -1.4004, -0.0000
+                close
+            }
+            min Y 0
+            max Y 2.3500
+            scale [1, 1, 1.02]
+            shear [-1.24525, 0, 0, 0, 0, 0]
+            translate [7.4586, -2.7500, 0]
+        }
+        union {
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.6780, -1.3460, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8570, -1.3460, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.2820, -1.6330, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.4660, -1.6330, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.7200, -1.6330, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8960, -1.6330, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1410, -1.6330, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1390, -1.9320, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [7.4660, -1.9320, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [7.6500, -1.9320, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1350, -2.1960, 0.5000] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        // the dark windows to starboard
+        tapered extrusion {
+            // the dorsal, 2% fuller across, so a window cut from it stands a hair proud of the dorsal's side
+            taper 1.30129
+            path {
+                move to -1.4004, 0.0000
+                curve -1.4004, 0.0517, -1.3666, 0.1102 to -1.2870, 0.1260
+                curve -1.1270, 0.1577, -0.9470, 0.1821 to -0.7972, 0.1978
+                curve -0.6274, 0.2155, -0.3875, 0.2170 to -0.2559, 0.2199
+                curve 0.0323, 0.2264, 0.2198, 0.2037 to 0.3113, 0.1970
+                curve 0.7434, 0.1654, 0.9470, 0.0976 to 1.4004, 0.0934
+                line to 1.4004, -0.0934
+                curve 0.9470, -0.0976, 0.7434, -0.1654 to 0.3113, -0.1970
+                curve 0.2198, -0.2037, 0.0323, -0.2264 to -0.2559, -0.2199
+                curve -0.3875, -0.2170, -0.6274, -0.2155 to -0.7972, -0.1978
+                curve -0.9470, -0.1821, -1.1270, -0.1577 to -1.2870, -0.1260
+                curve -1.3666, -0.1102, -1.4004, -0.0517 to -1.4004, -0.0000
+                close
+            }
+            min Y 0
+            max Y 2.3500
+            scale [1, 1, 1.02]
+            shear [-1.24525, 0, 0, 0, 0, 0]
+            translate [7.4586, -2.7500, 0]
+        }
+        union {
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [4.7360, -1.0650, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [4.9370, -1.0650, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1470, -1.0650, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1420, -1.3460, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8860, -1.9320, 0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.3870, -2.1960, 0.5000] }
+        }
+        material {
+            pigment [0.03, 0.03, 0.035]
+            specular 0.5
+            shininess 120
+        }
+    }
+    intersection {
+        // the lit windows to port
+        tapered extrusion {
+            // the dorsal, 2% fuller across, so a window cut from it stands a hair proud of the dorsal's side
+            taper 1.30129
+            path {
+                move to -1.4004, 0.0000
+                curve -1.4004, 0.0517, -1.3666, 0.1102 to -1.2870, 0.1260
+                curve -1.1270, 0.1577, -0.9470, 0.1821 to -0.7972, 0.1978
+                curve -0.6274, 0.2155, -0.3875, 0.2170 to -0.2559, 0.2199
+                curve 0.0323, 0.2264, 0.2198, 0.2037 to 0.3113, 0.1970
+                curve 0.7434, 0.1654, 0.9470, 0.0976 to 1.4004, 0.0934
+                line to 1.4004, -0.0934
+                curve 0.9470, -0.0976, 0.7434, -0.1654 to 0.3113, -0.1970
+                curve 0.2198, -0.2037, 0.0323, -0.2264 to -0.2559, -0.2199
+                curve -0.3875, -0.2170, -0.6274, -0.2155 to -0.7972, -0.1978
+                curve -0.9470, -0.1821, -1.1270, -0.1577 to -1.2870, -0.1260
+                curve -1.3666, -0.1102, -1.4004, -0.0517 to -1.4004, -0.0000
+                close
+            }
+            min Y 0
+            max Y 2.3500
+            scale [1, 1, 1.02]
+            shear [-1.24525, 0, 0, 0, 0, 0]
+            translate [7.4586, -2.7500, 0]
+        }
+        union {
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.6780, -1.3460, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8570, -1.3460, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.2820, -1.6330, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.4660, -1.6330, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.7200, -1.6330, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8960, -1.6330, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1410, -1.6330, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1390, -1.9320, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [7.4660, -1.9320, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [7.6500, -1.9320, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1350, -2.1960, -0.5000] }
+        }
+        material {
+            pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+            ambient 1
+            diffuse 0
+            specular 0
+        }
+    }
+    intersection {
+        // the dark windows to port
+        tapered extrusion {
+            // the dorsal, 2% fuller across, so a window cut from it stands a hair proud of the dorsal's side
+            taper 1.30129
+            path {
+                move to -1.4004, 0.0000
+                curve -1.4004, 0.0517, -1.3666, 0.1102 to -1.2870, 0.1260
+                curve -1.1270, 0.1577, -0.9470, 0.1821 to -0.7972, 0.1978
+                curve -0.6274, 0.2155, -0.3875, 0.2170 to -0.2559, 0.2199
+                curve 0.0323, 0.2264, 0.2198, 0.2037 to 0.3113, 0.1970
+                curve 0.7434, 0.1654, 0.9470, 0.0976 to 1.4004, 0.0934
+                line to 1.4004, -0.0934
+                curve 0.9470, -0.0976, 0.7434, -0.1654 to 0.3113, -0.1970
+                curve 0.2198, -0.2037, 0.0323, -0.2264 to -0.2559, -0.2199
+                curve -0.3875, -0.2170, -0.6274, -0.2155 to -0.7972, -0.1978
+                curve -0.9470, -0.1821, -1.1270, -0.1577 to -1.2870, -0.1260
+                curve -1.3666, -0.1102, -1.4004, -0.0517 to -1.4004, -0.0000
+                close
+            }
+            min Y 0
+            max Y 2.3500
+            scale [1, 1, 1.02]
+            shear [-1.24525, 0, 0, 0, 0, 0]
+            translate [7.4586, -2.7500, 0]
+        }
+        union {
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [4.7360, -1.0650, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [4.9370, -1.0650, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1470, -1.0650, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.1420, -1.3460, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [5.8860, -1.9320, -0.5000] }
+            cube { scale [0.0620, 0.0370, 0.5000]  translate [6.3870, -2.1960, -0.5000] }
+        }
+        material {
+            pigment [0.03, 0.03, 0.035]
+            specular 0.5
+            shininess 120
+        }
     }
 
     // The deflector dish, from the cutaway: a shell open toward the front, its rim 0.8132 in radius,
@@ -2040,6 +2489,96 @@ EnterpriseSecondaryHull = union {
                     pigment [0.1332, 0.1332, 0.1332]   // the vane rings' matte gray, 0.40 as it shows with gamma on
                     specular 0
                 }
+            }
+        }
+    }
+
+    // The hull's windows, on both its sides: FJ's profile draws thirty-two and nine round ports, from a flat
+    // pair low on the nose to a pair high up by the beacon, and the studio model's photograph of the
+    // starboard side has the same rows, near enough to say which are lit -- four of the five in the long row
+    // forward, the two just above the pennant and one below it, a window and a square low down, the pair aft
+    // and one port.  The rest are dark, but for the square the near pylon hides, which is taken to be lit.
+    // The sizes are FJ's, to the middle of his outline, and the windows in a row share one.  Each is a plate
+    // standing 0.004 proud of the hull: a short straight tube fitted to the hull's surface over the window
+    // and made that much fuller, cut to the window by a prism run straight through the hull, so one prism
+    // makes a window on each side.  (A copy of the hull's own tube, grown, would serve as well, but every ray
+    // that reached the hull would then be tested against its curved sections twice more, and they are slow.)
+    // The two on the nose's shoulder are cut from the shoulder, grown the same way.
+    group {
+        group {
+            intersection { tube { radius 1.5671 at [6.4350, -4.0493, 0]  radius 1.5586 at [7.1350, -4.0411, 0] }  cube { scale [0.0672, 0.0362, 2]  translate [6.7850, -3.0469, 0] } }
+            intersection { tube { radius 1.5673 at [6.6848, -4.0454, 0]  radius 1.5475 at [7.3848, -4.0392, 0] }  cube { scale [0.0293, 0.0254, 2]  translate [7.0348, -3.3329, 0] } }
+            intersection { tube { radius 1.5656 at [6.8123, -4.0429, 0]  radius 1.5400 at [7.5123, -4.0401, 0] }  cube { scale [0.0293, 0.0254, 2]  translate [7.1623, -3.3277, 0] } }
+            intersection { tube { radius 1.5590 at [7.0621, -4.0402, 0]  radius 1.5213 at [7.7621, -4.0446, 0] }  cube { scale [0.0672, 0.0388, 2]  translate [7.4121, -3.6120, 0] } }
+            intersection { tube { radius 1.5590 at [7.0639, -4.0414, 0]  radius 1.5210 at [7.7639, -4.0426, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [7.4139, -4.4683, 0] } }
+            intersection { tube { radius 1.5436 at [7.3826, -4.0429, 0]  radius 1.4889 at [8.0826, -4.0366, 0] }  cube { scale [0.0672, 0.0388, 2]  translate [7.7326, -3.6120, 0] } }
+            intersection { tube { radius 1.5232 at [7.6600, -4.0409, 0]  radius 1.4565 at [8.3600, -4.0263, 0] }  cube { scale [0.0672, 0.0388, 2]  translate [8.0100, -3.6120, 0] } }
+            intersection { tube { radius 1.5160 at [7.7427, -4.0398, 0]  radius 1.4462 at [8.4427, -4.0222, 0] }  cube { scale [0.0663, 0.0362, 2]  translate [8.0927, -3.8558, 0] } }
+            intersection { tube { radius 1.4999 at [7.9121, -4.0363, 0]  radius 1.4249 at [8.6121, -4.0139, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [8.2621, -4.1797, 0] } }
+            intersection { tube { radius 1.4990 at [7.9219, -4.0357, 0]  radius 1.4235 at [8.6219, -4.0143, 0] }  cube { scale [0.0672, 0.0388, 2]  translate [8.2719, -3.6120, 0] } }
+            intersection { tube { radius 1.4952 at [7.9598, -4.0347, 0]  radius 1.4186 at [8.6598, -4.0125, 0] }  cube { scale [0.0327, 0.0310, 2]  translate [8.3098, -3.8558, 0] } }
+            intersection { tube { radius 1.3825 at [8.9212, -3.9964, 0]  radius 1.2985 at [9.6212, -3.9623, 0] }  cube { scale [0.0302, 0.0284, 2]  translate [9.2712, -4.4752, 0] } }
+            intersection { tube { radius 1.1690 at [10.8406, -3.9227, 0]  radius 1.1385 at [11.5406, -3.9447, 0] }  cube { scale [0.0336, 0.0319, 2]  translate [11.1906, -3.3449, 0] } }
+            intersection { tube { radius 1.0603 at [12.6858, -3.9521, 0]  radius 1.0746 at [13.3858, -4.0187, 0] }  cube { scale [0.0612, 0.0388, 2]  translate [13.0358, -3.4113, 0] } }
+            intersection { tube { radius 1.0653 at [12.8564, -3.9698, 0]  radius 1.0754 at [13.5564, -4.0322, 0] }  cube { scale [0.0612, 0.0388, 2]  translate [13.2064, -3.4113, 0] } }
+            intersection { tube { radius 1.0681 at [12.9047, -3.9781, 0]  radius 1.0736 at [13.6047, -4.0324, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [13.2547, -4.0789, 0] } }
+            material {
+                pigment [1, 0.76, 0.31]         // a yellow warm white, (1.0, 0.88, 0.59) as it shows under one white light
+                ambient 1
+                diffuse 0
+                specular 0
+            }
+        }
+        group {
+            intersection { tube { radius 1.5587 at [5.4615, -3.9678, 0]  radius 1.5442 at [6.1615, -4.0640, 0] }  cube { scale [0.0637, 0.0211, 2]  translate [5.8115, -5.3272, 0] } }
+            intersection { tube { radius 1.5578 at [5.6343, -4.0001, 0]  radius 1.5522 at [6.3343, -4.0644, 0] }  cube { scale [0.0637, 0.0211, 2]  translate [5.9843, -5.3272, 0] } }
+            intersection { tube { radius 1.5257 at [7.6285, -4.0416, 0]  radius 1.4608 at [8.3285, -4.0270, 0] }  cube { scale [0.0258, 0.0276, 2]  translate [7.9785, -4.7681, 0] } }
+            intersection { tube { radius 1.4806 at [8.0976, -4.0309, 0]  radius 1.4009 at [8.7976, -4.0048, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [8.4476, -4.1797, 0] } }
+            intersection { tube { radius 1.4799 at [8.1050, -4.0305, 0]  radius 1.3997 at [8.8050, -4.0051, 0] }  cube { scale [0.0586, 0.0388, 2]  translate [8.4550, -3.6120, 0] } }
+            intersection { tube { radius 1.3687 at [9.0349, -3.9907, 0]  radius 1.2858 at [9.7349, -3.9573, 0] }  cube { scale [0.0319, 0.0319, 2]  translate [9.3849, -3.6206, 0] } }
+            intersection { tube { radius 1.3199 at [9.4450, -3.9708, 0]  radius 1.2367 at [10.1450, -3.9396, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [9.7950, -4.1797, 0] } }
+            intersection { tube { radius 1.3000 at [9.6104, -3.9630, 0]  radius 1.2183 at [10.3104, -3.9341, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [9.9604, -4.1797, 0] } }
+            intersection { tube { radius 1.2569 at [9.9756, -3.9475, 0]  radius 1.1825 at [10.6756, -3.9256, 0] }  cube { scale [0.0603, 0.0370, 2]  translate [10.3256, -3.8704, 0] } }
+            intersection { tube { radius 1.2395 at [10.1307, -3.9418, 0]  radius 1.1695 at [10.8307, -3.9241, 0] }  cube { scale [0.0603, 0.0370, 2]  translate [10.4807, -3.8704, 0] } }
+            intersection { tube { radius 1.2376 at [10.1514, -3.9409, 0]  radius 1.1669 at [10.8514, -3.9242, 0] }  cube { scale [0.0293, 0.0284, 2]  translate [10.5014, -4.7715, 0] } }
+            intersection { tube { radius 1.2343 at [10.1789, -3.9398, 0]  radius 1.1655 at [10.8789, -3.9245, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [10.5289, -4.1797, 0] } }
+            intersection { tube { radius 1.2023 at [10.4874, -3.9314, 0]  radius 1.1461 at [11.1874, -3.9263, 0] }  cube { scale [0.0414, 0.0405, 2]  translate [10.8374, -4.1797, 0] } }
+            intersection { tube { radius 1.1729 at [10.7992, -3.9243, 0]  radius 1.1379 at [11.4992, -3.9402, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [11.1492, -4.1797, 0] } }
+            intersection { tube { radius 1.1645 at [11.0473, -3.9347, 0]  radius 1.1141 at [11.7473, -3.9344, 0] }  cube { scale [0.0629, 0.0388, 2]  translate [11.3973, -4.1797, 0] } }
+            intersection { tube { radius 1.0675 at [12.8874, -3.9770, 0]  radius 1.0739 at [13.5874, -4.0308, 0] }  cube { scale [0.0284, 0.0345, 2]  translate [13.2374, -4.1943, 0] } }
+            intersection { tube { radius 1.5640 at [6.8950, -4.0421, 0]  radius 1.5343 at [7.5950, -4.0405, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [7.2450, -4.5820, 0] } }
+            intersection { tube { radius 1.5467 at [7.3344, -4.0433, 0]  radius 1.4942 at [8.0344, -4.0374, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [7.6844, -4.2994, 0] } }
+            intersection { tube { radius 1.5245 at [7.6428, -4.0415, 0]  radius 1.4591 at [8.3428, -4.0264, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [7.9928, -4.6785, 0] } }
+            intersection { tube { radius 1.2352 at [10.1721, -3.9403, 0]  radius 1.1656 at [10.8721, -3.9239, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [10.5221, -4.6837, 0] } }
+            intersection { tube { radius 1.0614 at [12.2051, -3.9159, 0]  radius 1.0595 at [12.9051, -3.9691, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [12.5551, -3.7464, 0] } }
+            intersection { tube { radius 1.0619 at [12.2361, -3.9199, 0]  radius 1.0587 at [12.9361, -3.9693, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [12.5861, -3.1020, 0] } }
+            intersection { tube { radius 1.0664 at [12.9012, -3.9743, 0]  radius 1.0754 at [13.6012, -4.0356, 0] }  cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [13.2512, -3.1416, 0] } }
+            intersection {
+                lathe {
+                    // the nose's shoulder, every radius 0.004 more
+                    path {
+                        move to 0, 5.1999
+                        line to 1.3488, 5.1999
+                        curve 1.4170, 5.2469, 1.4351, 5.2671 to 1.4599, 5.3291
+                        curve 1.5052, 5.4424, 1.5092, 5.4477 to 1.5340, 5.5875
+                        curve 1.5462, 5.6564, 2.5884, 5.7254 to 2.5884, 5.8632
+                        line to 2.5884, 14.8742
+                        line to 0, 14.8742
+                        close
+                    }
+                    rotate Z -90
+                    shear [0, 0, -0.1, 0, 0, 0]
+                    translate [0, -3.4581, 0]
+                }
+                union {
+                    cube { scale [0.0207, 0.0258, 2]  translate [5.4571, -4.7422, 0] }
+                    cylinder { min Y -2  max Y 2  scale [0.0155, 1, 0.0155]  rotate X 90  translate [5.4686, -4.5837, 0] }
+                }
+            }
+            material {
+                pigment [0.03, 0.03, 0.035]
+                specular 0.5
+                shininess 120
             }
         }
     }

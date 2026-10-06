@@ -2139,6 +2139,9 @@ seen only in a photograph lands where the photograph puts it.  From them come:
 - the grilles along the pylons, the vents in the side tabs, the panel under each nacelle, the hatch
   under the fantail, the darker rib on the saucer, the four lighted panels on top of it, and the
   landing gear doors underneath;
+- which windows are lit, the forward group of windows round the saucer's rim, the gold strip in
+  each arc of windows under it, and the windows the plans leave out: round ports under the saucer and
+  on its rim, and a small dark one either side;
 - where the markings differ from FJ's, their size and place: the registration under the saucer, and
   the pennants and registrations on the nacelles.
 
@@ -2147,8 +2150,9 @@ seen only in a photograph lands where the photograph puts it.  From them come:
 The plating has no material of its own, so it takes what the scene gives the object -- and every part
 that names its own color keeps it: the deflector's orange, the copper of the inner cups and the
 antenna, the bronze of the Bussard domes, the sensor domes, the darker gray of the rib on the saucer,
-and the matte gray of the vanes, the reactor's recess, the vents, the grooves, the nacelles' hoods,
-the pylons' grilles, the tabs' vents and the wall behind the hangar doors.
+the gold of the strips under it, the dark of the unlit windows, and the matte gray of the vanes, the
+reactor's recess, the vents, the grooves, the nacelles' hoods, the pylons' grilles, the tabs' vents and
+the wall behind the hangar doors.
 
 ```
 import 'enterprise' { Enterprise }
@@ -2186,10 +2190,11 @@ a little longer in it.
 ##### A glow counts the lights
 
 The impulse ports, the homing beacon, the bow light, the running lights above and below, the lighted
-panels, the red lamp on the strip, the hangar's light and the lights along its deck are materials at
-`ambient 1`, and each shows its own color under one white light.  **Every light adds its own
-ambient**, in proportion to its color, so a second light at full strength makes a glow twice as
-bright -- and a pale glow goes to white -- while a dim fill adds only a little.
+panels, the red lamp on the strip, the hangar's light, the lights along its deck and the lit windows are
+materials at `ambient 1`, and each shows its own color under one white light.  **Every light adds its
+own ambient**, in proportion to its color, so a second light at full strength makes a glow twice as
+bright -- and a pale glow goes to white -- while a dim fill adds only a little.  The lit windows glow
+a yellow warm white, as the studio model's photograph.
 
 ##### Her own frame
 
