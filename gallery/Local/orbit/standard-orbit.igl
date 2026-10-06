@@ -12,8 +12,10 @@
 
 context {
     parallel pixel scanner
-    antialiasing depth 1
-    antialiasing threshold 0.4
+    width 2732
+    height 2064
+    antialiasing depth 5
+    antialiasing threshold 0.1
     angles are degrees
     info {
         title 'Standard Orbit'
