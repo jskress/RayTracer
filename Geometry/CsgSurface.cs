@@ -31,6 +31,7 @@ public class CsgSurface : Surface
         {
             value.Parent = this;
             field = value;
+            _leftMembers = null;
         }
     }
 
@@ -44,8 +45,12 @@ public class CsgSurface : Surface
         {
             value.Parent = this;
             field = value;
+            _rightMembers = null;
         }
     }
+
+    private HashSet<Surface> _leftMembers;
+    private HashSet<Surface> _rightMembers;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -63,6 +68,27 @@ public class CsgSurface : Surface
             foreach (Surface surface in new SurfaceIterator([Left, Right]).Surfaces)
                 surface.Material = Material.HandedDown(surface.Material, Material, merged);
         }
+
+        // Every crossing this shape keeps or drops has first to be put on one side or the other, and
+        // that was a walk of the side's whole tree for each crossing.  A union of many things is a
+        // chain of these, each with everything before it on its left, so a big one walked itself
+        // over and over for every ray.  What stands on each side cannot change while it renders, so
+        // it is listed once, here -- after the sides are ready, since a tube builds the segments its
+        // crossings come from only when it is readied.
+        _leftMembers = MembersOf(Left);
+        _rightMembers = MembersOf(Right);
+    }
+
+    /// <summary>
+    /// This method lists everything that stands on one side of this shape: the side itself and all
+    /// it holds.
+    /// </summary>
+    /// <param name="side">The side to list.</param>
+    /// <returns>The surfaces that stand on that side.</returns>
+    private static HashSet<Surface> MembersOf(Surface side)
+    {
+        return new HashSet<Surface>(
+            new SurfaceIterator(side).Surfaces, ReferenceEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -167,11 +193,11 @@ public class CsgSurface : Surface
                 // What stands in this shape's tree is the *instance*, when the crossing came through
                 // one -- the shape it points at is shared and lives outside the tree altogether.
                 Surface hit = intersection.Portal ?? intersection.Surface;
-                bool leftHit = IsOrIncludes(Left, hit);
+                bool leftHit = IsOrIncludes(Left, _leftMembers, hit);
                 bool result = !IsIntersectionAllowed(leftHit, inLeft, inRight);
 
                 if (!result && Operation == CsgOperation.Difference &&
-                    IsOrIncludes(Right, hit))
+                    IsOrIncludes(Right, _rightMembers, hit))
                     intersection.ShouldFlipInsideForOut = true;
 
                 if (leftHit)
@@ -186,14 +212,20 @@ public class CsgSurface : Surface
     /// <summary>
     /// This method decides whether the given child surface is, or is contained by, the
     /// given (potential) parent surface.
+    /// <para>
+    /// Once this shape has been readied, the answer is looked up in the list made then of what
+    /// stands on that side.  Before that -- a shape put together and asked straight away, as a test
+    /// will -- there is no list, and the side is walked as it stands.
+    /// </para>
     /// </summary>
     /// <param name="parent">The surface to check whether it is, or contains, the child.</param>
+    /// <param name="members">What stands on that side, if it has been listed.</param>
     /// <param name="child">the child surface to test.</param>
     /// <returns><c>true</c>, if <c>child</c> either is, or is contained by, <c>parent</c>.</returns>
-    private static bool IsOrIncludes(Surface parent, Surface child)
+    private static bool IsOrIncludes(Surface parent, HashSet<Surface> members, Surface child)
     {
-        return new SurfaceIterator(parent).Surfaces
-            .Any(surface => surface == child);
+        return members?.Contains(child) ??
+               new SurfaceIterator(parent).Surfaces.Any(surface => surface == child);
     }
 
     /// <summary>
