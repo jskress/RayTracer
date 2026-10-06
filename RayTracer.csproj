@@ -22,6 +22,26 @@
         gain follows how much of a scene is shadow rays, which is the same as how much of it allocates.
         -->
         <ServerGarbageCollection>true</ServerGarbageCollection>
+
+        <!--
+        Optimized in every configuration, Debug included.  A Debug build is otherwise compiled with
+        optimization off, and the JIT then inlines nothing at all: every vector sum, every color
+        product and every property read becomes a call of its own.  Renders are run from the Debug
+        build, so that is what every render paid.
+
+        Measured, and pixel for pixel identical either way, down to 16 bits a channel: focal-blur
+        14.9s to 4.0s, the candle 14.8s to 3.6s, scattering 22.9s to 6.0s, a-stony-bank 33.1s to
+        7.4s, first-light-at-the-field 45.0s to 12.0s.  Nothing here is conditional on DEBUG, so an
+        optimized Debug build runs exactly as fast as a Release one.
+
+        The price is in the debugger, which may show a local as unavailable or step out of order.
+        For a session that needs to step through code, rebuild in full with Optimize set false,
+        and rebuild in full again afterwards; the commands are in CLAUDE.md.  Both must be full
+        rebuilds: a plain build sees no file changed and keeps whichever the last compile made, so
+        renders would quietly stay unoptimized after a debugging session, or the debugger quietly
+        stay optimized.
+        -->
+        <Optimize>true</Optimize>
     </PropertyGroup>
 
     <ItemGroup>
