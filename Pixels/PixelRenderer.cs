@@ -57,22 +57,45 @@ public abstract class PixelRenderer
         Scene scene, int x, int y, double centerX = 0.5, double centerY = 0.5,
         double shiftX = 0, double shiftY = 0)
     {
+        return Trace<RgbSpectrum>(scene, x, y, centerX, centerY, shiftX, shiftY);
+    }
+
+    /// <summary>
+    /// This method works out the color seen at one spot within a pixel, carrying the light in the
+    /// given kind of bands and turning it into a color only once the lens has been gathered.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light to carry.</typeparam>
+    /// <param name="scene">The scene being rendered.</param>
+    /// <param name="x">The X coordinate of the pixel to render.</param>
+    /// <param name="y">The Y coordinate of the pixel to render.</param>
+    /// <param name="centerX">The X offset within the pixel to treat as center.</param>
+    /// <param name="centerY">The Y offset within the pixel to treat as center.</param>
+    /// <param name="shiftX">The amount to shift the X coordinate off center of the pixel.</param>
+    /// <param name="shiftY">The amount to shift the Y coordinate off center of the pixel.</param>
+    /// <returns>The color seen at that spot within the pixel.</returns>
+    private Color Trace<TS>(
+        Scene scene, int x, int y, double centerX, double centerY, double shiftX, double shiftY)
+        where TS : struct, ISpectrum<TS>
+    {
         int count = Converter.Sampler.SampleCount;
 
         Statistics?.CountSample(count);
 
         if (count == 1)
-            return scene.GetColorFor(Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY));
+        {
+            return scene.GetColorFor<TS>(
+                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY)).ToColor();
+        }
 
-        Color sum = Colors.Black;
+        TS sum = TS.Black;
 
         for (int index = 0; index < count; index++)
         {
-            sum += scene.GetColorFor(
+            sum += scene.GetColorFor<TS>(
                 Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index));
         }
 
-        return sum * (1.0 / count);
+        return (sum * (1.0 / count)).ToColor();
     }
 
     /// <summary>

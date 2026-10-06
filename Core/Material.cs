@@ -493,12 +493,27 @@ public class Material
     /// <returns>The tint to multiply the reflected color by.</returns>
     public Color GetMetallicTint(Color surfaceColor, double cosAngle)
     {
+        return GetMetallicTint(RgbSpectrum.From(surfaceColor), cosAngle).ToColor();
+    }
+
+    /// <summary>
+    /// This method returns the tint a metal gives the light it reflects, band by band, in whatever
+    /// bands the render is carrying light in.  See <see cref="GetMetallicTint(Color, double)"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="surfaceColor">The share of each band the material gives back at the point being
+    /// lit, which must be the pigment's alone and not already multiplied by the light's.</param>
+    /// <param name="cosAngle">The cosine of the angle between the surface normal and the light.</param>
+    /// <returns>The tint to multiply the reflected light by.</returns>
+    public TS GetMetallicTint<TS>(TS surfaceColor, double cosAngle)
+        where TS : struct, ISpectrum<TS>
+    {
         double x = Math.Abs(Math.Acos(Math.Clamp(cosAngle, -1, 1))) / (Math.PI / 2);
         double fresnel = Math.Clamp(
             0.014567225 / ((x - 1.12) * (x - 1.12)) - 0.011612903, 0, 1);
         double weight = Metallic * (1 - fresnel);
 
-        return Colors.White + (surfaceColor - Colors.White) * weight;
+        return TS.White + (surfaceColor - TS.White) * weight;
     }
 
     /// <summary>
