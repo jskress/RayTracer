@@ -62,6 +62,10 @@ A surface with `no shadow` is still seen, but light passes through it as though 
 there.  It is a cheat, and a useful one: a glass pane that would otherwise darken a room, or
 a light's own visible bulb that should not shade what it lights.
 
+Written on a group, a union, intersection or difference, or a tube, it covers everything that is
+made of.  Written on an `object` that calls a primitive, it covers that one copy, even where the
+copies share the one shape.
+
 #### A surface that gives light
 
 A glowing [medium](scene-files.md#filling-that-space) is seen and not felt.  It adds its light to rays

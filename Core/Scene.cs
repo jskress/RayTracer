@@ -911,8 +911,11 @@ public class Scene : NamedThing, IDisposable
             // in the way, which is what Hit() has always taken it to mean -- rays start at a point
             // nudged off the surface precisely so that a grazing hit at no distance at all is a
             // real occluder rather than the surface shading itself.
+            //
+            // A shared shape is one copy behind every instance of it, so whether it casts a shadow
+            // is the instance's to say as much as its own.
             if (intersection.Distance < 0 || intersection.Distance >= distance ||
-                intersection.Surface.NoShadow)
+                intersection.Surface.NoShadow || intersection.Portal is { NoShadow: true })
                 continue;
 
             Material material = intersection.Surface.Material ?? Material.Default;

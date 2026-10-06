@@ -77,6 +77,10 @@ public class RenderInstruction : Instruction
         // same for its own children, from inside its preparation just above.
         PlacementSettler.Settle(scene.Surfaces);
 
+        // What casts no shadow is settled only now, when every surface a ray can meet exists -- a
+        // tube builds its segments as it is readied -- and the command line has had its say.
+        ShadowSettler.Settle(scene.Surfaces, context.SuppressAllShadows);
+
         // Two things can only be settled once the scene is whole, since each depends on the company it
         // keeps rather than on anything written beside it.
         SettleTheSky(context, scene);

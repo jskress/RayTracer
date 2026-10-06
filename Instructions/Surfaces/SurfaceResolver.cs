@@ -107,8 +107,6 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         if (MotionResolver is not null)
             value.MotionAt = fraction => MotionResolver.ResolveAt(context, variables, fraction);
 
-        value.NoShadow |= context.SuppressAllShadows;
-
         base.SetProperties(context, variables, value);
     }
 
