@@ -80,6 +80,13 @@ precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPa
 `Line`, `QuadCurve`, `CubicCurve`, `TwoDPoint`/`TwoDVector`) used by extrusions, lathes and
 text layout to describe outlines in 2D before they're revolved/extruded into 3D surfaces.
 
+Shading carries light in an `ISpectrum<TSelf>` struct (`Graphics/ISpectrum.cs`), not in `Color`:
+every shading method (`Scene`, `Light.ApplyPhong`, `Medium`, `Interior`/`Material` tints,
+`PixelRenderer.Trace`) is generic in it, `RgbSpectrum` mirrors `Color`'s arithmetic bit for bit, and
+the `Color`-returning methods tests call are one-line wrappers over `<RgbSpectrum>`. Pigments, light
+colors and medium coefficients stay `Color` (they are what an author wrote) and are converted where
+the shading first meets them -- as a reflectance, an illuminant or an unbounded rate.
+
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
 the `context { scanner ... }` DSL block or command line) and `Pixels/` (anti-aliasing

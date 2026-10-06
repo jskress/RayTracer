@@ -91,6 +91,20 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The color for the ray.</returns>
     public Color GetColorFor(Ray ray, int remaining = 4)
     {
+        return GetColorFor<RgbSpectrum>(ray, remaining).ToColor();
+    }
+
+    /// <summary>
+    /// This method determines the light arriving along the given ray, in whatever bands the render is
+    /// carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="ray">The ray to determine the light for.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <returns>The light arriving along the ray.</returns>
+    public TS GetColorFor<TS>(Ray ray, int remaining = 4)
+        where TS : struct, ISpectrum<TS>
+    {
         List<Intersection> hits = Intersect(ray);
         Intersection hit = hits.Hit();
 
@@ -100,12 +114,13 @@ public class Scene : NamedThing, IDisposable
         if (hit == null)
         {
             return ThroughTheSurroundings(
-                Background.GetTransformedColorFor(HeadingOf(ray)), ray, double.PositiveInfinity);
+                TS.FromIlluminant(Background.GetTransformedColorFor(HeadingOf(ray))), ray,
+                double.PositiveInfinity);
         }
 
         hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
 
-        Color color = GetHitColor(hit, remaining);
+        TS color = GetHitColor<TS>(hit, remaining);
 
         // What the ray crossed to get here was the surroundings, unless it was on its way out of
         // something, in which case it crossed that thing's insides and has been charged for it
@@ -121,7 +136,8 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray that carried it.</param>
     /// <param name="distance">How far the ray crossed the surroundings.</param>
     /// <returns>The color once the surroundings have had their say.</returns>
-    private Color ThroughTheSurroundings(Color color, Ray ray, double distance)
+    private TS ThroughTheSurroundings<TS>(TS color, Ray ray, double distance)
+        where TS : struct, ISpectrum<TS>
     {
         return Environment.Medium is null
             ? color
@@ -137,8 +153,9 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray that crossed it.</param>
     /// <param name="distance">How far the ray crossed it; may be endless.</param>
     /// <returns>The color once the medium has had its say.</returns>
-    private Color ThroughMedium(
-        Medium medium, Color color, Ray ray, double distance, Surface container = null)
+    private TS ThroughMedium<TS>(
+        Medium medium, TS color, Ray ray, double distance, Surface container = null)
+        where TS : struct, ISpectrum<TS>
     {
         // A medium with a shape has no answer to be written down and must be walked along instead.
         // Only a medium filling a surface may have one, which is why the container is wanted here: it
@@ -146,7 +163,7 @@ public class Scene : NamedThing, IDisposable
         if (medium.HasShape && container is not null)
             return MarchedThrough(medium, color, ray, distance, container);
 
-        Color through = medium.ApplyOver(color, distance);
+        TS through = medium.ApplyOver(color, distance);
 
         // Everything above was written down rather than worked out.  What follows is the one term
         // that has to be gone and looked for, and only a medium that turns light aside has it -- so a
@@ -154,16 +171,12 @@ public class Scene : NamedThing, IDisposable
         if (!medium.Scatters || Lights.Count == 0)
             return through;
 
-        Color gathered = GatheredFromTheLights(medium, ray, distance, container);
+        TS gathered = GatheredFromTheLights<TS>(medium, ray, distance, container);
 
         // The gathered light adds to what came through without covering the pixel any further: how
         // much of the pixel the medium stands in front of was settled by what it took out, and
         // turning light aside is one of the ways it took it.
-        return new Color(
-            through.Red + gathered.Red,
-            through.Green + gathered.Green,
-            through.Blue + gathered.Blue,
-            through.Alpha);
+        return (through + gathered).WithAlpha(through.Alpha);
     }
 
     /// <summary>
@@ -182,8 +195,9 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray crossing it.</param>
     /// <param name="distance">How far the ray crosses it; may be endless.</param>
     /// <returns>The light the medium sends along the ray.</returns>
-    private Color GatheredFromTheLights(
+    private TS GatheredFromTheLights<TS>(
         Medium medium, Ray ray, double distance, Surface container)
+        where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
         double extinction = medium.MeanExtinction;
@@ -191,7 +205,7 @@ public class Scene : NamedThing, IDisposable
         // A medium that turns light aside stops it by doing so, so this cannot be nothing here; the
         // guard is for the arithmetic's sake rather than for any scene's.
         if (extinction <= 0 || distance <= 0)
-            return Colors.Black;
+            return TS.Black;
 
         // Places along the crossing are not spread evenly over it.  They are spread by how much of
         // what is there could still reach the eye, which falls away exponentially -- so most of them
@@ -207,7 +221,8 @@ public class Scene : NamedThing, IDisposable
         double reach = Medium.FractionStopped(extinction * distance);
         Vector heading = ray.Direction.Unit;
         double shift = ShiftFor(ray);
-        Color gathered = Colors.Black;
+        TS scattering = TS.FromUnbounded(medium.Scattering);
+        TS gathered = TS.Black;
         List<Intersection> crossings = container is null ? null : [];
 
         for (int index = 0; index < count; index++)
@@ -216,17 +231,17 @@ public class Scene : NamedThing, IDisposable
             double along = -Math.Log(1 - fraction * reach) / extinction;
             double chance = extinction * Math.Exp(-extinction * along) / reach;
             Point where = ray.Origin + heading * along;
-            Color arriving = GatheredAt(
+            TS arriving = GatheredAt<TS>(
                 medium, container, where, heading, ray.TimeIndex, index, crossings);
 
-            if (arriving.Matches(Colors.Black))
+            if (arriving.IsBlack)
                 continue;
 
             // What this place turns aside, of what reached it, dimmed by the trip back to the eye and
             // divided by how likely the place was to have been asked at all.
-            Color scattered = arriving * medium.Scattering * (medium.Density / (chance * count));
+            TS scattered = arriving * scattering * (medium.Density / (chance * count));
 
-            gathered += scattered * medium.GetTransmittanceOver(along);
+            gathered += scattered * medium.GetTransmittanceOver<TS>(along);
         }
 
         return gathered;
@@ -256,8 +271,9 @@ public class Scene : NamedThing, IDisposable
     /// <param name="distance">How far the ray crosses it.</param>
     /// <param name="container">The surface the medium fills.</param>
     /// <returns>The color once the medium has had its say.</returns>
-    private Color MarchedThrough(
-        Medium medium, Color behind, Ray ray, double distance, Surface container)
+    private TS MarchedThrough<TS>(
+        Medium medium, TS behind, Ray ray, double distance, Surface container)
+        where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
         double step = distance / count;
@@ -265,8 +281,9 @@ public class Scene : NamedThing, IDisposable
         double shift = ShiftFor(ray);
         bool gathers = medium.Scatters && Lights.Count > 0;
         double surviving = 1;
-        Color transmittance = Colors.White;
-        Color added = Colors.Black;
+        TS scattering = TS.FromUnbounded(medium.Scattering);
+        TS transmittance = TS.White;
+        TS added = TS.Black;
         List<Intersection> crossings = gathers ? [] : null;
 
         for (int index = 0; index < count; index++)
@@ -281,45 +298,45 @@ public class Scene : NamedThing, IDisposable
 
             // Asked at the same point the density was, so that a medium whose color varies and a
             // medium whose amount varies are describing the same place.
-            Color source = medium.EmissionAt(local) * density;
+            TS source = medium.EmissionAt<TS>(local) * density;
 
             if (gathers)
             {
-                source += medium.Scattering * density * GatheredAt(
+                source += scattering * density * GatheredAt<TS>(
                     medium, container, where, heading, ray.TimeIndex, index, crossings);
             }
 
             // What this step's worth gives up to the eye, dimmed by everything nearer than it, and then
             // the step's own share of the dimming added on for whatever lies further.
             added += source * transmittance * step;
-            transmittance *= Transmitted(medium.ExtinctionAt(density), step);
-            surviving = (transmittance.Red + transmittance.Green + transmittance.Blue) / 3;
+            transmittance *= Transmitted(medium.ExtinctionAt<TS>(density), step);
+            surviving = transmittance.Average;
 
             // Nothing beyond this can show, so there is no sense in walking further.
             if (surviving < 0.001)
                 break;
         }
 
-        return new Color(
-            behind.Red * transmittance.Red + added.Red,
-            behind.Green * transmittance.Green + added.Green,
-            behind.Blue * transmittance.Blue + added.Blue,
+        return (behind * transmittance + added).WithAlpha(
             behind.Alpha + (1 - behind.Alpha) * (1 - surviving));
     }
 
     /// <summary>
-    /// This method returns what fraction of each color survives the given rate of stopping over the
+    /// This method returns what fraction of each band survives the given rate of stopping over the
     /// given length.
     /// </summary>
-    /// <param name="extinction">The rate at which each color stops coming this way.</param>
+    /// <param name="extinction">The rate at which each band stops coming this way.</param>
     /// <param name="distance">The length crossed at that rate.</param>
-    /// <returns>The fraction of each color that gets through.</returns>
-    private static Color Transmitted(Color extinction, double distance)
+    /// <returns>The fraction of each band that gets through.</returns>
+    private static TS Transmitted<TS>(TS extinction, double distance)
+        where TS : struct, ISpectrum<TS>
     {
-        return new Color(
-            Math.Exp(-extinction.Red * distance),
-            Math.Exp(-extinction.Green * distance),
-            Math.Exp(-extinction.Blue * distance));
+        TS surviving = TS.White;
+
+        for (int band = 0; band < TS.Count; band++)
+            surviving[band] = Math.Exp(-extinction[band] * distance);
+
+        return surviving;
     }
 
     /// <summary>
@@ -340,11 +357,12 @@ public class Scene : NamedThing, IDisposable
     /// <param name="crossings">A list to find the shape's far side with, reused between places so that
     /// a walk does not allocate one per step.</param>
     /// <returns>The light the place sends along the ray.</returns>
-    private Color GatheredAt(
+    private TS GatheredAt<TS>(
         Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
         List<Intersection> crossings)
+        where TS : struct, ISpectrum<TS>
     {
-        Color arriving = GatheredDirectlyAt(
+        TS arriving = GatheredDirectlyAt<TS>(
             medium, container, where, heading, timeIndex, index, crossings);
 
         // Everything above is light that reached this place straight from a lamp.  What follows is
@@ -352,7 +370,7 @@ public class Scene : NamedThing, IDisposable
         // it -- and all of which was simply missing until now.
         if (medium.Bounces > 0)
         {
-            arriving += CarriedOnFrom(
+            arriving += CarriedOnFrom<TS>(
                 medium, container, where, heading, medium.Bounces, ShiftFor(where, index), timeIndex,
                 crossings);
         }
@@ -372,11 +390,12 @@ public class Scene : NamedThing, IDisposable
     /// <param name="index">Which sample along the crossing this is.</param>
     /// <param name="crossings">A list to find the shape's far side with.</param>
     /// <returns>The light the lamps send this way.</returns>
-    private Color GatheredDirectlyAt(
+    private TS GatheredDirectlyAt<TS>(
         Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
         List<Intersection> crossings)
+        where TS : struct, ISpectrum<TS>
     {
-        Color arriving = Colors.Black;
+        TS arriving = TS.Black;
 
         foreach (Light light in Lights)
         {
@@ -384,9 +403,9 @@ public class Scene : NamedThing, IDisposable
             // softness is then spread across the crossing for nothing, rather than each sample paying
             // for the whole face of it.
             LightSample sample = light.SampleToward(where, index % light.SampleCount);
-            Color reaching = GetLightReaching(where, sample.Direction, sample.Distance, timeIndex);
+            TS reaching = GetLightReaching<TS>(where, sample.Direction, sample.Distance, timeIndex);
 
-            if (reaching.Matches(Colors.Black))
+            if (reaching.IsBlack)
                 continue;
 
             // A medium filling a surface stands in its own light's way, and nothing else accounts for
@@ -394,9 +413,12 @@ public class Scene : NamedThing, IDisposable
             // A medium filling the surroundings needs no such thing, having been charged for its trip
             // there already.
             if (container is not null)
-                reaching *= SurvivingTheMedium(medium, container, where, sample, timeIndex, crossings);
+            {
+                reaching *= SurvivingTheMedium<TS>(
+                    medium, container, where, sample, timeIndex, crossings);
+            }
 
-            if (reaching.Matches(Colors.Black))
+            if (reaching.IsBlack)
                 continue;
 
             // The angle between the way the light was travelling and the way it leaves toward the eye.
@@ -404,7 +426,7 @@ public class Scene : NamedThing, IDisposable
             // product alone, so this is simply the one direction against the other.
             double phase = medium.PhaseFor(sample.Direction.Dot(heading));
 
-            arriving += light.ColorFor(sample) * reaching *
+            arriving += TS.FromIlluminant(light.ColorFor(sample)) * reaching *
                 (sample.Cone * phase * light.FadingOver(sample.Distance));
         }
 
@@ -438,12 +460,14 @@ public class Scene : NamedThing, IDisposable
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
     /// <param name="crossings">A list to find the shape's edge with.</param>
     /// <returns>The light that arrived here by way of somewhere else.</returns>
-    private Color CarriedOnFrom(
+    private TS CarriedOnFrom<TS>(
         Medium medium, Surface container, Point from, Vector heading, int left, double seed,
         int timeIndex, List<Intersection> crossings)
+        where TS : struct, ISpectrum<TS>
     {
-        Color carried = Colors.Black;
-        Color throughput = Colors.White;
+        TS albedo = medium.AlbedoOf<TS>();
+        TS carried = TS.Black;
+        TS throughput = TS.White;
         Vector going = heading;
         Point at = from;
 
@@ -462,12 +486,12 @@ public class Scene : NamedThing, IDisposable
 
             at += came * howFar;
             going = came;
-            throughput *= medium.Albedo;
+            throughput *= albedo;
 
-            if (throughput.Red + throughput.Green + throughput.Blue < 0.003)
+            if (throughput.Sum < 0.001 * TS.Count)
                 break;
 
-            carried += throughput * GatheredDirectlyAt(
+            carried += throughput * GatheredDirectlyAt<TS>(
                 medium, container, at, going, timeIndex, turn, crossings);
         }
 
@@ -609,9 +633,10 @@ public class Scene : NamedThing, IDisposable
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
     /// <param name="crossings">A list to find the shape's far side with.</param>
     /// <returns>The fraction of each color that arrives.</returns>
-    private static Color SurvivingTheMedium(
+    private static TS SurvivingTheMedium<TS>(
         Medium medium, Surface container, Point where, LightSample sample, int timeIndex,
         List<Intersection> crossings)
+        where TS : struct, ISpectrum<TS>
     {
         Ray toward = new (where, sample.Direction, timeIndex);
 
@@ -629,14 +654,14 @@ public class Scene : NamedThing, IDisposable
         }
 
         if (double.IsPositiveInfinity(edge))
-            return Colors.White;
+            return TS.White;
 
         edge = Math.Min(edge, sample.Distance);
 
         // An even density needs no walking: how much stands in the way is the rate times the length,
         // which is the very thing the closed form is for.
         if (!medium.HasShape)
-            return Transmitted(medium.ExtinctionAt(medium.Density), edge);
+            return Transmitted(medium.ExtinctionAt<TS>(medium.Density), edge);
 
         // A fixed number of steps rather than a share of the crossing's own.  How finely this one
         // shadow is answered is its own question, and tying it to how many places the eye's ray asks
@@ -646,7 +671,7 @@ public class Scene : NamedThing, IDisposable
         const int count = 16;
 
         double step = edge / count;
-        Color depth = Colors.Black;
+        TS depth = TS.Black;
 
         for (int index = 0; index < count; index++)
         {
@@ -654,7 +679,7 @@ public class Scene : NamedThing, IDisposable
             double density = medium.DensityAt(container.WorldToSurface(at, timeIndex));
 
             if (density > 0)
-                depth += medium.ExtinctionAt(density) * step;
+                depth += medium.ExtinctionAt<TS>(density) * step;
         }
 
         return Transmitted(depth, 1);
@@ -764,12 +789,29 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The color to use.</returns>
     public Color GetHitColor(Intersection intersection, int remaining)
     {
-        Color surfaceColor = Lights.Aggregate(Colors.Black, (color, light) =>
-            color + Illuminate(light, intersection));
-        Color reflectedColor = GetReflectionColor(intersection, remaining);
-        Color refractedColor = GetRefractedColor(intersection, remaining);
+        return GetHitColor<RgbSpectrum>(intersection, remaining).ToColor();
+    }
+
+    /// <summary>
+    /// This method is used to determine the light leaving the given intersection point toward the
+    /// eye, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">The intersection point to derive the light for.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <returns>The light to use.</returns>
+    public TS GetHitColor<TS>(Intersection intersection, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
+        TS surfaceColor = TS.Black;
+
+        foreach (Light light in Lights)
+            surfaceColor += Illuminate<TS>(light, intersection);
+
+        TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
+        TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
         Material material = intersection.Surface.Material ?? Material.Default;
-        Color refColor;
+        TS refColor;
 
         // What a surface lets past, it cannot also show.  The pigment may say so color by color,
         // which is what lets one pattern be a window in some places and a wall in others, so the
@@ -792,7 +834,7 @@ public class Scene : NamedThing, IDisposable
         // A surface shows only as much of itself as it stops.  Perfectly clear glass therefore
         // contributes nothing of its own and is seen entirely through, which is what makes a
         // transmitting pigment a window rather than merely a dimmer wall.
-        Color color = surfaceColor * (1 - transparency) + refColor;
+        TS color = surfaceColor * (1 - transparency) + refColor;
 
         // If this hit is on the far side of a surface, the ray reached it by travelling through
         // whatever the surface is made of, and a substance that fades light charges for the trip.
@@ -830,7 +872,8 @@ public class Scene : NamedThing, IDisposable
     /// <param name="light">The light lending its color.</param>
     /// <param name="intersection">The surface point being lit.</param>
     /// <returns>The color the light lends the point.</returns>
-    private Color Illuminate(Light light, Intersection intersection)
+    private TS Illuminate<TS>(Light light, Intersection intersection)
+        where TS : struct, ISpectrum<TS>
     {
         int count = light.SampleCount;
 
@@ -840,12 +883,12 @@ public class Scene : NamedThing, IDisposable
 
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                only, GetLightReaching(
+                only, GetLightReaching<TS>(
                     intersection.LitPoint, only.Direction, only.Distance, intersection.TimeIndex),
                 intersection.Footprint, intersection.Portal);
         }
 
-        Color sum = Colors.Black;
+        TS sum = TS.Black;
 
         for (int index = 0; index < count; index++)
         {
@@ -854,7 +897,7 @@ public class Scene : NamedThing, IDisposable
 
             sum += light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                sample, GetLightReaching(
+                sample, GetLightReaching<TS>(
                     intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
                 intersection.Footprint, intersection.Portal);
         }
@@ -901,8 +944,25 @@ public class Scene : NamedThing, IDisposable
     public Color GetLightReaching(
         Point point, Vector direction, double distance, int timeIndex = 0)
     {
+        return GetLightReaching<RgbSpectrum>(point, direction, distance, timeIndex).ToColor();
+    }
+
+    /// <summary>
+    /// This method returns how much light arrives at the given point from the given direction, up
+    /// to the given distance, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">The point to test.</param>
+    /// <param name="direction">The unit direction from the point toward the light or sample.</param>
+    /// <param name="distance">How far off the light or sample is.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at.</param>
+    /// <returns>The fraction of each band of the light that arrives at the point.</returns>
+    public TS GetLightReaching<TS>(
+        Point point, Vector direction, double distance, int timeIndex = 0)
+        where TS : struct, ISpectrum<TS>
+    {
         Ray ray = new (point, direction, timeIndex);
-        Color reaching = Colors.White;
+        TS reaching = TS.White;
 
         foreach (Intersection intersection in IntersectWithin(ray, distance))
         {
@@ -945,14 +1005,14 @@ public class Scene : NamedThing, IDisposable
                 : material.TransparencyFor(surfaceColor);
 
             if (transparency <= 0)
-                return Colors.Black;
+                return TS.Black;
 
             reaching *= transparency;
 
             if (interior.Filter > 0 || interior.Refracts)
             {
                 if (interior.Filter > 0)
-                    reaching *= interior.GetFilterTint(surfaceColor);
+                    reaching *= interior.GetFilterTint(TS.FromReflectance(surfaceColor));
 
                 // Some of the light never gets in at all, being mirrored off the surface instead,
                 // and how much depends on how glancing its approach is.  This is what keeps clear
@@ -979,7 +1039,7 @@ public class Scene : NamedThing, IDisposable
         // answer for a fog described as having no far side.  A fog with one is a bounded surface.
         return Environment.Medium is null
             ? reaching
-            : reaching * Environment.Medium.GetTransmittanceOver(distance);
+            : reaching * Environment.Medium.GetTransmittanceOver<TS>(distance);
     }
 
     /// <summary>
@@ -1028,7 +1088,7 @@ public class Scene : NamedThing, IDisposable
         // whether any light reaches at all.
         LightSample sample = light.SampleToward(point, 0);
 
-        return GetLightReaching(point, sample.Direction, sample.Distance).Matches(Colors.Black);
+        return GetLightReaching<RgbSpectrum>(point, sample.Direction, sample.Distance).IsBlack;
     }
 
     /// <summary>
@@ -1040,11 +1100,25 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetReflectionColor(Intersection intersection, int remaining)
     {
+        return GetReflectionColor<RgbSpectrum>(intersection, remaining).ToColor();
+    }
+
+    /// <summary>
+    /// This method is used to determine the light along the reflected ray from the given
+    /// intersection, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">The intersection to start with.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <returns>The reflected light.</returns>
+    public TS GetReflectionColor<TS>(Intersection intersection, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
         Material material = intersection.Surface.Material ?? Material.Default;
         double reflective = material.Reflective;
 
         if (remaining < 1 || reflective == 0)
-            return Colors.Black;
+            return TS.Black;
 
         // The cone goes on widening past the mirror, so what is seen in a reflection is filtered for
         // how far the light really travelled rather than for how far it is from the glass.  A curved
@@ -1053,7 +1127,7 @@ public class Scene : NamedThing, IDisposable
         Ray reflectedRay = new (
             intersection.LitPoint, intersection.Reflect, intersection.TimeIndex,
             intersection.ConeSpread, intersection.ConeTravelled);
-        Color color = GetColorFor(reflectedRay, remaining - 1) * reflective;
+        TS color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
 
         // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
         // surface throw back a gold scene rather than a plain one.  The angle here is the eye
@@ -1061,7 +1135,7 @@ public class Scene : NamedThing, IDisposable
         // highlight has to settle for.
         if (material.Metallic != 0)
         {
-            Color pigmentColor = material.GetColorFor(intersection);
+            TS pigmentColor = TS.FromReflectance(material.GetColorFor(intersection));
 
             color *= material.GetMetallicTint(pigmentColor, intersection.Eye.Dot(intersection.Normal));
         }
@@ -1078,6 +1152,20 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The reflected color.</returns>
     public Color GetRefractedColor(Intersection intersection, int remaining)
     {
+        return GetRefractedColor<RgbSpectrum>(intersection, remaining).ToColor();
+    }
+
+    /// <summary>
+    /// This method is used to determine the light along the refracted ray from the given
+    /// intersection, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">The intersection to start with.</param>
+    /// <param name="remaining">The remaining number of refraction recursions allowed.</param>
+    /// <returns>The refracted light.</returns>
+    public TS GetRefractedColor<TS>(Intersection intersection, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
         Material material = intersection.Surface.Material ?? Material.Default;
 
         // The pigment may say, color by color, how much light gets past it, so where it might,
@@ -1091,14 +1179,14 @@ public class Scene : NamedThing, IDisposable
             : material.TransparencyFor(pigmentColor);
 
         if (remaining < 1 || transparency == 0)
-            return Colors.Black;
+            return TS.Black;
 
         double ratio = intersection.N1 / intersection.N2;
         double cosI = intersection.Eye.Dot(intersection.Normal);
         double sin2T = ratio * ratio * (1 - cosI * cosI);
 
         if (sin2T > 1)
-            return Colors.Black;
+            return TS.Black;
 
         double cosT = Math.Sqrt(1 - sin2T);
         Vector direction = intersection.Normal * (ratio * cosI - cosT) -
@@ -1107,7 +1195,7 @@ public class Scene : NamedThing, IDisposable
 
         Ray refractedRay = new (point, direction, intersection.TimeIndex,
             intersection.ConeSpread, intersection.ConeTravelled);
-        Color color = GetColorFor(refractedRay, remaining - 1) * transparency;
+        TS color = GetColorFor<TS>(refractedRay, remaining - 1) * transparency;
 
         // Transparency says how much light gets through; the filter says what color it comes out.
         // Tinting toward the pigment's color at this very point, rather than toward some single
@@ -1115,7 +1203,7 @@ public class Scene : NamedThing, IDisposable
         // the transparency it follows, this is charged once per surface crossed, so a solid tints
         // what passes through it twice -- going in, and coming back out.
         if (material.Interior.Filter > 0)
-            color *= material.Interior.GetFilterTint(pigmentColor);
+            color *= material.Interior.GetFilterTint(TS.FromReflectance(pigmentColor));
 
         return color;
     }

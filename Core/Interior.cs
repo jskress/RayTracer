@@ -85,12 +85,28 @@ public class Interior
     /// <returns>The tint to apply, which is white when no filtering is called for.</returns>
     public Color GetFilterTint(Color surfaceColor)
     {
+        return Filter <= 0
+            ? Colors.White
+            : GetFilterTint(RgbSpectrum.From(surfaceColor)).ToColor();
+    }
+
+    /// <summary>
+    /// This method returns the amount by which light passing through a surface is tinted by that
+    /// surface's own color, band by band, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="surfaceColor">The share of each band the surface gives back where light
+    /// crossed it.</param>
+    /// <returns>The tint to apply, which is white when no filtering is called for.</returns>
+    public TS GetFilterTint<TS>(TS surfaceColor)
+        where TS : struct, ISpectrum<TS>
+    {
         // A lerp from white -- light through untouched -- toward the surface's color.  This is
         // the same shape as Material.GetMetallicTint() on purpose, so that the two properties that
         // tint by a surface's own color read alike.
         return Filter <= 0
-            ? Colors.White
-            : Colors.White + (surfaceColor - Colors.White) * Filter;
+            ? TS.White
+            : TS.White + (surfaceColor - TS.White) * Filter;
     }
 
     /// <summary>

@@ -129,10 +129,26 @@ public class Medium
     /// much of it there happens to be at one place or another.
     /// </para>
     /// </summary>
-    public Color Albedo => new (
-        ShareCarriedOn(Absorption.Red, Scattering.Red),
-        ShareCarriedOn(Absorption.Green, Scattering.Green),
-        ShareCarriedOn(Absorption.Blue, Scattering.Blue));
+    public Color Albedo => AlbedoOf<RgbSpectrum>().ToColor();
+
+    /// <summary>
+    /// This method returns the share of stopped light that carries on, band by band, in whatever bands
+    /// the render is carrying light in.  See <see cref="Albedo"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <returns>The share carried on in each band.</returns>
+    public TS AlbedoOf<TS>()
+        where TS : struct, ISpectrum<TS>
+    {
+        TS absorption = TS.FromUnbounded(Absorption);
+        TS scattering = TS.FromUnbounded(Scattering);
+        TS albedo = TS.White;
+
+        for (int band = 0; band < TS.Count; band++)
+            albedo[band] = ShareCarriedOn(absorption[band], scattering[band]);
+
+        return albedo;
+    }
 
     /// <summary>
     /// This property holds how many places along a ray's crossing the medium is asked what light
@@ -208,6 +224,19 @@ public class Medium
         return EmissionPigment is null ? Emission : EmissionPigment.GetTransformedColorFor(point);
     }
 
+    /// <summary>
+    /// This method returns the light the medium gives off at the given place, in whatever bands the
+    /// render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <returns>The light it gives off there.</returns>
+    public TS EmissionAt<TS>(Point point)
+        where TS : struct, ISpectrum<TS>
+    {
+        return TS.FromIlluminant(EmissionAt(point));
+    }
+
     public double DensityAt(Point point)
     {
         if (DensityField is not null)
@@ -221,16 +250,22 @@ public class Medium
 
     /// <summary>
     /// This method returns how much light stops coming this way per unit of distance at a place of the
-    /// given density, color by color.
+    /// given density, band by band.
     /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="density">How much of the stuff there is at the place in question.</param>
-    /// <returns>The rate at which each color leaves the ray.</returns>
-    public Color ExtinctionAt(double density)
+    /// <returns>The rate at which each band leaves the ray.</returns>
+    public TS ExtinctionAt<TS>(double density)
+        where TS : struct, ISpectrum<TS>
     {
-        return new Color(
-            (Absorption.Red + Scattering.Red) * density,
-            (Absorption.Green + Scattering.Green) * density,
-            (Absorption.Blue + Scattering.Blue) * density);
+        TS absorption = TS.FromUnbounded(Absorption);
+        TS scattering = TS.FromUnbounded(Scattering);
+        TS extinction = TS.White;
+
+        for (int band = 0; band < TS.Count; band++)
+            extinction[band] = (absorption[band] + scattering[band]) * density;
+
+        return extinction;
     }
 
     /// <summary>
@@ -457,13 +492,30 @@ public class Medium
     /// <returns>The fraction of each color that gets through.</returns>
     public Color GetTransmittanceOver(double distance)
     {
-        if (!Affects || distance <= 0)
-            return Colors.White;
+        return GetTransmittanceOver<RgbSpectrum>(distance).ToColor();
+    }
 
-        return new Color(
-            SurvivingFraction(Absorption.Red, Scattering.Red, distance),
-            SurvivingFraction(Absorption.Green, Scattering.Green, distance),
-            SurvivingFraction(Absorption.Blue, Scattering.Blue, distance));
+    /// <summary>
+    /// This method returns the fraction of light that survives a crossing of the given length, band
+    /// by band, in whatever bands the render is carrying light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="distance">How far the light travels through the medium.</param>
+    /// <returns>The fraction of each band that gets through.</returns>
+    public TS GetTransmittanceOver<TS>(double distance)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (!Affects || distance <= 0)
+            return TS.White;
+
+        TS absorption = TS.FromUnbounded(Absorption);
+        TS scattering = TS.FromUnbounded(Scattering);
+        TS surviving = TS.White;
+
+        for (int band = 0; band < TS.Count; band++)
+            surviving[band] = SurvivingFraction(absorption[band], scattering[band], distance);
+
+        return surviving;
     }
 
     /// <summary>
@@ -477,18 +529,41 @@ public class Medium
     /// <returns>The color to hand back in its place.</returns>
     public Color ApplyOver(Color behind, double distance)
     {
+        return !Affects || distance <= 0
+            ? behind
+            : ApplyOver(RgbSpectrum.From(behind), distance).ToColor();
+    }
+
+    /// <summary>
+    /// This method returns what the eye is handed after a crossing of the given length, in whatever
+    /// bands the render is carrying light in.  See <see cref="ApplyOver(Color, double)"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="behind">The light arriving from beyond the medium.</param>
+    /// <param name="distance">How far the ray travels through the medium; may be infinite.</param>
+    /// <returns>The light to hand back in its place.</returns>
+    public TS ApplyOver<TS>(TS behind, double distance)
+        where TS : struct, ISpectrum<TS>
+    {
         if (!Affects || distance <= 0)
             return behind;
 
-        double red = SurvivingFraction(Absorption.Red, Scattering.Red, distance);
-        double green = SurvivingFraction(Absorption.Green, Scattering.Green, distance);
-        double blue = SurvivingFraction(Absorption.Blue, Scattering.Blue, distance);
+        TS absorption = TS.FromUnbounded(Absorption);
+        TS scattering = TS.FromUnbounded(Scattering);
+        TS emission = TS.FromIlluminant(Emission);
+        TS seen = TS.White;
+        double surviving = 0;
 
-        return new Color(
-            behind.Red * red + AddedAlong(Absorption.Red, Scattering.Red, Emission.Red, distance),
-            behind.Green * green + AddedAlong(Absorption.Green, Scattering.Green, Emission.Green, distance),
-            behind.Blue * blue + AddedAlong(Absorption.Blue, Scattering.Blue, Emission.Blue, distance),
-            Covering(behind.Alpha, (red + green + blue) / 3));
+        for (int band = 0; band < TS.Count; band++)
+        {
+            double through = SurvivingFraction(absorption[band], scattering[band], distance);
+
+            surviving += through;
+            seen[band] = behind[band] * through +
+                         AddedAlong(absorption[band], scattering[band], emission[band], distance);
+        }
+
+        return seen.WithAlpha(Covering(behind.Alpha, surviving / TS.Count));
     }
 
     /// <summary>

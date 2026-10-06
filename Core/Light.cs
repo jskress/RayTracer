@@ -79,17 +79,6 @@ public abstract class Light : NamedThing
     public virtual Color ColorFor(LightSample sample) => Color;
 
     /// <summary>
-    /// This method shades a point under this light looked at from where it lies, which is the
-    /// whole of it for every light but an area one.  It is the convenient form for a caller that
-    /// has no sample of its own in hand.
-    /// </summary>
-    /// <param name="point">The point being illuminated.</param>
-    /// <param name="eye">The eye vector.</param>
-    /// <param name="normal">The surface normal vector.</param>
-    /// <param name="surface">The surface being illuminated.</param>
-    /// <param name="lightReaching">How much of this light arrives at the point.</param>
-    /// <returns>The resulting color.</returns>
-    /// <summary>
     /// This property holds the distance at which the light's color means what it says, or
     /// <c>null</c> for a light that does not dim with distance at all.
     /// <para>
@@ -137,9 +126,33 @@ public abstract class Light : NamedThing
             : Math.Pow(reference / distance, FadePower);
     }
 
+    /// <summary>
+    /// This method shades a point under this light looked at from where it lies, which is the
+    /// whole of it for every light but an area one.  It is the convenient form for a caller that
+    /// has no sample of its own in hand.
+    /// </summary>
+    /// <param name="point">The point being illuminated.</param>
+    /// <param name="eye">The eye vector.</param>
+    /// <param name="normal">The surface normal vector.</param>
+    /// <param name="surface">The surface being illuminated.</param>
+    /// <param name="lightReaching">How much of this light arrives at the point.</param>
+    /// <returns>The resulting color.</returns>
     public Color ApplyPhong(Point point, Vector eye, Vector normal, Surface surface, Color lightReaching)
     {
         return ApplyPhong(point, eye, normal, surface, SampleToward(point, 0), lightReaching);
+    }
+
+    /// <summary>
+    /// This method works out the color a surface takes on under this light, shaded in three bands.
+    /// See <see cref="ApplyPhong{TS}"/>.
+    /// </summary>
+    public Color ApplyPhong(
+        Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
+        Color lightReaching, Footprint footprint = null, Surface portal = null)
+    {
+        return ApplyPhong(
+            point, eye, normal, surface, sample, RgbSpectrum.From(lightReaching), footprint,
+            portal).ToColor();
     }
 
     /// <summary>
@@ -163,20 +176,23 @@ public abstract class Light : NamedThing
     /// for a caller with no footprint to give, which asks the pigment for a point as before.</param>
     /// <param name="portal">The instance this point was found through, when the surface is a shape
     /// shared among several places, so that its pattern is read in the right space.</param>
-    public Color ApplyPhong(
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        Color lightReaching, Footprint footprint = null, Surface portal = null)
+        TS lightReaching, Footprint footprint = null, Surface portal = null)
+        where TS : struct, ISpectrum<TS>
     {
         Material material = surface.Material ?? Material.Default;
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
-        Color pigmentColor = material.GetColorFor(surface, point, normal, footprint, portal);
-        Color color = pigmentColor * ColorFor(sample);
+        TS pigmentColor = TS.FromReflectance(
+            material.GetColorFor(surface, point, normal, footprint, portal));
+        TS color = pigmentColor * TS.FromIlluminant(ColorFor(sample));
         Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come
         // straight from this source, so it is the one term a shadow does not take away.
-        Color ambientColor = color * material.EffectiveAmbient;
+        TS ambientColor = color * material.EffectiveAmbient;
 
         // How much of the light is pointed this way at all, which is where a spotlight's cone comes
         // in.  It scales everything that depends on the light arriving, and leaves the ambient term
@@ -185,17 +201,17 @@ public abstract class Light : NamedThing
         // the reaching color is passed straight through untouched, which keeps such a light's
         // shading exactly what it was before any of this existed.
         double intensity = sample.Cone * FadingOver(sample.Distance);
-        Color reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
+        TS reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
 
-        if (reaching.Matches(Colors.Black))
+        if (reaching.IsBlack)
             return ambientColor;
 
-        Color diffuseColor;
-        Color specularColor;
+        TS diffuseColor;
+        TS specularColor;
         double lightDotNormal = vector.Dot(normal);
 
         if (lightDotNormal < 0)
-            diffuseColor = specularColor = Colors.Black;
+            diffuseColor = specularColor = TS.Black;
         else
         {
             // How much of the light the surface takes, before its color is applied.  Brilliance
@@ -213,12 +229,12 @@ public abstract class Light : NamedThing
             double reflectDotEye = reflect.Dot(eye);
 
             if (reflectDotEye < 0)
-                specularColor = Colors.Black;
+                specularColor = TS.Black;
             else
             {
                 double factor = Math.Pow(reflectDotEye, material.Shininess);
 
-                specularColor = Color * material.Specular * factor;
+                specularColor = TS.FromIlluminant(Color) * material.Specular * factor;
 
                 // A metal's highlight takes the color of the metal rather than of the light.  The
                 // angle used is the light against the normal, which is the approximation POV-Ray
