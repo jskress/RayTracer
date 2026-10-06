@@ -1,3 +1,6 @@
+using System.Globalization;
+using RayTracer.Core;
+
 namespace RayTracer.Renderer;
 
 /// <summary>
@@ -145,6 +148,209 @@ public class Statistics
     private static double Ratio(long numerator, long denominator)
     {
         return denominator == 0 ? 0 : (double) numerator / denominator;
+    }
+
+    /// <summary>
+    /// This property holds what the scene held once it was ready to render, or null before then.
+    /// </summary>
+    public SceneCensus Census { get; private set; }
+
+    /// <summary>
+    /// This property holds the width of the picture rendered, in pixels.
+    /// </summary>
+    public int Width { get; private set; }
+
+    /// <summary>
+    /// This property holds the height of the picture rendered, in pixels.
+    /// </summary>
+    public int Height { get; private set; }
+
+    /// <summary>
+    /// This property reports how long the rendering itself took: from the first pixel to the last,
+    /// leaving out reading the scene and building it.
+    /// </summary>
+    public TimeSpan RenderTime { get; private set; }
+
+    /// <summary>
+    /// This method notes what the scene about to be rendered holds, and the size of the picture it
+    /// is rendered at.
+    /// </summary>
+    /// <param name="scene">The scene, ready to render.</param>
+    /// <param name="width">The picture's width, in pixels.</param>
+    /// <param name="height">The picture's height, in pixels.</param>
+    public void Describe(Scene scene, int width, int height)
+    {
+        Census = SceneCensus.Of(scene);
+        Width = width;
+        Height = height;
+    }
+
+    /// <summary>
+    /// This method adds the time a render took to the time rendering has taken.
+    /// </summary>
+    /// <param name="time">How long the render took.</param>
+    public void AddRenderTime(TimeSpan time)
+    {
+        RenderTime += time;
+    }
+
+    /// <summary>
+    /// This method writes everything out for a person to read: what the render cost, and what the
+    /// scene held, laid out as a short report.
+    /// </summary>
+    /// <param name="title">What the report is of, usually the scene file's name.</param>
+    /// <returns>The report's lines.</returns>
+    public List<string> AsReport(string title)
+    {
+        List<string> lines = [$"Statistics for {title}", ""];
+        double seconds = RenderTime.TotalSeconds;
+
+        if (Width > 0)
+            AddLine(lines, "Image", $"{Width} x {Height}, {Plural(Pixels, "pixel")}");
+
+        AddLine(lines, "Samples", $"{Number(Samples)}, {Fraction(SamplesPerPixel)} a pixel");
+        AddLine(lines, "Rays",
+            $"{Number(SceneRays)}, {Fraction(SceneRaysPerSample)} a sample, {Number(PrimaryRays)} of them " +
+            "from the camera");
+
+        if (seconds > 0)
+        {
+            AddLine(lines, "Rendering",
+                $"{Duration(RenderTime)}, {Number((long) Math.Round(SceneRays / seconds))} rays a second");
+        }
+
+        if (Census is not null)
+            AddScene(lines, Census);
+
+        return lines;
+    }
+
+    /// <summary>
+    /// This method adds what the scene held to a report.
+    /// </summary>
+    /// <param name="lines">The report so far.</param>
+    /// <param name="census">What the scene held.</param>
+    private static void AddScene(List<string> lines, SceneCensus census)
+    {
+        List<KeyValuePair<string, long>> kinds = census.Surfaces
+            .OrderByDescending(pair => pair.Value)
+            .ThenBy(pair => pair.Key, StringComparer.Ordinal)
+            .ToList();
+        long surfaces = kinds.Sum(pair => pair.Value);
+
+        lines.Add("");
+
+        if (surfaces == 0)
+            AddLine(lines, "Surfaces", "none");
+        else
+        {
+            AddLine(lines, "Surfaces", $"{Number(surfaces)}, of {Plural(kinds.Count, "kind")}");
+
+            int nameWidth = kinds.Max(pair => pair.Key.Length);
+            int countWidth = kinds.Max(pair => Number(pair.Value).Length);
+
+            foreach ((string kind, long count) in kinds)
+            {
+                // A kind built from pieces of its own says how many, which is what it costs to trace.
+                string pieces = census.Pieces.TryGetValue(kind, out long made) && made > count
+                    ? $"  ({Plural(made, "piece")})"
+                    : "";
+
+                lines.Add($"      {kind.PadRight(nameWidth)}  {Number(count).PadLeft(countWidth)}{pieces}");
+            }
+        }
+
+        List<string> combinations = [];
+
+        if (census.Unions > 0)
+            combinations.Add(Plural(census.Unions, "union"));
+
+        if (census.Intersections > 0)
+            combinations.Add(Plural(census.Intersections, "intersection"));
+
+        if (census.Differences > 0)
+            combinations.Add(Plural(census.Differences, "difference"));
+
+        if (combinations.Count > 0)
+            AddLine(lines, "Combined", Joined(combinations));
+
+        if (census.SharedShapes > 0)
+        {
+            AddLine(lines, "Shared",
+                $"{Plural(census.SharedShapes, "shape")}, shown {Plural(census.SharedUses, "time")}");
+        }
+
+        List<string> lights = census.Lights
+            .OrderByDescending(pair => pair.Value)
+            .ThenBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => Plural(pair.Value, pair.Key))
+            .ToList();
+
+        AddLine(lines, "Lights", lights.Count == 0
+            ? "none"
+            : $"{Number(census.Lights.Values.Sum())}: {Joined(lights)}");
+    }
+
+    /// <summary>
+    /// This method adds one labeled line to a report.
+    /// </summary>
+    private static void AddLine(List<string> lines, string label, string value)
+    {
+        lines.Add($"  {label,-12}{value}");
+    }
+
+    /// <summary>
+    /// This method writes a count with its separators, the same way wherever the program runs.
+    /// </summary>
+    private static string Number(long value)
+    {
+        return value.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// This method writes a ratio to two places.
+    /// </summary>
+    private static string Fraction(double value)
+    {
+        return value.ToString("F2", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// This method writes a count of something, with the word for it made plural as it needs.
+    /// </summary>
+    private static string Plural(long count, string word)
+    {
+        return $"{Number(count)} {word}{(count == 1 ? "" : "s")}";
+    }
+
+    /// <summary>
+    /// This method joins a list the way a sentence would: "a, b and c".
+    /// </summary>
+    private static string Joined(List<string> items)
+    {
+        return items.Count == 1
+            ? items[0]
+            : $"{string.Join(", ", items.Take(items.Count - 1))} and {items[^1]}";
+    }
+
+    /// <summary>
+    /// This method writes a length of time in words, to a tenth of a second once it runs to minutes.
+    /// </summary>
+    private static string Duration(TimeSpan time)
+    {
+        if (time.TotalSeconds < 60)
+            return $"{time.TotalSeconds.ToString("F2", CultureInfo.InvariantCulture)} seconds";
+
+        double seconds = time.Seconds + time.Milliseconds / 1000.0;
+        List<string> parts = [];
+
+        if (time.TotalHours >= 1)
+            parts.Add(Plural((long) time.TotalHours, "hour"));
+
+        parts.Add(Plural(time.Minutes, "minute"));
+        parts.Add($"{seconds.ToString("F1", CultureInfo.InvariantCulture)} seconds");
+
+        return Joined(parts);
     }
 
     /// <summary>

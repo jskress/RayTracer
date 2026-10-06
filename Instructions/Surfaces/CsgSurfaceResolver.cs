@@ -64,7 +64,8 @@ public class CsgSurfaceResolver : SurfaceResolver<CsgSurface>, IValidatable
             {
                 Operation = Operation,
                 Left = surfaces[0],
-                Right = surfaces[1]
+                Right = surfaces[1],
+                IsChainLink = true
             };
 
             surfaces.RemoveFirst();
