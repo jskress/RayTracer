@@ -358,4 +358,162 @@ public class TestCsgSurfaces
             hits.Any(hit => hit.Distance > 0.0001 && hit.Distance < distance),
             "nothing the CSG keeps should stand between a point in the removed half and the lamp");
     }
+
+    /// <summary>
+    /// A plane is a half-space, so a ray climbing up through it began inside it, and one heading down
+    /// began outside; one running along it is inside all the way if it is below.  Turned over, the
+    /// plane's inside turns over with it.
+    /// </summary>
+    [TestMethod]
+    public void TestAPlaneKnowsWhereARayBegins()
+    {
+        Plane plane = new ();
+        Plane over = new () { Transform = Transforms.RotateAroundX(180) };
+
+        Assert.IsTrue(plane.StartsInside(new Ray(new Point(0, 5, 0), new Vector(0, 1, 0))), "climbing");
+        Assert.IsFalse(plane.StartsInside(new Ray(new Point(0, -5, 0), new Vector(0, -1, 0))), "falling");
+        Assert.IsTrue(plane.StartsInside(new Ray(new Point(0, -1, 0), new Vector(1, 0, 0))), "along, below");
+        Assert.IsFalse(plane.StartsInside(new Ray(new Point(0, 1, 0), new Vector(1, 0, 0))), "along, above");
+        Assert.IsFalse(over.StartsInside(new Ray(new Point(0, 5, 0), new Vector(0, 1, 0))), "turned over");
+        Assert.IsFalse(new Sphere().StartsInside(new Ray(Point.Zero, new Vector(0, 1, 0))), "a sphere");
+    }
+
+    /// <summary>
+    /// A floor cut from a plane by a box is lit from above: the top of the box, which the cut took away,
+    /// casts no shadow on it.
+    /// </summary>
+    [TestMethod]
+    public void TestAFloorCutFromAPlaneIsNotShadowedByWhatWasCutAway()
+    {
+        Scene scene = new ();
+        PointLight lamp = new () { Location = new Point(0, 10, 0) };
+
+        scene.Lights.Add(lamp);
+        scene.Surfaces.Add(new CsgSurface
+        {
+            Operation = CsgOperation.Intersection,
+            Left = new Plane(),
+            Right = new Cube { Transform = Transforms.Scale(5, 1, 5) }
+        });
+
+        Assert.IsFalse(scene.IsInShadow(lamp, new Point(0, 0.001, 0)), "on the floor");
+        Assert.IsFalse(scene.IsInShadow(lamp, new Point(2, 0.5, 2)), "above it");
+    }
+
+    /// <summary>
+    /// A sphere with its lower half cut away by a plane, seen from below, shows its flat cut and then
+    /// its dome -- not the half that is gone.  It must, whether or not it has been readied.
+    /// </summary>
+    [TestMethod]
+    public void TestASphereCutByAPlaneShowsItsTopToARayFromBelow()
+    {
+        foreach (bool readied in new[] { false, true })
+        {
+            CsgSurface half = new ()
+            {
+                Operation = CsgOperation.Difference, Left = new Sphere(), Right = new Plane()
+            };
+
+            if (readied)
+                half.PrepareForRendering();
+
+            AssertCrossings(half, new Ray(new Point(0, -2, 0), new Vector(0, 1, 0)), [2, 3],
+                readied ? "readied" : "as built");
+        }
+    }
+
+    /// <summary>
+    /// A ray running along inside a floor cut from a plane, under its top, crosses the sides of the box
+    /// it was cut by, since it is inside the plane the whole way.
+    /// </summary>
+    [TestMethod]
+    public void TestARayAlongInsideACutPlaneMeetsTheSides()
+    {
+        CsgSurface floor = new ()
+        {
+            Operation = CsgOperation.Intersection, Left = new Plane(), Right = new Cube()
+        };
+
+        AssertCrossings(floor, new Ray(new Point(-5, -0.5, 0), new Vector(1, 0, 0)), [4, 6], "along it");
+    }
+
+    /// <summary>
+    /// A plane is still a plane when it stands in a group or is shared through an instance: a ray
+    /// climbing through either, cut by a box, enters the box inside the plane and leaves the plane
+    /// inside the box.
+    /// </summary>
+    [TestMethod]
+    public void TestAPlaneInAGroupOrAnInstanceStillBeginsInside()
+    {
+        Surface[] wrapped = [new Group { Surfaces = { new Plane() } }, new Instance { Prototype = new Plane() }];
+
+        foreach (Surface plane in wrapped)
+        {
+            foreach (bool readied in new[] { false, true })
+            {
+                CsgSurface floor = new ()
+                {
+                    Operation = CsgOperation.Intersection, Left = plane, Right = new Cube()
+                };
+
+                if (readied)
+                    floor.PrepareForRendering();
+
+                AssertCrossings(floor, new Ray(new Point(0, -3, 0), new Vector(0, 1, 0)), [2, 3],
+                    $"{plane.GetType().Name}, {(readied ? "readied" : "as built")}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// A combination that is endless reports where a ray begins to the combination it is a side of,
+    /// whether it is that side itself or stands in a group that is.  A plane joined to a sphere above
+    /// it, all cut to a box: a ray climbing through enters the box already inside the union, leaves the
+    /// plane, enters the sphere, and leaves the box.
+    /// </summary>
+    [TestMethod]
+    public void TestAnEndlessSideSaysWhereARayBegins()
+    {
+        foreach (bool grouped in new[] { false, true })
+        {
+            foreach (bool readied in new[] { false, true })
+            {
+                CsgSurface union = new ()
+                {
+                    Operation = CsgOperation.Union,
+                    Left = new Plane(),
+                    Right = new Sphere { Transform = Transforms.Translate(0, 1.5, 0) }
+                };
+                CsgSurface cut = new ()
+                {
+                    Operation = CsgOperation.Intersection,
+                    Left = grouped ? new Group { Surfaces = { union } } : union,
+                    Right = new Cube { Transform = Transforms.Scale(2) }
+                };
+
+                if (readied)
+                    cut.PrepareForRendering();
+
+                AssertCrossings(cut, new Ray(new Point(0, -5, 0), new Vector(0, 1, 0)), [3, 5, 5.5, 7],
+                    $"{(grouped ? "in a group" : "alone")}, {(readied ? "readied" : "as built")}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// This method asserts that a surface keeps exactly the crossings of a ray at the given distances.
+    /// </summary>
+    private static void AssertCrossings(Surface surface, Ray ray, double[] expected, string what)
+    {
+        List<Intersection> hits = [];
+
+        surface.Intersect(ray, hits);
+
+        double[] found = hits.Select(hit => hit.Distance).OrderBy(distance => distance).ToArray();
+
+        Assert.AreEqual(expected.Length, found.Length, $"{what}: crossings at {string.Join(", ", found)}");
+
+        for (int index = 0; index < expected.Length; index++)
+            Assert.AreEqual(expected[index], found[index], 1e-9, $"{what}: crossing {index}");
+    }
 }
