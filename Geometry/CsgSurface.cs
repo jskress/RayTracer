@@ -174,27 +174,72 @@ public class CsgSurface : Surface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
-        List<Intersection> ours = [];
+        AddIntersectionsReportingStart(ray, intersections);
+    }
 
-        Left.Intersect(ray, ours);
-        Right.Intersect(ray, ours);
+    /// <summary>
+    /// This method finds where a ray crosses this combination and reports whether it begins inside it.
+    /// Each side says where the ray begins as it reports its crossings, which is where the walk over
+    /// those crossings has to start from; and what this combination makes of the two is what it in
+    /// turn says to whatever it is a side of.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this surface's own space.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this combination.</returns>
+    protected override bool AddIntersectionsReportingStart(Ray ray, List<Intersection> intersections)
+    {
+        List<Intersection> ours = [];
+        bool inLeft = Left.IntersectReportingStart(ray, ours);
+        bool inRight = Right.IntersectReportingStart(ray, ours);
 
         ours.Sort();
 
-        FilterIntersections(ours);
+        FilterIntersections(ours, inLeft, inRight);
 
         intersections.AddRange(ours);
+
+        return Holds(inLeft, inRight);
+    }
+
+    /// <summary>
+    /// This method reports whether a ray begins inside this combination, from where it begins with
+    /// respect to each side.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this surface's own space.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this combination.</returns>
+    protected override bool StartsInsideHere(Ray ray)
+    {
+        return Holds(Left.StartsInside(ray), Right.StartsInside(ray));
+    }
+
+    /// <summary>
+    /// This method reports whether a point is inside this combination, given whether it is inside
+    /// each side.
+    /// </summary>
+    /// <param name="inLeft">Whether the point is inside the left side.</param>
+    /// <param name="inRight">Whether the point is inside the right side.</param>
+    /// <returns><c>true</c>, if the point is inside the combination.</returns>
+    private bool Holds(bool inLeft, bool inRight)
+    {
+        return Operation switch
+        {
+            CsgOperation.Union => inLeft || inRight,
+            CsgOperation.Intersection => inLeft && inRight,
+            CsgOperation.Difference => inLeft && !inRight,
+            _ => throw new Exception($"Unknown operation: {Operation}")
+        };
     }
 
     /// <summary>
     /// This method is used to filter unwanted intersections out of the given list.
     /// </summary>
-    /// <param name="intersections">The list of intersections to filter.</param>
-    public void FilterIntersections(List<Intersection> intersections)
+    /// <param name="intersections">The list of intersections to filter, in order along the ray.</param>
+    /// <param name="inLeft">Whether the ray begins inside the left side, which only something
+    /// endless can do; see <see cref="Surface.StartsInside"/>.</param>
+    /// <param name="inRight">Whether the ray begins inside the right side.</param>
+    public void FilterIntersections(
+        List<Intersection> intersections, bool inLeft = false, bool inRight = false)
     {
-        bool inLeft = false;
-        bool inRight = false;
-
         intersections.RemoveAll(
             intersection =>
             {

@@ -39,6 +39,25 @@ public class Plane : Surface
     }
 
     /// <summary>
+    /// This method reports whether a ray begins inside the half-space below the plane.  One that
+    /// crosses it comes from the side it is heading away from, so a ray climbing up through the plane
+    /// began below it; one running along it never crosses, and is inside all the way if it is inside
+    /// at all.  Which rays count as running along it is settled exactly as it is for finding the
+    /// crossing, so that the two answers can never disagree.
+    /// </summary>
+    /// <param name="ray">The ray to test, in the plane's own space.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is below the plane.</returns>
+    protected override bool StartsInsideHere(Ray ray)
+    {
+        double directionY = ray.Direction.Y;
+
+        if ((directionY * directionY).IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction)))
+            return ray.Origin.Y < 0;
+
+        return directionY > 0;
+    }
+
+    /// <summary>
     /// This method returns the normal for the plane.  Since we are a plane, the normal
     /// is a constant.  It is assumed that the point will have been transformed to
     /// surface-space coordinates.  The vector returned will also be in surface-space

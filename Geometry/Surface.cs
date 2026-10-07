@@ -471,6 +471,78 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
+    /// This method finds where a ray crosses this surface, exactly as <see cref="Intersect"/> does,
+    /// and reports as well whether the ray begins inside it -- see <see cref="StartsInside"/>.  It is
+    /// what a <see cref="CsgSurface"/> asks of its two sides, getting both answers from the one trip
+    /// down: a long chain of combinations asking the second question separately would walk the whole
+    /// chain below it again at every link.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this solid.</returns>
+    internal bool IntersectReportingStart(Ray ray, List<Intersection> intersections)
+    {
+        ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
+
+        // Anything with a box ends somewhere, so a ray followed back far enough is out of it.
+        if (BoundingBox != null)
+        {
+            if (BoundingBox.IsHitBy(ray))
+                AddIntersections(ray, intersections);
+
+            return false;
+        }
+
+        return AddIntersectionsReportingStart(ray, intersections);
+    }
+
+    /// <summary>
+    /// This method adds where a ray, already in this surface's own space, crosses it, and reports
+    /// whether the ray begins inside it.  A surface simply answers the two questions one after the
+    /// other; one that holds others may answer both on the same trip.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this surface's own space.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this solid.</returns>
+    protected virtual bool AddIntersectionsReportingStart(Ray ray, List<Intersection> intersections)
+    {
+        AddIntersections(ray, intersections);
+
+        return StartsInsideHere(ray);
+    }
+
+    /// <summary>
+    /// This method reports whether a ray begins inside this solid: whether, followed back endlessly
+    /// behind its origin, it is still within it.
+    /// <para>
+    /// **A <see cref="CsgSurface"/> needs to know**, because it settles what is solid by walking the
+    /// crossings of its two sides in order, each one taking the ray into a side or out of it, and so
+    /// has to know where the walk begins.  For anything that ends somewhere the answer is outside,
+    /// since a ray followed back far enough leaves it behind, and that is all a combination ever used
+    /// to assume.  Something that goes on forever can be the other way: a plane is a half-space, and a
+    /// ray climbing out of it began inside it, however far back it is followed.  Assume otherwise and
+    /// every crossing after that is read backwards -- the plane's one crossing taken for going in
+    /// rather than coming out -- so a floor cut from a plane is shadowed by the face the cut took away,
+    /// and a sphere cut in half by one shows its missing half to anything looking up at it.
+    /// </para>
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this solid.</returns>
+    public bool StartsInside(Ray ray)
+    {
+        return BoundingBox == null && StartsInsideHere(InverseTransformAt(ray.TimeIndex).Transform(ray));
+    }
+
+    /// <summary>
+    /// This method answers <see cref="StartsInside"/> for a ray already in this surface's own space.
+    /// Only something that goes on forever can ever answer yes, so the answer is no unless a surface
+    /// says otherwise.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this surface's own space.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside this solid.</returns>
+    protected virtual bool StartsInsideHere(Ray ray) => false;
+
+    /// <summary>
     /// This method must be provided by subclasses to determine whether the given
     /// ray intersects the geometry and, if so, where.
     /// </summary>

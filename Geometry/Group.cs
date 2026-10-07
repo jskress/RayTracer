@@ -51,7 +51,12 @@ public class Group : Surface
         }
 
         ArrangeChildren();
+
+        // Only something without a box can have a ray begin inside it, so only those are asked.
+        _endless = Surfaces.Where(surface => surface.BoundingBox == null).ToList();
     }
+
+    private List<Surface> _endless;
 
     /// <summary>
     /// This method sorts the children into a tree of nested boxes, so that a ray reaching this group
@@ -160,6 +165,17 @@ public class Group : Surface
         ours.Sort();
 
         intersections.AddRange(ours);
+    }
+
+    /// <summary>
+    /// This method reports whether a ray begins inside anything in this group, which, the group being
+    /// the sum of what is in it, is whether it begins inside the group.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this group's own space.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside something here.</returns>
+    protected override bool StartsInsideHere(Ray ray)
+    {
+        return (_endless ?? Surfaces).Any(surface => surface.StartsInside(ray));
     }
 
     /// <summary>

@@ -170,6 +170,16 @@ public class Instance : Surface
     }
 
     /// <summary>
+    /// This method reports whether a ray begins inside the shape this instance stands for.
+    /// </summary>
+    /// <param name="ray">The ray to test, in this instance's own space.</param>
+    /// <returns><c>true</c>, if the ray, followed back endlessly, is inside the shape.</returns>
+    protected override bool StartsInsideHere(Ray ray)
+    {
+        return Prototype.StartsInside(ray);
+    }
+
+    /// <summary>
     /// This method is never called: a crossing found through an instance names the shape's own
     /// surface, not the instance, so it is that surface which is asked for the normal.
     /// </summary>
