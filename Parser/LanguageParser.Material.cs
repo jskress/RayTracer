@@ -152,6 +152,9 @@ public partial class LanguageParser
             case "reflective":
                 resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
                 break;
+            case "fresnel":
+                resolver.FresnelResolver = new LiteralResolver<bool> { Value = true };
+                break;
             case "metallic":
                 // The amount may be left off, since fully metallic is what is nearly always
                 // wanted; naming nothing means naming 1.

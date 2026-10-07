@@ -72,6 +72,52 @@ public class Material
     public double Reflective { get; set; }
 
     /// <summary>
+    /// This property notes whether the material reflects more of its surroundings the more steeply
+    /// it is seen at a slant, as every real surface does.
+    /// <para>
+    /// Left alone, a surface mirrors <see cref="Reflective"/> of what it faces at every angle.  No
+    /// real one does: varnish, paint, wet asphalt and still water all give back a few percent of the
+    /// light meeting them square-on and very nearly all of it at a graze, which is why a polished
+    /// floor is dark at your feet and a mirror toward the far wall, and why a road shines toward
+    /// the horizon.  With this set, <see cref="Reflective"/> is how much is mirrored square-on and
+    /// the share rises from there, by Schlick's approximation to Fresnel's equations, the same one a
+    /// transparent surface already follows.
+    /// </para>
+    /// <para>
+    /// What a surface mirrors never reaches its pigment, so the light it shows of its own is turned
+    /// down by as much: at a graze such a surface stops being a colored thing with a reflection on
+    /// it and becomes a mirror.  The highlights are left alone.  A surface that lets light through
+    /// already shares light this way between what it mirrors and what it lets by, by its index of
+    /// refraction, and so is not affected; nor is one that reflects nothing.
+    /// </para>
+    /// </summary>
+    public bool Fresnel { get; set; }
+
+    /// <summary>
+    /// This method returns how much of what a surface faces it mirrors when seen at a given angle.
+    /// It is <see cref="Reflective"/> square-on and, where <see cref="Fresnel"/> applies, climbs to
+    /// all of it at a graze.
+    /// </summary>
+    /// <param name="cosAngle">The cosine of the angle between the eye and the surface normal.</param>
+    /// <returns>The share mirrored, between 0 and 1.</returns>
+    public double ReflectanceAt(double cosAngle)
+    {
+        if (!FresnelApplies)
+            return Reflective;
+
+        double slant = 1 - Math.Clamp(cosAngle, 0, 1);
+
+        return Reflective + (1 - Reflective) * Math.Pow(slant, 5);
+    }
+
+    /// <summary>
+    /// This property reports whether <see cref="Fresnel"/> has anything to do here: the surface must
+    /// mirror something, and must not let light through, which has a Fresnel of its own.
+    /// </summary>
+    public bool FresnelApplies =>
+        Fresnel && Reflective > 0 && Transparency == 0 && !PigmentMayTransmit;
+
+    /// <summary>
     /// This property holds how metallic the material is, between 0 and 1, and governs the color
     /// of what it reflects -- both its specular highlight and, where it is reflective, the scene
     /// mirrored in it.

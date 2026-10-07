@@ -149,6 +149,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading) |
+| `fresnel` | Finish: mirror more at a slant, square-on share from `reflective`. | [Materials](materials.md#fresnel) |
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
 | `gamma` | Context: the display gamma to correct for. | [Context](context.md#gamma) |
