@@ -60,6 +60,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `axisV` | Area light: the other edge of the panel. | [Lights](lights.md#area-lights) |
 | `azimuth` | `physical sky`: which way round the sun lies, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `back` | With `align`, names the `+Z` edge. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `balance` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
 | `background` | Sets the sky, a pigment, seen where no ray hits a surface. | [Scene Files](scene-files.md#background) |
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
@@ -77,7 +78,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `boxed` | Pattern: nested square boxes. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bozo` | Pattern: smooth value noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `brightness` | `physical sky`: what the whole sky and its sun are multiplied by. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, `scale ambient by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
@@ -326,6 +327,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Text](advanced-surfaces.md#text), [Text as a Path](advanced-surfaces.md#text-as-a-path), [Context](context.md#image-information) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
+| `temperature` | Light: the temperature, in kelvin, of the glow it gives instead of a color. | [Lights](lights.md#color-temperature) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
 | `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, and a decal's `fade from` … `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading) |
@@ -364,6 +366,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
 | `width` | Context: image width in pixels.  Also a ribbon's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |
@@ -681,16 +684,17 @@ or vectors; ask for a form that does not exist and the error names the ones that
 
 | | | | |
 | --- | --- | --- | --- |
-| `abs` | `count` | `log` | `round` |
-| `acos` | `cross` | `log10` | `sign` |
-| `asin` | `distance` | `magnitude` | `sin` |
-| `atan` | `dot` | `max` | `sinh` |
-| `atan2` | `exp` | `min` | `smoothstep` |
-| `cbrt` | `floor` | `mod` | `sqrt` |
-| `ceil` | `item` | `noise` | `tan` |
-| `clamp` | `length` | `normalize` | `tanh` |
-| `cos` | `lerp` | `pow` | `toDegrees` |
-| `cosh` | `list` | `random` | `trunc` |
+| `abs` | `cross` | `log10` | `sin` |
+| `acos` | `distance` | `magnitude` | `sinh` |
+| `asin` | `dot` | `max` | `smoothstep` |
+| `atan` | `exp` | `min` | `sqrt` |
+| `atan2` | `floor` | `mod` | `tan` |
+| `cbrt` | `item` | `noise` | `tanh` |
+| `ceil` | `kelvin` | `normalize` | `toDegrees` |
+| `clamp` | `length` | `pow` | `trunc` |
+| `cos` | `lerp` | `random` |  |
+| `cosh` | `list` | `round` |  |
+| `count` | `log` | `sign` |  |
 
 #### Colors
 
@@ -856,6 +860,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--no-shadows` | Turn shadows off everywhere. |
 | `--grayscale` | Write the image in shades of gray. |
 | `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
+| `--white-balance` | The temperature, in kelvin, the picture is [balanced](context.md#white-balance) to show as white. |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
 | `-r`, `--frame-rate` | Frames per second for a series of images (default 24). |
 | `-m`, `--frame` | Render one particular frame of an animation. |

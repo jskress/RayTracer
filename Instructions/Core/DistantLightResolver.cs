@@ -8,17 +8,13 @@ namespace RayTracer.Instructions.Core;
 /// <summary>
 /// This class is used to resolve a distant light value.
 /// </summary>
-public class DistantLightResolver : NamedObjectResolver<DistantLight>, ILightResolver
+public class DistantLightResolver : LightResolver<DistantLight>
 {
     /// <summary>
     /// This property holds the resolver for the direction the light travels.
     /// </summary>
     public Resolver<Vector> DirectionResolver { get; set; }
 
-    /// <summary>
-    /// This property holds the resolver for the light's color.
-    /// </summary>
-    public Resolver<Color> ColorResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a distant light.
@@ -32,16 +28,10 @@ public class DistantLightResolver : NamedObjectResolver<DistantLight>, ILightRes
         base.SetProperties(context, variables, value);
 
         DirectionResolver.AssignTo(value, target => target.Direction, context, variables);
-        ColorResolver.AssignTo(value, target => target.Color, context, variables);
     }
     /// <summary>
     /// This method returns a copy of this resolver, so that a scene using a named light again may
     /// adjust its copy without touching the one the name still stands for.
     /// </summary>
     /// <returns>A copy of this resolver.</returns>
-    public object Clone()
-    {
-        return MemberwiseClone();
-    }
-
 }

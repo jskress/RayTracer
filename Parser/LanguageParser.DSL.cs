@@ -77,7 +77,7 @@ public partial class LanguageParser
             'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
-            'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
+            'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
             'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
@@ -100,9 +100,9 @@ public partial class LanguageParser
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
+            'temperature', 'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'width', 'with', 'within', 'wood',
+            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -300,7 +300,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | antiAliasingClause | scaleAmbientClause |
-            colorDepthClause | grayscale | spectral | contextPropertyClause
+            colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // How much of each channel reaches the file, and whether any of it is color at all.  These
@@ -309,6 +309,11 @@ public partial class LanguageParser
         colorDepthClause:
         {
             color > depth ?? 'Expecting "depth" to follow "color" here.' > _expression
+        }
+        // What the camera is balanced for: the temperature of the glow that should come out white.
+        whiteBalanceClause:
+        {
+            white > balance ?? 'Expecting "balance" to follow "white" here.' > _expression
         }
 
         // How hard to work at the edges within a pixel.  This belongs with the scanner and the
@@ -373,7 +378,9 @@ public partial class LanguageParser
             [ openBrace | { [ _identifier | _keyword ] > openBrace{?} } ]
                 ?? 'Expecting an open brace, or the name of a light, to follow "light" here.'
         }
-        lightColorClause: { color > _expression }
+        // What light a light gives: a color, or the temperature of something glowing, and either way
+        // how bright.
+        lightColorClause: { [ color | temperature | brightness ] > _expression }
         directionClause: { direction > _expression }
         pointAtClause:
         {

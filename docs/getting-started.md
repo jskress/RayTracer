@@ -184,6 +184,7 @@ and ignored.
 | `--no-gamma` | Apply no gamma correction at all. |
 | `--grayscale` | Render in shades of gray. |
 | `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
+| `--white-balance` | Balance the picture for lamps of a given [temperature](context.md#white-balance). |
 | `--no-shadows` | Let nothing cast a shadow. |
 
 #### Animation

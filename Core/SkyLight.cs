@@ -136,7 +136,7 @@ public class SkyLight : Light
         Vector heading = sample.Direction;
 
         return Pigment.GetTransformedLightFor<TS>(new Point(heading.X, heading.Y, heading.Z)) *
-               TS.FromUnbounded(Color);
+               Emitted<TS>();
     }
 
     /// <summary>

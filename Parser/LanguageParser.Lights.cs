@@ -108,8 +108,8 @@ public partial class LanguageParser
             case "named":
                 resolver.NameResolver = new TermResolver<string> { Term = clause.Term() };
                 break;
-            case "color":
-                resolver.ColorResolver = new TermResolver<Color> { Term = clause.Term() };
+            case "color" or "temperature" or "brightness":
+                HandleLightColorClause(clause.Text(), clause.Term(), resolver);
                 break;
             case "pigment":
                 resolver.PigmentResolver = ParsePigmentClause();
@@ -125,6 +125,41 @@ public partial class LanguageParser
                 break;
             default:
                 throw new NotSupportedException("Unknown sky light property found.");
+        }
+    }
+
+    /// <summary>
+    /// This method handles what light a light gives, which every sort of light says the same way: a
+    /// color, or the temperature of something glowing, and how bright.
+    /// </summary>
+    /// <param name="what">Which it is: "color", "temperature" or "brightness".</param>
+    /// <param name="term">The term giving its value.</param>
+    /// <param name="resolver">The resolver of the light being described.</param>
+    private static void HandleLightColorClause(string what, Term term, ILightResolver resolver)
+    {
+        switch (what)
+        {
+            case "color":
+                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+                break;
+            case "temperature":
+                resolver.TemperatureResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = kelvin => kelvin > 0
+                        ? null
+                        : "A temperature is in kelvin, and nothing glows at absolute zero or below."
+                };
+                break;
+            default:
+                resolver.BrightnessResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = brightness => brightness >= 0
+                        ? null
+                        : "A light cannot be less than dark, so its brightness cannot be below nothing."
+                };
+                break;
         }
     }
 
@@ -145,8 +180,8 @@ public partial class LanguageParser
             case "location":
                 resolver.LocationResolver = new TermResolver<Point> { Term = term };
                 break;
-            case "color":
-                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+            case "color" or "temperature" or "brightness":
+                HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":
                 if (clause.Text(1) == "distance")
@@ -195,8 +230,8 @@ public partial class LanguageParser
             case "direction":
                 resolver.DirectionResolver = new TermResolver<Vector> { Term = term };
                 break;
-            case "color":
-                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+            case "color" or "temperature" or "brightness":
+                HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
@@ -233,8 +268,8 @@ public partial class LanguageParser
             case "tightness":
                 resolver.TightnessResolver = new TermResolver<double> { Term = term };
                 break;
-            case "color":
-                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+            case "color" or "temperature" or "brightness":
+                HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":
                 if (clause.Text(1) == "distance")
@@ -309,8 +344,8 @@ public partial class LanguageParser
             case "no.jitter":
                 resolver.Jitter = false;
                 break;
-            case "color":
-                resolver.ColorResolver = new TermResolver<Color> { Term = term };
+            case "color" or "temperature" or "brightness":
+                HandleLightColorClause(clause.Text(), term, resolver);
                 break;
             case "fade":
                 if (clause.Text(1) == "distance")

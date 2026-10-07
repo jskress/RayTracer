@@ -15,10 +15,6 @@ public class PointLightResolver : FadingLightResolver<PointLight>
     /// </summary>
     public Resolver<Point> LocationResolver { get; set; }
 
-    /// <summary>
-    /// This property holds the resolver for our camera's color property.
-    /// </summary>
-    public Resolver<Color> ColorResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a camera.
@@ -31,6 +27,5 @@ public class PointLightResolver : FadingLightResolver<PointLight>
         base.SetProperties(context, variables, value);
         
         LocationResolver.AssignTo(value, target => target.Location, context, variables);
-        ColorResolver.AssignTo(value, target => target.Color, context, variables);
     }
 }

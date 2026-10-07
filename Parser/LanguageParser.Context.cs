@@ -71,6 +71,17 @@ public partial class LanguageParser
             case "spectral":
                 updater.SpectralResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            // `white balance <term>`, which arrives as plain "white" for the same reason `scale ambient
+            // by` arrives as "scale".
+            case "white":
+                updater.WhiteBalanceResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = kelvin => kelvin > 0
+                        ? null
+                        : "A white balance is a temperature in kelvin, and must be above nothing."
+                };
+                break;
             // `scale ambient by <term>`.  `ToCmd` joins a second word only after `apply`, `no`, `bounded`,
             // `with` or `gives`, so this arrives as plain "scale" -- and `scale` is not a word to add to
             // that list, since it is also the transform keyword and ToCmd serves those too.  The second

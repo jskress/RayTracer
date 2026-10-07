@@ -664,6 +664,11 @@ extrusion {
 | **Angles** | `sin` `cos` `tan` `asin` `acos` `atan` `atan2` `sinh` `cosh` `tanh` `toDegrees` |
 | **Vectors** | `length` (or `magnitude`) `dot` `cross` `normalize` `distance` |
 | **Noise** | `noise` `random` |
+| **Colors** | `kelvin` |
+
+`kelvin(2700)` is the color of something glowing at that [temperature](lights.md#color-temperature),
+its brightest channel one, for whatever glows without being a light: a filament seen through glass,
+the glowing stuff inside a lamp, an ember.
 
 Several take either numbers or vectors, and which they mean follows from what you hand them:
 `abs`, `min`, `max`, `clamp` and `lerp` all work on both, and `min` and `max` given a *single*

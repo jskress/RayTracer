@@ -63,6 +63,80 @@ public static class SpectralColor
     public static (double Red, double Green, double Blue) MatchingTotals { get; } = WorkOutTotals();
 
     /// <summary>
+    /// This method returns the light something glows with at a given temperature, band by band: the
+    /// color a glowing filament, a flame or the surface of the sun has because of how hot it is, and
+    /// nothing else.  A candle burns at about 1900 K and a household bulb about 2700; noon sunlight
+    /// is about 5500, which is where an even spectrum, this renderer's white, falls; anything hotter
+    /// is bluer.
+    /// <para>
+    /// It is scaled so that it stands at a strength of one, seen as a color, whatever the temperature,
+    /// so that a temperature changes what color a light is and not how bright: a cool light and a warm
+    /// one of the same strength light a scene equally.
+    /// </para>
+    /// </summary>
+    /// <param name="temperature">How hot the glowing thing is, in kelvin.</param>
+    /// <returns>The light, one amount for each band.</returns>
+    public static double[] Blackbody(double temperature)
+    {
+        double[] perBand = new double[Bands];
+
+        for (int band = 0; band < Bands; band++)
+            perBand[band] = Glow(WavelengthOf(band), temperature);
+
+        // Scaled so the whole of it stands at a strength of one.
+        Color asSeen = ToColor(perBand);
+        double brightness =
+            0.2126 * asSeen.Red + 0.7152 * asSeen.Green + 0.0722 * asSeen.Blue;
+
+        for (int band = 0; band < Bands; band++)
+            perBand[band] /= brightness;
+
+        return perBand;
+    }
+
+    /// <summary>
+    /// This method returns the glow of something at a given temperature as a light or a glowing thing
+    /// in a scene would want it: as a color and band by band, both scaled so that the brightest channel
+    /// of the color is one, the way a color written out by hand would be.
+    /// <para>
+    /// Held instead at the brightness of white, as <see cref="Blackbody"/> is, a warm glow's red runs
+    /// well past one -- 1.65 at 2700 K, 2.3 for a candle -- and a renderer that clips rather than tone
+    /// maps turns a wall lit by it yellow where it should be orange.  The cost is that a warm glow at
+    /// strength one is dimmer than white, which a scene makes up by multiplying.
+    /// </para>
+    /// </summary>
+    /// <param name="temperature">How hot the glowing thing is, in kelvin.</param>
+    /// <returns>The glow's color, and the glow band by band.</returns>
+    public static (Color Color, double[] PerBand) GlowAt(double temperature)
+    {
+        double[] perBand = Blackbody(temperature);
+        Color color = ToColor(perBand);
+        double brightest = Math.Max(color.Red, Math.Max(color.Green, color.Blue));
+
+        return (color / brightest, perBand.Select(amount => amount / brightest).ToArray());
+    }
+
+    /// <summary>
+    /// This method gives how brightly something at a given temperature glows at a given wavelength,
+    /// by Planck's law.
+    /// </summary>
+    /// <param name="wavelength">The wavelength in question, in nanometers.</param>
+    /// <param name="temperature">How hot the thing is, in kelvin.</param>
+    /// <returns>How brightly it glows there.</returns>
+    private static double Glow(double wavelength, double temperature)
+    {
+        const double PlanckConstant = 6.62607015e-34;
+        const double SpeedOfLight = 2.99792458e8;
+        const double BoltzmannConstant = 1.380649e-23;
+
+        double meters = wavelength * 1e-9;
+        double front = 2 * PlanckConstant * SpeedOfLight * SpeedOfLight / Math.Pow(meters, 5);
+        double exponent = PlanckConstant * SpeedOfLight / (meters * BoltzmannConstant * temperature);
+
+        return front / (Math.Exp(exponent) - 1);
+    }
+
+    /// <summary>
     /// This method converts light given band by band into a color.
     /// <para>
     /// The spectrum is weighed against how strongly the eye's three kinds of cone answer to each
