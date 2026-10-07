@@ -24,6 +24,16 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
     public Resolver<double> ClarityResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how much the substance spreads colors, as an Abbe number.
+    /// </summary>
+    public Resolver<double> AbbeNumberResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the name of the real glass the substance is.
+    /// </summary>
+    public Resolver<string> GlassResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for what fills the surface, if anything does.
     /// </summary>
     public MediumResolver MediumResolver { get; set; }
@@ -39,6 +49,12 @@ public class InteriorResolver : ObjectResolver<Interior>, ICloneable
         IndexOfRefractionResolver.AssignTo(value, target => target.IndexOfRefraction, context, variables);
         FilterResolver.AssignTo(value, target => target.Filter, context, variables);
         ClarityResolver.AssignTo(value, target => target.Clarity, context, variables);
+
+        if (AbbeNumberResolver is not null)
+            value.AbbeNumber = AbbeNumberResolver.Resolve(context, variables);
+
+        // After the index: a glass brings its own, which takes precedence over one written beside it.
+        GlassResolver.AssignTo(value, target => target.Glass, context, variables);
 
         if (MediumResolver is not null)
             value.Medium = MediumResolver.Resolve(context, variables);

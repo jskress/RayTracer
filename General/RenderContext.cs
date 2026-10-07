@@ -92,6 +92,13 @@ public class RenderContext
     public bool Grayscale { get; set; }
 
     /// <summary>
+    /// This property notes whether light is carried wavelength by wavelength, rather than in the three
+    /// broad bands of red, green and blue that are the default.
+    /// </summary>
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    public bool Spectral { get; set; }
+
+    /// <summary>
     /// This property holds the antialiasing option for the ray tracer.
     /// </summary>
     public AliasingOption AntiAliasing { get; set; } = new();
@@ -185,6 +192,10 @@ public class RenderContext
         // forces it on, and leaving it off says nothing about what the scene asked for.
         if (options.Grayscale)
             Grayscale = true;
+
+        // Spectral is a switch as well.
+        if (options.Spectral)
+            Spectral = true;
 
         // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
         // alone unless `-a` was actually given, which is why the option is null until it is: a

@@ -7,7 +7,7 @@ namespace RayTracer.Basics;
 /// This class provides a collection of values, each associated with a "break" value in
 /// the [0, 1] interval.
 /// </summary>
-public class Spectrum<T> : IEnumerable<T>
+public class BreakValue<T> : IEnumerable<T>
 {
     /// <summary>
     /// This record defines a record in our collection.  We have this, rather than using
@@ -34,14 +34,14 @@ public class Spectrum<T> : IEnumerable<T>
     public int Count => _entries.Count;
 
     /// <summary>
-    /// This property notes whether the spectrum is empty.
+    /// This property notes whether there are no entries.
     /// </summary>
     public bool IsEmpty => _entries.IsEmpty();
     
     private readonly List<Entry> _entries = [];
 
     /// <summary>
-    /// This method is used to add an entry to the spectrum.
+    /// This method is used to add an entry.
     /// </summary>
     /// <param name="value">The value to start using at the given break value.</param>
     /// <param name="breakValue">The break value that indicates where in the [0. 1] range
@@ -56,7 +56,7 @@ public class Spectrum<T> : IEnumerable<T>
     }
 
     /// <summary>
-    /// This method returns a value from the spectrum based on its index.
+    /// This method returns a value based on its index.
     /// </summary>
     /// <param name="index">The index of the desired value.</param>
     /// <returns>The value at the given index.</returns>
@@ -78,7 +78,7 @@ public class Spectrum<T> : IEnumerable<T>
     }
 
     /// <summary>
-    /// This method returns a value from the spectrum based on a number.
+    /// This method returns a value based on a number.
     /// </summary>
     /// <param name="number">The numb to use in determining the desired value.</param>
     /// <returns>The value for the given number and its break value.</returns>

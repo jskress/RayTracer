@@ -221,6 +221,40 @@ written.
 `-c`/`--bits-per-channel` and `--grayscale` on the command line still overrule what a scene
 asks for; saying nothing leaves it alone.
 
+### Spectral Light
+
+Light is carried as red, green and blue unless a scene asks for it to be carried wavelength by
+wavelength instead:
+
+```
+context {
+    spectral
+}
+```
+
+Three numbers are enough to say what color something is, but not what it does to light of
+another color.  Two paints can look the same yellow under white light and quite different under a
+sodium lamp, because one reflects a narrow band of yellow and the other a broad mix of red and
+green that only adds up to yellow.  Carried as red, green and blue, light can only be multiplied
+channel by channel, which treats every paint as if it were the broad kind.  Carried wavelength by
+wavelength, colored light on colored surfaces, light through colored glass, and light through
+colored fog or water come out as they physically would.
+
+Nothing has to be written differently.  Colors are still written as colors, and each is turned
+into the smoothest spectrum that is that color — a surface's never reflecting more than all the
+light at any wavelength — so a scene under white light looks as it always did.  The differences are
+where light of one color meets a surface of another.  The physical sky is already worked out
+wavelength by wavelength, and a spectral render takes it as it was worked out rather than as the
+color it comes to.
+
+It costs more: a fraction of a second to start, while the table that turns colors into spectra is
+built, and then more per ray, since every ray carries thirty-two numbers rather than three.  Across
+the gallery that came to a seventh more time in all; most scenes hardly notice, and those that
+march light through thick media take about twice as long, every band needing its own reckoning of
+what the medium lets through.
+
+`--spectral` on the command line asks for it too.
+
 ### Image Size
 
 A scene may fix the size of the image it wants:

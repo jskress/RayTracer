@@ -349,6 +349,24 @@ public partial class LanguageParser
             case "clarity":
                 resolver.ClarityResolver = new TermResolver<double> { Term = term };
                 break;
+            case "dispersion":
+                resolver.AbbeNumberResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = value => value <= 0
+                        ? "An Abbe number must be more than nothing; the lower it is, the wider the rainbow."
+                        : null
+                };
+                break;
+            case "glass":
+                resolver.GlassResolver = new TermResolver<string>
+                {
+                    Term = term,
+                    Validator = name => Glasses.IsKnown(name)
+                        ? null
+                        : $"There is no glass named '{name}'; the glasses are {string.Join(", ", Glasses.Names)}."
+                };
+                break;
             case "medium":
                 // A surface is a far side, so anything a medium may say is allowed here.
                 resolver.MediumResolver = GetMediumResolver(clause);

@@ -19,6 +19,62 @@ public class Interior
     public double IndexOfRefraction { get; set; } = IndicesOfRefraction.Vacuum;
 
     /// <summary>
+    /// This property holds how much the substance spreads colors as it bends them, as an Abbe number,
+    /// or <c>null</c> for one that bends every color alike.  See <see cref="Glasses.CauchyIndexAt"/>.
+    /// <para>
+    /// Real glass bends blue light more than red, which is what splits white light into a rainbow
+    /// through a prism and gives a diamond its fire.  Only a render that carries light wavelength by
+    /// wavelength can show it; one in red, green and blue bends every color by
+    /// <see cref="IndexOfRefraction"/>, which is the index at the middle of the visible range.
+    /// </para>
+    /// </summary>
+    public double? AbbeNumber { get; set; }
+
+    /// <summary>
+    /// This property holds the name of the real glass the substance is, one of <see cref="Glasses"/>,
+    /// or <c>null</c>.  A glass brings its own index at every wavelength, so naming one also sets
+    /// <see cref="IndexOfRefraction"/> to its index at the reference wavelength, and takes precedence
+    /// over an <see cref="AbbeNumber"/>.
+    /// </summary>
+    public string Glass
+    {
+        get => _glass;
+        set
+        {
+            if (value is not null && !Glasses.IsKnown(value))
+                throw new ArgumentException($"There is no glass named '{value}'.");
+
+            _glass = value;
+
+            if (value is not null)
+                IndexOfRefraction = Glasses.IndexAt(value, Glasses.ReferenceWavelength);
+        }
+    }
+
+    /// <summary>
+    /// This property reports whether the substance bends different colors differently.
+    /// </summary>
+    public bool Disperses => _glass is not null || AbbeNumber is not null;
+
+    private string _glass;
+
+    /// <summary>
+    /// This method returns the substance's index of refraction for light of the given wavelength.
+    /// </summary>
+    /// <param name="wavelength">The wavelength, in nanometers, or <c>NaN</c> for light of every
+    /// wavelength at once, which is bent by <see cref="IndexOfRefraction"/>.</param>
+    /// <returns>The index of refraction.</returns>
+    public double IndexOfRefractionAt(double wavelength)
+    {
+        if (double.IsNaN(wavelength) || !Disperses)
+            return IndexOfRefraction;
+
+        return _glass is not null
+            ? Glasses.IndexAt(_glass, wavelength)
+            : Glasses.CauchyIndexAt(IndexOfRefraction, AbbeNumber.Value, wavelength);
+    }
+
+    /// <summary>
     /// This property holds how much of the light passing through takes on the surface's own
     /// color, between 0 and 1.
     /// <para>

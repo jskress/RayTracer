@@ -24,6 +24,12 @@ public abstract class PixelRenderer
     /// </summary>
     internal Statistics Statistics { get; set; }
 
+    /// <summary>
+    /// This property notes whether light is carried wavelength by wavelength rather than as red, green
+    /// and blue.  It is set once before the render starts, as the statistics are.
+    /// </summary>
+    internal bool Spectral { get; set; }
+
     protected PixelRenderer(PixelToRayConverter converter)
     {
         Converter = converter;
@@ -57,7 +63,9 @@ public abstract class PixelRenderer
         Scene scene, int x, int y, double centerX = 0.5, double centerY = 0.5,
         double shiftX = 0, double shiftY = 0)
     {
-        return Trace<RgbSpectrum>(scene, x, y, centerX, centerY, shiftX, shiftY);
+        return Spectral
+            ? Trace<BandSpectrum>(scene, x, y, centerX, centerY, shiftX, shiftY)
+            : Trace<RgbSpectrum>(scene, x, y, centerX, centerY, shiftX, shiftY);
     }
 
     /// <summary>

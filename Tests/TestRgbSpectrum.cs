@@ -297,11 +297,15 @@ public class TestRgbSpectrum
         public double Alpha { get; private set; }
 
         public static int Count => 6;
+        public static bool IsSpectral => false;
+        public static double Wavelength => double.NaN;
         public static DoubledBands Black => Of(0, 0, 0, 1);
         public static DoubledBands White => Of(1, 1, 1, 1);
         public static DoubledBands FromReflectance(Color color) => Of(color);
         public static DoubledBands FromIlluminant(Color color) => Of(color);
         public static DoubledBands FromUnbounded(Color color) => Of(color);
+        public static DoubledBands FromSampled(ReadOnlySpan<double> perBand) =>
+            Of(SpectralColor.ToColor(perBand));
 
         public double this[int band]
         {

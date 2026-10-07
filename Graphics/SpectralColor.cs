@@ -116,7 +116,7 @@ public static class SpectralColor
     /// </summary>
     /// <param name="color">The color to bring into range.</param>
     /// <returns>The nearest color a screen can show.</returns>
-    private static Color IntoGamut(Color color)
+    internal static Color IntoGamut(Color color)
     {
         double least = Math.Min(color.Red, Math.Min(color.Green, color.Blue));
 
@@ -241,7 +241,7 @@ public static class SpectralColor
     /// </summary>
     /// <param name="wavelength">The wavelength being asked about, in nanometers.</param>
     /// <returns>How strongly that answer is stirred.</returns>
-    private static double MatchRed(double wavelength)
+    internal static double MatchRed(double wavelength)
     {
         return 1.056 * Bell(wavelength, 599.8, 37.9, 31.0) +
                0.362 * Bell(wavelength, 442.0, 16.0, 26.7) -
@@ -249,14 +249,14 @@ public static class SpectralColor
     }
 
     /// <inheritdoc cref="MatchRed"/>
-    private static double MatchGreen(double wavelength)
+    internal static double MatchGreen(double wavelength)
     {
         return 0.821 * Bell(wavelength, 568.8, 46.9, 40.5) +
                0.286 * Bell(wavelength, 530.9, 16.3, 31.1);
     }
 
     /// <inheritdoc cref="MatchRed"/>
-    private static double MatchBlue(double wavelength)
+    internal static double MatchBlue(double wavelength)
     {
         return 1.217 * Bell(wavelength, 437.0, 11.8, 36.0) +
                0.681 * Bell(wavelength, 459.0, 26.0, 13.8);

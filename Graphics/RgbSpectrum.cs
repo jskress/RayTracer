@@ -41,6 +41,8 @@ public struct RgbSpectrum : ISpectrum<RgbSpectrum>
     public double Alpha { get; private set; }
 
     public static int Count => 3;
+    public static bool IsSpectral => false;
+    public static double Wavelength => double.NaN;
     public static RgbSpectrum Black => new (0, 0, 0);
     public static RgbSpectrum White => new (1, 1, 1);
 
@@ -66,6 +68,7 @@ public struct RgbSpectrum : ISpectrum<RgbSpectrum>
     public static RgbSpectrum FromReflectance(Color color) => From(color);
     public static RgbSpectrum FromIlluminant(Color color) => From(color);
     public static RgbSpectrum FromUnbounded(Color color) => From(color);
+    public static RgbSpectrum FromSampled(ReadOnlySpan<double> perBand) => From(SpectralColor.ToColor(perBand));
 
     public double this[int band]
     {

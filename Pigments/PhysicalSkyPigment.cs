@@ -131,8 +131,8 @@ public class PhysicalSkyPigment : Pigment
             return null;
 
         Vector toward = TowardSun;
-        Color color = SpectralColor.ToColor(
-            new Atmosphere { Turbidity = Turbidity }.SunlightAfterAir(toward, Height));
+        double[] sunlight = new Atmosphere { Turbidity = Turbidity }.SunlightAfterAir(toward, Height);
+        Color color = SpectralColor.ToColor(sunlight);
 
         // Divided by pi, and it is worth saying why, because getting this wrong makes a sky look three
         // times too dark and sends you hunting through the physics for the missing light.
@@ -149,7 +149,8 @@ public class PhysicalSkyPigment : Pigment
         {
             // A light's direction is the way its rays travel, which is away from where the sun is.
             Direction = new Vector(-toward.X, -toward.Y, -toward.Z),
-            Color = new Color(color.Red * spread, color.Green * spread, color.Blue * spread)
+            Color = new Color(color.Red * spread, color.Green * spread, color.Blue * spread),
+            Spectrum = sunlight.Select(amount => amount * spread).ToArray()
         };
     }
 
@@ -187,6 +188,31 @@ public class PhysicalSkyPigment : Pigment
         return Brightness == 1
             ? found
             : new Color(found.Red * Brightness, found.Green * Brightness, found.Blue * Brightness);
+    }
+
+    /// <summary>
+    /// This property reports that the sky is worked out wavelength by wavelength, and so can be handed
+    /// to a spectral render as it was worked out rather than as the color it comes to.
+    /// </summary>
+    public override bool IsSpectral => true;
+
+    /// <summary>
+    /// This method returns the sky's light toward the given point, wavelength by wavelength.
+    /// </summary>
+    /// <param name="point">The point on the unit sphere the sky is looked at through.</param>
+    /// <param name="perBand">Where to put the light.</param>
+    public override void GetSpectrumFor(Point point, Span<double> perBand)
+    {
+        _sky ??= new SkyTable(
+            new Atmosphere { Turbidity = Turbidity }, TowardSun, Height, Rows, Columns);
+
+        _sky.SpectrumToward(new Vector(point.X, point.Y, point.Z), perBand);
+
+        if (Brightness != 1)
+        {
+            for (int band = 0; band < perBand.Length; band++)
+                perBand[band] *= Brightness;
+        }
     }
 
     /// <summary>

@@ -95,7 +95,14 @@ every shading method (`Scene`, `Light.ApplyPhong`, `Medium`, `Interior`/`Materia
 `PixelRenderer.Trace`) is generic in it, `RgbSpectrum` mirrors `Color`'s arithmetic bit for bit, and
 the `Color`-returning methods tests call are one-line wrappers over `<RgbSpectrum>`. Pigments, light
 colors and medium coefficients stay `Color` (they are what an author wrote) and are converted where
-the shading first meets them -- as a reflectance, an illuminant or an unbounded rate.
+the shading first meets them -- as a reflectance, an illuminant or an unbounded rate. `context {
+spectral }` / `--spectral` carries light in `BandSpectrum` instead: 32 bands over 380-780 nm (the
+sky's own, `SpectralColor.Bands`), colors turned into smooth spectra by `RgbToSpectrumTable`
+(Jakob-Hanika, ported from PBRT and fitted against our own bands at render start) and back by
+`SpectralBasis`. Under white light a spectral render matches RGB; the physical sky and its sun reach
+it as the spectra they were worked out as. An interior that disperses (`dispersion`, an Abbe number,
+or a named `glass` from `Core/Glasses.cs`) splits a spectral ray crossing it into one `SingleBand` ray
+per band (`Scene.SplitThrough`), which never split again; RGB renders ignore dispersion.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

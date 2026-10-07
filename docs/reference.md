@@ -121,6 +121,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `disc` | Shape: a flat disc, optionally with a hole. | [Surfaces](surfaces.md#disc) |
 | `disclaimer` | Info: a disclaimer. | [Context](context.md#image-information) |
 | `discontinuous` | Sweep/tube: the kinks between segments are meant. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `dispersion` | Interior: how much it spreads colors, as an Abbe number. | [Materials](materials.md#dispersion) |
 | `distance` | Camera: `focal distance`; also spotlight falloff distance. | [Cameras](cameras.md#depth-of-field) |
 | `distant` | A `distant light` (parallel rays, like the sun). | [Lights](lights.md#distant-lights) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -154,6 +155,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `generic` | `generic shape`: a flat surface from a 2D path. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
 | `gives` | Surface: `gives light`, so the glowing stuff inside it lights the scene. | [Surfaces](surfaces.md#a-surface-that-gives-light) |
+| `glass` | Interior: a real optical glass by name. | [Materials](materials.md#dispersion) |
 | `gradient` | Pattern: a smooth ramp of color. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -298,6 +300,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
+| `spectral` | Context: carry light wavelength by wavelength rather than as red, green and blue. | [Context](context.md#spectral-light) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
@@ -852,6 +855,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--no-gamma` | Apply no gamma correction. |
 | `--no-shadows` | Turn shadows off everywhere. |
 | `--grayscale` | Write the image in shades of gray. |
+| `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
 | `-r`, `--frame-rate` | Frames per second for a series of images (default 24). |
 | `-m`, `--frame` | Render one particular frame of an animation. |

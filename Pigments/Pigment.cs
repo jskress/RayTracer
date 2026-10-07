@@ -150,6 +150,47 @@ public abstract class Pigment
     }
 
     /// <summary>
+    /// This method returns the light this pigment gives off at the given point, in whatever bands the
+    /// render is carrying light in.  It is for a pigment that is a source of light rather than a share
+    /// of it -- a background, a sky -- and so turns its color into light as an illuminant.  A pigment
+    /// that works its light out wavelength by wavelength hands that over as it is, to a render that
+    /// can hold it.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">The point to get the light for.</param>
+    /// <returns>The light there.</returns>
+    public TS GetTransformedLightFor<TS>(Point point)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (!TS.IsSpectral || !IsSpectral)
+            return TS.FromIlluminant(GetTransformedColorFor(point));
+
+        Span<double> perBand = stackalloc double[SpectralColor.Bands];
+
+        GetSpectrumFor(InverseTransform * point, perBand);
+
+        return TS.FromSampled(perBand);
+    }
+
+    /// <summary>
+    /// This property reports whether this pigment works its light out wavelength by wavelength, in
+    /// <see cref="SpectralColor"/>'s bands, and so can hand it over that way.
+    /// </summary>
+    public virtual bool IsSpectral => false;
+
+    /// <summary>
+    /// This method works out this pigment's light at a point, wavelength by wavelength, for a pigment
+    /// that can.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="perBand">Where to put the light, one amount for each of
+    /// <see cref="SpectralColor"/>'s bands.</param>
+    public virtual void GetSpectrumFor(Point point, Span<double> perBand)
+    {
+        throw new NotSupportedException($"{GetType().Name} does not work its light out by wavelength.");
+    }
+
+    /// <summary>
     /// This method carries both the point and the patch around it into the pigment's own space and
     /// asks for the color there.
     /// </summary>

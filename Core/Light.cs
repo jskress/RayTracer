@@ -19,9 +19,28 @@ namespace RayTracer.Core;
 public abstract class Light : NamedThing
 {
     /// <summary>
-    /// This property notes the color of the light.
+    /// This property notes the color of the light.  Setting it lets go of any
+    /// <see cref="Spectrum"/>, which described the color it replaces.
     /// </summary>
-    public Color Color { get; set; } = Colors.White;
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            _color = value;
+            Spectrum = null;
+        }
+    }
+
+    /// <summary>
+    /// This property holds the light's color wavelength by wavelength, in <see cref="SpectralColor"/>'s
+    /// bands, for a light worked out that way -- the sun a physical sky hangs -- or <c>null</c> for one
+    /// that is only a color.  It must describe the same light as <see cref="Color"/>, which a render in
+    /// red, green and blue goes on using; set it after the color, since setting the color clears it.
+    /// </summary>
+    public double[] Spectrum { get; set; }
+
+    private Color _color = Colors.White;
 
     /// <summary>
     /// This method works out which way the light lies from the given point, and how far a shadow
@@ -77,6 +96,36 @@ public abstract class Light : NamedThing
     /// <param name="sample">The sample being asked about.</param>
     /// <returns>The color the light carries along it.</returns>
     public virtual Color ColorFor(LightSample sample) => Color;
+
+    /// <summary>
+    /// This method returns the light this light carries along one of its samples, in whatever bands the
+    /// render is carrying light in: <see cref="ColorFor"/>, turned into light as an illuminant, or the
+    /// light's own spectrum where it has one and the render can hold it.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="sample">The sample being asked about.</param>
+    /// <returns>The light it carries along it.</returns>
+    public virtual TS EmittedToward<TS>(LightSample sample)
+        where TS : struct, ISpectrum<TS>
+    {
+        return TS.IsSpectral && Spectrum is not null && sample.Carried is null
+            ? TS.FromSampled(Spectrum)
+            : TS.FromIlluminant(ColorFor(sample));
+    }
+
+    /// <summary>
+    /// This method returns the light's own color as light, in whatever bands the render is carrying
+    /// light in.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <returns>The light.</returns>
+    public TS Emitted<TS>()
+        where TS : struct, ISpectrum<TS>
+    {
+        return TS.IsSpectral && Spectrum is not null
+            ? TS.FromSampled(Spectrum)
+            : TS.FromIlluminant(Color);
+    }
 
     /// <summary>
     /// This property holds the distance at which the light's color means what it says, or
@@ -187,7 +236,7 @@ public abstract class Light : NamedThing
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
         TS pigmentColor = TS.FromReflectance(
             material.GetColorFor(surface, point, normal, footprint, portal));
-        TS color = pigmentColor * TS.FromIlluminant(ColorFor(sample));
+        TS color = pigmentColor * EmittedToward<TS>(sample);
         Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come
@@ -234,7 +283,7 @@ public abstract class Light : NamedThing
             {
                 double factor = Math.Pow(reflectDotEye, material.Shininess);
 
-                specularColor = TS.FromIlluminant(Color) * material.Specular * factor;
+                specularColor = Emitted<TS>() * material.Specular * factor;
 
                 // A metal's highlight takes the color of the metal rather than of the light.  The
                 // angle used is the light against the normal, which is the approximation POV-Ray

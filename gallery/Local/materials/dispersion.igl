@@ -1,0 +1,72 @@
+// Three prisms of real glass, looked through at black and white stripes.  Glass bends blue light a
+// little more than red, so every edge between black and white seen through a prism comes apart into
+// a rainbow -- and how wide a rainbow depends on the glass.
+//
+// Left to right: FK51A, a fluor crown made for lenses precisely because it hardly spreads colors at
+// all; BK7, the everyday crown glass of windows and spectacles; and SF10, a heavy flint, the glass a
+// prism is made of when the rainbow is the point.  Each is turned on its stand to the angle that lets
+// light through two of its faces -- the denser the glass, the further round it has to go, or light
+// meeting the far face is turned back inside instead.
+//
+// Only a spectral render can show this, so the scene asks for one.  Rendered in red, green and blue
+// the three prisms bend every color alike, and the stripes through them stay black and white.
+
+context {
+    angles are degrees
+    spectral
+    antialiasing depth 2
+    info {
+        title 'Dispersion'
+        author 'J. Stephen Kress'
+        description 'Three prisms of FK51A, BK7 and SF10 glass, spreading black and white stripes into rainbows.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.3, -17]
+    look at [0, 1.3, 0]
+    field of view 30
+}
+
+point light { location [-6, 10, -9] }
+
+// The stripes are painted on the sky rather than on a wall, and there is no floor, so that wherever
+// a prism turns a ray there is something behind it to see.
+background linear stripes { White, Black  scale 0.02 }
+
+Prism = extrusion {
+    path { move to -0.866, -0.5  line to 0.866, -0.5  line to 0, 1  close }
+    scale [1, 1.3, 1]
+    translate [0, 1.3, 0]
+}
+
+object Prism {
+    rotate Y 45
+    translate [-3.2, 0, 0]
+    material {
+        pigment White
+        ambient 0  diffuse 0  specular 0.4  shininess 200  transparency 1
+        interior { glass 'FK51A' }
+    }
+}
+
+object Prism {
+    rotate Y 45
+    material {
+        pigment White
+        ambient 0  diffuse 0  specular 0.4  shininess 200  transparency 1
+        interior { glass 'BK7' }
+    }
+}
+
+object Prism {
+    rotate Y 60
+    translate [3.2, 0, 0]
+    material {
+        pigment White
+        ambient 0  diffuse 0  specular 0.4  shininess 200  transparency 1
+        interior { glass 'SF10' }
+    }
+}

@@ -25,6 +25,7 @@ namespace RayTracer.Core;
 public class SkyTable
 {
     private readonly Color[] _entries;
+    private readonly double[] _spectra;
     private readonly int _rows;
     private readonly int _columns;
     private readonly int _horizon;
@@ -49,6 +50,7 @@ public class SkyTable
         _horizon = (_rows - 1) / 2;
         _towardSun = towardSun.Unit;
         _entries = new Color[_rows * _columns];
+        _spectra = new double[_rows * _columns * SpectralColor.Bands];
 
         // Which way round the sun lies, so that a direction can be measured against it.  Straight up
         // it has no way round at all, and then the sky is the same all the way round, so anything
@@ -69,8 +71,13 @@ public class SkyTable
                 double around = Math.PI * (_columns == 1 ? 0 : (double) column / (_columns - 1));
                 Vector view = TurnedFrom(sunAround, around, sine, cosine);
 
-                _entries[row * _columns + column] =
-                    SpectralColor.ToColor(air.RadianceToward(view, _towardSun, height));
+                double[] radiance = air.RadianceToward(view, _towardSun, height);
+                int entry = row * _columns + column;
+
+                // Kept both ways: as the color it has always been, and as the spectrum it was worked
+                // out as, for a render carrying light wavelength by wavelength.
+                _entries[entry] = SpectralColor.ToColor(radiance);
+                radiance.CopyTo(_spectra, entry * SpectralColor.Bands);
             }
         }
     }
@@ -102,6 +109,59 @@ public class SkyTable
     /// <param name="firstRow">The lowest row it may be read from.</param>
     /// <param name="lastRow">The highest row it may be read from.</param>
     /// <returns>The color there.</returns>
+    /// <summary>
+    /// This method returns the sky's light in the given direction, wavelength by wavelength, mixed
+    /// between the four entries around it exactly as <see cref="Toward"/> mixes their colors.
+    /// </summary>
+    /// <param name="direction">The direction to look in.</param>
+    /// <param name="perBand">Where to put the light, one amount for each of
+    /// <see cref="SpectralColor"/>'s bands.</param>
+    public void SpectrumToward(Vector direction, Span<double> perBand)
+    {
+        Vector looking = direction.Unit;
+        double row = RowAtSine(looking.Y) * (_rows - 1);
+        double column = WayRoundOf(looking) / Math.PI * (_columns - 1);
+
+        if (looking.Y >= 0)
+            SpectrumBetween(row, column, _horizon, _rows - 1, perBand);
+        else
+            SpectrumBetween(row, column, 0, _horizon, perBand);
+    }
+
+    /// <summary>
+    /// This method mixes the spectra of the four entries around a place in the table.
+    /// </summary>
+    private void SpectrumBetween(
+        double row, double column, int firstRow, int lastRow, Span<double> perBand)
+    {
+        int lowRow = Math.Clamp((int) Math.Floor(row), firstRow, lastRow);
+        int highRow = Math.Min(lowRow + 1, lastRow);
+        int lowColumn = Math.Clamp((int) Math.Floor(column), 0, _columns - 1);
+        int highColumn = Math.Min(lowColumn + 1, _columns - 1);
+        double downRow = Math.Clamp(row - lowRow, 0, 1);
+        double alongColumn = Math.Clamp(column - lowColumn, 0, 1);
+        int topLeft = (lowRow * _columns + lowColumn) * SpectralColor.Bands;
+        int topRight = (lowRow * _columns + highColumn) * SpectralColor.Bands;
+        int bottomLeft = (highRow * _columns + lowColumn) * SpectralColor.Bands;
+        int bottomRight = (highRow * _columns + highColumn) * SpectralColor.Bands;
+
+        for (int band = 0; band < SpectralColor.Bands; band++)
+        {
+            double top = Mix(_spectra[topLeft + band], _spectra[topRight + band], alongColumn);
+            double bottom = Mix(_spectra[bottomLeft + band], _spectra[bottomRight + band], alongColumn);
+
+            perBand[band] = Mix(top, bottom, downRow);
+        }
+    }
+
+    /// <summary>
+    /// This method mixes two amounts.
+    /// </summary>
+    private static double Mix(double first, double second, double howFar)
+    {
+        return first + (second - first) * howFar;
+    }
+
     private Color Between(double row, double column, int firstRow, int lastRow)
     {
         int lowRow = Math.Clamp((int) Math.Floor(row), firstRow, lastRow);
