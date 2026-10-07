@@ -54,6 +54,9 @@ context {
     parallel pixel scanner
     angles are degrees
     medium samples 120
+    // A camera balanced for candlelight, a little above the flame's own 1900 K, so that the desk comes
+    // out warm rather than the deep orange daylight film would make of it.
+    white balance 2350
     info {
         title 'A Candle'
         author 'J. Stephen Kress'
@@ -132,7 +135,8 @@ cylinder {
     translate Y 1.15
 }
 
-// The flame: glowing gas in an invisible shell, swallowing its own blue as it leaves.
+// The flame: glowing gas in an invisible shell, swallowing its own blue as it leaves.  It glows at the
+// same 1900 K as the light it gives, so that the camera's balance treats the two alike.
 sphere {
     material {
         pigment White
@@ -143,7 +147,7 @@ sphere {
         interior {
             ior 1.0
             medium {
-                emission [3.4, 1.55, 0.42]
+                emission kelvin(1900) * 4.3
                 absorption [0.5, 0.9, 1.6]
             }
         }
@@ -153,13 +157,15 @@ sphere {
     translate Y 1.37
 }
 
-// The one light in the scene: the size of the flame, standing in it, and thinning as it spreads.
+// The one light in the scene: the size of the flame, standing in it, and thinning as it spreads.  A
+// candle flame glows at about 1900 K.
 area light {
     location [-0.055, 1.66, -0.055]
     axisU [0.11, 0, 0]
     axisV [0, 0.16, 0.11]
     steps 3
-    color [1.6, 1.02, 0.52]
+    temperature 1900
+    brightness 2.56
     fade distance 0.7
 }
 

@@ -1060,6 +1060,13 @@ The same trap waits for any fitting built as a solid of revolution.
 And an unlit fitting needs pale glass, not dark.  A globe left dark reads as a hole in the lamp, which is
 the commonest way an unlit fixture goes wrong.
 
+##### The white lamp is a glow, and sodium is not
+
+The modern white lamp glows at 5000 K, which on the default daylight balance is a faintly warm white.
+The sodium lamp stays a color, and for a reason: sodium does not glow because it is hot.  It gives off
+light at one narrow yellow line, so no temperature describes it, and naming one would light the street
+with the wrong kind of light in a [spectral](context.md#spectral-light) render.
+
 #### Street Furniture
 
 ```
@@ -1206,6 +1213,22 @@ The floor lamp wore a gallery ring at its waist, at `height * 0.105`, where the 
 0.135 across — so it hooped straight out through the linen and rendered as a bright wire laid across
 the middle of the lamp.  It is a finial on top now.  Anything wrapped around a tapered surface has to be
 measured against that surface *at that height*, not against the widest part of it.
+
+##### The bulbs glow at 2800 K, so balance the camera for them
+
+Every fitting's bulb is a [glow](lights.md#color-temperature) at a tungsten filament's real
+temperature, 2800 K, or 5800 K for the cool variant.  A filament really is that orange: left on the
+default balance, which is daylight's, a room lit by these comes out deeply orange, the way a photograph
+taken on daylight film does.  What a room looks like to someone standing in it is a camera balanced
+for its bulbs:
+
+```
+context { white balance 3300 }
+```
+
+A little above the bulbs' own temperature, so the room stays warm rather than turning neutral.  It is
+what `gallery/Local/interiors/a-room-after-dark.igl` does.  A cool-variant fitting in that room comes
+out distinctly blue, as a daylight-colored lamp in a tungsten-lit room really does.
 
 #### Windows and Doors
 
