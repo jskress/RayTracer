@@ -121,6 +121,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `disc` | Shape: a flat disc, optionally with a hole. | [Surfaces](surfaces.md#disc) |
 | `disclaimer` | Info: a disclaimer. | [Context](context.md#image-information) |
 | `discontinuous` | Sweep/tube: the kinks between segments are meant. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `dispersion` | Interior: how much it spreads colors, as an Abbe number. | [Materials](materials.md#dispersion) |
 | `distance` | Camera: `focal distance`; also spotlight falloff distance. | [Cameras](cameras.md#depth-of-field) |
 | `distant` | A `distant light` (parallel rays, like the sun). | [Lights](lights.md#distant-lights) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -154,6 +155,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `generic` | `generic shape`: a flat surface from a 2D path. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
 | `gives` | Surface: `gives light`, so the glowing stuff inside it lights the scene. | [Surfaces](surfaces.md#a-surface-that-gives-light) |
+| `glass` | Interior: a real optical glass by name. | [Materials](materials.md#dispersion) |
 | `gradient` | Pattern: a smooth ramp of color. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

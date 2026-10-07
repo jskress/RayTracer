@@ -50,6 +50,13 @@ public interface ISpectrum<TSelf> where TSelf : struct, ISpectrum<TSelf>
     static abstract bool IsSpectral { get; }
 
     /// <summary>
+    /// This property holds the one wavelength, in nanometers, this kind of light is carried at, or
+    /// <c>NaN</c> for light that spans them all.  Only a ray split off to carry a single band has one,
+    /// and it is what a substance that spreads colors bends that ray by.
+    /// </summary>
+    static abstract double Wavelength { get; }
+
+    /// <summary>
     /// This property holds no light at all, fully covering its pixel.
     /// </summary>
     static abstract TSelf Black { get; }

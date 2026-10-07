@@ -32,19 +32,33 @@ public static class IntersectionExtensions
     public static (double N1, double N2) FindIndicesOfRefraction(
         this List<Intersection> intersections, Intersection hit, double environment = 1)
     {
+        (Interior before, Interior after) = intersections.FindInteriors(hit);
+
+        return (before?.IndexOfRefraction ?? environment, after?.IndexOfRefraction ?? environment);
+    }
+
+    /// <summary>
+    /// This method works out what the ray was travelling through before the given hit and what it
+    /// travels through after it: the interior of the innermost thing it is inside on each side, or
+    /// <c>null</c> where it is inside nothing and so in the surroundings.
+    /// </summary>
+    /// <param name="intersections">The list of intersections to work with.</param>
+    /// <param name="hit">The current "hit" intersection.</param>
+    /// <returns>The interiors before and after the hit.</returns>
+    public static (Interior Before, Interior After) FindInteriors(
+        this List<Intersection> intersections, Intersection hit)
+    {
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
         // for every instance of it: a ray entering one glass ball and then another would otherwise
         // read as entering and *leaving* the one ball, and come out the far side unrefracted.
         List<(Surface Surface, Surface Portal)> containers = [];
-        double n1 = 0;
-        double n2 = 0;
+        Interior before = null;
+        Interior after = null;
 
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit)
-                n1 = containers.IsEmpty()
-                    ? environment
-                    : (containers.Last().Surface.Material ?? Material.Default).Interior.IndexOfRefraction;
+                before = containers.IsEmpty() ? null : InteriorOf(containers.Last().Surface);
 
             (Surface, Surface) inside = (intersection.Surface, intersection.Portal);
 
@@ -55,14 +69,20 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                n2 = containers.IsEmpty()
-                    ? environment
-                    : (containers.Last().Surface.Material ?? Material.Default).Interior.IndexOfRefraction;
+                after = containers.IsEmpty() ? null : InteriorOf(containers.Last().Surface);
 
                 break;
             }
         }
 
-        return (n1, n2);
+        return (before, after);
+    }
+
+    /// <summary>
+    /// This method returns what a surface is filled with.
+    /// </summary>
+    private static Interior InteriorOf(Surface surface)
+    {
+        return (surface.Material ?? Material.Default).Interior;
     }
 }

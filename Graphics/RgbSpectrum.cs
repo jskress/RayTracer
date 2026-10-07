@@ -42,6 +42,7 @@ public struct RgbSpectrum : ISpectrum<RgbSpectrum>
 
     public static int Count => 3;
     public static bool IsSpectral => false;
+    public static double Wavelength => double.NaN;
     public static RgbSpectrum Black => new (0, 0, 0);
     public static RgbSpectrum White => new (1, 1, 1);
 

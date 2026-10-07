@@ -117,7 +117,7 @@ public class Scene : NamedThing, IDisposable
                 Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
         }
 
-        hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
+        hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
 
         TS color = GetHitColor<TS>(hit, remaining);
 
@@ -1180,21 +1180,21 @@ public class Scene : NamedThing, IDisposable
         if (remaining < 1 || transparency == 0)
             return TS.Black;
 
-        double ratio = intersection.N1 / intersection.N2;
-        double cosI = intersection.Eye.Dot(intersection.Normal);
-        double sin2T = ratio * ratio * (1 - cosI * cosI);
+        TS color;
 
-        if (sin2T > 1)
-            return TS.Black;
+        // A ray carrying every band, crossing into or out of something that bends each band by its
+        // own amount, goes as many ways as it has bands.
+        if (TS.IsSpectral && TS.Count > 1 && intersection.Disperses)
+            color = SplitThrough<TS>(intersection, remaining) * transparency;
+        else
+        {
+            Vector direction = Bent(intersection, intersection.N1, intersection.N2);
 
-        double cosT = Math.Sqrt(1 - sin2T);
-        Vector direction = intersection.Normal * (ratio * cosI - cosT) -
-                           intersection.Eye * ratio;
-        Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
+            if (direction is null)
+                return TS.Black;
 
-        Ray refractedRay = new (point, direction, intersection.TimeIndex,
-            intersection.ConeSpread, intersection.ConeTravelled);
-        TS color = GetColorFor<TS>(refractedRay, remaining - 1) * transparency;
+            color = GetColorFor<TS>(RefractedRay(intersection, direction), remaining - 1) * transparency;
+        }
 
         // Transparency says how much light gets through; the filter says what color it comes out.
         // Tinting toward the pigment's color at this very point, rather than toward some single
@@ -1205,6 +1205,93 @@ public class Scene : NamedThing, IDisposable
             color *= material.Interior.GetFilterTint(TS.FromReflectance(pigmentColor));
 
         return color;
+    }
+
+    /// <summary>
+    /// This method works out which way a ray goes on through a crossing, by Snell's law.
+    /// </summary>
+    /// <param name="intersection">The crossing.</param>
+    /// <param name="n1">The index of refraction the ray is leaving.</param>
+    /// <param name="n2">The index of refraction it is entering.</param>
+    /// <returns>The direction it goes on in, or <c>null</c> where it is reflected entirely instead.</returns>
+    private static Vector Bent(Intersection intersection, double n1, double n2)
+    {
+        double ratio = n1 / n2;
+        double cosI = intersection.Eye.Dot(intersection.Normal);
+        double sin2T = ratio * ratio * (1 - cosI * cosI);
+
+        if (sin2T > 1)
+            return null;
+
+        double cosT = Math.Sqrt(1 - sin2T);
+
+        return intersection.Normal * (ratio * cosI - cosT) - intersection.Eye * ratio;
+    }
+
+    /// <summary>
+    /// This method returns the ray that goes on through a crossing in the given direction.
+    /// </summary>
+    private static Ray RefractedRay(Intersection intersection, Vector direction)
+    {
+        Point point = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
+
+        return new Ray(
+            point, direction, intersection.TimeIndex, intersection.ConeSpread, intersection.ConeTravelled);
+    }
+
+    /// <summary>
+    /// This method follows light of every band through a crossing that bends each band by its own
+    /// amount: one ray per band, each going its own way and carrying only its band from there on.
+    /// This is where a prism's rainbow and a diamond's fire come from.
+    /// <para>
+    /// A band's ray never splits again, having only the one band to send anywhere, so the cost is paid
+    /// once per path rather than compounding at every crossing; and each is carried as a
+    /// <see cref="SingleBand"/>, at the price of one number rather than a whole spectrum.  A band bent
+    /// back entirely, where the others got through, simply contributes nothing.
+    /// </para>
+    /// <para>
+    /// Each band is bent at a wavelength somewhere within it rather than at its middle.  Bent at the
+    /// middle, a glass that spreads colors widely laid its thirty-two bands down as thirty-two separate
+    /// stripes of color.  Where within the band is a plain function of where the crossing is, the same
+    /// shift for every band, so neighboring rays bend a little differently, the samples within a pixel
+    /// average the steps into a smooth rainbow, and two renders of a scene still agree to the last bit.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried, which must be held in
+    /// <see cref="BandSpectrum"/>'s bands.</typeparam>
+    /// <param name="intersection">The crossing.</param>
+    /// <param name="remaining">The remaining number of recursions allowed.</param>
+    /// <returns>The light arriving through the crossing, band by band.</returns>
+    private TS SplitThrough<TS>(Intersection intersection, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
+        TS light = TS.Black;
+        double width = (SpectralColor.LongestWavelength - SpectralColor.ShortestWavelength) / TS.Count;
+        double shift = ShiftFor(intersection.Point, 0) - 0.5;
+        (int Band, double Wavelength) was = SingleBand.Carry(0, double.NaN);
+
+        try
+        {
+            for (int band = 0; band < TS.Count; band++)
+            {
+                double wavelength = SpectralColor.WavelengthOf(band) + shift * width;
+                (double n1, double n2) = intersection.IndicesAt(wavelength);
+                Vector direction = Bent(intersection, n1, n2);
+
+                if (direction is null)
+                    continue;
+
+                SingleBand.Carry(band, wavelength);
+                light[band] = GetColorFor<SingleBand>(
+                    RefractedRay(intersection, direction), remaining - 1).Amount;
+            }
+        }
+        finally
+        {
+            SingleBand.Carry(was.Band, was.Wavelength);
+        }
+
+        return light;
     }
 
     /// <summary>

@@ -100,7 +100,9 @@ spectral }` / `--spectral` carries light in `BandSpectrum` instead: 32 bands ove
 sky's own, `SpectralColor.Bands`), colors turned into smooth spectra by `RgbToSpectrumTable`
 (Jakob-Hanika, ported from PBRT and fitted against our own bands at render start) and back by
 `SpectralBasis`. Under white light a spectral render matches RGB; the physical sky and its sun reach
-it as the spectra they were worked out as.
+it as the spectra they were worked out as. An interior that disperses (`dispersion`, an Abbe number,
+or a named `glass` from `Core/Glasses.cs`) splits a spectral ray crossing it into one `SingleBand` ray
+per band (`Scene.SplitThrough`), which never split again; RGB renders ignore dispersion.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

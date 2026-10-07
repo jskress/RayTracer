@@ -91,6 +91,27 @@ public class Intersection : IComparable<Intersection>
     public double N2 { get; private set; }
 
     /// <summary>
+    /// This property holds what the ray was travelling through before this crossing, or <c>null</c>
+    /// for the space between the scene's objects.
+    /// </summary>
+    public Interior InteriorBefore { get; private set; }
+
+    /// <summary>
+    /// This property holds what the ray travels through after this crossing, or <c>null</c> for the
+    /// space between the scene's objects.
+    /// </summary>
+    public Interior InteriorAfter { get; private set; }
+
+    /// <summary>
+    /// This property reports whether light crossing here is bent by different amounts at different
+    /// wavelengths, which is the case when either side of the crossing is a substance that spreads
+    /// colors.
+    /// </summary>
+    public bool Disperses => InteriorBefore is { Disperses: true } || InteriorAfter is { Disperses: true };
+
+    private double _environmentIndexOfRefraction = 1;
+
+    /// <summary>
     /// This property notes which instant of the shutter's opening the ray that found this
     /// intersection saw the scene at.  Everything fired onward from here -- toward a light, off a
     /// mirror, through glass -- must see it at the same instant.
@@ -121,6 +142,20 @@ public class Intersection : IComparable<Intersection>
 
     public double Reflectance => GetReflectance();
 
+    /// <summary>
+    /// This method returns the indices of refraction on either side of this crossing for light of the
+    /// given wavelength.  <c>PrepareUsing()</c> must have been called.
+    /// </summary>
+    /// <param name="wavelength">The wavelength, in nanometers, or <c>NaN</c> for light of every
+    /// wavelength at once.</param>
+    /// <returns>The index the ray was in, and the one it enters.</returns>
+    public (double N1, double N2) IndicesAt(double wavelength)
+    {
+        return (
+            InteriorBefore?.IndexOfRefractionAt(wavelength) ?? _environmentIndexOfRefraction,
+            InteriorAfter?.IndexOfRefractionAt(wavelength) ?? _environmentIndexOfRefraction);
+    }
+
     public Intersection(Surface surface, double distance)
     {
         Surface = surface;
@@ -143,8 +178,12 @@ public class Intersection : IComparable<Intersection>
     /// <param name="environmentIndexOfRefraction">The index of refraction of the space between the
     /// scene's objects, which a ray is in whenever it is inside none of them.  One -- a vacuum -- is
     /// the default, and is what a caller with no scene to ask should leave it as.</param>
+    /// <param name="wavelength">The one wavelength, in nanometers, the ray carries light at, which
+    /// decides how much a substance that spreads colors bends it; <c>NaN</c>, the default, for a ray
+    /// carrying every wavelength at once.</param>
     public void PrepareUsing(
-        Ray ray, List<Intersection> intersections, double environmentIndexOfRefraction = 1)
+        Ray ray, List<Intersection> intersections, double environmentIndexOfRefraction = 1,
+        double wavelength = double.NaN)
     {
         Point = ray.At(Distance);
         Eye = -ray.Direction;
@@ -185,7 +224,9 @@ public class Intersection : IComparable<Intersection>
             : OverPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
-        (N1, N2) = intersections.FindIndicesOfRefraction(this, environmentIndexOfRefraction);
+        (InteriorBefore, InteriorAfter) = intersections.FindInteriors(this);
+        _environmentIndexOfRefraction = environmentIndexOfRefraction;
+        (N1, N2) = IndicesAt(wavelength);
 
         // How much of the surface this ray is answerable for.  It is worked out here, where the
         // distance and the normal are both to hand, and it is what lets a pattern answer for a patch

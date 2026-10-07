@@ -50,6 +50,7 @@ public struct BandSpectrum : ISpectrum<BandSpectrum>
 
     public static int Count => SpectralColor.Bands;
     public static bool IsSpectral => true;
+    public static double Wavelength => double.NaN;
     public static BandSpectrum Black => Filled(0);
     public static BandSpectrum White => Filled(1);
 

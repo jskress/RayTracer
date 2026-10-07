@@ -149,6 +149,8 @@ material {
 | `ior` | 1 (vacuum) | The index of refraction: how sharply light bends entering it. |
 | `filter` | 0 | How much the substance colors what passes through. |
 | `clarity` | infinite | How far light travels through it before fading. |
+| `dispersion` | none | How much it spreads colors, as an Abbe number; see [Dispersion](#dispersion). |
+| `glass` | none | A real optical glass by name, bringing its own index at every wavelength. |
 
 `ior` may also be written out as `index of refraction`, which reads better in a scene meant to
 be shown to someone else.
@@ -180,6 +182,36 @@ solid rather than like a soap bubble.
 **`filter`** colors what passes through, so a green bottle casts a green light on the table
 beneath it.  Note that transparency and filter are different questions: transparency is *how
 much* gets through, filter is *what color* it comes out.
+
+#### Dispersion
+
+Real glass bends blue light a little more than red.  It is why a prism splits white light into a
+rainbow and why a cut diamond throws flashes of color.  A substance can be told to do it in either
+of two ways:
+
+```
+interior { ior Diamond  dispersion 55 }
+interior { glass 'SF11' }
+```
+
+**`dispersion`** is the Abbe number glass catalogs give, and it reads backwards from what you might
+expect: the *lower* the number, the more the colors spread.  Crown glass is about 60, flint about
+35, diamond about 55, water about 56; anything under 30 is a very dense flint, and the rainbow
+gets wide.  The index you give is the one at the middle of the visible range, and the rest follows
+from the two numbers.
+
+**`glass`** names a real optical glass, measured at every wavelength rather than described by two
+numbers: `'BK7'`, the everyday crown glass of lenses and windows; `'FK51A'`, a fluor crown that
+hardly spreads colors at all; `'BAF10'` and `'LASF9'`, dense glasses that bend light hard; and
+`'SF5'`, `'SF10'` and `'SF11'`, the heavy flints a prism is made from when the rainbow is the
+point.  A glass brings its own index, so there is no `ior` to give with it.  The measurements are
+from [refractiveindex.info](https://refractiveindex.info).
+
+Dispersion only shows in a [spectral](context.md#spectral-light) render.  In red, green and blue
+every color bends alike, by the index at the middle of the range, so a scene renders as it would
+without it.  A spectral ray that crosses into such a substance splits into one ray per band, each
+going its own way; that costs more wherever there is dispersive glass in view, and nothing
+anywhere else.
 
 ### Filling a Surface
 

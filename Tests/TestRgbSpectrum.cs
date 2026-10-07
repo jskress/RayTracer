@@ -298,6 +298,7 @@ public class TestRgbSpectrum
 
         public static int Count => 6;
         public static bool IsSpectral => false;
+        public static double Wavelength => double.NaN;
         public static DoubledBands Black => Of(0, 0, 0, 1);
         public static DoubledBands White => Of(1, 1, 1, 1);
         public static DoubledBands FromReflectance(Color color) => Of(color);
