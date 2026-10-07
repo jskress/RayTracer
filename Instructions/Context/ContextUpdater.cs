@@ -64,6 +64,11 @@ public class ContextUpdater : Instruction
     public Resolver<bool> GrayscaleResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether light is carried wavelength by wavelength.
+    /// </summary>
+    public Resolver<bool> SpectralResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how deeply the sampler looks into a pixel.
     /// </summary>
     public Resolver<int> AntiAliasingDepthResolver { get; set; }
@@ -108,6 +113,7 @@ public class ContextUpdater : Instruction
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
+        SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);
 
         // These land on the context's own aliasing option rather than on the context, since asking
         // for either of them is what asks for the sampler at all.

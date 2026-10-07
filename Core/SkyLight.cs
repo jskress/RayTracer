@@ -121,6 +121,25 @@ public class SkyLight : Light
     }
 
     /// <summary>
+    /// This method returns the sky's light in the direction of the given sample, in whatever bands the
+    /// render is carrying light in.  A sky worked out wavelength by wavelength is handed to a spectral
+    /// render that way, and then tinted by the light's own color, as <see cref="ColorFor"/> tints it.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="sample">The sample being asked about.</param>
+    /// <returns>The light of that piece of sky.</returns>
+    public override TS EmittedToward<TS>(LightSample sample)
+    {
+        if (!TS.IsSpectral || Pigment is null || !Pigment.IsSpectral)
+            return base.EmittedToward<TS>(sample);
+
+        Vector heading = sample.Direction;
+
+        return Pigment.GetTransformedLightFor<TS>(new Point(heading.X, heading.Y, heading.Z)) *
+               TS.FromUnbounded(Color);
+    }
+
+    /// <summary>
     /// This method spreads a sample evenly over the whole sphere of directions.
     /// </summary>
     /// <param name="alongOne">Where the sample falls, from nothing up to one.</param>

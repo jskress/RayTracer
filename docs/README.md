@@ -103,6 +103,7 @@ branches, any one of the branches will do.
   - [Scanners](context.md#scanners)
   - [Anti-Aliasing](context.md#anti-aliasing)
   - [Color Depth and Grayscale](context.md#color-depth-and-grayscale)
+  - [Spectral Light](context.md#spectral-light)
   - [Image Size](context.md#image-size)
 - [Cameras](cameras.md)
   - [Placing a Camera](cameras.md#placing-a-camera)

@@ -298,6 +298,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
+| `spectral` | Context: carry light wavelength by wavelength rather than as red, green and blue. | [Context](context.md#spectral-light) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
@@ -852,6 +853,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--no-gamma` | Apply no gamma correction. |
 | `--no-shadows` | Turn shadows off everywhere. |
 | `--grayscale` | Write the image in shades of gray. |
+| `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
 | `-r`, `--frame-rate` | Frames per second for a series of images (default 24). |
 | `-m`, `--frame` | Render one particular frame of an animation. |

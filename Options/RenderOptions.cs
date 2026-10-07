@@ -208,6 +208,11 @@ public class RenderOptions
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool Grayscale { get; set; }
 
+    [Option("spectral", Required = false,
+        HelpText = "Carry light wavelength by wavelength rather than as red, green and blue, so that colored light on colored surfaces, and anything else that depends on wavelength, comes out as it physically would.")]
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public bool Spectral { get; set; }
+
     [Option('l', "output-level", Required = false, Default = "normal",
         // ReSharper disable once StringLiteralTypo
         HelpText = "Sets the desired level of output.  Must be one of, [q]uiet, [n]ormal, [c]hatty or [v]erbose.  The values are not case-sensitive.")]

@@ -97,7 +97,7 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
@@ -300,7 +300,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | antiAliasingClause | scaleAmbientClause |
-            colorDepthClause | grayscale | contextPropertyClause
+            colorDepthClause | grayscale | spectral | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
         // How much of each channel reaches the file, and whether any of it is color at all.  These

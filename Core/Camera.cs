@@ -141,7 +141,14 @@ public class Camera : NamedThing
         PixelRenderer renderer = context.AntiAliasing.GetRenderer(converter);
 
         renderer.Statistics = context.Statistics;
+        renderer.Spectral = context.Spectral;
         scene.Statistics = context.Statistics;
+
+        // Turning a color into a spectrum wants a table that is built the first time it is asked for;
+        // it is asked for here, before the first pixel, rather than by whichever pixel gets there first
+        // while every other thread waits on it.
+        if (context.Spectral)
+            SpectralBasis.Shared.Prepare();
 
         context.Progress?.SetTotal(canvas.Width * canvas.Height);
 

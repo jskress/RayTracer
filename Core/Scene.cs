@@ -114,8 +114,7 @@ public class Scene : NamedThing, IDisposable
         if (hit == null)
         {
             return ThroughTheSurroundings(
-                TS.FromIlluminant(Background.GetTransformedColorFor(HeadingOf(ray))), ray,
-                double.PositiveInfinity);
+                Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
         }
 
         hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction);
@@ -426,7 +425,7 @@ public class Scene : NamedThing, IDisposable
             // product alone, so this is simply the one direction against the other.
             double phase = medium.PhaseFor(sample.Direction.Dot(heading));
 
-            arriving += TS.FromIlluminant(light.ColorFor(sample)) * reaching *
+            arriving += light.EmittedToward<TS>(sample) * reaching *
                 (sample.Cone * phase * light.FadingOver(sample.Distance));
         }
 

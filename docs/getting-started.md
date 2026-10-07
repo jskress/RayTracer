@@ -183,6 +183,7 @@ and ignored.
 | `-g`, `--gamma` | The gamma correction to apply. |
 | `--no-gamma` | Apply no gamma correction at all. |
 | `--grayscale` | Render in shades of gray. |
+| `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
 | `--no-shadows` | Let nothing cast a shadow. |
 
 #### Animation

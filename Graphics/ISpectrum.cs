@@ -42,6 +42,14 @@ public interface ISpectrum<TSelf> where TSelf : struct, ISpectrum<TSelf>
     static abstract int Count { get; }
 
     /// <summary>
+    /// This property reports whether this kind of light is held wavelength by wavelength, rather than in
+    /// the three broad bands that are simply a color's channels.  Where something was worked out
+    /// wavelength by wavelength in the first place -- the sky -- it is handed over as it was worked out
+    /// only to a kind that can hold it, and as the color it has always been to the rest.
+    /// </summary>
+    static abstract bool IsSpectral { get; }
+
+    /// <summary>
     /// This property holds no light at all, fully covering its pixel.
     /// </summary>
     static abstract TSelf Black { get; }
@@ -74,6 +82,14 @@ public interface ISpectrum<TSelf> where TSelf : struct, ISpectrum<TSelf>
     /// <param name="color">The rate, as written.</param>
     /// <returns>The rate in each band.</returns>
     static abstract TSelf FromUnbounded(Color color);
+
+    /// <summary>
+    /// This method takes light that was worked out wavelength by wavelength, in
+    /// <see cref="SpectralColor"/>'s bands.
+    /// </summary>
+    /// <param name="perBand">The light, one amount for each of <see cref="SpectralColor"/>'s bands.</param>
+    /// <returns>The light, fully covering its pixel.</returns>
+    static abstract TSelf FromSampled(ReadOnlySpan<double> perBand);
 
     /// <summary>
     /// This property holds the amount in one band.
