@@ -39,6 +39,7 @@ The rest of the material describes how light behaves when it arrives.
 | `specular` | 0.9 | The strength of the highlight. |
 | `shininess` | 200 | How tight that highlight is. |
 | `reflective` | 0 | How much of its surroundings it mirrors. |
+| `fresnel` | off | Mirrors more at a slant, as every real surface does. |
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
@@ -92,6 +93,52 @@ material {
 Reflections are traced, so they cost time, and they are limited in depth — a ray bounces only
 so many times before the renderer gives up, which is what keeps two facing mirrors from
 running forever.
+
+#### Fresnel
+
+Left alone, a surface mirrors the same share of its surroundings from every angle.  No real
+one does.  Varnish, paint, plastic and still water give back a few percent of the light meeting
+them square-on and nearly all of it at a graze.  That is why a polished floor is dark at your feet
+and a mirror toward the far wall, and why a wet road shines toward the horizon.  `fresnel` turns
+that on:
+
+```
+material {
+    pigment color [0.30, 0.16, 0.08]
+    reflective 0.04
+    fresnel
+}
+```
+
+With it, `reflective` is how much is mirrored square-on, and the share climbs from there toward
+all of it as the surface is seen more and more edge-on.  Most of the climb comes late: the share
+has barely moved at sixty degrees from square-on and is past a half by eighty-five.  It follows
+Schlick's approximation to Fresnel's equations, which transparent surfaces already follow.
+
+`gallery/Local/materials/fresnel.igl` lays the same polished floor down twice, with it and without.
+
+What a surface mirrors never reaches its pigment, so the color it shows of its own is turned down
+by as much.  Square-on that is only the few percent it mirrors; at a graze it is nearly all of
+it, and the surface stops being a colored thing with a reflection on it and becomes a mirror.
+The highlight is left as it is.
+
+The square-on share is small for anything that is not a metal, and much the same from one
+material to the next:
+
+| Surface | `reflective` |
+| --- | --- |
+| Water | 0.02 |
+| Glass, plastic, paint, varnish, lacquer | 0.04 |
+| Diamond | 0.17 |
+| Iron, chrome | 0.55 |
+| Gold, copper | 0.6 to 0.95, best colored with `metallic` |
+| Aluminum, silver | 0.9 to 0.95 |
+
+A `reflective` value chosen for a surface without `fresnel` is usually far too high with it.
+Such values were set to give a surface some gloss head-on, and with `fresnel` the edges supply
+that gloss themselves.  A transparent surface already shares its light between what it mirrors
+and what it lets through by its index of refraction, so `fresnel` changes nothing there.  Nor
+does it change a surface that mirrors nothing.
 
 #### Metallic
 

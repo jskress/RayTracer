@@ -83,7 +83,7 @@ public partial class LanguageParser
             'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
@@ -631,8 +631,8 @@ public partial class LanguageParser
         ]
         materialEntryClause:
         [
-            pigment | normal | materialValueClause | materialMetallicClause | startInteriorClause |
-            startDecalClause
+            pigment | normal | fresnel | materialValueClause | materialMetallicClause |
+            startInteriorClause | startDecalClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

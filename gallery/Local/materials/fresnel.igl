@@ -1,0 +1,100 @@
+// Two floors of the same dark polish, side by side and running away from the camera, differing only in
+// "fresnel".  Both mirror four percent of what they face when seen square-on, which is what varnish,
+// lacquer and paint really do.
+//
+// The left one mirrors four percent from every angle, which no real surface does: it stays dull all the
+// way to the horizon, with a faint copy of the columns lying on it everywhere alike.  The right one
+// follows Fresnel.  At your feet, where it is seen nearly square-on, it is the same dull floor; further
+// off, seen more and more edge-on, the share it mirrors climbs, and toward the far end it is very nearly
+// a mirror, holding the sky and the columns at almost their full brightness.  That climb is why a
+// polished floor is dark underfoot and bright toward the far wall, and why a road shines toward the
+// horizon.
+//
+// What a Fresnel surface mirrors comes out of the color it shows of its own, so far off the right floor's
+// tiles fade under the reflection rather than having it laid on top of them.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 2
+    info {
+        title 'Fresnel'
+        author 'J. Stephen Kress'
+        description 'The same polished floor with and without fresnel: dull everywhere, or dull underfoot and a mirror toward the horizon.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.4, -12]
+    look at [0, 0.8, 8]
+    field of view 58
+}
+
+// A dusk sky, warm along the horizon and deepening overhead, so that what the floors mirror is plain.  It
+// bounces, so that below the horizon it is the horizon's color again rather than wrapping round to the
+// deep blue overhead.
+background linear Y bouncing gradient {
+    [0, [0.96, 0.80, 0.60], 0.12, [0.80, 0.74, 0.74], 0.45, [0.42, 0.52, 0.76], 1, [0.18, 0.25, 0.48]]
+}
+
+distant light { direction [-0.4, -1, 0.9]  color [1, 0.95, 0.88] }
+
+Tiles = pigment checker { [0.20, 0.09, 0.05], [0.13, 0.055, 0.03]  scale 1.5 }
+
+// Each floor is a patch laid out at its full size rather than a box flattened and stretched to the
+// horizon, because a pattern is laid out in the space of the surface wearing it, and a stretched box
+// would stretch its tiles with it.
+
+// LEFT: four percent at every angle.
+parallelogram {
+    at [-400, 0, -10]
+    sides [0, 0, 20000], [399.96, 0, 0]
+    material { pigment Tiles  ambient 0.08  diffuse 0.7  specular 0.3  shininess 80  reflective 0.04 }
+}
+
+// RIGHT: four percent square-on, climbing toward all of it at a graze.
+parallelogram {
+    at [0.04, 0, -10]
+    sides [0, 0, 20000], [399.96, 0, 0]
+    material { pigment Tiles  ambient 0.08  diffuse 0.7  specular 0.3  shininess 80  reflective 0.04  fresnel }
+}
+
+// A strip of dark metal between them.
+cube {
+    material { pigment [0.05, 0.05, 0.05]  ambient 0.05  diffuse 0.5  specular 0.5  shininess 120 }
+    scale [0.04, 0.01, 10000]
+    translate [0, 0, 9990]
+}
+
+// A row of pale columns down each floor, for both to mirror.
+Stone = material { pigment [0.86, 0.84, 0.80]  ambient 0.15  diffuse 0.8  specular 0.1 }
+
+for z in [0, 6] {
+    cylinder { min Y 0  max Y 4.4  scale [0.32, 1, 0.32]  translate [-3, 0, z * 7]  material Stone }
+    cylinder { min Y 0  max Y 4.4  scale [0.32, 1, 0.32]  translate [3, 0, z * 7]  material Stone }
+}
+
+// What each floor is, written on it.
+Label = material { pigment [0.92, 0.90, 0.86]  ambient 0.6  diffuse 0.4  specular 0 }
+
+text {
+    text 'reflective 0.04'
+    font 'Merriweather'
+    layout { horizontal position center }
+    material Label
+    scale [0.3, 0.005, 0.3]
+    rotate X -90
+    translate [-2.4, 0.01, -4]
+}
+
+text {
+    text 'reflective 0.04  fresnel'
+    font 'Merriweather'
+    layout { horizontal position center }
+    material Label
+    scale [0.3, 0.005, 0.3]
+    rotate X -90
+    translate [2.6, 0.01, -4]
+}

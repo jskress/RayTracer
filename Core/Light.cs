@@ -261,10 +261,13 @@ public abstract class Light : NamedThing
     /// for a caller with no footprint to give, which asks the pigment for a point as before.</param>
     /// <param name="portal">The instance this point was found through, when the surface is a shape
     /// shared among several places, so that its pattern is read in the right space.</param>
+    /// <param name="ownShare">How much of the light the surface keeps to show as its own color, the
+    /// rest being mirrored -- which takes from the ambient and diffuse terms and leaves the highlight
+    /// alone.  All of it, unless the material follows <see cref="Material.Fresnel"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        TS lightReaching, Footprint footprint = null, Surface portal = null)
+        TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1)
         where TS : struct, ISpectrum<TS>
     {
         Material material = surface.Material ?? Material.Default;
@@ -273,6 +276,11 @@ public abstract class Light : NamedThing
         TS pigmentColor = TS.FromReflectance(
             material.GetColorFor(surface, point, normal, footprint, portal));
         TS color = pigmentColor * EmittedToward<TS>(sample);
+
+        // Skipped outright when the surface keeps all of it, which every surface did before Fresnel,
+        // so that they come out bit for bit as they always have.
+        if (ownShare != 1)
+            color *= ownShare;
         Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come

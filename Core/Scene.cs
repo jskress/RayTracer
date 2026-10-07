@@ -803,13 +803,19 @@ public class Scene : NamedThing, IDisposable
         where TS : struct, ISpectrum<TS>
     {
         TS surfaceColor = TS.Black;
+        Material material = intersection.Surface.Material ?? Material.Default;
+
+        // What a surface mirrors never reaches its pigment, so one whose mirroring follows Fresnel
+        // shows only the rest of the light as its own -- next to none of it, at a graze.
+        double ownShare = material.FresnelApplies
+            ? 1 - material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
+            : 1;
 
         foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(light, intersection);
+            surfaceColor += Illuminate<TS>(light, intersection, ownShare);
 
         TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
         TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
-        Material material = intersection.Surface.Material ?? Material.Default;
         TS refColor;
 
         // What a surface lets past, it cannot also show.  The pigment may say so color by color,
@@ -870,8 +876,10 @@ public class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="light">The light lending its color.</param>
     /// <param name="intersection">The surface point being lit.</param>
+    /// <param name="ownShare">How much of the light reaching the point the surface keeps to show as
+    /// its own color rather than mirroring; see <see cref="Material.Fresnel"/>.</param>
     /// <returns>The color the light lends the point.</returns>
-    private TS Illuminate<TS>(Light light, Intersection intersection)
+    private TS Illuminate<TS>(Light light, Intersection intersection, double ownShare)
         where TS : struct, ISpectrum<TS>
     {
         int count = light.SampleCount;
@@ -884,7 +892,7 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, GetLightReaching<TS>(
                     intersection.LitPoint, only.Direction, only.Distance, intersection.TimeIndex),
-                intersection.Footprint, intersection.Portal);
+                intersection.Footprint, intersection.Portal, ownShare);
         }
 
         TS sum = TS.Black;
@@ -898,7 +906,7 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, GetLightReaching<TS>(
                     intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
-                intersection.Footprint, intersection.Portal);
+                intersection.Footprint, intersection.Portal, ownShare);
         }
 
         return sum * (1.0 / count);
@@ -1114,10 +1122,12 @@ public class Scene : NamedThing, IDisposable
         where TS : struct, ISpectrum<TS>
     {
         Material material = intersection.Surface.Material ?? Material.Default;
-        double reflective = material.Reflective;
 
-        if (remaining < 1 || reflective == 0)
+        if (remaining < 1 || material.Reflective == 0)
             return TS.Black;
+
+        // How much is mirrored depends on the angle it is seen at, for a surface that says so.
+        double reflective = material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal));
 
         // The cone goes on widening past the mirror, so what is seen in a reflection is filtered for
         // how far the light really travelled rather than for how far it is from the glass.  A curved

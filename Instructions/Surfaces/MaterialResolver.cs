@@ -47,6 +47,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public Resolver<double> ReflectiveResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether what the material mirrors follows Fresnel.
+    /// </summary>
+    public Resolver<bool> FresnelResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how sharply diffuse lighting falls away.
     /// </summary>
     public Resolver<double> BrillianceResolver { get; set; }
@@ -118,6 +123,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         bool saysMore = PigmentResolver is not null || AmbientResolver is not null ||
                         DiffuseResolver is not null || SpecularResolver is not null ||
                         ShininessResolver is not null || ReflectiveResolver is not null ||
+                        FresnelResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
@@ -146,6 +152,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         SpecularResolver.AssignTo(value, target => target.Specular, context, variables);
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
+        FresnelResolver.AssignTo(value, target => target.Fresnel, context, variables);
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
         GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
