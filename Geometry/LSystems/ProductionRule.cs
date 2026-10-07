@@ -12,11 +12,10 @@ namespace RayTracer.Geometry.LSystems;
 public class ProductionRule : ProductionRuleBase
 {
     /// <summary>
-    /// This property holds the spectrum of production values.
-    /// When this rule does not have any stochastic aspect, the spectrum will hold only a
-    /// single value.
+    /// This property holds the production values, each at its break value.
+    /// When this rule does not have any stochastic aspect, it will hold only a single value.
     /// </summary>
-    public Spectrum<ModuleTemplate[]> Productions { get; } = new ();
+    public BreakValue<ModuleTemplate[]> Productions { get; } = new ();
 
     /// <summary>
     /// This property holds the condition this rule is guarded by, or null when it has none.

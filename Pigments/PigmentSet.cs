@@ -25,7 +25,7 @@ public class PigmentSet
     /// </summary>
     public bool MayTransmit => _pigments.Any(pigment => pigment.MayTransmit);
 
-    private readonly Spectrum<Pigment> _pigments = new (); 
+    private readonly BreakValue<Pigment> _pigments = new (); 
 
     /// <summary>
     /// This method is used to add an entry to the pigment map.
@@ -179,7 +179,7 @@ public class PigmentSet
 
         // The break values live in [0, 1), so the value has to be brought into that same
         // interval before it's measured against them.
-        double fraction = (Spectrum<Pigment>.Normalize(value) - start) / (end - start);
+        double fraction = (BreakValue<Pigment>.Normalize(value) - start) / (end - start);
         Color secondColor = footprint is null || footprint.IsEmpty
             ? secondPigment.GetTransformedColorFor(point)
             : secondPigment.GetTransformedColorFor(point, footprint);
