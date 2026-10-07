@@ -150,6 +150,8 @@ public class Camera : NamedThing
         if (context.Spectral)
             SpectralBasis.Shared.Prepare();
 
+        WhiteBalance balance = context.WhiteBalance is { } kelvin ? new WhiteBalance(kelvin) : null;
+
         context.Progress?.SetTotal(canvas.Width * canvas.Height);
 
         // The progress bar takes the cursor away while it has the line, so it must be given the
@@ -162,6 +164,9 @@ public class Camera : NamedThing
             context.Scanner.Scan(canvas.Width, canvas.Height, (x, y) =>
             {
                 Color color = renderer.Render(scene, x, y);
+
+                if (balance is not null)
+                    color = balance.Apply(color);
 
                 canvas.SetColor(color, x, y);
                 context.Statistics?.CountPixel();

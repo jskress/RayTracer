@@ -69,6 +69,11 @@ public class ContextUpdater : Instruction
     public Resolver<bool> SpectralResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the temperature the picture is balanced to show as white.
+    /// </summary>
+    public Resolver<double> WhiteBalanceResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how deeply the sampler looks into a pixel.
     /// </summary>
     public Resolver<int> AntiAliasingDepthResolver { get; set; }
@@ -114,6 +119,9 @@ public class ContextUpdater : Instruction
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
         SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);
+
+        if (WhiteBalanceResolver is not null)
+            context.WhiteBalance = WhiteBalanceResolver.Resolve(context, variables);
 
         // These land on the context's own aliasing option rather than on the context, since asking
         // for either of them is what asks for the sampler at all.

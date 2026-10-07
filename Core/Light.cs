@@ -43,6 +43,42 @@ public abstract class Light : NamedThing
     private Color _color = Colors.White;
 
     /// <summary>
+    /// This method makes the light the color of something glowing at the given temperature.  It gives
+    /// the light the glow's own spectrum as well, so that a render carrying light wavelength by
+    /// wavelength lights the scene with the glow itself rather than with a spectrum guessed from its
+    /// color.  For a glow the two are close, both being smooth, but the glow is what the light really
+    /// is.  See <see cref="SpectralColor.Blackbody"/>.
+    /// <para>
+    /// **It is scaled so that its brightest channel is one**, as a color written out by hand would be;
+    /// see <see cref="SpectralColor.GlowAt"/> for why.  A warm light at strength one is therefore dimmer
+    /// than a white one, which is what <see cref="Brighten"/> is for.
+    /// </para>
+    /// </summary>
+    /// <param name="kelvin">The temperature, in kelvin.</param>
+    public void SetColorTemperature(double kelvin)
+    {
+        (Color color, double[] glow) = SpectralColor.GlowAt(kelvin);
+
+        Color = color;
+        Spectrum = glow;
+    }
+
+    /// <summary>
+    /// This method makes the light brighter or dimmer by the given factor, leaving its color alone --
+    /// its spectrum too, where it has one.
+    /// </summary>
+    /// <param name="factor">What to multiply the light by.</param>
+    public void Brighten(double factor)
+    {
+        double[] spectrum = Spectrum;
+
+        Color = Color * factor;
+
+        if (spectrum is not null)
+            Spectrum = spectrum.Select(amount => amount * factor).ToArray();
+    }
+
+    /// <summary>
     /// This method works out which way the light lies from the given point, and how far a shadow
     /// ray must travel before it has gone past the light and stops being able to shade the point.
     /// </summary>

@@ -46,10 +46,6 @@ public class AreaLightResolver : FadingLightResolver<AreaLight>
     /// </summary>
     public bool? Jitter { get; set; }
 
-    /// <summary>
-    /// This property holds the resolver for the light's color.
-    /// </summary>
-    public Resolver<Color> ColorResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an area light.
@@ -67,7 +63,6 @@ public class AreaLightResolver : FadingLightResolver<AreaLight>
         UStepsResolver.AssignTo(value, target => target.USteps, context, variables);
         VStepsResolver.AssignTo(value, target => target.VSteps, context, variables);
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
-        ColorResolver.AssignTo(value, target => target.Color, context, variables);
 
         if (Jitter.HasValue)
             value.Jitter = Jitter.Value;

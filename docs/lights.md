@@ -19,7 +19,9 @@ examples all write `point light` so that they say which sort they mean.
 
 Any number of lights, of any sort, may share a scene and their contributions add.
 
-All light types carry a color.  If you don't specify one, `White` is the default.
+All light types carry a color.  If you don't specify one, `White` is the default.  A light may
+instead be given the [temperature](#color-temperature) of something glowing, and either way a
+`brightness` to multiply it by.
 
 ### Point Lights
 
@@ -178,6 +180,58 @@ is exactly how a real soft shadow reads — see `gallery/Local/lights/area-light
 around that.
 
 The complete example is [`docs/examples/lights/area-light.igl`](examples/lights/area-light.igl).
+
+### Color Temperature
+
+Most real lamps are hot things glowing — a filament, a flame, the sun — and the color of that glow
+is set by nothing but how hot it is.  A light may say that rather than a color:
+
+```
+point light {
+    location [0, 3, 0]
+    temperature 2700
+}
+```
+
+The temperature is in kelvin.  Some to go by:
+
+| Kelvin | What glows at about that temperature |
+| --- | --- |
+| 1900 | A candle flame. |
+| 2700 | A household bulb, the warm white of a living room at night. |
+| 3200 | A tungsten studio lamp. |
+| 4000 | A cool white lamp. |
+| 5500 | Noon sunlight — white, in this renderer. |
+| 6500 | Overcast daylight, a little blue. |
+| 10000 | Light from a clear blue sky. |
+
+White is about 5500 K here, not the 6500 a computer screen calls white: this renderer counts light of
+the same strength at every wavelength as white, which is how a film balanced for daylight sees, and
+that is where such light falls.  Below it lights warm toward orange and red; above it they cool toward
+blue.
+
+A light given a temperature is scaled so that its **brightest channel is one**, the way a color written
+out by hand would be, so it never washes a lit wall out to a different hue.  That makes a warm light
+dimmer than a white one at the same strength, and **`brightness`** is how to make up the difference:
+
+```
+point light {
+    location [0, 3, 0]
+    temperature 2700
+    brightness 1.6
+}
+```
+
+`brightness` multiplies whatever light the light gives, a `color` as well as a `temperature`, so it is
+also simply a way to turn a light up or down without rewriting its color.  If a light is given both a
+color and a temperature, the temperature wins.
+
+In a [spectral](context.md#spectral-light) render a light given a temperature lights the scene with
+the glow itself, wavelength by wavelength, rather than with a spectrum guessed from its color.  A glow
+is a smooth slope from red down to blue, and the guess for an orange is a smooth curve too, so the two
+come out close — within a percent or so on most paints — but the glow is what the light really is.
+The larger difference is the one any spectral render makes: a warm lamp on a blue paint keeps more of
+the paint's blue than red, green and blue arithmetic allows.
 
 ### Fading With Distance
 

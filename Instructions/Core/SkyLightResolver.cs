@@ -8,13 +8,8 @@ namespace RayTracer.Instructions.Core;
 /// <summary>
 /// This class is used to resolve a sky light value.
 /// </summary>
-public class SkyLightResolver : NamedObjectResolver<SkyLight>, ILightResolver
+public class SkyLightResolver : LightResolver<SkyLight>
 {
-    /// <summary>
-    /// This property holds the resolver for the color the light carries, which multiplies whatever the
-    /// sky itself is rather than replacing it.
-    /// </summary>
-    public Resolver<Color> ColorResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the sky this light carries, when the scene gives it one of
@@ -35,7 +30,6 @@ public class SkyLightResolver : NamedObjectResolver<SkyLight>, ILightResolver
     /// <param name="value">The value to update.</param>
     protected override void SetProperties(RenderContext context, Variables variables, SkyLight value)
     {
-        ColorResolver.AssignTo(value, target => target.Color, context, variables);
         SamplesResolver.AssignTo(value, target => target.Samples, context, variables);
 
         // Left as nothing when the scene named none, so that the scene may hand it the background once
@@ -50,9 +44,4 @@ public class SkyLightResolver : NamedObjectResolver<SkyLight>, ILightResolver
     /// adjust its copy without touching the one the name still stands for.
     /// </summary>
     /// <returns>A copy of this resolver.</returns>
-    public object Clone()
-    {
-        return MemberwiseClone();
-    }
-
 }

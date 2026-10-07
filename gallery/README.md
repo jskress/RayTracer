@@ -768,7 +768,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Materials</b> &mdash; 8 images &middot; what a surface is made of</summary>
+<summary><b>Materials</b> &mdash; 9 images &middot; what a surface is made of</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -835,12 +835,20 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/materials/dispersion.igl">Dispersion</a>
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/materials/a-rainbow-through-a-prism.png">
+      <img alt="A Rainbow Through a Prism" height="120" src="Local/materials/a-rainbow-through-a-prism.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/materials/a-rainbow-through-a-prism.igl">A Rainbow Through a Prism</a>
+    </td>
+  </tr>
 </table>
 
 </details>
 
 <details>
-<summary><b>Lights</b> &mdash; 5 images &middot; where the light comes from</summary>
+<summary><b>Lights</b> &mdash; 6 images &middot; where the light comes from</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -881,6 +889,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/times-of-day.igl">Times of Day</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/color-temperature.png">
+      <img alt="Color Temperature" height="120" src="Local/lights/color-temperature.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/color-temperature.igl">Color Temperature</a>
     </td>
   </tr>
 </table>

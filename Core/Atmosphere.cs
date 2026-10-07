@@ -593,38 +593,7 @@ public class Atmosphere
     /// <returns>The sunlight above the air, band by band.</returns>
     private static double[] WorkOutSunlight()
     {
-        double[] sunlight = new double[SpectralColor.Bands];
-
-        for (int band = 0; band < SpectralColor.Bands; band++)
-            sunlight[band] = Glow(SpectralColor.WavelengthOf(band), 5778);
-
-        // Scaled so the whole of it stands at a strength of one.
-        Color asSeen = SpectralColor.ToColor(sunlight);
-        double brightness =
-            0.2126 * asSeen.Red + 0.7152 * asSeen.Green + 0.0722 * asSeen.Blue;
-
-        for (int band = 0; band < SpectralColor.Bands; band++)
-            sunlight[band] /= brightness;
-
-        return sunlight;
-    }
-
-    /// <summary>
-    /// This method gives how brightly something at a given temperature glows at a given wavelength.
-    /// </summary>
-    /// <param name="wavelength">The wavelength in question, in nanometers.</param>
-    /// <param name="temperature">How hot the thing is, in kelvin.</param>
-    /// <returns>How brightly it glows there.</returns>
-    private static double Glow(double wavelength, double temperature)
-    {
-        const double PlanckConstant = 6.62607015e-34;
-        const double SpeedOfLight = 2.99792458e8;
-        const double BoltzmannConstant = 1.380649e-23;
-
-        double meters = wavelength * 1e-9;
-        double front = 2 * PlanckConstant * SpeedOfLight * SpeedOfLight / Math.Pow(meters, 5);
-        double exponent = PlanckConstant * SpeedOfLight / (meters * BoltzmannConstant * temperature);
-
-        return front / (Math.Exp(exponent) - 1);
+        // The sun's surface is a glowing body at about this temperature.
+        return SpectralColor.Blackbody(5778);
     }
 }

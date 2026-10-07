@@ -213,6 +213,14 @@ without it.  A spectral ray that crosses into such a substance splits into one r
 going its own way; that costs more wherever there is dispersive glass in view, and nothing
 anywhere else.
 
+What dispersion shows is what an eye looking through the glass sees: edges fringed with color, and a
+bright slit drawn out into a full spectrum —
+`gallery/Local/materials/a-rainbow-through-a-prism.igl` is built around that.  What it does not show
+is the rainbow a prism casts on a wall when a beam is shone through it.  That is a caustic, light
+carried forward from a lamp, through the glass, onto a surface, and this renderer traces backward
+from the eye: when a point on the wall asks whether it can see the lamp, the question goes in a
+straight line and does not bend through the glass.
+
 ### Filling a Surface
 
 An interior may also hold a `medium`: not what the boundary is made of, but what fills the space

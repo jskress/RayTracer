@@ -102,7 +102,12 @@ sky's own, `SpectralColor.Bands`), colors turned into smooth spectra by `RgbToSp
 `SpectralBasis`. Under white light a spectral render matches RGB; the physical sky and its sun reach
 it as the spectra they were worked out as. An interior that disperses (`dispersion`, an Abbe number,
 or a named `glass` from `Core/Glasses.cs`) splits a spectral ray crossing it into one `SingleBand` ray
-per band (`Scene.SplitThrough`), which never split again; RGB renders ignore dispersion.
+per band (`Scene.SplitThrough`), which never split again; RGB renders ignore dispersion. A light
+given a `temperature` (`Light.SetColorTemperature`) carries a Planck spectrum as well as its color,
+scaled so its brightest channel is one; `brightness` multiplies either, and `kelvin(T)` is the same glow
+as a color for emissions and pigments. `context { white balance T }` (`Graphics/WhiteBalance.cs`, a
+Bradford adaptation applied to each finished pixel in `Camera.Render`) makes a glow at T come out white;
+lamp-lit scenes use it so real bulb temperatures read warm rather than orange.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

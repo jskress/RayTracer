@@ -1,3 +1,5 @@
+using RayTracer.Graphics;
+
 namespace RayTracer.Instructions.Core;
 
 /// <summary>
@@ -10,4 +12,20 @@ namespace RayTracer.Instructions.Core;
 /// that gets edited in one place and not the other.
 /// </para>
 /// </summary>
-public interface ILightResolver : IObjectResolver, ICloneable;
+public interface ILightResolver : IObjectResolver, ICloneable
+{
+    /// <summary>
+    /// This property holds the resolver for the light's color.
+    /// </summary>
+    Resolver<Color> ColorResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the temperature of the glow the light gives.
+    /// </summary>
+    Resolver<double> TemperatureResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how bright the light is.
+    /// </summary>
+    Resolver<double> BrightnessResolver { get; set; }
+}

@@ -13,7 +13,7 @@ namespace RayTracer.Instructions.Core;
 /// </para>
 /// </summary>
 /// <typeparam name="TLight">The type of light being resolved.</typeparam>
-public abstract class FadingLightResolver<TLight> : NamedObjectResolver<TLight>, ILightResolver
+public abstract class FadingLightResolver<TLight> : LightResolver<TLight>
     where TLight : Light, new()
 {
     /// <summary>
@@ -47,9 +47,4 @@ public abstract class FadingLightResolver<TLight> : NamedObjectResolver<TLight>,
     /// adjust its copy without touching the one the name still stands for.
     /// </summary>
     /// <returns>A copy of this resolver.</returns>
-    public object Clone()
-    {
-        return MemberwiseClone();
-    }
-
 }

@@ -50,8 +50,12 @@ LampGlassCold = material {
 LampShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
 
 // Sodium, which is what a street was lit by for most of a century, and a colder modern white.
+//
+// The white is a glow at 5000 K, made as bright as the color it replaces.  Sodium stays a color: a
+// sodium lamp does not glow because it is hot, it gives off light at one narrow yellow line, so no
+// temperature describes it -- naming one would light the street with the wrong kind of light.
 LampSodium = pigment [1.00, 0.78, 0.42]
-LampWhite = pigment [1.00, 0.96, 0.88]
+LampWhite = pigment kelvin(5000) * 0.98
 
 LampSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
 

@@ -255,6 +255,37 @@ what the medium lets through.
 
 `--spectral` on the command line asks for it too.
 
+### White Balance
+
+A camera has to be told what white is, and so does this renderer.  Left alone, white is light of the
+same strength at every wavelength, which is noon sunlight at about 5500 K — how a film balanced for
+daylight sees.  Outdoors that is right.  Indoors it is not: a household bulb glows at about 2800 K, and
+on daylight film a room lit by one comes out deeply orange.  That is a faithful photograph, and nothing
+like what the room looks like to someone standing in it, whose eyes have adjusted to the lamps.
+
+```
+context {
+    white balance 3400
+}
+```
+
+**`white balance`** names the [temperature](lights.md#color-temperature) of a glow that should come out
+white, and the whole picture is shifted to match, the way a photographer balances a camera for the
+light in the room.  Balanced a little above the lamps themselves, as here, a lamp-lit room reads warm
+rather than orange; balanced right at them, it reads neutral.  Everything else moves too, as it does in
+a photograph: daylight through the windows of that room turns blue, and balanced for candlelight, a
+candle's flame comes out white.
+
+| Balance | Use |
+| --- | --- |
+| 2500 | Candlelight that still looks warm. |
+| 3400 | A room lit by household bulbs, warm but not orange. |
+| 5500 | Daylight — the same as leaving it out. |
+
+The balance is applied to the finished picture, in red, green and blue and in a
+[spectral](#spectral-light) render alike, so it costs nothing to render.  `--white-balance` on the
+command line overrules what a scene asks for.
+
 ### Image Size
 
 A scene may fix the size of the image it wants:

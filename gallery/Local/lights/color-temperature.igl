@@ -1,0 +1,73 @@
+// Five lamps, each the color of something glowing at a different temperature, each lighting a white
+// ball and a pale blue one.  Left to right: a candle at 1900 K, a household bulb at 2700, a cool white
+// lamp at 4000, noon sunlight at 5500, and the light of a clear blue sky at 10000.
+//
+// White, in this renderer, is light of the same strength at every wavelength, which is where noon
+// sunlight falls -- the middle ball is white, the ones to its left warm and the one to its right cool.
+// A lamp given a temperature has its brightest channel at one, which leaves the warm ones dimmer than
+// white; each is given the brightness that evens that out, so that the pools differ in color only.
+//
+// The scene is rendered spectrally, so each lamp lights with the glow itself.  Watch the blue balls:
+// under the candle there is almost nothing blue in the light for one to give back, and it goes the
+// color of the floor.
+
+context {
+    angles are degrees
+    spectral
+    antialiasing depth 2
+    info {
+        title 'Color Temperature'
+        author 'J. Stephen Kress'
+        description 'Five lamps at 1900, 2700, 4000, 5500 and 10000 K, each lighting a white ball and a pale blue one.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 9, -14]
+    look at [0, 0.2, -0.3]
+    field of view 50
+}
+
+// A dark stage, so that each pool of light is the only light where it falls.
+plane { material { pigment [0.42, 0.42, 0.42]  ambient 0  specular 0.1 } }
+
+plane {
+    rotate X -90
+    translate [0, 0, 6]
+    material { pigment [0.30, 0.30, 0.30]  ambient 0  specular 0 }
+}
+
+Plaster = material { pigment [0.92, 0.92, 0.92]  ambient 0  specular 0.15  shininess 30 }
+PaleBlue = material { pigment [0.45, 0.62, 0.92]  ambient 0  specular 0.15  shininess 30 }
+
+Label = material { pigment [0.9, 0.9, 0.9]  ambient 1  diffuse 0  specular 0 }
+
+primitive Station(across, kelvin, brightness, caption) -> group {
+    return group {
+        sphere { scale 0.85  translate [across - 0.45, 0.85, 0.3]  material Plaster }
+        sphere { scale 0.45  translate [across + 0.75, 0.45, -0.45]  material PaleBlue }
+        text {
+            text caption
+            font 'Merriweather'
+            layout { horizontal position center }
+            material Label
+            scale [0.4, 0.04, 0.4]
+            rotate X -90
+            translate [across, 0.12, -1.7]
+        }
+    }
+}
+
+object Station(-6, 1900, 2.3, '1900 K')
+object Station(-3, 2700, 1.65, '2700 K')
+object Station(0, 4000, 1.18, '4000 K')
+object Station(3, 5500, 1.02, '5500 K')
+object Station(6, 10000, 1.55, '10000 K')
+
+spot light { location [-6, 7, -2]  point at [-6, 0, 0]  radius 16  falloff 22  temperature 1900  brightness 2.3 }
+spot light { location [-3, 7, -2]  point at [-3, 0, 0]  radius 16  falloff 22  temperature 2700  brightness 1.65 }
+spot light { location [0, 7, -2]  point at [0, 0, 0]  radius 16  falloff 22  temperature 4000  brightness 1.18 }
+spot light { location [3, 7, -2]  point at [3, 0, 0]  radius 16  falloff 22  temperature 5500  brightness 1.02 }
+spot light { location [6, 7, -2]  point at [6, 0, 0]  radius 16  falloff 22  temperature 10000  brightness 1.55 }

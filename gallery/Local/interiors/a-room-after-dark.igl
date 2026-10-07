@@ -36,6 +36,9 @@ context {
     // A shade is walked the same way a plume of smoke is, and too few steps bands it.
     medium samples 28
     scale ambient by 0.25
+    // The lamps' bulbs glow at 2800 K; a camera balanced a little above them keeps the room warm rather
+    // than orange.
+    white balance 3300
     info {
         title 'A Room After Dark'
         author 'J. Stephen Kress'

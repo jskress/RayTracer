@@ -35,10 +35,6 @@ public class SpotlightResolver : FadingLightResolver<Spotlight>
     /// </summary>
     public Resolver<double> TightnessResolver { get; set; }
 
-    /// <summary>
-    /// This property holds the resolver for the light's color.
-    /// </summary>
-    public Resolver<Color> ColorResolver { get; set; }
 
     /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a spotlight.
@@ -55,6 +51,5 @@ public class SpotlightResolver : FadingLightResolver<Spotlight>
         RadiusResolver.AssignTo(value, target => target.Radius, context, variables);
         FalloffResolver.AssignTo(value, target => target.Falloff, context, variables);
         TightnessResolver.AssignTo(value, target => target.Tightness, context, variables);
-        ColorResolver.AssignTo(value, target => target.Color, context, variables);
     }
 }

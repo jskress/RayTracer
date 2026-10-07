@@ -213,6 +213,22 @@ public class RenderOptions
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool Spectral { get; set; }
 
+    [Option("white-balance", Required = false,
+        HelpText = "Balance the picture so that a glow at this temperature, in kelvin, comes out white: about 2800 for a room lit by household bulbs, 1900 for candlelight.  Left out, white is noon sunlight, about 5500.")]
+    // Null until given, so that a balance the scene settled on is left alone.
+    public double? WhiteBalance
+    {
+        get => field;
+        // ReSharper disable once UnusedMember.Global
+        set
+        {
+            if (value is <= 0)
+                throw new ArgumentException("A white balance is a temperature in kelvin, and must be above nothing.");
+
+            field = value;
+        }
+    }
+
     [Option('l', "output-level", Required = false, Default = "normal",
         // ReSharper disable once StringLiteralTypo
         HelpText = "Sets the desired level of output.  Must be one of, [q]uiet, [n]ormal, [c]hatty or [v]erbose.  The values are not case-sensitive.")]

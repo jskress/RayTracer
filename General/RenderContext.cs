@@ -99,6 +99,13 @@ public class RenderContext
     public bool Spectral { get; set; }
 
     /// <summary>
+    /// This property holds the temperature, in kelvin, of the glow the picture is balanced to show as
+    /// white, or <c>null</c> to leave white where an even spectrum puts it, at about 5500 K.  See
+    /// <see cref="RayTracer.Graphics.WhiteBalance"/>.
+    /// </summary>
+    public double? WhiteBalance { get; set; }
+
+    /// <summary>
     /// This property holds the antialiasing option for the ray tracer.
     /// </summary>
     public AliasingOption AntiAliasing { get; set; } = new();
@@ -196,6 +203,8 @@ public class RenderContext
         // Spectral is a switch as well.
         if (options.Spectral)
             Spectral = true;
+
+        WhiteBalance = options.WhiteBalance ?? WhiteBalance;
 
         // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
         // alone unless `-a` was actually given, which is why the option is null until it is: a

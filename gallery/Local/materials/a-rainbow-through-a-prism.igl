@@ -1,0 +1,71 @@
+// A prism of heavy flint glass on a stand in a dark room, looked through at a single narrow slit of
+// white light off to one side.  Glass bends blue light a little more than red, so the slit, seen through
+// the prism, is not a white line but a rainbow: the slit drawn out into its spectrum, red at one end and
+// violet at the other, with every color between in order.  It is what a spectroscope is.
+//
+// The slit is on the sky, behind and to the right, where the prism's right-hand face looks; seen
+// straight on it is off the edge of the picture.  It is a band of white on a black sky, so that wherever
+// a ray through the glass ends up there is either the slit or darkness, and nothing else.
+//
+// Only a spectral render can show this: carried as red, green and blue, light bends by one amount at
+// every color, and the slit comes through the glass as the white line it is.
+//
+// What it does not show is a prism's other rainbow, the one cast on a wall by a beam of light shone
+// through it.  That one is light carried forward from a lamp, through the glass, to a surface, and this
+// renderer traces backward from the eye: when a point on the wall asks whether it can see the lamp, the
+// question goes in a straight line and does not bend through the glass.
+
+context {
+    angles are degrees
+    spectral
+    antialiasing depth 2
+    info {
+        title 'A Rainbow Through a Prism'
+        author 'J. Stephen Kress'
+        description 'A white slit seen through a prism of SF10 glass, drawn out into its spectrum.'
+        copyright true
+        software __software__
+    }
+}
+
+// Level with the middle of the prism: a ray through the glass carries on the way it was going up or
+// down, and from above it would go on down into the dark rather than out to the slit.
+camera {
+    location [0, 1.25, -9.5]
+    look at [0, 1.1, 0]
+    field of view 30
+}
+
+// Just enough light to find the glass and the stand by: one from the front and one glancing in from
+// behind, to catch the edges.
+point light { location [-5, 7, -6]  color [0.35, 0.35, 0.35] }
+point light { location [4, 5, 6]  color [0.25, 0.25, 0.25] }
+
+// The slit: a thin band of white standing on the sky.  `radial` measures the way round the sky about the
+// vertical, so a band of it is a slit as tall as the sky.  The prism's left face mirrors it, which puts
+// the white light and what the glass makes of it side by side: the slit as it is, reflected in one face,
+// and drawn out into its spectrum, seen through the next.  It is bright, three times white, because
+// what it gives is spread over the whole width of its spectrum.
+background radial { banded [0, Black, 0.586, [3, 3, 3], 0.588, Black] }
+
+
+// The stand.
+cylinder {
+    min Y 0  max Y 1
+    scale [0.75, 0.3, 0.75]
+    material { pigment [0.03, 0.03, 0.03]  specular 0.4  shininess 60 }
+}
+
+// The prism, turned on its stand so that light comes in through one face and out through the next; the
+// face square to the camera would turn it all back inside instead.
+extrusion {
+    path { move to -0.866, -0.5  line to 0.866, -0.5  line to 0, 1  close }
+    scale [1, 0.9, 1]
+    translate [0, 1.2, 0]
+    rotate Y 60
+    material {
+        pigment White
+        ambient 0  diffuse 0  specular 0.8  shininess 300  transparency 1  reflective 1
+        interior { glass 'SF10' }
+    }
+}

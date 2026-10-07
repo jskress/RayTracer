@@ -49,6 +49,8 @@ context {
     angles are degrees
     parallel pixel scanner
     scale ambient by 0.2
+    // A camera balanced for the lamp's bulb, so the table is warm rather than orange.
+    white balance 3300
     info {
         title 'Two Numbers and a Room'
         author 'J. Stephen Kress'
@@ -65,10 +67,11 @@ camera {
 }
 
 // The lamp is the light, so it stands where the lamp does and thins with distance the way a lamp
-// does -- which is what puts a pool on the table and leaves the corner to the fills.
-point light { location [0.30, 1.09, 0]  color [2.6, 2.10, 1.42]  fade distance 1.1  fade power 2 }
-point light { location [-1.9, 2.2, -2.5]  color [0.075, 0.085, 0.115] }
-point light { location [2.3, 1.5, -2.7]  color [0.045, 0.055, 0.085] }
+// does -- which is what puts a pool on the table and leaves the corner to the fills.  The fills are the
+// lamp's own light, come round the room off the walls, and so glow at the bulb's temperature too.
+point light { location [0.30, 1.09, 0]  temperature 2800  brightness 3.45  fade distance 1.1  fade power 2 }
+point light { location [-1.9, 2.2, -2.5]  temperature 2800  brightness 0.134 }
+point light { location [2.3, 1.5, -2.7]  temperature 2800  brightness 0.087 }
 
 // -- The room ------------------------------------------------------------------------------------
 
