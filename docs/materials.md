@@ -40,6 +40,7 @@ The rest of the material describes how light behaves when it arrives.
 | `shininess` | 200 | How tight that highlight is. |
 | `reflective` | 0 | How much of its surroundings it mirrors. |
 | `fresnel` | off | Mirrors more at a slant, as every real surface does. |
+| `roughness` | 0 | Blurs what it mirrors and spreads its highlight, from 0 (a mirror) to 1 (matte). |
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
@@ -139,6 +140,61 @@ Such values were set to give a surface some gloss head-on, and with `fresnel` th
 that gloss themselves.  A transparent surface already shares its light between what it mirrors
 and what it lets through by its index of refraction, so `fresnel` changes nothing there.  Nor
 does it change a surface that mirrors nothing.
+
+#### Roughness
+
+A real surface is never quite a mirror.  Polished wood, satin paint, brushed metal and wet
+asphalt all mirror their surroundings, but blurred, and the blur is what tells the eye what the
+surface is made of.  `roughness` says how much:
+
+```
+material {
+    pigment color [0.30, 0.16, 0.08]
+    roughness 0.2
+}
+```
+
+It runs from 0, a perfect mirror, to 1, which is matte.  It is the same scale every physically
+based renderer and material library uses, so a value read off a chart means here what it means
+there:
+
+| Surface | `roughness` |
+| --- | --- |
+| Glass, chrome, still water | 0 to 0.05 |
+| Car paint, lacquer, polished stone | 0.05 to 0.15 |
+| Polished wood, wet asphalt, glossy plastic | 0.15 to 0.3 |
+| Satin paint, brushed metal | 0.3 to 0.5 |
+| Eggshell, unfinished wood | 0.5 to 0.7 |
+| Chalk, dry asphalt, paper | 0.7 to 1 |
+
+**A rough surface is one finish rather than two.**  A highlight is only the reflection of a lamp,
+and a rough surface blurs the lamp exactly as it blurs everything else it mirrors.  So its
+highlight is worked out from its roughness too, and `specular` and `shininess` have no say in it.
+How much it mirrors is `reflective`, square-on, and it always follows [Fresnel](#fresnel), rising
+toward a graze, whether it says `fresnel` or not.  A rough surface that names no `reflective` is
+given 0.04, what nearly everything that is not a metal gives back square-on, so that `roughness`
+alone makes a satin finish.  Metals want their own, much higher, from the table above, and
+`metallic` to color it.
+
+**Lamps a ray can meet are shared fairly.**  A lamp at a point, a panel or the sun gives a rough
+surface a highlight, since no ray could ever find it.  The sky and a glowing lantern or flame are
+things a ray *can* meet, and they show in the blur as well; counted both ways, their light would be
+counted twice.  The sky is left to the blur, which finds something so large and smooth easily.  A
+glowing volume is shared between the two, place by place, by how likely each was to find it: a
+satin surface takes the lantern mostly from its own samples, smoothly, and a near-mirror mostly from
+what it mirrors, sharply.  Left to the blur alone, a small bright lantern on a wet road comes out as
+glitter; shared, it is a smooth streak, at no extra cost.  A glowing volume inside a shell that bends
+light — glass with an index of its own — cannot be shared this way and is left to the blur.
+
+**Rough reflections cost more than sharp ones**, because a blur is found by looking in many
+directions and averaging: sixteen, unless the scene asks for a different number with
+[`reflection samples`](context.md#rough-reflections).  Only the first rough surface along a ray
+spreads it, so the cost does not multiply between two rough surfaces facing each other.
+
+Roughness blurs what a surface mirrors, not yet what it lets through: a transparent surface that is
+rough mirrors a blur but still refracts sharply.
+
+`gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic.
 
 #### Metallic
 

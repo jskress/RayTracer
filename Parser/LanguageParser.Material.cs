@@ -152,6 +152,15 @@ public partial class LanguageParser
             case "reflective":
                 resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
                 break;
+            case "roughness":
+                resolver.RoughnessResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = value => value is < 0 or > 1
+                        ? "A roughness runs from nothing, a mirror, to one, which is matte."
+                        : null
+                };
+                break;
             case "fresnel":
                 resolver.FresnelResolver = new LiteralResolver<bool> { Value = true };
                 break;

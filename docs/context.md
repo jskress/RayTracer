@@ -191,6 +191,24 @@ it, or a sweep that re-renders the whole gallery, gets a picture with the edges 
 no indication that anything was lost.  That is not hypothetical; it is how three gallery images
 came to be replaced with worse ones.
 
+### Rough Reflections
+
+A [rough surface](materials.md#roughness) sees what it mirrors as a blur, and finds the blur by
+looking in many directions and averaging:
+
+```
+context { reflection samples 32 }
+```
+
+The usual number is 16.  More makes a large glossy surface smoother and costs more on every pixel
+of it; fewer is quicker and grainier, which is often fine for a draft or for surfaces that are
+small in the picture.  Antialiasing adds to it, since every sample within a pixel looks in its own
+set of directions.
+
+Only the first rough surface a ray meets spreads it this way.  A ray already one of a spread, and
+every bounce after it, looks in one direction only, so two rough surfaces facing each other cost
+the samples once rather than raised to the power of the bounces.
+
 ### Color Depth and Grayscale
 
 What reaches the image file, as opposed to what was rendered:

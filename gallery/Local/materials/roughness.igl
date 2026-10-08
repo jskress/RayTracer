@@ -1,0 +1,85 @@
+// Ten balls, two of each roughness from nearly a mirror on the left to nearly matte on the right: gold
+// along the back, red plastic along the front.
+//
+// A rough surface is made of facets too small to see, each a mirror, leaning every which way; what
+// shows is the blur of everything they mirror between them.  The gold balls show it in the floor and
+// the sky they mirror, crisp on the left and smeared to a glow on the right.  The plastic balls show it
+// in their highlights, which are only the sun mirrored in them: a hard point on the left, spreading and
+// dimming toward the right as the same light is shared over more of the ball.  Highlight and reflection
+// are one thing on a rough surface, so neither ball needs a `specular` or a `shininess`, and neither
+// has one.
+//
+// Plastic gives back four percent of what meets it square-on, which is what a rough surface is given
+// when it says nothing, and more toward its edges, as everything does; a ball of it looks colored in
+// the middle and shiny at the rim.  Gold gives back most of what meets it, colored, so it says so.
+
+context {
+    angles are degrees
+    antialiasing depth 2
+    info {
+        title 'Roughness'
+        author 'J. Stephen Kress'
+        description 'Gold and red plastic at five roughnesses, from nearly a mirror to nearly matte.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 6.5, -13.5]
+    look at [0, 0.5, 0.3]
+    field of view 36
+}
+
+// A sky that is bright along the horizon and deepens overhead, for the gold to mirror.
+background linear Y bouncing gradient {
+    [0, [0.92, 0.88, 0.80], 0.15, [0.62, 0.72, 0.88], 1, [0.22, 0.36, 0.66]]
+}
+
+// A low sun behind the camera's shoulder, so that every ball shows its highlight.
+distant light { direction [0.35, -0.5, 1]  color [1, 0.97, 0.92] }
+
+// A checkered floor, for the gold to mirror something with edges in it.
+plane {
+    material { pigment checker { [0.82, 0.80, 0.76], [0.18, 0.19, 0.22]  scale 1.2 }  specular 0 }
+}
+
+Label = material { pigment [0.08, 0.08, 0.1]  ambient 0.6  diffuse 0.4  specular 0 }
+
+primitive Pair(across, rough, caption) -> group {
+    return group {
+        sphere {
+            scale 0.75
+            translate [across, 0.75, 1.7]
+            material { pigment Gold  diffuse 0.3  reflective 0.8  metallic 1  roughness rough }
+        }
+        sphere {
+            scale 0.75
+            translate [across, 0.75, -1.0]
+            material { pigment [0.62, 0.06, 0.05]  roughness rough }
+        }
+        // A pale card under each label, so that it reads against the dark squares as well as the light.
+        cube {
+            scale [0.85, 0.01, 0.6]
+            translate [across, 0.01, -2.2]
+            material { pigment [0.93, 0.92, 0.88]  ambient 0.4  diffuse 0.6  specular 0 }
+            no shadow
+        }
+        text {
+            text caption
+            font 'Merriweather'
+            layout { horizontal position center }
+            material Label
+            no shadow
+            scale [0.6, 0.005, 0.6]
+            rotate X -90
+            translate [across, 0.025, -2.6]
+        }
+    }
+}
+
+object Pair(-3.6, 0.03, '0.03')
+object Pair(-1.8, 0.1, '0.1')
+object Pair(0, 0.2, '0.2')
+object Pair(1.8, 0.4, '0.4')
+object Pair(3.6, 0.7, '0.7')

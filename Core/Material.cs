@@ -94,6 +94,36 @@ public class Material
     public bool Fresnel { get; set; }
 
     /// <summary>
+    /// This property holds how rough the surface is, from nothing -- a mirror -- to one, which is
+    /// matte.  It is the scale every physically based renderer uses, so a value read off a chart of
+    /// materials means here what it means there: polished wood is about 0.2, satin paint 0.4.
+    /// <para>
+    /// **A rough surface is one finish rather than two.**  A highlight is only the reflection of a
+    /// lamp, and a rough surface blurs both the same way, so its highlight and what it mirrors come
+    /// from one spread of microscopic facets (GGX's, by Trowbridge and Reitz) rather than from
+    /// <see cref="Specular"/> and <see cref="Shininess"/>, which it does not use.  How much it gives
+    /// back is <see cref="Reflective"/>, square-on, rising toward a graze as <see cref="Fresnel"/>
+    /// describes, which every rough surface follows whether it says so or not.
+    /// </para>
+    /// <para>
+    /// Nothing is rough unless it says so, and nothing that is not rough is touched.
+    /// </para>
+    /// </summary>
+    public double Roughness { get; set; }
+
+    /// <summary>
+    /// This property reports whether the surface is rough at all, and so shades by its facets rather
+    /// than by Phong's highlight and a perfect mirror.
+    /// </summary>
+    public bool IsRough => Roughness > 0;
+
+    /// <summary>
+    /// This property holds how many directions a rough surface looks in to see what it mirrors, the
+    /// first time a ray meets one.  It is the scene's <c>reflection samples</c> unless set otherwise.
+    /// </summary>
+    public int ReflectionSamples { get; set; } = 16;
+
+    /// <summary>
     /// This method returns how much of what a surface faces it mirrors when seen at a given angle.
     /// It is <see cref="Reflective"/> square-on and, where <see cref="Fresnel"/> applies, climbs to
     /// all of it at a graze.
@@ -112,10 +142,11 @@ public class Material
 
     /// <summary>
     /// This property reports whether <see cref="Fresnel"/> has anything to do here: the surface must
-    /// mirror something, and must not let light through, which has a Fresnel of its own.
+    /// ask for it, or be rough, which always follows it; it must mirror something; and it must not let
+    /// light through, which has a Fresnel of its own.
     /// </summary>
     public bool FresnelApplies =>
-        Fresnel && Reflective > 0 && Transparency == 0 && !PigmentMayTransmit;
+        (Fresnel || IsRough) && Reflective > 0 && Transparency == 0 && !PigmentMayTransmit;
 
     /// <summary>
     /// This property holds how metallic the material is, between 0 and 1, and governs the color

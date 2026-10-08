@@ -102,6 +102,7 @@ branches, any one of the branches will do.
   - [Ambient](context.md#ambient)
   - [Scanners](context.md#scanners)
   - [Anti-Aliasing](context.md#anti-aliasing)
+  - [Rough Reflections](context.md#rough-reflections)
   - [Color Depth and Grayscale](context.md#color-depth-and-grayscale)
   - [Spectral Light](context.md#spectral-light)
   - [White Balance](context.md#white-balance)

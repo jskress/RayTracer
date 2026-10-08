@@ -158,9 +158,13 @@ public class Scene : NamedThing, IDisposable
     {
         // A medium with a shape has no answer to be written down and must be walked along instead.
         // Only a medium filling a surface may have one, which is why the container is wanted here: it
-        // says both what space the shape is described in and where the shape ends.
-        if (medium.HasShape && container is not null)
-            return MarchedThrough(medium, color, ray, distance, container);
+        // says both what space the shape is described in and where the shape ends.  A glowing volume
+        // met along a rough surface's reflection is walked whatever its shape, since its glow is
+        // shared place by place (see HighlightShareOf).
+        VolumeLight mixing = container is null ? null : MixingLightFor(medium, ray);
+
+        if (mixing is not null || (medium.HasShape && container is not null))
+            return MarchedThrough(medium, color, ray, distance, container, mixing);
 
         TS through = medium.ApplyOver(color, distance);
 
@@ -271,7 +275,7 @@ public class Scene : NamedThing, IDisposable
     /// <param name="container">The surface the medium fills.</param>
     /// <returns>The color once the medium has had its say.</returns>
     private TS MarchedThrough<TS>(
-        Medium medium, TS behind, Ray ray, double distance, Surface container)
+        Medium medium, TS behind, Ray ray, double distance, Surface container, VolumeLight mixing = null)
         where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
@@ -298,6 +302,9 @@ public class Scene : NamedThing, IDisposable
             // Asked at the same point the density was, so that a medium whose color varies and a
             // medium whose amount varies are describing the same place.
             TS source = medium.EmissionAt<TS>(local) * density;
+
+            if (mixing is not null)
+                source *= ReflectionShareAt(mixing, where, ray.TimeIndex);
 
             if (gathers)
             {
@@ -811,8 +818,14 @@ public class Scene : NamedThing, IDisposable
             ? 1 - material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
             : 1;
 
+        // How many directions this point's own reflection will look in, which a glowing volume's
+        // samples are weighed against.  None, where it will not look at all.
+        int looks = material.IsRough && remaining >= 1 && material.Reflective > 0
+            ? _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples
+            : 0;
+
         foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(light, intersection, ownShare);
+            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks);
 
         TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
         TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
@@ -879,7 +892,7 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ownShare">How much of the light reaching the point the surface keeps to show as
     /// its own color rather than mirroring; see <see cref="Material.Fresnel"/>.</param>
     /// <returns>The color the light lends the point.</returns>
-    private TS Illuminate<TS>(Light light, Intersection intersection, double ownShare)
+    private TS Illuminate<TS>(Light light, Intersection intersection, double ownShare, int looks)
         where TS : struct, ISpectrum<TS>
     {
         int count = light.SampleCount;
@@ -892,7 +905,8 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, GetLightReaching<TS>(
                     intersection.LitPoint, only.Direction, only.Distance, intersection.TimeIndex),
-                intersection.Footprint, intersection.Portal, ownShare);
+                intersection.Footprint, intersection.Portal, ownShare,
+                HighlightShareOf(light, only, intersection, looks));
         }
 
         TS sum = TS.Black;
@@ -906,10 +920,129 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, GetLightReaching<TS>(
                     intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
-                intersection.Footprint, intersection.Portal, ownShare);
+                intersection.Footprint, intersection.Portal, ownShare,
+                HighlightShareOf(light, sample, intersection, looks));
         }
 
         return sum * (1.0 / count);
+    }
+
+    /// <summary>
+    /// This method works out how much of a rough surface's highlight one sample of a light gives.
+    /// <para>
+    /// **A glowing volume reaches a rough surface two ways**: as a highlight, from the places the light
+    /// picks inside itself, and in what the surface mirrors, when one of the directions it looks in
+    /// passes through the glow.  Counting both in full would count it twice; giving it to one alone
+    /// fails one way or the other.  The highlight alone shows a lantern on a near-mirror as the cluster
+    /// of its own sample points; the reflection alone finds a small bright lantern so rarely that its
+    /// streak across a wet road comes out as glitter.
+    /// </para>
+    /// <para>
+    /// **So each place in the glow is shared** between the two ways, by how likely each was to find it
+    /// (Veach's balance heuristic).  The light picks a place with the odds its sample carries, which,
+    /// seen from the surface, crowd together with the square of the distance; the reflection picks it
+    /// with the odds of looking that way, times how many ways it looks.  Where the reflection is
+    /// nearly a mirror its odds are enormous along the one direction it looks and it takes nearly all;
+    /// where it is broad the light's own samples take nearly all.  What one way is given here, the other
+    /// is given in <see cref="MixingLightFor"/>, and the two always come to the whole.
+    /// </para>
+    /// <para>
+    /// The sky reaches a rough surface through its reflection only, being large and smooth enough for
+    /// that to settle well, and so does a glowing volume inside a shell that bends light -- the
+    /// reflection's rays bend going in, and the light's own samples do not, so the two would not be
+    /// finding the same places.
+    /// </para>
+    /// </summary>
+    /// <param name="light">The light.</param>
+    /// <param name="sample">The place the light is being looked at from.</param>
+    /// <param name="intersection">The point being lit.</param>
+    /// <param name="looks">How many directions the point's own reflection will look in.</param>
+    /// <returns>The share, or <c>null</c> to leave it to the light, as for a surface that is not
+    /// rough.</returns>
+    private double? HighlightShareOf(Light light, LightSample sample, Intersection intersection, int looks)
+    {
+        Material material = intersection.Surface.Material ?? Material.Default;
+
+        if (!material.IsRough)
+            return null;
+
+        if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
+            return light.CanBeSeen ? 0 : 1;
+
+        if (looks == 0)
+            return 1;
+
+        double alpha = material.Roughness * material.Roughness;
+        double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
+        double byLooking = looks * Microfacets.DirectionOdds(
+            intersection.Normal, intersection.Eye, sample.Direction, alpha);
+
+        return byLight / (byLight + byLooking);
+    }
+
+    /// <summary>
+    /// This method reports whether a glowing volume can be shared between a rough surface's highlight
+    /// and its reflection: whether a ray goes into it without bending, the shell having the index of
+    /// the space around it.
+    /// </summary>
+    private bool Mixes(VolumeLight glow)
+    {
+        double index = glow.Surface.Material?.Interior.IndexOfRefraction ?? Environment.IndexOfRefraction;
+
+        return Math.Abs(index - Environment.IndexOfRefraction) < 1e-12;
+    }
+
+    /// <summary>
+    /// This method returns the glowing volume a medium belongs to, when a ray is crossing it along a
+    /// rough surface's reflection, so that its glow is shared with the volume's own samples.  The ray
+    /// must still be on the reflection's straight run, having gone nowhere but on through anything
+    /// that does not bend it; one that reaches the glow any other way keeps all of it.
+    /// </summary>
+    /// <param name="medium">The medium being crossed.</param>
+    /// <param name="ray">The ray crossing it.</param>
+    /// <returns>The volume light, or <c>null</c> if the glow is not to be shared.</returns>
+    private VolumeLight MixingLightFor(Medium medium, Ray ray)
+    {
+        if (_looking is not { } run)
+            return null;
+
+        VolumeLight glow = null;
+
+        foreach (Light light in Lights)
+        {
+            if (light is VolumeLight volume && ReferenceEquals(volume.Medium, medium))
+            {
+                glow = volume;
+                break;
+            }
+        }
+
+        if (glow is null || !Mixes(glow) || ray.Direction.Unit.Dot(run.Direction) < 1 - 1e-9)
+            return null;
+
+        Vector offset = ray.Origin - run.Origin;
+        double along = offset.Dot(run.Direction);
+
+        return (offset - run.Direction * along).Magnitude > 1e-6 * (1 + Math.Abs(along)) ? null : glow;
+    }
+
+    /// <summary>
+    /// This method returns the share of a glowing volume's glow, at one place in it, that belongs to the
+    /// rough surface's reflection now looking through it -- what is left once the volume's own samples
+    /// have taken theirs; see <see cref="HighlightShareOf"/>.
+    /// </summary>
+    /// <param name="glow">The volume light.</param>
+    /// <param name="where">The place in the glow.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening the place is asked about at.</param>
+    /// <returns>The reflection's share.</returns>
+    private static double ReflectionShareAt(VolumeLight glow, Point where, int timeIndex)
+    {
+        LookingRun run = _looking!.Value;
+        double distance = (where - run.Origin).Magnitude;
+        double byLooking = run.Count * run.Odds;
+        double byLight = glow.SampleCount * glow.OddsAt(where, timeIndex) * distance * distance;
+
+        return byLooking + byLight > 0 ? byLooking / (byLooking + byLight) : 1;
     }
 
     /// <summary>
@@ -1126,17 +1259,25 @@ public class Scene : NamedThing, IDisposable
         if (remaining < 1 || material.Reflective == 0)
             return TS.Black;
 
-        // How much is mirrored depends on the angle it is seen at, for a surface that says so.
-        double reflective = material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal));
+        TS color;
 
-        // The cone goes on widening past the mirror, so what is seen in a reflection is filtered for
-        // how far the light really travelled rather than for how far it is from the glass.  A curved
-        // mirror also focuses or spreads the cone, which this does not attempt -- that wants full ray
-        // differentials, and a flat mirror is the case that turns up.
-        Ray reflectedRay = new (
-            intersection.LitPoint, intersection.Reflect, intersection.TimeIndex,
-            intersection.ConeSpread, intersection.ConeTravelled);
-        TS color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
+        if (material.IsRough)
+            color = GetRoughReflection<TS>(intersection, material, remaining);
+        else
+        {
+            // How much is mirrored depends on the angle it is seen at, for a surface that says so.
+            double reflective = material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal));
+
+            // The cone goes on widening past the mirror, so what is seen in a reflection is filtered
+            // for how far the light really travelled rather than for how far it is from the glass.  A
+            // curved mirror also focuses or spreads the cone, which this does not attempt -- that wants
+            // full ray differentials, and a flat mirror is the case that turns up.
+            Ray reflectedRay = new (
+                intersection.LitPoint, intersection.Reflect, intersection.TimeIndex,
+                intersection.ConeSpread, intersection.ConeTravelled);
+
+            color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
+        }
 
         // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
         // surface throw back a gold scene rather than a plain one.  The angle here is the eye
@@ -1150,6 +1291,122 @@ public class Scene : NamedThing, IDisposable
         }
 
         return color;
+    }
+
+    /// <summary>
+    /// This field notes that a rough surface has already spread a ray out into many, somewhere back
+    /// along the path being followed, so that any rough surface met after it looks in one direction
+    /// only.  Without it two rough surfaces facing each other would multiply their samples at every
+    /// bounce; with it the cost is paid once per path, as it is for a glass that spreads colors.
+    /// </summary>
+    [ThreadStatic]
+    private static bool _spreading;
+
+    /// <summary>
+    /// This field holds the straight run a rough surface's reflection is looking along, while it is
+    /// looking: where it set off, which way, how likely that way was to be picked and among how many.
+    /// A glowing volume met along it shares its glow with the volume's own samples by those odds; one
+    /// met any other way -- round a corner, through a mirror -- was not something the volume's samples
+    /// could have found from that surface, and keeps all of it.
+    /// </summary>
+    [ThreadStatic]
+    private static LookingRun? _looking;
+
+    /// <summary>
+    /// This record holds one straight run of a rough surface's reflection; see <see cref="_looking"/>.
+    /// </summary>
+    private readonly record struct LookingRun(Point Origin, Vector Direction, double Odds, int Count);
+
+    /// <summary>
+    /// This method works out what a rough surface mirrors toward the eye: the blur of everything its
+    /// facets show, looked for in several directions and averaged.
+    /// <para>
+    /// **Each direction is a facet the eye can see**, picked in proportion to how much of the view it
+    /// fills (see <see cref="Microfacets.SampleVisibleNormal"/>), and the eye's ray mirrored in it.
+    /// Picked that way, what each brings back needs weighing only by how much its facet mirrors at
+    /// the angle it is seen at, and by how much of the surface the mirrored direction can see past the
+    /// facets in front -- so a rough surface, seen across, both shines and darkens toward a graze, as a
+    /// real one does.  A facet whose mirror image would point into the surface brings back nothing.
+    /// </para>
+    /// <para>
+    /// **The directions are spread as evenly as they can be**, by the same two numbers walked against
+    /// each other that the volume lights use, and the whole pattern is turned by an amount that is a
+    /// fixed function of the point.  So neighboring points use different directions and the samples
+    /// within a pixel average the steps away, while the same point gets the same directions every
+    /// time: a render comes out the same twice over, and a still surface does not crawl when the
+    /// camera moves.
+    /// </para>
+    /// <para>
+    /// **Only the first rough surface along a path spreads.**  A ray already one of a spread, or one
+    /// carrying a single band of a split color, looks in one direction, so that the cost is paid once.
+    /// </para>
+    /// <para>
+    /// **Each ray carries only the cone it arrived with**, not one widened by the facets' lean, though
+    /// what it sees is a blur.  The many directions already average whatever patterns they meet, and a
+    /// widened cone made every pattern seen in a rough surface filter itself at its most expensive: on
+    /// a wet street lit by lanterns, 60% more time for a picture that was the same to within a level.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">Where the ray met the rough surface.</param>
+    /// <param name="material">The surface's material.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <returns>The light the surface mirrors toward the eye.</returns>
+    private TS GetRoughReflection<TS>(Intersection intersection, Material material, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
+        Vector normal = intersection.Normal;
+        (Vector across, Vector along) = Microfacets.FrameAround(normal);
+        Vector eye = new (intersection.Eye.Dot(across), intersection.Eye.Dot(along), intersection.Eye.Dot(normal));
+
+        if (eye.Z <= 0)
+            return TS.Black;
+
+        double alpha = material.Roughness * material.Roughness;
+        int count = _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples;
+        double turnOut = ShiftFor(intersection.Point, 101);
+        double turnRound = ShiftFor(intersection.Point, 102);
+        TS sum = TS.Black;
+        bool was = _spreading;
+        LookingRun? wasLooking = _looking;
+
+        _spreading = true;
+
+        try
+        {
+            for (int index = 0; index < count; index++)
+            {
+                double first = (index + 0.5) / count + turnOut;
+                double second = index * 0.6180339887498949 + turnRound;
+                Vector facet = Microfacets.SampleVisibleNormal(
+                    eye, alpha, first - Math.Floor(first), second - Math.Floor(second));
+                double cosFacet = eye.Dot(facet);
+                Vector mirrored = facet * (2 * cosFacet) - eye;
+
+                if (mirrored.Z <= 0)
+                    continue;
+
+                double weight = material.ReflectanceAt(cosFacet) * Microfacets.Masking(mirrored.Z, alpha);
+                Vector direction = (across * mirrored.X + along * mirrored.Y + normal * mirrored.Z).Unit;
+                Ray ray = new (
+                    intersection.LitPoint, direction, intersection.TimeIndex, intersection.ConeSpread,
+                    intersection.ConeTravelled);
+
+                _looking = new LookingRun(
+                    intersection.LitPoint, direction,
+                    Microfacets.Masking(eye.Z, alpha) * Microfacets.Distribution(facet.Z, alpha) / (4 * eye.Z),
+                    count);
+
+                sum += GetColorFor<TS>(ray, remaining - 1) * weight;
+            }
+        }
+        finally
+        {
+            _spreading = was;
+            _looking = wasLooking;
+        }
+
+        return sum * (1.0 / count);
     }
 
     /// <summary>

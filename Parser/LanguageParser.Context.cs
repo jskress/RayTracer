@@ -95,6 +95,15 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "reflection":
+                updater.ReflectionSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A rough surface must look in at least one direction."
+                        : null
+                };
+                break;
             case "medium":
                 if (clause.Text(1) == "bounces")
                 {

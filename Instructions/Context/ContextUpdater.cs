@@ -44,6 +44,11 @@ public class ContextUpdater : Instruction
     public Resolver<int> MediumSamplesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many directions a rough surface looks in.
+    /// </summary>
+    public Resolver<int> ReflectionSamplesResolver { get; set; }
+
+    /// <summary>
     /// What to multiply every material's ambient by once the scene is whole.
     /// </summary>
     public Resolver<double> AmbientScaleResolver { get; set; }
@@ -114,6 +119,7 @@ public class ContextUpdater : Instruction
         SuppressAllShadowsResolver.AssignTo(context, target => target.SuppressAllShadows, context, variables);
         WidthResolver.AssignTo(context, target => target.Width, context, variables);
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
+        ReflectionSamplesResolver.AssignTo(context, target => target.ReflectionSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);

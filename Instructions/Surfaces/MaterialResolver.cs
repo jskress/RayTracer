@@ -52,6 +52,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public Resolver<bool> FresnelResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how rough the material is.
+    /// </summary>
+    public Resolver<double> RoughnessResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how sharply diffuse lighting falls away.
     /// </summary>
     public Resolver<double> BrillianceResolver { get; set; }
@@ -123,7 +128,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         bool saysMore = PigmentResolver is not null || AmbientResolver is not null ||
                         DiffuseResolver is not null || SpecularResolver is not null ||
                         ShininessResolver is not null || ReflectiveResolver is not null ||
-                        FresnelResolver is not null ||
+                        FresnelResolver is not null || RoughnessResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
@@ -153,6 +158,15 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
         FresnelResolver.AssignTo(value, target => target.Fresnel, context, variables);
+        RoughnessResolver.AssignTo(value, target => target.Roughness, context, variables);
+
+        // A rough surface's highlight is what it mirrors, so one that named no reflectance would show
+        // none at all.  It gets what nearly everything that is not a metal gives back square-on --
+        // paint, varnish, plastic, glass -- so that `roughness` alone makes a satin finish.
+        if (RoughnessResolver is not null && ReflectiveResolver is null && value.IsRough)
+            value.Reflective = 0.04;
+
+        value.ReflectionSamples = context.ReflectionSamples;
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
         GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
