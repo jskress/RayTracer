@@ -166,10 +166,23 @@ public partial class LanguageParser
                 break;
             case "metallic":
                 // The amount may be left off, since fully metallic is what is nearly always
-                // wanted; naming nothing means naming 1.
-                resolver.MetallicResolver = term is null
+                // wanted; naming nothing means naming 1.  When the material's next entry follows
+                // straight on, it arrives in the same clause -- whatever amount there is belongs to
+                // it -- and is handled as itself.
+                bool followed = clause.Tokens.Count > 1;
+
+                resolver.MetallicResolver = term is null || followed
                     ? new LiteralResolver<double> { Value = 1 }
                     : new TermResolver<double> { Term = term };
+
+                if (followed)
+                {
+                    HandleMaterialEntryClause(new Clause
+                    {
+                        Tag = clause.Tag, Tokens = clause.Tokens[1..], Expressions = clause.Expressions
+                    });
+                }
+
                 break;
             case "transparency":
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };

@@ -567,9 +567,16 @@ public partial class LanguageParser
                 refraction ?? 'Expecting "refraction" to follow "of" here.'
             } | ior ] > _expression
         }
+        // The amount may be left off, and then what follows may be the material's next entry rather
+        // than an amount.  The entries are tried before an expression, since an expression would
+        // take the next entry's word for the name of a variable -- a keyword may name one -- and the
+        // entry would then be lost: `metallic reflective 0.3` read as metallic by `reflective`.
         materialMetallicClause:
         {
-            metallic > _expression{?}
+            metallic > [
+                pigment | normal | fresnel | materialValueClause | startInteriorClause |
+                startDecalClause | _expression{?}
+            ]
         }
         // An interior may be written out in full, named, or named and then added to, much as a
         // material may.  What a surface is made of is worth keeping and reusing on its own terms:
