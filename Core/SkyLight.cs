@@ -50,6 +50,11 @@ public class SkyLight : Light
     public override int SampleCount => Samples;
 
     /// <summary>
+    /// This property notes that a ray can meet this light -- the sky, which shows in every mirror that faces it.
+    /// </summary>
+    public override bool CanBeSeen => true;
+
+    /// <summary>
     /// This method works out which way the sky lies from a point, which has no one answer: it lies
     /// every way at once.  Straight up stands for it where a single direction must be given, which is
     /// only in the convenience form of shading that takes no sample of its own.

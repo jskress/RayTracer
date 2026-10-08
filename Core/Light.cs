@@ -104,6 +104,14 @@ public abstract class Light : NamedThing
     public virtual int SampleCount => 1;
 
     /// <summary>
+    /// This property reports whether a ray can meet this light: whether it is something in the scene
+    /// a mirror would show, as the sky and a glowing volume are, rather than a point of light with
+    /// nothing to see.  A rough surface takes such a light from what it mirrors and gives it no
+    /// highlight of its own, so that its light is not counted twice.
+    /// </summary>
+    public virtual bool CanBeSeen => false;
+
+    /// <summary>
     /// This method works out one of the places this light is looked at from, of the
     /// <see cref="SampleCount"/> there are.  A light with no width is the whole of itself from its
     /// one place, so it ignores the index and answers as it lies; an area light spreads its
@@ -264,10 +272,15 @@ public abstract class Light : NamedThing
     /// <param name="ownShare">How much of the light the surface keeps to show as its own color, the
     /// rest being mirrored -- which takes from the ambient and diffuse terms and leaves the highlight
     /// alone.  All of it, unless the material follows <see cref="Material.Fresnel"/>.</param>
+    /// <param name="highlightShare">How much of a rough surface's highlight this sample gives, where
+    /// the surface's reflection may find the same light another way; see
+    /// <see cref="Scene"/>'s weighing of the two.  Left out, a light a ray can meet gives none and
+    /// any other gives all of it.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1)
+        TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1,
+        double? highlightShare = null)
         where TS : struct, ISpectrum<TS>
     {
         Material material = surface.Material ?? Material.Default;
@@ -321,7 +334,28 @@ public abstract class Light : NamedThing
             Vector reflect = (-vector).Reflect(normal);
             double reflectDotEye = reflect.Dot(eye);
 
-            if (reflectDotEye < 0)
+            if (material.IsRough)
+            {
+                // A rough surface's highlight is its facets' reflection of the lamp.  A lamp a ray can
+                // meet -- the sky, a glowing volume -- already shows in what the surface mirrors, so it
+                // gives only the share its own samples are owed, which for the sky is none.
+                double share = highlightShare ?? (CanBeSeen ? 0 : 1);
+                double factor = share == 0
+                    ? 0
+                    : share * Microfacets.Highlight(
+                        normal, eye, vector, material.Roughness * material.Roughness,
+                        material.ReflectanceAt);
+
+                // The light along this sample, not the light's own color: a glowing volume's samples
+                // each carry what their share of the glow delivers here, which the highlight must take
+                // as the diffuse term does, or it would shine as brightly from across a street as from
+                // an inch away.
+                specularColor = factor == 0 ? TS.Black : EmittedToward<TS>(sample) * factor;
+
+                if (factor != 0 && material.Metallic != 0)
+                    specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
+            }
+            else if (reflectDotEye < 0)
                 specularColor = TS.Black;
             else
             {

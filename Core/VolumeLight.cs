@@ -114,6 +114,11 @@ public class VolumeLight : Light
     public override int SampleCount => Samples;
 
     /// <summary>
+    /// This property notes that a ray can meet this light -- a glowing stuff, which shows in a mirror like anything else.
+    /// </summary>
+    public override bool CanBeSeen => true;
+
+    /// <summary>
     /// This method answers where the middle of the stuff lies, for the one caller that wants a light
     /// as a single place rather than as a spread.
     /// </summary>
@@ -167,7 +172,7 @@ public class VolumeLight : Light
         double reach = Math.Max(distance, _nearest);
         Color carried = _medium.EmissionAt(local) * (_stuff / (Math.PI * reach * reach));
 
-        return new LightSample(toward.Unit, distance, 1, carried);
+        return new LightSample(toward.Unit, distance, 1, carried, OddsOf(cell));
     }
 
     /// <summary>
@@ -179,6 +184,49 @@ public class VolumeLight : Light
     public override Color ColorFor(LightSample sample)
     {
         return sample.Carried is null ? Color : sample.Carried * Color;
+    }
+
+    /// <summary>
+    /// This property holds the stuff that glows.
+    /// </summary>
+    public Medium Medium => _medium;
+
+    /// <summary>
+    /// This property holds the surface the glowing stuff fills.
+    /// </summary>
+    public Surface Surface => _surface;
+
+    /// <summary>
+    /// This method returns how likely this light is to pick a place as one of its samples, per unit of
+    /// volume in the world.  A place is picked by first picking its cell, in proportion to the stuff
+    /// at the cell's middle, and then anywhere within the cell -- so the odds are that cell's share of
+    /// the stuff spread over the cell's volume, which comes to the density at its middle over the
+    /// stuff in all.  Nought outside the box the light was measured over.
+    /// </summary>
+    /// <param name="point">The place, in the world.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening the place is asked about at.</param>
+    /// <returns>The odds, per unit of volume.</returns>
+    public double OddsAt(Point point, int timeIndex = 0)
+    {
+        Point local = _surface.WorldToSurface(point, timeIndex);
+        int x = (int) Math.Floor((local.X - _corner.X) / _span.X * Cells);
+        int y = (int) Math.Floor((local.Y - _corner.Y) / _span.Y * Cells);
+        int z = (int) Math.Floor((local.Z - _corner.Z) / _span.Z * Cells);
+
+        if (x is < 0 or >= Cells || y is < 0 or >= Cells || z is < 0 or >= Cells)
+            return 0;
+
+        return OddsOf(x * Cells * Cells + y * Cells + z);
+    }
+
+    /// <summary>
+    /// This method returns the odds of picking a place in one cell, per unit of volume in the world.
+    /// </summary>
+    private double OddsOf(int cell)
+    {
+        double here = _running[cell] - (cell > 0 ? _running[cell - 1] : 0);
+
+        return _stuff > 0 ? here / _stuff : 0;
     }
 
     /// <summary>

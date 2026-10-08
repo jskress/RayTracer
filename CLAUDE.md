@@ -107,7 +107,14 @@ given a `temperature` (`Light.SetColorTemperature`) carries a Planck spectrum as
 scaled so its brightest channel is one; `brightness` multiplies either, and `kelvin(T)` is the same glow
 as a color for emissions and pigments. `context { white balance T }` (`Graphics/WhiteBalance.cs`, a
 Bradford adaptation applied to each finished pixel in `Camera.Render`) makes a glow at T come out white;
-lamp-lit scenes use it so real bulb temperatures read warm rather than orange.
+lamp-lit scenes use it so real bulb temperatures read warm rather than orange. A material may say `fresnel`
+(its `reflective` is then the square-on share, rising toward a graze) or `roughness` (0-1, GGX facets in
+`Core/Microfacets.cs`): a rough surface takes its highlight and its blurred reflection from the same facets,
+with Fresnel implied, looking in `reflection samples` directions at the first rough hit of a path
+(`Scene.GetRoughReflection`) and one thereafter. Lights a ray can meet (`Light.CanBeSeen`) are not counted
+twice: the sky reaches a rough surface through its reflection only, and a glowing volume is shared between
+its own samples and the reflection by Veach's balance heuristic (`Scene.HighlightShareOf` /
+`ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

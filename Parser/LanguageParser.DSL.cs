@@ -93,9 +93,9 @@ public partial class LanguageParser
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflective', 'return',
+            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
@@ -287,6 +287,12 @@ public partial class LanguageParser
             medium > [ samples | bounces ] ?? 'Expecting "samples" or "bounces" to follow "medium" here.' >
             _expression
         }
+        // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
+        // one.
+        reflectionSamplesClause:
+        {
+            reflection > samples ?? 'Expecting "samples" to follow "reflection" here.' > _expression
+        }
         // Ambient stands in for light this renderer does not trace, and every material either names its
         // own or takes what the scene settles on it.  This turns the whole lot up or down at once, which
         // is the only way to reach the ones that named their own.
@@ -299,7 +305,8 @@ public partial class LanguageParser
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | antiAliasingClause | scaleAmbientClause |
+            settingOffClause | mediumSamplesClause | reflectionSamplesClause | antiAliasingClause |
+            scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
 
@@ -549,7 +556,7 @@ public partial class LanguageParser
         }
         materialValueClause:
         {
-            [ ambient | diffuse | specular | shininess | reflective | transparency |
+            [ ambient | diffuse | specular | shininess | reflective | roughness | transparency |
               brilliance | grain ] >
             _expression
         }
@@ -560,9 +567,16 @@ public partial class LanguageParser
                 refraction ?? 'Expecting "refraction" to follow "of" here.'
             } | ior ] > _expression
         }
+        // The amount may be left off, and then what follows may be the material's next entry rather
+        // than an amount.  The entries are tried before an expression, since an expression would
+        // take the next entry's word for the name of a variable -- a keyword may name one -- and the
+        // entry would then be lost: `metallic reflective 0.3` read as metallic by `reflective`.
         materialMetallicClause:
         {
-            metallic > _expression{?}
+            metallic > [
+                pigment | normal | fresnel | materialValueClause | startInteriorClause |
+                startDecalClause | _expression{?}
+            ]
         }
         // An interior may be written out in full, named, or named and then added to, much as a
         // material may.  What a surface is made of is worth keeping and reusing on its own terms:
