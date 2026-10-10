@@ -174,7 +174,8 @@ How much it mirrors is `reflective`, square-on, and it always follows [Fresnel](
 toward a graze, whether it says `fresnel` or not.  A rough surface that names no `reflective` is
 given 0.04, what nearly everything that is not a metal gives back square-on, so that `roughness`
 alone makes a satin finish.  Metals want their own, much higher, from the table above, and
-`metallic` to color it.
+`metallic` to color it.  Rough glass works out what it mirrors from its own index of refraction, so
+one that names no `reflective` is given all of that.
 
 **Lamps a ray can meet are shared fairly.**  A lamp at a point, a panel or the sun gives a rough
 surface a highlight, since no ray could ever find it.  The sky and a glowing lantern or flame are
@@ -191,10 +192,49 @@ directions and averaging: sixteen, unless the scene asks for a different number 
 [`reflection samples`](context.md#rough-reflections).  Only the first rough surface along a ray
 spreads it, so the cost does not multiply between two rough surfaces facing each other.
 
-Roughness blurs what a surface mirrors, not yet what it lets through: a transparent surface that is
-rough mirrors a blur but still refracts sharply.
-
 `gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic.
+
+#### Frosted Glass
+
+Roughness on something that lets light through blurs what is seen *through* it as well as what it
+mirrors, and that is frosted glass:
+
+```
+material {
+    pigment White
+    transparency 1
+    roughness 0.3
+    interior { ior 1.5 }
+}
+```
+
+Each of its facets bends the light by Snell's law, so what lies behind is spread into a blur, more
+of one the rougher the glass and the further off the thing behind it is.  How much each facet
+mirrors and how much it lets through is settled facet by facet, by the glass's own index, so a
+frosted bottle's rim turns bright and mirror-like where it is seen edge-on.  Its glints stay as
+bright as any rough surface's; letting the rest of the light through takes nothing from them.
+
+**A lamp behind frosted glass glows through it**, softly, where it stands — the frosted globe round
+a bulb, the frosted window at night.  Behind clear glass a lamp at a point shows nothing, since no
+ray could ever find it; frosted glass spreads its light toward the eye.  The glow is worked out at
+the last of the glass between the lamp and the eye — the far face of a pane — so a pane's two faces
+are each counted once.  The near face aims at the lamp through the glass as well as spreading its
+rays, so the glow comes out smooth rather than glittering at its edges.  A lamp found any other way
+— after its light has turned back inside the glass, or through a second pane — is left to the rays
+alone, and can glitter a little.  A glowing volume behind frosted glass is shared between its own
+glow and what the glass's rays find, as one in front of a rough surface is; behind a pane whose
+faces are both rough, a small bright one can still come out a little grainy, the blur of the near
+face being found by the glass's sixteen directions.
+
+Glass that spreads colors bends each band through a facet of its own, so a frosted prism blurs its
+rainbow without costing more than a clear one.  Shadows cast by frosted glass are as they were —
+colored by the glass's `filter`, not blurred.
+
+**Frosting needs an index.**  It is the bending at each facet that blurs, so a rough surface between
+two substances of the same index — a thin open sheet, say, which has no inside to bend into — lets
+light straight through.  Give the glass a body and an `ior`.
+
+`gallery/Local/materials/frosted-glass.igl` shows four panes from clear to deeply frosted.
 
 #### Metallic
 

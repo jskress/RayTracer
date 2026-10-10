@@ -276,11 +276,15 @@ public abstract class Light : NamedThing
     /// the surface's reflection may find the same light another way; see
     /// <see cref="Scene"/>'s weighing of the two.  Left out, a light a ray can meet gives none and
     /// any other gives all of it.</param>
+    /// <param name="glass">The indices of refraction on the eye's side and the far side, for a rough
+    /// surface that lets light through: its facets then mirror by its own index rather than by
+    /// <see cref="Material.Reflective"/> alone, and a lamp on the far side glows through it.  Null for
+    /// any other surface.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1,
-        double? highlightShare = null)
+        double? highlightShare = null, (double Near, double Far)? glass = null)
         where TS : struct, ISpectrum<TS>
     {
         Material material = surface.Material ?? Material.Default;
@@ -317,7 +321,20 @@ public abstract class Light : NamedThing
         double lightDotNormal = vector.Dot(normal);
 
         if (lightDotNormal < 0)
-            diffuseColor = specularColor = TS.Black;
+        {
+            diffuseColor = TS.Black;
+            specularColor = TS.Black;
+
+            // A lamp behind rough glass glows through it, softly, where it stands -- the frosted globe
+            // round a bulb, the frosted window at night.  Worked out from the same facets as the blur.
+            // A lamp a ray can meet already shows in what the glass lets through, so it gives only the
+            // share it is owed: none for the sky, and a glowing volume's share by how likely its own
+            // samples are to find it beside the glass's rays.
+            double share = highlightShare ?? (CanBeSeen ? 0 : 1);
+
+            if (glass is { } sides && material.IsRough && share > 0)
+                specularColor = GlowOf(eye, normal, material, pigmentColor, sample, sides, share);
+        }
         else
         {
             // How much of the light the surface takes, before its color is applied.  Brilliance
@@ -340,11 +357,13 @@ public abstract class Light : NamedThing
                 // meet -- the sky, a glowing volume -- already shows in what the surface mirrors, so it
                 // gives only the share its own samples are owed, which for the sky is none.
                 double share = highlightShare ?? (CanBeSeen ? 0 : 1);
+                Func<double, double> reflectance = glass is { } sides
+                    ? cos => material.Reflective * Microfacets.GlassReflectance(cos, sides.Near, sides.Far)
+                    : material.ReflectanceAt;
                 double factor = share == 0
                     ? 0
                     : share * Microfacets.Highlight(
-                        normal, eye, vector, material.Roughness * material.Roughness,
-                        material.ReflectanceAt);
+                        normal, eye, vector, material.Roughness * material.Roughness, reflectance);
 
                 // The light along this sample, not the light's own color: a glowing volume's samples
                 // each carry what their share of the glow delivers here, which the highlight must take
@@ -382,5 +401,64 @@ public abstract class Light : NamedThing
         // regrouping them shifts the odd pixel by one level even when nothing has been lost -- and
         // a scene with nothing transparent in it should come out bit for bit unchanged.
         return ambientColor + diffuseColor * reaching + specularColor * reaching;
+    }
+
+    /// <summary>
+    /// This method returns only the glow of this light through rough glass at a point on the glass's
+    /// far side from it -- what <see cref="ApplyPhong{TS}"/> gives there, without the ambient term and
+    /// in full rather than shared.  It is what the near side of a pane, aiming at the lamp, finds at
+    /// the far side.
+    /// </summary>
+    /// <param name="point">The point on the glass, on its far side from the light.</param>
+    /// <param name="eye">The eye vector, from inside the glass.</param>
+    /// <param name="normal">The surface normal on the eye's side.</param>
+    /// <param name="surface">The glass.</param>
+    /// <param name="sample">The place on the light the glow is looked at from.</param>
+    /// <param name="lightReaching">How much of this light arrives at the glass.</param>
+    /// <param name="glass">The indices of refraction on the eye's side and the far side.</param>
+    /// <param name="footprint">How much of the surface the ray that found this point covers there.</param>
+    /// <param name="portal">The instance this point was found through, if any.</param>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <returns>The glow, or black where there is none.</returns>
+    public TS GlowThrough<TS>(
+        Point point, Vector eye, Vector normal, Surface surface, LightSample sample, TS lightReaching,
+        (double Near, double Far) glass, Footprint footprint = null, Surface portal = null)
+        where TS : struct, ISpectrum<TS>
+    {
+        Material material = surface.Material ?? Material.Default;
+        double intensity = sample.Cone * FadingOver(sample.Distance);
+        TS reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
+
+        if (reaching.IsBlack || !material.IsRough || sample.Direction.Dot(normal) >= 0)
+            return TS.Black;
+
+        TS pigmentColor = TS.FromReflectance(
+            material.GetColorFor(surface, point, normal, footprint, portal));
+
+        return GlowOf(eye, normal, material, pigmentColor, sample, glass, 1) * reaching;
+    }
+
+    /// <summary>
+    /// This method works out a light's glow through rough glass, from the same facets as the blur,
+    /// before anything stands in its way.
+    /// </summary>
+    private TS GlowOf<TS>(
+        Vector eye, Vector normal, Material material, TS pigmentColor, LightSample sample,
+        (double Near, double Far) sides, double share)
+        where TS : struct, ISpectrum<TS>
+    {
+        double factor = share * Microfacets.TransmittedHighlight(
+            normal, eye, sample.Direction, material.Roughness * material.Roughness, sides.Near, sides.Far);
+
+        if (factor <= 0)
+            return TS.Black;
+
+        TS glow = EmittedToward<TS>(sample) * (factor * material.Transparency);
+
+        // Coming through this surface, the light is colored by it as any ray crossing it is.
+        if (material.Interior.Filter > 0)
+            glow *= material.Interior.GetFilterTint(pigmentColor);
+
+        return glow;
     }
 }

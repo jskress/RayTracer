@@ -160,17 +160,19 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         FresnelResolver.AssignTo(value, target => target.Fresnel, context, variables);
         RoughnessResolver.AssignTo(value, target => target.Roughness, context, variables);
 
-        // A rough surface's highlight is what it mirrors, so one that named no reflectance would show
-        // none at all.  It gets what nearly everything that is not a metal gives back square-on --
-        // paint, varnish, plastic, glass -- so that `roughness` alone makes a satin finish.
-        if (RoughnessResolver is not null && ReflectiveResolver is null && value.IsRough)
-            value.Reflective = 0.04;
-
         value.ReflectionSamples = context.ReflectionSamples;
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
         GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
+
+        // A rough surface's highlight is what it mirrors, so one that named no reflectance would show
+        // none at all.  An opaque one gets what nearly everything that is not a metal gives back
+        // square-on -- paint, varnish, plastic -- so that `roughness` alone makes a satin finish.
+        // Rough glass works out what it mirrors from its own index, facet by facet, so it is left to
+        // give back all of that.
+        if (RoughnessResolver is not null && ReflectiveResolver is null && value.IsRough)
+            value.Reflective = value.Transparency > 0 || value.PigmentMayTransmit ? 1 : 0.04;
         if (InteriorResolver != null)
             value.Interior = InteriorResolver.Resolve(context, variables);
 
