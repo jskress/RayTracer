@@ -1,0 +1,102 @@
+// Four panes of glass, clear on the left and more deeply frosted toward the right, each standing in
+// front of the same things: a ball close behind it, another further back, a striped wall, and a small
+// lamp.
+//
+// Frosted glass is glass with a rough face.  Each of its facets bends the light a little differently,
+// so what lies behind it is spread into a blur -- and spread further the further off it is, which is
+// why the near ball keeps its shape through a pane that has turned the far one and the stripes to a
+// wash of color.  The pane at nought is clear glass, and shows all three sharply.
+//
+// The lamps are points of light, which no ray can ever see: behind the clear pane there is nothing to
+// show where one stands.  Frosted glass spreads a lamp's light toward the eye, so behind each of the
+// others it glows -- a tight bright spot through lightly frosted glass, a broad soft one through
+// deeply frosted.
+//
+// Rough glass mirrors as well as it lets through, facet by facet, by its own index, so the panes keep
+// their glints; and none of them is given a `reflective`, the glass working out its own.
+
+context {
+    angles are degrees
+    antialiasing depth 2
+    info {
+        title 'Frosted Glass'
+        author 'J. Stephen Kress'
+        description 'Four panes of glass from clear to deeply frosted, each in front of two balls, a striped wall and a lamp.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 2.4, -12]
+    look at [0, 1.2, 0]
+    field of view 44
+}
+
+background [0.10, 0.11, 0.14]
+
+// A light from in front and above, for the balls, the wall and the glints.
+point light { location [-3, 8, -8]  color [0.85, 0.85, 0.85] }
+
+plane { material { pigment [0.32, 0.31, 0.30]  specular 0 } }
+
+// The wall behind, in broad stripes of color.
+plane {
+    rotate X -90
+    translate Z 4.5
+    material {
+        pigment linear X gradient {
+            banded [0, [0.85, 0.25, 0.20], 0.25, [0.95, 0.80, 0.25], 0.5, [0.25, 0.55, 0.85], 0.75, [0.30, 0.70, 0.35]]
+            scale 2.4
+        }
+        ambient 0.06  diffuse 0.7  specular 0
+    }
+}
+
+Label = material { pigment [0.08, 0.08, 0.1]  ambient 0.6  diffuse 0.4  specular 0 }
+
+primitive Pane(across, rough, caption) -> group {
+    return group {
+        cube {
+            scale [0.95, 1.4, 0.04]
+            translate [across, 1.4, 0]
+            material {
+                pigment White  ambient 0  diffuse 0  transparency 1  roughness rough
+                interior { ior 1.5 }
+            }
+        }
+        // A ball close behind the pane, and another further back.
+        sphere { scale 0.32  translate [across - 0.35, 0.32, 0.7]  material { pigment [0.90, 0.30, 0.15]  specular 0.3 } }
+        sphere { scale 0.32  translate [across + 0.4, 0.32, 3.2]  material { pigment [0.20, 0.45, 0.90]  specular 0.3 } }
+        // A pale card standing behind each label, so that it reads against the floor; the camera
+        // is too low for one lying flat to show behind it.
+        cube {
+            scale [0.55, 0.17, 0.01]
+            translate [across, 0.17, -1.99]
+            material { pigment [0.93, 0.92, 0.88]  ambient 0.4  diffuse 0.6  specular 0 }
+            no shadow
+        }
+        text {
+            text caption
+            font 'Merriweather'
+            layout { horizontal position center }
+            material Label
+            no shadow
+            scale [0.34, 0.005, 0.34]
+            rotate X -90
+            translate [across, 0.06, -2.005]
+        }
+    }
+}
+
+object Pane(-3.3, 0, '0')
+object Pane(-1.1, 0.08, '0.08')
+object Pane(1.1, 0.2, '0.2')
+object Pane(3.3, 0.45, '0.45')
+
+// A small lamp behind each pane, at the height of its middle, turned toward the pane so that it lights
+// the glass rather than the wall.
+spot light { location [-3.3, 1.7, 1.6]  point at [-3.3, 1.7, -10]  radius 25  falloff 35  color [0.4, 0.35, 0.28] }
+spot light { location [-1.1, 1.7, 1.6]  point at [-1.1, 1.7, -10]  radius 25  falloff 35  color [0.4, 0.35, 0.28] }
+spot light { location [1.1, 1.7, 1.6]  point at [1.1, 1.7, -10]  radius 25  falloff 35  color [0.4, 0.35, 0.28] }
+spot light { location [3.3, 1.7, 1.6]  point at [3.3, 1.7, -10]  radius 25  falloff 35  color [0.4, 0.35, 0.28] }

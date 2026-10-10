@@ -812,25 +812,6 @@ public class Scene : NamedThing, IDisposable
         TS surfaceColor = TS.Black;
         Material material = intersection.Surface.Material ?? Material.Default;
 
-        // What a surface mirrors never reaches its pigment, so one whose mirroring follows Fresnel
-        // shows only the rest of the light as its own -- next to none of it, at a graze.
-        double ownShare = material.FresnelApplies
-            ? 1 - material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
-            : 1;
-
-        // How many directions this point's own reflection will look in, which a glowing volume's
-        // samples are weighed against.  None, where it will not look at all.
-        int looks = material.IsRough && remaining >= 1 && material.Reflective > 0
-            ? _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples
-            : 0;
-
-        foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks);
-
-        TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
-        TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
-        TS refColor;
-
         // What a surface lets past, it cannot also show.  The pigment may say so color by color,
         // which is what lets one pattern be a window in some places and a wall in others, so the
         // question is asked at this point rather than of the material as a whole.
@@ -838,8 +819,44 @@ public class Scene : NamedThing, IDisposable
             ? material.TransparencyFor(
                 material.GetColorFor(intersection))
             : material.Transparency;
+        bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
+        bool roughGlass = material.IsRough && transmits;
 
-        if (material.Reflective > 0 && (material.Transparency > 0 || material.PigmentMayTransmit))
+        // What a surface mirrors never reaches its pigment, so one whose mirroring follows Fresnel
+        // shows only the rest of the light as its own -- next to none of it, at a graze.
+        double ownShare = material.FresnelApplies
+            ? 1 - material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
+            : 1;
+
+        // Rough glass shows only what it stops of its own color, as any glass does, but keeps its
+        // highlight whole: that is what its facets mirror, and letting light through takes none of it
+        // away.  So its own share is cut here, where the highlight is spared, rather than below.
+        if (roughGlass)
+            ownShare *= 1 - transparency;
+
+        // How many directions this point's own reflection will look in, which a glowing volume's
+        // samples are weighed against.  None, where it will not look at all.
+        int looks = material.IsRough && remaining >= 1 && material.Reflective > 0
+            ? _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples
+            : 0;
+        (double, double)? glass = roughGlass ? (intersection.N1, intersection.N2) : null;
+
+        // And how many directions its glass will look through, which a glowing volume beyond it is
+        // weighed against in the same way.
+        int looksThrough = roughGlass && remaining >= 1 && transparency > 0
+            ? _spreading || TS.Count == 1 || (TS.IsSpectral && intersection.Disperses) ? 1 : material.ReflectionSamples
+            : 0;
+
+        foreach (Light light in Lights)
+            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough);
+
+        TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
+        TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
+        TS refColor;
+
+        // Smooth glass shares its light between what it mirrors and what it lets through by one
+        // Fresnel share for the whole surface.  Rough glass has already shared it facet by facet.
+        if (material.Reflective > 0 && transmits && !material.IsRough)
         {
             double reflectance = intersection.Reflectance;
 
@@ -852,7 +869,7 @@ public class Scene : NamedThing, IDisposable
         // A surface shows only as much of itself as it stops.  Perfectly clear glass therefore
         // contributes nothing of its own and is seen entirely through, which is what makes a
         // transmitting pigment a window rather than merely a dimmer wall.
-        TS color = surfaceColor * (1 - transparency) + refColor;
+        TS color = roughGlass ? surfaceColor + refColor : surfaceColor * (1 - transparency) + refColor;
 
         // If this hit is on the far side of a surface, the ray reached it by travelling through
         // whatever the surface is made of, and a substance that fades light charges for the trip.
@@ -892,7 +909,9 @@ public class Scene : NamedThing, IDisposable
     /// <param name="ownShare">How much of the light reaching the point the surface keeps to show as
     /// its own color rather than mirroring; see <see cref="Material.Fresnel"/>.</param>
     /// <returns>The color the light lends the point.</returns>
-    private TS Illuminate<TS>(Light light, Intersection intersection, double ownShare, int looks)
+    private TS Illuminate<TS>(
+        Light light, Intersection intersection, double ownShare, int looks, (double, double)? glass,
+        int looksThrough)
         where TS : struct, ISpectrum<TS>
     {
         int count = light.SampleCount;
@@ -903,10 +922,9 @@ public class Scene : NamedThing, IDisposable
 
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                only, GetLightReaching<TS>(
-                    intersection.LitPoint, only.Direction, only.Distance, intersection.TimeIndex),
+                only, ReachingFrom<TS>(intersection, only, glass),
                 intersection.Footprint, intersection.Portal, ownShare,
-                HighlightShareOf(light, only, intersection, looks));
+                ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass);
         }
 
         TS sum = TS.Black;
@@ -918,13 +936,83 @@ public class Scene : NamedThing, IDisposable
 
             sum += light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                sample, GetLightReaching<TS>(
-                    intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex),
+                sample, ReachingFrom<TS>(intersection, sample, glass),
                 intersection.Footprint, intersection.Portal, ownShare,
-                HighlightShareOf(light, sample, intersection, looks));
+                ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass);
         }
 
         return sum * (1.0 / count);
+    }
+
+    /// <summary>
+    /// This method returns how much of a light's sample reaches the point being lit.  A shadow ray sets
+    /// off from the lit point, on the eye's side -- except toward a lamp behind rough glass, whose glow
+    /// comes through the surface.
+    /// <para>
+    /// **That glow is given at the last of the glass between the lamp and the eye, and only there.**
+    /// Light through a pane is bent going in and again coming out, each time off a rough facet; the
+    /// rays the glass spreads at its near side take care of the first of those, and the lamp is
+    /// found exactly at the far side, where the light has only the one surface left to cross.  Given at
+    /// the near side as well, the lamp would be counted twice -- and the near side's count is the
+    /// wrong one, treating the lamp as if it stood inside the glass.  So a shadow ray from the near
+    /// side that meets more of the same glass on its way finds nothing, and the glow is left to that
+    /// glass's far side.  It sets off from just beyond the surface, the surface it is coming through
+    /// being already accounted for.
+    /// </para>
+    /// <para>
+    /// The same holds for a lamp in front of a surface of the glass seen from inside it.  Its light
+    /// crossed the glass to get there, and is given where it crossed: inside a pane, the near side
+    /// glows with it, seen from within.  A shadow ray straight back through the glass would count it a
+    /// second time, and unbent, at angles no light that came in through the glass could take -- the far
+    /// side mirroring it entirely, where light that has come in through a pane can never be turned back
+    /// that way.
+    /// </para>
+    /// </summary>
+    private TS ReachingFrom<TS>(Intersection intersection, LightSample sample, (double, double)? glass)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
+        {
+            return GetLightReaching<TS>(
+                intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex,
+                glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null);
+        }
+
+        Point beyond = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
+
+        return GetLightReaching<TS>(
+            beyond, sample.Direction, sample.Distance, intersection.TimeIndex,
+            intersection.Surface.Material ?? Material.Default);
+    }
+
+    /// <summary>
+    /// This method works out how much of a rough surface's highlight -- or, beyond rough glass, its glow
+    /// -- one sample of a light gives.  A glowing volume beyond the glass is shared with the glass's
+    /// rays place by place, exactly as one in front of it is shared with the surface's reflection (see
+    /// <see cref="HighlightShareOf"/>), with the odds of the glass bending its rays that way in place
+    /// of the odds of mirroring them; the glow being given only at the last of the glass, what lies
+    /// between is one straight run, as a reflection's is.
+    /// </summary>
+    private double? ShareOf(
+        Light light, LightSample sample, int index, Intersection intersection, int looks,
+        (double, double)? glass, int looksThrough)
+    {
+        if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
+            return HighlightShareOf(light, sample, intersection, looks);
+
+        if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
+            return light.CanBeSeen ? 0 : LookingShareOf(light, index, intersection);
+
+        if (looksThrough == 0)
+            return 1;
+
+        Material material = intersection.Surface.Material ?? Material.Default;
+        double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
+        double byLooking = looksThrough * Microfacets.RefractionOdds(
+            intersection.Normal, intersection.Eye, sample.Direction, material.Roughness * material.Roughness,
+            intersection.N1, intersection.N2);
+
+        return byLight / (byLight + byLooking);
     }
 
     /// <summary>
@@ -1003,7 +1091,7 @@ public class Scene : NamedThing, IDisposable
     /// <returns>The volume light, or <c>null</c> if the glow is not to be shared.</returns>
     private VolumeLight MixingLightFor(Medium medium, Ray ray)
     {
-        if (_looking is not { } run)
+        if (_looking is not { } looking)
             return null;
 
         VolumeLight glow = null;
@@ -1017,13 +1105,25 @@ public class Scene : NamedThing, IDisposable
             }
         }
 
-        if (glow is null || !Mixes(glow) || ray.Direction.Unit.Dot(run.Direction) < 1 - 1e-9)
+        if (glow is null || !Mixes(glow))
             return null;
 
-        Vector offset = ray.Origin - run.Origin;
-        double along = offset.Dot(run.Direction);
+        return OnRun(ray, looking.Origin, looking.Direction) ? glow : null;
+    }
 
-        return (offset - run.Direction * along).Magnitude > 1e-6 * (1 + Math.Abs(along)) ? null : glow;
+    /// <summary>
+    /// This method reports whether a ray is still on a straight run: heading the same way, from a point
+    /// on the line the run set off along.
+    /// </summary>
+    private static bool OnRun(Ray ray, Point origin, Vector direction)
+    {
+        if (ray.Direction.Unit.Dot(direction) < 1 - 1e-9)
+            return false;
+
+        Vector offset = ray.Origin - origin;
+        double along = offset.Dot(direction);
+
+        return (offset - direction * along).Magnitude <= 1e-6 * (1 + Math.Abs(along));
     }
 
     /// <summary>
@@ -1096,9 +1196,12 @@ public class Scene : NamedThing, IDisposable
     /// <param name="direction">The unit direction from the point toward the light or sample.</param>
     /// <param name="distance">How far off the light or sample is.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at.</param>
+    /// <param name="glass">For a lamp glowing through rough glass, the glass: meeting any more of it on
+    /// the way means the lamp's glow is given at the glass's far side instead, so none arrives here.
+    /// </param>
     /// <returns>The fraction of each band of the light that arrives at the point.</returns>
     public TS GetLightReaching<TS>(
-        Point point, Vector direction, double distance, int timeIndex = 0)
+        Point point, Vector direction, double distance, int timeIndex = 0, Material glass = null)
         where TS : struct, ISpectrum<TS>
     {
         Ray ray = new (point, direction, timeIndex);
@@ -1119,6 +1222,10 @@ public class Scene : NamedThing, IDisposable
                 continue;
 
             Material material = intersection.Surface.Material ?? Material.Default;
+
+            if (glass is not null && ReferenceEquals(material, glass))
+                return TS.Black;
+
             Interior interior = material.Interior;
 
             // Shadow rays never have their intersections prepared, since that work would be wasted
@@ -1315,7 +1422,19 @@ public class Scene : NamedThing, IDisposable
     /// <summary>
     /// This record holds one straight run of a rough surface's reflection; see <see cref="_looking"/>.
     /// </summary>
-    private readonly record struct LookingRun(Point Origin, Vector Direction, double Odds, int Count);
+    private readonly record struct LookingRun(
+        Point Origin, Vector Direction, double Odds, int Count, NearSide Side = null);
+
+    /// <summary>
+    /// This record holds the near side of a pane of rough glass that a run set off through, for the
+    /// lamps beyond it that the pane also aimed at; see <see cref="GlowsAimedThrough{TS}"/>.
+    /// </summary>
+    /// <param name="Normal">The surface normal on the eye's side.</param>
+    /// <param name="Glass">The glass's material, which its far side must share.</param>
+    /// <param name="Alpha">How far the glass's facets lean.</param>
+    /// <param name="Outside">The index of refraction on the eye's side, taken for the lamp's too.</param>
+    /// <param name="Inside">The glass's index of refraction.</param>
+    private sealed record NearSide(Vector Normal, Material Glass, double Alpha, double Outside, double Inside);
 
     /// <summary>
     /// This method works out what a rough surface mirrors toward the eye: the blur of everything its
@@ -1364,6 +1483,12 @@ public class Scene : NamedThing, IDisposable
 
         double alpha = material.Roughness * material.Roughness;
         int count = _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples;
+
+        // Rough glass mirrors by its own index, facet by facet, as it lets through the rest.
+        Func<double, double> reflectance = material.Transparency > 0 || material.PigmentMayTransmit
+            ? cos => material.Reflective *
+                     Microfacets.GlassReflectance(cos, intersection.N1, intersection.N2)
+            : material.ReflectanceAt;
         double turnOut = ShiftFor(intersection.Point, 101);
         double turnRound = ShiftFor(intersection.Point, 102);
         TS sum = TS.Black;
@@ -1386,7 +1511,7 @@ public class Scene : NamedThing, IDisposable
                 if (mirrored.Z <= 0)
                     continue;
 
-                double weight = material.ReflectanceAt(cosFacet) * Microfacets.Masking(mirrored.Z, alpha);
+                double weight = reflectance(cosFacet) * Microfacets.Masking(mirrored.Z, alpha);
                 Vector direction = (across * mirrored.X + along * mirrored.Y + normal * mirrored.Z).Unit;
                 Ray ray = new (
                     intersection.LitPoint, direction, intersection.TimeIndex, intersection.ConeSpread,
@@ -1453,6 +1578,8 @@ public class Scene : NamedThing, IDisposable
         // own amount, goes as many ways as it has bands.
         if (TS.IsSpectral && TS.Count > 1 && intersection.Disperses)
             color = SplitThrough<TS>(intersection, remaining) * transparency;
+        else if (material.IsRough)
+            color = GetRoughRefraction<TS>(intersection, material, remaining) * transparency;
         else
         {
             Vector direction = Bent(intersection, intersection.N1, intersection.N2);
@@ -1506,6 +1633,303 @@ public class Scene : NamedThing, IDisposable
             point, direction, intersection.TimeIndex, intersection.ConeSpread, intersection.ConeTravelled);
     }
 
+
+    /// <summary>
+    /// This method works out what rough glass lets through toward the eye: the blur of everything
+    /// beyond it, looked for through several of its facets and averaged -- what makes glass frosted.
+    /// <para>
+    /// It is <see cref="GetRoughReflection{TS}"/> turned to the far side: each direction is a facet the
+    /// eye can see, the eye's ray bent through it rather than mirrored in it, and weighed by how much
+    /// the facet lets through at the angle it is seen at and how much of the surface the bent ray can
+    /// see past the facets around it.  A facet that would turn the light back entirely lets through
+    /// nothing, its share being in what the glass mirrors.  Only the first rough surface along a path
+    /// spreads its ray, and the directions are turned by a fixed amount per point, both as for what it
+    /// mirrors.  A glowing volume a ray meets on its straight run out of the glass is shared with the
+    /// volume's own glow through the glass (see <see cref="ShareOf"/>); and going into a pane, the pane
+    /// aims at the lamps beyond it as well (see <see cref="GlowsAimedThrough{TS}"/>).
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">Where the ray met the rough glass.</param>
+    /// <param name="material">The glass's material.</param>
+    /// <param name="remaining">The remaining number of recursions allowed.</param>
+    /// <returns>The light the glass lets through toward the eye, before its transparency and filter.</returns>
+    private TS GetRoughRefraction<TS>(Intersection intersection, Material material, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
+        int count = _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples;
+        double turnOut = ShiftFor(intersection.Point, 103);
+        double turnRound = ShiftFor(intersection.Point, 104);
+        TS sum = TS.Black;
+        TS aimed = TS.Black;
+        bool was = _spreading;
+        LookingRun? wasLooking = _looking;
+        double alpha = material.Roughness * material.Roughness;
+
+        // Going into a pane, these rays find a lamp beyond it only by chance, so the pane aims at the
+        // lamp as well.  Not through glass with a medium in it, whose fog would give its own glow to
+        // the aimed rays as well as dimming the lamp's; there the rays find the lamp alone, as before.
+        NearSide side = intersection.Inside || material.Interior.Medium is not null
+            ? null
+            : new NearSide(intersection.Normal, material, alpha, intersection.N1, intersection.N2);
+
+        _spreading = true;
+
+        try
+        {
+            for (int index = 0; index < count; index++)
+            {
+                (Vector direction, double weight) = ThroughAFacet(
+                    intersection, material, intersection.N1, intersection.N2,
+                    (index + 0.5) / count + turnOut, index * 0.6180339887498949 + turnRound);
+
+                if (direction is null)
+                    continue;
+
+                Ray ray = RefractedRay(intersection, direction);
+
+                // Each sets off on a straight run, along which a glowing volume is shared with that
+                // volume's own glow through the glass, as a reflection's run shares it with a highlight
+                // -- and a lamp's glow at the pane's far side with the pane's aim at it.
+                _looking = new LookingRun(
+                    ray.Origin, direction, Microfacets.RefractionOdds(
+                        intersection.Normal, intersection.Eye, direction, alpha, intersection.N1, intersection.N2),
+                    count, side);
+
+                sum += GetColorFor<TS>(ray, remaining - 1) * weight;
+            }
+
+            if (side is not null)
+            {
+                _looking = null;
+                aimed = GlowsAimedThrough<TS>(intersection, side, count);
+            }
+        }
+        finally
+        {
+            _spreading = was;
+            _looking = wasLooking;
+        }
+
+        return side is null ? sum * (1.0 / count) : sum * (1.0 / count) + aimed;
+    }
+
+    /// <summary>
+    /// This method works out the glow of the lamps beyond a pane of rough glass at the pane's far side,
+    /// found by aiming at them from the near side.
+    /// <para>
+    /// **A lamp seen through both sides of a pane glitters if only the near side's rays look for it.**
+    /// Through rough glass a lamp's glow is a narrow, enormously bright lobe -- hundreds of times white
+    /// at the middle, through lightly frosted glass -- given at the far side (see
+    /// <see cref="ReachingFrom{TS}"/>).  The near side spreads its rays without knowing where the lamp
+    /// is, so around the glow, where the light is faint, one ray in a great many lands on that lobe and
+    /// whitens its pixel by itself.  More rays only mean more chances to land there: the specks
+    /// multiply rather than fade.
+    /// </para>
+    /// <para>
+    /// **So the near side also aims at the lamp**: it picks directions through the glass from the far
+    /// side's facets, as the lamp sees them -- the directions the lamp's light comes in along -- and
+    /// asks the far side for the glow wherever each comes out.  Those are good just where the near side's
+    /// own rays are poor, and poor where they are good, so each direction is shared between the two
+    /// ways by how likely each was to pick it (Veach's balance heuristic), exactly as a glowing volume
+    /// is shared with a rough surface's reflection; what the aim is given here, the rays are given in
+    /// <see cref="LookingShareOf"/>, and the two always come to the whole.
+    /// </para>
+    /// <para>
+    /// The far side's facets are taken to face the near side's way, which is exactly so for a pane and
+    /// only roughly so for a ball; the aim is then less good, but the sharing still comes to the whole.
+    /// It covers the one straight run across the glass: a lamp found any other way -- after the light
+    /// has turned back inside, or through a second pane -- is left to the rays.  An area light is aimed
+    /// at one of its places per direction, in turn.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="intersection">Where the eye's ray met the pane's near side.</param>
+    /// <param name="side">The near side.</param>
+    /// <param name="count">How many directions to aim along, the same as the near side's rays.</param>
+    /// <returns>The aimed share of the lamps' glow, before the near side's transparency.</returns>
+    private TS GlowsAimedThrough<TS>(Intersection intersection, NearSide side, int count)
+        where TS : struct, ISpectrum<TS>
+    {
+        double turnOut = ShiftFor(intersection.Point, 105);
+        double turnRound = ShiftFor(intersection.Point, 106);
+        Point origin = intersection.UnderPoint;
+        TS sum = TS.Black;
+
+        foreach (Light light in Lights)
+        {
+            if (light.CanBeSeen)
+                continue;
+
+            int samples = light.SampleCount;
+
+            for (int index = 0; index < count; index++)
+            {
+                int which = index % samples;
+                LightSample there = light.SampleToward(origin, which, side.Normal);
+
+                if (!Aims(side, there))
+                    continue;
+
+                (Vector bent, _) = Bend(
+                    -side.Normal, there.Direction, side.Alpha, side.Outside, side.Inside,
+                    (index + 0.5) / count + turnOut, index * 0.6180339887498949 + turnRound);
+
+                if (bent is null)
+                    continue;
+
+                Vector direction = -bent;
+                double through = Microfacets.TransmittedHighlight(
+                    side.Normal, intersection.Eye, direction, side.Alpha, side.Outside, side.Inside) / Math.PI;
+
+                if (through <= 0)
+                    continue;
+
+                Ray ray = RefractedRay(intersection, direction);
+                List<Intersection> hits = Intersect(ray);
+                Intersection exit = hits.Hit();
+
+                if (exit is null || !ReferenceEquals(exit.Surface.Material, side.Glass))
+                    continue;
+
+                exit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
+
+                if (!exit.Inside)
+                    continue;
+
+                (double, double) sides = (exit.N1, exit.N2);
+                LightSample sample = light.SampleToward(exit.LitPoint, which, exit.Normal);
+                TS glow = light.GlowThrough(
+                    exit.LitPoint, exit.Eye, exit.Normal, exit.Surface, sample,
+                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portal);
+
+                if (glow.IsBlack)
+                    continue;
+
+                double byAiming = AimedAt(which, count, samples) * AimOdds(side, there, direction);
+                double byLooking = count * Microfacets.RefractionOdds(
+                    side.Normal, intersection.Eye, direction, side.Alpha, side.Outside, side.Inside);
+
+                sum += glow * (side.Glass.Interior.GetFadeOver(exit.Distance) * through /
+                               (samples * (byLooking + byAiming)));
+            }
+        }
+
+        return sum;
+    }
+
+    /// <summary>
+    /// This method returns the share of a lamp's glow at the far side of a pane that belongs to the
+    /// near side's ray now arriving there -- what is left once the near side's aim at the lamp has taken
+    /// its own; see <see cref="GlowsAimedThrough{TS}"/>.  All of it, for a glow found any way the aim
+    /// could not have found it.
+    /// </summary>
+    /// <param name="light">The lamp.</param>
+    /// <param name="index">Which of the lamp's places the glow is from.</param>
+    /// <param name="intersection">The point on the far side being lit.</param>
+    /// <returns>The ray's share.</returns>
+    private static double LookingShareOf(Light light, int index, Intersection intersection)
+    {
+        if (_looking is not { Side: { } side } run || !intersection.Inside ||
+            !ReferenceEquals(intersection.Surface.Material, side.Glass) ||
+            !OnRun(RayThatReached(intersection), run.Origin, run.Direction))
+            return 1;
+
+        int samples = light.SampleCount;
+        LightSample there = light.SampleToward(run.Origin, index, side.Normal);
+
+        if (!Aims(side, there))
+            return 1;
+
+        double byAiming = AimedAt(index, run.Count, samples) * AimOdds(side, there, run.Direction);
+        double byLooking = run.Count * run.Odds;
+
+        return byLooking + byAiming > 0 ? byLooking / (byLooking + byAiming) : 1;
+    }
+
+    /// <summary>
+    /// This method reports whether a pane's near side aims at a light's place: one beyond the pane, and
+    /// pointed its way.  Asked the same way from both ends, so that the aim and the rays agree on it.
+    /// </summary>
+    private static bool Aims(NearSide side, LightSample there)
+    {
+        return there.Direction.Dot(side.Normal) < 0 && there.Cone > 0;
+    }
+
+    /// <summary>
+    /// This method returns how many of a pane's aimed directions go to one of a light's places, the
+    /// directions being handed to its places in turn.
+    /// </summary>
+    private static int AimedAt(int index, int count, int samples)
+    {
+        return (count - index + samples - 1) / samples;
+    }
+
+    /// <summary>
+    /// This method returns how likely a pane's aim at a light's place is to pick a direction through
+    /// the glass, per unit of solid angle: the far side's facets bending the light's own direction into
+    /// it, the far side being taken to face the near side's way.
+    /// </summary>
+    private static double AimOdds(NearSide side, LightSample there, Vector direction)
+    {
+        return Microfacets.RefractionOdds(
+            -side.Normal, there.Direction, -direction, side.Alpha, side.Outside, side.Inside);
+    }
+
+    /// <summary>
+    /// This method picks one facet of rough glass the eye can see and bends the eye's ray through it.
+    /// </summary>
+    /// <param name="intersection">Where the ray met the glass.</param>
+    /// <param name="material">The glass's material.</param>
+    /// <param name="n1">The index of refraction on the eye's side.</param>
+    /// <param name="n2">The index of refraction on the far side.</param>
+    /// <param name="first">A number choosing how far the facet leans; only its fraction counts.</param>
+    /// <param name="second">A number choosing which way it leans; only its fraction counts.</param>
+    /// <returns>The direction the ray goes on in and what it brings back is worth, or no direction
+    /// where the facet lets nothing through.</returns>
+    private static (Vector Direction, double Weight) ThroughAFacet(
+        Intersection intersection, Material material, double n1, double n2, double first, double second)
+    {
+        return Bend(
+            intersection.Normal, intersection.Eye, material.Roughness * material.Roughness, n1, n2,
+            first, second);
+    }
+
+    /// <summary>
+    /// This method picks one facet of a rough surface that can be seen from a given direction and bends
+    /// that direction through it.
+    /// </summary>
+    /// <param name="normal">The surface normal, of unit length, on the seeing side.</param>
+    /// <param name="toward">The direction the facet is seen from, of unit length.</param>
+    /// <param name="alpha">How far the facets lean.</param>
+    /// <param name="n1">The index of refraction on the seeing side.</param>
+    /// <param name="n2">The index of refraction on the far side.</param>
+    /// <param name="first">A number choosing how far the facet leans; only its fraction counts.</param>
+    /// <param name="second">A number choosing which way it leans; only its fraction counts.</param>
+    /// <returns>The bent direction and what it brings back is worth, or no direction where the facet
+    /// lets nothing through.</returns>
+    private static (Vector Direction, double Weight) Bend(
+        Vector normal, Vector toward, double alpha, double n1, double n2, double first, double second)
+    {
+        (Vector across, Vector along) = Microfacets.FrameAround(normal);
+        Vector eye = new (toward.Dot(across), toward.Dot(along), toward.Dot(normal));
+
+        if (eye.Z <= 0)
+            return (null, 0);
+
+        Vector facet = Microfacets.SampleVisibleNormal(
+            eye, alpha, first - Math.Floor(first), second - Math.Floor(second));
+        double cosFacet = eye.Dot(facet);
+        double through = 1 - Microfacets.GlassReflectance(cosFacet, n1, n2);
+        Vector bent = through > 0 ? Microfacets.Refract(eye, facet, n1 / n2) : null;
+
+        if (bent is null || bent.Z >= 0)
+            return (null, 0);
+
+        return ((across * bent.X + along * bent.Y + normal * bent.Z).Unit,
+            through * Microfacets.Masking(-bent.Z, alpha));
+    }
+
     /// <summary>
     /// This method follows light of every band through a crossing that bends each band by its own
     /// amount: one ray per band, each going its own way and carrying only its band from there on.
@@ -1535,7 +1959,11 @@ public class Scene : NamedThing, IDisposable
         TS light = TS.Black;
         double width = (SpectralColor.LongestWavelength - SpectralColor.ShortestWavelength) / TS.Count;
         double shift = ShiftFor(intersection.Point, 0) - 0.5;
+        Material material = intersection.Surface.Material ?? Material.Default;
+        double turnOut = ShiftFor(intersection.Point, 103);
+        double turnRound = ShiftFor(intersection.Point, 104);
         (int Band, double Wavelength) was = SingleBand.Carry(0, double.NaN);
+        LookingRun? wasLooking = _looking;
 
         try
         {
@@ -1543,19 +1971,40 @@ public class Scene : NamedThing, IDisposable
             {
                 double wavelength = SpectralColor.WavelengthOf(band) + shift * width;
                 (double n1, double n2) = intersection.IndicesAt(wavelength);
-                Vector direction = Bent(intersection, n1, n2);
+
+                // Rough glass that spreads colors bends each band through a facet of its own, so
+                // the bands between them spread over the blur as well as over the rainbow, and
+                // the cost stays one ray a band.
+                (Vector direction, double weight) = material.IsRough
+                    ? ThroughAFacet(
+                        intersection, material, n1, n2,
+                        (band + 0.5) / TS.Count + turnOut, band * 0.6180339887498949 + turnRound)
+                    : (Bent(intersection, n1, n2), 1);
 
                 if (direction is null)
                     continue;
 
+                // A band bent through a facet sets off on a straight run of its own, sharing a glowing
+                // volume it meets with the volume's glow through the glass as any rough glass's rays do.
+                Ray ray = RefractedRay(intersection, direction);
+
+                if (material.IsRough)
+                {
+                    _looking = new LookingRun(
+                        ray.Origin, direction, Microfacets.RefractionOdds(
+                            intersection.Normal, intersection.Eye, direction,
+                            material.Roughness * material.Roughness, n1, n2),
+                        1);
+                }
+
                 SingleBand.Carry(band, wavelength);
-                light[band] = GetColorFor<SingleBand>(
-                    RefractedRay(intersection, direction), remaining - 1).Amount;
+                light[band] = GetColorFor<SingleBand>(ray, remaining - 1).Amount * weight;
             }
         }
         finally
         {
             SingleBand.Carry(was.Band, was.Wavelength);
+            _looking = wasLooking;
         }
 
         return light;

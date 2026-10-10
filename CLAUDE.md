@@ -114,7 +114,12 @@ with Fresnel implied, looking in `reflection samples` directions at the first ro
 (`Scene.GetRoughReflection`) and one thereafter. Lights a ray can meet (`Light.CanBeSeen`) are not counted
 twice: the sky reaches a rough surface through its reflection only, and a glowing volume is shared between
 its own samples and the reflection by Veach's balance heuristic (`Scene.HighlightShareOf` /
-`ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering.
+`ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering. Rough glass
+(`roughness` on something transparent) frosts: `Scene.GetRoughRefraction` bends a fan of rays through visible
+facets, each facet mirroring and passing by the glass's own index, and a lamp behind it glows through it
+(`Microfacets.TransmittedHighlight`) -- given only at the LAST of the glass before the lamp
+(`GetLightReaching`'s `glass` check), so a pane's near face never counts it, and glowing volumes are shared
+there along the straight run out, exactly as for reflection.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
