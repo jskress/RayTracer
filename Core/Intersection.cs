@@ -33,6 +33,20 @@ public class Intersection : IComparable<Intersection>
     public Surface Portal { get; set; }
 
     /// <summary>
+    /// This holds the material the surface is shaded with here: its own, unless the ray that found it
+    /// had already been spread by a rough surface and the surface is a smooth mirror or clear glass,
+    /// in which case it is shaded as a rough one (see <see cref="Scene"/>'s regularizing).  Anything
+    /// asking which surface this is, rather than how it looks, asks <see cref="Surface"/> instead.
+    /// </summary>
+    public Material Material
+    {
+        get => _material ?? Surface.Material ?? Material.Default;
+        set => _material = value;
+    }
+
+    private Material _material;
+
+    /// <summary>
     /// This holds the point of intersection.
     /// </summary>
     public Point Point { get; private set; }

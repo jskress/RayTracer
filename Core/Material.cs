@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Basics;
 using RayTracer.Extensions;
@@ -116,6 +117,35 @@ public class Material
     /// than by Phong's highlight and a perfect mirror.
     /// </summary>
     public bool IsRough => Roughness > 0;
+
+    /// <summary>
+    /// This method returns this material made rough, with the given roughness and everything else as
+    /// it is.  It is what a smooth surface is shaded as when a ray that a rough surface has already
+    /// spread meets it; see <see cref="Scene"/>'s regularizing.
+    /// <para>
+    /// The copy for each roughness is made once and kept, so that a surface met again and again along
+    /// the same path is shaded as one material and not as a new one each time.  It shares this one's
+    /// pigment, interior and everything else, being a copy of the reference to each.
+    /// </para>
+    /// </summary>
+    /// <param name="roughness">The roughness to give it.</param>
+    /// <returns>The rough copy.</returns>
+    public Material RoughAs(double roughness)
+    {
+        LazyInitializer.EnsureInitialized(ref _roughCopies);
+
+        return _roughCopies.GetOrAdd(roughness, value =>
+        {
+            Material copy = (Material) MemberwiseClone();
+
+            copy.Roughness = value;
+            copy._roughCopies = null;
+
+            return copy;
+        });
+    }
+
+    private ConcurrentDictionary<double, Material> _roughCopies;
 
     /// <summary>
     /// This property holds how many directions a rough surface looks in to see what it mirrors, the

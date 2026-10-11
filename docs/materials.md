@@ -192,6 +192,15 @@ directions and averaging: sixteen, unless the scene asks for a different number 
 [`reflection samples`](context.md#rough-reflections).  Only the first rough surface along a ray
 spreads it, so the cost does not multiply between two rough surfaces facing each other.
 
+**What a rough surface shows of a mirror is shaded as rough as the surface.**  A car's gloss paint
+mirrors a lantern sharply; seen in a wet road, that lantern can only be found by chance by the road's
+blurred reflection, and the road under the car comes out sprinkled with glitter.  So a smooth surface
+met in a rough one's reflection — paint, polished stone, chrome, clear glass — is shaded there as if
+it were as rough as the surface showing it, and the lantern in it is shared fairly, as above.  It
+blurs the mirror only where the rough surface already blurs it, by about as much again, which is hard
+to see; looked at directly, a mirror is a mirror.  A transparent shell with the surroundings' own
+index, such as a lantern's, bends nothing and is left alone.
+
 `gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic.
 
 #### Frosted Glass

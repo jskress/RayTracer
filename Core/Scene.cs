@@ -810,7 +810,7 @@ public class Scene : NamedThing, IDisposable
         where TS : struct, ISpectrum<TS>
     {
         TS surfaceColor = TS.Black;
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = RegularizedFor(intersection);
 
         // What a surface lets past, it cannot also show.  The pigment may say so color by color,
         // which is what lets one pattern be a window in some places and a wall in others, so the
@@ -924,7 +924,8 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, ReachingFrom<TS>(intersection, only, glass),
                 intersection.Footprint, intersection.Portal, ownShare,
-                ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass);
+                ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass,
+                intersection.Material);
         }
 
         TS sum = TS.Black;
@@ -938,7 +939,8 @@ public class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, ReachingFrom<TS>(intersection, sample, glass),
                 intersection.Footprint, intersection.Portal, ownShare,
-                ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass);
+                ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass,
+                intersection.Material);
         }
 
         return sum * (1.0 / count);
@@ -1006,7 +1008,7 @@ public class Scene : NamedThing, IDisposable
         if (looksThrough == 0)
             return 1;
 
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.Material;
         double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
         double byLooking = looksThrough * Microfacets.RefractionOdds(
             intersection.Normal, intersection.Eye, sample.Direction, material.Roughness * material.Roughness,
@@ -1049,7 +1051,7 @@ public class Scene : NamedThing, IDisposable
     /// rough.</returns>
     private double? HighlightShareOf(Light light, LightSample sample, Intersection intersection, int looks)
     {
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.Material;
 
         if (!material.IsRough)
             return null;
@@ -1361,7 +1363,7 @@ public class Scene : NamedThing, IDisposable
     public TS GetReflectionColor<TS>(Intersection intersection, int remaining)
         where TS : struct, ISpectrum<TS>
     {
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.Material;
 
         if (remaining < 1 || material.Reflective == 0)
             return TS.Black;
@@ -1408,6 +1410,62 @@ public class Scene : NamedThing, IDisposable
     /// </summary>
     [ThreadStatic]
     private static bool _spreading;
+
+    /// <summary>
+    /// This field holds how rough the roughest surface that has spread the path being followed is, so
+    /// that a smooth surface met further along can be shaded as that rough; see
+    /// <see cref="RegularizedFor"/>.  Nought while nothing has.
+    /// </summary>
+    [ThreadStatic]
+    private static double _spreadRoughness;
+
+    /// <summary>
+    /// This method returns the material to shade a hit with: the surface's own -- unless the ray that
+    /// found it had already been spread by a rough surface and the surface is a smooth mirror or clear
+    /// glass, in which case it is that material made as rough as the roughest surface that spread the
+    /// path.  The material chosen is left on the hit, for everything that shades it after.
+    /// <para>
+    /// **A mirror met after a rough bounce glitters if it stays a mirror.**  A glowing volume seen in a
+    /// rough surface is shared between its own samples and the surface's rays, but only along the
+    /// straight run a ray sets off on (see <see cref="HighlightShareOf"/>).  A ray that a wet road
+    /// spread, mirrored on by a car's paint into a lantern, has left that run, and the lantern's own
+    /// samples cannot be found through a mirror at all -- so only chance finds the lantern there, and
+    /// the road under the car came out sprinkled with specks that no number of samples smoothed away.
+    /// </para>
+    /// <para>
+    /// **So the mirror is made rough for that bounce**, as rough as what spread the ray -- path
+    /// regularization, after Kaplanyan and Dachsbacher.  A rough surface shades a glowing volume both
+    /// ways and shares it, so the lantern in the paint comes out a smooth blur rather than chance hits.
+    /// What it costs is a little more blur in a mirror seen in a rough surface, which already blurs
+    /// everything it shows by as much: the blur grows by about the square root of two, which is hard to
+    /// see.  The camera's own view of a mirror is untouched, and so is any scene with nothing rough in it.
+    /// </para>
+    /// <para>
+    /// Clear glass is frosted the same way.  But a transparent surface at the surroundings' own index is
+    /// left alone: it bends nothing, so there is nothing to blur, and a lantern's shell is one.  Made
+    /// rough, its rays would set off on a run of their own along which the lantern's share could not be
+    /// reckoned, and the lantern would lose the rays' share of its light.
+    /// </para>
+    /// </summary>
+    /// <param name="intersection">The hit about to be shaded.</param>
+    /// <returns>The material to shade it with.</returns>
+    private static Material RegularizedFor(Intersection intersection)
+    {
+        Material material = intersection.Surface.Material ?? Material.Default;
+
+        if (!_spreading || _spreadRoughness <= 0 || material.IsRough)
+            return material;
+
+        bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
+
+        if (transmits ? intersection.N1 == intersection.N2 : material.Reflective <= 0)
+            return material;
+
+        material = material.RoughAs(_spreadRoughness);
+        intersection.Material = material;
+
+        return material;
+    }
 
     /// <summary>
     /// This field holds the straight run a rough surface's reflection is looking along, while it is
@@ -1493,9 +1551,11 @@ public class Scene : NamedThing, IDisposable
         double turnRound = ShiftFor(intersection.Point, 102);
         TS sum = TS.Black;
         bool was = _spreading;
+        double wasRoughness = _spreadRoughness;
         LookingRun? wasLooking = _looking;
 
         _spreading = true;
+        _spreadRoughness = Math.Max(wasRoughness, material.Roughness);
 
         try
         {
@@ -1528,6 +1588,7 @@ public class Scene : NamedThing, IDisposable
         finally
         {
             _spreading = was;
+            _spreadRoughness = wasRoughness;
             _looking = wasLooking;
         }
 
@@ -1557,7 +1618,7 @@ public class Scene : NamedThing, IDisposable
     public TS GetRefractedColor<TS>(Intersection intersection, int remaining)
         where TS : struct, ISpectrum<TS>
     {
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.Material;
 
         // The pigment may say, color by color, how much light gets past it, so where it might,
         // it is sampled and has its say.  Sampled once here and reused for the filter below, since
@@ -1663,6 +1724,7 @@ public class Scene : NamedThing, IDisposable
         TS sum = TS.Black;
         TS aimed = TS.Black;
         bool was = _spreading;
+        double wasRoughness = _spreadRoughness;
         LookingRun? wasLooking = _looking;
         double alpha = material.Roughness * material.Roughness;
 
@@ -1671,9 +1733,12 @@ public class Scene : NamedThing, IDisposable
         // the aimed rays as well as dimming the lamp's; there the rays find the lamp alone, as before.
         NearSide side = intersection.Inside || material.Interior.Medium is not null
             ? null
-            : new NearSide(intersection.Normal, material, alpha, intersection.N1, intersection.N2);
+            : new NearSide(
+                intersection.Normal, intersection.Surface.Material ?? Material.Default, alpha,
+                intersection.N1, intersection.N2);
 
         _spreading = true;
+        _spreadRoughness = Math.Max(wasRoughness, material.Roughness);
 
         try
         {
@@ -1708,6 +1773,7 @@ public class Scene : NamedThing, IDisposable
         finally
         {
             _spreading = was;
+            _spreadRoughness = wasRoughness;
             _looking = wasLooking;
         }
 
@@ -1801,7 +1867,8 @@ public class Scene : NamedThing, IDisposable
                 LightSample sample = light.SampleToward(exit.LitPoint, which, exit.Normal);
                 TS glow = light.GlowThrough(
                     exit.LitPoint, exit.Eye, exit.Normal, exit.Surface, sample,
-                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portal);
+                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portal,
+                    RegularizedFor(exit));
 
                 if (glow.IsBlack)
                     continue;
@@ -1959,11 +2026,21 @@ public class Scene : NamedThing, IDisposable
         TS light = TS.Black;
         double width = (SpectralColor.LongestWavelength - SpectralColor.ShortestWavelength) / TS.Count;
         double shift = ShiftFor(intersection.Point, 0) - 0.5;
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.Material;
         double turnOut = ShiftFor(intersection.Point, 103);
         double turnRound = ShiftFor(intersection.Point, 104);
         (int Band, double Wavelength) was = SingleBand.Carry(0, double.NaN);
         LookingRun? wasLooking = _looking;
+        bool wasSpreading = _spreading;
+        double wasRoughness = _spreadRoughness;
+
+        // Bands bent through rough glass have been spread by it, each through a facet of its own, and
+        // a mirror they meet is shaded as rough as the glass, as after any rough surface.
+        if (material.IsRough)
+        {
+            _spreading = true;
+            _spreadRoughness = Math.Max(wasRoughness, material.Roughness);
+        }
 
         try
         {
@@ -2005,6 +2082,8 @@ public class Scene : NamedThing, IDisposable
         {
             SingleBand.Carry(was.Band, was.Wavelength);
             _looking = wasLooking;
+            _spreading = wasSpreading;
+            _spreadRoughness = wasRoughness;
         }
 
         return light;
