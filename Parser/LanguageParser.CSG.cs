@@ -156,6 +156,9 @@ public partial class LanguageParser
                 case "ribbon":
                     resolver.SurfaceResolvers.Add(ParseRibbonClause(clause));
                     break;
+                case "strand":
+                    resolver.SurfaceResolvers.Add(ParseStrandClause(clause));
+                    break;
                 case "field":
                     resolver.SurfaceResolvers.Add(ParseFieldClause(clause));
                     break;

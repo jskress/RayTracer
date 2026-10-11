@@ -218,6 +218,23 @@ public class RenderInstruction : Instruction
 
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
+            Settle(surface);
+
+            // Hair with no material of its own wears the materials of what it grew from, which are
+            // settled by now -- the very same ones, so they are not settled twice.
+            if (surface.Hair is { } hair)
+            {
+                if (hair.Material is null)
+                    hair.WearWhatItGrewFrom();
+                else
+                    Settle(hair);
+            }
+        }
+
+        return;
+
+        void Settle(Surface surface)
+        {
             // A surface with no material gets one of its own; one whose material only adds decals to
             // whatever it is handed, and was handed nothing, gets the same with its decals on top.
             if (surface.Material is null)

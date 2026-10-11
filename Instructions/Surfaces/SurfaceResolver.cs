@@ -56,6 +56,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public TransformResolver MotionResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the hair the surface grows, if it grows any.
+    /// </summary>
+    public HairGrowthResolver HairResolver { get; set; }
+
+    /// <summary>
     /// This property notes whether this resolver would give the surface a material of its own.
     /// </summary>
     public bool SetsMaterial => MaterialResolver is not null;
@@ -88,6 +93,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
 
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
+        HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 

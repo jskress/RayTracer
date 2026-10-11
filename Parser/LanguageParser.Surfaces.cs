@@ -163,6 +163,9 @@ public partial class LanguageParser
             case "motion":
                 resolver.MotionResolver = ParseMotionClause();
                 break;
+            case "hair":
+                resolver.HairResolver = ParseHairClause();
+                break;
             default:
                 throw new Exception($"Internal error: unknown {noun} property found: {field}.");
         }

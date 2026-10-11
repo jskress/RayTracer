@@ -83,7 +83,12 @@ seeding), and calls `camera.Render(...)`.
 `Geometry/` holds all `Surface` subclasses (`Sphere`, `Plane`, `Cube`, `Cylinder`, `Conic`,
 `Torus`, `Triangle`/`SmoothTriangle`, `Parallelogram`, `Group`, `CsgSurface`, `HeightField`,
 `Extrusion`/`ExtrudedSurface`, `Lathe`, `TextSolid`, and L-system-driven shapes under
-`Geometry/LSystems/`). `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
+`Geometry/LSystems/`).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
+`StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
+A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
+`PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton) and the
+hair is found through the surface -- `Surface.Intersect` asks it, `BoxAround` boxes it in unless
+asked for the true extent, and CSG keeps or drops strand hits without counting them as entered. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
 `Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,

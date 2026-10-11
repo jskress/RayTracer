@@ -139,7 +139,11 @@ public class TestSheetSurfaces
             "Ribbon",
             // A field is a holder too: it fills an outline with copies of something else, and what
             // answers a ray is whichever of those it hit.
-            "Field"
+            "Field",
+            // A strand is hit as a ribbon but shaded as a rod: its normal always faces whoever is
+            // looking, and a ray leaving it sets off from the round surface the shading pretends is
+            // there (see HairIntersection.LeavingPoints), so it is never met from behind.
+            "Strand", "Hair", "HairPart"
         ];
 
         List<string> undecided = [];

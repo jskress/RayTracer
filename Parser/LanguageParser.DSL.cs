@@ -78,15 +78,15 @@ public partial class LanguageParser
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'color',
-            'columns', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
-            'copyright', 'crackle', 'csg', 'cube', 'cubic', 'curve', 'cylinder', 'cylindrical',
+            'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
+            'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
+            'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
-            'grain', 'grayscale', 'group', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'left', 'length',
+            'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
@@ -97,12 +97,12 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
-            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strength', 'stripes', 'sun',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strand', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'temperature', 'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
+            'temperature', 'thickness', 'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'white', 'width', 'with', 'within', 'wood',
+            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -674,11 +674,24 @@ public partial class LanguageParser
         {
             motion > openBrace ?? 'Expecting an open brace to follow "motion" here.'
         }
+        // Hair clauses: what grows on a surface, written inside the surface it grows on.
+        startHairClause:
+        {
+            hair > openBrace ?? 'Expecting an open brace to follow "hair" here.'
+        }
+        hairEntryClause:
+        [
+            { density > _expression } | { count > _expression } | { length > _expression } |
+            { vary > _expression } | { thickness > _expression } | { lean > _expression } |
+            { comb > _expression } | { curl > _expression > { radius > _expression }{?} } |
+            { frizz > _expression } | { clump > _expression > { size > _expression }{?} } |
+            { droop > _expression } | startMaterialClause | withSeedClause
+        ] ?? 'Expecting a hair property here.'
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
-            placementClause
+            startHairClause | placementClause
         ]
         
         // Plane clause.
@@ -1224,6 +1237,20 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Strand clauses: the points a single fiber runs through, each with its width there.
+        startStrandClause:
+        {
+            strand > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "strand" here.'
+        }
+        strandEntryClause:
+        [
+            ribbonPointClause => 'width' |
+            surfaceEntryClause
+        ]
+
         // Sweep clauses.
         startSweepClause:
         {
@@ -1556,6 +1583,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1636,6 +1664,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1694,6 +1723,7 @@ public partial class LanguageParser
             startSwellsClause => 'swells' |
             startTubeClause => 'tube' |
             startRibbonClause => 'ribbon' |
+            startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
             startTextClause => 'text' |
@@ -1789,7 +1819,7 @@ public partial class LanguageParser
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
-                startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startFieldClause |
+                startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
                 startSweepClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
@@ -1829,7 +1859,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | field | sweep | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -1948,6 +1978,7 @@ public partial class LanguageParser
             startSwellsClause         => 'HandleStartSwellsClause' |
             startTubeClause           => 'HandleStartTubeClause' |
             startRibbonClause => 'HandleStartRibbonClause' |
+            startStrandClause => 'HandleStartStrandClause' |
             startFieldClause => 'HandleStartFieldClause' |
             startSweepClause          => 'HandleStartSweepClause' |
             startTextClause           => 'HandleStartTextClause' |

@@ -88,6 +88,25 @@ public abstract class Surface : NamedThing
     public int? GivesLightSamples { get; set; }
 
     /// <summary>
+    /// This property holds a description of the hair this surface grows, or <c>null</c> if it grows
+    /// none.  See <see cref="Geometry.Hair"/>.
+    /// </summary>
+    public HairGrowth HairGrowth { get; set; }
+
+    /// <summary>
+    /// This property holds the hair this surface grows, once it has been readied for rendering and
+    /// grown it.
+    /// <para>
+    /// **The hair is found through the surface rather than standing beside it**, so that wherever the
+    /// surface goes, the hair goes too: it is hit when the surface is asked about a ray, and boxed in
+    /// with it when something holding the surface asks where it is.  Only what the surface really
+    /// covers leaves it out -- placing one thing atop another should set it on the other's skin, not
+    /// on the tips of its fur.
+    /// </para>
+    /// </summary>
+    public Hair Hair { get; private set; }
+
+    /// <summary>
     /// This property holds the transform for the surface for converting from world to
     /// surface space.
     /// </summary>
@@ -157,14 +176,14 @@ public abstract class Surface : NamedThing
     /// This method returns the inverse transform to use for a ray that sees the scene at the given
     /// instant.  A surface that holds still has but the one, whichever instant is asked for.
     /// </summary>
-    private Matrix InverseTransformAt(int timeIndex) =>
+    internal Matrix InverseTransformAt(int timeIndex) =>
         _movingInverses is null ? InverseTransform : _movingInverses[timeIndex];
 
     /// <summary>
     /// This method returns the transposed inverse transform to use for a ray that sees the scene at
     /// the given instant, which is what carries a normal back out to the world.
     /// </summary>
-    private Matrix TransposedInverseTransformAt(int timeIndex) =>
+    internal Matrix TransposedInverseTransformAt(int timeIndex) =>
         _movingTransposedInverses is null
             ? TransformedInverseTransform
             : _movingTransposedInverses[timeIndex];
@@ -221,6 +240,15 @@ public abstract class Surface : NamedThing
         BoundingBox ??= GetDefaultBoundingBox();
 
         BoundingBox?.Expand();
+
+        // Last, since growing hair asks the surface where rays cross it, and that takes everything
+        // above.  Once only: a surface readied again keeps the hair it has.
+        if (HairGrowth is not null && Hair is null)
+        {
+            Hair = Hair.Grow(this, HairGrowth);
+
+            Hair.PrepareForRendering();
+        }
     }
 
     /// <summary>
@@ -286,8 +314,15 @@ public abstract class Surface : NamedThing
     {
         BoundingBox box = new ();
 
+        // The hair is in the surface's own space, under a transform of its own that undoes the
+        // surface's -- see Hair.
+        BoundingBox hair = trueExtent || surface.Hair is null ? null : BoxAround(surface.Hair);
+
         foreach (Matrix transform in surface.TransformsThroughShutter)
         {
+            if (hair is not null)
+                box.Add(hair.TransformedBy(transform));
+
             if (surface.BoundingBox != null)
             {
                 // Taken back to the surface's real extent, and taken back *here* rather than
@@ -426,6 +461,10 @@ public abstract class Surface : NamedThing
     {
         ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
 
+        // The hair reaches beyond the surface's own box, so it is asked before that box can turn the
+        // ray away.
+        Hair?.IntersectWithin(ray, intersections, maxDistance);
+
         if (BoundingBox is not null)
         {
             (double from, double to) = BoundingBox.GetIntersections(ray);
@@ -468,6 +507,8 @@ public abstract class Surface : NamedThing
 
         if (BoundingBox == null || BoundingBox.IsHitBy(ray))
             AddIntersections(ray, intersections);
+
+        Hair?.Intersect(ray, intersections);
     }
 
     /// <summary>
@@ -483,6 +524,8 @@ public abstract class Surface : NamedThing
     internal bool IntersectReportingStart(Ray ray, List<Intersection> intersections)
     {
         ray = InverseTransformAt(ray.TimeIndex).Transform(ray);
+
+        Hair?.Intersect(ray, intersections);
 
         // Anything with a box ends somewhere, so a ray followed back far enough is out of it.
         if (BoundingBox != null)
@@ -638,14 +681,18 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="point">The point to convert.</param>
     /// <param name="timeIndex">Which instant to convert at.</param>
+    /// <param name="portal">The instance the point was found through, if it was.</param>
     /// <returns>The point, in the world's coordinate system.</returns>
-    public Point SurfaceToWorld(Point point, int timeIndex = 0)
+    public Point SurfaceToWorld(Point point, int timeIndex = 0, Surface portal = null)
     {
         Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
 
         point = forward * point;
 
-        return Parent is null ? point : Parent.SurfaceToWorld(point, timeIndex);
+        if (Parent != null)
+            return Parent.SurfaceToWorld(point, timeIndex, portal);
+
+        return portal is null ? point : portal.SurfaceToWorld(point, timeIndex);
     }
 
     /// <summary>

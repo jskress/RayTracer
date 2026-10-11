@@ -401,6 +401,105 @@ thousand blades of grass.
 Two or more points are needed, and the widths are the whole width of the strip rather than a radius —
 unlike a tube, which takes half of one.
 
+### Strand
+
+A single fiber — a hair, a whisker, a thread, a wire too fine to be worth a tube.  It runs smoothly
+through a series of points, each with the strand's width there:
+
+```
+strand {
+    width 0.02 at [0, 0, 0]
+    width 0.012 at [0.1, 0.3, 0]
+    width 0.001 at [0.3, 0.45, 0]
+}
+```
+
+**It is hit as a flat strip that always faces the ray, and shaded as though it were round.**  Where
+across the strip a ray passes says where on a rod of the same width it would have struck, so the
+light falls across a strand as it falls across a rod, and a ray leaving it — toward a light, or as a
+reflection — sets off from that rod's surface rather than from the strip inside it.  Asked only that
+much, a strand is far cheaper than a [`tube`](#tube): it is kept as a handful of numbers rather than
+as surfaces, and that is what lets a scene hold millions of them.
+
+The points are joined by a curve through every one of them, turning smoothly at each, so a few points
+make a smooth bend.  Widths are the whole width rather than a radius, as a ribbon's are, and two or
+more points are needed.
+
+**Strands are rarely written one at a time.**  For fur, a pile or a head of hair, have a surface
+grow them: see [Hair](#hair), next.
+
+### Hair
+
+Hair grown over a surface — fur, a rug's pile, moss, a head of hair.  It is written inside the surface
+it grows on, as one of its properties, and the surface grows it:
+
+![Hair on three surfaces](images/figures/adv-hair.png)
+
+Plain fur on the left, fur combed downward and sagging under its own weight in the middle, and a rug
+whose pile curls and gathers into tufts.  The scene is
+[`docs/examples/advanced/hair.igl`](examples/advanced/hair.igl).
+
+```
+sphere {
+    material { pigment color [0.42, 0.44, 0.50] }
+    hair { density 2500  length 0.35  lean 40  comb [0, -1, 0]  droop 0.4 }
+    scale 0.5
+}
+```
+
+| Property | What it does |
+| --- | --- |
+| `density` | How many strands grow on each unit of the surface's area. |
+| `count` | Exactly how many strands grow, however large the surface.  Say this or `density`, not both. |
+| `length` | How long a strand is.  Always needed. |
+| `vary` | How much one strand's length may differ from another's, as a fraction either way: 0.2 unless said. |
+| `thickness` | How wide a strand is at its root; it tapers to a point.  A fiftieth of its length unless said. |
+| `lean` | How far strands lean from straight out, as an angle: nought stands up, a right angle lies flat. |
+| `comb` | The direction they lean toward, laid along the surface.  Unsaid, each leans its own way. |
+| `curl` | How many turns a strand winds through, root to tip.  `curl 3 radius 0.02` also says how far from its line it winds, which is a twelfth of its length unless said. |
+| `frizz` | How far strands wander, roughly as a fraction of their length. |
+| `clump` | How strongly neighboring strands gather into locks, from nought to one.  `clump 0.6 size 20` also says how many strands make a lock, which is 30 unless said. |
+| `droop` | How far strands sag: one bends a strand until its tip hangs nearly straight down. |
+| `material` | The hair's own material.  Unsaid, each strand wears the material of what it grows from. |
+| `with seed` | Fixes where the strands grow and the way each one goes. |
+
+`lean` is an angle in the scene's own unit, like a rotation's: degrees, unless the scene says
+`angles are radians`.
+
+**Lengths and areas are measured where the surface is placed, not in its own space.**  A cube scaled
+flat into a rug grows a pile of the length asked for, rather than one flattened along with the cube,
+and a density counts strands on each unit of the rug's area as it stands, not the cube's it was made
+from.  So the numbers mean what they look like they mean, however the surface was scaled to size.
+
+**The hair goes wherever its surface goes.**  It is found through the surface, so moving it in a
+group, setting it in [motion](cameras.md#motion-blur) or using it again by name takes the hair
+along.  Placing something [`on`](transforms.md#placing-one-thing-against-another) a furry surface sets
+it on the skin, not on the tips of the fur.
+
+**Roots fall evenly, whatever the surface's shape.**  They are found by casting straight lines at the
+surface from every direction, and lines cast that way cross any patch of any surface as often as any
+other patch of the same area — so the poles of a sphere and every face of a cube get their fair share,
+without the surface having to describe itself.  That works for anything with an end to it: a group, a
+CSG, a mesh, a line of text.  It cannot work for a plane, which goes on forever, and hair on one is an
+error.  A sheet — a disc, a patch — grows hair on the side its normal faces.
+
+**Hair with no material of its own takes the color of its skin.**  Each strand wears the material
+of the part of the surface it grows from, so fur grown over a group whose parts are dressed
+differently comes out in each part's color, even when the group itself has no material.
+
+**On one side of a [CSG](surfaces.md#combining-surfaces), hair shows only where it is outside the
+other side** — fur on one sphere of a union is hidden where it is buried in the other.  Hair grown on
+the CSG itself grows on the combined shape.
+
+**Strands are usually much finer than a pixel**, so a picture of hair wants
+[antialiasing](context.md#anti-aliasing), as the figure's scene asks for.  A strand is shaded with its
+material as a fine rod would be.
+
+**What it costs.**  A strand takes about three hundred bytes, and growing them is quick: a sphere of
+radius one at a density of fifty thousand — over six hundred thousand strands — takes about two
+seconds to grow and render small, and three quarters of a gigabyte.  A surface may grow at most two
+million.
+
 ### Lathe
 
 A path spun about the Y axis.  The path is the silhouette of one side of the finished object,

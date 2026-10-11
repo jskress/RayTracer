@@ -1,0 +1,50 @@
+// Hair, grown over a surface.
+//
+// Left, a ball with plain fur: straight out, a little uneven in length.  Middle, the same ball with its
+// fur combed one way, leaning and sagging under its own weight, as an animal's coat lies.  Right, a
+// slab of a rug whose pile curls and gathers into tufts.  None of the three is told where a strand
+// goes; each says what its hair is like and the surface grows it.
+context {
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.2
+}
+
+camera {
+    location [0, 1.7, -4.6]
+    look at [0, 0.3, 0]
+    field of view 46
+}
+
+point light { location [-4, 6, -5]  color [1, 0.97, 0.92] }
+point light { location [5, 3, -2]   color [0.30, 0.30, 0.36] }
+
+plane {
+    material { pigment checker { color [0.30, 0.30, 0.33], color [0.24, 0.24, 0.27]  scale 0.5 } }
+}
+
+Tawny = material { pigment color [0.72, 0.48, 0.24]  specular 0.25  shininess 30 }
+Slate = material { pigment color [0.42, 0.44, 0.50]  specular 0.25  shininess 30 }
+Wool = material { pigment color [0.62, 0.20, 0.14]  specular 0.1 }
+
+sphere {
+    material Tawny
+    hair { density 2500  length 0.22 }
+    scale 0.5
+    translate [-1.25, 0.5, 0]
+}
+
+sphere {
+    material Slate
+    hair { density 2500  length 0.35  lean 40  comb [0, -1, 0]  droop 0.4 }
+    scale 0.5
+    translate [0, 0.5, 0]
+}
+
+cube {
+    material Wool
+    hair { density 1500  length 0.2  curl 1.5  clump 0.6 size 15  frizz 0.3 }
+    scale [0.55, 0.05, 0.45]
+    rotate Y 30
+    translate [1.3, 0.05, -0.1]
+}
