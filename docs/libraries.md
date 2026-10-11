@@ -711,6 +711,13 @@ glass is only ever seen as a band beneath it.
 what says *painted metal*.  Drop these to a building's `specular 0.05` and the shape stops reading long
 before the color does.
 
+**The clear coat and the glass follow [Fresnel](materials.md#fresnel).**  Lacquer gives back about five
+percent of what meets it square-on and far more at a graze, so a roof seen from above shows its paint and a
+flank seen along the street carries the sky.  Glass does the same from four percent: dark looked into,
+bright looked across.  The [trains](#trains), [aircraft](#aircraft), [vessels](#vessels) and
+[windows and doors](#windows-and-doors) are finished the same way, and their bare and brushed metals —
+satin steel, alloy, foil — are [rough](materials.md#roughness), so what they mirror is blurred.
+
 #### Vessels
 
 ```
@@ -1336,6 +1343,36 @@ let the curb stand out of it.
 The variant picks the surface, and here that is a bigger choice than a color: `0` is new asphalt, nearly
 black; `1` is worn asphalt, grayed and cracked; `2` is concrete, pale and laid in bays.
 
+The season is `'summer'` or `'winter'`, which lays snow along the crown and banks it in the channels — or
+**`'wet'`, the street after rain**.  `'wet'` is this library's alone: the others take a season they do not
+know as their own default, so a rainy scene gives the road pieces `'wet'` and everything else the season
+the rain fell in.
+
+```
+object Road(70, 7, 'wet', 1)
+object Curb(70, 'wet', 1)          { translate Z 3.5 }
+object Pavement(70, 3.2, 'wet', 1) { translate Z 5.3 }
+```
+
+##### After rain
+
+**A wet road is a darker road under a film of water.**  The water soaks into the surface and darkens it —
+wet asphalt returns little more than half the light dry asphalt does — and lies on top as a sheet that
+mirrors what is above it, by [Fresnel](materials.md#fresnel): two percent square-on, as water always does,
+and nearly all of it at a graze.  So a wet street seen along its length is bright with sky and lamps, and
+one seen from above is merely dark.
+
+**The film is not a mirror everywhere.**  Over open asphalt it is thin and follows the grain, so what it
+mirrors is [blurred](materials.md#roughness); in the wheel tracks, polished smooth and worn a little
+hollow, it pools and the reflection comes back nearly sharp; in the channels it is a stream.  So a wet road
+shows its tracks as two long bright streaks and its channels as ribbons, which is what a road after rain
+actually looks like.
+
+**It is dear.**  Every wet surface but the curb is rough, so it looks in `reflection samples` directions
+at every point, and at night each of those lands on something the lamps light.
+`gallery/Local/towns/a-street-after-rain.igl` sets `reflection samples 8` in its context, which halves the
+cost, and with the sampler is still plenty for reflections already blurred into streaks.
+
 ##### What makes a slab into a road
 
 A road is the flattest thing in any of these scenes, so it has the least to work with.
@@ -1721,6 +1758,13 @@ as such.
 
 **A piece stands on `y = 0` and grows upward**, so it drops onto a floor at the origin without a height
 to work out, the same as the [street furniture](#street-furniture) does.
+
+**The wood is finished in satin varnish**, [rough](materials.md#roughness) and following Fresnel, so a
+tabletop seen across a room carries a soft sheen of the window and one seen from above shows its grain.
+The steel is brushed, carrying a blurred picture of the room, and the stone counter is polished.  The
+satin costs: a rough surface looks in sixteen directions, and a kitchen of wooden cabinets renders about
+four times as slowly as it did with a plain highlight.  A draft can say `context { reflection samples 4 }`
+to make it cheap and grainy.
 
 ##### The height does not follow the first number
 

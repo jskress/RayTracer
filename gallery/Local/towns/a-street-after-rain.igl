@@ -1,0 +1,123 @@
+// The street after dark again, after rain.
+//
+//     import 'roads'          { Road, Curb, Pavement }
+//
+//     object Road(70, 7, 'wet', 1)
+//
+// **A wet road is a darker road under a film of water.**  `'wet'` is a season of the `roads` library: the
+// surface soaks the water up and darkens, and the film on top mirrors whatever is above it -- a little
+// looked down into, and more and more toward a graze.  Seen from where a person stands, looking along a
+// street, that graze is most of the road, which is why a wet street at night is lit twice: once by the
+// lamps, and again by their reflections laid down the road toward you.
+//
+// **The reflections are not mirror images, and should not be.**  The film is thin over open asphalt and
+// blurs what it mirrors into long soft streaks; it pools in the wheel tracks, where the reflections come
+// back sharper; and it runs in the channels.  A road that mirrored as crisply as a pond would read as a
+// flooded one.
+//
+// **Only the road pieces are told it is wet.**  The other libraries have no wet season and take any word
+// they do not know as their own default -- `undergrowth`'s is spring -- so the houses, cars, lamps and
+// grass are all given the summer the street had before the rain.
+
+Season = 'summer'
+Weather = 'wet'
+
+import 'outdoor-lights' { StreetLamp, BollardLight }
+import 'buildings'      { House, Row }
+import 'roads'          { Road, Curb, Pavement }
+import 'vehicles'       { Car, Van }
+import 'undergrowth'    { Grass }
+import 'daylight'       { Dusk, DuskLight }
+
+context {
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    parallel pixel scanner
+    angles are degrees
+    medium samples 28
+    // The wet road looks in this many directions at each point, rather than sixteen, and with the
+    // sampler that is still forty or so a pixel -- plenty for a reflection already blurred into streaks.
+    // Every direction lands on something seven lanterns light, so it halves the rain's cost.
+    reflection samples 8
+    // A scene lit by its own lamps wants none of the libraries' ambient; see `a-street-after-dark`.
+    scale ambient by 0
+    info {
+        title 'A Street After Rain'
+        author 'J. Stephen Kress'
+        description 'The street after dark, wet, with its lamps laid down the road in reflections.'
+        copyright true
+        software __software__
+    }
+}
+
+// Low, at about where a person's eyes are, and looking along the street rather than across it: the wet
+// road mirrors at a graze, so the reflections are strongest down a street and all but gone across one.
+camera {
+    location [21, 1.7, -2.6]
+    look at [-12, 1.6, 1.8]
+    field of view 50
+}
+
+background Dusk
+
+light DuskLight { samples 18  color [0.075, 0.095, 0.155] }
+
+plane {
+    material { pigment [0.105, 0.118, 0.088]  specular 0.03  ambient 0.02 }
+    translate Y -0.13
+}
+
+// -- The street ------------------------------------------------------------------------------------
+
+object Road(70, 7, Weather, 1)
+object Curb(70, Weather, 1)                { translate Z 3.5 }
+object Curb(70, Weather, 1) { rotate Y 180  translate Z -3.5 }
+object Pavement(70, 3.2, Weather, 1)       { translate Z 5.3 }
+object Pavement(70, 3.2, Weather, 1)       { translate Z -5.3 }
+
+// -- The lamps -------------------------------------------------------------------------------------
+
+for lamp in [0, 3] {
+    object StreetLamp(5, Season, 0, 1) { translate [lamp * 13 - 20, 0, 4.6] }
+}
+object StreetLamp(5.4, Season, 1, 1) { rotate Y 180  translate [6, 0, -4.6] }
+
+object BollardLight(0.95, Season, 0, 1) { translate [-13.5, 0, 6.6] }
+object BollardLight(0.95, Season, 0, 1) { translate [-11.0, 0, 6.6] }
+
+// -- What the lamps are standing in front of -------------------------------------------------------
+
+object Row(4, Season, 2)      { translate [-9, 0, 12.5] }
+object House(4.4, Season, 0)  { translate [10, 0, 12] }
+object House(4.0, Season, 5)  { translate [17, 0, 12.5] }
+object House(4.2, Season, 3)  { rotate Y 180  translate [-14, 0, -12] }
+object House(3.8, Season, 1)  { rotate Y 180  translate [-6, 0, -12.5] }
+
+// -- The traffic, parked ---------------------------------------------------------------------------
+
+object Car(4.4, Season, 1) { translate [2, 0, -2.2] }
+object Van(5.6, Season, 3) { rotate Y 180  translate [-9, 0, 2.2] }
+object Car(4.5, Season, 4) { translate [-22, 0, -2.2] }
+
+// -- The verges ------------------------------------------------------------------------------------
+
+NearVerge = path {
+    move to -20.6, -10.2
+    line to -0.6, -10.2
+    line to -0.6, -7.2
+    quad -8.0, -6.6 to -14.0, -7.3
+    line to -20.6, -7.0
+    close
+}
+
+FarVerge = path {
+    move to -17.6, 7.0
+    line to 2.4, 7.0
+    line to 2.4, 10.2
+    quad -5.0, 9.6 to -11.0, 10.3
+    line to -17.6, 10.0
+    close
+}
+
+object Grass(NearVerge, Season, 1, 0.4, 0.5) { translate Y -0.13 }
+object Grass(FarVerge, Season, 2, 0.4, 0.5)  { translate Y -0.13 }

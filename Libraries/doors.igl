@@ -54,7 +54,7 @@ DoorShade = material { pigment [0.030, 0.032, 0.036]  specular 0.20  shininess 4
 
 DoorGlass = material {
     pigment [0.090, 0.110, 0.130]
-    specular 0.56  shininess 150  reflective 0.20  ambient 0.05
+    specular 0.56  shininess 150  reflective 0.04  fresnel  ambient 0.05
 }
 
 // The surround is painted stone, the step is stone that is walked on, and the two are not the same tone.

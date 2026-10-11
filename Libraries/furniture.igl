@@ -72,6 +72,13 @@
 // flat-sawn board's cathedral figure comes from -- the arch a plank shows when the saw passed close
 // to the heart of the log -- and it is the difference between a table that is brown and a table that
 // is wooden.
+//
+// **The finish is a satin varnish**: `roughness` over the grain, giving back four percent square-on as
+// a lacquer does and more toward a graze.  So a tabletop seen across the room carries a soft sheen of
+// the window, and one seen from above shows its grain.  Varnish as smooth as glass looked it, too --
+// the chair backs mirrored crisply in the table -- and a satin finish is what furniture actually has.
+// It is the costliest finish in these libraries: a rough surface looks in sixteen directions, and a
+// kitchen of wooden cabinets took four times as long to render with it.
 
 FurnitureOak = material {
     pigment wood {
@@ -82,7 +89,7 @@ FurnitureOak = material {
         rotate Y 90
         translate [0, 26, 0]
     }
-    specular 0.30  shininess 50  ambient 0.12  reflective 0.03
+    reflective 0.04  roughness 0.3  ambient 0.12
 }
 
 // Walnut: darker, for a piece meant to sit apart from the rest of the room.
@@ -95,7 +102,7 @@ FurnitureWalnut = material {
         rotate Y 90
         translate [0, 26, 0]
     }
-    specular 0.36  shininess 65  ambient 0.10  reflective 0.05
+    reflective 0.04  roughness 0.3  ambient 0.10
 }
 
 // Linen, for what a chair is covered in.
@@ -105,14 +112,15 @@ FurnitureLinen = material {
 }
 
 // Stone, for a kitchen counter.  Speckled rather than plain, because a plain counter reads as
-// plastic: what says stone is that the grain is finer than anything else in the room.
+// plastic: what says stone is that the grain is finer than anything else in the room.  Polished, so it
+// mirrors by Fresnel: dark looked down into, bright with the room toward the back of the counter.
 FurnitureStone = material {
     pigment granite {
         [0, [0.13, 0.12, 0.12], 0.42, [0.21, 0.20, 0.19],
          0.74, [0.34, 0.32, 0.30], 1, [0.13, 0.12, 0.12]]
         scale [2.2, 2.2, 2.2]
     }
-    specular 0.55  shininess 140  ambient 0.11  reflective 0.06
+    specular 0.55  shininess 140  ambient 0.11  reflective 0.05  fresnel
 }
 
 // Steel, for the things in a kitchen that are not made of wood.
@@ -122,10 +130,10 @@ FurnitureStone = material {
 // light it went to white and took every edge on the appliance with it: the door lines, the handles
 // and the oven front all disappeared into one blank panel.  A metal is dark and gets its brightness
 // back from what it reflects, which is also the only reason an appliance is recognizable across a
-// room: it carries a dim, distorted picture of that room on its door.
+// room: it carries a dim picture of that room on its door -- blurred, since kitchen steel is brushed.
 FurnitureSteel = material {
     pigment [0.30, 0.31, 0.33]
-    specular 0.70  shininess 190  ambient 0.10  reflective 0.24
+    ambient 0.10  reflective 0.24  roughness 0.3
 }
 
 // -- Dining table ---------------------------------------------------------------------------------

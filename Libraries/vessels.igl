@@ -53,17 +53,17 @@
 // a sheerline is most of what says this is a made thing rather than a carved one.
 VesselWhite = material {
     pigment [0.85, 0.85, 0.82]
-    specular 0.62  shininess 160  ambient 0.13  reflective 0.05
+    specular 0.62  shininess 160  ambient 0.13  reflective 0.05  fresnel
 }
 
 VesselBlue = material {
     pigment [0.09, 0.15, 0.26]
-    specular 0.66  shininess 180  ambient 0.09  reflective 0.07
+    specular 0.66  shininess 180  ambient 0.09  reflective 0.05  fresnel
 }
 
 VesselGreen = material {
     pigment [0.07, 0.17, 0.13]
-    specular 0.64  shininess 170  ambient 0.09  reflective 0.06
+    specular 0.64  shininess 170  ambient 0.09  reflective 0.05  fresnel
 }
 
 // **Below the waterline a hull is red**, and it is worth the second material.  Antifouling is the one
@@ -111,12 +111,12 @@ VesselCanvas = material {
 
 VesselSpar = material {
     pigment [0.72, 0.72, 0.70]
-    specular 0.55  shininess 140  ambient 0.12  reflective 0.10
+    ambient 0.12  reflective 0.10  roughness 0.3
 }
 
 VesselSteel = material {
     pigment [0.24, 0.26, 0.27]
-    specular 0.45  shininess 110  ambient 0.10  reflective 0.14
+    ambient 0.10  reflective 0.14  roughness 0.35
 }
 
 VesselDark = material {

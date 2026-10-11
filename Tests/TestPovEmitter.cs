@@ -145,6 +145,55 @@ public class TestPovEmitter
     }
 
     [TestMethod]
+    public void TestAReflectionThatClimbsByFresnelBecomesItsMost()
+    {
+        // POV-Ray's own glass finishes say how much they mirror at the least and the most, climbing
+        // by Fresnel between them.  The ray tracer's glass climbs by Fresnel already, by its own
+        // index, so the most is the strength -- and with nothing at the least, nothing is lost.  Glass
+        // shares its light between what it mirrors and what it lets through whatever is said, so
+        // `conserve_energy` costs nothing either.
+        string library = Convert("""
+            #declare F_Glass = finish {
+                specular 0.7  roughness 0.001  ambient 0  diffuse 0
+                reflection { 0.0, 1.0 fresnel on }
+                conserve_energy
+            }
+            """, out List<PovIssue> issues);
+
+        StringAssert.Contains(library, "GlassFinish = material {");
+        StringAssert.Contains(library, "reflective 1");
+        Assert.AreEqual(0, issues.Count, string.Join("; ", issues.Select(issue => issue.Reason)));
+    }
+
+    [TestMethod]
+    public void TestWhatAReflectionLosesIsNoted()
+    {
+        // A least above nothing does not come across, and nor does a climb that is not Fresnel's --
+        // POV-Ray's plain variable reflection climbs in a straight line.
+        string library = Convert(
+            "#declare F_Water = finish { reflection { 0.3, 1 fresnel } }", out List<PovIssue> issues);
+
+        StringAssert.Contains(library, "reflective 1");
+        Assert.AreEqual(1, issues.Count);
+        StringAssert.Contains(issues[0].Reason, "least, 0.3");
+
+        Convert("#declare F_Glass9 = finish { reflection { 0.05, 1.0 } }", out issues);
+
+        Assert.AreEqual(2, issues.Count);
+        Assert.IsTrue(issues.Any(issue => issue.Reason.Contains("climb")), "the straight climb was not noted");
+    }
+
+    [TestMethod]
+    public void TestAReflectionOfOneAmountIsThatAmount()
+    {
+        string library = Convert(
+            "#declare F_Shiny = finish { reflection { 0.4 } }", out List<PovIssue> issues);
+
+        StringAssert.Contains(library, "reflective 0.4");
+        Assert.AreEqual(0, issues.Count);
+    }
+
+    [TestMethod]
     public void TestAFinishBecomesAMaterialWithNothingButItsFinish()
     {
         // There is no finish of its own here, so it becomes a material a texture can be built on.

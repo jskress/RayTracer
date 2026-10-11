@@ -45,8 +45,13 @@
 //
 // **Gloss.**  A building is matte and a vehicle is not, and the highlight sliding along a wing is most
 // of what says *painted metal* rather than *painted wood*.  These carry a high `specular`, a tight
-// `shininess` and a little `reflective`; take those away and the shape stops reading long before the
-// color does.
+// `shininess` and a clear coat; take those away and the shape stops reading long before the color does.
+//
+// **The clear coat follows Fresnel.**  Lacquer gives back about five percent of what meets it
+// square-on and far more at a graze, so a roof seen from above shows its paint and a flank seen along
+// the street carries the sky.  A paint mirroring a sixth of everything at every angle, as these first
+// did, came out as a roof washed pale with sky.  The glass is the same with glass's four percent:
+// dark where it is looked into, bright where it is looked across.
 //
 // -- What is here for the library and not for you --------------------------------------------------
 //
@@ -58,16 +63,16 @@
 
 // The gloss is the point; see above.  A paint with these numbers dropped to a building's `specular
 // 0.05` stops reading as a vehicle even with the shape untouched.
-VehicleRed = material { pigment [0.52, 0.11, 0.09]  specular 0.85  shininess 200  reflective 0.16 }
-VehicleBlue = material { pigment [0.13, 0.20, 0.42]  specular 0.85  shininess 200  reflective 0.16 }
-VehicleWhite = material { pigment [0.80, 0.80, 0.79]  specular 0.85  shininess 200  reflective 0.14 }
-VehicleGreen = material { pigment [0.13, 0.28, 0.19]  specular 0.85  shininess 200  reflective 0.16 }
-VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.14 }
-VehicleGray = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.18 }
+VehicleRed = material { pigment [0.52, 0.11, 0.09]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleBlue = material { pigment [0.13, 0.20, 0.42]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleWhite = material { pigment [0.80, 0.80, 0.79]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleGreen = material { pigment [0.13, 0.28, 0.19]  specular 0.85  shininess 200  reflective 0.05  fresnel }
+VehicleSand = material { pigment [0.62, 0.55, 0.36]  specular 0.80  shininess 180  reflective 0.05  fresnel }
+VehicleGray = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 200  reflective 0.05  fresnel }
 
-VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.34 }
+VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.04  fresnel }
 VehicleTire = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
-VehicleHub = material { pigment [0.62, 0.63, 0.66]  specular 0.70  shininess 160  reflective 0.20 }
+VehicleHub = material { pigment [0.62, 0.63, 0.66]  reflective 0.20  roughness 0.25 }
 VehicleChrome = material { pigment [0.70, 0.71, 0.74]  specular 0.95  shininess 300  reflective 0.40 }
 VehicleLamp = material { pigment [0.86, 0.83, 0.71]  specular 0.90  shininess 250 }
 VehicleTail = material { pigment [0.58, 0.06, 0.05]  specular 0.90  shininess 250 }
