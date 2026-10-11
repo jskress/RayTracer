@@ -37,13 +37,13 @@
 
 LampIron = material { pigment [0.085, 0.088, 0.092]  specular 0.34  shininess 70  ambient 0.05 }
 LampPaint = material { pigment [0.130, 0.155, 0.140]  specular 0.30  shininess 60  ambient 0.05 }
-LampAlloy = material { pigment [0.320, 0.330, 0.345]  specular 0.55  shininess 120  reflective 0.14  ambient 0.06 }
+LampAlloy = material { pigment [0.320, 0.330, 0.345]  reflective 0.14  roughness 0.3  ambient 0.06 }
 
 // The glass of a lantern that is not burning: pale, dusty, and not a mirror.  A dark globe reads as a
 // hole in the lamp, which is the commonest way an unlit fitting goes wrong.
 LampGlassCold = material {
     pigment [0.520, 0.520, 0.505]
-    specular 0.44  shininess 110  reflective 0.10  ambient 0.10
+    reflective 0.04  roughness 0.5  ambient 0.10
 }
 
 // The shell an emissive medium lives in -- see `fire`, which does the same thing with flames.
@@ -237,9 +237,18 @@ primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
                     quad radius height * 0.014 at [height * 0.10, height * 1.00, 0]
                          radius height * 0.013 at [height * 0.22, height * 1.01, 0]
                 }
-                // The cobra head.
+                // The cobra head, and the glow in it.
+                //
+                // **The glow hangs below the hood as a flat lens, and the hood is dark.**  The glow was a
+                // ball half inside the hood once, and the hood's underside then sat in the middle of it,
+                // lit hundreds of times brighter than white.  Seen directly that is only a white blob
+                // beside a white lamp, but a wet road mirrors it -- and since the hood is not a light,
+                // the road's blurred reflection can find it only by chance, so the street under the lamp
+                // glittered.  Out of the glow and painted dark, as the period lantern's iron is, the hood
+                // is lit like everything else near a lamp.  The lens keeps the ball's volume, so the
+                // lamp gives the same light.
                 superellipsoid {
-                    material LampAlloy
+                    material LampIron
                     east 0.45  north 0.35
                     scale [height * 0.085, height * 0.022, height * 0.038]
                     translate [height * 0.29, height * 1.005, 0]
@@ -249,7 +258,7 @@ primitive StreetLamp(height, season = 'summer', variant = 1, lit = 0) -> group {
                 object LampGlobe(height * 0.030, lit)
                     { scale [1, 0.55, 1]  translate [height * 0.29, height * 0.988, 0] }
                 object LampFlame(height * 0.040, lit, variant, 24)
-                    { translate [height * 0.29, height * 0.985, 0] }
+                    { scale [1.8, 0.45, 1.2]  translate [height * 0.29, height * 0.961, 0] }
                 object LampSnow(season, height * 0.070) { on 'hood' }
             }
         }

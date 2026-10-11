@@ -44,18 +44,20 @@
 
 // -- What a window is made of ----------------------------------------------------------------------
 
-// Glass is dark and a little reflective rather than transparent, which is what a window looks like from
-// outside in daylight: what you see is the sky it reflects, not the room behind it.
+// Glass is dark and reflective rather than transparent, which is what a window looks like from outside
+// in daylight: the room behind it is too dim to show, and what you see is what the glass mirrors.  How
+// much it mirrors follows Fresnel -- four percent square-on, nearly all of it at a graze -- so a window
+// faced head-on is dark, and the windows of a wall seen along the street fill with sky.
 WindowGlass = material {
     pigment [0.075, 0.095, 0.115]
-    specular 0.58  shininess 150  reflective 0.22  ambient 0.04
+    specular 0.58  shininess 150  reflective 0.04  fresnel  ambient 0.04
 }
 
 // A shade lighter, for glass with a room's worth of nothing behind it -- the upper lights of a stair
 // window, say, where there is no curtain to darken it.
 WindowGlassPale = material {
     pigment [0.105, 0.125, 0.148]
-    specular 0.60  shininess 160  reflective 0.26  ambient 0.05
+    specular 0.60  shininess 160  reflective 0.04  fresnel  ambient 0.05
 }
 
 // Three paints, so a street does not come out as one window repeated.

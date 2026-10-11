@@ -1728,7 +1728,7 @@ public class TestShippedLibraries
             Path.Combine(_directory, "roads.igl"), true);
 
         foreach (string piece in RoadPieces)
-        foreach (string season in (string[]) ["summer", "winter"])
+        foreach (string season in (string[]) ["summer", "winter", "wet"])
         foreach (int variant in (int[]) [0, 1, 2])
         {
             Assert.IsNull(Lay(piece, season, variant),
@@ -1774,6 +1774,82 @@ public class TestShippedLibraries
         Assert.IsTrue(brightness[1] < brightness[2] - 0.01,
             $"worn asphalt came out at {brightness[1]:F3} against concrete at {brightness[2]:F3}, and " +
             "concrete is meant to be the palest surface the library offers");
+    }
+
+    [TestMethod]
+    public void TestAWetRoadIsDarkerFromAboveAndBrightAtAGraze()
+    {
+        // The library's account of a wet road is two claims, and each half would break alone.  Water
+        // soaks in and darkens the surface, so looked down on, a wet road is darker than a dry one; and
+        // the film on top mirrors by Fresnel, so looked across at a graze, it is brighter, carrying the
+        // sky.  A wet road that only darkened would read as a dirty one, and one that only mirrored as a
+        // dry road with a sheen.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "roads.igl"),
+            Path.Combine(_directory, "roads.igl"), true);
+
+        foreach (int variant in (int[]) [0, 1, 2])
+        {
+            const string above = "location [0, 10, -6]  look at [0, 0, 0]";
+            const string graze = "location [0, 0.5, -16]  look at [0, 0, 0]";
+            (double dryAbove, double wetAbove) = DryAndWet(variant, above);
+            (double dryGraze, double wetGraze) = DryAndWet(variant, graze);
+
+            Assert.IsTrue(wetAbove < dryAbove * 0.85,
+                $"variant {variant} from above: wet {wetAbove:F4} against dry {dryAbove:F4}");
+            Assert.IsTrue(wetGraze > dryGraze * 1.15,
+                $"variant {variant} at a graze: wet {wetGraze:F4} against dry {dryGraze:F4}");
+        }
+    }
+
+    /// <summary>
+    /// Lays a road dry and wet, seen from the given place under a bright sky, and returns how bright the
+    /// road itself is in each: the pixels where the dry picture shows something other than the sky.
+    /// </summary>
+    private (double Dry, double Wet) DryAndWet(int variant, string camera)
+    {
+        Canvas dry = RoadPicture("summer", variant, camera);
+        Canvas wet = RoadPicture("wet", variant, camera);
+        double dryTotal = 0;
+        double wetTotal = 0;
+        int counted = 0;
+
+        for (int x = 0; x < dry.Width; x++)
+        for (int y = 0; y < dry.Height; y++)
+        {
+            // The sky's red is 0.5, as near as eight bits hold it.
+            if (Math.Abs(dry.GetPixel(x, y).Red - 0.5) < 0.004)
+                continue;
+
+            dryTotal += dry.GetPixel(x, y).Red;
+            wetTotal += wet.GetPixel(x, y).Red;
+            counted++;
+        }
+
+        Assert.IsTrue(counted > 100, $"too little road was seen from {camera}: {counted} pixels");
+
+        return (dryTotal / counted, wetTotal / counted);
+    }
+
+    /// <summary>
+    /// Lays a road in the given season and returns the picture of it.
+    /// </summary>
+    private Canvas RoadPicture(string season, int variant, string camera)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'roads' { Road }
+            context { angles are degrees  no gamma }
+            camera { {{camera}}  field of view 40 }
+            point light { location [-10, 14, -14] }
+            background [0.5, 0.6, 0.8]
+            object Road(30, 7, '{{season}}', {{variant}})
+            """);
+
+        Assert.IsNull(Render(scene, 80, 60), $"the {season} road should lay");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
     }
 
     /// <summary>
@@ -1912,7 +1988,7 @@ public class TestShippedLibraries
             """
             WindowGlass = material {
                 pigment [0.075, 0.095, 0.115]
-                specular 0.58  shininess 150  reflective 0.22  ambient 0.04
+                specular 0.58  shininess 150  reflective 0.04  fresnel  ambient 0.04
             }
             """.Replace("\n            ", "\n").Trim(),
             "WindowGlass = material { pigment [1, 0, 1]  ambient 1  diffuse 0  specular 0 }"));

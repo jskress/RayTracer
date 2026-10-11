@@ -69,11 +69,11 @@ RoomBrass = material {
 }
 RoomBronze = material {
     pigment [0.20, 0.16, 0.12]
-    specular 0.44  shininess 90  reflective 0.10  ambient 0.05
+    reflective 0.10  roughness 0.35  ambient 0.05
 }
 RoomSteel = material {
     pigment [0.42, 0.44, 0.46]
-    specular 0.58  shininess 130  reflective 0.20  ambient 0.06
+    reflective 0.20  roughness 0.3  ambient 0.06
 }
 RoomCeramic = material {
     pigment [0.78, 0.74, 0.68]

@@ -35,7 +35,7 @@ public partial class PovEmitter
     /// </summary>
     private static readonly HashSet<string> IgnorableProperties =
     [
-        "irid", "conserve_energy", "fresnel", "reflection_exponent", "subsurface", "iridescence",
+        "irid", "fresnel", "reflection_exponent", "subsurface", "iridescence",
         "caustics", "dispersion", "dispersion_samples", "fade_power", "fade_color", "fade_color",
         "phong_albedo", "specular_albedo", "diffuse_albedo", "use_alpha", "no_radiosity"
     ];
@@ -295,6 +295,11 @@ public partial class PovEmitter
 
                     break;
 
+                case PovBlock { Kind: "reflection" } reflection:
+                    CollectReflection(reflection, parts, declaration);
+
+                    break;
+
                 case PovBlock inner:
                     throw new PovEmitException(
                         $"We cannot express a \"{inner.Kind}\" inside a finish.", inner.Line);
@@ -321,6 +326,13 @@ public partial class PovEmitter
 
         switch (property.Name)
         {
+            case "conserve_energy":
+                // POV-Ray's way of saying that light a surface mirrors is not also its own color.  The
+                // ray tracer's glass always shares its light that way, between what it mirrors and
+                // what it lets through, so there is nothing to say -- and every finish in POV-Ray's
+                // own files that asks for this is a glass's or water's.
+                break;
+
             case "metallic":
                 // Both languages let the amount be left off, meaning fully metallic, but the ray
                 // tracer's grammar then takes whatever property comes next as the amount, so the
@@ -353,6 +365,87 @@ public partial class PovEmitter
             default:
                 throw new PovEmitException(
                     $"We cannot express \"{property.Name}\" in a finish.", property.Line);
+        }
+    }
+
+    /// <summary>
+    /// This method reads POV-Ray's variable reflection: the least and the most a finish mirrors, and
+    /// how it climbs from the one to the other as the surface turns away from the eye.
+    /// <para>
+    /// Every one of these in POV-Ray's own files is a glass's or water's, and the ray tracer's glass
+    /// already climbs the way Fresnel says, by its own index, from what it mirrors square-on to all
+    /// of it at a graze.  So the most is what is written, as the strength the index then shares out.
+    /// A least above nothing, or a climb that is not Fresnel's, is noted as not having come across.
+    /// </para>
+    /// </summary>
+    /// <param name="block">The reflection block.</param>
+    /// <param name="parts">The pile to add to.</param>
+    /// <param name="declaration">The declaration being written, for reporting.</param>
+    private void CollectReflection(PovBlock block, TextureParts parts, PovDeclaration declaration)
+    {
+        List<double> amounts = [];
+        bool fresnel = false;
+
+        foreach (IPovItem item in block.Items)
+        {
+            switch (item)
+            {
+                case PovProperty { Name: "fresnel" } property:
+                    fresnel = property.Value is not PovNumber { Value: 0 };
+
+                    break;
+
+                // `fresnel on` is read as two words, the second a word of its own.
+                case PovProperty { Name: "on" or "true" or "yes" }:
+                    break;
+
+                case PovProperty { Name: "off" or "false" or "no" }:
+                    fresnel = false;
+
+                    break;
+
+                case PovProperty property:
+                    Report(declaration, property.Line,
+                        $"The reflection's \"{property.Name}\" did not come across; the ray tracer has no " +
+                        "answer for it.");
+
+                    break;
+
+                case PovNumber number:
+                    amounts.Add(number.Value);
+
+                    break;
+
+                case PovVector vector:
+                    amounts.Add((vector.Red + vector.Green + vector.Blue) / 3);
+
+                    break;
+
+                default:
+                    throw new PovEmitException("A reflection we cannot read.", block.Line);
+            }
+        }
+
+        if (amounts.Count is 0 or > 2)
+            throw new PovEmitException("A reflection we cannot read.", block.Line);
+
+        parts.Finish["reflective"] = IglWriter.Number(amounts[^1]);
+
+        if (amounts.Count < 2)
+            return;
+
+        if (amounts[0] > 0)
+        {
+            Report(declaration, block.Line,
+                $"The reflection's least, {IglWriter.Number(amounts[0])}, did not come across; glass " +
+                "mirrors by its own index, from what it mirrors square-on.");
+        }
+
+        if (!fresnel)
+        {
+            Report(declaration, block.Line,
+                "The reflection's climb from its least to its most did not come across; glass climbs " +
+                "by Fresnel here.");
         }
     }
 

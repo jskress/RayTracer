@@ -280,14 +280,16 @@ public abstract class Light : NamedThing
     /// surface that lets light through: its facets then mirror by its own index rather than by
     /// <see cref="Material.Reflective"/> alone, and a lamp on the far side glows through it.  Null for
     /// any other surface.</param>
+    /// <param name="material">The material to shade with, where it is not the surface's own; see
+    /// <see cref="Intersection.Material"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1,
-        double? highlightShare = null, (double Near, double Far)? glass = null)
+        double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null)
         where TS : struct, ISpectrum<TS>
     {
-        Material material = surface.Material ?? Material.Default;
+        material ??= surface.Material ?? Material.Default;
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
         TS pigmentColor = TS.FromReflectance(
@@ -418,14 +420,17 @@ public abstract class Light : NamedThing
     /// <param name="glass">The indices of refraction on the eye's side and the far side.</param>
     /// <param name="footprint">How much of the surface the ray that found this point covers there.</param>
     /// <param name="portal">The instance this point was found through, if any.</param>
+    /// <param name="material">The material to shade with, where it is not the surface's own; see
+    /// <see cref="Intersection.Material"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <returns>The glow, or black where there is none.</returns>
     public TS GlowThrough<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample, TS lightReaching,
-        (double Near, double Far) glass, Footprint footprint = null, Surface portal = null)
+        (double Near, double Far) glass, Footprint footprint = null, Surface portal = null,
+        Material material = null)
         where TS : struct, ISpectrum<TS>
     {
-        Material material = surface.Material ?? Material.Default;
+        material ??= surface.Material ?? Material.Default;
         double intensity = sample.Cone * FadingOver(sample.Distance);
         TS reaching = intensity == 1 ? lightReaching : lightReaching * intensity;
 

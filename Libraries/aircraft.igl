@@ -53,17 +53,17 @@
 
 AircraftWhite = material {
     pigment [0.88, 0.88, 0.86]
-    specular 0.55  shininess 150  ambient 0.16  reflective 0.06
+    specular 0.55  shininess 150  ambient 0.16  reflective 0.05  fresnel
 }
 
 AircraftBlue = material {
     pigment [0.10, 0.20, 0.42]
-    specular 0.60  shininess 170  ambient 0.11  reflective 0.08
+    specular 0.60  shininess 170  ambient 0.11  reflective 0.05  fresnel
 }
 
 AircraftRed = material {
     pigment [0.48, 0.10, 0.11]
-    specular 0.58  shininess 165  ambient 0.11  reflective 0.07
+    specular 0.58  shininess 165  ambient 0.11  reflective 0.05  fresnel
 }
 
 // Bare metal, for a cowling or a spinner.  Dark, for the reason the [furniture](#furniture)'s steel is:
@@ -71,12 +71,12 @@ AircraftRed = material {
 // under a working light and takes every edge with it.
 AircraftMetal = material {
     pigment [0.34, 0.35, 0.37]
-    specular 0.72  shininess 200  ambient 0.11  reflective 0.26
+    ambient 0.11  reflective 0.26  roughness 0.25
 }
 
 AircraftGlass = material {
     pigment [0.06, 0.09, 0.13]
-    specular 0.80  shininess 220  ambient 0.08  reflective 0.30
+    specular 0.80  shininess 220  ambient 0.08  reflective 0.04  fresnel
 }
 
 AircraftTire = material {

@@ -39,6 +39,14 @@
 // | `1` | Worn asphalt: grayed by the sun, the aggregate showing, and cracked. |
 // | `2` | Concrete: pale, and jointed rather than continuous. |
 //
+// -- What time of year -----------------------------------------------------------------------------
+//
+// `'winter'` lays snow along the crown and banks it in the channels, and **`'wet'` is the street after
+// rain**: every surface darker, under a film of water that mirrors the sky and the lamps -- see the note
+// on the wet materials below.  Anything else is a dry road.  `'wet'` is this library's alone; the others
+// take a season they do not know as their own default, so a rainy scene gives the road pieces `'wet'`
+// and everything else the season the rain fell in.
+//
 // -- What makes a slab into a road -----------------------------------------------------------------
 //
 // The other libraries each ask this.  A road is the flattest thing in any of these scenes, so it has
@@ -73,28 +81,30 @@
 
 // New asphalt.  The speckle is the aggregate, and it is fine and low-contrast because in a new surface
 // the stone is still buried -- what you see is binder with a hint of grain under it.
+RoadNewAsphaltPigment = pigment granite with seed 13 {
+    [0.06, color [0.038, 0.038, 0.042],
+     0.16, color [0.048, 0.048, 0.053],
+     0.22, color [0.056, 0.056, 0.062],
+     0.30, color [0.066, 0.066, 0.072],
+     0.41, color [0.080, 0.080, 0.087]]
+    scale 0.05
+}
 RoadNewAsphalt = material {
-    pigment granite with seed 13 {
-        [0.06, color [0.038, 0.038, 0.042],
-         0.16, color [0.048, 0.048, 0.053],
-         0.22, color [0.056, 0.056, 0.062],
-         0.30, color [0.066, 0.066, 0.072],
-         0.41, color [0.080, 0.080, 0.087]]
-        scale 0.05
-    }
+    pigment RoadNewAsphaltPigment
     specular 0.10  shininess 22  ambient 0.05  brilliance 1.2
 }
 
 // The same, polished by tires: no lighter, but glossier, which is what a wheel track actually is.
+RoadNewTrackPigment = pigment granite with seed 13 {
+    [0.06, color [0.034, 0.034, 0.038],
+     0.16, color [0.042, 0.042, 0.047],
+     0.22, color [0.049, 0.049, 0.055],
+     0.30, color [0.058, 0.058, 0.065],
+     0.41, color [0.070, 0.070, 0.078]]
+    scale 0.05
+}
 RoadNewTrack = material {
-    pigment granite with seed 13 {
-        [0.06, color [0.034, 0.034, 0.038],
-         0.16, color [0.042, 0.042, 0.047],
-         0.22, color [0.049, 0.049, 0.055],
-         0.30, color [0.058, 0.058, 0.065],
-         0.41, color [0.070, 0.070, 0.078]]
-        scale 0.05
-    }
+    pigment RoadNewTrackPigment
     specular 0.16  shininess 40  reflective 0.03  ambient 0.05  brilliance 1.2
 }
 
@@ -116,92 +126,99 @@ RoadNewTrack = material {
 // the 55 cm they started at, because the top few per cent of crackle is a *ring* around every wall
 // rather than a line: at 55 cm those rings render as dark blobs, and only at 20 cm do they read as
 // cracking.  The turbulence came down with them, since smearing a ring only makes it a wider ring.
+RoadWornAsphaltPigment = pigment crackle with seed 21 {
+    turbulence 0.12
+    [0.04, color [0.152, 0.150, 0.146],
+     0.24, color [0.163, 0.161, 0.156],
+     0.38, color [0.150, 0.148, 0.144],
+     0.46, color [0.114, 0.112, 0.110],
+     0.60, color [0.052, 0.051, 0.050]]
+    scale 0.20
+}
 RoadWornAsphalt = material {
-    pigment crackle with seed 21 {
-        turbulence 0.12
-        [0.04, color [0.152, 0.150, 0.146],
-         0.24, color [0.163, 0.161, 0.156],
-         0.38, color [0.150, 0.148, 0.144],
-         0.46, color [0.114, 0.112, 0.110],
-         0.60, color [0.052, 0.051, 0.050]]
-        scale 0.20
-    }
+    pigment RoadWornAsphaltPigment
     specular 0.06  shininess 14  ambient 0.055  brilliance 1.25
 }
 
+RoadWornTrackPigment = pigment crackle with seed 21 {
+    turbulence 0.12
+    [0.04, color [0.130, 0.129, 0.126],
+     0.24, color [0.140, 0.139, 0.136],
+     0.38, color [0.128, 0.127, 0.124],
+     0.46, color [0.098, 0.097, 0.095],
+     0.60, color [0.046, 0.045, 0.044]]
+    scale 0.20
+}
 RoadWornTrack = material {
-    pigment crackle with seed 21 {
-        turbulence 0.12
-        [0.04, color [0.130, 0.129, 0.126],
-         0.24, color [0.140, 0.139, 0.136],
-         0.38, color [0.128, 0.127, 0.124],
-         0.46, color [0.098, 0.097, 0.095],
-         0.60, color [0.046, 0.045, 0.044]]
-        scale 0.20
-    }
+    pigment RoadWornTrackPigment
     specular 0.13  shininess 34  reflective 0.02  ambient 0.055  brilliance 1.25
 }
 
 // Concrete: pale, and the aggregate in it is coarser than asphalt's because there is no binder hiding it.
+RoadConcretePigment = pigment granite with seed 29 {
+    [0.06, color [0.225, 0.223, 0.212],
+     0.16, color [0.262, 0.259, 0.246],
+     0.22, color [0.288, 0.285, 0.271],
+     0.30, color [0.318, 0.314, 0.298],
+     0.41, color [0.355, 0.351, 0.333]]
+    scale 0.09
+}
 RoadConcrete = material {
-    pigment granite with seed 29 {
-        [0.06, color [0.225, 0.223, 0.212],
-         0.16, color [0.262, 0.259, 0.246],
-         0.22, color [0.288, 0.285, 0.271],
-         0.30, color [0.318, 0.314, 0.298],
-         0.41, color [0.355, 0.351, 0.333]]
-        scale 0.09
-    }
+    pigment RoadConcretePigment
     specular 0.05  shininess 12  ambient 0.06  brilliance 1.3
 }
 
+RoadConcreteTrackPigment = pigment granite with seed 29 {
+    [0.06, color [0.195, 0.193, 0.184],
+     0.16, color [0.228, 0.225, 0.214],
+     0.22, color [0.250, 0.247, 0.235],
+     0.30, color [0.276, 0.273, 0.259],
+     0.41, color [0.308, 0.305, 0.289]]
+    scale 0.09
+}
 RoadConcreteTrack = material {
-    pigment granite with seed 29 {
-        [0.06, color [0.195, 0.193, 0.184],
-         0.16, color [0.228, 0.225, 0.214],
-         0.22, color [0.250, 0.247, 0.235],
-         0.30, color [0.276, 0.273, 0.259],
-         0.41, color [0.308, 0.305, 0.289]]
-        scale 0.09
-    }
+    pigment RoadConcreteTrackPigment
     specular 0.12  shininess 30  reflective 0.02  ambient 0.06  brilliance 1.3
 }
 
 // The silt against a curb: grit, dust and whatever the last rain left.  Browner than the road, always.
+RoadEdgeDirtPigment = pigment granite with seed 37 {
+    turbulence 0.2
+    [0.08, color [0.072, 0.066, 0.056],
+     0.20, color [0.096, 0.088, 0.073],
+     0.30, color [0.122, 0.111, 0.092],
+     0.42, color [0.150, 0.136, 0.112]]
+    scale 0.22
+}
 RoadEdgeDirt = material {
-    pigment granite with seed 37 {
-        turbulence 0.2
-        [0.08, color [0.072, 0.066, 0.056],
-         0.20, color [0.096, 0.088, 0.073],
-         0.30, color [0.122, 0.111, 0.092],
-         0.42, color [0.150, 0.136, 0.112]]
-        scale 0.22
-    }
+    pigment RoadEdgeDirtPigment
     specular 0.03  shininess 9  ambient 0.055  brilliance 1.3
 }
 
 // Curbstone and paving: the same cast concrete, a shade apart so the two do not merge into one gray mass.
+RoadCurbStonePigment = pigment granite with seed 43 {
+    [0.06, color [0.235, 0.232, 0.222],
+     0.16, color [0.276, 0.272, 0.259],
+     0.22, color [0.302, 0.298, 0.284],
+     0.30, color [0.334, 0.329, 0.313],
+     0.41, color [0.372, 0.367, 0.349]]
+    scale 0.10
+}
 RoadCurbStone = material {
-    pigment granite with seed 43 {
-        [0.06, color [0.235, 0.232, 0.222],
-         0.16, color [0.276, 0.272, 0.259],
-         0.22, color [0.302, 0.298, 0.284],
-         0.30, color [0.334, 0.329, 0.313],
-         0.41, color [0.372, 0.367, 0.349]]
-        scale 0.10
-    }
+    pigment RoadCurbStonePigment
     specular 0.06  shininess 16  ambient 0.06  brilliance 1.3
 }
 
+RoadSlabPigment = pigment granite with seed 47 {
+    [0.06, color [0.205, 0.203, 0.196],
+     0.16, color [0.242, 0.239, 0.230],
+     0.22, color [0.266, 0.263, 0.253],
+     0.30, color [0.295, 0.291, 0.280],
+     0.41, color [0.330, 0.326, 0.313]]
+    scale 0.13
+}
 RoadSlab = material {
-    pigment granite with seed 47 {
-        [0.06, color [0.205, 0.203, 0.196],
-         0.16, color [0.242, 0.239, 0.230],
-         0.22, color [0.266, 0.263, 0.253],
-         0.30, color [0.295, 0.291, 0.280],
-         0.41, color [0.330, 0.326, 0.313]]
-        scale 0.13
-    }
+    pigment RoadSlabPigment
     specular 0.05  shininess 14  ambient 0.06  brilliance 1.3
 }
 
@@ -222,6 +239,63 @@ RoadSnow = material {
     pigment [0.90, 0.92, 0.96]  specular 0.24  shininess 50  ambient 0.10
 }
 
+// -- After rain ------------------------------------------------------------------------------------
+
+// **A wet road is a darker road under a film of water**, and both halves matter.  The water soaks into
+// the surface and darkens it -- wet asphalt returns little more than half the light dry asphalt does --
+// and lies on top as a sheet that mirrors what is above it: two percent square-on, as water always
+// does, and nearly all of it at a graze, which is why a wet street seen along its length is bright with
+// sky and lamps and one seen from above is merely dark.
+//
+// **The film is not a mirror everywhere.**  Over open asphalt it is thin and follows the grain, so what it
+// mirrors is blurred; in the wheel tracks, polished smooth and worn a little hollow, it pools, and there
+// the reflection comes back nearly sharp; in the channels, where the water runs to the drains, it is a
+// stream.  So a wet road shows its wheel tracks as two long bright streaks and its channels as ribbons,
+// which is what a road after rain actually looks like -- and which a single wet material would lose.
+// All but the curb are rough surfaces, so each looks in sixteen directions: a wet street costs several
+// times a dry one to render.
+RoadNewAsphaltWet = material {
+    pigment RoadNewAsphaltPigment
+    diffuse 0.5  ambient 0.03  brilliance 1.2  reflective 0.02  roughness 0.2
+}
+RoadNewTrackWet = material {
+    pigment RoadNewTrackPigment
+    diffuse 0.5  ambient 0.03  brilliance 1.2  reflective 0.02  roughness 0.07
+}
+RoadWornAsphaltWet = material {
+    pigment RoadWornAsphaltPigment
+    diffuse 0.5  ambient 0.033  brilliance 1.25  reflective 0.02  roughness 0.25
+}
+RoadWornTrackWet = material {
+    pigment RoadWornTrackPigment
+    diffuse 0.5  ambient 0.033  brilliance 1.25  reflective 0.02  roughness 0.09
+}
+RoadConcreteWet = material {
+    pigment RoadConcretePigment
+    diffuse 0.55  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.2
+}
+RoadConcreteTrackWet = material {
+    pigment RoadConcreteTrackPigment
+    diffuse 0.55  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.09
+}
+RoadEdgeDirtWet = material {
+    pigment RoadEdgeDirtPigment
+    diffuse 0.45  ambient 0.033  brilliance 1.3  reflective 0.02  roughness 0.05
+}
+// The curb's face is smooth stone with water running down it, and mirrors sharply rather than in a blur.
+// A rough wet curb, seen almost edge-on from where a person stands, glittered with the lamps opposite.
+RoadCurbStoneWet = material {
+    pigment RoadCurbStonePigment
+    diffuse 0.6  ambient 0.036  brilliance 1.3  specular 0.06  shininess 16  reflective 0.02  fresnel
+}
+RoadSlabWet = material {
+    pigment RoadSlabPigment
+    diffuse 0.6  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.3
+}
+RoadPaintWet = material {
+    pigment [0.545, 0.535, 0.495]  diffuse 0.75  ambient 0.06  reflective 0.02  roughness 0.15
+}
+
 // -- Choosing a surface ----------------------------------------------------------------------------
 
 primitive RoadPlainOf(variant) -> material {
@@ -240,18 +314,77 @@ primitive RoadTrackOf(variant) -> material {
     }
 }
 
+primitive RoadWetPlainOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoadNewAsphaltWet }
+        case 1 { return material RoadWornAsphaltWet }
+        default { return material RoadConcreteWet }
+    }
+}
+
+primitive RoadWetTrackOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material RoadNewTrackWet }
+        case 1 { return material RoadWornTrackWet }
+        default { return material RoadConcreteTrackWet }
+    }
+}
+
+// The surfaces again, by season: a wet road has its own, and every other season the dry ones.
+primitive RoadPlainIn(variant, season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadWetPlainOf(variant) }
+        default { return material RoadPlainOf(variant) }
+    }
+}
+
+primitive RoadTrackIn(variant, season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadWetTrackOf(variant) }
+        default { return material RoadTrackOf(variant) }
+    }
+}
+
+primitive RoadEdgeDirtIn(season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadEdgeDirtWet }
+        default { return material RoadEdgeDirt }
+    }
+}
+
+primitive RoadCurbStoneIn(season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadCurbStoneWet }
+        default { return material RoadCurbStone }
+    }
+}
+
+primitive RoadSlabIn(season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadSlabWet }
+        default { return material RoadSlab }
+    }
+}
+
+primitive RoadPaintIn(season) -> material {
+    switch (season) {
+        case 'wet' { return material RoadPaintWet }
+        default { return material RoadPaint }
+    }
+}
+
 // Whether a strip of the carriageway is a wheel track.
 //
 // `across` is nought at the crown and one at the channel.  A lane sits centered on half of that, and a
 // car's wheels run about three quarters of a meter either side of the lane's middle -- so on a
 // seven-meter road the tracks land near 0.29 and 0.71, which is a band either side of 0.5.  Everything
 // else stays matte: the crown, the middle of each lane, and the channel.
-primitive RoadSurfaceAt(variant, across) -> material {
+primitive RoadSurfaceAt(variant, across, season) -> material {
     if (abs(across - 0.5) > 0.08 and abs(across - 0.5) < 0.35) {
-        return material RoadTrackOf(variant)
+        return material RoadTrackIn(variant, season)
     }
     else {
-        return material RoadPlainOf(variant)
+        return material RoadPlainIn(variant, season)
     }
 }
 
@@ -323,7 +456,7 @@ function RoadJointOf(variant) -> number {
 
 // The carriageway itself -- body, wearing course and the silt in the channels -- with no markings on it.
 // `Road` adds those; a `Junction` is this and nothing else, because markings stop at a junction.
-primitive RoadDeck(length, width, variant) -> group {
+primitive RoadDeck(length, width, variant, season) -> group {
     half = width * 0.5
     crown = half * 0.025
     strips = floor(width / 0.5)
@@ -358,7 +491,7 @@ primitive RoadDeck(length, width, variant) -> group {
                 // A parallelogram takes two edge *vectors*, so giving the second one a Y component costs
                 // nothing and removes the step instead of covering it.
                 parallelogram {
-                    material RoadSurfaceAt(variant, abs((strip + 0.5) * step - half) / half)
+                    material RoadSurfaceAt(variant, abs((strip + 0.5) * step - half) / half, season)
                     at [bay * bayLength - length * 0.5,
                         -crown * (abs(strip * step - half) / half)
                                * (abs(strip * step - half) / half),
@@ -377,7 +510,7 @@ primitive RoadDeck(length, width, variant) -> group {
         // The silt against each curb, laid on the channel rather than instead of it.
         for side in [0, 1] {
             parallelogram {
-                material RoadEdgeDirt
+                material RoadEdgeDirtIn(season)
                 at [-length * 0.5, -crown * 0.90 + 0.002,
                     (half - width * 0.055) * (1 - side * 2) - width * 0.055]
                 sides [length, 0, 0], [0, 0, width * 0.110]
@@ -391,20 +524,20 @@ primitive Road(length, width, season = 'summer', variant = 1) -> group {
     crown = half * 0.025
 
     return group {
-        object RoadDeck(length, width, variant)
+        object RoadDeck(length, width, variant, season)
 
         // A dashed line down the middle, and a solid one in each channel.  The dashes are two meters in
         // six, which is close enough to what a road actually carries that the eye stops counting.
         for dash in [0, floor(length / 6) - 1] {
             cube {
-                material RoadPaint
+                material RoadPaintIn(season)
                 scale [1.0, 0.003, 0.055]
                 translate [(dash + 0.5) * 6 - length * 0.5, 0.002, 0]
             }
         }
         for side in [0, 1] {
             cube {
-                material RoadPaint
+                material RoadPaintIn(season)
                 scale [length * 0.5, 0.003, 0.055]
                 translate [0, -crown * 0.60 + 0.002,
                            (half - width * 0.10) * (1 - side * 2)]
@@ -432,7 +565,7 @@ primitive Road(length, width, season = 'summer', variant = 1) -> group {
 // Markings stop at a junction, which is why this carries none. The side road's own `Road` provides its.
 primitive Junction(width, opening, season = 'summer', variant = 1) -> group {
     return group {
-        object RoadDeck(opening, width, variant)
+        object RoadDeck(opening, width, variant, season)
         object RoadWinter(season, opening, width)
     }
 }
@@ -450,12 +583,12 @@ primitive Curb(length, season = 'summer', variant = 1) -> group {
             translate [0, 0.125 - 0.165, 0.075]
         }
         parallelogram {
-            material RoadCurbStone
+            material RoadCurbStoneIn(season)
             at [-length * 0.5, 0.1252, 0]
             sides [length, 0, 0], [0, 0, 0.15]
         }
         parallelogram {
-            material RoadCurbStone
+            material RoadCurbStoneIn(season)
             at [-length * 0.5, 0.125, -0.0002]
             sides [length, 0, 0], [0, -0.26, 0]
         }
@@ -476,14 +609,14 @@ primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
     return group {
         // The bed the slabs sit on, so the joints between them are dark rather than transparent.
         cube {
-            material RoadEdgeDirt
+            material RoadEdgeDirtIn(season)
             scale [length * 0.5, 0.06, width * 0.5]
             translate Y 0.125 - 0.06 - 0.045
         }
         for row in [0, along - 1] {
             for column in [0, across - 1] {
                 cube {
-                    material RoadSlab
+                    material RoadSlabIn(season)
                     scale [stepAlong * 0.5 - 0.012, 0.024, stepAcross * 0.5 - 0.012]
                     translate [(row + 0.5) * stepAlong - length * 0.5,
                                0.125 - 0.024,
@@ -520,14 +653,14 @@ primitive ParkingLot(width, depth, season = 'summer', variant = 1) -> group {
             translate Y -0.07
         }
         parallelogram {
-            material RoadPlainOf(variant)
+            material RoadPlainIn(variant, season)
             at [-width * 0.5, 0, -depth * 0.5]
             sides [width, 0, 0], [0, 0, depth]
         }
         // The silt along the edges, where nothing sweeps -- the same thing the carriageway's channels get.
         for side in [0, 1] {
             parallelogram {
-                material RoadEdgeDirt
+                material RoadEdgeDirtIn(season)
                 at [-width * 0.5, 0.002, (depth * 0.5 - 0.4) * (1 - side * 2) - 0.4]
                 sides [width, 0, 0], [0, 0, 0.8]
             }
@@ -536,7 +669,7 @@ primitive ParkingLot(width, depth, season = 'summer', variant = 1) -> group {
         for row in [0, 1] {
             for line in [0, bays] {
                 cube {
-                    material RoadPaint
+                    material RoadPaintIn(season)
                     scale [0.055, 0.003, bayDepth * 0.5]
                     translate [line * bayWidth - width * 0.5, 0.003,
                                (depth * 0.5 - bayDepth * 0.5) * (1 - row * 2)]
@@ -632,7 +765,7 @@ primitive Crossing(width, depth, season = 'summer') -> group {
             // built in half-meter strips is the half meter a real zebra uses.
             if (mod(strip, 2) == 0) {
                 parallelogram {
-                    material RoadPaint
+                    material RoadPaintIn(season)
                     at [-depth * 0.5,
                         -crown * (abs(strip * step - half) / half)
                                * (abs(strip * step - half) / half) + 0.003,
@@ -689,14 +822,14 @@ primitive Crossroads(mainWidth, sideWidth, radius, season = 'summer', variant = 
     opening = sideWidth + radius * 2
 
     return group {
-        object RoadDeck(opening, mainWidth, variant)
+        object RoadDeck(opening, mainWidth, variant, season)
 
         // A stop line across each side arm, laid just outside the mouth so it reads as belonging to the
         // arm rather than to the crossing.  Solid, and wider than a lane line, which is what a stop line
         // is: it is the one marking a driver is meant to stop *at* rather than follow.
         for arm in [0, 1] {
             cube {
-                material RoadPaint
+                material RoadPaintIn(season)
                 scale [sideWidth * 0.5, 0.003, 0.10]
                 translate [0, -crown * 0.35 + 0.002, (half + 0.10) * (1 - arm * 2)]
             }
@@ -723,7 +856,7 @@ primitive Crossroads(mainWidth, sideWidth, radius, season = 'summer', variant = 
                 cylinder { min Y -1  max Y 1
                            scale [radius, 0.5, radius]
                            translate [radius, 0, radius] }
-                material RoadPlainOf(variant)
+                material RoadPlainIn(variant, season)
                 rotate Y (corner * 90)
                 translate [(1 - 2 * floor(corner * 0.5)) * sideWidth * 0.5,
                            -crown * 0.9,
@@ -758,26 +891,26 @@ primitive Roundabout(radius, width, season = 'summer', variant = 1) -> group {
     return group {
         // The circulating carriageway, in three rings: the middle one is where the wheels go.
         disc {
-            material RoadPlainOf(variant)
+            material RoadPlainIn(variant, season)
             center [0, 0, 0]  normal [0, 1, 0]
             radius radius + width * 0.28
             inner radius radius
         }
         disc {
-            material RoadTrackOf(variant)
+            material RoadTrackIn(variant, season)
             center [0, 0, 0]  normal [0, 1, 0]
             radius radius + width * 0.72
             inner radius radius + width * 0.28
         }
         disc {
-            material RoadPlainOf(variant)
+            material RoadPlainIn(variant, season)
             center [0, 0, 0]  normal [0, 1, 0]
             radius radius + width
             inner radius radius + width * 0.72
         }
         // The silt that collects against the outer curb, where nothing sweeps.
         disc {
-            material RoadEdgeDirt
+            material RoadEdgeDirtIn(season)
             center [0, 0.002, 0]  normal [0, 1, 0]
             radius radius + width
             inner radius radius + width * 0.93
@@ -798,7 +931,7 @@ primitive Roundabout(radius, width, season = 'summer', variant = 1) -> group {
         // came out with no visible curb at all.  `radius - 0.15` meets the body's inner edge instead.
         object CurbRing(radius, 0, season, variant)
         disc {
-            material RoadSlab
+            material RoadSlabIn(season)
             center [0, 0.125, 0]  normal [0, 1, 0]
             radius radius - 0.15
         }

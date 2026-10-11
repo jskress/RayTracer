@@ -1080,7 +1080,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Towns</b> &mdash; 8 images &middot; streets, buildings, and what runs through them</summary>
+<summary><b>Towns</b> &mdash; 9 images &middot; streets, buildings, and what runs through them</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1121,6 +1121,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/towns/a-street-after-dark.igl">A Street After Dark</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/towns/a-street-after-rain.png">
+      <img alt="A Street After Rain" height="120" src="Local/towns/a-street-after-rain.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/towns/a-street-after-rain.igl">A Street After Rain</a>
     </td>
   </tr>
   <tr style="border: none;">
@@ -1427,7 +1435,8 @@ done
 
 It renders to a scratch path and moves the result into place deliberately: a render that fails
 part way must not leave a tracked picture truncated or missing.  Expect roughly an hour for the
-lot on an idle machine, most of it `a-street-after-dark`.
+lot on an idle machine, most of it the two streets at night, `a-street-after-dark` and
+`a-street-after-rain`.
 
 Nothing checks these for staleness — that would mean rendering them all — so run this after any
 change to how things are drawn.  Re-rendering alters a picture's *bytes* even when no pixel

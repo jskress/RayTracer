@@ -119,7 +119,11 @@ its own samples and the reflection by Veach's balance heuristic (`Scene.Highligh
 facets, each facet mirroring and passing by the glass's own index, and a lamp behind it glows through it
 (`Microfacets.TransmittedHighlight`) -- given only at the LAST of the glass before the lamp
 (`GetLightReaching`'s `glass` check), so a pane's near face never counts it, and glowing volumes are shared
-there along the straight run out, exactly as for reflection.
+there along the straight run out, exactly as for reflection.  A smooth mirror or clear glass met by a ray a rough
+surface has already spread is shaded as rough as that surface (`Scene.RegularizedFor`, path regularization:
+`Material.RoughAs`, kept on `Intersection.Material`, while identity checks keep `Surface.Material`), so a lantern
+seen in a car's paint in a wet road is shared rather than found by chance; the camera's own view of a mirror,
+and a shell at the surroundings' index, are untouched.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
