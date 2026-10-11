@@ -158,6 +158,8 @@ branches, any one of the branches will do.
   - [Tapered Extrusion](advanced-surfaces.md#tapered-extrusion)
   - [Field](advanced-surfaces.md#field)
   - [Ribbon](advanced-surfaces.md#ribbon)
+  - [Strand](advanced-surfaces.md#strand)
+  - [Hair](advanced-surfaces.md#hair)
   - [Lathe](advanced-surfaces.md#lathe)
   - [Sweep](advanced-surfaces.md#sweep)
   - [Tube](advanced-surfaces.md#tube)

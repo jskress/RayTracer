@@ -213,8 +213,7 @@ public class Intersection : IComparable<Intersection>
 
         Vector adjustment = Normal * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale);
 
-        OverPoint = Point + adjustment;
-        UnderPoint = Point - adjustment;
+        (OverPoint, UnderPoint) = LeavingPoints(adjustment);
 
         // Where a light, or a bounce, sets off from.  For everything with an inside this is simply the
         // over point; for a sheet met from behind it is a step towards the eye instead.
@@ -256,6 +255,18 @@ public class Intersection : IComparable<Intersection>
 
         if (Inside)
             Normal = -Normal;
+    }
+
+    /// <summary>
+    /// This method returns the points a ray leaving this crossing sets off from: just off the surface on
+    /// the side the normal faces, and just off it on the other.  The time the ray sees the scene at is
+    /// known by now, and the point and normal are worked out.
+    /// </summary>
+    /// <param name="adjustment">The nudge off the surface, along the normal.</param>
+    /// <returns>The points to set off from, on this side and the far side.</returns>
+    protected virtual (Point Over, Point Under) LeavingPoints(Vector adjustment)
+    {
+        return (Point + adjustment, Point - adjustment);
     }
 
     /// <summary>

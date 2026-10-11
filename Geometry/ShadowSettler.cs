@@ -52,6 +52,10 @@ internal static class ShadowSettler
         noShadow |= surface.NoShadow;
         surface.NoShadow = noShadow;
 
+        // Hair casts a shadow as the surface it grows on does, and only so.
+        if (surface.Hair is not null)
+            surface.Hair.NoShadow = noShadow;
+
         switch (surface)
         {
             case Group group:

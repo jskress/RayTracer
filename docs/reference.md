@@ -90,8 +90,10 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `close` | Path: join back to where the run began. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `clump` | Hair: how strongly strands gather into locks; `clump 0.6 size 20`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `color` | A solid pigment, or a light's color. | [Materials](materials.md#the-color) |
 | `columns` | `physical sky`: how many ways round the sky is worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `comb` | Hair: the direction strands lean toward. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `commands` | L-system: maps characters to turtle moves. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `comment` | Info: a free-form comment. | [Context](context.md#image-information) |
 | `completeBranch` | L-system turtle: pop back to it. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -100,18 +102,20 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `context` | The block of render-wide settings. | [Context](context.md#angles) |
 | `controls` | L-system: how the string is drawn (pipes, tubes, sizes). | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `copyright` | Info: a copyright notice. | [Context](context.md#image-information) |
+| `count` | Hair: exactly how many strands grow. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `crackle` | Pattern: cracked-cell (Worley) noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `cross` | Quadric: the coefficients of `xy`, `xz` and `yz`. | [Surfaces](surfaces.md#quadric) |
 | `csg` | Combines surfaces by a named set operation. | [Surfaces](surfaces.md#combining-surfaces) |
 | `cube` | Surface: a unit cube. | [Surfaces](surfaces.md#cube) |
 | `cubic` | Pattern (and wave shape): cubic-interpolated. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `curl` | Hair: how many turns a strand winds through; `curl 3 radius 0.02`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic), [Blob](surfaces.md#blob) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping, and a decal wrapped around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `decal` | A marking painted over a material's pigment, inside an outline. | [Materials](materials.md#decals) |
 | `default` | The last way out of a [selection](scene-files.md#choosing-inside-a-body); required. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
-| `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern). | [Scene Files](scene-files.md#giving-a-medium-a-shape) |
+| `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `depth` | Normal: how deep the roughening bites; also an L-system material depth. | [Materials](materials.md#roughening-the-surface) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
@@ -126,6 +130,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `distance` | Camera: `focal distance`; also spotlight falloff distance. | [Cameras](cameras.md#depth-of-field) |
 | `distant` | A `distant light` (parallel rays, like the sun). | [Lights](lights.md#distant-lights) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `droop` | Hair: how far strands sag under their own weight. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -148,6 +153,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
+| `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading) |
 | `fresnel` | Finish: mirror more at a slant, square-on share from `reflective`. | [Materials](materials.md#fresnel) |
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
@@ -163,6 +169,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
 | `group` | Gathers surfaces so a transform moves them together. | [Surfaces](surfaces.md#groups) |
+| `hair` | Grows strands over the surface it is written in. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
 | `heightfield` | Surface: terrain, from an image or a function. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -193,8 +200,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `layer` | Pigment: stack pigments, the front ones showing through where clear. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
 | `layout` | Text: alignment, positioning, line gap, and a path to lay the text along. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `leaf` | L-system: the surface drawn for a leaf. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `lean` | Hair: how far strands lean from straight out, as an angle. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `length` | L-system control: the step length. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `length` | L-system control: the step length.  Also hair: how long a strand is. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `light` | Font weight; also a light source. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -262,7 +270,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `radians` | Angle unit: radians. | [Context](context.md#angles) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
-| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, and a wrapped decal's reach. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections) |
+| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, and a hair's curl. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
@@ -287,7 +295,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `scattering` | Medium: how much light it turns aside per unit of distance. | [Scene Files](scene-files.md#scattering) |
 | `scene` | Groups a camera, lights and surfaces into a named scene. | [Scene Files](scene-files.md#scenes-and-cameras) |
 | `sdf` | Surface: a shape written as a signed distance function. | [Surfaces](advanced-surfaces.md#signed-distance-surface) |
-| `seed` | Fixes the random start of a pattern, light or camera. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
+| `seed` | Fixes the random start of a pattern, light, camera or hair. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `shadows` | `no shadows`: the whole scene casts none. | [Surfaces](surfaces.md#no-shadow) |
@@ -297,7 +305,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
-| `size` | Brick pattern: `brick size`/`mortar size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
@@ -314,6 +322,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `startBranch` | L-system turtle: push a branch point. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `steepness` | Swells: how tall a wave train is against its wavelength. | [Surfaces](surfaces.md#swells) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
+| `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -328,6 +337,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `taper` | How much a tapered extrusion's outline, or a tapered text's glyphs, are scaled by at the far end. | [Advanced Surfaces](advanced-surfaces.md#tapered-extrusion) |
 | `tapered` | Surface: an extrusion whose outline is scaled as it rises, or text whose glyphs are. | [Advanced Surfaces](advanced-surfaces.md#tapered-extrusion) |
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Text](advanced-surfaces.md#text), [Text as a Path](advanced-surfaces.md#text-as-a-path), [Context](context.md#image-information) |
+| `thickness` | Hair: how wide a strand is at its root. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
 | `temperature` | Light: the temperature, in kelvin, of the glow it gives instead of a color. | [Lights](lights.md#color-temperature) |
@@ -361,6 +371,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `up` | Camera: which way is up. | [Cameras](cameras.md#placing-a-camera) |
 | `uSteps` | Area light: samples across U. | [Lights](lights.md#area-lights) |
 | `v` | Parametric surface: the span the second parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
+| `vary` | Hair: how much one strand's length may differ from another's. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `vector` | Casts a tuple to a vector. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `vertical` | Text layout: vertical placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `view` | The third word of `field of view`. | [Cameras](cameras.md#field-of-view) |
@@ -370,7 +381,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
-| `width` | Context: image width in pixels.  Also a ribbon's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon) |
+| `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `wood` | Pattern: concentric growth rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |

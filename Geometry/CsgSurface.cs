@@ -95,8 +95,18 @@ public class CsgSurface : Surface
     /// <returns>The surfaces that stand on that side.</returns>
     private static HashSet<Surface> MembersOf(Surface side)
     {
-        return new HashSet<Surface>(
-            new SurfaceIterator(side).Surfaces, ReferenceEqualityComparer.Instance);
+        HashSet<Surface> members = new (ReferenceEqualityComparer.Instance);
+
+        // Hair is found through the surface growing it, so it stands on that surface's side.
+        foreach (Surface surface in new SurfaceIterator(side).Surfaces)
+        {
+            members.Add(surface);
+
+            if (surface.Hair is not null)
+                members.Add(surface.Hair);
+        }
+
+        return members;
     }
 
     /// <summary>
@@ -232,6 +242,13 @@ public class CsgSurface : Surface
 
     /// <summary>
     /// This method is used to filter unwanted intersections out of the given list.
+    /// <para>
+    /// **A strand is kept or dropped as its side's surface would be there, but it is never gone into.**
+    /// A strand is crossed once, as a ribbon, so it has no inside for a ray to be in; counted as going
+    /// in, it would leave the walk believing the ray inside that side from then on.  So hair grown on
+    /// one side of a union shows wherever it is out of the other, and is hidden where it is buried in
+    /// it.
+    /// </para>
     /// </summary>
     /// <param name="intersections">The list of intersections to filter, in order along the ray.</param>
     /// <param name="inLeft">Whether the ray begins inside the left side, which only something
@@ -245,9 +262,12 @@ public class CsgSurface : Surface
             {
                 // What stands in this shape's tree is the *instance*, when the crossing came through
                 // one -- the shape it points at is shared and lives outside the tree altogether.
-                Surface hit = intersection.Portal ?? intersection.Surface;
+                Surface hit = intersection.Portal ?? Hair.StandingFor(intersection.Surface);
                 bool leftHit = IsOrIncludes(Left, _leftMembers, hit);
                 bool result = !IsIntersectionAllowed(leftHit, inLeft, inRight);
+
+                if (intersection.Surface is StrandSurface)
+                    return result;
 
                 if (!result && Operation == CsgOperation.Difference &&
                     IsOrIncludes(Right, _rightMembers, hit))

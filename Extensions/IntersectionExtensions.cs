@@ -60,6 +60,18 @@ public static class IntersectionExtensions
             if (intersection == hit)
                 before = containers.IsEmpty() ? null : InteriorOf(containers.Last().Surface);
 
+            // A strand is crossed once, as a ribbon, so it is never gone into: a ray passing one is in
+            // whatever it was in before, and stays there.
+            if (intersection.Surface is StrandSurface)
+            {
+                if (intersection != hit)
+                    continue;
+
+                after = before;
+
+                break;
+            }
+
             (Surface, Surface) inside = (intersection.Surface, intersection.Portal);
 
             if (containers.Contains(inside))
