@@ -459,6 +459,8 @@ sphere {
 | `frizz` | How far strands wander, roughly as a fraction of their length. |
 | `clump` | How strongly neighboring strands gather into locks, from nought to one.  `clump 0.6 size 20` also says how many strands make a lock, which is 30 unless said. |
 | `droop` | How far strands sag: one bends a strand until its tip hangs nearly straight down. |
+| `patches` | A pattern saying where the hair grows: `patches bozo { scale 0.3 }`.  Its value at each root is the chance a strand grows there. |
+| `facing` | The way the surface must face for hair to grow on it: `facing [0, 1, 0]` grows it only on what faces up, thinning toward the sides.  `facing [0, 1, 0] by 3` keeps it to what faces nearly that way. |
 | `material` | The hair's own material.  Unsaid, each strand wears the material of what it grows from. |
 | `with seed` | Fixes where the strands grow and the way each one goes. |
 
@@ -469,6 +471,26 @@ sphere {
 flat into a rug grows a pile of the length asked for, rather than one flattened along with the cube,
 and a density counts strands on each unit of the rug's area as it stands, not the cube's it was made
 from.  So the numbers mean what they look like they mean, however the surface was scaled to size.
+
+**Hair can grow in places only**, which is how moss grows on a stone or a rug's pile on its top and not
+its edges.  `facing` gives the way the surface must face, and a strand grows where it does as often as
+the surface faces squarely that way: everywhere on what faces it, on half of what is turned sixty
+degrees off, and nowhere on what faces away.  `by` raises that to a power, so `by 3` keeps the hair to
+faces turned nearly that way.  `patches` gives a pattern, with everything a pigment's pattern can say,
+and a strand grows at each root as often as the pattern's value there says; the pattern is read in the
+space of the surface the hair is written in.  The two together put moss on a boulder's top in patches:
+
+```
+hair {
+    density 150000  length 0.015  thickness 0.006
+    patches bozo { poly 2 wave  scale 0.3 }
+    facing [0, 1, 0] by 1.2
+    material { pigment color [0.17, 0.29, 0.07] }
+}
+```
+
+A `density` still counts strands on each unit of the whole surface, so hair kept to a tenth of it grows
+a tenth as many; a `count` is the number that grow where they may.
 
 **The hair goes wherever its surface goes.**  It is found through the surface, so moving it in a
 group, setting it in [motion](cameras.md#motion-blur) or using it again by name takes the hair
@@ -540,18 +562,32 @@ followed into it, strand by strand, and where it goes is recorded in a grid laid
 every strand then draws on.  Black hair, which keeps little of what reaches it, is hardly changed by it.
 A strand standing alone has no others to bounce light to it.
 
+**What reaches the skin comes back up.**  Fair hair passes much of the light falling on it down to
+whatever it grows from, and the skin sends back as much as its color says, among the strands again.  So
+a rug's pile is lit from below by its backing, and should stand on a backing of its own color: pale pile
+on a dark backing comes out gray, as it would.  Only what lies among the hair counts — the skin, and the
+floor right beside it — so this is still the light among the strands, not the light of the whole room.
+
 **A surface beneath hair is lit through it.**  Each strand in the way of a light sends on what it does
 not absorb or turn back, in its own color: black hair stops nearly all of it and blond much less, so the
 skin under fair fur, and the floor under a fair-haired animal, are lit through it.
 
 #### What hair costs
 
-A strand takes about three hundred bytes, and growing them is quick: a sphere of
-radius one at a density of fifty thousand — over six hundred thousand strands — takes about five and a
-half seconds to grow, gather the light among, and render small, and under a gigabyte.  Gathering the
-light is done once for each head of hair and each light, before the hair is first drawn, and takes
-about a third of a second for a fur ball of six thousand strands.  A surface may grow at most two
-million.
+A strand takes about three hundred bytes, and growing them is quick.  A sphere of radius one at a
+density of fifty thousand — over six hundred thousand strands of pale, dense fur — takes about
+twenty-two seconds to grow, gather the light among and render at 160 by 120, and just under a gigabyte:
+about twelve seconds before the first pixel, most of it following the light among the strands, and
+ten drawing them, since at that size each pixel sees through dozens of them.  Gathering the light is
+done once for each head of hair and each light, before the first pixel, and takes about a third of a
+second for a fur ball of six thousand strands.  A surface may grow at most two million.
+
+**A low light raking across a rug costs more than one overhead**, since each shadow ray toward it runs
+through the pile on the way; a ray stops looking once next to nothing gets past the strands it has
+met, which keeps that to a few hundred strands rather than the whole rug.  A fire-lit room with a shag
+rug, a sheepskin and a teddy bear —
+[`a-rug-by-the-fire`](../gallery/Local/interiors/a-rug-by-the-fire.igl) — takes about four and a quarter
+minutes at 800 by 600 with antialiasing.
 
 ### Lathe
 

@@ -53,13 +53,16 @@ public partial class Scene
         double ambient = material.EffectiveAmbient;
         TS color = TS.Black;
 
-        foreach (Light light in Lights)
+        for (int number = 0; number < Lights.Count; number++)
         {
+            Light light = Lights[number];
             int count = light.SampleCount;
+            (int taken, double odds) = TakenOf(count, hit, number);
             TS sum = TS.Black;
 
-            for (int index = 0; index < count; index++)
+            for (int each = 0; each < taken; each++)
             {
+                int index = taken == count ? each : (int) ((each + 0.5) * count / taken + hit.Ordinal * 7) % count;
                 LightSample sample = light.SampleAround(frame.Center, index);
                 TS emitted = light.EmittedToward<TS>(sample);
 
@@ -67,7 +70,8 @@ public partial class Scene
                 // and is shown in the color the hair is matched to.
                 sum += own * emitted * ambient;
 
-                double intensity = sample.Cone * light.FadingOver(sample.Distance);
+                // A strand that did not draw this light this time takes only its ambient from it.
+                double intensity = odds > 0 ? sample.Cone * light.FadingOver(sample.Distance) / odds : 0;
 
                 if (intensity <= 0)
                     continue;
@@ -86,7 +90,7 @@ public partial class Scene
                 sum += scattered * emitted * reaching * (Math.PI * intensity);
             }
 
-            color += count == 1 ? sum : sum * (1.0 / count);
+            color += taken == 1 ? sum : sum * (1.0 / taken);
         }
 
         // The light scattered among the strands arrives from every way, more from some than others, and
@@ -107,6 +111,58 @@ public partial class Scene
         }
 
         return color;
+    }
+
+    /// <summary>
+    /// This method returns how many of a light's samples to shade a strand with, and the odds that the
+    /// strand looks at the light at all: every sample, surely, unless the strand is counted for only a
+    /// share of what the eye sees, when it is that share of them -- and, where that comes to less than one,
+    /// one sample by chance, at odds of what it comes to, counted for as much more as it is unlikely.
+    /// <para>
+    /// **A fine strand is one of a great many along a ray**, each covering a little of it: at a pixel
+    /// fourteen millimeters across, the strands of a rug's pile cover a few hundredths of it each, and the
+    /// ray goes through a hundred of them before it is covered.  Shading every one of them with every
+    /// sample of a fire's light sent thousands of shadow rays into the pile for each pixel.  Each looks at
+    /// as many as its share says, picked evenly from among the light's own, and a strand whose share is
+    /// less than one sample's worth of a light looked at from many places looks at one now and then, so
+    /// that the strands of one ray between them look at about as many as one opaque strand would.  The
+    /// chance is drawn from the crossing itself, so a picture comes out the same every time it is made.
+    /// </para>
+    /// </summary>
+    private static (int Taken, double Odds) TakenOf(int count, HairIntersection hit, int light)
+    {
+        if (hit.Share >= 1)
+            return (count, 1);
+
+        double wanted = count * hit.Share;
+
+        if (wanted >= 1 || count < FewestToDrawFrom)
+            return (Math.Clamp((int) Math.Ceiling(wanted), 1, count), 1);
+
+        return (1, ChanceAt(hit, light) < wanted ? wanted : 0);
+    }
+
+    // How many places a light must be looked at from for a strand to look at it only by chance.  A light
+    // looked at from one place -- a lamp -- would light each fine strand or not on a coin's toss, and a
+    // pixel's worth of them comes out speckled as brightly as the lamp itself; so every strand looks at a
+    // light seen from fewer places, as it always has, and only the strands of a fire, a sky or a broad
+    // lamp take their chance, where the speckle is no more than the light's own sampling makes.
+    private const int FewestToDrawFrom = 8;
+
+    /// <summary>
+    /// This method returns a number from nought to one, the same every time for the same crossing and the
+    /// same light, and as good as random from one to the next.
+    /// </summary>
+    private static double ChanceAt(HairIntersection hit, int light)
+    {
+        ulong bits = (ulong) BitConverter.DoubleToInt64Bits(hit.Distance) +
+                     0x9E3779B97F4A7C15UL * (ulong) (hit.Ordinal * 31L + light + 1);
+
+        bits = (bits ^ (bits >> 30)) * 0xBF58476D1CE4E5B9UL;
+        bits = (bits ^ (bits >> 27)) * 0x94D049BB133111EBUL;
+        bits ^= bits >> 31;
+
+        return (bits >> 11) * (1.0 / (1UL << 53));
     }
 
     /// <summary>
@@ -174,9 +230,32 @@ public partial class Scene
     private TS OnwardThroughStrand<TS>(HairIntersection crossed, Ray ray)
         where TS : struct, ISpectrum<TS>
     {
-        Dye dye = DyeOf(crossed, ray.At(crossed.Distance));
+        return OnwardThroughStrand<TS>(crossed, ray.At(crossed.Distance));
+    }
+
+    private TS OnwardThroughStrand<TS>(HairIntersection crossed, Point where)
+        where TS : struct, ISpectrum<TS>
+    {
+        Dye dye = DyeOf(crossed, where);
 
         return Fiber.For(dye.Roughness).SharesOf(crossed.SineAlong, dye.Absorbing<TS>()).Onward;
+    }
+
+    /// <summary>
+    /// This method returns how much of the light falling on a surface beneath a strand gets past it, in
+    /// whichever band the most does: what it sends onward of the share of the ray it covers, and all of
+    /// the rest.  See <see cref="StrandTally"/>.
+    /// </summary>
+    private double MostPassedBy<TS>(HairIntersection strand, Point where)
+        where TS : struct, ISpectrum<TS>
+    {
+        TS onward = OnwardThroughStrand<TS>(strand, where);
+        double most = 0;
+
+        for (int band = 0; band < TS.Count; band++)
+            most = Math.Max(most, onward[band]);
+
+        return strand.Coverage >= 1 ? most : most * strand.Coverage + 1 - strand.Coverage;
     }
 
     /// <summary>

@@ -127,6 +127,7 @@ public partial class Scene : NamedThing, IDisposable
         // always has.
         TS seen = TS.Black;
         double left = 1;
+        int strands = 0;
 
         foreach (Intersection hit in hits)
         {
@@ -135,12 +136,23 @@ public partial class Scene : NamedThing, IDisposable
 
             hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
 
+            if (hit is HairIntersection { Coverage: < 1 } fine)
+            {
+                fine.Share = left * fine.Coverage;
+                fine.Ordinal = strands++;
+            }
+
             TS color = GetHitColor<TS>(hit, remaining);
 
             // What the ray crossed to get here was the surroundings, unless it was on its way out of
             // something, in which case it crossed that thing's insides and has been charged for it
-            // already.  This is the same division the fade through a substance has always drawn.
-            color = hit.Inside ? color : ThroughTheSurroundings(color, ray, hit.Distance);
+            // already.  This is the same division the fade through a substance has always drawn.  And
+            // unless it met something standing inside a thing that fades light or is filled with a
+            // medium, when it crossed that thing's insides on the way -- a log inside a flame is seen
+            // through the flame in front of it, and a flower set in tinted glass through the glass.
+            color = hit.Inside ? color
+                : HasInsides(hit.ContainerBefore) ? ThroughTheInsideOf(hit.ContainerBefore, color, hit)
+                : ThroughTheSurroundings(color, ray, hit.Distance);
 
             if (hit is not HairIntersection { Coverage: < 1 } strand)
                 return left == 1 ? color : (seen + color * left).WithAlpha(1);
@@ -159,6 +171,38 @@ public partial class Scene : NamedThing, IDisposable
             Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
 
         return left == 1 ? sky : (seen + sky * left).WithAlpha(1 - left * (1 - sky.Alpha));
+    }
+
+    /// <summary>
+    /// This method reports whether a surface something stands inside has anything to say about light
+    /// crossing it: a fade or a medium.  Plain glass, or nothing, has not.
+    /// </summary>
+    private static bool HasInsides(Surface container)
+    {
+        if (container is null)
+            return false;
+
+        Interior interior = IntersectionExtensions.InteriorOf(container);
+
+        return interior.Medium is not null || !double.IsPositiveInfinity(interior.Clarity);
+    }
+
+    /// <summary>
+    /// This method charges the light from a crossing for the insides of the surface it stands within,
+    /// over the ray's whole run to it: the ray set off inside the surface, or it would have met the
+    /// surface first.  It is what the far side of the surface charges a ray leaving it; see the end of
+    /// <see cref="GetHitColor{TS}"/>.
+    /// </summary>
+    private TS ThroughTheInsideOf<TS>(Surface container, TS color, Intersection hit)
+        where TS : struct, ISpectrum<TS>
+    {
+        Interior interior = IntersectionExtensions.InteriorOf(container);
+
+        color *= interior.GetFadeOver(hit.Distance);
+
+        return interior.Medium is null
+            ? color
+            : ThroughMedium(interior.Medium, color, RayThatReached(hit), hit.Distance, container);
     }
 
     /// <summary>
@@ -1013,10 +1057,22 @@ public partial class Scene : NamedThing, IDisposable
     {
         if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
         {
-            return GetLightReaching<TS>(
+            TS reaching = GetLightReaching<TS>(
                 intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex,
                 glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null,
                 false, intersection.FootprintRadius);
+
+            // Something standing inside a medium is lit through it, as the medium's own stuff is: the
+            // medium stands in the light's way as far as the edge of the surface it fills.
+            if (!intersection.Inside && !reaching.IsBlack &&
+                intersection.ContainerBefore is { } container &&
+                IntersectionExtensions.InteriorOf(container).Medium is { } medium)
+            {
+                reaching *= SurvivingTheMedium<TS>(
+                    medium, container, intersection.LitPoint, sample, intersection.TimeIndex, []);
+            }
+
+            return reaching;
         }
 
         Point beyond = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
@@ -1272,10 +1328,22 @@ public partial class Scene : NamedThing, IDisposable
         double footprint)
         where TS : struct, ISpectrum<TS>
     {
-        Ray ray = new (point, direction, timeIndex, baseRadius: _hasStrands ? footprint : 0);
+        StrandTally tally = !_hasStrands ? null
+            : strandsStop ? new StrandTally()
+            : new StrandTally(strand => MostPassedBy<TS>(strand, point + direction * strand.Distance));
+        Ray ray = new (point, direction, timeIndex, baseRadius: _hasStrands ? footprint : 0)
+        {
+            Tally = tally,
+            NarrowsAt = _hasStrands && footprint > 0 ? distance : double.PositiveInfinity
+        };
         TS reaching = TS.White;
+        List<Intersection> crossings = IntersectWithin(ray, distance);
 
-        foreach (Intersection intersection in IntersectWithin(ray, distance))
+        // Strands in the way that let next to nothing past stopped the search for more of them.
+        if (ray.Tally is { Stopped: true })
+            return TS.Black;
+
+        foreach (Intersection intersection in crossings)
         {
             // Only things that actually stand between the point and the light can shade it;
             // anything behind the point, or beyond the light, is irrelevant.  Zero counts as being

@@ -76,6 +76,34 @@ public sealed class HairLight
     public double Cell => _cell;
 
     /// <summary>
+    /// This method returns which cell of the grid a point lies in, counted as the places are, or -1 for a
+    /// point outside the grid.
+    /// </summary>
+    /// <param name="point">The point, in the world.</param>
+    /// <returns>The cell's number.</returns>
+    public int CellOf(Point point)
+    {
+        int i = (int) Math.Floor((point.X - _corner.X) / _cell);
+        int j = (int) Math.Floor((point.Y - _corner.Y) / _cell);
+        int k = (int) Math.Floor((point.Z - _corner.Z) / _cell);
+
+        return i < 0 || j < 0 || k < 0 || i >= _across || j >= _up || k >= _deep ? -1 : (k * _up + j) * _across + i;
+    }
+
+    /// <summary>
+    /// This method reports whether a point lies within the box the grid covers.
+    /// </summary>
+    /// <param name="point">The point.</param>
+    /// <returns><c>true</c>, if it does.</returns>
+    public bool Holds(Point point)
+    {
+        Point high = High;
+
+        return point.X >= _corner.X && point.Y >= _corner.Y && point.Z >= _corner.Z &&
+               point.X <= high.X && point.Y <= high.Y && point.Z <= high.Z;
+    }
+
+    /// <summary>
     /// This method records light travelling a stretch of the way, spread over the places around each point
     /// along it in proportion to how near each is, into the given tally.
     /// </summary>

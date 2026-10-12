@@ -82,7 +82,7 @@ public partial class LanguageParser
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'fade', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -691,7 +691,12 @@ public partial class LanguageParser
             { vary > _expression } | { thickness > _expression } | { lean > _expression } |
             { comb > _expression } | { curl > _expression > { radius > _expression }{?} } |
             { frizz > _expression } | { clump > _expression > { size > _expression }{?} } |
-            { droop > _expression } | startMaterialClause | withSeedClause
+            { droop > _expression } | startMaterialClause | withSeedClause |
+            {
+                patches > patternClause >
+                openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            } |
+            { facing > _expression > { by > _expression }{?} }
         ] ?? 'Expecting a hair property here.'
         surfaceEntryClause:
         [

@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 114 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 115 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1240,7 +1240,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Interiors</b> &mdash; 7 images &middot; rooms, and light indoors</summary>
+<summary><b>Interiors</b> &mdash; 8 images &middot; rooms, and light indoors</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1297,6 +1297,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/interiors/a-bed-made-up.igl">A Bed Made Up</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/interiors/a-rug-by-the-fire.png">
+      <img alt="A Rug by the Fire" height="120" src="Local/interiors/a-rug-by-the-fire.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/interiors/a-rug-by-the-fire.igl">A Rug by the Fire</a>
     </td>
   </tr>
 </table>

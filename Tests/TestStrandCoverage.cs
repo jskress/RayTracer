@@ -154,9 +154,9 @@ public class TestStrandCoverage
     }
 
     /// <summary>
-    /// A shadow ray from a point the eye saw is as wide as the eye's ray was there, and a fine strand in its
-    /// way blocks only its share of the light: all of that share, for another strand, and of a surface
-    /// beneath, what it does not send onward.
+    /// A shadow ray from a point the eye saw is as wide as the eye's ray was there, narrowing to nothing at
+    /// the light, and a fine strand in its way blocks only its share of the light where it stands: all of
+    /// that share, for another strand, and of a surface beneath, what it does not send onward.
     /// </summary>
     [TestMethod]
     public void TestAFineStrandsShadowIsItsShare()
@@ -174,9 +174,66 @@ public class TestStrandCoverage
         RgbSpectrum wide = scene.GetLightReaching<RgbSpectrum>(Point.Zero, new Vector(0, 1, 0), 10, 0, null, true, 0.05);
         RgbSpectrum beneath = scene.GetLightReaching<RgbSpectrum>(Point.Zero, new Vector(0, 1, 0), 10, 0, null, false, 0.05);
 
+        // Half a unit along a ray ten long, it has narrowed by a twentieth.
+        double share = 0.005 / (0.05 * 0.95);
+
         Assert.AreEqual(0, line[0], 1e-12, "a line through the strand got past it");
-        Assert.AreEqual(0.9, wide[0], 1e-6, "a wide ray lost more than the strand's share");
-        Assert.IsTrue(beneath[0] > 0.9 && beneath[0] < 0.92, $"a surface beneath kept {beneath[0]}");
+        Assert.AreEqual(1 - share, wide[0], 1e-6, "a wide ray lost other than the strand's share");
+        Assert.IsTrue(beneath[0] > 1 - share && beneath[0] < 1 - share + 0.02, $"a surface beneath kept {beneath[0]}");
+    }
+
+    /// <summary>
+    /// A wide shadow ray narrows to nothing at its light, so a fine strand right beside the light, where the
+    /// ray is narrower than the strand, stops all of the light however wide the ray started.
+    /// </summary>
+    [TestMethod]
+    public void TestAStrandBesideTheLightStopsAllOfIt()
+    {
+        Scene scene = new ();
+        Strand strand = new () { Material = new Material { Melanin = Melanin.Shades["black"] } };
+
+        strand.Points.Add(new RibbonControlPoint { Position = new Point(0, 9.9, -1), Width = 0.01 });
+        strand.Points.Add(new RibbonControlPoint { Position = new Point(0, 9.9, 1), Width = 0.01 });
+        strand.PrepareForRendering();
+        scene.Surfaces.Add(strand);
+        scene.ArrangeSurfaces();
+
+        RgbSpectrum reaching = scene.GetLightReaching<RgbSpectrum>(Point.Zero, new Vector(0, 1, 0), 10, 0, null, true, 0.05);
+
+        Assert.AreEqual(0, reaching[0], 1e-12, "a strand beside the light let some of a wide ray past");
+    }
+
+    /// <summary>
+    /// A shadow ray through a great many fine strands lets through what each lets past, multiplied
+    /// together, until that is next to nothing -- when it stops looking and lets nothing through.
+    /// </summary>
+    [TestMethod]
+    public void TestAShadowThroughManyStrandsStopsWhenNextToNothingIsLeft()
+    {
+        foreach ((int strands, double expected) in new[] { (100, Math.Pow(0.95, 100)), (200, 0.0) })
+        {
+            Scene scene = new ();
+
+            // Each strand is a tenth as wide as the ray where it crosses it -- the ray narrowing toward
+            // a light far off hardly at all over the strands -- so each covers a twentieth of it.
+            for (int index = 0; index < strands; index++)
+            {
+                Strand strand = new () { Material = new Material { Melanin = Melanin.Shades["black"] } };
+                double y = 0.01 + index * 0.001;
+
+                strand.Points.Add(new RibbonControlPoint { Position = new Point(0, y, -1), Width = 0.01 });
+                strand.Points.Add(new RibbonControlPoint { Position = new Point(0, y, 1), Width = 0.01 });
+                strand.PrepareForRendering();
+                scene.Surfaces.Add(strand);
+            }
+
+            scene.ArrangeSurfaces();
+
+            RgbSpectrum reaching = scene.GetLightReaching<RgbSpectrum>(
+                Point.Zero, new Vector(0, 1, 0), 1e6, 0, null, true, 0.1);
+
+            Assert.AreEqual(expected, reaching[0], 1e-6, $"{strands} strands");
+        }
     }
 
     /// <summary>

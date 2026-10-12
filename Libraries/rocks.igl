@@ -13,9 +13,12 @@
 // | `Boulder` | One big weathered stone, lumpy all over.  The expensive one -- see below. |
 // | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
 // | `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
+// | `MossyBoulder` | A boulder with moss on its top and its shaded side, in patches. |
+// | `MossyCobble` | A cobble capped with moss. |
 //
 // The first three arguments mean what they mean in the other libraries -- **how big**, **what time of
-// year**, and **which one of that kind** -- and only the first is ever required.  For `Boulder` and
+// year**, and **which one of that kind** -- and only the first is ever required.  The mossy two take a
+// fourth, the way their shaded side faces, which the moss creeps furthest down.  For `Boulder` and
 // `Cobble` the size is roughly how far across the stone is; for `Scree` it is the outline the stones
 // fill, since an area has a shape as well as a size and a heap of stone is never square.
 //
@@ -200,6 +203,55 @@ primitive Cobble(size, season = 'summer', variant = 1) -> group {
             rotate Y random(variant, 31) * 360
         }
 
+        object RockCap(season, size * 0.5, flat, variant)
+    }
+}
+
+// -- Moss ----------------------------------------------------------------------------------------
+
+// Cushion moss: a deep green, its fronds too fine and too many to shine.
+RockMoss = material { pigment color [0.17, 0.29, 0.07]  roughness 0.55 }
+
+// A boulder grown over with moss.
+//
+// The moss is hair grown over the stone: a centimeter and a half of it, its fronds thicker than real
+// ones and fewer, so that it covers the stone as a cushion does without costing millions of strands.
+// It grows where the stone faces up, and down its shaded side further than its sunny one -- `shade`
+// is the way that side faces -- and only in patches, which differ from one variant to the next.  Rain
+// runs off the steep places and the sun dries the open ones; a stone mossed evenly all over reads as a
+// stone painted green.
+//
+// **It is grown over the bare stone and the snow is put on afterward**, so that the moss lies under the
+// snow rather than growing over it.
+primitive MossyBoulder(size, season = 'summer', variant = 1, shade = [0, 0, 1]) -> group {
+    flat = 0.58 + random(variant, 14) * 0.22
+
+    return group {
+        object Boulder(size, 'summer', variant) {
+            hair {
+                density 150000  length 0.015  thickness 0.006  vary 0.4  lean 35  frizz 0.5
+                patches bozo with seed variant { poly 2 wave  scale 0.3 }
+                facing vector [0, 1, 0] + (vector shade) * 0.6 by 1.2
+                material RockMoss
+            }
+        }
+        object RockCap(season, size * 0.5, flat, variant)
+    }
+}
+
+// A cobble grown over with moss, as the boulder is.
+primitive MossyCobble(size, season = 'summer', variant = 1, shade = [0, 0, 1]) -> group {
+    flat = 0.55 + random(variant, 21) * 0.25
+
+    return group {
+        object Cobble(size, 'summer', variant) {
+            hair {
+                density 150000  length 0.015  thickness 0.006  vary 0.4  lean 35  frizz 0.5
+                patches bozo with seed variant { poly 2 wave  scale 0.3 }
+                facing vector [0, 1, 0] + (vector shade) * 0.6 by 1.2
+                material RockMoss
+            }
+        }
         object RockCap(season, size * 0.5, flat, variant)
     }
 }

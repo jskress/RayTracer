@@ -120,6 +120,21 @@ public partial class LanguageParser
             case "with.seed":
                 resolver.SeedResolver = new TermResolver<int?> { Term = term };
                 break;
+            case "patches":
+                resolver.PatchesResolver = ParseDensityShapeClause(clause);
+                break;
+            case "facing":
+                resolver.FacingResolver = new TermResolver<Vector> { Term = term };
+
+                if (clause.Expressions.Count > 1)
+                {
+                    resolver.FacingPowerResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(1),
+                        Validator = value => value > 0 ? null : "How strongly hair favors a facing must be more than nought."
+                    };
+                }
+                break;
             default:
                 throw new Exception($"Internal error: unknown hair property found: {ToCmd(clause)}.");
         }

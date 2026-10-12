@@ -1,6 +1,7 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
+using RayTracer.Patterns;
 
 namespace Tests;
 
@@ -149,6 +150,41 @@ public class TestHair
 
         foreach (List<Point> path in group.Hair.Paths())
             Assert.AreEqual(1, (path[0] - Point.Zero).Magnitude, 1e-5, "a strand grew from another strand");
+    }
+
+    /// <summary>
+    /// Hair that must face a way grows only where the surface faces that way, and more where it faces it
+    /// more squarely: none at all under a ball growing hair that faces up, and favoring the top harder the
+    /// more strongly it is told to.
+    /// </summary>
+    [TestMethod]
+    public void TestHairGrowsWhereTheSurfaceFacesItsWay()
+    {
+        List<List<Point>> gentle = Furry(new HairGrowth { Count = 1000, Length = 0.1, Facing = new Vector(0, 1, 0) }).Hair.Paths();
+        List<List<Point>> strong = Furry(
+            new HairGrowth { Count = 1000, Length = 0.1, Facing = new Vector(0, 1, 0), FacingPower = 4 }).Hair.Paths();
+
+        Assert.AreEqual(1000, gentle.Count, "a count was not met where the hair may grow");
+        Assert.IsTrue(gentle.All(path => path[0].Y >= -1e-6), "hair grew on a face turned away");
+        Assert.AreEqual(2 / 3.0, gentle.Average(path => path[0].Y), 0.05, "hair did not grow in proportion to the facing");
+        Assert.IsTrue(strong.Average(path => path[0].Y) > 0.8, "a stronger facing did not favor the top");
+    }
+
+    /// <summary>
+    /// Hair that grows in patches grows where the pattern says and nowhere else, and a density grows its
+    /// share of the strands on the part of the surface it covers.
+    /// </summary>
+    [TestMethod]
+    public void TestHairGrowsInPatchesAsThePatternSays()
+    {
+        // Stripes one unit wide: nought for x from nought to one, one from minus one to nought.
+        DensityShape stripes = new () { Pattern = new StripedPattern() };
+        Hair counted = Furry(new HairGrowth { Count = 800, Length = 0.1, Patches = stripes }).Hair;
+        Hair dense = Furry(new HairGrowth { Density = 400, Length = 0.1, Patches = stripes }).Hair;
+
+        Assert.AreEqual(800, counted.StrandCount);
+        Assert.IsTrue(counted.Paths().All(path => path[0].X <= 1e-6), "hair grew where the pattern said not to");
+        Assert.AreEqual(400 * 2 * Math.PI, dense.StrandCount, 400 * 2 * Math.PI * 0.06, "a density did not grow its share");
     }
 
     /// <summary>

@@ -85,6 +85,27 @@ public class HairGrowth
     public double Droop { get; set; }
 
     /// <summary>
+    /// This property holds a pattern saying where the hair grows: its value at each root, read in the
+    /// space of the surface the hair is written in, is the chance a strand grows there.  Unsaid, it grows
+    /// everywhere.
+    /// </summary>
+    public DensityShape Patches { get; set; }
+
+    /// <summary>
+    /// This property holds the way the surface must face for hair to grow on it: the chance a strand
+    /// grows is how squarely the surface faces that way, nothing where it faces away.  Unsaid, the hair
+    /// grows whichever way the surface faces.
+    /// </summary>
+    public Vector Facing { get; set; }
+
+    /// <summary>
+    /// This property holds how strongly the hair favors surfaces facing squarely the way it must: the
+    /// chance from <see cref="Facing"/> is raised to this power, so more than one keeps it to faces turned
+    /// nearly that way.
+    /// </summary>
+    public double FacingPower { get; set; } = 1;
+
+    /// <summary>
     /// This property holds the seed the hair's randomness starts from.
     /// </summary>
     public int? Seed { get; set; }

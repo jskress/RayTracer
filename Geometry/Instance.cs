@@ -163,6 +163,14 @@ public class Instance : Surface
     {
         int before = intersections.Count;
 
+        // What an instance that casts no shadow holds stops none of a shadow ray's light, so its strands
+        // must not count toward the ray's tally.
+        if (NoShadow && ray.Tally is not null)
+            ray = new Ray(ray.Origin, ray.Direction, ray.TimeIndex, ray.Spread, ray.Travelled, ray.BaseRadius)
+            {
+                NarrowsAt = ray.NarrowsAt
+            };
+
         Prototype.IntersectWithin(ray, intersections, maxDistance);
 
         for (int index = before; index < intersections.Count; index++)

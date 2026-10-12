@@ -893,6 +893,43 @@ public class TestShippedLibraries
     }
 
     [TestMethod]
+    public void TestAMossyStoneIsGreenerThanABareOne()
+    {
+        // The moss is hair grown over the stone, and the whole of what the word promises: a mossy stone
+        // that came out as bare as the other -- the hair grown nowhere, or grown and not drawn -- would be
+        // the library taking the word and ignoring it.  Winter too, since the snow is put on afterward.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "rocks.igl"),
+            Path.Combine(_directory, "rocks.igl"), true);
+
+        foreach ((string stone, string season) in new[] { ("Boulder", "summer"), ("Cobble", "winter") })
+        {
+            int bare = GreenIn(StoneIn(stone, season, 3));
+            int mossy = GreenIn(StoneIn($"Mossy{stone}", season, 3));
+
+            Assert.IsTrue(mossy > bare + 40, $"a mossy {stone} in {season} had {mossy} green pixels to a bare one's {bare}");
+        }
+
+        static int GreenIn(Canvas canvas)
+        {
+            int green = 0;
+
+            for (int x = 0; x < canvas.Width; x++)
+            {
+                for (int y = 0; y < canvas.Height; y++)
+                {
+                    Color color = canvas.GetPixel(x, y);
+
+                    if (color.Green > color.Red * 1.15 && color.Green > color.Blue * 1.3)
+                        green++;
+                }
+            }
+
+            return green;
+        }
+    }
+
+    [TestMethod]
     public void TestOneStoneIsNotAnother()
     {
         // The variant has to do something, or a scree of them is one stone repeated -- which is what a

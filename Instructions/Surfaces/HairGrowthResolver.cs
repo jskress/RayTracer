@@ -76,6 +76,21 @@ public class HairGrowthResolver : ObjectResolver<HairGrowth>, IValidatable
     public Resolver<double> DroopResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the pattern saying where the hair grows.
+    /// </summary>
+    public DensityShapeResolver PatchesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the way the surface must face for hair to grow on it.
+    /// </summary>
+    public Resolver<Vector> FacingResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how strongly the hair favors surfaces facing that way.
+    /// </summary>
+    public Resolver<double> FacingPowerResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the seed the hair's randomness starts from.
     /// </summary>
     public Resolver<int?> SeedResolver { get; set; }
@@ -107,6 +122,9 @@ public class HairGrowthResolver : ObjectResolver<HairGrowth>, IValidatable
         ClumpSizeResolver.AssignTo(value, target => target.ClumpSize, context, variables);
         DroopResolver.AssignTo(value, target => target.Droop, context, variables);
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
+        PatchesResolver.AssignTo(value, target => target.Patches, context, variables);
+        FacingResolver.AssignTo(value, target => target.Facing, context, variables);
+        FacingPowerResolver.AssignTo(value, target => target.FacingPower, context, variables);
         MaterialResolver.AssignTo(value, target => target.Material, context, variables);
     }
 

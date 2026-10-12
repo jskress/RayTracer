@@ -150,6 +150,12 @@ public class Hair : StrandSurface
     internal List<List<Point>> Paths() => Strands?.Paths() ?? [];
 
     /// <summary>
+    /// This method hands every control point of every strand to the given action, in the space the hair
+    /// was grown in; see <see cref="StrandSet.VisitPoints"/>.
+    /// </summary>
+    internal void VisitPoints(Action<Point> visit) => Strands?.VisitPoints(visit);
+
+    /// <summary>
     /// This method grows hair over the given surface, which must already be readied for rendering.
     /// <para>
     /// **Roots are found by casting straight lines at the surface from every direction**, through a sphere
@@ -192,15 +198,21 @@ public class Hair : StrandSurface
         List<Intersection> hits = [];
         Dictionary<Surface, int> sources = new (ReferenceEqualityComparer.Instance);
         long lines = 0;
+        long crossings = 0;
         double area;
 
         while (true)
         {
             for (int index = 0; index < Batch; index++)
-                CastLine(host, inward, outward, center, radius, random, roots, hits, sources);
+                CastLine(host, growth, inward, outward, center, radius, random, roots, hits, sources, ref crossings);
 
             lines += Batch;
-            area = 2 * Math.PI * radius * radius * roots.Count / lines;
+            area = 2 * Math.PI * radius * radius * crossings / lines;
+
+            // Hair that may grow only in a few places can need a great many lines to find room for a
+            // count of strands, and none at all where it may grow nowhere.
+            if (growth.Count is not null && crossings > 20L * MostStrands)
+                throw new Exception($"Hair could not find room for {growth.Count:N0} strands where it may grow.");
 
             if (growth.Count is null && roots.Count > MostStrands)
                 throw TooMany();
@@ -215,7 +227,8 @@ public class Hair : StrandSurface
                 break;
         }
 
-        int target = growth.Count ?? (int) Math.Round(growth.Density!.Value * area);
+        // A density holds over the surface's whole area, of which the hair grows only where it may.
+        int target = growth.Count ?? (int) Math.Round(growth.Density!.Value * area * roots.Count / Math.Max(crossings, 1));
 
         if (roots.Count > target)
             roots.RemoveRange(target, roots.Count - target);
@@ -268,8 +281,9 @@ public class Hair : StrandSurface
     /// </para>
     /// </summary>
     private static void CastLine(
-        Surface host, Matrix inward, Matrix outward, Point center, double radius, Random random,
-        List<Root> roots, List<Intersection> hits, Dictionary<Surface, int> sources)
+        Surface host, HairGrowth growth, Matrix inward, Matrix outward, Point center, double radius,
+        Random random, List<Root> roots, List<Intersection> hits, Dictionary<Surface, int> sources,
+        ref long crossings)
     {
         Vector direction = RandomUnit(random);
         (Vector across, Vector up) = Microfacets.FrameAround(direction);
@@ -291,10 +305,24 @@ public class Hair : StrandSurface
 
             Point point = line.At(hit.Distance);
 
+            crossings++;
+            normal = (outward * normal).Unit;
+
+            // Hair that grows only in places grows here as often as the places say.
+            if (growth.Patches is not null || growth.Facing is not null)
+            {
+                double chance = growth.Patches?.ValueAt(local.At(hit.Distance)) ?? 1;
+
+                if (growth.Facing is not null)
+                    chance *= Math.Pow(Math.Max(0, normal.Dot(growth.Facing.Unit)), growth.FacingPower);
+
+                if (random.NextDouble() >= chance)
+                    continue;
+            }
+
             if (!sources.TryGetValue(hit.Surface, out int source))
                 sources[hit.Surface] = source = sources.Count;
 
-            normal = (outward * normal).Unit;
             roots.Add(new Root(point.X, point.Y, point.Z, normal.X, normal.Y, normal.Z, source));
         }
     }
