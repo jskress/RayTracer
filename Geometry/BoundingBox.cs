@@ -16,6 +16,14 @@ public class BoundingBox
     /// </summary>
     internal bool IsEmpty { get; private set; } = true;
 
+    /// <summary>
+    /// This property notes that the box holds strands of hair, which a ray with width to it meets
+    /// wherever its width reaches them; see <see cref="StrandSet"/>.  Such a box is grown, for such a ray,
+    /// by as wide as the ray is at the box's far side, so that a strand just outside the box that the ray
+    /// would widen to meet is not turned away.  Any box taking in such a box is such a box too.
+    /// </summary>
+    internal bool Widens { get; set; }
+
     private double _xMin = double.MaxValue;
     private double _yMin = double.MaxValue;
     private double _zMin = double.MaxValue;
@@ -65,6 +73,7 @@ public class BoundingBox
         // smallest, but it would otherwise leave this box marked as no longer empty.
         if (other is { IsEmpty: false })
         {
+            Widens |= other.Widens;
             _xMin = Math.Min(_xMin, other._xMin);
             _yMin = Math.Min(_yMin, other._yMin);
             _zMin = Math.Min(_zMin, other._zMin);
@@ -86,7 +95,7 @@ public class BoundingBox
     /// <returns>The transformed, axis-aligned bounding box.</returns>
     internal BoundingBox TransformedBy(Matrix matrix)
     {
-        BoundingBox box = new ();
+        BoundingBox box = new () { Widens = Widens };
 
         // Nothing anywhere, moved anywhere, is still nothing anywhere.  Left to run, the loop below
         // would put the largest and smallest numbers a double can hold through a matrix and hand back
@@ -125,7 +134,7 @@ public class BoundingBox
         if (xMin > xMax || yMin > yMax || zMin > zMax)
             return null;
 
-        return new BoundingBox()
+        return new BoundingBox { Widens = Widens || other.Widens }
             .Add(new Point(xMin, yMin, zMin))
             .Add(new Point(xMax, yMax, zMax));
     }
@@ -149,7 +158,7 @@ public class BoundingBox
         {
             _xMin = _xMin, _yMin = _yMin, _zMin = _zMin,
             _xMax = _xMax, _yMax = _yMax, _zMax = _zMax,
-            IsEmpty = IsEmpty
+            IsEmpty = IsEmpty, Widens = Widens
         };
 
         box.Expand(-Padding);
@@ -198,10 +207,12 @@ public class BoundingBox
     /// <returns>The min and max intersection points for the axis being tested.</returns>
     internal (double min, double max) GetIntersections(Ray ray)
     {
+        double pad = Widens && (ray.Spread > 0 || ray.BaseRadius > 0) ? WidthAtFarSide(ray) : 0;
+
         // First, find the points of intersection on each axis.
-        (double xMin, double xMax) = CheckAxis(ray.Origin.X, ray.Direction.X, _xMin, _xMax);
-        (double yMin, double yMax) = CheckAxis(ray.Origin.Y, ray.Direction.Y, _yMin, _yMax);
-        (double zMin, double zMax) = CheckAxis(ray.Origin.Z, ray.Direction.Z, _zMin, _zMax);
+        (double xMin, double xMax) = CheckAxis(ray.Origin.X, ray.Direction.X, _xMin - pad, _xMax + pad);
+        (double yMin, double yMax) = CheckAxis(ray.Origin.Y, ray.Direction.Y, _yMin - pad, _yMax + pad);
+        (double zMin, double zMax) = CheckAxis(ray.Origin.Z, ray.Direction.Z, _zMin - pad, _zMax + pad);
 
         // Then, find the intersections.
         double tMin = Math.Max(xMin, Math.Max(yMin, zMin));
@@ -218,6 +229,22 @@ public class BoundingBox
     /// <param name="axisMin">The minimum allowed value for the axis.</param>
     /// <param name="axisMax">The maximum allowed value for the axis.</param>
     /// <returns>The min and max intersection points for the axis being tested.</returns>
+    /// <summary>
+    /// This method returns how wide a ray is, as a radius, where it has gone as far along itself as the
+    /// box's furthest corner.
+    /// </summary>
+    private double WidthAtFarSide(Ray ray)
+    {
+        Vector direction = ray.Direction;
+        double halfX = (_xMax - _xMin) * 0.5, halfY = (_yMax - _yMin) * 0.5, halfZ = (_zMax - _zMin) * 0.5;
+        double along = (_xMin + halfX - ray.Origin.X) * direction.X + (_yMin + halfY - ray.Origin.Y) * direction.Y +
+                       (_zMin + halfZ - ray.Origin.Z) * direction.Z + Math.Abs(halfX * direction.X) +
+                       Math.Abs(halfY * direction.Y) + Math.Abs(halfZ * direction.Z);
+        double squared = direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z;
+
+        return ray.RadiusAt(Math.Max(0, along / squared));
+    }
+
     private static (double min, double max) CheckAxis(
         double origin, double direction, double axisMin, double axisMax)
     {

@@ -486,8 +486,14 @@ error.  A sheet — a disc, a patch — grows hair on the side its normal faces.
 other side** — fur on one sphere of a union is hidden where it is buried in the other.  Hair grown on
 the CSG itself grows on the combined shape.
 
-**Strands are usually much finer than a pixel**, so a picture of hair wants
-[antialiasing](context.md#anti-aliasing), as the figure's scene asks for.
+**Strands are usually much finer than a pixel, and are drawn as what they are: a part of it.**  A ray is a
+thin cone a pixel wide, and a strand finer than that is widened to the cone's width where it meets it and
+seen in proportion to how much of it it fills — the rest of the pixel showing whatever lies beyond, more
+strands or the skin or the sky.  So fur comes out smooth, rather than as a scatter of strands caught and
+missed, with no [antialiasing](context.md#anti-aliasing) at all; the figures' scenes ask for none.
+Antialiasing on top only softens it a little, and costs several times as much, since every sample sees
+every strand it touches.  The shadows strands cast fade the same way: a strand finer than the patch a
+pixel sees blocks only its share of the light reaching it.
 
 #### How hair is lit
 

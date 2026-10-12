@@ -101,7 +101,12 @@ recorded after their first scattering as fluence AND net flow in a grid of stran
 the light arriving from its center direction, `HairLight.Here.From`).  Isotropic light was 1.5-2x too bright: the
 flow is what makes it match a brute-force path tracer (`TestHairLight`) within ~15%.  A non-hair surface's shadow
 ray keeps each crossed strand's forward share (`Fiber.SharesOf`).  Spectral renders take the absorption by
-`FromUnbounded` and work the hair's own color out from it band by band. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
+`FromUnbounded` and work the hair's own color out from it band by band.  A strand finer than a ray's cone is
+WIDENED to it and carries `HairIntersection.Coverage` (true width / widened); `Scene.GetColorFor` composites partly
+covering strands front to back (stopping at a thousandth left), and a shadow ray from a point the eye saw carries
+that point's footprint (`Intersection.FootprintRadius`, only in scenes with strands).  For this `Matrix.Transform`
+keeps a ray's cone in a surface's space (scaled), and a `BoundingBox` holding strands is marked `Widens` and grown
+by the ray's width at its far side -- other boxes and surfaces are untouched, so other scenes stay bit-identical. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
 `Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,

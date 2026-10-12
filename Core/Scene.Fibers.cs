@@ -75,7 +75,7 @@ public partial class Scene
                 Vector toward = sample.Direction;
                 TS reaching = GetLightReaching<TS>(
                     frame.Center + toward * frame.Radius, toward, sample.Distance - frame.Radius, hit.TimeIndex,
-                    null, true);
+                    null, true, hit.FootprintRadius);
 
                 if (reaching.IsBlack)
                     continue;

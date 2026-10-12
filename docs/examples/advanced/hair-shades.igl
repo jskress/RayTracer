@@ -4,8 +4,6 @@
 // the color of what passes through it, which glows where the lamp behind shines through the fur.
 context {
     angles are degrees
-    antialiasing depth 2
-    antialiasing threshold 0.2
 }
 
 camera { location [0, 2.2, -8.6]  look at [0, 0.5, 0]  field of view 44 }
