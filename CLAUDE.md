@@ -94,7 +94,11 @@ by `PlacementSettler` after placements, at the one moment children are prepared 
 `below`; a dropped field is left EMPTY when prepared and fills itself at the drop (`Field.Fill` with a `Dropping`),
 building only what lands and then running the group's own preparation over it.  A primitive call hands an empty
 group back bare, never as an instance: a shape holding an instance cannot be shared, and a summer fir bough's empty
-snow made every fir rebuild its 2000 needle shoots (140 MB a tree).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
+snow made every fir rebuild its 2000 needle shoots (140 MB a tree).  `along <path>` lays copies along each run of a
+path instead of filling an outline (`Field.PathPlaces`, walking a `PathGuide` by distance): each turned so its +X runs
+with the path (-Z faces the path's right), the spacing fitted to whole gaps (both ends of an open run, no doubled seam
+on a closed one), `rows n apart d` each spaced along its OWN length, `offset` to the path's left, jitter drawn from
+the place.  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
 `StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
 `PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton, kept by `patches`

@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 116 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 117 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1080,7 +1080,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Towns</b> &mdash; 9 images &middot; streets, buildings, and what runs through them</summary>
+<summary><b>Towns</b> &mdash; 10 images &middot; streets, buildings, and what runs through them</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1145,6 +1145,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/towns/where-four-roads-meet.igl">Where Four Roads Meet</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/towns/along-the-front.png">
+      <img alt="Along the Front" height="120" src="Local/towns/along-the-front.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/towns/along-the-front.igl">Along the Front</a>
     </td>
   </tr>
   <tr style="border: none;">

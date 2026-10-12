@@ -1,0 +1,107 @@
+// A seafront round a bay: the railing along the sea wall, benches and lamps a pace back from it, palms
+// down the middle of the promenade and a terrace of houses facing the sea -- every one of them laid
+// along the one curve, `Front`, and turned to follow it.  Nothing here is placed by hand.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // The sea wants it: one sample a pixel turns the ripples going away from the camera to gray mush.
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    info {
+        title 'Along the Front'
+        author 'J. Stephen Kress'
+        description 'A promenade round a bay, its railing, benches, lamps, palms and houses all laid along one curve.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'street-furniture' { Bench, Railing }
+import 'outdoor-lights'   { StreetLamp }
+import 'buildings'        { House }
+import 'trees'            { Palm }
+import 'water'            { Water, SeaWater }
+import 'daylight'         { ClearMorningFrom, ClearMorningLight }
+
+// On the promenade, a little back from where the front begins, looking along it as it curves away round
+// the bay to the right.
+camera {
+    location [-6, 6.5, -36]
+    look at [22, 0.5, 70]
+    field of view 55
+}
+
+// A morning sun over the sea, swung off the line of the house fronts so it rakes across them.
+background ClearMorningFrom(70)
+light ClearMorningLight
+
+// -- The front -------------------------------------------------------------------------------------
+
+// The edge of the sea wall, walked from the near end round the bay.  **Which way it is walked is what
+// decides which way everything faces**: a thing laid along a path is turned so that what faces -Z as it
+// was made -- a bench's seat, a house's door -- faces the path's right, and walked this way the sea is
+// on the right.
+Front = path { move to 0, -40  curve 0, 50, 30, 110 to 140, 160  curve 200, 188, 250, 215 to 300, 260 }
+
+// The land: everything inland of the front, raised two and a half meters above the sea.  Its seaward
+// edge is the same curve written out again, so the wall and everything laid along the front agree.
+extrusion {
+    path {
+        move to 0, -40  curve 0, 50, 30, 110 to 140, 160  curve 200, 188, 250, 215 to 300, 260
+        line to 300, 700  line to -400, 700  line to -400, -40  close
+    }
+    min Y -6  max Y 2.5
+    material {
+        // Pale flags with darker joints.  `brick` squared off is a paving slab: the pattern's own
+        // brick is 8 by 3 by 4.5, so ninety-centimeter flags want 0.9/8 across and 0.9/4.5 along.
+        pigment brick {
+            [0.46, 0.43, 0.38], [0.74, 0.70, 0.62]
+            scale [0.1125, 30, 0.2]
+        }
+        specular 0.05  shininess 14
+    }
+}
+
+// A headland closing the bay.
+sphere {
+    material { pigment [0.27, 0.36, 0.17]  specular 0.04 }
+    scale [120, 40, 90]  translate [330, -14, 330]
+}
+
+object Water(9000, 9000, 'breezy') { material SeaWater }
+
+// -- Along it ---------------------------------------------------------------------------------------
+
+// Everything stands on the promenade, two and a half meters up.  `offset` is how far inland of the
+// front each line stands: to the path's left as it is walked.
+
+// The railing, in lengths as long as the spacing, so each meets the next.  Straight lengths round a
+// gentle curve close up well enough; a tight one would want shorter.
+field { of Railing(2.4)  along Front  spacing 2.4  offset 0.15  translate Y 2.5 }
+
+// Benches facing the sea, with a lamp between each pair: taken in turn, `cycle`, so no lamp ever stands
+// in front of a bench.
+field {
+    of Bench(1.8), StreetLamp(4.6, 'summer', 2)
+    cycle
+    along Front  spacing 7  offset 1.4
+    translate Y 2.5
+}
+
+// Palms down the middle of the promenade, each turned its own way, since a palm has no front.
+field {
+    of Palm(7, 'summer', 1), Palm(6.5, 'summer', 2), Palm(7.6, 'summer', 3)
+    along Front  spacing 14  offset 10
+    turned 360
+    translate Y 2.5
+}
+
+// The houses, facing the sea across the promenade.  Laid along a line nineteen meters inland, they are
+// spaced along that line's own length rather than the front's -- so the terrace stays as close-set
+// round the bay as it is where the front runs straight.
+field {
+    of House(8, 'summer', 1), House(7.5, 'summer', 2), House(8.5, 'summer', 3)
+    along Front  spacing 6.4  offset 19
+    translate Y 2.5
+}

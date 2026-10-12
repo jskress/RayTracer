@@ -22,6 +22,27 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<GeneralPath> OutlineResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the path the field lays its copies along, which is
+    /// resolved the same way as the outline, for the same reason.
+    /// </summary>
+    public Resolver<GeneralPath> AlongResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many rows a field following a path lays.
+    /// </summary>
+    public Resolver<int> RowsResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far apart a field's rows are.
+    /// </summary>
+    public Resolver<double> ApartResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far to the path's left a field's rows lie.
+    /// </summary>
+    public Resolver<double> OffsetResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolvers for the things the field is filled with, each with how often it
     /// is picked against the others: unsaid, as often as any.
     /// </summary>
@@ -108,6 +129,10 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     protected override void SetProperties(RenderContext context, Variables variables, Field value)
     {
         OutlineResolver.AssignTo(value, target => target.Outline, context, variables);
+        AlongResolver.AssignTo(value, target => target.Along, context, variables);
+        RowsResolver.AssignTo(value, target => target.Rows, context, variables);
+        ApartResolver.AssignTo(value, target => target.Apart, context, variables);
+        OffsetResolver.AssignTo(value, target => target.Offset, context, variables);
         SpacingResolver.AssignTo(value, target => target.Spacing, context, variables);
         JitterResolver.AssignTo(value, target => target.Jitter, context, variables);
         CopiesResolver.AssignTo(value, target => target.Copies, context, variables);
@@ -193,8 +218,8 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     /// <returns>The text of an error message or <c>null</c>.</returns>
     public string Validate()
     {
-        if (OutlineResolver is null)
-            return "The \"within\" property is required.";
+        if (OutlineResolver is null && AlongResolver is null)
+            return "Either the \"within\" or the \"along\" property is required.";
 
         return ChoiceResolvers.Count == 0 ? "The \"of\" property is required." : null;
     }

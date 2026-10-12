@@ -4,7 +4,7 @@ namespace RayTracer.Graphics;
 
 /// <summary>
 /// This class lets a path be walked by distance: given how far along it, where that is and which way
-/// the path runs there.  It is what lays a run of text along a path.
+/// the path runs there.  It is what lays a run of text along a path, and a field's copies.
 /// <para>
 /// A path's curves are drawn by a parameter that does not run evenly -- a cubic's middle half may
 /// cover far more ground than either quarter at its ends -- so the path is cut into short straight
@@ -43,7 +43,7 @@ public class PathGuide
         List<TwoDPoint> corners = path.Segments.SelectMany(segment => segment.Points).ToList();
 
         if (corners.Count == 0)
-            throw new Exception("A path to lay text along has to have something in it.");
+            throw new Exception("A path to lay anything along has to have something in it.");
 
         double size = Math.Max(
             corners.Max(point => point.X) - corners.Min(point => point.X),
@@ -74,7 +74,7 @@ public class PathGuide
         }
 
         if (travelled <= 0)
-            throw new Exception("A path to lay text along has to have some length to it.");
+            throw new Exception("A path to lay anything along has to have some length to it.");
 
         Length = travelled;
     }

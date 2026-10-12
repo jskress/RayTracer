@@ -6,7 +6,7 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class represents a field: an area of the X/Z plane, given by a 2D outline, filled with
-/// copies of one surface.
+/// copies of one surface -- or a line in it, given by a path, laid with them.
 /// <para>
 /// It is a compound surface, like <see cref="TextSolid"/> and <see cref="LSystem"/> -- it builds its
 /// own children when it is prepared, from a description rather than from a list.  What that buys is
@@ -16,7 +16,8 @@ namespace RayTracer.Geometry;
 /// </para>
 /// <para>
 /// **It is not only for grass.**  Balls in a pit, a stand of trees, soldiers drawn up in ranks --
-/// anything that is one thing in many places over an area, and none of it needing a loop.
+/// anything that is one thing in many places over an area, and none of it needing a loop.  And along
+/// a line: fence posts, a ring of standing stones, seats round a curved terrace.
 /// </para>
 /// <para>
 /// **The copies are <see cref="Instance"/>s by default.**  An instance's saving is in the *building*
@@ -36,9 +37,45 @@ public class Field : Group
     private const int DefaultSeed = 0;
 
     /// <summary>
-    /// This property holds the outline, in the X/Z plane, that the field fills.
+    /// This property holds the outline, in the X/Z plane, that the field fills, or <c>null</c> for a
+    /// field that follows a path instead.
     /// </summary>
     public GeneralPath Outline { get; set; }
+
+    /// <summary>
+    /// This property holds the path, in the X/Z plane, that the field lays its copies along, or
+    /// <c>null</c> for a field that fills an outline instead.  Each of the path's runs is laid
+    /// separately.
+    /// <para>
+    /// **Each copy is turned to run with the path where it stands**: its own X runs the way the path
+    /// does, so what faces -Z as made faces the path's right as you walk it, and what faces +Z its left.
+    /// A bench or a length of railing follows a curve, and a round post or a tree is none the worse.
+    /// </para>
+    /// <para>
+    /// **The spacing is fitted to the length**: a whole number of gaps, each the spacing asked or a
+    /// little more, so that an open path has a copy at both ends -- the posts of a fence -- and a closed
+    /// one goes round with no two copies at its seam.  A run whose end meets its start is closed, however
+    /// it was drawn.
+    /// </para>
+    /// </summary>
+    public GeneralPath Along { get; set; }
+
+    /// <summary>
+    /// This property holds how many rows a field following a path lays, side by side.  Each is spaced
+    /// along its own length, so the outside of a bend holds more than the inside.
+    /// </summary>
+    public int Rows { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds how far apart a field's rows are, across the path.
+    /// </summary>
+    public double Apart { get; set; }
+
+    /// <summary>
+    /// This property holds how far to the path's left, as it is walked, the middle of a field's rows
+    /// lies; to its right, if less than nought.  Nought centers them on the path.
+    /// </summary>
+    public double Offset { get; set; }
 
     /// <summary>
     /// This property holds how to make the thing the field is filled with.  It is a factory rather
@@ -154,8 +191,20 @@ public class Field : Group
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
-        if (Outline is null)
-            throw new Exception("A field needs an outline to fill.");
+        if (Outline is null && Along is null)
+            throw new Exception("A field needs an outline to fill or a path to follow.");
+
+        if (Outline is not null && Along is not null)
+            throw new Exception("A field fills an outline or follows a path, not both.");
+
+        if (Outline is not null && (Rows != 1 || Offset != 0))
+            throw new Exception("A field's rows and offset are for one that follows a path, not one that fills an outline.");
+
+        if (Rows < 1)
+            throw new Exception("A field must lay at least one row.");
+
+        if (Rows > 1 && Apart <= 0)
+            throw new Exception("A field's rows must be some distance apart.");
 
         if (Choices.Count == 0 && Prototype is null)
             throw new Exception("A field needs something to fill its outline with.");
@@ -178,8 +227,9 @@ public class Field : Group
     }
 
     /// <summary>
-    /// This method stands a copy at every place of the grid that falls inside the outline: on the
-    /// field's own ground, or, given a surface to drop onto, wherever each lands on it.
+    /// This method stands a copy at every place of the grid that falls inside the outline, or at every
+    /// stop along the path: on the field's own ground, or, given a surface to drop onto, wherever each
+    /// lands on it.
     /// </summary>
     /// <param name="ground">The surface to drop the copies onto, or <c>null</c> to stand them on the
     /// field's own ground.</param>
@@ -187,7 +237,6 @@ public class Field : Group
     {
         List<FieldChoice> choices = Choices.Count > 0 ? Choices : [new FieldChoice(Prototype)];
         int seed = Seed ?? DefaultSeed;
-        Random random = new Random(seed);
         Surface[] shared = new Surface[choices.Count];
         Surface[] first = new Surface[choices.Count];
         int number = 0;
@@ -227,6 +276,54 @@ public class Field : Group
         double totalWeight = choices.Sum(choice => choice.Weight);
         Dropping dropping = ground is null ? null : new Dropping(this, ground);
 
+        foreach (Place place in Along is null ? GridPlaces(seed) : PathPlaces(seed))
+        {
+            // Dropped before anything is made, so that a place standing nothing costs only the drop:
+            // most of a wood filling a hill's whole square falls in the lake or above the tree line.
+            Matrix landing = null;
+
+            if (dropping is not null && (landing = dropping.LandingAt(place.X, place.Z)) is null)
+                continue;
+
+            int pick = choices.Count == 1 ? 0
+                : turns is not null ? turns[(place.Row + place.Column) % turns.Length]
+                : Picked(choices, totalWeight * DrawFor(seed, place.Row, place.Column, PickDraw));
+            Surface copy;
+
+            if (shared[pick] is not null)
+                copy = new Instance { Prototype = shared[pick] };
+            else if (first[pick] is not null)
+            {
+                copy = first[pick];
+                first[pick] = null;
+            }
+            else
+                copy = choices[pick].Make(number++);
+
+            copy.Transform = landing is null
+                ? PlacedAt(place, seed) * copy.Transform
+                : landing * TurnAndSizeAt(place, seed) * copy.Transform;
+
+            Add(copy);
+        }
+    }
+
+    /// <summary>
+    /// This record holds one place a copy may stand: where, which row and column of the field it is,
+    /// for the draws that decide what stands there, and which way the path runs there, in radians about
+    /// the up axis, for a field that follows one.
+    /// </summary>
+    private readonly record struct Place(double X, double Z, int Row, int Column, double? Facing = null);
+
+    /// <summary>
+    /// This method returns the places of the grid that fall inside the outline.
+    /// </summary>
+    /// <param name="seed">The seed the jitter is drawn from.</param>
+    /// <returns>The places, row by row.</returns>
+    private IEnumerable<Place> GridPlaces(int seed)
+    {
+        Random random = new Random(seed);
+
         // The grid runs over the outline's own extent, so an outline drawn anywhere is filled where
         // it actually lies rather than about the origin.
         int columns = (int) Math.Ceiling((Outline.MaxX - Outline.MinX) / Spacing);
@@ -248,39 +345,149 @@ public class Field : Group
                 // Tested where it has actually been *moved to*, not where the grid put it.  Asking
                 // about the grid point instead would let a copy's jitter carry it outside the very
                 // outline it was chosen for, which shows along every edge.
-                if (!Outline.Contains(new TwoDPoint(x, z)))
-                    continue;
-
-                // Dropped before anything is made, so that a place standing nothing costs only the
-                // drop: most of a wood filling a hill's whole square falls in the lake or above the
-                // tree line.
-                Matrix landing = null;
-
-                if (dropping is not null && (landing = dropping.LandingAt(x, z)) is null)
-                    continue;
-
-                int pick = choices.Count == 1 ? 0
-                    : turns is not null ? turns[(row + column) % turns.Length]
-                    : Picked(choices, totalWeight * DrawFor(seed, row, column, PickDraw));
-                Surface copy;
-
-                if (shared[pick] is not null)
-                    copy = new Instance { Prototype = shared[pick] };
-                else if (first[pick] is not null)
-                {
-                    copy = first[pick];
-                    first[pick] = null;
-                }
-                else
-                    copy = choices[pick].Make(number++);
-
-                copy.Transform = landing is null
-                    ? PlacedAt(x, z, seed, row, column) * copy.Transform
-                    : landing * TurnAndSizeAt(seed, row, column) * copy.Transform;
-
-                Add(copy);
+                if (Outline.Contains(new TwoDPoint(x, z)))
+                    yield return new Place(x, z, row, column);
             }
         }
+    }
+
+    /// <summary>
+    /// This method returns the stops along the path: along each of its runs, in each row.
+    /// <para>
+    /// **The jitter is drawn from the place**, along the path and across it, rather than in order as the
+    /// grid's is: the grid's has always been drawn in order and fields that ask for nothing else stand
+    /// where they always stood, but a path has no such history to keep.
+    /// </para>
+    /// </summary>
+    /// <param name="seed">The seed the draws are made from.</param>
+    /// <returns>The places, run by run and row by row.</returns>
+    private IEnumerable<Place> PathPlaces(int seed)
+    {
+        List<SubPath> runs = Along.FindAllSubPaths();
+
+        if (runs.Count == 0)
+            throw new Exception("A path to lay a field along has to have something in it.");
+
+        for (int run = 0; run < runs.Count; run++)
+        {
+            GeneralPath path = runs[run].Path;
+            PathGuide guide = new PathGuide(path);
+            bool closed = IsClosed(path);
+
+            for (int lane = 0; lane < Rows; lane++)
+            {
+                double aside = Offset + (lane - (Rows - 1) / 2.0) * Apart;
+                int row = run * Rows + lane;
+                double[] stops = StopsAlong(guide, aside, closed);
+
+                for (int column = 0; column < stops.Length; column++)
+                {
+                    double along = stops[column];
+                    double across = aside;
+
+                    if (Jitter > 0)
+                    {
+                        along += (DrawFor(seed, row, column, AlongDraw) - 0.5) * Spacing * Jitter;
+                        across += (DrawFor(seed, row, column, AcrossDraw) - 0.5) * Spacing * Jitter;
+                    }
+
+                    // Round a closed run rather than off its end.
+                    if (closed)
+                        along -= Math.Floor(along / guide.Length) * guide.Length;
+
+                    (TwoDPoint point, TwoDVector way) = guide.At(along);
+
+                    // The path's left, as it is walked, is a quarter turn anticlockwise from the way it
+                    // runs; and a copy's X is turned onto the way it runs.
+                    yield return new Place(
+                        point.X - way.Y * across, point.Y + way.X * across, row, column,
+                        Math.Atan2(-way.Y, way.X));
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// This method returns whether a run of a path ends where it starts.
+    /// </summary>
+    private static bool IsClosed(GeneralPath path)
+    {
+        TwoDPoint start = path.Segments[0].Points[0];
+        TwoDPoint end = path.Segments[^1].Points[^1];
+        List<TwoDPoint> corners = path.Segments.SelectMany(segment => segment.Points).ToList();
+        double size = Math.Max(
+            corners.Max(point => point.X) - corners.Min(point => point.X),
+            corners.Max(point => point.Y) - corners.Min(point => point.Y));
+
+        return (end - start).Magnitude <= 1e-9 * Math.Max(size, 1);
+    }
+
+    /// <summary>
+    /// This method returns how far along the path each stop of a row is, for a row standing the given
+    /// distance to the path's left.
+    /// <para>
+    /// **Each row is spaced along its own length**, not the path's: a row on the outside of a bend is
+    /// longer than one on the inside, and spaced by the path's own length its copies would stand
+    /// further apart than asked there and crowd together on the inside.  So a row beside the path is
+    /// measured by walking the path finely and summing how far the row moves, and its stops are carried
+    /// back to how far along the path each falls.
+    /// </para>
+    /// </summary>
+    /// <param name="guide">The run of the path, ready to walk.</param>
+    /// <param name="aside">How far to the path's left the row stands.</param>
+    /// <param name="closed">Whether the run is closed.</param>
+    /// <returns>How far along the path each stop is.</returns>
+    private double[] StopsAlong(PathGuide guide, double aside, bool closed)
+    {
+        double[] distances;
+        double[] lengths;
+
+        if (aside == 0)
+        {
+            distances = [0, guide.Length];
+            lengths = [0, guide.Length];
+        }
+        else
+        {
+            int steps = Math.Max(256, (int) Math.Ceiling(16 * guide.Length / Spacing));
+
+            distances = new double[steps + 1];
+            lengths = new double[steps + 1];
+
+            TwoDPoint previous = default;
+
+            for (int step = 0; step <= steps; step++)
+            {
+                double distance = guide.Length * step / steps;
+                (TwoDPoint point, TwoDVector way) = guide.At(distance);
+                TwoDPoint beside = new TwoDPoint(point.X - way.Y * aside, point.Y + way.X * aside);
+
+                distances[step] = distance;
+                lengths[step] = step == 0 ? 0 : lengths[step - 1] + (beside - previous).Magnitude;
+                previous = beside;
+            }
+        }
+
+        double length = lengths[^1];
+        int gaps = Math.Max(1, (int) Math.Floor(length / Spacing + 1e-9));
+        int count = closed ? gaps : gaps + 1;
+        double[] stops = new double[count];
+        int at = 0;
+
+        for (int stop = 0; stop < count; stop++)
+        {
+            double wanted = length * stop / gaps;
+
+            while (at < lengths.Length - 2 && lengths[at + 1] < wanted)
+                at++;
+
+            double span = lengths[at + 1] - lengths[at];
+            double fraction = span > 0 ? (wanted - lengths[at]) / span : 0;
+
+            stops[stop] = distances[at] + (distances[at + 1] - distances[at]) * Math.Clamp(fraction, 0, 1);
+        }
+
+        return stops;
     }
 
     // Which of a place's draws is which: each is its own number, so asking for one more of them never
@@ -288,23 +495,22 @@ public class Field : Group
     private const int PickDraw = 1;
     private const int TurnDraw = 2;
     private const int SizeDraw = 3;
+    private const int AlongDraw = 4;
+    private const int AcrossDraw = 5;
 
     /// <summary>
     /// This method returns the transform that stands a copy at a place: turned and sized as the field
     /// says, then moved there.
     /// </summary>
-    private Matrix PlacedAt(double x, double z, int seed, int row, int column)
+    private Matrix PlacedAt(Place place, int seed)
     {
-        Matrix placed = Transforms.Translate(x, 0, z);
+        Matrix placed = Transforms.Translate(place.X, 0, place.Z);
 
-        if (Turn > 0)
-            placed *= Transforms.RotateAroundY((DrawFor(seed, row, column, TurnDraw) - 0.5) * Turn, true);
+        if (Turned(place, seed) is { } angle)
+            placed *= Transforms.RotateAroundY(angle, true);
 
         if (SmallestSize != 1 || LargestSize != 1)
-        {
-            placed *= Transforms.Scale(
-                SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, row, column, SizeDraw));
-        }
+            placed *= Transforms.Scale(SizeAt(place, seed));
 
         return placed;
     }
@@ -312,20 +518,37 @@ public class Field : Group
     /// <summary>
     /// This method returns the turn and size a copy is stood with at a place, without the move there.
     /// </summary>
-    private Matrix TurnAndSizeAt(int seed, int row, int column)
+    private Matrix TurnAndSizeAt(Place place, int seed)
     {
         Matrix shape = Transforms.Scale(1);
 
-        if (Turn > 0)
-            shape *= Transforms.RotateAroundY((DrawFor(seed, row, column, TurnDraw) - 0.5) * Turn, true);
+        if (Turned(place, seed) is { } angle)
+            shape *= Transforms.RotateAroundY(angle, true);
 
         if (SmallestSize != 1 || LargestSize != 1)
-        {
-            shape *= Transforms.Scale(
-                SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, row, column, SizeDraw));
-        }
+            shape *= Transforms.Scale(SizeAt(place, seed));
 
         return shape;
+    }
+
+    /// <summary>
+    /// This method returns how far a copy is turned about the up axis at a place, in radians: the way
+    /// the path runs there, if the field follows one, and a share of the field's spread of turns, if it
+    /// has one -- or <c>null</c>, if neither, when nothing is turned at all.
+    /// </summary>
+    private double? Turned(Place place, int seed)
+    {
+        double? spread = Turn > 0 ? (DrawFor(seed, place.Row, place.Column, TurnDraw) - 0.5) * Turn : null;
+
+        return place.Facing is { } facing ? facing + (spread ?? 0) : spread;
+    }
+
+    /// <summary>
+    /// This method returns the size a copy is stood at, at a place.
+    /// </summary>
+    private double SizeAt(Place place, int seed)
+    {
+        return SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, place.Row, place.Column, SizeDraw);
     }
 
     /// <summary>

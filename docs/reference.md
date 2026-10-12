@@ -42,7 +42,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `along` | Text layout: `along path` lays the text along a path rather than a straight line. | [Advanced Surfaces](advanced-surfaces.md#text-along-a-path) |
+| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
@@ -50,6 +50,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `angles` | `angles are degrees`/`radians`. | [Context](context.md#angles) |
 | `anisotropy` | Medium: which way it prefers to turn light. | [Scene Files](scene-files.md#scattering) |
 | `antialiasing` | Context: `antialiasing depth`/`threshold`. | [Context](context.md#anti-aliasing) |
+| `apart` | Field: `rows <n> apart <d>`, how far apart its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `aperture` | Camera: lens radius; larger blurs more. | [Cameras](cameras.md#depth-of-field) |
 | `apply` | Context: `apply gamma`. | [Context](context.md#gamma) |
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
@@ -239,6 +240,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `object` | `object file` (loads a mesh), or `object` (reuse by name). | [Advanced Surfaces](advanced-surfaces.md#object-files), [Surfaces](surfaces.md#reusing-a-surface) |
 | `octaves` | Turbulence/noise: how many layers of it. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
+| `offset` | Field: how far to the left of the path it follows its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `on` | Places a surface on top of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `once` | Image map: show the image once rather than tiling it. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
@@ -292,7 +294,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
 | `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [Hair](advanced-surfaces.md#how-hair-is-lit) |
-| `rows` | `physical sky`: how many heights in the sky are worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `rows` | `physical sky`: how many heights in the sky are worked out and kept.  Also a field's `rows <n> apart <d>`, rows laid side by side along a path. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count, and context: `reflection samples`. | [Scene Files](scene-files.md#scattering) |
 | `scale` | Transform: resize (a surface or a 2D path); also a sweep spline point's cross-section size, and `scale ambient by` in a context block. | [Transforms](transforms.md#scale), [Context](context.md#ambient) |

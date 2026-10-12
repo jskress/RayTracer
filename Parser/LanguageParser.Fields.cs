@@ -82,6 +82,30 @@ public partial class LanguageParser
                             Term = new VariableTerm(clause.Tokens[1])
                         };
                     break;
+                case "along":
+                    // Written out here, or named, for the same reason as the outline.
+                    resolver.AlongResolver = BounderToken.OpenBrace.Matches(clause.Tokens[1])
+                        ? ParseGeneralPathClause()
+                        : new TermResolver<GeneralPath>
+                        {
+                            Term = new VariableTerm(clause.Tokens[1])
+                        };
+                    break;
+                case "rows":
+                    resolver.RowsResolver = new TermResolver<int>
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value >= 1 ? null : "A field must lay at least one row."
+                    };
+                    resolver.ApartResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(1),
+                        Validator = value => value > 0 ? null : "A field's rows must be some distance apart."
+                    };
+                    break;
+                case "offset":
+                    resolver.OffsetResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
                 case "of":
                     // A named surface, or a call of a primitive, and then as many more as are written
                     // after commas, each with how often it is picked.  The call is what makes `copies`

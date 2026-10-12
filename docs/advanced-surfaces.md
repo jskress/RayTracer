@@ -262,7 +262,8 @@ The complete scene is
 
 ### Field
 
-An area of the X/Z plane, given by a 2D outline, filled with copies of one surface.
+An area of the X/Z plane, given by a 2D outline, filled with copies of one surface — or a line in it,
+given by a path, laid with them.
 
 ```
 Blade = ribbon { width 0.03 at [0, 0, 0]  width 0.002 at [0.16, 0.36, 0] }
@@ -291,6 +292,7 @@ that is one thing in many places over an area, and none of it needing a loop.
 | | |
 | --- | --- |
 | `within` | The outline to fill, in the X/Z plane. |
+| `along` | A path to lay the copies along instead, in the X/Z plane; see [Laying a field along a path](#laying-a-field-along-a-path). |
 | `of` | The surface to fill it with, by name or by a call of a primitive — or several, after commas, each with an optional `weight`. |
 | `spacing` | How far apart the copies stand, before any jitter. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
@@ -302,6 +304,8 @@ that is one thing in many places over an area, and none of it needing a loop.
 | `above`, `below` | The lowest and highest ground a dropped copy may stand on. |
 | `steepest` | The steepest ground a dropped copy may stand on, as an angle from level. |
 | `sink` | How far a dropped copy is sunk into the ground, along its own up. |
+| `rows <n> apart <d>` | Along a path: lay that many rows side by side, that far apart, centered on it. |
+| `offset` | Along a path: how far to its left, as it is walked, the rows lie; to its right, if less than nought. |
 | `index in <name>` | Name each copy's number, and give each place its own surface rather than an instance of one shape.  The `in <name>` is not optional. |
 
 **The copies are *instances* by default**, and that is the right way round: an
@@ -444,6 +448,38 @@ from a primitive is dropped by the block on its call, as the grass above is.
 
 The grid is laid out level, so ground that slopes away holds its copies a little further apart along
 its surface than level ground does — at thirty degrees, by about fifteen percent.
+
+#### Laying a field along a path
+
+A field may lay its copies along a path instead of filling an outline: fence posts, a ring of standing
+stones, benches along a front, seats round a curved terrace.  Write `along` where `within` would go:
+
+```
+Front = path { move to -40, 0  curve -15, 18, 15, -18 to 40, 0 }
+
+field { of Bollard(0.9)  along Front  spacing 2.5 }
+field { of Bench(1.8)  along Front  spacing 9  offset 3 }
+field { of Oak(9, 'summer', 1), Oak(8, 'summer', 2)  along Front  spacing 8  rows 2 apart 14  turned 360 }
+```
+
+**Each copy is turned to run with the path where it stands.**  Its own X runs the way the path does,
+so a length of railing or a bench follows a curve, and a round post or a tree is none the worse.  What
+faces -Z as it was made faces the path's right, as the path is walked from its start, and what faces +Z
+its left; draw the path the other way round to turn everything about.  `turned` spreads the copies about
+that way rather than about the way they were made.
+
+**The spacing is fitted to the length**: a whole number of gaps, each the spacing asked or a little
+more, so an open path has a copy at both ends, as a fence has a post at each.  A closed path goes round
+with no two copies at its seam, and a path whose end meets its start is closed however it was drawn.
+Each run of a path — each part begun with its own `move to` — is laid by itself.
+
+**`rows <n> apart <d>` lays rows side by side**, centered on the path, and each row is spaced along its
+own length: the row on the outside of a bend is longer than the one inside it, and holds more.
+`offset` sets them to one side of the path — to its left, as it is walked, or to its right if less than
+nought — so one path can carry the railing at its edge and the benches a few paces back from it.
+
+`jitter` moves a copy along the path and across it, by as much as that share of the spacing, and
+`over '<name>'` drops a field laid along a path onto the ground like any other: a fence over a hill.
 
 ### Ribbon
 
