@@ -258,14 +258,11 @@ primitive MossyCobble(size, season = 'summer', variant = 1, shade = [0, 0, 1]) -
 
 // -- Scree ---------------------------------------------------------------------------------------
 
-// One stone of a scree, lifted so that it sits *into* the ground rather than on it.  How far to lift
-// it depends on how big this particular stone came out, so it happens here rather than where the
-// field puts it -- a field stands its copies on the plane and knows nothing about what they are.
+// One stone of a scree, lifted so that it sits *into* the ground rather than on it.  The lift goes
+// with the stone, so a field that sizes the stone sizes its lift with it.
 primitive RockScreeStone(n, season, variant, size) -> group {
-    stone = size * (0.55 + random(variant, n, 1) * 0.75)
-
     return group {
-        object Cobble(stone, season, variant * 6421 + n) { translate Y stone * 0.16 }
+        object Cobble(size, season, variant * 6421 + n) { translate Y size * 0.16 }
     }
 }
 
@@ -273,8 +270,9 @@ primitive RockScreeStone(n, season, variant, size) -> group {
 // a scree is the shape you draw, lying where you draw it.
 //
 // The stones stand on a grid and are then thrown nearly a whole cell off it, exactly as the grass is
-// and for the same reason: a lattice is very easy to notice and impossible to unsee.  Each takes its
-// size and its shape from its number within the heap, so no two are alike.
+// and for the same reason: a lattice is very easy to notice and impossible to unsee.  Eight stones are
+// built and every place stands one of them, turned any way and sized from about half the size asked for
+// to a third over it -- the same arrangement `Grass` uses, and for the same saving.
 //
 // **This was a square, and squares are why a heap of stone never sat against anything.**  Scree runs
 // out where a slope runs out; it does not stop along a line at right angles to another line.  It was
@@ -283,10 +281,14 @@ primitive RockScreeStone(n, season, variant, size) -> group {
 // them costs what the blocking used to and says a great deal less.
 primitive Scree(shape, season = 'summer', variant = 1, size = 0.3, density = 1) -> field {
     return field {
-        of RockScreeStone(n, season, variant, size)
+        of RockScreeStone(0, season, variant, size), RockScreeStone(1, season, variant, size),
+           RockScreeStone(2, season, variant, size), RockScreeStone(3, season, variant, size),
+           RockScreeStone(4, season, variant, size), RockScreeStone(5, season, variant, size),
+           RockScreeStone(6, season, variant, size), RockScreeStone(7, season, variant, size)
         within shape
         spacing size * 1.25 / density
         jitter 1.7
-        index in n
+        turned 360
+        sized 0.55 to 1.3
     }
 }

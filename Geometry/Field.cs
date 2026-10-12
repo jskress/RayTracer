@@ -74,6 +74,41 @@ public class Field : Group
     public bool Copies { get; set; }
 
     /// <summary>
+    /// This property holds the things the field may stand at a place, when there is more than one: each
+    /// built once and stood wherever it is picked.  Empty means the one <see cref="Prototype"/>.
+    /// <para>
+    /// **A wood is not one tree in a thousand places, nor a thousand different trees.**  Built one by
+    /// one, every copy costs a tree to make; built once, every copy is the same tree.  A handful of
+    /// trees, each built once and picked among at every place -- and turned and sized as each is stood
+    /// there -- reads as a wood for the cost of a handful.
+    /// </para>
+    /// </summary>
+    public List<FieldChoice> Choices { get; } = [];
+
+    /// <summary>
+    /// This property notes that the things to stand are taken in turn rather than picked at random: by
+    /// row and column together, so that over a grid they run in diagonal stripes.
+    /// </summary>
+    public bool Cycle { get; set; }
+
+    /// <summary>
+    /// This property holds how far each copy may be turned about the up axis, in radians: the whole
+    /// spread of turns, centered on the way the thing faces as made.  Nought leaves every copy facing
+    /// the same way, as soldiers in ranks do; a whole turn faces each any way at all.
+    /// </summary>
+    public double Turn { get; set; }
+
+    /// <summary>
+    /// This property holds the smallest size a copy may be stood at, as a scale of the thing as made.
+    /// </summary>
+    public double SmallestSize { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds the largest size a copy may be stood at, as a scale of the thing as made.
+    /// </summary>
+    public double LargestSize { get; set; } = 1;
+
+    /// <summary>
     /// This method is called once prior to rendering to fill the outline.
     /// </summary>
     protected override void PrepareSurfaceForRendering()
@@ -81,42 +116,60 @@ public class Field : Group
         if (Outline is null)
             throw new Exception("A field needs an outline to fill.");
 
-        if (Prototype is null)
+        List<FieldChoice> choices = Choices.Count > 0 ? Choices
+            : Prototype is null ? [] : [new FieldChoice(Prototype)];
+
+        if (choices.Count == 0)
             throw new Exception("A field needs something to fill its outline with.");
 
         if (Spacing <= 0)
             throw new Exception("A field's spacing must be greater than nought.");
 
-        Random random = new Random(Seed ?? DefaultSeed);
-        Surface shared = null;
-        Surface first = null;
+        if (choices.Any(choice => choice.Weight <= 0))
+            throw new Exception("A field's weights must be greater than nought.");
+
+        if (SmallestSize <= 0 || LargestSize < SmallestSize)
+            throw new Exception("A field's sizes must be greater than nought, the smaller first.");
+
+        int seed = Seed ?? DefaultSeed;
+        Random random = new Random(seed);
+        Surface[] shared = new Surface[choices.Count];
+        Surface[] first = new Surface[choices.Count];
         int number = 0;
 
         if (!Copies)
         {
-            // Built to be shared -- but not every shape may be, and asking is not fussiness.  A
-            // shape holding a light, or a medium, or one that moves has no single place to be; and
-            // an instance of a shape that is itself an instance cannot say which of the two a point
-            // lies in, which the instance refuses outright rather than getting quietly wrong.
-            //
-            // **That last is the ordinary case, not an exotic one.**  A primitive that gives back a
-            // group hands out a group holding an instance, and most primitives worth calling give
-            // back a group.  A field of one used to end the render complaining about shapes holding
-            // shapes, which is true of the internals and no help at all to whoever wrote the scene.
-            Surface candidate = Prototype(0);
-
-            if (Instance.MayBeShared(candidate))
-                shared = candidate;
-            else
+            for (int index = 0; index < choices.Count; index++)
             {
-                // It is made already, so it stands at the first place rather than being thrown away,
-                // and the numbering carries on from it.  Nothing much is lost by the refusal: where
-                // the shape came from a primitive, that primitive does its own sharing underneath,
-                // so what is built again here is the wrapper and not the geometry.
-                first = candidate;
-                number = 1;
+                // Built to be shared -- but not every shape may be, and asking is not fussiness.  A
+                // shape holding a light, or a medium, or one that moves has no single place to be;
+                // and an instance of a shape that is itself an instance cannot say which of the two a
+                // point lies in, which the instance refuses outright rather than getting quietly wrong.
+                //
+                // **That last is the ordinary case, not an exotic one.**  A primitive that gives back
+                // a group hands out a group holding an instance, and most primitives worth calling
+                // give back a group.  A field of one used to end the render complaining about shapes
+                // holding shapes, which is true of the internals and no help at all to whoever wrote
+                // the scene.
+                Surface candidate = choices[index].Make(number);
+
+                if (Instance.MayBeShared(candidate))
+                    shared[index] = candidate;
+                else
+                {
+                    // It is made already, so it stands at the first place it is picked for rather than
+                    // being thrown away, and the numbering carries on from it.  Nothing much is lost
+                    // by the refusal: where the shape came from a primitive, that primitive does its
+                    // own sharing underneath, so what is built again here is the wrapper and not the
+                    // geometry.
+                    first[index] = candidate;
+                    number++;
+                }
             }
         }
+
+        int[] turns = Cycle ? TurnsOf(choices) : null;
+        double totalWeight = choices.Sum(choice => choice.Weight);
 
         Surfaces.Clear();
 
@@ -144,19 +197,22 @@ public class Field : Group
                 if (!Outline.Contains(new TwoDPoint(x, z)))
                     continue;
 
+                int pick = choices.Count == 1 ? 0
+                    : turns is not null ? turns[(row + column) % turns.Length]
+                    : Picked(choices, totalWeight * DrawFor(seed, row, column, PickDraw));
                 Surface copy;
 
-                if (shared is not null)
-                    copy = new Instance { Prototype = shared };
-                else if (first is not null)
+                if (shared[pick] is not null)
+                    copy = new Instance { Prototype = shared[pick] };
+                else if (first[pick] is not null)
                 {
-                    copy = first;
-                    first = null;
+                    copy = first[pick];
+                    first[pick] = null;
                 }
                 else
-                    copy = Prototype(number++);
+                    copy = choices[pick].Make(number++);
 
-                copy.Transform = Transforms.Translate(x, 0, z) * copy.Transform;
+                copy.Transform = PlacedAt(x, z, seed, row, column) * copy.Transform;
 
                 Add(copy);
             }
@@ -164,4 +220,92 @@ public class Field : Group
 
         base.PrepareSurfaceForRendering();
     }
+
+    // Which of a place's draws is which: each is its own number, so asking for one more of them never
+    // changes another.
+    private const int PickDraw = 1;
+    private const int TurnDraw = 2;
+    private const int SizeDraw = 3;
+
+    /// <summary>
+    /// This method returns the transform that stands a copy at a place: turned and sized as the field
+    /// says, then moved there.
+    /// </summary>
+    private Matrix PlacedAt(double x, double z, int seed, int row, int column)
+    {
+        Matrix placed = Transforms.Translate(x, 0, z);
+
+        if (Turn > 0)
+            placed *= Transforms.RotateAroundY((DrawFor(seed, row, column, TurnDraw) - 0.5) * Turn, true);
+
+        if (SmallestSize != 1 || LargestSize != 1)
+        {
+            placed *= Transforms.Scale(
+                SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, row, column, SizeDraw));
+        }
+
+        return placed;
+    }
+
+    /// <summary>
+    /// This method returns which of the things to stand a draw picks, each as often as its weight says.
+    /// </summary>
+    private static int Picked(List<FieldChoice> choices, double draw)
+    {
+        for (int index = 0; index < choices.Count - 1; index++)
+        {
+            draw -= choices[index].Weight;
+
+            if (draw < 0)
+                return index;
+        }
+
+        return choices.Count - 1;
+    }
+
+    /// <summary>
+    /// This method returns the order the things to stand are taken in, for a field that takes them in
+    /// turn: each as many times running as its weight, rounded to a whole number and at least once.
+    /// </summary>
+    private static int[] TurnsOf(List<FieldChoice> choices)
+    {
+        List<int> turns = [];
+
+        for (int index = 0; index < choices.Count; index++)
+            turns.AddRange(Enumerable.Repeat(index, Math.Max(1, (int) Math.Round(choices[index].Weight))));
+
+        return turns.ToArray();
+    }
+
+    /// <summary>
+    /// This method returns a number from nought to one for one place of the grid, as good as random and
+    /// the same every time.
+    /// <para>
+    /// **It comes from the place, not from the order places are filled in.**  Drawn one after another,
+    /// what stood at a place would depend on how many places before it fell inside the outline, and a
+    /// pond cut out of a wood would turn and swap every tree beyond it.  Drawn from the place, a tree
+    /// keeps its kind, its turn and its size whatever is cut away around it.  The jitter is drawn in
+    /// order, as it always has been, so a field asked for none of this stands exactly where it did.
+    /// </para>
+    /// </summary>
+    private static double DrawFor(int seed, int row, int column, int purpose)
+    {
+        ulong bits = (ulong) (uint) seed * 0x9E3779B97F4A7C15UL;
+
+        bits ^= (ulong) (uint) row * 0xC2B2AE3D27D4EB4FUL + (ulong) (uint) column * 0x165667B19E3779F9UL +
+                (ulong) purpose * 0xD6E8FEB86659FD93UL;
+        bits = (bits ^ (bits >> 30)) * 0xBF58476D1CE4E5B9UL;
+        bits = (bits ^ (bits >> 27)) * 0x94D049BB133111EBUL;
+        bits ^= bits >> 31;
+
+        return (bits >> 11) * (1.0 / (1UL << 53));
+    }
 }
+
+/// <summary>
+/// This record holds one of the things a field may stand at a place: how to make it, given a copy's
+/// number, and how often it is picked against the others.
+/// </summary>
+/// <param name="Make">How to make it.</param>
+/// <param name="Weight">How often it is picked, against the others' weights.</param>
+public sealed record FieldChoice(Func<int, Surface> Make, double Weight = 1);

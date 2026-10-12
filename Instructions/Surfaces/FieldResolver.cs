@@ -22,9 +22,30 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<GeneralPath> OutlineResolver { get; set; }
 
     /// <summary>
-    /// This property holds the resolver for the thing the field is filled with.
+    /// This property holds the resolvers for the things the field is filled with, each with how often it
+    /// is picked against the others: unsaid, as often as any.
     /// </summary>
-    public ISurfaceResolver PrototypeResolver { get; set; }
+    public List<(ISurfaceResolver Surface, Resolver<double> Weight)> ChoiceResolvers { get; set; } = [];
+
+    /// <summary>
+    /// This property holds the resolver for whether the things to stand are taken in turn.
+    /// </summary>
+    public Resolver<bool> CycleResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far each copy may be turned about the up axis.
+    /// </summary>
+    public Resolver<double> TurnResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the smallest size a copy may be stood at.
+    /// </summary>
+    public Resolver<double> SmallestSizeResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the largest size a copy may be stood at.
+    /// </summary>
+    public Resolver<double> LargestSizeResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how far apart the copies stand.
@@ -60,13 +81,43 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
         SpacingResolver.AssignTo(value, target => target.Spacing, context, variables);
         JitterResolver.AssignTo(value, target => target.Jitter, context, variables);
         CopiesResolver.AssignTo(value, target => target.Copies, context, variables);
+        CycleResolver.AssignTo(value, target => target.Cycle, context, variables);
+        TurnResolver.AssignTo(value, target => target.Turn, context, variables);
+        SmallestSizeResolver.AssignTo(value, target => target.SmallestSize, context, variables);
+        LargestSizeResolver.AssignTo(value, target => target.LargestSize, context, variables);
 
-        // Handed over as a factory rather than as a surface, so that a field told to make copies can
-        // ask for a fresh one at every place -- the same arrangement an L-system's leaf uses.
-        if (PrototypeResolver is not null)
-            value.Prototype = number => Make(context, variables, number);
+        // Handed over as factories rather than as surfaces, so that a field told to make copies can ask
+        // for a fresh one at every place -- the same arrangement an L-system's leaf uses.  Only a
+        // resolver with things of its own replaces the field's: the block on a call of a primitive
+        // giving back a field is read as another field, holding a transform and nothing to fill with,
+        // and it must not wipe what the primitive just worked out.
+        if (ChoiceResolvers.Count > 0)
+        {
+            value.Choices.Clear();
+
+            foreach ((ISurfaceResolver surface, Resolver<double> weight) in ChoiceResolvers)
+            {
+                value.Choices.Add(new FieldChoice(
+                    number => Make(surface, context, variables, number),
+                    weight?.Resolve(context, variables) ?? 1));
+            }
+        }
 
         base.SetProperties(context, variables, value);
+    }
+
+    /// <summary>
+    /// This method creates a copy of this resolver.
+    /// </summary>
+    /// <returns>A clone of this resolver.</returns>
+    public override object Clone()
+    {
+        FieldResolver resolver = (FieldResolver) base.Clone();
+
+        // Force the list to be physically different, but with the same content.
+        resolver.ChoiceResolvers = [..resolver.ChoiceResolvers];
+
+        return resolver;
     }
 
     /// <summary>
@@ -78,20 +129,21 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     /// and it is the whole of what makes `index` worth more than an instance.
     /// </para>
     /// </summary>
+    /// <param name="surface">The resolver for the thing to build.</param>
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The names the field was written among.</param>
     /// <param name="number">Which copy this is.</param>
     /// <returns>The surface to stand at this place.</returns>
-    private Surface Make(RenderContext context, Variables variables, int number)
+    private Surface Make(ISurfaceResolver surface, RenderContext context, Variables variables, int number)
     {
         if (CopyNumberName is null)
-            return PrototypeResolver.ResolveToSurface(context, variables);
+            return surface.ResolveToSurface(context, variables);
 
         Variables scope = new Variables(variables);
 
         scope.SetValue(CopyNumberName, (double) number);
 
-        return PrototypeResolver.ResolveToSurface(context, scope);
+        return surface.ResolveToSurface(context, scope);
     }
 
     /// <summary>
@@ -104,6 +156,6 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
         if (OutlineResolver is null)
             return "The \"within\" property is required.";
 
-        return PrototypeResolver is null ? "The \"of\" property is required." : null;
+        return ChoiceResolvers.Count == 0 ? "The \"of\" property is required." : null;
     }
 }

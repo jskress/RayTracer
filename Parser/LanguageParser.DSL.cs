@@ -80,7 +80,7 @@ public partial class LanguageParser
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
-            'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cylinder', 'cylindrical',
+            'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
@@ -96,13 +96,13 @@ public partial class LanguageParser
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sky', 'smooth', 'software', 'source',
+            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sized', 'sky', 'smooth', 'software', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strand', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
-            'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'white', 'width', 'with', 'within', 'wood',
+            'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
+            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'weight', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -1224,8 +1224,19 @@ public partial class LanguageParser
             { index > in ?? 'Expecting "in" to follow "index" here.' >
                 [ _identifier | _keyword ]
                 ?? 'Expecting a name for the copy number to follow "in" here.' } |
+            cycle | { turned > _expression } |
+            { sized > _expression > { to > _expression }{?} } |
             surfaceEntryClause
         ]
+        // What may follow one of the things a field is filled with: how often it is picked, and then,
+        // after a comma, the next of them.
+        fieldWeightClause: { weight > _expression }
+        fieldChoiceClause:
+        {
+            comma > [ _identifier | _keyword ]
+                ?? 'Expecting a surface name, or a call of a primitive, to follow the comma here.' >
+            leftParen{?}
+        }
 
         // Ribbon clauses.
         startRibbonClause:

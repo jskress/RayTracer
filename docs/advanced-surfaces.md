@@ -291,9 +291,12 @@ that is one thing in many places over an area, and none of it needing a loop.
 | | |
 | --- | --- |
 | `within` | The outline to fill, in the X/Z plane. |
-| `of` | The name of the surface to fill it with. |
+| `of` | The surface to fill it with, by name or by a call of a primitive — or several, after commas, each with an optional `weight`. |
 | `spacing` | How far apart the copies stand, before any jitter. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
+| `turned` | How far each copy may be turned about the up axis: the whole spread, centered on the way it faces as made.  `turned 360` faces each any way at all. |
+| `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size. |
+| `cycle` | Take the things after `of` in turn rather than at random. |
 | `index in <name>` | Name each copy's number, and give each place its own surface rather than an instance of one shape.  The `in <name>` is not optional. |
 
 **The copies are *instances* by default**, and that is the right way round: an
@@ -336,6 +339,37 @@ same geometry over and over, which is strictly worse than one instance of it.
 
 **`of` takes a name or a call.**  A named surface is the same shape everywhere, which is what an
 instance wants; a call of a primitive is what lets each copy be its own.
+
+**Or several, each built once.**  A wood is not one tree in a thousand places, and it should not be a
+thousand trees built one by one either.  A handful of things after `of`, each built once and stood
+wherever it is picked — and turned and sized as it is stood there — reads as a wood for the cost of a
+handful:
+
+```
+field {
+    of Oak(10, 'summer', 1), Oak(9, 'summer', 2), Elm(11, 'summer', 3) weight 2
+    within Wood
+    spacing 4  jitter 0.9
+    turned 360
+    sized 0.85 to 1.15
+}
+```
+
+Each is picked as often as its `weight` says against the others' — the elm above, twice as often as
+either oak — and `cycle` takes them in turn instead, by row and column together, so over a grid they run
+in diagonal stripes; with `cycle`, a weight is how many stripes of that thing run together.  `turned` is
+in the scene's own unit of angle, like a rotation, and a small one keeps copies roughly facing the way
+they were made: `turned 20` faces each within ten degrees of it, either way.
+
+**What stands at a place belongs to the place.**  Which thing it is, how far it is turned and how big it
+is are worked out from the place itself rather than drawn one after another, so cutting a pond out of
+the middle of a wood leaves every tree around the pond as it was.  A field that asks for none of this
+stands its copies exactly where it always did.
+
+This is usually what to reach for in place of `index in n`.  The `Grass` the
+[undergrowth library](libraries.md#undergrowth) offers is eight tufts, turned and sized, and sets up
+thirteen times faster than when it built every tuft its own; keep `index` for when each copy must
+differ in a way no turn or size can give, like the wildflowers that each take a color of their own.
 
 **A lattice is very easy to see and impossible to unsee.**  `jitter` defaults to nought, which gives
 ranks and files — right for soldiers, wrong for grass.  Anything meant to look natural wants most of

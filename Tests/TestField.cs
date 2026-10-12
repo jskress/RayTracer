@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
@@ -407,6 +408,200 @@ public class TestField
         Assert.IsTrue(numbered > uniform * 1.5,
             $"Numbered copies covered {numbered} pixels against {uniform} for copies all built " +
             "from nought, which is not enough of a difference to say the number varied.");
+    }
+
+    /// <summary>
+    /// A field of several things picks among them as often as their weights say, and builds each once
+    /// however many places it stands at.
+    /// </summary>
+    [TestMethod]
+    public void TestSeveralThingsArePickedByWeightAndBuiltOnce()
+    {
+        int ballsBuilt = 0, boxesBuilt = 0;
+        Field field = new ()
+        {
+            Outline = new GeneralPath().MoveTo(-10, -10).LineTo(10, -10).LineTo(10, 10).LineTo(-10, 10).ClosePath(),
+            Spacing = 0.5
+        };
+
+        field.Choices.Add(new FieldChoice(_ => { ballsBuilt++; return new Sphere(); }));
+        field.Choices.Add(new FieldChoice(_ => { boxesBuilt++; return new Cube(); }, 3));
+        field.PrepareForRendering();
+
+        int balls = field.Surfaces.Cast<Instance>().Count(instance => instance.Prototype is Sphere);
+        int boxes = field.Surfaces.Cast<Instance>().Count(instance => instance.Prototype is Cube);
+
+        Assert.AreEqual(1600, balls + boxes);
+        Assert.AreEqual(3, (double) boxes / balls, 0.3, $"{boxes} boxes to {balls} balls");
+        Assert.AreEqual(1, ballsBuilt, "the ball was built more than once");
+        Assert.AreEqual(1, boxesBuilt, "the box was built more than once");
+    }
+
+    /// <summary>
+    /// Taken in turn, the things a field stands run in diagonal stripes over the grid, each as many
+    /// stripes running as its weight.
+    /// </summary>
+    [TestMethod]
+    public void TestThingsTakenInTurnRunInDiagonalStripes()
+    {
+        Sphere ball = new ();
+        Cube box = new ();
+        Field field = new () { Outline = Square(), Spacing = 0.25, Cycle = true };
+
+        field.Choices.Add(new FieldChoice(_ => ball, 2));
+        field.Choices.Add(new FieldChoice(_ => box));
+        field.PrepareForRendering();
+
+        foreach (Instance instance in field.Surfaces.Cast<Instance>())
+        {
+            Point at = Point.Zero * instance.Transform;
+            int column = (int) Math.Floor((at.X + 1) / 0.25);
+            int row = (int) Math.Floor((at.Z + 1) / 0.25);
+            Surface expected = (row + column) % 3 < 2 ? ball : box;
+
+            Assert.AreSame(expected, instance.Prototype, $"at row {row}, column {column}");
+        }
+    }
+
+    /// <summary>
+    /// A field's turn is spread evenly about the way a thing faces as made, so a turn of twenty degrees
+    /// faces each copy within ten of it either way; and a field asked for no turn and no size stands
+    /// each copy exactly as it always has, moved and nothing else.
+    /// </summary>
+    [TestMethod]
+    public void TestTurnsSpreadAboutTheWayAThingFaces()
+    {
+        Field turned = new ()
+        {
+            Outline = Square(), Spacing = 0.1, Turn = 20.0.ToRadians(), Prototype = _ => new Sphere()
+        };
+
+        turned.PrepareForRendering();
+
+        List<double> angles = turned.Surfaces.Select(copy => TurnAndSizeOf(copy.Transform).Turn).ToList();
+
+        Assert.IsTrue(angles.All(angle => Math.Abs(angle) <= 10.0.ToRadians() + 1e-12), "a copy turned too far");
+        Assert.IsTrue(angles.Max() - angles.Min() > 18.0.ToRadians(), "the turns did not spread over the range");
+        Assert.AreEqual(0, angles.Average(), 1.0.ToRadians(), "the turns did not center on the way the thing faces");
+
+        Field plain = Filled(0.5, 0.9);
+
+        foreach (Surface copy in plain.Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+
+            Assert.IsTrue(Transforms.Translate(at.X, 0, at.Z).Matches(copy.Transform), "a plain copy was more than moved");
+        }
+    }
+
+    /// <summary>
+    /// A field's sizes fall between its smallest and its largest, spread over the range.
+    /// </summary>
+    [TestMethod]
+    public void TestSizesFallBetweenTheSmallestAndTheLargest()
+    {
+        Field field = new ()
+        {
+            Outline = Square(), Spacing = 0.1, SmallestSize = 0.5, LargestSize = 2, Prototype = _ => new Sphere()
+        };
+
+        field.PrepareForRendering();
+
+        List<double> sizes = field.Surfaces.Select(copy => TurnAndSizeOf(copy.Transform).Size).ToList();
+
+        Assert.IsTrue(sizes.All(size => size is >= 0.5 - 1e-12 and <= 2 + 1e-12), "a copy was sized out of range");
+        Assert.AreEqual(1.25, sizes.Average(), 0.06, "the sizes did not spread evenly over the range");
+        Assert.IsTrue(sizes.All(size => Math.Abs(TurnAndSizeOf(Transforms.Scale(size)).Turn) < 1e-12));
+    }
+
+    /// <summary>
+    /// What stands at a place, which way it is turned and how big it is, belong to the place: cutting a
+    /// hole in the outline changes nothing around the hole.
+    /// </summary>
+    [TestMethod]
+    public void TestAPlaceKeepsWhatStandsThereWhenAHoleIsCut()
+    {
+        Dictionary<(double, double), (Surface, double, double)> Stood(GeneralPath outline)
+        {
+            Field field = new ()
+            {
+                Outline = outline, Spacing = 0.2, Jitter = 0.8, Turn = Math.PI * 2, SmallestSize = 0.5, LargestSize = 1.5
+            };
+
+            field.Choices.Add(new FieldChoice(_ => new Sphere()));
+            field.Choices.Add(new FieldChoice(_ => new Cube()));
+            field.PrepareForRendering();
+
+            return field.Surfaces.Cast<Instance>().ToDictionary(
+                copy => (Math.Round((Point.Zero * copy.Transform).X, 9), Math.Round((Point.Zero * copy.Transform).Z, 9)),
+                copy => ((Surface) (copy.Prototype is Sphere ? null : copy.Prototype), TurnAndSizeOf(copy.Transform).Turn,
+                    TurnAndSizeOf(copy.Transform).Size));
+        }
+
+        Dictionary<(double, double), (Surface Box, double Turn, double Size)> whole = Stood(Square());
+        Dictionary<(double, double), (Surface Box, double Turn, double Size)> holed = Stood(Square()
+            .MoveTo(-0.4, -0.4).LineTo(-0.4, 0.4).LineTo(0.4, 0.4).LineTo(0.4, -0.4).ClosePath());
+
+        Assert.IsTrue(holed.Count < whole.Count - 10, "the hole cut nothing away");
+
+        foreach (((double, double) at, (Surface Box, double Turn, double Size) there) in holed)
+        {
+            Assert.IsTrue(whole.TryGetValue(at, out (Surface Box, double Turn, double Size) before), $"nothing stood at {at} before");
+            Assert.AreEqual(before.Box is null, there.Box is null, $"what stood at {at} changed");
+            Assert.AreEqual(before.Turn, there.Turn, 1e-12, $"the turn at {at} changed");
+            Assert.AreEqual(before.Size, there.Size, 1e-12, $"the size at {at} changed");
+        }
+    }
+
+    /// <summary>
+    /// The scene's side: several things after commas, each with a weight, the heavier one picked more
+    /// often; `turned` and `sized`; and weights and sizes that make no sense are refused.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayFillAFieldWithSeveralThings()
+    {
+        int moreBig = Lit($$"""
+                            {{Ball}}
+                            field { of Ball(0), Ball(5) weight 4  {{Outline}}  spacing 0.5  turned 360  sized 0.8 to 1.2 }
+                            """);
+        int moreSmall = Lit($$"""
+                              {{Ball}}
+                              field { of Ball(0) weight 4, Ball(5)  {{Outline}}  spacing 0.5  turned 360  sized 0.8 to 1.2 }
+                              """);
+        int doubled = Lit($$"""
+                            {{Ball}}
+                            field { of Ball(0)  {{Outline}}  spacing 0.5  sized 2 }
+                            """);
+        int single = Lit($$"""
+                           {{Ball}}
+                           field { of Ball(0)  {{Outline}}  spacing 0.5 }
+                           """);
+
+        Assert.IsTrue(moreBig > moreSmall * 1.3, $"weighted to the big ball covered {moreBig}, to the small {moreSmall}");
+        Assert.AreEqual(4, (double) doubled / single, 1, $"twice the size covered {doubled} against {single}");
+        Assert.IsNull(ErrorFrom($$"""
+                                  {{Ball}}
+                                  field { of Ball(0), Ball(1), Ball(2) weight 2  {{Outline}}  spacing 0.5  cycle }
+                                  """), "a field taking things in turn should just work");
+
+        foreach (string wrong in new[] { "of Ball(0), Ball(1) weight 0", "of Ball(0)  sized 0.5 to 0.25", "of Ball(0)  sized -1" })
+        {
+            Assert.IsNotNull(ErrorFrom($$"""
+                                         {{Ball}}
+                                         field { {{wrong}}  {{Outline}}  spacing 0.5 }
+                                         """), $"`{wrong}` should have been refused");
+        }
+    }
+
+    /// <summary>
+    /// This method returns how far a transform turns about the up axis and how much it scales,
+    /// for one made of a move, a turn about the up axis and an even scale.
+    /// </summary>
+    private static (double Turn, double Size) TurnAndSizeOf(Matrix transform)
+    {
+        Vector across = new Vector(1, 0, 0) * transform;
+
+        return (Math.Atan2(-across.Z, across.X), across.Magnitude);
     }
 
     /// <summary>

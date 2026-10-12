@@ -83,7 +83,12 @@ seeding), and calls `camera.Render(...)`.
 `Geometry/` holds all `Surface` subclasses (`Sphere`, `Plane`, `Cube`, `Cylinder`, `Conic`,
 `Torus`, `Triangle`/`SmoothTriangle`, `Parallelogram`, `Group`, `CsgSurface`, `HeightField`,
 `Extrusion`/`ExtrudedSurface`, `Lathe`, `TextSolid`, and L-system-driven shapes under
-`Geometry/LSystems/`).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
+`Geometry/LSystems/`).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
+several things (`of A, B weight 2`), each built once and stood by `Instance` where picked, `turned` and `sized`;
+what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
+in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The
+undergrowth and rocks libraries' areas (`Grass`, `Reeds`, `Wheat`, `Scree`) are eight such variants, not a build
+per copy (`index in n`).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
 `StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
 `PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton, kept by `patches`

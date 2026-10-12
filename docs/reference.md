@@ -110,6 +110,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cubic` | Pattern (and wave shape): cubic-interpolated. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `curl` | Hair: how many turns a strand winds through; `curl 3 radius 0.02`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `cycle` | Field: take the things it is filled with in turn rather than at random. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic), [Blob](surfaces.md#blob) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping, and a decal wrapped around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `decal` | A marking painted over a material's pigment, inside an outline. | [Materials](materials.md#decals) |
@@ -309,6 +310,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair) |
+| `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
@@ -363,6 +365,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `turned` | Field: how far its copies may be turned about the up axis, the whole spread. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
@@ -383,6 +386,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
