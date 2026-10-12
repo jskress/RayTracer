@@ -336,11 +336,13 @@ public partial class LanguageParser
     /// </para>
     /// </summary>
     /// <param name="clause">The clause that names the pattern, opening with "density".</param>
+    /// <param name="words">How many words open the clause before the pattern: one for "density" or
+    /// "patches", two for "picked by".</param>
     /// <returns>The resolver for the shaping.</returns>
-    private DensityShapeResolver ParseDensityShapeClause(Clause clause)
+    private DensityShapeResolver ParseDensityShapeClause(Clause clause, int words = 1)
     {
         // Past the word "density", which the pattern grammar knows nothing about.
-        (IPatternResolver patternResolver, _) = ParsePatternClause(clause, 1);
+        (IPatternResolver patternResolver, _) = ParsePatternClause(clause, words);
         DensityShapeResolver resolver = new ()
         {
             PatternResolver = patternResolver,

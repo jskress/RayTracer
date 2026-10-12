@@ -297,8 +297,10 @@ that is one thing in many places over an area, and none of it needing a loop.
 | `spacing` | How far apart the copies stand, before any jitter. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
 | `turned` | How far each copy may be turned about the up axis: the whole spread, centered on the way it faces as made.  `turned 360` faces each any way at all. |
-| `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size. |
+| `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size.  `sized 0.8 to 1.2 by <pattern> { … }` sets each by a pattern rather than chance. |
 | `cycle` | Take the things after `of` in turn rather than at random. |
+| `picked by <pattern> { … }` | Pick which of the things after `of` stands at a place by a pattern rather than chance; see [Fields in patches](#fields-in-patches). |
+| `patches <pattern> { … }` | A pattern saying where the field stands anything, its value the chance; `from <a> to <b>` gives it an edge. |
 | `over '<name>'` | Drop every copy straight down onto the surface of that name standing beside the field. |
 | `tilted` | A dropped copy leans with the ground under it, rather than standing upright. |
 | `above`, `below` | The lowest and highest ground a dropped copy may stand on. |
@@ -480,6 +482,49 @@ nought — so one path can carry the railing at its edge and the benches a few p
 
 `jitter` moves a copy along the path and across it, by as much as that share of the spacing, and
 `over '<name>'` drops a field laid along a path onto the ground like any other: a fence over a hill.
+
+#### Fields in patches
+
+A wood is not the same everywhere.  It has clearings, groves of one kind of tree among another, and
+places where the trees grow taller.  Three things a pattern can say do all of that, each read from the
+pattern's value at a place on the field's own ground — as a map of it, seen from above:
+
+```
+field {
+    of Oak(9, 'summer', 1), Birch(8, 'summer', 2), Fir(10, 'summer', 3)
+    picked by bozo { scale 40 }
+    within Wood
+    spacing 6  jitter 0.9  turned 360
+    patches bozo { scale 30 } from 0.38 to 0.42
+    sized 0.7 to 1.3 by bozo { scale 25 }
+}
+```
+
+**`patches` says where the field stands anything.**  It is the `patches` [hair](#hair) has, with
+everything a pigment's pattern can say: the pattern's value at a place is the chance something stands
+there, so on its own it thins a wood gently from thick to bare.  **`from <a> to <b>` gives it an edge**:
+nothing stands where the value is below `a`, something always stands where it is above `b`, and the
+chance rises evenly between.  `from 0.38 to 0.42` cuts clearings with a fringe a few trees wide in a wood
+that is full everywhere else; `from 0.4 to 0.4` cuts them with a knife.
+
+**An edge turned about — the larger first — keeps the places the other leaves**, exactly: a meadow given
+the wood's own pattern with `from 0.42 to 0.38` grows in its clearings and nowhere else, place for place
+where the two share a grid.
+
+**`picked by` picks what stands at a place** from the things after `of`: the first where the pattern is
+lowest, the last where it is highest.  Each takes as large a share of the places as its weight says,
+however the pattern's own values fall — a noise pattern's values crowd toward its middle, and banded by
+their value three kinds of tree would come out as one kind with a fringe of the other two.  Where two
+groves meet they mingle a little, as real ones do, rather than meeting in a line.  It cannot be had with
+`cycle`, which takes the things in turn instead.
+
+**`sized … by` sets each copy's size by a pattern** in the same way: the smallest where the pattern is
+lowest, the largest where it is highest, spanning the whole range asked for, with neighbours a little
+different from one another.
+
+Each pattern may be different, and usually wants to be: one shared by the patches and the picking would
+put every clearing at the edge of the first kind of tree.  They work alike whether the field fills an
+outline, follows a path — gaps in a hedge — or is dropped onto the ground.
 
 ### Ribbon
 

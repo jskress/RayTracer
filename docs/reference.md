@@ -83,7 +83,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
-| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair) |
+| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
@@ -159,7 +159,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading) |
+| `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`; where a field's patches begin, `from <a> to <b>`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `fresnel` | Finish: mirror more at a slant, square-on share from `reflective`. | [Materials](materials.md#fresnel) |
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
@@ -253,10 +253,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
 | `parametric` | A surface whose points are written out in terms of two parameters. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `patch` | Shape: a bicubic (16-point) surface patch. | [Surfaces](surfaces.md#patch) |
-| `patches` | Hair: a pattern saying where it grows, its value the chance a strand grows. | [Advanced Surfaces](advanced-surfaces.md#hair) |
+| `patches` | Hair: a pattern saying where it grows, its value the chance a strand grows.  Also a field's: where it stands anything. | [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Medium: `phase rayleigh`, which shape of scattering it follows.  Also shaping: slides a pattern's value before the wave. | [Scene Files](scene-files.md#scattering) |
+| `picked` | Field: `picked by <pattern>`, which of its things stands at a place. | [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `physical` | `physical sky`: a sky derived from what the air does to sunlight. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `pigment` | Material: what colors the surface; also a blob component's own color. | [Materials](materials.md#the-color) |
 | `pipes` | L-system control: draw edges as pipes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -315,7 +316,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair) |
-| `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`. | [Advanced Surfaces](advanced-surfaces.md#field) |
+| `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |

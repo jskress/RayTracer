@@ -98,7 +98,10 @@ snow made every fir rebuild its 2000 needle shoots (140 MB a tree).  `along <pat
 path instead of filling an outline (`Field.PathPlaces`, walking a `PathGuide` by distance): each turned so its +X runs
 with the path (-Z faces the path's right), the spacing fitted to whole gaps (both ends of an open run, no doubled seam
 on a closed one), `rows n apart d` each spaced along its OWN length, `offset` to the path's left, jitter drawn from
-the place.  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
+the place.  Patterns read on the field's plane at (x, 0, z): `patches` keeps a place by the RAW value as a chance
+(`from a to b` an edge; reversed, the exact complement on the same grid), while `picked by` and `sized … by` go by
+the place's RANK among the kept places (`Field.RanksOf`), so weights are true shares whatever the pattern's
+distribution, blurred by `Mingling`.  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
 `StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
 `PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton, kept by `patches`

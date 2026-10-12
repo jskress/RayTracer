@@ -141,6 +141,25 @@ public partial class LanguageParser
                     {
                         Term = clause.Expressions.Count > 1 ? clause.Term(1) : clause.Term()
                     };
+
+                    // And, if the scene says, a pattern that sets each size rather than chance.
+                    if (ParseClause("fieldSizedByClause") is { } sizedBy)
+                        resolver.SizedByResolver = ParseDensityShapeClause(sizedBy);
+
+                    break;
+                case "patches":
+                    resolver.PatchesResolver = ParseDensityShapeClause(clause);
+
+                    // An edge, if the scene gives one: unsaid, the pattern's value is the chance itself.
+                    if (ParseClause("fieldEdgeClause") is { } edge)
+                    {
+                        resolver.PatchesFromResolver = new TermResolver<double> { Term = edge.Term() };
+                        resolver.PatchesToResolver = new TermResolver<double> { Term = edge.Term(1) };
+                    }
+
+                    break;
+                case "picked":
+                    resolver.PickedByResolver = ParseDensityShapeClause(clause, 2);
                     break;
                 case "over":
                     resolver.OverResolver = new TermResolver<string> { Term = clause.Term() };
