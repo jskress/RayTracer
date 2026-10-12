@@ -4,6 +4,7 @@ using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Terms;
 using RayTracer.Instructions;
+using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Surfaces;
 
 namespace RayTracer.Parser;
@@ -43,6 +44,22 @@ public partial class LanguageParser
     }
 
     /// <summary>
+    /// This method reads how often one of the things a field is filled with is picked, if the scene
+    /// says: `weight` and a number greater than nought.
+    /// </summary>
+    /// <returns>The resolver for the weight, or <c>null</c> if none was written.</returns>
+    private Resolver<double> ParseFieldWeight()
+    {
+        Clause clause = ParseClause("fieldWeightClause");
+
+        return clause is null ? null : new TermResolver<double>
+        {
+            Term = clause.Term(),
+            Validator = value => value > 0 ? null : "A weight must be greater than nought."
+        };
+    }
+
+    /// <summary>
     /// This method is used to handle an item clause of a field block.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
@@ -66,12 +83,40 @@ public partial class LanguageParser
                         };
                     break;
                 case "of":
-                    // A named surface, or a call of a primitive.  The call is what makes `copies`
+                    // A named surface, or a call of a primitive, and then as many more as are written
+                    // after commas, each with how often it is picked.  The call is what makes `copies`
                     // worth having: the scene hands the copy's number in as an argument, and the
                     // primitive's own arithmetic makes each of them its own.
-                    resolver.PrototypeResolver = clause.Tokens.Count > 2
-                        ? ParseCall(clause)
-                        : GetExtensibleItem<ISurfaceResolver>(clause.Tokens[1], false);
+                    List<(ISurfaceResolver, Resolver<double>)> choices = [];
+
+                    for (Clause choice = clause; choice is not null; choice = ParseClause("fieldChoiceClause"))
+                    {
+                        ISurfaceResolver surface = choice.Tokens.Count > 2
+                            ? ParseCall(choice)
+                            : GetExtensibleItem<ISurfaceResolver>(choice.Tokens[1], false);
+
+                        choices.Add((surface, ParseFieldWeight()));
+                    }
+
+                    resolver.ChoiceResolvers = choices;
+                    break;
+                case "cycle":
+                    resolver.CycleResolver = new LiteralResolver<bool> { Value = true };
+                    break;
+                case "turned":
+                    // In the scene's own unit of angle, as a rotation is: the whole spread of turns.
+                    resolver.TurnResolver = new AngleResolver
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value >= 0 ? null : "A field's turn may not be less than nought."
+                    };
+                    break;
+                case "sized":
+                    resolver.SmallestSizeResolver = new TermResolver<double> { Term = clause.Term() };
+                    resolver.LargestSizeResolver = new TermResolver<double>
+                    {
+                        Term = clause.Expressions.Count > 1 ? clause.Term(1) : clause.Term()
+                    };
                     break;
                 case "spacing":
                     resolver.SpacingResolver = new TermResolver<double> { Term = clause.Term() };
