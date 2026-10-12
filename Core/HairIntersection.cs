@@ -42,11 +42,26 @@ public class HairIntersection : Intersection
     /// </summary>
     public double Radius { get; }
 
+    /// <summary>
+    /// This property holds the way the strand runs at the crossing, root to tip, as a unit vector in the
+    /// strands' own space.
+    /// </summary>
+    public Vector Tangent { get; }
+
+    /// <summary>
+    /// This property holds the sine of the angle between the ray and the plane square to the strand,
+    /// which is how steeply the ray crossed it.  It is what a shadow ray needs to know of a strand it
+    /// crosses, and has it without working out anything in the world.
+    /// </summary>
+    public double SineAlong { get; }
+
     public HairIntersection(
         Surface surface, double distance, Vector normal, double along, double across, int strand = 0,
-        Point center = null, double radius = 0)
+        Point center = null, double radius = 0, Vector tangent = null, double sineAlong = 0)
         : base(surface, distance)
     {
+        Tangent = tangent;
+        SineAlong = sineAlong;
         StrandNormal = normal;
         Along = along;
         Across = across;

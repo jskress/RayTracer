@@ -51,6 +51,7 @@ public class Hair : StrandSurface
     // material, and which part each strand is.
     private Surface[] _parts;
     private int[] _partOf;
+    private bool _wearsItsSkin;
 
     /// <summary>
     /// This method dresses hair that was given no material of its own: each strand wears the material
@@ -83,6 +84,7 @@ public class Hair : StrandSurface
             partOfSource[source] = part;
         }
 
+        _wearsItsSkin = true;
         Material = materials.Count > 0 ? materials[0] : Host.Material;
 
         if (materials.Count < 2)
@@ -101,6 +103,17 @@ public class Hair : StrandSurface
     internal override Surface WearerOf(int strand) => _parts is null ? this : _parts[_partOf[strand]];
 
     /// <summary>
+    /// This property reports whether the strands wear the materials of what they grew from.
+    /// </summary>
+    internal override bool WearsItsSkin => _wearsItsSkin;
+
+    /// <summary>
+    /// This method returns the part of the surface a strand grew from, and its root in the hair's space.
+    /// </summary>
+    internal override (Surface Part, Point Root)? RootOf(int strand) =>
+        Strands is null ? null : (_sources[_sourceOf[strand]], Strands.RootOf(strand));
+
+    /// <summary>
     /// This method returns what stands for a surface a crossing was reported on, when it comes to which
     /// side of a combination it belongs to: the hair itself, for one of its parts.
     /// </summary>
@@ -110,7 +123,12 @@ public class Hair : StrandSurface
     /// This class is a part of a hair whose strands wear more than one material: the strands wearing one
     /// of them are reported on it, and it stands exactly where the hair does.
     /// </summary>
-    private sealed class HairPart : StrandSurface;
+    private sealed class HairPart : StrandSurface
+    {
+        internal override bool WearsItsSkin => ((Hair) Parent).WearsItsSkin;
+
+        internal override (Surface Part, Point Root)? RootOf(int strand) => ((Hair) Parent).RootOf(strand);
+    }
 
     /// <summary>
     /// This method returns the points each strand runs through, root first, in the space the hair was

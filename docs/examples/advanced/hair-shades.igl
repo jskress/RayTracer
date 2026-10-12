@@ -1,0 +1,60 @@
+// The named shades of hair: black, brown, auburn, ginger, blond and platinum, each a fur of the
+// same shape, lit by a lamp in front and a dimmer one behind.  The shade is a material's `melanin`,
+// which colors hair as natural hair is colored -- the white highlight off each strand's outside, and
+// the color of what passes through it, which glows where the lamp behind shines through the fur.
+context {
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.2
+}
+
+camera { location [0, 2.2, -8.6]  look at [0, 0.5, 0]  field of view 44 }
+
+point light { location [-5, 6, -6] }
+point light { location [2, 5, 7]  color [0.8, 0.8, 0.8] }
+
+plane { material { pigment checker { color [0.32, 0.32, 0.35], color [0.26, 0.26, 0.29]  scale 0.6 } } }
+
+Skin = material { pigment color [0.3, 0.3, 0.3] }
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'black' } }
+    scale 0.45
+    translate [-2.75, 0.5, 0]
+}
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'brown' } }
+    scale 0.45
+    translate [-1.65, 0.5, 0]
+}
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'auburn' } }
+    scale 0.45
+    translate [-0.55, 0.5, 0]
+}
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'ginger' } }
+    scale 0.45
+    translate [0.55, 0.5, 0]
+}
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'blond' } }
+    scale 0.45
+    translate [1.65, 0.5, 0]
+}
+
+sphere {
+    material Skin
+    hair { density 4000  length 0.25  lean 30  comb [0, -1, 0]  droop 0.3  material { melanin 'platinum' } }
+    scale 0.45
+    translate [2.75, 0.5, 0]
+}

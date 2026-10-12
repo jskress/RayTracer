@@ -11,7 +11,7 @@ namespace RayTracer.Core;
 /// <summary>
 /// This class represents a world of things to render.
 /// </summary>
-public class Scene : NamedThing, IDisposable
+public partial class Scene : NamedThing, IDisposable
 {
     /// <summary>
     /// This list holds the collection of cameras in the scene.
@@ -809,6 +809,10 @@ public class Scene : NamedThing, IDisposable
     public TS GetHitColor<TS>(Intersection intersection, int remaining)
         where TS : struct, ISpectrum<TS>
     {
+        // A strand of hair is a fiber, and is shaded as one.
+        if (intersection is HairIntersection strand)
+            return ShadeFiber<TS>(strand);
+
         TS surfaceColor = TS.Black;
         Material material = RegularizedFor(intersection);
 
@@ -1222,6 +1226,17 @@ public class Scene : NamedThing, IDisposable
             if (intersection.Distance < 0 || intersection.Distance >= distance ||
                 intersection.Surface.NoShadow || intersection.Portal is { NoShadow: true })
                 continue;
+
+            // A strand of hair lets through what passes through it.
+            if (intersection is HairIntersection strand)
+            {
+                reaching *= PassedThroughStrand<TS>(strand, ray);
+
+                if (reaching.IsBlack)
+                    return TS.Black;
+
+                continue;
+            }
 
             Material material = intersection.Surface.Material ?? Material.Default;
 

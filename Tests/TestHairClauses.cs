@@ -62,6 +62,59 @@ public class TestHairClauses
     }
 
     /// <summary>
+    /// A material may color hair by its melanin: a named natural shade, an amount of eumelanin, or
+    /// amounts of eumelanin and pheomelanin.
+    /// </summary>
+    [TestMethod]
+    public void TestAMaterialMayColorHairByItsMelanin()
+    {
+        Assert.IsNull(ErrorFrom("sphere { hair { count 30  length 0.3  material { melanin 'auburn' } } }"));
+        Assert.IsNull(ErrorFrom("sphere { hair { count 30  length 0.3  material { melanin 1.3 } } }"));
+        Assert.IsNull(ErrorFrom("sphere { hair { count 30  length 0.3  material { melanin 0.5, 0.8  roughness 0.2 } } }"));
+        Assert.IsNull(ErrorFrom("strand { width 0.02 at [0, 0, 0]  width 0.01 at [0, 1, 0]  material { melanin 'black' } }"));
+        StringAssert.Contains(ErrorFrom("sphere { material { melanin 'purple' } }"), "no shade of hair called 'purple'");
+        StringAssert.Contains(ErrorFrom("sphere { material { melanin -1 } }"), "less than nought");
+        StringAssert.Contains(ErrorFrom("sphere { material { melanin 'black', 2 } }"), "written alone");
+    }
+
+    /// <summary>
+    /// Melanin colors hair as it colors real hair: black hair comes out darker than blond.
+    /// </summary>
+    [TestMethod]
+    public void TestBlackHairIsDarkerThanBlond()
+    {
+        double Brightness(string shade)
+        {
+            string path = Path.Combine(_directory, "shade.igl");
+            string output = Path.Combine(_directory, "shade.png");
+
+            File.WriteAllText(path,
+                "context { no gamma }\n" +
+                "camera { location [0, 0, -8]  look at [0, 0, 0]  field of view 30 }\n" +
+                "point light { location [-4, 8, -8] }\n" +
+                $"sphere {{ material {{ pigment [0, 0, 0] }}  hair {{ count 4000  length 0.6  thickness 0.04  material {{ melanin '{shade}' }} }} }}\n");
+
+            new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 60, Height = 60 });
+
+            Canvas canvas = new ImageFile(output).Load()[0];
+            double sum = 0;
+
+            for (int y = 0; y < canvas.Height; y++)
+            {
+                for (int x = 0; x < canvas.Width; x++)
+                    sum += canvas.GetPixel(x, y).Red;
+            }
+
+            return sum;
+        }
+
+        double black = Brightness("black");
+        double blond = Brightness("blond");
+
+        Assert.IsTrue(blond > 2 * black, $"blond {blond}, black {black}");
+    }
+
+    /// <summary>
     /// Hair with no material of its own wears its surface's, and hair with one wears that.
     /// </summary>
     [TestMethod]
@@ -90,7 +143,9 @@ public class TestHairClauses
         (int blue, int red, int white) = CountedWithWhite(
             $"group {{ {parts}  hair {{ count 3000  length 0.8  thickness 0.04 }} }}");
 
-        Assert.AreEqual(0, white, "some hair wore no material at all");
+        // A strand's highlight is white whatever its color, so a little white is to be expected; hair
+        // wearing nothing at all would be white all over.
+        Assert.IsTrue(white * 50 < red + blue, $"some hair wore no material at all: {white} white pixels");
         Assert.IsTrue(red > bareRed * 1.2, $"the red part's hair was not red: {red} against {bareRed}");
         Assert.IsTrue(blue > bareBlue * 1.2, $"the blue part's hair was not blue: {blue} against {bareBlue}");
     }

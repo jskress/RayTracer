@@ -40,6 +40,7 @@ public sealed class StrandSet
     private readonly List<int> _buildingStrands;
     private float[] _segments = [];
     private int[] _strandOf = [];
+    private int[] _firstOf = [];
     private int _count;
 
     // The tree, as arrays: each node's box (six numbers), and either the first of its segments and how
@@ -140,6 +141,11 @@ public sealed class StrandSet
         _segments = _building.ToArray();
         _strandOf = _buildingStrands.ToArray();
         _count = _segments.Length / Stride;
+        _firstOf = new int[StrandCount];
+
+        // Each strand's segments were added together, so its first is where its number first appears.
+        for (int segment = _count - 1; segment >= 0; segment--)
+            _firstOf[_strandOf[segment]] = segment;
         _building.Clear();
         _building.TrimExcess();
         _buildingStrands.Clear();
@@ -226,6 +232,18 @@ public sealed class StrandSet
             else
                 break;
         }
+    }
+
+    /// <summary>
+    /// This method returns the point a strand starts from, once the set is sealed.
+    /// </summary>
+    /// <param name="strand">Which strand, counting from nought in the order they were added.</param>
+    /// <returns>Its first point.</returns>
+    public Point RootOf(int strand)
+    {
+        int at = _firstOf[strand] * Stride;
+
+        return new Point(_segments[at], _segments[at + 1], _segments[at + 2]);
     }
 
     /// <summary>
@@ -686,8 +704,8 @@ public sealed class StrandSet
 
         return new HairIntersection(
             owner.WearerOf(_strandOf[segment]), distance, normal, along, signedAcross, _strandOf[segment],
-            new Point(centerX, centerY, centerZ),
-            width * 0.5);
+            new Point(centerX, centerY, centerZ), width * 0.5, tangent,
+            frame.AlongX * tangent.X + frame.AlongY * tangent.Y + frame.AlongZ * tangent.Z);
     }
 
     /// <summary>
