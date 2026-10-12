@@ -200,7 +200,19 @@ public class Matrix
     {
         // Moving the ray into a surface's own space says nothing about when it was fired, so the
         // instant it sees the scene at rides along untouched.
-        return new Ray(ray.Origin * this, ray.Direction * this, ray.TimeIndex);
+        Vector direction = ray.Direction * this;
+
+        if (ray.Spread <= 0 && ray.BaseRadius <= 0)
+            return new Ray(ray.Origin * this, direction, ray.TimeIndex);
+
+        // A ray that is really a cone stays one, and as wide as it was: a surface's own space measures
+        // lengths differently, by as much as it measures the ray's direction differently, so the cone's
+        // widths are scaled by that.  How far it has come is measured in the ray's own steps, which the
+        // move leaves alone.  Only strands of hair ask how wide a ray is where they meet it.
+        double scale = direction.Magnitude / ray.Direction.Magnitude;
+
+        return new Ray(
+            ray.Origin * this, direction, ray.TimeIndex, ray.Spread * scale, ray.Travelled, ray.BaseRadius * scale);
     }
 
     /// <summary>

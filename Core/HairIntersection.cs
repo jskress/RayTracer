@@ -43,6 +43,13 @@ public class HairIntersection : Intersection
     public double Radius { get; }
 
     /// <summary>
+    /// This property holds how much of the ray the strand covers where it crossed it, from nought to one:
+    /// one, unless the strand is finer than the ray is wide there, when it is widened to the ray's width
+    /// and covers only its own share of it.  See <see cref="StrandSet"/>.
+    /// </summary>
+    public double Coverage { get; init; } = 1;
+
+    /// <summary>
     /// This property holds the way the strand runs at the crossing, root to tip, as a unit vector in the
     /// strands' own space.
     /// </summary>

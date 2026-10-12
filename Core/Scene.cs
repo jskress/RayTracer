@@ -48,7 +48,16 @@ public partial class Scene : NamedThing, IDisposable
     public void ArrangeSurfaces()
     {
         _arranged.Arrange(Surfaces);
+        _hasStrands = new SurfaceIterator(Surfaces).Surfaces.Any(surface => surface is StrandSurface || surface.Hair is not null);
     }
+
+    // Whether anything in the scene is made of strands of hair, which are all that make a shadow ray's
+    // width matter; a scene without any sends its shadow rays as lines, as it always has.
+    private bool _hasStrands;
+
+    // How little of a ray may be left to see past strands that cover only part of it before the rest is
+    // let go: a thousandth, which no picture can show.
+    private const double MostlyCovered = 1e-3;
 
     /// <summary>
     /// This property holds the pigment to use for a pixel when rays do not intersect with
@@ -106,25 +115,50 @@ public partial class Scene : NamedThing, IDisposable
         where TS : struct, ISpectrum<TS>
     {
         List<Intersection> hits = Intersect(ray);
-        Intersection hit = hits.Hit();
+
+        // Sorted again, as finding the nearest has always sorted it, so that crossings tied in distance
+        // fall in exactly the order they always have.
+        hits.Sort();
+
+        // **A strand finer than the ray is wide covers only part of it** -- see StrandSet -- so it is seen
+        // in that share, and the rest of the ray goes on to whatever lies beyond: further strands, each
+        // seen in its share of what is left, until something covers the whole of it.  Nothing else covers
+        // only part of a ray, so for everything else this finds the nearest crossing and shades it, as it
+        // always has.
+        TS seen = TS.Black;
+        double left = 1;
+
+        foreach (Intersection hit in hits)
+        {
+            if (hit.Distance < 0)
+                continue;
+
+            hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
+
+            TS color = GetHitColor<TS>(hit, remaining);
+
+            // What the ray crossed to get here was the surroundings, unless it was on its way out of
+            // something, in which case it crossed that thing's insides and has been charged for it
+            // already.  This is the same division the fade through a substance has always drawn.
+            color = hit.Inside ? color : ThroughTheSurroundings(color, ray, hit.Distance);
+
+            if (hit is not HairIntersection { Coverage: < 1 } strand)
+                return left == 1 ? color : (seen + color * left).WithAlpha(1);
+
+            seen += color * (left * strand.Coverage);
+            left *= 1 - strand.Coverage;
+
+            if (left < MostlyCovered)
+                return seen.WithAlpha(1);
+        }
 
         // Now that the sky costs a pattern lookup to ask about, only rays that saw nothing ask it.
         // A ray that saw nothing also crossed the surroundings forever, which is a span an endless
         // medium is entitled to have the whole of its say over.
-        if (hit == null)
-        {
-            return ThroughTheSurroundings(
-                Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
-        }
+        TS sky = ThroughTheSurroundings(
+            Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
 
-        hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
-
-        TS color = GetHitColor<TS>(hit, remaining);
-
-        // What the ray crossed to get here was the surroundings, unless it was on its way out of
-        // something, in which case it crossed that thing's insides and has been charged for it
-        // already.  This is the same division the fade through a substance has always drawn.
-        return hit.Inside ? color : ThroughTheSurroundings(color, ray, hit.Distance);
+        return left == 1 ? sky : (seen + sky * left).WithAlpha(1 - left * (1 - sky.Alpha));
     }
 
     /// <summary>
@@ -981,14 +1015,15 @@ public partial class Scene : NamedThing, IDisposable
         {
             return GetLightReaching<TS>(
                 intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex,
-                glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null);
+                glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null,
+                false, intersection.FootprintRadius);
         }
 
         Point beyond = intersection.Inside ? intersection.OverPoint : intersection.UnderPoint;
 
         return GetLightReaching<TS>(
             beyond, sample.Direction, sample.Distance, intersection.TimeIndex,
-            intersection.Surface.Material ?? Material.Default);
+            intersection.Surface.Material ?? Material.Default, false, intersection.FootprintRadius);
     }
 
     /// <summary>
@@ -1210,7 +1245,7 @@ public partial class Scene : NamedThing, IDisposable
         Point point, Vector direction, double distance, int timeIndex = 0, Material glass = null)
         where TS : struct, ISpectrum<TS>
     {
-        return GetLightReaching<TS>(point, direction, distance, timeIndex, glass, false);
+        return GetLightReaching<TS>(point, direction, distance, timeIndex, glass, false, 0);
     }
 
     /// <summary>
@@ -1229,12 +1264,15 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at.</param>
     /// <param name="glass">See <see cref="GetLightReaching{TS}(Point, Vector, double, int, Material)"/>.</param>
     /// <param name="strandsStop">Whether a strand of hair stops the light, as it does for another strand.</param>
+    /// <param name="footprint">How wide, as a radius, the ray that found the point had grown there: a strand
+    /// of hair finer than that in the way blocks only its share of the light.  Nought for a line.</param>
     /// <returns>The fraction of each band of the light that arrives at the point.</returns>
     internal TS GetLightReaching<TS>(
-        Point point, Vector direction, double distance, int timeIndex, Material glass, bool strandsStop)
+        Point point, Vector direction, double distance, int timeIndex, Material glass, bool strandsStop,
+        double footprint)
         where TS : struct, ISpectrum<TS>
     {
-        Ray ray = new (point, direction, timeIndex);
+        Ray ray = new (point, direction, timeIndex, baseRadius: _hasStrands ? footprint : 0);
         TS reaching = TS.White;
 
         foreach (Intersection intersection in IntersectWithin(ray, distance))
@@ -1254,10 +1292,20 @@ public partial class Scene : NamedThing, IDisposable
             // A strand of hair sends most of the light onward.
             if (intersection is HairIntersection strand)
             {
+                // Only the share of the ray the strand covers is stopped or sent onward by it.
                 if (strandsStop)
-                    return TS.Black;
+                {
+                    if (strand.Coverage >= 1)
+                        return TS.Black;
 
-                reaching *= OnwardThroughStrand<TS>(strand, ray);
+                    reaching *= 1 - strand.Coverage;
+
+                    continue;
+                }
+
+                reaching *= strand.Coverage >= 1
+                    ? OnwardThroughStrand<TS>(strand, ray)
+                    : OnwardThroughStrand<TS>(strand, ray) * strand.Coverage + TS.White * (1 - strand.Coverage);
 
                 if (reaching.IsBlack)
                     return TS.Black;

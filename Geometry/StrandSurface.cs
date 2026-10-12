@@ -76,7 +76,7 @@ public abstract class StrandSurface : Surface
     /// </summary>
     protected override BoundingBox GetDefaultBoundingBox()
     {
-        BoundingBox box = new ();
+        BoundingBox box = new () { Widens = true };
 
         if (Strands is not null)
             box.Add(Strands.Bounds);

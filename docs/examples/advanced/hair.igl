@@ -6,8 +6,6 @@
 // goes; each says what its hair is like and the surface grows it.
 context {
     angles are degrees
-    antialiasing depth 2
-    antialiasing threshold 0.2
 }
 
 camera {

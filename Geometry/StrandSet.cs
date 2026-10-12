@@ -549,6 +549,10 @@ public sealed class StrandSet
             highZ = Math.Max(highZ, piece[point * 3 + 2]);
         }
 
+        // A strand finer than the ray is wide is widened to it; see the leaf below.
+        if (frame.Spreads)
+            half = Math.Max(half, frame.ReachAt((highZ + half) / frame.Length));
+
         if (lowX - half > 0 || highX + half < 0 || lowY - half > 0 || highY + half < 0 ||
             highZ + half < nearest * frame.Length || lowZ - half > farthest * frame.Length)
             return;
@@ -589,9 +593,23 @@ public sealed class StrandSet
 
         Evaluate(whole, u, out double curveX, out double curveY, out double curveZ);
 
+        // **A strand finer than the ray is wide is widened to the ray's width, and covers only its share of
+        // it.**  A ray is a thin cone, a pixel wide, and a strand finer than that is either missed by it or
+        // hit by it, as the pixel's middle happens to fall -- so fur finer than the pixels came out as a
+        // scatter of hits and misses that flickers as anything moves.  Widened, every strand the cone
+        // touches is met, and is seen in proportion to how much of the cone it fills, the rest of the
+        // light coming from what lies beyond it.
+        double halfWidth = width * 0.5;
+        double reach = frame.Spreads ? frame.ReachAt(curveZ / frame.Length) : 0;
+        double widened = Math.Max(halfWidth, reach);
         double distanceSquared = curveX * curveX + curveY * curveY;
 
-        if (distanceSquared > width * width * 0.25)
+        if (distanceSquared > widened * widened)
+            return;
+
+        double coverage = halfWidth >= reach ? 1 : halfWidth / reach;
+
+        if (coverage <= 0)
             return;
 
         double distance = curveZ / frame.Length;
@@ -599,7 +617,7 @@ public sealed class StrandSet
         if (distance < nearest || distance > farthest)
             return;
 
-        intersections.Add(MakeHit(segment, u, width, distance, frame, owner));
+        intersections.Add(MakeHit(segment, u, width, widened, coverage, distance, frame, owner));
     }
 
     /// <summary>
@@ -648,7 +666,9 @@ public sealed class StrandSet
     /// the ray is nearer by as much as a cylinder would be.
     /// </para>
     /// </summary>
-    private Intersection MakeHit(int segment, double u, double width, double distance, in RayFrame frame, StrandSurface owner)
+    private Intersection MakeHit(
+        int segment, double u, double width, double widened, double coverage, double distance, in RayFrame frame,
+        StrandSurface owner)
     {
         int at = segment * Stride;
         Span<double> controls = stackalloc double[12];
@@ -692,9 +712,11 @@ public sealed class StrandSet
         Vector normal = face;
         double signedAcross = 0;
 
-        if (across > 1e-12 && width > 0)
+        // Where across the strand is measured across the width it was met at, which for a widened strand
+        // spreads the cone's breadth over the whole of the strand's round.
+        if (across > 1e-12 && widened > 0)
         {
-            double sine = Math.Min(1, across / (width * 0.5));
+            double sine = Math.Min(1, across / widened);
 
             normal = face * Math.Sqrt(1 - sine * sine) + side * (sine / across);
             signedAcross = sine * Math.Sign(side.Dot(tangent.Cross(face)));
@@ -705,7 +727,10 @@ public sealed class StrandSet
         return new HairIntersection(
             owner.WearerOf(_strandOf[segment]), distance, normal, along, signedAcross, _strandOf[segment],
             new Point(centerX, centerY, centerZ), width * 0.5, tangent,
-            frame.AlongX * tangent.X + frame.AlongY * tangent.Y + frame.AlongZ * tangent.Z);
+            frame.AlongX * tangent.X + frame.AlongY * tangent.Y + frame.AlongZ * tangent.Z)
+        {
+            Coverage = coverage
+        };
     }
 
     /// <summary>
@@ -719,12 +744,16 @@ public sealed class StrandSet
         public readonly double AcrossX, AcrossY, AcrossZ;
         public readonly double UpX, UpY, UpZ;
         public readonly double Length;
+        private readonly double _reachAtStart;
+        private readonly double _reachPerStep;
         private readonly double _inverseX, _inverseY, _inverseZ;
         private readonly double _directionX, _directionY, _directionZ;
 
         public RayFrame(Ray ray, double length)
         {
             Length = length;
+            _reachAtStart = ray.BaseRadius + (ray.Spread > 0 ? ray.Travelled * ray.Spread * 0.5 : 0);
+            _reachPerStep = ray.Spread > 0 ? ray.Spread * 0.5 : 0;
             OriginX = ray.Origin.X;
             OriginY = ray.Origin.Y;
             OriginZ = ray.Origin.Z;
@@ -762,16 +791,44 @@ public sealed class StrandSet
         }
 
         /// <summary>
-        /// This method reports whether the ray crosses a node's box within the given stretch of itself.
+        /// This property reports whether the ray has any width to it.
+        /// </summary>
+        public bool Spreads => _reachAtStart > 0 || _reachPerStep > 0;
+
+        /// <summary>
+        /// This method returns how wide the ray is, as a radius, the given number of its steps along.  It
+        /// does not narrow behind its start.
+        /// </summary>
+        public double ReachAt(double step) => _reachAtStart + _reachPerStep * Math.Max(step, 0);
+
+        /// <summary>
+        /// This method reports whether the ray crosses a node's box within the given stretch of itself --
+        /// the box grown, for a ray with width, by as wide as the ray is at the box's far side, so that no
+        /// strand it would widen is passed over.
         /// </summary>
         public bool Crosses(float[] boxes, int at, double nearest, double farthest)
         {
             double low = nearest;
             double high = farthest;
+            double pad = 0;
 
-            if (!Slab(boxes[at], boxes[at + 3], OriginX, _directionX, _inverseX, ref low, ref high) ||
-                !Slab(boxes[at + 1], boxes[at + 4], OriginY, _directionY, _inverseY, ref low, ref high) ||
-                !Slab(boxes[at + 2], boxes[at + 5], OriginZ, _directionZ, _inverseZ, ref low, ref high))
+            if (Spreads)
+            {
+                double halfX = (boxes[at + 3] - boxes[at]) * 0.5;
+                double halfY = (boxes[at + 4] - boxes[at + 1]) * 0.5;
+                double halfZ = (boxes[at + 5] - boxes[at + 2]) * 0.5;
+                double reach = (boxes[at] + halfX - OriginX) * _directionX +
+                               (boxes[at + 1] + halfY - OriginY) * _directionY +
+                               (boxes[at + 2] + halfZ - OriginZ) * _directionZ +
+                               Math.Abs(halfX * _directionX) + Math.Abs(halfY * _directionY) +
+                               Math.Abs(halfZ * _directionZ);
+
+                pad = ReachAt(reach / (Length * Length));
+            }
+
+            if (!Slab(boxes[at] - pad, boxes[at + 3] + pad, OriginX, _directionX, _inverseX, ref low, ref high) ||
+                !Slab(boxes[at + 1] - pad, boxes[at + 4] + pad, OriginY, _directionY, _inverseY, ref low, ref high) ||
+                !Slab(boxes[at + 2] - pad, boxes[at + 5] + pad, OriginZ, _directionZ, _inverseZ, ref low, ref high))
                 return false;
 
             return low <= high;

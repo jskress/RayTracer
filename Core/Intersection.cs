@@ -154,6 +154,13 @@ public class Intersection : IComparable<Intersection>
     /// </summary>
     public Footprint Footprint { get; private set; } = Footprint.None;
 
+    /// <summary>
+    /// This property holds how wide the ray that found this crossing had grown by the time it got here, as
+    /// a radius, or nought for a ray with no width.  A ray setting off from here toward a light is given
+    /// it, so that a strand of hair finer than that in the way blocks only its share of the light.
+    /// </summary>
+    public double FootprintRadius { get; private set; }
+
     public double Reflectance => GetReflectance();
 
     /// <summary>
@@ -245,7 +252,8 @@ public class Intersection : IComparable<Intersection>
         // distance and the normal are both to hand, and it is what lets a pattern answer for a patch
         // instead of for a point.  A ray that was never told it spreads gives a footprint of nothing,
         // which is every ray that existed before this did.
-        Footprint = Footprint.For(ray.RadiusAt(Distance), ray.Direction, Normal);
+        FootprintRadius = ray.RadiusAt(Distance);
+        Footprint = Footprint.For(FootprintRadius, ray.Direction, Normal);
 
         // Kept so that a ray born here -- off a mirror, or through glass -- can go on widening from
         // the width this one had reached, rather than starting again from nothing.  A wall seen in a
