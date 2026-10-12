@@ -38,6 +38,11 @@ public class Hair : StrandSurface
     public int StrandCount => Strands?.StrandCount ?? 0;
 
     /// <summary>
+    /// This property holds how long a strand is, before it varies.
+    /// </summary>
+    public double StrandLength { get; private init; }
+
+    /// <summary>
     /// This property holds the area the hair was grown over, as measured by the lines that found its roots.
     /// </summary>
     public double Area { get; private init; }
@@ -108,6 +113,11 @@ public class Hair : StrandSurface
     internal override bool WearsItsSkin => _wearsItsSkin;
 
     /// <summary>
+    /// This property reports that the strands grow among others, as hair does.
+    /// </summary>
+    internal override bool HasNeighbors => true;
+
+    /// <summary>
     /// This method returns the part of the surface a strand grew from, and its root in the hair's space.
     /// </summary>
     internal override (Surface Part, Point Root)? RootOf(int strand) =>
@@ -126,6 +136,8 @@ public class Hair : StrandSurface
     private sealed class HairPart : StrandSurface
     {
         internal override bool WearsItsSkin => ((Hair) Parent).WearsItsSkin;
+
+        internal override bool HasNeighbors => true;
 
         internal override (Surface Part, Point Root)? RootOf(int strand) => ((Hair) Parent).RootOf(strand);
     }
@@ -212,6 +224,7 @@ public class Hair : StrandSurface
         {
             Host = host,
             _sourceOf = roots.Select(root => root.Source).ToArray(),
+            StrandLength = growth.Length,
             Area = area,
             Material = growth.Material,
             NoShadow = host.NoShadow,

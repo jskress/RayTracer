@@ -1210,6 +1210,30 @@ public partial class Scene : NamedThing, IDisposable
         Point point, Vector direction, double distance, int timeIndex = 0, Material glass = null)
         where TS : struct, ISpectrum<TS>
     {
+        return GetLightReaching<TS>(point, direction, distance, timeIndex, glass, false);
+    }
+
+    /// <summary>
+    /// This method returns how much light arrives at the given point from the given direction, up to the
+    /// given distance.
+    /// <para>
+    /// **Light through hair arrives by way of the hair.**  Each strand it crosses sends most of it onward,
+    /// and that is what reaches a surface beneath it -- unless what is being lit is itself a strand, for
+    /// which light scattered by other strands is gathered ahead of time; see <see cref="HairLight"/>.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">The point to test.</param>
+    /// <param name="direction">The unit direction from the point toward the light or sample.</param>
+    /// <param name="distance">How far off the light or sample is.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look for blockers at.</param>
+    /// <param name="glass">See <see cref="GetLightReaching{TS}(Point, Vector, double, int, Material)"/>.</param>
+    /// <param name="strandsStop">Whether a strand of hair stops the light, as it does for another strand.</param>
+    /// <returns>The fraction of each band of the light that arrives at the point.</returns>
+    internal TS GetLightReaching<TS>(
+        Point point, Vector direction, double distance, int timeIndex, Material glass, bool strandsStop)
+        where TS : struct, ISpectrum<TS>
+    {
         Ray ray = new (point, direction, timeIndex);
         TS reaching = TS.White;
 
@@ -1227,10 +1251,13 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.Surface.NoShadow || intersection.Portal is { NoShadow: true })
                 continue;
 
-            // A strand of hair lets through what passes through it.
+            // A strand of hair sends most of the light onward.
             if (intersection is HairIntersection strand)
             {
-                reaching *= PassedThroughStrand<TS>(strand, ray);
+                if (strandsStop)
+                    return TS.Black;
+
+                reaching *= OnwardThroughStrand<TS>(strand, ray);
 
                 if (reaching.IsBlack)
                     return TS.Black;

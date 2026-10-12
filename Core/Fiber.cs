@@ -24,7 +24,7 @@ namespace RayTracer.Core;
 /// strand the eye's ray passed, positive toward y.
 /// </para>
 /// </summary>
-public sealed class Fiber
+public sealed partial class Fiber
 {
     /// <summary>
     /// This is the index of refraction of hair, which is keratin.
@@ -86,6 +86,8 @@ public sealed class Fiber
                   (0.265 * roughness + 1.194 * roughness * roughness + 5.372 * Math.Pow(roughness, 22));
 
         // The tilt each lobe is shifted by: twice it, once, and four times.
+        _shares = new Lazy<ShareTable>(() => new ShareTable(this));
+
         _sinTilt[0] = Math.Sin(Tilt);
         _cosTilt[0] = Math.Sqrt(1 - _sinTilt[0] * _sinTilt[0]);
 
@@ -113,11 +115,13 @@ public sealed class Fiber
         internal readonly TS Through;
         internal readonly TS MirroredInside;
         internal readonly TS Rest;
+        internal readonly TS Absorption;
 
         internal Seen(
             double sinThetaO, double cosThetaO, double phiO, double gammaO, double gammaT, TS mirrored,
-            TS through, TS mirroredInside, TS rest)
+            TS through, TS mirroredInside, TS rest, TS absorption)
         {
+            Absorption = absorption;
             SinThetaO = sinThetaO;
             CosThetaO = cosThetaO;
             PhiO = phiO;
@@ -148,7 +152,7 @@ public sealed class Fiber
 
         return new Seen<TS>(
             sinThetaO, cosThetaO, phiO, Math.Asin(Math.Clamp(h, -1, 1)), gammaT, mirrored, passed,
-            mirroredInside, rest);
+            mirroredInside, rest, absorption);
     }
 
     /// <summary>
@@ -175,17 +179,7 @@ public sealed class Fiber
 
         for (int lobe = 0; lobe < Lobes; lobe++)
         {
-            // Each lobe is shifted along the strand by the scales' tilt: the mirror off the outside by
-            // twice it one way, the trip through by once the other, the mirror inside by four times.
-            (double sinThetaOp, double cosThetaOp) = lobe switch
-            {
-                0 => (seen.SinThetaO * _cosTilt[1] - seen.CosThetaO * _sinTilt[1],
-                    seen.CosThetaO * _cosTilt[1] + seen.SinThetaO * _sinTilt[1]),
-                1 => (seen.SinThetaO * _cosTilt[0] + seen.CosThetaO * _sinTilt[0],
-                    seen.CosThetaO * _cosTilt[0] - seen.SinThetaO * _sinTilt[0]),
-                _ => (seen.SinThetaO * _cosTilt[2] + seen.CosThetaO * _sinTilt[2],
-                    seen.CosThetaO * _cosTilt[2] - seen.SinThetaO * _sinTilt[2])
-            };
+            (double sinThetaOp, double cosThetaOp) = Tilted(seen, lobe);
             double along = Longitudinal(cosThetaI, Math.Abs(cosThetaOp), sinThetaI, sinThetaOp, _variance[lobe]);
             double around = Azimuthal(phi, lobe, seen.GammaO, seen.GammaT);
             TS attenuation = lobe switch { 0 => seen.Mirrored, 1 => seen.Through, _ => seen.MirroredInside };
@@ -196,33 +190,6 @@ public sealed class Fiber
         double rest = Longitudinal(cosThetaI, seen.CosThetaO, sinThetaI, seen.SinThetaO, _variance[Lobes]);
 
         return sum + seen.Rest * (rest / (2 * Math.PI));
-    }
-
-    /// <summary>
-    /// This method returns how much of the light along a ray crossing a strand comes out the far side
-    /// still going its way: the share that passes through the strand without being mirrored at either
-    /// surface, less what its inside absorbs on the way.
-    /// <para>
-    /// It is what a shadow ray keeps for each strand it crosses.  That light is spread a little as it
-    /// passes, rather than going exactly straight on, and taking it as going straight on is the
-    /// approximation that multiple scattering in hair is built on (Zinke, Yuksel, Weber and Keyser,
-    /// 2008).  Black hair keeps none of it; blond hair keeps a good deal, which is how light gets into
-    /// it at all.
-    /// </para>
-    /// </summary>
-    /// <typeparam name="TS">The kind of light being carried.</typeparam>
-    /// <param name="sinTheta">The sine of the ray's angle out of the plane square to the strand.</param>
-    /// <param name="h">Where across the strand the ray passed, from -1 to 1.</param>
-    /// <param name="absorption">How much the strand's inside absorbs, per band, over its own radius.</param>
-    /// <returns>The share of the light that passes, per band.</returns>
-    public static TS PassedThrough<TS>(double sinTheta, double h, TS absorption)
-        where TS : struct, ISpectrum<TS>
-    {
-        double cosTheta = Math.Sqrt(Math.Max(0, 1 - sinTheta * sinTheta));
-        (_, TS through) = Inside(sinTheta, cosTheta, h, absorption);
-        double fresnel = Reflectance(cosTheta * Math.Sqrt(Math.Max(0, 1 - h * h)));
-
-        return through * ((1 - fresnel) * (1 - fresnel));
     }
 
     /// <summary>
@@ -316,6 +283,60 @@ public sealed class Fiber
             through[band] = Math.Exp(-absorption[band] * length);
 
         return (Math.Asin(sinGammaT), through);
+    }
+
+    /// <summary>
+    /// This method returns the eye's angle out of the plane square to the strand, shifted for one lobe by
+    /// the tilt of the strand's scales: the mirror off the outside by twice it one way, the trip through by
+    /// once the other, the mirror inside by four times.
+    /// </summary>
+    private (double Sin, double Cos) Tilted<TS>(in Seen<TS> seen, int lobe)
+        where TS : struct, ISpectrum<TS>
+    {
+        return lobe switch
+        {
+            0 => (seen.SinThetaO * _cosTilt[1] - seen.CosThetaO * _sinTilt[1],
+                seen.CosThetaO * _cosTilt[1] + seen.SinThetaO * _sinTilt[1]),
+            1 => (seen.SinThetaO * _cosTilt[0] + seen.CosThetaO * _sinTilt[0],
+                seen.CosThetaO * _cosTilt[0] - seen.SinThetaO * _sinTilt[0]),
+            _ => (seen.SinThetaO * _cosTilt[2] + seen.CosThetaO * _sinTilt[2],
+                seen.CosThetaO * _cosTilt[2] - seen.SinThetaO * _sinTilt[2])
+        };
+    }
+
+    /// <summary>
+    /// This method returns the direction one lobe draws its light from most: along the strand, the mirror
+    /// of the eye's angle shifted by the scales' tilt; round it, where light through a circle at this
+    /// offset leaves it after that many trips across.  The last lobe draws from every way round alike, and
+    /// is given the mirror of the eye's angle and the eye's own way round.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="seen">What the scattering owes to the eye's direction.</param>
+    /// <param name="lobe">Which lobe, from nought to three.</param>
+    /// <returns>The sine of the direction's angle out of the plane square to the strand, and its angle
+    /// round it.</returns>
+    public (double SinThetaI, double PhiI) CenterOf<TS>(in Seen<TS> seen, int lobe)
+        where TS : struct, ISpectrum<TS>
+    {
+        double thetaO = Math.Asin(Math.Clamp(seen.SinThetaO, -1, 1));
+        double shift = lobe switch { 0 => 2 * Tilt, 1 => -Tilt, 2 => -4 * Tilt, _ => 0 };
+        double turn = lobe < Lobes ? 2 * lobe * seen.GammaT - 2 * seen.GammaO + lobe * Math.PI : 0;
+
+        return (Math.Sin(shift - thetaO), seen.PhiO + turn);
+    }
+
+    /// <summary>
+    /// This method returns how much of the light one lobe carries, per band: what is mirrored off the
+    /// outside, what passes through, what is mirrored inside, and the rest.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="seen">What the scattering owes to the eye's direction.</param>
+    /// <param name="lobe">Which lobe, from nought to three.</param>
+    /// <returns>The share it carries.</returns>
+    public static TS Carried<TS>(in Seen<TS> seen, int lobe)
+        where TS : struct, ISpectrum<TS>
+    {
+        return lobe switch { 0 => seen.Mirrored, 1 => seen.Through, 2 => seen.MirroredInside, _ => seen.Rest };
     }
 
     /// <summary>

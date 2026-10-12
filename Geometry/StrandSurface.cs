@@ -49,6 +49,12 @@ public abstract class StrandSurface : Surface
     internal virtual bool WearsItsSkin => false;
 
     /// <summary>
+    /// This property reports whether the strands grow among others, which scatter light to them: true for
+    /// hair, and false for a strand standing alone.
+    /// </summary>
+    internal virtual bool HasNeighbors => false;
+
+    /// <summary>
     /// This method returns where a strand grows from, for strands that grow from a surface: the part of
     /// it they grew from, and the root, in this surface's own space.
     /// </summary>

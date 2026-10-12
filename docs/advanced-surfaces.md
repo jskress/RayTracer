@@ -526,19 +526,25 @@ pigment, and nothing but hair takes any notice of it.
 real hair measures, and smoother hair shines in a narrower band.  Hair wearing its skin's material
 takes none of the skin's finish.
 
-**Light passes partly through hair.**  A strand in the way of a light lets through what passes through
-it, in its own color: black hair stops nearly all of it and blond a good deal less, so light finds its
-way into fair fur and not into dark.
+**Light bounces from strand to strand.**  A strand sends most of the light reaching it onward, so light
+soaks deep into fair hair and comes back out having bounced about among the strands — and that light is
+most of what makes fair hair fair: fur with no melanin at all is several times brighter for it than its
+strands lit one at a time would be.  Before a head of hair is first drawn, the light from each lamp is
+followed into it, strand by strand, and where it goes is recorded in a grid laid over the hair, which
+every strand then draws on.  Black hair, which keeps little of what reaches it, is hardly changed by it.
+A strand standing alone has no others to bounce light to it.
 
-**Fair hair comes out darker than the color it is matched to.**  That color is what a head of such hair
-looks like with all the light bounced from strand to strand, and that light — most of what makes fair
-hair fair — is not followed yet.  Dark hair, which keeps little of it, comes out as it should.
+**A surface beneath hair is lit through it.**  Each strand in the way of a light sends on what it does
+not absorb or turn back, in its own color: black hair stops nearly all of it and blond much less, so the
+skin under fair fur, and the floor under a fair-haired animal, are lit through it.
 
 #### What hair costs
 
 A strand takes about three hundred bytes, and growing them is quick: a sphere of
-radius one at a density of fifty thousand — over six hundred thousand strands — takes about two
-seconds to grow and render small, and three quarters of a gigabyte.  A surface may grow at most two
+radius one at a density of fifty thousand — over six hundred thousand strands — takes about five and a
+half seconds to grow, gather the light among, and render small, and under a gigabyte.  Gathering the
+light is done once for each head of hair and each light, before the hair is first drawn, and takes
+about a third of a second for a fur ball of six thousand strands.  A surface may grow at most two
 million.
 
 ### Lathe
