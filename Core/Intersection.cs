@@ -117,6 +117,13 @@ public class Intersection : IComparable<Intersection>
     public Interior InteriorAfter { get; private set; }
 
     /// <summary>
+    /// This property holds the surface the ray was inside before this crossing -- the one whose interior
+    /// is <see cref="InteriorBefore"/> -- or <c>null</c> for the space between the scene's objects.  A
+    /// medium with a shape needs it, being described in that surface's own space.
+    /// </summary>
+    public Surface ContainerBefore { get; private set; }
+
+    /// <summary>
     /// This property reports whether light crossing here is bent by different amounts at different
     /// wavelengths, which is the case when either side of the crossing is a substance that spreads
     /// colors.
@@ -244,7 +251,11 @@ public class Intersection : IComparable<Intersection>
             : OverPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
-        (InteriorBefore, InteriorAfter) = intersections.FindInteriors(this);
+        (Surface before, Surface after) = intersections.FindContainers(this);
+
+        ContainerBefore = before;
+        InteriorBefore = before is null ? null : IntersectionExtensions.InteriorOf(before);
+        InteriorAfter = after is null ? null : IntersectionExtensions.InteriorOf(after);
         _environmentIndexOfRefraction = environmentIndexOfRefraction;
         (N1, N2) = IndicesAt(wavelength);
 

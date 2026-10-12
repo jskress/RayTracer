@@ -712,6 +712,87 @@ public class TestMedium
         return scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 5);
     }
 
+    /// <summary>
+    /// What stands inside a glowing shell is seen through the glow in front of it, and dimmed by what
+    /// fills the shell on both its ways: the eye's, and the light's.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatStandsInsideAMediumIsSeenAndLitThroughIt()
+    {
+        // A black box whose front face is a quarter in from the middle of a glowing ball of radius one:
+        // the eye's ray crosses one and a quarter of the glow before it meets the box, and sees that
+        // much of it, as it would with no box there.
+        Color glow = new (0.5, 0.5, 0.5);
+        Scene glowing = InAShell(new Medium { Emission = glow }, Colors.Black, 0);
+
+        Color glowSeen = glowing.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In));
+
+        Assert.AreEqual(0.5 * 1.25, glowSeen.Red, 1e-5, $"saw {glowSeen}");
+
+        // A white box, lit from straight behind the eye, inside a ball that only absorbs: the light
+        // crosses one and a quarter of it to reach the box, and what the box sends back crosses the same
+        // again to reach the eye.
+        Medium absorbing = new () { Absorption = new Color(0.5, 0.5, 0.5) };
+        Color seen = InAShell(absorbing, Colors.White, 1).GetColorFor(new Ray(new Point(0, 0, -5), Directions.In));
+        Color bare = InAShell(null, Colors.White, 1).GetColorFor(new Ray(new Point(0, 0, -5), Directions.In));
+
+        Assert.IsTrue(bare.Red > 0.1, $"the bare box came out {bare}");
+        Assert.AreEqual(Math.Exp(-0.5 * 1.25 * 2), seen.Red / bare.Red, 1e-5, $"seen {seen} bare {bare}");
+    }
+
+    /// <summary>
+    /// What stands inside tinted glass is seen through the glass in front of it, faded by as much of it
+    /// as lies between.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatStandsInsideTintedGlassIsSeenThroughIt()
+    {
+        Interior tinted = new () { Clarity = 2 };
+        Scene scene = InAShell(null, Colors.White, 1, tinted);
+        Color seen = scene.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In));
+        Color bare = InAShell(null, Colors.White, 1).GetColorFor(new Ray(new Point(0, 0, -5), Directions.In));
+
+        Assert.AreEqual(tinted.GetFadeOver(1.25), seen.Red / bare.Red, 1e-5, $"seen {seen} bare {bare}");
+        Assert.IsTrue(tinted.GetFadeOver(1.25) < 0.9, "the glass faded too little to tell");
+    }
+
+    /// <summary>
+    /// This method builds a scene of a clear ball of radius one, filled as given, with a box inside it
+    /// whose front face stands a quarter in from the ball's middle, colored as given and lit by a lamp
+    /// straight behind the eye.
+    /// </summary>
+    private static Scene InAShell(Medium medium, Color box, double diffuse, Interior interior = null)
+    {
+        interior ??= new Interior();
+        interior.Medium = medium;
+
+        Sphere ball = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                Transparency = 1, Interior = interior
+            }
+        };
+        Cube cube = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(box), Ambient = 0, Diffuse = diffuse, Specular = 0
+            },
+            Transform = Transforms.Translate(0, 0, 0.5) * Transforms.Scale(0.25)
+        };
+        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+
+        ball.PrepareForRendering();
+        cube.PrepareForRendering();
+        scene.Surfaces.Add(ball);
+        scene.Surfaces.Add(cube);
+        scene.Lights.Add(new PointLight { Location = new Point(0, 0, -20), Color = Colors.White });
+
+        return scene;
+    }
+
     [TestMethod]
     public void TestAMediumWithNothingToSayChangesNothing()
     {

@@ -153,7 +153,11 @@ there along the straight run out, exactly as for reflection.  A smooth mirror or
 surface has already spread is shaded as rough as that surface (`Scene.RegularizedFor`, path regularization:
 `Material.RoughAs`, kept on `Intersection.Material`, while identity checks keep `Surface.Material`), so a lantern
 seen in a car's paint in a wet road is shared rather than found by chance; the camera's own view of a mirror,
-and a shell at the surroundings' index, are untouched.
+and a shell at the surroundings' index, are untouched.  A container's interior (`clarity` fade, `medium`) is
+charged where a ray leaves it (end of `GetHitColor`) and, for anything met inside it, over the run to that
+(`Scene.ThroughTheInsideOf` from `Intersection.ContainerBefore`); a surface inside a medium is lit through it
+up to the container's edge (`SurvivingTheMedium` in `ReachingFrom`) -- so a log inside a flame keeps the glow
+in front of it.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

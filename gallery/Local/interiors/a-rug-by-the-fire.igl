@@ -15,11 +15,6 @@
 // frame, and the pile shows its lie -- the tufts lit on the side toward the fire, shadowed on the
 // other, as a shag rug looks by a hearth.
 //
-// **The firebox goes back further than a fireplace needs to.**  A flame is a glowing volume inside a
-// shell, and anything opaque inside the shell cuts the glow in front of it out of the picture: with
-// the back of the firebox standing within the fire's shell, a dark disc sat in the middle of the
-// flames.  So the back is set beyond the shell's reach.
-//
 // **Ambient is turned up, not down,** the opposite of `a-room-after-dark`.  A room lit by a fire is lit
 // as much by what its walls send back as by the fire itself, and ambient is all that stands in for that
 // here; at a quarter, as there, the armchair and the brick were black and the room was a fire floating
@@ -97,7 +92,7 @@ plane { material Plaster  rotate Z 90   translate X 2.6 }    // the wall on the 
 plane { material Plaster  rotate Z -90  translate X -2.6 }   // the wall on the left
 plane { material Plaster  rotate X 180  translate Y 2.6 }    // the ceiling
 
-// The chimney breast, with the firebox cut into it -- back past the fire's shell, as above.
+// The chimney breast, with the firebox cut into it.
 difference {
     cube { material Bricks(1.35, 1.3, 0.55)  scale [1.35, 1.3, 0.55]  translate [0, 1.3, 1.85] }
     cube { material Soot  scale [0.65, 0.65, 0.525]  translate [0, 0.71, 1.725] }

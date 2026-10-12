@@ -48,17 +48,33 @@ public static class IntersectionExtensions
     public static (Interior Before, Interior After) FindInteriors(
         this List<Intersection> intersections, Intersection hit)
     {
+        (Surface before, Surface after) = intersections.FindContainers(hit);
+
+        return (before is null ? null : InteriorOf(before), after is null ? null : InteriorOf(after));
+    }
+
+    /// <summary>
+    /// This method works out what the ray was inside before the given hit and what it is inside after
+    /// it: the innermost thing on each side, or <c>null</c> where it is inside nothing and so in the
+    /// surroundings.
+    /// </summary>
+    /// <param name="intersections">The list of intersections to work with.</param>
+    /// <param name="hit">The current "hit" intersection.</param>
+    /// <returns>The surfaces the ray is inside before and after the hit.</returns>
+    public static (Surface Before, Surface After) FindContainers(
+        this List<Intersection> intersections, Intersection hit)
+    {
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
         // for every instance of it: a ray entering one glass ball and then another would otherwise
         // read as entering and *leaving* the one ball, and come out the far side unrefracted.
         List<(Surface Surface, Surface Portal)> containers = [];
-        Interior before = null;
-        Interior after = null;
+        Surface before = null;
+        Surface after = null;
 
         foreach (Intersection intersection in intersections)
         {
             if (intersection == hit)
-                before = containers.IsEmpty() ? null : InteriorOf(containers.Last().Surface);
+                before = containers.IsEmpty() ? null : containers.Last().Surface;
 
             // A strand is crossed once, as a ribbon, so it is never gone into: a ray passing one is in
             // whatever it was in before, and stays there.
@@ -81,7 +97,7 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                after = containers.IsEmpty() ? null : InteriorOf(containers.Last().Surface);
+                after = containers.IsEmpty() ? null : containers.Last().Surface;
 
                 break;
             }
@@ -93,7 +109,7 @@ public static class IntersectionExtensions
     /// <summary>
     /// This method returns what a surface is filled with.
     /// </summary>
-    private static Interior InteriorOf(Surface surface)
+    internal static Interior InteriorOf(Surface surface)
     {
         return (surface.Material ?? Material.Default).Interior;
     }

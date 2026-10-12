@@ -409,6 +409,13 @@ A medium inside a surface may [scatter](scene-files.md#scattering) as well, in w
 light from the scene's lamps just as one filling the surroundings does — so a glass globe of smoke
 lights up where a lamp shines into it.
 
+**Whatever stands inside is seen and lit through what fills it.**  A log inside a flame is seen through
+as much of the flame as lies in front of it, glow and all, and a flower set in tinted glass through as
+much of the glass as lies between; and a lamp lights the log through as much of the flame as lies
+between the log and the flame's edge.  Until this was so, anything opaque inside a glowing shell cut the
+glow in front of it out of the picture entirely.  A shadow is still dimmed only by a medium, not by
+`clarity`, which no shadow anywhere takes account of.
+
 `clarity` and a medium overlap on purpose rather than one replacing the other.  Clarity is the
 one-number form of the same idea, and stays the easier thing to reach for when fading with depth is
 all a surface needs.  A medium is the richer form: it fades color by color, and it can glow.  A
