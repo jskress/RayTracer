@@ -118,6 +118,31 @@ public partial class LanguageParser
                         Term = clause.Expressions.Count > 1 ? clause.Term(1) : clause.Term()
                     };
                     break;
+                case "over":
+                    resolver.OverResolver = new TermResolver<string> { Term = clause.Term() };
+                    break;
+                case "tilted":
+                    resolver.TiltedResolver = new LiteralResolver<bool> { Value = true };
+                    break;
+                case "above":
+                    resolver.AboveResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                case "below":
+                    resolver.BelowResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                case "steepest":
+                    // In the scene's own unit of angle, from level.
+                    resolver.SteepestResolver = new AngleResolver
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value is >= 0 and <= Math.PI / 2 + 1e-9
+                            ? null
+                            : "The steepest ground a field may stand on must be from level to upright."
+                    };
+                    break;
+                case "sink":
+                    resolver.SinkResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
                 case "spacing":
                     resolver.SpacingResolver = new TermResolver<double> { Term = clause.Term() };
                     break;

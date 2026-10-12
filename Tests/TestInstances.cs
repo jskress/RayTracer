@@ -369,6 +369,69 @@ public class TestInstances
             "a primitive called twice does not look like its contents written out twice");
     }
 
+    [TestMethod]
+    public void TestAnEmptyGroupIsNotSharedSoWhatHoldsItMayBe()
+    {
+        // **A fir's bough carries the snow lying on it, and in summer that is an empty group.**  Shared
+        // like any other, it made each bough a shape holding a shared shape -- which may not itself be
+        // shared -- so every fir built its sixty-six boughs again, needles and all: some 140 MB a tree,
+        // and a field of four hundred firs swapped for minutes.  There is nothing in an empty group to
+        // share, so it is handed back bare and the bough holding it is shared instead.
+        string report = StatisticsOf("""
+            primitive snow(on) -> group {
+                if (on > 0) { return group { sphere { scale 0.2 } } }
+                else { return group { } }
+            }
+            primitive bough(on) -> group {
+                return group { sphere { scale 0.3 }  object snow(on)  object snow(on - 1) }
+            }
+            object bough(0) { translate X -1 }
+            object bough(0)
+            object bough(0) { translate X 1 }
+            """);
+
+        StringAssert.Contains(report, "1 shape, shown 3 times",
+            "the bough was not shared; the report said:\n" + report);
+    }
+
+    /// <summary>
+    /// Renders a scene written in the language and hands back the statistics reported for it.
+    /// </summary>
+    /// <param name="body">The scene to render.</param>
+    /// <returns>What the render reported.</returns>
+    private string StatisticsOf(string body)
+    {
+        string path = Path.Combine(_directory, $"scene-{Guid.NewGuid():N}.igl");
+
+        File.WriteAllText(path,
+            "context { width 16  height 12 }\n" +
+            "camera { location [0, 0.6, -4]  look at [0, 0, 0] }\n" +
+            "point light { location [-4, 6, -5] }\n" + body);
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            ImageRenderer renderer = new LanguageParser(path).Parse();
+
+            Assert.IsNotNull(renderer, "the scene did not parse");
+
+            renderer.Render(new RenderOptions
+            {
+                OutputFileName = Path.ChangeExtension(path, ".png"), ReportStatistics = true
+            });
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        return captured.ToString();
+    }
+
     /// <summary>
     /// Renders a scene written in the language and hands back the picture as text, so that two of
     /// them can be compared exactly.

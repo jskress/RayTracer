@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Graphics;
 
 namespace RayTracer.Geometry;
@@ -109,28 +110,82 @@ public class Field : Group
     public double LargestSize { get; set; } = 1;
 
     /// <summary>
-    /// This method is called once prior to rendering to fill the outline.
+    /// This property holds the name of the surface the copies are dropped onto, standing beside the
+    /// field in the same group: each falls straight down onto it, and onto nothing else, and a place
+    /// with nothing of it below stands nothing.  Unsaid, the copies stand on the field's own ground.
+    /// </summary>
+    public string Over { get; set; }
+
+    /// <summary>
+    /// This property notes that a dropped copy leans with the ground under it, as grass and stones do,
+    /// rather than standing upright, as trees and people do.
+    /// </summary>
+    public bool Tilted { get; set; }
+
+    /// <summary>
+    /// This property holds the steepest ground a dropped copy may stand on, as an angle from level, in
+    /// radians.
+    /// </summary>
+    public double Steepest { get; set; } = Math.PI / 2;
+
+    /// <summary>
+    /// This property holds the lowest ground a dropped copy may stand on, in the space the field shares
+    /// with the ground, or <c>null</c> for no limit.
+    /// </summary>
+    public double? Above { get; set; }
+
+    /// <summary>
+    /// This property holds the highest ground a dropped copy may stand on, in the space the field shares
+    /// with the ground, or <c>null</c> for no limit.
+    /// </summary>
+    public double? Below { get; set; }
+
+    /// <summary>
+    /// This property holds how far a dropped copy is sunk into the ground, along its own up.  A trunk
+    /// standing upright on a slope touches the ground only on its uphill side, and this keeps its
+    /// downhill side from standing in the air.
+    /// </summary>
+    public double Sink { get; set; }
+
+    /// <summary>
+    /// This method is called once prior to rendering to fill the outline -- or, for a field to be
+    /// dropped onto the ground, to leave it empty until it is dropped, since only then is it known
+    /// which places stand anything.
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
         if (Outline is null)
             throw new Exception("A field needs an outline to fill.");
 
-        List<FieldChoice> choices = Choices.Count > 0 ? Choices
-            : Prototype is null ? [] : [new FieldChoice(Prototype)];
-
-        if (choices.Count == 0)
+        if (Choices.Count == 0 && Prototype is null)
             throw new Exception("A field needs something to fill its outline with.");
 
         if (Spacing <= 0)
             throw new Exception("A field's spacing must be greater than nought.");
 
-        if (choices.Any(choice => choice.Weight <= 0))
+        if (Choices.Any(choice => choice.Weight <= 0))
             throw new Exception("A field's weights must be greater than nought.");
 
         if (SmallestSize <= 0 || LargestSize < SmallestSize)
             throw new Exception("A field's sizes must be greater than nought, the smaller first.");
 
+        Surfaces.Clear();
+
+        if (Over is null)
+            Fill(null);
+
+        base.PrepareSurfaceForRendering();
+    }
+
+    /// <summary>
+    /// This method stands a copy at every place of the grid that falls inside the outline: on the
+    /// field's own ground, or, given a surface to drop onto, wherever each lands on it.
+    /// </summary>
+    /// <param name="ground">The surface to drop the copies onto, or <c>null</c> to stand them on the
+    /// field's own ground.</param>
+    private void Fill(Surface ground)
+    {
+        List<FieldChoice> choices = Choices.Count > 0 ? Choices : [new FieldChoice(Prototype)];
         int seed = Seed ?? DefaultSeed;
         Random random = new Random(seed);
         Surface[] shared = new Surface[choices.Count];
@@ -170,8 +225,7 @@ public class Field : Group
 
         int[] turns = Cycle ? TurnsOf(choices) : null;
         double totalWeight = choices.Sum(choice => choice.Weight);
-
-        Surfaces.Clear();
+        Dropping dropping = ground is null ? null : new Dropping(this, ground);
 
         // The grid runs over the outline's own extent, so an outline drawn anywhere is filled where
         // it actually lies rather than about the origin.
@@ -197,6 +251,14 @@ public class Field : Group
                 if (!Outline.Contains(new TwoDPoint(x, z)))
                     continue;
 
+                // Dropped before anything is made, so that a place standing nothing costs only the
+                // drop: most of a wood filling a hill's whole square falls in the lake or above the
+                // tree line.
+                Matrix landing = null;
+
+                if (dropping is not null && (landing = dropping.LandingAt(x, z)) is null)
+                    continue;
+
                 int pick = choices.Count == 1 ? 0
                     : turns is not null ? turns[(row + column) % turns.Length]
                     : Picked(choices, totalWeight * DrawFor(seed, row, column, PickDraw));
@@ -212,13 +274,13 @@ public class Field : Group
                 else
                     copy = choices[pick].Make(number++);
 
-                copy.Transform = PlacedAt(x, z, seed, row, column) * copy.Transform;
+                copy.Transform = landing is null
+                    ? PlacedAt(x, z, seed, row, column) * copy.Transform
+                    : landing * TurnAndSizeAt(seed, row, column) * copy.Transform;
 
                 Add(copy);
             }
         }
-
-        base.PrepareSurfaceForRendering();
     }
 
     // Which of a place's draws is which: each is its own number, so asking for one more of them never
@@ -245,6 +307,194 @@ public class Field : Group
         }
 
         return placed;
+    }
+
+    /// <summary>
+    /// This method returns the turn and size a copy is stood with at a place, without the move there.
+    /// </summary>
+    private Matrix TurnAndSizeAt(int seed, int row, int column)
+    {
+        Matrix shape = Transforms.Scale(1);
+
+        if (Turn > 0)
+            shape *= Transforms.RotateAroundY((DrawFor(seed, row, column, TurnDraw) - 0.5) * Turn, true);
+
+        if (SmallestSize != 1 || LargestSize != 1)
+        {
+            shape *= Transforms.Scale(
+                SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, row, column, SizeDraw));
+        }
+
+        return shape;
+    }
+
+    /// <summary>
+    /// This method fills the field by dropping every copy straight down onto the given surface, which
+    /// stands beside the field in the space they share: a copy stands where it lands, upright or leaning
+    /// with the ground as the field says, and a place where nothing of the surface lies below, or where
+    /// the ground is too steep, too low or too high, stands nothing.
+    /// <para>
+    /// **It runs when relative placement does**, between the field's group preparing its children and
+    /// sorting them, for the same reason: the ground has to have been built and moved to where it stands
+    /// first, and nothing may yet have been decided on the strength of where the copies are.  The field
+    /// was left empty when it was prepared, and is prepared again here now that it holds something, which
+    /// gives it its box.
+    /// </para>
+    /// </summary>
+    /// <param name="ground">The surface to drop the copies onto.</param>
+    internal void DropOnto(Surface ground)
+    {
+        Surfaces.Clear();
+
+        Fill(ground);
+
+        base.PrepareSurfaceForRendering();
+
+        BoundingBox = GetDefaultBoundingBox();
+        BoundingBox?.Expand();
+    }
+
+    /// <summary>
+    /// This class drops a field's copies onto the ground, one place at a time.
+    /// <para>
+    /// **The slope is found by dropping again, a little way either side**, rather than asked of the
+    /// surface: what the ground's own normal says is in the world's space and of whatever part of it was
+    /// struck, while a few more drops answer in the very space the copies are stood in, whatever the
+    /// ground is made of.
+    /// </para>
+    /// </summary>
+    private sealed class Dropping
+    {
+        private readonly Field _field;
+        private readonly Surface _ground;
+        private readonly BoundingBox _box;
+        private readonly Matrix _shared;
+        private readonly Matrix _own;
+        private readonly double _reach;
+
+        /// <summary>
+        /// This constructor readies the drops of a field onto the ground.
+        /// </summary>
+        /// <param name="field">The field being dropped.</param>
+        /// <param name="ground">The surface it is dropped onto.</param>
+        internal Dropping(Field field, Surface ground)
+        {
+            BoundingBox box = BoxAround(ground, true);
+
+            _field = field;
+            _ground = ground;
+            _box = box is { IsEmpty: true } ? null : box;
+            _shared = field.Transform;
+            _own = field.Transform.Invert();
+            _reach = ((new Point(field.Spacing, 0, 0) * _shared) - (Point.Zero * _shared)).Magnitude * 0.05;
+        }
+
+        /// <summary>
+        /// This method returns where a copy at a place of the field's grid lands, as the move that stands
+        /// it there in the field's own space -- leaned and sunk as the field says -- or <c>null</c> if it
+        /// stands nothing.
+        /// </summary>
+        /// <param name="x">Where the place is across the field.</param>
+        /// <param name="z">Where the place is along the field.</param>
+        /// <returns>The move that stands a copy there, or <c>null</c>.</returns>
+        internal Matrix LandingAt(double x, double z)
+        {
+            Point at = new Point(x, 0, z) * _shared;
+            double top = Math.Max(_box?.Maximum.Y ?? 0, at.Y) + 1;
+            double? height = HeightOf(_ground, at.X, at.Z, top);
+
+            if (height is null || height < _field.Above || height > _field.Below)
+                return null;
+
+            Vector up = UpOf(_ground, at.X, at.Z, height.Value, top, _reach);
+
+            if (Math.Acos(Math.Clamp(up.Y, -1, 1)) > _field.Steepest + 1e-12)
+                return null;
+
+            Point landed = new Point(at.X, height.Value, at.Z) * _own;
+            Matrix placed = Transforms.Translate(landed.X, landed.Y, landed.Z);
+
+            if (_field.Tilted)
+                placed *= Leaning((up * _own).Unit);
+
+            if (_field.Sink != 0)
+                placed *= Transforms.Translate(0, -_field.Sink, 0);
+
+            return placed;
+        }
+    }
+
+    /// <summary>
+    /// This method returns the height of the first thing of a surface met dropping straight down at a
+    /// place, from the given height, or <c>null</c> if nothing of it lies below.  Strands of hair the
+    /// surface grows are passed through: a copy stands on the skin, not on the fur.
+    /// </summary>
+    private static double? HeightOf(Surface ground, double x, double z, double top)
+    {
+        List<Intersection> hits = [];
+        double nearest = double.PositiveInfinity;
+
+        ground.Intersect(new Ray(new Point(x, top, z), new Vector(0, -1, 0)), hits);
+
+        foreach (Intersection hit in hits)
+        {
+            if (hit is not HairIntersection && hit.Distance > 0 && hit.Distance < nearest)
+                nearest = hit.Distance;
+        }
+
+        return double.IsPositiveInfinity(nearest) ? null : top - nearest;
+    }
+
+    /// <summary>
+    /// This method returns which way is up out of the ground at a place, from where the ground lies a
+    /// little way either side of it: as evenly as both sides allow, and from the one side where the
+    /// other falls off the ground's edge.
+    /// </summary>
+    private static Vector UpOf(Surface ground, double x, double z, double height, double top, double reach)
+    {
+        double Rise(double? before, double? after)
+        {
+            return (before, after) switch
+            {
+                ({ } low, { } high) => (high - low) / (2 * reach),
+                (null, { } high) => (high - height) / reach,
+                ({ } low, null) => (height - low) / reach,
+                _ => 0
+            };
+        }
+
+        double acrossX = Rise(HeightOf(ground, x - reach, z, top), HeightOf(ground, x + reach, z, top));
+        double acrossZ = Rise(HeightOf(ground, x, z - reach, top), HeightOf(ground, x, z + reach, top));
+
+        return new Vector(-acrossX, 1, -acrossZ).Unit;
+    }
+
+    /// <summary>
+    /// This method returns the rotation that tips a copy's up onto the given direction, about the line
+    /// square to both, by the angle between them.
+    /// </summary>
+    private static Matrix Leaning(Vector up)
+    {
+        double cos = Math.Clamp(up.Y, -1, 1);
+        double sin = Math.Sqrt(up.X * up.X + up.Z * up.Z);
+
+        if (sin < 1e-12)
+            return Transforms.Scale(1);
+
+        // The axis is up crossed with the new up, of unit length: (z, 0, -x) / sin.
+        double kx = up.Z / sin, kz = -up.X / sin;
+        double turn = 1 - cos;
+
+        return new Matrix()
+            .SetEntry(0, 0, cos + kx * kx * turn)
+            .SetEntry(0, 1, -kz * sin)
+            .SetEntry(0, 2, kx * kz * turn)
+            .SetEntry(1, 0, kz * sin)
+            .SetEntry(1, 1, cos)
+            .SetEntry(1, 2, -kx * sin)
+            .SetEntry(2, 0, kx * kz * turn)
+            .SetEntry(2, 1, kx * sin)
+            .SetEntry(2, 2, cos + kz * kz * turn);
     }
 
     /// <summary>

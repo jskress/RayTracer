@@ -48,6 +48,36 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<double> LargestSizeResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the name of the surface the copies are dropped onto.
+    /// </summary>
+    public Resolver<string> OverResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for whether a dropped copy leans with the ground.
+    /// </summary>
+    public Resolver<bool> TiltedResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the lowest ground a dropped copy may stand on.
+    /// </summary>
+    public Resolver<double> AboveResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the highest ground a dropped copy may stand on.
+    /// </summary>
+    public Resolver<double> BelowResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the steepest ground a dropped copy may stand on.
+    /// </summary>
+    public Resolver<double> SteepestResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far a dropped copy is sunk into the ground.
+    /// </summary>
+    public Resolver<double> SinkResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how far apart the copies stand.
     /// </summary>
     public Resolver<double> SpacingResolver { get; set; }
@@ -85,6 +115,16 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
         TurnResolver.AssignTo(value, target => target.Turn, context, variables);
         SmallestSizeResolver.AssignTo(value, target => target.SmallestSize, context, variables);
         LargestSizeResolver.AssignTo(value, target => target.LargestSize, context, variables);
+        OverResolver.AssignTo(value, target => target.Over, context, variables);
+        TiltedResolver.AssignTo(value, target => target.Tilted, context, variables);
+        SteepestResolver.AssignTo(value, target => target.Steepest, context, variables);
+        SinkResolver.AssignTo(value, target => target.Sink, context, variables);
+
+        if (AboveResolver is not null)
+            value.Above = AboveResolver.Resolve(context, variables);
+
+        if (BelowResolver is not null)
+            value.Below = BelowResolver.Resolve(context, variables);
 
         // Handed over as factories rather than as surfaces, so that a field told to make copies can ask
         // for a fresh one at every place -- the same arrangement an L-system's leaf uses.  Only a

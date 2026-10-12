@@ -138,7 +138,7 @@ public class PrimitiveCallResolver : ISurfaceResolver
             : null;
 
         if (key is not null && context.SharedShapes.TryGetValue(key, out Surface already))
-            return new Group().Add(new Instance { Prototype = already });
+            return SharedAs(already);
 
         Surface built = Build(context, primitive, given);
 
@@ -147,7 +147,32 @@ public class PrimitiveCallResolver : ISurfaceResolver
 
         context.SharedShapes[key] = built;
 
-        return new Group().Add(new Instance { Prototype = built });
+        return SharedAs(built);
+    }
+
+    /// <summary>
+    /// This method returns what a call is handed for a shape it shares: a group holding an instance of
+    /// it -- or, for a group with nothing in it, a group of its own with nothing in it.
+    /// <para>
+    /// **An empty group is never handed out as an instance**, since there is nothing in it to share and
+    /// the instance costs whatever holds it its own sharing: a shape holding an instance may not itself
+    /// be shared.  A fir's bough carries the snow lying on it, which in summer is nothing, and an
+    /// instance of that nothing had every fir build its sixty-six boughs again -- two thousand needled
+    /// shoots a tree, and some 140 MB of them.  It is still remembered, so the body that worked out it
+    /// had nothing to give is not run again.
+    /// </para>
+    /// <para>
+    /// A plain group, exactly: a field, an L-system or a line of text is a group that fills itself only
+    /// when it is prepared, and is not empty for looking so beforehand.
+    /// </para>
+    /// </summary>
+    /// <param name="shape">The shape being shared.</param>
+    /// <returns>What the call is handed.</returns>
+    private static Surface SharedAs(Surface shape)
+    {
+        return shape.GetType() == typeof(Group) && ((Group) shape).Surfaces.Count == 0
+            ? new Group()
+            : new Group().Add(new Instance { Prototype = shape });
     }
 
     /// <summary>

@@ -297,6 +297,11 @@ that is one thing in many places over an area, and none of it needing a loop.
 | `turned` | How far each copy may be turned about the up axis: the whole spread, centered on the way it faces as made.  `turned 360` faces each any way at all. |
 | `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size. |
 | `cycle` | Take the things after `of` in turn rather than at random. |
+| `over '<name>'` | Drop every copy straight down onto the surface of that name standing beside the field. |
+| `tilted` | A dropped copy leans with the ground under it, rather than standing upright. |
+| `above`, `below` | The lowest and highest ground a dropped copy may stand on. |
+| `steepest` | The steepest ground a dropped copy may stand on, as an angle from level. |
+| `sink` | How far a dropped copy is sunk into the ground, along its own up. |
 | `index in <name>` | Name each copy's number, and give each place its own surface rather than an instance of one shape.  The `in <name>` is not optional. |
 
 **The copies are *instances* by default**, and that is the right way round: an
@@ -395,6 +400,50 @@ object Sward(Verge, 0.09, 0.9)
 **Each copy is tested where it has been moved to, not where the grid put it.**  Testing the grid
 point instead would let a copy's jitter carry it outside the very outline it was chosen for, which
 shows along every edge.
+
+#### Dropping a field onto the ground
+
+A field stands its copies on its own plane, which is level.  Ground is seldom level, and `over` drops
+every copy straight down onto a surface standing beside the field instead — a hill, a height field, a
+bank — named by its `named` name:
+
+```
+heightfield { ...  named 'hill' }
+
+field {
+    of Oak(10, 'summer', 1), Birch(9, 'summer', 2), Elm(11, 'summer', 3)
+    within Wood
+    spacing 6  jitter 0.9
+    turned 360  sized 0.85 to 1.15
+    over 'hill'
+    above 1  below 14
+    steepest 30
+    sink 0.2
+}
+
+object Grass(Meadow) { over 'hill' tilted  above 0.4 }
+```
+
+**Each copy falls onto that surface and nothing else.**  A canopy, a roof or the field's own copies do
+not catch it, and a place with nothing of the ground below it stands nothing — so the outline may be
+drawn generously and the ground's own edge decides where the copies stop.  Nothing is built at a place
+where nothing lands, so a generous outline costs a few drops there and no more.  Hair the ground grows is
+fallen through: a copy stands on the skin.
+
+**Copies stand upright, as trees and people do, unless the field says `tilted`**, when each leans with
+the ground under it, as grass and stones do.  An upright trunk on a slope touches the ground on its
+uphill side only, and `sink` sets it that much lower so its downhill side is not standing in the air.
+
+**`above`, `below` and `steepest` keep copies off ground they do not belong on**: a wood off the beach
+and under its tree line, and off slopes too steep to hold a tree.  Heights are in the space the field
+shares with the ground, and `steepest` is an angle from level in the scene's own unit.
+
+**The ground has to stand beside the field**, in the same group or both at the top of the scene, as
+anything placed against another does; it is dropped onto only once it has been placed itself.  A field
+from a primitive is dropped by the block on its call, as the grass above is.
+
+The grid is laid out level, so ground that slopes away holds its copies a little further apart along
+its surface than level ground does — at thirty degrees, by about fifteen percent.
 
 ### Ribbon
 

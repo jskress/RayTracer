@@ -1,0 +1,151 @@
+// A hill across a lake, wooded from the shore to a tree line, with every tree, tuft and stone on it
+// dropped there by a field rather than placed: `over 'hill'` lets each copy fall straight down onto the
+// ground named, and stand wherever it lands.  Nothing here knows how high the ground is anywhere.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    // Water wants it: one sample a pixel turns the ripples going away from the camera to gray mush.
+    antialiasing depth 1
+    antialiasing threshold 0.4
+    info {
+        title 'A Wooded Hillside'
+        author 'J. Stephen Kress'
+        description 'Broadleaves from the shore, firs above them, bare rock at the top: fields dropped onto a hill.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'trees'       { Oak, Birch, Elm, Fir }
+import 'undergrowth' { Grass }
+import 'rocks'       { Scree }
+import 'water'       { Water, SeaWater }
+import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
+
+// Standing on the grass of a knoll on the near side of the lake, looking across and a little to the
+// right, so that the summit sits off the middle of the picture.
+camera {
+    location [-15, 9.6, -142]
+    look at [30, 15, 30]
+    field of view 55
+}
+
+// From the left and a little behind, so the light rakes across the face of the hill and every tree on
+// it throws its shadow onto the slope beside it.  From straight behind, a wood is a flat green wall.
+background SoftAfternoonFrom(290)
+light SoftAfternoonLight
+
+// -- The ground ------------------------------------------------------------------------------------
+
+Sand  = pigment granite { [0, [0.62, 0.56, 0.42], 1, [0.52, 0.46, 0.34]]  scale 2 }
+Turf  = pigment bozo    { [0, [0.20, 0.30, 0.12], 1, [0.30, 0.38, 0.17]]  scale 6 }
+Stone = pigment granite { [0, [0.46, 0.44, 0.42], 1, [0.30, 0.29, 0.29]]  scale 1.5 }
+
+// One function for the whole of it, read across a square three hundred units on a side: the hill, a
+// shoulder off to its left, ground rising gently away from the camera, the knoll the camera stands on,
+// the hollow the lake fills, and noise to keep any of it from looking turned on a lathe.
+//
+// **The hill is broad because trees cannot stand on a cliff.**  The first one tried was a steep cone,
+// fifty degrees at its steepest, and every fir was turned away by `steepest` below; this one is never
+// much more than thirty-five.  And it is sixty high against trees of seven or eight, since a hill only
+// five trees tall reads as a mound with a wood on it.
+heightfield {
+    function {
+        60 * exp(-((x - 0.55) * (x - 0.55) + (z - 0.74) * (z - 0.74)) / 0.07)
+        + 16 * exp(-((x - 0.26) * (x - 0.26) + (z - 0.66) * (z - 0.66)) / 0.015)
+        + 12 * (z - 0.44)
+        + 14 / (1 + exp((z - 0.10) / 0.03))
+        - 5 * exp(-(z - 0.22) * (z - 0.22) / 0.0036)
+        + 3.0 * (noise(x * 9, 0, z * 9) - 0.5)
+        + 1.2 * (noise(x * 25, 0, z * 25) - 0.5)
+    }
+    samples 500
+    material {
+        // Sand at the water's edge, turf up the hill, and rock where the trees have given out.
+        pigment linear Y gradient {
+            [0.0, Sand, 0.02, Sand, 0.032, Turf, 0.62, Turf, 0.72, Stone]
+            scale [1, 70, 1]
+        }
+        specular 0.04  shininess 10
+    }
+    translate [-0.5, 0, -0.5]
+    scale [300, 1, 300]
+    named 'hill'
+}
+
+// **Sea water, not lake water, and for this lake.**  The library's lake water is for a bed near
+// enough to see, and lets most of the light through to it -- which over this one's sandy bottom came
+// out a muddy gray-brown sheet.  Deep water is dark, and a dark surface is what shows the wood
+// mirrored in it.
+object Water(320, 320, 'calm') { material SeaWater  translate Y 0.6 }
+
+// -- What stands on it -----------------------------------------------------------------------------
+
+// The slopes the wood is planted over: the near half of the hill only, since the far side cannot be
+// seen.  A dropped field builds nothing where nothing lands, so the outline could as well be the whole
+// square; it is the far side's trees that would cost, standing where no ray reaches them.
+//
+// The clearings are holes in the outline.  Every tree's kind, turn and size is drawn from its own
+// place rather than from how many came before it, so cutting a clearing changes nothing around it.
+Slopes = path {
+    move to -150, -75  line to 150, -75  line to 150, 70  line to -150, 70  close
+    move to -31.1, -18.0  line to -33.2, -10.6  line to -43.8, -9.0  line to -52.7, -8.1
+    line to -63.3, -10.4  line to -63.1, -18.0  line to -59.0, -23.5  line to -53.7, -30.0
+    line to -42.8, -29.1  line to -37.4, -23.3  close
+    move to 61.1, -4.0  line to 56.8, 1.4  line to 49.3, 3.0  line to 41.7, 5.3  line to 34.1, 2.0
+    line to 35.1, -4.0  line to 35.8, -9.1  line to 41.3, -14.1  line to 49.7, -11.9
+    line to 55.2, -8.6  close
+    move to 6.0, 28.0  line to 0.5, 32.1  line to -4.6, 34.9  line to -12.4, 37.0  line to -17.5, 32.6
+    line to -18.0, 28.0  line to -18.9, 22.7  line to -12.0, 19.7  line to -4.9, 21.7
+    line to 1.9, 23.2  close
+}
+
+// Broadleaves, from just above the water to a little past where the firs begin.  Trees stand upright
+// whatever the slope, as trees do, and are sunk a little so that the downhill side of a trunk is not
+// left standing in the air.
+field {
+    of Oak(7.5, 'summer', 1), Oak(6.5, 'summer', 2), Birch(7, 'summer', 3), Birch(6, 'summer', 4),
+       Elm(8, 'summer', 5)
+    within Slopes
+    spacing 5.5  jitter 0.9
+    turned 360  sized 0.85 to 1.15
+    over 'hill'
+    above 2  below 26
+    steepest 36
+    sink 0.3
+}
+
+// Firs above them, overlapping them by a few units so the change is a mingling rather than a line, and
+// giving out at the tree line.  Above that the hill is bare.
+field {
+    of Fir(8, 'summer', 6), Fir(7, 'summer', 7), Fir(9, 'summer', 8)
+    within Slopes
+    spacing 4.5  jitter 0.9
+    turned 360  sized 0.8 to 1.1
+    over 'hill'
+    above 22  below 42
+    steepest 38
+    sink 0.3
+}
+
+// A few birches on the knoll, at the left edge of the picture, standing upright on its slope.
+Copse = path { move to -26, -126  line to -15, -127  line to -13, -117  line to -22, -114  line to -27, -119  close }
+
+field {
+    of Birch(9, 'summer', 9), Birch(7.5, 'summer', 10)
+    within Copse
+    spacing 4  jitter 0.8
+    turned 360  sized 0.9 to 1.1
+    over 'hill'
+    sink 0.2
+}
+
+// Grass on the knoll and stones on the summit lean with the ground under them, as anything lying on
+// a slope does: `tilted`.  A tuft standing plumb on a slope looks pinned on.  The grass stops above
+// the water and the stones start well above the trees.
+Bank   = path { move to -70, -150  line to 50, -150  line to 50, -100  line to -70, -100  close }
+Summit = path { move to -40, 20  line to 70, 20  line to 70, 110  line to -40, 110  close }
+
+object Grass(Bank, 'summer', 1, 0.9, 0.7) { over 'hill' tilted  above 0.8 }
+object Scree(Summit, 'summer', 2, 0.9, 0.8) { over 'hill' tilted  above 46 }

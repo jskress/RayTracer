@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -591,6 +592,269 @@ public class TestField
                                          field { {{wrong}}  {{Outline}}  spacing 0.5 }
                                          """), $"`{wrong}` should have been refused");
         }
+    }
+
+    /// <summary>
+    /// The ground the drop tests stand things on: an ellipsoid ten across and three high, named
+    /// 'hill', whose height and slope at any place are known exactly.
+    /// </summary>
+    private static Sphere Hill() => new ()
+    {
+        Name = "hill", Transform = Transforms.Scale(10, 3, 10)
+    };
+
+    private static double HillHeight(double x, double z) => 3 * Math.Sqrt(1 - (x * x + z * z) / 100);
+
+    private static Vector HillUp(double x, double z) =>
+        new Vector(x / 100, HillHeight(x, z) / 9, z / 100).Unit;
+
+    /// <summary>
+    /// This method stands a field beside a hill in a group, readies the group, and hands back the field.
+    /// </summary>
+    private static Field DroppedOnAHill(Field field, Matrix group = null, params Surface[] more)
+    {
+        Group holder = new () { Transform = group ?? Transforms.Scale(1) };
+
+        field.Over ??= "hill";
+        holder.Add(Hill()).Add(field);
+
+        foreach (Surface surface in more)
+            holder.Add(surface);
+
+        holder.PrepareForRendering();
+
+        return field;
+    }
+
+    /// <summary>
+    /// A field dropped over a hill stands each copy on the hill where it lands -- at the hill's own
+    /// height there -- and stands nothing where no hill lies below, however generous its outline.
+    /// </summary>
+    [TestMethod]
+    public void TestADroppedFieldStandsOnTheGroundAndNowhereElse()
+    {
+        Field field = DroppedOnAHill(new Field
+        {
+            Outline = new GeneralPath().MoveTo(-14, -14).LineTo(14, -14).LineTo(14, 14).LineTo(-14, 14).ClosePath(),
+            Spacing = 1, Jitter = 0.8, Prototype = _ => new Sphere()
+        });
+
+        Assert.IsTrue(field.Surfaces.Count > 250, $"only {field.Surfaces.Count} copies stood on the hill");
+
+        foreach (Surface copy in field.Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+
+            Assert.IsTrue(at.X * at.X + at.Z * at.Z < 100, $"a copy stood off the hill at {at}");
+            Assert.AreEqual(HillHeight(at.X, at.Z), at.Y, 1e-6, $"a copy stood at the wrong height at {at}");
+        }
+    }
+
+    /// <summary>
+    /// A dropped copy falls onto the ground it was told of and nothing else: a roof over it does not
+    /// catch it.
+    /// </summary>
+    [TestMethod]
+    public void TestADroppedFieldFallsPastEverythingButItsGround()
+    {
+        Cube roof = new () { Transform = Transforms.Translate(0, 6, 0) * Transforms.Scale(20, 0.1, 20) };
+        Field field = DroppedOnAHill(new Field { Outline = Square(), Spacing = 0.5, Prototype = _ => new Sphere() },
+            more: roof);
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+        Assert.IsTrue(field.Surfaces.All(copy => (Point.Zero * copy.Transform).Y < 3.01), "a copy was caught by the roof");
+    }
+
+    /// <summary>
+    /// An upright copy keeps its own up whatever the slope; a tilted one leans with the ground, its up
+    /// along the ground's own.
+    /// </summary>
+    [TestMethod]
+    public void TestCopiesStandUprightUnlessTilted()
+    {
+        Field Dropped(bool tilted) => DroppedOnAHill(new Field
+        {
+            Outline = new GeneralPath().MoveTo(-8, -8).LineTo(8, -8).LineTo(8, 8).LineTo(-8, 8).ClosePath(),
+            Spacing = 1.5, Jitter = 0.5, Tilted = tilted, Prototype = _ => new Sphere()
+        });
+
+        foreach (Surface copy in Dropped(false).Surfaces)
+        {
+            Vector up = (new Vector(0, 1, 0) * copy.Transform).Unit;
+
+            Assert.AreEqual(1, up.Y, 1e-12, "an upright copy leaned");
+        }
+
+        int steep = 0;
+
+        // The slope is read from the ground a little way either side of a copy, so it is judged where a
+        // copy could stand at all -- up to sixty degrees -- rather than at the hill's very rim, where the
+        // ground turns over faster than that little way can follow.
+        foreach (Surface copy in Dropped(true).Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+            Vector up = (new Vector(0, 1, 0) * copy.Transform).Unit;
+            Vector expected = HillUp(at.X, at.Z);
+
+            if (expected.Y < 0.5)
+                continue;
+
+            Assert.AreEqual(1, up.Dot(expected), 2e-4, $"a tilted copy at {at} did not lean with the ground");
+
+            if (expected.Y < 0.9)
+                steep++;
+        }
+
+        Assert.IsTrue(steep > 5, "too few copies stood on a slope to judge by");
+    }
+
+    /// <summary>
+    /// Ground too steep, too low or too high stands nothing, and a copy sunk into the ground stands that
+    /// much lower along its own up.
+    /// </summary>
+    [TestMethod]
+    public void TestSteepLowAndHighGroundStandNothing()
+    {
+        GeneralPath wide = new GeneralPath().MoveTo(-12, -12).LineTo(12, -12).LineTo(12, 12).LineTo(-12, 12).ClosePath();
+        Field all = DroppedOnAHill(new Field { Outline = wide, Spacing = 0.7, Prototype = _ => new Sphere() });
+        Field gentle = DroppedOnAHill(new Field
+        {
+            Outline = wide, Spacing = 0.7, Steepest = 30.0.ToRadians(), Prototype = _ => new Sphere()
+        });
+        Field band = DroppedOnAHill(new Field
+        {
+            Outline = wide, Spacing = 0.7, Above = 1, Below = 2.5, Prototype = _ => new Sphere()
+        });
+        Field sunk = DroppedOnAHill(new Field
+        {
+            Outline = Square(), Spacing = 0.5, Sink = 0.25, Prototype = _ => new Sphere()
+        });
+
+        Assert.IsTrue(gentle.Surfaces.Count < all.Surfaces.Count * 0.9, "steep ground was not left bare");
+        Assert.IsTrue(gentle.Surfaces.Count > all.Surfaces.Count * 0.3, "gentle ground was left bare too");
+
+        foreach (Surface copy in gentle.Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+
+            Assert.IsTrue(HillUp(at.X, at.Z).Y >= Math.Cos(30.0.ToRadians()) - 2e-3, $"a copy stood on steep ground at {at}");
+        }
+
+        Assert.IsTrue(band.Surfaces.Count is > 20, "the band of heights stood too little");
+        Assert.IsTrue(band.Surfaces.All(copy => (Point.Zero * copy.Transform).Y is >= 1 and <= 2.5), "a copy stood out of its band");
+
+        foreach (Surface copy in sunk.Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+
+            Assert.AreEqual(HillHeight(at.X, at.Z) - 0.25, at.Y, 1e-6, "a sunk copy stood at the wrong depth");
+        }
+    }
+
+    /// <summary>
+    /// A field moved and turned on its own, beside its ground in a group that is moved, turned and scaled
+    /// as well, still stands its copies on the ground where they fall in the space the two share -- and
+    /// rays across the group find the copies where they fell, the field having sorted them and boxed
+    /// itself again.
+    /// </summary>
+    [TestMethod]
+    public void TestADroppedFieldWorksInTheSharedSpaceAndIsFoundWhereItFell()
+    {
+        Field field = new ()
+        {
+            Outline = Square(), Spacing = 0.5, Over = "hill",
+            Transform = Transforms.Translate(2, 0, -1) * Transforms.RotateAroundY(30),
+            Prototype = _ => new Sphere { Transform = Transforms.Scale(0.1) }
+        };
+        Group holder = new ()
+        {
+            Transform = Transforms.Translate(3, 1, -2) * Transforms.RotateAroundY(35) * Transforms.Scale(0.5)
+        };
+
+        holder.Add(Hill()).Add(field);
+        holder.PrepareForRendering();
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+
+        double[] grid = [-0.75, -0.25, 0.25, 0.75];
+
+        foreach (Surface copy in field.Surfaces)
+        {
+            Point own = Point.Zero * copy.Transform;
+            Point shared = Point.Zero * (field.Transform * copy.Transform);
+
+            // Where the field's grid put it, in the field's own space; only its height has changed.
+            Assert.IsTrue(grid.Any(x => Math.Abs(own.X - x) < 1e-9) && grid.Any(z => Math.Abs(own.Z - z) < 1e-9),
+                $"a copy fell away from its place on the grid, to {own}");
+            Assert.AreEqual(HillHeight(shared.X, shared.Z), shared.Y, 1e-6, $"a copy stood at the wrong height at {shared}");
+
+            // Across the group, level with the copy's middle, in the group's own space.
+            List<Intersection> hits = [];
+
+            holder.AddIntersections(new Ray(new Point(shared.X - 20, shared.Y, shared.Z), new Vector(1, 0, 0)), hits);
+
+            Assert.IsTrue(hits.Any(hit => Math.Abs(hit.Distance - (20 - 0.1)) < 1e-6),
+                $"a ray across the group did not find the copy standing at {shared}");
+        }
+    }
+
+    /// <summary>
+    /// A copy stands on the ground's skin, not on the fur the ground grows.
+    /// </summary>
+    [TestMethod]
+    public void TestADroppedCopyStandsOnTheSkinNotTheFur()
+    {
+        Sphere furry = new ()
+        {
+            Name = "hill", Transform = Transforms.Scale(10, 3, 10),
+            // Lying nearly flat, so that every drop crosses fur on its way to the skin.
+            HairGrowth = new HairGrowth { Count = 20000, Length = 0.6, Thickness = 0.12, Lean = 1.4 }
+        };
+        Group holder = new ();
+        Field field = new () { Outline = Square(), Spacing = 0.5, Over = "hill", Prototype = _ => new Sphere() };
+
+        holder.Add(furry).Add(field);
+        holder.PrepareForRendering();
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+        Assert.IsTrue(field.Surfaces.All(copy => Math.Abs((Point.Zero * copy.Transform).Y - HillHeight(
+            (Point.Zero * copy.Transform).X, (Point.Zero * copy.Transform).Z)) < 1e-6), "a copy stood on the fur");
+    }
+
+    /// <summary>
+    /// The scene's side: every clause reads, a field from a primitive may be dropped by the block on its
+    /// call, and naming nothing beside the field is refused with the names that are there.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayDropAFieldOntoTheGround()
+    {
+        const string ground = "sphere { scale [3, 1, 3]  named 'hill' }";
+
+        int dropped = Lit($$"""
+                            {{Ball}}
+                            {{ground}}
+                            field { of Ball(0)  {{Outline}}  spacing 0.5  over 'hill' tilted  above 0.1  below 5  steepest 60  sink 0.02 }
+                            """);
+
+        Assert.IsTrue(dropped > 0, "the dropped field showed nothing");
+        Assert.IsNull(ErrorFrom($$"""
+                                  {{Ball}}
+                                  {{ground}}
+                                  primitive Patch(outline) -> field {
+                                      return field { of Ball(0)  within outline  spacing 0.5 }
+                                  }
+                                  Square = path { move to -1, -1  line to 1, -1  line to 1, 1  line to -1, 1  close }
+                                  object Patch(Square) { over 'hill' tilted }
+                                  """), "a field from a primitive should drop by the block on its call");
+
+        string missing = ErrorFrom($$"""
+                                     {{Ball}}
+                                     {{ground}}
+                                     field { of Ball(0)  {{Outline}}  spacing 0.5  over 'mountain' }
+                                     """);
+
+        Assert.IsNotNull(missing, "dropping onto nothing should have been refused");
+        Assert.IsTrue(missing.Contains("'mountain'") && missing.Contains("'hill'"), $"the complaint was: {missing}");
     }
 
     /// <summary>
