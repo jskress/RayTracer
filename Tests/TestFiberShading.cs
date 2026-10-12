@@ -88,8 +88,9 @@ public class TestFiberShading
     }
 
     /// <summary>
-    /// A shadow ray keeps what passes through each strand it crosses: next to none through black hair,
-    /// some through blond, most through hair with no melanin at all -- and red hair lets red through.
+    /// A shadow ray to a surface beneath hair keeps what each strand it crosses sends onward: next to none
+    /// through black hair, most through blond, more through hair with no melanin at all -- and red hair
+    /// sends red on.
     /// </summary>
     [TestMethod]
     public void TestAShadowRayKeepsWhatPassesThroughAStrand()
@@ -113,9 +114,9 @@ public class TestFiberShading
         Color black = Reaching(Melanin.Shades["black"]);
         Color ginger = Reaching(Melanin.Shades["ginger"]);
 
-        Assert.IsTrue(clear.Red > 0.9, $"clear let through {clear}");
-        Assert.IsTrue(blond.Red is > 0.4 and < 0.9, $"blond let through {blond}");
-        Assert.IsTrue(black.Red < 0.005, $"black let through {black}");
+        Assert.AreEqual(0.9, clear.Red, 0.03, $"clear let through {clear}");
+        Assert.IsTrue(blond.Red is > 0.7 and < 0.88, $"blond let through {blond}");
+        Assert.IsTrue(black.Red < 0.06, $"black let through {black}");
         Assert.IsTrue(ginger.Red > 2 * ginger.Blue, $"ginger let through {ginger}");
     }
 

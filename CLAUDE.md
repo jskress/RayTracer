@@ -94,9 +94,14 @@ the Chiang 2016 / PBRT fiber model in `Core/Fiber.cs` (R, TT, TRT and the rest; 
 material's `roughness` or 0.3), lit from every light at the strand's middle with shadow rays setting off a radius
 toward the light, and the sky sampled over the whole sphere (`Light.SampleAround`, weight 4).  Color is matched by
 Chiang's inversion from the pigment -- read at each strand's ROOT in the skin's space when the hair wears its skin's
-material -- or set by a material's `melanin`; a shadow ray crossing a strand keeps `Fiber.PassedThrough` (the TT
-share).  Spectral renders take the absorption by `FromUnbounded` and work the hair's own color out from it band by
-band, never fitting a spectrum to the (very dark, very red) matched color. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
+material -- or set by a material's `melanin`.  A strand's shadow rays treat other strands as OPAQUE; light bounced
+among strands comes from a `HairLight` gathered per (hair, instance) before the hair is first shaded
+(`Core/Scene.HairLight.cs`: photons from each light sample as a beam over the hair, scattered by `Fiber.Sample`,
+recorded after their first scattering as fluence AND net flow in a grid of strand-length/6 cells; each lobe reads
+the light arriving from its center direction, `HairLight.Here.From`).  Isotropic light was 1.5-2x too bright: the
+flow is what makes it match a brute-force path tracer (`TestHairLight`) within ~15%.  A non-hair surface's shadow
+ray keeps each crossed strand's forward share (`Fiber.SharesOf`).  Spectral renders take the absorption by
+`FromUnbounded` and work the hair's own color out from it band by band. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
 `Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,

@@ -28,6 +28,12 @@ public partial class Scene
     /// sets off a radius toward its light, so that the strand's own share of what passes through it is
     /// counted in its scattering and not again on the way out.
     /// </para>
+    /// <para>
+    /// **Other strands stop a shadow ray here**, though they let light through to a surface beneath them.
+    /// Light that came to this strand by way of other strands was scattered on the way, and it is counted
+    /// with all the rest of the light scattered among the strands, gathered ahead of time; see
+    /// <see cref="HairLight"/>.  A strand standing alone has no others to scatter light to it.
+    /// </para>
     /// </summary>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="hit">Where the ray met the strand, already prepared.</param>
@@ -42,18 +48,8 @@ public partial class Scene
         TS own = dye.Showing<TS>();
         Fiber fiber = Fiber.For(dye.Roughness);
 
-        // The strand's frame in the world: along it, toward the eye square to it, and across.
-        Point center = strands.SurfaceToWorld(hit.Center, hit.TimeIndex, hit.Portal);
-        Vector tangent = (strands.SurfaceToWorld(hit.Center + hit.Tangent, hit.TimeIndex, hit.Portal) - center).Unit;
-        Vector eye = hit.Eye;
-        Vector face = eye - tangent * eye.Dot(tangent);
-
-        face = face.Magnitude > 1e-9 ? face.Unit : Microfacets.FrameAround(tangent).Across;
-
-        Vector side = face.Cross(tangent);
-        double h = Math.Abs(hit.Across) * ((hit.Point - center).Dot(side) < 0 ? -1 : 1);
-        double radius = (hit.OverPoint - center).Magnitude;
-        Fiber.Seen<TS> seen = fiber.Seeing(Math.Clamp(eye.Dot(tangent), -1, 1), Math.PI / 2, h, absorption);
+        StrandFrame frame = FrameOf(hit);
+        Fiber.Seen<TS> seen = fiber.Seeing(frame.SineOf(hit.Eye), Math.PI / 2, frame.H, absorption);
         double ambient = material.EffectiveAmbient;
         TS color = TS.Black;
 
@@ -64,7 +60,7 @@ public partial class Scene
 
             for (int index = 0; index < count; index++)
             {
-                LightSample sample = light.SampleAround(center, index);
+                LightSample sample = light.SampleAround(frame.Center, index);
                 TS emitted = light.EmittedToward<TS>(sample);
 
                 // Ambient light stands in for light bounced about the scene, as it does for a surface,
@@ -78,14 +74,14 @@ public partial class Scene
 
                 Vector toward = sample.Direction;
                 TS reaching = GetLightReaching<TS>(
-                    center + toward * radius, toward, sample.Distance - radius, hit.TimeIndex);
+                    frame.Center + toward * frame.Radius, toward, sample.Distance - frame.Radius, hit.TimeIndex,
+                    null, true);
 
                 if (reaching.IsBlack)
                     continue;
 
                 // A light's color is the irradiance it gives a surface square to it, over π.
-                TS scattered = fiber.Scattered(
-                    seen, Math.Clamp(toward.Dot(tangent), -1, 1), Math.Atan2(toward.Dot(face), toward.Dot(side)));
+                TS scattered = fiber.Scattered(seen, frame.SineOf(toward), frame.AngleOf(toward));
 
                 sum += scattered * emitted * reaching * (Math.PI * intensity);
             }
@@ -93,22 +89,94 @@ public partial class Scene
             color += count == 1 ? sum : sum * (1.0 / count);
         }
 
+        // The light scattered among the strands arrives from every way, more from some than others, and
+        // each lobe sends toward the eye what arrives from where it draws its light; the last lobe draws
+        // from every way round alike.
+        if (strands.HasNeighbors && HairOf(strands) is { } hair)
+        {
+            HairLight.Here here = LightAmong(hair, hit.Portal).At(frame.Center);
+
+            for (int lobe = 0; lobe < 3; lobe++)
+            {
+                (double sinTheta, double phi) = fiber.CenterOf(seen, lobe);
+
+                color += Fiber.Carried(seen, lobe) * here.From<TS>(frame.Toward(sinTheta, phi));
+            }
+
+            color += Fiber.Carried(seen, 3) * here.Everywhere<TS>();
+        }
+
         return color;
     }
 
     /// <summary>
-    /// This method returns how much of the light along a shadow ray gets past a strand it crosses: the
-    /// share that passes through it, tinted by the hair.  See <see cref="Fiber.PassedThrough{TS}"/>.
+    /// This method returns the head of hair a strand surface belongs to: itself, or the hair it is a part
+    /// of.
+    /// </summary>
+    private static Hair HairOf(StrandSurface strands) => strands as Hair ?? strands.Parent as Hair;
+
+    /// <summary>
+    /// This record holds a strand's frame in the world where a ray met it: its middle there, the way it
+    /// runs, the way toward the eye square to it, the way across, where across the strand the ray passed,
+    /// and how wide it is.  See <see cref="Fiber"/> for how angles are measured in it.
+    /// </summary>
+    internal readonly record struct StrandFrame(
+        Point Center, Vector Tangent, Vector Face, Vector Side, double H, double Radius)
+    {
+        /// <summary>
+        /// This method returns the sine of a direction's angle out of the plane square to the strand.
+        /// </summary>
+        public double SineOf(Vector direction) => Math.Clamp(direction.Dot(Tangent), -1, 1);
+
+        /// <summary>
+        /// This method returns a direction's angle round the strand.
+        /// </summary>
+        public double AngleOf(Vector direction) => Math.Atan2(direction.Dot(Face), direction.Dot(Side));
+
+        /// <summary>
+        /// This method returns the direction at the given angles.
+        /// </summary>
+        public Vector Toward(double sinTheta, double phi)
+        {
+            double cosTheta = Math.Sqrt(Math.Max(0, 1 - sinTheta * sinTheta));
+
+            return (Tangent * sinTheta + (Side * Math.Cos(phi) + Face * Math.Sin(phi)) * cosTheta).Unit;
+        }
+    }
+
+    /// <summary>
+    /// This method works out a strand's frame in the world where a ray met it, already prepared.
+    /// </summary>
+    internal static StrandFrame FrameOf(HairIntersection hit)
+    {
+        StrandSurface strands = (StrandSurface) hit.Surface;
+        Point center = strands.SurfaceToWorld(hit.Center, hit.TimeIndex, hit.Portal);
+        Vector tangent = (strands.SurfaceToWorld(hit.Center + hit.Tangent, hit.TimeIndex, hit.Portal) - center).Unit;
+        Vector eye = hit.Eye;
+        Vector face = eye - tangent * eye.Dot(tangent);
+
+        face = face.Magnitude > 1e-9 ? face.Unit : Microfacets.FrameAround(tangent).Across;
+
+        Vector side = face.Cross(tangent);
+        double h = Math.Abs(hit.Across) * ((hit.Point - center).Dot(side) < 0 ? -1 : 1);
+
+        return new StrandFrame(center, tangent, face, side, h, (hit.OverPoint - center).Magnitude);
+    }
+
+    /// <summary>
+    /// This method returns how much of the light along a shadow ray a strand it crosses sends onward, per
+    /// band.  See <see cref="Fiber.SharesOf{TS}"/>.
     /// </summary>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="crossed">The crossing.</param>
     /// <param name="ray">The shadow ray.</param>
-    /// <returns>The share of each band that gets past.</returns>
-    private TS PassedThroughStrand<TS>(HairIntersection crossed, Ray ray)
+    /// <returns>The share of each band sent onward.</returns>
+    private TS OnwardThroughStrand<TS>(HairIntersection crossed, Ray ray)
         where TS : struct, ISpectrum<TS>
     {
-        return Fiber.PassedThrough(
-            crossed.SineAlong, crossed.Across, DyeOf(crossed, ray.At(crossed.Distance)).Absorbing<TS>());
+        Dye dye = DyeOf(crossed, ray.At(crossed.Distance));
+
+        return Fiber.For(dye.Roughness).SharesOf(crossed.SineAlong, dye.Absorbing<TS>()).Onward;
     }
 
     /// <summary>
