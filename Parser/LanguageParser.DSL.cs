@@ -75,7 +75,7 @@ public partial class LanguageParser
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'along', 'ambient', 'amplitude', 'and',
             'above', 'angle', 'angles', 'aperture', 'apply',
-            'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
+            'anisotropy', 'antialiasing', 'apart', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
@@ -89,7 +89,7 @@ public partial class LanguageParser
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
-            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
+            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
@@ -1215,6 +1215,12 @@ public partial class LanguageParser
                 within > [ openBrace | [ _identifier | _keyword ] ]
                     ?? 'Expecting an outline, or the name of one, to follow "within" here.'
             } |
+            {
+                along > [ openBrace | [ _identifier | _keyword ] ]
+                    ?? 'Expecting a path, or the name of one, to follow "along" here.'
+            } |
+            { rows > _expression > apart ?? 'Expecting "apart" to follow the number of rows here.' > _expression } |
+            { offset > _expression } |
             {
                 of > [ _identifier | _keyword ]
                     ?? 'Expecting a surface name, or a call of a primitive, to follow "of" here.' >

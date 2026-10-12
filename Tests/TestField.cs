@@ -857,6 +857,306 @@ public class TestField
         Assert.IsTrue(missing.Contains("'mountain'") && missing.Contains("'hill'"), $"the complaint was: {missing}");
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Along a path.
+    // ---------------------------------------------------------------------------------------------
+
+    // The four cubics that make a circle as nearly as four can.
+    private const double Kappa = 0.5522847498;
+
+    /// <summary>
+    /// A circle of the given radius about the origin, drawn anticlockwise from its rightmost point and
+    /// ending where it starts -- but never closed by name.
+    /// </summary>
+    private static GeneralPath Circle(double radius)
+    {
+        double k = radius * Kappa;
+
+        return new GeneralPath()
+            .MoveTo(radius, 0)
+            .CubicTo(radius, k, k, radius, 0, radius)
+            .CubicTo(-k, radius, -radius, k, -radius, 0)
+            .CubicTo(-radius, -k, -k, -radius, 0, -radius)
+            .CubicTo(k, -radius, radius, -k, radius, 0);
+    }
+
+    private static Field Laid(GeneralPath path, double spacing, Action<Field> more = null)
+    {
+        Field field = new () { Along = path, Spacing = spacing, Prototype = _ => new Sphere() };
+
+        more?.Invoke(field);
+        field.PrepareForRendering();
+
+        return field;
+    }
+
+    private static List<Point> WhereEach(Field field) =>
+        field.Surfaces.Select(copy => Point.Zero * copy.Transform).ToList();
+
+    /// <summary>
+    /// An open path is laid from end to end: a whole number of gaps, each the spacing asked or a little
+    /// more, so there is a copy at both ends -- the posts of a fence.
+    /// </summary>
+    [TestMethod]
+    public void TestAnOpenPathIsLaidEndToEndAtTheSpacingOrALittleMore()
+    {
+        GeneralPath line = new GeneralPath().MoveTo(0, 0).LineTo(10, 0);
+
+        void AssertStops(double spacing, params double[] expected)
+        {
+            List<Point> stops = WhereEach(Laid(line, spacing));
+
+            Assert.HasCount(expected.Length, stops, $"at a spacing of {spacing}");
+
+            for (int index = 0; index < expected.Length; index++)
+            {
+                Assert.AreEqual(expected[index], stops[index].X, 1e-9, $"stop {index} at a spacing of {spacing}");
+                Assert.AreEqual(0, stops[index].Z, 1e-9, $"stop {index} left the path at a spacing of {spacing}");
+            }
+        }
+
+        AssertStops(2.5, 0, 2.5, 5, 7.5, 10);
+        AssertStops(3, 0, 10 / 3.0, 20 / 3.0, 10);
+        AssertStops(20, 0, 10);
+    }
+
+    /// <summary>
+    /// A closed path goes round without two copies at its seam, whether it was closed by name or merely
+    /// ends where it starts.
+    /// </summary>
+    [TestMethod]
+    public void TestAClosedPathGoesRoundWithoutDoublingItsSeam()
+    {
+        GeneralPath square = new GeneralPath().MoveTo(0, 0).LineTo(4, 0).LineTo(4, 4).LineTo(0, 4).ClosePath();
+        List<Point> round = WhereEach(Laid(square, 2));
+
+        Assert.HasCount(8, round, "a square sixteen round at a spacing of two");
+        Assert.AreEqual(new Point(0, 0, 0), round[0]);
+        Assert.AreEqual(new Point(4, 0, 2), round[3]);
+        Assert.AreEqual(new Point(0, 0, 2), round[7]);
+
+        List<Point> ring = WhereEach(Laid(Circle(5), 1));
+
+        Assert.HasCount((int) Math.Floor(10 * Math.PI), ring, "a circle that ends where it starts is closed");
+
+        for (int index = 0; index < ring.Count; index++)
+        {
+            Point next = ring[(index + 1) % ring.Count];
+
+            // Four cubics stray a little from a true circle: some 0.0013 at this size.
+            Assert.AreEqual(5, new Vector(ring[index].X, 0, ring[index].Z).Magnitude, 2e-3, $"stop {index} left the circle");
+            Assert.AreEqual(10 * Math.PI / ring.Count, (next - ring[index]).Magnitude, 2e-3,
+                $"stops {index} and the next are not the even share of the way round apart");
+        }
+    }
+
+    /// <summary>
+    /// Each copy is turned so its X runs the way the path does where it stands, which puts what faces
+    /// -Z as made on the path's right as it is walked.
+    /// </summary>
+    [TestMethod]
+    public void TestEachCopyRunsWithThePath()
+    {
+        // Walking +Z, the right is +X.
+        foreach (Surface copy in Laid(new GeneralPath().MoveTo(0, 0).LineTo(0, 10), 2).Surfaces)
+        {
+            Assert.IsTrue((new Vector(1, 0, 0) * copy.Transform).Matches(new Vector(0, 0, 1)), "a copy's X did not run with the path");
+            Assert.IsTrue((new Vector(0, 0, -1) * copy.Transform).Matches(new Vector(1, 0, 0)), "a copy's front did not face the path's right");
+        }
+
+        // Round an anticlockwise circle, each runs along the circle, anticlockwise.
+        double worst = 0;
+        Point where = null;
+
+        foreach (Surface copy in Laid(Circle(5), 1).Surfaces)
+        {
+            Point at = Point.Zero * copy.Transform;
+            double off = (new Vector(1, 0, 0) * copy.Transform - new Vector(-at.Z, 0, at.X).Unit).Magnitude;
+
+            if (off > worst)
+                (worst, where) = (off, at);
+        }
+
+        // Four cubics run a little off a true circle's way as well as off its radius: up to 0.0012.
+        Assert.IsTrue(worst < 2e-3, $"the copy at {where} did not run round the circle: {worst}");
+    }
+
+    /// <summary>
+    /// A field's turns spread about the way the path runs, rather than about the way the thing was made.
+    /// </summary>
+    [TestMethod]
+    public void TestTurnsAlongAPathSpreadAboutTheWayItRuns()
+    {
+        Field field = Laid(new GeneralPath().MoveTo(0, 0).LineTo(0, 20), 0.2, field => field.Turn = 40.0.ToRadians());
+        double facing = Math.Atan2(-1, 0);
+        List<double> offs = field.Surfaces
+            .Select(copy => TurnAndSizeOf(copy.Transform).Turn - facing)
+            .ToList();
+
+        Assert.IsTrue(offs.All(off => Math.Abs(off) <= 20.0.ToRadians() + 1e-9), "a copy turned too far from the path");
+        Assert.IsTrue(offs.Max() - offs.Min() > 36.0.ToRadians(), "the turns did not spread over the range");
+    }
+
+    /// <summary>
+    /// Rows lie side by side, centred on the path, and each is spaced along its own length: round a
+    /// circle, the row outside holds more than the row inside.  An offset moves them all to one side.
+    /// </summary>
+    [TestMethod]
+    public void TestRowsLieSideBySideEachSpacedAlongItsOwnLength()
+    {
+        // Anticlockwise, the path's left is the inside of the circle.
+        List<Point> three = WhereEach(Laid(Circle(5), 1, field =>
+        {
+            field.Rows = 3;
+            field.Apart = 1;
+        }));
+        Dictionary<int, int> byRadius = three
+            .GroupBy(at => (int) Math.Round(new Vector(at.X, 0, at.Z).Magnitude * 10))
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        Assert.HasCount(3, byRadius, $"the rows stood at radii {string.Join(", ", byRadius.Keys)}");
+        Assert.AreEqual((int) Math.Floor(8 * Math.PI), byRadius[40], "the inside row");
+        Assert.AreEqual((int) Math.Floor(10 * Math.PI), byRadius[50], "the middle row");
+        Assert.AreEqual((int) Math.Floor(12 * Math.PI), byRadius[60], "the outside row");
+
+        GeneralPath line = new GeneralPath().MoveTo(0, 0).LineTo(10, 0);
+
+        // Walking +X, the left is +Z.
+        Assert.IsTrue(WhereEach(Laid(line, 2, field => field.Offset = 1.5)).All(at => Math.Abs(at.Z - 1.5) < 1e-9),
+            "an offset did not set the row to the path's left");
+        Assert.IsTrue(WhereEach(Laid(line, 2, field => field.Offset = -1.5)).All(at => Math.Abs(at.Z + 1.5) < 1e-9),
+            "a negative offset did not set the row to the path's right");
+
+        List<double> sides = WhereEach(Laid(line, 2, field =>
+            {
+                field.Rows = 2;
+                field.Apart = 3;
+                field.Offset = 4;
+            }))
+            .Select(at => at.Z)
+            .Distinct()
+            .Order()
+            .ToList();
+
+        CollectionAssert.AreEqual(new List<double> { 2.5, 5.5 }, sides, "two rows offset to one side");
+    }
+
+    /// <summary>
+    /// Each run of a path is laid by itself, with copies at both of its own ends.
+    /// </summary>
+    [TestMethod]
+    public void TestEachRunOfAPathIsLaidByItself()
+    {
+        GeneralPath two = new GeneralPath()
+            .MoveTo(0, 0).LineTo(4, 0)
+            .MoveTo(0, 5).LineTo(0, 9);
+        List<Point> stops = WhereEach(Laid(two, 2));
+
+        CollectionAssert.AreEqual(
+            new List<Point>
+            {
+                new (0, 0, 0), new (2, 0, 0), new (4, 0, 0),
+                new (0, 0, 5), new (0, 0, 7), new (0, 0, 9)
+            },
+            stops);
+    }
+
+    /// <summary>
+    /// Jitter along a path moves each copy along it and across it, by no more than its share of the
+    /// spacing -- and it is drawn from the place, so the same field stands the same way twice.
+    /// </summary>
+    [TestMethod]
+    public void TestJitterAlongAPathStaysWithinItsShare()
+    {
+        GeneralPath line = new GeneralPath().MoveTo(0, 0).LineTo(40, 0);
+        List<Point> plain = WhereEach(Laid(line, 2));
+        List<Point> jittered = WhereEach(Laid(line, 2, field => field.Jitter = 0.5));
+
+        Assert.HasCount(plain.Count, jittered);
+        Assert.IsTrue(plain.Zip(jittered).All(pair =>
+            Math.Abs(pair.First.X - pair.Second.X) <= 0.5 + 1e-9 && Math.Abs(pair.Second.Z) <= 0.5 + 1e-9),
+            "a copy strayed further than its share");
+        Assert.IsTrue(jittered.Count(at => Math.Abs(at.Z) > 0.1) > plain.Count / 3, "the copies were hardly moved across");
+        CollectionAssert.AreEqual(jittered, WhereEach(Laid(line, 2, field => field.Jitter = 0.5)), "the jitter is not the same twice");
+    }
+
+    /// <summary>
+    /// A field laid along a path may be dropped onto the ground like any other.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldAlongAPathDropsOntoTheGround()
+    {
+        Field field = DroppedOnAHill(new Field
+        {
+            Along = new GeneralPath().MoveTo(-12, 1).LineTo(12, 1), Spacing = 1, Prototype = _ => new Sphere()
+        });
+        List<Point> stops = WhereEach(field);
+
+        // Twenty-five stops along the line, of which those within the hill's ten either side of it stand.
+        Assert.HasCount(19, stops);
+
+        foreach ((Point at, Surface copy) in stops.Zip(field.Surfaces))
+        {
+            Assert.AreEqual(HillHeight(at.X, at.Z), at.Y, 1e-6, $"a copy stood at the wrong height at {at}");
+            Assert.IsTrue((new Vector(1, 0, 0) * copy.Transform).Matches(new Vector(1, 0, 0)), "a dropped copy did not run with the path");
+        }
+    }
+
+    /// <summary>
+    /// A field fills an outline or follows a path, and says so if it is told both or neither, or given
+    /// rows it cannot lay.
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldFillsOrFollowsButNotBoth()
+    {
+        GeneralPath line = new GeneralPath().MoveTo(0, 0).LineTo(10, 0);
+
+        void AssertRefused(Field field, string expected)
+        {
+            field.Prototype = _ => new Sphere();
+            field.Spacing = 1;
+
+            Exception thrown = Assert.ThrowsExactly<Exception>(() => field.PrepareForRendering());
+
+            StringAssert.Contains(thrown.Message, expected);
+        }
+
+        AssertRefused(new Field(), "an outline to fill or a path to follow");
+        AssertRefused(new Field { Outline = Square(), Along = line }, "not both");
+        AssertRefused(new Field { Outline = Square(), Rows = 2, Apart = 1 }, "rows and offset are for one that follows a path");
+        AssertRefused(new Field { Along = line, Rows = 0 }, "at least one row");
+        AssertRefused(new Field { Along = line, Rows = 2 }, "some distance apart");
+        AssertRefused(new Field { Along = new GeneralPath() }, "has to have something in it");
+    }
+
+    /// <summary>
+    /// A scene lays a field along a path written out or named, in rows and to one side.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayLayAFieldAlongAPath()
+    {
+        int written = Lit($$"""
+                            {{Ball}}
+                            field { of Ball(0)  along { move to -1, 0  line to 1, 0 }  spacing 0.5  rows 2 apart 0.6  offset 0.2 }
+                            """);
+        int named = Lit($$"""
+                          {{Ball}}
+                          Line = path { move to -1, 0  line to 1, 0 }
+                          field { of Ball(0)  along Line  spacing 0.5  rows 2 apart 0.6  offset 0.2 }
+                          """);
+
+        Assert.IsTrue(written > 0, "the field along a path showed nothing");
+        Assert.AreEqual(written, named, "a named path did not lay the same field as one written out");
+
+        string unspaced = ErrorFrom($$"""
+                                      {{Ball}}
+                                      field { of Ball(0)  along { move to -1, 0  line to 1, 0 }  spacing 0.5  rows 2 }
+                                      """);
+
+        Assert.IsNotNull(unspaced, "rows without how far apart should have been refused");
+        StringAssert.Contains(unspaced, "apart");
+    }
+
     /// <summary>
     /// This method returns how far a transform turns about the up axis and how much it scales,
     /// for one made of a move, a turn about the up axis and an even scale.
