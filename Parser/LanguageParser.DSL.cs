@@ -74,9 +74,9 @@ public partial class LanguageParser
         conditional: _operator("?")
 
         _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'along', 'ambient', 'amplitude', 'and',
-            'angle', 'angles', 'aperture', 'apply',
+            'above', 'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
-            'align', 'back', 'baseline', 'behind', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
+            'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
@@ -96,11 +96,11 @@ public partial class LanguageParser
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'size', 'sized', 'sky', 'smooth', 'software', 'source',
-            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepness', 'strand', 'strength', 'stripes', 'sun',
+            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'software', 'source',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'temperature', 'thickness', 'tightness', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
+            'temperature', 'thickness', 'tightness', 'tilted', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'weight', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
@@ -1226,6 +1226,9 @@ public partial class LanguageParser
                 ?? 'Expecting a name for the copy number to follow "in" here.' } |
             cycle | { turned > _expression } |
             { sized > _expression > { to > _expression }{?} } |
+            { over > _expression ?? 'Expecting the name of the ground to drop onto here.' } |
+            tilted | { above > _expression } | { below > _expression } |
+            { steepest > _expression } | { sink > _expression } |
             surfaceEntryClause
         ]
         // What may follow one of the things a field is filled with: how often it is picked, and then,

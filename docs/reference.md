@@ -36,6 +36,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Z expression. | [Transforms](transforms.md#rotate) |
+| `above` | Field: the lowest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface or parametric surface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -65,6 +66,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `banded` | Pigment map qualifier: step between entries rather than blend. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `baseline` | Text layout: sit the block on the first line's baseline. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `behind` | Places a surface behind another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `below` | Field: the highest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight; also the color black. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `blend` | Pigment: average several pigments together. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
@@ -242,7 +244,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `open` | Leaves the end caps off a cylinder, cone, extrusion, sweep or text. | [Surfaces](surfaces.md#cylinder-and-conic) |
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
-| `over` | A `for` loop with no name for its count. | [Surfaces](surfaces.md#repeating-things) |
+| `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `paraboloid` | Surface: a bowl that gathers to a focus. | [Surfaces](surfaces.md#paraboloid) |
 | `parallel` | Context: a `parallel line`/`pixel scanner`. | [Context](context.md#scanners) |
@@ -309,6 +311,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
+| `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
@@ -325,6 +328,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `squares` | Quadric: the coefficients of `x²`, `y²` and `z²`. | [Surfaces](surfaces.md#quadric) |
 | `startBranch` | L-system turtle: push a branch point. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `steepest` | Field: the steepest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `steepness` | Swells: how tall a wave train is against its wavelength. | [Surfaces](surfaces.md#swells) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
 | `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
@@ -347,6 +351,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
 | `temperature` | Light: the temperature, in kelvin, of the glow it gives instead of a color. | [Lights](lights.md#color-temperature) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
+| `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
 | `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, and a decal's `fade from` … `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading) |
 | `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |

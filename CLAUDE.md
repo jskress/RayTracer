@@ -88,7 +88,13 @@ several things (`of A, B weight 2`), each built once and stood by `Instance` whe
 what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
 in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The
 undergrowth and rocks libraries' areas (`Grass`, `Reeds`, `Wheat`, `Scree`) are eight such variants, not a build
-per copy (`index in n`).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
+per copy (`index in n`).  `over 'name'` drops every copy straight down onto a named SIBLING (`Field.DropOnto`, called
+by `PlacementSettler` after placements, at the one moment children are prepared and not yet arranged), upright or
+`tilted` (slope from a few extra drops either side, in the shared space), skipping misses, `steepest`, `above`,
+`below`; a dropped field is left EMPTY when prepared and fills itself at the drop (`Field.Fill` with a `Dropping`),
+building only what lands and then running the group's own preparation over it.  A primitive call hands an empty
+group back bare, never as an instance: a shape holding an instance cannot be shared, and a summer fir bough's empty
+snow made every fir rebuild its 2000 needle shoots (140 MB a tree).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
 `StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
 `PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton, kept by `patches`

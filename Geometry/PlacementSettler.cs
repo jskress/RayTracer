@@ -35,14 +35,44 @@ internal static class PlacementSettler
         List<Surface> placed = siblings
             .Where(surface => surface.Placements is { Count: > 0 })
             .ToList();
+        List<Field> dropped = siblings
+            .OfType<Field>()
+            .Where(field => field.Over is not null)
+            .ToList();
 
-        if (placed.Count == 0)
+        if (placed.Count == 0 && dropped.Count == 0)
             return;
 
         Dictionary<string, Surface> byName = NamesAmong(siblings);
 
         foreach (Surface surface in InDependencyOrder(placed, byName))
             Settle(surface, byName);
+
+        // Fields dropped onto the ground beside them go last, so that the ground has been placed
+        // wherever it was told to stand before anything falls onto it.
+        foreach (Field field in dropped)
+            field.DropOnto(GroundFor(field, byName));
+    }
+
+    /// <summary>
+    /// This method finds the surface a field is dropped onto, complaining usefully when there is no such
+    /// thing among the field's siblings.
+    /// </summary>
+    /// <param name="field">The field being dropped.</param>
+    /// <param name="byName">The named siblings, by name.</param>
+    /// <returns>The surface to drop it onto.</returns>
+    private static Surface GroundFor(Field field, Dictionary<string, Surface> byName)
+    {
+        if (byName.TryGetValue(field.Over, out Surface ground) && ground != field)
+            return ground;
+
+        string known = byName.Count == 0
+            ? "nothing beside it carries a name at all"
+            : $"the names here are {string.Join(", ", byName.Keys.Order().Select(name => $"'{name}'"))}";
+
+        throw new Exception(
+            $"A field is dropped over '{field.Over}', but {known}.  A field may only be dropped onto " +
+            "something standing beside it in the same group.");
     }
 
     /// <summary>
