@@ -111,17 +111,134 @@ public class TestHairLight
         }
     }
 
+    /// <summary>
+    /// Light that pale fur passes down to its skin comes back up among the strands, as much of it as the
+    /// skin's color says: fur on white skin is brighter than the same fur on black, and as bright as
+    /// following the light the long way round -- strand to skin to strand -- says.
+    /// </summary>
+    [TestMethod]
+    public void TestPaleSkinSendsLightBackAmongTheStrands()
+    {
+        RgbSpectrum onBlack = RgbSpectrum.Black;
+
+        foreach (Color skin in new[] { new Color(0, 0, 0), new Color(1, 1, 1) })
+        {
+            (Scene scene, _) = FurBall(new Melanin(0, 0), 6000, 0.5, skin);
+            Random random = new (5);
+            RgbSpectrum gathered = RgbSpectrum.Black, longWay = RgbSpectrum.Black;
+            const int grid = 24, paths = 24;
+
+            for (int i = 0; i < grid; i++)
+            {
+                for (int j = 0; j < grid; j++)
+                {
+                    Ray ray = new (
+                        new Point(-1.6 + 3.2 * (i + 0.5) / grid, -1.6 + 3.2 * (j + 0.5) / grid, -10), new Vector(0, 0, 1));
+                    RgbSpectrum seen = scene.GetColorFor<RgbSpectrum>(ray);
+
+                    gathered += seen;
+
+                    // Where the eye meets the skin itself, it is shaded as any surface is, which is not what
+                    // is being judged.
+                    if (Nearest(scene, ray).Hit is not HairIntersection)
+                    {
+                        longWay += seen;
+                        continue;
+                    }
+
+                    for (int path = 0; path < paths; path++)
+                        longWay += TheLongWay(scene, ray, random).All * (1.0 / paths);
+                }
+            }
+
+            Assert.AreEqual(longWay[1], gathered[1], longWay[1] * 0.15, $"{skin}: gathered {gathered.ToColor()}, the long way {longWay.ToColor()}");
+
+            if (skin.Red == 0)
+                onBlack = gathered;
+            else
+                Assert.IsTrue(gathered[1] > 1.2 * onBlack[1], $"white skin gave {gathered.ToColor()}, black {onBlack.ToColor()}");
+        }
+    }
+
+    /// <summary>
+    /// The light among the strands is held at a share of a strand's length as it is in the world, not as
+    /// the hair was written: fur scaled down forty times from outside -- a rug written in inches, put in a
+    /// room in meters -- is held forty times as finely.
+    /// </summary>
+    [TestMethod]
+    public void TestTheLightIsHeldAtTheStrandsLengthInTheWorld()
+    {
+        double Cell(double scale)
+        {
+            Sphere sphere = new ()
+            {
+                HairGrowth = new HairGrowth { Count = 400, Length = 0.5, Thickness = 0.012 }
+            };
+            Group group = new Group { Transform = Transforms.Scale(scale) }.Add(sphere);
+            Scene scene = new ();
+
+            scene.Lights.Add(new PointLight { Location = new Point(Lamp.X * scale, Lamp.Y * scale, Lamp.Z * scale) });
+            group.PrepareForRendering();
+            scene.Surfaces.Add(group);
+            scene.ArrangeSurfaces();
+
+            return scene.LightAmong(sphere.Hair, null).Cell;
+        }
+
+        Assert.AreEqual(Cell(1) / 40, Cell(1.0 / 40), 1e-12);
+    }
+
+    /// <summary>
+    /// The light among the strands is the same however small the hair is in its scene: a fur ball a
+    /// thousandth the size, its lamp as far off in proportion, is lit the same at the same places on it --
+    /// though each path of light into it carries a millionth as much, which once counted as none at all.
+    /// </summary>
+    [TestMethod]
+    public void TestTinyHairIsLitAsBrightlyAsLarge()
+    {
+        HairLight.Here Gathered(double scale, Point at)
+        {
+            Sphere sphere = new ()
+            {
+                Material = new Material { Pigment = new SolidPigment(new Color(0, 0, 0)), Ambient = 0, Diffuse = 0, Specular = 0 },
+                HairGrowth = new HairGrowth
+                {
+                    Count = 3000, Length = 0.5, Thickness = 0.012, Lean = 0.5,
+                    Material = new Material { Melanin = Melanin.Shades["blond"], Ambient = 0 }
+                }
+            };
+            Group group = new Group { Transform = Transforms.Scale(scale) }.Add(sphere);
+            Scene scene = new ();
+
+            scene.Lights.Add(new PointLight { Location = new Point(Lamp.X * scale, Lamp.Y * scale, Lamp.Z * scale) });
+            group.PrepareForRendering();
+            scene.Surfaces.Add(group);
+            scene.ArrangeSurfaces();
+
+            return scene.LightAmong(sphere.Hair, null).At(new Point(at.X * scale, at.Y * scale, at.Z * scale));
+        }
+
+        foreach (Point at in new[] { new Point(-0.8, 0.6, -0.6), new Point(0, 1.2, 0), new Point(-1.1, -0.2, -0.4) })
+        {
+            double large = Gathered(1, at).Everywhere<RgbSpectrum>()[1];
+            double tiny = Gathered(0.001, at).Everywhere<RgbSpectrum>()[1];
+
+            Assert.IsTrue(large > 0, $"no light gathered at {at}");
+            Assert.AreEqual(large, tiny, large * 0.05, $"at {at}: large {large} tiny {tiny}");
+        }
+    }
+
     private static readonly Point Lamp = new (-10, 10, -10);
 
     /// <summary>
-    /// This method returns a ball of black skin, of radius one, growing fur of the given melanin, lit by
-    /// one lamp.
+    /// This method returns a ball of skin, black unless told otherwise, of radius one, growing fur of the
+    /// given melanin, lit by one lamp.
     /// </summary>
-    private static (Scene Scene, Sphere Ball) FurBall(Melanin melanin, int strands, double length)
+    private static (Scene Scene, Sphere Ball) FurBall(Melanin melanin, int strands, double length, Color skin = null)
     {
         Sphere sphere = new ()
         {
-            Material = new Material { Pigment = new SolidPigment(new Color(0, 0, 0)), Ambient = 0, Diffuse = 0, Specular = 0 },
+            Material = new Material { Pigment = new SolidPigment(skin ?? new Color(0, 0, 0)), Ambient = 0, Specular = 0 },
             HairGrowth = new HairGrowth
             {
                 Count = strands, Length = length, Thickness = 0.012, Lean = 0.5,
@@ -139,18 +256,49 @@ public class TestHairLight
     }
 
     /// <summary>
-    /// This method follows one path of light back from the eye, strand to strand, adding the lamp's light
-    /// wherever it can see the lamp past everything: the light the eye gets along it, and the part of that
-    /// from the first strand alone.
+    /// This method follows one path of light back from the eye, strand to strand and off the skin, adding
+    /// the lamp's light wherever it can see the lamp past everything: the light the eye gets along it, and
+    /// the part of that from the first strand alone.
     /// </summary>
     private static (RgbSpectrum All, RgbSpectrum First) TheLongWay(Scene scene, Ray ray, Random random)
     {
         RgbSpectrum light = RgbSpectrum.Black, first = RgbSpectrum.Black, carried = RgbSpectrum.White;
-        (List<Intersection> hits, HairIntersection hit) = Nearest(scene, ray);
+        (List<Intersection> hits, Intersection found) = Nearest(scene, ray);
 
-        for (int bounce = 0; bounce < 256 && hit is not null; bounce++)
+        for (int bounce = 0; bounce < 256 && found is not null; bounce++)
         {
-            hit.PrepareUsing(ray, hits);
+            found.PrepareUsing(ray, hits);
+
+            // The skin sends back what it does not absorb, as a matte surface does.
+            if (found is not HairIntersection hit)
+            {
+                Material material = found.Material;
+                RgbSpectrum albedo = RgbSpectrum.FromReflectance(material.GetColorFor(found)) * material.Diffuse;
+
+                if (albedo.IsBlack)
+                    break;
+
+                Vector toLamp = Lamp - found.OverPoint;
+                double far = toLamp.Magnitude;
+
+                toLamp = toLamp.Unit;
+
+                if (!Nearest(scene, new Ray(found.OverPoint, toLamp)).Hits.Any(
+                        crossing => crossing.Distance > 0 && crossing.Distance < far))
+                    light += carried * albedo * Math.Max(0, found.Normal.Dot(toLamp));
+
+                (Vector across, Vector along) = Microfacets.FrameAround(found.Normal);
+                double reach = Math.Sqrt(random.NextDouble());
+                double turn = 2 * Math.PI * random.NextDouble();
+                Vector up = across * (reach * Math.Cos(turn)) + along * (reach * Math.Sin(turn)) +
+                            found.Normal * Math.Sqrt(Math.Max(0, 1 - reach * reach));
+
+                carried *= albedo;
+                ray = new Ray(found.OverPoint, up.Unit);
+                (hits, found) = Nearest(scene, ray);
+
+                continue;
+            }
 
             Scene.StrandFrame frame = Scene.FrameOf(hit);
             Scene.Dye dye = scene.DyeOf(hit, hit.Point);
@@ -193,16 +341,16 @@ public class TestHairLight
             Vector onward = frame.Toward(sinTheta, phi);
 
             ray = new Ray(frame.Center + onward * frame.Radius, onward);
-            (hits, hit) = Nearest(scene, ray);
+            (hits, found) = Nearest(scene, ray);
         }
 
         return (light, first);
     }
 
-    private static (List<Intersection> Hits, HairIntersection Hit) Nearest(Scene scene, Ray ray)
+    private static (List<Intersection> Hits, Intersection Hit) Nearest(Scene scene, Ray ray)
     {
         List<Intersection> hits = scene.Intersect(ray);
 
-        return (hits, hits.FirstOrDefault(crossing => crossing.Distance > 0) as HairIntersection);
+        return (hits, hits.FirstOrDefault(crossing => crossing.Distance > 0));
     }
 }

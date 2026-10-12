@@ -1,3 +1,4 @@
+using RayTracer.Core;
 using RayTracer.Extensions;
 
 namespace RayTracer.Basics;
@@ -68,6 +69,26 @@ public class Ray
     /// </summary>
     public double BaseRadius { get; }
 
+    /// <summary>
+    /// This property holds, for a shadow ray that strands of hair stop, the tally of how much of its light
+    /// gets past the strands met so far; see <see cref="StrandTally"/>.  Null for any other ray.
+    /// </summary>
+    public StrandTally Tally { get; init; }
+
+    /// <summary>
+    /// This property holds how far along itself a shadow ray narrows to nothing: the light it looks for.
+    /// <para>
+    /// **A shadow ray is as wide as the patch the eye saw at its start, and no wider than a point at the
+    /// light's end**, so it narrows between the two, and a strand in the way blocks the share of it it
+    /// covers where it stands.  Kept as wide as it started all the way, a shadow ray from a ceiling a
+    /// long way off -- where a pixel covers meters -- was meters wide where it passed the hair by the
+    /// light, and met every strand in the scene.  Endless unless said, which leaves every other ray as it
+    /// always was, and a ray toward a light with no distance to it -- the sun, the sky -- the same width all
+    /// the way.
+    /// </para>
+    /// </summary>
+    public double NarrowsAt { get; init; } = double.PositiveInfinity;
+
     public Ray(Point origin, Vector direction, int timeIndex = 0, double spread = 0,
         double travelled = 0, double baseRadius = 0)
     {
@@ -102,7 +123,9 @@ public class Ray
     /// <returns>The radius the cone has reached, or nought if this ray has no spread.</returns>
     public double RadiusAt(double distance)
     {
-        return BaseRadius + (Spread <= 0 ? 0 : (Travelled + distance) * Spread * 0.5);
+        double radius = BaseRadius + (Spread <= 0 ? 0 : (Travelled + distance) * Spread * 0.5);
+
+        return double.IsPositiveInfinity(NarrowsAt) ? radius : radius * Math.Clamp(1 - distance / NarrowsAt, 0, 1);
     }
 
     public bool Contains(Point point)

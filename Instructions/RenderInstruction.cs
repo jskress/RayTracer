@@ -107,6 +107,9 @@ public class RenderInstruction : Instruction
 
         Stopwatch stopwatch = Stopwatch.StartNew();
 
+        // The light among any hair is gathered before the first pixel, so that it has every thread.
+        scene.GatherTheLightAmongHair();
+
         Canvas = camera.Render(context, scene);
 
         context.Statistics?.AddRenderTime(stopwatch.Elapsed);

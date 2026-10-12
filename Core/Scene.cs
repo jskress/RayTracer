@@ -127,6 +127,7 @@ public partial class Scene : NamedThing, IDisposable
         // always has.
         TS seen = TS.Black;
         double left = 1;
+        int strands = 0;
 
         foreach (Intersection hit in hits)
         {
@@ -134,6 +135,12 @@ public partial class Scene : NamedThing, IDisposable
                 continue;
 
             hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
+
+            if (hit is HairIntersection { Coverage: < 1 } fine)
+            {
+                fine.Share = left * fine.Coverage;
+                fine.Ordinal = strands++;
+            }
 
             TS color = GetHitColor<TS>(hit, remaining);
 
@@ -1272,10 +1279,22 @@ public partial class Scene : NamedThing, IDisposable
         double footprint)
         where TS : struct, ISpectrum<TS>
     {
-        Ray ray = new (point, direction, timeIndex, baseRadius: _hasStrands ? footprint : 0);
+        StrandTally tally = !_hasStrands ? null
+            : strandsStop ? new StrandTally()
+            : new StrandTally(strand => MostPassedBy<TS>(strand, point + direction * strand.Distance));
+        Ray ray = new (point, direction, timeIndex, baseRadius: _hasStrands ? footprint : 0)
+        {
+            Tally = tally,
+            NarrowsAt = _hasStrands && footprint > 0 ? distance : double.PositiveInfinity
+        };
         TS reaching = TS.White;
+        List<Intersection> crossings = IntersectWithin(ray, distance);
 
-        foreach (Intersection intersection in IntersectWithin(ray, distance))
+        // Strands in the way that let next to nothing past stopped the search for more of them.
+        if (ray.Tally is { Stopped: true })
+            return TS.Black;
+
+        foreach (Intersection intersection in crossings)
         {
             // Only things that actually stand between the point and the light can shade it;
             // anything behind the point, or beyond the light, is irrelevant.  Zero counts as being

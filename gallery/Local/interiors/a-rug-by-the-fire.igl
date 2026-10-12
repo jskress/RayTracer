@@ -1,0 +1,133 @@
+// A shag rug before a fire, a sheepskin beside it, and a teddy bear sitting up on the rug -- the `fur`
+// library's pile lit the way pile looks best, by a low light raking across it.
+//
+//     import 'fur' { ShagRug, Sheepskin, TeddyBear }
+//
+// **The fire is the only light.**  The reading lamp behind the armchair is switched off, and was left
+// off on the evidence: lit, any fitting from `indoor-lights` outshone the fire on the rug wherever it
+// stood, in the frame or out of it, since every one of them burns the same bulb -- and a rug lit by a
+// lamp with a fire glowing behind it is a different and much duller picture.  A fire's brightness is
+// not a setting either (see the `fire` library): this one is a meter across because the smaller ones
+// left the rug too dark to read, and the hearth is built round it.
+//
+// **The camera stands to the side of the fire, not facing it.**  Looking into the fire, everything on
+// the rug is lit from behind and comes out as a silhouette; from the side, the light runs across the
+// frame, and the pile shows its lie -- the tufts lit on the side toward the fire, shadowed on the
+// other, as a shag rug looks by a hearth.
+//
+// **The firebox goes back further than a fireplace needs to.**  A flame is a glowing volume inside a
+// shell, and anything opaque inside the shell cuts the glow in front of it out of the picture: with
+// the back of the firebox standing within the fire's shell, a dark disc sat in the middle of the
+// flames.  So the back is set beyond the shell's reach.
+//
+// **Ambient is turned up, not down,** the opposite of `a-room-after-dark`.  A room lit by a fire is lit
+// as much by what its walls send back as by the fire itself, and ambient is all that stands in for that
+// here; at a quarter, as there, the armchair and the brick were black and the room was a fire floating
+// in nothing.
+//
+// The libraries are written in inches and this scene in meters, so each piece is scaled by an inch,
+// as in `a-room-after-dark`.  A rug's pile is grown in the space its slab is placed in, so it is two
+// inches deep however it is scaled into the room.
+
+context {
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    parallel pixel scanner
+    angles are degrees
+    // A flame is walked rather than solved for; this many places along each crossing.
+    medium samples 28
+    scale ambient by 3
+    info {
+        title 'A Rug by the Fire'
+        author 'J. Stephen Kress'
+        description 'A shag rug, a sheepskin and a teddy bear before a fire, lit by nothing else.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'fire' { Campfire }
+import 'fur' { ShagRug, Sheepskin, TeddyBear, Wool, Fleece }
+import 'furniture' { Armchair }
+import 'indoor-lights' { FloorLamp }
+
+camera {
+    location [1.9, 0.8, -0.95]
+    look at [-0.35, 0.3, 0.85]
+    field of view 56
+}
+
+background [0, 0, 0]
+
+Inch = 0.0254
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.74, 0.71, 0.64]  specular 0.03  ambient 0.10 }
+Boards = material {
+    pigment brick {
+        [0.20, 0.13, 0.08], [0.30, 0.20, 0.12]
+        scale [0.9, 4, 0.12]
+    }
+    specular 0.16  shininess 40  ambient 0.06
+}
+Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.22  shininess 45  ambient 0.06 }
+Velvet = material { pigment [0.30, 0.09, 0.08]  specular 0.05  ambient 0.07 }
+Hearthstone = material { pigment [0.30, 0.29, 0.27]  specular 0.08  shininess 20  ambient 0.06 }
+Soot = material { pigment [0.05, 0.045, 0.04]  specular 0  ambient 0.02 }
+
+// Brickwork, laid at a real brick's size however the box it covers was stretched: a pattern is read in
+// the space of the surface it is on, so a cube scaled into a chimney breast would stretch its bricks
+// with it unless the pattern is scaled back the other way.
+primitive Bricks(sx, sy, sz) -> material {
+    return material {
+        pigment brick {
+            brick size [0.215, 0.065, 0.1025]
+            mortar size 0.01
+            color [0.40, 0.17, 0.11], [0.52, 0.49, 0.44]
+            scale [1 / sx, 1 / sy, 1 / sz]
+        }
+        specular 0.04  ambient 0.06
+    }
+}
+
+plane { material Boards }                                    // the floor
+plane { material Plaster  rotate X -90  translate Z 2.4 }    // the wall the chimney breast stands against
+plane { material Plaster  rotate Z 90   translate X 2.6 }    // the wall on the right
+plane { material Plaster  rotate Z -90  translate X -2.6 }   // the wall on the left
+plane { material Plaster  rotate X 180  translate Y 2.6 }    // the ceiling
+
+// The chimney breast, with the firebox cut into it -- back past the fire's shell, as above.
+difference {
+    cube { material Bricks(1.35, 1.3, 0.55)  scale [1.35, 1.3, 0.55]  translate [0, 1.3, 1.85] }
+    cube { material Soot  scale [0.65, 0.65, 0.525]  translate [0, 0.71, 1.725] }
+}
+
+// The hearth, a stone slab before it, and the mantel over it.
+cube { material Hearthstone  scale [1.0, 0.03, 0.3]  translate [0, 0.03, 1.1] }
+cube { material Oak  scale [1.45, 0.045, 0.12]  translate [0, 1.5, 1.24] }
+
+object Campfire(1.0) { translate [0, 0.06, 1.68] }
+
+// -- What is in it ----------------------------------------------------------------------------------
+
+// The rug's back edge stops short of the hearth stone rather than running under it, where its pile
+// would come up through the stone.
+object ShagRug(60, 40, Wool) { scale Inch  translate [0.05, 0, 0.25] }
+object Sheepskin(40, Fleece) { rotate Y 30  scale Inch  translate [-1.2, 0, 0.25] }
+
+// Facing the fire: the library builds a chair facing -Z, and this turns it round to the hearth.
+object Armchair(32, Velvet, Oak) { rotate Y -115  scale Inch  translate [-1.35, 0, 0.95] }
+
+// Turned halfway between the fire and the camera, which is as much of him as the fire can light from
+// here: it stands a right angle off the camera's line, so whichever way he faces, half of what we see of
+// him is in his own shadow.  A honey coat rather than the library's brown keeps him a teddy bear against
+// the glow and not a hole in it -- and his fur takes its color from the coat, so the coat is all it
+// takes.  He sits a few millimeters up, on the rug's backing, with its pile around him.
+Honey = material { pigment [0.80, 0.58, 0.32]  specular 0 }
+Cream = material { pigment [0.92, 0.82, 0.62]  specular 0 }
+
+object TeddyBear(14, Honey, Cream) { rotate Y -117  scale Inch  translate [-0.38, 0.006, 0.12] }
+
+// Off.
+object FloorLamp(1.58, 0, 0) { translate [-1.85, 0, 1.55] }

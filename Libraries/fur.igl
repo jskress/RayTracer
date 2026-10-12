@@ -1,0 +1,182 @@
+// Fur, fleece and pile you can name.
+//
+// Hair grows on any surface from a few numbers -- how much of it, how long, how it leans and curls --
+// and nobody knows which numbers make a shag rug.  Everybody knows what one looks like.  So this
+// library holds the finishes hair is made of and the things that are mostly hair:
+//
+//     import 'fur' { ShagRug, Wool }
+//
+//     object ShagRug(60, 40, Wool)
+//
+// **Everything is in inches**, as the furniture library is, so a rug is laid beside a sofa at the size
+// it says on the label.  A finish carries no size at all, and dresses hair of any length.
+//
+// **A finish is the hair's own material**, written in its hair block -- `hair { ...  material Wool }`
+// -- and its `roughness` is how blurred the strands' highlights are: smooth mohair shines in a narrow
+// band, wool scarcely at all.  Hair given no material wears its surface's instead, and takes its
+// color from where each strand grows; that is how the teddy bear's muzzle comes out lighter than the
+// rest of him.  Such hair takes only the color: a surface's roughness is its own sheen, not its fur's.
+//
+// **Strands here are thicker than real ones, and fewer.**  A real rug has a hundred fibers where these
+// have one; drawn that fine there would be millions to a rug, and each would come out as nothing but
+// the share of a pixel it covers.  Fewer, thicker strands with the same color and the same lie give
+// the same look for a small part of the cost.
+
+// ---------------------------------------------------------------------------------------------
+// Finishes, each for a hair block's own `material`.  Their colors are what a head of each comes out
+// with the light bounced among its strands, which is how the strands are colored to match.
+// ---------------------------------------------------------------------------------------------
+
+// Sheep's wool as it comes off a rug: cream, and nearly matte, the scales of each fiber scattering
+// what a smoother hair would mirror.
+Wool = material { pigment color [0.86, 0.80, 0.68]  roughness 0.45 }
+
+// Mohair, from the angora goat: whiter than wool and smooth enough to shine.
+Mohair = material { pigment color [0.92, 0.89, 0.82]  roughness 0.2 }
+
+// A sheepskin's fleece, washed: the warm cream of wool, a little glossier.
+Fleece = material { pigment color [0.90, 0.84, 0.72]  roughness 0.35 }
+
+// Dry straw or thatching reed: pale gold, with the sheen of a hollow stalk.
+Straw = material { pigment color [0.78, 0.66, 0.38]  roughness 0.3 }
+
+// Cushion moss: a deep green, the fronds too fine and too many to shine.
+Moss = material { pigment color [0.17, 0.29, 0.07]  roughness 0.55 }
+
+// A brush's bristles: pale boar bristle, stiff and glossy.
+Bristle = material { pigment color [0.74, 0.62, 0.42]  roughness 0.15 }
+
+// The synthetic fur of a soft toy: honey brown, soft rather than glossy.
+Plush = material { pigment color [0.62, 0.42, 0.22]  roughness 0.35 }
+
+// Natural fur, colored as natural hair is, by its melanin.
+FurBlack = material { melanin 'black' }
+FurBrown = material { melanin 'brown' }
+FurTawny = material { melanin 0.3, 0.5 }
+FurRed = material { melanin 0.05, 0.9 }
+FurCream = material { melanin 'blond' }
+FurWhite = material { melanin 'platinum' }
+FurGray = material { melanin 0.25, 0.02  roughness 0.25 }
+
+// ---------------------------------------------------------------------------------------------
+// Rugs.  A rug is a slab with pile on its top face only -- `facing` up, and squarely, keeps the
+// strands off its edges -- with its middle over the origin and its back on the floor.  The slab is
+// made of the pile's own finish, as a rug's backing is woven of its yarn: light passes down through
+// pale pile to whatever it grows from and comes back up only as much as that is pale, so anything
+// darker grays the whole rug.
+// ---------------------------------------------------------------------------------------------
+
+// A shag rug: long, loose pile, two inches of it, curling and lying over every which way.
+primitive ShagRug(long, wide, finish = Wool) -> group {
+    return group {
+        cube {
+            material finish
+            hair {
+                density 60  length 2  thickness 0.07  vary 0.3
+                curl 1.2  frizz 0.35  clump 0.45 size 8  droop 0.7
+                facing [0, 1, 0] by 3
+                material finish
+            }
+            scale [long / 2, 0.12, wide / 2]
+            translate [0, 0.12, 0]
+        }
+    }
+}
+
+// A plush rug: short, dense, upright pile, cut level, three quarters of an inch of it.
+primitive PlushRug(long, wide, finish = Wool) -> group {
+    return group {
+        cube {
+            material finish
+            hair {
+                density 120  length 0.75  thickness 0.05  vary 0.1
+                lean 8  frizz 0.1
+                facing [0, 1, 0] by 3
+                material finish
+            }
+            scale [long / 2, 0.12, wide / 2]
+            translate [0, 0.12, 0]
+        }
+    }
+}
+
+// A sheepskin: a hide the shape of the sheep it came from -- a long body, a neck and four legs --
+// its long fleece falling in curling locks.  It lies along X, the neck toward -X.
+primitive Sheepskin(long = 40, finish = Fleece) -> group {
+    s = long / 40
+
+    return group {
+        union {
+            material finish
+            cylinder { min Y 0  max Y 0.3  scale [16 * s, 1, 11 * s] }
+            cylinder { min Y 0  max Y 0.3  scale [5 * s, 1, 4 * s]  translate [-17 * s, 0, 0] }
+            cylinder { min Y 0  max Y 0.3  scale [6 * s, 1, 3 * s]  rotate Y 40  translate [-10 * s, 0, -11 * s] }
+            cylinder { min Y 0  max Y 0.3  scale [6 * s, 1, 3 * s]  rotate Y -40  translate [-10 * s, 0, 11 * s] }
+            cylinder { min Y 0  max Y 0.3  scale [6 * s, 1, 3 * s]  rotate Y -35  translate [12 * s, 0, -11 * s] }
+            cylinder { min Y 0  max Y 0.3  scale [6 * s, 1, 3 * s]  rotate Y 35  translate [12 * s, 0, 11 * s] }
+            hair {
+                density 40  length 2.6  thickness 0.07  vary 0.35
+                curl 2.2  frizz 0.3  clump 0.65 size 12  droop 0.55
+                facing [0, 1, 0] by 2
+                material finish
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Toys.
+// ---------------------------------------------------------------------------------------------
+
+// A teddy bear's coat and the lighter fur of his muzzle and the pads of his paws.  They are matte, as
+// fur's skin should be: his fur takes its color from them, and its sheen from the strands themselves.
+TeddyCoat = material { pigment color [0.62, 0.42, 0.22]  specular 0 }
+TeddyMuzzle = material { pigment color [0.82, 0.68, 0.48]  specular 0 }
+
+// Glass eyes and a stitched nose, which grow no fur.
+TeddyEye = material { pigment color [0.03, 0.02, 0.02]  specular 0.9  shininess 300  reflective 0.08 }
+TeddyNose = material { pigment color [0.10, 0.06, 0.05]  specular 0.2  shininess 20 }
+
+// A teddy bear sitting up, `high` inches tall from the floor to the top of his ears, facing -Z.  His
+// fur takes its color from what he is made of -- `coat`, and `muzzle` for his muzzle and the pads of
+// his paws -- so a bear of any color is a matter of two materials.
+primitive TeddyBear(high = 14, coat = TeddyCoat, muzzle = TeddyMuzzle) -> group {
+    s = high / 14
+
+    return group {
+        // One union, so that his fur grows only where he shows and not from the parts of him that are
+        // buried in one another.
+        union {
+            // body, sitting, and his head on it
+            sphere { material coat  scale [3.6 * s, 4.2 * s, 3.2 * s]  translate [0, 4.2 * s, 0] }
+            sphere { material coat  scale 3.1 * s  translate [0, 9.9 * s, -0.2 * s] }
+
+            // ears
+            sphere { material coat  scale [1.25 * s, 1.25 * s, 0.7 * s]  translate [-2.3 * s, 12.6 * s, 0] }
+            sphere { material coat  scale [1.25 * s, 1.25 * s, 0.7 * s]  translate [2.3 * s, 12.6 * s, 0] }
+
+            // the muzzle, lighter
+            sphere { material muzzle  scale [1.5 * s, 1.15 * s, 1.2 * s]  translate [0, 9.0 * s, -2.7 * s] }
+
+            // arms, hanging down and a little forward
+            sphere { material coat  scale [1.1 * s, 2.9 * s, 1.2 * s]  rotate X 30  rotate Z -18  translate [-3.8 * s, 5.4 * s, -1 * s] }
+            sphere { material coat  scale [1.1 * s, 2.9 * s, 1.2 * s]  rotate X 30  rotate Z 18  translate [3.8 * s, 5.4 * s, -1 * s] }
+
+            // legs, stuck out in front, with lighter pads on their soles
+            sphere { material coat  scale [1.5 * s, 1.5 * s, 3 * s]  translate [-2.1 * s, 1.5 * s, -2.6 * s] }
+            sphere { material coat  scale [1.5 * s, 1.5 * s, 3 * s]  translate [2.1 * s, 1.5 * s, -2.6 * s] }
+            sphere { material muzzle  scale [1.15 * s, 1.15 * s, 0.4 * s]  translate [-2.1 * s, 1.5 * s, -5.5 * s] }
+            sphere { material muzzle  scale [1.15 * s, 1.15 * s, 0.4 * s]  translate [2.1 * s, 1.5 * s, -5.5 * s] }
+
+            hair {
+                density 260 / (s * s)  length 0.35 * s  thickness 0.035 * s  vary 0.25
+                lean 25  frizz 0.25
+            }
+        }
+
+        // eyes and nose, bare
+        sphere { material TeddyEye  scale 0.4 * s  translate [-1.15 * s, 10.7 * s, -3.05 * s] }
+        sphere { material TeddyEye  scale 0.4 * s  translate [1.15 * s, 10.7 * s, -3.05 * s] }
+        sphere { material TeddyNose  scale [0.55 * s, 0.4 * s, 0.35 * s]  translate [0, 9.55 * s, -3.85 * s] }
+    }
+}

@@ -332,6 +332,8 @@ piece of ground needs before it stops looking swept.
 | `Boulder` | One big weathered stone, lumpy all over.  The expensive one — see below. |
 | `Cobble` | A smaller stone with flat faces, knocked off something bigger.  Cheap. |
 | `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
+| `MossyBoulder` | A boulder with moss on its top and down its shaded side, in patches. |
+| `MossyCobble` | A cobble capped with moss. |
 
 **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
 the four are the same stone; in winter snow lies on top of it, as it gathers on the fir and the
@@ -352,6 +354,17 @@ rather than weathered stone, and measured about four times a sphere rather than 
 
 That is the same division `undergrowth` makes between `Tuft` and `Grass`: the careful expensive one
 for the few you look at, the cheap one for the many you do not.  A picture wants some of each.
+
+**The moss is [hair](advanced-surfaces.md#hair)**, grown over the stone where it faces up and in
+patches that differ from one variant to the next: a centimeter and a half of it, its fronds thicker than
+real ones and fewer, so that it covers the stone as a cushion does without costing millions of strands.
+The mossy two take a fourth argument, the way the stone's shaded side faces, which the moss creeps
+furthest down — `[0, 0, 1]` unless said, so the side away from a camera looking along +Z.  A stone mossed
+evenly all over reads as a stone painted green, which is why the patches are there.  In winter the snow
+lies on top of the moss rather than the moss growing through it.
+
+Growing the moss costs a few seconds a boulder, the most of it marching lines through the isosurface to
+find where it grows; a cobble is quicker.
 
 **`Scree` fills an outline, exactly as `Grass` does**, and for the same reason: stone runs out where a
 slope runs out, not along a line at right angles to another line.  Draw the outline for a heap and
@@ -955,6 +968,47 @@ does, and it is most of what separates a flag from a painted sheet of metal.
 its shape from the table, and nothing here looks at the scene around it. `Sheet` will sit on a flat
 top convincingly; a cloth falling over the *edge* of something, or caught on a corner, is not a wave
 and this library does not pretend otherwise.
+
+#### Fur
+
+```
+import 'fur' { ShagRug, Wool }
+
+object ShagRug(60, 40, Wool)
+```
+
+Fur, fleece and pile you can name.  [Hair](advanced-surfaces.md#hair) grows on any surface from a few
+numbers, and nobody knows which numbers make a shag rug; everybody knows what one looks like.
+
+| | |
+| --- | --- |
+| `ShagRug` | Long, loose pile, two inches of it, curling and lying every which way.  Its length and width, then a finish. |
+| `PlushRug` | Short, dense, upright pile, cut level.  Its length and width, then a finish. |
+| `Sheepskin` | A hide the shape of the sheep it came from, its long fleece falling in curling locks.  Its length, then a finish. |
+| `TeddyBear` | A teddy bear sitting up, facing -Z.  His height, then his `coat` and `muzzle`. |
+| `Wool`, `Mohair`, `Fleece` | Pale fibers, from nearly matte wool to mohair that shines. |
+| `Straw`, `Moss`, `Bristle`, `Plush` | Thatch, a mossy cushion, a brush, a soft toy. |
+| `FurBlack`, `FurBrown`, `FurTawny`, `FurRed`, `FurCream`, `FurWhite`, `FurGray` | Natural fur, colored by its melanin. |
+
+**Everything is in inches**, as the [furniture](#furniture) is, so a rug goes beside a sofa at the size
+on its label, and a scene in meters scales both by the same `Inch = 0.0254`.  A finish carries no size,
+and dresses hair of any length.
+
+**A finish is the hair's own material**, for a hair block's `material`, and its `roughness` is how
+blurred the strands' highlights are.  The rugs and the sheepskin are made of their finish as well, as a
+rug's backing is woven of its yarn: pale pile passes much of the light falling on it down to whatever it
+grows from, which sends back only as much as its color says, so pale pile on a dark backing comes out
+gray.
+
+**The teddy bear's fur takes its color from what he is made of**, so a bear of another color is two
+materials: `coat` for most of him and `muzzle` for his muzzle and the pads of his paws.  Keep them matte —
+`specular 0` — since fur shows its skin between the strands, and a glossy skin shines through like a
+plastic toy under a fuzz.
+
+**Strands here are thicker than real ones, and fewer.**  A real rug has a hundred fibers where these have
+one; drawn that fine there would be millions to a rug, each showing as no more than the share of a pixel
+it covers.  Fewer, thicker strands of the same color lying the same way look the same for a small part
+of the cost — a rug is about a hundred and fifty thousand of them.
 
 #### Outdoor Lights
 

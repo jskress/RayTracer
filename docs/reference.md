@@ -80,7 +80,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
-| `by` | Follows `bounded by`, `scale ambient by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient) |
+| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
@@ -138,6 +138,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment. | [Scene Files](scene-files.md#filling-that-space) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
+| `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
@@ -247,6 +248,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `parallelogram` | Shape: a flat parallelogram. | [Surfaces](surfaces.md#parallelogram) |
 | `parametric` | A surface whose points are written out in terms of two parameters. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `patch` | Shape: a bicubic (16-point) surface patch. | [Surfaces](surfaces.md#patch) |
+| `patches` | Hair: a pattern saying where it grows, its value the chance a strand grows. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Medium: `phase rayleigh`, which shape of scattering it follows.  Also shaping: slides a pattern's value before the wave. | [Scene Files](scene-files.md#scattering) |

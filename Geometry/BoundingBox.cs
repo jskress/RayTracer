@@ -230,16 +230,17 @@ public class BoundingBox
     /// <param name="axisMax">The maximum allowed value for the axis.</param>
     /// <returns>The min and max intersection points for the axis being tested.</returns>
     /// <summary>
-    /// This method returns how wide a ray is, as a radius, where it has gone as far along itself as the
-    /// box's furthest corner.
+    /// This method returns how wide a ray is, as a radius, where it is widest across the box: as far along
+    /// itself as the box's furthest corner, or its nearest, for a shadow ray narrowing toward its light.
     /// </summary>
     private double WidthAtFarSide(Ray ray)
     {
         Vector direction = ray.Direction;
         double halfX = (_xMax - _xMin) * 0.5, halfY = (_yMax - _yMin) * 0.5, halfZ = (_zMax - _zMin) * 0.5;
-        double along = (_xMin + halfX - ray.Origin.X) * direction.X + (_yMin + halfY - ray.Origin.Y) * direction.Y +
-                       (_zMin + halfZ - ray.Origin.Z) * direction.Z + Math.Abs(halfX * direction.X) +
-                       Math.Abs(halfY * direction.Y) + Math.Abs(halfZ * direction.Z);
+        double middle = (_xMin + halfX - ray.Origin.X) * direction.X + (_yMin + halfY - ray.Origin.Y) * direction.Y +
+                        (_zMin + halfZ - ray.Origin.Z) * direction.Z;
+        double spread = Math.Abs(halfX * direction.X) + Math.Abs(halfY * direction.Y) + Math.Abs(halfZ * direction.Z);
+        double along = double.IsPositiveInfinity(ray.NarrowsAt) ? middle + spread : middle - spread;
         double squared = direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z;
 
         return ray.RadiusAt(Math.Max(0, along / squared));

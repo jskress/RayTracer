@@ -203,7 +203,7 @@ public class Matrix
         Vector direction = ray.Direction * this;
 
         if (ray.Spread <= 0 && ray.BaseRadius <= 0)
-            return new Ray(ray.Origin * this, direction, ray.TimeIndex);
+            return new Ray(ray.Origin * this, direction, ray.TimeIndex) { Tally = ray.Tally, NarrowsAt = ray.NarrowsAt };
 
         // A ray that is really a cone stays one, and as wide as it was: a surface's own space measures
         // lengths differently, by as much as it measures the ray's direction differently, so the cone's
@@ -212,7 +212,11 @@ public class Matrix
         double scale = direction.Magnitude / ray.Direction.Magnitude;
 
         return new Ray(
-            ray.Origin * this, direction, ray.TimeIndex, ray.Spread * scale, ray.Travelled, ray.BaseRadius * scale);
+            ray.Origin * this, direction, ray.TimeIndex, ray.Spread * scale, ray.Travelled, ray.BaseRadius * scale)
+        {
+            Tally = ray.Tally,
+            NarrowsAt = ray.NarrowsAt
+        };
     }
 
     /// <summary>

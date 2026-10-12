@@ -47,6 +47,8 @@ public class TestHairClauses
                                 }
                                 """));
         Assert.IsNull(ErrorFrom("cube { hair { count 40  length 0.2 }  scale [2, 0.1, 1] }"));
+        Assert.IsNull(ErrorFrom("sphere { hair { count 40  length 0.2  patches granite { scale 0.3 }  facing [0, 1, 0] by 2 } }"));
+        Assert.IsNull(ErrorFrom("sphere { hair { density 40  length 0.2  facing [1, 1, 0] } }"));
     }
 
     [TestMethod]

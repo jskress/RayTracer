@@ -50,6 +50,21 @@ public class HairIntersection : Intersection
     public double Coverage { get; init; } = 1;
 
     /// <summary>
+    /// This property holds how much of what the eye sees along its ray the strand's shading is counted
+    /// for: its coverage, times what the strands before it left uncovered.  The strands deep in a fine
+    /// head of hair are each counted for very little, and are shaded with fewer of each light's samples
+    /// accordingly; see <see cref="Scene"/>'s shading of a fiber.
+    /// </summary>
+    public double Share { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds how many strands the eye's ray met before this one, which sets where among a
+    /// light's samples a strand shaded with only a few of them starts, so that the strands of one ray
+    /// look at different parts of the light rather than all at the same one.
+    /// </summary>
+    public int Ordinal { get; set; }
+
+    /// <summary>
     /// This property holds the way the strand runs at the crossing, root to tip, as a unit vector in the
     /// strands' own space.
     /// </summary>

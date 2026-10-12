@@ -86,7 +86,8 @@ seeding), and calls `camera.Render(...)`.
 `Geometry/LSystems/`).  Fibers are `Strand` and `Hair`, both `StrandSurface`s over a compact
 `StrandSet` (floats, Bézier segments, its own BVH) hit as camera-facing ribbons and shaded as rods.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
-`PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton) and the
+`PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton, kept by `patches`
+-- a pattern's value at the root -- and `facing` -- which way the surface faces there) and the
 hair is found through the surface -- `Surface.Intersect` asks it, `BoxAround` boxes it in unless
 asked for the true extent, and CSG keeps or drops strand hits without counting them as entered.
 Strands are never Phong: `Scene.GetHitColor` hands a `HairIntersection` to `Scene.ShadeFiber` (`Core/Scene.Fibers.cs`),
@@ -95,18 +96,24 @@ material's `roughness` or 0.3), lit from every light at the strand's middle with
 toward the light, and the sky sampled over the whole sphere (`Light.SampleAround`, weight 4).  Color is matched by
 Chiang's inversion from the pigment -- read at each strand's ROOT in the skin's space when the hair wears its skin's
 material -- or set by a material's `melanin`.  A strand's shadow rays treat other strands as OPAQUE; light bounced
-among strands comes from a `HairLight` gathered per (hair, instance) before the hair is first shaded
-(`Core/Scene.HairLight.cs`: photons from each light sample as a beam over the hair, scattered by `Fiber.Sample`,
-recorded after their first scattering as fluence AND net flow in a grid of strand-length/6 cells; each lobe reads
+among strands comes from a `HairLight` gathered per (hair, instance) before the first pixel
+(`Scene.GatherTheLightAmongHair`; behind an instance, when first met) (`Core/Scene.HairLight.cs`: photons from each
+light sample as a beam over the hair, scattered by `Fiber.Sample` and bounced off the skin or anything else inside
+the grid by its diffuse color, recorded after their first scattering as fluence AND net flow in a grid of cells a
+sixth of a strand's length IN THE WORLD, at most 2^18 cells, eight paths for each cell the strands occupy; a path's
+power is tested against exact nought, never `IsBlack`, since it shrinks with the number of paths; each lobe reads
 the light arriving from its center direction, `HairLight.Here.From`).  Isotropic light was 1.5-2x too bright: the
 flow is what makes it match a brute-force path tracer (`TestHairLight`) within ~15%.  A non-hair surface's shadow
 ray keeps each crossed strand's forward share (`Fiber.SharesOf`).  Spectral renders take the absorption by
 `FromUnbounded` and work the hair's own color out from it band by band.  A strand finer than a ray's cone is
 WIDENED to it and carries `HairIntersection.Coverage` (true width / widened); `Scene.GetColorFor` composites partly
-covering strands front to back (stopping at a thousandth left), and a shadow ray from a point the eye saw carries
-that point's footprint (`Intersection.FootprintRadius`, only in scenes with strands).  For this `Matrix.Transform`
-keeps a ray's cone in a surface's space (scaled), and a `BoundingBox` holding strands is marked `Widens` and grown
-by the ray's width at its far side -- other boxes and surfaces are untouched, so other scenes stay bit-identical. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
+covering strands front to back (stopping at a thousandth left), each taking lights' samples in proportion to its
+`Share` of the pixel (by chance below one sample, for lights of eight samples or more).  A shadow ray from a point
+the eye saw carries that point's footprint (`Intersection.FootprintRadius`, only in scenes with strands) as a cone
+narrowing to nothing at the light (`Ray.NarrowsAt`), and a `StrandTally` that stops its traversal once next to
+nothing gets past the strands.  For this `Matrix.Transform` keeps a ray's cone in a surface's space (scaled), and a
+`BoundingBox` holding strands is marked `Widens` and grown by the ray's width at its widest side -- other boxes and
+surfaces are untouched, so other scenes stay bit-identical. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
 `Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,

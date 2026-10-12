@@ -247,6 +247,23 @@ public sealed class StrandSet
     }
 
     /// <summary>
+    /// This method hands every control point of every segment to the given action, once the set is
+    /// sealed: the places the strands run through and the places their curves are drawn toward, which
+    /// between them say where the strands lie.
+    /// </summary>
+    /// <param name="visit">What to do with each point.</param>
+    internal void VisitPoints(Action<Point> visit)
+    {
+        for (int segment = 0; segment < _count; segment++)
+        {
+            int at = segment * Stride;
+
+            for (int point = 0; point < 4; point++)
+                visit(new Point(_segments[at + point * 3], _segments[at + point * 3 + 1], _segments[at + point * 3 + 2]));
+        }
+    }
+
+    /// <summary>
     /// This method returns the points each strand runs through, root first, as they were added, once the
     /// set is sealed.  It is for looking at the strands rather than hitting them.
     /// </summary>
@@ -413,6 +430,15 @@ public sealed class StrandSet
         int top = 0;
         int before = intersections.Count;
 
+        // A shadow ray that strands stop counts each strand as it is found, and stops looking once next
+        // to nothing gets past them; see StrandTally.  Only a shadow's query, which looks no further back
+        // than the ray's start, keeps the tally: a combination asks its parts about the whole line, behind
+        // the point lit and past the light, and none of that stands in the light's way.
+        StrandTally tally = owner.NoShadow || nearest < 0 ? null : ray.Tally;
+
+        if (tally is { Stopped: true })
+            return;
+
         stack[top++] = 0;
 
         while (top > 0)
@@ -425,7 +451,20 @@ public sealed class StrandSet
             if (_nodeCount[node] > 0)
             {
                 for (int index = _nodeFirst[node]; index < _nodeFirst[node] + _nodeCount[node]; index++)
+                {
+                    int found = intersections.Count;
+
                     IntersectSegment(_order[index], frame, owner, intersections, nearest, farthest);
+
+                    if (tally is null)
+                        continue;
+
+                    for (int at = found; at < intersections.Count; at++)
+                        tally.Pass((HairIntersection) intersections[at]);
+
+                    if (tally.Stopped)
+                        return;
+                }
             }
             else
             {
@@ -549,9 +588,10 @@ public sealed class StrandSet
             highZ = Math.Max(highZ, piece[point * 3 + 2]);
         }
 
-        // A strand finer than the ray is wide is widened to it; see the leaf below.
+        // A strand finer than the ray is wide is widened to it; see the leaf below.  The ray is widest at
+        // the piece's far side, unless it narrows toward a light, when it is widest at the near side.
         if (frame.Spreads)
-            half = Math.Max(half, frame.ReachAt((highZ + half) / frame.Length));
+            half = Math.Max(half, frame.ReachAt((frame.Narrows ? lowZ - half : highZ + half) / frame.Length));
 
         if (lowX - half > 0 || highX + half < 0 || lowY - half > 0 || highY + half < 0 ||
             highZ + half < nearest * frame.Length || lowZ - half > farthest * frame.Length)
@@ -754,6 +794,10 @@ public sealed class StrandSet
             Length = length;
             _reachAtStart = ray.BaseRadius + (ray.Spread > 0 ? ray.Travelled * ray.Spread * 0.5 : 0);
             _reachPerStep = ray.Spread > 0 ? ray.Spread * 0.5 : 0;
+
+            // A shadow ray narrows to nothing at its light; see Ray.NarrowsAt.
+            if (!double.IsPositiveInfinity(ray.NarrowsAt))
+                _reachPerStep = -_reachAtStart / ray.NarrowsAt;
             OriginX = ray.Origin.X;
             OriginY = ray.Origin.Y;
             OriginZ = ray.Origin.Z;
@@ -796,10 +840,16 @@ public sealed class StrandSet
         public bool Spreads => _reachAtStart > 0 || _reachPerStep > 0;
 
         /// <summary>
-        /// This method returns how wide the ray is, as a radius, the given number of its steps along.  It
-        /// does not narrow behind its start.
+        /// This property reports whether the ray narrows as it goes, as a shadow ray does toward its light,
+        /// so that it is widest at the near side of anything rather than the far.
         /// </summary>
-        public double ReachAt(double step) => _reachAtStart + _reachPerStep * Math.Max(step, 0);
+        public bool Narrows => _reachPerStep < 0;
+
+        /// <summary>
+        /// This method returns how wide the ray is, as a radius, the given number of its steps along.  It
+        /// does not change behind its start, and does not narrow past nothing.
+        /// </summary>
+        public double ReachAt(double step) => Math.Max(0, _reachAtStart + _reachPerStep * Math.Max(step, 0));
 
         /// <summary>
         /// This method reports whether the ray crosses a node's box within the given stretch of itself --
@@ -817,13 +867,13 @@ public sealed class StrandSet
                 double halfX = (boxes[at + 3] - boxes[at]) * 0.5;
                 double halfY = (boxes[at + 4] - boxes[at + 1]) * 0.5;
                 double halfZ = (boxes[at + 5] - boxes[at + 2]) * 0.5;
-                double reach = (boxes[at] + halfX - OriginX) * _directionX +
-                               (boxes[at + 1] + halfY - OriginY) * _directionY +
-                               (boxes[at + 2] + halfZ - OriginZ) * _directionZ +
-                               Math.Abs(halfX * _directionX) + Math.Abs(halfY * _directionY) +
-                               Math.Abs(halfZ * _directionZ);
+                double middle = (boxes[at] + halfX - OriginX) * _directionX +
+                                (boxes[at + 1] + halfY - OriginY) * _directionY +
+                                (boxes[at + 2] + halfZ - OriginZ) * _directionZ;
+                double spread = Math.Abs(halfX * _directionX) + Math.Abs(halfY * _directionY) +
+                                Math.Abs(halfZ * _directionZ);
 
-                pad = ReachAt(reach / (Length * Length));
+                pad = ReachAt((Narrows ? middle - spread : middle + spread) / (Length * Length));
             }
 
             if (!Slab(boxes[at] - pad, boxes[at + 3] + pad, OriginX, _directionX, _inverseX, ref low, ref high) ||
