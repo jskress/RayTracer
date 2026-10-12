@@ -138,9 +138,43 @@ public class TestBandSpectrum
     }
 
     /// <summary>
+    /// A dark surface is dark at every wavelength, and still comes back as itself.  The table's curve for
+    /// a dark red, purple or magenta ran up to all of the light where the eye can barely see -- a red of
+    /// a thousandth reflected every bit of the deep red -- since what a curve does there hardly changes
+    /// its color.  No surface's curve is more than twice its brightest channel anywhere.
+    /// </summary>
+    [TestMethod]
+    public void TestADarkColorIsDarkAtEveryWavelength()
+    {
+        SpectralBasis basis = SpectralBasis.Shared;
+        double[] bands = new double[basis.Count];
+        Color[] hues =
+        [
+            new (1, 0.05, 0), new (1, 0.5, 0.1), new (1, 1, 0), new (0.05, 1, 0.05), new (0, 1, 1), new (0, 0.1, 1),
+            new (0.5, 0, 1), new (1, 0, 1), new (1, 0.7, 0.55)
+        ];
+
+        foreach (Color hue in hues)
+        {
+            foreach (double level in new[] { 1e-5, 1e-4, 1e-3, 0.01, 0.05, 0.2, 0.45 })
+            {
+                Color color = hue * level;
+
+                basis.Uplift(color, true, bands);
+
+                foreach (double amount in bands)
+                    Assert.IsTrue(amount <= 2 * level + 1e-12, $"{color} reflects {amount}");
+
+                AssertColor(color, basis.ToColor(bands, 1), 1e-3 * level, "as a dark surface");
+            }
+        }
+    }
+
+    /// <summary>
     /// Turning a light up changes how much light there is and not what color it is, so its spectrum
-    /// keeps its shape at any brightness -- which a surface's need not, a dark red paint and a bright
-    /// one being different paints.
+    /// keeps its shape at any brightness -- which a surface's need not above half its brightness, a
+    /// middling red paint and a bright one being different paints.  Below that a surface is scaled as a
+    /// light is; see <see cref="TestADarkColorIsDarkAtEveryWavelength"/>.
     /// </summary>
     [TestMethod]
     public void TestALightKeepsItsShapeAtAnyBrightness()
