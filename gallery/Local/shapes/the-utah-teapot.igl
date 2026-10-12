@@ -45,7 +45,7 @@ context {
 camera {
     location [9.6, 4.4, -10.2]
     look at [0.1, 1.25, 0.4]
-    field of view 36
+    field of view 36.81
 }
 
 // A window off to the left, given a real size so the shadow on the stone has a soft edge and the

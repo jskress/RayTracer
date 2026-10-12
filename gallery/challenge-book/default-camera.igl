@@ -3,5 +3,5 @@
 camera {
 	location [0, 1.5, -5]
 	look at [0, 1, 0]
-	field of view 60
+	field of view 60.25
 }

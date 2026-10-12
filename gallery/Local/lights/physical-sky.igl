@@ -77,7 +77,7 @@ context {
 camera {
     location [0, 1.4, -12]
     look at [-0.8, 4.4, 0]
-    field of view 70
+    field of view 71.63
 }
 
 // Where the sun is and how clear the air is.  Everything the sky does follows from these.

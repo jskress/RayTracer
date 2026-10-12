@@ -11,7 +11,7 @@ context { angles are degrees  no gamma }
 camera {
     location [1.5, 1.4, -7.1]
     look at [0.25, -0.05, 0]
-    field of view 50
+    field of view 50.88
 }
 
 point light { location [-2.5, 11, -9]  color [1, 0.97, 0.93] }

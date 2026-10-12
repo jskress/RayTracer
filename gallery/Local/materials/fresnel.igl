@@ -29,7 +29,7 @@ context {
 camera {
     location [0, 2.4, -12]
     look at [0, 0.8, 8]
-    field of view 58
+    field of view 58.16
 }
 
 // A dusk sky, warm along the horizon and deepening overhead, so that what the floors mirror is plain.  It

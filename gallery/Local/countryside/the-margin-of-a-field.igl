@@ -21,7 +21,7 @@ Season = 'summer'
 camera {
     location [0, 10.5, -25]
     look at [0, 5.0, 9]
-    field of view 44
+    field of view 44.52
 }
 
 background ClearMorning

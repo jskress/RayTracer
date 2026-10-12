@@ -31,7 +31,7 @@ import 'spacecraft' { Shuttle, Satellite }
 camera {
     location [300, 42, -520]
     look at [-10, -4, 20]
-    field of view 40
+    field of view 40.10
 }
 
 // **The starfield is a `granite` pattern and its map had to be measured.**  Granite does not run to

@@ -49,7 +49,7 @@ import 'indoor-lights' { FloorLamp }
 camera {
     location [1.9, 0.8, -0.95]
     look at [-0.35, 0.3, 0.85]
-    field of view 56
+    field of view 56.71
 }
 
 background [0, 0, 0]

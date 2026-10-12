@@ -54,7 +54,7 @@ import 'furniture' { Sideboard, Armchair, LowTable }
 camera {
     location [2.45, 1.62, -3.15]
     look at [-0.35, 1.05, 0.9]
-    field of view 56
+    field of view 56.32
 }
 
 background [0, 0, 0]

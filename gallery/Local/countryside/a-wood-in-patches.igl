@@ -23,7 +23,7 @@ import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
 camera {
     location [0, 100, -95]
     look at [0, 0, 22]
-    field of view 55
+    field of view 68.81
 }
 
 // From the left and well down the sky, so every crown throws its shadow across the next and the

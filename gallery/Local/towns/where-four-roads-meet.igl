@@ -51,7 +51,7 @@ context {
 camera {
     location [46, 36, -53]
     look at [-1, 0.5, 2]
-    field of view 46
+    field of view 50.61
 }
 
 // The sun round on the near side and well down.  `LateAfternoon` stands at twenty degrees, which throws

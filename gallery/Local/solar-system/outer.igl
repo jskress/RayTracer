@@ -9,6 +9,7 @@ title = 'The Outer Planets'
 distance = -75
 height = 10
 
+fieldOfView = 60.11
 include 'ss-setup.igl'
 
 sphere {

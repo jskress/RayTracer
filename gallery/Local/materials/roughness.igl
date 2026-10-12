@@ -28,7 +28,7 @@ context {
 camera {
     location [0, 6.5, -13.5]
     look at [0, 0.5, 0.3]
-    field of view 36
+    field of view 39.02
 }
 
 // A sky that is bright along the horizon and deepens overhead, for the gold to mirror.

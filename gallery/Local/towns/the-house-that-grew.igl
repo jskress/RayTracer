@@ -69,7 +69,7 @@ context {
 camera {
     location [23, 10.5, -31]
     look at [-3, 5.4, 3]
-    field of view 44
+    field of view 44.28
 }
 
 // The sun round on the near side, which is what lights a frontage.

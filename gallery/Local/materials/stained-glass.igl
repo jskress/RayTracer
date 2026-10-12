@@ -27,7 +27,7 @@ context {
 camera {
     location [0, 3.2, -8.5]
     look at [0, 1.15, 0]
-    field of view 50
+    field of view 51.25
 }
 
 // Behind and above, so each pane casts its light forward onto the floor where the camera can see

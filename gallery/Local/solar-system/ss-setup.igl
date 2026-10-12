@@ -18,7 +18,7 @@ background Black
 camera {
 	location [0, height * 1.5, distance]
 	look at [0, height, 0]
-	field of view 60
+	field of view fieldOfView
 }
 
 point light {

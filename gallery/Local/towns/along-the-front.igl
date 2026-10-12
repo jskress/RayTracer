@@ -29,7 +29,7 @@ import 'daylight'         { ClearMorningFrom, ClearMorningLight }
 camera {
     location [-6, 6.5, -36]
     look at [22, 0.5, 70]
-    field of view 55
+    field of view 55.07
 }
 
 // A morning sun over the sea, swung off the line of the house fronts so it rakes across them.

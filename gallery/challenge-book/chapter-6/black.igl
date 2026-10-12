@@ -11,7 +11,7 @@ background Black
 camera {
     location [0, 1.5, -5]
     look at [0, 0, 0]
-    field of view 30
+    field of view 31.26
 }
 
 sphere {

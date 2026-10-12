@@ -40,7 +40,7 @@ context {
 camera {
     location [0, 4.5, -13]
     look at [0, 4.2, 0]
-    field of view 50
+    field of view 50.01
 }
 
 point light {

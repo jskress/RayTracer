@@ -9,6 +9,7 @@ title = 'The Planets'
 distance = -300
 height = 100
 
+fieldOfView = 60.68
 include 'ss-setup.igl'
 
 // The sun

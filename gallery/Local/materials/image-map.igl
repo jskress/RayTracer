@@ -4,6 +4,7 @@ title = 'Spherical image pigment test'
 distance = -5
 height = 1
 
+fieldOfView = 60.25
 include '../solar-system/ss-setup.igl'
 
 background Transparent

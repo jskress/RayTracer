@@ -52,7 +52,7 @@ context {
 camera {
     location [17.5, 4.4, -15.5]
     look at [-2.4, 1.9, 0.6]
-    field of view 45
+    field of view 45.19
 }
 
 // The sun round on the near side, which is what puts a highlight down the whole length of a boiler and

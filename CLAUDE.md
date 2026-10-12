@@ -225,6 +225,10 @@ progress/error output.
   (the DSL keywords, named colors, indices of refraction, directions, built-in functions and
   renderer globals), and `TestEditorGrammar` fails when it falls behind -- so a change that adds
   any of those needs the generator re-run.
+- `Camera.GetTransform` makes its sideways axis of unit length, which the book's view transform does not:
+  left as it came, a camera tilted θ saw wider than its field of view by 1/cos θ (41% at 45°, nothing at all
+  looking straight down).  Fixed 2026-10-12, which re-framed nearly every gallery image slightly; the book's
+  "arbitrary view transformation" test carries the corrected numbers.  A camera looking along its `up` is refused.
 - `TestResults/` at the repo root accumulates a very large number of timestamped run
   directories from previous `dotnet test` invocations; they are not gitignored but are also
   not source — ignore them when exploring the repo.

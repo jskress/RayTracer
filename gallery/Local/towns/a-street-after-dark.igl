@@ -65,7 +65,7 @@ context {
 camera {
     location [17, 4.4, -13]
     look at [-6, 2.4, 1.5]
-    field of view 52
+    field of view 52.12
 }
 
 background Dusk

@@ -58,7 +58,7 @@ context {
 camera {
     location [-15, 7.0, -31]
     look at [-1.5, 3.6, -2.5]
-    field of view 56
+    field of view 56.27
 }
 
 // The azimuth is this scene's to give and the rest of the sky is the library's -- see `daylight` on why

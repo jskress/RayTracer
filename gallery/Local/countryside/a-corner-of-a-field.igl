@@ -68,7 +68,7 @@ context {
 camera {
     location [5.2, 3.4, 15.5]
     look at [-1.6, 2.6, -4]
-    field of view 46
+    field of view 46.03
 }
 
 background ClearMorning
