@@ -43,6 +43,7 @@ The rest of the material describes how light behaves when it arrives.
 | `roughness` | 0 | Blurs what it mirrors and spreads its highlight, from 0 (a mirror) to 1 (matte). |
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
+| `melanin` | none | For hair only: colors it as natural hair is colored; see [How hair is lit](advanced-surfaces.md#how-hair-is-lit). |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
 | `grain` | 0 | Roughens the diffuse falloff. |
 

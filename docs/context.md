@@ -260,7 +260,8 @@ colored fog or water come out as they physically would.
 
 Nothing has to be written differently.  Colors are still written as colors, and each is turned
 into the smoothest spectrum that is that color — a surface's never reflecting more than all the
-light at any wavelength — so a scene under white light looks as it always did.  The differences are
+light at any wavelength, and a dark one dark at all of them — so a scene under white light looks as
+it always did.  The differences are
 where light of one color meets a surface of another.  The physical sky is already worked out
 wavelength by wavelength, and a spectral render takes it as it was worked out rather than as the
 color it comes to.

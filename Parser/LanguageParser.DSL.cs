@@ -88,7 +88,7 @@ public partial class LanguageParser
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
-            'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'metallic', 'min', 'mortar',
+            'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
@@ -643,10 +643,16 @@ public partial class LanguageParser
             } |
             { no > fade ?? 'Expecting "fade" to follow "no" here.' }
         ]
+        // How much of each melanin hair wearing the material holds: a named shade, or an amount of
+        // eumelanin with, after a comma, one of pheomelanin.
+        materialMelaninClause:
+        {
+            melanin > _expression > { comma > _expression }{?}
+        }
         materialEntryClause:
         [
             pigment | normal | fresnel | materialValueClause | materialMetallicClause |
-            startInteriorClause | startDecalClause
+            materialMelaninClause | startInteriorClause | startDecalClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

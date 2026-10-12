@@ -42,6 +42,21 @@ public abstract class StrandSurface : Surface
     internal virtual Surface WearerOf(int strand) => this;
 
     /// <summary>
+    /// This property reports whether the strands wear the material of the surface they grow from, rather
+    /// than one given them: such a strand takes its color from that surface where it grows, and its
+    /// finish from nothing.
+    /// </summary>
+    internal virtual bool WearsItsSkin => false;
+
+    /// <summary>
+    /// This method returns where a strand grows from, for strands that grow from a surface: the part of
+    /// it they grew from, and the root, in this surface's own space.
+    /// </summary>
+    /// <param name="strand">Which strand.</param>
+    /// <returns>The part grown from and the root, or nothing for a strand that grows from nothing.</returns>
+    internal virtual (Surface Part, Point Root)? RootOf(int strand) => null;
+
+    /// <summary>
     /// This method returns the normal the strand is shaded with where the ray crossed it, which the
     /// crossing carries; see <see cref="HairIntersection"/>.
     /// </summary>

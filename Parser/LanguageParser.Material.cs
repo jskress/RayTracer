@@ -164,6 +164,12 @@ public partial class LanguageParser
             case "fresnel":
                 resolver.FresnelResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "melanin":
+                resolver.MelaninResolver = new MelaninResolver
+                {
+                    First = term, Second = clause.Expressions.Count > 1 ? clause.Term(1) : null
+                };
+                break;
             case "metallic":
                 // The amount may be left off, since fully metallic is what is nearly always
                 // wanted; naming nothing means naming 1.  When the material's next entry follows

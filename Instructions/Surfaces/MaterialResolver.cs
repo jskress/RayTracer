@@ -72,6 +72,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public Resolver<double> MetallicResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how much of each melanin hair wearing the material holds.
+    /// </summary>
+    public Resolver<Melanin?> MelaninResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the transparency property of the material.
     /// </summary>
     public Resolver<double> TransparencyResolver { get; set; }
@@ -131,6 +136,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         FresnelResolver is not null || RoughnessResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
+                        MelaninResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
 
         return SetToNull && saysMore
@@ -164,6 +170,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
         GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
+        MelaninResolver.AssignTo(value, target => target.Melanin, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
 
         // A rough surface's highlight is what it mirrors, so one that named no reflectance would show

@@ -216,6 +216,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
 | `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the far end of a decal's reach (`max Y`, `max radius`).  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
 | `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
+| `melanin` | Material, for hair only: colors it as natural hair is colored — a named shade, or amounts of eumelanin and pheomelanin. | [How hair is lit](advanced-surfaces.md#how-hair-is-lit) |
 | `metallic` | Finish: tints the highlight with the surface color. | [Materials](materials.md#metallic) |
 | `min` | Extrusion: the low Y of the solid (`min Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the near end of a decal's reach (`min Y`, `min radius`). | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach) |
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -285,7 +286,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
-| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass) |
+| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [Hair](advanced-surfaces.md#how-hair-is-lit) |
 | `rows` | `physical sky`: how many heights in the sky are worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count, and context: `reflection samples`. | [Scene Files](scene-files.md#scattering) |

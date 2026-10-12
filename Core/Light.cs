@@ -132,6 +132,21 @@ public abstract class Light : NamedThing
     }
 
     /// <summary>
+    /// This method works out one of the places this light is looked at from, for a strand of hair, which
+    /// faces no particular way: it takes light from every direction, from behind as much as from in
+    /// front.  A light with a place answers as it would anything else; one spread over directions spreads
+    /// its samples over all of them.
+    /// <para>
+    /// A sample's weight is what turns the light along it into light arriving, in the units this
+    /// renderer's lights carry -- the irradiance they would give a surface square to them, divided by π.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point being lit.</param>
+    /// <param name="index">Which sample, from zero up to <see cref="SampleCount"/>.</param>
+    /// <returns>The sample.</returns>
+    public virtual LightSample SampleAround(Point point, int index) => SampleToward(point, index);
+
+    /// <summary>
     /// This method returns the color this light carries along one of its samples.  For every light with
     /// a color of its own that is simply that color, the same in every direction.  A light spread over
     /// the sky is different: it is a different color whichever way you look, so it answers by the

@@ -119,6 +119,13 @@ public class Material
     public bool IsRough => Roughness > 0;
 
     /// <summary>
+    /// This property holds how much of each melanin hair wearing this material holds, which colors it as
+    /// natural hair is colored, in place of its pigment; or <c>null</c> to color it by its pigment.
+    /// Only strands take any notice of it.
+    /// </summary>
+    public Melanin? Melanin { get; set; }
+
+    /// <summary>
     /// This method returns this material made rough, with the given roughness and everything else as
     /// it is.  It is what a smooth surface is shaded as when a ray that a rough surface has already
     /// spread meets it; see <see cref="Scene"/>'s regularizing.

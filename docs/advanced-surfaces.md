@@ -414,10 +414,9 @@ strand {
 }
 ```
 
-**It is hit as a flat strip that always faces the ray, and shaded as though it were round.**  Where
-across the strip a ray passes says where on a rod of the same width it would have struck, so the
-light falls across a strand as it falls across a rod, and a ray leaving it — toward a light, or as a
-reflection — sets off from that rod's surface rather than from the strip inside it.  Asked only that
+**It is hit as a flat strip that always faces the ray, and lit as the fiber it is.**  Where across the
+strip a ray passes says where on a round strand of the same width it would have struck, which is what
+a fiber's way with light needs to know — see [How hair is lit](#how-hair-is-lit).  Asked only that
 much, a strand is far cheaper than a [`tube`](#tube): it is kept as a handful of numbers rather than
 as surfaces, and that is what lets a scene hold millions of them.
 
@@ -483,19 +482,61 @@ without the surface having to describe itself.  That works for anything with an 
 CSG, a mesh, a line of text.  It cannot work for a plane, which goes on forever, and hair on one is an
 error.  A sheet — a disc, a patch — grows hair on the side its normal faces.
 
-**Hair with no material of its own takes the color of its skin.**  Each strand wears the material
-of the part of the surface it grows from, so fur grown over a group whose parts are dressed
-differently comes out in each part's color, even when the group itself has no material.
-
 **On one side of a [CSG](surfaces.md#combining-surfaces), hair shows only where it is outside the
 other side** — fur on one sphere of a union is hidden where it is buried in the other.  Hair grown on
 the CSG itself grows on the combined shape.
 
 **Strands are usually much finer than a pixel**, so a picture of hair wants
-[antialiasing](context.md#anti-aliasing), as the figure's scene asks for.  A strand is shaded with its
-material as a fine rod would be.
+[antialiasing](context.md#anti-aliasing), as the figure's scene asks for.
 
-**What it costs.**  A strand takes about three hundred bytes, and growing them is quick: a sphere of
+#### How hair is lit
+
+![The named shades of hair](images/figures/adv-hair-shades.png)
+
+The six named shades of hair, each a fur of the same shape, lit by a lamp in front and a dimmer one
+behind.  The scene is [`docs/examples/advanced/hair-shades.igl`](examples/advanced/hair-shades.igl).
+
+**A strand is not shaded as a surface.**  A hair is a glassy fiber with its color inside it, and light
+leaves it three ways: some is mirrored off the outside, which is the white highlight a head of hair
+has; some passes through and out the far side, which is the glow of hair with the light behind it; and
+some goes in, is mirrored inside and comes back out colored, a second and softer highlight just below
+the first.  A strand is lit all three ways by every light, from behind as much as in front — the sky
+included, all the way round — after Chiang, Bitterli, Tappan and Burley's model, as PBRT has it.
+
+**Its color is the color a head of such hair comes out**, and any pigment will do: the inside of each
+strand is made to absorb as much as hair of that color does.  Hair with no material of its own wears
+the material of what it grows from, and takes its color from there too, where each strand grows —
+read in the skin's own space at the strand's root, so that a striped skin grows striped fur however
+the strands lie.  Fur grown over a group whose parts are dressed differently comes out in each part's
+color, even when the group itself has no material.
+
+**Or color it as natural hair is colored**, by its melanin:
+
+```
+hair { density 2500  length 0.3  material { melanin 'auburn' } }
+```
+
+`melanin` names a shade — `'black'`, `'brown'`, `'auburn'`, `'ginger'`, `'blond'` or `'platinum'` — or
+gives an amount of eumelanin, the pigment that runs from brown to black, with, after a comma, an amount
+of pheomelanin, which is red: `melanin 1.3` is brown and `melanin 0.5, 0.8` is auburn.  Amounts run
+from nothing, which is white, to about eight, which is black.  Melanin colors hair in place of the
+pigment, and nothing but hair takes any notice of it.
+
+**A material's `roughness` says how blurred a strand's highlights are**: 0.3 unless said, about what
+real hair measures, and smoother hair shines in a narrower band.  Hair wearing its skin's material
+takes none of the skin's finish.
+
+**Light passes partly through hair.**  A strand in the way of a light lets through what passes through
+it, in its own color: black hair stops nearly all of it and blond a good deal less, so light finds its
+way into fair fur and not into dark.
+
+**Fair hair comes out darker than the color it is matched to.**  That color is what a head of such hair
+looks like with all the light bounced from strand to strand, and that light — most of what makes fair
+hair fair — is not followed yet.  Dark hair, which keeps little of it, comes out as it should.
+
+#### What hair costs
+
+A strand takes about three hundred bytes, and growing them is quick: a sphere of
 radius one at a density of fifty thousand — over six hundred thousand strands — takes about two
 seconds to grow and render small, and three quarters of a gigabyte.  A surface may grow at most two
 million.

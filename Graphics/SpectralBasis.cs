@@ -168,6 +168,17 @@ public class SpectralBasis
     /// scaled back up, pbrt's way.  Doing that to every light keeps a light's spectrum the same shape
     /// however bright it is said to be, which a dimmer switch should.
     /// </para>
+    /// <para>
+    /// **A surface darker than that is fitted at half its largest channel too, and scaled down.**  The
+    /// table's curve for a dark color is free to do almost anything where the eye can barely see -- below
+    /// about four hundred nanometers and above seven hundred -- since what it does there hardly changes
+    /// the color it comes back as, and for a dark red, purple or magenta it ran up to all of the light
+    /// there: a color of a thousandth reflected every bit of the deep red, and black hair, matched to
+    /// a color darker still, came out purple.  Under white light no one could tell, but anything that
+    /// treats the bands one at a time -- a lamp rich in deep red, light bounced from surface to surface,
+    /// a fiber's absorption -- could.  Fitted at half and scaled, no surface's curve is ever more than
+    /// twice its largest channel, and a dark one is dark at every wavelength.
+    /// </para>
     /// </summary>
     /// <param name="color">The color.  A negative channel is taken as nothing, a negative amount of
     /// light having no spectrum.</param>
@@ -175,6 +186,9 @@ public class SpectralBasis
     /// <param name="into">Where to put the light, band by band.</param>
     public void Uplift(Color color, bool reflectance, Span<double> into)
     {
+        // How bright a color's largest channel is made before the table is asked for its curve, unless it
+        // is a surface's color brighter than that already.
+        const double FittedAtLeast = 0.5;
         double red = Math.Max(0, color.Red);
         double green = Math.Max(0, color.Green);
         double blue = Math.Max(0, color.Blue);
@@ -187,7 +201,7 @@ public class SpectralBasis
         }
 
         bool bounded = reflectance && largest <= 1;
-        double scale = bounded ? 1 : 2 * largest;
+        double scale = bounded && largest >= FittedAtLeast ? 1 : largest / FittedAtLeast;
         (double, double, double) curve = Table.CoefficientsFor(red / scale, green / scale, blue / scale);
         double backRed = 0, backGreen = 0, backBlue = 0;
 

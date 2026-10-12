@@ -106,6 +106,27 @@ public class SkyLight : Light
     }
 
     /// <summary>
+    /// This method works out one of the directions the sky is looked at in from a strand of hair: over the
+    /// whole sphere, since a strand takes light from behind it as well as before.
+    /// <para>
+    /// **Each counts four times.**  A strand sends on, toward the eye, its share of the light arriving
+    /// from every direction, and samples spread evenly over the sphere each stand for 4π of solid angle
+    /// shared among them -- the averaging does the sharing.  The sky's light is radiance and a light's
+    /// color is irradiance over π, so what a sample carries is the sky's light times 4π over π: four.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point being lit.</param>
+    /// <param name="index">Which sample.</param>
+    /// <returns>The sample.</returns>
+    public override LightSample SampleAround(Point point, int index)
+    {
+        double alongOne = (index + 0.5) / Samples;
+        double alongTwo = index * 0.7548776662466927 % 1;
+
+        return new LightSample(OverTheWholeSphere(alongOne, alongTwo), double.PositiveInfinity, 4);
+    }
+
+    /// <summary>
     /// This method returns the color the sky is in the direction of the given sample.
     /// <para>
     /// The light's own color multiplies it rather than replacing it, so that a sky may be dimmed or

@@ -88,7 +88,15 @@ seeding), and calls `camera.Render(...)`.
 A surface's `hair { }` becomes a `HairGrowth`; the surface grows a `Hair` at the end of
 `PrepareForRendering` (roots by random lines through a sphere around it, Cauchy-Crofton) and the
 hair is found through the surface -- `Surface.Intersect` asks it, `BoxAround` boxes it in unless
-asked for the true extent, and CSG keeps or drops strand hits without counting them as entered. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
+asked for the true extent, and CSG keeps or drops strand hits without counting them as entered.
+Strands are never Phong: `Scene.GetHitColor` hands a `HairIntersection` to `Scene.ShadeFiber` (`Core/Scene.Fibers.cs`),
+the Chiang 2016 / PBRT fiber model in `Core/Fiber.cs` (R, TT, TRT and the rest; index 1.55, tilt 2 degrees, the
+material's `roughness` or 0.3), lit from every light at the strand's middle with shadow rays setting off a radius
+toward the light, and the sky sampled over the whole sphere (`Light.SampleAround`, weight 4).  Color is matched by
+Chiang's inversion from the pigment -- read at each strand's ROOT in the skin's space when the hair wears its skin's
+material -- or set by a material's `melanin`; a shadow ray crossing a strand keeps `Fiber.PassedThrough` (the TT
+share).  Spectral renders take the absorption by `FromUnbounded` and work the hair's own color out from it band by
+band, never fitting a spectrum to the (very dark, very red) matched color. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
 `Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,
