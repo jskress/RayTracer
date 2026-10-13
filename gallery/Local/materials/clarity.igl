@@ -32,7 +32,7 @@ context {
 camera {
     location [0, 3.5, -12]
     look at [0, 1.1, 0]
-    field of view 52
+    field of view 52.89
 }
 
 // Mostly from behind, so that what the camera sees has come *through* the glass rather than

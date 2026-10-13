@@ -10,7 +10,7 @@ camera {
     location [0, 1150, 240]
     look at [0, 0, -10]
     up [0, 0, -1]
-    field of view 56
+    field of view 57.10
 }
 
 point light { location [-320, 800, -220]  color [1, 0.97, 0.93] }

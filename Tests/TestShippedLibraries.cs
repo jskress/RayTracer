@@ -2490,8 +2490,10 @@ public class TestShippedLibraries
 
         // The crown, and a stretch of the shaft well below it.  Both were found by rendering the two
         // seasons and asking where they actually differ, rather than by guessing at the geometry: the
-        // cap occupies x 94..105, y 63..70 and nothing else in the picture changes at all.
-        return (Patch(picture, 94, 106, 63, 71), Patch(picture, 92, 110, 100, 140));
+        // cap occupies x 93..105, y 51..58, and nothing else in the picture changes but the cap's own
+        // faint shadow on the ground to its right.  (It was x 94..105, y 63..70 while the camera still
+        // saw wider than its field of view: tilted down this far, by about a quarter.)
+        return (Patch(picture, 93, 106, 51, 59), Patch(picture, 92, 110, 100, 140));
     }
 
     /// <summary>

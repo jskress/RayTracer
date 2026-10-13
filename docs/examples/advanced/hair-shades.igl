@@ -6,7 +6,7 @@ context {
     angles are degrees
 }
 
-camera { location [0, 2.2, -8.6]  look at [0, 0.5, 0]  field of view 44 }
+camera { location [0, 2.2, -8.6]  look at [0, 0.5, 0]  field of view 44.77 }
 
 point light { location [-5, 6, -6] }
 point light { location [2, 5, 7]  color [0.8, 0.8, 0.8] }

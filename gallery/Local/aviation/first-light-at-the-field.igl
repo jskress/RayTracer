@@ -28,7 +28,7 @@ import 'daylight' { ClearMorning, ClearMorningLight }
 camera {
     location [58, 15, -82]
     look at [-4, 20, 16]
-    field of view 56
+    field of view 56.04
 }
 
 background ClearMorning

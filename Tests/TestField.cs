@@ -6,6 +6,7 @@ using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
+using RayTracer.Patterns;
 using RayTracer.Renderer;
 
 namespace Tests;
@@ -1155,6 +1156,256 @@ public class TestField
 
         Assert.IsNotNull(unspaced, "rows without how far apart should have been refused");
         StringAssert.Contains(unspaced, "apart");
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Patterns.
+    // ---------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// A pattern rising across the square from one side to the other, never wrapping inside it.
+    /// </summary>
+    private static DensityShape Across() => new ()
+    {
+        Pattern = new GradientPattern { BandType = BandType.LinearX },
+        Transform = Transforms.Translate(-1.01, 0, 0) * Transforms.Scale(2.03, 1, 1)
+    };
+
+    /// <summary>
+    /// The same, but with its values crowded toward nought, as a noise pattern's crowd toward its middle:
+    /// banded by their raw value, three-quarters of the places would fall below a half.
+    /// </summary>
+    private static DensityShape Crowded() => new ()
+    {
+        Pattern = new GradientPattern { BandType = BandType.LinearX, Wave = WaveType.Poly, Exponent = 4 },
+        Transform = Transforms.Translate(-1.01, 0, 0) * Transforms.Scale(2.03, 1, 1)
+    };
+
+    private static Field Patterned(Action<Field> more)
+    {
+        Field field = new () { Outline = Square(), Spacing = 0.05, Jitter = 0.5, Prototype = _ => new Sphere() };
+
+        more(field);
+        field.PrepareForRendering();
+
+        return field;
+    }
+
+    private static double ValueOf(DensityShape shape, Surface copy)
+    {
+        Point at = Point.Zero * copy.Transform;
+
+        return shape.ValueAt(new Point(at.X, 0, at.Z));
+    }
+
+    private static HashSet<(long, long)> PlacesOf(Field field) => field.Surfaces
+        .Select(copy => Point.Zero * copy.Transform)
+        .Select(at => ((long) Math.Round(at.X * 1e6), (long) Math.Round(at.Z * 1e6)))
+        .ToHashSet();
+
+    /// <summary>
+    /// A field's patches keep a place as often as the pattern's value there says: in each tenth of the
+    /// pattern's range, about as many of the places as the middle of that tenth.
+    /// </summary>
+    [TestMethod]
+    public void TestPatchesKeepAPlaceAsOftenAsThePatternSays()
+    {
+        DensityShape across = Across();
+        Field everywhere = Patterned(_ => { });
+        Field kept = Patterned(field => field.Patches = across);
+
+        int[] all = new int[10];
+        int[] stood = new int[10];
+
+        foreach (Surface copy in everywhere.Surfaces)
+            all[Math.Min(9, (int) (ValueOf(across, copy) * 10))]++;
+
+        foreach (Surface copy in kept.Surfaces)
+            stood[Math.Min(9, (int) (ValueOf(across, copy) * 10))]++;
+
+        for (int tenth = 0; tenth < 10; tenth++)
+        {
+            Assert.IsTrue(all[tenth] > 100, $"only {all[tenth]} places fell in tenth {tenth}");
+            Assert.AreEqual((tenth + 0.5) / 10, stood[tenth] / (double) all[tenth], 0.1,
+                $"tenth {tenth} kept {stood[tenth]} of {all[tenth]}");
+        }
+    }
+
+    /// <summary>
+    /// An edge with no width cuts clean; a wider one thins between its two ends; and turned about, an
+    /// edge keeps exactly the places the edge the right way round leaves.
+    /// </summary>
+    [TestMethod]
+    public void TestAnEdgeCutsCleanAndTurnedAboutFillsWhatItCut()
+    {
+        DensityShape across = Across();
+        Field everywhere = Patterned(_ => { });
+        Field cut = Patterned(field =>
+        {
+            field.Patches = across;
+            field.PatchesFrom = field.PatchesTo = 0.4;
+        });
+
+        Assert.AreEqual(
+            everywhere.Surfaces.Count(copy => ValueOf(across, copy) >= 0.4), cut.Surfaces.Count,
+            "a clean edge did not keep exactly the places at or above it");
+        Assert.IsTrue(cut.Surfaces.All(copy => ValueOf(across, copy) >= 0.4), "a clean edge kept a place below it");
+
+        Field soft = Patterned(field =>
+        {
+            field.Patches = across;
+            field.PatchesFrom = 0.3;
+            field.PatchesTo = 0.5;
+        });
+        List<double> values = soft.Surfaces.Select(copy => ValueOf(across, copy)).ToList();
+
+        Assert.IsTrue(values.All(value => value >= 0.3), "a soft edge kept a place below where it begins");
+        Assert.AreEqual(everywhere.Surfaces.Count(copy => ValueOf(across, copy) > 0.5), values.Count(value => value > 0.5),
+            "a soft edge did not keep every place beyond where it ends");
+
+        int between = everywhere.Surfaces.Count(copy => ValueOf(across, copy) is >= 0.3 and <= 0.5);
+        int keptBetween = values.Count(value => value <= 0.5);
+
+        Assert.IsTrue(keptBetween > between / 4 && keptBetween < between * 3 / 4,
+            $"a soft edge kept {keptBetween} of the {between} places between its ends");
+
+        Field reversed = Patterned(field =>
+        {
+            field.Patches = across;
+            field.PatchesFrom = 0.5;
+            field.PatchesTo = 0.3;
+        });
+        HashSet<(long, long)> one = PlacesOf(soft);
+        HashSet<(long, long)> other = PlacesOf(reversed);
+
+        Assert.IsFalse(one.Overlaps(other), "an edge turned about kept a place the other kept too");
+        Assert.IsTrue(PlacesOf(everywhere).SetEquals(one.Union(other)), "between them the two edges left places empty");
+    }
+
+    /// <summary>
+    /// A pattern picks the first thing where it is lowest and the last where it is highest, each as large
+    /// a share of the places as its weight -- however the pattern's own values happen to fall -- and the
+    /// groves mingle only near where they meet.
+    /// </summary>
+    [TestMethod]
+    public void TestAPatternPicksEachThingWhereItRanksAndAsMuchAsItWeighs()
+    {
+        DensityShape across = Crowded();
+        Field field = Patterned(field =>
+        {
+            field.PickedBy = across;
+            field.Choices.Add(new FieldChoice(_ => new Sphere(), 1));
+            field.Choices.Add(new FieldChoice(_ => new Cube(), 1));
+            field.Choices.Add(new FieldChoice(_ => new Cylinder(), 2));
+        });
+        List<(double Rank, Type Kind)> ranked = field.Surfaces
+            .Select(copy => (Value: ValueOf(across, copy), Kind: ((Instance) copy).Prototype.GetType()))
+            .OrderBy(pair => pair.Value)
+            .Select((pair, index) => ((index + 0.5) / field.Surfaces.Count, pair.Kind))
+            .ToList();
+
+        Assert.AreEqual(0.25, ranked.Count(pair => pair.Kind == typeof(Sphere)) / (double) ranked.Count, 0.03, "the first thing's share");
+        Assert.AreEqual(0.25, ranked.Count(pair => pair.Kind == typeof(Cube)) / (double) ranked.Count, 0.03, "the second thing's share");
+        Assert.AreEqual(0.50, ranked.Count(pair => pair.Kind == typeof(Cylinder)) / (double) ranked.Count, 0.03, "the third thing's share");
+
+        Assert.IsTrue(ranked.Where(pair => pair.Rank < 0.15).All(pair => pair.Kind == typeof(Sphere)),
+            "something else stood where the pattern is lowest");
+        Assert.IsTrue(ranked.Where(pair => pair.Rank > 0.6).All(pair => pair.Kind == typeof(Cylinder)),
+            "something else stood where the pattern is highest");
+
+        // Mingled: each crosses a little way into the other's share, rather than the two meeting in a line.
+        Assert.IsTrue(ranked.Any(pair => pair.Rank < 0.24 && pair.Kind == typeof(Cube)) &&
+                      ranked.Any(pair => pair.Rank > 0.26 && pair.Kind == typeof(Sphere)),
+            "the first two did not mingle where they meet");
+    }
+
+    /// <summary>
+    /// A pattern sets each size from the smallest where it is lowest to the largest where it is highest,
+    /// spanning the whole range asked for.
+    /// </summary>
+    [TestMethod]
+    public void TestAPatternSetsSizesFromTheSmallestToTheLargest()
+    {
+        DensityShape across = Crowded();
+        Field field = Patterned(field =>
+        {
+            field.SizedBy = across;
+            field.SmallestSize = 0.5;
+            field.LargestSize = 1.5;
+        });
+        List<(double Value, double Size)> pairs = field.Surfaces
+            .Select(copy => (ValueOf(across, copy), TurnAndSizeOf(copy.Transform).Size))
+            .ToList();
+
+        Assert.IsTrue(pairs.All(pair => pair.Size is >= 0.5 - 1e-12 and <= 1.5 + 1e-12), "a size fell outside the range");
+
+        // Evenly over the range, however the pattern's own values crowd.
+        for (int fifth = 0; fifth < 5; fifth++)
+        {
+            int count = pairs.Count(pair => Math.Min(4, (int) ((pair.Size - 0.5) * 5)) == fifth);
+
+            Assert.AreEqual(0.2, count / (double) pairs.Count, 0.05, $"fifth {fifth} of the sizes held {count} of {pairs.Count}");
+        }
+
+        // And in the pattern's own order: ranked by value and by size, the two orders nearly agree.
+        double[] byValue = RanksIn(pairs.Select(pair => pair.Value).ToList());
+        double[] bySize = RanksIn(pairs.Select(pair => pair.Size).ToList());
+        double agreement = 1 - 6 * byValue.Zip(bySize).Sum(pair => (pair.First - pair.Second) * (pair.First - pair.Second)) /
+                           (pairs.Count * ((double) pairs.Count * pairs.Count - 1));
+
+        Assert.IsTrue(agreement > 0.95, $"the sizes did not follow the pattern: {agreement}");
+    }
+
+    private static double[] RanksIn(List<double> values)
+    {
+        double[] ranks = new double[values.Count];
+        int position = 0;
+
+        foreach (int index in Enumerable.Range(0, values.Count).OrderBy(index => values[index]))
+            ranks[index] = position++;
+
+        return ranks;
+    }
+
+    /// <summary>
+    /// A field takes its things in turn or picks them by a pattern, and a scene may say all of it.
+    /// </summary>
+    [TestMethod]
+    public void TestASceneMayPatternAField()
+    {
+        Exception thrown = Assert.ThrowsExactly<Exception>(() => Patterned(field =>
+        {
+            field.Cycle = true;
+            field.PickedBy = Across();
+            field.Choices.Add(new FieldChoice(_ => new Sphere()));
+            field.Choices.Add(new FieldChoice(_ => new Cube()));
+        }));
+
+        StringAssert.Contains(thrown.Message, "in turn or picks them by a pattern");
+
+        int lit = Lit($$"""
+                        {{Ball}}
+                        field {
+                            of Ball(0), Ball(2)  picked by bozo { scale 0.5 }
+                            {{Outline}}  spacing 0.1  jitter 0.8
+                            patches bozo { scale 0.4 } from 0.3 to 0.4
+                            sized 0.5 to 1.5 by bozo { scale 0.3 }
+                        }
+                        """);
+        int softly = Lit($$"""
+                           {{Ball}}
+                           field { of Ball(0)  {{Outline}}  spacing 0.1  patches bozo { scale 0.4 } }
+                           """);
+
+        Assert.IsTrue(lit > 0 && softly > 0, "a patterned field showed nothing");
+
+        string unfinished = ErrorFrom($$"""
+                                        {{Ball}}
+                                        field { of Ball(0)  {{Outline}}  spacing 0.1  patches bozo { scale 0.4 } from 0.3 }
+                                        """);
+
+        Assert.IsNotNull(unfinished, "an edge with no end should have been refused");
+        StringAssert.Contains(unfinished, "to");
     }
 
     /// <summary>

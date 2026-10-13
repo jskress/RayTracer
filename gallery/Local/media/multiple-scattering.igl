@@ -56,7 +56,7 @@ context {
 camera {
     location [0, 0.4, -6.5]
     look at [0, 0.1, 0]
-    field of view 44
+    field of view 44.04
 }
 
 background [0.03, 0.045, 0.08]

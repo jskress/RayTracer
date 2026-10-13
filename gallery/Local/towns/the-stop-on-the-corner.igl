@@ -44,7 +44,7 @@ import 'daylight'       { WinterSunFrom, WinterSunLight }
 camera {
     location [8.9, 2.05, 2.35]
     look at [-2.6, 1.18, 6.65]
-    field of view 50
+    field of view 50.11
 }
 
 // A low winter sun raking across the pavement.  The stock `WinterSun` puts its sun at azimuth 160,

@@ -8,7 +8,7 @@ include '../default-context.igl'
 camera {
     location [0, 2.5, -5]
     look at [0, 1, 0]
-    field of view 60
+    field of view 62.16
 }
 
 point light {

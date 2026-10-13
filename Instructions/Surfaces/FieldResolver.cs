@@ -69,6 +69,32 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
     public Resolver<double> LargestSizeResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the pattern saying where the field stands anything.
+    /// </summary>
+    public DensityShapeResolver PatchesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the patterned value below which a place stands nothing.
+    /// </summary>
+    public Resolver<double> PatchesFromResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the patterned value above which a place always stands
+    /// something.
+    /// </summary>
+    public Resolver<double> PatchesToResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the pattern that picks which thing stands at a place.
+    /// </summary>
+    public DensityShapeResolver PickedByResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the pattern that sets the size of a copy.
+    /// </summary>
+    public DensityShapeResolver SizedByResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for the name of the surface the copies are dropped onto.
     /// </summary>
     public Resolver<string> OverResolver { get; set; }
@@ -140,6 +166,11 @@ public class FieldResolver : SurfaceResolver<Field>, IValidatable
         TurnResolver.AssignTo(value, target => target.Turn, context, variables);
         SmallestSizeResolver.AssignTo(value, target => target.SmallestSize, context, variables);
         LargestSizeResolver.AssignTo(value, target => target.LargestSize, context, variables);
+        PatchesResolver.AssignTo(value, target => target.Patches, context, variables);
+        PatchesFromResolver.AssignTo(value, target => target.PatchesFrom, context, variables);
+        PatchesToResolver.AssignTo(value, target => target.PatchesTo, context, variables);
+        PickedByResolver.AssignTo(value, target => target.PickedBy, context, variables);
+        SizedByResolver.AssignTo(value, target => target.SizedBy, context, variables);
         OverResolver.AssignTo(value, target => target.Over, context, variables);
         TiltedResolver.AssignTo(value, target => target.Tilted, context, variables);
         SteepestResolver.AssignTo(value, target => target.Steepest, context, variables);

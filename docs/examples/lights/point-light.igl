@@ -3,7 +3,7 @@ context { angles are degrees  no gamma }
 camera {
     location [0, 3.2, -7]
     look at [0, 1, 0]
-    field of view 45
+    field of view 46.94
 }
 
 include 'stage.igl'

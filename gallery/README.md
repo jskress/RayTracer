@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 117 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 118 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -1168,7 +1168,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Countryside</b> &mdash; 10 images &middot; trees, ground, weather and fire</summary>
+<summary><b>Countryside</b> &mdash; 11 images &middot; trees, ground, weather and fire</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1201,6 +1201,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/countryside/a-wooded-hillside.igl">A Wooded Hillside</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/countryside/a-wood-in-patches.png">
+      <img alt="A Wood in Patches" height="120" src="Local/countryside/a-wood-in-patches.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/countryside/a-wood-in-patches.igl">A Wood in Patches</a>
     </td>
   </tr>
   <tr style="border: none;">

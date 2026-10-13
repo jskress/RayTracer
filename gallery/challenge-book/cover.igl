@@ -16,7 +16,7 @@ camera {
     location [-6, 6, -10]
     look at [6, 0, 6]
     up [-0.45, 1, 0]
-    field of view 45
+    field of view 51.06
 }
 
 point light {

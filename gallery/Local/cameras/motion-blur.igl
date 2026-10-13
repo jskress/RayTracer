@@ -35,7 +35,7 @@ background [0.02, 0.02, 0.03]
 camera {
     location [-0.15, 2.9, -8.6]
     look at [-0.15, 0.55, 0.4]
-    field of view 50
+    field of view 51.46
     shutter 1
     blur samples 32
 }

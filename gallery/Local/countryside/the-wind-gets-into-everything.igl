@@ -26,7 +26,7 @@ context { angles are degrees }
 import 'cloth' { Flag, Banner, Sheet, SheetRise, Canvas, Cotton, Silk }
 import 'daylight' { ClearAfternoonFrom, ClearAfternoonLight }
 
-camera { location [3.7, 2.5, -4.7]  look at [0.0, 1.45, 0.15]  field of view 48 }
+camera { location [3.7, 2.5, -4.7]  look at [0.0, 1.45, 0.15]  field of view 48.62 }
 background ClearAfternoonFrom(318)
 light ClearAfternoonLight
 

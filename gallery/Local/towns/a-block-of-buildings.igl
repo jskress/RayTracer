@@ -61,7 +61,7 @@ context {
 camera {
     location [15, 8.5, 27]
     look at [0, 4.2, 0]
-    field of view 50
+    field of view 50.42
 }
 
 background GoldenHour

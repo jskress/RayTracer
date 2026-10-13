@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'physical', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'physical', 'picked', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -1222,6 +1222,14 @@ public partial class LanguageParser
             { rows > _expression > apart ?? 'Expecting "apart" to follow the number of rows here.' > _expression } |
             { offset > _expression } |
             {
+                patches > patternClause >
+                openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            } |
+            {
+                picked > by ?? 'Expecting "by" to follow "picked" here.' > patternClause >
+                openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            } |
+            {
                 of > [ _identifier | _keyword ]
                     ?? 'Expecting a surface name, or a call of a primitive, to follow "of" here.' >
                 leftParen{?}
@@ -1240,6 +1248,13 @@ public partial class LanguageParser
         // What may follow one of the things a field is filled with: how often it is picked, and then,
         // after a comma, the next of them.
         fieldWeightClause: { weight > _expression }
+        // What may follow a field's patches: where their edge begins and ends.  And what may follow its
+        // sizes: a pattern that sets them.
+        fieldEdgeClause: { from > _expression > to ?? 'Expecting "to" to follow where the edge begins here.' > _expression }
+        fieldSizedByClause:
+        {
+            by > patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
+        }
         fieldChoiceClause:
         {
             comma > [ _identifier | _keyword ]

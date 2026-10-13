@@ -45,7 +45,7 @@ context {
 camera {
     location [0, 2.0, -18]
     look at [-1.2, 0.98, 42]
-    field of view 44
+    field of view 44.01
 }
 
 // Low and to the side, so the crests catch the light on one face and fall away on the other.

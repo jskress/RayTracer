@@ -22,7 +22,7 @@ context { angles are degrees  no gamma }
 camera {
     location [0, 3.1, -11.2]
     look at [0, 1.8, 0]
-    field of view 44
+    field of view 44.27
 }
 
 // A low sun, so the ground has some modelling in it to be gathered.

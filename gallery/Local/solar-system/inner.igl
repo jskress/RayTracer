@@ -9,6 +9,7 @@ title = 'The Inner Planets'
 distance = -5
 height = 1
 
+fieldOfView = 60.25
 include 'ss-setup.igl'
 
 sphere {

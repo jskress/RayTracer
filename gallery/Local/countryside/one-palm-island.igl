@@ -21,7 +21,7 @@ import 'rocks'       { Cobble }
 camera {
     location [17, 4.6, -27]
     look at [0, 5.4, 0]
-    field of view 42
+    field of view 42.01
 }
 
 // A morning sun, which puts the light toward +X -- the side the camera stands on, so the trunk and

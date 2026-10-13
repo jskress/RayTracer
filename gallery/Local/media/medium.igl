@@ -41,7 +41,7 @@ context {
 camera {
     location [0, 2.4, -15]
     look at [0, 0.7, 22]
-    field of view 50
+    field of view 50.05
 }
 
 // Lamps rather than a distant light, deliberately.  A light is charged for its own trip through the

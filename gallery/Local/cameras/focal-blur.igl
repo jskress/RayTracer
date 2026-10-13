@@ -32,7 +32,7 @@ background [0.02, 0.02, 0.03]
 camera {
     location [1.6, 3.4, -7.5]
     look at [-0.97, 0.09, 1.5]
-    field of view 39.6
+    field of view 41.80
     aperture 0.25
     focal point [-0.2, 0.9, 1.5]
     blur samples 32

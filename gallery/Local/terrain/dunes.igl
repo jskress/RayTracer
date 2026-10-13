@@ -65,7 +65,7 @@ context {
     }
 }
 
-camera { location [-165, 170, -250]  look at [55, 0, 95]  field of view 46 }
+camera { location [-165, 170, -250]  look at [55, 0, 95]  field of view 49.37 }
 
 background physical sky { sun elevation 20  sun azimuth 50  turbidity 3.2  brightness 3.2 }
 sky light { samples 28 }

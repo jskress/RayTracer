@@ -31,7 +31,7 @@ import 'furniture' { DiningTable, FurnitureWalnut }
 camera {
     location [3.9, 6.6, -8.2]
     look at [0.15, -0.5, 0.15]
-    field of view 42
+    field of view 51.82
 }
 
 point light { location [-6, 13, -7] }

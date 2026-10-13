@@ -35,7 +35,7 @@ camera {
 // the swells throw the sky back at you and the same water reads twice as bright.
     location [30, 10, -44]
     look at [-2, 2.5, 20]
-    field of view 54
+    field of view 54.25
 }
 
 background ClearMorning

@@ -78,6 +78,44 @@ public class Field : Group
     public double Offset { get; set; }
 
     /// <summary>
+    /// This property holds a pattern saying where the field stands anything: its value at a place, read on
+    /// the field's own plane, is the chance something stands there, between the edge's two ends -- see
+    /// <see cref="PatchesTo"/>.  Unsaid, every place stands something.
+    /// </summary>
+    public DensityShape Patches { get; set; }
+
+    /// <summary>
+    /// This property holds the patterned value below which a place stands nothing.
+    /// </summary>
+    public double PatchesFrom { get; set; }
+
+    /// <summary>
+    /// This property holds the patterned value at and above which a place always stands something; between
+    /// the edge's two ends the chance rises evenly.  Given the larger first, the edge is turned about and a
+    /// place stands something where the value is low -- so the same pattern with its edge reversed fills
+    /// exactly the clearings the first one cut.
+    /// </summary>
+    public double PatchesTo { get; set; } = 1;
+
+    /// <summary>
+    /// This property holds a pattern that picks which of the field's things stands at a place: where the
+    /// pattern is lowest the first, where it is highest the last, each as large a share of the places as
+    /// its weight says.  Unsaid, they are picked at random.
+    /// </summary>
+    public DensityShape PickedBy { get; set; }
+
+    /// <summary>
+    /// This property holds a pattern that sets the size of the copy at a place: the smallest where the
+    /// pattern is lowest, the largest where it is highest.  Unsaid, sizes are random.
+    /// </summary>
+    public DensityShape SizedBy { get; set; }
+
+    // How widely a pattern's pick or size is blurred by chance, as a share of the places: enough that
+    // neighbouring groves mingle along a fringe instead of meeting in a line, and neighbours under a
+    // pattern that sets sizes are not all the same size.
+    private const double Mingling = 0.15;
+
+    /// <summary>
     /// This property holds how to make the thing the field is filled with.  It is a factory rather
     /// than a surface so that a field asked for its copies one by one can have a fresh one each
     /// time, the way an L-system makes its leaves.
@@ -218,6 +256,9 @@ public class Field : Group
         if (SmallestSize <= 0 || LargestSize < SmallestSize)
             throw new Exception("A field's sizes must be greater than nought, the smaller first.");
 
+        if (Cycle && PickedBy is not null)
+            throw new Exception("A field takes its things in turn or picks them by a pattern, not both.");
+
         Surfaces.Clear();
 
         if (Over is null)
@@ -276,8 +317,18 @@ public class Field : Group
         double totalWeight = choices.Sum(choice => choice.Weight);
         Dropping dropping = ground is null ? null : new Dropping(this, ground);
 
-        foreach (Place place in Along is null ? GridPlaces(seed) : PathPlaces(seed))
+        // A place the patches keep empty is left before anything else is asked of it, and the places a
+        // pattern picks or sizes by are ranked among those that are left.
+        List<Place> places = (Along is null ? GridPlaces(seed) : PathPlaces(seed))
+            .Where(place => Patches is null || KeptByThePatches(place, seed))
+            .ToList();
+        double[] pickRanks = PickedBy is null || choices.Count == 1 ? null : RanksOf(places, PickedBy);
+        double[] sizeRanks = SizedBy is null ? null : RanksOf(places, SizedBy);
+
+        for (int index = 0; index < places.Count; index++)
         {
+            Place place = sizeRanks is null ? places[index] : places[index] with { SizeRank = sizeRanks[index] };
+
             // Dropped before anything is made, so that a place standing nothing costs only the drop:
             // most of a wood filling a hill's whole square falls in the lake or above the tree line.
             Matrix landing = null;
@@ -287,7 +338,9 @@ public class Field : Group
 
             int pick = choices.Count == 1 ? 0
                 : turns is not null ? turns[(place.Row + place.Column) % turns.Length]
-                : Picked(choices, totalWeight * DrawFor(seed, place.Row, place.Column, PickDraw));
+                : pickRanks is not null
+                    ? Picked(choices, totalWeight * Mingled(pickRanks[index], DrawFor(seed, place.Row, place.Column, PickDraw)))
+                    : Picked(choices, totalWeight * DrawFor(seed, place.Row, place.Column, PickDraw));
             Surface copy;
 
             if (shared[pick] is not null)
@@ -310,10 +363,73 @@ public class Field : Group
 
     /// <summary>
     /// This record holds one place a copy may stand: where, which row and column of the field it is,
-    /// for the draws that decide what stands there, and which way the path runs there, in radians about
-    /// the up axis, for a field that follows one.
+    /// for the draws that decide what stands there, which way the path runs there, in radians about the
+    /// up axis, for a field that follows one, and where it ranks among the field's places by the pattern
+    /// that sets sizes, for a field that has one.
     /// </summary>
-    private readonly record struct Place(double X, double Z, int Row, int Column, double? Facing = null);
+    private readonly record struct Place(
+        double X, double Z, int Row, int Column, double? Facing = null, double? SizeRank = null);
+
+    /// <summary>
+    /// This method reports whether the patches keep a place.
+    /// <para>
+    /// **An edge turned about keeps exactly the places the edge the right way round leaves**, not merely
+    /// as many: it keeps a place where the draw is at or above the chance the other would have given,
+    /// rather than below its own.  So a meadow given the same pattern as a wood, with its edge reversed,
+    /// fills the wood's clearings place for place, wherever the two share a grid.
+    /// </para>
+    /// </summary>
+    private bool KeptByThePatches(Place place, int seed)
+    {
+        double draw = DrawFor(seed, place.Row, place.Column, PatchDraw);
+
+        return PatchesFrom > PatchesTo ? 1 - draw <= ChanceAt(place) : draw < ChanceAt(place);
+    }
+
+    /// <summary>
+    /// This method returns the chance something stands at a place, by the patches.
+    /// </summary>
+    private double ChanceAt(Place place)
+    {
+        double value = Patches.ValueAt(new Point(place.X, 0, place.Z));
+
+        // An edge with no width is a line: everything on one side of it, nothing on the other.
+        if (PatchesFrom == PatchesTo)
+            return value >= PatchesFrom ? 1 : 0;
+
+        return Math.Clamp((value - PatchesFrom) / (PatchesTo - PatchesFrom), 0, 1);
+    }
+
+    /// <summary>
+    /// This method returns where each place ranks among them all by a pattern's value there, from nought
+    /// for the lowest to one for the highest.
+    /// <para>
+    /// **A rank rather than the value itself**, because a noise pattern's values crowd toward its middle:
+    /// banded by their raw value, three kinds of tree would be one kind with a fringe of the other two, and
+    /// sizes would seldom reach either end of the range asked for.  Ranked, the weights are the shares the
+    /// places really fall into and the sizes span the range, while the groves keep the pattern's own
+    /// shapes -- a rank only orders what the pattern already says.
+    /// </para>
+    /// </summary>
+    private static double[] RanksOf(List<Place> places, DensityShape pattern)
+    {
+        double[] values = places.Select(place => pattern.ValueAt(new Point(place.X, 0, place.Z))).ToArray();
+        int[] order = Enumerable.Range(0, places.Count).OrderBy(index => values[index]).ToArray();
+        double[] ranks = new double[places.Count];
+
+        for (int position = 0; position < order.Length; position++)
+            ranks[order[position]] = (position + 0.5) / order.Length;
+
+        return ranks;
+    }
+
+    /// <summary>
+    /// This method returns a place's rank, blurred a little by a draw of its own.
+    /// </summary>
+    private static double Mingled(double rank, double draw)
+    {
+        return Math.Clamp(rank + (draw - 0.5) * Mingling, 0, 1);
+    }
 
     /// <summary>
     /// This method returns the places of the grid that fall inside the outline.
@@ -497,6 +613,7 @@ public class Field : Group
     private const int SizeDraw = 3;
     private const int AlongDraw = 4;
     private const int AcrossDraw = 5;
+    private const int PatchDraw = 6;
 
     /// <summary>
     /// This method returns the transform that stands a copy at a place: turned and sized as the field
@@ -548,7 +665,10 @@ public class Field : Group
     /// </summary>
     private double SizeAt(Place place, int seed)
     {
-        return SmallestSize + (LargestSize - SmallestSize) * DrawFor(seed, place.Row, place.Column, SizeDraw);
+        double draw = DrawFor(seed, place.Row, place.Column, SizeDraw);
+        double share = place.SizeRank is { } rank ? Mingled(rank, draw) : draw;
+
+        return SmallestSize + (LargestSize - SmallestSize) * share;
     }
 
     /// <summary>

@@ -72,7 +72,7 @@ function railAt(step, above = 0.92) -> number {
 camera {
     location [8.0, 3.2, -11.0]
     look at [0, 3.6, 0]
-    field of view 46
+    field of view 46.02
 }
 
 background physical sky {

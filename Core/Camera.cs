@@ -230,12 +230,31 @@ public class Camera : NamedThing
 
     /// <summary>
     /// This method generates the view transform for the camera.
+    /// <para>
+    /// **The sideways axis is made of unit length, which the book's transform does not do.**  Crossing
+    /// the way the camera looks with "up" gives a vector as long as the sine of the angle between them --
+    /// one only for a camera looking level -- and left as it came, it shrank the picture's sideways and
+    /// upward axes alike by the cosine of the camera's tilt.  Every tilted camera saw wider than its field
+    /// of view said: 1.5% at ten degrees down, 41% at forty-five, and looking straight down, everything at
+    /// a point.
+    /// </para>
     /// </summary>
     /// <returns>The view transform the camera represents.</returns>
     private Matrix GetTransform()
     {
         Vector forward = (LookAt - Location).Unit;
         Vector left = forward.Cross(Up.Unit);
+
+        // Looking straight along "up" leaves no way to say which way is sideways.
+        if (left.Magnitude < 1e-12)
+        {
+            throw new Exception(
+                "A camera cannot look straight along its up direction; give it an \"up\" that is not " +
+                "the way it looks.");
+        }
+
+        left = left.Unit;
+
         Vector trueUp = left.Cross(forward);
 
         return new Matrix(

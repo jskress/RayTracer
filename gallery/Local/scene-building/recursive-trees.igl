@@ -149,7 +149,7 @@ primitive limb(depth, length, thickness, twist, id) -> group {
 camera {
     location [6.6, 2.7, -13.0]
     look at [-0.4, 3.6, 0.4]
-    field of view 50
+    field of view 50.08
 }
 
 background physical sky {

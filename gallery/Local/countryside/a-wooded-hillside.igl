@@ -28,7 +28,7 @@ import 'daylight'    { SoftAfternoonFrom, SoftAfternoonLight }
 camera {
     location [-15, 9.6, -142]
     look at [30, 15, 30]
-    field of view 55
+    field of view 55.02
 }
 
 // From the left and a little behind, so the light rakes across the face of the hill and every tree on

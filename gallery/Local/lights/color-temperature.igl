@@ -27,7 +27,7 @@ context {
 camera {
     location [0, 9, -14]
     look at [0, 0.2, -0.3]
-    field of view 50
+    field of view 57.99
 }
 
 // A dark stage, so that each pool of light is the only light where it falls.

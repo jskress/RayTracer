@@ -7,7 +7,7 @@ earth = '../../../gallery/Local/solar-system/images/earth-satellite.png'
 camera {
     location [0, 1.6, -15]
     look at [0, 0, 0]
-    field of view 42
+    field of view 42.22
 }
 
 point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }

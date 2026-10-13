@@ -81,7 +81,7 @@ import 'furniture' { Desk }
 camera {
     location [-1.6, 2.1, -6.4]
     look at [0.2, 0.8, 0.1]
-    field of view 46
+    field of view 46.76
 }
 
 background Black

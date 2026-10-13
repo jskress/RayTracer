@@ -40,8 +40,8 @@ camera {
 ```
 
 There is one arrangement to avoid: an `up` that points along the direction of view.  With
-nothing left over after the parallel part is removed, there is no "up" to be had and the view
-comes out degenerate.  Looking straight down, give an `up` of `[0, 0, 1]` rather than
+nothing left over after the parallel part is removed, there is no "up" to be had, and the camera
+says so rather than taking a picture.  Looking straight down, give an `up` of `[0, 0, 1]` rather than
 `[0, 1, 0]` — the light tests in this repository do exactly that.  The tracer defines some
 useful vectors of `Up`, `Down`, `Left`, `Right`, `In` and `Out` that give you the usual
 things you might want to choose from.

@@ -25,7 +25,7 @@ camera {
     location [0, 1150, 240]
     look at [0, 0, -10]
     up [0, 0, -1]
-    field of view 56
+    field of view 57.10
 }
 
 // The key light throws the icons' relief across the floor; the fill keeps the walls inside the

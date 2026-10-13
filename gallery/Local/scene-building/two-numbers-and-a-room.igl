@@ -63,7 +63,7 @@ context {
 camera {
     location [1.45, 1.24, -1.62]
     look at [0.10, 0.86, 0.08]
-    field of view 46
+    field of view 46.63
 }
 
 // The lamp is the light, so it stands where the lamp does and thins with distance the way a lamp

@@ -47,7 +47,7 @@ context {
 camera {
     location [7.5, 5.2, -17]
     look at [-0.5, 4.6, 1]
-    field of view 50
+    field of view 50.02
 }
 
 // A low sun almost behind them, so the limbs are drawn as edges rather than filled in -- which is

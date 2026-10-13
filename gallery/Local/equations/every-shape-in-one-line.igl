@@ -22,7 +22,7 @@
 // three pixels in a thousand, all of them on a silhouette.
 context { angles are degrees  no gamma }
 
-camera { location [0, 3.6, -8.5]  look at [0, 0, 0]  field of view 44 }
+camera { location [0, 3.6, -8.5]  look at [0, 0, 0]  field of view 47.38 }
 
 point light { location [-7, 9, -8] }
 point light { location [6, 4, -5]  color [0.3, 0.3, 0.36] }
