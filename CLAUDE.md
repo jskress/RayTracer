@@ -180,7 +180,14 @@ and a shell at the surroundings' index, are untouched.  A container's interior (
 charged where a ray leaves it (end of `GetHitColor`) and, for anything met inside it, over the run to that
 (`Scene.ThroughTheInsideOf` from `Intersection.ContainerBefore`); a surface inside a medium is lit through it
 up to the container's edge (`SurvivingTheMedium` in `ReachingFrom`) -- so a log inside a flame keeps the glow
-in front of it.
+in front of it.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
+thinner than light, a soap bubble's or oil's: Airy's sum over both faces, s and p averaged, complex cosines past
+the critical angle, worked out over the 32 bands in every render (`FilmShares<TS>`: Mirrored, Passed, Highlight).
+It takes the place of `reflective`/`fresnel` (`GetReflectionColor` returns a film's mirror image whole; `GetHitColor`
+charges Mirrored to it and Passed to what goes through), Passed scales ambient and diffuse, the highlight is spared
+from transparency as rough glass's is and tinted by R over its thickness-average, a light that `CanBeSeen` gives a
+film no highlight, and a shadow ray charges each face as met from the surroundings (it is not bent, so measuring
+from inside would fake total internal reflection).  The substrate is the material's interior index.
 
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via

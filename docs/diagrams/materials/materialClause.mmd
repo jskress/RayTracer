@@ -1,10 +1,15 @@
 railroad-ebnf-beta
 title "A material"
 
-material = "material" "{" { pigment | normal | finish | metallic | interior | decal } "}"
+material = "material" "{" { pigment | normal | finish | metallic | interior | decal | film } "}"
          | "material" "inherited" [ "{" { decal } "}" ] ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
          | "transparency" | "brilliance" | "grain" ) number ;
 
 metallic = "metallic" [ number ] ;
+
+film = "film" "{" { "thickness" number [ "to" number "by" pattern ]
+                  | ( "ior" | "index" "of" "refraction" ) number } "}" ;
+
+pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] { transform } "}" ;

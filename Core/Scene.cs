@@ -912,8 +912,12 @@ public partial class Scene : NamedThing, IDisposable
 
         // Rough glass shows only what it stops of its own color, as any glass does, but keeps its
         // highlight whole: that is what its facets mirror, and letting light through takes none of it
-        // away.  So its own share is cut here, where the highlight is spared, rather than below.
-        if (roughGlass)
+        // away.  So its own share is cut here, where the highlight is spared, rather than below.  A
+        // film's highlight is what it mirrors too, and is spared in the same way: without it a soap
+        // bubble, which stops nothing, would show no highlight at all.
+        bool sparesHighlight = roughGlass || material.Film is not null;
+
+        if (sparesHighlight)
             ownShare *= 1 - transparency;
 
         // How many directions this point's own reflection will look in, which a glowing volume's
@@ -929,16 +933,23 @@ public partial class Scene : NamedThing, IDisposable
             ? _spreading || TS.Count == 1 || (TS.IsSpectral && intersection.Disperses) ? 1 : material.ReflectionSamples
             : 0;
 
+        // A film shares the light out color by color, in place of Fresnel's one share for every color.
+        FilmShares<TS>? film = material.Film?.SharesAt<TS>(intersection);
+
         foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough);
+            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough, film);
 
         TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
         TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
         TS refColor;
 
+        // A film mirrors its share of each color and lets the rest on, through a surface that lets
+        // light through; what reaches an opaque surface's own color has been charged already.
+        if (film is { } shares)
+            refColor = reflectedColor * shares.Mirrored + refractedColor * shares.Passed;
         // Smooth glass shares its light between what it mirrors and what it lets through by one
         // Fresnel share for the whole surface.  Rough glass has already shared it facet by facet.
-        if (material.Reflective > 0 && transmits && !material.IsRough)
+        else if (material.Reflective > 0 && transmits && !material.IsRough)
         {
             double reflectance = intersection.Reflectance;
 
@@ -951,7 +962,7 @@ public partial class Scene : NamedThing, IDisposable
         // A surface shows only as much of itself as it stops.  Perfectly clear glass therefore
         // contributes nothing of its own and is seen entirely through, which is what makes a
         // transmitting pigment a window rather than merely a dimmer wall.
-        TS color = roughGlass ? surfaceColor + refColor : surfaceColor * (1 - transparency) + refColor;
+        TS color = sparesHighlight ? surfaceColor + refColor : surfaceColor * (1 - transparency) + refColor;
 
         // If this hit is on the far side of a surface, the ray reached it by travelling through
         // whatever the surface is made of, and a substance that fades light charges for the trip.
@@ -990,10 +1001,11 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="intersection">The surface point being lit.</param>
     /// <param name="ownShare">How much of the light reaching the point the surface keeps to show as
     /// its own color rather than mirroring; see <see cref="Material.Fresnel"/>.</param>
+    /// <param name="film">How the surface's film shares out the light, for a surface that has one.</param>
     /// <returns>The color the light lends the point.</returns>
     private TS Illuminate<TS>(
         Light light, Intersection intersection, double ownShare, int looks, (double, double)? glass,
-        int looksThrough)
+        int looksThrough, FilmShares<TS>? film)
         where TS : struct, ISpectrum<TS>
     {
         int count = light.SampleCount;
@@ -1007,7 +1019,7 @@ public partial class Scene : NamedThing, IDisposable
                 only, ReachingFrom<TS>(intersection, only, glass),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass,
-                intersection.Material);
+                intersection.Material, film);
         }
 
         TS sum = TS.Black;
@@ -1022,7 +1034,7 @@ public partial class Scene : NamedThing, IDisposable
                 sample, ReachingFrom<TS>(intersection, sample, glass),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass,
-                intersection.Material);
+                intersection.Material, film);
         }
 
         return sum * (1.0 / count);
@@ -1394,7 +1406,8 @@ public partial class Scene : NamedThing, IDisposable
             // crossed, so that patterned glass shadows as a pattern, and once sampled it serves for
             // both how much light gets past and what color it comes out.
             bool needsPigment = interior.Filter > 0 || material.PigmentMayTransmit;
-            Point where = needsPigment || interior.Refracts
+            ThinFilm film = material.Film;
+            Point where = needsPigment || interior.Refracts || film is not null
                 ? ray.At(intersection.Distance)
                 : null;
 
@@ -1433,13 +1446,30 @@ public partial class Scene : NamedThing, IDisposable
                 // ring, which is close to what one really does -- what is still missing is the
                 // bright spot in the middle, where refraction gathers the light it bent aside.
                 // That is a caustic, and finding it means tracing forward from the light.
-                if (interior.Refracts)
+                if (interior.Refracts && film is null)
                 {
                     Vector normal = intersection.Surface.NormalAt(where, intersection);
 
                     reaching *= 1 - interior.GetReflectanceAt(
                         ray.Direction.Dot(normal), Environment.IndexOfRefraction);
                 }
+            }
+
+            // A film turns its share of each color away -- so a bubble's shadow is faintly colored, the
+            // complement of what it mirrors.  The light is taken to arrive from the surroundings at
+            // either face, as for bare glass above: a shadow ray is not bent where it goes in, so on its
+            // way out it would meet the far face at a slant the bent light never does, and find it
+            // mirroring everything.
+            if (film is not null)
+            {
+                Vector normal = intersection.Surface.NormalAt(where, intersection);
+                double thickness = film.ThicknessAt(film.Pattern is null
+                    ? null
+                    : intersection.Surface.WorldToSurface(where, 0, intersection.Portals));
+
+                reaching *= film.SharesAt<TS>(
+                    thickness, Math.Abs(ray.Direction.Unit.Dot(normal)), Environment.IndexOfRefraction,
+                    interior.IndexOfRefraction).Passed;
             }
         }
 
@@ -1517,6 +1547,10 @@ public partial class Scene : NamedThing, IDisposable
     /// <summary>
     /// This method is used to determine the light along the reflected ray from the given
     /// intersection, in whatever bands the render is carrying light in.
+    /// <para>
+    /// For a surface with a film, it is all the light along that ray: what share of it the film mirrors
+    /// is charged by <see cref="GetHitColor{TS}"/>, beside the share it lets through.
+    /// </para>
     /// </summary>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="intersection">The intersection to start with.</param>
@@ -1527,7 +1561,9 @@ public partial class Scene : NamedThing, IDisposable
     {
         Material material = intersection.Material;
 
-        if (remaining < 1 || material.Reflective == 0)
+        // A film mirrors something whatever its reflective says.  What it mirrors is returned whole, and
+        // the film's share of each color charged where the hit is shaded, beside what it lets through.
+        if (remaining < 1 || (material.Reflective == 0 && material.Film is null))
             return TS.Black;
 
         TS color;
@@ -1537,7 +1573,9 @@ public partial class Scene : NamedThing, IDisposable
         else
         {
             // How much is mirrored depends on the angle it is seen at, for a surface that says so.
-            double reflective = material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal));
+            double reflective = material.Film is null
+                ? material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
+                : 1;
 
             // The cone goes on widening past the mirror, so what is seen in a reflection is filtered
             // for how far the light really travelled rather than for how far it is from the glass.  A
@@ -1615,7 +1653,8 @@ public partial class Scene : NamedThing, IDisposable
     {
         Material material = intersection.Surface.Material ?? Material.Default;
 
-        if (!_spreading || _spreadRoughness <= 0 || material.IsRough)
+        // A film is never made rough: what it mirrors depends on its being smooth.
+        if (!_spreading || _spreadRoughness <= 0 || material.IsRough || material.Film is not null)
             return material;
 
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;

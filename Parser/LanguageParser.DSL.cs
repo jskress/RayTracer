@@ -83,7 +83,7 @@ public partial class LanguageParser
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
@@ -575,7 +575,7 @@ public partial class LanguageParser
         {
             metallic > [
                 pigment | normal | fresnel | materialValueClause | startInteriorClause |
-                startDecalClause | _expression{?}
+                startDecalClause | startFilmClause | _expression{?}
             ]
         }
         // An interior may be written out in full, named, or named and then added to, much as a
@@ -649,10 +649,22 @@ public partial class LanguageParser
         {
             melanin > _expression > { comma > _expression }{?}
         }
+        // A film on the surface, thinner than light's own wavelength -- a soap bubble's skin, oil on a
+        // puddle -- which colors what the surface mirrors.  How thick it is is in nanometers: the same
+        // everywhere, or running from one thickness to another by a pattern, which follows as a field's
+        // sizes do.
+        startFilmClause:
+        {
+            film > openBrace ?? 'Expecting an open brace to follow "film" here.'
+        }
+        filmEntryClause:
+        [
+            { thickness > _expression > { to > _expression }{?} } | materialIorClause
+        ] ?? 'Expecting a film property here.'
         materialEntryClause:
         [
             pigment | normal | fresnel | materialValueClause | materialMetallicClause |
-            materialMelaninClause | startInteriorClause | startDecalClause
+            materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

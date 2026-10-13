@@ -1,0 +1,62 @@
+// Three thin films: a soap bubble, oil on a black ball, and the coating on a glass lens.
+context { angles are degrees  no gamma }
+
+background [0.04, 0.05, 0.08]
+
+camera {
+    location [0, 2.4, -14]
+    look at [0, 0.2, 0]
+    field of view 34
+}
+
+point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -5]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material {
+        pigment checker { color [0.55, 0.55, 0.6], color [0.2, 0.2, 0.25] scale 1.6 }
+        specular 0.1
+    }
+    translate [0, -1, 0]
+}
+
+// A broad bright panel behind the camera for the films to mirror, as a photographer's softbox is: a
+// film shows its colors in what it mirrors, and mirrors only a few percent, so it needs something
+// bright to mirror.
+cube {
+    material { pigment White  ambient 8  diffuse 0  specular 0 }
+    scale [40, 20, 0.05]
+    translate [0, 8, -16]
+    no shadow
+}
+
+// A soap bubble: clear, holding nothing but air, and draining -- thick at its foot, thin at its crown.
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 1
+        transparency 1
+        film { thickness 900 to 150 by linear Y bouncing gradient { turbulence 0.8  scale 2.2  translate Y -1.1 } }
+    }
+    translate [-2.6, 0, 0]
+}
+
+// Oil on a black ball: an opaque surface, with the oil spread thicker in some places than others.
+sphere {
+    material {
+        pigment color [0.03, 0.03, 0.04]  diffuse 0.6
+        interior { ior 1.33 }
+        film { thickness 200 to 650 by bozo { scale 0.35 }  ior 1.47 }
+    }
+}
+
+// A lens: glass with a coating a quarter of a green wave thick, which mirrors less than bare glass
+// would and what it does mirror, purple.
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 1
+        transparency 1
+        interior { ior 1.5 }
+        film { thickness 100  ior 1.38 }
+    }
+    translate [2.6, 0, 0]
+}

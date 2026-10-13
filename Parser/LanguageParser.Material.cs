@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Core;
 using RayTracer.Extensions;
@@ -203,9 +204,65 @@ public partial class LanguageParser
                 resolver.DecalResolvers.Add(
                     ParseObjectResolver<DecalResolver>("decalEntryClause", HandleDecalEntryClause));
                 break;
+            case "film":
+                resolver.FilmResolver =
+                    ParseObjectResolver<ThinFilmResolver>("filmEntryClause", HandleFilmEntryClause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
         }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a film block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleFilmEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid film property here.");
+
+        ThinFilmResolver resolver = (ThinFilmResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "thickness":
+                resolver.ThicknessResolver = Thickness(clause.Term());
+                resolver.ThickestResolver = null;
+                resolver.PatternResolver = null;
+
+                // A thickness running from one to another needs a pattern to say where it is which.
+                if (clause.Expressions.Count > 1)
+                {
+                    resolver.ThickestResolver = Thickness(clause.Term(1));
+                    resolver.PatternResolver = ParseClause("fieldSizedByClause") is { } by
+                        ? ParseDensityShapeClause(by)
+                        : throw new TokenException(
+                            "Expecting \"by\" and the pattern that sets the film's thickness to follow here.")
+                        {
+                            Token = CurrentParser.PeekNextToken()
+                        };
+                }
+
+                break;
+            case "index":
+            case "ior":
+                resolver.IndexOfRefractionResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value > 0 ? null : "A film's index of refraction must be more than nought."
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown film property found: {ToCmd(clause)}.");
+        }
+
+        return;
+
+        static TermResolver<double> Thickness(Term term) => new ()
+        {
+            Term = term, Validator = value => value >= 0 ? null : "A film's thickness may not be less than nought."
+        };
     }
 
     /// <summary>
