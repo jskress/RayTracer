@@ -1,3 +1,4 @@
+using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
 
@@ -34,8 +35,10 @@ public abstract class SurfaceListEntry : ISurfaceResolver
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The scope of the list this stands in.</param>
     /// <param name="add">What to do with each surface it makes.</param>
+    /// <param name="light">What to do with each light it makes, which only a light standing in the list
+    /// does.</param>
     public abstract void AddSurfacesTo(
-        RenderContext context, Variables variables, Action<Surface> add);
+        RenderContext context, Variables variables, Action<Surface> add, Action<Light> light);
 
     /// <summary>
     /// This method walks a list of things standing in a group and adds what each makes to it, which is
@@ -52,16 +55,17 @@ public abstract class SurfaceListEntry : ISurfaceResolver
     /// <param name="variables">The scope the list was written in.</param>
     /// <param name="entries">The things standing there.</param>
     /// <param name="add">What to do with each surface they make.</param>
+    /// <param name="light">What to do with each light standing among them.</param>
     public static void AddAllTo(
         RenderContext context, Variables variables, List<ISurfaceResolver> entries,
-        Action<Surface> add)
+        Action<Surface> add, Action<Light> light)
     {
         Variables scope = new (variables);
 
         foreach (ISurfaceResolver entry in entries)
         {
             if (entry is SurfaceListEntry standing)
-                standing.AddSurfacesTo(context, scope, add);
+                standing.AddSurfacesTo(context, scope, add, light);
             else
                 add(entry.ResolveToSurface(context, scope));
         }

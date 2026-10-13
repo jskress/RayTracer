@@ -79,6 +79,95 @@ public abstract class Light : NamedThing
     }
 
     /// <summary>
+    /// This property holds the surfaces that close round this light where it stands on something -- the
+    /// bulb of the lamp it was written in -- each with the instances it stands behind, or <c>null</c> for
+    /// a light with nothing round it.  None of them shadows it: light leaves a bulb through its glass,
+    /// and a bulb drawn as a glowing ball would otherwise put the whole room in its shadow.  A shade open
+    /// at its ends is no enclosure, and shadows the light as anything else does.  See
+    /// <see cref="LightPlacer"/>.
+    /// </summary>
+    public IReadOnlySet<(Surface Surface, Portals Portals)> Housing { get; internal set; }
+
+    /// <summary>
+    /// This field holds where a light standing on something moving stands at each instant the camera
+    /// looks at, the light itself first; or <c>null</c> for a light that stays where it is.
+    /// </summary>
+    private Light[] _atTimes;
+
+    /// <summary>
+    /// This method returns the light as it stands at one instant of the shutter's opening -- itself, for
+    /// any light that does not move.  A light standing on something moving goes with it, and a ray is
+    /// lit by it where it stood at the ray's own instant, so its light and its shadows blur as the thing
+    /// carrying it does.
+    /// </summary>
+    /// <param name="timeIndex">Which instant of the shutter's opening.</param>
+    /// <returns>The light at that instant.</returns>
+    public Light At(int timeIndex)
+    {
+        Light[] atTimes = _atTimes;
+
+        return atTimes is null || timeIndex <= 0 || timeIndex >= atTimes.Length ? this : atTimes[timeIndex];
+    }
+
+    /// <summary>
+    /// This method records where a light standing on something moving stands at each instant; see
+    /// <see cref="At"/>.  The first must be this light.
+    /// </summary>
+    /// <param name="atTimes">The light at each instant.</param>
+    internal void MovesThrough(Light[] atTimes)
+    {
+        _atTimes = atTimes;
+    }
+
+    /// <summary>
+    /// This method returns a copy of the light written in some surface's own space, carried out into the
+    /// world: everything about where it stands goes through the given placing, and a distance it fades
+    /// over grows or shrinks with the scale of that space, as everything else written there does.  Only
+    /// a light that stands somewhere can be carried; a sun and a sky are infinitely far off.
+    /// </summary>
+    /// <param name="placing">What carries a point from the surface's space into the world.</param>
+    /// <returns>The light, placed in the world.</returns>
+    internal Light PlacedBy(Func<Point, Point> placing)
+    {
+        Light placed = (Light) MemberwiseClone();
+
+        placed._atTimes = null;
+        placed.Housing = null;
+        placed.PlaceBy(placing);
+
+        if (FadeDistance is { } distance)
+            placed.FadeDistance = distance * ScaleOf(placing);
+
+        return placed;
+    }
+
+    /// <summary>
+    /// This method carries everything about where a copy of this light stands through the given placing.
+    /// </summary>
+    /// <param name="placing">What carries a point from the surface's space into the world.</param>
+    protected virtual void PlaceBy(Func<Point, Point> placing)
+    {
+        throw new NotSupportedException(
+            $"A {GetType().Name} is infinitely far off, so it cannot stand on anything.");
+    }
+
+    /// <summary>
+    /// This method works out how much a placing grows or shrinks things, taken evenly across its three
+    /// directions: the cube root of how much it grows a volume.
+    /// </summary>
+    /// <param name="placing">The placing.</param>
+    /// <returns>How much it scales by.</returns>
+    private static double ScaleOf(Func<Point, Point> placing)
+    {
+        Point origin = placing(Point.Zero);
+        Vector x = placing(new Point(1, 0, 0)) - origin;
+        Vector y = placing(new Point(0, 1, 0)) - origin;
+        Vector z = placing(new Point(0, 0, 1)) - origin;
+
+        return Math.Cbrt(Math.Abs(x.Dot(y.Cross(z))));
+    }
+
+    /// <summary>
     /// This method works out which way the light lies from the given point, and how far a shadow
     /// ray must travel before it has gone past the light and stops being able to shade the point.
     /// </summary>

@@ -325,3 +325,55 @@ One thing to know if a scene has both a sky light and an unbounded
 medium extinguishes it completely, exactly as it does a `distant light`. That is the right answer to the
 question as asked — an infinitely deep fog really does hide the sky — and the remedy is the same, which
 is to give the fog a surface to fill.
+
+### Lights on Things
+
+A lamp is a thing, and its light belongs to it: set the lamp on a table and the light goes with it,
+knock it askew and the light leans.  So a light may be written inside a `group`, in the group's own
+space, and it stands, turns and grows with the group — wherever the group is put, by a transform, by
+[`atop`](transforms.md#placing-one-thing-against-another) and its kind, by a [field](advanced-surfaces.md#field), or
+inside whatever holds the group in turn.
+
+```
+primitive Lamp() -> group {
+    return group {
+        cylinder { min Y 0  max Y 1.22  scale [0.03, 1, 0.03] }
+        sphere { scale 0.08  translate Y 1.3  material { pigment White  ambient 1  diffuse 0 } }
+        conic { min Y 1  max Y 2  open  scale 0.22  rotate X 180  translate Y 1.62 }
+        point light { location [0, 1.3, 0]  fade distance 1.2 }
+    }
+}
+
+object Lamp() { translate [0.1, 0, 1.7] }
+object Lamp() { rotate Z -20  translate [-3.1, 0, 1.1] }
+```
+
+![Two lamps](images/figures/light-lamps.png)
+
+The complete example is [`docs/examples/lights/lamps.igl`](examples/lights/lamps.igl).
+
+- **Point lights, spotlights and area lights** may stand on things: a lamp's location, a spotlight's
+  `point at` and an area light's sides all go through the group's transform, so a spotlight in a lamp's
+  head aims wherever the head is turned.  A `fade distance` written in the group grows and shrinks with
+  it, as everything else written there does.  A distant light or a sky light is infinitely far off, so
+  there is nothing for standing on something to mean, and either is refused.
+- **Every lamp gets its own light.**  A primitive called twice, or a field of a hundred street lamps,
+  shares one built lamp among its places, and its light becomes a light at each of them.
+- **What closes round a light does not shadow it.**  The glowing ball drawn for a bulb would otherwise
+  put the whole room in its shadow; light leaves a real bulb through its glass.  Only the closed surfaces
+  of the light's own group that surround it are left out — a shade open at its ends still shadows the
+  light, which is what throws a lamp's light down in a pool and up in a fan, and a closed box around the
+  lamp that is not part of it still shuts its light in.
+- **A light on something moving goes with it.**  Set a group moving while the
+  [shutter](cameras.md#motion-blur) is open and its light moves through the exposure with it, so the
+  light it casts and the shadows it throws blur as the lamp does.
+- **A light may stand in a loop or a choice** inside a group, so a row of lights is one line; a loop at
+  a scene's top level may set out lights as well as surfaces.
+
+A light on a thing is an ordinary light once the scene is built, and costs what any light of its sort
+costs: each lit point looks toward every light, so a street of a hundred lit lamps is a hundred lights.
+That is still far cheaper than a lamp lit by a glowing [medium](surfaces.md#a-surface-that-gives-light), which
+looks toward every part of the glow.
+
+The [Reading Corner](../gallery/Local/lights/a-reading-corner.igl) is a room lit by two lamps carrying
+their own lights.

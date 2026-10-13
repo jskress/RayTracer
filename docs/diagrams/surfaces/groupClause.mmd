@@ -1,4 +1,6 @@
 railroad-ebnf-beta
 title "A group"
 
-group = "group" "{" { surface } "}" ;
+group = "group" "{" { surface | light } "}" ;
+
+light = ( "point" | "spot" | "area" ) "light" "{" { property } "}" ;

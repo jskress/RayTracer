@@ -1697,6 +1697,7 @@ public partial class LanguageParser
             startForClause => 'for' |
             startOverClause => 'over' |
             startIfClause => 'if' |
+            startLightClause => 'light' |
             startPlaneClause => 'plane' |
             startSphereClause => 'sphere' |
             startCubeClause => 'cube' |

@@ -1,0 +1,34 @@
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 3.2, -7]
+    look at [0, 1, 0]
+    field of view 46.94
+}
+
+include 'stage.igl'
+
+// A table lamp: a stand, a glowing bulb, and a shade open at both ends -- with a light in the bulb.  The
+// light is written in the lamp's own space, so wherever a lamp is put the light goes with it, and every
+// lamp made from this has a light of its own.  The bulb closes round the light, so it does not shadow
+// it; the shade does not, so it throws the light down in a pool and up in a fan.
+primitive Lamp() -> group {
+    return group {
+        cylinder { min Y 0  max Y 0.06  scale [0.3, 1, 0.3]  material { pigment [0.15, 0.15, 0.17] } }
+        cylinder { min Y 0  max Y 1.22  scale [0.03, 1, 0.03]  material { pigment [0.15, 0.15, 0.17] } }
+        sphere { scale 0.08  translate Y 1.3  material { pigment [1, 0.95, 0.8]  ambient 1  diffuse 0 } }
+        conic {
+            min Y 1  max Y 2  open
+            scale 0.22  rotate X 180  translate Y 1.62
+            // Linen, which a real bulb lights through.  Light is not carried through a surface to its far
+            // face here, so a little ambient stands in for the glow.
+            material { pigment [0.95, 0.9, 0.75]  ambient 0.45 }
+        }
+        point light { location [0, 1.3, 0]  color [1, 0.9, 0.72]  brightness 1.6  fade distance 1.2 }
+    }
+}
+
+object Lamp() { translate [0.1, 0, 1.7] }
+
+// The same lamp knocked askew: its light leans with it.
+object Lamp() { rotate Z -20  translate [-3.1, 0, 1.1] }

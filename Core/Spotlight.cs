@@ -45,6 +45,18 @@ public class Spotlight : PointLight
     public double Tightness { get; set; }
 
     /// <summary>
+    /// This method carries where a copy of this light stands, and where it points, through the given
+    /// placing, so a spotlight in a lamp's head aims wherever the head is turned.
+    /// </summary>
+    /// <param name="placing">What carries a point from the surface's space into the world.</param>
+    protected override void PlaceBy(Func<Point, Point> placing)
+    {
+        PointAt = placing(PointAt);
+
+        base.PlaceBy(placing);
+    }
+
+    /// <summary>
     /// This method works out how much of the light is aimed at the given point: how far off the
     /// cone's axis the point lies, turned into a strength between one on the axis and nothing at
     /// the rim.

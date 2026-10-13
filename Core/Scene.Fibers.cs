@@ -55,7 +55,7 @@ public partial class Scene
 
         for (int number = 0; number < Lights.Count; number++)
         {
-            Light light = Lights[number];
+            Light light = Lights[number].At(hit.TimeIndex);
             int count = light.SampleCount;
             (int taken, double odds) = TakenOf(count, hit, number);
             TS sum = TS.Black;
@@ -79,7 +79,7 @@ public partial class Scene
                 Vector toward = sample.Direction;
                 TS reaching = GetLightReaching<TS>(
                     frame.Center + toward * frame.Radius, toward, sample.Distance - frame.Radius, hit.TimeIndex,
-                    null, true, hit.FootprintRadius);
+                    null, true, hit.FootprintRadius, light.Housing);
 
                 if (reaching.IsBlack)
                     continue;

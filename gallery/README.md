@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 126 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 127 images</summary>
 
 <details>
 <summary><b>Shapes</b> &mdash; 12 images &middot; the solids a scene names and places</summary>
@@ -888,7 +888,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Lights</b> &mdash; 6 images &middot; where the light comes from</summary>
+<summary><b>Lights</b> &mdash; 7 images &middot; where the light comes from</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -937,6 +937,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/color-temperature.igl">Color Temperature</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/a-reading-corner.png">
+      <img alt="A Reading Corner" height="120" src="Local/lights/a-reading-corner.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/a-reading-corner.igl">A Reading Corner</a>
     </td>
   </tr>
 </table>

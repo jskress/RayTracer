@@ -481,13 +481,16 @@ public partial class Scene : NamedThing, IDisposable
     {
         TS arriving = TS.Black;
 
-        foreach (Light light in Lights)
+        foreach (Light each in Lights)
         {
+            Light light = each.At(timeIndex);
+
             // One place on the lamp per sample, walking around it as the samples go.  An area light's
             // softness is then spread across the crossing for nothing, rather than each sample paying
             // for the whole face of it.
             LightSample sample = light.SampleToward(where, index % light.SampleCount);
-            TS reaching = GetLightReaching<TS>(where, sample.Direction, sample.Distance, timeIndex);
+            TS reaching = GetLightReaching<TS>(
+                where, sample.Direction, sample.Distance, timeIndex, null, false, 0, light.Housing);
 
             if (reaching.IsBlack)
                 continue;
@@ -1008,6 +1011,9 @@ public partial class Scene : NamedThing, IDisposable
         int looksThrough, FilmShares<TS>? film)
         where TS : struct, ISpectrum<TS>
     {
+        // A light standing on something moving is where that stood at this ray's instant.
+        light = light.At(intersection.TimeIndex);
+
         int count = light.SampleCount;
 
         if (count == 1)
@@ -1016,7 +1022,7 @@ public partial class Scene : NamedThing, IDisposable
 
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                only, ReachingFrom<TS>(intersection, only, glass),
+                only, ReachingFrom<TS>(intersection, only, glass, light),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass,
                 intersection.Material, film);
@@ -1031,7 +1037,7 @@ public partial class Scene : NamedThing, IDisposable
 
             sum += light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                sample, ReachingFrom<TS>(intersection, sample, glass),
+                sample, ReachingFrom<TS>(intersection, sample, glass, light),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass,
                 intersection.Material, film);
@@ -1064,7 +1070,8 @@ public partial class Scene : NamedThing, IDisposable
     /// that way.
     /// </para>
     /// </summary>
-    private TS ReachingFrom<TS>(Intersection intersection, LightSample sample, (double, double)? glass)
+    private TS ReachingFrom<TS>(
+        Intersection intersection, LightSample sample, (double, double)? glass, Light light)
         where TS : struct, ISpectrum<TS>
     {
         if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
@@ -1072,7 +1079,7 @@ public partial class Scene : NamedThing, IDisposable
             TS reaching = GetLightReaching<TS>(
                 intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex,
                 glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null,
-                false, intersection.FootprintRadius);
+                false, intersection.FootprintRadius, light.Housing);
 
             // Something standing inside a medium is lit through it, as the medium's own stuff is: the
             // medium stands in the light's way as far as the edge of the surface it fills.
@@ -1091,7 +1098,8 @@ public partial class Scene : NamedThing, IDisposable
 
         return GetLightReaching<TS>(
             beyond, sample.Direction, sample.Distance, intersection.TimeIndex,
-            intersection.Surface.Material ?? Material.Default, false, intersection.FootprintRadius);
+            intersection.Surface.Material ?? Material.Default, false, intersection.FootprintRadius,
+            light.Housing);
     }
 
     /// <summary>
@@ -1334,10 +1342,12 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="strandsStop">Whether a strand of hair stops the light, as it does for another strand.</param>
     /// <param name="footprint">How wide, as a radius, the ray that found the point had grown there: a strand
     /// of hair finer than that in the way blocks only its share of the light.  Nought for a line.</param>
+    /// <param name="housing">What closes round the light, which does not shadow it; see
+    /// <see cref="Light.Housing"/>.</param>
     /// <returns>The fraction of each band of the light that arrives at the point.</returns>
     internal TS GetLightReaching<TS>(
         Point point, Vector direction, double distance, int timeIndex, Material glass, bool strandsStop,
-        double footprint)
+        double footprint, IReadOnlySet<(Surface, Portals)> housing = null)
         where TS : struct, ISpectrum<TS>
     {
         StrandTally tally = !_hasStrands ? null
@@ -1367,6 +1377,10 @@ public partial class Scene : NamedThing, IDisposable
             // is the instance's to say as much as its own.
             if (intersection.Distance < 0 || intersection.Distance >= distance ||
                 intersection.Surface.NoShadow || intersection.Portals.CastsNoShadow)
+                continue;
+
+            // Nor does the bulb round a light standing in a lamp: the light leaves it through its glass.
+            if (housing is not null && housing.Contains((intersection.Surface, intersection.Portals)))
                 continue;
 
             // A strand of hair sends most of the light onward.
@@ -2023,8 +2037,10 @@ public partial class Scene : NamedThing, IDisposable
         Point origin = intersection.UnderPoint;
         TS sum = TS.Black;
 
-        foreach (Light light in Lights)
+        foreach (Light each in Lights)
         {
+            Light light = each.At(intersection.TimeIndex);
+
             if (light.CanBeSeen)
                 continue;
 
@@ -2068,7 +2084,7 @@ public partial class Scene : NamedThing, IDisposable
                 LightSample sample = light.SampleToward(exit.LitPoint, which, exit.Normal);
                 TS glow = light.GlowThrough(
                     exit.LitPoint, exit.Eye, exit.Normal, exit.Surface, sample,
-                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portals,
+                    ReachingFrom<TS>(exit, sample, sides, light), sides, exit.Footprint, exit.Portals,
                     RegularizedFor(exit));
 
                 if (glow.IsBlack)
