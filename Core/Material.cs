@@ -183,7 +183,17 @@ public class Material
     /// light through, which has a Fresnel of its own.
     /// </summary>
     public bool FresnelApplies =>
-        (Fresnel || IsRough) && Reflective > 0 && Transparency == 0 && !PigmentMayTransmit;
+        (Fresnel || IsRough) && Reflective > 0 && Transparency == 0 && !PigmentMayTransmit && Film is null;
+
+    /// <summary>
+    /// This property holds the film on the surface, if it has one: a skin thinner than light's own
+    /// wavelength, which colors what the surface mirrors by interference -- a soap bubble's swirls, oil
+    /// on a puddle.  What it mirrors it works out for itself, color by color, from its thickness and
+    /// its index and from the index of whatever the material is made of beneath it, and that takes the
+    /// place of <see cref="Reflective"/> and <see cref="Fresnel"/>, which it does not use.  See
+    /// <see cref="ThinFilm"/>.
+    /// </summary>
+    public ThinFilm Film { get; set; }
 
     /// <summary>
     /// This property holds how metallic the material is, between 0 and 1, and governs the color

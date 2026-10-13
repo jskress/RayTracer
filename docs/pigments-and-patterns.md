@@ -185,6 +185,11 @@ things that shape a pattern's value work on it as usual.  Its turbulence and sca
 does not depend on the point at all.  Unlike other patterns, its two ends are two different colors and
 are never wrapped round onto each other.
 
+`flop` paints whatever colors its map names, which is what a paint chosen from a chart wants.  The
+colors of a soap bubble or of oil on water are a different thing — they come of a film's thickness and
+not of any pigment, and are worked out rather than chosen; see
+[Thin films](materials.md#thin-films).
+
 ### Turbulence
 
 Most of the interesting patterns are dull without turbulence.  It stirs the points before the

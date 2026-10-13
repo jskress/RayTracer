@@ -297,11 +297,15 @@ public abstract class Light : NamedThing
     /// any other surface.</param>
     /// <param name="material">The material to shade with, where it is not the surface's own; see
     /// <see cref="Intersection.Material"/>.</param>
+    /// <param name="film">How the surface's film shares out the light, for a surface that has one:
+    /// what it lets on is all the ambient and diffuse terms have to show, and its highlight takes the
+    /// film's color.  See <see cref="ThinFilm"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
-        double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null)
+        double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null,
+        FilmShares<TS>? film = null)
         where TS : struct, ISpectrum<TS>
     {
         material ??= surface.Material ?? Material.Default;
@@ -315,6 +319,10 @@ public abstract class Light : NamedThing
         // so that they come out bit for bit as they always have.
         if (ownShare != 1)
             color *= ownShare;
+
+        // A film lets on only what it does not mirror, and that is all the surface beneath has to show.
+        if (film is { } passing)
+            color *= passing.Passed;
         Vector vector = sample.Direction;
 
         // Ambient light stands in for light that has bounced around the scene rather than come
@@ -398,6 +406,13 @@ public abstract class Light : NamedThing
                 double factor = Math.Pow(reflectDotEye, material.Shininess);
 
                 specularColor = Emitted<TS>() * material.Specular * factor;
+
+                // A highlight is the lamp's mirror image, and a film colors it as it colors any other.  A
+                // film always mirrors, so a lamp a ray can meet -- the sky, a glowing volume -- already
+                // shows in what it mirrors and gives no highlight besides, as on a rough surface; under a
+                // sky, every one of the sky's samples would otherwise put its own dot on a bubble.
+                if (film is { } filmed)
+                    specularColor = CanBeSeen ? TS.Black : specularColor * filmed.Highlight;
 
                 // A metal's highlight takes the color of the metal rather than of the light.  The
                 // angle used is the light against the normal, which is the approximation POV-Ray

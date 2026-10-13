@@ -43,6 +43,7 @@ The rest of the material describes how light behaves when it arrives.
 | `roughness` | 0 | Blurs what it mirrors and spreads its highlight, from 0 (a mirror) to 1 (matte). |
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
+| `film` | none | A film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored; see [Thin films](#thin-films). |
 | `melanin` | none | For hair only: colors it as natural hair is colored; see [How hair is lit](advanced-surfaces.md#how-hair-is-lit). |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
 | `grain` | 0 | Roughens the diffuse falloff. |
@@ -265,6 +266,86 @@ material {
 Written bare, `metallic` means fully metallic; give it a number between 0 and 1 to blend.
 Gold, copper and brass all want this, and all want a reflection too — a metal that mirrors
 nothing looks like painted plastic.
+
+#### Thin films
+
+A soap bubble, oil on a puddle, the coating on a camera lens: each is a film thinner than the
+waves of light themselves, and each mirrors colors that are in none of what it is made of.  Light
+is mirrored twice, once off the film's outer face and once off its inner one, and the two
+reflections leave together.  Where one has fallen behind the other by a whole number of waves they
+add, and where by half a wave they cancel.  How far behind it falls depends on how thick the film is
+and how slantwise the light crosses it, measured against each color's own wavelength, so a film
+mirrors some colors and turns others away, and the colors run round as the angle changes.
+
+```
+material {
+    pigment White  ambient 0  diffuse 0
+    transparency 1
+    film { thickness 450 }
+}
+```
+
+![Three thin films](images/figures/material-thin-films.png)
+
+A soap bubble, oil on a black ball, and a glass ball with a lens's coating, each mirroring a broad
+bright panel behind the camera.  The scene is
+[`docs/examples/materials/thin-films.igl`](examples/materials/thin-films.igl).
+
+`thickness` is in nanometers.  Visible light runs from about 380 nm, violet, to 780 nm, red, and a
+film shows colors from about 100 nm to 1000 nm thick, brightest and plainest in the first few
+hundred.  Thinner, it mirrors less and less of anything: a soap film just before it bursts is so
+thin that it shows black.  Thicker, its colors come closer and closer together along the spectrum
+until they run into white, which is why a thick pane of glass shows no colors at all.
+
+`ior` is the film's own index of refraction, and is soapy water's, 1.33, unless said.  What lies
+beneath the film is whatever the material is made of, by the index of refraction of its
+[interior](#transparency-and-interiors).  A bubble is clear and holds nothing but air, which is an
+interior's default, so it bends nothing that passes through it.
+
+The film works out what it mirrors for itself, from those indices and the angle, so a material with
+a film does not use `reflective` or `fresnel`.  It mirrors a few percent square-on, more at a slant,
+and nearly everything at a graze, as Fresnel's equations say any face does — with the colors on
+top.  What it does not mirror goes on: into the surface's own color, if it is opaque, or through
+it, if it is clear.  So what comes through a film is the complement of what it mirrors, and a
+bubble's shadow is faintly tinted the opposite way to its reflection.  The highlight takes the
+film's color too, and is kept whole on a surface that is clear, as it is on
+[frosted glass](#frosted-glass): it is light the film mirrors, which letting light through takes
+none of.  How bright it is is still `specular`'s to say.
+
+A real film is seldom the same thickness everywhere.  A bubble drains, thin at the top and thicker
+below, and swirls as it does; oil spreads thin toward its edges.  So a thickness may run from one to
+another by a pattern, as a field's sizes may:
+
+```
+film { thickness 800 to 150 by linear Y bouncing gradient { turbulence 0.6  scale 2.2  translate Y -1.1 } }
+```
+
+The pattern's value of nought gives the first thickness and one the second, so this bubble is 800 nm
+thick at its foot and 150 at its crown.  The gradient bounces rather than starting over at each end,
+since turbulence carries a pattern past its ends, and one that started over would tear the film
+into seams where its thickness jumped.  The pattern is read in the surface's own space, as a pigment
+is, so a pattern written for a unit sphere fits a unit bubble however large the bubble is scaled.
+
+| Film | `ior` | `thickness` |
+| --- | --- | --- |
+| Soap | 1.33 | 100 to 1000 |
+| Oil on water | 1.47 | 100 to 600 |
+| A lens's coating, magnesium fluoride | 1.38 | about 100, a quarter of a green wave |
+| Titanium dioxide, as on pearlescent paint and mica | 2.4 | 50 to 400 |
+
+A film is worked out over the spectrum, band by band, in both kinds of render.  A
+[spectral](context.md#spectral-light) one carries the bands on and so gets each color of what
+the film mirrors exactly; one in red, green and blue turns the film's colors into those three at
+once.  Under white light the two agree.  A film is smooth by nature, its colors coming of that, so a
+material with one may not also be rough.
+
+A light that a ray can meet — the sky, a glowing volume — gives a film no highlight, since a film
+always mirrors and the light already shows in what it mirrors.  A lamp, a sun or an area light, which
+no ray meets, gives one as usual.
+
+`gallery/Local/materials/soap-bubbles.igl` blows bubbles in a garden, and is as much about how to
+light a film as about the film: a film mirrors only a few percent, so it needs something bright to
+mirror and something dark to be seen against.
 
 #### Brilliance and grain
 

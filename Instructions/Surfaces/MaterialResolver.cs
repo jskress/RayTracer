@@ -92,6 +92,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public SurfaceNormalResolver SurfaceNormalResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the material's film, if it has one.
+    /// </summary>
+    public ThinFilmResolver FilmResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolvers for the decals painted over the pigment, in the order they
     /// were written.
     /// </summary>
@@ -136,12 +141,17 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         FresnelResolver is not null || RoughnessResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
-                        MelaninResolver is not null ||
+                        MelaninResolver is not null || FilmResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
 
-        return SetToNull && saysMore
-            ? "An inherited material takes everything but its decals from the material handed down " +
-              "to it, so only decals may be written in one."
+        if (SetToNull && saysMore)
+        {
+            return "An inherited material takes everything but its decals from the material handed down " +
+                   "to it, so only decals may be written in one.";
+        }
+
+        return FilmResolver is not null && RoughnessResolver is not null
+            ? "A film's colors come of its being smooth, so a material with a film may not also be rough."
             : null;
     }
 
@@ -185,6 +195,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
 
         if (SurfaceNormalResolver != null)
             value.SurfaceNormal = SurfaceNormalResolver.Resolve(context, variables);
+
+        if (FilmResolver != null)
+            value.Film = FilmResolver.Resolve(context, variables);
 
         // Decals go on top of any the material already has rather than in place of them, the same as
         // writing a second one in the same block would, which is what a block laid over a material
