@@ -343,6 +343,10 @@ A light that a ray can meet — the sky, a glowing volume — gives a film no hi
 always mirrors and the light already shows in what it mirrors.  A lamp, a sun or an area light, which
 no ray meets, gives one as usual.
 
+`gallery/Local/materials/soap-bubbles.igl` blows bubbles in a garden, and is as much about how to
+light a film as about the film: a film mirrors only a few percent, so it needs something bright to
+mirror and something dark to be seen against.
+
 #### Brilliance and grain
 
 Two adjustments to how the diffuse term falls off.  `brilliance` above 1 makes a surface hold

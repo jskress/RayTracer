@@ -1,0 +1,151 @@
+// Soap bubbles drifting in a garden, and the wand that blew them.
+//
+// Every color here is in a film of soapy water a few hundred nanometers thick, and in none of what
+// anything is made of: the bubbles are white, clear, and hold nothing but air.  Light is mirrored off
+// both faces of the film, and the two reflections leave together, adding where one has fallen a whole
+// number of waves behind the other and cancelling where it has fallen half a wave -- so the colors
+// follow the film's thickness, and run round as the angle changes toward each bubble's rim.
+//
+// **A bubble drains.**  The film runs down under its own weight, thick at the foot and thinning toward
+// the crown, and swirls as it goes; so each bubble's thickness runs from 750 nm at its foot to a
+// fraction of that at its crown, by a gradient stirred with turbulence.  Two of them are nearly done,
+// thinned at the top to twenty or thirty nanometers -- too thin to mirror anything, which is the black
+// cap a bubble shows just before it bursts.  The wand's film is the textbook picture of the same thing:
+// level bands, finer and finer toward the foot, under a black top.
+//
+// **A film shows its colors in what it mirrors, and mirrors only a few percent**, so how this scene is
+// lit is the whole of whether it works -- and it is lit the way a photographer would shoot it.  The
+// sun is ahead, low over the hedge, so the hedge's face is in its own shade and is the dark ground the
+// bubbles stand out against.  Behind the camera stands the white wall of the house in full sun, and
+// that is what every bubble mirrors: the bright panel in each, upright in the near wall of the bubble
+// and upside down in the far one, colored by the film.  The first try had the sun behind the camera
+// and the hedge lit; the bubbles mirrored a dim sky against a bright hedge and all but vanished.
+//
+// The sky is brighter than the daylight library's own by a little under three times.  That is
+// exposure, nothing more: what matters is the share the films mirror against the shaded hedge, which
+// is the same at any brightness, and this brightness puts both where they read.
+//
+// The lens is open, focused on the large bubble, so the bubbles nearer and further are soft.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'Soap Bubbles'
+        author 'J. Stephen Kress'
+        description 'Soap bubbles in a garden, colored by the films they are made of, and the wand that blew them.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.3, -1.6]
+    look at [0, 1.32, 0]
+    field of view 44
+    aperture 0.02
+    focal point [-0.28, 1.36, 0.35]
+    blur samples 32
+}
+
+background physical sky { sun elevation 34  sun azimuth 160  turbidity 3  brightness 8 }
+sky light { samples 16 }
+
+// The lawn and the hedge are both in shade, and both lit by more than the sky: the sunlit wall behind the
+// camera throws its light back over everything in front of it.  This renderer does not follow light from
+// one surface to another, so the wall blocks the sky behind it without giving any back -- left at that,
+// the hedge came out at a twentieth of what the bubbles mirror, near enough black, and the whole picture
+// with it.  The ambient term is that bounced light, the one thing it exists for, and it is set so the
+// hedge stands at about a fifth of the bubbles' reflections: green and in shade, and still dark enough
+// for a film's few percent to show against.
+//
+// The lawn.
+plane {
+    material {
+        pigment granite { [0, [0.10, 0.20, 0.05], 1, [0.22, 0.34, 0.10]]  scale 0.3 }
+        specular 0  ambient 0.04
+    }
+}
+
+// A yew hedge, in its own shade.  A pattern is read in its surface's own space, and the hedge is a cube
+// stretched twelve times across and not two up, so the leaves are scaled back against the stretch to come
+// out the same size every way rather than as long smears.
+cube {
+    material {
+        pigment granite {
+            [0, [0.05, 0.13, 0.04], 1, [0.16, 0.30, 0.09]]
+            scale [0.25 / 12, 0.25 / 1.6, 0.25 / 0.8]
+        }
+        normal wrinkles { depth 0.6  scale [0.05 / 12, 0.05 / 1.6, 0.05 / 0.8] }
+        specular 0.05  ambient 0.04
+    }
+    scale [12, 1.6, 0.8]
+    translate [0, 1.6, 4]
+}
+
+// The white wall of the house behind the camera, in full sun: what the bubbles mirror.
+cube {
+    material { pigment [0.85, 0.82, 0.76]  specular 0 }
+    scale [14, 4, 0.2]
+    translate [1, 4, -4]
+}
+
+// A bubble: a clear ball of air in a skin of soap.  It shows no color of its own and bends nothing, so
+// it is all film -- what that mirrors, what it lets through, and the highlight.  Each is handed its own
+// place in the turbulence, so no two swirl alike.
+primitive Bubble(radius, at, swirl, thinnest = 120) -> sphere {
+    return sphere {
+        material {
+            pigment White  ambient 0  diffuse 0  specular 1  shininess 600
+            transparency 1
+            film {
+                thickness 750 to thinnest by linear Y bouncing gradient {
+                    turbulence 0.7  scale 2.2  translate Y -1.1  translate swirl
+                }
+            }
+        }
+        scale radius
+        translate at
+    }
+}
+
+// The wand, just dipped and held up: a ring of pink plastic on a handle, with a film across the ring.
+// It is held tilted, but the film drains straight down whatever the wand does, so the pattern is turned
+// back against the tilt to keep its bands level.
+group {
+    torus {
+        radii 1, 0.08
+        material { pigment [0.85, 0.22, 0.5]  specular 0.5  shininess 60 }
+        rotate X 90
+    }
+    cylinder {
+        material { pigment [0.85, 0.22, 0.5]  specular 0.5  shininess 60 }
+        min Y -9  max Y -0.96
+        scale [0.12, 1, 0.12]
+    }
+    disc {
+        center [0, 0, 0]  normal [0, 0, -1]  radius 1
+        material {
+            pigment White  ambient 0  diffuse 0  specular 1  shininess 600
+            transparency 1
+            film {
+                thickness 900 to 15 by linear Y bouncing gradient {
+                    turbulence 0.15  scale 2  translate Y -1  rotate Z 25
+                }
+            }
+        }
+    }
+    scale 0.07
+    rotate Z -25
+    rotate Y 15
+    translate [0.36, 1.08, 0.2]
+}
+
+object Bubble(0.17, [-0.28, 1.36, 0.35], [0, 0, 0])
+object Bubble(0.06, [0.12, 1.62, 0.6], [3, 0, 1], 20)
+object Bubble(0.04, [0.5, 1.48, 0], [5, 2, 0])
+object Bubble(0.1, [0.55, 1.75, 2.5], [1, 7, 3])
+object Bubble(0.035, [-0.62, 1.7, 1.1], [8, 1, 5])
+object Bubble(0.065, [-0.7, 1.05, 0.9], [2, 9, 7], 30)
+object Bubble(0.025, [-0.05, 1.18, -0.6], [6, 4, 2])
+object Bubble(0.05, [0.24, 1.3, 0.15], [4, 6, 8])
