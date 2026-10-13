@@ -149,7 +149,7 @@ public class TestDecals
         {
             Point world = instance.SurfaceToWorld(shape.Transform * there);
 
-            Assert.IsTrue(material.WorldToAnchor(part, world, instance).Matches(there),
+            Assert.IsTrue(material.WorldToAnchor(part, world, new Portals(instance)).Matches(there),
                 "a point on a shared shape was not carried into the shape's space through its instance");
         }
     }
@@ -177,7 +177,7 @@ public class TestDecals
         Point there = new (0.2, -0.6, 0.9);
         Point world = outer.SurfaceToWorld(there);
 
-        Assert.IsTrue(material.WorldToAnchor(shape, world, placed).Matches(there),
+        Assert.IsTrue(material.WorldToAnchor(shape, world, new Portals(placed)).Matches(there),
             "a point was carried through an instance to reach an anchor that stands above it");
     }
 

@@ -20,17 +20,18 @@ public class Intersection : IComparable<Intersection>
     public double Distance { get; }
 
     /// <summary>
-    /// This holds the instance this hit was found through, or <c>null</c> when the surface stands in
-    /// the scene in its own right.
+    /// This holds the instances this hit was found through, innermost first, or none when the surface
+    /// stands in the scene in its own right.
     /// <para>
     /// **This is what makes shared geometry possible at all.**  Everything that carries a point or a
     /// normal between the world and a surface walks <see cref="Surface.Parent"/>, and a surface has
     /// exactly one parent -- so a shape reachable from a dozen places has no answer to "whereabouts
-    /// am I".  The hit itself knows, because it came through one particular instance; that instance
-    /// is recorded here on the way out, and the walk picks it up where the parents run out.
+    /// am I".  The hit itself knows, because it came through particular instances; each is recorded
+    /// here on the way out, and the walk picks them up, one after another, wherever the parents run
+    /// out.  See <see cref="Geometry.Portals"/>.
     /// </para>
     /// </summary>
-    public Surface Portal { get; set; }
+    public Portals Portals { get; set; }
 
     /// <summary>
     /// This holds the material the surface is shaded with here: its own, unless the ray that found it
@@ -348,11 +349,6 @@ public class Intersection : IComparable<Intersection>
         // in two of those places are two different things.  Comparing the shape alone calls them
         // equal, which hands an unstable sort a tie it cannot break and makes the picture depend on
         // the order the geometry happened to be walked.
-        if (ReferenceEquals(Portal, other.Portal))
-            return 0;
-
-        return Portal is null ? -1
-            : other.Portal is null ? 1
-            : Portal.Ordinal.CompareTo(other.Portal.Ordinal);
+        return Portals.CompareTo(other.Portals);
     }
 }

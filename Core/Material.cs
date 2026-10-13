@@ -285,20 +285,20 @@ public class Material
     /// </summary>
     /// <param name="surface">The surface the point was found on, which wears this material.</param>
     /// <param name="point">The point, in the world's coordinate system.</param>
-    /// <param name="portal">The instance the point was found through, if it was.</param>
+    /// <param name="portals">The instances the point was found through, if it was.</param>
     /// <returns>The point, in the space of the surface this material was written on.</returns>
-    public Point WorldToAnchor(Surface surface, Point point, Surface portal = null)
+    public Point WorldToAnchor(Surface surface, Point point, Portals portals = default)
     {
-        return ToAnchor(Anchor ?? surface, surface, point, portal);
+        return ToAnchor(Anchor ?? surface, surface, point, portals);
     }
 
     /// <summary>
     /// This method carries a point from the world into the space of a given anchor, for a point found
     /// on the given surface.
     /// </summary>
-    private static Point ToAnchor(Surface anchor, Surface surface, Point point, Surface portal)
+    private static Point ToAnchor(Surface anchor, Surface surface, Point point, Portals portals)
     {
-        return anchor.WorldToSurface(point, 0, PortalTo(anchor, surface, portal));
+        return anchor.WorldToSurface(point, 0, PortalTo(anchor, surface, portals));
     }
 
     /// <summary>
@@ -307,50 +307,60 @@ public class Material
     /// </summary>
     /// <param name="surface">The surface the footprint was found on, which wears this material.</param>
     /// <param name="footprint">The footprint, in the world's coordinate system.</param>
-    /// <param name="portal">The instance it was found through, if it was.</param>
+    /// <param name="portals">The instances it was found through, if it was.</param>
     /// <returns>The footprint, in the space of the surface this material was written on.</returns>
-    public Footprint WorldToAnchor(Surface surface, Footprint footprint, Surface portal = null)
+    public Footprint WorldToAnchor(Surface surface, Footprint footprint, Portals portals = default)
     {
-        return ToAnchor(Anchor ?? surface, surface, footprint, portal);
+        return ToAnchor(Anchor ?? surface, surface, footprint, portals);
     }
 
     /// <summary>
     /// The same, for a footprint.
     /// </summary>
-    private static Footprint ToAnchor(Surface anchor, Surface surface, Footprint footprint, Surface portal)
+    private static Footprint ToAnchor(Surface anchor, Surface surface, Footprint footprint, Portals portals)
     {
-        return anchor.WorldToSurface(footprint, 0, PortalTo(anchor, surface, portal));
+        return anchor.WorldToSurface(footprint, 0, PortalTo(anchor, surface, portals));
     }
 
     /// <summary>
-    /// This method decides whether the walk into the anchor's space goes through the instance a
-    /// point was found through.
+    /// This method decides which of the instances a point was found through the walk into the anchor's
+    /// space goes through.
     /// <para>
-    /// **Only when the anchor stands inside the shared shape.**  A shared shape has no parent, so the
-    /// walk from any surface inside it runs out at its top and carries on through the instance, which
-    /// is what places it.  An anchor above the instance -- a group holding it, whose material was
-    /// handed down into the shape -- stands in the scene's own chain and needs no instance to place
-    /// it; carried through one anyway, the point would be moved by the instance's placing a second
-    /// time.  The anchor is inside the shape exactly when it is the surface itself or one of the
-    /// surfaces above it before the chain runs out.
+    /// **Only those beyond the anchor.**  A shared shape has no parent, so the walk from any surface
+    /// inside it runs out at its top and carries on through the instance that places it.  An anchor above
+    /// that instance -- a group holding it, whose material was handed down into the shape -- stands in
+    /// the chain beyond it and needs no instance to place it; carried through one anyway, the point would
+    /// be moved by the instance's placing a second time.  So the walk is followed up from the surface
+    /// struck, through each instance where the parents run out, and the instances still to be passed
+    /// through when it reaches the anchor are the ones the anchor's own walk needs.
     /// </para>
     /// </summary>
     /// <param name="anchor">The surface the material was written on.</param>
     /// <param name="surface">The surface the point was found on.</param>
-    /// <param name="portal">The instance the point was found through, if any.</param>
-    /// <returns>The instance to walk through, or <c>null</c>.</returns>
-    private static Surface PortalTo(Surface anchor, Surface surface, Surface portal)
+    /// <param name="portals">The instances the point was found through, if any.</param>
+    /// <returns>The instances to walk through.</returns>
+    private static Portals PortalTo(Surface anchor, Surface surface, Portals portals)
     {
-        if (portal is null)
-            return null;
+        if (portals.IsEmpty)
+            return default;
 
-        for (Surface walk = surface; walk is not null; walk = walk.Parent)
+        Surface walk = surface;
+
+        while (walk is not null)
         {
             if (ReferenceEquals(walk, anchor))
-                return portal;
+                return portals;
+
+            if (walk.Parent is null && !portals.IsEmpty)
+            {
+                walk = portals.Through;
+                portals = portals.Outward;
+            }
+            else
+                walk = walk.Parent;
         }
 
-        return null;
+        return default;
     }
 
     /// <summary>
@@ -428,7 +438,7 @@ public class Material
     public Color GetColorFor(Intersection intersection)
     {
         return GetColorFor(
-            intersection.Surface, intersection.Point, intersection.Normal, portal: intersection.Portal);
+            intersection.Surface, intersection.Point, intersection.Normal, portals: intersection.Portals);
     }
 
     /// <summary>
@@ -452,13 +462,13 @@ public class Material
     /// <c>null</c>.  Which way it points does not matter.</param>
     /// <param name="footprint">How much of the surface the ray covers there, so that a pattern or a
     /// decal's edge too fine to resolve is averaged rather than sampled, or <c>null</c>.</param>
-    /// <param name="portal">The instance the point was found through, if it was.</param>
+    /// <param name="portals">The instances the point was found through, if it was.</param>
     /// <returns>The color there.</returns>
     public Color GetColorFor(
         Surface surface, Point point, Vector normal = null, Footprint footprint = null,
-        Surface portal = null)
+        Portals portals = default)
     {
-        Color color = Pigment.GetColorFor(surface, point, footprint, portal);
+        Color color = Pigment.GetColorFor(surface, point, footprint, portals);
 
         if (Decals is null)
             return color;
@@ -479,11 +489,11 @@ public class Material
             if (!ReferenceEquals(anchor, carriedTo))
             {
                 carriedTo = anchor;
-                there = ToAnchor(anchor, surface, point, portal);
+                there = ToAnchor(anchor, surface, point, portals);
                 patch = footprint is null || footprint.IsEmpty
                     ? null
-                    : ToAnchor(anchor, surface, footprint, portal);
-                facing = normal is null ? null : NormalToAnchor(anchor, surface, normal, portal);
+                    : ToAnchor(anchor, surface, footprint, portals);
+                facing = normal is null ? null : NormalToAnchor(anchor, surface, normal, portals);
             }
 
             color = decal.LayerOver(color, there, patch, facing);
@@ -505,15 +515,15 @@ public class Material
     /// <param name="anchor">The surface whose space to carry the normal into.</param>
     /// <param name="surface">The surface the normal was found on.</param>
     /// <param name="normal">The normal, in the world's coordinate system.</param>
-    /// <param name="portal">The instance it was found through, if it was.</param>
+    /// <param name="portals">The instances it was found through, if it was.</param>
     /// <returns>A normal in the anchor's space, of no particular length.</returns>
-    private static Vector NormalToAnchor(Surface anchor, Surface surface, Vector normal, Surface portal)
+    private static Vector NormalToAnchor(Surface anchor, Surface surface, Vector normal, Portals portals)
     {
         Vector unit = normal.Unit;
         Vector aside = Math.Abs(unit.X) < 0.9
             ? unit.Cross(new Vector(1, 0, 0)).Unit
             : unit.Cross(new Vector(0, 1, 0)).Unit;
-        Footprint frame = ToAnchor(anchor, surface, new Footprint(aside, unit.Cross(aside)), portal);
+        Footprint frame = ToAnchor(anchor, surface, new Footprint(aside, unit.Cross(aside)), portals);
 
         return frame.Across.Cross(frame.Along);
     }

@@ -311,7 +311,7 @@ public class TestCsgSurfaces
 
         Assert.AreEqual(2, intersections.Count);
         Assert.AreEqual(4, intersections[0].Distance, 1e-9);
-        Assert.AreSame(instance, intersections[0].Portal);
+        Assert.AreSame(instance, intersections[0].Portals.Through);
         Assert.AreEqual(5, intersections[1].Distance, 1e-9);
         Assert.AreSame(cube, intersections[1].Surface);
     }

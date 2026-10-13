@@ -28,7 +28,7 @@ public partial class Scene
     private const int CellsPerLength = 6;
     private const int MostCells = 1 << 18;
 
-    private readonly ConcurrentDictionary<(Hair, Surface), Lazy<HairLight>> _hairLights = new ();
+    private readonly ConcurrentDictionary<(Hair, Portals), Lazy<HairLight>> _hairLights = new ();
 
     /// <summary>
     /// This method gathers the light among every head of hair that stands in the scene itself, before the
@@ -47,7 +47,7 @@ public partial class Scene
         foreach (Hair hair in HairOutsideInstances(Surfaces))
         {
             if (hair.StrandCount > 0)
-                LightAmong(hair, null);
+                LightAmong(hair, default);
         }
     }
 
@@ -81,12 +81,12 @@ public partial class Scene
     /// it is gathered for each place it stands.
     /// </summary>
     /// <param name="hair">The hair.</param>
-    /// <param name="portal">The instance it was found through, if it was.</param>
+    /// <param name="portals">The instances it was found through, if it was.</param>
     /// <returns>The light among its strands.</returns>
-    internal HairLight LightAmong(Hair hair, Surface portal)
+    internal HairLight LightAmong(Hair hair, Portals portals)
     {
         return _hairLights.GetOrAdd(
-            (hair, portal), key => new Lazy<HairLight>(() => GatherLightAmong(key.Item1, key.Item2))).Value;
+            (hair, portals), key => new Lazy<HairLight>(() => GatherLightAmong(key.Item1, key.Item2))).Value;
     }
 
     /// <summary>
@@ -104,12 +104,12 @@ public partial class Scene
     /// surface would; see <see cref="BouncesOff"/>.
     /// </para>
     /// </summary>
-    private HairLight GatherLightAmong(Hair hair, Surface portal)
+    private HairLight GatherLightAmong(Hair hair, Portals portals)
     {
-        (Point low, Point high) = BoxInTheWorld(hair, portal);
+        (Point low, Point high) = BoxInTheWorld(hair, portals);
         Vector extent = high - low;
         double cell = Math.Max(
-            LengthInTheWorld(hair, portal) / CellsPerLength, Math.Cbrt(extent.X * extent.Y * extent.Z / MostCells));
+            LengthInTheWorld(hair, portals) / CellsPerLength, Math.Cbrt(extent.X * extent.Y * extent.Z / MostCells));
 
         // Each side also holds a cell's margin at either end, which the volume alone leaves out.
         while ((extent.X / cell + 3) * (extent.Y / cell + 3) * (extent.Z / cell + 3) > MostCells)
@@ -120,7 +120,7 @@ public partial class Scene
         Point center = low + extent * 0.5;
         double radius = extent.Magnitude / 2 + cell;
         List<Beam> beams = [];
-        int paths = Math.Max(PathsPerLight, PathsPerCell * PlacesHeldIn(hair, portal, grid));
+        int paths = Math.Max(PathsPerLight, PathsPerCell * PlacesHeldIn(hair, portals, grid));
 
         foreach (Light light in Lights)
         {
@@ -334,14 +334,14 @@ public partial class Scene
     /// <summary>
     /// This method counts the places of the grid that the strands of a head of hair lie in.
     /// </summary>
-    private static int PlacesHeldIn(Hair hair, Surface portal, HairLight grid)
+    private static int PlacesHeldIn(Hair hair, Portals portals, HairLight grid)
     {
         bool[] held = new bool[grid.Size];
         int count = 0;
 
         hair.VisitPoints(point =>
         {
-            int cell = grid.CellOf(hair.SurfaceToWorld(point, 0, portal));
+            int cell = grid.CellOf(hair.SurfaceToWorld(point, 0, portals));
 
             if (cell >= 0 && !held[cell])
             {
@@ -358,12 +358,12 @@ public partial class Scene
     /// given instance.  A strand's length is given in the space the hair is grown in, and a rug written in
     /// inches and scaled into a room in meters is forty times shorter in the world than it says.
     /// </summary>
-    private static double LengthInTheWorld(Hair hair, Surface portal)
+    private static double LengthInTheWorld(Hair hair, Portals portals)
     {
-        Point origin = hair.SurfaceToWorld(Point.Zero, 0, portal);
-        double across = (hair.SurfaceToWorld(new Point(1, 0, 0), 0, portal) - origin).Magnitude;
-        double up = (hair.SurfaceToWorld(new Point(0, 1, 0), 0, portal) - origin).Magnitude;
-        double deep = (hair.SurfaceToWorld(new Point(0, 0, 1), 0, portal) - origin).Magnitude;
+        Point origin = hair.SurfaceToWorld(Point.Zero, 0, portals);
+        double across = (hair.SurfaceToWorld(new Point(1, 0, 0), 0, portals) - origin).Magnitude;
+        double up = (hair.SurfaceToWorld(new Point(0, 1, 0), 0, portals) - origin).Magnitude;
+        double deep = (hair.SurfaceToWorld(new Point(0, 0, 1), 0, portals) - origin).Magnitude;
 
         return hair.StrandLength * Math.Cbrt(across * up * deep);
     }
@@ -372,7 +372,7 @@ public partial class Scene
     /// This method returns the box a head of hair occupies in the world, where it stands for the given
     /// instance.
     /// </summary>
-    private static (Point Low, Point High) BoxInTheWorld(Hair hair, Surface portal)
+    private static (Point Low, Point High) BoxInTheWorld(Hair hair, Portals portals)
     {
         BoundingBox box = hair.BoundingBox;
         BoundingBox world = new ();
@@ -383,7 +383,7 @@ public partial class Scene
                 (corner & 1) == 0 ? box.Minimum.X : box.Maximum.X, (corner & 2) == 0 ? box.Minimum.Y : box.Maximum.Y,
                 (corner & 4) == 0 ? box.Minimum.Z : box.Maximum.Z);
 
-            world.Add(hair.SurfaceToWorld(local, 0, portal));
+            world.Add(hair.SurfaceToWorld(local, 0, portals));
         }
 
         return (world.Minimum, world.Maximum);

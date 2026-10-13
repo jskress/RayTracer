@@ -98,7 +98,7 @@ public partial class Scene
         // from every way round alike.
         if (strands.HasNeighbors && HairOf(strands) is { } hair)
         {
-            HairLight.Here here = LightAmong(hair, hit.Portal).At(frame.Center);
+            HairLight.Here here = LightAmong(hair, hit.Portals).At(frame.Center);
 
             for (int lobe = 0; lobe < 3; lobe++)
             {
@@ -206,8 +206,8 @@ public partial class Scene
     internal static StrandFrame FrameOf(HairIntersection hit)
     {
         StrandSurface strands = (StrandSurface) hit.Surface;
-        Point center = strands.SurfaceToWorld(hit.Center, hit.TimeIndex, hit.Portal);
-        Vector tangent = (strands.SurfaceToWorld(hit.Center + hit.Tangent, hit.TimeIndex, hit.Portal) - center).Unit;
+        Point center = strands.SurfaceToWorld(hit.Center, hit.TimeIndex, hit.Portals);
+        Vector tangent = (strands.SurfaceToWorld(hit.Center + hit.Tangent, hit.TimeIndex, hit.Portals) - center).Unit;
         Vector eye = hit.Eye;
         Vector face = eye - tangent * eye.Dot(tangent);
 
@@ -355,8 +355,8 @@ public partial class Scene
     private static Color ColorOfStrand(HairIntersection hit, StrandSurface strands, Material material, Point where)
     {
         if (strands.WearsItsSkin && strands.RootOf(hit.Strand) is ({ } part, { } root))
-            return material.GetColorFor(part, strands.SurfaceToWorld(root, 0, hit.Portal), portal: hit.Portal);
+            return material.GetColorFor(part, strands.SurfaceToWorld(root, 0, hit.Portals), portals: hit.Portals);
 
-        return material.GetColorFor(hit.Surface, where, portal: hit.Portal);
+        return material.GetColorFor(hit.Surface, where, portals: hit.Portals);
     }
 }

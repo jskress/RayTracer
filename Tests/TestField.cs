@@ -286,13 +286,12 @@ public class TestField
 
     /// <summary>
     /// A field asked for instances still copies a shape that may not be shared, since that is the
-    /// shape's to refuse rather than the author's to get right.
+    /// shape's to refuse rather than the author's to get right.  A thing that moves is one: an
+    /// instance would have to carry the shape's motion as well as its own place.
     /// <para>
-    /// **This is the ordinary case rather than a corner of one.**  A primitive that gives back a
-    /// group hands out a group holding an instance, and an instance of *that* cannot say which of
-    /// the two a point lies in -- so a field of any group primitive used to stop the render with a
-    /// complaint about shapes holding shapes, which is true of the internals and no use at all to
-    /// whoever wrote the scene.
+    /// (This used to be the ordinary case: a primitive that gives back a group hands out a group
+    /// holding an instance, and a shared shape could not hold one.  Now it can -- see
+    /// <c>TestASharedShapeMayHoldAnotherSharedShape</c> -- so a field of a group primitive shares it.)
     /// </para>
     /// </summary>
     [TestMethod]
@@ -302,7 +301,7 @@ public class TestField
         {
             Outline = Square(),
             Spacing = 0.5,
-            Prototype = _ => new Group().Add(new Instance { Prototype = new Sphere() })
+            Prototype = _ => new Group().Add(Moving())
         };
 
         field.PrepareForRendering();
@@ -311,6 +310,39 @@ public class TestField
         Assert.IsFalse(field.Surfaces.Any(surface => surface is Instance),
             "A shape that may not be shared should have been copied, not instanced.");
     }
+
+    /// <summary>
+    /// A field shares a shape that holds shared shapes of its own -- which is what every group primitive
+    /// gives back -- rather than building it again at every place.
+    /// </summary>
+    [TestMethod]
+    public void TestAShapeHoldingSharedShapesIsSharedToo()
+    {
+        Sphere leaf = new ();
+        int built = 0;
+        Field field = new ()
+        {
+            Outline = Square(),
+            Spacing = 0.5,
+            Prototype = _ =>
+            {
+                built++;
+
+                return new Group().Add(new Instance { Prototype = leaf });
+            }
+        };
+
+        field.PrepareForRendering();
+
+        Assert.AreEqual(16, field.Surfaces.Count);
+        Assert.AreEqual(1, built, "the shape was built again for each place");
+        Assert.IsTrue(field.Surfaces.All(surface => surface is Instance), "a copy was not an instance");
+    }
+
+    /// <summary>
+    /// A sphere that moves while the shutter is open, which may not be shared.
+    /// </summary>
+    private static Sphere Moving() => new () { MotionAt = _ => Transforms.Translate(0.1, 0, 0) };
 
     /// <summary>
     /// The shape built to be shared is kept as the first copy when sharing is refused, rather than
@@ -329,7 +361,7 @@ public class TestField
             {
                 asked.Add(number);
 
-                return new Group().Add(new Instance { Prototype = new Sphere() });
+                return new Group().Add(Moving());
             }
         };
 

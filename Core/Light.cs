@@ -256,11 +256,11 @@ public abstract class Light : NamedThing
     /// </summary>
     public Color ApplyPhong(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        Color lightReaching, Footprint footprint = null, Surface portal = null)
+        Color lightReaching, Footprint footprint = null, Portals portals = default)
     {
         return ApplyPhong(
             point, eye, normal, surface, sample, RgbSpectrum.From(lightReaching), footprint,
-            portal).ToColor();
+            portals).ToColor();
     }
 
     /// <summary>
@@ -282,7 +282,7 @@ public abstract class Light : NamedThing
     /// <param name="footprint">How much of the surface the ray that found this point covers there,
     /// so that a pattern too fine to resolve is averaged rather than sampled at a point.  Nothing,
     /// for a caller with no footprint to give, which asks the pigment for a point as before.</param>
-    /// <param name="portal">The instance this point was found through, when the surface is a shape
+    /// <param name="portals">The instances this point was found through, when the surface is a shape
     /// shared among several places, so that its pattern is read in the right space.</param>
     /// <param name="ownShare">How much of the light the surface keeps to show as its own color, the
     /// rest being mirrored -- which takes from the ambient and diffuse terms and leaves the highlight
@@ -300,7 +300,7 @@ public abstract class Light : NamedThing
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
-        TS lightReaching, Footprint footprint = null, Surface portal = null, double ownShare = 1,
+        TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
         double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null)
         where TS : struct, ISpectrum<TS>
     {
@@ -308,7 +308,7 @@ public abstract class Light : NamedThing
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
         TS pigmentColor = TS.FromReflectance(
-            material.GetColorFor(surface, point, normal, footprint, portal));
+            material.GetColorFor(surface, point, normal, footprint, portals));
         TS color = pigmentColor * EmittedToward<TS>(sample);
 
         // Skipped outright when the surface keeps all of it, which every surface did before Fresnel,
@@ -434,14 +434,14 @@ public abstract class Light : NamedThing
     /// <param name="lightReaching">How much of this light arrives at the glass.</param>
     /// <param name="glass">The indices of refraction on the eye's side and the far side.</param>
     /// <param name="footprint">How much of the surface the ray that found this point covers there.</param>
-    /// <param name="portal">The instance this point was found through, if any.</param>
+    /// <param name="portals">The instances this point was found through, if any.</param>
     /// <param name="material">The material to shade with, where it is not the surface's own; see
     /// <see cref="Intersection.Material"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <returns>The glow, or black where there is none.</returns>
     public TS GlowThrough<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample, TS lightReaching,
-        (double Near, double Far) glass, Footprint footprint = null, Surface portal = null,
+        (double Near, double Far) glass, Footprint footprint = null, Portals portals = default,
         Material material = null)
         where TS : struct, ISpectrum<TS>
     {
@@ -453,7 +453,7 @@ public abstract class Light : NamedThing
             return TS.Black;
 
         TS pigmentColor = TS.FromReflectance(
-            material.GetColorFor(surface, point, normal, footprint, portal));
+            material.GetColorFor(surface, point, normal, footprint, portals));
 
         return GlowOf(eye, normal, material, pigmentColor, sample, glass, 1) * reaching;
     }

@@ -56,8 +56,8 @@ public class TestHairLight
     {
         (Scene first, Sphere one) = FurBall(Melanin.Shades["blond"], 3000, 0.4);
         (Scene second, Sphere other) = FurBall(Melanin.Shades["blond"], 3000, 0.4);
-        HairLight light = first.LightAmong(one.Hair, null);
-        HairLight again = second.LightAmong(other.Hair, null);
+        HairLight light = first.LightAmong(one.Hair, default);
+        HairLight again = second.LightAmong(other.Hair, default);
 
         for (double x = -1.2; x <= 1.2; x += 0.3)
         {
@@ -182,7 +182,7 @@ public class TestHairLight
             scene.Surfaces.Add(group);
             scene.ArrangeSurfaces();
 
-            return scene.LightAmong(sphere.Hair, null).Cell;
+            return scene.LightAmong(sphere.Hair, default).Cell;
         }
 
         Assert.AreEqual(Cell(1) / 40, Cell(1.0 / 40), 1e-12);
@@ -215,7 +215,7 @@ public class TestHairLight
             scene.Surfaces.Add(group);
             scene.ArrangeSurfaces();
 
-            return scene.LightAmong(sphere.Hair, null).At(new Point(at.X * scale, at.Y * scale, at.Z * scale));
+            return scene.LightAmong(sphere.Hair, default).At(new Point(at.X * scale, at.Y * scale, at.Z * scale));
         }
 
         foreach (Point at in new[] { new Point(-0.8, 0.6, -0.6), new Point(0, 1.2, 0), new Point(-1.1, -0.2, -0.4) })

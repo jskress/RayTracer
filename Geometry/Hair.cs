@@ -340,10 +340,11 @@ public class Hair : StrandSurface
     {
         List<Surface> chain = [];
         Surface surface = hit.Surface;
-        Surface portal = hit.Portal;
+        Portals portals = hit.Portals;
 
-        // Up from the surface struck to the host, by way of the instance it was found through when it
-        // is a shared shape -- whose own parents end before they reach the instance.
+        // Up from the surface struck to the host, by way of the instances it was found through when it
+        // is a shared shape -- whose own parents end before they reach the instance, and that instance
+        // may stand in a shared shape of its own.
         while (surface != host)
         {
             if (surface is null)
@@ -351,10 +352,10 @@ public class Hair : StrandSurface
 
             chain.Add(surface);
 
-            if (surface.Parent is null && portal is not null)
+            if (surface.Parent is null && !portals.IsEmpty)
             {
-                surface = portal;
-                portal = null;
+                surface = portals.Through;
+                portals = portals.Outward;
             }
             else
                 surface = surface.Parent;
