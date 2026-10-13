@@ -33,10 +33,10 @@ public class TopLevelSurfacesCreator : Instruction
     /// <param name="variables">The current set of scoped variables.</param>
     public override void Execute(RenderContext context, Variables variables)
     {
-        Entry.AddSurfacesTo(context, variables, AddOne);
+        Entry.AddSurfacesTo(context, variables, AddOne, AddOne);
 
         return;
 
-        void AddOne(Surface surface) => Context.AddTopLevelObject(surface);
+        void AddOne(object thing) => Context.AddTopLevelObject(thing);
     }
 }

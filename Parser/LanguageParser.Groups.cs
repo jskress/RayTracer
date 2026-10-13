@@ -95,6 +95,11 @@ public partial class LanguageParser
                 case "local":
                     resolver.SurfaceResolvers.Add(ParseLocalClause(clause));
                     break;
+                case "light":
+                    // A lamp's bulb, a beam in a lamp's head: written in the group's own space, and
+                    // carried wherever the group goes.
+                    resolver.SurfaceResolvers.Add(new ListedLight { Resolver = ParseLightClause(clause) });
+                    break;
                 case "plane":
                     resolver.SurfaceResolvers.Add(ParsePlaneClause(clause));
                     break;

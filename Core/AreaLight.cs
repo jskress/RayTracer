@@ -80,6 +80,21 @@ public class AreaLight : PointLight
     public override int SampleCount => USteps * VSteps;
 
     /// <summary>
+    /// This method carries where a copy of this light stands, and the two sides of its face, through the
+    /// given placing, so a panel turns, tilts and grows with whatever it is fixed to.
+    /// </summary>
+    /// <param name="placing">What carries a point from the surface's space into the world.</param>
+    protected override void PlaceBy(Func<Point, Point> placing)
+    {
+        Point center = placing(Location);
+
+        Axis1 = placing(Location + Axis1) - center;
+        Axis2 = placing(Location + Axis2) - center;
+
+        base.PlaceBy(placing);
+    }
+
+    /// <summary>
     /// This method works out one of the places on the face the light is looked at from, following
     /// POV-Ray: the grid square is turned into an offset running from half the face one way to half
     /// the other, nudged off its square by the jitter, and added to the center.

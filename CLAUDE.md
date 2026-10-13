@@ -99,7 +99,13 @@ Instances NEST: a hit carries `Intersection.Portals` (`Geometry/Portals.cs`: the
 `PortalChain` of those beyond, appended as outer instances stamp it -- the only allocation, and only for nested
 hits), every walk continues at each shared shape's root with the next portal, CSG membership asks the OUTERMOST
 stamped so far, `no shadow` holds if any instance in the chain says it, hair light is keyed by the whole chain, and
-`Material.PortalTo` hands an anchor only the portals beyond it.  So a tree holding shared leaves is shared itself.  `along <path>` lays copies along each run of a
+`Material.PortalTo` hands an anchor only the portals beyond it.  So a tree holding shared leaves is shared itself.
+A `group` may hold point, spot and area lights in its own space (`Group.Lights`; a light travels through surface lists
+as a `ListedLight`, so loops and choices may set lights out, at a scene's top level too).  `LightPlacer` sets each out
+in the world after the scene is arranged -- once for every placement, walking instance chains, and once for every
+sample time if the group moves (`Light.At(timeIndex)`, asked by every shading loop) -- and records its `Housing`:
+the closed surfaces of its own group round it (odd crossings on all of seven looks), which its shadow rays skip,
+keyed with their portals so one lamp's bulb is not the next one's.  Placed lights are ordinary lights to the shading.  `along <path>` lays copies along each run of a
 path instead of filling an outline (`Field.PathPlaces`, walking a `PathGuide` by distance): each turned so its +X runs
 with the path (-Z faces the path's right), the spacing fitted to whole gaps (both ends of an open run, no doubled seam
 on a closed one), `rows n apart d` each spaced along its OWN length, `offset` to the path's left, jitter drawn from

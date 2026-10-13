@@ -752,6 +752,10 @@ any child that does not have one; a child that names its own material keeps it.
 A group is also what makes a big scene tractable.  It works out a box around its children and
 tests that first, so a ray that misses the group skips every surface in it at once.
 
+A group may hold a light as well as surfaces — the bulb in a lamp, the beam in a lamp's head — written
+in the group's own space, so it goes, turns and grows with the group.  See
+[Lights on Things](lights.md#lights-on-things).
+
 ### Repeating Things
 
 A group may make what stands in it over and over, counting through a range:

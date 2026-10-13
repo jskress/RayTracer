@@ -79,12 +79,13 @@ public class SurfaceLoop : SurfaceListEntry
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="add">What to do with each surface it makes.</param>
+    /// <param name="light">What to do with each light it makes.</param>
     public override void AddSurfacesTo(
-        RenderContext context, Variables variables, Action<Surface> add)
+        RenderContext context, Variables variables, Action<Surface> add, Action<Light> light)
     {
         if (Source is not null)
         {
-            WalkTheSequence(context, variables, add);
+            WalkTheSequence(context, variables, add, light);
 
             return;
         }
@@ -131,7 +132,7 @@ public class SurfaceLoop : SurfaceListEntry
             if (CounterName is not null)
                 scope.SetValue(CounterName, index);
 
-            AddAllTo(context, scope, SurfaceResolvers, add);
+            AddAllTo(context, scope, SurfaceResolvers, add, light);
         }
     }
 
@@ -146,8 +147,9 @@ public class SurfaceLoop : SurfaceListEntry
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The variables that are currently in scope.</param>
     /// <param name="add">What to hand each surface the loop makes.</param>
+    /// <param name="light">What to hand each light the loop makes.</param>
     private void WalkTheSequence(
-        RenderContext context, Variables variables, Action<Surface> add)
+        RenderContext context, Variables variables, Action<Surface> add, Action<Light> light)
     {
         if (Source.GetValue(variables) is not Sequence sequence)
         {
@@ -166,7 +168,7 @@ public class SurfaceLoop : SurfaceListEntry
             if (CounterName is not null)
                 scope.SetValue(CounterName, value);
 
-            AddAllTo(context, scope, SurfaceResolvers, add);
+            AddAllTo(context, scope, SurfaceResolvers, add, light);
         }
     }
 

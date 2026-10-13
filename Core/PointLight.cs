@@ -27,4 +27,13 @@ public class PointLight : Light
 
         return (vector.Unit, vector.Magnitude);
     }
+
+    /// <summary>
+    /// This method carries where a copy of this light stands through the given placing.
+    /// </summary>
+    /// <param name="placing">What carries a point from the surface's space into the world.</param>
+    protected override void PlaceBy(Func<Point, Point> placing)
+    {
+        Location = placing(Location);
+    }
 }

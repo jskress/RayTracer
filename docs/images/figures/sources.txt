@@ -61,6 +61,7 @@ image-maps.png|docs/examples/pigments/image-maps.igl|640|210
 lib-textures.png|gallery/POVRay/library-textures.igl|400|300
 light-area.png|docs/examples/lights/area-light.igl|400|300
 light-distant.png|docs/examples/lights/distant-light.igl|400|300
+light-lamps.png|docs/examples/lights/lamps.igl|400|300
 light-point.png|docs/examples/lights/point-light.igl|400|300
 light-spot.png|docs/examples/lights/spot-light.igl|400|300
 material-decal-projections.png|docs/examples/materials/decal-projections.igl|640|240

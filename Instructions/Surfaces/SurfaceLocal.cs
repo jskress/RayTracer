@@ -1,3 +1,4 @@
+using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Terms;
@@ -43,8 +44,9 @@ public class SurfaceLocal : SurfaceListEntry
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The scope of the list this stands in.</param>
     /// <param name="add">What to do with each surface it makes, which is never called.</param>
+    /// <param name="light">What to do with each light it makes, which is never called either.</param>
     public override void AddSurfacesTo(
-        RenderContext context, Variables variables, Action<Surface> add)
+        RenderContext context, Variables variables, Action<Surface> add, Action<Light> light)
     {
         variables.SetValue(Name, Value.GetValue(variables));
     }

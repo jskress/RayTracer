@@ -30,6 +30,42 @@ public class Group : Surface
     }
 
     /// <summary>
+    /// This property holds the lights standing in the group -- the bulb in a lamp, the beam in a
+    /// lamp's head -- each written in the group's own space.  They go wherever the group goes, and
+    /// turn and grow with it; they are placed out in the world with it just before rendering, once for
+    /// every place the group stands.  See <see cref="LightPlacer"/>.
+    /// </summary>
+    public List<Light> Lights { get; } = [];
+
+    /// <summary>
+    /// This method is used to add a light to the group.  Only a light that stands somewhere may: a
+    /// point light, a spotlight or an area light.  A sun and a sky are infinitely far off, so there is
+    /// nothing for standing in a group to mean.
+    /// </summary>
+    /// <param name="light">The light to add.</param>
+    /// <returns>This object, for fluency.</returns>
+    public Group Add(Light light)
+    {
+        if (light is not PointLight)
+        {
+            string sort = light switch
+            {
+                DistantLight => "distant light",
+                SkyLight => "sky light",
+                _ => light.GetType().Name
+            };
+
+            throw new NotSupportedException(
+                $"A {sort} is infinitely far off, so it cannot stand in a group; only a point light, a " +
+                "spotlight or an area light can.");
+        }
+
+        Lights.Add(light);
+
+        return this;
+    }
+
+    /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
     /// perform any expensive precomputing that will help ray/intersection tests go faster.
     /// </summary>

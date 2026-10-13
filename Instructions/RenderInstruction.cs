@@ -101,6 +101,10 @@ public class RenderInstruction : Instruction
         HangTheSun(scene);
         LightTheGlowingThings(scene);
 
+        // Lights standing on things are set out in the world only now, when every surface stands where
+        // it will and the scene can be searched for what closes round each of them.
+        LightPlacer.Place(scene, sampleTimes.Length);
+
         // What the scene holds is counted only now that the sky and anything glowing have added the
         // lights they bring, and the render is timed on its own, without the building before it.
         context.Statistics?.Describe(scene, context.Width, context.Height);

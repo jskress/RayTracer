@@ -175,7 +175,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
-| `group` | Gathers surfaces so a transform moves them together. | [Surfaces](surfaces.md#groups) |
+| `group` | Gathers surfaces, and any lights standing on them, so a transform moves them together. | [Surfaces](surfaces.md#groups), [Lights on Things](lights.md#lights-on-things) |
 | `hair` | Grows strands over the surface it is written in. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
 | `heightfield` | Surface: terrain, from an image or a function. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
@@ -211,7 +211,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `length` | L-system control: the step length.  Also hair: how long a strand is. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `light` | Font weight; also a light source. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `light` | Font weight; also a light source, which may stand in a group. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things) |
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `location` | Camera/light: where it sits. | [Cameras](cameras.md#placing-a-camera) |
