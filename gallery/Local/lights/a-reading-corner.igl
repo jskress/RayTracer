@@ -1,0 +1,205 @@
+// A corner of a room at night, lit by two lamps that carry their own lights.
+//
+// The desk lamp's light is a spotlight in its head, and the head is three joints from the base: the
+// lamp is built as one group inside another -- base, lower arm, upper arm, head -- each turned at its
+// joint, and the spotlight is written in the head's own space, pointing straight out of the shade.
+// Nothing in the scene says where the beam lands.  It lands where the head is pointing, on the open
+// book, because the light goes wherever the head goes; bend the elbow and the pool of light on the desk
+// follows it.
+//
+// The table lamp's light is a point light inside its bulb.  The bulb is a glowing ball closed round
+// the light, which would put the whole room in its shadow if it shadowed it -- it does not, being what
+// the light is housed in.  The shade is open at both ends, so it does shadow it: the light goes down
+// in a pool on the side table and up in a fan on the wall, and nowhere much else.
+//
+// The furniture comes from the `furniture` library, in inches, scaled into the scene's meters.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    // Ambient stands in for light bounced about the room, and at night there is little of it.
+    scale ambient by 0.3
+    // The bulbs glow at 2700 and 3000 K; balanced a little above them, the room reads warm, not orange.
+    white balance 3300
+    info {
+        title 'A Reading Corner'
+        author 'J. Stephen Kress'
+        description 'A room at night, lit by a desk lamp and a table lamp that carry their own lights.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'furniture' { Desk, Armchair, Nightstand, Bookcase, FurnitureOak, FurnitureLinen }
+
+camera {
+    location [1.55, 1.38, -1.55]
+    look at [-0.75, 0.85, 1.25]
+    field of view 60
+}
+
+background [0, 0, 0]
+
+Inch = 0.0254
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.72, 0.69, 0.62]  specular 0.03 }
+Boards = material {
+    pigment brick { [0.22, 0.14, 0.09], [0.31, 0.21, 0.13]  scale [0.9, 4, 0.12] }
+    specular 0.18  shininess 40
+}
+
+plane { material Boards }                                    // the floor
+plane { material Plaster  rotate X -90  translate Z 2 }      // the back wall
+plane { material Plaster  rotate Z -90  translate X -2.3 }   // the wall on the left
+plane { material Plaster  rotate X 180  translate Y 2.5 }    // the ceiling
+
+parallelogram {
+    material { pigment [0.32, 0.14, 0.13]  specular 0.04 }
+    at [-1.9, 0.004, -0.4]
+    sides [2.4, 0, 0], [0, 0, 1.8]
+}
+
+// -- The desk lamp ----------------------------------------------------------------------------------
+
+LampMetal = material { pigment [0.12, 0.13, 0.12]  specular 0.6  shininess 80  metallic 0.4 }
+Glowing = material { pigment [1, 0.94, 0.82]  ambient 3.3  diffuse 0 }
+
+// A desk lamp with three joints: where the lower arm leans from the base, where the upper arm bends at
+// the elbow, and where the head tips at the wrist, each in degrees about the joint and each measured
+// from the one before.  The spotlight is in the head, pointing out of the shade along the head's own
+// -Y, so it shines wherever the joints put the head.
+primitive DeskLamp(lean, bend, tip) -> group {
+    return group {
+        cylinder { min Y 0  max Y 0.025  scale [0.085, 1, 0.085]  material LampMetal }
+
+        group {
+            cylinder { min Y 0  max Y 0.38  scale [0.008, 1, 0.008]  material LampMetal }
+            sphere { scale 0.016  translate Y 0.38  material LampMetal }
+
+            group {
+                cylinder { min Y 0  max Y 0.34  scale [0.008, 1, 0.008]  material LampMetal }
+                sphere { scale 0.014  translate Y 0.34  material LampMetal }
+
+                group {
+                    // The shade, open at its mouth, and a bulb in it with the beam's light inside that.
+                    conic {
+                        min Y 0.45  max Y 1  open
+                        scale [0.13, 0.13, 0.13]  rotate X 180  translate Y 0.02
+                        material LampMetal
+                    }
+                    cylinder { min Y 0  max Y 0.035  scale [0.03, 1, 0.03]  translate Y -0.04  material LampMetal }
+                    sphere { scale 0.022  translate Y -0.075  material Glowing }
+                    spot light {
+                        location [0, -0.075, 0]
+                        point at [0, -1, 0]
+                        radius 30  falloff 46
+                        temperature 3000  brightness 3.4
+                        fade distance 0.32
+                    }
+
+                    rotate X tip
+                    translate Y 0.34
+                }
+
+                rotate X bend
+                translate Y 0.38
+            }
+
+            rotate X lean
+            translate Y 0.025
+        }
+    }
+}
+
+// -- The table lamp ---------------------------------------------------------------------------------
+
+// A table lamp: a turned base and stem, a bulb with the light inside it, and a linen shade open at both
+// ends.  Light is not carried through a surface to its far face here, so the linen's glow is a little
+// ambient of its own.
+primitive TableLamp() -> group {
+    return group {
+        lathe {
+            path { move to 0, 0  line to 0.07, 0  line to 0.075, 0.02  line to 0.03, 0.05  line to 0.012, 0.08
+                   line to 0.012, 0.3  line to 0, 0.3 }
+            material { pigment [0.55, 0.42, 0.26]  specular 0.5  shininess 60  metallic 0.6 }
+        }
+        sphere { scale 0.035  translate Y 0.34  material Glowing }
+        conic {
+            min Y 0.6  max Y 1  open
+            scale [0.24, 0.24, 0.24]  rotate X 180  translate Y 0.48
+            material { pigment [0.93, 0.86, 0.7]  diffuse 0.85  ambient 1.4 }
+        }
+        point light { location [0, 0.34, 0]  temperature 2700  brightness 2.6  fade distance 0.45 }
+    }
+}
+
+// -- The furniture ----------------------------------------------------------------------------------
+
+// The library builds a desk facing +Z, which is the wall; turned, it faces the room, its drawers on the
+// right.
+object Desk(46, 26, FurnitureOak) { rotate Y 180  scale Inch  translate [0.55, 0, 1.66] }
+
+// Facing out into the room, with the lamp at its side.
+object Armchair(32, FurnitureLinen, FurnitureOak) { rotate Y -35  scale Inch  translate [-1.25, 0, 1.15] }
+
+object Nightstand(FurnitureOak) { rotate Y 90  scale Inch  translate [-2.02, 0, 0.55] }
+
+object Bookcase(36, 72, 1, FurnitureOak) { rotate Y 90  scale Inch  translate [-2.08, 0, -0.55] }
+
+// A print over the desk, in a dark frame, for the desk lamp's spill to find.
+group {
+    difference {
+        cube { scale [0.27, 0.21, 0.012] }
+        cube { scale [0.23, 0.17, 0.02] }
+        material { pigment [0.09, 0.07, 0.06]  specular 0.3  shininess 60 }
+    }
+    parallelogram {
+        at [-0.23, -0.17, 0.004]
+        sides [0.46, 0, 0], [0, 0.34, 0]
+        material {
+            pigment linear Y gradient {
+                [0, [0.24, 0.3, 0.22], 0.42, [0.4, 0.44, 0.3], 0.46, [0.62, 0.66, 0.68], 1, [0.42, 0.52, 0.66]]
+                scale 0.34  translate Y -0.17
+            }
+        }
+    }
+    translate [0.45, 1.5, 1.985]
+}
+
+// -- What is on them --------------------------------------------------------------------------------
+
+DeskTop = 30 * Inch
+StandTop = 25 * Inch
+
+object DeskLamp(20, -120, 115) { rotate Y 15  translate [0.0, DeskTop, 1.86] }
+object TableLamp() { translate [-2.02, StandTop, 0.55] }
+
+// The open book under the desk lamp: two pages either side of the spine, each a little higher at its
+// outer edge, with a block of type on each.
+Paper = color [0.93, 0.9, 0.82]
+Ink = color [0.42, 0.4, 0.38]
+Type = pigment linear Z gradient { [0, Paper, 0.5, Paper, 0.52, Ink, 0.88, Ink, 0.9, Paper]  scale 0.007 }
+
+group {
+    cube { scale [0.16, 0.003, 0.115]  material { pigment [0.35, 0.08, 0.07]  specular 0.2 } }
+
+    for side in [0, 1] {
+        group {
+            cube { scale [0.074, 0.007, 0.11]  translate [0.076, 0.009, 0]  material { pigment Paper  specular 0.05 } }
+            parallelogram {
+                at [0.018, 0.0165, -0.09]
+                sides [0.11, 0, 0], [0, 0, 0.175]
+                material { pigment Type  specular 0.05 }
+            }
+            rotate Z 3
+            rotate Y side * 180
+        }
+    }
+
+    rotate Y 8
+    translate [0.06, DeskTop, 1.52]
+}

@@ -374,3 +374,6 @@ A light on a thing is an ordinary light once the scene is built, and costs what 
 costs: each lit point looks toward every light, so a street of a hundred lit lamps is a hundred lights.
 That is still far cheaper than a lamp lit by a glowing [medium](surfaces.md#a-surface-that-gives-light), which
 looks toward every part of the glow.
+
+The [Reading Corner](../gallery/Local/lights/a-reading-corner.igl) is a room lit by two lamps carrying
+their own lights.
