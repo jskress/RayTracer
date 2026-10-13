@@ -174,6 +174,12 @@ it, or a metal's reflection — the light is taken to be at the eye.
 paint is a reflection, which is the material's to give: `reflective` with `fresnel`, as above, and a little
 `roughness` for an older finish.  It goes over any pigment, this one included.
 
+**It shows best under one strong light.**  Lit from everywhere at once, as by a whole sky, each direction
+brings its own angle and the colors average toward the middle of the map; a single window or the sun
+sorts a body into one color on one side and the other on the other, which is why a car's paint shows it
+best in sunshine.  [Flip-Flop Paint](../gallery/Local/materials/flip-flop-paint.igl) puts the Utah teapot in
+it, lit from one window.
+
 `flop` may stand anywhere a pattern may — inside a blend, as one entry of another pattern's map — and the
 things that shape a pattern's value work on it as usual.  Its turbulence and scale do nothing, since it
 does not depend on the point at all.  Unlike other patterns, its two ends are two different colors and

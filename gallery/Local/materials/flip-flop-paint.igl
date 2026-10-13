@@ -1,0 +1,135 @@
+// The Utah Teapot again, in color-shifting paint: deep blue where the eye looks along the window's
+// reflection, dark green where it looks away from it, and teal between -- and since the pot is curved
+// everywhere, every one of those angles is somewhere on it at once.
+//
+// The paint is a `flop` pattern: its value is the angle between the eye and the way the light mirrors off
+// the surface, so the color is worked out afresh for each light.  The gloss over it is not part of the
+// pigment at all but the material's own: a clear coat is a reflection, with Fresnel, over whatever color
+// lies beneath.
+//
+// **Lit as the brass teapot is, from one window.**  Under a whole sky the paint is lit from every direction
+// at once, each with its own angle, and the shift averages out toward teal; it is a single strong light
+// that sorts the body into blue on one side and green on the other, which is why a car's paint shows it
+// best in sunshine.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    no gamma
+    info {
+        title 'Flip-Flop Paint'
+        author 'J. Stephen Kress'
+        description 'The Utah teapot in color-shifting paint: blue one way, green the other, under a clear coat.'
+        copyright true
+        software __software__
+    }
+}
+
+include '../shapes/teapot.igl'
+
+// Low and close, the way a thing on a counter is actually looked at.
+camera {
+    location [9.6, 4.4, -10.2]
+    look at [0.1, 1.25, 0.4]
+    field of view 36.81
+}
+
+// A window off to the left, given a real size so the shadow on the stone has a soft edge and the
+// highlight along the shoulder of the pot is a broad sweep rather than a dot.  Brass with a dot of
+// white on it reads as plastic.
+area light {
+    location [-7, 7.5, -5.5]
+    axisU [4.5, 0, 0]
+    axisV [0, 3.6, 0]
+    steps 10
+    color [1.35, 1.28, 1.15]
+}
+
+// Daylight coming back off the room, cool and dim, so the shadowed side is not simply black.
+point light {
+    location [11, 5.5, -3]
+    color [0.13, 0.15, 0.21]
+}
+
+background [0.055, 0.058, 0.068]
+
+// The wall behind. It earns its place by being reflected: a mirror-finish object in an empty room
+// mirrors the emptiness, and brass that reflects nothing looks like painted tin.
+plane {
+    material {
+        pigment [0.40, 0.365, 0.325]
+        ambient 0.20
+        diffuse 0.75
+        specular 0.02
+    }
+    rotate X -90
+    translate Z 6.5
+}
+
+// The softbox.  Product photographers do not light metal so much as light something *for the metal
+// to reflect*, and this is that thing: a broad bright panel above and behind the camera.  It is not a
+// light -- it is a surface with its ambient turned up, so reflection rays that find it come back
+// bright while it casts no light and no shadow of its own.
+//
+// Where it stands took three tries, and the two failures are the useful part.  Directly behind the
+// camera it reflected as a small hard-edged diamond on the belly of the pot -- a panel far away and
+// square-on to a curved surface subtends almost nothing.  Off to the left it made exactly the long
+// sweep down the shoulder that brass wants, and stood in the frame as a white slab.  So: off to the
+// left, and far enough forward to be out of the frame, which puts it about forty degrees off the
+// camera's axis where the widest thing it can be seen in is the teapot itself.
+cube {
+    material {
+        pigment [1.0, 0.97, 0.92]
+        ambient 1
+        diffuse 0
+        specular 0
+    }
+    scale [0.05, 2.9, 2.6]
+    translate [-6.4, 3.5, -7.4]
+}
+
+// The counter: dark granite, honed rather than mirror-polished, so the pot's reflection in it is
+// present but soft.  A slab with an edge rather than an endless plane, since the front edge is what
+// says "counter".
+cube {
+    material {
+        // The stops are close together on purpose.  A wider spread gives a handsome speckle on its
+        // own and then turns up a second time in the brass, which mirrors the counter across its
+        // whole lower body -- and salt-and-pepper reflected in a mirror-finish curve reads as a dirty
+        // pot rather than as stone.  Granite's own output runs about 0.09 to 0.41, so those are the
+        // ends worth mapping.
+        pigment granite {
+            [0.09, [0.098, 0.095, 0.104],
+             0.20, [0.120, 0.116, 0.126],
+             0.30, [0.142, 0.137, 0.142],
+             0.41, [0.172, 0.166, 0.158]]
+            scale 0.14
+        }
+        ambient 0.10
+        diffuse 0.62
+        specular 0.28
+        shininess 110
+        reflective 0.09
+    }
+    scale [9, 0.45, 5.5]
+    translate Y -0.45
+}
+
+// The paint.  The map runs from deep blue, looking along the window's reflection, through teal to dark
+// green and a darker green beyond, looking back toward the window.  The clear coat is the reflection with
+// Fresnel above it, and the highlight.
+object Teapot() {
+    material {
+        pigment flop {
+            [0, [0.10, 0.24, 0.95], 0.35, [0.05, 0.55, 0.68], 0.7, [0.10, 0.62, 0.18], 1, [0.06, 0.38, 0.10]]
+        }
+        ambient 0.06
+        diffuse 0.8
+        specular 0.8
+        shininess 220
+        reflective 0.14
+        fresnel
+    }
+    rotate Y -16
+    translate [0.2, 0, 0.2]
+}
