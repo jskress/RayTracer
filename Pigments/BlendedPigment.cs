@@ -87,6 +87,31 @@ public class BlendedPigment : Pigment
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>
     /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
+    /// <summary>
+    /// This property reports whether any of the blended pigments depends on the directions a surface is
+    /// seen and lit from.
+    /// </summary>
+    public override bool SeesTheViewer => Pigments.Any(pigment => pigment.SeesTheViewer);
+
+    /// <summary>
+    /// This method blends the pigments, each told the directions the surface is being shaded between.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        if (viewing.IsEmpty)
+            return base.GetColorFor(point, footprint, viewing);
+
+        List<Color> colors = Pigments
+            .Select(p => p.GetTransformedColorFor(point, footprint, viewing))
+            .ToList();
+
+        return Layer ? Colors.Layer(colors) : Colors.Average(colors);
+    }
+
     public override bool Matches(Pigment other)
     {
         if (other is not BlendedPigment blendedPigment ||

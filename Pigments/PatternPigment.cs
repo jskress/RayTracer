@@ -84,6 +84,32 @@ public class PatternPigment : Pigment
     }
 
     /// <summary>
+    /// This property reports whether this pigment depends on the directions a surface is seen and lit
+    /// from: whether its pattern does, or any of the pigments it maps to.
+    /// </summary>
+    public override bool SeesTheViewer => Pattern is FlopPattern || (PigmentSet?.SeesTheViewer ?? false);
+
+    /// <summary>
+    /// This method produces the color at a point, told the directions the surface is being shaded
+    /// between: the pattern is asked with them, and so is whatever it maps to.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        if (viewing.IsEmpty)
+            return base.GetColorFor(point, footprint, viewing);
+
+        double value = Pattern.ValueFor(point, footprint, viewing);
+
+        return Pattern.DiscretePigmentsNeeded > 0
+            ? PigmentSet.GetBlendedColorFor(point, value, footprint, viewing)
+            : PigmentSet.GetColorFor(point, value, footprint, viewing);
+    }
+
+    /// <summary>
     /// This method returns whether the given pigment matches this one.
     /// </summary>
     /// <param name="other">The pigment to compare to.</param>

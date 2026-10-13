@@ -154,6 +154,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `finer` | Turbulence/noise: shrinks each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
+| `flop` | Pattern: the angle a surface is seen at, against the light's reflection, for paint whose color shifts with it. | [Pigments & Patterns](pigments-and-patterns.md#a-color-that-shifts-with-the-angle) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |

@@ -83,6 +83,30 @@ public class BlobPigment : Pigment
     /// <returns>The appropriate color for that patch.</returns>
     public override Color GetColorFor(Point point, Footprint footprint)
     {
+        return ColorAt(point, footprint, default);
+    }
+
+    /// <summary>
+    /// This property reports whether any of the components' pigments depends on the directions a
+    /// surface is seen and lit from.
+    /// </summary>
+    public override bool SeesTheViewer => Everything().Any(pigment => pigment.SeesTheViewer);
+
+    /// <summary>
+    /// This method shares the color out among the components, each pigment told the directions the
+    /// surface is being shaded between.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        return viewing.IsEmpty ? base.GetColorFor(point, footprint, viewing) : ColorAt(point, footprint, viewing);
+    }
+
+    private Color ColorAt(Point point, Footprint footprint, Viewing viewing)
+    {
         Span<double> weights = stackalloc double[_pigments.Length];
         double total = _blob.GetComponentWeights(point, weights);
 
@@ -90,7 +114,7 @@ public class BlobPigment : Pigment
         // A point on the surface is not normally one of these, but a shadow or a stray query may be,
         // and the blob's own pigment is the right thing to answer with.
         if (total <= 0)
-            return ColorFrom(_fallback, point, footprint);
+            return ColorFrom(_fallback, point, footprint, viewing);
 
         Color color = Colors.Black;
         double alpha = 0;
@@ -101,7 +125,7 @@ public class BlobPigment : Pigment
                 continue;
 
             double share = weights[index] / total;
-            Color part = ColorFrom(_pigments[index] ?? _fallback, point, footprint);
+            Color part = ColorFrom(_pigments[index] ?? _fallback, point, footprint, viewing);
 
             // The alpha is carried by hand because adding colors does not carry it, and a component
             // wearing a pigment that lets light through must be able to say so through the mix.
@@ -149,11 +173,9 @@ public class BlobPigment : Pigment
     /// <param name="point">The point to ask about.</param>
     /// <param name="footprint">The patch around it, or <c>null</c>, for a point sample.</param>
     /// <returns>The color that pigment gives.</returns>
-    private static Color ColorFrom(Pigment pigment, Point point, Footprint footprint)
+    private static Color ColorFrom(Pigment pigment, Point point, Footprint footprint, Viewing viewing)
     {
-        return footprint is null || footprint.IsEmpty
-            ? pigment.GetTransformedColorFor(point)
-            : pigment.GetTransformedColorFor(point, footprint);
+        return pigment.GetTransformedColorFor(point, footprint, viewing);
     }
 
     /// <summary>

@@ -308,7 +308,7 @@ public abstract class Light : NamedThing
         // The pigment's own color is kept as well as the lit one, because a metallic highlight
         // tints by the surface's color alone -- using the lit color would fold the light in twice.
         TS pigmentColor = TS.FromReflectance(
-            material.GetColorFor(surface, point, normal, footprint, portals));
+            material.GetColorFor(surface, point, normal, footprint, portals, new Viewing(eye, normal, sample.Direction)));
         TS color = pigmentColor * EmittedToward<TS>(sample);
 
         // Skipped outright when the surface keeps all of it, which every surface did before Fresnel,
@@ -453,7 +453,7 @@ public abstract class Light : NamedThing
             return TS.Black;
 
         TS pigmentColor = TS.FromReflectance(
-            material.GetColorFor(surface, point, normal, footprint, portals));
+            material.GetColorFor(surface, point, normal, footprint, portals, new Viewing(eye, normal, sample.Direction)));
 
         return GlowOf(eye, normal, material, pigmentColor, sample, glass, 1) * reaching;
     }

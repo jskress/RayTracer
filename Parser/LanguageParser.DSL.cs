@@ -83,7 +83,7 @@ public partial class LanguageParser
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'fainter', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
@@ -475,7 +475,7 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            agate | boxed | brick | checker | cubic | hexagon | leopard | planar | radial |
+            agate | boxed | brick | checker | cubic | flop | hexagon | leopard | planar | radial |
             ripples | square | triangular | waves |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}

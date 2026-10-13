@@ -209,6 +209,43 @@ public abstract class Pattern
     }
 
     /// <summary>
+    /// This method is the same again, told the directions the surface is being shaded between, for a
+    /// pattern whose value depends on them; see <see cref="FlopPattern"/>.  Any other pattern goes on
+    /// computing exactly what it always did.
+    /// </summary>
+    /// <param name="point">The point the pattern is being asked about.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The derived pattern value.</returns>
+    public double ValueFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        if (viewing.IsEmpty)
+            return ValueFor(point, footprint);
+
+        footprint ??= Footprint.None;
+
+        double width = footprint.Width;
+        double value = Evaluate(Turbulence is null || StirsItsOwnPoints
+            ? point
+            : Turbulence.Warp(point, width), footprint, viewing);
+
+        return Shape(value);
+    }
+
+    /// <summary>
+    /// This method works out the pattern's value at a point, told the directions the surface is being
+    /// shaded between.  Only a pattern that depends on them need say anything different.
+    /// </summary>
+    /// <param name="point">The point, in the pattern's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The pattern's value there.</returns>
+    public virtual double Evaluate(Point point, Footprint footprint, Viewing viewing)
+    {
+        return Evaluate(point, footprint);
+    }
+
+    /// <summary>
     /// This method takes the number a pattern produced and shapes it on its way to the color map:
     /// scaled and slid by the frequency and phase, wrapped back into range, and then bent by
     /// whichever wave was asked for.

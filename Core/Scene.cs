@@ -1398,14 +1398,18 @@ public partial class Scene : NamedThing, IDisposable
                 ? ray.At(intersection.Distance)
                 : null;
 
-            // A decal fades where the surface turns away from it, so if there are any it needs the
-            // surface's normal too -- which a shadow ray has not worked out, and nothing else here
-            // wants, so it is worked out only then.
+            // A decal fades where the surface turns away from it, and a flop paint shifts with the
+            // angle it is seen at, so either needs the surface's normal too -- which a shadow ray has not
+            // worked out, and nothing else here wants, so it is worked out only then.  A flop paint seen
+            // along a shadow ray has no light in particular: it is taken as lit from the eye, which is
+            // where the ray came from.
+            Vector facing = needsPigment && (material.Decals is not null || material.PigmentSeesTheViewer)
+                ? intersection.Surface.NormalAt(where, intersection)
+                : null;
             Color surfaceColor = needsPigment
                 ? material.GetColorFor(
-                    intersection.Surface, where,
-                    material.Decals is null ? null : intersection.Surface.NormalAt(where, intersection),
-                    portals: intersection.Portals)
+                    intersection.Surface, where, facing, portals: intersection.Portals,
+                    viewing: facing is null ? default : new Viewing(-ray.Direction.Unit, facing))
                 : null;
             double transparency = surfaceColor is null
                 ? material.Transparency

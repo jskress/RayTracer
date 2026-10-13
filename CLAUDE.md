@@ -195,7 +195,11 @@ Pigments (`Pigments/`) define how color is derived at a surface point (solid, pa
 image-mapped, blended/layered, noisy). Patterns (`Patterns/`) define the underlying spatial
 functions (stripes, checker, gradient, agate, wood, granite, brick, hexagon, etc.) that
 pigments sample. Each has a corresponding DSL resolver under `Instructions/Patterns/` and
-`Instructions/Pigments/`.
+`Instructions/Pigments/`.  One pattern depends on direction rather than place: `flop` (`FlopPattern`), the angle
+between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.Aspecular`), for color-shifting
+paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose `SeesTheViewer` (cached per pigment in
+`Material`), so every other pigment is asked exactly as before; it is worked out per light in `Light.ApplyPhong`, and
+with no particular light (transparency, refraction, metallic tint, shadow tint) the light is taken to be at the eye.
 
 ### Expression language (`Terms/`)
 
