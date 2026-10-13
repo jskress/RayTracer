@@ -113,6 +113,7 @@ map*: pairs of a position and the color at that position, in square brackets.
 | `ripples`, `waves` | Rings spreading from scattered sources. |
 | `radial` | The angle about the Y axis. |
 | `planar`, `spherical`, `cylindrical`, `boxed` | Distance from a plane, point, axis or box. |
+| `flop` | Not a place at all: the angle the surface is seen at; see [A color that shifts with the angle](#a-color-that-shifts-with-the-angle). |
 
 ```
 pigment marble {
@@ -143,6 +144,46 @@ The same three-color map read three ways: blended, which is the default; `banded
 each color until the next; and `bouncing`, which runs the map up and back down so there is no
 seam where it would otherwise wrap.  The scene is
 [`docs/examples/pigments/maps.igl`](examples/pigments/maps.igl).
+
+#### A color that shifts with the angle
+
+Some car paints are deep blue seen from one side and dark green from the other, running through teal
+between, and a body's curves carry a single panel through the whole of it at once.  `flop` is the pattern
+for that: its value is not a matter of *where* on the surface a point is, but of the angle it is seen at.
+
+```
+material {
+    pigment flop { [0, [0.05, 0.10, 0.55], 0.5, [0.03, 0.30, 0.32], 1, [0.04, 0.32, 0.08]] }
+    specular 0.6  shininess 120
+    reflective 0.12  fresnel
+}
+```
+
+**The angle is measured against the light**: it is the angle between the way to the eye and the way the
+light mirrors off the surface, from nought looking straight along the reflection to one looking straight
+back toward the light.  That is what makes the two sides of a panel differ — seen from the far side of the
+light, the eye looks along its reflection; seen from the light's own side, it does not — which measuring
+the eye alone could never tell apart.  So the color is worked out afresh for every light, each
+contributing its own, and a sky light's every sample with them.  Painters call the color seen away from
+square-on the *flop*, whence the name.
+
+Where no particular light is being shaded for — the tint a transparent surface gives what passes through
+it, or a metal's reflection — the light is taken to be at the eye.
+
+**A clear coat is not a second pigment.**  A pigment says what color a surface is; the gloss over a car's
+paint is a reflection, which is the material's to give: `reflective` with `fresnel`, as above, and a little
+`roughness` for an older finish.  It goes over any pigment, this one included.
+
+**It shows best under one strong light.**  Lit from everywhere at once, as by a whole sky, each direction
+brings its own angle and the colors average toward the middle of the map; a single window or the sun
+sorts a body into one color on one side and the other on the other, which is why a car's paint shows it
+best in sunshine.  [Flip-Flop Paint](../gallery/Local/materials/flip-flop-paint.igl) puts the Utah teapot in
+it, lit from one window.
+
+`flop` may stand anywhere a pattern may — inside a blend, as one entry of another pattern's map — and the
+things that shape a pattern's value work on it as usual.  Its turbulence and scale do nothing, since it
+does not depend on the point at all.  Unlike other patterns, its two ends are two different colors and
+are never wrapped round onto each other.
 
 ### Turbulence
 

@@ -127,10 +127,20 @@ public abstract class Pigment
     /// <param name="point">The point to produce a color for.</param>
     /// <param name="footprint">How much of the surface the ray covers there.</param>
     /// <param name="portals">The instances the point was found through, if it was.</param>
+    /// <param name="viewing">The directions the surface is being shaded between, for a pigment that
+    /// depends on them; see <see cref="SeesTheViewer"/>.  Any other pigment is never handed them.</param>
     /// <returns>The appropriate color for that patch of the surface.</returns>
     public Color GetColorFor(
-        Surface surface, Point point, Footprint footprint, Portals portals = default)
+        Surface surface, Point point, Footprint footprint, Portals portals = default, Viewing viewing = default)
     {
+        if (!viewing.IsEmpty)
+        {
+            return GetTransformedColorFor(
+                surface.WorldToSurface(point, 0, portals),
+                footprint is null || footprint.IsEmpty ? Footprint.None : surface.WorldToSurface(footprint, 0, portals),
+                viewing);
+        }
+
         return footprint is null || footprint.IsEmpty
             ? GetTransformedColorFor(surface.WorldToSurface(point, 0, portals))
             : GetTransformedColorFor(
@@ -210,6 +220,49 @@ public abstract class Pigment
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
     public abstract Color GetColorFor(Point point);
+
+    /// <summary>
+    /// This property reports whether this pigment's color depends on the directions a surface is seen
+    /// and lit from -- whether it holds a <see cref="Patterns.FlopPattern"/> anywhere -- and so must be
+    /// handed them.  Nearly every pigment does not, and is never asked any differently than it was.
+    /// </summary>
+    public virtual bool SeesTheViewer => false;
+
+    /// <summary>
+    /// This method accepts a point in the pigment's own space, how much of the surface the ray covers,
+    /// and the directions the surface is being shaded between, and produces the color.
+    /// </summary>
+    /// <param name="point">The point, already in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there, in the same space.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public Color GetTransformedColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        if (viewing.IsEmpty)
+        {
+            return footprint is null || footprint.IsEmpty
+                ? GetTransformedColorFor(point)
+                : GetTransformedColorFor(point, footprint);
+        }
+
+        return GetColorFor(
+            InverseTransform * point,
+            footprint is null || footprint.IsEmpty ? Footprint.None : footprint.TransformedBy(InverseTransform),
+            viewing);
+    }
+
+    /// <summary>
+    /// This method produces the color at a point, told the directions the surface is being shaded
+    /// between.  Only a pigment that depends on them, or holds one that does, need say anything different.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public virtual Color GetColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        return footprint is null || footprint.IsEmpty ? GetColorFor(point) : GetColorFor(point, footprint);
+    }
 
     /// <summary>
     /// This method accepts a point and the patch of space around it, and produces a color.

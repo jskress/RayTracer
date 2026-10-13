@@ -69,6 +69,7 @@ public partial class LanguageParser
             {
                 SeedResolver = seedResolver
             }, new GranitePattern().DiscretePigmentsNeeded),
+            "flop" => (new FlopPatternResolver(), new FlopPattern().DiscretePigmentsNeeded),
             "hexagon" => (new HexagonPatternResolver(), new HexagonPattern().DiscretePigmentsNeeded),
             "leopard" => (new LeopardPatternResolver(), new LeopardPattern().DiscretePigmentsNeeded),
             "marble" => (new MarblePatternResolver(), new MarblePattern().DiscretePigmentsNeeded),

@@ -430,6 +430,29 @@ public class Material
     }
 
     /// <summary>
+    /// This property reports whether this material's pigment depends on the directions a surface is
+    /// seen and lit from, worked out once for each pigment it has had rather than on every ray: the
+    /// answer means walking the whole of the pigment, and it is asked every time the surface is shaded.
+    /// </summary>
+    internal bool PigmentSeesTheViewer
+    {
+        get
+        {
+            Sight sight = _sight;
+
+            if (sight is null || !ReferenceEquals(sight.Pigment, Pigment))
+                _sight = sight = new Sight(Pigment, Pigment?.SeesTheViewer ?? false);
+
+            return sight.Sees;
+        }
+    }
+
+    // Held as one object, so that a thread reading it never pairs one pigment with another's answer.
+    private sealed record Sight(Pigment Pigment, bool Sees);
+
+    private Sight _sight;
+
+    /// <summary>
     /// This method returns the color of this material where a ray met a surface wearing it.  See
     /// <see cref="GetColorFor(Surface, Point, Vector, Footprint, Surface)"/>.
     /// </summary>
@@ -438,7 +461,8 @@ public class Material
     public Color GetColorFor(Intersection intersection)
     {
         return GetColorFor(
-            intersection.Surface, intersection.Point, intersection.Normal, portals: intersection.Portals);
+            intersection.Surface, intersection.Point, intersection.Normal, portals: intersection.Portals,
+            viewing: intersection.Eye is null ? default : new Viewing(intersection.Eye, intersection.Normal));
     }
 
     /// <summary>
@@ -463,12 +487,16 @@ public class Material
     /// <param name="footprint">How much of the surface the ray covers there, so that a pattern or a
     /// decal's edge too fine to resolve is averaged rather than sampled, or <c>null</c>.</param>
     /// <param name="portals">The instances the point was found through, if it was.</param>
+    /// <param name="viewing">The directions the surface is being shaded between: the eye, the way it
+    /// faces, and the light, where one is being shaded for.  Handed on only to a pigment that depends on
+    /// them, so that every other pigment is asked exactly as it always was.</param>
     /// <returns>The color there.</returns>
     public Color GetColorFor(
         Surface surface, Point point, Vector normal = null, Footprint footprint = null,
-        Portals portals = default)
+        Portals portals = default, Viewing viewing = default)
     {
-        Color color = Pigment.GetColorFor(surface, point, footprint, portals);
+        Color color = Pigment.GetColorFor(
+            surface, point, footprint, portals, viewing.IsEmpty || !PigmentSeesTheViewer ? default : viewing);
 
         if (Decals is null)
             return color;

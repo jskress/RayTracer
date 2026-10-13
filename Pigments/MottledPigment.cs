@@ -87,6 +87,28 @@ public class MottledPigment : Pigment
     }
 
     /// <summary>
+    /// This property reports whether the mottled pigment depends on the directions a surface is seen
+    /// and lit from.
+    /// </summary>
+    public override bool SeesTheViewer => Pigment.SeesTheViewer;
+
+    /// <summary>
+    /// This method mottles the pigment's color, the pigment told the directions the surface is being
+    /// shaded between.
+    /// </summary>
+    /// <param name="point">The point, in the pigment's own space.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions to the eye and the light, and the way the surface faces.</param>
+    /// <returns>The color there.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint, Viewing viewing)
+    {
+        if (viewing.IsEmpty)
+            return base.GetColorFor(point, footprint, viewing);
+
+        return Pigment.GetColorFor(point, footprint, viewing) * Noise.Generate(point, footprint?.Width ?? 0);
+    }
+
+    /// <summary>
     /// This method returns whether the given pigmentation matches this one.
     /// </summary>
     /// <param name="other">The pigmentation to compare to.</param>

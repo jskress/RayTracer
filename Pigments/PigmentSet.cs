@@ -25,6 +25,12 @@ public class PigmentSet
     /// </summary>
     public bool MayTransmit => _pigments.Any(pigment => pigment.MayTransmit);
 
+    /// <summary>
+    /// This property reports whether any of the set's pigments depends on the directions a surface is
+    /// seen and lit from.
+    /// </summary>
+    public bool SeesTheViewer => _pigments.Any(pigment => pigment.SeesTheViewer);
+
     private readonly BreakValue<Pigment> _pigments = new (); 
 
     /// <summary>
@@ -84,13 +90,11 @@ public class PigmentSet
     /// <param name="index">The index of the desired color.</param>
     /// <param name="footprint">The patch around the point.</param>
     /// <returns>The appropriate color for the value.</returns>
-    public Color GetColorFor(Point point, int index, Footprint footprint)
+    public Color GetColorFor(Point point, int index, Footprint footprint, Viewing viewing = default)
     {
         (_, Pigment pigment) = _pigments.GetByIndex(index);
 
-        return footprint is null || footprint.IsEmpty
-            ? pigment.GetTransformedColorFor(point)
-            : pigment.GetTransformedColorFor(point, footprint);
+        return pigment.GetTransformedColorFor(point, footprint, viewing);
     }
 
     /// <summary>
@@ -120,7 +124,7 @@ public class PigmentSet
     /// <param name="value">The index, which may lie between two pigments.</param>
     /// <param name="footprint">The patch around the point.</param>
     /// <returns>The appropriate color.</returns>
-    public Color GetBlendedColorFor(Point point, double value, Footprint footprint)
+    public Color GetBlendedColorFor(Point point, double value, Footprint footprint, Viewing viewing = default)
     {
         int index = (int) value;
         double fraction = value - index;
@@ -128,10 +132,10 @@ public class PigmentSet
         // The whole-number case is the one nearly every ray takes, and it must come out bit for bit
         // as it did before any of this: no second lookup, no arithmetic on the color.
         if (fraction <= 0)
-            return GetColorFor(point, index, footprint);
+            return GetColorFor(point, index, footprint, viewing);
 
-        Color firstColor = GetColorFor(point, index, footprint);
-        Color secondColor = GetColorFor(point, index + 1, footprint);
+        Color firstColor = GetColorFor(point, index, footprint, viewing);
+        Color secondColor = GetColorFor(point, index + 1, footprint, viewing);
         double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 
         return (firstColor + (secondColor - firstColor) * fraction).WithAlpha(alpha);
@@ -155,7 +159,7 @@ public class PigmentSet
     /// <param name="value">The value to get the color for.</param>
     /// <param name="footprint">The patch around the point.</param>
     /// <returns>The appropriate color for the value.</returns>
-    public Color GetColorFor(Point point, double value, Footprint footprint)
+    public Color GetColorFor(Point point, double value, Footprint footprint, Viewing viewing = default)
     {
         // If we have no pigments, just go with black.
         if (_pigments.IsEmpty)
@@ -167,9 +171,7 @@ public class PigmentSet
         // belonging to a different stop entirely.
         int index = _pigments.GetIndexByValue(value);
         (double start, Pigment firstPigment) = _pigments.GetByIndex(index);
-        Color firstColor = footprint is null || footprint.IsEmpty
-            ? firstPigment.GetTransformedColorFor(point)
-            : firstPigment.GetTransformedColorFor(point, footprint);
+        Color firstColor = firstPigment.GetTransformedColorFor(point, footprint, viewing);
 
         // If we're banded or on the last entry, then we have our color.
         if (Banded || index >= _pigments.Count - 1)
@@ -180,9 +182,7 @@ public class PigmentSet
         // The break values live in [0, 1), so the value has to be brought into that same
         // interval before it's measured against them.
         double fraction = (BreakValue<Pigment>.Normalize(value) - start) / (end - start);
-        Color secondColor = footprint is null || footprint.IsEmpty
-            ? secondPigment.GetTransformedColorFor(point)
-            : secondPigment.GetTransformedColorFor(point, footprint);
+        Color secondColor = secondPigment.GetTransformedColorFor(point, footprint, viewing);
         double alpha = firstColor.Alpha + (secondColor.Alpha - firstColor.Alpha) * fraction;
 
         return (firstColor + (secondColor - firstColor) * fraction).WithAlpha(alpha);
