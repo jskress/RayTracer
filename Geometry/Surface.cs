@@ -604,8 +604,8 @@ public abstract class Surface : NamedThing
         // Asked without an intersection to go on -- as a caller testing the geometry alone may do
         // -- there is no particular instant meant, so the surface is taken where it starts.
         int timeIndex = intersection?.TimeIndex ?? 0;
-        Surface portal = intersection?.Portal;
-        Point surfacePoint = WorldToSurface(point, timeIndex, portal);
+        Portals portals = intersection?.Portals ?? default;
+        Point surfacePoint = WorldToSurface(point, timeIndex, portals);
         Vector normal = SurfaceNormalAt(surfacePoint, intersection);
 
         // Any roughening happens here, in surface space, which is the same footing the pigment is
@@ -615,7 +615,7 @@ public abstract class Surface : NamedThing
         if (Material?.SurfaceNormal is not null)
             normal = Material.SurfaceNormal.PerturbAt(normal, surfacePoint);
 
-        return NormalToWorld(normal, timeIndex, portal);
+        return NormalToWorld(normal, timeIndex, portals);
     }
 
     /// <summary>
@@ -634,13 +634,15 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="point">The point to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
+    /// <param name="portals">The instances the point was found through, if it was: where the parents
+    /// run out at the top of a shared shape, the walk carries on through the innermost of them.</param>
     /// <returns>The converted point.</returns>
-    public Point WorldToSurface(Point point, int timeIndex = 0, Surface portal = null)
+    public Point WorldToSurface(Point point, int timeIndex = 0, Portals portals = default)
     {
         if (Parent != null)
-            point = Parent.WorldToSurface(point, timeIndex, portal);
-        else if (portal != null)
-            point = portal.WorldToSurface(point, timeIndex);
+            point = Parent.WorldToSurface(point, timeIndex, portals);
+        else if (!portals.IsEmpty)
+            point = portals.Through.WorldToSurface(point, timeIndex, portals.Outward);
 
         return InverseTransformAt(timeIndex) * point;
     }
@@ -657,15 +659,15 @@ public abstract class Surface : NamedThing
     /// <param name="footprint">The footprint to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
     /// <returns>The converted footprint.</returns>
-    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0, Surface portal = null)
+    public Footprint WorldToSurface(Footprint footprint, int timeIndex = 0, Portals portals = default)
     {
         if (footprint is null || footprint.IsEmpty)
             return Footprint.None;
 
         if (Parent != null)
-            footprint = Parent.WorldToSurface(footprint, timeIndex, portal);
-        else if (portal != null)
-            footprint = portal.WorldToSurface(footprint, timeIndex);
+            footprint = Parent.WorldToSurface(footprint, timeIndex, portals);
+        else if (!portals.IsEmpty)
+            footprint = portals.Through.WorldToSurface(footprint, timeIndex, portals.Outward);
 
         return footprint.TransformedBy(InverseTransformAt(timeIndex));
     }
@@ -681,18 +683,18 @@ public abstract class Surface : NamedThing
     /// </summary>
     /// <param name="point">The point to convert.</param>
     /// <param name="timeIndex">Which instant to convert at.</param>
-    /// <param name="portal">The instance the point was found through, if it was.</param>
+    /// <param name="portals">The instances the point was found through, if it was.</param>
     /// <returns>The point, in the world's coordinate system.</returns>
-    public Point SurfaceToWorld(Point point, int timeIndex = 0, Surface portal = null)
+    public Point SurfaceToWorld(Point point, int timeIndex = 0, Portals portals = default)
     {
         Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
 
         point = forward * point;
 
         if (Parent != null)
-            return Parent.SurfaceToWorld(point, timeIndex, portal);
+            return Parent.SurfaceToWorld(point, timeIndex, portals);
 
-        return portal is null ? point : portal.SurfaceToWorld(point, timeIndex);
+        return portals.IsEmpty ? point : portals.Through.SurfaceToWorld(point, timeIndex, portals.Outward);
     }
 
     /// <summary>
@@ -702,15 +704,15 @@ public abstract class Surface : NamedThing
     /// <param name="normal">The normal to convert.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to place the surface at.</param>
     /// <returns>The converted normal.</returns>
-    public Vector NormalToWorld(Vector normal, int timeIndex = 0, Surface portal = null)
+    public Vector NormalToWorld(Vector normal, int timeIndex = 0, Portals portals = default)
     {
         normal = TransposedInverseTransformAt(timeIndex) * normal;
         normal = normal.Clean().Unit;
 
         if (Parent != null)
-            normal = Parent.NormalToWorld(normal, timeIndex, portal);
-        else if (portal != null)
-            normal = portal.NormalToWorld(normal, timeIndex);
+            normal = Parent.NormalToWorld(normal, timeIndex, portals);
+        else if (!portals.IsEmpty)
+            normal = portals.Through.NormalToWorld(normal, timeIndex, portals.Outward);
 
         return normal;
     }

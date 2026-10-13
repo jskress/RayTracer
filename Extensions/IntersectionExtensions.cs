@@ -67,7 +67,7 @@ public static class IntersectionExtensions
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
         // for every instance of it: a ray entering one glass ball and then another would otherwise
         // read as entering and *leaving* the one ball, and come out the far side unrefracted.
-        List<(Surface Surface, Surface Portal)> containers = [];
+        List<(Surface Surface, Portals Portals)> containers = [];
         Surface before = null;
         Surface after = null;
 
@@ -88,7 +88,7 @@ public static class IntersectionExtensions
                 break;
             }
 
-            (Surface, Surface) inside = (intersection.Surface, intersection.Portal);
+            (Surface, Portals) inside = (intersection.Surface, intersection.Portals);
 
             if (containers.Contains(inside))
                 containers.Remove(inside);

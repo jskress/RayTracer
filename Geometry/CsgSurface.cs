@@ -261,8 +261,10 @@ public class CsgSurface : Surface
             intersection =>
             {
                 // What stands in this shape's tree is the *instance*, when the crossing came through
-                // one -- the shape it points at is shared and lives outside the tree altogether.
-                Surface hit = intersection.Portal ?? Hair.StandingFor(intersection.Surface);
+                // one -- the shape it points at is shared and lives outside the tree altogether.  It is
+                // the outermost stamped so far: any instance further out has yet to stamp the crossing,
+                // and any further in stands inside the shape this one points at.
+                Surface hit = intersection.Portals.Outermost ?? Hair.StandingFor(intersection.Surface);
                 bool leftHit = IsOrIncludes(Left, _leftMembers, hit);
                 bool result = !IsIntersectionAllowed(leftHit, inLeft, inRight);
 

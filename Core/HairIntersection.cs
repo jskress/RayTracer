@@ -113,8 +113,8 @@ public class HairIntersection : Intersection
         if (Center is null)
             return base.LeavingPoints(adjustment);
 
-        Point near = Surface.SurfaceToWorld(Center + StrandNormal * Radius, TimeIndex, Portal);
-        Point far = Surface.SurfaceToWorld(Center - StrandNormal * Radius, TimeIndex, Portal);
+        Point near = Surface.SurfaceToWorld(Center + StrandNormal * Radius, TimeIndex, Portals);
+        Point far = Surface.SurfaceToWorld(Center - StrandNormal * Radius, TimeIndex, Portals);
 
         return (near + adjustment, far - adjustment);
     }

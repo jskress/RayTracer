@@ -1005,7 +1005,7 @@ public partial class Scene : NamedThing, IDisposable
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, ReachingFrom<TS>(intersection, only, glass),
-                intersection.Footprint, intersection.Portal, ownShare,
+                intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass,
                 intersection.Material);
         }
@@ -1020,7 +1020,7 @@ public partial class Scene : NamedThing, IDisposable
             sum += light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, ReachingFrom<TS>(intersection, sample, glass),
-                intersection.Footprint, intersection.Portal, ownShare,
+                intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass,
                 intersection.Material);
         }
@@ -1354,7 +1354,7 @@ public partial class Scene : NamedThing, IDisposable
             // A shared shape is one copy behind every instance of it, so whether it casts a shadow
             // is the instance's to say as much as its own.
             if (intersection.Distance < 0 || intersection.Distance >= distance ||
-                intersection.Surface.NoShadow || intersection.Portal is { NoShadow: true })
+                intersection.Surface.NoShadow || intersection.Portals.CastsNoShadow)
                 continue;
 
             // A strand of hair sends most of the light onward.
@@ -1405,7 +1405,7 @@ public partial class Scene : NamedThing, IDisposable
                 ? material.GetColorFor(
                     intersection.Surface, where,
                     material.Decals is null ? null : intersection.Surface.NormalAt(where, intersection),
-                    portal: intersection.Portal)
+                    portals: intersection.Portals)
                 : null;
             double transparency = surfaceColor is null
                 ? material.Transparency
@@ -2025,7 +2025,7 @@ public partial class Scene : NamedThing, IDisposable
                 LightSample sample = light.SampleToward(exit.LitPoint, which, exit.Normal);
                 TS glow = light.GlowThrough(
                     exit.LitPoint, exit.Eye, exit.Normal, exit.Surface, sample,
-                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portal,
+                    ReachingFrom<TS>(exit, sample, sides), sides, exit.Footprint, exit.Portals,
                     RegularizedFor(exit));
 
                 if (glow.IsBlack)

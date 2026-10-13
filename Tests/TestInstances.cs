@@ -394,6 +394,33 @@ public class TestInstances
             "the bough was not shared; the report said:\n" + report);
     }
 
+    [TestMethod]
+    public void TestAPrimitiveHoldingSharedShapesIsSharedItself()
+    {
+        // **The tree is the point.**  A primitive whose body calls another hands back a shape holding an
+        // instance, which could not be shared -- so a tree called twice was built twice, leaves and all,
+        // and only its leaves were shared.  Now the tree is shared as well, and the census counts what
+        // is shown: two trees, and three leaves in each of them, six in all.
+        string report = StatisticsOf("""
+            primitive leaf() -> group {
+                return group { sphere { scale 0.1 } }
+            }
+            primitive tree(n) -> group {
+                return group {
+                    cylinder { min Y 0  max Y 1  scale 0.05 }
+                    object leaf() { translate [0.2, 1, 0] }
+                    object leaf() { translate [-0.2, 1, 0] }
+                    object leaf() { translate [0, 1.2, 0] }
+                }
+            }
+            object tree(1) { translate X -1 }
+            object tree(1) { translate X 1 }
+            """);
+
+        StringAssert.Contains(report, "2 shapes, shown 8 times",
+            "the tree was not shared, or its leaves were not counted in each; the report said:\n" + report);
+    }
+
     /// <summary>
     /// Renders a scene written in the language and hands back the statistics reported for it.
     /// </summary>
@@ -464,21 +491,264 @@ public class TestInstances
         return pixels.ToString();
     }
 
-    [TestMethod]
-    public void TestASharedShapeCannotHoldAnotherSharedShape()
+    /// <summary>
+    /// Builds a shape shared at several depths -- a sphere inside a group shared by two instances,
+    /// that group inside another shared by two more, and so on -- or the same spheres written out, one
+    /// for every way down through the instances.  The two must come out identical.
+    /// </summary>
+    /// <param name="shared">Whether to share the shapes rather than write them out.</param>
+    /// <param name="depth">How many levels of sharing to stand the sphere inside.</param>
+    /// <param name="dress">What to make the sphere of.</param>
+    /// <returns>The surfaces to put in a scene.</returns>
+    private static List<Surface> Nested(bool shared, int depth, Func<Material> dress)
     {
-        // Refused rather than quietly got wrong: a hit would have to remember both instances, in
-        // order, and it remembers one.
-        Sphere inner = new () { Material = Checkered() };
-        Group holder = new ();
+        // The sphere's own turn and squash, and at every level two placings, one of them sheared, and
+        // a transform on the group itself -- so that every link of the chain has to compose the right
+        // way round, and a normal carried out through the wrong one is lit wrongly.
+        Matrix mine = Transforms.RotateAroundY(25) * Transforms.Scale(0.5, 0.35, 0.5);
+        Matrix[][] placings =
+        [
+            [Transforms.Translate(-0.45, 0, 0.1), Transforms.Translate(0.5, 0.15, 0) * Transforms.Shear(0.4, 0, 0, 0.3, 0, 0)],
+            [Transforms.Translate(0, -0.5, 0.3) * Transforms.Scale(0.8), Transforms.Translate(0.2, 0.55, -0.2) * Transforms.RotateAroundZ(35)],
+            [Transforms.Translate(-0.6, 0, 0) * Transforms.Scale(0.7), Transforms.Translate(0.7, 0.1, 0.2) * Transforms.Shear(0, 0.3, 0.25, 0, 0, 0)]
+        ];
+        Matrix[] groups = [Transforms.RotateAroundX(10), Transforms.Scale(1.1, 0.9, 1), Transforms.RotateAroundY(-20)];
 
-        holder.Add(new Instance { Prototype = inner, Transform = Transforms.Translate(1, 0, 0) });
+        // Level nought is the innermost: the sphere, placed twice in a group; each level after it places
+        // the one before twice in a group of its own.
+        if (!shared)
+        {
+            List<Matrix> ways = [Matrix.Identity];
 
-        Instance outer = new () { Prototype = holder };
+            for (int level = 0; level < depth; level++)
+            {
+                int at = level;
 
-        Exception thrown = Assert.ThrowsExactly<Exception>(() => outer.PrepareForRendering(null));
+                ways = ways.SelectMany(way => placings[at].Select(placing => groups[at] * placing * way)).ToList();
+            }
 
-        StringAssert.Contains(thrown.Message, "cannot itself hold a shared shape");
+            return ways.Select(way => (Surface) new Sphere { Material = dress(), Transform = way * mine }).ToList();
+        }
+
+        Surface shape = new Sphere { Material = dress(), Transform = mine };
+
+        for (int level = 0; level < depth; level++)
+        {
+            Group holder = new () { Transform = groups[level] };
+
+            foreach (Matrix placing in placings[level])
+                holder.Add(new Instance { Prototype = shape, Transform = placing });
+
+            shape = holder;
+        }
+
+        return [shape];
+    }
+
+    [TestMethod]
+    public void TestASharedShapeMayHoldAnotherSharedShape()
+    {
+        // **An oak holds its leaf clusters, and a wood holds its oaks.**  A crossing found through both
+        // has two places to come out through, in order, and a walk that took only one would read the
+        // checker in the wrong space and light the sheared ball by the wrong normal.  Two levels and
+        // three, against the same balls written out: four of them, and eight.
+        foreach (int depth in (int[]) [2, 3])
+        {
+            AssertSame(
+                Rendered(scene => scene.Surfaces.AddRange(Nested(true, depth, Checkered))),
+                Rendered(scene => scene.Surfaces.AddRange(Nested(false, depth, Checkered))),
+                $"shapes shared {depth} deep did not look like the same shapes written out");
+        }
+    }
+
+    [TestMethod]
+    public void TestARayThroughNestedGlassTellsItsPlacesApart()
+    {
+        // **The same inner instance, in two outer places.**  The two balls here differ only by the outer
+        // instance that places their group: the instance inside the group, and the ball inside that, are
+        // the very same objects for both.  So which surfaces a ray is inside must be told by the whole
+        // chain of instances -- told by the inner one alone, entering the second ball reads as leaving
+        // the first.  They overlap, so a ray is inside both at once.
+        Canvas Balls(bool shared) => Rendered(scene =>
+        {
+            Sphere shape = new () { Material = Glass(), Transform = Transforms.Scale(0.55) };
+            Group pair = new Group().Add(new Instance { Prototype = shape, Transform = Transforms.Translate(0, 0.05, 0) });
+
+            foreach (double z in new[] { -0.3, 0.3 })
+            {
+                Matrix placing = Transforms.Translate(0, 0, z);
+
+                scene.Surfaces.Add(shared
+                    ? new Instance { Prototype = pair, Transform = placing }
+                    : new Sphere
+                    {
+                        Material = Glass(),
+                        Transform = placing * Transforms.Translate(0, 0.05, 0) * Transforms.Scale(0.55)
+                    });
+            }
+
+            scene.Surfaces.Add(new Cube
+            {
+                Material = Checkered(), Transform = Transforms.Translate(0, 0, 4) * Transforms.Scale(3, 3, 0.1)
+            });
+        }, new Point(0, 0, -5));
+
+        AssertSame(Balls(true), Balls(false),
+            "two nested instances of one glass shape do not refract like two glass shapes; the inside of " +
+            "a shape is being told by its inner instance alone");
+    }
+
+    [TestMethod]
+    public void TestACombinationMayHoldNestedInstances()
+    {
+        // **Both sides share the same inner instance**, so only the outer one can say which side a
+        // crossing came from -- the outermost stamped by the time the combination asks.  And a
+        // combination may stand inside a shared shape too, when the instances it asks about are the
+        // inner ones, since the outer have yet to stamp.
+        Cube bite = new () { Material = Checkered() };
+        Group held = new Group().Add(new Instance { Prototype = bite, Transform = Transforms.Translate(0.05, 0, 0) });
+        CsgSurface inside = new ()
+        {
+            Operation = CsgOperation.Difference,
+            Left = new Group().Add(new Instance { Prototype = bite, Transform = Transforms.Scale(0.4) }),
+            Right = new Group().Add(new Instance
+            {
+                Prototype = bite, Transform = Transforms.Translate(0.25, 0.25, -0.3) * Transforms.Scale(0.3)
+            })
+        };
+
+        Canvas shared = Rendered(scene =>
+        {
+            scene.Surfaces.Add(new CsgSurface
+            {
+                Operation = CsgOperation.Difference,
+                Left = new Group().Add(new Instance { Prototype = held, Transform = Transforms.Translate(-0.5, 0, 0) * Transforms.Scale(0.6) }),
+                Right = new Group().Add(new Instance
+                {
+                    Prototype = held, Transform = Transforms.Translate(-0.2, 0.3, -0.4) * Transforms.Scale(0.4)
+                })
+            });
+
+            foreach (double y in new[] { -0.7, 0.6 })
+                scene.Surfaces.Add(new Instance { Prototype = inside, Transform = Transforms.Translate(0.9, y, 0) });
+        });
+        Canvas direct = Rendered(scene =>
+        {
+            scene.Surfaces.Add(new CsgSurface
+            {
+                Operation = CsgOperation.Difference,
+                Left = new Group().Add(new Cube
+                {
+                    Material = Checkered(),
+                    Transform = Transforms.Translate(-0.5, 0, 0) * Transforms.Scale(0.6) * Transforms.Translate(0.05, 0, 0)
+                }),
+                Right = new Group().Add(new Cube
+                {
+                    Material = Checkered(),
+                    Transform = Transforms.Translate(-0.2, 0.3, -0.4) * Transforms.Scale(0.4) * Transforms.Translate(0.05, 0, 0)
+                })
+            });
+
+            foreach (double y in new[] { -0.7, 0.6 })
+            {
+                scene.Surfaces.Add(new CsgSurface
+                {
+                    Operation = CsgOperation.Difference,
+                    Transform = Transforms.Translate(0.9, y, 0),
+                    Left = new Group().Add(new Cube { Material = Checkered(), Transform = Transforms.Scale(0.4) }),
+                    Right = new Group().Add(new Cube
+                    {
+                        Material = Checkered(),
+                        Transform = Transforms.Translate(0.25, 0.25, -0.3) * Transforms.Scale(0.3)
+                    })
+                });
+            }
+        });
+
+        AssertSame(shared, direct,
+            "a combination of nested instances did not cut as the same shapes written out do; it cannot " +
+            "tell which of its sides a crossing came from");
+    }
+
+    [TestMethod]
+    public void TestAnInstanceThatCastsNoShadowDoesSoForWhatItHolds()
+    {
+        // `no shadow` on an outer instance covers everything found through it, however deep.
+        Canvas Shadowed(bool shared) => Rendered(scene =>
+        {
+            scene.Surfaces.Add(new Plane { Material = Checkered(), Transform = Transforms.Translate(0, -0.9, 0) });
+
+            if (shared)
+            {
+                Sphere ball = new () { Material = Checkered(), Transform = Transforms.Scale(0.5) };
+                Group held = new Group().Add(new Instance { Prototype = ball });
+
+                scene.Surfaces.Add(new Instance { Prototype = held, NoShadow = true });
+            }
+            else
+                scene.Surfaces.Add(new Sphere { Material = Checkered(), Transform = Transforms.Scale(0.5), NoShadow = true });
+        });
+
+        AssertSame(Shadowed(true), Shadowed(false),
+            "a shape found through an outer instance that casts no shadow cast one anyway");
+    }
+
+    [TestMethod]
+    public void TestAPointIsCarriedBothWaysThroughNestedInstances()
+    {
+        // Out to the world and back in again, through two instances and the groups between: what lights
+        // made of a shape's insides and hair lit from the world both carry points this way.
+        Sphere ball = new () { Transform = Transforms.Scale(0.5, 0.4, 0.6) };
+        Instance inner = new () { Prototype = ball, Transform = Transforms.Translate(0.3, 0, 0) * Transforms.RotateAroundZ(20) };
+        Group middle = new () { Transform = Transforms.RotateAroundY(30) };
+        Instance outer = new () { Prototype = middle, Transform = Transforms.Translate(0, 1, 0) * Transforms.Shear(0.3, 0, 0, 0, 0.2, 0) };
+        Group top = new () { Transform = Transforms.Translate(-1, 0, 2) };
+
+        middle.Add(inner);
+        top.Add(outer);
+
+        Portals portals = new Portals(inner).And(outer);
+        Point there = new (0.4, 0.2, 0.1);
+        Matrix whole = top.Transform * outer.Transform * middle.Transform * inner.Transform * ball.Transform;
+        Point world = ball.SurfaceToWorld(there, 0, portals);
+
+        Assert.IsTrue((whole * there).Matches(world), "a point was carried out to the world through the wrong chain");
+        Assert.IsTrue(ball.WorldToSurface(world, 0, portals).Matches(there), "a point was carried back in through the wrong chain");
+
+        Footprint patch = ball.WorldToSurface(new Footprint(new Vector(0.01, 0, 0), new Vector(0, 0.01, 0)), 0, portals);
+        Footprint expected = new Footprint(new Vector(0.01, 0, 0), new Vector(0, 0.01, 0)).TransformedBy(whole.Invert());
+
+        Assert.IsTrue(patch.Across.Matches(expected.Across) && patch.Along.Matches(expected.Along),
+            "a footprint was carried in through the wrong chain");
+    }
+
+    [TestMethod]
+    public void TestAMaterialsAnchorIsReachedThroughOnlyTheInstancesBeyondIt()
+    {
+        // A material anchored on a surface inside the innermost shared shape is read through every
+        // instance; one anchored on the shape that holds the inner instance, through the outer alone;
+        // one anchored above them all, through none.
+        Sphere ball = new () { Transform = Transforms.Scale(0.5) };
+        Instance inner = new () { Prototype = ball, Transform = Transforms.Translate(0.3, 0, 0) };
+        Group middle = new () { Transform = Transforms.RotateAroundY(30) };
+        Instance outer = new () { Prototype = middle, Transform = Transforms.Translate(0, 1, 0) * Transforms.Scale(2) };
+        Group top = new () { Transform = Transforms.Translate(-1, 0, 0) };
+
+        middle.Add(inner);
+        top.Add(outer);
+
+        Portals portals = new Portals(inner).And(outer);
+        Point there = new (0.4, 0.2, 0.1);
+        Point world = top.Transform * outer.Transform * middle.Transform * inner.Transform * ball.Transform * there;
+
+        Assert.IsTrue(new Material { Anchor = ball }.WorldToAnchor(ball, world, portals).Matches(there),
+            "an anchor inside the innermost shared shape was not reached through every instance");
+        Assert.IsTrue(new Material { Anchor = middle }.WorldToAnchor(ball, world, portals)
+                .Matches(inner.Transform * ball.Transform * there),
+            "an anchor holding the inner instance was not reached through the outer one alone");
+        Assert.IsTrue(new Material { Anchor = top }.WorldToAnchor(ball, world, portals)
+                .Matches(outer.Transform * middle.Transform * inner.Transform * ball.Transform * there),
+            "an anchor above every instance was reached through one");
     }
 
     private static void AssertSame(Canvas left, Canvas right, string what)
@@ -521,11 +791,11 @@ public class TestInstances
 
         Assert.IsFalse(Instance.MayBeShared(null),
             "Nothing at all cannot be shared.");
-        Assert.IsFalse(Instance.MayBeShared(new Instance { Prototype = new Sphere() }),
-            "An instance cannot itself be shared; only the nearer of the two is remembered.");
-        Assert.IsFalse(Instance.MayBeShared(
+        Assert.IsTrue(Instance.MayBeShared(new Instance { Prototype = new Sphere() }),
+            "An instance may stand in a shared shape; a crossing remembers every instance it came through.");
+        Assert.IsTrue(Instance.MayBeShared(
                 new Group().Add(new Instance { Prototype = new Sphere() })),
-            "Nor may a group holding one, which is exactly what a group primitive gives back.");
+            "So may a group holding one, which is exactly what a group primitive gives back.");
         Assert.IsFalse(Instance.MayBeShared(new Sphere { GivesLightSamples = 4 }),
             "A shape that is a light has to be somewhere.");
         Assert.IsFalse(Instance.MayBeShared(

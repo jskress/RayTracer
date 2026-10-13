@@ -60,12 +60,12 @@ public class SceneCensus
     /// <summary>
     /// This property holds how many shapes the scene shows in more than one place.
     /// </summary>
-    public int SharedShapes => _uses.Values.Count(uses => uses > 1);
+    public int SharedShapes => _all.Uses.Values.Count(uses => uses > 1);
 
     /// <summary>
     /// This property holds how many places, between them, those shapes are shown in.
     /// </summary>
-    public long SharedUses => _uses.Values.Where(uses => uses > 1).Sum();
+    public long SharedUses => _all.Uses.Values.Where(uses => uses > 1).Sum();
 
     /// <summary>
     /// This property holds how many lights there are of each kind.
@@ -83,7 +83,6 @@ public class SceneCensus
 
     private readonly Tally _all = new ();
     private readonly Dictionary<Surface, Tally> _shared = [];
-    private readonly Dictionary<Surface, long> _uses = [];
     private readonly Dictionary<string, long> _lights = [];
 
     /// <summary>
@@ -118,7 +117,10 @@ public class SceneCensus
         switch (surface)
         {
             case Instance instance:
-                _uses[instance.Prototype] = _uses.GetValueOrDefault(instance.Prototype) + 1;
+                // Counted into the tally rather than once for the census, so that a shape shared inside
+                // a shared shape is counted every time its holder is shown: an oak shown ten times
+                // shows each of its leaf clusters ten times over.
+                tally.Uses[instance.Prototype] = tally.Uses.GetValueOrDefault(instance.Prototype) + 1;
                 tally.Add(SharedTally(instance.Prototype));
                 break;
             case CsgSurface csgSurface:
@@ -203,6 +205,7 @@ public class SceneCensus
         internal long Unions { get; private set; }
         internal long Intersections { get; private set; }
         internal long Differences { get; private set; }
+        internal Dictionary<Surface, long> Uses { get; } = new (ReferenceEqualityComparer.Instance);
 
         internal void CountSurface(string kind, long pieces = 0)
         {
@@ -235,6 +238,9 @@ public class SceneCensus
 
             foreach ((string kind, long count) in other.Pieces)
                 Pieces[kind] = Pieces.GetValueOrDefault(kind) + count;
+
+            foreach ((Surface shape, long count) in other.Uses)
+                Uses[shape] = Uses.GetValueOrDefault(shape) + count;
 
             Unions += other.Unions;
             Intersections += other.Intersections;

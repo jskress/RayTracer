@@ -93,8 +93,13 @@ by `PlacementSettler` after placements, at the one moment children are prepared 
 `tilted` (slope from a few extra drops either side, in the shared space), skipping misses, `steepest`, `above`,
 `below`; a dropped field is left EMPTY when prepared and fills itself at the drop (`Field.Fill` with a `Dropping`),
 building only what lands and then running the group's own preparation over it.  A primitive call hands an empty
-group back bare, never as an instance: a shape holding an instance cannot be shared, and a summer fir bough's empty
-snow made every fir rebuild its 2000 needle shoots (140 MB a tree).  `along <path>` lays copies along each run of a
+group back bare, never as an instance: there is nothing in it to share (before instances could nest, a summer fir
+bough's empty snow stopped the bough being shared and every fir rebuilt its 2000 needle shoots, 140 MB a tree).
+Instances NEST: a hit carries `Intersection.Portals` (`Geometry/Portals.cs`: the innermost instance plus an immutable
+`PortalChain` of those beyond, appended as outer instances stamp it -- the only allocation, and only for nested
+hits), every walk continues at each shared shape's root with the next portal, CSG membership asks the OUTERMOST
+stamped so far, `no shadow` holds if any instance in the chain says it, hair light is keyed by the whole chain, and
+`Material.PortalTo` hands an anchor only the portals beyond it.  So a tree holding shared leaves is shared itself.  `along <path>` lays copies along each run of a
 path instead of filling an outline (`Field.PathPlaces`, walking a `PathGuide` by distance): each turned so its +X runs
 with the path (-Z faces the path's right), the spacing fitted to whole gaps (both ends of an open run, no doubled seam
 on a closed one), `rows n apart d` each spaced along its OWN length, `offset` to the path's left, jitter drawn from

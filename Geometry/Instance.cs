@@ -15,10 +15,11 @@ namespace RayTracer.Geometry;
 /// <para>
 /// **The one hard part is that a surface has exactly one parent.**  Everything that carries a point
 /// or a normal between the world and a surface -- <see cref="Surface.WorldToSurface(Point,int,
-/// Surface)"/> and its kin -- walks up the parent chain, and a shape reachable from a dozen places
+/// Portals)"/> and its kin -- walks up the parent chain, and a shape reachable from a dozen places
 /// cannot say which of them it is standing in.  So the *hit* carries the answer instead: every
 /// crossing found through this instance is stamped with it, and where the parent chain runs out the
-/// walk carries on through the stamp.  See <see cref="Intersection.Portal"/>.
+/// walk carries on through the stamp -- through each in turn, for a shared shape inside another.
+/// See <see cref="Intersection.Portals"/>.
 /// </para>
 /// </summary>
 public class Instance : Surface
@@ -34,6 +35,11 @@ public class Instance : Surface
     /// instance pointing at it, and its box would be padded again each time.  The flag lives on the
     /// shape rather than here, since it is the shape that must only be readied once however many
     /// instances point at it.
+    /// <para>
+    /// **The shape may itself hold shared shapes** -- an oak holds its leaf clusters, a wood holds its
+    /// oaks.  A crossing found through both carries both, innermost first, and the walk out comes through
+    /// each in turn; see <see cref="Portals"/>.
+    /// </para>
     /// </summary>
     protected override void PrepareSurfaceForRendering()
     {
@@ -42,18 +48,6 @@ public class Instance : Surface
             Prototype.SharedAndReady = true;
 
             Prototype.PrepareForRendering(SampleTimes);
-        }
-
-        // An instance inside a shared shape would need the hit to carry *both* of them, in order, so
-        // that the walk could come out through each in turn.  That is a chain and an allocation on
-        // the hottest path in the renderer, and nothing yet asks for it -- a wood varies its trees by
-        // their variant, which is an argument, so the trees do not share and only their leaves do.
-        // It is refused here rather than quietly getting the second one wrong.
-        if (HoldsAnInstance(Prototype))
-        {
-            throw new Exception(
-                "A shape that is shared cannot itself hold a shared shape.  Both would have to be " +
-                "unwound to say where a point on it lies, and only the nearer one is remembered.");
         }
     }
 
@@ -88,27 +82,13 @@ public class Instance : Surface
         // `Moves` alone was a guard that could never fire.
         _ when surface.Moves || surface.MotionAt is not null => false,
 
-        // Both of these would need a hit to remember two instances rather than one, which is what
-        // PrepareSurfaceForRendering refuses outright.  Answering here lets a caller build its own
-        // copies quietly instead of ending the render with a complaint no scene can act on.
-        Instance => false,
+        // An instance may stand in a shared shape like anything else: a crossing found through both
+        // remembers both.  What it points at was asked these same questions when it was first shared.
+        Instance => true,
 
         Group group => group.Surfaces.All(MayBeShared),
         CsgSurface csg => MayBeShared(csg.Left) && MayBeShared(csg.Right),
         _ => true
-    };
-
-    /// <summary>
-    /// This method reports whether a shape holds an instance anywhere inside it.
-    /// </summary>
-    /// <param name="surface">The shape to look through.</param>
-    /// <returns><c>true</c>, if there is an instance somewhere within it.</returns>
-    private static bool HoldsAnInstance(Surface surface) => surface switch
-    {
-        Instance => true,
-        Group group => group.Surfaces.Any(HoldsAnInstance),
-        CsgSurface csg => HoldsAnInstance(csg.Left) || HoldsAnInstance(csg.Right),
-        _ => false
     };
 
     /// <summary>
@@ -148,7 +128,7 @@ public class Instance : Surface
         Prototype.Intersect(ray, intersections);
 
         for (int index = before; index < intersections.Count; index++)
-            intersections[index].Portal = this;
+            intersections[index].Portals = intersections[index].Portals.And(this);
     }
 
     /// <summary>
@@ -174,7 +154,7 @@ public class Instance : Surface
         Prototype.IntersectWithin(ray, intersections, maxDistance);
 
         for (int index = before; index < intersections.Count; index++)
-            intersections[index].Portal = this;
+            intersections[index].Portals = intersections[index].Portals.And(this);
     }
 
     /// <summary>
