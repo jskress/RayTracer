@@ -1,0 +1,116 @@
+// A great wood, from a knoll on its southern ridge: down into the valley, across it to the next ridge and
+// the one beyond, and on to the mountains.  Every tree out to the third ridge, three and a half kilometers
+// off, is planted -- oaks, birches and elms below, firs above -- and the whole of it is a handful of trees
+// built once and shared: each holds shared leaves of its own, and a shape shared inside a shared shape is
+// what makes a wood this size cost what a copse used to.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A Great Wood'
+        author 'J. Stephen Kress'
+        description 'A forest over ridges to the mountains, every tree out to the third ridge planted and shared.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'trees'    { Oak, Birch, Elm, Fir }
+import 'daylight' { LateAfternoonFrom, LateAfternoonLight }
+
+// Standing a little above the canopy on a knoll of the first ridge.  The ground there is 246 m exactly,
+// since the knoll is kept clear of the land's noise, so the camera can be put just over the trees.
+camera {
+    location [0, 291, -1850]
+    look at [0, 215, 0]
+    field of view 55
+}
+
+// From the right and a little ahead, low enough that every crown throws its shadow across the next.
+background LateAfternoonFrom(115)
+light LateAfternoonLight
+
+// -- The land --------------------------------------------------------------------------------------
+
+// Eight kilometers square: four ridges across the view, each higher than the one before it so it shows
+// above it -- the last of them mountains -- with noise along the far crests and over everything else.
+heightfield {
+    function {
+        // The near ridge, the one the camera stands on, has no noise of its own, and the rest of the
+        // noise is kept off a knoll around the camera.
+        250 * exp(-((z - 0.275) / 0.05)²)
+        + 330 * exp(-((z - 0.4625) / 0.06)²) * (0.7 + 0.6 * noise(x * 3, 0, 1.1))
+        + 650 * exp(-((z - 0.6625) / 0.07)²) * (0.65 + 0.5 * noise(x * 7, 0, 2.3) + 0.15 * noise(x * 25, 0, 2.9))
+        + 1150 * exp(-((z - 0.875) / 0.08)²) * (0.6 + 0.5 * noise(x * 6, 0, 3.7) + 0.2 * noise(x * 22, 0, 4.4))
+        + (40 * noise(x * 12, 0, z * 12) + 12 * noise(x * 30, 0, z * 30))
+          * (1 - exp(-((x - 0.5)² + (z - 0.26875)²) / 0.0002))
+    }
+    samples 700
+    material {
+        // Meadow under the planted wood, so that its clearings read as clearings; forest-dark beyond it,
+        // where no tree is planted; rock high up.
+        pigment linear Y gradient {
+            [0.0, linear Z gradient {
+                      [0.0, bozo { [0, [0.26, 0.34, 0.13], 1, [0.34, 0.40, 0.16]]  scale 0.002 },
+                       0.705, bozo { [0, [0.26, 0.34, 0.13], 1, [0.34, 0.40, 0.16]]  scale 0.002 },
+                       0.72, bozo { [0, [0.10, 0.17, 0.08], 1, [0.18, 0.25, 0.11]]  scale 0.003 }]
+                  },
+             0.55, bozo { [0, [0.10, 0.17, 0.08], 1, [0.18, 0.25, 0.11]]  scale 0.003 },
+             0.72, granite { [0, [0.42, 0.41, 0.38], 1, [0.30, 0.29, 0.28]]  scale 0.002 }]
+            scale [1, 1300, 1]
+        }
+        specular 0.02  shininess 6
+    }
+    translate [-0.5, 0, -0.5]
+    scale [8000, 1, 8000]
+    named 'land'
+}
+
+// The air between the ridges: a slab of haze over the valleys, the camera inside it, its top at a
+// thousand meters so the mountains stand clear of it.  It fades what lies beyond toward its own pale
+// blue-gray, a little more with every ridge further off.
+//
+// **Thin, because light pays its own way through it too.**  A sun low in the sky crosses a kilometer
+// or more of it on the way down, so a haze thick enough to bury the far ridges leaves the near wood in
+// the dark: the first try here, at six times this, washed the whole picture to gray.
+cube {
+    material {
+        ambient 0  diffuse 0  specular 0
+        transparency 1
+        interior { medium { absorption [0.000085, 0.000078, 0.000070]  emission [0.000062, 0.000062, 0.000066] } }
+    }
+    scale [4000, 525, 4000]
+    translate [0, 475, 0]
+}
+
+// -- The wood ---------------------------------------------------------------------------------------
+
+// What the camera sees out to the third ridge, three and a half kilometers off, and a little more.
+// Beyond it the land's own dark green stands for forest: a tree there would be two or three pixels tall.
+Wood = path { move to -60, -1835  line to 60, -1835  line to 1900, 1650  line to -1900, 1650  close }
+
+// Broadleaves on the lower ground, in groves of one kind and another, with clearings and stands of
+// taller and shorter trees; firs take over on the higher, mingling with them where the two meet.
+field {
+    of Oak(10, 'summer', 1), Oak(9, 'summer', 2), Birch(10, 'summer', 3), Elm(11, 'summer', 4)
+    picked by bozo { scale 170  translate [31, 0, 7] }
+    within Wood
+    spacing 7  jitter 0.9  turned 360
+    patches bozo { scale 140 } from 0.31 to 0.34
+    sized 0.8 to 1.25 by bozo { scale 90 }
+    over 'land'
+    below 330
+    sink 0.4
+}
+
+field {
+    of Fir(11, 'summer', 5), Fir(10, 'summer', 6), Fir(12, 'summer', 7)
+    within Wood
+    spacing 6  jitter 0.9  turned 360
+    patches bozo { scale 140 } from 0.31 to 0.34
+    sized 0.8 to 1.2 by bozo { scale 90 }
+    over 'land'
+    above 300
+    sink 0.4
+}

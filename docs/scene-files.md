@@ -1141,6 +1141,12 @@ are different calls and get shapes of their own; it is the *leaves* on them, whi
 that are the same thing ten thousand times over.  If you want a thing to differ, give the primitive
 something that differs — which is what you were doing anyway.
 
+**A shape holding shared shapes is shared itself.**  A tree is a primitive whose body calls others for
+its leaves, so it holds shared shapes of its own; called twice with the same values, it is still one
+tree, leaves and all.  A [field](advanced-surfaces.md#field) of them is a handful of trees however many
+places it fills — [A Great Wood](../gallery/Local/countryside/a-great-wood.igl) plants a whole forest
+out to the third ridge from seven.
+
 Sharing is quietly declined, and the call gets a shape of its own, when:
 
 | | |
