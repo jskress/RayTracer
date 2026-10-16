@@ -1,0 +1,534 @@
+// Tatooine: R2-D2 on three legs in the desert, watching the twin suns go down.
+//
+// A showcase rather than a demonstration -- a picture made with everything the renderer has, the way one
+// would be made for its own sake.  He comes from the `droids` library, in inches, set out in this scene's
+// meters with `scale 0.0254`; everything else is here.
+//
+// **Two suns are two skies, blended.**  A physical sky works out its sky and its sun from one sun's place,
+// so a sky with two suns in it is two skies averaged -- scattering adds, so that is exactly right -- each
+// written at twice the brightness wanted.  The blend hangs each sky's sun as a light at its half share, so
+// the light agrees with the sky it stands in.  Clouds are layered over the pair, which leaves the skies
+// their suns.
+//
+// **The suns are behind him, so he is lit from behind.**  Straight from them his visible side gets only a
+// sliver of light along its edge.  Three things make that a rim rather than nothing: the suns' light given
+// again, warmer and stronger, for a sun this low has lost most of itself to the air before it reaches him;
+// a kicker, a spotlight behind him on the suns' side, narrowed to his dome and shoulders and fading so
+// steeply that the sand its cone goes on to meet is not lit; and a dim warm light lying on the sand in
+// front of him for the light the sand throws back up, which the sky light does not follow.
+//
+// **Nothing near him may stand above the camera's height** and still stay under the horizon on level
+// sand, which is how low the rocks had to be.  The horizon is the camera's own height wherever the ground
+// is flat.
+//
+// **The far dune is placed rather than grown.**  A field of dunes seen from 0.62 m up shrinks to a sliver
+// on the horizon, however tall it is; one big one, two hundred meters off and twenty high, its slip face
+// toward the camera and a sharp crest, is what reads.  Its crest is worn down to a flat shoulder where the
+// sandcrawler stands, without which the crest and the slow swell under it buried the crawler's treads.
+// No ripple pattern is on the sand: at a dune's distance a ripple too fine to see aliases into stripes,
+// which is why the sand's grain is in its color instead.
+//
+// The sandcrawler is built from a published blueprint, the vaporator from a published cutaway, and neither
+// is reproduced here.
+
+context {
+    parallel pixel scanner
+    width 1920
+    height 1080
+    antialiasing depth 2
+    antialiasing threshold 0.25
+    angles are degrees
+    // Balanced as for a bluer light than the scene's, which warms the whole picture the way a photographer
+    // warms one at sunset.
+    white balance 8500
+    info {
+        title 'Tatooine'
+        author 'J. Stephen Kress'
+        description 'R2-D2 in the desert, watching the twin suns set.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'droids' { R2D2 }
+
+// Low, in front of him and to his right, looking past him toward the setting suns.
+camera { location [2.4, 0.62, -3.4]  look at [0, 0.7, 0.5]  field of view 52 }
+
+// -- The sky -------------------------------------------------------------------------------------------
+
+background layer {
+    // Wisps of cloud low in the sky, dusky rose where the sky behind them is dim and dark against it
+    // near the suns: streaks of turbulent noise, thinned to nothing below the horizon's haze and above
+    // twenty degrees.
+    linear Y gradient {
+        [0, color [1, 1, 1, 0],
+         0.035, color [1, 1, 1, 0],
+         0.09, bozo {
+             turbulence { amplitude 0.7  octaves 4 }
+             [0, color [1, 1, 1, 0], 0.5, color [1, 1, 1, 0], 0.62, color [0.62, 0.36, 0.32, 0.55],
+              0.75, color [0.55, 0.30, 0.30, 0.8], 1, color [0.5, 0.27, 0.28, 0.85]]
+             scale [0.45, 0.018, 0.45]
+         },
+         0.24, bozo {
+             turbulence { amplitude 0.7  octaves 4 }
+             [0, color [1, 1, 1, 0], 0.5, color [1, 1, 1, 0], 0.62, color [0.62, 0.36, 0.32, 0.55],
+              0.75, color [0.55, 0.30, 0.30, 0.8], 1, color [0.5, 0.27, 0.28, 0.85]]
+             scale [0.45, 0.018, 0.45]
+         },
+         0.36, color [1, 1, 1, 0],
+         1, color [1, 1, 1, 0]]
+    },
+    // Two suns going down together, the larger a little higher: each a sky of its own, blended.  A blend
+    // averages, so each is written at twice the brightness wanted, and each sky's sun is hung at half.
+    blend {
+        physical sky { sun elevation 7  sun azimuth 199  turbidity 4  brightness 6 },
+        physical sky { sun elevation 4.6  sun azimuth 193.5  turbidity 4  brightness 6 }
+    }
+}
+
+sky light { samples 64 }
+
+// The suns' light again, from the same two places, warmer and stronger: what the sky works out for a sun
+// this low barely reaches him, and this is what puts the light on his edges.  Their shadows fall where the
+// suns' own would.
+distant light { direction [0.323, -0.122, -0.938]  color [1.3, 0.88, 0.5] }
+distant light { direction [0.2326, -0.0802, -0.9694]  color [1.15, 0.69, 0.36] }
+
+// The kicker: behind him on the suns' side, 24 degrees up and three meters off, its cone narrowed to his
+// dome and shoulders.  It fades steeply past him -- a look, not the truth -- so that the sand its cone goes
+// on to meet beyond him, and its shadow of him there, are not lit.
+spot light {
+    location [0.937, 2.120, 2.575]  point at [0, 0.9, 0]
+    radius 7  falloff 9
+    color [3, 2, 1.1]
+    fade distance 3  fade power 10
+}
+
+// What the sand throws back up, which the sky light does not follow, in two parts.  Near him, a broad warm
+// glow lying on the sand in front of him, fading as light off the sand does.  Further off, the same warmth
+// from where the camera stands, unfaded: a light at the camera hides every shadow it casts behind the
+// thing casting it.  One light did both jobs at first, and lying on the sand in front of him it threw a
+// great soft shadow of him across the far dune, which read as a blotch in the sand.
+area light {
+    location [0.8, 0.02, -2.2]  axisU [4, 0, 0]  axisV [0, 0, 4]  steps 3  color [0.3, 0.21, 0.13]
+    fade distance 3
+}
+point light { location [2.4, 0.62, -3.4]  color [0.3, 0.21, 0.13] }
+
+// The suns' discs, which a physical sky leaves out: three kilometers off where the skies put the suns, and
+// the size they look -- 0.95 and 0.7 degrees across.
+SunGlow = material { ambient 4  diffuse 0  specular 0 }
+sphere {
+    scale 24.87  translate [-969.42, 365.61, 2815.41]  no shadow  material SunGlow { pigment [1, 0.93, 0.78] }
+}
+sphere {
+    scale 18.33  translate [-698.08, 240.60, 2907.71]  no shadow  material SunGlow { pigment [1, 0.78, 0.55] }
+}
+
+// -- The desert ----------------------------------------------------------------------------------------
+
+Sand = material {
+    pigment granite { [0.25, [0.80, 0.64, 0.45], 0.45, [0.85, 0.69, 0.49], 0.6, [0.88, 0.73, 0.53]]  scale 0.6 }
+    specular 0.04  shininess 8
+}
+
+// Level sand beyond the height field, out to the horizon.
+plane { material Sand  translate Y -0.1 }
+
+// The desert's height at a place, `x` and `z` in meters from him.
+//
+// The big dune is measured along and across its crest, which runs at right angles to the line from it to
+// the camera: `DuneAlong` along the crest, `DuneAcross` toward the camera.  Across, it falls away steeply
+// toward him and gently behind -- a slip face and a back, meeting at a sharp crest -- and along, it rises
+// and falls over three hundred meters.
+function DuneAlong(x, z) -> number { return (x + 165.81) * 0.5652 + (z - 111.84) * 0.825 }
+function DuneAcross(x, z) -> number { return (x + 165.81) * 0.825 - (z - 111.84) * 0.5652 }
+function BigDune(along, across) -> number {
+    return 20 * exp(-along * along / 23716) * exp(-abs(across) / (38.5 - 23.1 * tanh(across / 8.8)))
+}
+
+// Lower dunes from two hundred meters out to seven hundred, their crests bent and fading in and out, and a
+// slow swell under everything from twenty-five meters out; `p` and `q` are the place in kilometers-and-a-
+// half, which the noise was tuned in.
+function FarDunes(x, z, p, q, r) -> number {
+    return smoothstep(180, 420, r) * (1 - smoothstep(600, 740, r))
+        * 6 * pow(0.5 + 0.5 * sin(126 * q + 6 * noise(6 * p, 0, 1.5 * q) + 2.5 * noise(14 * p, 0, 3.5 * q)), 3.4)
+        * clamp(1.7 * noise(4 * p, 0, 3 * q) - 0.15, 0, 1)
+        + smoothstep(25, 120, r) * 1.5 * noise(2.5 * p, 0, 2.5 * q)
+}
+function Ground(x, z) -> number {
+    return BigDune(DuneAlong(x, z), DuneAcross(x, z))
+        + FarDunes(x, z, x / 3000 + 0.5, z / 3000 + 0.5, sqrt(x * x + z * z))
+}
+
+// The crest worn flat at 17.5 for twenty meters where the sandcrawler stands, and the ground dipped six
+// centimeters out of the way of the disc of sand he stands on.
+function CrawlerPad(along) -> number { return exp(-pow((along - 14) / 14, 4)) }
+function Desert(x, z) -> number {
+    return Ground(x, z) - CrawlerPad(DuneAlong(x, z)) * max(Ground(x, z) - 17.5, 0)
+        - 0.06 * (1 - smoothstep(9, 11, sqrt(x * x + z * z)))
+}
+
+// A kilometer and a half square, in cells of 0.75 m: coarser, and the far dune's slope shows its triangles.
+heightfield {
+    function { Desert(1500 * (x - 0.5), 1500 * (z - 0.5)) }
+    samples 2000
+    smooth
+    material Sand
+    translate [-0.5, 0, -0.5]
+    scale [1500, 1, 1500]
+}
+
+// -- R2-D2, and the way he came --------------------------------------------------------------------------
+
+// A wheel track: a groove 10 cm wide and 3 cm deep in the sand, along an arc of radius `r` about
+// [`cx`, `cz`], from straight across from its middle round `sweep` degrees -- a ring of a torus, cut to the
+// arc by two half-spaces.
+primitive WheelTrack(cx, cz, r, sweep) -> group {
+    return group {
+        intersection {
+            torus { radii r, 0.057 }
+            cube { scale 20  translate Z 20 }
+            cube { scale 20  translate X -20  rotate Y sweep - 90 }
+            translate [cx, 0.027, cz]
+        }
+    }
+}
+
+// The sand he stands on, a disc fifteen meters round lying a hair above the desert, so that his tracks can
+// be cut into something: three, one from each foot, curving away behind him the way he came, nine meters
+// long on arcs about a point fourteen meters to his left.
+difference {
+    cylinder { min Y -0.3  max Y 0.002  scale [15, 1, 15] }
+    group {
+        object WheelTrack(14, 0.1455, 13.7155, 36.8)
+        object WheelTrack(14, 0.1455, 14.2845, 36.8)
+        object WheelTrack(14, -0.1763, 14, 36.8)
+        rotate Y -70
+    }
+    material Sand
+}
+
+// On three legs, his dome turned toward the suns, his front three-quarters to the camera.
+object R2D2(3, -126) { scale 0.0254  rotate Y -70 }
+
+// -- Rocks, and scree ------------------------------------------------------------------------------------
+
+// Sandstone, wind-worn: a lumpy ball like the rocks library's boulder, its top flattened and its sides
+// stepped in ledges where the layers wear back at different rates.  `w` across, `h` tall.
+Sandstone = material {
+    pigment granite { [0.2, [0.52, 0.36, 0.24], 0.4, [0.62, 0.45, 0.30], 0.6, [0.70, 0.53, 0.36]]  scale 0.15 }
+    specular 0.03  shininess 9  brilliance 1.4
+}
+primitive SandstoneRock(w, h, variant) -> group {
+    ox = random(variant, 11) * 40
+    oz = random(variant, 13) * 40
+    return group {
+        isosurface {
+            material Sandstone
+            function {
+                sqrt(x * x + y * y + z * z) - 1
+                    - 0.26 * (noise(x * 1.7 + ox, y * 1.7, z * 1.7 + oz) - 0.5)
+                    - 0.12 * (noise(x * 4.1 + ox, y * 4.1, z * 4.1 + oz) - 0.5)
+                    - 0.05 * sin(y * 22 + 3 * noise(x * 2 + ox, 0, z * 2 + oz))
+            }
+            bounded by [-1.6, -1.6, -1.6], [1.6, 1.6, 1.6]
+            scale [w * 0.5, h, w * 0.5 * (0.7 + random(variant, 15) * 0.4)]
+            rotate Y random(variant, 16) * 360
+        }
+    }
+}
+
+// Low enough that none of it reaches the horizon -- nothing taller than the camera, 0.62 up, can stay
+// under it -- half sunk in the sand, between him and the suns to his left.
+object SandstoneRock(2.2, 0.5, 1) { translate [1.18, -0.05, 3.49] }
+object SandstoneRock(1.4, 0.38, 2) { translate [0.49, -0.04, 4.88] }
+object SandstoneRock(0.9, 0.24, 3) { translate [0.55, -0.03, 2.82] }
+object SandstoneRock(1.6, 0.42, 4) { translate [2.1, -0.05, 4.6] }
+
+// Scree round them: chips of the same stone, dense at their feet and thinning out across the sand -- a
+// sphere with two flat faces cut off it, as the rocks library's cobble is, in two tones of the rock.
+SandPebbleLight = material {
+    pigment granite { [0.2, [0.62, 0.46, 0.31], 0.6, [0.72, 0.56, 0.39]]  scale 0.05 }
+    specular 0.03  shininess 9
+}
+SandPebbleDark = material {
+    pigment granite { [0.2, [0.45, 0.31, 0.21], 0.6, [0.55, 0.39, 0.26]]  scale 0.05 }
+    specular 0.03  shininess 9
+}
+primitive SandPebble(size, variant) -> group {
+    flat = 0.5 + random(variant, 21) * 0.3
+    return group {
+        intersection {
+            sphere { }
+            cube {
+                scale 0.85  rotate X (random(variant, 22) - 0.5) * 80  rotate Y random(variant, 23) * 360
+                translate [(random(variant, 24) - 0.5) * 0.45, 0, (random(variant, 25) - 0.5) * 0.45]
+            }
+            cube {
+                scale 0.8  rotate Z (random(variant, 26) - 0.5) * 80  rotate Y random(variant, 27) * 360
+                translate [0, (random(variant, 28) - 0.5) * 0.45, (random(variant, 29) - 0.5) * 0.45]
+            }
+            scale [size * 0.5, size * 0.5 * flat, size * 0.5 * (0.8 + random(variant, 30) * 0.35)]
+        }
+        translate Y size * 0.14
+    }
+}
+primitive SandPebbleStone(n, size) -> group {
+    return group {
+        if (n < 3) { object SandPebble(size, 17 + n) { material SandPebbleLight } }
+        else { object SandPebble(size, 17 + n) { material SandPebbleDark } }
+    }
+}
+ScreeNear = path {
+    move to -0.35, 2.4
+    line to 0.4, 2.05
+    line to 1.3, 2.25
+    line to 2.3, 2.7
+    line to 3.05, 3.6
+    line to 3.15, 4.7
+    line to 2.7, 5.55
+    line to 1.6, 5.75
+    line to 0.6, 5.8
+    line to -0.3, 5.4
+    line to -0.55, 4.4
+    line to -0.45, 3.3
+    close
+}
+ScreeFar = path {
+    move to -1.2, 1.7
+    line to 0.3, 1.1
+    line to 1.8, 1.4
+    line to 3.2, 2.1
+    line to 4, 3.5
+    line to 4.1, 5.2
+    line to 3.4, 6.5
+    line to 1.8, 6.9
+    line to 0.2, 6.8
+    line to -1, 6.2
+    line to -1.6, 4.8
+    line to -1.5, 3
+    close
+
+    move to -0.35, 2.4
+    line to 0.4, 2.05
+    line to 1.3, 2.25
+    line to 2.3, 2.7
+    line to 3.05, 3.6
+    line to 3.15, 4.7
+    line to 2.7, 5.55
+    line to 1.6, 5.75
+    line to 0.6, 5.8
+    line to -0.3, 5.4
+    line to -0.55, 4.4
+    line to -0.45, 3.3
+    close
+}
+field {
+    of SandPebbleStone(0, 0.09), SandPebbleStone(1, 0.09), SandPebbleStone(2, 0.09),
+       SandPebbleStone(3, 0.09), SandPebbleStone(4, 0.09), SandPebbleStone(5, 0.09)
+    within ScreeNear
+    spacing 0.16
+    jitter 1.6
+    turned 360
+    sized 0.5 to 1.6
+}
+field {
+    of SandPebbleStone(0, 0.07), SandPebbleStone(1, 0.07), SandPebbleStone(2, 0.07),
+       SandPebbleStone(3, 0.07), SandPebbleStone(4, 0.07), SandPebbleStone(5, 0.07)
+    within ScreeFar
+    spacing 0.38
+    jitter 1.7
+    turned 360
+    sized 0.5 to 1.4
+}
+
+// -- A moisture vaporator behind the rocks ------------------------------------------------------------
+
+// A moisture vaporator, after a published cutaway that stands one beside a man: a central tower 5.6 tall
+// -- a flared foot, the water pump's box, the condenser's, the coolant section ringed at its top, the
+// binary brain unit, a ribbed neck, the slender upper body with the air density sensors' bands, the
+// telemetry cone, a mast, and the humidity sensor's vanes at its top -- and round it three chiller bars,
+// equally spaced 0.64 out, each on a foot and rounded at its top, braced to the tower at two heights.  In
+// meters, standing on y = 0.
+VaporatorMetal = material {
+    pigment granite { [0.2, [0.40, 0.37, 0.33], 0.6, [0.52, 0.48, 0.42], 0.9, [0.60, 0.56, 0.49]]  scale 0.3 }
+    metallic 0.4  specular 0.3  shininess 30
+}
+VaporatorDark = material { pigment [0.12, 0.11, 0.1]  specular 0.2  shininess 30 }
+primitive VaporatorChiller(angle) -> group {
+    return group {
+        cylinder { min Y 0  max Y 0.12  scale [0.085, 1, 0.085] }
+        cylinder { min Y 0.12  max Y 2.7  scale [0.055, 1, 0.055] }
+        sphere { scale [0.055, 0.09, 0.055]  translate Y 2.7 }
+        cylinder { min Y -0.36  max Y -0.03  scale [0.035, 1, 0.035]  rotate Z -90  translate Y 2.1 }
+        cylinder { min Y -0.36  max Y -0.03  scale [0.035, 1, 0.035]  rotate Z -90  translate Y 1.0 }
+        translate X 0.64
+        rotate Y angle
+    }
+}
+Vaporator = group {
+    lathe {
+        path {
+            move to 0, 0
+            line to 0.53, 0
+            line to 0.5, 0.05
+            line to 0.3, 0.23
+            line to 0.24, 0.23
+            line to 0.24, 0.74
+            line to 0.3, 0.74
+            line to 0.3, 1.43
+            line to 0.32, 1.43
+            line to 0.32, 2.07
+            line to 0.41, 2.07
+            line to 0.41, 2.12
+            line to 0.28, 2.12
+            line to 0.28, 2.26
+            line to 0.33, 2.26
+            line to 0.33, 2.35
+            line to 0.28, 2.35
+            line to 0.28, 2.54
+            line to 0.15, 2.54
+            line to 0.15, 3.72
+            line to 0.16, 3.72
+            line to 0.11, 3.95
+            line to 0.02, 3.95
+            line to 0.02, 5.4
+            line to 0, 5.4
+        }
+    }
+    // The ribs of the neck, and the bands of the upper body.
+    for k in [0, 3] {
+        cylinder { min Y 2.56 + k * 0.025  max Y 2.57 + k * 0.025  scale [0.19, 1, 0.19] }
+    }
+    for k in [0, 3] {
+        cylinder { min Y 2.85 + k * 0.25  max Y 2.88 + k * 0.25  scale [0.165, 1, 0.165]  material VaporatorDark }
+    }
+    // The pump's box and the condenser's.
+    cube { scale [0.3, 0.22, 0.26]  translate [-0.02, 0.45, 0] }
+    cube { scale [0.37, 0.345, 0.3]  translate [0, 1.085, 0] }
+    cube { scale [0.08, 0.12, 0.31]  translate [-0.2, 1.1, 0]  material VaporatorDark }
+    // The coolant intake coupling, and the pressure relief valve.
+    cylinder { min Y 0.3  max Y 0.38  scale [0.08, 1, 0.08]  rotate X -90  translate Y 1.8 }
+    cylinder { min Y 0.12  max Y 0.22  scale [0.045, 1, 0.045]  rotate X -90  translate Y 2.6 }
+    // The humidity sensor: a crossbar and its two vanes.
+    cylinder { min Y -0.22  max Y 0.22  scale [0.012, 1, 0.012]  rotate Z 90  translate Y 5.45 }
+    cube { scale [0.05, 0.05, 0.015]  translate [0.2, 5.45, 0] }
+    cube { scale [0.05, 0.05, 0.015]  translate [-0.2, 5.45, 0] }
+    object VaporatorChiller(-12.3)
+    object VaporatorChiller(107.7)
+    object VaporatorChiller(227.7)
+    material VaporatorMetal
+}
+object Vaporator { rotate Y 30  translate [-4.89, 0, 35.93] }
+
+// -- A sandcrawler on the far dune ---------------------------------------------------------------------
+
+// A Jawa sandcrawler, from a published blueprint's side and end views: its hull a single long profile --
+// the great wedge of its front, the cabin at its top corner, the roof stepping down behind the railing and
+// up again over the rear block, the rear face leaning in to a bevel -- with flat sides; eight tread units
+// under it, two lengths of four abreast, the outer ones standing a little proud of the hull; the suction
+// tube between them; two decks' ledges along its sides; the railing on its roof behind the cabin; its
+// cabin windows dark and one small window lit.  Rust-brown plating, mottled, its seams the mortar of a
+// `brick` pattern.  In meters, 14.75 long, its front toward +X, its treads on y = 0.
+CrawlerRust = material {
+    pigment brick {
+        brick size [2.6, 1.1, 2]  mortar size 0.05
+        [0.17, 0.11, 0.07],
+        granite { [0.2, [0.30, 0.18, 0.10], 0.5, [0.38, 0.23, 0.13], 0.8, [0.44, 0.28, 0.16]]  scale 0.8 }
+    }
+    specular 0.12  shininess 20
+}
+CrawlerIron = material { pigment [0.13, 0.115, 0.1]  specular 0.2  shininess 30 }
+CrawlerWindow = material { pigment [0.03, 0.03, 0.035]  specular 0.5  shininess 80 }
+CrawlerLamp = material { pigment [1, 0.72, 0.38]  ambient 0.9  diffuse 0 }
+CrawlerSide = path {
+    move to 7.375, 6.410
+    line to 1.103, 6.252
+    line to 0.921, 6.070
+    line to 0.840, 5.949
+    line to -3.409, 5.979
+    line to -3.693, 6.161
+    line to -5.534, 6.161
+    line to -5.716, 5.979
+    line to -7.375, 5.979
+    line to -6.768, 2.023
+    line to -6.819, 1.932
+    line to -6.262, 1.333
+    line to -6.262, 1.062
+    line to 3.632, 1.062
+    line to 3.638, 1.012
+    line to 6.489, 4.184
+    close
+}
+CrawlerHalfWidth = 3.156
+
+// A tread unit, `x0` to `x1` along the hull and `h` tall, `z` across: a track round rounded ends, with
+// the hubs of its road wheels showing at its sides.
+primitive CrawlerTread(x0, x1, h, z) -> group {
+    r = h / 2
+    n = 5
+    pitch = (x1 - x0 - h) / (n - 1)
+    return group {
+        union {
+            cube { scale [(x1 - x0) / 2 - r, r, 0.575]  translate [(x0 + x1) / 2, r, 0] }
+            cylinder { min Y -0.575  max Y 0.575  scale [r, 1, r]  rotate X 90  translate [x0 + r, r, 0] }
+            cylinder { min Y -0.575  max Y 0.575  scale [r, 1, r]  rotate X 90  translate [x1 - r, r, 0] }
+        }
+        for k in [0, n - 1] {
+            cylinder {
+                min Y -0.6  max Y 0.6  scale [0.2, 1, 0.2]  rotate X 90  translate [x0 + r + k * pitch, 0.32, 0]
+                material CrawlerWindow
+            }
+        }
+        material CrawlerIron
+        translate Z z
+    }
+}
+
+CrawlerTreads = group {
+    object CrawlerTread(-0.617, 3.308, 1.285, -2.67)
+    object CrawlerTread(-0.617, 3.308, 1.285, -1.1)
+    object CrawlerTread(-0.617, 3.308, 1.285, 1.1)
+    object CrawlerTread(-0.617, 3.308, 1.285, 2.67)
+    object CrawlerTread(-6.404, -2.398, 1.062, -2.67)
+    object CrawlerTread(-6.404, -2.398, 1.062, -1.1)
+    object CrawlerTread(-6.404, -2.398, 1.062, 1.1)
+    object CrawlerTread(-6.404, -2.398, 1.062, 2.67)
+}
+
+Sandcrawler = group {
+    extrusion { path CrawlerSide  min Y -CrawlerHalfWidth  max Y CrawlerHalfWidth  rotate X -90 }
+    // The ledges of its two lower decks, trimmed to the hull's own outline.
+    intersection {
+        extrusion { path CrawlerSide  min Y -CrawlerHalfWidth - 0.07  max Y CrawlerHalfWidth + 0.07  rotate X -90 }
+        union {
+            cube { scale [8, 0.06, 4]  translate Y 2.35 }
+            cube { scale [8, 0.06, 4]  translate Y 1.6 }
+        }
+    }
+    // The cabin's windows high on its front corner, and a lit window amidships.
+    cube { scale [0.55, 0.11, CrawlerHalfWidth + 0.02]  translate [6.45, 5.86, 0]  material CrawlerWindow }
+    cube { scale [0.17, 0.15, CrawlerHalfWidth + 0.02]  translate [1.0, 3.3, 0]  material CrawlerLamp }
+    // The railing along the roof behind the cabin, on both sides: posts and a rail along their tops.
+    for side in [-1, 1] by 2 {
+        group {
+            cube { scale [1.18, 0.03, 0.05]  translate [2.28, 6.53, 0] }
+            for k in [0, 13] {
+                cube {
+                    scale [0.04, 0.14, 0.04]  translate [1.15 + k * 0.175, 6.38 + (3.4 - k * 0.175) * 0.0083, 0]
+                }
+            }
+            translate Z side * (CrawlerHalfWidth - 0.08)
+            material CrawlerIron
+        }
+    }
+    // The magnetic suction tube between the two lengths of treads.
+    cube { scale [0.83, 0.48, 0.55]  translate [-1.49, 0.67, 0]  material CrawlerIron }
+    object CrawlerTreads
+    material CrawlerRust
+}
+// Standing on the dune's flat shoulder, two hundred meters off, broadside to the camera and heading along
+// the crest away to the right.
+object Sandcrawler { rotate Y -55.6  translate [-159.13, 17.5, 124.24] }
