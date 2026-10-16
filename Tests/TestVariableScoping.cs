@@ -334,6 +334,53 @@ public class TestVariableScoping
     }
 
     [TestMethod]
+    public void TestAFunctionsParametersHideTheFieldsOwnCoordinates()
+    {
+        // A function folded into a field may read the field's x, y and z -- but not in place of its own
+        // parameters of the same names.  The same bump, its parameters called x and z or a and b, must
+        // be the same terrain; and it must be a bump at all, which it was not while the field's own
+        // coordinates (the unit square) were handed to it in place of the meters it was called with.
+        string Scene(string first, string second) => $$"""
+            camera { location [0, 12, -24]  look at [0, 1, 0]  field of view 50 }
+            point light { location [-12, 30, -20] }
+            function Bump({{first}}, {{second}}) -> number {
+                return 5 * exp(-({{first}} * {{first}} + {{second}} * {{second}}) / 20)
+            }
+            heightfield {
+                function { Bump(20 * (x - 0.5), 20 * (z - 0.5)) }
+                samples 60
+                material { pigment [0.8, 0.6, 0.4] }
+                translate [-0.5, 0, -0.5]
+                scale [20, 1, 20]
+            }
+            """;
+        (Canvas named, string error) = Render(Scene("x", "z"));
+        (Canvas other, string otherError) = Render(Scene("a", "b"));
+        (Canvas flat, string flatError) = Render("""
+            camera { location [0, 12, -24]  look at [0, 1, 0]  field of view 50 }
+            point light { location [-12, 30, -20] }
+            plane { material { pigment [0.8, 0.6, 0.4] } }
+            """);
+
+        Assert.IsNull(error ?? otherError ?? flatError, error ?? otherError ?? flatError);
+
+        bool same = true;
+        bool bumped = false;
+
+        for (int y = 0; y < named.Height; y++)
+        {
+            for (int x = 0; x < named.Width; x++)
+            {
+                same &= named.GetPixel(x, y).Matches(other.GetPixel(x, y));
+                bumped |= !other.GetPixel(x, y).Matches(flat.GetPixel(x, y));
+            }
+        }
+
+        Assert.IsTrue(bumped, "the bump should stand out of the flat ground");
+        Assert.IsTrue(same, "parameters named x and z should be the parameters, not the field's coordinates");
+    }
+
+    [TestMethod]
     public void TestAFunctionWithWorkingsIsRefusedInADensity()
     {
         // The line drawn deliberately: a field is compiled down and, for an isosurface,

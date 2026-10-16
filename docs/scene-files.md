@@ -968,6 +968,10 @@ differentiate it to find surface normals — which can be done by folding a plai
 cannot be done at all once there is a small procedure to fold in instead.  You will be told plainly if
 you cross that line.
 
+Folded in, a function may read the field's own `x`, `y` and `z` — but a parameter of the same name is
+the parameter.  `function Dune(x, z) -> number { … }`, called as `Dune(1500 * (x - 0.5), 1500 * (z -
+0.5))` from a height field, works in the meters it is handed, not in the field's unit square.
+
 ### Things of Your Own
 
 A `function` gives back a number.  A **`primitive`** gives back a *thing* — something to put in a
