@@ -145,6 +145,56 @@ public class TestMultipleScattering
     }
 
     [TestMethod]
+    public void TestABlendOfSkiesHangsEachSkysSunAtItsShare()
+    {
+        // A world with two suns: two skies, each with one, blended.  The blend halves each sky, so each
+        // sun must be halved with it -- and point its own way, and keep its own color.  Before, only a
+        // physical sky that was the background itself hung its sun, and a blend of two hung neither.
+        PhysicalSkyPigment higher = new () { SunElevation = 9, SunAzimuth = 250, Brightness = 6 };
+        PhysicalSkyPigment lower = new () { SunElevation = 5, SunAzimuth = 262, Brightness = 6 };
+        List<DistantLight> suns = PhysicalSkyPigment.SunsOf(
+            new BlendedPigment { Pigments = [higher, lower] }).ToList();
+
+        Assert.AreEqual(2, suns.Count);
+
+        foreach ((PhysicalSkyPigment sky, DistantLight sun) in new[] { higher, lower }.Zip(suns))
+        {
+            DistantLight alone = sky.SunAsALight();
+
+            Assert.AreEqual(alone.Color.Red / 2, sun.Color.Red, 1e-12);
+            Assert.AreEqual(alone.Color.Blue / 2, sun.Color.Blue, 1e-12);
+            Assert.AreEqual(alone.Spectrum[10] / 2, sun.Spectrum[10], 1e-12);
+            Assert.AreEqual(0, (alone.Direction - sun.Direction).Magnitude, 1e-12);
+        }
+
+        // A sky alone hangs its sun whole, and anything else has no sun at all.
+        Assert.AreEqual(
+            higher.SunAsALight().Color.Red, PhysicalSkyPigment.SunsOf(higher).Single().Color.Red, 1e-12);
+        Assert.AreEqual(0, PhysicalSkyPigment.SunsOf(new SolidPigment(new Color(0.4, 0.5, 0.9))).Count());
+
+        // A layer hangs the suns of its topmost part that has any: clouds over the blended skies leave
+        // both suns at their shares, and a sky over another hides the one beneath, sun and all.
+        BlendedPigment clouded = new ()
+        {
+            Pigments =
+            [
+                new SolidPigment(new Color(0.6, 0.3, 0.3)), new BlendedPigment { Pigments = [higher, lower] }
+            ],
+            Layer = true
+        };
+        List<DistantLight> under = PhysicalSkyPigment.SunsOf(clouded).ToList();
+
+        Assert.AreEqual(2, under.Count);
+        Assert.AreEqual(higher.SunAsALight().Color.Red / 2, under[0].Color.Red, 1e-12);
+
+        DistantLight top = PhysicalSkyPigment.SunsOf(
+            new BlendedPigment { Pigments = [higher, lower], Layer = true }).Single();
+
+        Assert.AreEqual(higher.SunAsALight().Color.Red, top.Color.Red, 1e-12);
+        Assert.AreEqual(0, (higher.SunAsALight().Direction - top.Direction).Magnitude, 1e-12);
+    }
+
+    [TestMethod]
     public void TestTheDiffuseShareOfDaylightIsAboutWhatIsMeasured()
     {
         // What the whole model is finally worth, said as the quantity meteorologists actually record:
