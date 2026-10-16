@@ -1,0 +1,1832 @@
+// Droids: R2-D2, built part by part from published measurements and the plans that agree with them.
+//
+//     import 'droids' { R2D2 }
+//
+//     object R2D2()        // standing on his two outer legs
+//     object R2D2(3, 40)   // on three, as he rolls, his dome turned 40 degrees to his right
+//
+// | `R2D2` | The astromech droid: dome, body, the two outer legs and the center leg and foot. |
+//
+// **`legs` is two or three.**  On two he stands upright with his center foot tucked up under him; on
+// three his body tips back eighteen degrees about his shoulders -- the angle builders set, there being no
+// published figure -- his outer legs lean fifteen the other way about the pivots in their feet, their
+// feet going back and his shoulders down, and his center leg runs out along his body until its foot stands
+// flat on the ground just ahead of the other two.  **`dome` turns his dome**, in the scene's unit of angle,
+// from facing straight ahead; positive turns it to his right, as `rotate Y` would.
+//
+// **It is written in inches, and a scene unit IS an inch**, as the furniture is: every published figure
+// for him is in inches, so the numbers here can be checked against them directly.  A scene in meters
+// scales him by 0.0254.  **He stands on `y = 0` and faces `-Z`**, his legs to either side on X.
+//
+// -- Where the shape comes from -----------------------------------------------------------------------
+//
+// The published measurements, which the R2 Builders Club took from a screen-used unit and builders have
+// repeated since: the dome is 18.25 in across; the body a little over 18 in (46.3 cm, from the Starlog
+// Technical Journal's plans, by ArndToo's reckoning at r2-d2.de) and about 21.5 in tall; the legs 31 in
+// tall, 8.75 in wide at the top and 4.5 in at the middle seen from the side, and 3 in thick from the
+// front; and the whole of him 42.5 to 43 in (107.8 cm by the 1977 Norank prints and a Smithsonian unit;
+// 1.09 m on StarWars.com).
+//
+// Where those say nothing, the proportions are a front elevation on graph paper with a metric scale,
+// which scales by the dome to 17.9 pixels to the inch and then agrees with every measurement above to
+// within two percent -- 43.0 in overall, the legs 31.5, 2.7 thick -- and so is trusted for the rest:
+// the body 18.3 across, the dome's band from 32.4 and its ring below that, the legs' place either side,
+// and the feet, 7.2 wide.  A cutaway in the style of the cross-section books shows the colors and the
+// details, and a photograph of a finished droid from his front and right the pistons on his legs and the
+// depth of his blue.
+//
+// The side comes from the starboard elevation of the 1977 production drawings (20th Century-Fox, sheet 4
+// of 4), which scales by the dome to 33.97 pixels to the inch: the body's barrel running down to 10.55 in,
+// a flat step in from its edge and the skirt narrowing from there to its bottom; the leg's round top
+// centered on its shoulder hub, narrowing in a V to its shank and widening again at its ankle; and the
+// foot, a long base under a shorter top.  Its heights are taken a fiftieth larger, the drawings standing
+// 42.2 in to the finished droid's 43.  Those drawings are of an early unit, so where the finished droid
+// differs the finished droid wins: the leg's widths are the published ones, and the foot is as long,
+// against the body, as a five-view drawing of the finished droid makes it (Onno van Braam,
+// the-blueprints.com, 1090 mm tall) -- 12.6 in where the early drawing has 14.  A line drawing of him on
+// three legs shows how the center leg stands.  None of these is reproduced here.
+
+// -- Materials ----------------------------------------------------------------------------------------
+
+// The dome is polished aluminum; everything else is painted, white and blue.
+R2Aluminum = material { pigment [0.8, 0.81, 0.83]  metallic 1  reflective 0.55  roughness 0.18  diffuse 0.35 }
+R2White = material { pigment [0.86, 0.86, 0.84]  specular 0.4  shininess 60  reflective 0.04  fresnel }
+R2Blue = material { pigment [0.01, 0.055, 0.45]  specular 0.4  shininess 60  reflective 0.04  fresnel }
+R2Dark = material { pigment [0.12, 0.12, 0.13]  specular 0.3  shininess 40 }
+// The gray metal of the small fittings mirrors sharply: blurred, its sixteen looks at every point cost a
+// quarter of the droid's render and showed nothing on parts this small.
+R2Metal = material {
+    pigment [0.5, 0.51, 0.53]  metallic 1  reflective 0.2  diffuse 0.6  specular 0.5  shininess 60
+}
+R2Gray = material { pigment [0.42, 0.42, 0.43]  specular 0.3  shininess 40 }
+R2Satin = material { pigment [0.84, 0.85, 0.87]  metallic 0.3  diffuse 0.8  specular 0.6  shininess 80 }
+R2Hole = material { pigment [0.025, 0.025, 0.03]  diffuse 0.5  specular 0.1 }
+R2Brass = material { pigment [0.52, 0.4, 0.22]  metallic 1  specular 0.6  shininess 50  reflective 0.1 }
+// The radar eye's lens: black glass under a coating a quarter of a green wave thick, which mirrors less than
+// bare glass would and what it does mirror, purple, as a coated camera lens does.
+R2EyeLens = material {
+    pigment [0.012, 0.012, 0.016]  diffuse 0.3  specular 0.9  shininess 300
+    interior { ior 1.52 }
+    film { thickness 110  ior 1.38 }
+}
+// The lights in the dome, glowing: the logic displays' blue and white lamps, and those that are off, and the
+// front indicator's frosted blue lens.
+R2LampBlue = material { pigment [0.3, 0.5, 1]  ambient 1.2  diffuse 0.2  specular 0.3 }
+R2LampWhite = material { pigment [0.95, 0.97, 1]  ambient 1  diffuse 0.2  specular 0.3 }
+R2LampOff = material { pigment [0.06, 0.07, 0.09]  specular 0.4  shininess 80 }
+R2IndicatorBlue = material { pigment [0.45, 0.68, 1]  ambient 0.7  diffuse 0.5  specular 0.7  shininess 150 }
+R2IndicatorGreen = material { pigment [0.5, 1, 0.68]  ambient 0.7  diffuse 0.5  specular 0.7  shininess 150 }
+R2LampGreen = material { pigment [0.35, 1, 0.45]  ambient 1.1  diffuse 0.2  specular 0.3 }
+R2Chrome = material {
+    pigment [0.88, 0.89, 0.91]  metallic 1  reflective 0.85  diffuse 0.1  specular 0.9  shininess 400
+}
+
+// -- The dome ------------------------------------------------------------------------------------------
+
+// The hemisphere's middle and radius -- 18.25 across, its crown at 43 -- and the bottom of the upright band
+// it stands on, as wide as the body and as tall as from the body's top to the hemisphere's middle.
+R2DomeMiddle = 33.875
+R2DomeRadius = 9.125
+R2DomeBase = 31.5
+
+// How far the radar eye's face leans back from upright, and the point on it at the middle of the lens.
+R2EyeLean = 30
+R2EyeAt = [0.05, 39, -7.95]
+
+// A piece of the dome's skin between its shape -- the hemisphere and the band under it -- grown or shrunk to
+// `inner` and to `outer`: between the meridians `from` and
+// `to`, each drawn in toward the other by `inset`, and between the heights `low` and `high`.  A meridian is
+// measured in degrees from straight ahead, toward his left (+X) as it grows.  The last box only holds the
+// piece tight, so that a ray that does not come near it is spared it.
+primitive R2DomeRegion(from, to, low, high, inset, inner, outer) -> group {
+    middle = (from + to) / 2
+    half = (to - from) / 2
+    across = outer * sin(half degrees) + 0.2
+    rise = max(high - R2DomeMiddle, 0)
+    near = sqrt(inner * inner - rise * rise) * cos(half degrees) - 0.2
+    return group {
+        intersection {
+            difference {
+                union {
+                    sphere { scale outer  translate Y R2DomeMiddle }
+                    cylinder { min Y R2DomeBase - 0.1  max Y R2DomeMiddle  scale [outer, 1, outer] }
+                }
+                union {
+                    sphere { scale inner  translate Y R2DomeMiddle }
+                    cylinder { min Y R2DomeBase - 0.2  max Y R2DomeMiddle  scale [inner, 1, inner] }
+                }
+            }
+            cube { scale 12  translate [inset + 12, 38, 0]  rotate Y -from }
+            cube { scale 12  translate [-inset - 12, 38, 0]  rotate Y -to }
+            cube {
+                scale [across, (high - low) / 2, (outer + 0.2 - near) / 2]
+                translate [0, (high + low) / 2, -(outer + 0.2 + near) / 2]
+                rotate Y -middle
+            }
+        }
+    }
+}
+
+// A panel let into the dome: the piece itself, 0.06 thick and flush with the skin, and the cut it sits in,
+// to be taken out of the dome -- 0.05 wider all round, so that a dark seam shows round the panel.
+primitive R2DomePanel(from, to, low, high, inset = 0) -> group {
+    return group { object R2DomeRegion(from, to, low, high, inset, R2DomeRadius - 0.06, R2DomeRadius) }
+}
+primitive R2DomeCut(from, to, low, high, inset = 0) -> group {
+    return group {
+        object R2DomeRegion(
+            from, to, low - 0.05, high + 0.05, inset - 0.05, R2DomeRadius - 0.06, R2DomeRadius + 0.2
+        )
+    }
+}
+
+// Where the dome's panels are, each as (from, to) in degrees round from straight ahead, toward his left as it
+// grows.  The lower row runs from 33.35 to 36.5 all round, but for the front indicator's panel, which stops
+// at 35.8 under the radar eye -- the front elevation's heights, which the 1977 side elevation agrees with to
+// a fifth of an inch -- and the pie panels on top from 40.9 to 42.5, six of them between spokes 0.35 wide,
+// one spoke straight ahead, round a blue cap over 42.7 with a ring of bare dome between.
+//
+// The places round the dome come from photographs of a fan-made droid from in front, from his left and from
+// behind, each registered by fitting the camera that took it to the dome's own stripe, its pie ring and the
+// spoke straight ahead or straight behind; and from one of the finished droid from his front and right.
+// From in front: the front indicator's panel, a little to his left as the front elevation also draws it,
+// then to his right a narrow panel, the bare frame of the logic displays, another narrow panel and the long
+// panel down his right side, which the 1977 side elevation ends at -90; to his left the bare dome the
+// holoprojector stands on, then the first of the narrow panels down his left side.  From his left, those
+// and the rest of that side -- three narrow panels, a wide one, a blue frame round a bare inset with a small
+// square over it, and a bare panel -- set between where the front and the back put its ends.  From behind:
+// the back of that bare panel, the bare frame round the rear indicator's blue panel just to his left of
+// straight behind, the bare dome the rear holoprojector stands on, and the rear logic display's panel with
+// a narrow strip before it, which the 1977 side elevation ends at -97.
+R2DomeBluePanels = group {
+    object R2DomePanel(-6.5, 17.8, 33.35, 35.8)
+    object R2DomePanel(-14.5, -8, 33.35, 36.5)
+    object R2DomePanel(-31, -16, 33.35, 36.5)
+    object R2DomePanel(-40, -32.5, 33.35, 36.5)
+    object R2DomePanel(-93, -42, 33.35, 36.5)
+    object R2DomePanel(-153.5, -97, 33.35, 36.5)
+    object R2DomePanel(-159.5, -155, 33.35, 36.5)
+    object R2DomePanel(154.2, 178, 33.75, 36.15)
+    difference {
+        object R2DomePanel(104.5, 115.3, 33.35, 36)
+        object R2DomeCut(106.5, 113.3, 33.7, 35.65)
+    }
+    object R2DomePanel(108, 115.3, 36.3, 37.1)
+    object R2DomePanel(80, 103, 33.35, 36.5)
+    object R2DomePanel(67, 78.3, 33.35, 36.5)
+    object R2DomePanel(54.5, 65, 33.35, 36.5)
+    object R2DomePanel(39, 52, 33.35, 36.5)
+    object R2DomePanel(20.5, 26.5, 38.3, 40.4)
+    object R2DomePanel(20.5, 26, 36, 37.9)
+    for k in [0, 5] {
+        object R2DomePanel(k * 60, k * 60 + 60, 40.9, 42.5, 0.175)
+    }
+    intersection {
+        difference {
+            sphere { scale R2DomeRadius  translate Y R2DomeMiddle }
+            sphere { scale R2DomeRadius - 0.06  translate Y R2DomeMiddle }
+        }
+        cube { scale [3, 0.5, 3]  translate Y 43.2 }
+    }
+}
+R2DomeBarePanels = group {
+    object R2DomePanel(118.5, 150.5, 33.35, 36.5)
+    difference {
+        object R2DomePanel(151.6, 180.5, 33.35, 36.5)
+        object R2DomeCut(154.2, 178, 33.75, 36.15)
+    }
+    object R2DomePanel(106.5, 113.3, 33.7, 35.65)
+}
+R2DomeCuts = group {
+    object R2DomeCut(-6.5, 17.8, 33.35, 35.8)
+    object R2DomeCut(-14.5, -8, 33.35, 36.5)
+    object R2DomeCut(-31, -16, 33.35, 36.5)
+    object R2DomeCut(-40, -32.5, 33.35, 36.5)
+    object R2DomeCut(-93, -42, 33.35, 36.5)
+    object R2DomeCut(-153.5, -97, 33.35, 36.5)
+    object R2DomeCut(-159.5, -155, 33.35, 36.5)
+    object R2DomeCut(151.6, 180.5, 33.35, 36.5)
+    object R2DomeCut(118.5, 150.5, 33.35, 36.5)
+    object R2DomeCut(104.5, 115.3, 33.35, 36)
+    object R2DomeCut(108, 115.3, 36.3, 37.1)
+    object R2DomeCut(80, 103, 33.35, 36.5)
+    object R2DomeCut(67, 78.3, 33.35, 36.5)
+    object R2DomeCut(54.5, 65, 33.35, 36.5)
+    object R2DomeCut(39, 52, 33.35, 36.5)
+    object R2DomeCut(20.5, 26.5, 38.3, 40.4)
+    object R2DomeCut(20.5, 26, 36, 37.9)
+    for k in [0, 5] {
+        object R2DomeCut(k * 60, k * 60 + 60, 40.9, 42.5, 0.175)
+    }
+    cylinder { min Y -0.45  max Y 0.2  scale [1.7, 1, 1.7]  rotate X R2EyeLean - 90  translate R2EyeAt }
+    intersection {
+        difference {
+            sphere { scale R2DomeRadius + 0.2  translate Y R2DomeMiddle }
+            sphere { scale R2DomeRadius - 0.06  translate Y R2DomeMiddle }
+        }
+        cube { scale [3.2, 0.6, 3.2]  translate Y 43.25 }
+    }
+}
+
+// The fixtures on the dome are each built flat, in a frame of their own touching the dome at one point: +X
+// toward his left, +Y up the dome and -Z straight out of it.  `R2OnDome` is how far to tip such a frame and
+// how high to set it so that its origin lands on the dome `h` up, at `az` degrees round from straight ahead;
+// a fixture's group ends `translate Z -R2DomeRadius  rotate X <tip>  translate Y <base>  rotate Y -az`.
+
+// A logic display, `which` telling one from another so each has its own lamps: a white bezel 1.9 across and
+// 1.32 tall standing 0.12 proud of the dome, with a dark window 1.42 by 0.9 let 0.08 into it, and in the
+// window five rows of nine lamps, a third of them off and the rest blue or white, scattered.  A photograph
+// of a fan-made droid from in front places the two on his front, one over the other in the blue frame to his
+// right of the radar eye, and one of the finished droid from his front and right shows their white bezels.
+primitive R2LogicDisplay(az, h, which) -> group {
+    tip = toDegrees(asin(max(h - R2DomeMiddle, 0) / R2DomeRadius))
+    base = min(h, R2DomeMiddle)
+    return group {
+        difference {
+            cube { scale [0.95, 0.66, 0.26]  translate Z 0.14 }
+            cube { scale [0.71, 0.45, 0.1]  translate Z -0.14  material R2LampOff }
+            material R2White
+        }
+        for col in [0, 8] {
+            for row in [0, 4] {
+                if (random(which * 10 + col, row) < 0.35) {
+                    cylinder {
+                        min Y -0.06  max Y -0.04  scale [0.05, 1, 0.05]  rotate X 90
+                        translate [(col - 4) * 0.155, (row - 2) * 0.17, 0]  material R2LampOff
+                    }
+                }
+                else {
+                    if (random(which * 10 + col, row, 7) < 0.5) {
+                        cylinder {
+                            min Y -0.06  max Y -0.04  scale [0.05, 1, 0.05]  rotate X 90
+                            translate [(col - 4) * 0.155, (row - 2) * 0.17, 0]  material R2LampBlue
+                        }
+                    }
+                    else {
+                        cylinder {
+                            min Y -0.06  max Y -0.04  scale [0.05, 1, 0.05]  rotate X 90
+                            translate [(col - 4) * 0.155, (row - 2) * 0.17, 0]  material R2LampWhite
+                        }
+                    }
+                }
+            }
+        }
+        translate Z -R2DomeRadius  rotate X tip  translate Y base  rotate Y -az
+    }
+}
+
+// An indicator: a round lens `radius` across its half, domed out of the dome by nearly a fifth of that in a
+// thin dark ring, wearing `lens`.  The photograph from in front puts the front one, 1.6 across, in its blue
+// panel, a little to his left of the panel's middle, and the fan-made droid lights it blue, as the front one
+// is on screen; the photographs from behind put the rear one, 1.9 across, in the blue panel in the bare
+// frame just to his left of straight behind, lit green.
+primitive R2Indicator(az, h, lens, radius = 0.8) -> group {
+    tip = toDegrees(asin(max(h - R2DomeMiddle, 0) / R2DomeRadius))
+    base = min(h, R2DomeMiddle)
+    return group {
+        intersection {
+            sphere { scale 2.7604 * radius  translate Z 2.5729 * radius }
+            cylinder { min Y -0.2  max Y 0.4  scale [radius, 1, radius]  rotate X 90 }
+            material lens
+        }
+        difference {
+            cylinder { min Y -0.05  max Y 0.4  scale [radius + 0.1, 1, radius + 0.1]  rotate X 90 }
+            cylinder { min Y -0.1  max Y 0.5  scale [radius, 1, radius]  rotate X 90 }
+            material R2Dark
+        }
+        translate Z -R2DomeRadius  rotate X tip  translate Y base  rotate Y -az
+    }
+}
+
+// A button: a blue dome 0.7 across standing 0.25 out of the dome.  The photographs from behind put two over
+// the rear indicator.
+primitive R2Button(az, h) -> group {
+    tip = toDegrees(asin(max(h - R2DomeMiddle, 0) / R2DomeRadius))
+    base = min(h, R2DomeMiddle)
+    return group {
+        sphere { scale 0.45  translate Z 0.2  material R2Blue }
+        translate Z -R2DomeRadius  rotate X tip  translate Y base  rotate Y -az
+    }
+}
+
+// A holoprojector: a knurled barrel 1.64 across on a ball it turns in, the ball sunk in the dome and standing
+// 0.45 out of it and the barrel reaching 1 out, its open end dark with a lens down in it.  `yaw` turns the
+// barrel round the dome the way `az` grows, and `pitch` up, from straight out of the dome; the ball wears
+// `ball`.  The photograph from in front puts the front one on the bare dome to his left of the indicator,
+// pointing out and turned forward, a little down, its ball silver as the finished droid's is (the fan-made
+// droid's is blue); those from behind put the rear one on the bare dome just to his right of straight
+// behind, pointing straight back, its ball silver, and the top one on the pie panel over his left shoulder,
+// pointing up and back, its ball blue.
+primitive R2Holoprojector(az, h, yaw, pitch, ball) -> group {
+    tip = toDegrees(asin(max(h - R2DomeMiddle, 0) / R2DomeRadius))
+    base = min(h, R2DomeMiddle)
+    return group {
+        sphere { scale 1.45  translate Z 1  material ball }
+        group {
+            difference {
+                cylinder { min Y 0.6  max Y 2  scale [0.82, 1, 0.82] }
+                cylinder { min Y 1.6  max Y 2.1  scale [0.66, 1, 0.66]  material R2Dark }
+            }
+            for k in [0, 23] {
+                cube { scale [0.035, 0.32, 0.045]  translate [0.82, 1.6, 0]  rotate Y k * 15 }
+            }
+            cylinder { min Y 1.95  max Y 2  scale [0.84, 1, 0.84]  open }
+            intersection {
+                sphere { scale 0.9  translate Y 0.85 }
+                cylinder { min Y 1.5  max Y 1.7  scale [0.66, 1, 0.66] }
+                material R2EyeLens
+            }
+            material R2Metal
+            rotate X -90  rotate X pitch  rotate Y -yaw  translate Z 1
+        }
+        translate Z -R2DomeRadius  rotate X tip  translate Y base  rotate Y -az
+    }
+}
+
+// The rear logic display, in the long blue panel round from behind on his right: a blue housing 0.12 proud
+// following the dome, from -152 to -118 round and 34.2 to 36.6 up, with a dark window let into it, -149.4 to
+// -122.8 and 34.8 to 36, and in the window four rows of twenty lamps, scattered green and off.  The
+// photographs from behind give the window, lit green, and the housing round it.
+primitive R2RearLamp(col, row) -> group {
+    az = -148.7 + col * 1.31
+    h = 35.06 + row * 0.29
+    tip = toDegrees(asin(max(h - R2DomeMiddle, 0) / R2DomeRadius))
+    base = min(h, R2DomeMiddle)
+    return group {
+        if (random(30 + col, row) < 0.4) {
+            cylinder { min Y -0.08  max Y -0.04  scale [0.07, 1, 0.07]  rotate X 90  material R2LampOff }
+        }
+        else {
+            cylinder { min Y -0.08  max Y -0.04  scale [0.07, 1, 0.07]  rotate X 90  material R2LampGreen }
+        }
+        translate Z -R2DomeRadius  rotate X tip  translate Y base  rotate Y -az
+    }
+}
+R2RearLogic = group {
+    difference {
+        object R2DomeRegion(-152, -118, 34.2, 36.6, 0, R2DomeRadius - 0.05, R2DomeRadius + 0.12)
+        object R2DomeRegion(-149.4, -122.8, 34.8, 36, 0, R2DomeRadius + 0.04, R2DomeRadius + 0.3) {
+            material R2LampOff
+        }
+        material R2Blue
+    }
+    for col in [0, 19] {
+        for row in [0, 3] {
+            object R2RearLamp(col, row)
+        }
+    }
+}
+
+// The fixtures on the dome's back and top, as the photographs from behind place them.
+R2DomeBack = group {
+    object R2Indicator(162.5, 35, R2IndicatorGreen, 0.95)
+    object R2Button(164.4, 37.1)
+    object R2Button(172.1, 37.1)
+    object R2Holoprojector(-167.9, 35.3, -12, 0, R2Aluminum)
+    object R2Holoprojector(150, 41.7, 0, 30, R2Blue)
+    object R2RearLogic
+}
+
+// The fixtures on the dome's front, as the photograph from in front places them.
+R2DomeFront = group {
+    object R2LogicDisplay(-23.2, 35.96, 1)
+    object R2LogicDisplay(-23.75, 34.4, 2)
+    object R2Indicator(8, 34.46, R2IndicatorBlue)
+    object R2Holoprojector(27.5, 35.2, -14, -14, R2Aluminum)
+}
+
+// The radar eye: a blue housing on the front of the dome, its flat top level at 40.4 and its bottom at 36.5,
+// its sides on the meridians -14 and 19.5, and its face leaning back 30 degrees, standing about 0.7 out from
+// the dome all the way up, with the lens let into it -- a recess 3.4 across and 0.45 deep, square to the
+// face, and in it a black lens bulging to 0.1 short of the face -- a little to his right of the face's
+// middle, on the dome's centerline.  A slot runs across the face's foot, and two grooves along each side,
+// 0.3 and 0.6 behind the face.  A photograph of a fan-made droid from in front gives the face, the lens and
+// the slot, and one from his left the lean, how far it stands out and the grooves; the 1977 side elevation
+// leans it a little less.  The recess is cut from the dome too, where the dome comes up behind the face.
+primitive R2EyeSideGroove(behind) -> group {
+    return group {
+        difference {
+            cube { scale [6, 4, 0.03]  translate Z behind + 0.03  rotate X R2EyeLean  translate R2EyeAt }
+            intersection {
+                cube { scale 12  translate [12, 38, 0]  rotate Y 13.6 }
+                cube { scale 12  translate [-12, 38, 0]  rotate Y -19.1 }
+            }
+        }
+        material R2Dark
+    }
+}
+R2RadarEye = group {
+    difference {
+        intersection {
+            cube { scale [6, 1.95, 3.5]  translate [0, 38.45, -7] }
+            cube { scale 8  translate Z 8  rotate X R2EyeLean  translate R2EyeAt }
+            cube { scale 12  translate [12, 38, 0]  rotate Y 14 }
+            cube { scale 12  translate [-12, 38, 0]  rotate Y -19.5 }
+        }
+        cylinder {
+            min Y -0.45  max Y 0.2  scale [1.7, 1, 1.7]  rotate X R2EyeLean - 90  translate R2EyeAt
+        }
+        cube {
+            scale [4, 0.06, 0.12]  translate Y -2.14  rotate X R2EyeLean  translate R2EyeAt  material R2Dark
+        }
+        object R2EyeSideGroove(0.3)
+        object R2EyeSideGroove(0.6)
+    }
+    intersection {
+        sphere { scale 4.3  translate Y -4.4 }
+        cylinder { min Y -0.5  max Y 0  scale [1.7, 1, 1.7] }
+        material R2EyeLens
+        rotate X R2EyeLean - 90
+        translate R2EyeAt
+    }
+    material R2Blue
+}
+
+// The dome: an aluminum hemisphere on an upright band as wide as the body, from just over the body's top --
+// a dark gap 0.1 tall lets it turn -- with its panels let into it, a blue stripe painted round the band
+// from 32.5 to 33.1, as the front elevation draws it and the photographs show it, and the radar eye.
+R2Dome = group {
+    cylinder { min Y R2DomeBase - 0.1  max Y R2DomeBase  scale [9, 1, 9]  material R2Dark }
+    difference {
+        union {
+            intersection {
+                sphere { scale R2DomeRadius  translate Y R2DomeMiddle }
+                cube { scale [10, 5, 10]  translate Y R2DomeMiddle + 5 }
+            }
+            cylinder { min Y R2DomeBase  max Y R2DomeMiddle  scale [R2DomeRadius, 1, R2DomeRadius] }
+        }
+        object R2DomeCuts { material R2Dark }
+    }
+    group {
+        object R2DomeBluePanels
+        cylinder { min Y 32.5  max Y 33.1  open  scale [R2DomeRadius + 0.002, 1, R2DomeRadius + 0.002] }
+        material R2Blue
+    }
+    object R2DomeBarePanels
+    object R2RadarEye
+    object R2DomeFront
+    object R2DomeBack
+    material R2Aluminum
+}
+
+// -- The body ------------------------------------------------------------------------------------------
+
+// How far up the bottom of the skirt is, which the center leg hangs from.
+R2SkirtBottom = 7.95
+
+// The body's radius, and a piece of its skin between the radii `inner` and `outer`: between the meridians
+// `from` and `to` -- degrees round from straight ahead, toward his left as they grow, less than half a turn
+// apart -- and between the heights `low` and `high`.  The last box only holds the piece tight.
+R2BodyRadius = 9.125
+primitive R2BodyRegion(from, to, low, high, inner, outer) -> group {
+    middle = (from + to) / 2
+    half = (to - from) / 2
+    across = outer * sin(min(half, 90) degrees) + 0.2
+    near = inner * cos(min(half, 90) degrees) - 0.2
+    return group {
+        intersection {
+            difference {
+                cylinder { min Y low  max Y high  scale [outer, 1, outer] }
+                cylinder { min Y low - 0.1  max Y high + 0.1  scale [inner, 1, inner] }
+            }
+            cube { scale 40  translate [40, 20, 0]  rotate Y -from }
+            cube { scale 40  translate [-40, 20, 0]  rotate Y -to }
+            cube {
+                scale [across, (high - low) / 2 + 0.1, (outer + 0.2 - near) / 2]
+                translate [0, (high + low) / 2, -(outer + 0.2 + near) / 2]
+                rotate Y -middle
+            }
+        }
+    }
+}
+
+// A panel on the body, to be cut from it: a groove round its edge 0.08 wide and 0.06 deep -- four strips, so
+// that a ray meeting the panel's middle meets none of them -- and if `inset` is one, a plate inside that sunk
+// 0.04, its edges 0.3 in from the groove and its corners rounded 0.35 -- the plate cut square to the dome's
+// middle at the panel's middle, which on the barrel's curve is near enough.
+primitive R2BodyPanel(from, to, low, high, inset = 0) -> group {
+    r = R2BodyRadius
+    d = toDegrees(0.04 / r)
+    m = toDegrees(0.34 / r)
+    half = r * sin(((to - from) / 2 - m) degrees)
+    top = high - 0.34
+    bottom = low + 0.34
+    middle = (from + to) / 2
+    near = r * cos(((to - from) / 2) degrees) - 0.5
+    x = half - 0.35
+    up = top - 0.35
+    down = bottom + 0.35
+    return group {
+        group {
+            object R2BodyRegion(from - d, to + d, high - 0.04, high + 0.04, r - 0.06, r + 0.3)
+            object R2BodyRegion(from - d, to + d, low - 0.04, low + 0.04, r - 0.06, r + 0.3)
+            object R2BodyRegion(from - d, from + d, low + 0.0405, high - 0.0405, r - 0.06, r + 0.3)
+            object R2BodyRegion(to - d, to + d, low + 0.0405, high - 0.0405, r - 0.06, r + 0.3)
+            material R2Gray
+        }
+        if (inset == 1) {
+            intersection {
+                difference {
+                    cylinder { min Y bottom - 0.1  max Y top + 0.1  scale [r + 0.3, 1, r + 0.3] }
+                    cylinder { min Y bottom - 0.2  max Y top + 0.2  scale [r - 0.04, 1, r - 0.04] }
+                }
+                union {
+                    cube { scale [half, (top - bottom) / 2 - 0.35, r]  translate Y (top + bottom) / 2 }
+                    cube { scale [x, (top - bottom) / 2, r]  translate Y (top + bottom) / 2 }
+                    cylinder { min Y -r  max Y r  scale [0.35, 1, 0.35]  rotate X 90  translate [x, up, 0] }
+                    cylinder { min Y -r  max Y r  scale [0.35, 1, 0.35]  rotate X 90  translate [-x, up, 0] }
+                    cylinder { min Y -r  max Y r  scale [0.35, 1, 0.35]  rotate X 90  translate [x, down, 0] }
+                    cylinder { min Y -r  max Y r  scale [0.35, 1, 0.35]  rotate X 90  translate [-x, down, 0] }
+                }
+                cube {
+                    scale [half + 0.1, (top - bottom) / 2 + 0.1, (r + 0.4 - near) / 2]
+                    translate [0, (top + bottom) / 2, -(r + 0.4 + near) / 2]
+                }
+                material R2White
+                rotate Y -middle
+            }
+        }
+    }
+}
+
+// Where the body's panels are, each as (from, to, low, high, inset).  Photographs of a fan-made droid from in
+// front and from behind, each registered by fitting the camera that took it to the dome, place them; their
+// heights are taken against the body's own top and the barrel's bottom in each, which the photographs put an
+// inch and a half lower and three quarters of an inch higher respectively than the dome fit alone would.  The
+// body's front is the middle of the blue vent panel, which the front elevation also centers, and its back the
+// middle of the panel under the wide one.  The sides, under the shoulders, are not yet laid out.
+R2BodyPanels = group {
+    // The top panel on his front, holding the utility arms, and the slot's panel at its top.
+    object R2BodyPanel(-42, 42, 25.05, 31.25, 0)
+    object R2BodyPanel(-33.2, 33.2, 30.17, 31.07, 0)
+    // The tall panels either side of it.
+    object R2BodyPanel(-66.5, -46.2, 16.9, 31.2, 1)
+    object R2BodyPanel(46.2, 66.5, 16.9, 31.2, 1)
+    // Under the top panel, to his right: a square one, the coin slots' and a narrow one.
+    object R2BodyPanel(-41.9, -16.6, 22.3, 25.16, 0)
+    object R2BodyPanel(-44.1, -29.8, 16.69, 22.24, 0)
+    object R2BodyPanel(-28.6, -16.2, 16.69, 21.76, 1)
+    // The blue vent panel in the middle, and the data panel to his left.
+    object R2BodyPanel(-12.2, 12.2, 16.73, 24.95, 0)
+    object R2BodyPanel(15.7, 41.9, 16.8, 25.15, 1)
+    // A row of four under those.
+    object R2BodyPanel(-33.6, -19.9, 14.83, 16.22, 0)
+    object R2BodyPanel(-13.2, 12.5, 14.83, 16.22, 0)
+    object R2BodyPanel(19.3, 42.6, 14.83, 16.22, 0)
+    object R2BodyPanel(46.4, 68.9, 14.83, 16.22, 0)
+    // Three narrow ones at the bottom, to his left.
+    object R2BodyPanel(15.3, 27.9, 11.02, 14.48, 0)
+    object R2BodyPanel(31.4, 38.0, 11.02, 14.48, 0)
+    object R2BodyPanel(42.1, 49.4, 11.02, 14.48, 0)
+    // The wide panel across his back, and a second groove inside it.
+    object R2BodyPanel(140.3, 219.7, 25.05, 31.12, 0)
+    object R2BodyPanel(144.2, 215.8, 25.62, 30.42, 1)
+    // The tall panels either side of it.
+    object R2BodyPanel(112.5, 135.2, 16.9, 30.75, 1)
+    object R2BodyPanel(224.8, 247.5, 16.9, 30.75, 1)
+    // Three under it.
+    object R2BodyPanel(143.1, 165.8, 16.71, 24.32, 1)
+    object R2BodyPanel(170.4, 189.6, 17.13, 24.39, 1)
+    object R2BodyPanel(194.2, 216.9, 16.71, 24.32, 1)
+    // And a row of three under those.
+    object R2BodyPanel(143.7, 165.4, 14.6, 16.45, 0)
+    object R2BodyPanel(170.5, 189.5, 15.13, 16.47, 0)
+    object R2BodyPanel(194.6, 216.3, 14.6, 16.45, 0)
+}
+
+// A vent in the body, between the meridians `from` and `to` and the heights `low` and `high`: a pocket 0.35
+// deep, gray inside as the legs' grooves are, with `slats` blue louvers standing upright in it, 0.08 back
+// from the barrel's face and filling a little over half its width, and a gray frame 0.12 wide standing 0.06
+// proud round its mouth.
+// `R2VentPocket` is the pocket, to be cut from the body; `R2Vent` the louvers and the frame.
+primitive R2VentPocket(from, to, low, high) -> group {
+    return group {
+        object R2BodyRegion(from, to, low, high, R2BodyRadius - 0.35, R2BodyRadius + 0.3)
+        material R2Gray
+    }
+}
+primitive R2Vent(from, to, low, high, slats) -> group {
+    r = R2BodyRadius
+    d = toDegrees(0.12 / r)
+    pitch = (to - from) / slats
+    return group {
+        difference {
+            object R2BodyRegion(from - d, to + d, low - 0.12, high + 0.12, r - 0.05, r + 0.06)
+            object R2BodyRegion(from, to, low, high, r - 0.1, r + 0.2)
+            material R2Gray
+        }
+        for k in [0, slats - 1] {
+            object R2BodyRegion(
+                from + (k + 0.22) * pitch, from + (k + 0.78) * pitch, low + 0.05, high - 0.05, r - 0.3, r - 0.08
+            )
+        }
+        material R2Blue
+    }
+}
+
+// The foot of a vent's frame, carried on down under its louvers to `low`: the frame's sides and bottom, 0.12
+// wide, round a recess of its own 0.3 deep, gray as the vent's inside is.  `R2VentFootPocket` is the recess,
+// to be cut from the body.
+primitive R2VentFootPocket(from, to, low, high) -> group {
+    return group {
+        object R2BodyRegion(from, to, low + 0.12, high - 0.12, R2BodyRadius - 0.3, R2BodyRadius + 0.3)
+        material R2Gray
+    }
+}
+primitive R2VentFoot(from, to, low, high) -> group {
+    r = R2BodyRadius
+    d = toDegrees(0.12 / r)
+    return group {
+        difference {
+            object R2BodyRegion(from - d, to + d, low, high - 0.12, r - 0.05, r + 0.06)
+            object R2BodyRegion(from, to, low + 0.12, high, r - 0.1, r + 0.2)
+        }
+        material R2Gray
+    }
+}
+
+// The vents: one on each side under the shoulder, louvered five times and half hidden by the leg -- a
+// photograph of a fan-made droid from his left and one of the finished droid from his front and right show
+// them, a little forward of the leg's shank, from about the coin slots' foot up to the horseshoe's lower
+// fittings -- and two low ones on opposite corners of the barrel, one to his right in front, which the
+// photograph from in front places, and one to his left behind, which the one from behind does.  The front one's
+// frame carries on down below its louvers to the foot of the coin return's plate beside it, round a recess of
+// its own, as a photograph of the finished droid from his front and right shows it.
+R2BodyVentPockets = group {
+    object R2VentPocket(74, 100, 17, 23)
+    object R2VentPocket(-100, -74, 17, 23)
+    object R2VentPocket(-76, -50.4, 12.5, 16.5)
+    object R2VentFootPocket(-76, -50.4, 11.18, 12.5)
+    object R2VentPocket(108, 137, 10.8, 17.4)
+}
+R2BodyVents = group {
+    object R2Vent(74, 100, 17, 23, 5)
+    object R2Vent(-100, -74, 17, 23, 5)
+    object R2Vent(-76, -50.4, 12.5, 16.5, 5)
+    object R2VentFoot(-76, -50.4, 11.18, 12.5)
+    object R2Vent(108, 137, 10.8, 17.4, 5)
+}
+
+// The utility arms in the top panel on his front, and the slot over them, as the front elevation draws them.
+// Each arm is seen from in front as a long flat blade: a thick end, a handle 1.44 tall, a thinner neck, and a
+// tip that swells to near the handle's height before tapering to its end -- the same shape above and below
+// its middle line, and the lower arm the upper one turned end for end, the upper's tip to his right and the
+// lower's to his left.  The outline from straight in front is carried back into the barrel: the arm is the
+// outline between the barrel's radius less 1.6 and less 0.3, so its face is set back a little and follows
+// the barrel's curve -- but for its neck, which dips into the body behind the tip, below -- and it stands in
+// a pocket of the same outline 0.07 wider all round, dark inside, which is the black line round each arm in
+// the photographs.  A photograph of a fan-made droid from his left shows the arms set back in their pockets.
+// (The last box in each piece only holds it tight.)  The slot over them is a dark opening 0.45 tall in a
+// panel just under the dome, with a blue lip along its top, as the photographs show it, and a groove runs
+// across the top panel between the arms.
+R2UpperArmFront = path {
+    move to -4.940, 29.380
+    line to -4.740, 29.380
+    line to -3.840, 29.570
+    line to -2.870, 29.600
+    line to -2.490, 29.300
+    line to -0.970, 29.260
+    line to -0.970, 29.620
+    line to 3.380, 29.620
+    line to 3.880, 29.390
+    line to 4.950, 29.390
+    line to 4.950, 28.410
+    line to 3.880, 28.410
+    line to 3.380, 28.180
+    line to -0.970, 28.180
+    line to -0.970, 28.540
+    line to -2.490, 28.500
+    line to -2.870, 28.200
+    line to -3.840, 28.230
+    line to -4.740, 28.420
+    line to -4.940, 28.420
+    close
+}
+R2UpperArmPocket = path {
+    move to -5.010, 29.450
+    line to -4.747, 29.450
+    line to -3.848, 29.640
+    line to -2.847, 29.671
+    line to -2.465, 29.369
+    line to -1.040, 29.332
+    line to -1.040, 29.690
+    line to 3.395, 29.690
+    line to 3.895, 29.460
+    line to 5.020, 29.460
+    line to 5.020, 28.340
+    line to 3.895, 28.340
+    line to 3.395, 28.110
+    line to -1.040, 28.110
+    line to -1.040, 28.468
+    line to -2.465, 28.431
+    line to -2.847, 28.129
+    line to -3.848, 28.160
+    line to -4.747, 28.350
+    line to -5.010, 28.350
+    close
+}
+R2LowerArmFront = path {
+    move to 4.950, 26.970
+    line to 4.750, 26.970
+    line to 3.850, 27.160
+    line to 2.880, 27.190
+    line to 2.500, 26.890
+    line to 0.980, 26.850
+    line to 0.980, 27.210
+    line to -3.370, 27.210
+    line to -3.870, 26.980
+    line to -4.940, 26.980
+    line to -4.940, 26.000
+    line to -3.870, 26.000
+    line to -3.370, 25.770
+    line to 0.980, 25.770
+    line to 0.980, 26.130
+    line to 2.500, 26.090
+    line to 2.880, 25.790
+    line to 3.850, 25.820
+    line to 4.750, 26.010
+    line to 4.950, 26.010
+    close
+}
+R2LowerArmPocket = path {
+    move to 5.020, 27.040
+    line to 4.757, 27.040
+    line to 3.858, 27.230
+    line to 2.857, 27.261
+    line to 2.475, 26.959
+    line to 1.050, 26.922
+    line to 1.050, 27.280
+    line to -3.385, 27.280
+    line to -3.885, 27.050
+    line to -5.010, 27.050
+    line to -5.010, 25.930
+    line to -3.885, 25.930
+    line to -3.385, 25.700
+    line to 1.050, 25.700
+    line to 1.050, 26.058
+    line to 2.475, 26.021
+    line to 2.857, 25.719
+    line to 3.858, 25.750
+    line to 4.757, 25.940
+    line to 5.020, 25.940
+    close
+}
+
+primitive R2ArmShell(inner, outer) -> group {
+    return group {
+        difference {
+            cylinder { min Y 25  max Y 31.4  scale [outer, 1, outer] }
+            cylinder { min Y 24.9  max Y 31.5  scale [inner, 1, inner] }
+        }
+    }
+}
+// The bend where an arm's tip meets its neck, in a frame of its own: the joint straight ahead on the arm's
+// face, 8.825 from the barrel's axis, and the neck running toward +X.  The tip turns square into the body
+// there, 0.8 deep, round a tight bend -- its outside 0.15 round, its inside 0.12 -- and the neck rises back
+// out at 23 degrees to meet the handle on the face where the neck ends, 10 degrees round.  `R2ArmBendCut` is
+// what is taken from the arm, `R2ArmBendFill` the inside of the bend put back.
+R2ArmBendCut = group {
+    intersection {
+        cube { scale [4, 1.2, 4]  translate [4, 0, -4]  rotate Y 23.26  translate Z -8.025 }
+        cube { scale [4, 1.2, 4]  translate [4, 0, -8] }
+    }
+    difference {
+        cube { scale [0.075, 1.2, 0.225]  translate [-0.075, 0, -8.9] }
+        cylinder { min Y -1.3  max Y 1.3  scale [0.15, 1, 0.15]  translate [-0.15, 0, -8.675] }
+    }
+}
+R2ArmBendFill = difference {
+    intersection {
+        cube { scale [4, 1.2, 4]  translate [4, 0, -4]  rotate Y 23.26  translate Z -8.025 }
+        cube { scale [0.0835, 1.2, 0.091]  translate [0.0835, 0, -8.116] }
+    }
+    cylinder { min Y -1.3  max Y 1.3  scale [0.12, 1, 0.12]  translate [0.12, 0, -8.207] }
+}
+
+R2ArmPockets = group {
+    intersection {
+        extrusion { path R2UpperArmPocket  min Y 0  max Y 12  rotate X -90 }
+        object R2ArmShell(R2BodyRadius - 1.7, R2BodyRadius + 0.3)
+        cube { scale [5.2, 0.85, 1.7]  translate [0, 28.9, -7.8] }
+    }
+    intersection {
+        extrusion { path R2LowerArmPocket  min Y 0  max Y 12  rotate X -90 }
+        object R2ArmShell(R2BodyRadius - 1.7, R2BodyRadius + 0.3)
+        cube { scale [5.2, 0.85, 1.7]  translate [0, 26.49, -7.8] }
+    }
+    object R2BodyRegion(-30.3, 30.3, 30.45, 30.9, R2BodyRadius - 1.2, R2BodyRadius + 0.3)
+    material R2Hole
+}
+R2UtilityArms = group {
+    intersection {
+        extrusion { path R2UpperArmFront  min Y 0  max Y 12  rotate X -90 }
+        cube { scale [5.2, 0.85, 1.7]  translate [0, 28.9, -7.8] }
+        union {
+            difference {
+                object R2ArmShell(R2BodyRadius - 1.6, R2BodyRadius - 0.3)
+                object R2ArmBendCut { rotate Y 16.39  translate Y 28.9 }
+            }
+            object R2ArmBendFill { rotate Y 16.39  translate Y 28.9 }
+        }
+    }
+    intersection {
+        extrusion { path R2LowerArmFront  min Y 0  max Y 12  rotate X -90 }
+        cube { scale [5.2, 0.85, 1.7]  translate [0, 26.49, -7.8] }
+        union {
+            difference {
+                object R2ArmShell(R2BodyRadius - 1.6, R2BodyRadius - 0.3)
+                object R2ArmBendCut { scale [-1, 1, 1]  rotate Y -16.46  translate Y 26.49 }
+            }
+            object R2ArmBendFill { scale [-1, 1, 1]  rotate Y -16.46  translate Y 26.49 }
+        }
+    }
+    object R2BodyRegion(-30.1, 30.1, 30.76, 30.9, R2BodyRadius - 1.1, R2BodyRadius - 0.12)
+    material R2Blue
+}
+R2ArmGrooves = group {
+    object R2BodyRegion(-42, 42, 27.82, 27.9, R2BodyRadius - 0.06, R2BodyRadius + 0.3)
+    material R2Gray
+}
+
+// A rounded rectangle carried straight back from in front, through the front of the barrel: `hw` and `hh`
+// across and up from its middle at height `cy`, its corners rounded `r`.  Cut with a shell, it gives a shape
+// that follows the barrel's curve.
+primitive R2RoundedPrism(cy, hw, hh, r) -> group {
+    return group {
+        union {
+            cube { scale [hw, hh - r, 6]  translate [0, cy, -6] }
+            cube { scale [hw - r, hh, 6]  translate [0, cy, -6] }
+            cylinder { min Y 0  max Y 12  scale [r, 1, r]  rotate X -90  translate [hw - r, cy + hh - r, 0] }
+            cylinder { min Y 0  max Y 12  scale [r, 1, r]  rotate X -90  translate [r - hw, cy + hh - r, 0] }
+            cylinder { min Y 0  max Y 12  scale [r, 1, r]  rotate X -90  translate [hw - r, cy - hh + r, 0] }
+            cylinder { min Y 0  max Y 12  scale [r, 1, r]  rotate X -90  translate [r - hw, cy - hh + r, 0] }
+        }
+    }
+}
+
+// The blue vent panel in the middle of his front: the panel painted blue, and in it two vents one over the
+// other, each a rounded opening 2.9 across and 3.2 tall, its corners rounded 0.9, in a bright rim 0.21 wide
+// standing 0.12 proud, dark inside, with four slats across it, tilted down to the front, set back 0.12 from
+// the face.  A photograph of a fan-made droid from in front places them; one of the finished droid from his
+// front and right, and the front elevation, show both with slats across.  `R2VentOpening` is the opening, to
+// be cut from the body.
+R2VentPanelBlue = group {
+    object R2BodyRegion(-11.95, 11.95, 16.77, 24.91, R2BodyRadius - 0.1, R2BodyRadius + 0.003)
+    material R2Blue
+}
+primitive R2VentOpening(cy) -> group {
+    return group {
+        intersection {
+            object R2RoundedPrism(cy, 1.44, 1.58, 0.9)
+            object R2BodyRegion(-15, 15, cy - 1.7, cy + 1.7, R2BodyRadius - 0.7, R2BodyRadius + 0.3)
+        }
+        material R2Hole
+    }
+}
+primitive R2VentRim(cy) -> group {
+    return group {
+        intersection {
+            difference {
+                object R2RoundedPrism(cy, 1.65, 1.84, 1.1)
+                object R2RoundedPrism(cy, 1.44, 1.58, 0.9)
+            }
+            object R2BodyRegion(-15, 15, cy - 1.9, cy + 1.9, R2BodyRadius - 0.2, R2BodyRadius + 0.12)
+        }
+        intersection {
+            object R2RoundedPrism(cy, 1.44, 1.58, 0.9)
+            group {
+                for k in [0, 3] {
+                    cube {
+                        scale [1.5, 0.035, 0.25]  rotate X -25
+                        translate [0, cy - 1.14 + k * 0.76, -R2BodyRadius + 0.37]
+                    }
+                }
+            }
+            material R2Metal
+        }
+        material R2Satin
+    }
+}
+
+// A coin slot, `top` its top and `az` the middle of its face: a bright wedge 1.24 across standing 0.4 out of
+// the body, flat on top, with an upright face 0.28 tall and an underside sloping back to the body 0.5 under
+// its top, and a dark slot 1 across and 0.08 tall in its face.  Its side is drawn front to the right, as the
+// legs' are, and turned to stand out of the barrel at `az`.
+primitive R2CoinSlot(az, top) -> group {
+    r = R2BodyRadius
+    return group {
+        difference {
+            extrusion {
+                path R2CoinSlotSide  min Y -0.62  max Y 0.62  rotate X -90  rotate Y 90
+            }
+            cube { scale [0.5, 0.04, 0.15]  translate [0, -0.13, -r - 0.4]  material R2Hole }
+        }
+        material R2Satin
+        translate Y top
+        rotate Y -az
+    }
+}
+R2CoinSlotSide = path {
+    move to 8.825, 0
+    line to 9.525, 0
+    line to 9.525, -0.28
+    line to 9.125, -0.5
+    line to 8.825, -0.5
+    close
+}
+
+// The six coin slots in their panel to his right of the vent panel, one over another 0.88 apart, as a
+// photograph of a fan-made droid from in front places them; one of the finished droid from his front and
+// right shows their wedges.
+R2CoinSlots = group {
+    for k in [0, 5] {
+        object R2CoinSlot(-37.2, 21.84 - k * 0.88)
+    }
+}
+
+// The data port on the panel to his left of the vents: a dark flange 2 across on the panel, a bright collar,
+// and a barrel 1.44 across standing 1.1 out of the body, its end dark round a bright ring and a pin.  The
+// photograph from in front places it, and one from his left shows its shape.
+R2DataPort = group {
+    cylinder { min Y 0  max Y 0.12  scale [1, 1, 1]  material R2Dark }
+    cylinder { min Y 0.12  max Y 0.55  scale [0.78, 1, 0.78]  material R2Chrome }
+    difference {
+        cylinder { min Y 0.55  max Y 1.1  scale [0.72, 1, 0.72] }
+        cylinder { min Y 0.85  max Y 1.2  scale [0.56, 1, 0.56]  material R2Hole }
+    }
+    difference {
+        cylinder { min Y 0.85  max Y 1.02  scale [0.36, 1, 0.36] }
+        cylinder { min Y 0.8  max Y 1.1  scale [0.28, 1, 0.28]  material R2Hole }
+        material R2Chrome
+    }
+    cylinder { min Y 0.85  max Y 1.0  scale [0.1, 1, 0.1]  material R2Chrome }
+    material R2Metal
+    rotate X -90
+    translate [0, 21.7, -R2BodyRadius + 0.02]
+    rotate Y -27.8
+}
+
+// -- The lower row --------------------------------------------------------------------------------------
+
+// A coin return: a gray metal plate 0.04 proud between the meridians `from` and `to` and the heights `low`
+// and `high`, with a square opening `hw` and `hh` across and up from its middle at `az` and `cy`, its corners
+// rounded a little, going into the body as far as the return's face, the same gray: a face leaning back, 1
+// in at the opening's foot and 2 at its top.  `R2CoinReturnPocket` is the opening, to be cut from the body;
+// `R2CoinReturn` the plate.  Photographs of a fan-made droid from in front and from behind place one in
+// front, its opening toward his right, and two behind, theirs in their middles; one of the finished droid
+// from his front and right shows the front one's plate and its open box.
+primitive R2CoinReturnOpening(az, cy, hw, hh) -> group {
+    return group { object R2RoundedPrism(cy, hw, hh, 0.12) { rotate Y -az } }
+}
+primitive R2CoinReturnPocket(az, cy, hw, hh) -> group {
+    return group {
+        intersection {
+            object R2CoinReturnOpening(az, cy, hw, hh)
+            object R2BodyRegion(
+                az - 20, az + 20, cy - hh - 0.1, cy + hh + 0.1, R2BodyRadius - 2.3, R2BodyRadius + 0.3
+            )
+            cube {
+                scale 10  translate Z -10  rotate X toDegrees(atan(1 / (2 * hh)))
+                translate [0, cy - hh, 1 - R2BodyRadius]  rotate Y -az
+            }
+        }
+        material R2Metal
+    }
+}
+primitive R2CoinReturn(from, to, low, high, az, cy, hw, hh) -> group {
+    return group {
+        difference {
+            object R2BodyRegion(from, to, low, high, R2BodyRadius - 0.05, R2BodyRadius + 0.04)
+            object R2CoinReturnOpening(az, cy, hw, hh) { material R2Metal }
+        }
+        material R2Metal
+    }
+}
+
+// A power coupler, `az` round and `cy` up, in a frame of its own touching the body there: a round pocket 3.24
+// across, 0.35 deep at its middle, in a blue plate, ringed in satin standing just proud.  On the front one a
+// blue disc lies in the pocket under a dark cross with satin edges and a satin hub, as the photograph from in
+// front shows it; on the back one, `back`, the pocket is a dark bowl with a small satin tab at its top, as the
+// photographs from behind show it.  `R2CouplerPocket` is the pocket, to be cut from the body.
+primitive R2CouplerPocket(az, cy) -> group {
+    return group {
+        cylinder { min Y -1  max Y 0.35  scale [1.62, 1, 1.62]  rotate X 90 }
+        material R2Dark
+        translate Z -R2BodyRadius  translate Y cy  rotate Y -az
+    }
+}
+primitive R2Coupler(az, cy, back = 0) -> group {
+    return group {
+        difference {
+            cylinder { min Y -0.05  max Y 0.35  scale [1.62, 1, 1.62]  rotate X 90 }
+            cylinder { min Y -0.1  max Y 0.4  scale [1.47, 1, 1.47]  rotate X 90 }
+        }
+        if (back == 1) {
+            cylinder { min Y 0.33  max Y 0.35  scale [1.47, 1, 1.47]  rotate X 90  material R2Hole }
+            cube { scale [0.22, 0.1, 0.1]  translate [0, 1.2, 0.25] }
+        }
+        else {
+            cylinder { min Y 0.29  max Y 0.35  scale [1.25, 1, 1.25]  rotate X 90  material R2Blue }
+            cube { scale [0.43, 1.25, 0.065]  translate Z 0.285 }
+            cube { scale [1.25, 0.43, 0.065]  translate Z 0.285 }
+            cube { scale [0.35, 1.26, 0.075]  translate Z 0.275  material R2Dark }
+            cube { scale [1.26, 0.35, 0.075]  translate Z 0.275  material R2Dark }
+            cylinder { min Y 0.05  max Y 0.35  scale [0.38, 1, 0.38]  rotate X 90 }
+        }
+        material R2Satin
+        translate Z -R2BodyRadius  translate Y cy  rotate Y -az
+    }
+}
+
+// An octagonal port, `az` round and `cy` up: a dark pocket 2.9 across and 3.4 tall, its corners cut 0.6 and
+// 0.45 deep, framed in gray 0.15 wide standing just proud, with a dark round lens in it 2 across.  The
+// photographs from in front and from his left put one on his front left, low; those from behind and the 1977
+// side elevation one on his back right.
+R2OctagonFront = path {
+    move to -0.85, -1.7
+    line to 0.85, -1.7
+    line to 1.45, -1.1
+    line to 1.45, 1.1
+    line to 0.85, 1.7
+    line to -0.85, 1.7
+    line to -1.45, 1.1
+    line to -1.45, -1.1
+    close
+}
+R2OctagonRim = path {
+    move to -0.94, -1.85
+    line to 0.94, -1.85
+    line to 1.6, -1.19
+    line to 1.6, 1.19
+    line to 0.94, 1.85
+    line to -0.94, 1.85
+    line to -1.6, 1.19
+    line to -1.6, -1.19
+    close
+}
+primitive R2OctagonPocket(az, cy) -> group {
+    return group {
+        intersection {
+            extrusion { path R2OctagonFront  min Y 0  max Y 12  rotate X -90  translate Y cy  rotate Y -az }
+            object R2BodyRegion(az - 15, az + 15, cy - 1.8, cy + 1.8, R2BodyRadius - 0.45, R2BodyRadius + 0.3)
+        }
+        material R2Hole
+    }
+}
+primitive R2OctagonPort(az, cy) -> group {
+    return group {
+        intersection {
+            difference {
+                extrusion { path R2OctagonRim  min Y 0  max Y 12  rotate X -90  translate Y cy  rotate Y -az }
+                extrusion { path R2OctagonFront  min Y 0  max Y 12  rotate X -90  translate Y cy  rotate Y -az }
+            }
+            object R2BodyRegion(az - 15, az + 15, cy - 2, cy + 2, R2BodyRadius - 0.05, R2BodyRadius + 0.03)
+            material R2Gray
+        }
+        group {
+            cylinder { min Y 0.3  max Y 0.5  scale [1, 1, 1]  rotate X 90  material R2Dark }
+            difference {
+                cylinder { min Y 0.27  max Y 0.5  scale [1, 1, 1]  rotate X 90 }
+                cylinder { min Y 0.2  max Y 0.55  scale [0.9, 1, 0.9]  rotate X 90 }
+                material R2Metal
+            }
+            translate Z -R2BodyRadius  translate Y cy  rotate Y -az
+        }
+    }
+}
+
+// The lower row's places, front and back, as the photographs from in front and from behind place them: the
+// coin return to his right in front, the power coupler in the middle and the octagonal port to his left; the
+// two coin returns either side of the power coupler behind, and the octagonal port to his right.
+R2LowerRowPaint = group {
+    object R2BodyRegion(-10.6, 10.1, 11.05, 14.25, R2BodyRadius - 0.1, R2BodyRadius + 0.003)
+    object R2BodyRegion(170.2, 190, 11.3, 14.6, R2BodyRadius - 0.1, R2BodyRadius + 0.003)
+    material R2Blue
+}
+R2LowerRowPockets = group {
+    object R2BodyPanel(-10.6, 10.1, 11.05, 14.25, 0)
+    object R2BodyPanel(170.2, 190, 11.3, 14.6, 0)
+    object R2CoinReturnPocket(-34.56, 12.59, 0.875, 1.23)
+    object R2CoinReturnPocket(153.9, 12.85, 1.1, 1.15)
+    object R2CoinReturnPocket(-153.9, 12.85, 1.1, 1.15)
+    object R2CouplerPocket(-0.25, 12.62)
+    object R2CouplerPocket(180.1, 13)
+    object R2OctagonPocket(65.8, 13.25)
+    object R2OctagonPocket(-125, 12.6)
+}
+R2LowerRow = group {
+    object R2CoinReturn(-43.1, -15.5, 11.18, 14.44, -34.56, 12.59, 0.875, 1.23)
+    object R2CoinReturn(142.2, 165.6, 11.3, 14.45, 153.9, 12.85, 1.1, 1.15)
+    object R2CoinReturn(-165.2, -143.7, 11.3, 14.45, -153.9, 12.85, 1.1, 1.15)
+    object R2Coupler(-0.25, 12.62)
+    object R2Coupler(180.1, 13, 1)
+    object R2OctagonPort(65.8, 13.25)
+    object R2OctagonPort(-125, 12.6)
+}
+
+// -- The skirt ------------------------------------------------------------------------------------------
+
+// A strut on the skirt, `az` round: a flat bar 0.44 wide standing 0.15 out of the skirt, running straight down
+// it from under the step at the barrel's foot to the skirt's bottom -- the skirt's own slope, 32.9 degrees
+// from upright, 2.9 long, ending just inside both.  Built straight ahead and turned round to `az`.
+primitive R2SkirtStrut(az) -> group {
+    return group {
+        cube { scale [0.22, 1.45, 0.1]  translate Z -0.05  rotate X -32.86  translate [0, 9.292, -7.697] }
+        rotate Y -az
+    }
+}
+
+// The skirt's struts, as photographs of a fan-made droid from in front and from behind place them: three either
+// side of his middle in front, the two nearest 18 apart and the others in a pair over each foot, and two either
+// side of his middle behind.  Under the legs the skirt is plain, as the one from his left shows it.
+R2SkirtStruts = group {
+    object R2SkirtStrut(-55)
+    object R2SkirtStrut(-38.5)
+    object R2SkirtStrut(-9)
+    object R2SkirtStrut(9)
+    object R2SkirtStrut(38.5)
+    object R2SkirtStrut(55)
+    object R2SkirtStrut(149)
+    object R2SkirtStrut(172)
+    object R2SkirtStrut(188)
+    object R2SkirtStrut(211)
+}
+
+// The body: its outline turned about its axis, as the 1977 side elevation draws it, front and back alike --
+// the barrel 18.25 across, straight down from 31.4 under the dome to 10.55; then a flat ring 0.6 wide
+// stepping in from its edge; then the skirt, narrowing down and in to its flat bottom, 6.83 round at 7.95 --
+// with its panels, vents and the arms' pockets cut into it, and the vents' louvers and frames and the arms.  The
+// cuts are gathered into one group, so that they are one side of one difference, sorted among themselves.
+R2Body = group {
+    difference {
+        union {
+            lathe {
+                path {
+                    move to 0, R2SkirtBottom
+                    line to 6.83, R2SkirtBottom
+                    line to 8.51, 10.55
+                    line to 9.125, 10.55
+                    line to 9.125, 31.4
+                    line to 0, 31.4
+                }
+            }
+            object R2VentPanelBlue
+            object R2LowerRowPaint
+        }
+        group {
+            object R2BodyPanels
+            object R2BodyVentPockets
+            object R2ArmPockets
+            object R2ArmGrooves
+            object R2VentOpening(22.96)
+            object R2VentOpening(18.86)
+            object R2LowerRowPockets
+        }
+    }
+    object R2BodyVents
+    object R2UtilityArms
+    object R2VentRim(22.96)
+    object R2VentRim(18.86)
+    object R2DataPort
+    object R2CoinSlots
+    object R2LowerRow
+    object R2SkirtStruts
+    material R2White
+}
+
+// -- The legs ------------------------------------------------------------------------------------------
+
+// How high the shoulder hubs stand, which the outer legs hang from and the body turns about: the legs are
+// 31 tall, and their round tops are 8.75 across, centered on the hubs.
+R2Shoulder = 26.625
+
+// One outer leg's side view, front to the right: the round top, straight sides falling to a V that narrows
+// it to its 4.5-in shank, and the shank widening again to the ankle block.  The top is a horseshoe, open
+// in its middle round the hub on the body that the leg turns on: the opening is 3.2 across, round at the
+// top about the pivot and falling 2 below it -- the second run here, which the extrusion cuts out.
+R2LegProfile = path {
+    move to -4.375, 26.625
+    curve -4.375, 29.04, -2.42, 31 to 0, 31
+    curve 2.42, 31, 4.375, 29.04 to 4.375, 26.625
+    line to 4.375, 21.8
+    line to 2.25, 20.6
+    line to 2.25, 12.6
+    line to 2.65, 12.6
+    line to 2.65, 7.4
+    line to -2.65, 7.4
+    line to -2.65, 12.6
+    line to -2.25, 12.6
+    line to -2.25, 20.6
+    line to -4.375, 21.8
+    close
+
+    move to -1.6, 24.625
+    line to 1.6, 24.625
+    line to 1.6, 26.625
+    curve 1.6, 27.509, 0.884, 28.225 to 0, 28.225
+    curve -0.884, 28.225, -1.6, 27.509 to -1.6, 26.625
+    close
+}
+
+// The shank's face either side of the blue housing, sunk 0.93 -- a third of the leg's thickness -- from the
+// top of the booster cover up to the horseshoe's underside, whose slant runs on in to meet the housing
+// rather than stopping at the shank's edge: two runs, before and behind, with the same profile convention.
+R2ShankSink = path {
+    move to 1, 12.8
+    line to 2.3, 12.8
+    line to 2.3, 20.63
+    line to 1, 19.89
+    close
+
+    move to -1, 12.8
+    line to -1, 19.89
+    line to -2.3, 20.63
+    line to -2.3, 12.8
+    close
+}
+
+// The groove round the horseshoe's edge, running parallel to the face a third of the leg's thickness back
+// from it -- level with the sunken face below -- over the round top, down both sides and along the slant
+// underneath to the shank, 0.08 deep: the band between the outline drawn out by 0.2 and drawn in by 0.08,
+// to be cut 0.12 wide.  Front to the right, as the leg's profile.
+R2HorseshoeGroove = path {
+    move to -2.3, 20.4
+    line to -4.575, 21.684
+    line to -4.575, 26.625
+    curve -4.575, 29.152, -2.527, 31.2 to 0, 31.2
+    curve 2.527, 31.2, 4.575, 29.152 to 4.575, 26.625
+    line to 4.575, 21.684
+    line to 2.3, 20.4
+    line to 2.3, 20.72
+    line to 4.295, 21.847
+    line to 4.295, 26.625
+    curve 4.295, 28.997, 2.372, 30.92 to 0, 30.92
+    curve -2.372, 30.92, -4.295, 28.997 to -4.295, 26.625
+    line to -4.295, 21.847
+    line to -2.3, 20.72
+    close
+}
+
+// A foot's side view: a base 12.6 long under a top 7, with sloping toes and heels, above its sole.
+R2FootProfile = path {
+    move to -6.3, 0.8
+    line to 6.3, 0.8
+    line to 3.5, 5.7
+    line to -3.5, 5.7
+    close
+}
+
+// A foot's front view, its outer face to the right: 7.2 wide at the bottom, the outer face leaning in
+// 1.5 by the top and the inner one upright.  A center foot leans in on both sides.
+R2FootFront = path {
+    move to -3.6, 0.8
+    line to 3.6, 0.8
+    line to 2.1, 5.7
+    line to -3.6, 5.7
+    close
+}
+R2FootFrontBoth = path {
+    move to -3.6, 0.8
+    line to 3.6, 0.8
+    line to 2.1, 5.7
+    line to -2.1, 5.7
+    close
+}
+
+// The sole under a foot, 0.8 deep, its sides and ends sloping in by 0.25 to its bottom: an upside-down
+// trapezoid seen from the side or from in front, as the five-view drawing and the photographs show it,
+// with a row of dark slots round it, 0.2 tall and 0.1 deep -- seven 1.45 long down each side and four 1.35
+// long across each end, as the photographs count them.
+R2FootSoleSide = path {
+    move to -6.3, 0.8
+    line to 6.3, 0.8
+    line to 6.05, 0
+    line to -6.05, 0
+    close
+}
+R2FootSoleFront = path {
+    move to -3.6, 0.8
+    line to 3.6, 0.8
+    line to 3.35, 0
+    line to -3.35, 0
+    close
+}
+R2FootSoleSlots = group {
+    for along in [-3, 3] {
+        cube { scale [0.155, 0.1, 0.725]  translate [3.545, 0.45, along * 1.75] }
+        cube { scale [0.155, 0.1, 0.725]  translate [-3.545, 0.45, along * 1.75] }
+    }
+    for across in [0, 3] {
+        cube { scale [0.675, 0.1, 0.155]  translate [-2.625 + across * 1.75, 0.45, 6.245] }
+        cube { scale [0.675, 0.1, 0.155]  translate [-2.625 + across * 1.75, 0.45, -6.245] }
+    }
+    material R2Dark
+}
+
+// A foot, in its own frame with its outer face toward +X: the block its two views make, on its sole, with
+// the half-round housing over its wheel standing out of its leaning face -- 3.2 round about an axle 1.8 up,
+// its flat face upright and flush with the leaning face at its own bottom edge, so that it stands proud as
+// the face leans away above it.  `both` puts a leaning face and a housing on each side, as a center foot
+// has.  Down its middle a slot 1.2 wide runs right through it from front to back, from the top down to
+// 3.74, which the fin under its leg stands in on its pivot; and on its front, under the slot, a plate
+// as wide and 3.1 long lies on the sloping face, its bottom 1.05 up, which the hoses come into on an outer
+// foot.  The front elevation and the photographs show the plate and the slot over it.  The front slopes
+// back 29.74 degrees.  Front is toward -Z.
+primitive R2Foot(both = 0) -> group {
+    return group {
+        if (both == 1) {
+            difference {
+                intersection {
+                    extrusion { path R2FootProfile  min Y -3.7  max Y 3.7  rotate X -90  rotate Y 90 }
+                    extrusion { path R2FootFrontBoth  min Y -6.4  max Y 6.4  rotate X -90 }
+                }
+                cube { scale [0.6, 1.4, 7]  translate Y 5.14 }
+            }
+        }
+        else {
+            difference {
+                intersection {
+                    extrusion { path R2FootProfile  min Y -3.7  max Y 3.7  rotate X -90  rotate Y 90 }
+                    extrusion { path R2FootFront  min Y -6.4  max Y 6.4  rotate X -90 }
+                }
+                cube { scale [0.6, 1.4, 7]  translate Y 5.14 }
+            }
+        }
+        cube { scale [0.6, 1.55, 0.08]  rotate X 29.74  translate [0, 2.435, -5.458] }
+        intersection {
+            cylinder {
+                min Y both == 1 ? -3.294 : 0  max Y 3.294
+                scale [3.2, 1, 3.2]  rotate Z -90  translate Y 1.8
+            }
+            cube { scale [4, 1.6, 3.3]  translate Y 3.4 }
+        }
+        difference {
+            intersection {
+                extrusion { path R2FootSoleSide  min Y -3.7  max Y 3.7  rotate X -90  rotate Y 90 }
+                extrusion { path R2FootSoleFront  min Y -6.4  max Y 6.4  rotate X -90 }
+            }
+            object R2FootSoleSlots
+        }
+        material R2White
+    }
+}
+
+// A shoulder's hub, the axle the leg turns on, in its own frame on the pivot's line: 2.84 across, reaching
+// out through the horseshoe at the leg's top with a gap of 0.18 all round and stopping 0.2 short of the
+// leg's face.  Its end is cut 0.5 deep with a round recess 1.68 across and four notches out from it, up,
+// down, fore and aft, to 0.96 from its middle; in the recess a cylinder 1 across stands 0.2 short of the
+// end, and four lugs from it reach into the notches, standing lower still.  From the fan-made droid's
+// profile photograph.
+R2Hub = group {
+    difference {
+        cylinder { min Y 8  max Y 12.4  scale [1.42, 1, 1.42]  rotate Z -90 }
+        cylinder { min Y 11.9  max Y 12.5  scale [0.84, 1, 0.84]  rotate Z -90  material R2Dark }
+        cube { scale [0.3, 0.96, 0.3]  translate X 12.2  material R2Dark }
+        cube { scale [0.3, 0.3, 0.96]  translate X 12.2  material R2Dark }
+    }
+    cylinder { min Y 11.85  max Y 12.2  scale [0.5, 1, 0.5]  rotate Z -90 }
+    cube { scale [0.095, 0.9, 0.18]  translate X 11.985 }
+    cube { scale [0.095, 0.18, 0.9]  translate X 11.985 }
+    material R2Metal
+}
+
+// The body's two shoulders, which the legs turn on: on each side a rounded boss standing out of the barrel
+// to meet the leg, 6.5 across and swelling 1.3 toward the body at its middle, as the front elevation shades
+// it; and the hub.  Both lie on the pivot's line, so they stay where they are as the body tips.
+R2Shoulders = group {
+    for side in [-1, 1] by 2 {
+        group {
+            intersection {
+                sphere { scale 4.71  translate X 13.21 }
+                cube { scale [0.75, 4, 4]  translate X 9.05 }
+            }
+            object R2Hub
+            scale [side, 1, 1]
+            translate Y R2Shoulder
+        }
+    }
+    material R2White
+}
+
+// How high a foot's pivot stands above its bottom: the pin through the point of the fin under its leg, in
+// the slot down the foot's middle, which the foot turns on and an outer leg leans about.
+R2FootPivot = 4.5
+
+// The stepped bracket on a leg's outer face, under the hub: a block standing 0.9 out of the face from just
+// under the hub's ring to 23.2, its underside hollowed in a cove that sweeps back into the face by 22.4,
+// and below that a box sloping out and down at 35 degrees, past the block to 14 in from his middle, with
+// two slots in its end.  The front elevation gives the steps, the side elevation the widths -- the block 3
+// fore and aft, its top cut in to clear the hub's ring.  In the leg's frame, its outer face toward +X.
+R2BracketSide = path {
+    move to -1.05, 25.66
+    line to 1.05, 25.66
+    line to 1.5, 25.06
+    line to 1.5, 22
+    line to -1.5, 22
+    line to -1.5, 25.06
+    close
+}
+R2BracketFront = path {
+    move to 12.55, 25.66
+    line to 13.5, 25.66
+    line to 13.5, 23.2
+    curve 13.003, 23.2, 12.6, 22.842 to 12.6, 22.4
+    line to 12.55, 22.4
+    close
+}
+R2Bracket = group {
+    intersection {
+        extrusion { path R2BracketSide  min Y -13.5  max Y -12.55  rotate X -90  rotate Y 90 }
+        extrusion { path R2BracketFront  min Y -1.6  max Y 1.6  rotate X -90 }
+    }
+    difference {
+        cube { scale [1.15, 0.6, 1.3]  translate [0.56, -0.6, 0] }
+        cube { scale [0.3, 0.3, 0.45]  translate [1.71, -0.6, -0.7]  material R2Dark }
+        cube { scale [0.3, 0.3, 0.45]  translate [1.71, -0.6, 0.7]  material R2Dark }
+        rotate Z -35
+        translate [12.6, 22.3, 0]
+    }
+    material R2Blue
+}
+
+// The groove round the shank 14.92 up, 0.12 wide and 0.08 deep, in the shank's every face and the blue
+// housing's: a thin slab less the shank and housing drawn in by the groove's depth -- the middle, as far out
+// as the housing's face, and the rest, as far out as the sunken face.  The 1977 side elevation and a
+// profile photograph of a fan-made droid put it at the same height.  In the leg's frame.
+R2LegGroove = difference {
+    cube { scale [1.85, 0.06, 2.6]  translate [11.35, 14.92, 0] }
+    cube { scale [1.445, 0.1, 0.95]  translate [11.325, 14.92, 0] }
+    cube { scale [0.8535, 0.1, 2.17]  translate [10.7335, 14.92, 0] }
+    material R2Gray
+}
+
+// The piston hung from the bracket, down the leg's outer face into the top of the booster cover: a blue
+// housing standing 0.3 out of the face, 2.06 fore and aft, rising out of the sunken face either side of it,
+// its top tucked up inside the bracket's box, the groove round the shank cut across it and two more cut up
+// its face either side of the rod from the cover to just short of that; and in front of it a silver rod
+// 0.64 thick on a clevis under the box's end, flush with the cover's face where it meets it.  A photograph
+// of the finished droid gives the parts and their colors, the side elevation their widths; the side
+// elevation has the housing wider, 3 across, so its grooves -- 0.85 and 1.25 out from the middle there --
+// are drawn in here to 0.56 and 0.8.  In the leg's frame.
+R2Piston = group {
+    difference {
+        cube { scale [0.625, 4.2, 1.03]  translate [12.225, 16.8, 0] }
+        object R2LegGroove
+        cube { scale [0.08, 0.95, 0.05]  translate [12.85, 13.65, -0.8]  material R2Gray }
+        cube { scale [0.08, 0.95, 0.05]  translate [12.85, 13.65, -0.56]  material R2Gray }
+        cube { scale [0.08, 0.95, 0.05]  translate [12.85, 13.65, 0.56]  material R2Gray }
+        cube { scale [0.08, 0.95, 0.05]  translate [12.85, 13.65, 0.8]  material R2Gray }
+        material R2Blue
+    }
+    cube { scale [0.25, 0.55, 0.3]  translate [12.98, 20.05, 0] }
+    cylinder { min Y 12.6  max Y 19.6  scale [0.32, 1, 0.32]  translate X 12.98 }
+    cylinder { min Y 18.7  max Y 18.95  scale [0.39, 1, 0.39]  translate X 12.98 }
+    material R2Metal
+}
+
+// The recesses in the horseshoe either side of the hub: two small ones behind it with a fitting each, and a
+// long one before it holding a strut, all 1.15 across and 0.45 deep, 2.4 from the hub's line to 3.55.  The
+// 1977 side elevation draws the two behind, a photograph of the finished droid the long one before; the
+// legs mirror each other, as they do on screen (a fan-made droid photographed in profile has its left leg
+// turned about, which makes the two legs one part to build).  A fitting is a round connector standing up
+// from a recess's floor, short of the face.  In the leg's frame; `along` is fore and aft, positive behind.
+primitive R2Fitting(up, along) -> group {
+    return group {
+        cylinder { min Y 12.15  max Y 12.48  scale [0.28, 1, 0.28]  rotate Z -90  translate [0, up, along] }
+        cylinder { min Y 12.48  max Y 12.56  scale [0.13, 1, 0.13]  rotate Z -90  translate [0, up, along] }
+        material R2Metal
+    }
+}
+// The strut in the long recess, as the fan-made droid has it where the finished droid has three fittings:
+// a short cylinder at its foot, a rod up from it with a nut halfway, and a block at its head with a stud
+// above, all standing in the recess short of the face.
+R2Strut = group {
+    cylinder { min Y 23.1  max Y 24.2  scale [0.22, 1, 0.22] }
+    cylinder { min Y 24.2  max Y 24.45  scale [0.19, 1, 0.19] }
+    cylinder { min Y 24.45  max Y 26.1  scale [0.08, 1, 0.08] }
+    cylinder { min Y 25.2  max Y 25.42  scale [0.18, 1, 0.18] }
+    cylinder { min Y 26.1  max Y 26.7  scale [0.2, 1, 0.2] }
+    cylinder { min Y 26.7  max Y 26.92  scale [0.17, 1, 0.17] }
+    cylinder { min Y 26.92  max Y 27.1  scale [0.07, 1, 0.07] }
+    material R2Metal
+    translate [12.38, 0, -2.975]
+}
+
+// The booster cover over the outer side of an ankle, which the piston runs down into: seen from the side, 5.5
+// fore and aft from the top of the ankle block, 12.8 up, to 10.4, narrowing from there into a disc 4.4
+// across about 8.08 whose round bottom comes down to just over the foot, and stays clear of it as the leg
+// leans about the foot's pivot -- a little smaller than the 1977 side elevation's circle,
+// which a profile photograph of a fan-made droid shows is the cover's own bottom.  It stands 0.75 out of the
+// face down to 10.6, as the front elevation draws it, then slopes in to a plate 0.25 out for the disc, which
+// the ankle cylinder crosses; a slot is cut across the disc above that, as the photograph shows.  In the
+// leg's frame, front to the right as the leg's profile.
+R2CoverSide = path {
+    move to -2.75, 12.8
+    line to 2.75, 12.8
+    line to 2.75, 10.4
+    line to 2.2, 8.08
+    curve 2.2, 6.865, 1.215, 5.88 to 0, 5.88
+    curve -1.215, 5.88, -2.2, 6.865 to -2.2, 8.08
+    line to -2.75, 10.4
+    close
+}
+R2CoverFront = path {
+    move to 12.55, 12.8
+    line to 13.3, 12.8
+    line to 13.3, 10.6
+    line to 12.8, 9.6
+    line to 12.8, 5.7
+    line to 12.55, 5.7
+    close
+}
+R2BoosterCover = difference {
+    intersection {
+        extrusion { path R2CoverSide  min Y -13.3  max Y -12.55  rotate X -90  rotate Y 90 }
+        extrusion { path R2CoverFront  min Y -2.8  max Y 2.8  rotate X -90 }
+    }
+    cube { scale [0.2, 0.07, 1]  translate [12.8, 9.25, 0]  material R2Dark }
+}
+
+// The fittings on the forward face of the block the blue housing runs down into: a blue cylinder 0.72
+// across standing upright in a recess high in the face's outer half, its front just short of the face, and
+// under it two gray plates over the face's lower part, 2.4 across together with a gap of 0.06 between them:
+// the outer coming up to 0.1 short of the cylinder, with a bolt in its lower outer corner and a smaller one
+// in its upper, and the inner stepping down 0.4 from it.  A photograph of the finished droid from his front
+// and right shows them.  In the leg's frame, the face 2.65 forward of the leg's middle; the recess is cut
+// from the leg.
+R2CoverPlate = group {
+    cube { scale [0.585, 1.2, 0.06]  translate [11.815, 8.8, -2.71]  material R2Gray }
+    cube { scale [0.585, 1, 0.06]  translate [10.585, 8.6, -2.71]  material R2Gray }
+    cylinder {
+        min Y -2.86  max Y -2.77  scale [0.15, 1, 0.15]  rotate X 90  translate [12.1, 7.9, 0]  material R2Metal
+    }
+    cylinder {
+        min Y -2.83  max Y -2.77  scale [0.1, 1, 0.1]  rotate X 90  translate [12.12, 9.72, 0]  material R2Metal
+    }
+    cylinder { min Y 10.1  max Y 11.25  scale [0.36, 1, 0.36]  translate [12, 0, -2.25]  material R2Blue }
+}
+
+// The box on the inner side of an ankle, which the hoses come from: gray, 2.55 across and 3 fore and aft,
+// rounded top and bottom -- its top 9 up, its sides straight from 8.1 down to 2.4 and its bottom 1.3 up --
+// with a band across its front under the round of its top.  Its lower half sits down in a scoop cut through
+// the foot's inner front, so that it and the two fittings on its front show from in front down to their
+// rounded feet.  The front elevation draws the box, the band and the fittings; a photograph of a fan-made
+// droid from in front shows them rounded at the bottom and sitting in the scooped foot.  The elevation puts
+// the box 0.9 further in and 3.1 across, where on this model its top would meet the skirt with him on two
+// legs.  It belongs to the foot, so it stays upright when the leg leans.  In the leg's frame.
+R2InnerBoxFront = path {
+    move to 7, 2.4
+    curve 7, 1.792, 7.571, 1.3 to 8.275, 1.3
+    curve 8.979, 1.3, 9.55, 1.792 to 9.55, 2.4
+    line to 9.55, 8.1
+    curve 9.55, 8.597, 8.979, 9 to 8.275, 9
+    curve 7.571, 9, 7, 8.597 to 7, 8.1
+    close
+}
+
+// A fitting on the inner box's front, `at` across: a white bracket hooked over the band with a blue window,
+// a gray bar down from it, and a dark rounded foot, which the hose leaves.  From the front elevation.
+primitive R2HoseFitting(at) -> group {
+    return group {
+        cube { scale [0.28, 0.455, 0.075]  translate [at, 7.435, -2.675] }
+        cube { scale [0.46, 0.765, 0.1]  translate [at, 6.215, -2.7] }
+        cube { scale [0.22, 0.53, 0.015]  translate [at, 6.12, -2.81]  material R2Blue }
+        cube { scale [0.18, 1.33, 0.06]  translate [at, 4.12, -2.66]  material R2Metal }
+        cube { scale [0.335, 0.11, 0.125]  translate [at, 2.68, -2.725]  material R2Dark }
+        cylinder {
+            min Y -2.85  max Y -2.6  scale [0.335, 1, 0.335]  rotate X 90  translate [at, 2.57, 0]  material R2Dark
+        }
+        material R2White
+    }
+}
+
+R2InnerBox = group {
+    extrusion { path R2InnerBoxFront  min Y -0.4  max Y 2.6  rotate X -90 }
+    cube { scale [1.275, 0.14, 0.05]  translate [8.275, 8.02, -2.65] }
+    object R2HoseFitting(7.61)
+    object R2HoseFitting(8.94)
+    material R2Gray
+}
+
+// The scoop the inner box sits in: its outline drawn out by 0.12, cut through the foot from in front back to
+// just behind the box.  In the leg's frame.
+R2FootScoopFront = path {
+    move to 6.88, 6.5
+    line to 6.88, 2.4
+    curve 6.88, 1.726, 7.505, 1.18 to 8.275, 1.18
+    curve 9.045, 1.18, 9.67, 1.726 to 9.67, 2.4
+    line to 9.67, 6.5
+    close
+}
+R2FootScoop = extrusion { path R2FootScoopFront  min Y -0.52  max Y 7  rotate X -90 }
+
+// The two hoses from the inner box's fittings to the foot's front, braided brass, 0.5 thick: each leaves the
+// foot of its fitting going down and forward out of the scoop, arches up and out in front of the foot, and
+// comes back into a dark round fitting on the plate on the foot's sloping front, square to it -- the inner
+// fitting's hose to the upper one, arching to 4.3, the outer's to the lower, arching to 3.3 and further out
+// in front, so that the two pass clear of each other.  The front elevation draws the loops and the two
+// fittings on the foot's front, one over the other at its middle; photographs of the finished droid and of
+// a fan-made one show them brass.  Each hose is drawn as two curves, each sampled at twelve points and joined
+// by straight pieces, which round over at the joints and are far cheaper to trace than the curves.  In the
+// leg's frame; the foot's front slopes back 29.74 degrees, 4.9 forward of its middle at 3.245 up and 5.73 at
+// 1.795.
+R2Hoses = group {
+    cylinder {
+        min Y 0  max Y 0.4  scale [0.32, 1, 0.32]  rotate X -60.26  translate [11.2, 3.245, -4.903]
+        material R2Dark
+    }
+    cylinder {
+        min Y 0  max Y 0.4  scale [0.32, 1, 0.32]  rotate X -60.26  translate [11.2, 1.795, -5.731]
+        material R2Dark
+    }
+    tube {
+        discontinuous
+        radius 0.25 at [7.610, 2.350, -2.725]  radius 0.25 at [7.626, 2.199, -3.171]
+        radius 0.25 at [7.674, 2.182, -3.607]  radius 0.25 at [7.752, 2.275, -4.027]
+        radius 0.25 at [7.859, 2.456, -4.426]  radius 0.25 at [7.994, 2.701, -4.798]
+        radius 0.25 at [8.155, 2.987, -5.138]  radius 0.25 at [8.341, 3.293, -5.440]
+        radius 0.25 at [8.551, 3.594, -5.699]  radius 0.25 at [8.783, 3.869, -5.910]
+        radius 0.25 at [9.036, 4.093, -6.068]  radius 0.25 at [9.309, 4.244, -6.166]
+        radius 0.25 at [9.600, 4.300, -6.200]  radius 0.25 at [9.842, 4.294, -6.199]
+        radius 0.25 at [10.066, 4.274, -6.196]  radius 0.25 at [10.272, 4.242, -6.184]
+        radius 0.25 at [10.459, 4.197, -6.163]  radius 0.25 at [10.627, 4.140, -6.127]
+        radius 0.25 at [10.775, 4.070, -6.072]  radius 0.25 at [10.902, 3.988, -5.996]
+        radius 0.25 at [11.007, 3.893, -5.895]  radius 0.25 at [11.091, 3.787, -5.765]
+        radius 0.25 at [11.151, 3.668, -5.602]  radius 0.25 at [11.188, 3.537, -5.402]
+        radius 0.25 at [11.200, 3.394, -5.163]
+        material R2Brass
+    }
+    tube {
+        discontinuous
+        radius 0.25 at [8.940, 2.350, -2.725]  radius 0.25 at [8.944, 2.201, -3.271]
+        radius 0.25 at [8.956, 2.143, -3.806]  radius 0.25 at [8.979, 2.161, -4.321]
+        radius 0.25 at [9.015, 2.241, -4.811]  radius 0.25 at [9.065, 2.367, -5.269]
+        radius 0.25 at [9.133, 2.525, -5.688]  radius 0.25 at [9.218, 2.700, -6.060]
+        radius 0.25 at [9.325, 2.876, -6.381]  radius 0.25 at [9.455, 3.039, -6.641]
+        radius 0.25 at [9.609, 3.174, -6.836]  radius 0.25 at [9.790, 3.266, -6.958]
+        radius 0.25 at [10.000, 3.300, -7.000]  radius 0.25 at [10.192, 3.285, -7.000]
+        radius 0.25 at [10.367, 3.241, -6.998]  radius 0.25 at [10.525, 3.172, -6.989]
+        radius 0.25 at [10.667, 3.081, -6.970]  radius 0.25 at [10.792, 2.971, -6.937]
+        radius 0.25 at [10.900, 2.845, -6.886]  radius 0.25 at [10.992, 2.707, -6.814]
+        radius 0.25 at [11.067, 2.560, -6.716]  radius 0.25 at [11.125, 2.407, -6.588]
+        radius 0.25 at [11.167, 2.251, -6.428]  radius 0.25 at [11.192, 2.096, -6.230]
+        radius 0.25 at [11.200, 1.944, -5.991]
+        material R2Brass
+    }
+}
+
+// The fin under a leg, which its foot turns on: gray, 0.9 thick, a triangle point down whose point is
+// rounded about the foot's pivot down in the foot's slot and which flares up 3.1 to the leg, 4.6 long where
+// it meets it, with the dark pin through its point across the slot.  Part of the leg, so it leans with it
+// and turns in the slot about its own point.  `across` and `pivot` place its point; front to the right.
+R2FinSide = path {
+    move to -2.3, 3.1
+    line to 2.3, 3.1
+    line to 0, 0
+    close
+}
+primitive R2Fin(across, pivot) -> group {
+    return group {
+        extrusion { path R2FinSide  min Y -0.45  max Y 0.45  rotate X -90  rotate Y 90 }
+        cylinder { min Y -0.45  max Y 0.45  scale [0.45, 1, 0.45]  rotate Z -90 }
+        cylinder { min Y -0.75  max Y 0.75  scale [0.22, 1, 0.22]  rotate Z -90  material R2Dark }
+        material R2Gray
+        translate [across, pivot, 0]
+    }
+}
+
+// An ankle cylinder, lying fore and aft about its own middle: a chrome tube 1.32 thick and 6.7 long, with
+// caps a little fuller on its ends and an upright tab standing from the front one, and its middle sleeved
+// in a blue band 2.6 long and square in section.  An outer leg has one across its booster cover's disc,
+// 13.15 out and 7.93 up, and the center leg one either side of its ankle.  The 1977 side elevation gives its
+// length, its height, its caps and the band; the front elevation the tab; the photographs its colors and
+// the band's flat faces.
+R2AnkleTube = group {
+    cylinder { min Y -2.57  max Y 2.57  scale [0.66, 1, 0.66] }
+    cylinder { min Y -3.35  max Y -2.57  scale [0.68, 1, 0.68] }
+    cylinder { min Y 2.57  max Y 3.35  scale [0.68, 1, 0.68] }
+    cube { scale [0.68, 1.3, 0.68]  material R2Blue }
+    cube { scale [0.15, 0.1, 0.45]  translate Y -3.45 }
+    material R2Chrome
+    rotate X 90
+}
+
+// One leg and its foot, on the side `side` says: one for his left, which is on +X, minus one for his
+// right, which mirrors it.  The leg leans `lean` degrees about its foot's pivot, its top going forward,
+// while its foot stays flat; the whole is then moved back so that its hub is where it was, over z = 0.
+// The profiles are drawn front-to-right; turned to stand up, the front faces -Z and the extrusion runs
+// toward -X, which is why its span is written negative.
+primitive R2Leg(side, lean = 0) -> group {
+    return group {
+        group {
+            difference {
+                extrusion { path R2LegProfile  min Y -12.6  max Y -9.8  rotate X -90  rotate Y 90 }
+                cube { scale [0.45, 0.6, 0.575]  translate [12.6, 26.4, 2.975]  material R2Gray }
+                cube { scale [0.45, 0.6, 0.575]  translate [12.6, 24.4, 2.975]  material R2Gray }
+                cube { scale [0.45, 2.2, 0.575]  translate [12.6, 25, -2.975]  material R2Gray }
+                extrusion { path R2ShankSink  min Y -12.7  max Y -11.667  rotate X -90  rotate Y 90 }
+                object R2LegGroove
+                extrusion {
+                    path R2HorseshoeGroove  min Y -11.727  max Y -11.607  rotate X -90  rotate Y 90
+                    material R2Gray
+                }
+                cube { scale [0.45, 0.625, 0.3]  translate [12, 10.675, -2.65]  material R2Dark }
+            }
+            object R2Fitting(26.4, 2.975)
+            object R2Fitting(24.4, 2.975)
+            object R2Strut
+            object R2Bracket
+            object R2Piston
+            object R2BoosterCover
+            object R2CoverPlate
+            object R2AnkleTube { translate [13.15, 7.93, 0] }
+            // The fin behind the booster cover's disc.
+            object R2Fin(11.2, R2FootPivot)
+            scale [side, 1, 1]
+            translate Y -R2FootPivot
+            rotate X -lean
+            translate Y R2FootPivot
+        }
+        difference {
+            object R2Foot() { translate X 11.2  scale [side, 1, 1] }
+            object R2FootScoop { scale [side, 1, 1] }
+        }
+        object R2InnerBox { scale [side, 1, 1] }
+        object R2Hoses { scale [side, 1, 1] }
+        material R2White
+        translate Z (R2Shoulder - R2FootPivot) * sin(lean degrees)
+    }
+}
+
+// The center leg's ankle, in its own frame with the center foot's pivot at its origin: a housing 4.5 fore
+// and aft, tapering from 5.6 across at its top, 4.6 above the pivot, to a neck 2 across, 2.2 above it; an
+// ankle cylinder either side, 1.75 out from the middle and 3 above the pivot, sunk into the housing's
+// sloping sides; and the fin hanging from the neck into the foot's slot.  A photograph of a fan-made droid
+// from in front shows the housing and the cylinders' capped and tabbed front ends either side of it, and one
+// from his left side a cylinder with its blue band lying fore and aft right under the skirt.  The cylinders
+// sit no lower so that, on three legs, their back ends clear the top of the foot.
+R2CenterAnkleFront = path {
+    move to -1, 2.2
+    line to 1, 2.2
+    line to 2.8, 4.6
+    line to -2.8, 4.6
+    close
+}
+R2CenterAnkle = group {
+    extrusion { path R2CenterAnkleFront  min Y -2.25  max Y 2.25  rotate X -90 }
+    object R2AnkleTube { translate [1.75, 3, 0] }
+    object R2AnkleTube { translate [-1.75, 3, 0] }
+    object R2Fin(0, 0)
+}
+
+// The center leg, in the body's own frame: its ankle, whose pivot -- the center foot's -- is `long` below
+// the bottom of the skirt, and, if the ankle's housing does not reach up into the skirt, a strut the outer
+// legs' shank is in section, 2.8 across and 4.5 fore and aft, from the skirt down to it.  On two legs the
+// ankle is drawn up into the body, and only the fin shows under it.
+primitive R2CenterLeg(long) -> group {
+    strut = long - 4.6
+    return group {
+        if (strut > 0.01) {
+            cube { scale [1.4, strut / 2, 2.25]  translate Y R2SkirtBottom - strut / 2 }
+        }
+        object R2CenterAnkle { translate Y R2SkirtBottom - long }
+        material R2White
+    }
+}
+
+// -- The droid -----------------------------------------------------------------------------------------
+
+// On three legs his body tips back about his shoulders and his outer legs lean forward about the pivots in
+// their feet, which brings his shoulders down to `shoulder`; the center leg runs out until its foot stands
+// flat on the ground -- its length worked out from the tilt and the shoulders' height, all three feet
+// turning on pivots 4.5 above their bottoms.  At eighteen and fifteen degrees the center foot's heel stands
+// 0.07 ahead of the outer feet's toes, as a profile photograph of a fan-made droid shows it,
+// and the center foot's pivot is 3.8 below the skirt.  On two the center leg is drawn up until its foot's
+// top is a tenth under the skirt, its pivot 1.3 below it, and the foot stands 2.15 off the ground.
+primitive R2D2(legs = 2, dome = 0) -> group {
+    tilt = legs == 3 ? 18 : 0
+    lean = legs == 3 ? 15 : 0
+    ankle = legs == 3 ? R2FootPivot : R2SkirtBottom - 1.3
+    shoulder = R2FootPivot + (R2Shoulder - R2FootPivot) * cos(lean degrees)
+    long = (shoulder - ankle) / cos(tilt degrees) - (R2Shoulder - R2SkirtBottom)
+    reach = (R2Shoulder - R2SkirtBottom + long) * sin(tilt degrees)
+
+    return group {
+        object R2Leg(1, lean)
+        object R2Leg(-1, lean)
+
+        // The body, the dome and the center leg, tipped back about the shoulders.
+        group {
+            object R2Dome { rotate Y dome }
+            object R2Body
+            object R2Shoulders
+            object R2CenterLeg(long)
+            translate Y -R2Shoulder
+            rotate X tilt
+            translate Y shoulder
+        }
+
+        // The center foot, the same as the others, stays level under the end of the leg.
+        object R2Foot(1) { translate [0, ankle - R2FootPivot, -reach] }
+    }
+}
