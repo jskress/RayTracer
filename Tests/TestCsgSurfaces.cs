@@ -501,6 +501,45 @@ public class TestCsgSurfaces
     }
 
     /// <summary>
+    /// A pocket cut by a shape that is itself a difference: the cut-away shape is a slab with its far
+    /// part taken off, so the pocket's floor is the face of what was taken off.  That face is turned over
+    /// twice -- once as the cut of the inner difference, once as the cut of the outer -- and so faces the
+    /// way it did to begin with, out of the pocket toward the eye.  Turned only once it faced into the
+    /// solid: its light set off from inside and the floor shadowed itself.
+    /// </summary>
+    [TestMethod]
+    public void TestAPocketCutByADifferenceHasItsFloorFacingOut()
+    {
+        Cube block = new () { Transform = Transforms.Scale(2) };
+        Cube slab = new () { Transform = Transforms.Translate(0, 0, -2) * Transforms.Scale(1, 1, 1) };
+        Cube beyond = new () { Transform = Transforms.Translate(0, 0, 1.5) * Transforms.Scale(3, 3, 3) };
+        CsgSurface pocket = new ()
+        {
+            Operation = CsgOperation.Difference,
+            Left = block,
+            Right = new CsgSurface { Operation = CsgOperation.Difference, Left = slab, Right = beyond }
+        };
+
+        pocket.PrepareForRendering();
+
+        Ray ray = new (new Point(0, 0, -10), Directions.In);
+        List<Intersection> hits = [];
+
+        pocket.Intersect(ray, hits);
+
+        Intersection floor = hits.OrderBy(hit => hit.Distance).First();
+
+        Assert.AreSame(beyond, floor.Surface);
+        Assert.AreEqual(8.5, floor.Distance, 1e-9);
+
+        floor.PrepareUsing(ray, hits);
+
+        Assert.IsFalse(floor.Inside);
+        Assert.AreEqual(-1, floor.Normal.Z, 1e-9);
+        Assert.IsTrue(floor.LitPoint.Z < -1.5);
+    }
+
+    /// <summary>
     /// This method asserts that a surface keeps exactly the crossings of a ray at the given distances.
     /// </summary>
     private static void AssertCrossings(Surface surface, Ray ray, double[] expected, string what)
