@@ -18,6 +18,10 @@ public class LathePathSurface
     private readonly Polynomial _heightDerivative;
     private readonly double _side;
 
+    // A straight segment that climbs or falls -- a cylinder or a cone -- is kept as its ends as well,
+    // and solved as one, along the ray; see GetIntersectionsForSlopedLine.
+    private readonly (double Radius0, double Height0, double Radius1, double Height1)? _slopedLine;
+
     public LathePathSurface(IPathSegment segment)
     {
         _radius = BuildPolynomial(segment.Points, point => point.X);
@@ -29,6 +33,11 @@ public class LathePathSurface
         // allowed a hair beyond its own ends, and there its radius can dip below nought by the
         // width of a rounding error.
         _side = segment.Points.MaxBy(point => Math.Abs(point.X)).X < 0 ? -1 : 1;
+
+        if (segment.Points.Length == 2 && segment.Points[0].Y != segment.Points[1].Y)
+        {
+            _slopedLine = (segment.Points[0].X, segment.Points[0].Y, segment.Points[1].X, segment.Points[1].Y);
+        }
     }
 
     /// <summary>
@@ -90,7 +99,60 @@ public class LathePathSurface
         return (ray.Direction.Y * ray.Direction.Y)
             .IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction))
             ? GetIntersectionsForHorizontalRay(surface, ray)
-            : GetIntersectionsForGeneralRay(surface, ray);
+            : _slopedLine is { } line
+                ? GetIntersectionsForSlopedLine(surface, ray, line)
+                : GetIntersectionsForGeneralRay(surface, ray);
+    }
+
+    /// <summary>
+    /// This method finds where a ray crosses a straight segment that climbs or falls, which turns into
+    /// a cylinder or a cone, by solving along the ray as those surfaces are solved.
+    /// <para>
+    /// **The general solve is in the segment's own parameter, and for a ray all but level that cannot
+    /// be done.**  How far along the ray a crossing lies is the segment's height over the ray's climb,
+    /// so the equation's coefficients grow as the square of one over the climb: at a climb of a
+    /// hundred-thousandth across a barrel twenty inches tall they reach millions of millions, and
+    /// merely working the equation out carries a rounding error that puts a crossing hundredths of a
+    /// thousandth out along the ray.  That is enough to set a barrel's own surface just in front of a
+    /// shadow ray leaving it -- a row of specks on any lathe at the height of a low lamp.  Along the
+    /// ray the coefficients stay near one, and where on the segment the crossing lies follows from its
+    /// height.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The lathe.</param>
+    /// <param name="ray">The ray, in the lathe's space.</param>
+    /// <param name="line">The segment's two ends, as radius and height.</param>
+    /// <returns>The crossings, with how far along the segment each lies.</returns>
+    private IEnumerable<(Intersection Hit, double Along)> GetIntersectionsForSlopedLine(
+        Surface surface, Ray ray, (double Radius0, double Height0, double Radius1, double Height1) line)
+    {
+        double ox = ray.Origin.X, oy = ray.Origin.Y, oz = ray.Origin.Z;
+        double dx = ray.Direction.X, dy = ray.Direction.Y, dz = ray.Direction.Z;
+        double rise = line.Height1 - line.Height0;
+        double spread = (line.Radius1 - line.Radius0) / rise;
+
+        // The radius at the ray's own height, as the ray goes: where it starts and how it changes.
+        double start = line.Radius0 + (oy - line.Height0) * spread;
+        double change = dy * spread;
+        double a = dx * dx + dz * dz - change * change;
+        double b = 2 * (ox * dx + oz * dz - start * change);
+        double c = ox * ox + oz * oz - start * start;
+
+        foreach (double distance in SolveQuadratic(a, b, c))
+        {
+            double u = (oy + dy * distance - line.Height0) / rise;
+
+            if (u < -DoubleExtensions.Epsilon || u > 1 + DoubleExtensions.Epsilon)
+                continue;
+
+            // The cone has a second nappe, where the radius would run below nought; the segment does
+            // not reach it, the radius between its ends keeping its sign, so a root there lies off it.
+            if ((start + change * distance) * _side < -DoubleExtensions.Epsilon)
+                continue;
+
+            // Hits behind the origin are kept for CSG's sake, as in the general-ray case.
+            yield return (CreateIntersection(surface, distance, u, ray.At(distance)), u);
+        }
     }
 
     /// <summary>
