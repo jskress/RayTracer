@@ -1,5 +1,6 @@
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Fields;
 using RayTracer.General;
 
 namespace RayTracer.Terms;
@@ -112,6 +113,11 @@ public class UserFunction
         for (int index = 0; index < ParameterNames.Count; index++)
         {
             object value = index < arguments.Count ? arguments[index] : Defaults[index]?.GetValue(scope);
+
+            // A default worked out to a number is bound as field arithmetic too, so that it hides the
+            // field's own coordinates as a value handed in does.
+            if (value is double number)
+                value = new FieldConstant(number);
 
             if (value is not null)
                 scope.SetValue(ParameterNames[index], value);

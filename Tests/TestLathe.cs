@@ -507,6 +507,61 @@ public class TestLathe
     }
 
     /// <summary>
+    /// **A ray leaving a lathe all but level never meets it ahead.**  A straight segment that climbs is
+    /// solved along the ray, as a cylinder or a cone is: solved in the segment's own parameter, a ray
+    /// climbing a hundred-thousandth found the barrel it was leaving a hair in front of it on one ray
+    /// in six, and a low lamp drew a row of specks across a droid's body.  Shadow rays from just off a
+    /// barrel's surface, at every climb from a tenth down to the level, meet nothing ahead of them; and
+    /// the same rays from just inside it meet the barrel once, going out.
+    /// </summary>
+    [TestMethod]
+    public void TestANearlyLevelRayNeverMeetsTheLatheItLeaves()
+    {
+        Lathe lathe = new ()
+        {
+            Path = new GeneralPath()
+                .MoveTo(0, 8.2).LineTo(6.83, 8.2).LineTo(8.51, 10.8).LineTo(9.125, 10.8)
+                .LineTo(9.125, 31.4).LineTo(0, 31.4)
+        };
+        Random random = new (7);
+
+        lathe.PrepareForRendering(null);
+
+        foreach (double climb in new[] { 1e-1, 1e-3, 1e-4, 1e-5, 3e-6, 1e-6, 1e-8 })
+        {
+            int ahead = 0;
+            int crossedOnce = 0;
+
+            for (int count = 0; count < 2000; count++)
+            {
+                double angle = random.NextDouble() * Math.PI * 2;
+                double height = 12 + random.NextDouble() * 18;
+                Vector outward = new (Math.Cos(angle), 0, Math.Sin(angle));
+                Vector aside = new (-Math.Sin(angle), 0, Math.Cos(angle));
+                Point on = new (9.125 * Math.Cos(angle), height, 9.125 * Math.Sin(angle));
+                double lean = random.NextDouble() * 1.6 - 0.8;
+                Vector level = (outward * Math.Sqrt(1 - lean * lean) + aside * lean).Unit;
+                Vector direction = new Vector(level.X, climb * (random.Next(2) * 2 - 1), level.Z).Unit;
+
+                List<Intersection> outside = [];
+                List<Intersection> inside = [];
+
+                lathe.Intersect(new Ray(on + outward * 1e-5, direction), outside);
+                lathe.Intersect(new Ray(on - outward * 1e-5, direction), inside);
+
+                if (outside.Any(hit => hit.Distance > 0 && hit.Distance < 100))
+                    ahead++;
+
+                if (inside.Count(hit => hit.Distance > 0 && hit.Distance < 100) == 1)
+                    crossedOnce++;
+            }
+
+            Assert.AreEqual(0, ahead, $"at a climb of {climb}, rays leaving the barrel met it ahead");
+            Assert.AreEqual(2000, crossedOnce, $"at a climb of {climb}, rays from inside did not cross once");
+        }
+    }
+
+    /// <summary>
     /// The way a doubled crossing at a corner showed itself: a lathe used to trim something it
     /// wholly encloses -- here a ball inside a cylinder -- let rays that passed just inside its rim
     /// lose the ball's near side, so they saw its far side from within, a back face lit only by

@@ -2327,6 +2327,58 @@ about, moves her middle to the origin and scales her to meters, so a scene that 
 never sees that frame.  It is there for a scene that wants one part on its own:
 `object EnterpriseNacelle` is a nacelle with its axis on `X` and the pylon's chord at its origin.
 
+#### Droids
+
+```
+import 'droids' { R2D2 }
+
+object R2D2(3, 30) { scale 0.0254 }
+```
+
+| | |
+| --- | --- |
+| `R2D2` | The astromech droid: dome, body, the two outer legs, and the center leg and foot. |
+| `R2Dome`, `R2Body` | His dome, with its panels, radar eye and fixtures, and his body with its panels, vents, arms and ports. |
+| `R2Leg`, `R2Foot` | An outer leg, `side` one for his left and minus one for his right, and a foot. |
+
+**He is written in inches, and a scene unit is an inch**, the way the [furniture](#furniture) is: every
+published figure for him is in inches, so the numbers in the library can be checked against them
+directly.  A scene in meters scales him by `0.0254`, as the example does.  **He stands on `y = 0` and
+faces `-Z`**, his left on `+X`, and stands 43 tall to the top of his dome.
+
+**`legs` is two or three.**  On two he stands upright with his center foot tucked up under him.  On
+three his body tips back eighteen degrees about his shoulders, his outer legs lean fifteen the other way
+about the pivots in their feet, and his center leg runs out until its foot stands flat on the ground just
+ahead of the other two -- worked out from the tilt, so all three feet are always on the ground.
+**`dome` turns his dome**, in the scene's unit of angle; positive turns it to his right, as `rotate Y`
+would.
+
+##### Built from the drawings, and from photographs where they disagree
+
+His masses come from published measurements -- the dome 18.25 across, the legs 31 tall, the whole of
+him 42.5 to 43 -- and the proportions they leave open from a front elevation, the 1977 production
+drawings' side elevation and a five-view drawing of the finished droid, each laid over an orthographic
+render of the model.  His details come from photographs, of the finished droid and of a fan-made one,
+each matched by fitting the camera that took it to things the model already has right -- his dome's
+stripe and the ring of its top panels -- so a panel seen only in a photograph lands where the
+photograph puts it.  Where the drawings and the finished droid disagree, the finished droid wins.  None
+of them is reproduced here.
+
+Everything is modeled rather than painted on: the dome's panels are separate pieces with seams round
+them, the body's panels are grooves cut into it, and the vents, arms, coin slots and returns, the
+power couplers, the octagonal ports, the radar eye's coated lens, the holoprojectors and the logic
+displays, the shoulders' hubs, the legs' brackets, pistons and grooves, the booster covers, the ankle
+cylinders, the hoses and the feet with their slotted soles are all geometry.  That is what lets him be
+looked at from anywhere, and it is also what he costs: about a minute for an 800 x 600 picture of him
+filling the frame under an area light.
+
+##### Lit from behind, he needs a rim
+
+His white is a gloss paint, so from the front with the light behind him it shows only a sliver of edge.
+`gallery/Local/showcase/tatooine.igl`, with two suns low behind him, lights him for that the way a
+photographer would: the suns' light given again a little stronger, and a spotlight behind him narrowed
+to his dome and shoulders with a steep `fade` so that its cone dies before reaching the sand beyond him.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

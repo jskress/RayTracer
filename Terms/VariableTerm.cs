@@ -66,6 +66,20 @@ public class VariableTerm : Term
     /// <returns>This term, as a field expression.</returns>
     public override FieldExpression ToField(Variables variables)
     {
+        // A value a folded function was handed may itself be a piece of field arithmetic rather than
+        // a settled number -- which is exactly what happens when one shape function is handed to
+        // another.  Without this, a vocabulary of shapes could only ever be given constants, and
+        // building one shape out of others, which is the whole reason to name them, would be
+        // impossible.
+        //
+        // **It is asked first, before the field's own x, y and z**: a function whose parameters are
+        // named `x` and `z` means its parameters by them, as anywhere else a name is declared closer
+        // in.  Asked after, the field's coordinates won, and a terrain function written as `Dune(x, z)`
+        // and handed places in meters was quietly handed the unit square instead.  Only a folded
+        // function's scope binds field arithmetic to a name, so nothing else is changed by the order.
+        if (variables.GetValue(_name, typeof(FieldExpression)) is FieldExpression already)
+            return already;
+
         FieldVariable variable = FieldVariable.For(_name);
 
         if (variable is not null)
@@ -73,14 +87,6 @@ public class VariableTerm : Term
 
         if (variables.GetValue(_name, typeof(double)) is double number)
             return new FieldConstant(number);
-
-        // A value a folded function was handed may itself be a piece of field arithmetic rather than
-        // a settled number -- which is exactly what happens when one shape function is handed to
-        // another.  Without this, a vocabulary of shapes could only ever be given constants, and
-        // building one shape out of others, which is the whole reason to name them, would be
-        // impossible.
-        if (variables.GetValue(_name, typeof(FieldExpression)) is FieldExpression already)
-            return already;
 
         throw new TokenException(
             $"A function knows the variables x, y and z; '{_name}' is neither one of those nor a " +

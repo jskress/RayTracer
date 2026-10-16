@@ -16,7 +16,12 @@ General Plans, and, where the plans and the original model disagree, from photog
 (A19740668000, gift of Paramount Pictures Inc.) in the Smithsonian's National Air and Space
 Museum:
 
-![The U.S.S. Enterprise](gallery/Local/orbit/standard-orbit.png)
+![The U.S.S. Enterprise](gallery/Local/showcase/standard-orbit.png)
+
+And from the `droids` library, R2-D2, built the same way from the production drawings and photographs of
+the finished droid, on Tatooine under its two setting suns:
+
+![R2-D2 on Tatooine](gallery/Local/showcase/tatooine.png)
 
 ## Documentation
 

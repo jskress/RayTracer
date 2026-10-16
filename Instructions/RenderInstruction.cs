@@ -150,12 +150,15 @@ public class RenderInstruction : Instruction
     /// It is added rather than substituted: a scene may have as many lights beside this one as it
     /// likes, so wanting a lamp of one's own is no reason to refuse this one.
     /// </para>
+    /// <para>
+    /// A blend of physical skies is the sky of a world with more than one sun, and hangs each of them,
+    /// and clouds layered over a sky leave it its suns; see <see cref="PhysicalSkyPigment.SunsOf"/>.
+    /// </para>
     /// </summary>
     /// <param name="scene">The scene being readied.</param>
     private static void HangTheSun(Scene scene)
     {
-        if (scene.Background is PhysicalSkyPigment sky && sky.SunAsALight() is { } sun)
-            scene.Lights.Add(sun);
+        scene.Lights.AddRange(PhysicalSkyPigment.SunsOf(scene.Background));
     }
 
     /// <summary>

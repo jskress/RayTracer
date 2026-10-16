@@ -271,9 +271,15 @@ public class CsgSurface : Surface
                 if (intersection.Surface is StrandSurface)
                     return result;
 
+                // A crossing on the right side of a difference is the cut's face, which faces the
+                // other way from the shape it was cut by.  It is turned over, not marked turned: the
+                // shape cut away may itself be a difference, whose own cut face was turned over once
+                // already and is turned back here.  Marking it twice as turned left a pocket cut by a
+                // shape with a hole in it facing into the solid -- shaded from inside and shadowed by
+                // its own floor.
                 if (!result && Operation == CsgOperation.Difference &&
                     IsOrIncludes(Right, _rightMembers, hit))
-                    intersection.ShouldFlipInsideForOut = true;
+                    intersection.ShouldFlipInsideForOut = !intersection.ShouldFlipInsideForOut;
 
                 if (leftHit)
                     inLeft = !inLeft;

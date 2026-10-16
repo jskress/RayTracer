@@ -154,6 +154,62 @@ public class PhysicalSkyPigment : Pigment
         };
     }
 
+    /// <summary>
+    /// This method returns the suns that go with a scene's background: the one sun of a physical sky;
+    /// for a blend of skies, every sky's sun, each dimmed by as much as the blend dims its sky; and for a
+    /// layer, the suns of the topmost of its pigments that has any.
+    /// <para>
+    /// A blend averages what it holds, so two skies blended each count for half; and scattering is
+    /// linear in the light scattered, so a sky with two suns in it is exactly the sum of two skies with
+    /// one each.  Written at twice the brightness and blended, two skies therefore make the sky of a
+    /// world with two suns -- and each sun's light must be halved with its sky, or the suns would stand
+    /// at twice what the sky around them says they are worth.
+    /// </para>
+    /// <para>
+    /// A layer shows what is beneath wherever what is above is clear, so clouds layered over a sky leave
+    /// the sky's suns as they were; but a sky hides all that lies under it, so it is the topmost sky's
+    /// suns alone, at their full strength.  Anything else as a background has no sun.
+    /// </para>
+    /// </summary>
+    /// <param name="background">The scene's background.</param>
+    /// <returns>The suns, as lights.</returns>
+    public static IEnumerable<DistantLight> SunsOf(Pigment background)
+    {
+        switch (background)
+        {
+            case PhysicalSkyPigment sky when sky.SunAsALight() is { } sun:
+                yield return sun;
+                break;
+            case BlendedPigment { Layer: false } blend:
+                foreach (Pigment part in blend.Pigments)
+                {
+                    foreach (DistantLight sun in SunsOf(part))
+                    {
+                        sun.Brighten(1.0 / blend.Pigments.Count);
+
+                        yield return sun;
+                    }
+                }
+
+                break;
+            case BlendedPigment { Layer: true } layer:
+                foreach (Pigment part in layer.Pigments)
+                {
+                    List<DistantLight> suns = SunsOf(part).ToList();
+
+                    if (suns.Count > 0)
+                    {
+                        foreach (DistantLight sun in suns)
+                            yield return sun;
+
+                        yield break;
+                    }
+                }
+
+                break;
+        }
+    }
+
     private SkyTable _sky;
 
     /// <summary>

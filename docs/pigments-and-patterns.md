@@ -453,6 +453,24 @@ background physical sky { sun elevation 30  no light }
 You do not need that merely to add a lamp of your own -- a scene may hold as many lights as it likes,
 and the sun will simply stand among them.
 
+**More than one sun is more than one sky, blended.**  Scattering adds, so the sky of a world with two
+suns is exactly the sum of two skies with one each -- and a [`blend`](#blending-and-layering) of two
+physical skies, each written at twice the brightness wanted since a blend averages, is that sky.  Each
+sky hangs its own sun, at the share the blend gives its sky, so the light agrees with the sky around
+it:
+
+```
+background blend {
+    physical sky { sun elevation 7  sun azimuth 199  turbidity 4  brightness 6 },
+    physical sky { sun elevation 4.6  sun azimuth 193.5  turbidity 4  brightness 6 }
+}
+```
+
+**Clouds may be layered over a sky.**  A `layer` whose top pigment is partly clear -- streaks of a
+pattern, say, with alpha in its map -- shows the sky through it, and keeps the sky's suns: a layer hangs
+the suns of the topmost of its pigments that has any.  `gallery/Local/showcase/tatooine.igl` does both,
+two setting suns under a band of wisps.
+
 **About `brightness`.**  It is an exposure and deliberately a single knob, because the proportions
 *within* a sky, and between a sky and its sun, are what the physics settles and nothing should be able
 to disturb them.  Turning it up brightens the sun by exactly as much as it brightens the sky.
