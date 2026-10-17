@@ -28,7 +28,22 @@ public class ImagePigment : Pigment
     /// </summary>
     public bool Once { get; set; }
 
-    private Canvas _canvas;
+    /// <summary>
+    /// This property holds how bright the image is: what its colors are multiplied by.  A photograph of
+    /// the sky holds light in whatever units the camera that took it left it in, so bringing it to the
+    /// scene's is the one thing it needs said of it -- a single knob, like a physical sky's, so that its
+    /// sun and its sky go up or down together.
+    /// </summary>
+    public double Brightness { get; set; } = 1;
+
+    private Texture _texture;
+    private TextureWrap _wrapAcross;
+    private TextureWrap _wrapDown;
+
+    /// <summary>
+    /// This property holds how many texels the image has across, once it is loaded, and nought before.
+    /// </summary>
+    public int TexelsAcross => _texture?.Width ?? 0;
 
     /// <summary>
     /// This method is used to give the pigment a time to prepare for rendering.
@@ -53,33 +68,69 @@ public class ImagePigment : Pigment
             _ => throw new Exception("Cannot determine image map type for surface.")
         };
 
-        // Next, load the image.
-        _canvas = ImageReference.Canvas;
+        // Next, load the image and settle what lies past its edges.  The image is read as the light it
+        // stands for when the render turns its light back into a picture's values at the end, and as
+        // the values it holds when the scene writes no gamma -- in such a scene a color is the value
+        // that reaches the file, and an image's colors must mean what the scene's own do, or a texture
+        // under white light would not come back as itself.
+        _texture = ImageReference.TextureFor(context.ApplyGamma);
+        (_wrapAcross, _wrapDown) = MapType.WrapFor(Once);
     }
 
-    /// <summary>
-    /// This method accepts a point and produces a color for that point.  We return the
-    /// color that our wrapped pigment returns, with noise applied.
-    /// </summary>
-    /// <param name="point">The point to produce a color for.</param>
-    /// <returns>The appropriate color at the given point.</returns>
     /// <summary>
     /// An image may carry an alpha channel of its own, and finding out would mean reading it, so this answers yes and pays for the sample.
     /// </summary>
     public override bool MayTransmit => true;
 
+    /// <summary>
+    /// This method produces the image's color at a point, read between the four texels nearest it.
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        (double u, double v) = MapType.GetImageLocationFor(
-            point, _canvas.Width, _canvas.Height, Once);
-        
+        (double u, double v) = MapType.GetTexelLocationFor(point, _texture.Width, _texture.Height);
+
+        return double.IsNaN(u) || double.IsNaN(v)
+            ? Colors.Transparent
+            : Brightened(_texture.Bilinear(u, v, _wrapAcross, _wrapDown));
+    }
+
+    /// <summary>
+    /// This method produces the image's color averaged over the patch of it a footprint covers.  Each
+    /// edge of the footprint is carried into the image by placing both its ends, and the two edges so
+    /// carried are the axes of the ellipse the texture averages over.
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">The patch of surface the ray is answerable for.</param>
+    /// <returns>The image's color over the patch.</returns>
+    public override Color GetColorFor(Point point, Footprint footprint)
+    {
+        if (footprint is null || footprint.IsEmpty)
+            return GetColorFor(point);
+
+        int width = _texture.Width, height = _texture.Height;
+        (double u, double v) = MapType.GetTexelLocationFor(point, width, height);
+
         if (double.IsNaN(u) || double.IsNaN(v))
             return Colors.Transparent;
 
-        int x = Math.Min((int) Math.Round(u), _canvas.Width - 1);
-        int y = Math.Min((int) Math.Round(v),  _canvas.Height - 1);
+        (double du0, double dv0) = MapType.AxesFor(point, footprint.Across, width, height);
+        (double du1, double dv1) = MapType.AxesFor(point, footprint.Along, width, height);
 
-        return _canvas.GetPixel(x, y);
+        return Brightened(double.IsNaN(du0 + dv0 + du1 + dv1)
+            ? _texture.Bilinear(u, v, _wrapAcross, _wrapDown)
+            : _texture.Filtered(u, v, du0, dv0, du1, dv1, _wrapAcross, _wrapDown));
+    }
+
+    /// <summary>
+    /// This method brightens a color read from the image, leaving how opaque it is alone.
+    /// </summary>
+    private Color Brightened(Color color)
+    {
+        return Brightness == 1
+            ? color
+            : new Color(color.Red * Brightness, color.Green * Brightness, color.Blue * Brightness, color.Alpha);
     }
 
     /// <summary>
@@ -92,6 +143,7 @@ public class ImagePigment : Pigment
         return other is ImagePigment pigmentation &&
                MapType == pigmentation.MapType &&
                ImageReference.Matches(pigmentation.ImageReference) &&
-               Once == pigmentation.Once;
+               Once == pigmentation.Once &&
+               Brightness == pigmentation.Brightness;
     }
 }

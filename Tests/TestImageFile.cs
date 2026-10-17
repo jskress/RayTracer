@@ -354,4 +354,82 @@ public class TestImageFile
 
         Assert.IsTrue(File.Exists(_tempFile));
     }
+
+    /// <summary>
+    /// This tests that a picture file is known to hold sRGB values rather than light.  PNG and JPEG
+    /// files say so of themselves, and it is what lets a pigment turn them back into light.
+    /// </summary>
+    [TestMethod]
+    public void TestAPictureFileIsKnownToHoldSrgb()
+    {
+        foreach (string extension in new[] { "png", "jpg" })
+        {
+            string path = Path.Combine(Path.GetTempPath(), $"raytracer-srgb-{Guid.NewGuid():N}.{extension}");
+
+            try
+            {
+                using (MagickImage image = new (MagickColors.Gray, 2, 2))
+                    image.Write(path);
+
+                Canvas canvas = new ImageFile(path).Load()[0];
+
+                Assert.AreSame(TransferFunction.Srgb, canvas.Encoding, extension);
+                Assert.AreEqual(128 / 255.0, canvas.GetPixel(0, 0).Red, 0.01, "the values are read as they stand");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+    }
+
+    /// <summary>
+    /// This tests that a Radiance or OpenEXR file is known to hold light, and that light brighter than
+    /// white survives being read -- which is what lets a picture of a real sky, sun and all, light a
+    /// scene.  OpenEXR files are reported as sRGB by Magick.NET, with a gamma of one; the format settles
+    /// it.
+    /// </summary>
+    [TestMethod]
+    public void TestAHighDynamicRangeFileHoldsLight()
+    {
+        foreach (MagickFormat format in new[] { MagickFormat.Hdr, MagickFormat.Exr })
+        {
+            string path = Path.Combine(
+                Path.GetTempPath(), $"raytracer-hdr-{Guid.NewGuid():N}.{format.ToString().ToLower()}");
+
+            try
+            {
+                using (MagickImage image = new (MagickColors.Black, 2, 2))
+                {
+                    image.ColorSpace = ColorSpace.RGB;
+
+                    using (IPixelCollection<float> pixels = image.GetPixels())
+                    {
+                        foreach (IPixel<float> pixel in pixels)
+                        {
+                            pixel.SetChannel(0, 3f * 65535);
+                            pixel.SetChannel(1, 0.5f * 65535);
+                            pixel.SetChannel(2, 0.25f * 65535);
+                        }
+                    }
+
+                    image.Write(path, format);
+                }
+
+                Canvas canvas = new ImageFile(path).Load()[0];
+                Color color = canvas.GetPixel(1, 1);
+
+                Assert.AreSame(TransferFunction.Linear, canvas.Encoding, format.ToString());
+                Assert.AreEqual(3, color.Red, 0.05, format.ToString());
+                Assert.AreEqual(0.5, color.Green, 0.01, format.ToString());
+                Assert.AreEqual(0.25, color.Blue, 0.01, format.ToString());
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+    }
 }

@@ -25,6 +25,11 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
     public Resolver<bool> OnceResolver { get; init; }
 
     /// <summary>
+    /// This property holds the resolver for how bright the image is, if one was given.
+    /// </summary>
+    public Resolver<double> BrightnessResolver { get; init; }
+
+    /// <summary>
     /// This method is used to execute the resolver to produce a value.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -38,6 +43,7 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
             Once = OnceResolver.Resolve(context, variables)
         };
 
+        BrightnessResolver.AssignTo(pigment, target => target.Brightness, context, variables);
         SetProperties(context, variables, pigment);
 
         return pigment;

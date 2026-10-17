@@ -208,7 +208,22 @@ Pigments (`Pigments/`) define how color is derived at a surface point (solid, pa
 image-mapped, blended/layered, noisy). Patterns (`Patterns/`) define the underlying spatial
 functions (stripes, checker, gradient, agate, wood, granite, brick, hexagon, etc.) that
 pigments sample. Each has a corresponding DSL resolver under `Instructions/Patterns/` and
-`Instructions/Pigments/`.  One pattern depends on direction rather than place: `flop` (`FlopPattern`), the angle
+`Instructions/Pigments/`.  An image pigment reads a `Texture` (`Graphics/Texture.cs`, cached per file in
+`ImageCache.GetTexture`): the file turned into light by the curve it declares (`TransferFunction`: sRGB for PNG/JPEG,
+linear for `.hdr`/`.exr`, which keep light above white), premultiplied by alpha, with a pyramid of halved copies, and
+read by EWA over the footprint's two edges carried into texels (`ImageMapType.AxesFor`), the ellipse's half-axes 0.78
+of a pixel's side so its spread matches the pixel's box; bilinear with no footprint.  A `no gamma` scene reads an image's values as they stand (its colors are file values),
+and a height field reads the raw values too.  An image background is read with a footprint too (`Scene.SkyFootprintOf`); a pattern sky is not, since a
+footprint straddling the horizon averages in the gradient's repeat below it.  An image takes `{ brightness b  <transforms> }`
+after it (parsed by hand in `ParseImagePigmentClause`).  A sky light carrying an image (`SkyLight.IsAPicture`) is
+image-based lighting: half its samples are picked by a `SkyMap` (luminance on a grid twice the image's width, at most
+4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),
+and the pattern is turned per point (`Scene.ShiftFor`, salts 107/108) so a cloudy sky is grain, not blotches.  When it
+carries the shown background untinted (`Scene.PictureSky`), a rough surface shares it with its reflection, direction
+by direction (`HighlightShareOf`, `SkyShareOf` on a `LookingRun` with a `Mirror`).  Pattern skies keep the even
+fixed pattern.  A smooth highlight from ANY sky light takes each sample's own light (`Light.HighlightsBySample`); until
+2026-10-17 it took the light's white color, a white sheen under a blue sky.  One pattern
+depends on direction rather than place: `flop` (`FlopPattern`), the angle
 between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.Aspecular`), for color-shifting
 paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose `SeesTheViewer` (cached per pigment in
 `Material`), so every other pigment is asked exactly as before; it is worked out per light in `Light.ApplyPhong`, and

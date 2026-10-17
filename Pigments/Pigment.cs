@@ -162,6 +162,26 @@ public abstract class Pigment
     }
 
     /// <summary>
+    /// This method returns the light this pigment gives off over the given patch round a point, in
+    /// whatever bands the render is carrying light in.  It is the background's lookup: a pixel that sees
+    /// the sky sees a patch of it as wide as the pixel, and an image of the sky has to be averaged over
+    /// that patch or its detail beats into moiré as a floor's does.  A pigment that works its light out
+    /// wavelength by wavelength is asked at the point, as before.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">The point to get the light for.</param>
+    /// <param name="footprint">The patch round it the ray is answerable for.</param>
+    /// <returns>The light there.</returns>
+    public TS GetTransformedLightFor<TS>(Point point, Footprint footprint)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (footprint is null || footprint.IsEmpty || (TS.IsSpectral && IsSpectral))
+            return GetTransformedLightFor<TS>(point);
+
+        return TS.FromIlluminant(GetTransformedColorFor(point, footprint));
+    }
+
+    /// <summary>
     /// This method returns the light this pigment gives off at the given point, in whatever bands the
     /// render is carrying light in.  It is for a pigment that is a source of light rather than a share
     /// of it -- a background, a sky -- and so turns its color into light as an illuminant.  A pigment

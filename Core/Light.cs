@@ -201,6 +201,14 @@ public abstract class Light : NamedThing
     public virtual bool CanBeSeen => false;
 
     /// <summary>
+    /// This property reports whether a smooth surface's highlight from each of this light's samples
+    /// takes that sample's own light rather than the light's color as a whole -- which it must for a
+    /// light whose color differs from one sample to the next as much as a photographed sky's does,
+    /// whose sun is a hundred thousand times the blue around it.
+    /// </summary>
+    protected virtual bool HighlightsBySample => false;
+
+    /// <summary>
     /// This method works out one of the places this light is looked at from, of the
     /// <see cref="SampleCount"/> there are.  A light with no width is the whole of itself from its
     /// one place, so it ignores the index and answers as it lies; an area light spreads its
@@ -494,7 +502,8 @@ public abstract class Light : NamedThing
             {
                 double factor = Math.Pow(reflectDotEye, material.Shininess);
 
-                specularColor = Emitted<TS>() * material.Specular * factor;
+                specularColor = (HighlightsBySample ? EmittedToward<TS>(sample) : Emitted<TS>()) *
+                                material.Specular * factor;
 
                 // A highlight is the lamp's mirror image, and a film colors it as it colors any other.  A
                 // film always mirrors, so a lamp a ray can meet -- the sky, a glowing volume -- already

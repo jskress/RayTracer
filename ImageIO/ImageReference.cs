@@ -29,6 +29,16 @@ public class ImageReference
     public Canvas Canvas => ImageCache.GetImage(ImageName, SourceDirectory, AlwaysLoad);
 
     /// <summary>
+    /// This method produces the image made ready to be read as colors, by loading it.
+    /// </summary>
+    /// <param name="asLight">Whether the image's values are to be turned into light.</param>
+    /// <returns>The texture made from the image.</returns>
+    public Texture TextureFor(bool asLight)
+    {
+        return ImageCache.GetTexture(ImageName, SourceDirectory, asLight, AlwaysLoad);
+    }
+
+    /// <summary>
     /// This method returns whether the given image reference matches this one.
     /// </summary>
     /// <param name="other">The image reference to compare to.</param>
