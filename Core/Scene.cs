@@ -167,9 +167,14 @@ public partial class Scene : NamedThing, IDisposable
         // Now that the sky costs a pattern lookup to ask about, only rays that saw nothing ask it.
         // A ray that saw nothing also crossed the surroundings forever, which is a span an endless
         // medium is entitled to have the whole of its say over.
-        TS sky = ThroughTheSurroundings(
-            Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray)), ray,
-            double.PositiveInfinity);
+        TS sky = Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray));
+
+        // A rough surface's reflection may be owed only part of a picture's sky; see SkyShareOf.  The
+        // whole is left untouched rather than multiplied by one, which would make a clear sky opaque.
+        if (SkyShareOf(ray) is var share and < 1)
+            sky *= share;
+
+        sky = ThroughTheSurroundings(sky, ray, double.PositiveInfinity);
 
         return left == 1 ? sky : (seen + sky * left).WithAlpha(1 - left * (1 - sky.Alpha));
     }
@@ -690,7 +695,7 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="where">The place the path leaves from.</param>
     /// <param name="index">Which sample along the crossing it leaves from.</param>
     /// <returns>The starting place.</returns>
-    private static double ShiftFor(Point where, int index)
+    internal static double ShiftFor(Point where, int index)
     {
         ulong bits = (ulong) (
             BitConverter.DoubleToInt64Bits(where.X) * 73_856_093 ^
@@ -873,6 +878,51 @@ public partial class Scene : NamedThing, IDisposable
         Vector heading = ray.Direction.Unit;
 
         return Footprint.For(ray.Spread * 0.5, heading, -heading);
+    }
+
+    /// <summary>
+    /// This property holds the sky light that carries the sky the scene shows, when that sky is a
+    /// picture and is shared between a rough surface's highlight and its reflection; see
+    /// <see cref="HighlightShareOf"/>.  Found the first time it is asked for, once the lights are all
+    /// in place.
+    /// </summary>
+    private SkyLight PictureSky
+    {
+        get
+        {
+            if (!_pictureSkyFound)
+            {
+                _pictureSky = Lights.OfType<SkyLight>()
+                    .FirstOrDefault(sky => ReferenceEquals(sky.Pigment, Background) && sky.IsAPicture &&
+                                           sky.Color.Matches(Colors.White));
+                _pictureSkyFound = true;
+            }
+
+            return _pictureSky;
+        }
+    }
+
+    private SkyLight _pictureSky;
+    private bool _pictureSkyFound;
+
+    /// <summary>
+    /// This method returns the share of the sky that belongs to the ray reading it: all of it, unless
+    /// the ray is one of a rough surface's reflections, still on its straight run, and the sky is a
+    /// picture whose light that surface's highlight shares -- when it is what is left once the sky's
+    /// own samples have taken theirs.
+    /// </summary>
+    /// <param name="ray">The ray that saw nothing.</param>
+    /// <returns>The ray's share of the sky.</returns>
+    private double SkyShareOf(Ray ray)
+    {
+        if (_looking is not { Mirror: { } mirror } run || PictureSky is not { } sky ||
+            !OnRun(ray, run.Origin, run.Direction))
+            return 1;
+
+        double byReflecting = run.Count * run.Odds;
+        double byTheSky = sky.OddsToward(run.Direction, mirror);
+
+        return byReflecting + byTheSky > 0 ? byReflecting / (byReflecting + byTheSky) : 1;
     }
 
     /// <summary>
@@ -1178,10 +1228,20 @@ public partial class Scene : NamedThing, IDisposable
     /// is given in <see cref="MixingLightFor"/>, and the two always come to the whole.
     /// </para>
     /// <para>
-    /// The sky reaches a rough surface through its reflection only, being large and smooth enough for
-    /// that to settle well, and so does a glowing volume inside a shell that bends light -- the
+    /// A smooth sky reaches a rough surface through its reflection only, being large and smooth enough
+    /// for that to settle well, and so does a glowing volume inside a shell that bends light -- the
     /// reflection's rays bend going in, and the light's own samples do not, so the two would not be
     /// finding the same places.
+    /// </para>
+    /// <para>
+    /// **A sky that is a picture is shared, direction by direction**, since its sun is as small and as
+    /// bright as any lantern and a reflection looking for it at random scatters it into glitter.  The
+    /// sky picks a direction with the odds of all its samples together (see
+    /// <see cref="SkyLight.OddsToward"/>), and the reflection with the odds of looking that way times how
+    /// many ways it looks -- both per unit of solid angle, so no distance comes into it.  What the
+    /// highlight is given here, the reflection is given in <see cref="SkyShareOf"/>.  Only the sky the
+    /// scene shows is shared, and only at the light it shows: a sky light carrying a picture of its own,
+    /// or tinting or dimming the scene's, lights the surface with a sky its reflection never sees.
     /// </para>
     /// </summary>
     /// <param name="light">The light.</param>
@@ -1196,6 +1256,19 @@ public partial class Scene : NamedThing, IDisposable
 
         if (!material.IsRough)
             return null;
+
+        if (light is SkyLight sky && ReferenceEquals(sky, PictureSky))
+        {
+            if (looks == 0)
+                return 1;
+
+            double byTheSky = sky.OddsToward(sample.Direction, intersection.Normal);
+            double byReflecting = looks * Microfacets.DirectionOdds(
+                intersection.Normal, intersection.Eye, sample.Direction,
+                material.Roughness * material.Roughness);
+
+            return byTheSky + byReflecting > 0 ? byTheSky / (byTheSky + byReflecting) : 1;
+        }
 
         if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
             return light.CanBeSeen ? 0 : 1;
@@ -1720,9 +1793,11 @@ public partial class Scene : NamedThing, IDisposable
 
     /// <summary>
     /// This record holds one straight run of a rough surface's reflection; see <see cref="_looking"/>.
+    /// <see cref="Mirror"/> is the normal of the surface the run is a reflection off, and is left out
+    /// for a run through glass.
     /// </summary>
     private readonly record struct LookingRun(
-        Point Origin, Vector Direction, double Odds, int Count, NearSide Side = null);
+        Point Origin, Vector Direction, double Odds, int Count, NearSide Side = null, Vector Mirror = null);
 
     /// <summary>
     /// This record holds the near side of a pane of rough glass that a run set off through, for the
@@ -1821,7 +1896,7 @@ public partial class Scene : NamedThing, IDisposable
                 _looking = new LookingRun(
                     intersection.LitPoint, direction,
                     Microfacets.Masking(eye.Z, alpha) * Microfacets.Distribution(facet.Z, alpha) / (4 * eye.Z),
-                    count);
+                    count, Mirror: normal);
 
                 sum += GetColorFor<TS>(ray, remaining - 1) * weight;
             }

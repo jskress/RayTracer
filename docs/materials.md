@@ -182,8 +182,9 @@ one that names no `reflective` is given all of that.
 **Lamps a ray can meet are shared fairly.**  A lamp at a point, a panel or the sun gives a rough
 surface a highlight, since no ray could ever find it.  The sky and a glowing lantern or flame are
 things a ray *can* meet, and they show in the blur as well; counted both ways, their light would be
-counted twice.  The sky is left to the blur, which finds something so large and smooth easily.  A
-glowing volume is shared between the two, place by place, by how likely each was to find it: a
+counted twice.  The sky is left to the blur, which finds something so large and smooth easily -- unless
+it is a [photograph](lights.md#a-photograph-of-the-sky), whose sun is as small and bright as any lantern,
+and which is shared the way a lantern is, direction by direction.  A glowing volume is shared between the two, place by place, by how likely each was to find it: a
 satin surface takes the lantern mostly from its own samples, smoothly, and a near-mirror mostly from
 what it mirrors, sharply.  Left to the blur alone, a small bright lantern on a wet road comes out as
 glitter; shared, it is a smooth streak, at no extra cost.  A glowing volume inside a shell that bends

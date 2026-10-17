@@ -131,6 +131,59 @@ public class TestPigmentClauses
         return count;
     }
 
+    /// <summary>
+    /// This tests that an image may be turned, as any other pigment may, in braces after it -- which a
+    /// photograph of the sky needs, to turn its sun round a scene.  A ball wearing a picture red above and
+    /// blue below shows blue on top once the picture is turned over.
+    /// </summary>
+    [TestMethod]
+    public void TestAnImageMayBeTurned()
+    {
+        string image = TwoColorImage(Colors.Red, Colors.Blue);
+        (Canvas upright, string uprightError) = BallWearing($"pigment image '{image}' spherical", 24);
+        (Canvas turned, string turnedError) = BallWearing($"pigment image '{image}' spherical {{ rotate X 180 }}", 24);
+
+        Assert.IsNull(uprightError, uprightError);
+        Assert.IsNull(turnedError, turnedError);
+
+        // Just inside the top of the ball, down the middle of the picture.
+        int top = Enumerable.Range(0, upright.Height).First(y => upright.GetPixel(12, y).Alpha > 0.99) + 1;
+
+        Assert.IsGreaterThan(0.9, upright.GetPixel(12, top).Red, $"the upright picture's top: {upright.GetPixel(12, top)}");
+        Assert.IsGreaterThan(0.9, turned.GetPixel(12, top).Blue, $"the turned picture's top: {turned.GetPixel(12, top)}");
+    }
+
+    /// <summary>
+    /// This tests that an image may be given a brightness, alone or beside its transforms, in either
+    /// order -- what a photograph of the sky needs to bring its light to the scene's.
+    /// </summary>
+    [TestMethod]
+    public void TestAnImageMayBeBrightened()
+    {
+        string image = TwoColorImage(Colors.Red, Colors.Blue);
+        (Canvas dimmed, string dimmedError) = BallWearing($"pigment image '{image}' spherical {{ brightness 0.5 }}", 24);
+        (Canvas both, string bothError) = BallWearing(
+            $"pigment image '{image}' spherical {{ rotate X 180  brightness 0.5 }}", 24);
+        (Canvas other, string otherError) = BallWearing(
+            $"pigment image '{image}' spherical {{ brightness 0.5  rotate X 180 }}", 24);
+
+        (Canvas upright, _) = BallWearing($"pigment image '{image}' spherical", 24);
+        (Canvas turned, _) = BallWearing($"pigment image '{image}' spherical {{ rotate X 180 }}", 24);
+
+        Assert.IsNull(dimmedError, dimmedError);
+        Assert.IsNull(bothError, bothError);
+        Assert.IsNull(otherError, otherError);
+
+        // Just inside the top of the ball, where the picture's first color shows, each dimmed render
+        // is half the one at full brightness, to within what an eight-bit file can hold.
+        int top = Enumerable.Range(0, dimmed.Height).First(y => dimmed.GetPixel(12, y).Alpha > 0.99) + 1;
+
+        Assert.IsGreaterThan(0.8, upright.GetPixel(12, top).Red, $"the upright picture's top: {upright.GetPixel(12, top)}");
+        Assert.AreEqual(upright.GetPixel(12, top).Red / 2, dimmed.GetPixel(12, top).Red, 0.005, "dimmed");
+        Assert.AreEqual(turned.GetPixel(12, top).Blue / 2, both.GetPixel(12, top).Blue, 0.005, "turned, then dimmed");
+        Assert.AreEqual(turned.GetPixel(12, top).Blue / 2, other.GetPixel(12, top).Blue, 0.005, "dimmed, then turned");
+    }
+
     [TestMethod]
     public void TestAnAgateNeedsNoTurbulence()
     {

@@ -28,9 +28,22 @@ public class ImagePigment : Pigment
     /// </summary>
     public bool Once { get; set; }
 
+    /// <summary>
+    /// This property holds how bright the image is: what its colors are multiplied by.  A photograph of
+    /// the sky holds light in whatever units the camera that took it left it in, so bringing it to the
+    /// scene's is the one thing it needs said of it -- a single knob, like a physical sky's, so that its
+    /// sun and its sky go up or down together.
+    /// </summary>
+    public double Brightness { get; set; } = 1;
+
     private Texture _texture;
     private TextureWrap _wrapAcross;
     private TextureWrap _wrapDown;
+
+    /// <summary>
+    /// This property holds how many texels the image has across, once it is loaded, and nought before.
+    /// </summary>
+    public int TexelsAcross => _texture?.Width ?? 0;
 
     /// <summary>
     /// This method is used to give the pigment a time to prepare for rendering.
@@ -80,7 +93,7 @@ public class ImagePigment : Pigment
 
         return double.IsNaN(u) || double.IsNaN(v)
             ? Colors.Transparent
-            : _texture.Bilinear(u, v, _wrapAcross, _wrapDown);
+            : Brightened(_texture.Bilinear(u, v, _wrapAcross, _wrapDown));
     }
 
     /// <summary>
@@ -105,9 +118,19 @@ public class ImagePigment : Pigment
         (double du0, double dv0) = MapType.AxesFor(point, footprint.Across, width, height);
         (double du1, double dv1) = MapType.AxesFor(point, footprint.Along, width, height);
 
-        return double.IsNaN(du0 + dv0 + du1 + dv1)
+        return Brightened(double.IsNaN(du0 + dv0 + du1 + dv1)
             ? _texture.Bilinear(u, v, _wrapAcross, _wrapDown)
-            : _texture.Filtered(u, v, du0, dv0, du1, dv1, _wrapAcross, _wrapDown);
+            : _texture.Filtered(u, v, du0, dv0, du1, dv1, _wrapAcross, _wrapDown));
+    }
+
+    /// <summary>
+    /// This method brightens a color read from the image, leaving how opaque it is alone.
+    /// </summary>
+    private Color Brightened(Color color)
+    {
+        return Brightness == 1
+            ? color
+            : new Color(color.Red * Brightness, color.Green * Brightness, color.Blue * Brightness, color.Alpha);
     }
 
     /// <summary>
@@ -120,6 +143,7 @@ public class ImagePigment : Pigment
         return other is ImagePigment pigmentation &&
                MapType == pigmentation.MapType &&
                ImageReference.Matches(pigmentation.ImageReference) &&
-               Once == pigmentation.Once;
+               Once == pigmentation.Once &&
+               Brightness == pigmentation.Brightness;
     }
 }

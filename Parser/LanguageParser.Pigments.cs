@@ -3,10 +3,12 @@ using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Extensions;
+using RayTracer.ImageIO;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
 using RayTracer.Instructions.Pigments;
+using RayTracer.Instructions.Transforms;
 using RayTracer.Pigments;
 using RayTracer.Terms;
 
@@ -189,11 +191,46 @@ public partial class LanguageParser
         else if (texts.Contains("toroidal"))
             imageMapType = ImageMapType.Toroidal;
 
+        Resolver<ImageReference> imageReferenceResolver = ParseImageReference(clause);
+        TransformResolver transformResolver = null;
+        Resolver<double> brightnessResolver = null;
+
+        // An image may be turned, moved or sized as any other pigment is, and given a brightness, in
+        // braces after it -- which a photograph of the sky needs, to turn its sun round the scene and to
+        // bring its light to the scene's.  The braces are optional, since an image needs nothing else
+        // said of it.  An image named in a file's last clause has nothing after it at all: the parser
+        // lets go of a file the moment its tokens run out.
+        if (CurrentParser is not null && BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
+        {
+            CurrentParser.GetNextToken();
+
+            // A transform clause is any number of transforms, none included, so it always matches; the
+            // loop ends at the close brace, or at anything neither clause took, which the brace check
+            // below then reports.
+            while (!CurrentParser.IsNext(BounderToken.CloseBrace))
+            {
+                Token next = CurrentParser.PeekNextToken();
+
+                if (ParseClause("imageEntryClause") is { } entry)
+                    brightnessResolver = new TermResolver<double> { Term = entry.Term() };
+                else
+                    transformResolver = ParseTransformClause(transformResolver) ?? transformResolver;
+
+                if (ReferenceEquals(next, CurrentParser.PeekNextToken()))
+                    break;
+            }
+
+            CurrentParser.MatchToken(
+                true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
+        }
+
         return new ImagePigmentResolver
         {
-            ImageReferenceResolver = ParseImageReference(clause),
+            ImageReferenceResolver = imageReferenceResolver,
             MapTypeResolver = new LiteralResolver<ImageMapType?> { Value = imageMapType },
-            OnceResolver = new LiteralResolver<bool> { Value = once }
+            OnceResolver = new LiteralResolver<bool> { Value = once },
+            BrightnessResolver = brightnessResolver,
+            TransformResolver = transformResolver
         };
     }
 

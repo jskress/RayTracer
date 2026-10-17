@@ -1,0 +1,84 @@
+// A scene lit by a photograph of a real sky, and by nothing else.
+//
+// The sky is a high-dynamic-range photograph of the whole sky over Kloofendal, near Johannesburg, by Greg
+// Zaal, with the sky edited by Jarod Guest, published free of any restriction (CC0) at Poly Haven:
+//
+//     https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+//
+// It is read from there each time the scene is rendered rather than kept in this repository.  A file like
+// this holds light rather than a picture's values: its sun is a disc a few texels across, a third of a
+// million times as bright as the middle of its sky, and carries half of all the light in it.  So the sun
+// that casts these shadows is the photograph's own -- where it stands, how large it is, how warm -- and so
+// is the blue in the shade, and the clouds in the mirror.
+//
+// Four balls show the four ways a surface takes that light.  The matte one, from everywhere at once: its
+// lit side is the sun, its shaded side the sky.  The mirror shows the sky itself, sun and all.  The rough
+// metal blurs the sky into a sheen and the sun into a soft glow -- a glow that a reflection looking for a
+// sun about a degree across would find only now and then, as glitter, and that comes out smooth because the
+// sky's own samples and the reflection share it.  The glossy red one catches a glint of the sun in the
+// sun's own color.
+//
+// `brightness` brings the photograph's light to the scene's: half its sky over a floor of diffuse 0.9 in
+// full sun gives about 0.65, which a camera would call a good exposure.  `rotate Y` turns the sky so its
+// sun stands behind the balls and to the left.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    info {
+        title 'A Photographed Sky'
+        author 'J. Stephen Kress'
+        description 'Four balls on a floor, lit by nothing but a photograph of a real sky.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.6, -7.5]
+    look at [0, 0.7, 0]
+    field of view 50
+}
+
+background image 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr' {
+    brightness 0.47
+    rotate Y 64
+}
+
+sky light { samples 128 }
+
+plane {
+    material {
+        pigment checker { color [0.62, 0.62, 0.6], color [0.42, 0.42, 0.4] }
+        diffuse 0.9
+        specular 0
+    }
+}
+
+// Matte.
+sphere {
+    material { pigment White  diffuse 0.9  specular 0 }
+    translate [-3.3, 1, 0]
+}
+
+// A mirror.
+sphere {
+    material { pigment Black  diffuse 0  specular 0  reflective 0.95 }
+    translate [-1.1, 1, 0]
+}
+
+// Rough brass.
+sphere {
+    material { pigment [0.9, 0.75, 0.5]  metallic 1  reflective 0.9  roughness 0.25  diffuse 0  specular 0 }
+    translate [1.1, 1, 0]
+}
+
+// Glossy red paint.
+sphere {
+    material { pigment [0.6, 0.05, 0.04]  diffuse 0.8  specular 0.6  shininess 80 }
+    translate [3.3, 1, 0]
+}

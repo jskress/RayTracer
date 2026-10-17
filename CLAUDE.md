@@ -214,7 +214,14 @@ linear for `.hdr`/`.exr`, which keep light above white), premultiplied by alpha,
 read by EWA over the footprint's two edges carried into texels (`ImageMapType.AxesFor`), the ellipse's half-axes 0.78
 of a pixel's side so its spread matches the pixel's box; bilinear with no footprint.  A `no gamma` scene reads an image's values as they stand (its colors are file values),
 and a height field reads the raw values too.  An image background is read with a footprint too (`Scene.SkyFootprintOf`); a pattern sky is not, since a
-footprint straddling the horizon averages in the gradient's repeat below it.  One pattern
+footprint straddling the horizon averages in the gradient's repeat below it.  An image takes `{ brightness b  <transforms> }`
+after it (parsed by hand in `ParseImagePigmentClause`).  A sky light carrying an image (`SkyLight.IsAPicture`) is
+image-based lighting: half its samples are picked by a `SkyMap` (luminance on a grid twice the image's width, at most
+4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),
+and the pattern is turned per point (`Scene.ShiftFor`, salts 107/108) so a cloudy sky is grain, not blotches.  When it
+carries the shown background untinted (`Scene.PictureSky`), a rough surface shares it with its reflection, direction
+by direction (`HighlightShareOf`, `SkyShareOf` on a `LookingRun` with a `Mirror`), and a smooth highlight takes each
+sample's own light (`Light.HighlightsBySample`).  Pattern skies keep the even fixed pattern, bit-identical.  One pattern
 depends on direction rather than place: `flop` (`FlopPattern`), the angle
 between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.Aspecular`), for color-shifting
 paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose `SeesTheViewer` (cached per pigment in

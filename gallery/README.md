@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 128 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 129 images</summary>
 
 <details>
 <summary><b>Showcase</b> &mdash; 2 images &middot; whole pictures, made for their own sake</summary>
@@ -912,7 +912,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Lights</b> &mdash; 7 images &middot; where the light comes from</summary>
+<summary><b>Lights</b> &mdash; 8 images &middot; where the light comes from</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -945,6 +945,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/physical-sky.igl">A Physical Sky</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/a-photographed-sky.png">
+      <img alt="A Photographed Sky" height="120" src="Local/lights/a-photographed-sky.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/a-photographed-sky.igl">A Photographed Sky</a>
     </td>
   </tr>
   <tr style="border: none;">

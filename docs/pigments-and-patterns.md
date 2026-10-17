@@ -321,6 +321,12 @@ The mapping says how the flat picture is wrapped onto the surface:
 The same picture wrapped four ways, each onto the surface its mapping suits.  The scene is
 [`docs/examples/pigments/image-maps.igl`](examples/pigments/image-maps.igl).
 
+An image may be moved, turned or sized like any other pigment, in braces after it:
+
+```
+pigment image 'earth.png' spherical { rotate Y 120 }
+```
+
 `planar` and `cylindrical` may be followed by `once`, which draws the image a single time
 rather than repeating it.  Without it the image tiles, so a surface larger than one unit gets
 the picture over and over.  Outside an image drawn once the surface shows clear, and the image's

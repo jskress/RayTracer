@@ -320,6 +320,38 @@ On cost: one shadow ray per sample per surface hit, like an area light. Unlike t
 — a sky is large and smooth, so there is no needle to find and tens of samples settle it rather than
 thousands.
 
+#### A Photograph of the Sky
+
+**A picture of a real place can light a scene**, sun and all — which is the most direct road there is
+to a scene lit the way the world is lit. Use a high-dynamic-range photograph of the whole sky, an
+equirectangular `.hdr` or `.exr` such as the free ones at Poly Haven, as the background, and let the sky
+light carry it:
+
+```
+background image 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr'
+sky light { samples 64 }
+```
+
+Such a file holds the light itself, the sun included at its real strength — often tens of thousands of
+times the sky around it — so nothing need be added to stand in for the sun, and its shadows fall where
+the photograph's sun stands. Turn the picture to move the sun round the scene:
+`background image '…' { rotate Y 120 }`.
+
+**A sky that is a picture is not smooth**, and is looked at differently. Its sun is a disc a few texels
+across that carries most of its light, and spreading samples evenly over the sky would almost never find
+it. So half of a picture's samples are picked by where its light is and half evenly, and each is counted
+by how likely either way was to pick it: the sun is found by the first half, the broad sky settled by the
+second. What a modest count costs is grain, which halves each time the samples double: at 64 samples a
+sunlit surface strays from point to point by about two percent, at 128 by about one. A cloudy sky wants
+more than a clear one, its clouds being bright patches the samples must find as well as the sun.
+
+A picture's sun also reaches a [rough](materials.md#roughness) surface two ways — through the sky light's
+samples and through the surface's own blurred reflection — and is shared between them, as a
+glowing volume is (see [Roughness](materials.md#roughness)), so the sun's smear on a rough surface comes out smooth
+rather than as glitter. A smooth surface's highlight from each sample is the highlight of what that
+sample looks at, so a picture's sun puts a sun-colored glint on a shiny surface, and its blue sky a blue
+sheen.
+
 One thing to know if a scene has both a sky light and an unbounded
 [medium](scene-files.md#filling-that-space): the sky is infinitely far off, so an endless absorbing
 medium extinguishes it completely, exactly as it does a `distant light`. That is the right answer to the

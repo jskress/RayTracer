@@ -515,6 +515,9 @@ public partial class LanguageParser
         {
             imageClause > imageMapTypeClause{?}
         }
+        // What may be said of an image in braces after it, besides its transforms: how bright it is, which
+        // a photograph of the sky needs, being in whatever units the camera that took it left it in.
+        imageEntryClause: { brightness > _expression }
         patternPigmentClause:
         {
             patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
