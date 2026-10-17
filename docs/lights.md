@@ -303,6 +303,10 @@ of light. A niche is darker than an open field, and a sphere resting on a floor 
 where the two meet, for the same reason real ones do. No other light in this renderer produces that,
 because no other one comes from everywhere.
 
+**A shiny surface shines with the sky it faces.** Each sample gives a smooth surface the highlight of
+the piece of sky it looks at, in that piece's color and as bright as it is: a blue sky gives a blue sheen,
+and a photographed sky's sun a sun-colored glint.
+
 **It replaces `ambient`, and takes ambient's default with it.** The [ambient
 term](materials.md#ambient-diffuse-and-specular) is a fudge: a flat amount added everywhere, shadow or
 no shadow, standing in for the bounced light this renderer does not trace. A sky light is the real
@@ -348,9 +352,7 @@ more than a clear one, its clouds being bright patches the samples must find as 
 A picture's sun also reaches a [rough](materials.md#roughness) surface two ways — through the sky light's
 samples and through the surface's own blurred reflection — and is shared between them, as a
 glowing volume is (see [Roughness](materials.md#roughness)), so the sun's smear on a rough surface comes out smooth
-rather than as glitter. A smooth surface's highlight from each sample is the highlight of what that
-sample looks at, so a picture's sun puts a sun-colored glint on a shiny surface, and its blue sky a blue
-sheen.
+rather than as glitter.
 
 One thing to know if a scene has both a sky light and an unbounded
 [medium](scene-files.md#filling-that-space): the sky is infinitely far off, so an endless absorbing

@@ -220,8 +220,9 @@ image-based lighting: half its samples are picked by a `SkyMap` (luminance on a 
 4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),
 and the pattern is turned per point (`Scene.ShiftFor`, salts 107/108) so a cloudy sky is grain, not blotches.  When it
 carries the shown background untinted (`Scene.PictureSky`), a rough surface shares it with its reflection, direction
-by direction (`HighlightShareOf`, `SkyShareOf` on a `LookingRun` with a `Mirror`), and a smooth highlight takes each
-sample's own light (`Light.HighlightsBySample`).  Pattern skies keep the even fixed pattern, bit-identical.  One pattern
+by direction (`HighlightShareOf`, `SkyShareOf` on a `LookingRun` with a `Mirror`).  Pattern skies keep the even
+fixed pattern.  A smooth highlight from ANY sky light takes each sample's own light (`Light.HighlightsBySample`); until
+2026-10-17 it took the light's white color, a white sheen under a blue sky.  One pattern
 depends on direction rather than place: `flop` (`FlopPattern`), the angle
 between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.Aspecular`), for color-shifting
 paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose `SeesTheViewer` (cached per pigment in

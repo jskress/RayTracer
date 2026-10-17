@@ -208,4 +208,39 @@ public class TestSkyLights
         Assert.IsTrue(Colors.Black.Matches(
             unlit.GetColorFor(new Ray(new Point(0, 0, -5), Directions.In), 3)));
     }
+
+    /// <summary>
+    /// This tests that a shiny surface's highlights from a sky are the sky's own: in its color, and as
+    /// bright as it is.  Taken from the light's color as a whole, every sample of a blue sky put a white
+    /// highlight on the surface, as bright under a dim sky as under a bright one.
+    /// </summary>
+    [TestMethod]
+    public void TestAShinySurfaceShinesWithTheSkysOwnLight()
+    {
+        Color Shine(Color sky)
+        {
+            Plane floor = new ()
+            {
+                Material = new Material
+                {
+                    Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0.9,
+                    Shininess = 50
+                }
+            };
+            Scene scene = new () { Background = new SolidPigment(sky) };
+
+            floor.PrepareForRendering();
+            scene.Surfaces.Add(floor);
+            scene.Lights.Add(new SkyLight { Pigment = new SolidPigment(sky), Samples = 400 });
+
+            return OnTheFloorOf(scene, Point.Zero);
+        }
+
+        Color blue = Shine(new Color(0.1, 0.2, 0.6));
+        Color dimmer = Shine(new Color(0.05, 0.1, 0.3));
+
+        Assert.IsGreaterThan(0, blue.Red, $"the sky should shine in the surface: {blue}");
+        Assert.AreEqual(6, blue.Blue / blue.Red, 1e-6, $"the shine should be the sky's blue: {blue}");
+        Assert.AreEqual(blue.Blue / 2, dimmer.Blue, 1e-9, $"half the sky should shine half as much: {dimmer}");
+    }
 }

@@ -57,10 +57,13 @@ public class SkyLight : Light
     public bool IsAPicture => Pigment is ImagePigment && Map is { IsDark: false };
 
     /// <summary>
-    /// A sky that is a picture lends a smooth surface the highlight of each piece of itself a sample
-    /// looks at, as bright as that piece is: its sun's, its clouds', its blue's.
+    /// A sky lends a smooth surface the highlight of each piece of itself a sample looks at, as bright as
+    /// that piece is and in its color: a photograph's sun, its clouds, its blue; a physical sky's blue
+    /// overhead and pale band at the horizon.  Taken from the light's color as a whole, as it once was,
+    /// every sample of a blue sky put a white highlight on a shiny surface -- a white sheen the sky did
+    /// not have, as bright from the dim blue overhead as from the bright horizon.
     /// </summary>
-    protected override bool HighlightsBySample => IsAPicture;
+    protected override bool HighlightsBySample => true;
 
     // The sky's light laid out by direction, made the first time it is wanted, once the picture it is
     // made from is loaded, and kept with the pigment it was made from so that a sky given another is
