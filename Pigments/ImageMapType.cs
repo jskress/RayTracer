@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Graphics;
 
 namespace RayTracer.Pigments;
 
@@ -36,69 +37,105 @@ public static class ImageMapTypeExtensions
     private const double TwoPi = Math.PI * 2;
 
     /// <summary>
-    /// This method is used to take a 3D point and, using the indicated image map type,
-    /// convert it to a normalized x, y coordinate pair, each coordinate in the range of
-    /// [0..1).
+    /// This method is used to take a 3D point and, using the indicated image map type, find where in
+    /// the image it lies, in texels: a texel's middle is half a texel in from its corner, and the image
+    /// spans nought to its width across and nought to its height down.
+    /// <para>
+    /// The place is left unwrapped.  What lies past an edge -- the image again, the edge itself, or
+    /// nothing -- is the texture's question, answered by <see cref="WrapFor"/>; and a footprint is
+    /// measured as the difference between two places, which wrapping would break wherever it crossed an
+    /// edge.  The places for the angles round an axis are the exception, since an angle comes back to
+    /// itself; see <see cref="AxesFor"/>.
+    /// </para>
     /// </summary>
     /// <param name="imageMapType">The type of image map to use.</param>
     /// <param name="point">The point to transform.</param>
     /// <param name="width">The width of the image.</param>
-    /// <param name="height">The height of hte image.</param>
-    /// <param name="once">A flag indicating whether the image may repeat.</param>
-    /// <returns>The X and Y coordinates within the image to use.</returns>
-    public static (double, double) GetImageLocationFor(
-        this ImageMapType? imageMapType, Point point, double width, double height,
-        bool once)
+    /// <param name="height">The height of the image.</param>
+    /// <returns>The X and Y coordinates within the image to use, or NaN for a point the map cannot
+    /// place.</returns>
+    public static (double, double) GetTexelLocationFor(
+        this ImageMapType? imageMapType, Point point, double width, double height)
     {
         return imageMapType switch
         {
-            ImageMapType.Planar => GetPlanarImageLocationFor(point, width, height, once),
+            ImageMapType.Planar => (point.X * width, point.Z * height),
             ImageMapType.Spherical => GetSphericalImageLocationFor(point, width, height),
-            ImageMapType.Cylindrical => GetCylindricalImageLocationFor(point, width, height, once),
+            ImageMapType.Cylindrical => GetCylindricalImageLocationFor(point, width, height),
             ImageMapType.Toroidal => GetToroidalImageLocationFor(point, width, height),
             _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
         };
     }
 
     /// <summary>
-    /// This method is used to take a 3D point and, using a planar map type, convert it
-    /// to a normalized x, y coordinate pair, each coordinate in the range of [0..1).
+    /// This method reports what lies past the image's edges under the indicated image map type.
+    /// <para>
+    /// An image drawn `once` has nothing round it, so past its edges a surface shows clear -- and, now
+    /// that the image is averaged over a pixel's patch, its edge fades out over that patch rather than
+    /// stopping on a texel.  Otherwise a planar map tiles both ways and a cylindrical one up its axis;
+    /// a sphere's top and bottom rows are its poles and go on as themselves; and every angle round an
+    /// axis comes back to where it began.
+    /// </para>
     /// </summary>
-    /// <param name="point">The point to transform.</param>
-    /// <param name="width">The width of the image.</param>
-    /// <param name="height">The height of hte image.</param>
+    /// <param name="imageMapType">The type of image map to use.</param>
     /// <param name="once">A flag indicating whether the image may repeat.</param>
-    /// <returns>The X and Y coordinates within the image to use.</returns>
-    private static (double, double) GetPlanarImageLocationFor(
-        Point point, double width, double height, bool once)
+    /// <returns>What lies past the image's sides, and past its top and bottom.</returns>
+    public static (TextureWrap, TextureWrap) WrapFor(this ImageMapType? imageMapType, bool once)
     {
-        // Note the parentheses: "&&" binds tighter than "||", so without them the Z test applied
-        // whether or not "once" was asked for, and half the plane came back transparent for no
-        // stated reason.
-        if (once && (point.X is < 0 or > 1 || point.Z is < 0 or > 1))
-            return (double.NaN, double.NaN);
+        TextureWrap tiled = once ? TextureWrap.Border : TextureWrap.Repeat;
 
-        return (Wrap(point.X, width), Wrap(point.Z, height));
-
-        // Left to repeat, the image tiles, so a coordinate outside [0, 1) wraps back into it.
-        // C#'s remainder keeps the sign of its left operand, so a negative coordinate -- which
-        // any surface reaching to the left of the origin has -- produced a negative index and
-        // took the render down with it.
-        static double Wrap(double value, double size)
+        return imageMapType switch
         {
-            double result = value * size % size;
-
-            return result < 0 ? result + size : result;
-        }
+            ImageMapType.Planar => (tiled, tiled),
+            ImageMapType.Spherical => (TextureWrap.Repeat, TextureWrap.Clamp),
+            ImageMapType.Cylindrical => (TextureWrap.Repeat, tiled),
+            ImageMapType.Toroidal => (TextureWrap.Repeat, TextureWrap.Repeat),
+            _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
+        };
     }
 
     /// <summary>
-    /// This method is used to take a 3D point and, using a spherical map type, convert it
-    /// to a normalized x, y coordinate pair, each coordinate in the range of [0..1).
+    /// This method works out how far across and down the image one edge of a footprint reaches, by
+    /// placing both ends of the edge and taking the difference.
+    /// <para>
+    /// A place measured as an angle runs from nought to the image's width and starts again, so the two
+    /// ends of an edge that crosses the seam lie nearly a whole image apart when they are really a texel
+    /// or two; such a difference is taken the short way round.  Places along a straight line need no
+    /// such care, and get none -- a footprint at the horizon of a tiled floor really does span many
+    /// tiles, and must be allowed to say so.
+    /// </para>
+    /// </summary>
+    /// <param name="imageMapType">The type of image map to use.</param>
+    /// <param name="point">The middle of the footprint.</param>
+    /// <param name="edge">One edge of the footprint, in the same space as the point.</param>
+    /// <param name="width">The width of the image.</param>
+    /// <param name="height">The height of the image.</param>
+    /// <returns>How far across and down the image the edge reaches, or NaN where either end cannot be
+    /// placed.</returns>
+    public static (double, double) AxesFor(
+        this ImageMapType? imageMapType, Point point, Vector edge, double width, double height)
+    {
+        (double u0, double v0) = imageMapType.GetTexelLocationFor(point - edge * 0.5, width, height);
+        (double u1, double v1) = imageMapType.GetTexelLocationFor(point + edge * 0.5, width, height);
+        double du = u1 - u0;
+        double dv = v1 - v0;
+
+        if (imageMapType is ImageMapType.Spherical or ImageMapType.Cylindrical or ImageMapType.Toroidal)
+            du -= width * Math.Round(du / width);
+
+        if (imageMapType is ImageMapType.Toroidal)
+            dv -= height * Math.Round(dv / height);
+
+        return (du, dv);
+    }
+
+    /// <summary>
+    /// This method is used to take a 3D point and, using a spherical map type, find where in the
+    /// image it lies, in texels.
     /// </summary>
     /// <param name="point">The point to transform.</param>
     /// <param name="width">The width of the image.</param>
-    /// <param name="height">The height of hte image.</param>
+    /// <param name="height">The height of the image.</param>
     /// <returns>The X and Y coordinates within the image to use.</returns>
     private static (double, double) GetSphericalImageLocationFor(
         Point point, double width, double height)
@@ -140,21 +177,19 @@ public static class ImageMapTypeExtensions
     }
 
     /// <summary>
-    /// This method is used to take a 3D point and, using a cylindrical map type, convert it
-    /// to a normalized x, y coordinate pair, each coordinate in the range of [0..1).
+    /// This method is used to take a 3D point and, using a cylindrical map type, find where in the
+    /// image it lies, in texels.
     /// </summary>
     /// <param name="point">The point to transform.</param>
     /// <param name="width">The width of the image.</param>
-    /// <param name="height">The height of hte image.</param>
-    /// <param name="once">A flag indicating whether the image may repeat.</param>
+    /// <param name="height">The height of the image.</param>
     /// <returns>The X and Y coordinates within the image to use.</returns>
     private static (double, double) GetCylindricalImageLocationFor(
-        Point point, double width, double height, bool once)
+        Point point, double width, double height)
     {
-        if (once && point.Y is < 0 or > 1)
-            return (double.NaN, double.NaN);
-
-        double y = point.Y * height % height;
+        // Left unwrapped, as every place is; taken as a remainder, as it once was, a point below the
+        // axis's nought gave a negative row and took the render down with it.
+        double y = point.Y * height;
 
         Vector vector = new Vector(point);
         double magnitude = vector.Magnitude;
@@ -187,12 +222,12 @@ public static class ImageMapTypeExtensions
     }
 
     /// <summary>
-    /// This method is used to take a 3D point and, using a toroidal map type, convert it
-    /// to a normalized x, y coordinate pair, each coordinate in the range of [0..1).
+    /// This method is used to take a 3D point and, using a toroidal map type, find where in the
+    /// image it lies, in texels.
     /// </summary>
     /// <param name="point">The point to transform.</param>
     /// <param name="width">The width of the image.</param>
-    /// <param name="height">The height of hte image.</param>
+    /// <param name="height">The height of the image.</param>
     /// <returns>The X and Y coordinates within the image to use.</returns>
     private static (double, double) GetToroidalImageLocationFor(
         Point point, double width, double height)

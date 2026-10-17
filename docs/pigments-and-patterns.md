@@ -323,7 +323,27 @@ The same picture wrapped four ways, each onto the surface its mapping suits.  Th
 
 `planar` and `cylindrical` may be followed by `once`, which draws the image a single time
 rather than repeating it.  Without it the image tiles, so a surface larger than one unit gets
-the picture over and over.
+the picture over and over.  Outside an image drawn once the surface shows clear, and the image's
+edge fades out over the width of a pixel rather than stopping on a texel.
+
+**A picture is read as the light it stands for.**  Almost every image file is written in sRGB,
+whose values are not light: a mid-gray of 128 in a PNG or JPEG is about a fifth of white's light,
+not half.  Each file is turned back into light by the curve it says it was written with, so a
+photograph used as a pigment comes out with the colors it was taken with rather than paler.  A
+Radiance (`.hdr`) or OpenEXR (`.exr`) file holds light already, including light brighter than
+white, and is read as it stands -- which is what a photograph of a real sky needs, sun and all.
+A scene that writes [`no gamma`](context.md#gamma) takes its colors as the values that reach the
+file, and takes an image's values the same way, as they stand -- so in either kind of scene a
+picture under white light comes back as itself.  An image used for a
+[height field](advanced-surfaces.md#height-field) is different again: its grays are heights, and
+are read exactly as the file holds them.
+
+**A pixel sees a patch of a picture, not a point of it.**  Seen from far off or at a glance, many
+of an image's texels fall within one pixel, and reading just one of them beats a fine pattern
+into moiré.  So an image is averaged over the patch each pixel covers, longer along the way a
+surface runs away from the eye, and read smoothly between its texels when seen close up.  The
+same goes for an image used as a `background`: a pixel that sees the sky sees as much of the
+picture as the pixel is wide.
 
 Worth knowing about `planar`: it maps the surface's **X and Z**, so it belongs on something
 lying flat.  Put it on an upright face — where Z barely changes — and you get a single row of

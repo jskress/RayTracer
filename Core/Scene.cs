@@ -168,7 +168,8 @@ public partial class Scene : NamedThing, IDisposable
         // A ray that saw nothing also crossed the surroundings forever, which is a span an endless
         // medium is entitled to have the whole of its say over.
         TS sky = ThroughTheSurroundings(
-            Background.GetTransformedLightFor<TS>(HeadingOf(ray)), ray, double.PositiveInfinity);
+            Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray)), ray,
+            double.PositiveInfinity);
 
         return left == 1 ? sky : (seen + sky * left).WithAlpha(1 - left * (1 - sky.Alpha));
     }
@@ -847,6 +848,31 @@ public partial class Scene : NamedThing, IDisposable
         Vector heading = ray.Direction.Unit;
 
         return new Point(heading.X, heading.Y, heading.Z);
+    }
+
+    /// <summary>
+    /// This method works out the patch of the sky a ray that saw nothing is answerable for.  The sky is
+    /// read as though painted on a sphere of radius one, so the patch is the ray's cone where it crosses
+    /// that sphere: as wide as the angle the cone spreads by, square on to the ray.
+    /// <para>
+    /// Only a sky that is a picture is read over a patch.  A pattern sky is read at a point, as it always
+    /// was, because the usual one is a gradient up from the horizon that repeats below it -- where the
+    /// ground hides it, until a patch straddling the horizon reaches down and averages the top of the sky
+    /// into the row of pixels along it.  A picture of the sky has no such hidden half, and is the sky
+    /// fine enough to beat into moiré.
+    /// </para>
+    /// </summary>
+    /// <param name="ray">The ray that saw nothing.</param>
+    /// <returns>The patch of sky, or none for a ray that does not spread or a sky that is not a
+    /// picture.</returns>
+    private Footprint SkyFootprintOf(Ray ray)
+    {
+        if (ray.Spread <= 0 || Background is not ImagePigment)
+            return Footprint.None;
+
+        Vector heading = ray.Direction.Unit;
+
+        return Footprint.For(ray.Spread * 0.5, heading, -heading);
     }
 
     /// <summary>

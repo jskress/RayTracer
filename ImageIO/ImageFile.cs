@@ -64,7 +64,34 @@ public class ImageFile
             canvas.SetColor(color, pixel.X, pixel.Y);
         }
 
+        canvas.Encoding = EncodingOf(image);
+
         return [canvas];
+    }
+
+    /// <summary>
+    /// This method works out the curve an image's values were written with, from what the file says of
+    /// itself.
+    /// <para>
+    /// Radiance and OpenEXR files hold light whatever else they say -- Magick.NET reports an OpenEXR file
+    /// as sRGB, but with a gamma of one -- and so does a file whose color space is a linear one.  Anything
+    /// else declares a gamma: 0.4545 is how Magick.NET reports sRGB, which is what PNG and JPEG files
+    /// carry unless they say otherwise, and any other gamma is taken as a plain power.
+    /// </para>
+    /// </summary>
+    /// <param name="image">The image as read.</param>
+    /// <returns>The curve its values were written with.</returns>
+    private static TransferFunction EncodingOf(MagickImage image)
+    {
+        if (image.Format is MagickFormat.Exr or MagickFormat.Hdr or MagickFormat.Pfm ||
+            image.ColorSpace is ColorSpace.RGB or ColorSpace.LinearGray)
+            return TransferFunction.Linear;
+
+        double gamma = image.Gamma;
+
+        return gamma <= 0 || Math.Abs(gamma - 1 / 2.2) < 0.001
+            ? TransferFunction.Srgb
+            : TransferFunction.Power(gamma);
     }
 
     /// <summary>

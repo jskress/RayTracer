@@ -21,6 +21,13 @@ public class Canvas
     /// </summary>
     public bool NeedsAlphaChannel => HasAlphaValues();
 
+    /// <summary>
+    /// This property notes the curve this canvas's colors were written with.  A canvas the renderer
+    /// draws holds light, and so does one read from a file that holds light; one read from anything
+    /// else holds the file's values as they stand, and this says how to turn them back into light.
+    /// </summary>
+    public TransferFunction Encoding { get; set; } = TransferFunction.Linear;
+
     private readonly Color[][] _pixels;
 
     public Canvas(int width, int height)

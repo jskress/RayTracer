@@ -94,7 +94,9 @@ Correction is on by default.  A great many of the gallery scenes write `no gamma
 worth understanding: with correction off, the numbers a scene writes for its colors are the
 numbers that reach the file, so a material's color can be reasoned about directly.  With it
 on, the picture generally looks better on an ordinary screen.  Neither is wrong; they answer
-different questions.
+different questions.  An [image pigment](pigments-and-patterns.md#image-pigments) follows the scene: with correction
+on, a picture's values are turned into the light they stand for, and with it off they are taken as
+they stand, like every other color in the scene.
 
 ### Shadows
 
