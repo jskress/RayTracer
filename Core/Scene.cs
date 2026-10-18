@@ -128,11 +128,22 @@ public partial class Scene : NamedThing, IDisposable
         TS seen = TS.Black;
         double left = 1;
         int strands = 0;
+        bool bouncing = _bounced > 0;
 
         foreach (Intersection hit in hits)
         {
             if (hit.Distance < 0)
                 continue;
+
+            // Bounced light passes what a shadow ray passes, all along its path; see Scene.Bounces.
+            if (bouncing && PassedByBouncedLight(hit))
+                continue;
+
+            NoteWhereABounceMet(ray, hit);
+
+            // A place the cache covers looks round itself only for what is near; see Scene.Bounces.
+            if (BeyondTheNear(ray, hit.Distance, left))
+                return seen;
 
             hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
 
@@ -167,7 +178,14 @@ public partial class Scene : NamedThing, IDisposable
         // Now that the sky costs a pattern lookup to ask about, only rays that saw nothing ask it.
         // A ray that saw nothing also crossed the surroundings forever, which is a span an endless
         // medium is entitled to have the whole of its say over.
-        TS sky = Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray));
+        // A search for bounced light that runs straight out to the sky finds what a sky light has counted
+        // already, or a backdrop that lights nothing; see Scene.Bounces.
+        if (BeyondTheNear(ray, double.PositiveInfinity, left))
+            return seen;
+
+        TS sky = SeenAlongABounce(ray)
+            ? TS.Black
+            : Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray));
 
         // A rough surface's reflection may be owed only part of a picture's sky; see SkyShareOf.  The
         // whole is left untouched rather than multiplied by one, which would make a clear sky opaque.
@@ -247,8 +265,13 @@ public partial class Scene : NamedThing, IDisposable
         // shared place by place (see HighlightShareOf).
         VolumeLight mixing = container is null ? null : MixingLightFor(medium, ray);
 
-        if (mixing is not null || (medium.HasShape && container is not null))
-            return MarchedThrough(medium, color, ray, distance, container, mixing);
+        // A glowing volume crossed straight on a search for bounced light lends none of its glow, which its
+        // light's own samples count, though it still dims what lies beyond; see Scene.Bounces.  It is
+        // walked to leave the glow out, whatever its shape.
+        bool withoutGlow = mixing is null && container is not null && SeenAlongABounce(ray) && GlowsAsALight(medium);
+
+        if (withoutGlow || mixing is not null || (medium.HasShape && container is not null))
+            return MarchedThrough(medium, color, ray, distance, container, mixing, withoutGlow);
 
         TS through = medium.ApplyOver(color, distance);
 
@@ -359,7 +382,8 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="container">The surface the medium fills.</param>
     /// <returns>The color once the medium has had its say.</returns>
     private TS MarchedThrough<TS>(
-        Medium medium, TS behind, Ray ray, double distance, Surface container, VolumeLight mixing = null)
+        Medium medium, TS behind, Ray ray, double distance, Surface container, VolumeLight mixing = null,
+        bool withoutGlow = false)
         where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
@@ -385,7 +409,7 @@ public partial class Scene : NamedThing, IDisposable
 
             // Asked at the same point the density was, so that a medium whose color varies and a
             // medium whose amount varies are describing the same place.
-            TS source = medium.EmissionAt<TS>(local) * density;
+            TS source = withoutGlow ? TS.Black : medium.EmissionAt<TS>(local) * density;
 
             if (mixing is not null)
                 source *= ReflectionShareAt(mixing, where, ray.TimeIndex);
@@ -1018,6 +1042,27 @@ public partial class Scene : NamedThing, IDisposable
         foreach (Light light in Lights)
             surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough, film);
 
+        // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp.
+        if (material.Emission is { } glow)
+            surfaceColor += TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow);
+
+        // And the light bounced onto it off everything else, which a surface takes as it takes a lamp's --
+        // its own share of it, and a film's passing share -- when the scene asks for it; see Scene.Bounces.
+        if (DiffuseBounces > 0)
+        {
+            TS bounced = BouncedOnto<TS>(intersection, material, remaining);
+
+            if (!bounced.IsBlack)
+            {
+                bounced *= ownShare;
+
+                if (film is { } passing)
+                    bounced *= passing.Passed;
+
+                surfaceColor += bounced;
+            }
+        }
+
         TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
         TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
         TS refColor;
@@ -1092,16 +1137,24 @@ public partial class Scene : NamedThing, IDisposable
 
         int count = light.SampleCount;
 
-        if (count == 1)
+        // A place met along a path of bounced light asks each lamp about one of its samples, picked by a
+        // fixed function of the place, rather than all of them: a fair guess at the whole, which the
+        // many paths from the first surface average out, and the difference between a second bounce
+        // costing what the first did and costing its square.  See Scene.Bounces.
+        int one = count > 1 && _bounced > 0
+            ? Math.Min(count - 1, (int) (ShiftFor(intersection.Point, 111) * count))
+            : 0;
+
+        if (count == 1 || _bounced > 0)
         {
-            LightSample only = light.SampleToward(intersection.LitPoint, 0, intersection.Normal);
+            LightSample only = light.SampleToward(intersection.LitPoint, one, intersection.Normal);
 
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, ReachingFrom<TS>(intersection, only, glass, light),
                 intersection.Footprint, intersection.Portals, ownShare,
-                ShareOf(light, only, 0, intersection, looks, glass, looksThrough), glass,
-                intersection.Material, film);
+                ShareOf(light, only, one, intersection, looks, glass, looksThrough), glass,
+                intersection.Material, film, highlights: _bounced == 0);
         }
 
         TS sum = TS.Black;

@@ -84,22 +84,30 @@ public class TestSheetSurfaces
     }
 
     /// <summary>
-    /// This tests that a solid is untouched by any of that.  A solid's normal genuinely names its
-    /// outside, so it sets off along that normal whichever side it was met from.
+    /// This tests where a solid met from inside works its light out from.  Glass sets off along its own
+    /// normal, outward, whichever side it was met from: its inner face takes the light falling on its outer
+    /// one.  An opaque solid has no light falling through it, so seen from inside -- a hollow ball, the inside
+    /// of a box -- it is lit by whatever is inside with it, and sets off toward the eye; from outside, a lamp
+    /// at the middle of a ball was hidden from the whole of its wall by the wall itself.
     /// </summary>
     [TestMethod]
-    public void TestASolidStillNudgesAlongItsOwnNormal()
+    public void TestASolidMetFromWithinIsLitFromTheSideItIsLitOn()
     {
-        Sphere sphere = new ();
+        Sphere glass = new () { Material = new Material { Transparency = 1 } };
+        Sphere opaque = new ();
 
-        sphere.PrepareForRendering();
+        glass.PrepareForRendering();
+        opaque.PrepareForRendering();
 
-        // From inside, looking out: the normal points away from the eye, and must still be followed.
+        // From inside, looking out: the normal points away from the eye.
         Ray ray = new (new Point(0, 0, 0), new Vector(0, 0, 1));
-        (Vector nudge, Vector eye) = HitFrom(sphere, ray);
+        (Vector throughGlass, Vector eye) = HitFrom(glass, ray);
+        (Vector inTheBall, _) = HitFrom(opaque, ray);
 
-        Assert.IsTrue(nudge.Dot(eye) < 0,
-            "a solid met from within must still nudge along its own normal, which points outward");
+        Assert.IsTrue(throughGlass.Dot(eye) < 0,
+            "glass met from within must still nudge along its own normal, which points outward");
+        Assert.IsTrue(inTheBall.Dot(eye) > 0,
+            "an opaque solid met from within must be lit from the side the eye is on");
     }
 
     /// <summary>

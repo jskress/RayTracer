@@ -19,8 +19,17 @@ context {
     angles are degrees
     antialiasing depth 1
     antialiasing threshold 0.5
-    // Ambient stands in for light bounced about the room, and at night there is little of it.
-    scale ambient by 0.3
+    // The light bounced about the room, followed rather than stood in for: off the pool of light on the
+    // desk up onto the wall and the print, off the walls into the corners, off the floor under the chair.
+    // The light from far away is worked out with care at scattered places, looking in 8192 directions from
+    // each, and blended between them; what is near, each pixel looks for itself.  Smooth, where looking
+    // afresh from every pixel in a few hundred directions left it grainy -- and so many directions because
+    // the nook under the desk is lit mostly by the lampshade across the room, which few of them find.
+    diffuse bounces 3
+    diffuse samples 8192
+    diffuse cache
+    // The desk's varnish mirrors the book's bright pages, blurred, and takes many looks to blur them evenly.
+    reflection samples 128
     // The bulbs glow at 2700 and 3000 K; balanced a little above them, the room reads warm, not orange.
     white balance 3300
     info {
@@ -66,7 +75,7 @@ parallelogram {
 // -- The desk lamp ----------------------------------------------------------------------------------
 
 LampMetal = material { pigment [0.12, 0.13, 0.12]  specular 0.6  shininess 80  metallic 0.4 }
-Glowing = material { pigment [1, 0.94, 0.82]  ambient 3.3  diffuse 0 }
+Glowing = material { pigment [1, 0.94, 0.82]  emission 6 * kelvin(2850)  diffuse 0 }
 
 // A desk lamp with three joints: where the lower arm leans from the base, where the upper arm bends at
 // the elbow, and where the head tips at the wrist, each in degrees about the joint and each measured
@@ -118,8 +127,9 @@ primitive DeskLamp(lean, bend, tip) -> group {
 // -- The table lamp ---------------------------------------------------------------------------------
 
 // A table lamp: a turned base and stem, a bulb with the light inside it, and a linen shade open at both
-// ends.  Light is not carried through a surface to its far face here, so the linen's glow is a little
-// ambient of its own.
+// ends.  Light is not carried through a surface to its far face here, so the light the linen lets through
+// is a glow of its own, the bulb's color -- which, the room following bounced light, lights the wall
+// beside it as the shade of a real lamp does.
 primitive TableLamp() -> group {
     return group {
         lathe {
@@ -131,7 +141,7 @@ primitive TableLamp() -> group {
         conic {
             min Y 0.6  max Y 1  open
             scale [0.24, 0.24, 0.24]  rotate X 180  translate Y 0.48
-            material { pigment [0.93, 0.86, 0.7]  diffuse 0.85  ambient 1.4 }
+            material { pigment [0.93, 0.86, 0.7]  diffuse 0.85  emission 2.5 * kelvin(2700) }
         }
         point light { location [0, 0.34, 0]  temperature 2700  brightness 2.6  fade distance 0.45 }
     }

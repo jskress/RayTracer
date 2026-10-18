@@ -182,6 +182,34 @@ public class Camera : NamedThing
     }
 
     /// <summary>
+    /// This method fills the scene's cache of bounced light, if it keeps one, by looking at the scene through
+    /// this camera in passes over ever finer grids of the picture's pixels; see
+    /// <see cref="Scene.FillTheBounceCache{TS}"/>.  It looks through each pixel's middle, at the first
+    /// instant and from the middle of the lens, which is where every sample of the pixel will look near.
+    /// </summary>
+    /// <param name="context">The current rendering context.</param>
+    /// <param name="scene">The scene to fill the cache of.</param>
+    public void FillTheBounceCache(RenderContext context, Scene scene)
+    {
+        if (scene.DiffuseBounces <= 0 || scene.DiffuseCacheError <= 0)
+            return;
+
+        PixelToRayConverter converter = CreateConverter(context);
+
+        if (context.Spectral)
+        {
+            SpectralBasis.Shared.Prepare();
+            scene.FillTheBounceCache<BandSpectrum>(
+                (x, y) => converter.GetRayForPixel(x, y), context.Width, context.Height);
+        }
+        else
+        {
+            scene.FillTheBounceCache<RgbSpectrum>(
+                (x, y) => converter.GetRayForPixel(x, y), context.Width, context.Height);
+        }
+    }
+
+    /// <summary>
     /// This method builds the pixel-to-ray converter for the camera's projection.
     /// </summary>
     /// <param name="context">The current rendering context.</param>

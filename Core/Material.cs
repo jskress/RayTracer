@@ -52,6 +52,21 @@ public class Material
     public double EffectiveAmbient => Ambient ?? 0.1;
 
     /// <summary>
+    /// This property holds the light the surface gives off of its own, which its color tints: a bulb's
+    /// glass, a lit window, a lampshade the light shows through, a painted sun.  <c>null</c>, for the great
+    /// majority of surfaces, which give off nothing.
+    /// <para>
+    /// **It is not ambient.**  Ambient is lent by the lamps -- each lights the surface by that share of its
+    /// light whether it reaches or not -- and stands in for light that has bounced about the scene; where
+    /// the scene follows that light for real it is dropped altogether, a curated library's ambient
+    /// included.  Emission is the surface's own, the same whatever lamps there are or none, and a scene
+    /// that follows bounced light finds it as it finds anything lit: a glowing lampshade lights the wall
+    /// beside it.
+    /// </para>
+    /// </summary>
+    public Color Emission { get; set; }
+
+    /// <summary>
     /// The diffuse factor for the material.
     /// </summary>
     public double Diffuse { get; set; } = 0.9;

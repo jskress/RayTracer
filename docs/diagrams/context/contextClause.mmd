@@ -5,6 +5,9 @@ context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians
         | "apply" "gamma" | "no" ( "gamma" | "shadows" )
         | "scale" "ambient" "by" expression
         | "medium" ( "samples" | "bounces" ) expression
+        | "diffuse" ( ( "bounces" | "samples" ) expression | "cache" [ "error" expression ] )
+        | "reflection" "samples" expression
         | "antialiasing" ( "depth" | "threshold" ) expression
-        | "color" "depth" number | "grayscale"
+        | "color" "depth" number | "grayscale" | "spectral"
+        | "white" "balance" expression
         | ( "width" | "height" | "gamma" ) number } "}" ;

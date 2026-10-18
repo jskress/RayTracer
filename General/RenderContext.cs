@@ -147,6 +147,36 @@ public class RenderContext
     public int MediumBounces { get; set; }
 
     /// <summary>
+    /// This property holds how many times light is followed as it bounces from one matte surface to the
+    /// next before it reaches the eye: none by default, so that a scene says when it wants the cost, and
+    /// <c>ambient</c> stands in for all of it.  One bounce is the light off a wall onto the floor beside
+    /// it; two, the light off the floor back onto the wall; each further bounce is fainter by the
+    /// surfaces' own color, so a few is nearly all of it.
+    /// </summary>
+    public int DiffuseBounces { get; set; }
+
+    /// <summary>
+    /// This property holds how many directions a matte surface looks in for the light bounced onto it,
+    /// the first time a ray from the eye meets one.  Every bounce after that looks in one, so that the
+    /// cost is paid once.
+    /// </summary>
+    public int DiffuseSamples { get; set; } = 32;
+
+    /// <summary>
+    /// This property holds how far the cache of bounced light may stray, as a share of the light, or nought
+    /// for no cache -- the default, every place working its bounced light out for itself.  Asked for, the
+    /// light is worked out at scattered places and blended between them, which is smoother for far fewer
+    /// directions; see <see cref="RayTracer.Core.IrradianceCache{TS}"/>.
+    /// </summary>
+    public double DiffuseCacheError { get; set; }
+
+    /// <summary>
+    /// This field holds the error a cache of bounced light is given when a scene asks for one without
+    /// saying: a seventh of the light, which is where Ward's cache is usually set.
+    /// </summary>
+    public const double DefaultDiffuseCacheError = 0.15;
+
+    /// <summary>
     /// This property holds the time value (in ticks) for the frame currently being rendered.
     /// </summary>
     public long Ticks { get; set; }

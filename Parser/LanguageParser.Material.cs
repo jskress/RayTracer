@@ -135,6 +135,17 @@ public partial class LanguageParser
             case "ambient":
                 resolver.AmbientResolver = new TermResolver<double>() { Term = term };
                 break;
+            // A number is a white glow of that strength, and a color -- `kelvin(2700) * 3`, say -- a glow
+            // of its own color; the material's pigment tints either.
+            case "emission":
+                resolver.EmissionResolver = new CoefficientResolver
+                {
+                    Term = term,
+                    Validator = value => value.Red < 0 || value.Green < 0 || value.Blue < 0
+                        ? "A surface cannot give off less than no light."
+                        : null
+                };
+                break;
             case "diffuse":
                 resolver.DiffuseResolver = new TermResolver<double>() { Term = term };
                 break;

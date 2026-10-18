@@ -1,5 +1,6 @@
 using RayTracer.Core;
 using RayTracer.General;
+using RayTracer.Graphics;
 using RayTracer.Instructions.Pigments;
 
 namespace RayTracer.Instructions.Surfaces;
@@ -25,6 +26,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     /// This property holds the resolver for the ambient property of the material.
     /// </summary>
     public Resolver<double> AmbientResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the light the material gives off of its own.
+    /// </summary>
+    public Resolver<Color> EmissionResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the diffuse property of the material.
@@ -135,7 +141,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     /// <returns>The text of an error message, or <c>null</c>, if all is well.</returns>
     public string Validate()
     {
-        bool saysMore = PigmentResolver is not null || AmbientResolver is not null ||
+        bool saysMore = PigmentResolver is not null || AmbientResolver is not null || EmissionResolver is not null ||
                         DiffuseResolver is not null || SpecularResolver is not null ||
                         ShininessResolver is not null || ReflectiveResolver is not null ||
                         FresnelResolver is not null || RoughnessResolver is not null ||
@@ -169,6 +175,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         // Left alone when the scene said nothing, so that the scene as a whole may settle it later.
         if (AmbientResolver is not null)
             value.Ambient = AmbientResolver.Resolve(context, variables);
+        EmissionResolver.AssignTo(value, target => target.Emission, context, variables);
         DiffuseResolver.AssignTo(value, target => target.Diffuse, context, variables);
         SpecularResolver.AssignTo(value, target => target.Specular, context, variables);
         ShininessResolver.AssignTo(value, target => target.Shininess, context, variables);

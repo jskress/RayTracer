@@ -5,7 +5,8 @@ material = "material" "{" { pigment | normal | finish | metallic | interior | de
          | "material" "inherited" [ "{" { decal } "}" ] ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
-         | "transparency" | "brilliance" | "grain" ) number ;
+         | "roughness" | "transparency" | "brilliance" | "grain" ) number
+       | "emission" ( number | color ) ;
 
 metallic = "metallic" [ number ] ;
 

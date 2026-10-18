@@ -87,6 +87,10 @@ public class RenderInstruction : Instruction
         SettleTheSky(context, scene);
         FinalizeSurfaceData(context, scene, scene.Surfaces);
 
+        scene.DiffuseBounces = context.DiffuseBounces;
+        scene.DiffuseSamples = context.DiffuseSamples;
+        scene.DiffuseCacheError = context.DiffuseCacheError;
+
         // Last of all, and only now: the scene's own surfaces are sorted for searching.  It waits
         // until here because a box cannot be drawn round a surface before the surface knows its shape,
         // and one placed in terms of its neighbours does not stand where it will until they are
@@ -113,6 +117,9 @@ public class RenderInstruction : Instruction
 
         // The light among any hair is gathered before the first pixel, so that it has every thread.
         scene.GatherTheLightAmongHair();
+
+        // Bounced light that is cached is gathered before the first pixel too, in passes over the picture.
+        camera.FillTheBounceCache(context, scene);
 
         Canvas = camera.Render(context, scene);
 
@@ -207,10 +214,11 @@ public class RenderInstruction : Instruction
         RenderContext context, Scene scene, List<Surface> surfaces)
     {
         // Ambient stands in for light that has bounced about the scene, which this renderer does not
-        // trace.  A sky light is the real thing that fudge was imitating, so a scene that has one wants
-        // none of the fudge; one without it wants the tenth it has always had.  A material that named
-        // its own ambient keeps it either way.
-        double whenUnsaid = scene.Lights.OfType<SkyLight>().Any() ? 0 : 0.1;
+        // trace unless asked.  A sky light is the real thing that fudge was imitating, and so is the light
+        // a scene asks to be bounced, so a scene that has either wants none of the fudge; one without
+        // them wants the tenth it has always had.  A material that named its own ambient keeps it either
+        // way.
+        double whenUnsaid = scene.Lights.OfType<SkyLight>().Any() || context.DiffuseBounces > 0 ? 0 : 0.1;
 
         // And then the scene may turn the whole lot up or down.  This is applied here, once the settling
         // above has run, so it reaches the materials that named their own ambient as well as the ones
@@ -223,7 +231,11 @@ public class RenderInstruction : Instruction
         // It is written this way because `*=` compounds where the `??=` above does not -- if materials
         // ever come to be shared, scaling per surface would quietly darken a row of houses more than a
         // single house from the very same number, and nothing would report it.
-        HashSet<Material> scaled = context.AmbientScale.Near(1) ? null : [];
+        // A scene that follows bounced light for real wants none of the stand-in for it, not even the ambient
+        // a material named for itself -- which a curated library does almost everywhere -- so all of it is
+        // scaled to nothing; what glows of its own says `emission` instead.
+        double ambientScale = context.DiffuseBounces > 0 ? 0 : context.AmbientScale;
+        HashSet<Material> scaled = ambientScale.Near(1) ? null : [];
         Dictionary<Material, Material> orphaned = [];
 
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
@@ -255,7 +267,7 @@ public class RenderInstruction : Instruction
             surface.Material.Ambient ??= whenUnsaid;
 
             if (scaled is not null && scaled.Add(surface.Material))
-                surface.Material.Ambient *= context.AmbientScale;
+                surface.Material.Ambient *= ambientScale;
 
             // Now that the surface certainly has a material, it gets its say over the pigment on it.
             surface.MaterialIsSettled();

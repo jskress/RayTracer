@@ -78,11 +78,11 @@ public partial class LanguageParser
             'anisotropy', 'antialiasing', 'apart', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
+            'by', 'cache', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'error', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
@@ -287,6 +287,18 @@ public partial class LanguageParser
             medium > [ samples | bounces ] ?? 'Expecting "samples" or "bounces" to follow "medium" here.' >
             _expression
         }
+        // How many times light is followed from one matte surface to the next, how many directions a matte
+        // surface looks in for it the first time a ray meets one, and whether the light so found is cached
+        // and blended between places -- with, optionally, how far the blending may stray.  That is said
+        // with its own word: a bare number left optional after `cache` reads whatever comes next as one,
+        // and a `white balance` on the next line is a color.
+        diffuseLightClause:
+        {
+            diffuse > [
+                { [ bounces | samples ] > _expression } |
+                { cache > { error > _expression }{?} }
+            ] ?? 'Expecting "bounces", "samples" or "cache" to follow "diffuse" here.'
+        }
         // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
         // one.
         reflectionSamplesClause:
@@ -305,7 +317,8 @@ public partial class LanguageParser
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | reflectionSamplesClause | antiAliasingClause |
+            settingOffClause | mediumSamplesClause | diffuseLightClause | reflectionSamplesClause |
+            antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
@@ -559,7 +572,7 @@ public partial class LanguageParser
         }
         materialValueClause:
         {
-            [ ambient | diffuse | specular | shininess | reflective | roughness | transparency |
+            [ ambient | emission | diffuse | specular | shininess | reflective | roughness | transparency |
               brilliance | grain ] >
             _expression
         }

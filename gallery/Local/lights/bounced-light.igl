@@ -1,0 +1,66 @@
+// A Cornell box: a room of white with one red wall and one green, two white blocks on the floor, and
+// one lamp, a panel just under the ceiling.
+//
+// Everything the lamp cannot see is lit only by light that has bounced off something it can.  The
+// ceiling is lit by the floor; the left face of the tall block is pink, lit by the red wall beside it,
+// and the right face of the short block faintly green; the shadows are soft not only because the lamp
+// is a panel but because the walls fill them.  Nothing here stands in for any of it -- the scene asks
+// for the light to be followed three times over, which leaves `ambient` at nothing -- and rendered
+// without `diffuse bounces`, the blocks are flat gray and the ceiling a gray lid.
+//
+// Each bounce is fainter than the last by about the walls' own share -- two-thirds or so here, and less
+// for light that leaves by the open side -- so the first few carry most of it.  The first surface a ray
+// from the eye meets looks for its bounced light in 128 directions; every surface after that in one.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 600
+    height 600
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    diffuse bounces 3
+    diffuse samples 128
+    info {
+        title 'Bounced Light'
+        author 'J. Stephen Kress'
+        description 'A Cornell box lit by one panel, its shadows filled and its blocks tinted by light bounced off the walls.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1, -3.4]
+    look at [0, 1, 0]
+    field of view 40
+}
+
+area light {
+    location [-0.25, 1.98, -0.25]
+    axisU [0.5, 0, 0]
+    axisV [0, 0, 0.5]
+    steps 4
+    color [1, 0.95, 0.85]
+}
+
+White = material { pigment [0.75, 0.75, 0.72]  diffuse 0.9  specular 0 }
+
+// The room: planes facing into it, the side toward the camera open.
+plane { material White }                                     // the floor
+plane { material White  rotate X 180  translate Y 2 }        // the ceiling
+plane { material White  rotate X -90  translate Z 1 }        // the back wall
+plane {                                                      // the wall on the left, red
+    material { pigment [0.63, 0.06, 0.04]  diffuse 0.9  specular 0 }
+    rotate Z -90
+    translate X -1
+}
+plane {                                                      // the wall on the right, green
+    material { pigment [0.12, 0.45, 0.15]  diffuse 0.9  specular 0 }
+    rotate Z 90
+    translate X 1
+}
+
+// The blocks.
+cube { material White  scale [0.3, 0.6, 0.3]  rotate Y 18  translate [-0.35, 0.6, 0.3] }
+cube { material White  scale 0.3  rotate Y -17  translate [0.35, 0.3, -0.3] }

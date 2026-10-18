@@ -195,6 +195,33 @@ from transparency as rough glass's is and tinted by R over its thickness-average
 film no highlight, and a shadow ray charges each face as met from the surroundings (it is not bent, so measuring
 from inside would fake total internal reflection).  The substrate is the material's interior index.
 
+Bounced light is path continuation, off by default: `context { diffuse bounces N  diffuse samples K }`
+(`Core/Scene.Bounces.cs`).  A matte surface sends K cosine-weighted rays at the first bounce (one after, with
+`_spreading` set), each bringing back `GetColorFor`'s whole answer; their average times pigment and diffuse joins
+the surface's own color in `GetHitColor`, under its Fresnel share and film.  On a bounce's straight run the sky
+counts nothing and a glow that `gives light` lends no glow (`SeenAlongABounce`, `MarchedThrough`'s `withoutGlow`), as
+the sky light and volume lights count those directly; all along a bounce path (`_bounced > 0`) what a shadow ray
+passes -- `no shadow` stand-ins, light housings -- is passed (`PassedByBouncedLight`), and surfaces show no highlight
+(`ApplyPhong(highlights: false)`), glossy-to-matte light being the caustics'.  A lamp at a bounce point gives one sample
+picked per point (`Illuminate`); bounces do not spend the mirrors' `remaining`.  Asking for bounces scales EVERY
+ambient to 0, a library's named ones included; what glows of its own says `emission` (`Material.Emission`, a number or
+color tinted by the pigment, the same under any lamps, unlike ambient which each lamp lends).  An opaque closed surface
+hit from inside is lit from the eye's side (`Intersection.LitPoint`); glass met from within keeps the outside over
+point, so its inner face takes the light falling on its outer one.  `diffuse cache [error e]` (default 0.15) is Ward's
+irradiance cache (`Core/IrradianceCache.cs`) for the FIRST matte hit from the eye only (`_bounced == 0`, not spreading,
+not a single-band ray): records of the arriving light (before pigment, so texture stays sharp) with a reach = the
+harmonic mean of the K rays' first-hit distances, clamped to 3-64 pixel footprints over the error, blended by Ward's
+weight less 1/error (zero at the edge), refusing records in front of the point.  A record keeps only FAR light: the
+average of its rays whose first hit lies beyond near = 2 x error x reach (`NearOf`), and that share (`Open`, which
+weighs its say).  A covered pixel gathers max(16, K/16) rays itself (`_nearRay`/`_nearLimit`): `GetColorFor` stops
+that ray (only it, by reference) at its first hit beyond near, or the sky (`BeyondTheNear`), sets `_escaped`, and
+the gather adds the blended far light for it -- so contact shadows under a rug's edge are the pixel's own (a whole-
+light blend leaked 6x the light there, `TestThePlaceUnderAnEdgeSeesTheEdgeItself`).  Pretrace returns the blend
+for covered places and never gathers near.  `Camera.FillTheBounceCache` pretraces
+pixel grids at strides 32 down to 1 before rendering; each pass reads only earlier passes, its offers merged in key
+order (`EndPass`), so a cached render is deterministic however threads share the work.  With a cache K is per record,
+so it can be thousands; too few shows as blotches, not grain.
+
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
 the `context { scanner ... }` DSL block or command line) and `Pixels/` (anti-aliasing
