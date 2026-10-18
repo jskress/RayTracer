@@ -247,7 +247,17 @@ public class Intersection : IComparable<Intersection>
         // tilts near the tangent, where either sign of it lifts the point hardly at all and the wrong
         // sign buries it.  Reversing the normal cost a rippled plane a whole band of its light.  The
         // eye is the one direction that is on the right side however far the normal has been bent.
-        LitPoint = Surface.IsASheet && Inside
+        //
+        // **And for an opaque surface met from inside, on the eye's side too.**  The over point lies
+        // outside a closed surface whichever side it is met from, which suits glass met from within --
+        // its inner face takes the light falling on its outer one -- but an opaque one has no light
+        // falling through it: seen from inside, a hollow ball or the inside of a box is lit by whatever
+        // is inside with it, and from the over point a lamp at the middle of a ball was hidden from the
+        // whole of its wall by the wall itself.
+        Material material = Material;
+        bool opaque = material.Transparency <= 0 && !material.PigmentMayTransmit;
+
+        LitPoint = Inside && (Surface.IsASheet || opaque)
             ? Point + Eye * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale)
             : OverPoint;
         Reflect = ray.Direction.Reflect(Normal);

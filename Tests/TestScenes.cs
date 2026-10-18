@@ -86,6 +86,13 @@ public class TestScenes
         Assert.IsTrue(expected.Matches(color));
     }
 
+    /// <summary>
+    /// This tests the book's shading of an intersection from the inside: a lamp inside the inner ball lights
+    /// the inside of its wall, to the book's 0.90498.  For a while this renderer worked out the light falling
+    /// on a closed surface met from inside from just outside it, as suits glass met from within, so the lamp
+    /// was hidden by the wall itself and this gave the ambient alone; an opaque surface met from inside is
+    /// now lit from the eye's side, as the book has it.
+    /// </summary>
     [TestMethod]
     public void TestGetHitColorInside()
     {
@@ -101,7 +108,7 @@ public class TestScenes
         intersection.PrepareUsing(ray, [intersection]);
 
         Color color = scene.GetHitColor(intersection, 0);
-        Color expected = new (0.1, 0.1, 0.1);
+        Color expected = new (0.904984, 0.904984, 0.904984);
 
         Assert.IsTrue(expected.Matches(color));
     }
@@ -374,8 +381,11 @@ public class TestScenes
 
         intersections[2].PrepareUsing(ray, intersections);
 
+        // The book prints (0, 0.99888, 0.04725).  The test pigment's color is where it is read, and it is read
+        // at the point the light is worked out from, which for the outer ball met from inside lies a millionth
+        // to the eye's side of the wall: the last digit here follows that point, not anything about refraction.
         Color color = scene.GetRefractedColor(intersections[2], 5);
-        Color expected = new (0, 0.998886, 0.047217);
+        Color expected = new (0, 0.998884, 0.047217);
 
         Assert.IsTrue(expected.Matches(color));
     }
