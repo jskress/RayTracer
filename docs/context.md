@@ -138,9 +138,10 @@ of a picture the fudge was really carrying — usually less than you would guess
 measurement in a comment: its lamps turn out to be doing about 98% of the work.
 
 There is a related default worth knowing.  A material that never mentions ambient is given
-0.1, unless the scene contains a [sky light](lights.md), in which case it is given 0 — a sky
-light delivers the surrounding light for real, so the stand-in for it would be counted twice.
-Both are settled before this scaling is applied.
+0.1, unless the scene contains a [sky light](lights.md), in which case it is given 0 — a sky light
+delivers the surrounding light for real, so the stand-in for it would be counted twice.  Both are
+settled before this scaling is applied.  A scene that asks for [bounced light](#bounced-light) goes
+further and drops every material's ambient, named or not.
 
 ### Scanners
 
@@ -210,6 +211,97 @@ set of directions.
 Only the first rough surface a ray meets spreads it this way.  A ray already one of a spread, and
 every bounce after it, looks in one direction only, so two rough surfaces facing each other cost
 the samples once rather than raised to the power of the bounces.
+
+### Bounced Light
+
+Light does not stop at the first thing it lands on.  A sunlit wall lights the floor in front of it, a
+red rug puts a warm cast on the white wall above it, and the sand under a figure lights the shaded side
+of everything standing on it.  `ambient` is a flat stand-in for all of that; this follows it instead:
+
+```
+context { diffuse bounces 2 }
+```
+
+Each matte surface then looks out in a spread of directions -- more of them where it faces, in
+proportion to how squarely, exactly as a matte surface weighs the light it takes -- and takes its share
+of everything it finds there: other surfaces lit by the lamps, what they mirror, what shines through
+them, and their own bounced light in turn, as many times over as `diffuse bounces` says.  Asking for it
+takes `ambient` away altogether, even where a material names its own, as a curated library's materials
+do: what the fudge stood in for is now being followed.  What glows of its own says
+[`emission`](materials.md#emission) instead, and is seen by its neighbors as the light it is, which is
+how a lit window or a glowing lampshade lights the room around it.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `diffuse bounces` | 0 | How many times light is followed from one matte surface to the next. |
+| `diffuse samples` | 32 | How many directions the first matte surface along a path looks in -- or, with a [cache](#a-cache-of-bounced-light), each of its records, the pixels looking round themselves in a sixteenth as many. |
+
+**Each bounce is fainter than the last** by the surfaces' own color: a room of white walls taking 0.8
+of the light gives back 0.8 of it, then 0.64, then about half, so two or three bounces is most of it in
+a bright room and one is most of it outdoors.  **Only the first surface spreads**, as with
+[rough reflections](#rough-reflections): every surface after it looks in one direction and asks each
+lamp about one of its samples, so a second bounce costs about what the first did rather than its square.
+What a modest count costs is grain, which the samples within a pixel average away; more `diffuse
+samples` settles it further.
+
+**Nothing is counted twice.**  A direction that runs straight out to the sky finds what a sky light
+has already counted, and a sky with no sky light is a backdrop rather than a light, so it brings back
+nothing; one that runs straight through a glowing volume that [gives light](surfaces.md#a-surface-that-gives-light)
+brings back only what the volume lets through.  Lamps, panels and suns cannot be met by a ray at all.
+Anything found another way -- the sky in a mirror, a lamp's pool of light on a wall, a glow that gives
+no light of its own -- is light no lamp could have found, and counts.  And bounced light passes what a shadow ray passes:
+anything set out with `no shadow` and the bulb round a lamp, which stand for a light rather than being lit
+by one.  So a lamp's glowing bulb, or a painted sun's disc, is not counted again as a glowing thing --
+and does not turn up, as it would, as bright specks wherever one bounce in thousands happened to find it.
+
+#### A Cache of Bounced Light
+
+Bounced light changes slowly across a surface, even where the light falling straight on it does not:
+the pool under a lamp has a hard edge, but the light that pool throws onto the wall beside it is a soft
+wash.  So it need not be worked out afresh at every pixel:
+
+```
+context {
+    diffuse bounces 3
+    diffuse samples 2048
+    diffuse cache
+}
+```
+
+With `diffuse cache`, the first surface a ray from the eye meets no longer looks far for its bounced
+light itself.  Before the first pixel, the renderer works out the light arriving from far away at
+scattered places, each looking in `diffuse samples` directions, and every pixel blends it from the
+records near it that face its way.  Each record holds good for about as far as the things it looked out
+at are away -- a long way in the open middle of a floor, a little way into a corner, where the light
+changes faster -- and gives way smoothly to the next, so no seam shows where it does.  What a record
+holds is the light arriving; each pixel's own color still takes its share of it, so a wood's grain or a
+pattern's detail is as sharp as ever.
+
+What is near, each pixel still looks for itself, in a sixteenth as many directions as a record (and
+never fewer than 16): anything closer than twice the distance its records hold good for.  A record
+cannot speak for that.  The floor beside a rug sees the rug's edge low on its horizon, while the floor
+just under the edge sees nothing but rug, so a record lending the one's light to the other would lose
+the dark line where the rug meets the floor -- and the dark where a chair leg stands on it, and the
+red a rug throws on the skirting beside it.  Directions that meet nothing so near take the blended far
+light instead of looking further.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `diffuse cache` | off | Blend the first surface's bounced light from records worked out at scattered places. |
+| `diffuse cache error` | 0.15 | How far the blend may stray, as a share of the light, between 0 and 1. |
+
+**It trades grain for smoothness**, and for many more directions at the same cost.  There are thousands
+of records rather than hundreds of thousands of pixels, so each can look in far more directions: a
+couple of thousand is a usual `diffuse samples` with a cache, where a few hundred is a usual one without.
+Too few shows not as grain but as blotches -- a slow wash of lighter and darker patches the size of the
+records -- and more samples are the cure.  Blotches come first where a nook is lit mostly by something
+small and bright across the room, a glowing lampshade or a lamp's pool on a wall, which only a few of a
+record's directions find; the nook under a desk is the usual place to look, and a room lit that way may
+want several thousand more.  A tight corner, where much
+is near, shows a little grain instead, from the pixel's own look round it.  A smaller `diffuse cache error` holds each record good for
+less far round it, which makes more of them and follows fine changes more closely.  The records are
+worked out in passes over ever finer grids of the picture, each pass reading only what earlier ones set
+down, so a picture with a cache comes out the same every time it is rendered.
 
 ### Color Depth and Grayscale
 

@@ -75,7 +75,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `bottom` | Text layout: align the block by its bottom, the last line's descender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `bounces` | Medium: how many further turns of a light's path are followed. | [Scene Files](scene-files.md#multiple-scattering) |
+| `bounces` | Medium: how many further turns of a light's path are followed; context: `diffuse bounces`, how many times light is followed from surface to surface. | [Scene Files](scene-files.md#multiple-scattering), [Context](context.md#bounced-light) |
 | `bouncing` | Pattern qualifier: a gradient that ramps up then back down. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `bounded` | `bounded by`: a box the renderer may use to skip the surface, and the box an isosurface or distance surface is marched inside. | [Surfaces](surfaces.md#bounding), [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `boxed` | Pattern: nested square boxes. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -85,6 +85,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
+| `cache` | Context: `diffuse cache`, blending bounced light between records worked out at scattered places. | [Context](context.md#a-cache-of-bounced-light) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
 | `center` | Blob sphere: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Blob](surfaces.md#blob), [Text](advanced-surfaces.md#text), [Sweep](advanced-surfaces.md#sweep) |
@@ -125,7 +126,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `description` | Info: a description. | [Context](context.md#image-information) |
 | `diameter` | L-system control: the edge thickness. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `difference` | CSG: the first child with the rest carved out. | [Surfaces](surfaces.md#combining-surfaces) |
-| `diffuse` | Finish: strength of plain matte lighting. | [Materials](materials.md#ambient-diffuse-and-specular) |
+| `diffuse` | Finish: strength of plain matte lighting; context: `diffuse bounces`, `diffuse samples` and `diffuse cache`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#bounced-light) |
 | `direction` | Distant light: the way its rays travel. | [Lights](lights.md#distant-lights) |
 | `disc` | Shape: a flat disc, optionally with a hole. | [Surfaces](surfaces.md#disc) |
 | `disclaimer` | Info: a disclaimer. | [Context](context.md#image-information) |
@@ -139,7 +140,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
-| `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment. | [Scene Files](scene-files.md#filling-that-space) |
+| `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment.  Material: light the surface gives off of its own. | [Scene Files](scene-files.md#filling-that-space), [Materials](materials.md#emission) |
+| `error` | Context: `diffuse cache error`, how far the cache of bounced light may stray. | [Context](context.md#a-cache-of-bounced-light) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly. | [Advanced Surfaces](advanced-surfaces.md#hair) |

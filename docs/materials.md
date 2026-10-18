@@ -35,6 +35,7 @@ The rest of the material describes how light behaves when it arrives.
 | Term | Default | What it does |
 | --- | --- | --- |
 | `ambient` | 0.1 | How lit the surface is regardless of any light reaching it. |
+| `emission` | none | Light the surface gives off of its own, tinted by its color; see [Emission](#emission). |
 | `diffuse` | 0.9 | How much it takes from light striking it square-on. |
 | `specular` | 0.9 | The strength of the highlight. |
 | `shininess` | 200 | How tight that highlight is. |
@@ -53,8 +54,9 @@ The rest of the material describes how light behaves when it arrives.
 These three are the heart of how light is determined, and they add up to what you see.
 
 **`ambient`** stands in for light that has bounced around the scene rather than arriving
-straight from a lamp.  This renderer does not trace those bounces, so the ambient term is the
-fudge that keeps shadows from being perfectly black.  It is the one term a shadow does not take
+straight from a lamp.  Unless a scene asks for [bounced light](context.md#bounced-light), this
+renderer does not trace those bounces, so the ambient term is the fudge that keeps shadows from
+being perfectly black.  It is the one term a shadow does not take
 away — which is also why a surface in deep shadow still shows a little of its color.
 
 Raise it and the surface looks flat and self-lit; drop it to zero and anything unlit goes
@@ -64,6 +66,25 @@ A scene may turn every material's ambient up or down at once with
 `context { scale ambient by ... }`, which is how a scene lit by lamps of its own gets out from
 under a fudge sized for daylight — including the ambient named by materials it imported from a
 library.  See [The Context Block](context.md#ambient).
+
+#### Emission
+
+**`emission`** is light a surface gives off of its own -- a bulb's glass, a lit window, a lampshade
+with a lamp inside, a painted sun -- and the surface's color tints it:
+
+```
+material { pigment [1, 0.94, 0.82]  emission 3  diffuse 0 }        // a bulb
+material { pigment White  emission kelvin(2700) * 0.5 }               // glowing the color of lamplight
+```
+
+A number is a white glow of that strength; a color, such as `kelvin(T)` times a strength, a glow of its own
+color.  It is not ambient, though for a long time ambient was what made things glow.  Ambient is lent by
+the lamps -- each shows the surface by that share of its light, whether that light reaches it or not --
+and stands in for bounced light, so a scene that asks for bounced light drops it altogether, even where a
+material names its own.  Emission is the surface's own, the same with any lamps or none, and in a scene
+that follows bounced light it lights what is near it: a glowing lampshade lights the wall beside it.  A
+surface that stands for a light already in the scene -- the bulb round a lamp, a painted sun's disc set
+out with `no shadow` -- is passed by bounced light, as by a shadow, so its glow is not counted twice.
 
 **`diffuse`** is the ordinary business of a surface catching light: brightest where it faces
 the light square-on, falling away as it turns aside.  This is what gives a sphere its

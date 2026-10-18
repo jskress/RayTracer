@@ -70,13 +70,14 @@ R2EyeLens = material {
     film { thickness 110  ior 1.38 }
 }
 // The lights in the dome, glowing: the logic displays' blue and white lamps, and those that are off, and the
-// front indicator's frosted blue lens.
-R2LampBlue = material { pigment [0.3, 0.5, 1]  ambient 1.2  diffuse 0.2  specular 0.3 }
-R2LampWhite = material { pigment [0.95, 0.97, 1]  ambient 1  diffuse 0.2  specular 0.3 }
+// front indicator's frosted blue lens.  They glow by `emission`, the same under any lamps or none, and so
+// light what is close to them in a scene that follows bounced light.
+R2LampBlue = material { pigment [0.3, 0.5, 1]  emission 3  diffuse 0.2  specular 0.3 }
+R2LampWhite = material { pigment [0.95, 0.97, 1]  emission 2.5  diffuse 0.2  specular 0.3 }
 R2LampOff = material { pigment [0.06, 0.07, 0.09]  specular 0.4  shininess 80 }
-R2IndicatorBlue = material { pigment [0.45, 0.68, 1]  ambient 0.7  diffuse 0.5  specular 0.7  shininess 150 }
-R2IndicatorGreen = material { pigment [0.5, 1, 0.68]  ambient 0.7  diffuse 0.5  specular 0.7  shininess 150 }
-R2LampGreen = material { pigment [0.35, 1, 0.45]  ambient 1.1  diffuse 0.2  specular 0.3 }
+R2IndicatorBlue = material { pigment [0.45, 0.68, 1]  emission 1.5  diffuse 0.5  specular 0.7  shininess 150 }
+R2IndicatorGreen = material { pigment [0.5, 1, 0.68]  emission 1.5  diffuse 0.5  specular 0.7  shininess 150 }
+R2LampGreen = material { pigment [0.35, 1, 0.45]  emission 2.8  diffuse 0.2  specular 0.3 }
 R2Chrome = material {
     pigment [0.88, 0.89, 0.91]  metallic 1  reflective 0.85  diffuse 0.1  specular 0.9  shininess 400
 }

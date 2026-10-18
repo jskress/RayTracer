@@ -11,11 +11,12 @@
 // their suns.
 //
 // **The suns are behind him, so he is lit from behind.**  Straight from them his visible side gets only a
-// sliver of light along its edge.  Three things make that a rim rather than nothing: the suns' light given
+// sliver of light along its edge.  Two things make that a rim rather than nothing: the suns' light given
 // again, warmer and stronger, for a sun this low has lost most of itself to the air before it reaches him;
-// a kicker, a spotlight behind him on the suns' side, narrowed to his dome and shoulders and fading so
-// steeply that the sand its cone goes on to meet is not lit; and a dim warm light lying on the sand in
-// front of him for the light the sand throws back up, which the sky light does not follow.
+// and a kicker, a spotlight behind him on the suns' side, narrowed to his dome and shoulders and fading so
+// steeply that the sand its cone goes on to meet is not lit.  What lights his front is the sand: the light
+// it throws back up is followed, one bounce of it, which puts the warmth of the sunlit sand on his shaded
+// side and lifts it most where he stands closest to it.
 //
 // **Nothing near him may stand above the camera's height** and still stay under the horizon on level
 // sand, which is how low the rocks had to be.  The horizon is the camera's own height wherever the ground
@@ -41,6 +42,10 @@ context {
     // Balanced as for a bluer light than the scene's, which warms the whole picture the way a photographer
     // warms one at sunset.
     white balance 8500
+    // The light off the sand.  One bounce is nearly all of it in the open, where light that bounces once
+    // mostly goes on up into the sky: a second brightened him by less than a hundredth.
+    diffuse bounces 1
+    diffuse samples 128
     info {
         title 'Tatooine'
         author 'J. Stephen Kress'
@@ -105,20 +110,9 @@ spot light {
     fade distance 3  fade power 10
 }
 
-// What the sand throws back up, which the sky light does not follow, in two parts.  Near him, a broad warm
-// glow lying on the sand in front of him, fading as light off the sand does.  Further off, the same warmth
-// from where the camera stands, unfaded: a light at the camera hides every shadow it casts behind the
-// thing casting it.  One light did both jobs at first, and lying on the sand in front of him it threw a
-// great soft shadow of him across the far dune, which read as a blotch in the sand.
-area light {
-    location [0.8, 0.02, -2.2]  axisU [4, 0, 0]  axisV [0, 0, 4]  steps 3  color [0.3, 0.21, 0.13]
-    fade distance 3
-}
-point light { location [2.4, 0.62, -3.4]  color [0.3, 0.21, 0.13] }
-
 // The suns' discs, which a physical sky leaves out: three kilometers off where the skies put the suns, and
 // the size they look -- 0.95 and 0.7 degrees across.
-SunGlow = material { ambient 4  diffuse 0  specular 0 }
+SunGlow = material { emission 20  diffuse 0  specular 0 }
 sphere {
     scale 24.87  translate [-969.42, 365.61, 2815.41]  no shadow  material SunGlow { pigment [1, 0.93, 0.78] }
 }
@@ -442,7 +436,7 @@ CrawlerRust = material {
 }
 CrawlerIron = material { pigment [0.13, 0.115, 0.1]  specular 0.2  shininess 30 }
 CrawlerWindow = material { pigment [0.03, 0.03, 0.035]  specular 0.5  shininess 80 }
-CrawlerLamp = material { pigment [1, 0.72, 0.38]  ambient 0.9  diffuse 0 }
+CrawlerLamp = material { pigment [1, 0.72, 0.38]  emission [5.8, 4, 2.2]  diffuse 0 }
 CrawlerSide = path {
     move to 7.375, 6.410
     line to 1.103, 6.252

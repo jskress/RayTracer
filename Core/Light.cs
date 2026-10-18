@@ -397,12 +397,15 @@ public abstract class Light : NamedThing
     /// <param name="film">How the surface's film shares out the light, for a surface that has one:
     /// what it lets on is all the ambient and diffuse terms have to show, and its highlight takes the
     /// film's color.  See <see cref="ThinFilm"/>.</param>
+    /// <param name="highlights">Whether the surface shows a highlight at all: not where it is met along a
+    /// path of bounced light, which carries light from one matte surface to the next and leaves light
+    /// focused by shiny ones to the caustics.  See <see cref="Scene"/>'s bounces.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
         double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null,
-        FilmShares<TS>? film = null)
+        FilmShares<TS>? film = null, bool highlights = true)
         where TS : struct, ISpectrum<TS>
     {
         material ??= surface.Material ?? Material.Default;
@@ -530,6 +533,9 @@ public abstract class Light : NamedThing
         // they were before any of this existed.  Floating point addition does not associate, so
         // regrouping them shifts the odd pixel by one level even when nothing has been lost -- and
         // a scene with nothing transparent in it should come out bit for bit unchanged.
+        if (!highlights)
+            return ambientColor + diffuseColor * reaching;
+
         return ambientColor + diffuseColor * reaching + specularColor * reaching;
     }
 

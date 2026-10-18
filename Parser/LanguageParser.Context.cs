@@ -104,6 +104,43 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "diffuse":
+                if (clause.Text(1) == "cache")
+                {
+                    updater.DiffuseCacheResolver = term is null
+                        ? new LiteralResolver<double> { Value = General.RenderContext.DefaultDiffuseCacheError }
+                        : new TermResolver<double>
+                        {
+                            Term = term,
+                            Validator = value => value is <= 0 or >= 1
+                                ? "A cache's error is a share of the light, more than nothing and less than one."
+                                : null
+                        };
+
+                    break;
+                }
+
+                if (clause.Text(1) == "bounces")
+                {
+                    updater.DiffuseBouncesResolver = new TermResolver<int>
+                    {
+                        Term = term,
+                        Validator = value => value < 0
+                            ? "Light cannot bounce fewer than no times."
+                            : null
+                    };
+
+                    break;
+                }
+
+                updater.DiffuseSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A matte surface must look in at least one direction for the light bounced onto it."
+                        : null
+                };
+                break;
             case "medium":
                 if (clause.Text(1) == "bounces")
                 {

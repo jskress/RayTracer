@@ -59,6 +59,23 @@ public class ContextUpdater : Instruction
     public Resolver<int> MediumBouncesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many times light is followed from one matte surface to
+    /// the next.
+    /// </summary>
+    public Resolver<int> DiffuseBouncesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many directions a matte surface looks in for bounced
+    /// light.
+    /// </summary>
+    public Resolver<int> DiffuseSamplesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far a cache of bounced light may stray, when it is asked for.
+    /// </summary>
+    public Resolver<double> DiffuseCacheResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many bits of each color channel reach the file.
     /// </summary>
     public Resolver<int> BitsPerChannelResolver { get; set; }
@@ -122,6 +139,9 @@ public class ContextUpdater : Instruction
         ReflectionSamplesResolver.AssignTo(context, target => target.ReflectionSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
+        DiffuseBouncesResolver.AssignTo(context, target => target.DiffuseBounces, context, variables);
+        DiffuseSamplesResolver.AssignTo(context, target => target.DiffuseSamples, context, variables);
+        DiffuseCacheResolver.AssignTo(context, target => target.DiffuseCacheError, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
         SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);
