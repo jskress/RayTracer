@@ -1,0 +1,101 @@
+// Newton's prism: a dark room, a slit in the shutter, and sunlight through a prism drawn out into its
+// colors on the far wall.
+//
+// White light is every color at once, and glass bends each by its own amount, blue more than red; so a
+// narrow beam of sunlight that goes through a prism comes out of it fanned into a spectrum, red at the end
+// bent least and violet at the end bent most.  Newton let the sun in through a hole in his window shutter
+// and found the spectrum on the wall across the room five times as long as it was wide.  None of it can
+// be found by looking from the wall toward the sun -- the light came bent -- so it is followed from the
+// sun instead, through the slit and the glass, and kept where it lands.
+//
+// Only a spectral render can show it: carried as red, green and blue, light bends by one amount at every
+// color, and the beam comes through the glass white.
+//
+// Everything is in meters.  The prism is heavy flint, SF10, turned so the beam meets its first face at
+// sixty degrees: it then leaves the second face as it met the first, which is the least a prism can turn
+// light, and the colors are spread widest and cleanest.  Met much squarer, the light comes to the second
+// face past its critical angle and none of it gets out.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    spectral
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    // A dark room, lit only by what comes in through the slit and a dim lamp to find it by.
+    scale ambient by 0
+    // Only the photons that find the slit, under one in a hundred, reach the prism.
+    caustics photons 20000000
+    info {
+        title 'Newton\'s Prism'
+        author 'J. Stephen Kress'
+        description 'Sunlight through a slit in a shutter and a prism of flint glass, spread into its spectrum on the wall of a dark room.'
+        copyright true
+        software __software__
+    }
+}
+
+// From beside the beam's way and back from it: the prism on its stand to the left, the wall the light
+// lands on to the right.  Anywhere behind the prism, the prism stands in front of its own spectrum.
+camera {
+    location [0.6, 1.35, -1.9]
+    look at [0.55, 0.9, 2]
+    field of view 55
+}
+
+// The sun, low in the window.  It is bright, ten times white, because what comes through a slit two
+// centimeters wide is spread over half a meter of wall.  At thirty the spectrum was too bright for the
+// picture to hold: its colors ran past what a screen can show and were cut off there, and the rainbow
+// came out in flat blocks of violet, cyan, yellow and red instead of running from one into the next.
+distant light { direction [1, -0.12, 0]  color [10, 10, 10] }
+
+// Just enough light to find the room by, from over the camera's shoulder: with no ambient, whatever this
+// lamp casts a shadow on is black, so the shadows are put behind what casts them.
+point light { location [0.8, 2.3, -2.5]  color [0.07, 0.07, 0.07] }
+
+Plaster = material { pigment [0.82, 0.80, 0.75]  specular 0 }
+Oak = material {
+    pigment wood {
+        turbulence { amplitude 0.3  octaves 3 }
+        [0, [0.30, 0.20, 0.12], 0.55, [0.25, 0.16, 0.09], 0.85, [0.20, 0.12, 0.07], 1, [0.30, 0.20, 0.12]]
+        scale [0.03, 0.03, 4]
+    }
+    specular 0.1  shininess 30
+}
+
+// The room: seven meters by seven and two and a half high, closed all round, with the slit cut in the
+// shutter at the west end, two centimeters wide and fifteen tall.  It is a box and not walls and planes:
+// the sun comes in low, and an endless ceiling would have shaded the slit from it.
+difference {
+    cube { scale [3.55, 1.35, 3.55]  translate [0.5, 1.3, -0.5] }
+    cube { scale [3.5, 1.3, 3.5]  translate [0.5, 1.3, -0.5] }
+    cube { scale [0.2, 0.075, 0.01]  translate [-3, 1.4, 0] }
+    material Plaster
+}
+
+// The floor.
+parallelogram { at [-3, 0.001, -4]  sides [7, 0, 0], [0, 0, 7]  material Oak }
+
+// The stand.
+cylinder {
+    min Y 0  max Y 1
+    scale [0.32, 0.8, 0.32]
+    translate [0.07, 0, 0.12]
+    material { pigment [0.06, 0.04, 0.03]  specular 0.3  shininess 40 }
+}
+
+// The prism, an equilateral triangle half a meter on a side, standing a fifth of a millimeter clear of
+// the stand so that the two are not in the same place.  The beam from the slit meets the face from
+// (0.22, -0.125) to (-0.22, 0.125) at its middle.
+extrusion {
+    path { move to 0.2165, -0.125  line to -0.2165, 0.125  line to 0.2165, 0.375  close }
+    min Y 0.8002
+    max Y 1.3
+    material {
+        pigment White
+        ambient 0  diffuse 0  specular 0.8  shininess 300  transparency 1  reflective 1
+        interior { glass 'SF10' }
+    }
+}

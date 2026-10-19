@@ -183,7 +183,7 @@ public partial class Scene : NamedThing, IDisposable
         if (BeyondTheNear(ray, double.PositiveInfinity, left))
             return seen;
 
-        TS sky = SeenAlongABounce(ray)
+        TS sky = CountedElsewhere(ray, _skyIsALight)
             ? TS.Black
             : Background.GetTransformedLightFor<TS>(HeadingOf(ray), SkyFootprintOf(ray));
 
@@ -268,7 +268,8 @@ public partial class Scene : NamedThing, IDisposable
         // A glowing volume crossed straight on a search for bounced light lends none of its glow, which its
         // light's own samples count, though it still dims what lies beyond; see Scene.Bounces.  It is
         // walked to leave the glow out, whatever its shape.
-        bool withoutGlow = mixing is null && container is not null && SeenAlongABounce(ray) && GlowsAsALight(medium);
+        bool withoutGlow = mixing is null && container is not null && CountedElsewhere(ray, true) &&
+                           GlowsAsALight(medium);
 
         if (withoutGlow || mixing is not null || (medium.HasShape && container is not null))
             return MarchedThrough(medium, color, ray, distance, container, mixing, withoutGlow);
@@ -1046,6 +1047,11 @@ public partial class Scene : NamedThing, IDisposable
         if (material.Emission is { } glow)
             surfaceColor += TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow);
 
+        // The light mirrors and glass gather onto it from the lamps, when the scene asks for caustics, which
+        // it takes as it takes a lamp's; see Scene.Caustics.
+        if (_caustics is not null && material.Diffuse > 0 && transparency < 1)
+            surfaceColor += CausticsAt<TS>(intersection, material, ownShare, film);
+
         // And the light bounced onto it off everything else, which a surface takes as it takes a lamp's --
         // its own share of it, and a film's passing share -- when the scene asks for it; see Scene.Bounces.
         if (DiffuseBounces > 0)
@@ -1063,8 +1069,13 @@ public partial class Scene : NamedThing, IDisposable
             }
         }
 
-        TS reflectedColor = GetReflectionColor<TS>(intersection, remaining);
-        TS refractedColor = GetRefractedColor<TS>(intersection, remaining);
+        // How much of the light the path brings back each way will be worth, so that a way worth next to
+        // nothing is not followed, when the scene says to stop there; see Bailout.
+        (double mirrors, double passes) = Bailout > 0
+            ? SharesOf(intersection, material, transparency, film)
+            : (1, 1);
+        TS reflectedColor = Worth(mirrors) ? FollowedFor<TS>(mirrors, intersection, remaining, true) : TS.Black;
+        TS refractedColor = Worth(passes) ? FollowedFor<TS>(passes, intersection, remaining, false) : TS.Black;
         TS refColor;
 
         // A film mirrors its share of each color and lets the rest on, through a surface that lets
@@ -1108,6 +1119,95 @@ public partial class Scene : NamedThing, IDisposable
         }
 
         return color;
+    }
+
+    /// <summary>
+    /// This property holds how many surfaces a ray from the eye may be mirrored or bent at before it is
+    /// followed no further; see <see cref="RayTracer.General.RenderContext.TraceDepth"/>.
+    /// </summary>
+    public int TraceDepth { get; set; } = 4;
+
+    /// <summary>
+    /// This property holds the least share of its pixel a way a ray is mirrored or bent must be worth to be
+    /// followed, or nought to follow every way the depth allows.
+    /// <para>
+    /// **Glass sends every ray both ways**, mirrored and let through, so the ways a ray goes double at every
+    /// surface: a tumbler of water, looked through, crosses eight, and asked to follow them all twelve deep a
+    /// render took fourteen times as long as at four.  Nearly all those ways are worth nothing -- a twenty-fifth of
+    /// a twenty-fifth of what is left after the first mirroring -- and a way worth less than the smallest step
+    /// a picture can show is not followed (POV-Ray's adaptive depth control does the same).
+    /// </para>
+    /// </summary>
+    public double Bailout { get; set; }
+
+    // How much of its pixel the way being followed has fallen short of, so that nought is the whole of it.
+    [ThreadStatic]
+    private static double _fallenShort;
+
+    /// <summary>
+    /// This method reports whether a way a ray goes, worth the given share of what reaches the surface, is
+    /// worth following.
+    /// </summary>
+    private bool Worth(double share)
+    {
+        return share > 0 && (Bailout <= 0 || (1 - _fallenShort) * share >= Bailout);
+    }
+
+    /// <summary>
+    /// This method follows a ray mirrored or bent at a surface, carrying how much of its pixel it is worth.
+    /// </summary>
+    private TS FollowedFor<TS>(double share, Intersection intersection, int remaining, bool mirrored)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (Bailout <= 0)
+        {
+            return mirrored
+                ? GetReflectionColor<TS>(intersection, remaining)
+                : GetRefractedColor<TS>(intersection, remaining);
+        }
+
+        double was = _fallenShort;
+
+        _fallenShort = 1 - (1 - was) * share;
+
+        try
+        {
+            return mirrored
+                ? GetReflectionColor<TS>(intersection, remaining)
+                : GetRefractedColor<TS>(intersection, remaining);
+        }
+        finally
+        {
+            _fallenShort = was;
+        }
+    }
+
+    /// <summary>
+    /// This method works out roughly how much of what reaches a surface it mirrors and how much it lets
+    /// through, as GetHitColor will weigh them: enough to say whether either is worth following.
+    /// </summary>
+    private static (double Mirrors, double Passes) SharesOf<TS>(
+        Intersection intersection, Material material, double transparency, FilmShares<TS>? film)
+        where TS : struct, ISpectrum<TS>
+    {
+        bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
+        double mirrors = material.Reflective > 0 || film is not null
+            ? material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
+            : 0;
+        double passes = transparency;
+
+        if (film is { } shares)
+            return (shares.Mirrored.Sum / TS.Count, shares.Passed.Sum / TS.Count * transparency);
+
+        if (material.Reflective > 0 && transmits && !material.IsRough)
+        {
+            double reflectance = intersection.Reflectance;
+
+            mirrors *= reflectance;
+            passes *= 1 - reflectance;
+        }
+
+        return (mirrors, passes);
     }
 
     /// <summary>
@@ -1597,6 +1697,11 @@ public partial class Scene : NamedThing, IDisposable
             if (transparency <= 0)
                 return TS.Black;
 
+            // With caustics asked for, the light through glass that bends it is the photons'; see
+            // Scene.Caustics.
+            if (StopsTheShadowRay(intersection, material))
+                return TS.Black;
+
             reaching *= transparency;
 
             if (interior.Filter > 0 || interior.Refracts)
@@ -1748,7 +1853,7 @@ public partial class Scene : NamedThing, IDisposable
             // curved mirror also focuses or spreads the cone, which this does not attempt -- that wants
             // full ray differentials, and a flat mirror is the case that turns up.
             Ray reflectedRay = new (
-                intersection.LitPoint, intersection.Reflect, intersection.TimeIndex,
+                intersection.MirrorPoint, intersection.Reflect, intersection.TimeIndex,
                 intersection.ConeSpread, intersection.ConeTravelled);
 
             color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
@@ -1942,6 +2047,10 @@ public partial class Scene : NamedThing, IDisposable
 
                 double weight = reflectance(cosFacet) * Microfacets.Masking(mirrored.Z, alpha);
                 Vector direction = (across * mirrored.X + along * mirrored.Y + normal * mirrored.Z).Unit;
+                // From the lit point still, which for rough glass met from inside is just outside it: how a
+                // lamp's glow through rough glass is shared between its own light and these rays was worked
+                // out with them setting off there, and setting off inside, as a smooth mirror's do (see
+                // Intersection.MirrorPoint), made a lamp behind a frosted pane glitter.
                 Ray ray = new (
                     intersection.LitPoint, direction, intersection.TimeIndex, intersection.ConeSpread,
                     intersection.ConeTravelled);

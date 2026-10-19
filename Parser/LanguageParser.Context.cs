@@ -104,6 +104,26 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "trace":
+                updater.TraceDepthResolver = new TermResolver<int?>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A ray from the eye must be followed through at least one surface."
+                        : null
+                };
+                break;
+            case "caustics":
+                updater.CausticPhotonsResolver = term is null
+                    ? new LiteralResolver<int> { Value = General.RenderContext.DefaultCausticPhotons }
+                    : new TermResolver<int>
+                    {
+                        Term = term,
+                        Validator = value => value < 1
+                            ? "Caustics need at least one photon."
+                            : null
+                    };
+                break;
             case "diffuse":
                 if (clause.Text(1) == "cache")
                 {

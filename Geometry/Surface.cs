@@ -53,6 +53,13 @@ public abstract class Surface : NamedThing
     public bool NoShadow { get; set; }
 
     /// <summary>
+    /// This property says that this object turns none of the photons of a scene's caustics: they, and a
+    /// shadow ray, go straight past it as a shadow ray always has.  It is for a flat pane, whose two faces
+    /// bend light back the way it came, so that the straight line is exact.
+    /// </summary>
+    public bool NoCaustics { get; set; }
+
+    /// <summary>
     /// This property holds an optional bounding box for the group.
     /// </summary>
     public BoundingBox BoundingBox { get; set; }

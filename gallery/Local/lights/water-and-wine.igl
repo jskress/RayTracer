@@ -1,0 +1,128 @@
+// A tumbler of water and a glass of red wine on a table in the late sun, and the light they gather.
+//
+// A glass of water is a lens that nobody meant to make.  The water and the curved glass round it bend the
+// sun toward the middle of the glass's shadow, and the light that went into the glass comes out of it
+// gathered into a bright crescent on the table, with the rest of the shadow darker for what was taken.  A
+// glass of wine does the same with its color: the light it gathers has been through the wine, and lands
+// red.  None of it can be found by looking from the table toward the sun, since none of it came straight;
+// it is followed from the sun instead, through the glass and the liquid in it, and kept where it lands.
+//
+// Everything is in meters: an 11 cm tumbler with a heavy base, and a wine glass a little taller.  The
+// water reaches a hair into the tumbler's wall rather than stopping exactly at it, so that a ray going from
+// glass into water knows which it is in -- two surfaces in the same place leave that to chance -- and the
+// glasses stand a fifth of a millimeter clear of the table, for the same reason.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    caustics photons 8000000
+    // Looked through, a tumbler of water is eight surfaces deep, glass and water and glass again on each
+    // side; followed through only four, the water came out black.
+    trace depth 12
+    info {
+        title 'Water and Wine'
+        author 'J. Stephen Kress'
+        description 'A tumbler of water and a glass of red wine on a table in the late sun, gathering it into light on the table.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.05, 0.42, -0.5]
+    look at [0.02, 0.03, 0.06]
+    field of view 40
+}
+
+// The late sun, low and from behind, so the shadows run toward the camera.
+distant light { direction [0.55, -0.75, -1]  color [1, 0.93, 0.8] }
+
+background [0.86, 0.84, 0.8]
+
+// The table: a pale wood, its grain running across the picture.
+plane {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.3  octaves 3 }
+            [0, [0.66, 0.5, 0.33], 0.55, [0.58, 0.43, 0.27], 0.85, [0.5, 0.36, 0.22], 1, [0.66, 0.5, 0.33]]
+            scale [0.012, 0.012, 2]
+            rotate Y 90
+        }
+        specular 0.15  shininess 40
+    }
+}
+
+Glass = material {
+    pigment White  ambient 0  diffuse 0  specular 1  shininess 600
+    transparency 1  reflective 1
+    interior { ior 1.5 }
+}
+
+// The tumbler: a straight wall 3 mm thick, flaring a little toward the rim, on a 12 mm base.
+lathe {
+    path {
+        move to 0, 0
+        line to 0.034, 0
+        line to 0.04, 0.11
+        line to 0.037, 0.11
+        line to 0.0315, 0.012
+        line to 0, 0.012
+        close
+    }
+    material Glass
+    translate [-0.08, 0.0002, 0.06]
+}
+
+// The water in it, reaching a hair into the wall.
+lathe {
+    path {
+        move to 0, 0.0115
+        line to 0.0318, 0.0115
+        line to 0.0366, 0.085
+        line to 0, 0.085
+        close
+    }
+    material {
+        pigment White  ambient 0  diffuse 0  specular 1  shininess 600
+        transparency 1  reflective 1
+        interior { ior 1.333 }
+    }
+    translate [-0.08, 0.0002, 0.06]
+}
+
+// The wine glass: a round bowl on a stem and a foot.
+lathe {
+    path {
+        move to 0, 0
+        line to 0.035, 0
+        line to 0.035, 0.002
+        line to 0.004, 0.006
+        line to 0.004, 0.075
+        curve 0.03, 0.08, 0.042, 0.11 to 0.034, 0.16
+        line to 0.032, 0.16
+        curve 0.04, 0.11, 0.028, 0.083 to 0, 0.08
+        close
+    }
+    material Glass
+    translate [0.08, 0.0002, 0.1]
+}
+
+// The wine, a deep red that tints what passes through it, reaching a hair into the bowl.
+lathe {
+    path {
+        move to 0, 0.0795
+        curve 0.0282, 0.0828, 0.0402, 0.11 to 0.0394, 0.118
+        line to 0, 0.118
+        close
+    }
+    material {
+        pigment [0.62, 0.04, 0.09]  ambient 0  diffuse 0  specular 1  shininess 600
+        transparency 1  reflective 1
+        interior { ior 1.34  filter 1 }
+    }
+    translate [0.08, 0.0002, 0.1]
+}

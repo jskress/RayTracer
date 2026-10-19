@@ -29,6 +29,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public Resolver<bool> NoShadowResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether the surface turns the photons of a scene's caustics.
+    /// </summary>
+    public Resolver<bool> NoCausticsResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many places the stuff inside the surface is
     /// looked at from when it lights the scene.
     /// </summary>
@@ -92,6 +97,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
             value.Material.Anchor = value;
 
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
+        NoCausticsResolver.AssignTo(value, target => target.NoCaustics, context, variables);
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);

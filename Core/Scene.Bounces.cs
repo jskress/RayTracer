@@ -159,7 +159,7 @@ public partial class Scene
 
                     try
                     {
-                        GetColorFor<TS>(rayFor(x, y));
+                        GetColorFor<TS>(rayFor(x, y), TraceDepth);
                     }
                     finally
                     {
@@ -429,6 +429,22 @@ public partial class Scene
     {
         if (_measuring && double.IsPositiveInfinity(_bounceMet) && SeenAlongABounce(ray))
             _bounceMet = (ray.At(hit.Distance) - _bouncing!.Value.Origin).Magnitude;
+    }
+
+    /// <summary>
+    /// This method reports whether the sky, or a glowing volume that gives light, met along a ray is light
+    /// counted another way, and so to be found black: on a search for bounced light's straight run, which the
+    /// light's own samples count; and anywhere along a path of bounced light once a scene has caustics, if
+    /// the sky or the glow is a light, whose photons carry everything it gives a matte surface by way of
+    /// mirrors and glass.  The sky seen in a mirror from the floor is the photons' then, and found by a
+    /// bounce as well, would be counted twice.  A sky with no sky light sends no photons, and is found.
+    /// </summary>
+    /// <param name="ray">The ray.</param>
+    /// <param name="isALight">Whether what the ray meets is a light, and so sends photons.</param>
+    /// <returns><c>true</c>, if what the ray meets of such a light counts for nothing here.</returns>
+    private bool CountedElsewhere(Ray ray, bool isALight)
+    {
+        return SeenAlongABounce(ray) || (isALight && _caustics is not null && _bounced > 0);
     }
 
     /// <summary>

@@ -121,6 +121,22 @@ public class AreaLight : PointLight
     }
 
     /// <summary>
+    /// This method picks a place anywhere on the light's face for a photon to set off from.
+    /// </summary>
+    /// <param name="point">Where the light is looked at from.</param>
+    /// <param name="first">How far along the first axis, between nought and one.</param>
+    /// <param name="second">How far along the second.</param>
+    /// <param name="third">Unused.</param>
+    /// <returns>The sample.</returns>
+    public override LightSample PhotonSample(Point point, double first, double second, double third)
+    {
+        Point on = Location + Axis1 * (first - 0.5) + Axis2 * (second - 0.5);
+        Vector toward = on - point;
+
+        return new LightSample(toward.Unit, toward.Magnitude, 1);
+    }
+
+    /// <summary>
     /// This method works out the jitter offsets once, so that they are fixed for the whole render
     /// and the same from one render to the next.  Each is a nudge between minus and plus a half a
     /// grid square, which is POV-Ray's own, and all zero when the jitter is turned off.

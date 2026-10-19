@@ -90,6 +90,10 @@ public class RenderInstruction : Instruction
         scene.DiffuseBounces = context.DiffuseBounces;
         scene.DiffuseSamples = context.DiffuseSamples;
         scene.DiffuseCacheError = context.DiffuseCacheError;
+        scene.CausticPhotons = context.CausticPhotons;
+        scene.CausticsSpectral = context.Spectral;
+        scene.TraceDepth = context.TraceDepth ?? 4;
+        scene.Bailout = context.TraceDepth is null ? 0 : RenderContext.Bailout;
 
         // Last of all, and only now: the scene's own surfaces are sorted for searching.  It waits
         // until here because a box cannot be drawn round a surface before the surface knows its shape,
@@ -115,7 +119,11 @@ public class RenderInstruction : Instruction
 
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        // The light among any hair is gathered before the first pixel, so that it has every thread.
+        // The photons of any caustics are sent before the first pixel, before anything that looks for
+        // light, since glass that bends it stops a shadow ray once they have been.
+        scene.ShootCausticPhotons();
+
+        // The light among any hair is gathered before the first pixel too, so that it has every thread.
         scene.GatherTheLightAmongHair();
 
         // Bounced light that is cached is gathered before the first pixel too, in passes over the picture.

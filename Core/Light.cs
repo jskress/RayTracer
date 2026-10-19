@@ -244,6 +244,22 @@ public abstract class Light : NamedThing
     public virtual LightSample SampleAround(Point point, int index) => SampleToward(point, index);
 
     /// <summary>
+    /// This method picks one place or direction on this light for a photon to set off from, by the given
+    /// numbers, standing for the whole of the light by itself -- as a sample does averaged with the rest.
+    /// A light with one place or one direction has nothing to pick; one spread over an area, the sky or a
+    /// volume picks anywhere over it, not among its samples: a lens brings each of those to its own point,
+    /// and photons sent from a few dozen of them left a few dozen bright specks round a glass ball's focus.
+    /// Asked again with the same numbers from somewhere else, it gives the same place, as seen from there.
+    /// </summary>
+    /// <param name="point">Where the light is looked at from.</param>
+    /// <param name="first">The first number, between nought and one.</param>
+    /// <param name="second">The second.</param>
+    /// <param name="third">The third.</param>
+    /// <returns>The sample.</returns>
+    public virtual LightSample PhotonSample(Point point, double first, double second, double third) =>
+        SampleAround(point, 0);
+
+    /// <summary>
     /// This method returns the color this light carries along one of its samples.  For every light with
     /// a color of its own that is simply that color, the same in every direction.  A light spread over
     /// the sky is different: it is a different color whichever way you look, so it answers by the

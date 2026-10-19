@@ -70,6 +70,13 @@ public class Intersection : IComparable<Intersection>
     public Point LitPoint { get; private set; }
 
     /// <summary>
+    /// This holds the point a ray mirrored here sets off from: the lit point, except where something that
+    /// lets light through is met from inside, where it is the under point -- inside, as the light it
+    /// mirrors back is.
+    /// </summary>
+    public Point MirrorPoint { get; private set; }
+
+    /// <summary>
     /// This property holds the eye vector at this point of intersection.
     /// </summary>
     public Vector Eye { get; private set; }
@@ -260,6 +267,12 @@ public class Intersection : IComparable<Intersection>
         LitPoint = Inside && (Surface.IsASheet || opaque)
             ? Point + Eye * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale)
             : OverPoint;
+
+        // **But what glass mirrors from inside stays inside.**  Set off from the over point, a ray mirrored
+        // off the inner face of a pane began just outside it, met the same face again a hair away, and was
+        // bent into the glass as if it had come from the air -- so the light a ball's rim or a prism's face
+        // turns back entirely, past the critical angle, was shaded as light coming in.
+        MirrorPoint = Inside && !(Surface.IsASheet || opaque) ? UnderPoint : LitPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
         (Surface before, Surface after) = intersections.FindContainers(this);

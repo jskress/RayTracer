@@ -6,6 +6,8 @@ context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians
         | "scale" "ambient" "by" expression
         | "medium" ( "samples" | "bounces" ) expression
         | "diffuse" ( ( "bounces" | "samples" ) expression | "cache" [ "error" expression ] )
+        | "caustics" [ "photons" expression ]
+        | "trace" "depth" expression
         | "reflection" "samples" expression
         | "antialiasing" ( "depth" | "threshold" ) expression
         | "color" "depth" number | "grayscale" | "spectral"

@@ -92,7 +92,7 @@ public abstract class PixelRenderer
         if (count == 1)
         {
             return scene.GetColorFor<TS>(
-                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY)).ToColor();
+                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY), scene.TraceDepth).ToColor();
         }
 
         TS sum = TS.Black;
@@ -100,7 +100,7 @@ public abstract class PixelRenderer
         for (int index = 0; index < count; index++)
         {
             sum += scene.GetColorFor<TS>(
-                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index));
+                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index), scene.TraceDepth);
         }
 
         return (sum * (1.0 / count)).ToColor();

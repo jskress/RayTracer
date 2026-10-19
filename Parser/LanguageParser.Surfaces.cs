@@ -143,6 +143,9 @@ public partial class LanguageParser
             case "no.shadow":
                 resolver.NoShadowResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "no.caustics":
+                resolver.NoCausticsResolver = new LiteralResolver<bool> { Value = true };
+                break;
             case "gives.light":
                 // With no count named, enough places to be looked at from that a flame does not show
                 // its samples as banding on what it lights.

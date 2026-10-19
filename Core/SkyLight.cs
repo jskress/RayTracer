@@ -158,6 +158,30 @@ public class SkyLight : Light
     }
 
     /// <summary>
+    /// This method picks a direction anywhere over the sky for a photon to come from: evenly over the whole
+    /// sphere for a smooth sky, worth four as each of its samples is; and for a picture, by its light or
+    /// evenly in the shares its samples are, worth what such a direction is worth among them.
+    /// </summary>
+    /// <param name="point">Where the sky is looked at from, which does not matter.</param>
+    /// <param name="first">The first number, between nought and one.</param>
+    /// <param name="second">The second.</param>
+    /// <param name="third">Which way to pick, for a picture.</param>
+    /// <returns>The sample.</returns>
+    public override LightSample PhotonSample(Point point, double first, double second, double third)
+    {
+        if (!IsAPicture)
+            return new LightSample(OverTheWholeSphere(first, second), double.PositiveInfinity, 4);
+
+        int byLight = Samples - Samples / 2;
+        Vector direction = third * Samples < byLight
+            ? Map.Pick(first, second)
+            : OverTheWholeSphere(first, second);
+        double odds = OddsToward(direction, null);
+
+        return new LightSample(direction, double.PositiveInfinity, odds > 0 ? Samples / (Math.PI * odds) : 0);
+    }
+
+    /// <summary>
     /// This method picks one of the directions a sky that is a picture is looked at from.
     /// <para>
     /// **Half the directions are picked by the sky's light and half evenly**, as a smooth sky's are, and

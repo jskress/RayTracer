@@ -78,7 +78,7 @@ public partial class LanguageParser
             'anisotropy', 'antialiasing', 'apart', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'cache', 'camera', 'case', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
+            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
@@ -91,7 +91,7 @@ public partial class LanguageParser
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
-            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'physical', 'picked', 'pigment', 'pipes', 'primitive',
+            'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
@@ -100,7 +100,7 @@ public partial class LanguageParser
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
-            'temperature', 'thickness', 'tightness', 'tilted', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
+            'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'weight', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
@@ -299,6 +299,17 @@ public partial class LanguageParser
                 { cache > { error > _expression }{?} }
             ] ?? 'Expecting "bounces", "samples" or "cache" to follow "diffuse" here.'
         }
+        // How many surfaces a ray from the eye may be mirrored or bent at before it is followed no further.
+        traceDepthClause:
+        {
+            trace > depth ?? 'Expecting "depth" to follow "trace" here.' > _expression
+        }
+        // Whether light is followed forward from the lamps through mirrors and glass to where it lands, and
+        // with how many photons.
+        causticsClause:
+        {
+            caustics > { photons > _expression }{?}
+        }
         // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
         // one.
         reflectionSamplesClause:
@@ -317,8 +328,8 @@ public partial class LanguageParser
         contextEntryClause:
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
-            settingOffClause | mediumSamplesClause | diffuseLightClause | reflectionSamplesClause |
-            antiAliasingClause |
+            settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
+            reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
@@ -686,7 +697,7 @@ public partial class LanguageParser
         // Common surface clauses.
         noShadowClause:
         {
-            no > shadow ?? 'Expecting "shadow" to follow "no" here.'
+            no > [ shadow | caustics ] ?? 'Expecting "shadow" or "caustics" to follow "no" here.'
         }
         // A surface saying that the stuff inside it lights what is around, and not merely itself.
         givesLightClause:
