@@ -22,6 +22,10 @@ namespace RayTracer.Geometry;
 /// that casts no shadow keeps the mark itself, and the shadow test asks it as well as the surface.
 /// Only a scene that casts no shadows anywhere marks the shared shape.
 /// </para>
+/// <para>
+/// A `no caustics` is handed down the same way and for the same reason: a photon, too, asks only the leaf
+/// it met.
+/// </para>
 /// </summary>
 internal static class ShadowSettler
 {
@@ -35,7 +39,7 @@ internal static class ShadowSettler
         HashSet<Surface> shared = [];
 
         foreach (Surface surface in surfaces)
-            Settle(surface, noShadowsAnywhere, noShadowsAnywhere, shared);
+            Settle(surface, noShadowsAnywhere, false, noShadowsAnywhere, shared);
     }
 
     /// <summary>
@@ -43,14 +47,17 @@ internal static class ShadowSettler
     /// </summary>
     /// <param name="surface">The surface to settle.</param>
     /// <param name="noShadow">Whether something holding this surface casts no shadow.</param>
+    /// <param name="noCaustics">Whether something holding this surface turns no photons.</param>
     /// <param name="noShadowsAnywhere">Whether nothing in the scene casts a shadow.</param>
     /// <param name="shared">The shared shapes already settled, since each is reached once per
     /// instance of it.</param>
     private static void Settle(
-        Surface surface, bool noShadow, bool noShadowsAnywhere, HashSet<Surface> shared)
+        Surface surface, bool noShadow, bool noCaustics, bool noShadowsAnywhere, HashSet<Surface> shared)
     {
         noShadow |= surface.NoShadow;
         surface.NoShadow = noShadow;
+        noCaustics |= surface.NoCaustics;
+        surface.NoCaustics = noCaustics;
 
         // Hair casts a shadow as the surface it grows on does, and only so.
         if (surface.Hair is not null)
@@ -60,17 +67,17 @@ internal static class ShadowSettler
         {
             case Group group:
                 foreach (Surface child in group.Surfaces)
-                    Settle(child, noShadow, noShadowsAnywhere, shared);
+                    Settle(child, noShadow, noCaustics, noShadowsAnywhere, shared);
                 break;
             case CsgSurface csgSurface:
-                Settle(csgSurface.Left, noShadow, noShadowsAnywhere, shared);
-                Settle(csgSurface.Right, noShadow, noShadowsAnywhere, shared);
+                Settle(csgSurface.Left, noShadow, noCaustics, noShadowsAnywhere, shared);
+                Settle(csgSurface.Right, noShadow, noCaustics, noShadowsAnywhere, shared);
                 break;
             case Tube { Root: not null } tube:
-                Settle(tube.Root, noShadow, noShadowsAnywhere, shared);
+                Settle(tube.Root, noShadow, noCaustics, noShadowsAnywhere, shared);
                 break;
             case Instance instance when shared.Add(instance.Prototype):
-                Settle(instance.Prototype, noShadowsAnywhere, noShadowsAnywhere, shared);
+                Settle(instance.Prototype, noShadowsAnywhere, false, noShadowsAnywhere, shared);
                 break;
         }
     }

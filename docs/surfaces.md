@@ -29,6 +29,7 @@ Whatever its shape, any surface accepts these:
 | `named` | Gives the surface a name, so it can be reused. |
 | `material` | How it takes the light; see [Materials](materials.md). |
 | `no shadow` | The surface is visible but casts no shadow. |
+| `no caustics` | The surface turns none of a scene's caustics. |
 | `bounded by` | A box the renderer may use to skip it cheaply. |
 | `with seed` | Fixes the randomness anything about it draws on. |
 | `hair { }` | Grows hair over it; see [Hair](advanced-surfaces.md#hair). |
@@ -66,6 +67,14 @@ a light's own visible bulb that should not shade what it lights.
 Written on a group, a union, intersection or difference, or a tube, it covers everything that is
 made of.  Written on an `object` that calls a primitive, it covers that one copy, even where the
 copies share the one shape.
+
+#### `no caustics`
+
+In a scene that asks for [caustics](context.md#caustics), glass that bends light stops shadow rays,
+and the light through it comes as photons.  A surface with `no caustics` turns none of them: they, and
+shadow rays, go straight past it, dimmed and tinted by it as a shadow ray always was.  It is meant for a
+flat pane, whose two parallel faces send light on the way it came, so that the straight line is exact
+-- and sharper and cheaper than photons.  Like `no shadow`, it covers what a group or an `object` holds.
 
 #### A surface that gives light
 

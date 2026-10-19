@@ -145,10 +145,27 @@ public class VolumeLight : Light
         // Two irrationals walked against each other, as the sky light does: it spreads any number of
         // samples about as evenly as they can be spread, needs nothing remembered between them, and is
         // the same pattern at every point, which is what keeps a render the same twice over.
-        double which = (index + 0.5) / Samples;
-        double along = index * 0.7548776662466927 % 1;
-        double across = index * 0.5698402909980532 % 1;
+        return SampleAt(
+            point, (index + 0.5) / Samples, index * 0.7548776662466927 % 1, index * 0.5698402909980532 % 1);
+    }
 
+    /// <summary>
+    /// This method picks a place anywhere in the stuff for a photon to set off from, in proportion to how
+    /// much stuff is there.
+    /// </summary>
+    /// <param name="point">Where the light is looked at from.</param>
+    /// <param name="first">Which of the stuff, between nought and one.</param>
+    /// <param name="second">Where across it.</param>
+    /// <param name="third">Where along it.</param>
+    /// <returns>The sample.</returns>
+    public override LightSample PhotonSample(Point point, double first, double second, double third) =>
+        SampleAt(point, first, second, third);
+
+    /// <summary>
+    /// This method works out the place in the stuff the given numbers pick, as seen from a point.
+    /// </summary>
+    private LightSample SampleAt(Point point, double which, double along, double across)
+    {
         int cell = CellAt(which * _running[^1]);
         int z = cell % Cells;
         int y = cell / Cells % Cells;

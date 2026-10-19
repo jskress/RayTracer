@@ -90,6 +90,23 @@ public readonly struct Portals : IEquatable<Portals>
     }
 
     /// <summary>
+    /// This property notes that some instance the crossing came through was told to turn no photons.
+    /// </summary>
+    public bool MakesNoCaustics
+    {
+        get
+        {
+            for (Portals portals = this; !portals.IsEmpty; portals = portals.Outward)
+            {
+                if (portals.Through.NoCaustics)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
     /// This method returns these portals with one more instance outside them all: the instance a crossing
     /// is passing out through now.
     /// </summary>

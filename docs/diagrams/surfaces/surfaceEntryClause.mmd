@@ -1,5 +1,5 @@
 railroad-ebnf-beta
 title "Properties every surface has"
 
-property = "named" name | "material" material | "no" "shadow"
+property = "named" name | "material" material | "no" ( "shadow" | "caustics" )
          | "bounded" "by" point "," point | "with" "seed" number | transform ;

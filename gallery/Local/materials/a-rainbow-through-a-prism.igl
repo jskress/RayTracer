@@ -11,9 +11,9 @@
 // every color, and the slit comes through the glass as the white line it is.
 //
 // What it does not show is a prism's other rainbow, the one cast on a wall by a beam of light shone
-// through it.  That one is light carried forward from a lamp, through the glass, to a surface, and this
-// renderer traces backward from the eye: when a point on the wall asks whether it can see the lamp, the
-// question goes in a straight line and does not bend through the glass.
+// through it.  That one is light carried forward from a lamp, through the glass, to a surface -- a point
+// on the wall asking whether it can see the lamp asks in a straight line, which does not bend through the
+// glass -- and a scene asks for it to be followed so with `caustics`, as `lights/newtons-prism.igl` does.
 
 context {
     angles are degrees

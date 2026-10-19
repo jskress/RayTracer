@@ -1,0 +1,62 @@
+// Glass and brass on a table in a low sun, and the light they gather onto it.
+//
+// A glass ball casts a shadow, but not a gray one: the light that went into it came out bent toward the
+// middle, so the shadow is dark round the rim and the sun is brought to a bright spot in it, well out
+// along the shadow where the light comes to its focus.  The inside of a brass ring mirrors the sun onto
+// the table within it, every part of the wall throwing its share a little further round, and where they
+// pile up they draw the cusped curve that sits in the bottom of a teacup.  None of that light can be found
+// by looking from the table for the sun, since none of it came straight; it is followed from the sun
+// instead, through the glass and off the brass, and kept where it lands.  Rendered without `caustics`, the
+// ball casts a pale gray shadow, the light let straight through it, and the ring's floor is plain.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    caustics photons 8000000
+    info {
+        title 'Glass in the Sun'
+        author 'J. Stephen Kress'
+        description 'A glass ball and a brass ring in a low sun, gathering its light into a focus and a teacup curve.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 4.6, -4.6]
+    look at [0.1, 0, 0.7]
+    field of view 42
+}
+
+// A low sun from behind and to the left, so the shadows fall toward the camera.
+distant light { direction [1.1, -0.85, -1.6]  color [1, 0.95, 0.86] }
+
+background [0.56, 0.66, 0.8]
+
+// The table: pale, plain linen.
+plane { material { pigment [0.86, 0.83, 0.77]  specular 0 } }
+
+// The glass ball.
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 1  shininess 400
+        transparency 1  reflective 1  interior { ior 1.5 }
+    }
+    scale 0.55
+    translate [-1.05, 0.55, 0.8]
+}
+
+// The brass ring: a short open cylinder, polished inside and out.
+cylinder {
+    min Y 0  max Y 0.36  open
+    material {
+        pigment [0.88, 0.7, 0.38]  ambient 0  diffuse 0.1  specular 0.4  shininess 120
+        reflective 0.9  metallic 1
+    }
+    scale [0.85, 1, 0.85]
+    translate [1.05, 0, 1.0]
+}

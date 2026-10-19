@@ -88,6 +88,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cache` | Context: `diffuse cache`, blending bounced light between records worked out at scattered places. | [Context](context.md#a-cache-of-bounced-light) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
 | `case` | One arm of a [selection](scene-files.md#choosing-inside-a-body) in a function or primitive. | [Scene Files](scene-files.md#choosing-inside-a-body) |
+| `caustics` | Context: follow light from the lamps through mirrors and glass to where it lands; a surface's `no caustics` turns none of it. | [Context](context.md#caustics), [Surfaces](surfaces.md#no-caustics) |
 | `center` | Blob sphere: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Blob](surfaces.md#blob), [Text](advanced-surfaces.md#text), [Sweep](advanced-surfaces.md#sweep) |
 | `centered` | With `on`, says what a placement's remaining directions are middled on. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -122,7 +123,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `depth` | Normal: how deep the roughening bites; also an L-system material depth. | [Materials](materials.md#roughening-the-surface) |
+| `depth` | Normal: how deep the roughening bites; also an L-system material depth; context: `trace depth`. | [Materials](materials.md#roughening-the-surface), [Context](context.md#trace-depth) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
 | `diameter` | L-system control: the edge thickness. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `difference` | CSG: the first child with the rest carved out. | [Surfaces](surfaces.md#combining-surfaces) |
@@ -233,7 +234,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `mottled` | Pigment: a base color mottled by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `move` | Path/spline: lift the pen to a new point; also an L-system turtle move. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
-| `no` | Begins `no shadow`, `no shadows`, `no gamma`, `no jitter`, `no center`, `no fade`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading) |
+| `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading) |
 | `noise` | Mottling: dims a color by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `normal` | Roughens a surface: a pattern that tilts the normal; a blob plane: which way it faces. | [Materials](materials.md#roughening-the-surface), [Blob](surfaces.md#a-plane-component) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
@@ -261,6 +262,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `path` | A 2D outline, for an extrusion, lathe or generic shape. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `perspective` | Camera projection: the ordinary view (the default). | [Cameras](cameras.md#projections) |
 | `phase` | Medium: `phase rayleigh`, which shape of scattering it follows.  Also shaping: slides a pattern's value before the wave. | [Scene Files](scene-files.md#scattering) |
+| `photons` | Context: `caustics photons`, how many are sent. | [Context](context.md#caustics) |
 | `picked` | Field: `picked by <pattern>`, which of its things stands at a place. | [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `physical` | `physical sky`: a sky derived from what the air does to sunlight. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `pigment` | Material: what colors the surface; also a blob component's own color. | [Materials](materials.md#the-color) |
@@ -365,6 +367,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `trace` | Context: `trace depth`, how many surfaces a ray from the eye is mirrored or bent at before it is followed no further. | [Context](context.md#trace-depth) |
 | `transform` | Applies a named transform to a surface. | [Transforms](transforms.md#naming-a-transform) |
 | `translate` | Transform: move a surface or a 2D path. | [Transforms](transforms.md#translate) |
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |

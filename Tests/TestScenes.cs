@@ -357,6 +357,52 @@ public class TestScenes
         Assert.IsTrue(Colors.Black.Matches(color));
     }
 
+    /// <summary>
+    /// This tests that what glass mirrors from inside stays inside.  A ray in a wide slab meets its bottom
+    /// face past the critical angle and is mirrored whole toward the top face, which it meets the same way,
+    /// and so on: it is trapped, and finds nothing of the glowing ceiling above.  Set off from just outside
+    /// the face, as it once was, the mirrored ray met the face again from outside, was bent into the glass at
+    /// a gentler slant, and left by the top, finding the ceiling.
+    /// </summary>
+    [TestMethod]
+    public void TestAReflectionInsideGlassStaysInside()
+    {
+        Cube slab = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                Transparency = 1, Reflective = 1, Interior = new Interior { IndexOfRefraction = 1.5 }
+            },
+            Transform = Transforms.Scale(10, 0.5, 10)
+        };
+        Plane ceiling = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                Emission = new Color(1, 1, 1)
+            },
+            Transform = Transforms.Translate(0, 2, 0) * Transforms.RotateAroundX(Math.PI, true)
+        };
+        Scene scene = new ();
+
+        slab.PrepareForRendering();
+        ceiling.PrepareForRendering();
+        scene.Surfaces.Add(slab);
+        scene.Surfaces.Add(ceiling);
+
+        Ray ray = new (Point.Zero, new Vector(Math.Sin(Math.PI / 3), -Math.Cos(Math.PI / 3), 0));
+        List<Intersection> hits = scene.Intersect(ray);
+        Intersection hit = hits.First(each => each.Distance > 0);
+
+        hit.PrepareUsing(ray, hits);
+
+        Assert.IsTrue(hit.Inside);
+        Assert.IsGreaterThan(-0.5, hit.MirrorPoint.Y, "the mirrored ray should set off inside the glass");
+        Assert.IsTrue(Colors.Black.Matches(scene.GetReflectionColor(hit, 4)));
+    }
+
     [TestMethod]
     public void TestGetRefractedColor()
     {

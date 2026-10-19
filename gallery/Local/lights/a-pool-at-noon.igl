@@ -1,0 +1,103 @@
+// A swimming pool at noon, and the net of light the sun draws on its floor.
+//
+// The bright, wavering lines on the bottom of a pool are the sun focused by the water's surface: every
+// ripple is a lens, each bending the light that falls on it a little toward its own middle, and where
+// the light from neighboring ripples piles up the floor is bright, in lines that run between the
+// darker cells.  None of it can be found by looking from the floor toward the sun -- the light came
+// bent, through a surface that is never the same slope twice -- so it is followed from the sun
+// instead, through the water, and kept where it lands.
+//
+// The pool is five meters by six and a meter and a quarter deep under the water, plastered a pale aqua,
+// with a lane line down the middle and a concrete deck round it.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    caustics photons 8000000
+    info {
+        title 'A Pool at Noon'
+        author 'J. Stephen Kress'
+        description 'A swimming pool at noon, the sun focused by the ripples into a net of light on its floor.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.6, 1.8, -3.6]
+    look at [0, -1.1, 1.4]
+    field of view 50
+}
+
+// The sun, high and a little to one side.
+distant light { direction [0.3, -1, 0.45]  color [1, 0.97, 0.9] }
+
+background linear Y gradient { [0, [0.62, 0.74, 0.88], 1, [0.3, 0.48, 0.75]] }
+
+// The water.  **A pool is aqua because water takes the red out of the light**, a little over every meter
+// it goes, and the sun's light goes down to the floor and back up to the eye: about a third of the red
+// is left after that, and nearly all the blue.  Without the medium the water was clear and the pool was
+// gray.  The light that lights the floor is charged for the way down as the eye's is for the way back.
+Pool = material {
+    pigment [0.10, 0.30, 0.34]
+    ambient 0.05  diffuse 0.12
+    specular 1  shininess 800
+    reflective 0.7  transparency 0.95
+    interior {
+        index of refraction Water
+        medium { absorption [0.35, 0.06, 0.02] }
+    }
+}
+
+Plaster = material { pigment [0.80, 0.92, 0.94]  specular 0.1  shininess 20 }
+Lane = material { pigment [0.06, 0.12, 0.34]  specular 0.1  shininess 20 }
+Concrete = material { pigment [0.78, 0.76, 0.71]  specular 0 }
+
+// The basin: a floor and four walls.
+parallelogram { at [-2.5, -1.4, -2]  sides [5, 0, 0], [0, 0, 6]  material Plaster }
+parallelogram { at [-2.5, -1.4, -2]  sides [0, 0, 6], [0, 1.4, 0]  material Plaster }
+parallelogram { at [2.5, -1.4, -2]  sides [0, 0, 6], [0, 1.4, 0]  material Plaster }
+parallelogram { at [-2.5, -1.4, 4]  sides [5, 0, 0], [0, 1.4, 0]  material Plaster }
+parallelogram { at [-2.5, -1.4, -2]  sides [5, 0, 0], [0, 1.4, 0]  material Plaster }
+
+// A lane line down the middle of the floor, a hair above it.
+parallelogram { at [-0.12, -1.399, -1.6]  sides [0.24, 0, 0], [0, 0, 5.2]  material Lane }
+
+// The deck round it.
+cube { material Concrete  scale [5.5, 0.75, 3]  translate [0, -0.75, 7] }
+cube { material Concrete  scale [5.5, 0.75, 2]  translate [0, -0.75, -4] }
+cube { material Concrete  scale [2.75, 0.75, 3]  translate [-5.25, -0.75, 1] }
+cube { material Concrete  scale [2.75, 0.75, 3]  translate [5.25, -0.75, 1] }
+
+// The water's surface, its rest level twelve centimeters below the deck.
+//
+// **These are ripples and not the `water` library's sea.**  A sea scaled down to a pool is still a sea:
+// one long swell carries most of its slope, and a single train of waves focuses into parallel lines, not
+// a net -- the first render of this pool was striped like corduroy.  A pool's surface is ruffled by the
+// wind into short ripples running every way at once, and it is where they cross that the light gathers
+// into cells.  So these are eight trains from 38 centimeters down to 6, each turned well away from the
+// last.
+//
+// **How steep each is decides where its light comes to a focus.**  A ripple of water focuses the sun at
+// about 0.64 of its wavelength over its steepness below the surface; each train here alone would focus at
+// about two and a half meters, twice the depth, and where they cross and add their curves the light comes
+// together at the floor.  Steeper, and every line focused above the floor and blurred again on the way
+// down; the longest train is gentler still, since seen at a slant its slope bends the whole floor's image
+// sideways, and at its full steepness the far half of the pool came out in stripes.
+swells {
+    width 5.4  depth 6.4
+    wave { steepness 0.049  wavelength 0.38   direction [0.978, 0, 0.208]   phase 1 }
+    wave { steepness 0.074  wavelength 0.29   direction [-0.656, 0, 0.755]  phase 2.3 }
+    wave { steepness 0.059  wavelength 0.23   direction [0.326, 0, 0.946]   phase 3.7 }
+    wave { steepness 0.046  wavelength 0.18   direction [0.956, 0, -0.292]  phase 5.1 }
+    wave { steepness 0.036  wavelength 0.14   direction [0.682, 0, 0.731]   phase 7.3 }
+    wave { steepness 0.028  wavelength 0.11   direction [-0.225, 0, 0.974]  phase 8.9 }
+    wave { steepness 0.022  wavelength 0.085  direction [-0.755, 0, 0.656]  phase 4.4 }
+    wave { steepness 0.017  wavelength 0.065  direction [-0.883, 0, -0.469] phase 6.2 }
+    material Pool
+    translate [0, -0.12, 1]
+}

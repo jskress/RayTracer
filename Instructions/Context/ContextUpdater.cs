@@ -76,6 +76,16 @@ public class ContextUpdater : Instruction
     public Resolver<double> DiffuseCacheResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many photons the scene's caustics are made of.
+    /// </summary>
+    public Resolver<int> CausticPhotonsResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many surfaces a ray from the eye is followed through.
+    /// </summary>
+    public Resolver<int?> TraceDepthResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many bits of each color channel reach the file.
     /// </summary>
     public Resolver<int> BitsPerChannelResolver { get; set; }
@@ -142,6 +152,8 @@ public class ContextUpdater : Instruction
         DiffuseBouncesResolver.AssignTo(context, target => target.DiffuseBounces, context, variables);
         DiffuseSamplesResolver.AssignTo(context, target => target.DiffuseSamples, context, variables);
         DiffuseCacheResolver.AssignTo(context, target => target.DiffuseCacheError, context, variables);
+        CausticPhotonsResolver.AssignTo(context, target => target.CausticPhotons, context, variables);
+        TraceDepthResolver.AssignTo(context, target => target.TraceDepth, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
         SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);

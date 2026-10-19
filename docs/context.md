@@ -212,6 +212,28 @@ Only the first rough surface a ray meets spreads it this way.  A ray already one
 every bounce after it, looks in one direction only, so two rough surfaces facing each other cost
 the samples once rather than raised to the power of the bounces.
 
+### Trace Depth
+
+A ray from the eye that meets a mirror or glass goes on -- mirrored, and through -- and is followed four
+surfaces deep, after which it brings back nothing.  Four is plenty for most scenes and too few for some:
+looked through, a tumbler of water is eight surfaces deep, glass and water and glass again on each side,
+and followed through four the water comes out black.
+
+```
+context { trace depth 12 }
+```
+
+Glass sends every ray both ways, mirrored and let through, so followed deeper the ways a ray goes double
+at every surface; nearly all of them are worth next to nothing, a twenty-fifth of a twenty-fifth of what is
+left.  So a scene that says how deep to trace also leaves alone any way worth less than a 1024th of its
+pixel.  A tumbler of water and a wine glass took ten minutes followed twelve deep every way, and a minute
+this way -- against 44 seconds followed four deep, with the water black -- differing in one pixel in
+twenty-eight by at most four levels in 255.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `trace depth` | 4 | How many surfaces a ray from the eye is mirrored or bent at before it is followed no further. |
+
 ### Bounced Light
 
 Light does not stop at the first thing it lands on.  A sunlit wall lights the floor in front of it, a
@@ -302,6 +324,67 @@ is near, shows a little grain instead, from the pixel's own look round it.  A sm
 less far round it, which makes more of them and follows fine changes more closely.  The records are
 worked out in passes over ever finer grids of the picture, each pass reading only what earlier ones set
 down, so a picture with a cache comes out the same every time it is rendered.
+
+### Caustics
+
+Some light can't be found by looking from where it lands: the patch of sun a mirror throws on a wall,
+the bright spot in a glass ball's shadow, the ring of light in the bottom of a cup.  A mirror or a lens
+turned it on its way, so it came along no straight line, and a surface looking for its lamps along
+straight lines never finds it.  Asked for, it is followed the other way, forward from the lamps:
+
+```
+context { caustics }
+```
+
+The renderer sends photons from each lamp at whatever in the scene mirrors or bends light -- smooth
+mirrors, polished metal, glass and water -- and follows each through as many turns as it takes.  A
+photon loses light exactly as a ray from the eye would: the mirror's share, Fresnel's share at each face
+of glass, the filter's tint, the fade or the medium through the inside -- of glass it goes through, or of
+water it lands in, so that a pool's floor is lit through the water over it, its red taken out on the way
+down as the eye's is on the way back up.  Where one lands on something matte it is
+kept, and a matte surface takes the light of the photons nearest it as it takes a lamp's.  Two million
+are sent unless the scene says otherwise:
+
+```
+context { caustics photons 8000000 }
+```
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `caustics` | off | Follow light from the lamps through mirrors and glass to where it lands. |
+| `caustics photons` | 2,000,000 | How many photons are sent. |
+
+**Glass casts a real shadow.**  Without caustics, a shadow ray goes straight through glass, dimmed and
+tinted, and a glass ball casts a faint gray shadow.  With them, glass that bends light stops a shadow
+ray dead: all the light through it is the photons', gathered where the glass gathers it, so the ball's
+shadow is dark, with the sun brought to a bright spot in it.  A flat pane is the exception worth
+knowing.  Its two faces are parallel, so light leaves it going the way it came, and the old straight
+line is exact -- and sharper and cheaper than photons.  Say so with
+[`no caustics`](surfaces.md#no-caustics) on the pane.
+
+**More photons, sharper caustics.**  Each place takes its light from the 200 photons nearest it, so where
+they lie thick -- a focus -- they are gathered from a small area and the caustic is sharp, and where they
+lie thin, from a wide one, and it is soft.  More photons sharpen every caustic; too few show as a soft,
+mottled glow.  They are aimed at each thing that turns light, in proportion to how much light the lamps
+bring it, and they are sent the same way every time, so a picture comes out the same.
+
+Every light sends photons: point lights, spotlights, area lights and suns; a sky light, from each of
+the directions it is looked at in, so that a photographed sky's sun is gathered by a lens as any other
+sun is; and a glowing volume that gives light, from each of its places, so that a candle's flame
+throws its light through the glass round it.  Rough mirrors and frosted glass turn them as they turn
+the eye's rays, facet by facet, and spread what they gather into a soft glow; a soap film throws its
+own colors.  Anything without edges -- a plane used as a mirror, an endless sea -- cannot be aimed at.
+
+**In a [spectral](#spectral-light) render, glass that spreads colors splits its light into them.**  Each
+photon that goes through glass with a `dispersion` (or a named `glass`) goes on as one of the bands the
+render carries, bent by the glass's index at its own wavelength, so a prism in a beam throws a rainbow and
+a cut stone its fire.  A render in red, green and blue bends every color alike, as it does for the eye's
+rays, and the light through such glass lands as one.
+
+**With [bounced light](#bounced-light) as well**, the photons carry everything the lights give a matte
+surface by way of mirrors and glass, so a bounce that meets the sky or a glowing volume in a mirror
+finds nothing there: it would be the same light counted twice.  A sky that is only a backdrop, with no
+sky light, sends no photons, and a bounce still finds it.
 
 ### Color Depth and Grayscale
 

@@ -222,6 +222,54 @@ pixel grids at strides 32 down to 1 before rendering; each pass reads only earli
 order (`EndPass`), so a cached render is deterministic however threads share the work.  With a cache K is per record,
 so it can be thousands; too few shows as blotches, not grain.
 
+Caustics are a photon map, off by default: `context { caustics [photons N] }` (2M by default; `Core/Scene.Caustics.cs`,
+`Core/PhotonMap.cs`).  Before the first pixel (before hair light and the bounce cache), photons go from EVERY light at the world
+bounding balls of everything whose material
+`TurnsLight` (reflective, film, or transmitting with an index; rough or smooth; at most 64 targets, clustered by a
+grid; unbounded ones skipped), split by each (light, target) beam's power.  Each photon sets off from its OWN place on the light,
+picked continuously (`Light.PhotonSample`: anywhere on an area light's face, any sky direction by map and
+evenly, any place in a glow) -- from the light's fixed samples a lens made a speck per sample.  A photon's
+power is set at the first thing it does not
+pass straight by -- the light there (pi x ColorFor(sample there) x Cone x fade, so a glow's 1/d^2 cancels, a lamp's
+absence of falloff does not) times its share of the beam's cross-section -- and it is followed exactly as the eye's
+rays shade (`Turned`: film shares; a VNDF facet each way for rough, weight F x G1(out); else ReflectanceAt, metallic
+tint, Fresnel split via `Reflectance`, `Bent`, filter tint), and charged for each run as an eye ray is: the insides
+it leaves, else those of what the place stands inside (`ContainerBefore`, fade and medium -- until 2026-10-19 a pool's
+floor took the sun unfaded by the water over it), else the surroundings.  At a fork the greater way always goes
+on and the lesser by chance lesser/greater, so all photons carry alike; none is killed for losing light; choices
+come from digit-scrambled Halton sequences (`Pick`, `Bases`) at the first surfaces, hashes after; power is tested
+against exact nought (IsBlack's allowance ate a glow's photons).  Kept where a TURNED photon meets a diffuse
+surface; one that meets matte first is the light's own, and passing something that does not bend (a bubble, a
+sheet, `no caustics`) is not a turn.  With caustics on, a shadow ray stops at glass that bends light
+(`StopsTheShadowRay`), and a bounce path finds no sky light's sky and no light-giving glow anywhere along it
+(`CountedElsewhere`; a backdrop with no sky light still counts).  `no caustics` (settled down groups by
+`ShadowSettler`, through instances by `Portals.MakesNoCaustics`) restores the straight line for flat panes.  A
+diffuse hit adds pigment x Sigma(photon x cone filter x max(0, cos^brilliance x diffuse - grain)/cos) / (pi r^2) / pi
+from the 200 nearest photons on the same surface (80 left a frosted block's light grainy: photons set off by more
+than two numbers land as if at random, so a gather wobbles by ~1/sqrt(k); tests sum photons over squares instead) (normals within 0.9, within a quarter of the radius off its plane),
+never over less than the ray's footprint radius (a sun focuses to a point).  Every branch of the tree of 8 or more
+photons carries a `Bound` (its box and a cone round its photons' facings, widened by the 0.9; numbered heap-fashion,
+not by array place) and a search passes by any branch that can hold nothing counting -- finding exactly what it did:
+the tree halves along the widest spread, so it never splits a floor by height, and the water above a pool's floor
+looked over a square two meters across of floor photons out of its reach at every place (4.5 billion photons looked at for
+200 thousand gathers; a 400x250 preview took 46 minutes).  A ray mirrored inside glass sets off
+from `Intersection.MirrorPoint` (the under point), not the over point outside it -- for smooth reflection and all
+photons; the eye's ROUGH reflection still uses `LitPoint`, since inside, internally reflected rays meet the far face
+from random directions and read a lamp's narrow frosted glow there by chance (glitter).  A photon counts only if the first thing
+it TURNS at is its own target's -- the first target, in order, whose ball holds the place (`OwnerOf`) -- or
+beams at overlapping targets counted the light through both twice.  In a spectral render (`CausticsSpectral`,
+from context.Spectral) a photon of every color taking the bent way through glass that `Disperses` is split
+(`SplitThrough`): a band picked evenly over the photons, a wavelength jittered within it, 32x that band's
+share of its light (`BandSpectrum.FromIlluminant`), re-bent at that wavelength; thereafter every share is taken in
+its band (`Hue.Of`), and it is kept with its band (`Photon.Band`); a spectral gather adds band photons band by
+band (`FromSampled`) to the full ones (`FromIlluminant`).  RGB renders never split.
+
+`context { trace depth N }` sets how many surfaces a camera ray may be mirrored or bent at (`Scene.TraceDepth`, 4
+by default, as it always was): a tumbler of water looked through is eight deep, and at four it came out black.
+Asking for a depth also turns on adaptive bailout (`Scene.Bailout` = `RenderContext.Bailout`, 1/1024): a way a
+ray goes is followed only while what it is worth of its pixel (`_fallenShort`, thread-static, worked out by
+`SharesOf` as `GetHitColor` will weigh it) is at least that.  Without a depth, nothing changes, bit for bit.
+
 Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
 the `context { scanner ... }` DSL block or command line) and `Pixels/` (anti-aliasing

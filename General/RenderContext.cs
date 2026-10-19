@@ -177,6 +177,36 @@ public class RenderContext
     public const double DefaultDiffuseCacheError = 0.15;
 
     /// <summary>
+    /// This property holds how many photons are sent from the lamps to make the scene's caustics -- the
+    /// light mirrors and glass gather onto matte surfaces -- or none, the default, for no caustics.  Asked
+    /// for, glass that bends light also stops shadow rays, the light through it being the photons'; see
+    /// <see cref="RayTracer.Core.Scene.ShootCausticPhotons"/>.
+    /// </summary>
+    public int CausticPhotons { get; set; }
+
+    /// <summary>
+    /// This field holds how many photons a scene's caustics are made of when it asks for them without
+    /// saying how many.
+    /// </summary>
+    public const int DefaultCausticPhotons = 2_000_000;
+
+    /// <summary>
+    /// This property holds how many surfaces a ray from the eye may be mirrored or bent at before it is
+    /// followed no further, or <c>null</c> for the four it has always been.  Said, a way worth less than a
+    /// 1024th of its pixel is not followed either, which is what keeps a deep trace through glass -- which
+    /// sends every ray two ways at every surface -- from costing twice as much for every surface deeper.  A
+    /// tumbler of water and a wine glass took 10 minutes 11 seconds twelve deep, and 60 seconds with this
+    /// (44 seconds four deep), differing in 3.6% of pixels by at most 4 levels in 255.
+    /// </summary>
+    public int? TraceDepth { get; set; }
+
+    /// <summary>
+    /// This field holds the least share of its pixel a way a ray goes must be worth to be followed, when the
+    /// scene has said how deep to trace.
+    /// </summary>
+    public const double Bailout = 1.0 / 1024;
+
+    /// <summary>
     /// This property holds the time value (in ticks) for the frame currently being rendered.
     /// </summary>
     public long Ticks { get; set; }
