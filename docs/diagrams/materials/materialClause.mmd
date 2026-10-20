@@ -1,7 +1,7 @@
 railroad-ebnf-beta
 title "A material"
 
-material = "material" "{" { pigment | normal | finish | metallic | interior | decal | film } "}"
+material = "material" "{" { pigment | normal | finish | metallic | interior | decal | film | subsurface } "}"
          | "material" "inherited" [ "{" { decal } "}" ] ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
@@ -12,5 +12,7 @@ metallic = "metallic" [ number ] ;
 
 film = "film" "{" { "thickness" number [ "to" number "by" pattern ]
                   | ( "ior" | "index" "of" "refraction" ) number } "}" ;
+
+subsurface = "subsurface" "{" { "radius" ( number | color ) | "thickness" number } "}" ;
 
 pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] { transform } "}" ;

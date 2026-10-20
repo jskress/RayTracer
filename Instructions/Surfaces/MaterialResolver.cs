@@ -103,6 +103,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public ThinFilmResolver FilmResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how light wanders under the material's surface, if it does.
+    /// </summary>
+    public SubsurfaceResolver SubsurfaceResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolvers for the decals painted over the pigment, in the order they
     /// were written.
     /// </summary>
@@ -147,7 +152,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         FresnelResolver is not null || RoughnessResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
-                        MelaninResolver is not null || FilmResolver is not null ||
+                        MelaninResolver is not null || FilmResolver is not null || SubsurfaceResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
 
         if (SetToNull && saysMore)
@@ -205,6 +210,9 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
 
         if (FilmResolver != null)
             value.Film = FilmResolver.Resolve(context, variables);
+
+        if (SubsurfaceResolver != null)
+            value.Subsurface = SubsurfaceResolver.Resolve(context, variables);
 
         // Decals go on top of any the material already has rather than in place of them, the same as
         // writing a second one in the same block would, which is what a block laid over a material

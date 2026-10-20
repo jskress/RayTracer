@@ -132,6 +132,12 @@ public class Intersection : IComparable<Intersection>
     public Surface ContainerBefore { get; private set; }
 
     /// <summary>
+    /// This property holds the instances <see cref="ContainerBefore"/> was met through, if it stands in a
+    /// shape shared in many places, so that its shape can be found where this one of it stands.
+    /// </summary>
+    public Portals ContainerPortals { get; private set; }
+
+    /// <summary>
     /// This property reports whether light crossing here is bent by different amounts at different
     /// wavelengths, which is the case when either side of the crossing is a substance that spreads
     /// colors.
@@ -275,9 +281,10 @@ public class Intersection : IComparable<Intersection>
         MirrorPoint = Inside && !(Surface.IsASheet || opaque) ? UnderPoint : LitPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
-        (Surface before, Surface after) = intersections.FindContainers(this);
+        (Surface before, Surface after, Portals beforeThrough) = intersections.FindContainers(this);
 
         ContainerBefore = before;
+        ContainerPortals = beforeThrough;
         InteriorBefore = before is null ? null : IntersectionExtensions.InteriorOf(before);
         InteriorAfter = after is null ? null : IntersectionExtensions.InteriorOf(after);
         _environmentIndexOfRefraction = environmentIndexOfRefraction;

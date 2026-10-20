@@ -757,11 +757,135 @@ public class TestMedium
     }
 
     /// <summary>
+    /// What stands inside a medium is lit through it wherever the two are put, and however: in a group
+    /// that is moved, in one that is also scaled, and through an instance, the white box in the
+    /// absorbing ball is lit as it is standing at the middle of the world.  Until 2026-10-19 the light's
+    /// way out of the ball was looked for where the ball would be had its group never moved, missed it,
+    /// and arrived undimmed.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatStandsInsideAMediumIsLitThroughItWhereverItIsPut()
+    {
+        Medium absorbing = new () { Absorption = new Color(0.5, 0.5, 0.5) };
+        Matrix moved = Transforms.Translate(1.5, -0.5, 2);
+        Ray eye = new (new Point(0, 0, -5), Directions.In);
+        Ray movedEye = new (moved * eye.Origin, Directions.In);
+        double atTheMiddle = InAShell(absorbing, Colors.White, 1).GetColorFor(eye).Red;
+
+        double Seen(Func<Surface, Surface, Surface> placing, Matrix inside)
+        {
+            (Sphere ball, Cube box) = ShellWith(absorbing, Colors.White, 1);
+
+            ball.Transform = inside;
+            box.Transform = inside * box.Transform;
+
+            return SceneOf(placing(ball, box), moved * new Point(0, 0, -20)).GetColorFor(movedEye).Red;
+        }
+
+        double grouped = Seen((ball, box) => new Group { Transform = moved }.Add(ball).Add(box), Matrix.Identity);
+        double scaled = Seen(
+            (ball, box) => new Group { Transform = moved * Transforms.Scale(2) }.Add(ball).Add(box),
+            Transforms.Scale(0.5));
+        double shared = Seen(
+            (ball, box) => new Instance { Prototype = new Group().Add(ball).Add(box), Transform = moved },
+            Matrix.Identity);
+
+        Assert.AreEqual(Math.Exp(-0.5 * 1.25 * 2), atTheMiddle / BareBox(), 1e-5, "at the middle");
+        Assert.AreEqual(atTheMiddle, grouped, 1e-9, "in a moved group");
+        Assert.AreEqual(atTheMiddle, scaled, 1e-9, "in a moved and scaled group");
+        Assert.AreEqual(atTheMiddle, shared, 1e-9, "through an instance");
+
+        static double BareBox() => InAShell(null, Colors.White, 1).GetColorFor(
+            new Ray(new Point(0, 0, -5), Directions.In)).Red;
+    }
+
+    /// <summary>
+    /// A lit cloud is the same wherever it is put, and however: outright, in a group that is moved, in one
+    /// that is also scaled, and through an instance.  The cloud turns light again and again and is thicker
+    /// in some places than others, so each of its turns asks where its edge lies and how much of it stands
+    /// between it and the lamp -- all of which, until 2026-10-19, was asked of the ball as if its group had
+    /// never moved, and through an instance where its stuff would be had the instance not been moved.
+    /// </summary>
+    [TestMethod]
+    public void TestALitCloudIsTheSameWhereverItIsPut()
+    {
+        Matrix moved = Transforms.Translate(1.5, -0.5, 2);
+        Matrix sized = Transforms.Scale(1.4);
+
+        // Through the cloud off its middle, clear of the planes its checkered stuff changes at.
+        Color Seen(Surface placed) => SceneOf(placed, new Point(-4, 2, -3)).GetColorFor(
+            new Ray(new Point(1.5 + 0.42, -0.5 + 0.28, -5), Directions.In), 5);
+
+        Color outright = Seen(Cloud(moved * sized));
+        Color grouped = Seen(new Group { Transform = moved }.Add(Cloud(sized)));
+        Color scaled = Seen(new Group { Transform = moved * Transforms.Scale(2) }.Add(Cloud(Transforms.Scale(0.7))));
+        Color shared = Seen(new Instance { Prototype = Cloud(sized), Transform = moved });
+
+        Assert.IsGreaterThan(0.02, outright.Red, $"the cloud came out {outright}");
+        Assert.AreEqual(outright.Red, grouped.Red, 1e-6 * outright.Red, "in a moved group");
+        Assert.AreEqual(outright.Red, scaled.Red, 1e-6 * outright.Red, "in a moved and scaled group");
+        Assert.AreEqual(outright.Red, shared.Red, 1e-6 * outright.Red, "through an instance");
+
+        static Sphere Cloud(Matrix transform) => new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                Transparency = 1,
+                Interior = new Interior
+                {
+                    Medium = new Medium
+                    {
+                        Scattering = new Color(1.5, 1.5, 1.5),
+                        Absorption = new Color(0.1, 0.1, 0.1),
+                        DensityPattern = new DensityShape { Pattern = new CheckerPattern() },
+                        Samples = 24,
+                        Bounces = 2
+                    }
+                }
+            },
+            Transform = transform
+        };
+    }
+
+    /// <summary>
+    /// This method builds a scene of one thing, placed as it is, on black and lit by a white lamp.
+    /// </summary>
+    private static Scene SceneOf(Surface placed, Point lamp)
+    {
+        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+
+        placed.PrepareForRendering();
+        scene.Surfaces.Add(placed);
+        scene.Lights.Add(new PointLight { Location = lamp, Color = Colors.White });
+
+        return scene;
+    }
+
+    /// <summary>
     /// This method builds a scene of a clear ball of radius one, filled as given, with a box inside it
     /// whose front face stands a quarter in from the ball's middle, colored as given and lit by a lamp
     /// straight behind the eye.
     /// </summary>
     private static Scene InAShell(Medium medium, Color box, double diffuse, Interior interior = null)
+    {
+        (Sphere ball, Cube cube) = ShellWith(medium, box, diffuse, interior);
+        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+
+        ball.PrepareForRendering();
+        cube.PrepareForRendering();
+        scene.Surfaces.Add(ball);
+        scene.Surfaces.Add(cube);
+        scene.Lights.Add(new PointLight { Location = new Point(0, 0, -20), Color = Colors.White });
+
+        return scene;
+    }
+
+    /// <summary>
+    /// This method builds the clear ball and the box inside it that <see cref="InAShell"/> sets in a scene.
+    /// </summary>
+    private static (Sphere Ball, Cube Box) ShellWith(
+        Medium medium, Color box, double diffuse, Interior interior = null)
     {
         interior ??= new Interior();
         interior.Medium = medium;
@@ -782,15 +906,8 @@ public class TestMedium
             },
             Transform = Transforms.Translate(0, 0, 0.5) * Transforms.Scale(0.25)
         };
-        Scene scene = new () { Background = new SolidPigment(Colors.Black) };
 
-        ball.PrepareForRendering();
-        cube.PrepareForRendering();
-        scene.Surfaces.Add(ball);
-        scene.Surfaces.Add(cube);
-        scene.Lights.Add(new PointLight { Location = new Point(0, 0, -20), Color = Colors.White });
-
-        return scene;
+        return (ball, cube);
     }
 
     [TestMethod]

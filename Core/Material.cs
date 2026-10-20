@@ -211,6 +211,34 @@ public class Material
     public ThinFilm Film { get; set; }
 
     /// <summary>
+    /// This property holds how light wanders under the surface before it comes out again, for wax, marble,
+    /// skin and the like, or null for a surface that is lit where the light lands; see
+    /// <see cref="Core.Subsurface"/>.  Its pigment, times its diffuse, is still the color it shows.
+    /// </summary>
+    public Subsurface Subsurface { get; set; }
+
+    /// <summary>
+    /// This method returns this material with no diffuse term, and everything else as it is: what a surface
+    /// whose light comes up from under it is shaded with by the lamps, the light under it being worked out
+    /// apart.  The copy is made once and kept.
+    /// </summary>
+    public Material WithoutDiffuse()
+    {
+        return LazyInitializer.EnsureInitialized(ref _withoutDiffuse, () =>
+        {
+            Material copy = (Material) MemberwiseClone();
+
+            copy.Diffuse = 0;
+            copy._roughCopies = null;
+            copy._withoutDiffuse = null;
+
+            return copy;
+        });
+    }
+
+    private Material _withoutDiffuse;
+
+    /// <summary>
     /// This property holds how metallic the material is, between 0 and 1, and governs the color
     /// of what it reflects -- both its specular highlight and, where it is reflective, the scene
     /// mirrored in it.
