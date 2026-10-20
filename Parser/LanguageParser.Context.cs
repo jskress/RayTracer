@@ -2,6 +2,7 @@ using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
+using RayTracer.Graphics;
 using RayTracer.Instructions.Context;
 using RayTracer.Scanners;
 using RayTracer.Terms;
@@ -103,6 +104,9 @@ public partial class LanguageParser
                         ? "A rough surface must look in at least one direction."
                         : null
                 };
+                break;
+            case "film":
+                updater.FilmCurveResolver = new LiteralResolver<FilmCurve> { Value = FilmCurve.Named(clause.Text(2)) };
                 break;
             case "trace":
                 updater.TraceDepthResolver = new TermResolver<int?>

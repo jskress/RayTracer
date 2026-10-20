@@ -58,15 +58,67 @@ public class RenderContext
     public bool AnglesAreRadians { get; set; }
 
     /// <summary>
-    /// This property holds the gamma correction value to use when generating image files.
+    /// This property holds the gamma to write image files with, when a scene or the command line gives one;
+    /// see <see cref="OutputCurve"/>.
     /// </summary>
-    public double Gamma { get; set; } = 2.2;
+    public double Gamma
+    {
+        get;
+        set
+        {
+            field = value;
+            GammaIsSaid = true;
+        }
+    } = 2.2;
+
+    /// <summary>
+    /// This property notes whether a scene or the command line has said what gamma to write with.
+    /// </summary>
+    public bool GammaIsSaid { get; private set; }
 
     /// <summary>
     /// This property notes whether gamma correction should actually be applied.
     /// </summary>
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public bool ApplyGamma { get; set; } = true;
+
+    /// <summary>
+    /// This property holds how the light a render ends with is developed into a picture; see
+    /// <see cref="Graphics.FilmCurve"/>.  It is not asked for a file that holds light, nor with `no gamma`.
+    /// </summary>
+    public FilmCurve FilmCurve { get; set; } = FilmCurve.Soft;
+
+    /// <summary>
+    /// This property holds how many stops to expose every camera by, when the command line says, in place of
+    /// what each camera says for itself.
+    /// </summary>
+    public double? Exposure { get; set; }
+
+    /// <summary>
+    /// This method returns what a picture shows of the given light: developed by the film curve when gamma
+    /// correction is on, and as it stands, but for being cut off at white, with `no gamma`.
+    /// </summary>
+    /// <param name="light">The light.</param>
+    /// <returns>What the picture shows, at most white, before the file's curve.</returns>
+    public Color Shown(Color light)
+    {
+        return (ApplyGamma ? FilmCurve : FilmCurve.None).Develop(light);
+    }
+
+    /// <summary>
+    /// This property returns the curve light is written to an image file with.
+    /// <para>
+    /// **It is the sRGB curve unless something says otherwise**, because that is the curve every viewer
+    /// reads a picture with: a PNG that says nothing of how it was written is taken as sRGB.  Until
+    /// 2026-10-19 light was written with a plain 2.2 power, which tracks the sRGB curve closely except in
+    /// the deepest darks, where a viewer then showed them brighter than they were worked out to be -- a
+    /// thousandth of white came out as three and a half thousandths.  A gamma given outright is written as
+    /// the plain power it asks for, and the file says so; `no gamma` writes light as it stands.
+    /// </para>
+    /// </summary>
+    public TransferFunction OutputCurve => !ApplyGamma ? TransferFunction.Linear
+        : GammaIsSaid ? TransferFunction.Power(1 / Gamma)
+        : TransferFunction.Srgb;
 
     /// <summary>
     /// This property is used to suppress all shadow rendering.
@@ -249,7 +301,9 @@ public class RenderContext
 
         Width = options.Width ?? Width;
         Height = options.Height ?? Height;
-        Gamma = options.Gamma ?? Gamma;
+        // Only a gamma actually given is assigned, since assigning one is what says it.
+        if (options.Gamma is { } gamma)
+            Gamma = gamma;
 
         // These are one-directional CLI overrides: passing the flag forces the setting on;
         // not passing it leaves whatever the scene's own `context { }` block configured.
@@ -271,6 +325,10 @@ public class RenderContext
             Spectral = true;
 
         WhiteBalance = options.WhiteBalance ?? WhiteBalance;
+        Exposure = options.Exposure ?? Exposure;
+
+        if (options.FilmCurve is { } curve)
+            FilmCurve = FilmCurve.Named(curve);
 
         // Antialiasing is the scene's to ask for and the command line's to overrule.  It is left
         // alone unless `-a` was actually given, which is why the option is null until it is: a

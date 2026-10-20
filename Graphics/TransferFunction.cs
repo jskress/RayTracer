@@ -82,6 +82,27 @@ public sealed class TransferFunction
         return value <= 0 ? 0 : Math.Pow(value, _exponent);
     }
 
+    /// <summary>
+    /// This method turns one channel's light into the value a file written with this curve holds for it:
+    /// the other way from <see cref="ToLinear"/>.
+    /// </summary>
+    /// <param name="light">The light, which may be more than one or less than nought; neither is clamped.</param>
+    /// <returns>The value to write.</returns>
+    public double FromLinear(double light)
+    {
+        if (_exponent == 1)
+            return light;
+
+        if (double.IsNaN(_exponent))
+        {
+            return light <= 0.0031308
+                ? light * 12.92
+                : 1.055 * Math.Pow(light, 1 / 2.4) - 0.055;
+        }
+
+        return light <= 0 ? 0 : Math.Pow(light, 1 / _exponent);
+    }
+
     public override string ToString()
     {
         return Name;

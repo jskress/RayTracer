@@ -277,6 +277,29 @@ strategies: `NoAntiAliasingPixelRenderer`, `AdaptiveSuperSamplingPixelRenderer`,
 `AliasingOption`). Output goes through `ImageIO/` (`ImageFile`, `ImageCache`,
 `ImageReference`) which wraps SkiaSharp/Magick.NET for reading/writing image formats.
 
+The camera's response, from light to picture: a camera's `exposure` (stops; `Camera.Exposure`, or `--exposure` as
+`RenderContext.Exposure` over every camera) scales each finished pixel in `Camera.Render`, after white balance, so the
+canvas holds exposed LIGHT.  A picture file is developed only when written: `Color.ToChannelValues` takes
+`RenderContext.Shown` -- the `FilmCurve` (`Graphics/FilmCurve.cs`: `soft` by default, each channel identity below
+0.8 and eased above it by Khronos PBR Neutral's shoulder, so bright orange runs through yellow to white as film's;
+`neutral`, that shoulder on the brightest channel with the hue kept and paled, WITHOUT Khronos's toe -- the default
+for a day, it turned flames peach and Tatooine's sky beige; `agx`; `none` clamps) -- then encodes with
+`RenderContext.OutputCurve`: the sRGB curve unless a `gamma` was SAID (`GammaIsSaid`, set only by the scene or the
+command line; then a plain power, declared by a gAMA chunk, `ImageIO/PngGamma.cs`, since Magick.NET's gamma is read
+only).  `no gamma` is raw: no film curve, no curve, clamped.  Until 2026-10-19 output was a plain 2.2 power that every
+viewer decoded as sRGB (a thousandth of white shown as 0.0034) and clipped at white.  `.exr`, `.hdr` and `.pfm` are
+written by `ImageFile.SaveLight` as exposed linear light, undeveloped and unclamped, the image tagged linear first
+(left sRGB, Magick.NET decoded it on the way into Radiance: 3 became 12.8); Magick.NET cannot read back an OpenEXR
+one pixel high or wide.  When a picture is not the light as it stands, the adaptive sampler compares samples as
+shown (`PixelRenderer.Seen`: exposed, then developed), so an exposed-up dark scene subdivides as a bright one would.
+A camera's `blades n [turned a]` make its opening a polygon: `CameraSampler.ToPolygon` maps the lens samples into n
+equal triangles (sqrt warp outward), so bokeh takes the shape, and `glare g` spreads the finished canvas (after
+exposure, before any film curve) by the opening's diffraction pattern (`Core/Diffraction.cs`): |FFT|^2 of the
+opening on a 1024 grid (opening 0.24 of it, edges supersampled), summed into a table and box-integrated over each
+pixel for each of the 32 bands (pattern size by wavelength, first dark ring 1.5 px at 550 nm in an 800-wide picture,
+the same share of any width; band weights the clipped unbalanced CIE->sRGB answer, each channel's adding to one),
+convolved by `Basics/Fourier.cs` (radix-2, grid twice the picture's sides) as (1-g) + g x pattern.
+
 ### Pigments and patterns (`Pigments/`, `Patterns/`)
 
 Pigments (`Pigments/`) define how color is derived at a surface point (solid, pattern-based,

@@ -40,6 +40,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface or parametric surface: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `agate` | Pattern: turbulent, wandering bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `agx` | Context: `film curve agx`, a film's curve over the whole range. | [Context](context.md#film-curve) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path) |
@@ -70,6 +71,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `below` | Field: the highest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight; also the color black. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
 | `blend` | Pigment: average several pigments together. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
 | `blob` | Surface: metaballs that melt together. | [Surfaces](surfaces.md#blob) |
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
@@ -114,7 +116,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `cube` | Surface: a unit cube. | [Surfaces](surfaces.md#cube) |
 | `cubic` | Pattern (and wave shape): cubic-interpolated. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `curl` | Hair: how many turns a strand winds through; `curl 3 radius 0.02`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `curve` | Path/spline/tube: a cubic (two control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `curve` | Path/spline/tube: a cubic (two control point) segment.  Context: `film curve`, how light is developed into a picture. | [Advanced Surfaces](advanced-surfaces.md#paths), [Context](context.md#film-curve) |
 | `cycle` | Field: take the things it is filled with in turn rather than at random. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `cylinder` | Surface: a cylinder (also a blob component). | [Surfaces](surfaces.md#cylinder-and-conic), [Blob](surfaces.md#blob) |
 | `cylindrical` | Pattern/image map: value around a cylinder; also image mapping, and a decal wrapped around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
@@ -143,13 +145,14 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
 | `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment.  Material: light the surface gives off of its own. | [Scene Files](scene-files.md#filling-that-space), [Materials](materials.md#emission) |
 | `error` | Context: `diffuse cache error`, how far the cache of bounced light may stray. | [Context](context.md#a-cache-of-bounced-light) |
+| `exposure` | Camera: how many stops brighter or darker it takes the light. | [Cameras](cameras.md#exposure) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
-| `film` | Material: a film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored. | [Thin films](materials.md#thin-films) |
+| `film` | Material: a film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored.  Context: `film curve`, how light is developed into a picture. | [Thin films](materials.md#thin-films), [Context](context.md#film-curve) |
 | `falloff` | Spotlight: the outer cone where light fades out. | [Lights](lights.md#spotlights) |
 | `false` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `field` | Surface: an area of the X/Z plane, given by an outline, filled with copies of one shape.  Also a camera's `field of view`. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#field-of-view) |
@@ -173,6 +176,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `generic` | `generic shape`: a flat surface from a 2D path. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
 | `gives` | Surface: `gives light`, so the glowing stuff inside it lights the scene. | [Surfaces](surfaces.md#a-surface-that-gives-light) |
+| `glare` | Camera: the share of its light the opening spreads, as round a bright lamp. | [Cameras](cameras.md#glare) |
 | `glass` | Interior: a real optical glass by name. | [Materials](materials.md#dispersion) |
 | `gradient` | Pattern: a smooth ramp of color. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
@@ -234,8 +238,10 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `mottled` | Pigment: a base color mottled by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
 | `move` | Path/spline: lift the pen to a new point; also an L-system turtle move. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
+| `neutral` | Context: `film curve neutral`, which eases light brighter than eight tenths of white toward white, keeping its hue. | [Context](context.md#film-curve) |
 | `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading) |
 | `noise` | Mottling: dims a color by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
+| `none` | Context: `film curve none`, which cuts light off at white. | [Context](context.md#film-curve) |
 | `normal` | Roughens a surface: a pattern that tilts the normal; a blob plane: which way it faces. | [Materials](materials.md#roughening-the-surface), [Blob](surfaces.md#a-plane-component) |
 | `normals` | Smooth triangle: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
@@ -325,6 +331,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
+| `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white. | [Context](context.md#film-curve) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
@@ -380,7 +387,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `turned` | Field: how far its copies may be turned about the up axis, the whole spread. | [Advanced Surfaces](advanced-surfaces.md#field) |
+| `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
@@ -891,12 +898,14 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `-w`, `--width` | Image width; otherwise the scene's, otherwise 800. |
 | `-h`, `--height` | Image height; otherwise the scene's, otherwise 600. |
 | `-a`, `--antialias` | The [anti-aliasing](context.md#anti-aliasing) to apply: `off`, or `adaptive`, `adaptive:depth` or `adaptive:depth:threshold`, or just a depth. |
-| `-g`, `--gamma` | The [gamma](context.md#gamma) to correct the output for. |
-| `--no-gamma` | Apply no gamma correction. |
+| `-g`, `--gamma` | Write with a plain [gamma](context.md#gamma) power instead of the sRGB curve. |
+| `--no-gamma` | Write the light as it stands, with no curve. |
 | `--no-shadows` | Turn shadows off everywhere. |
 | `--grayscale` | Write the image in shades of gray. |
 | `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
 | `--white-balance` | The temperature, in kelvin, the picture is [balanced](context.md#white-balance) to show as white. |
+| `--exposure` | How many [stops](cameras.md#exposure) to expose every camera by. |
+| `--film-curve` | The [film curve](context.md#film-curve) to develop the picture by: `soft`, `neutral`, `agx` or `none`. |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
 | `-r`, `--frame-rate` | Frames per second for a series of images (default 24). |
 | `-m`, `--frame` | Render one particular frame of an animation. |

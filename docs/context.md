@@ -81,20 +81,68 @@ the setting applies to the whole scene.
 
 ### Gamma
 
-Gamma correction bends the colors on their way out of the renderer to suit how a display
-actually behaves.
+Gamma correction bends the light on its way out of the renderer into the values a picture file
+holds.  A file spends its values where an eye can tell them apart, steeply through the darks and
+gently through the lights, and a viewer bends them back into light as it shows them.
 
 | Written | What it does |
 | --- | --- |
 | `apply gamma` | Turn gamma correction on. |
 | `no gamma` | Turn it off. |
-| `gamma 2.2` | Set the value used when it is on. |
+| `gamma 2.2` | Write with a plain power of this gamma instead of the sRGB curve. |
 
-Correction is on by default.  A great many of the gallery scenes write `no gamma`, which is
+Correction is on by default, and it writes with the **sRGB curve**: the one every viewer reads
+a picture with, since a PNG that says nothing of how it was written is taken to be sRGB.  It
+follows a 2.2 power closely everywhere but the deepest darks, where it runs straight down to
+black.  Until October 2026 the renderer wrote a plain 2.2 power instead, and a viewer showed the
+darks brighter than they were worked out to be -- a thousandth of white as three and a half
+thousandths.  Giving a `gamma` writes the plain power it asks for, and a PNG then says so of
+itself, so that a viewer that heeds it reads it back rightly.
+
+A great many of the gallery scenes write `no gamma`, which is
 worth understanding: with correction off, the numbers a scene writes for its colors are the
 numbers that reach the file, so a material's color can be reasoned about directly.  With it
 on, the picture generally looks better on an ordinary screen.  Neither is wrong; they answer
-different questions.  An [image pigment](pigments-and-patterns.md#image-pigments) follows the scene: with correction
+different questions.  A file that holds light -- OpenEXR, Radiance or a float map -- is never
+curved either way: it is written as the light itself.
+
+### Film Curve
+
+A screen stops at white, and light does not.  What becomes of light brighter than white is the
+film curve's to say.
+
+```
+context { film curve agx }
+```
+
+| Written | What it does |
+| --- | --- |
+| `film curve soft` | The default.  Leaves each channel below eight tenths of white alone, and eases each that is brighter toward white by itself. |
+| `film curve neutral` | Leaves light below eight tenths of white alone, and eases what is brighter toward white keeping its hue, paling it as it goes. |
+| `film curve agx` | A film's curve over the whole range: softer and less saturated, with room for light sixteen times brighter than middle gray.  A scene wants [exposing](cameras.md#exposure) for it. |
+| `film curve none` | Cuts each channel off at white. |
+
+**Cut off at white, a highlight loses its shading.**  Where the light runs past white the
+picture goes flat, the shape of a lit cheek or a lamp's glass gone with it.  Film and a camera's
+sensor take light beyond a point less and less instead, so it climbs toward white without
+arriving and keeps its shading on the way.  Every render cut off at white until October 2026;
+`film curve none` still does.
+
+The soft curve changes nothing below eight tenths of white, so a scene's colors come out as
+they were written; a white wall in full light shows at nine tenths of white, leaving room above
+it for what is brighter.  It eases each channel by itself, as each of a color film's layers
+takes its own color, so a bright orange runs through yellow on its way to white -- which is how
+a flame comes out in a photograph.  What it cannot do is keep a very bright pure color: each
+channel still runs up toward white, so a spectrum cast too brightly on a wall comes out in flat
+blocks of violet, cyan, yellow and red, as it would on film.  The neutral curve keeps a color's
+hue instead, paling it toward white, which suits a product shot where a bright red must stay
+that red -- and turns a flame peach and a sunset beige.
+AgX is the curve Blender uses: it reshapes the whole range, so a scene tuned for the soft curve
+looks paler and flatter under it until it is exposed for it.
+
+With `no gamma` there is no curve either: the numbers a scene works out reach the file as they
+stand, cut off at white.  A file that holds light is written exposed but undeveloped, for
+developing elsewhere.  `--film-curve` on the command line takes the place of the scene's.  An [image pigment](pigments-and-patterns.md#image-pigments) follows the scene: with correction
 on, a picture's values are turned into the light they stand for, and with it off they are taken as
 they stand, like every other color in the scene.
 

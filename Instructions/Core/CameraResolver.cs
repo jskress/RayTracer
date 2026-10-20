@@ -69,6 +69,26 @@ public class CameraResolver : NamedObjectResolver<Camera>
     public Resolver<int?> SeedResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many stops our camera exposes the light by.
+    /// </summary>
+    public Resolver<double> ExposureResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how many blades our camera's opening is made of.
+    /// </summary>
+    public Resolver<int> BladesResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far our camera's blades are turned.
+    /// </summary>
+    public Resolver<double> BladeTurnResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the share of the light our camera's opening spreads.
+    /// </summary>
+    public Resolver<double> GlareResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a camera.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -88,6 +108,10 @@ public class CameraResolver : NamedObjectResolver<Camera>
         ShutterResolver.AssignTo(value, target => target.Shutter, context, variables);
         BlurSamplesResolver.AssignTo(value, target => target.BlurSamples, context, variables);
         SeedResolver.AssignTo(value, target => target.Seed, context, variables);
+        ExposureResolver.AssignTo(value, target => target.Exposure, context, variables);
+        BladesResolver.AssignTo(value, target => target.Blades, context, variables);
+        BladeTurnResolver.AssignTo(value, target => target.BladeTurn, context, variables);
+        GlareResolver.AssignTo(value, target => target.Glare, context, variables);
 
         base.SetProperties(context, variables, value);
     }

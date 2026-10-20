@@ -1,4 +1,5 @@
 using RayTracer.General;
+using RayTracer.Graphics;
 
 namespace RayTracer.Instructions.Context;
 
@@ -86,6 +87,11 @@ public class ContextUpdater : Instruction
     public Resolver<int?> TraceDepthResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how the light a render ends with is developed into a picture.
+    /// </summary>
+    public Resolver<FilmCurve> FilmCurveResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many bits of each color channel reach the file.
     /// </summary>
     public Resolver<int> BitsPerChannelResolver { get; set; }
@@ -154,6 +160,7 @@ public class ContextUpdater : Instruction
         DiffuseCacheResolver.AssignTo(context, target => target.DiffuseCacheError, context, variables);
         CausticPhotonsResolver.AssignTo(context, target => target.CausticPhotons, context, variables);
         TraceDepthResolver.AssignTo(context, target => target.TraceDepth, context, variables);
+        FilmCurveResolver.AssignTo(context, target => target.FilmCurve, context, variables);
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
         SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);

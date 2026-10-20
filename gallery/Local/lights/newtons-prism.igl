@@ -47,8 +47,9 @@ camera {
 
 // The sun, low in the window.  It is bright, ten times white, because what comes through a slit two
 // centimeters wide is spread over half a meter of wall.  At thirty the spectrum was too bright for the
-// picture to hold: its colors ran past what a screen can show and were cut off there, and the rainbow
-// came out in flat blocks of violet, cyan, yellow and red instead of running from one into the next.
+// picture to hold: each of its colors ran its own channel up to white, cut off there or eased toward it,
+// and the rainbow came out in flat blocks of violet, cyan, yellow and red instead of running from one into
+// the next.  Ten keeps the colors.
 distant light { direction [1, -0.12, 0]  color [10, 10, 10] }
 
 // Just enough light to find the room by, from over the camera's shoulder: with no ambient, whatever this

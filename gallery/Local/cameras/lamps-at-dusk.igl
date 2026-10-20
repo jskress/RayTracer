@@ -1,0 +1,74 @@
+// A row of lamps along a path at dusk, the nearest in focus and the rest gone soft.
+//
+// Three things a real camera does to light, all here at once.  The lens is open wide and focused on the
+// nearest lantern, so the lamps further off blur -- and a lens closed down by blades has an opening that
+// is a polygon, so each blurred lamp takes its shape: seven blades, seven sides.  The same opening spreads
+// the light of anything very bright into the pattern its shape makes, so the lit lanterns throw out
+// rays, an odd number of blades making twice as many.  And the lanterns are far brighter than white;
+// the film curve eases them toward white rather than cutting them off there, so they keep their shape and
+// their color fades into them as a photograph's does.
+
+import 'outdoor-lights' { StreetLamp }
+import 'daylight'       { Dusk, DuskLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    // A scene lit by its own lamps wants none of the libraries' ambient; see `a-street-after-dark`.
+    scale ambient by 0
+    info {
+        title 'Lamps at Dusk'
+        author 'J. Stephen Kress'
+        description 'A row of lamps along a path at dusk, the far ones blurred into seven-sided shapes by the blades of the lens.'
+        copyright true
+        software __software__
+    }
+}
+
+// At a person's eye, over the path, looking a little up and along the lamps with a longish lens -- the way
+// a photograph of lamps going soft is taken -- and focused on the first lantern, seven meters off.  The lens
+// is opened wide, wider than a real one of its length, so that what is far off blurs well past its own size.
+camera {
+    location [0.3, 1.6, -3]
+    look at [-0.92, 2.3, 6.9]
+    field of view 35
+    aperture 0.1
+    focal point [-1.2, 3.3, 4]
+    blades 7 turned 8
+    blur samples 96
+    glare 0.1
+}
+
+background Dusk
+
+light DuskLight { samples 18  color [0.075, 0.095, 0.155] }
+
+// The path and the grass beside it.
+plane { material { pigment [0.105, 0.118, 0.088]  specular 0.03 } }
+parallelogram {
+    at [-0.6, 0.002, -10]  sides [1.5, 0, 0], [0, 0, 80]
+    material { pigment [0.32, 0.30, 0.27]  specular 0.05 }
+}
+
+// A town far off across the fields, a string of lit windows two hundred meters away: lights the lens
+// cannot focus on, each blurred into the shape of the opening.  They glow without lighting anything.
+for light in [0, 11] {
+    sphere {
+        material { pigment [1, 0.82, 0.55]  emission 30  diffuse 0  specular 0 }
+        scale 0.6
+        translate [-30 + light * 5.3 + mod(light * 7, 3), 1.5 + mod(light * 5, 4) * 0.6, 190 + mod(light * 11, 5) * 6]
+    }
+}
+
+// A gatepost across the path, level with the first lamp and as sharp, with a bare bulb on it: a point of
+// light far brighter than white, which the opening spreads into fourteen rays -- seven blades, and an odd
+// number makes twice as many.
+cylinder { material { pigment [0.06, 0.06, 0.06]  specular 0.2 }  min Y 0  max Y 1  scale [0.07, 2.5, 0.07]  translate [1.2, 0, 4] }
+sphere { material { pigment [1, 0.9, 0.75]  emission 2000  diffuse 0  specular 0 }  scale 0.03  translate [1.2, 2.56, 4] }
+
+// The lamps, every eight meters along the path's left side, lit.
+for lamp in [0, 6] {
+    object StreetLamp(3.4, 'summer', 0, 1) { translate [-1.2, 0, 4 + lamp * 8] }
+}

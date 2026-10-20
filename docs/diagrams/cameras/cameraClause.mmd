@@ -5,4 +5,5 @@ camera = [ "perspective" | "orthographic" | "fisheye" | "ultraWide" | "panoramic
          "camera" "{" { "named" name | "location" point | "look" "at" point | "up" vector
        | "field" "of" "view" angle | "aperture" number
        | "focal" ( "point" point | "distance" number )
-       | "blur" "samples" number | "shutter" number | "seed" number } "}" ;
+       | "blur" "samples" number | "shutter" number | "seed" number
+       | "exposure" number | "blades" number [ "turned" angle ] | "glare" number } "}" ;

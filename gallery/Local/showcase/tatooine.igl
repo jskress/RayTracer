@@ -43,9 +43,13 @@ context {
     // warms one at sunset.
     white balance 8500
     // The light off the sand.  One bounce is nearly all of it in the open, where light that bounces once
-    // mostly goes on up into the sky: a second brightened him by less than a hundredth.
+    // mostly goes on up into the sky: a second brightened him by less than a hundredth.  It is cached:
+    // open sand is all long reaches and slow change, the case a cache is made for, so each place the
+    // cache keeps looks in a thousand directions and a pixel looks for itself only at what is near.
+    // Cached, the picture came out the same, in an hour against an hour and a half without.
     diffuse bounces 1
-    diffuse samples 128
+    diffuse samples 1024
+    diffuse cache
     info {
         title 'Tatooine'
         author 'J. Stephen Kress'

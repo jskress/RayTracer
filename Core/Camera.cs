@@ -87,6 +87,33 @@ public class Camera : NamedThing
     public int? Seed { get; set; }
 
     /// <summary>
+    /// This property holds how many stops brighter or darker the camera takes the light than it is: each
+    /// stop doubles it.  It is nought by default, the light as the scene gives it.  A scene lit by a candle,
+    /// or one whose sun is many times brighter than white, can be exposed for the way a photographer would,
+    /// rather than by relighting it.
+    /// </summary>
+    public double Exposure { get; set; }
+
+    /// <summary>
+    /// This property holds how many blades the camera's opening is made of, or nought for a round one.  Blades
+    /// make the opening a polygon, which shapes both what is out of focus -- each blurred point of light
+    /// takes the opening's shape -- and the rays a bright point throws out when the camera has
+    /// <see cref="Glare"/>.
+    /// </summary>
+    public int Blades { get; set; }
+
+    /// <summary>
+    /// This property holds how far the blades are turned, in radians.
+    /// </summary>
+    public double BladeTurn { get; set; }
+
+    /// <summary>
+    /// This property holds the share of the light the camera's opening spreads into its pattern -- the glare
+    /// round a lamp -- from nought, the default, to one; see <see cref="Diffraction"/>.
+    /// </summary>
+    public double Glare { get; set; }
+
+    /// <summary>
     /// This property provides the view transformation that the camera represents.
     /// </summary>
     public Matrix Transform => GetTransform();
@@ -98,7 +125,7 @@ public class Camera : NamedThing
     /// go on to ask for.
     /// </summary>
     public CameraSampler Sampler => _sampler ??= new CameraSampler(
-        Aperture, GetFocalDistance(), Shutter, BlurSamples, Seed);
+        Aperture, GetFocalDistance(), Shutter, BlurSamples, Seed, Blades, BladeTurn);
 
     /// <summary>
     /// This property provides how far through the shutter's opening each sample looks.
@@ -151,6 +178,12 @@ public class Camera : NamedThing
             SpectralBasis.Shared.Prepare();
 
         WhiteBalance balance = context.WhiteBalance is { } kelvin ? new WhiteBalance(kelvin) : null;
+        double gain = Math.Pow(2, context.Exposure ?? Exposure);
+
+        // The sampler tells samples apart as the picture will show them -- exposed, and developed by the film
+        // curve -- unless the picture shows the light just as it is.
+        if (gain != 1 || (context.ApplyGamma && context.FilmCurve != FilmCurve.None))
+            renderer.Seen = light => context.Shown(Exposed(light, gain));
 
         context.Progress?.SetTotal(canvas.Width * canvas.Height);
 
@@ -168,6 +201,9 @@ public class Camera : NamedThing
                 if (balance is not null)
                     color = balance.Apply(color);
 
+                if (gain != 1)
+                    color = Exposed(color, gain);
+
                 canvas.SetColor(color, x, y);
                 context.Statistics?.CountPixel();
                 context.Progress?.Bump();
@@ -178,8 +214,16 @@ public class Camera : NamedThing
             context.Progress?.Done();
         }
 
+        // The opening spreads the light as the picture forms, so the whole picture is spread at once; the
+        // film curve that develops it comes after, when it is written.
+        new Diffraction(Glare, Blades, BladeTurn).Spread(canvas);
+
         return canvas;
     }
+
+    // Light taken so many times brighter, keeping how much of the pixel it covers.
+    private static Color Exposed(Color light, double gain) =>
+        new (light.Red * gain, light.Green * gain, light.Blue * gain, light.Alpha);
 
     /// <summary>
     /// This method fills the scene's cache of bounced light, if it keeps one, by looking at the scene through
