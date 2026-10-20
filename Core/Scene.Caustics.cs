@@ -287,17 +287,19 @@ public partial class Scene
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
 
         return Math.Max(
-            Math.Max(material.Reflective, material.Film is null ? 0 : 0.25),
+            Math.Max(
+                Math.Max(material.Reflective, material.Film is null ? 0 : 0.25),
+                material.CoatApplies ? material.Coat.AverageReflectance(1) : 0),
             transmits && material.Interior.Refracts ? Math.Max(material.Transparency, 0.5) : 0);
     }
 
     /// <summary>
     /// This method reports whether a material turns light a photon is followed through: a mirror, smooth
-    /// or rough; glass that bends what it lets through; or a film, which always mirrors some of it.
+    /// or rough; glass that bends what it lets through; or a film or a coat, which always mirror some of it.
     /// </summary>
     private static bool TurnsLight(Material material)
     {
-        if (material.Film is not null)
+        if (material.Film is not null || material.CoatApplies)
             return true;
 
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
@@ -821,12 +823,18 @@ public partial class Scene
             // A rough surface, as GetRoughReflection and GetRoughRefraction have it: each way through a
             // facet of its own, and no share between them but the facets' own.
             double alpha = material.Roughness * material.Roughness;
-            (Vector across, Vector along) = Microfacets.FrameAround(hit.Normal);
+
+            // A brushed surface's facets, in its own frame, along its grooves and across them; see Facets.
+            Facets facets = Facets.At(material, hit.Surface, hit.Point, hit.Normal, 0, hit.Portals);
+            (Vector across, Vector along) = facets is null
+                ? Microfacets.FrameAround(hit.Normal)
+                : (facets.Along, facets.Across);
             Vector eye = new (hit.Eye.Dot(across), hit.Eye.Dot(along), hit.Eye.Dot(hit.Normal));
 
             if (material.Reflective > 0 && eye.Z > 0)
             {
-                Vector facet = Microfacets.SampleVisibleNormal(eye, alpha, first, second);
+                Vector facet = facets?.SampleVisibleNormal(eye, first, second) ??
+                               Microfacets.SampleVisibleNormal(eye, alpha, first, second);
                 double cosFacet = eye.Dot(facet);
                 Vector away = facet * (2 * cosFacet) - eye;
 
@@ -837,7 +845,8 @@ public partial class Scene
                         : material.ReflectanceAt(cosFacet);
 
                     mirrorRay = new Ray(hit.MirrorPoint, (across * away.X + along * away.Y + hit.Normal * away.Z).Unit);
-                    mirrored = RgbSpectrum.White * (reflectance * Microfacets.Masking(away.Z, alpha));
+                    mirrored = RgbSpectrum.White *
+                               (reflectance * (facets?.Masking(away) ?? Microfacets.Masking(away.Z, alpha)));
                 }
             }
 
@@ -883,10 +892,77 @@ public partial class Scene
         if (material.Metallic != 0 && mirrored.Sum > 0)
             mirrored *= material.GetMetallicTint(RgbSpectrum.From(pigment), cosine);
 
+        // A coat mirrors by its own index over whatever lies beneath it, and what lies beneath mirrors
+        // through it, crossing it both ways.  A smooth coat over a smooth mirror mirrors the same way, and
+        // the two shares go together; otherwise one way or the other goes on, picked by chance in
+        // proportion to what each gives back, so that either carries what a photon should.  A coat is only
+        // ever on something opaque, so the number glass would bend by is free to pick with.
+        if (material.CoatApplies && !hit.Inside)
+        {
+            Coat coat = material.Coat;
+            (Ray coatRay, double coatShare) = CoatTurned(hit, coat, first, second);
+
+            if (mirrorRay is not null)
+                mirrored *= coat.Through<RgbSpectrum>(cosine, cosine, hit.N1);
+
+            double beneath = mirrorRay is null ? 0 : Average(mirrored);
+
+            if (coatRay is not null && coatShare > 0)
+            {
+                if (beneath <= 0)
+                {
+                    mirrorRay = coatRay;
+                    mirrored = RgbSpectrum.White * coatShare;
+                }
+                else if (!coat.IsRough && !material.IsRough)
+                    mirrored += RgbSpectrum.White * coatShare;
+                else
+                {
+                    double odds = coatShare / (coatShare + beneath);
+
+                    if (third < odds)
+                    {
+                        mirrorRay = coatRay;
+                        mirrored = RgbSpectrum.White * (coatShare / odds);
+                    }
+                    else
+                        mirrored *= 1 / (1 - odds);
+                }
+            }
+        }
+
         if (passed.Sum > 0 && material.Interior.Filter > 0)
             passed *= material.Interior.GetFilterTint(RgbSpectrum.From(pigment));
 
         return (mirrorRay, mirrored, passRay, passed);
+    }
+
+    /// <summary>
+    /// This method works out which way a coat mirrors a photon, and how much of it: the mirror direction for
+    /// a smooth coat, or off a facet it sees for a rough one, as the coat's own reflection looks.
+    /// </summary>
+    private static (Ray Mirrored, double Share) CoatTurned(Intersection hit, Coat coat, double first, double second)
+    {
+        if (!coat.IsRough)
+            return (new Ray(hit.MirrorPoint, hit.Reflect), coat.ReflectanceAt(hit.Eye.Dot(hit.Normal), hit.N1));
+
+        double alpha = coat.Alpha;
+        (Vector across, Vector along) = Microfacets.FrameAround(hit.Normal);
+        Vector eye = new (hit.Eye.Dot(across), hit.Eye.Dot(along), hit.Eye.Dot(hit.Normal));
+
+        if (eye.Z <= 0)
+            return (null, 0);
+
+        Vector facet = Microfacets.SampleVisibleNormal(eye, alpha, first, second);
+        double cosFacet = eye.Dot(facet);
+        Vector away = facet * (2 * cosFacet) - eye;
+
+        if (away.Z <= 0)
+            return (null, 0);
+
+        return (
+            new Ray(hit.MirrorPoint, (across * away.X + along * away.Y + hit.Normal * away.Z).Unit),
+            coat.ReflectanceAt(cosFacet, hit.N1) * Microfacets.Masking(away.Z, alpha));
     }
 
     // A photon's light is tested against nought exactly, never IsBlack: each carries a share of the light

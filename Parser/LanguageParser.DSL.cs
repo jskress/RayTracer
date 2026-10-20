@@ -75,10 +75,10 @@ public partial class LanguageParser
 
         _keywords: 'absorption', 'accuracy', 'agate', 'agx', 'alignment', 'along', 'ambient', 'amplitude', 'and',
             'above', 'angle', 'angles', 'aperture', 'apply',
-            'anisotropy', 'antialiasing', 'apart', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
+            'anisotropy', 'antialiasing', 'apart', 'are', 'around', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
+            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
@@ -95,10 +95,10 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
+            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
+            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
@@ -621,8 +621,8 @@ public partial class LanguageParser
         materialMetallicClause:
         {
             metallic > [
-                pigment | normal | fresnel | materialValueClause | startInteriorClause |
-                startDecalClause | startFilmClause | _expression{?}
+                pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | startInteriorClause |
+                startDecalClause | startFilmClause | startSubsurfaceClause | startCoatClause | _expression{?}
             ]
         }
         // An interior may be written out in full, named, or named and then added to, much as a
@@ -718,11 +718,41 @@ public partial class LanguageParser
         [
             { radius > _expression } | { thickness > _expression }
         ] ?? 'Expecting a subsurface property here.'
+        // A clear coat over the surface -- lacquer, varnish, a glaze -- which mirrors by its own index over
+        // whatever the rest of the material says lies beneath it: how rough its own surface is, its index,
+        // and the color it gives what is beneath, seen square-on.
+        startCoatClause:
+        {
+            coat > openBrace ?? 'Expecting an open brace to follow "coat" here.'
+        }
+        coatEntryClause:
+        [
+            { roughness > _expression } | materialIorClause | { tint > _expression }
+        ] ?? 'Expecting a coat property here.'
+        // How much a rough surface is brushed, its facets leaning further across its grooves than along them,
+        // and which way the grooves run in the surface's own space: along a direction, or round an axis.
+        materialAnisotropyClause:
+        {
+            anisotropy > _expression > {
+                [ along | around ] > [ X | Y | Z | _expression ]
+                    ?? 'Expecting "X", "Y", "Z" or a direction to follow here.'
+            }{?}
+        }
+        // The sheen of cloth -- velvet, satin, felt -- a soft shine coming up toward a graze: the color its
+        // fibers give back, and how rough it is, a satin's narrow edge to a felt's broad glow.
+        startSheenClause:
+        {
+            sheen > openBrace ?? 'Expecting an open brace to follow "sheen" here.'
+        }
+        sheenEntryClause:
+        [
+            { color > _expression } | { roughness > _expression }
+        ] ?? 'Expecting a sheen property here.'
         materialEntryClause:
         [
-            pigment | normal | fresnel | materialValueClause | materialMetallicClause |
+            pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMetallicClause |
             materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause |
-            startSubsurfaceClause
+            startSubsurfaceClause | startCoatClause | startSheenClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

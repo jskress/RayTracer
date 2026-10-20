@@ -43,19 +43,20 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `agx` | Context: `film curve agx`, a film's curve over the whole range. | [Context](context.md#film-curve) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path) |
+| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
 | `angle` | L-system control: the turn angle. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `angles` | `angles are degrees`/`radians`. | [Context](context.md#angles) |
-| `anisotropy` | Medium: which way it prefers to turn light. | [Scene Files](scene-files.md#scattering) |
+| `anisotropy` | Medium: which way it prefers to turn light.  Material: how much a rough surface is brushed, `anisotropy a along X` or `around Y`. | [Scene Files](scene-files.md#scattering), [Brushed metal](materials.md#brushed-metal) |
 | `antialiasing` | Context: `antialiasing depth`/`threshold`. | [Context](context.md#anti-aliasing) |
 | `apart` | Field: `rows <n> apart <d>`, how far apart its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `aperture` | Camera: lens radius; larger blurs more. | [Cameras](cameras.md#depth-of-field) |
 | `apply` | Context: `apply gamma`. | [Context](context.md#gamma) |
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
+| `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
 | `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point. | [Cameras](cameras.md#placing-a-camera) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -98,7 +99,8 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `close` | Path: join back to where the run began. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `clump` | Hair: how strongly strands gather into locks; `clump 0.6 size 20`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `color` | A solid pigment, or a light's color. | [Materials](materials.md#the-color) |
+| `coat` | Material: a clear coat over the surface, lacquer or varnish; `roughness`, `ior` and `tint` go in it. | [A clear coat](materials.md#a-clear-coat) |
+| `color` | A solid pigment, or a light's color.  Sheen: what the fibers give back. | [Materials](materials.md#the-color), [Cloth](materials.md#cloth) |
 | `columns` | `physical sky`: how many ways round the sky is worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `comb` | Hair: the direction strands lean toward. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `commands` | L-system: maps characters to turtle moves. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -196,13 +198,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
 | `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
-| `index` | Interior or film: `index of refraction`, written out.  A `field`: `index in n` names each copy's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [Advanced Surfaces](advanced-surfaces.md#field) |
+| `index` | Interior, film or coat: `index of refraction`, written out.  A `field`: `index in n` names each copy's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat), [Advanced Surfaces](advanced-surfaces.md#field) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: take the material handed down from the surrounding group; with decals in a block, paint them on top of it. | [Materials](materials.md#markings-that-survive-a-repaint) |
 | `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |
 | `interior` | What a surface is made of: its index of refraction and clarity.  Also what fills the space inside it. | [Materials](materials.md#transparency-and-interiors), [Scene Files](scene-files.md#the-space-between-things) |
 | `intersection` | CSG: only where all children overlap. | [Surfaces](surfaces.md#combining-surfaces) |
-| `ior` | Interior or film: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films) |
+| `ior` | Interior, film or coat: index of refraction (short form). | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat) |
 | `isosurface` | A surface made by a function of x, y and z rather than by a shape. | [Advanced Surfaces](advanced-surfaces.md#isosurface) |
 | `italic` | Font style: slanted. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `iterations` | Julia set: how many times the iteration is applied. | [Surfaces](advanced-surfaces.md#julia) |
@@ -306,7 +308,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollLeft` | L-system turtle: roll left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
-| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [Hair](advanced-surfaces.md#how-hair-is-lit) |
+| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Coat or sheen: how rough its own surface is.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [A clear coat](materials.md#a-clear-coat), [Cloth](materials.md#cloth), [Hair](advanced-surfaces.md#how-hair-is-lit) |
 | `rows` | `physical sky`: how many heights in the sky are worked out and kept.  Also a field's `rows <n> apart <d>`, rows laid side by side along a path. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count, and context: `reflection samples`. | [Scene Files](scene-files.md#scattering) |
@@ -320,6 +322,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `serial` | Context: the single-threaded `serial scanner`. | [Context](context.md#scanners) |
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `shadows` | `no shadows`: the whole scene casts none. | [Surfaces](surfaces.md#no-shadow) |
+| `sheen` | Material: the soft shine of cloth toward a graze; `color` and `roughness` go in it. | [Cloth](materials.md#cloth) |
 | `shape` | The second word of `generic shape`. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
 | `shear` | Transform: slant one axis along another. | [Transforms](transforms.md#shear) |
 | `shininess` | Finish: how tight the highlight is. | [Materials](materials.md#ambient-diffuse-and-specular) |
@@ -369,6 +372,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `temperature` | Light: the temperature, in kelvin, of the glow it gives instead of a color. | [Lights](lights.md#color-temperature) |
 | `tightness` | Spotlight: how fast light fades across the cone. | [Lights](lights.md#spotlights) |
 | `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `tint` | Coat: the color it gives what lies beneath it, seen square-on. | [A clear coat](materials.md#a-clear-coat) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
 | `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, and a film's `thickness … to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films) |
 | `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |

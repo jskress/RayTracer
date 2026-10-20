@@ -54,6 +54,22 @@ public class TestRegularization
     }
 
     /// <summary>
+    /// A coated wall the camera sees only in a rough floor is shaded exactly as the same wall under a coat
+    /// as rough as the floor: its coat mirrors as a mirror does, and is made rough as one is, while the
+    /// paint beneath, which mirrors nothing, is left as it is.
+    /// </summary>
+    [TestMethod]
+    public void TestACoatSeenInARoughSurfaceIsAsRoughAsIt()
+    {
+        double[] smooth = RenderedCoat(0.25, "");
+        double[] asRough = RenderedCoat(0.25, "roughness 0.25");
+        double[] rougher = RenderedCoat(0.25, "roughness 0.5");
+
+        AssertSame(asRough, smooth, "a coat seen in a rough floor");
+        Assert.IsFalse(smooth.SequenceEqual(rougher), "a coat seen in a rough floor came out as rough as twice that");
+    }
+
+    /// <summary>
     /// Clear glass the camera sees only in a rough floor is frosted exactly as rough as the floor, as a
     /// mirror is.
     /// </summary>
@@ -124,6 +140,23 @@ public class TestRegularization
             $"plane {{ material {{ pigment [0.3, 0.3, 0.3]  reflective 0.5  roughness {floor} }} }}\n" +
             "cube { scale [10, 4, 0.1]  translate [0, 4, 4]\n" +
             $"    material {{ pigment [0.1, 0.1, 0.12]  diffuse 0.1  reflective 0.8  fresnel  {finish} }} }}\n" +
+            "sphere { scale 0.5  translate [-1, 1, -3]  material { pigment [0.8, 0.2, 0.1] } }\n",
+            24, 24));
+    }
+
+    /// <summary>
+    /// This method renders a rough floor mirroring a coated wall, the coat as given, and returns every
+    /// pixel's red.
+    /// </summary>
+    private double[] RenderedCoat(double floor, string coat)
+    {
+        return Red(RenderedCanvas("reflection samples 4",
+            "camera { location [0, 2, -4]  look at [0, 0, 0]  field of view 20 }\n" +
+            "background linear Y gradient { [0, [0.9, 0.85, 0.7], 1, [0.2, 0.3, 0.6]] }\n" +
+            "point light { location [-3, 5, -6] }\n" +
+            $"plane {{ material {{ pigment [0.3, 0.3, 0.3]  reflective 0.5  roughness {floor} }} }}\n" +
+            "cube { scale [10, 4, 0.1]  translate [0, 4, 4]\n" +
+            $"    material {{ pigment [0.5, 0.05, 0.05]  coat {{ {coat} }} }} }}\n" +
             "sphere { scale 0.5  translate [-1, 1, -3]  material { pigment [0.8, 0.2, 0.1] } }\n",
             24, 24));
     }

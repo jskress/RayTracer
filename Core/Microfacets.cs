@@ -281,6 +281,34 @@ public static class Microfacets
     }
 
     /// <summary>
+    /// This method returns how far the facets lean that a highlight of one sample of a lamp is worked out
+    /// from, where the sample stands for a patch of the lamp's face the given angle across.
+    /// <para>
+    /// **An area light is looked at from a fixed few places across its face**, and the highlight of each in a
+    /// surface of little roughness is a small fraction of a degree across, where the places may be degrees
+    /// apart: a window showed in a satin floor, or in lacquer, as a grid of separate dots.  A place stands for
+    /// its share of the face, though, not for a point, so its highlight is spread over that share -- the facets
+    /// widened by half the share's angle, since a facet leaning by an angle turns what it mirrors by twice
+    /// that, the two added as spreads add, in squares.  What the facets give back in all is the same however
+    /// far they lean, so the window gives the same light in all, as one soft patch; on a surface rough enough
+    /// for its highlights to overlap already, the widening is next to nothing.
+    /// </para>
+    /// <para>
+    /// **Soft, not crisp**: GGX's long tail spreads half a near-mirror's highlight beyond the window's own
+    /// image, so its middle is about half what a true mirror shows there.  Narrower, the dots came back -- a
+    /// third of the share rippled by a twentieth, a quarter by a fifth, with an even grid of places and before
+    /// the jitter opens gaps of up to two shares.  A crisp window in a near-mirror wants something there to
+    /// mirror: a panel glowing by its `emission`.
+    /// </para>
+    /// </summary>
+    /// <param name="alpha">How far the facets lean.</param>
+    /// <param name="spread">The angle across the patch of the lamp the sample stands for, in radians; nought
+    /// for a lamp that is a point or a direction.</param>
+    /// <returns>How far the facets lean for that sample's highlight.</returns>
+    public static double WidenedBy(double alpha, double spread) =>
+        spread <= 0 ? alpha : Math.Sqrt(alpha * alpha + spread * spread / 4);
+
+    /// <summary>
     /// This method returns how brightly a lamp shows in a rough surface: the facets' reflection of a
     /// light arriving from one direction, toward the eye, for a light of unit color.
     /// <para>

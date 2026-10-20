@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
@@ -108,6 +109,31 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public SubsurfaceResolver SubsurfaceResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the clear coat over the material's surface, if it has one.
+    /// </summary>
+    public CoatResolver CoatResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the sheen of cloth on the material's surface, if it has one.
+    /// </summary>
+    public SheenResolver SheenResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how much the material's surface is brushed.
+    /// </summary>
+    public Resolver<double> AnisotropyResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for which way a brushed surface's grooves run.
+    /// </summary>
+    public Resolver<Vector> BrushedAlongResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the axis a brushed surface's grooves run round.
+    /// </summary>
+    public Resolver<Vector> BrushedAroundResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolvers for the decals painted over the pigment, in the order they
     /// were written.
     /// </summary>
@@ -153,6 +179,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         BrillianceResolver is not null || GrainResolver is not null ||
                         MetallicResolver is not null || TransparencyResolver is not null ||
                         MelaninResolver is not null || FilmResolver is not null || SubsurfaceResolver is not null ||
+                        CoatResolver is not null || AnisotropyResolver is not null || SheenResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
 
         if (SetToNull && saysMore)
@@ -160,6 +187,12 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
             return "An inherited material takes everything but its decals from the material handed down " +
                    "to it, so only decals may be written in one.";
         }
+
+        if (FilmResolver is not null && CoatResolver is not null)
+            return "A film and a coat are each a skin over the surface, so a material may have one or the other.";
+
+        if (SheenResolver is not null && (FilmResolver is not null || CoatResolver is not null))
+            return "A sheen is cloth's own skin, so a material with one may have no film or coat as well.";
 
         return FilmResolver is not null && RoughnessResolver is not null
             ? "A film's colors come of its being smooth, so a material with a film may not also be rough."
@@ -187,6 +220,20 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
         FresnelResolver.AssignTo(value, target => target.Fresnel, context, variables);
         RoughnessResolver.AssignTo(value, target => target.Roughness, context, variables);
+        AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
+
+        // A surface is brushed one way or round an axis, so saying one is saying it is not the other.
+        if (BrushedAlongResolver is not null)
+        {
+            value.BrushedAlong = BrushedAlongResolver.Resolve(context, variables);
+            value.BrushedAround = null;
+        }
+
+        if (BrushedAroundResolver is not null)
+        {
+            value.BrushedAround = BrushedAroundResolver.Resolve(context, variables);
+            value.BrushedAlong = null;
+        }
 
         value.ReflectionSamples = context.ReflectionSamples;
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
@@ -213,6 +260,12 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
 
         if (SubsurfaceResolver != null)
             value.Subsurface = SubsurfaceResolver.Resolve(context, variables);
+
+        if (CoatResolver != null)
+            value.Coat = CoatResolver.Resolve(context, variables);
+
+        if (SheenResolver != null)
+            value.Sheen = SheenResolver.Resolve(context, variables);
 
         // Decals go on top of any the material already has rather than in place of them, the same as
         // writing a second one in the same block would, which is what a block laid over a material

@@ -1,0 +1,78 @@
+// A velvet cushion, a fold of satin and a felt ball, lit low from behind the camera and from beyond.
+//
+// Cloth shines in a way nothing hard does.  Its fibers stand out of the weave, so it catches the light where it
+// is seen and lit edge-on: velvet glows round its rounded edges and darkens where it faces the eye, satin shows a
+// pale shine along every fold that turns away, and felt, its fibers every which way, glows softly all over.  Each
+// says so with `sheen`: the color its fibers give back, which is not the cloth's own -- satin's is pale over a
+// deep color -- and how rough it is, a satin's narrow edge to a felt's broad glow.  None of the three has a
+// highlight of its own: a cloth's shine is its sheen.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    info {
+        title 'Velvet and Satin'
+        author 'J. Stephen Kress'
+        description 'A velvet cushion, a fold of satin and a felt ball, each glowing toward its edges.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'cloth' { Sheet }
+
+camera {
+    location [0.2, 2.2, -6.2]
+    look at [0.1, 0.55, 0.6]
+    field of view 40
+}
+
+background [0.03, 0.03, 0.035]
+
+// A lamp low behind the camera, where a sheen shines most, and a dim one from beyond.
+point light { location [-1.5, 2.6, -8]  color [1.0, 0.96, 0.9] }
+point light { location [3, 3.5, 6]  color [0.30, 0.32, 0.38] }
+
+// A plain table.
+cube {
+    material { pigment [0.30, 0.26, 0.22]  ambient 0.1  diffuse 0.75  specular 0 }
+    scale [6, 0.3, 4]
+    translate Y -0.3
+}
+
+// The cushion: deep red velvet, its sheen its own color brightened.
+superellipsoid {
+    east 0.35
+    north 0.45
+    material {
+        pigment [0.32, 0.03, 0.05]
+        ambient 0.06  diffuse 0.9  specular 0
+        sheen { color [0.75, 0.28, 0.32]  roughness 0.45 }
+    }
+    scale [1.1, 0.42, 1.1]
+    translate [-1.35, 0.42, 0.8]
+}
+
+// The satin: a fold of deep blue under a pale, narrow sheen.
+object Sheet(2.4, 1.8, 'breeze', 2) {
+    material {
+        pigment [0.04, 0.07, 0.24]
+        ambient 0.06  diffuse 0.85  specular 0
+        sheen { color [0.80, 0.85, 0.95]  roughness 0.25 }
+    }
+    rotate Y -12
+    translate [0.6, 0, -0.2]
+}
+
+// The felt ball: green, its fibers every which way, its sheen broad.
+sphere {
+    material {
+        pigment [0.10, 0.28, 0.12]
+        ambient 0.06  diffuse 0.9  specular 0
+        sheen { color [0.55, 0.75, 0.55]  roughness 0.9 }
+    }
+    scale 0.55
+    translate [1.75, 0.55, 1.4]
+}

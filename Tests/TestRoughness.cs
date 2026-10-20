@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
@@ -331,6 +332,100 @@ public class TestRoughness
     public void TestTheSceneSaysHowManyDirections()
     {
         Assert.IsNull(Said("reflection samples 4", "roughness 0.3"));
+    }
+
+    /// <summary>
+    /// A floor of little roughness under an area light, its 25 places half a unit apart and ten units off: the
+    /// window shows as one even patch rather than as 25 dots, each place's highlight spread over its share of
+    /// the face (a step along each axis, over the distance), and the middle is exactly that -- for a floor
+    /// rough alike every way and for one brushed.  A point lamp is a point and is not spread at all.
+    /// </summary>
+    [TestMethod]
+    public void TestAnAreaLightShowsInASatinFloorAsOnePatch()
+    {
+        AreaLight window = new ()
+        {
+            Location = new Point(0, 10, 0), Axis1 = new Vector(2, 0, 0), Axis2 = new Vector(0, 0, 2),
+            USteps = 5, VSteps = 5, Jitter = false
+        };
+        Point eye = new (0, 10, 0);
+
+        foreach (double anisotropy in new[] { 0.0, 0.6 })
+        {
+            Material material = new ()
+            {
+                Pigment = new SolidPigment(Colors.Black), Ambient = 0, Diffuse = 0, Specular = 0, Reflective = 0.5,
+                Roughness = 0.05, Anisotropy = anisotropy
+            };
+            Scene scene = new () { Background = new SolidPigment(Colors.Black) };
+            Plane floor = new () { Material = material };
+
+            scene.Surfaces.Add(floor);
+            scene.Lights.Add(window);
+
+            Intersection HitAt(double x)
+            {
+                Point target = new (x, 0, 0.013);
+                Ray ray = new (eye, (target - eye).Unit);
+                List<Intersection> hits = scene.Intersect(ray);
+                Intersection hit = hits.Hit();
+
+                hit.PrepareUsing(ray, hits);
+
+                return hit;
+            }
+
+            double[] across = Enumerable.Range(-5, 11).Select(step => scene.GetHitColor(HitAt(step * 0.03), 2).Red).ToArray();
+            string what = anisotropy == 0 ? "alike every way" : "brushed";
+
+            Assert.IsLessThan(1.05, across.Max() / across.Min(), $"{what}: {string.Join(", ", across)}");
+
+            // Worked out from where the floor is lit, just off it, as the lamp's places are looked at from.
+            Intersection middle = HitAt(0);
+            Facets facets = Facets.At(material, floor, middle.Point, middle.Normal, 0, default);
+            double expected = 0;
+
+            for (int u = 0; u < 5; u++)
+            {
+                for (int v = 0; v < 5; v++)
+                {
+                    Vector toPlace = new Point(-1 + u * 0.5, 10, -1 + v * 0.5) - middle.LitPoint;
+                    double spread = Math.Sqrt(0.5 * 0.5 + 0.5 * 0.5) / toPlace.Magnitude;
+
+                    expected += (facets is null
+                        ? Microfacets.Highlight(
+                            middle.Normal, middle.Eye, toPlace.Unit,
+                            Math.Sqrt(0.0025 * 0.0025 + spread * spread / 4), material.ReflectanceAt)
+                        : facets.Highlight(middle.Eye, toPlace.Unit, material.ReflectanceAt, spread)) / 25;
+                }
+            }
+
+            double seen = scene.GetHitColor(middle, 2).Red;
+
+            Assert.AreEqual(expected, seen, 1e-9 * expected, $"{what}, the middle: {seen} against {expected}");
+        }
+
+        // A point lamp's highlight is the facets' own, unspread.
+        Material satin = new ()
+        {
+            Pigment = new SolidPigment(Colors.Black), Ambient = 0, Diffuse = 0, Specular = 0, Reflective = 0.5,
+            Roughness = 0.05
+        };
+        Scene lamp = new () { Background = new SolidPigment(Colors.Black) };
+
+        lamp.Surfaces.Add(new Plane { Material = satin });
+        lamp.Lights.Add(new PointLight { Location = new Point(0, 10, 0) });
+
+        Ray down = new (eye, (new Point(0.01, 0, 0.013) - eye).Unit);
+        List<Intersection> found = lamp.Intersect(down);
+        Intersection under = found.Hit();
+
+        under.PrepareUsing(down, found);
+
+        double unspread = Microfacets.Highlight(
+            under.Normal, under.Eye, (new Point(0, 10, 0) - under.LitPoint).Unit, 0.0025, satin.ReflectanceAt);
+
+        Assert.AreEqual(unspread, lamp.GetHitColor(under, 2).Red, 1e-9 * unspread, "a point lamp");
     }
 
     /// <summary>
