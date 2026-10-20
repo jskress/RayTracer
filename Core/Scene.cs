@@ -1012,6 +1012,9 @@ public partial class Scene : NamedThing, IDisposable
         if (intersection is HairIntersection strand)
             return ShadeFiber<TS>(strand);
 
+        // For the patterns that look about the place being shaded; see Surroundings.
+        ShadeHere(intersection.TimeIndex);
+
         TS surfaceColor = TS.Black;
         Material material = RegularizedFor(intersection);
 
@@ -2127,11 +2130,30 @@ public partial class Scene : NamedThing, IDisposable
     /// reckoned, and the lantern would lose the rays' share of its light.
     /// </para>
     /// </summary>
+    /// <para>
+    /// A blend of whole materials by a pattern is settled here first, where the ray met it; see
+    /// <see cref="MaterialBlend"/>.
+    /// </para>
     /// <param name="intersection">The hit about to be shaded.</param>
     /// <returns>The material to shade it with.</returns>
     private static Material RegularizedFor(Intersection intersection)
     {
         Material material = intersection.Surface.Material ?? Material.Default;
+
+        // What weather the surface has been out in makes its material a blend; see Weather.
+        if (WeatherSettler.At(intersection) is { } weather && weather.Weathered(material) is var weathered &&
+            !ReferenceEquals(weathered, material))
+        {
+            material = weathered;
+            intersection.Material = material;
+        }
+
+        // A blend of materials is settled where the ray met the surface, and the hit keeps what it settled on.
+        if (material.Blend is { } blend)
+        {
+            material = blend.At(intersection, Shading);
+            intersection.Material = material;
+        }
 
         // A film is never made rough: what it mirrors depends on its being smooth.
         if (!_spreading || _spreadRoughness <= 0 || material.Film is not null)

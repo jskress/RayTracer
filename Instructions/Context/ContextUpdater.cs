@@ -55,6 +55,11 @@ public class ContextUpdater : Instruction
     public Resolver<int> SubsurfaceSamplesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many directions the weathering patterns look about in.
+    /// </summary>
+    public Resolver<int> WeatheringSamplesResolver { get; set; }
+
+    /// <summary>
     /// What to multiply every material's ambient by once the scene is whole.
     /// </summary>
     public Resolver<double> AmbientScaleResolver { get; set; }
@@ -159,6 +164,7 @@ public class ContextUpdater : Instruction
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
         ReflectionSamplesResolver.AssignTo(context, target => target.ReflectionSamples, context, variables);
         SubsurfaceSamplesResolver.AssignTo(context, target => target.SubsurfaceSamples, context, variables);
+        WeatheringSamplesResolver.AssignTo(context, target => target.WeatheringSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         DiffuseBouncesResolver.AssignTo(context, target => target.DiffuseBounces, context, variables);

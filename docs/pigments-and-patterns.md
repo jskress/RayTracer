@@ -190,6 +190,48 @@ colors of a soap bubble or of oil on water are a different thing — they come o
 not of any pigment, and are worked out rather than chosen; see
 [Thin films](materials.md#thin-films).
 
+#### Where weather gathers
+
+Dirt gathers in seams, corners and grooves; paint wears through on edges and rims; dust and sand settle
+on whatever faces up, and moss grows on the side away from the sun.  None of that is a matter of *where*
+a point is, but of what stands round it, and three patterns ask exactly that:
+
+| Pattern | Its value | Says of itself |
+| --- | --- | --- |
+| `crevices` | 0 on open ground, rising toward 1 in corners, grooves and seams | `radius r`: how far to look about the place, 0.25 unless said |
+| `edges` | 0 on a flat face of a solid, rising toward 1 at its corners and rims | `radius r`: how far to look into the solid |
+| `facing` | 1 facing a direction, 0.5 square to it, 0 facing away | `toward d`: the direction, in the world; up unless said |
+
+```
+material {
+    pigment crevices {
+        radius 0.1
+        [0, [0.85, 0.82, 0.75], 0.25, [0.85, 0.82, 0.75], 0.6, [0.20, 0.15, 0.10]]
+    }
+}
+```
+
+**`crevices` and `edges` look about the place**, with a few dozen short rays: out from the surface for
+crevices, counting how much of what they meet lies within reach, and how near; into the solid for edges,
+counting how much of it they come back out of.  So a groove's floor is closed in nearly all round and
+reads near one, a floor beside a wall reads a third or so close to the wall and less further off, and
+open ground reads nought.  A ray that comes out of a solid through a face turned back the way the place
+faces has found the far side of a sheet rather than a face round a corner, and counts for less the further
+that face is turned, nothing at all for one facing straight back: so a thin panel is flat across its face
+and stands out along its rim, and a ridge sharper than a right angle stands out by how sharp it is.  How
+many rays is the scene's [`weathering samples`](context.md#weathering-samples).
+
+**The reach is measured in the units of the space the shape stands in**: the scene's, for a shape in the
+scene, and a model's own for a part of one, so a droid built in inches says how far its dirt reaches in
+inches however the droid is later sized.  It is never the shape's own: a cube scaled into a table top does
+not stretch its reach with it.  **`facing` is read in the world**, since what falls, falls the world's way.
+
+**None of the three depends on the point**, so turbulence and a pattern's scale do nothing to them.  For a
+broken edge to the grime, which real grime has, put a noisy pattern inside the map: an entry of the map
+may be any pigment, a `granite` or a `bozo` of its own included.  These patterns mean something only on a
+surface being shaded -- in a pigment, and in a [blend of materials](materials.md#blending-materials), which
+is where weathering is usually wanted, since grime is matte and rust rough where paint was glossy.
+
 ### Turbulence
 
 Most of the interesting patterns are dull without turbulence.  It stirs the points before the

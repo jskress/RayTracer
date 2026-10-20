@@ -60,6 +60,18 @@ public abstract class Surface : NamedThing
     public bool NoCaustics { get; set; }
 
     /// <summary>
+    /// This property holds the weather this surface says it has been out in, if it says so; see
+    /// <see cref="Core.Weather"/>.  It reaches every part of a group or object that says it.
+    /// </summary>
+    public Weather Weather { get; set; }
+
+    /// <summary>
+    /// This property holds the weather that reaches this surface, its own or the nearest round it, settled
+    /// before rendering by <see cref="WeatherSettler"/>.
+    /// </summary>
+    internal Weather SettledWeather { get; set; }
+
+    /// <summary>
     /// This property holds an optional bounding box for the group.
     /// </summary>
     public BoundingBox BoundingBox { get; set; }

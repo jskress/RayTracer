@@ -265,6 +265,30 @@ public class Material
     public bool CoatApplies => Coat is not null && Transparency == 0 && !PigmentMayTransmit && Film is null;
 
     /// <summary>
+    /// This property holds the blend of whole materials this material is, by a pattern, or <c>null</c> for a
+    /// material that is one throughout.  A blend's own properties are its first material's, for whatever asks
+    /// without a hit to settle it at; see <see cref="MaterialBlend"/>.
+    /// </summary>
+    public MaterialBlend Blend { get; set; }
+
+    /// <summary>
+    /// This method returns a copy of this material to be made into a mixture of two: everything it says, and
+    /// none of what it has worked out and kept for itself.
+    /// </summary>
+    internal Material CopiedForBlending()
+    {
+        Material copy = (Material) MemberwiseClone();
+
+        copy.Blend = null;
+        copy._roughCopies = null;
+        copy._withoutDiffuse = null;
+        copy._sight = null;
+        copy._looks = null;
+
+        return copy;
+    }
+
+    /// <summary>
     /// This property holds the sheen of cloth on the surface, if it has one -- velvet, satin, felt -- a soft
     /// shine coming up toward a graze, over whatever the material is beneath it; see <see cref="Core.Sheen"/>.
     /// </summary>
@@ -452,7 +476,7 @@ public class Material
     /// <param name="surface">The surface the point was found on.</param>
     /// <param name="portals">The instances the point was found through, if any.</param>
     /// <returns>The instances to walk through.</returns>
-    private static Portals PortalTo(Surface anchor, Surface surface, Portals portals)
+    internal static Portals PortalTo(Surface anchor, Surface surface, Portals portals)
     {
         if (portals.IsEmpty)
             return default;
@@ -566,6 +590,25 @@ public class Material
     private Sight _sight;
 
     /// <summary>
+    /// This property reports whether this material's pigment depends on what stands round the place it is
+    /// asked about -- a weathering pattern -- worked out once for each pigment it has had.
+    /// </summary>
+    internal bool PigmentSeesTheSurroundings
+    {
+        get
+        {
+            Sight looks = _looks;
+
+            if (looks is null || !ReferenceEquals(looks.Pigment, Pigment))
+                _looks = looks = new Sight(Pigment, Pigment?.SeesTheSurroundings ?? false);
+
+            return looks.Sees;
+        }
+    }
+
+    private Sight _looks;
+
+    /// <summary>
     /// This method returns the color of this material where a ray met a surface wearing it.  See
     /// <see cref="GetColorFor(Surface, Point, Vector, Footprint, Surface)"/>.
     /// </summary>
@@ -608,8 +651,32 @@ public class Material
         Surface surface, Point point, Vector normal = null, Footprint footprint = null,
         Portals portals = default, Viewing viewing = default)
     {
-        Color color = Pigment.GetColorFor(
-            surface, point, footprint, portals, viewing.IsEmpty || !PigmentSeesTheViewer ? default : viewing);
+        Color color;
+
+        // A pigment that looks about the place is shown where it is: the scene, the point and the way the
+        // surface faces there.  See Surroundings.
+        if (normal is not null && PigmentSeesTheSurroundings)
+        {
+            Surroundings was = Surroundings.Current;
+
+            Surroundings.Current = new Surroundings(
+                Scene.Shading, surface, point, normal.Unit, portals, Scene.ShadingTime);
+
+            try
+            {
+                color = Pigment.GetColorFor(
+                    surface, point, footprint, portals, viewing.IsEmpty || !PigmentSeesTheViewer ? default : viewing);
+            }
+            finally
+            {
+                Surroundings.Current = was;
+            }
+        }
+        else
+        {
+            color = Pigment.GetColorFor(
+                surface, point, footprint, portals, viewing.IsEmpty || !PigmentSeesTheViewer ? default : viewing);
+        }
 
         if (Decals is null)
             return color;

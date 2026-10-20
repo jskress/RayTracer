@@ -90,6 +90,13 @@ public class PatternPigment : Pigment
     public override bool SeesTheViewer => Pattern is FlopPattern || (PigmentSet?.SeesTheViewer ?? false);
 
     /// <summary>
+    /// This property reports whether this pigment's pattern, or any pigment it maps to, sees what stands round
+    /// the place it is asked about.
+    /// </summary>
+    public override bool SeesTheSurroundings =>
+        Pattern.SeesTheSurroundings || (PigmentSet?.SeesTheSurroundings ?? false);
+
+    /// <summary>
     /// This method produces the color at a point, told the directions the surface is being shaded
     /// between: the pattern is asked with them, and so is whatever it maps to.
     /// </summary>

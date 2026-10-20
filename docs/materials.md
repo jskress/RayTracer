@@ -749,6 +749,86 @@ geometry.
 
 `gallery/Local/materials/normals.igl` shows the range of it.
 
+### Blending Materials
+
+A pattern may choose between whole materials, not only between colors: clean paint where a surface is
+open and grime in its crevices, bare metal on its worn edges, rust where it faces the weather.  The finish
+changes with the color, as it must, since grime is matte where the paint was glossy and worn paint bares a
+shiny metal:
+
+```
+Paint = material { pigment [0.86, 0.86, 0.84]  specular 0.4  shininess 60  reflective 0.04  fresnel }
+Grime = material { pigment [0.22, 0.17, 0.11]  specular 0  roughness 0.9 }
+
+material blend crevices {
+    radius 0.12
+    [0.15, Paint, 0.5, Grime]
+}
+```
+
+`material blend` takes a pattern, and whatever the pattern says of itself, then a map of values and
+materials, as a pigment's map has values and colors, and then the pattern's transforms.  Below the first
+value the first material is whole, above the last the last; between two, the surface is shaded with a
+material part way between them, every number of its finish -- `diffuse`, `specular`, `reflective`,
+`roughness`, `metallic` and the rest -- mixed in proportion, and its color mixed too.  What cannot be
+mixed, a coat, a sheen, a film, an interior, decals, is the nearer material's.  The materials may be named
+or written out in full, and either may be a blend itself, which is how grime gets a broken edge:
+
+```
+material blend crevices {
+    radius 0.12
+    [0.15, Paint,
+     0.5, material blend granite { [0.3, Grime, 0.6, Paint]  scale 0.05 }]
+}
+```
+
+A pattern that picks among a fixed number of things picks a material outright: `material blend checker
+{ Slate, Marble }` is a floor of two stones.
+
+The blend is settled where a ray meets the surface.  Whatever asks a surface for its material without
+meeting it there -- a shadow ray finding whether it is transparent, a photon -- is given the first
+material, so a blend's materials should agree on whether they let light through.
+
+### Weathering a Model
+
+A model fresh from its maker is clean everywhere; one that has been out is not, and the dirt is not
+spread evenly.  It gathers in the seams, sand settles on whatever faces up and is kicked up over the feet,
+and the paint wears through on the edges.  `weather` says so of a whole group or object at once:
+
+```
+object R2D2(2, 0) {
+    weather {
+        grime 0.6
+        dust 0.5
+        wear 0.3 to R2Aluminum
+        splash 12
+        radius 0.25
+    }
+}
+```
+
+| Entry | What it does |
+| --- | --- |
+| `grime g [color c]` | Dirt in crevices, seams and corners, from 0 to 1: the part's own color most of the way to the grime's, a dark brown unless said, and matte. |
+| `dust d [color c]` | Dust or sand on whatever faces up, from 0 to 1: sandy and matte. |
+| `wear w [to <material>]` | Wear on the edges, from 0 to 1, baring the material named -- the metal under the paint -- or else the part's own, paler and smoother, as handling polishes it. |
+| `splash h [color c]` | Dirt kicked up from the ground, as high as `h` in the model's own units above its own `y = 0`, thickest at the ground. |
+| `radius r` | How far about a place grime and wear are looked for, in the units the parts stand in: 0.25 unless said. |
+
+**Every part is weathered from its own material**, so nothing about the model has to be written again:
+each part's material becomes a [blend](#blending-materials) of itself and what the weather makes of it,
+by the [patterns that say where weather gathers](pigments-and-patterns.md#where-weather-gathers), each
+coming on more widely the more of it there is, and each with an edge broken by noise, as real dirt's is.
+An amount of nought adds nothing at all, so `weather { }`, or any weather of nothing, leaves a model
+exactly as it was.
+
+**A part's weather is the nearest it is given**: its own, or its group's, and so on out.  A shape shared
+in many places is weathered by the weather of the instance it is met through, so one object may stand
+weathered in one place and clean in another.
+
+`gallery/Local/materials/out-in-the-weather.igl` shows two droids, one fresh and one after a few days in
+the desert.
+
 ### Naming and Reusing
 
 A material may be assigned to a variable and reused like any other value:

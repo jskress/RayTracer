@@ -239,6 +239,27 @@ the sheen faint.  The weave beneath is scaled by `Beneath`: 1 - max(color) x E, 
 for ambient, bounces, caustics, walks and the base's mirror.  `SheenApplies` needs opaque, no film, no coat (sheen +
 coat or film is refused at parse).
 
+Weathering: three patterns LOOK ABOUT a place rather than at a point (`Pattern.SeesTheSurroundings`, handed a
+thread-static `Surroundings` -- scene, surface, world point, normal, portals, time index; `Scene.Shading` and
+`ShadingTime` are set by `GetHitColor` and by the photon and hair-light passes -- by `Material.GetColorFor` only for a
+pigment that `SeesTheSurroundings`, and by `MaterialBlend`): `crevices { radius r }` and `edges { radius r }`
+(`Core/Weathering.cs`: `weathering samples` (64) golden-angle, cosine-spread rays at the hit's instant, an eighth of
+them off a first hit from the eye, outward or from just under the skin into the solid, through
+`Scene.NearestCrossingWithin` -- shadow-ray rules, so `no shadow` stand-ins and strands do not count -- each hit
+counted 1 - d/reach, and an inward ray also by the face it leaves through, clamp(1 + n_exit.n, 0, 1), so a sheet's
+far side counts nothing (R2's 0.06-inch dome panels wore through whole without it); the reach in the units of the
+space the surface STANDS IN (parent's or instance's, never its own scale); memo of 4 per thread keyed (pattern,
+scene, surface, time, point)) and `facing { toward d }` ((1 + n.d)/2, WORLD space).  `material blend <pattern> { [v, M, ...] }` (`Core/MaterialBlend.cs`; or N materials
+for a discrete pattern) is settled per hit in `Scene.RegularizedFor` -> `intersection.Material`: scalars and pigment
+(`Pigments/MixedPigment.cs`) mixed, skins (coat, sheen, film, interior, decals) the nearer's, mixtures cached at 256
+steps; a blend's own properties are its FIRST material's for whatever asks without a hit (shadows, photons);
+components are settled in `RenderInstruction` (ambient default and scale, pigment prep).  `weather { grime g [color
+c]  dust d [color c]  wear w [to M]  splash h [color c]  radius r }` on any surface (`Core/Weather.cs`, settled down
+groups by `Geometry/WeatherSettler.cs`, nearest wins, and at the hit through the portal chain, so a shared shape is
+weathered per instance) makes each part's material a cached layered blend: crevices -> grime, edges -> wear, ground
+height in the OWNER's space (`Weather.Owner`, `Material.PortalTo`) -> splash, facing up -> dust, each with a bozo-noise
+broken edge; an amount of 0 adds nothing (bit-identical).  `R2D2(legs, dome, weathered)` uses it.
+
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
 `Material.WithoutDiffuse()` (swapped onto `Intersection.Material` for the light loop) and adds the walk's light; the

@@ -2,7 +2,7 @@
 //
 // A showcase rather than a demonstration -- a picture made with everything the renderer has, the way one
 // would be made for its own sake.  He comes from the `droids` library, in inches, set out in this scene's
-// meters with `scale 0.0254`; everything else is here.
+// meters with `scale 0.0254`, weathered by the library's own `weather { }`; everything else is here.
 //
 // **Two suns are two skies, blended.**  A physical sky works out its sky and its sun from one sun's place,
 // so a sky with two suns in it is two skies averaged -- scattering adds, so that is exactly right -- each
@@ -208,8 +208,9 @@ difference {
     material Sand
 }
 
-// On three legs, his dome turned toward the suns, his front three-quarters to the camera.
-object R2D2(3, -126) { scale 0.0254  rotate Y -70 }
+// On three legs, his dome turned toward the suns, his front three-quarters to the camera, and some days out in the
+// desert: sand on his dome and kicked up over his feet, grime in his seams, his edges worn to the aluminum.
+object R2D2(3, -126, 0.6) { scale 0.0254  rotate Y -70 }
 
 // -- Rocks, and scree ------------------------------------------------------------------------------------
 

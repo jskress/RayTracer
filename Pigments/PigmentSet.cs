@@ -31,6 +31,11 @@ public class PigmentSet
     /// </summary>
     public bool SeesTheViewer => _pigments.Any(pigment => pigment.SeesTheViewer);
 
+    /// <summary>
+    /// This property reports whether any pigment in the set sees what stands round the place it is asked about.
+    /// </summary>
+    public bool SeesTheSurroundings => _pigments.Any(pigment => pigment.SeesTheSurroundings);
+
     private readonly BreakValue<Pigment> _pigments = new (); 
 
     /// <summary>

@@ -76,6 +76,12 @@ public abstract class Pattern
     public abstract double Evaluate(Point point);
 
     /// <summary>
+    /// This property reports whether this pattern's value depends on what stands round the place it is asked
+    /// about, rather than on the point alone: the weathering patterns'.  See <see cref="Core.Surroundings"/>.
+    /// </summary>
+    public virtual bool SeesTheSurroundings => false;
+
+    /// <summary>
     /// This method is the same, told how much of the surface one ray covers there.
     /// <para>
     /// It falls back on the point-sampled answer, which is right for every pattern whose own detail

@@ -1,0 +1,178 @@
+using System.Collections.Concurrent;
+using RayTracer.Basics;
+using RayTracer.Graphics;
+using RayTracer.Patterns;
+using RayTracer.Pigments;
+
+namespace RayTracer.Core;
+
+/// <summary>
+/// This class is a blend of whole materials by a pattern: clean paint where a surface is open and grime in its
+/// crevices, bare metal on its worn edges, rust where it faces the weather.  It is what a material written as
+/// <c>material blend &lt;pattern&gt; { [v, A, v, B, ...] }</c> holds.
+/// <para>
+/// **The finish changes with the color**, which is the point of it: grime is matte where the paint was glossy,
+/// rust rough, and worn paint bares a shiny metal.  So where the pattern falls between two of its materials,
+/// what the surface is shaded with there is a material part way between them -- every number a finish has,
+/// and its color, mixed in proportion -- and where it falls beyond either end, that end's material whole.
+/// What cannot be mixed, a coat, a sheen, a film, an interior, a skin of decals, is the nearer material's.  A
+/// pattern that picks among a fixed number of things, a checker's two squares, picks a material outright.
+/// </para>
+/// <para>
+/// **It is settled where a ray meets the surface**, where every hit's material is settled (see
+/// <c>Scene.RegularizedFor</c>), and everything after shades with the material it settled on.  The mixtures are
+/// kept, a few hundred steps between any two materials, so that no hit makes one of its own.  What asks a
+/// surface for its material without a hit to settle it -- a shadow ray, a photon -- is given the first.
+/// </para>
+/// </summary>
+public sealed class MaterialBlend
+{
+    // How finely the way between two materials is cut, so that the mixtures can be kept: fine enough that a
+    // step is under a level of any color, which is far below what the eye takes for banding.
+    private const int Steps = 256;
+
+    /// <summary>
+    /// This property holds the pattern the materials are blended by.
+    /// </summary>
+    public Pattern Pattern { get; init; }
+
+    /// <summary>
+    /// This property holds where the pattern stands in the surface's space; <c>null</c> for where it is.
+    /// </summary>
+    public Matrix Transform { get; init; }
+
+    /// <summary>
+    /// This property holds the pattern's values at which each material stands whole, rising; empty for a pattern
+    /// that picks among a fixed number of things.
+    /// </summary>
+    public double[] Breaks { get; init; } = [];
+
+    /// <summary>
+    /// This property holds the materials, in the order of the values they stand at.
+    /// </summary>
+    public Material[] Materials { get; init; } = [];
+
+    private Matrix _inverse;
+
+    private readonly ConcurrentDictionary<(Material, Material, int), Material> _mixtures = new ();
+
+    /// <summary>
+    /// This property returns every material the blend holds, its blends' too, for whatever must see to each of
+    /// them before rendering starts.
+    /// </summary>
+    public IEnumerable<Material> AllMaterials =>
+        Materials.SelectMany(material => material.Blend is { } inner ? inner.AllMaterials.Prepend(material) : [material]);
+
+    /// <summary>
+    /// This method returns the material a hit is shaded with: the pattern read where the ray met the surface,
+    /// and the materials there blended by it.
+    /// </summary>
+    /// <param name="intersection">The hit, prepared.</param>
+    /// <param name="scene">The scene being shaded, for a pattern that looks about the place.</param>
+    /// <returns>The material to shade it with.</returns>
+    public Material At(Intersection intersection, Scene scene)
+    {
+        double value = ValueAt(intersection, scene);
+
+        if (Breaks.Length == 0)
+        {
+            int index = (int) Math.Floor(value);
+
+            return Settled(Materials[((index % Materials.Length) + Materials.Length) % Materials.Length], intersection, scene);
+        }
+
+        if (value <= Breaks[0])
+            return Settled(Materials[0], intersection, scene);
+
+        for (int index = 1; index < Breaks.Length; index++)
+        {
+            if (value > Breaks[index])
+                continue;
+
+            double span = Breaks[index] - Breaks[index - 1];
+            int step = span <= 0 ? Steps : (int) Math.Round((value - Breaks[index - 1]) / span * Steps);
+
+            if (step <= 0)
+                return Settled(Materials[index - 1], intersection, scene);
+
+            if (step >= Steps)
+                return Settled(Materials[index], intersection, scene);
+
+            Material from = Settled(Materials[index - 1], intersection, scene);
+            Material to = Settled(Materials[index], intersection, scene);
+
+            return _mixtures.GetOrAdd((from, to, step), key => Mixed(key.Item1, key.Item2, (double) key.Item3 / Steps));
+        }
+
+        return Settled(Materials[^1], intersection, scene);
+    }
+
+    // A material that is itself a blend is settled at the hit first.
+    private static Material Settled(Material material, Intersection intersection, Scene scene) =>
+        material.Blend is { } inner ? inner.At(intersection, scene) : material;
+
+    // The pattern's value where the ray met the surface, read in the surface's own space as a pigment is, and
+    // shown the surroundings if it looks about the place.
+    private double ValueAt(Intersection intersection, Scene scene)
+    {
+        Point point = intersection.Surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals);
+
+        if (Transform is not null)
+        {
+            _inverse ??= Transform.Invert();
+            point = _inverse * point;
+        }
+
+        if (!Pattern.SeesTheSurroundings)
+            return Pattern.ValueFor(point);
+
+        Surroundings was = Surroundings.Current;
+
+        Surroundings.Current = new Surroundings(
+            scene, intersection.Surface, intersection.Point, intersection.Normal.Unit, intersection.Portals,
+            intersection.TimeIndex);
+
+        try
+        {
+            return Pattern.ValueFor(point);
+        }
+        finally
+        {
+            Surroundings.Current = was;
+        }
+    }
+
+    /// <summary>
+    /// This method returns a material part way between two: every number of their finishes mixed in proportion,
+    /// their colors mixed, and whatever cannot be mixed taken from the nearer.
+    /// </summary>
+    /// <param name="from">The material at nought.</param>
+    /// <param name="to">The material at one.</param>
+    /// <param name="share">How far between them, from nought to one.</param>
+    /// <returns>The material between.</returns>
+    public static Material Mixed(Material from, Material to, double share)
+    {
+        Material mixed = (share < 0.5 ? from : to).CopiedForBlending();
+
+        mixed.Pigment = new MixedPigment { From = from.Pigment, To = to.Pigment, Share = share };
+        mixed.Ambient = Between(from.EffectiveAmbient, to.EffectiveAmbient, share);
+        mixed.Emission = from.Emission is null && to.Emission is null
+            ? null
+            : (from.Emission ?? Colors.Black) * (1 - share) + (to.Emission ?? Colors.Black) * share;
+        mixed.Diffuse = Between(from.Diffuse, to.Diffuse, share);
+        mixed.Specular = Between(from.Specular, to.Specular, share);
+        mixed.Shininess = Between(from.Shininess, to.Shininess, share);
+        mixed.Reflective = Between(from.Reflective, to.Reflective, share);
+        mixed.Roughness = Between(from.Roughness, to.Roughness, share);
+        mixed.Anisotropy = Between(from.Anisotropy, to.Anisotropy, share);
+        mixed.Metallic = Between(from.Metallic, to.Metallic, share);
+        mixed.Brilliance = Between(from.Brilliance, to.Brilliance, share);
+        mixed.Grain = Between(from.Grain, to.Grain, share);
+        mixed.Transparency = Between(from.Transparency, to.Transparency, share);
+        mixed.ReflectionSamples = Math.Max(from.ReflectionSamples, to.ReflectionSamples);
+
+        return mixed;
+    }
+
+    private static double Between(double from, double to, double share) => from + (to - from) * share;
+}

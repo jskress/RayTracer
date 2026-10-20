@@ -151,7 +151,7 @@ public class Intersection : IComparable<Intersection>
     /// intersection saw the scene at.  Everything fired onward from here -- toward a light, off a
     /// mirror, through glass -- must see it at the same instant.
     /// </summary>
-    public int TimeIndex { get; private set; }
+    public int TimeIndex { get; internal set; }
 
     /// <summary>
     /// This property exposes the reflectance for this intersection.

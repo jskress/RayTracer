@@ -2351,7 +2351,11 @@ three his body tips back eighteen degrees about his shoulders, his outer legs le
 about the pivots in their feet, and his center leg runs out until its foot stands flat on the ground just
 ahead of the other two -- worked out from the tilt, so all three feet are always on the ground.
 **`dome` turns his dome**, in the scene's unit of angle; positive turns it to his right, as `rotate Y`
-would.
+would.  **`weathered` is how long he has been out**, from 0, as clean as the day he was finished, to 1:
+grime in his panel seams and round his fittings, sand settled on whatever faces up and kicked up over
+his feet and lower legs, and the white and blue worn through to the aluminum on his edges.  It is his own
+materials [weathered](materials.md#weathering-a-model) where they are; `object R2D2(2, 0, 0.6)` is a few
+days in the desert.
 
 ##### Built from the drawings, and from photographs where they disagree
 

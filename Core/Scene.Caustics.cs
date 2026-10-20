@@ -146,9 +146,13 @@ public partial class Scene
                 int first = (block - beam.FirstBlock) * PhotonsPerBlock;
                 int last = Math.Min(beam.Photons, first + PhotonsPerBlock);
                 List<PhotonMap.Photon> here = [];
+                // A pigment that looks about a place looks about in this scene, at the instant photons go at.
+                (Scene, int) was = ShadeHere(0);
 
                 for (int index = first; index < last; index++)
                     Send(beam, index, here);
+
+                ShadeAgain(was);
 
                 landed[block] = here;
             });

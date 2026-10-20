@@ -1,0 +1,51 @@
+// Two droids on the sand: one as clean as the day he was finished, one after a few days in the desert.
+//
+// Nothing about the second droid was painted again.  He says he has been out in the weather, and each of his own
+// materials is weathered where it is: grime gathered in his panel seams and round his fittings, where his skin is
+// closed in; sand settled on everything that faces up, his dome most of all, and kicked up over his feet and lower
+// legs as he rolled; and the white and blue worn through to the aluminum beneath on the edges that stand out.
+// The droid library does it with `weather { }`, by how long he has been out: `R2D2(2, 0, 0.8)`.
+//
+// Everything is in inches, the droids' own units.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    info {
+        title 'Out in the Weather'
+        author 'J. Stephen Kress'
+        description 'Two droids on the sand, one fresh and one after a few days in the desert.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'droids' { R2D2 }
+
+camera {
+    location [0, 44, -118]
+    look at [0, 22, 0]
+    field of view 31
+}
+
+// A low desert sun from the left and behind the camera, and the sky's light from above.
+distant light { direction [0.55, -0.55, 0.62]  color [1.25, 1.12, 0.92] }
+point light { location [60, 140, -40]  color [0.30, 0.33, 0.40] }
+
+background linear Y gradient { [0, [0.86, 0.80, 0.70], 0.5, [0.62, 0.72, 0.86], 1, [0.40, 0.55, 0.78]]  scale 600  translate Y -40 }
+
+// The sand.
+plane {
+    material {
+        pigment granite {
+            [0.09, [0.66, 0.55, 0.40], 0.25, [0.72, 0.61, 0.45], 0.41, [0.62, 0.51, 0.37]]
+            scale 8
+        }
+        ambient 0.12  diffuse 0.8  specular 0
+    }
+}
+
+object R2D2(2, 0, 0) { rotate Y 12  translate X -16 }
+object R2D2(2, 0, 0.8) { rotate Y -12  translate X 16 }

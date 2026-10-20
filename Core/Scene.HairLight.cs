@@ -147,12 +147,16 @@ public partial class Scene
         {
             float[] tally = new float[HairLight.Quantities * grid.Size];
             Random random = new (run + 1);
+            // A pigment that looks about a place looks about in this scene, at the instant light is followed at.
+            (Scene, int) was = ShadeHere(0);
 
             foreach (Beam beam in beams)
             {
                 for (int path = run; path < beam.Paths; path += Runs)
                     Follow(grid, tally, beam, center, radius, random);
             }
+
+            ShadeAgain(was);
 
             tallies[run] = tally;
         });

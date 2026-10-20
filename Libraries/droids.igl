@@ -2,8 +2,9 @@
 //
 //     import 'droids' { R2D2 }
 //
-//     object R2D2()        // standing on his two outer legs
-//     object R2D2(3, 40)   // on three, as he rolls, his dome turned 40 degrees to his right
+//     object R2D2()             // standing on his two outer legs
+//     object R2D2(3, 40)        // on three, as he rolls, his dome turned 40 degrees to his right
+//     object R2D2(2, 0, 0.6)    // after a few days in the desert
 //
 // | `R2D2` | The astromech droid: dome, body, the two outer legs and the center leg and foot. |
 //
@@ -12,7 +13,10 @@
 // published figure -- his outer legs lean fifteen the other way about the pivots in their feet, their
 // feet going back and his shoulders down, and his center leg runs out along his body until its foot stands
 // flat on the ground just ahead of the other two.  **`dome` turns his dome**, in the scene's unit of angle,
-// from facing straight ahead; positive turns it to his right, as `rotate Y` would.
+// from facing straight ahead; positive turns it to his right, as `rotate Y` would.  **`weathered` is how long he
+// has been out**, from nought, as clean as the day he was finished, to one: grime in his panel seams and round his
+// fittings, sand settled on everything that faces up and kicked up over his feet, and the blue and white worn
+// through to the aluminum on his edges -- each of his own materials weathered where it is, by `weather { }`.
 //
 // **It is written in inches, and a scene unit IS an inch**, as the furniture is: every published figure
 // for him is in inches, so the numbers here can be checked against them directly.  A scene in meters
@@ -1804,7 +1808,7 @@ primitive R2CenterLeg(long) -> group {
 // 0.07 ahead of the outer feet's toes, as a profile photograph of a fan-made droid shows it,
 // and the center foot's pivot is 3.8 below the skirt.  On two the center leg is drawn up until its foot's
 // top is a tenth under the skirt, its pivot 1.3 below it, and the foot stands 2.15 off the ground.
-primitive R2D2(legs = 2, dome = 0) -> group {
+primitive R2D2(legs = 2, dome = 0, weathered = 0) -> group {
     tilt = legs == 3 ? 18 : 0
     lean = legs == 3 ? 15 : 0
     ankle = legs == 3 ? R2FootPivot : R2SkirtBottom - 1.3
@@ -1829,5 +1833,16 @@ primitive R2D2(legs = 2, dome = 0) -> group {
 
         // The center foot, the same as the others, stays level under the end of the leg.
         object R2Foot(1) { translate [0, ankle - R2FootPivot, -reach] }
+
+        // Grime looked for a quarter of an inch about, which takes in his panel seams -- 0.08 wide and 0.06
+        // deep -- and the edges of his fittings, and sand kicked up over his feet and lower legs as he rolls,
+        // sixteen inches up at the most; nothing at all when he is clean.
+        weather {
+            grime weathered
+            dust weathered * 0.8
+            wear weathered * 0.5 to R2Aluminum
+            splash 16 * weathered
+            radius 0.25
+        }
     }
 }

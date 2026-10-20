@@ -94,6 +94,11 @@ public class BlendedPigment : Pigment
     public override bool SeesTheViewer => Pigments.Any(pigment => pigment.SeesTheViewer);
 
     /// <summary>
+    /// This property reports whether any of the pigments this one blends sees what stands round it.
+    /// </summary>
+    public override bool SeesTheSurroundings => Pigments.Any(pigment => pigment.SeesTheSurroundings);
+
+    /// <summary>
     /// This method blends the pigments, each told the directions the surface is being shaded between.
     /// </summary>
     /// <param name="point">The point, in the pigment's own space.</param>

@@ -93,6 +93,11 @@ public class MottledPigment : Pigment
     public override bool SeesTheViewer => Pigment.SeesTheViewer;
 
     /// <summary>
+    /// This property reports whether the pigment this one mottles sees what stands round it.
+    /// </summary>
+    public override bool SeesTheSurroundings => Pigment.SeesTheSurroundings;
+
+    /// <summary>
     /// This method mottles the pigment's color, the pigment told the directions the surface is being
     /// shaded between.
     /// </summary>

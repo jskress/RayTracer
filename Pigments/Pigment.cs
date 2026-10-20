@@ -249,6 +249,13 @@ public abstract class Pigment
     public virtual bool SeesTheViewer => false;
 
     /// <summary>
+    /// This property reports whether this pigment's color depends on what stands round the place it is asked
+    /// about -- whether it holds a weathering pattern anywhere -- and so must be shown it; see
+    /// <see cref="Core.Surroundings"/>.  Nearly every pigment does not, and is never asked any differently.
+    /// </summary>
+    public virtual bool SeesTheSurroundings => false;
+
+    /// <summary>
     /// This method accepts a point in the pigment's own space, how much of the surface the ray covers,
     /// and the directions the surface is being shaded between, and produces the color.
     /// </summary>
