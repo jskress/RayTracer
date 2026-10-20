@@ -1,3 +1,4 @@
+using Lex.Parser;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Graphics;
@@ -293,5 +294,68 @@ public class TestCameraClauses
 
         Assert.IsNull(error, "a ball should be able to spin where it stands");
         Assert.IsTrue(profile.Any(value => value > 0.9), "the ball should still be there");
+    }
+
+    /// <summary>
+    /// This tests the words a camera says glare with, and that it shows: the white ball's light, spread by the
+    /// opening, reaches past its edge into the black, where with no glare there is none.
+    /// </summary>
+    [TestMethod]
+    public void TestGlareSpreadsTheBallsLightPastItsEdge()
+    {
+        double[] plain = EdgeProfile("camera { location [0, 0, -5]  look at [0, 0, 0] }", out string error);
+
+        Assert.IsNull(error, error);
+
+        double[] glaring = EdgeProfile(
+            "camera { location [0, 0, -5]  look at [0, 0, 0]  blades 6 turned 15  glare 0.3 }", out error);
+
+        Assert.IsNull(error, error);
+
+        // The first black pixel out from the ball's middle, along the row through it.
+        int beyond = plain.Length / 2;
+
+        while (beyond > 0 && plain[beyond] > 0)
+            beyond--;
+
+        Assert.AreEqual(0, plain[beyond], "the ball should have an edge with black beyond it");
+        Assert.IsGreaterThan(0, glaring[beyond], "the opening should have spread some light past the edge");
+
+        // The blades, and their turn, are what the opening is: a round one, or the blades unturned, spread
+        // the light otherwise.
+        double[] round = EdgeProfile("camera { location [0, 0, -5]  look at [0, 0, 0]  glare 0.3 }", out error);
+        double[] unturned = EdgeProfile(
+            "camera { location [0, 0, -5]  look at [0, 0, 0]  blades 6  glare 0.3 }", out error);
+
+        Assert.IsFalse(round.SequenceEqual(glaring), "blades should shape the glare");
+        Assert.IsFalse(unturned.SequenceEqual(glaring), "turning the blades should turn the glare");
+    }
+
+    /// <summary>
+    /// This tests that a lens of blades blurs as a round one does.
+    /// </summary>
+    [TestMethod]
+    public void TestABladedLensBlurs()
+    {
+        double[] blurred = EdgeProfile(
+            "camera { location [0, 0, -5]  look at [0, 0, 0]  aperture 0.3  focal distance 3  blades 5  blur samples 32 }",
+            out string error);
+
+        Assert.IsNull(error, error);
+        Assert.IsGreaterThan(4, SoftCount(blurred));
+    }
+
+    /// <summary>
+    /// This tests that an opening of too few blades, or glare outside its range, is refused.
+    /// </summary>
+    [TestMethod]
+    public void TestBladesAndGlareMustMakeSense()
+    {
+        Assert.ThrowsExactly<TokenException>(
+            () => EdgeProfile("camera { location [0, 0, -5]  look at [0, 0, 0]  blades 2 }", out _),
+            "two blades should be refused");
+        Assert.ThrowsExactly<TokenException>(
+            () => EdgeProfile("camera { location [0, 0, -5]  look at [0, 0, 0]  glare 1.5 }", out _),
+            "a glare above one should be refused");
     }
 }

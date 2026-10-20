@@ -2,6 +2,7 @@ using ImageMagick;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.ImageIO;
+using RayTracer.Options;
 
 namespace Tests;
 
@@ -80,9 +81,9 @@ public class TestImageFile
     [TestMethod]
     public void TestSaveAndLoadRoundTripWithGammaCorrection()
     {
-        // Pure black and pure white are fixed points of gamma correction (0^p = 0 and
-        // 1^p = 1 for any power p), so they round-trip cleanly even with the default
-        // gamma settings applied, unlike a mid-range gray would.
+        // Pure black and pure white are fixed points of every curve a picture is written with,
+        // so they round-trip cleanly even with the default curve applied, unlike a mid-range
+        // gray would.  Developed by a film curve, white is not white, so none is asked for.
         _tempFile = Path.Combine(Path.GetTempPath(), $"raytracer-test-{Guid.NewGuid():N}.png");
 
         Canvas canvas = new (2, 1);
@@ -90,7 +91,7 @@ public class TestImageFile
         canvas.SetColor(new Color(0, 0, 0), 0, 0);
         canvas.SetColor(new Color(1, 1, 1), 1, 0);
 
-        RenderContext context = new ();
+        RenderContext context = new () { FilmCurve = FilmCurve.None };
         ImageFile file = new (_tempFile);
 
         file.Save(canvas, context);
@@ -424,6 +425,165 @@ public class TestImageFile
                 Assert.AreEqual(3, color.Red, 0.05, format.ToString());
                 Assert.AreEqual(0.5, color.Green, 0.01, format.ToString());
                 Assert.AreEqual(0.25, color.Blue, 0.01, format.ToString());
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+    }
+
+    /// <summary>
+    /// This tests that each curve a file can be written with writes what it reads: the sRGB curve, a plain
+    /// power and light as it stands, and that sRGB gives its own numbers -- a straight run to a 2.4 power at
+    /// 0.0031308, where a plain 2.2 power puts a thousandth of white at 0.043, half again what sRGB does.
+    /// </summary>
+    [TestMethod]
+    public void TestEveryCurveWritesWhatItReads()
+    {
+        foreach (TransferFunction curve in new[] { TransferFunction.Srgb, TransferFunction.Power(1 / 1.8), TransferFunction.Linear })
+        {
+            for (int step = 0; step <= 100; step++)
+            {
+                double light = step / 100.0;
+
+                Assert.AreEqual(light, curve.ToLinear(curve.FromLinear(light)), 1e-12, $"{curve} at {light}");
+            }
+        }
+
+        Assert.AreEqual(0.001 * 12.92, TransferFunction.Srgb.FromLinear(0.001), 1e-12);
+        Assert.AreEqual(1.055 * Math.Pow(0.5, 1 / 2.4) - 0.055, TransferFunction.Srgb.FromLinear(0.5), 1e-12);
+        Assert.AreEqual(Math.Pow(0.5, 1 / 1.8), TransferFunction.Power(1 / 1.8).FromLinear(0.5), 1e-12);
+        Assert.AreEqual(3, TransferFunction.Linear.FromLinear(3));
+    }
+
+    /// <summary>
+    /// This tests which curve a render is written with: sRGB unless a gamma is given, a plain power when one
+    /// is -- by a scene or on the command line, but not by a command line that says nothing -- and light as it
+    /// stands with no gamma at all.
+    /// </summary>
+    [TestMethod]
+    public void TestARenderIsWrittenWithTheSrgbCurveUnlessToldOtherwise()
+    {
+        Assert.AreSame(TransferFunction.Srgb, new RenderContext().OutputCurve);
+        Assert.AreSame(TransferFunction.Linear, new RenderContext { ApplyGamma = false }.OutputCurve);
+        Assert.AreSame(TransferFunction.Linear, new RenderContext { ApplyGamma = false, Gamma = 1.8 }.OutputCurve);
+
+        RenderContext said = new () { Gamma = 1.8 };
+
+        Assert.AreEqual(Math.Pow(0.5, 1 / 1.8), said.OutputCurve.FromLinear(0.5), 1e-12);
+
+        RenderContext unsaid = new ();
+
+        unsaid.ApplyOptions(new RenderOptions(), 0);
+
+        Assert.AreSame(TransferFunction.Srgb, unsaid.OutputCurve, "a command line saying nothing says no gamma");
+
+        unsaid.ApplyOptions(new RenderOptions { Gamma = 2.6 }, 0);
+
+        Assert.AreEqual(Math.Pow(0.5, 1 / 2.6), unsaid.OutputCurve.FromLinear(0.5), 1e-12);
+    }
+
+    /// <summary>
+    /// This tests that a picture is written with the sRGB curve, as every viewer reads one: deep darks, a
+    /// mid-gray and white written to a 16-bit PNG come back as the sRGB values of their light, which the
+    /// file is known to hold, and so as the light itself.  The curve is asked for alone, with no film curve
+    /// developing the light first.
+    /// </summary>
+    [TestMethod]
+    public void TestAPictureIsWrittenWithTheSrgbCurve()
+    {
+        _tempFile = Path.Combine(Path.GetTempPath(), $"raytracer-test-{Guid.NewGuid():N}.png");
+
+        double[] lights = [0.001, 0.05, 0.5, 1];
+        Canvas canvas = new (lights.Length, 1);
+
+        for (int x = 0; x < lights.Length; x++)
+            canvas.SetColor(new Color(lights[x], lights[x], lights[x]), x, 0);
+
+        new ImageFile(_tempFile).Save(canvas, new RenderContext { BitsPerChannel = 16, FilmCurve = FilmCurve.None });
+
+        Canvas loaded = new ImageFile(_tempFile).Load()[0];
+
+        Assert.AreSame(TransferFunction.Srgb, loaded.Encoding);
+
+        for (int x = 0; x < lights.Length; x++)
+        {
+            double value = loaded.GetPixel(x, 0).Red;
+
+            Assert.AreEqual(TransferFunction.Srgb.FromLinear(lights[x]), value, 1 / 65535.0, $"value of {lights[x]}");
+            Assert.AreEqual(lights[x], loaded.Encoding.ToLinear(value), 1e-4 + 1e-4 * lights[x], $"light of {lights[x]}");
+        }
+    }
+
+    /// <summary>
+    /// This tests that a gamma given outright is written as the plain power it asks for, and that the file
+    /// says so in a gAMA chunk -- a PNG that says nothing is read as sRGB -- so that it is read back as the
+    /// light it was.
+    /// </summary>
+    [TestMethod]
+    public void TestAGammaGivenOutrightIsDeclared()
+    {
+        _tempFile = Path.Combine(Path.GetTempPath(), $"raytracer-test-{Guid.NewGuid():N}.png");
+
+        Canvas canvas = new (2, 1);
+
+        canvas.SetColor(new Color(0.2, 0.2, 0.2), 0, 0);
+        canvas.SetColor(new Color(0.5, 0.5, 0.5), 1, 0);
+
+        new ImageFile(_tempFile).Save(canvas, new RenderContext { Gamma = 1.8, BitsPerChannel = 16 });
+
+        using (MagickImage image = new (_tempFile))
+            Assert.AreEqual(1 / 1.8, image.Gamma, 1e-5, "the file should declare its gamma");
+
+        Canvas loaded = new ImageFile(_tempFile).Load()[0];
+
+        Assert.AreEqual(Math.Pow(0.5, 1 / 1.8), loaded.GetPixel(1, 0).Red, 1 / 65535.0);
+        Assert.AreEqual(0.2, loaded.Encoding.ToLinear(loaded.GetPixel(0, 0).Red), 1e-4);
+        Assert.AreEqual(0.5, loaded.Encoding.ToLinear(loaded.GetPixel(1, 0).Red), 1e-4);
+    }
+
+    /// <summary>
+    /// This tests that a file holding light -- OpenEXR, Radiance or a portable float map -- is written with
+    /// the light itself: brighter than white, the deepest darks and the colors as they are, neither curved
+    /// for a screen, nor clamped, nor cut down to eight bits.  Each is held to its format's own precision:
+    /// a half float's for OpenEXR, a shared exponent's for Radiance.
+    /// </summary>
+    [TestMethod]
+    public void TestAFileOfLightHoldsTheLightItself()
+    {
+        // Two rows, since Magick.NET cannot read back an OpenEXR file one pixel high.
+        Color[] colors = [new (3, 3, 3), new (0.001, 0.001, 0.001), new (0.5, 0.25, 0.125), new (12, 6, 0.75)];
+        Canvas canvas = new (colors.Length, 2);
+
+        for (int x = 0; x < colors.Length; x++)
+        {
+            canvas.SetColor(colors[x], x, 0);
+            canvas.SetColor(colors[x], x, 1);
+        }
+
+        foreach ((string extension, double precision) in new[] { ("exr", 1e-3), ("hdr", 1e-2), ("pfm", 1e-6) })
+        {
+            string path = Path.Combine(Path.GetTempPath(), $"raytracer-light-{Guid.NewGuid():N}.{extension}");
+
+            try
+            {
+                new ImageFile(path).Save(canvas, new RenderContext());
+
+                Canvas loaded = new ImageFile(path).Load()[0];
+
+                Assert.AreSame(TransferFunction.Linear, loaded.Encoding, extension);
+
+                for (int x = 0; x < colors.Length; x++)
+                {
+                    Color wanted = colors[x], got = loaded.GetPixel(x, 0);
+                    double brightest = Math.Max(wanted.Red, Math.Max(wanted.Green, wanted.Blue));
+
+                    Assert.AreEqual(wanted.Red, got.Red, precision * brightest, $"{extension} red at {x}: {got}");
+                    Assert.AreEqual(wanted.Green, got.Green, precision * brightest, $"{extension} green at {x}: {got}");
+                    Assert.AreEqual(wanted.Blue, got.Blue, precision * brightest, $"{extension} blue at {x}: {got}");
+                }
             }
             finally
             {

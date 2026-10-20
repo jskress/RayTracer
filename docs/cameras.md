@@ -12,8 +12,9 @@ chosen.  This chapter is about a single camera and everything you can say about 
   <img alt="Camera" src="images/cameras/cameraClause.svg">
 </picture>
 
-The properties fall into three groups: where the camera stands and what it looks at, how much
-of the world it takes in, and — the two that cost extra rays — the lens and the shutter.
+The properties fall into four groups: where the camera stands and what it looks at, how much
+of the world it takes in, the two that cost extra rays — the lens and the shutter — and how
+much of the light it takes.
 
 ### Placing a Camera
 
@@ -159,6 +160,72 @@ The lens and the shutter **share one set of samples**, so asking for both costs 
 than asking for either.  `blur samples` sets the count for both.
 
 `gallery/Local/cameras/motion-blur.igl` is a scene built around this.
+
+### Exposure
+
+A camera takes the light a scene gives it as it stands, unless it is told to take more of it
+or less.  `exposure` says by how many stops: each one doubles the light, and a stop below
+nought halves it.
+
+```
+camera {
+    exposure 1.5
+}
+```
+
+It is a photographer's answer to a scene that is too dark or too bright as a whole -- a room
+lit by a candle, a sun many times brighter than white -- and it is both easier and truer than
+relighting the scene: every lamp, glow and sky keeps its say against the others, and only the
+picture's brightness moves.  The anti-aliasing tells samples apart as the exposed picture will
+show them, so a dark scene exposed up is looked at as closely as a bright one would be.
+`--exposure` on the command line takes the place of every camera's own.
+
+What becomes of light brighter than white once it is exposed is the context's
+[film curve](context.md#film-curve).
+
+### Blades
+
+A real lens is closed down by blades, so its opening is a polygon rather than a circle, and
+whatever is out of focus takes the opening's shape: a point of light far behind the focus
+blurs into a hexagon rather than a disc.
+
+```
+camera {
+    aperture 0.15
+    focal distance 4
+    blades 6 turned 15
+}
+```
+
+`blades` is how many, from 3 to 32, and the optional `turned` how far they are turned, in the
+scene's angles.  None, the default, is a round opening.  The same blades shape the camera's
+[glare](#glare).
+
+### Glare
+
+Light through an opening does not keep to a point.  It spreads into the pattern the opening's
+own shape makes: a round opening's bright disc and its faint rings, and a polygon's the same
+with a ray thrown out square to each of its edges -- the star round a street lamp in a
+photograph.  Six blades make six rays; an odd number makes twice as many.
+
+```
+camera {
+    blades 6
+    glare 0.2
+}
+```
+
+`glare` is the share of all the light that is spread this way, from nought, the default, to
+one; the rest stays where it fell, and nothing is added or lost but what spreads past the
+picture's edge.  Only light far brighter than white shows it to any extent -- a lamp, the sun
+in a mirror, a glint -- which is as it is with a real lens.  The pattern is worked out exactly
+from the opening's shape at each wavelength, so the rays' ends are faintly colored, and it is
+the same share of any picture's width, so a larger render shows the same glare.  It is spread
+over the finished picture before the [film curve](context.md#film-curve) develops it, and
+costs a second or two.
+
+`gallery/Local/cameras/lamps-at-dusk.igl` puts the blades and the glare together: far lights
+blurred into the opening's shape, and a bare bulb throwing out its rays.
 
 ### Projections
 

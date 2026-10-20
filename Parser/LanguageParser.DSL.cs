@@ -73,30 +73,30 @@ public partial class LanguageParser
         logicalNot: _operator("!")
         conditional: _operator("?")
 
-        _keywords: 'absorption', 'accuracy', 'agate', 'alignment', 'along', 'ambient', 'amplitude', 'and',
+        _keywords: 'absorption', 'accuracy', 'agate', 'agx', 'alignment', 'along', 'ambient', 'amplitude', 'and',
             'above', 'angle', 'angles', 'aperture', 'apply',
             'anisotropy', 'antialiasing', 'apart', 'are', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
-            'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
+            'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
             'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'color',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'error', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'gradient', 'granite',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
+            'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
-            'motion', 'mottled', 'move', 'named', 'no', 'noise', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
+            'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
-            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'software', 'source',
+            'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
@@ -310,6 +310,13 @@ public partial class LanguageParser
         {
             caustics > { photons > _expression }{?}
         }
+        // How the light a render ends with is developed into a picture: eased toward white, by a film's
+        // curve, or cut off at white.
+        filmCurveClause:
+        {
+            film > curve ?? 'Expecting "curve" to follow "film" here.' >
+            [ soft | neutral | agx | none ] ?? 'Expecting "soft", "neutral", "agx" or "none" to follow "film curve" here.'
+        }
         // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
         // one.
         reflectionSamplesClause:
@@ -329,6 +336,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
+            filmCurveClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
@@ -391,11 +399,18 @@ public partial class LanguageParser
         {
             blur > samples ?? 'Expecting "samples" to follow "blur" here.' > _expression
         }
+        // What the camera's opening is made of -- how many blades, and how far they are turned -- which
+        // shapes what is out of focus and the rays bright points throw out.
+        bladesClause:
+        {
+            blades > _expression > { turned > _expression }{?}
+        }
         cameraEntryClause:
         [
             namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause |
             { aperture > _expression } | focalClause | blurSamplesClause |
-            { shutter > _expression } | { seed > _expression }
+            { shutter > _expression } | { seed > _expression } | { exposure > _expression } |
+            bladesClause | { glare > _expression }
         ] ?? 'Expecting a camera property here.'
 
         // Light clauses.  One opener serves all three sorts, told apart by the word before

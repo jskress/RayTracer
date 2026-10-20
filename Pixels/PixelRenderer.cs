@@ -30,6 +30,14 @@ public abstract class PixelRenderer
     /// </summary>
     internal bool Spectral { get; set; }
 
+    /// <summary>
+    /// This property holds what a picture will show of the light a sample brings, for telling samples apart
+    /// by, or null to tell them apart by the light itself.  Exposed brighter, two samples a sampler took for
+    /// alike in the light may be far apart in the picture; eased toward white, two far apart may show alike.
+    /// It is set once before the render starts, as the statistics are.
+    /// </summary>
+    internal Func<Color, Color> Seen { get; set; }
+
     protected PixelRenderer(PixelToRayConverter converter)
     {
         Converter = converter;

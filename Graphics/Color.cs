@@ -44,15 +44,15 @@ public class Color
     /// <returns>A tuple containing the converted channel values.</returns>
     public (int Red, int Green, int Blue, int Alpha) ToChannelValues(RenderContext context)
     {
-        bool gammaCorrect = context.ApplyGamma;
+        TransferFunction curve = context.OutputCurve;
         double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / context.Gamma : 1;
+        Color shown = context.Shown(this);
 
-        return (ChannelToInt(Red, maxValue, power, gammaCorrect),
-            ChannelToInt(Green, maxValue, power, gammaCorrect),
-            ChannelToInt(Blue, maxValue, power, gammaCorrect),
+        return (ChannelToInt(shown.Red, maxValue, curve),
+            ChannelToInt(shown.Green, maxValue, curve),
+            ChannelToInt(shown.Blue, maxValue, curve),
             // Note: the alpha channel is linear, so we never gamma correct it.
-            ChannelToInt(Alpha, maxValue));
+            ChannelToInt(Alpha, maxValue, TransferFunction.Linear));
     }
 
     /// <summary>
@@ -78,44 +78,40 @@ public class Color
     /// <returns>A tuple containing the gray and alpha values.</returns>
     public (int Gray, int Alpha) ToGrayValue(RenderContext context)
     {
-        bool gammaCorrect = context.ApplyGamma;
+        TransferFunction curve = context.OutputCurve;
         double maxValue = Convert.ToDouble(context.MaxColorChannelValue);
-        double power = gammaCorrect ? 1 / context.Gamma : 1;
-        double gray = PrepareChannelValue(Red, power, gammaCorrect) * 0.299 +
-                      PrepareChannelValue(Green, power, gammaCorrect) * 0.587 +
-                      PrepareChannelValue(Blue, power, gammaCorrect) * 0.114;
+        Color shown = context.Shown(this);
+        double gray = PrepareChannelValue(shown.Red, curve) * 0.299 +
+                      PrepareChannelValue(shown.Green, curve) * 0.587 +
+                      PrepareChannelValue(shown.Blue, curve) * 0.114;
 
-        return (ChannelToInt(gray, maxValue), ChannelToInt(Alpha, maxValue));
+        return (ChannelToInt(gray, maxValue, TransferFunction.Linear),
+            ChannelToInt(Alpha, maxValue, TransferFunction.Linear));
     }
 
     /// <summary>
-    /// This is a helper method for converting a channel value to an integer, applying
-    /// gamma correction upon request.
+    /// This is a helper method for converting a channel value to an integer, written with the
+    /// given curve.
     /// </summary>
     /// <param name="value">The value to convert</param>
     /// <param name="maxValue">The maximum value the integer form can take.</param>
-    /// <param name="power">The power factor to use when gamma correcting.</param>
-    /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
+    /// <param name="curve">The curve to write the value with.</param>
     /// <returns>The channel value converted to an integer.</returns>
-    private static int ChannelToInt(
-        double value, double maxValue, double power = 0, bool gammaCorrect = false)
+    private static int ChannelToInt(double value, double maxValue, TransferFunction curve)
     {
-        return Convert.ToInt32(PrepareChannelValue(value, power, gammaCorrect) * maxValue);
+        return Convert.ToInt32(PrepareChannelValue(value, curve) * maxValue);
     }
 
     /// <summary>
-    /// This is a helper method for preparing a channel value for output by (conditionally)
-    /// applying gamma correction and clamping the value into the appropriate range.
+    /// This is a helper method for preparing a channel value for output by writing it with the
+    /// given curve and clamping the value into the appropriate range.
     /// </summary>
     /// <param name="value">The channel value to prepare.</param>
-    /// <param name="power">The power factor to use when gamma correcting.</param>
-    /// <param name="gammaCorrect">Whether to apply gamma correction.</param>
+    /// <param name="curve">The curve to write the value with.</param>
     /// <returns>The prepared channel value.</returns>
-    private static double PrepareChannelValue(
-        double value, double power = 1, bool gammaCorrect = false)
+    private static double PrepareChannelValue(double value, TransferFunction curve)
     {
-        if (gammaCorrect && Math.Abs(power - 1) > 0.0000001)
-            value = Math.Pow(value, power);
+        value = curve.FromLinear(value);
 
         // Math.Clamp() passes NaN through unclamped, so guard against it explicitly,
         // regardless of whether it came from gamma correction or was already NaN going in.

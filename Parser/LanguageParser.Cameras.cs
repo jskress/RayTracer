@@ -99,6 +99,30 @@ public partial class LanguageParser
             case "seed":
                 resolver.SeedResolver = new TermResolver<int?> { Term = term };
                 break;
+            case "exposure":
+                resolver.ExposureResolver = new TermResolver<double> { Term = term };
+                break;
+            case "blades":
+                resolver.BladesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = blades => blades is 0 or >= 3 and <= 32
+                        ? null
+                        : "A camera's opening has from 3 to 32 blades, or none for a round one."
+                };
+
+                if (clause.Term(1) is { } turn)
+                    resolver.BladeTurnResolver = new AngleResolver { Term = turn };
+                break;
+            case "glare":
+                resolver.GlareResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = share => share is >= 0 and <= 1
+                        ? null
+                        : "A camera's glare is the share of its light the opening spreads, from 0 to 1."
+                };
+                break;
             default:
                 throw new Exception($"Internal error: unknown camera property found: {field}.");
         }

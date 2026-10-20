@@ -207,4 +207,61 @@ public class TestFocalBlur
 
         Assert.AreEqual(2, camera.GetFocalDistance(), 1e-9);
     }
+
+    /// <summary>
+    /// This tests that a lens of blades keeps every sample inside its polygon -- a pentagon, turned -- and on
+    /// the unit circle's side of it, which is where the vertices lie.
+    /// </summary>
+    [TestMethod]
+    public void TestABladedLensKeepsToItsPolygon()
+    {
+        const int blades = 5;
+        double turn = 0.3;
+        CameraSampler lens = new (0.5, 5, 0, 512, null, blades, turn);
+        double edge = Math.Cos(Math.PI / blades);
+
+        for (int index = 0; index < lens.SampleCount; index++)
+        {
+            (double x, double y) = lens.OffsetFor(index);
+
+            for (int blade = 0; blade < blades; blade++)
+            {
+                double facing = turn + (2 * blade + 1) * Math.PI / blades;
+
+                Assert.IsLessThanOrEqualTo(edge + 1e-9, x * Math.Cos(facing) + y * Math.Sin(facing),
+                    $"sample {index} at ({x:F3}, {y:F3}) is past blade {blade}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// This tests that a lens of blades fills its polygon evenly: the polygon half its size, about the same
+    /// middle, holds a quarter of the samples, as it holds a quarter of the area.
+    /// </summary>
+    [TestMethod]
+    public void TestABladedLensFillsItsPolygonEvenly()
+    {
+        const int blades = 6;
+        CameraSampler lens = new (0.5, 5, 0, 4096, null, blades);
+        double edge = Math.Cos(Math.PI / blades) / 2;
+        int inside = 0;
+
+        for (int index = 0; index < lens.SampleCount; index++)
+        {
+            (double x, double y) = lens.OffsetFor(index);
+            bool within = true;
+
+            for (int blade = 0; blade < blades && within; blade++)
+            {
+                double facing = (2 * blade + 1) * Math.PI / blades;
+
+                within = x * Math.Cos(facing) + y * Math.Sin(facing) <= edge;
+            }
+
+            if (within)
+                inside++;
+        }
+
+        Assert.AreEqual(0.25, inside / (double) lens.SampleCount, 0.02);
+    }
 }

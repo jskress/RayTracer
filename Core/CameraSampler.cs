@@ -52,7 +52,7 @@ public class CameraSampler
 
     public CameraSampler(
         double aperture, double focalDistance, double shutter = 0, int samples = 16,
-        int? seed = null)
+        int? seed = null, int blades = 0, double bladeTurn = 0)
     {
         Aperture = aperture;
         FocalDistance = focalDistance;
@@ -63,7 +63,7 @@ public class CameraSampler
 
         // Built on first use rather than here, since a plain camera needs neither, and lazily so
         // that the parallel scanners may share the one sampler safely.
-        _offsets = new Lazy<(double X, double Y)[]>(() => BuildOffsets(SampleCount, chosen));
+        _offsets = new Lazy<(double X, double Y)[]>(() => BuildOffsets(SampleCount, chosen, blades, bladeTurn));
         _times = new Lazy<double[]>(() => BuildTimes(SampleCount, chosen));
     }
 
@@ -131,7 +131,7 @@ public class CameraSampler
     /// the square.
     /// </para>
     /// </summary>
-    private static (double X, double Y)[] BuildOffsets(int count, int seed)
+    private static (double X, double Y)[] BuildOffsets(int count, int seed, int blades, double bladeTurn)
     {
         Random random = new (seed);
         (double X, double Y)[] offsets = new (double, double)[count];
@@ -144,7 +144,7 @@ public class CameraSampler
             double u = (index + random.NextDouble()) / count;
             double v = (RadicalInverse(index) + turn) % 1.0;
 
-            offsets[index] = ToDisc(u * 2 - 1, v * 2 - 1);
+            offsets[index] = blades >= 3 ? ToPolygon(u, v, blades, bladeTurn) : ToDisc(u * 2 - 1, v * 2 - 1);
         }
 
         return offsets;
@@ -166,6 +166,25 @@ public class CameraSampler
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// This method maps a point on the unit square onto a polygon of blades inscribed in the unit circle,
+    /// keeping the spread of points even: the polygon is taken as as many triangles as it has blades, all of a
+    /// size, the first coordinate picking the triangle and going on to say how far out in it the point lies --
+    /// by its square root, since a triangle widens as it goes out -- and the second how far across.
+    /// </summary>
+    private static (double X, double Y) ToPolygon(double u, double v, int blades, double bladeTurn)
+    {
+        double scaled = u * blades;
+        int which = Math.Min((int) scaled, blades - 1);
+        double outward = Math.Sqrt(scaled - which);
+        double from = bladeTurn + 2 * Math.PI * which / blades;
+        double to = from + 2 * Math.PI / blades;
+        double x = (1 - v) * Math.Cos(from) + v * Math.Cos(to);
+        double y = (1 - v) * Math.Sin(from) + v * Math.Sin(to);
+
+        return (outward * x, outward * y);
     }
 
     /// <summary>

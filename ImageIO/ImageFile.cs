@@ -129,6 +129,15 @@ public class ImageFile
     /// <param name="info">The information about the image.</param>
     public void Save(Canvas canvas, RenderContext context, ImageInformation info = null)
     {
+        MagickFormat? format = MagickFormatInfo.Create(new FileInfo(_fileName))?.Format;
+
+        if (format is MagickFormat.Exr or MagickFormat.Hdr or MagickFormat.Pfm)
+        {
+            SaveLight(canvas, context, info);
+
+            return;
+        }
+
         using MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
         using IPixelCollection<float> pixels = image.GetPixels();
 
@@ -186,7 +195,7 @@ public class ImageFile
         // render from carrying a channel of nothing but 255s -- which is what this did for a while,
         // having stated TrueColorAlpha unconditionally to solve the first problem without noticing
         // the second.
-        if (MagickFormatInfo.Create(new FileInfo(_fileName))?.Format == MagickFormat.Png)
+        if (format == MagickFormat.Png)
         {
             // A gray image is written in a gray container rather than as three equal channels, which
             // is both smaller and honest about what it holds.  `Load` already reads one- and
@@ -203,10 +212,67 @@ public class ImageFile
                 ColorType = colorType,
                 BitDepth = (uint) context.BitsPerChannel
             });
+
+            // A gamma given outright is a plain power, and the file says which, since a PNG that says
+            // nothing is read as sRGB; one written with the sRGB curve need say nothing.
+            if (context.ApplyGamma && context.GammaIsSaid)
+                PngGamma.Declare(_fileName, 1 / context.Gamma);
         }
         else
             image.Write(_fileName);
     }
+
+    /// <summary>
+    /// This method saves the given image to a file that holds light rather than a picture of it -- OpenEXR,
+    /// Radiance or a portable float map -- as the light it is: neither curved for a screen, nor clamped at
+    /// white, nor cut down to the channel depth.  Until 2026-10-19 such a file was written as every other
+    /// was, and held an 8-bit picture under an HDR name.
+    /// </summary>
+    /// <param name="canvas">The image to save.</param>
+    /// <param name="context">The current render context, which says whether the image is wanted gray.</param>
+    /// <param name="info">The information about the image.</param>
+    private void SaveLight(Canvas canvas, RenderContext context, ImageInformation info)
+    {
+        using MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
+
+        // The image is said to hold light before anything is put in it.  Left as sRGB, Magick.NET turned
+        // its values into light on the way into a Radiance file, as if they were a picture's, and 3 came
+        // out as 12.8.
+        image.ColorSpace = ColorSpace.RGB;
+
+        using IPixelCollection<float> pixels = image.GetPixels();
+
+        bool anyTransparency = false;
+
+        foreach (IPixel<float> pixel in pixels)
+        {
+            Color color = canvas.GetPixel(pixel.X, pixel.Y);
+            double red = Light(color.Red), green = Light(color.Green), blue = Light(color.Blue);
+
+            if (context.Grayscale)
+                red = green = blue = red * 0.299 + green * 0.587 + blue * 0.114;
+
+            double alpha = Math.Clamp(Light(color.Alpha), 0, 1);
+
+            if (alpha < 1)
+                anyTransparency = true;
+
+            pixel.SetValues([
+                (float) (red * 65535), (float) (green * 65535), (float) (blue * 65535), (float) (alpha * 65535)
+            ]);
+        }
+
+        if (!anyTransparency)
+            image.Alpha(AlphaOption.Off);
+
+        if (info != null)
+            AddInformation(image, info);
+
+        image.Write(_fileName);
+    }
+
+    // What a file of light can hold of a channel: anything but less than nothing, or nothing at all.
+    private static double Light(double value) => double.IsNaN(value) ? 0 : Math.Max(value, 0);
 
     /// <summary>
     /// This method is used to copy all the information we have about an image into the

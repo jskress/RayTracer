@@ -118,6 +118,12 @@ to say you want shadows after all.
 or the other and not both.  If you don't specify `--output-dir`, it will default to the
 directory where the input file sits.
 
+A PNG, JPEG or any other picture format is written as a picture, for a screen.  An OpenEXR
+(`.exr`), Radiance (`.hdr`) or portable float map (`.pfm`) file is written as the light itself:
+no [gamma](context.md#gamma) curve, nothing cut off at white, and every value kept to the
+format's own precision rather than to eight bits -- for an image to be graded or developed
+elsewhere, or lit by in another scene.
+
 #### Which scene, and which camera
 
 | Option | What it does |
@@ -180,11 +186,13 @@ and ignored.
 
 | Option | What it does |
 | --- | --- |
-| `-g`, `--gamma` | The gamma correction to apply. |
-| `--no-gamma` | Apply no gamma correction at all. |
+| `-g`, `--gamma` | Write with a plain gamma power instead of the sRGB curve. |
+| `--no-gamma` | Write the light as it stands, with no curve at all. |
 | `--grayscale` | Render in shades of gray. |
 | `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |
 | `--white-balance` | Balance the picture for lamps of a given [temperature](context.md#white-balance). |
+| `--exposure` | Expose every camera by this many [stops](cameras.md#exposure). |
+| `--film-curve` | Develop the picture by this [film curve](context.md#film-curve): `soft`, `neutral`, `agx` or `none`. |
 | `--no-shadows` | Let nothing cast a shadow. |
 
 #### Animation

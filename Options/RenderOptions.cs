@@ -170,7 +170,7 @@ public class RenderOptions
     }
 
     [Option('g', "gamma", Required = false,
-        HelpText = "The gamma correction to apply to colors in the image output file.")]
+        HelpText = "A plain gamma power to write the image file with, instead of the sRGB curve every viewer reads a picture with.")]
     public double? Gamma
     {
         get => field;
@@ -194,7 +194,7 @@ public class RenderOptions
     // scene's own `context { }` block configured," exactly like the `?? existing value`
     // pattern these used to rely on.  See `RenderContext.ApplyOptions`.
     [Option("no-gamma", Required = false,
-        HelpText = "If specified, gamma correction will not be applied to colors in the image output file.")]
+        HelpText = "If specified, the light is written to the image file as it stands, with no curve at all.")]
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public bool NoGamma { get; set; }
 
@@ -224,6 +224,26 @@ public class RenderOptions
         {
             if (value is <= 0)
                 throw new ArgumentException("A white balance is a temperature in kelvin, and must be above nothing.");
+
+            field = value;
+        }
+    }
+
+    [Option("exposure", Required = false,
+        HelpText = "How many stops brighter, or darker if less than nought, to expose the picture than the light the scene gives: each stop doubles it.  Given, it takes the place of what every camera says for itself.")]
+    // Null until given, so that what each camera says is left alone.
+    public double? Exposure { get; set; }
+
+    [Option("film-curve", Required = false,
+        HelpText = "How the light is developed into a picture: soft (the default) eases each channel brighter than eight tenths of white toward white, neutral does the same keeping the color's hue, agx is a film's curve over the whole range, and none cuts it off at white.")]
+    // Null until given, so that a curve the scene settled on is left alone.
+    public string FilmCurve
+    {
+        get => field;
+        // ReSharper disable once UnusedMember.Global
+        set
+        {
+            Graphics.FilmCurve.Named(value);
 
             field = value;
         }

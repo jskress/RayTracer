@@ -66,22 +66,32 @@ public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
         if (depth > 0)
         {
             double nextShift = shift / 2;
+            Color seen = Seen is null ? center : Seen(center);
 
             depth--;
 
-            if (center.Distance(topLeft) > _threshold)
+            if (Differs(seen, topLeft))
                 topLeft = Evaluate(scene, x, y, cx - shift, cy - shift, nextShift, depth);
 
-            if (center.Distance(topRight) > _threshold)
+            if (Differs(seen, topRight))
                 topRight = Evaluate(scene, x, y, cx + shift, cy - shift, nextShift, depth);
 
-            if (center.Distance(bottomLeft) > _threshold)
+            if (Differs(seen, bottomLeft))
                 bottomLeft = Evaluate(scene, x, y, cx - shift, cy + shift, nextShift, depth);
 
-            if (center.Distance(bottomRight) > _threshold)
+            if (Differs(seen, bottomRight))
                 bottomRight = Evaluate(scene, x, y, cx + shift, cy + shift, nextShift, depth);
         }
 
         return Colors.Average([center, topLeft, topRight, bottomLeft, bottomRight]);
+    }
+
+    /// <summary>
+    /// This method notes whether a corner differs from the center, as the picture will show it, by more than
+    /// the threshold.
+    /// </summary>
+    private bool Differs(Color seenCenter, Color corner)
+    {
+        return seenCenter.Distance(Seen is null ? corner : Seen(corner)) > _threshold;
     }
 }
