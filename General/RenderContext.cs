@@ -184,6 +184,12 @@ public class RenderContext
     public int SubsurfaceSamples { get; set; } = 64;
 
     /// <summary>
+    /// This property holds how many directions the weathering patterns look about in at each place they are
+    /// asked about; see <see cref="Core.Weathering"/>.
+    /// </summary>
+    public int WeatheringSamples { get; set; } = Core.Weathering.DefaultSamples;
+
+    /// <summary>
     /// What every material's ambient is multiplied by once the scene is whole.
     /// <para>
     /// Ambient stands in for light that has bounced about the scene, which this renderer does not trace.

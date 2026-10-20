@@ -3,7 +3,16 @@ title "A material"
 
 material = "material" "{" { pigment | normal | finish | brushing | metallic | interior | decal | film | subsurface
                            | coat | sheen } "}"
-         | "material" "inherited" [ "{" { decal } "}" ] ;
+         | "material" "inherited" [ "{" { decal } "}" ]
+         | "material" "blend" pattern "{" [ weathering ] ( map | materials ) { transform } "}" ;
+
+map = "[" number "," entry { "," number "," entry } "]" ;
+
+materials = entry { "," entry } ;
+
+entry = name | material ;
+
+weathering = "radius" number | "toward" ( "X" | "Y" | "Z" | vector ) ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
          | "roughness" | "transparency" | "brilliance" | "grain" ) number

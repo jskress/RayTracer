@@ -73,7 +73,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `bilinear` | Surface: the warped quadrilateral four corners span, optionally shaded from corner normals. | [Surfaces](surfaces.md#bilinear-patch) |
 | `black` | Font weight; also the color black. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
-| `blend` | Pigment: average several pigments together. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
+| `blend` | Pigment: average several pigments together.  Material: `material blend <pattern>`, whole materials chosen and mixed by a pattern. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering), [Blending Materials](materials.md#blending-materials) |
 | `blob` | Surface: metaballs that melt together. | [Surfaces](surfaces.md#blob) |
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -100,7 +100,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `close` | Path: join back to where the run began. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `clump` | Hair: how strongly strands gather into locks; `clump 0.6 size 20`. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `coat` | Material: a clear coat over the surface, lacquer or varnish; `roughness`, `ior` and `tint` go in it. | [A clear coat](materials.md#a-clear-coat) |
-| `color` | A solid pigment, or a light's color.  Sheen: what the fibers give back. | [Materials](materials.md#the-color), [Cloth](materials.md#cloth) |
+| `color` | A solid pigment, or a light's color.  Sheen: what the fibers give back.  Weather: the color of its grime, dust or splash. | [Materials](materials.md#the-color), [Cloth](materials.md#cloth) |
 | `columns` | `physical sky`: how many ways round the sky is worked out and kept. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `comb` | Hair: the direction strands lean toward. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `commands` | L-system: maps characters to turtle moves. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -113,6 +113,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `copyright` | Info: a copyright notice. | [Context](context.md#image-information) |
 | `count` | Hair: exactly how many strands grow. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `crackle` | Pattern: cracked-cell (Worley) noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `crevices` | Pattern: how closed in a place is, within a `radius` -- where dirt gathers. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `cross` | Quadric: the coefficients of `xy`, `xz` and `yz`. | [Surfaces](surfaces.md#quadric) |
 | `csg` | Combines surfaces by a named set operation. | [Surfaces](surfaces.md#combining-surfaces) |
 | `cube` | Surface: a unit cube. | [Surfaces](surfaces.md#cube) |
@@ -141,7 +142,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `distant` | A `distant light` (parallel rays, like the sun). | [Lights](lights.md#distant-lights) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `droop` | Hair: how far strands sag under their own weight. | [Advanced Surfaces](advanced-surfaces.md#hair) |
+| `dust` | Weather: dust or sand settled on whatever faces up. | [Weathering a Model](materials.md#weathering-a-model) |
 | `east` | Superellipsoid: its east-west roundness. | [Surfaces](surfaces.md#superellipsoid) |
+| `edges` | Pattern: how far a place stands out, within a `radius` -- where paint wears. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
@@ -150,7 +153,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `exposure` | Camera: how many stops brighter or darker it takes the light. | [Cameras](cameras.md#exposure) |
 | `environment` | What is true of the space between a scene's objects: its index of refraction, and what fills it. | [Scene Files](scene-files.md#the-space-between-things) |
 | `extrusion` | Surface: a path given thickness along Y. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
-| `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly. | [Advanced Surfaces](advanced-surfaces.md#hair) |
+| `facing` | Hair: the way a surface must face for hair to grow on it; `by` sets how strictly.  Pattern: which way a surface faces in the world, `toward` a direction. | [Advanced Surfaces](advanced-surfaces.md#hair), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `factor` | L-system control: how thickness shrinks with depth. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `fade` | Light: `fade distance` names where the light is worth its color; `fade power` how fast it thins past there.  Decal: `fade from` … `to` … sets the angles it fades between, and `no fade` turns that off. | [Lights](lights.md#fading-with-distance), [Materials](materials.md#fading) |
 | `fainter` | Turbulence/noise: dims each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
@@ -183,6 +186,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `gradient` | Pattern: a smooth ramp of color. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `grain` | Finish: adds a fine sparkle to the diffuse term. | [Materials](materials.md#brilliance-and-grain) |
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `grime` | Weather: dirt in crevices, seams and corners. | [Weathering a Model](materials.md#weathering-a-model) |
 | `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
 | `group` | Gathers surfaces, and any lights standing on them, so a transform moves them together. | [Surfaces](surfaces.md#groups), [Lights on Things](lights.md#lights-on-things) |
 | `hair` | Grows strands over the surface it is written in. | [Advanced Surfaces](advanced-surfaces.md#hair) |
@@ -293,7 +297,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `radians` | Angle unit: radians. | [Context](context.md#angles) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
-| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, and how far light travels under a surface. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface) |
+| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, and how far `crevices` and `edges`, and weather, look. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
@@ -342,6 +346,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `spectral` | Context: carry light wavelength by wavelength rather than as red, green and blue. | [Context](context.md#spectral-light) |
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
+| `splash` | Weather: dirt kicked up from the ground, up to a height in the model's own units. | [Weathering a Model](materials.md#weathering-a-model) |
 | `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `spot` | A `spot light` (a cone). | [Lights](lights.md#spotlights) |
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -374,8 +379,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `tint` | Coat: the color it gives what lies beneath it, seen square-on. | [A clear coat](materials.md#a-clear-coat) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
-| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, and a film's `thickness … to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films) |
+| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, and weather's `wear … to`, the material it bares. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films) |
 | `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
+| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -413,6 +419,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |
 | `wavelength` | Swells: how far apart a wave train's crests are. | [Surfaces](surfaces.md#swells) |
 | `waves` | Pattern: overlapping wave crests. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `wear` | Weather: wear on the edges, `to` the material it bares. | [Weathering a Model](materials.md#weathering-a-model) |
+| `weather` | Surface: the weather a group or object has been out in: `grime`, `dust`, `wear`, `splash`, `radius`. | [Weathering a Model](materials.md#weathering-a-model) |
+| `weathering` | Context: `weathering samples`, how many directions `crevices` and `edges` look about in. | [Context](context.md#weathering-samples) |
 | `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand) |

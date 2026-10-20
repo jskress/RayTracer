@@ -93,6 +93,11 @@ public class BlobPigment : Pigment
     public override bool SeesTheViewer => Everything().Any(pigment => pigment.SeesTheViewer);
 
     /// <summary>
+    /// This property reports whether any of the pigments this one blends sees what stands round it.
+    /// </summary>
+    public override bool SeesTheSurroundings => Everything().Any(pigment => pigment.SeesTheSurroundings);
+
+    /// <summary>
     /// This method shares the color out among the components, each pigment told the directions the
     /// surface is being shaded between.
     /// </summary>

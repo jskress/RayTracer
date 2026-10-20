@@ -272,6 +272,23 @@ context { subsurface samples 128 }
 The usual number is 64.  As with rough reflections, only the first such surface a ray from the
 eye meets takes them all; one met along a reflection or a bounce takes one walk.
 
+### Weathering Samples
+
+The patterns that say where weather gathers -- [`crevices` and `edges`](pigments-and-patterns.md#where-weather-gathers)
+-- look about each place they are asked about in a number of directions:
+
+```
+context { weathering samples 128 }
+```
+
+The usual number is 64, which comes within a few percent of the answer looking in every direction would
+give; fewer shows as grain at the edges of grime, which dirt has anyway, and more is smoother.  That many
+is for what the eye sees first.  What it sees in a rough surface's blurred reflection, or what bounced
+light finds, looks about in an eighth as many, since there many paths are averaged anyway; without that, a
+weathered model beside rough metal took twenty-seven times as long to render.  Even so, weather costs: each
+place looked about is a hundred or so short rays, and a picture of two droids, one of them weathered, took
+eight to twelve times as long as the same picture with both clean.
+
 ### Trace Depth
 
 A ray from the eye that meets a mirror or glass goes on -- mirrored, and through -- and is followed four

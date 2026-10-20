@@ -1,7 +1,10 @@
 railroad-ebnf-beta
 title "A pattern pigment"
 
-pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] colors { transform } "}" ;
+pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] [ weathering ] colors [ weathering ]
+          { transform } "}" ;
+
+weathering = "radius" number | "toward" ( "X" | "Y" | "Z" | vector ) ;
 
 colors = color { "," color } | "[" position "," color { "," position "," color } "]" ;
 

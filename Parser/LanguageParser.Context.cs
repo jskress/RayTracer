@@ -105,6 +105,15 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "weathering":
+                updater.WeatheringSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A weathering pattern must look about a place in at least one direction."
+                        : null
+                };
+                break;
             case "subsurface":
                 updater.SubsurfaceSamplesResolver = new TermResolver<int>
                 {

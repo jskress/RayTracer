@@ -7,6 +7,7 @@ using RayTracer.Extensions;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
+using RayTracer.Instructions.Patterns;
 using RayTracer.Instructions.Surfaces;
 using RayTracer.Instructions.Transforms;
 using RayTracer.Terms;
@@ -40,6 +41,10 @@ public partial class LanguageParser
         // Complete definition.
         if (BounderToken.OpenBrace.Matches(token))
             return ParseMaterialClause();
+
+        // A blend of whole materials by a pattern.
+        if (token.Text == "blend" && clause.Tokens.Count > 2)
+            return ParseMaterialBlend(clause);
 
         // Inherited, a surface takes the material handed down to it.  With a block, it takes that and
         // adds decals of its own on top, so a model can carry markings and still be repainted.
@@ -79,6 +84,150 @@ public partial class LanguageParser
             ParseObjectResolver("materialEntryClause", HandleMaterialEntryClause, resolver);
 
         return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to parse a blend of whole materials by a pattern: the pattern and whatever it has to
+    /// say of itself, then the materials -- a map of values and materials, or for a pattern that picks among a
+    /// fixed number of things, that many materials -- then where the pattern stands.  See
+    /// <see cref="MaterialBlend"/>.
+    /// </summary>
+    /// <param name="clause">The clause that opened the blend: `material blend`, the pattern and a brace.</param>
+    /// <returns>The blend's resolver.</returns>
+    private MaterialResolver ParseMaterialBlend(Clause clause)
+    {
+        (IPatternResolver pattern, int discretePigmentsNeeded) = ParsePatternClause(clause, 2);
+        MaterialBlendResolver resolver = new () { PatternResolver = pattern };
+
+        ReadWeatheringEntriesInto(pattern);
+
+        if (discretePigmentsNeeded > 0)
+        {
+            for (int index = 0; index < discretePigmentsNeeded; index++)
+            {
+                if (index > 0)
+                    CurrentParser.MatchToken(true, () => "Expecting a comma here.", OperatorToken.Comma);
+
+                resolver.MaterialResolvers.Add(ParseBlendedMaterial());
+            }
+        }
+        else
+        {
+            CurrentParser.MatchToken(
+                true, () => "Expecting the blend's values and materials, in brackets, here.", BounderToken.OpenBracket);
+
+            while (!CurrentParser.IsNext(BounderToken.CloseBracket))
+            {
+                Term value = (Term) LanguageDsl.ParseExpression(CurrentParser);
+
+                CurrentParser.MatchToken(true, () => "Expecting a comma here.", OperatorToken.Comma);
+
+                resolver.BreakResolvers.Add(new TermResolver<double> { Term = value });
+                resolver.MaterialResolvers.Add(ParseBlendedMaterial());
+
+                if (CurrentParser.IsNext(OperatorToken.Comma))
+                    CurrentParser.GetNextToken();
+                else if (!CurrentParser.IsNext(BounderToken.CloseBracket))
+                {
+                    throw new TokenException("Expecting a comma or close bracket here.")
+                    {
+                        Token = CurrentParser.GetNextToken()
+                    };
+                }
+            }
+
+            Token bracket = CurrentParser.GetNextToken();
+
+            if (resolver.MaterialResolvers.Count < 2)
+                throw new TokenException("A blend wants at least two materials.") { Token = bracket };
+        }
+
+        ReadWeatheringEntriesInto(pattern);
+
+        resolver.PatternTransformResolver = ParseTransformClause();
+
+        CurrentParser.MatchToken(true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
+
+        return resolver;
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a weather block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleWeatherEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid weather property here.");
+
+        WeatherResolver resolver = (WeatherResolver) _context.CurrentTarget;
+        TermResolver<double> amount = new ()
+        {
+            Term = clause.Term(),
+            Validator = value => value is < 0 or > 1 ? "How much weather there is runs from nothing to one." : null
+        };
+
+        switch (ToCmd(clause))
+        {
+            case "grime":
+                resolver.GrimeResolver = amount;
+
+                if (clause.Expressions.Count > 1)
+                    resolver.GrimeColorResolver = new TermResolver<Color> { Term = clause.Term(1) };
+
+                break;
+            case "dust":
+                resolver.DustResolver = amount;
+
+                if (clause.Expressions.Count > 1)
+                    resolver.DustColorResolver = new TermResolver<Color> { Term = clause.Term(1) };
+
+                break;
+            case "wear":
+                resolver.WearResolver = amount;
+
+                // What wear bares follows `to`: a material written out, or named.
+                if (clause.Tokens.Count > 1)
+                    resolver.WearToResolver = ParseBlendedMaterial();
+
+                break;
+            case "radius":
+                resolver.RadiusResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value > 0 ? null : "How far weather is looked for must be more than nothing."
+                };
+                break;
+            case "splash":
+                resolver.SplashResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value < 0 ? "How high dirt has been kicked up cannot be less than nothing." : null
+                };
+
+                if (clause.Expressions.Count > 1)
+                    resolver.SplashColorResolver = new TermResolver<Color> { Term = clause.Term(1) };
+
+                break;
+            default:
+                throw new Exception($"Internal error: unknown weather property found: {ToCmd(clause)}.");
+        }
+    }
+
+    /// <summary>
+    /// This method reads one of a blend's materials: a material written out, or named.
+    /// </summary>
+    /// <returns>The material's resolver.</returns>
+    private Resolver<Material> ParseBlendedMaterial()
+    {
+        if (CurrentParser.PeekNextToken() is { Text: "material" })
+            return GetMaterialResolverForUse(ParseClause("startMaterialClause"));
+
+        Token name = CurrentParser.GetNextToken();
+
+        return IsAPrimitiveParameter(name.Text)
+            ? new TermResolver<Material> { Term = new VariableTerm(name) }
+            : GetExtensibleItem<MaterialResolver>(name, false);
     }
 
     /// <summary>

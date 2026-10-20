@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 140 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 141 images</summary>
 
 <details>
 <summary><b>Showcase</b> &mdash; 2 images &middot; whole pictures, made for their own sake</summary>
@@ -792,7 +792,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Materials</b> &mdash; 19 images &middot; what a surface is made of</summary>
+<summary><b>Materials</b> &mdash; 20 images &middot; what a surface is made of</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -945,6 +945,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/materials/velvet-and-satin.igl">Velvet and Satin</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/materials/out-in-the-weather.png">
+      <img alt="Out in the Weather" height="120" src="Local/materials/out-in-the-weather.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/materials/out-in-the-weather.igl">Out in the Weather</a>
     </td>
   </tr>
 </table>

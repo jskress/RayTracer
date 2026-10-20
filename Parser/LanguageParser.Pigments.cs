@@ -244,9 +244,15 @@ public partial class LanguageParser
         Resolver<int?> seedResolver, Clause clause)
     {
         (IPatternResolver resolver, int discretePigmentsNeeded) = ParsePatternClause(clause);
+
+        // A weathering pattern's own entries may stand before its colors, and after them; see below.
+        ReadWeatheringEntriesInto(resolver);
+
         Resolver<PigmentSet> pigmentSetResolver = discretePigmentsNeeded == 0
             ? ParsePigmentMapClause()
             : ParsePigmentListClause(discretePigmentsNeeded);
+
+        ReadWeatheringEntriesInto(resolver);
 
         // A brick's sizes may stand after its colors as well as before them.  They are read by hand
         // rather than offered by the entry clause, so they are only seen where something looks for

@@ -66,6 +66,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public HairGrowthResolver HairResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the weather the surface has been out in, if it says.
+    /// </summary>
+    public WeatherResolver WeatherResolver { get; set; }
+
+    /// <summary>
     /// This property notes whether this resolver would give the surface a material of its own.
     /// </summary>
     public bool SetsMaterial => MaterialResolver is not null;
@@ -100,6 +105,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         NoCausticsResolver.AssignTo(value, target => target.NoCaustics, context, variables);
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
+        WeatherResolver.AssignTo(value, target => target.Weather, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 

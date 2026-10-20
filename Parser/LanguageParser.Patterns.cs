@@ -61,6 +61,9 @@ public partial class LanguageParser
                 SeedResolver = seedResolver
             }, new CracklePattern().DiscretePigmentsNeeded),
             "cubic" => (new CubicPatternResolver(), new CubicPattern().DiscretePigmentsNeeded),
+            "crevices" => (new CrevicesPatternResolver(), new CrevicesPattern().DiscretePigmentsNeeded),
+            "edges" => (new EdgesPatternResolver(), new EdgesPattern().DiscretePigmentsNeeded),
+            "facing" => (new FacingPatternResolver(), new FacingPattern().DiscretePigmentsNeeded),
             "dents" => (new DentsPatternResolver
             {
                 SeedResolver = seedResolver
@@ -173,6 +176,70 @@ public partial class LanguageParser
         ReadBrickSizesInto(resolver);
 
         return resolver;
+    }
+
+    /// <summary>
+    /// This method reads whatever a weathering pattern has to say standing at the current place -- how far a
+    /// crevice or an edge is looked for, which way a surface is asked to face -- into the resolver given, and
+    /// stops at the first thing that is not one.  Like a brick's sizes, these may stand before the colors or
+    /// after them, and are read by hand in both places.
+    /// </summary>
+    /// <param name="resolver">The pattern resolver to read into; any other is left alone.</param>
+    private void ReadWeatheringEntriesInto(IPatternResolver resolver)
+    {
+        if (resolver is not (CrevicesPatternResolver or EdgesPatternResolver or FacingPatternResolver))
+            return;
+
+        Clause clause = LanguageDsl.ParseClause(CurrentParser, "weatheringEntryClause");
+
+        while (clause != null)
+        {
+            Token said = clause.Tokens[0];
+
+            switch (resolver, clause.Text())
+            {
+                case (CrevicesPatternResolver crevices, "radius"):
+                    crevices.RadiusResolver = Reach(clause.Term());
+                    break;
+                case (EdgesPatternResolver edges, "radius"):
+                    edges.RadiusResolver = Reach(clause.Term());
+                    break;
+                case (FacingPatternResolver facing, "toward"):
+                    facing.TowardResolver = clause.Tokens.Count > 1
+                        ? new LiteralResolver<Vector>
+                        {
+                            Value = clause.Text(1) switch
+                            {
+                                "X" => new Vector(1, 0, 0),
+                                "Y" => new Vector(0, 1, 0),
+                                _ => new Vector(0, 0, 1)
+                            }
+                        }
+                        : new TermResolver<Vector>
+                        {
+                            Term = clause.Term(),
+                            Validator = value => value.Magnitude > 0
+                                ? null
+                                : "The way a surface is asked to face must be some way, not nothing."
+                        };
+                    break;
+                default:
+                    throw new TokenException(clause.Text() == "radius"
+                        ? "Only crevices and edges look about a place, so only they have a radius."
+                        : "Only facing asks which way a surface faces, so only it goes toward a direction.")
+                    {
+                        Token = said
+                    };
+            }
+
+            clause = LanguageDsl.ParseClause(CurrentParser, "weatheringEntryClause");
+        }
+
+        static Resolver<double> Reach(Terms.Term term) => new TermResolver<double>
+        {
+            Term = term,
+            Validator = value => value > 0 ? null : "How far a weathering pattern looks must be more than nothing."
+        };
     }
 
     /// <summary>

@@ -78,12 +78,12 @@ public partial class LanguageParser
             'anisotropy', 'antialiasing', 'apart', 'are', 'around', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color',
+            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color', 'crevices',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'east', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
-            'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
+            'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
             'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
@@ -97,12 +97,12 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
-            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
-            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'top', 'toroidal', 'torus',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
+            'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'toward', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
-            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'weight', 'white', 'width', 'with', 'within', 'wood',
+            'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
 
@@ -322,6 +322,11 @@ public partial class LanguageParser
         {
             subsurface > samples ?? 'Expecting "samples" to follow "subsurface" here.' > _expression
         }
+        // How many directions the weathering patterns look about in at each place they are asked about.
+        weatheringSamplesClause:
+        {
+            weathering > samples ?? 'Expecting "samples" to follow "weathering" here.' > _expression
+        }
         // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
         // one.
         reflectionSamplesClause:
@@ -341,7 +346,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
-            filmCurveClause | subsurfaceSamplesClause |
+            filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
@@ -519,8 +524,8 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            agate | boxed | brick | checker | cubic | flop | hexagon | leopard | planar | radial |
-            ripples | square | triangular | waves |
+            agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar |
+            radial | ripples | square | triangular | waves |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
             } | marble | wood |
@@ -536,6 +541,11 @@ public partial class LanguageParser
         {
             [ brick | mortar ] > size > _expression
         }
+        // How far a crevice or an edge is looked for about a place, and which way a surface is asked to face.
+        weatheringEntryClause:
+        [
+            { radius > _expression } | { toward > [ X | Y | Z | _expression ] }
+        ]
 
         // Pigment clauses.
         pigmentMapClause:
@@ -598,6 +608,7 @@ public partial class LanguageParser
         {
             material > [
                 openBrace | { inherited > openBrace{?} } |
+                { blend > patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.' } |
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }
@@ -798,11 +809,23 @@ public partial class LanguageParser
             } |
             { facing > _expression > { by > _expression }{?} }
         ] ?? 'Expecting a hair property here.'
+        // The weather a group or object has been out in: grime in its crevices, dust on top, wear on its
+        // edges -- baring a material, if one is named -- and how far about each place to look.
+        startWeatherClause:
+        {
+            weather > openBrace ?? 'Expecting an open brace to follow "weather" here.'
+        }
+        weatherEntryClause:
+        [
+            { [ grime | dust | splash ] > _expression > { color > _expression }{?} } |
+            { wear > _expression > to{?} } |
+            { radius > _expression }
+        ] ?? 'Expecting a weather property here.'
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
-            startHairClause | placementClause
+            startHairClause | placementClause | startWeatherClause
         ]
         
         // Plane clause.

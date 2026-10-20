@@ -85,13 +85,14 @@ public class RenderInstruction : Instruction
         // Two things can only be settled once the scene is whole, since each depends on the company it
         // keeps rather than on anything written beside it.
         SettleTheSky(context, scene);
-        FinalizeSurfaceData(context, scene, scene.Surfaces);
+        FinalizeSurfaceData(context, scene, scene.Surfaces, WeatherSettler.Settle(scene.Surfaces));
 
         scene.DiffuseBounces = context.DiffuseBounces;
         scene.DiffuseSamples = context.DiffuseSamples;
         scene.DiffuseCacheError = context.DiffuseCacheError;
         scene.CausticPhotons = context.CausticPhotons;
         scene.SubsurfaceSamples = context.SubsurfaceSamples;
+        scene.WeatheringSamples = context.WeatheringSamples;
         scene.CausticsSpectral = context.Spectral;
         scene.TraceDepth = context.TraceDepth ?? 4;
         scene.Bailout = context.TraceDepth is null ? 0 : RenderContext.Bailout;
@@ -220,7 +221,7 @@ public class RenderInstruction : Instruction
     /// <param name="scene">The scene the surfaces belong to.</param>
     /// <param name="surfaces">The list of surfaces to examine.</param>
     private static void FinalizeSurfaceData(
-        RenderContext context, Scene scene, List<Surface> surfaces)
+        RenderContext context, Scene scene, List<Surface> surfaces, Dictionary<Weather, Surface> weathers = null)
     {
         // Ambient stands in for light that has bounced about the scene, which this renderer does not
         // trace unless asked.  A sky light is the real thing that fudge was imitating, and so is the light
@@ -262,6 +263,21 @@ public class RenderInstruction : Instruction
             }
         }
 
+        // What weather bares is a material like any other, readied on the first surface it was said on.
+        foreach ((Weather weather, Surface surface) in weathers ?? [])
+        {
+            if (weather.WearTo is not { } bared)
+                continue;
+
+            bared.Ambient ??= whenUnsaid;
+
+            if (scaled is not null && scaled.Add(bared))
+                bared.Ambient *= ambientScale;
+
+            bared.Pigment.Seed ??= surface.Seed;
+            bared.Pigment.RenderingIsAboutToStart(context, surface);
+        }
+
         return;
 
         void Settle(Surface surface)
@@ -286,6 +302,27 @@ public class RenderInstruction : Instruction
             pigment.Seed ??= surface.Seed;
 
             pigment.RenderingIsAboutToStart(context, surface);
+
+            // A blend's materials are settled as the surface's own is, each of them, and its pattern seeded.
+            if (surface.Material.Blend is { } blend)
+            {
+                if (surface.Seed is { } seed)
+                    blend.Pattern.SetSeed(seed);
+
+                foreach (Material each in blend.AllMaterials)
+                {
+                    each.Ambient ??= whenUnsaid;
+
+                    if (scaled is not null && scaled.Add(each))
+                        each.Ambient *= ambientScale;
+
+                    each.Pigment.Seed ??= surface.Seed;
+                    each.Pigment.RenderingIsAboutToStart(context, surface);
+
+                    if (surface.Seed is { } inner)
+                        each.Blend?.Pattern.SetSeed(inner);
+                }
+            }
         }
     }
 
