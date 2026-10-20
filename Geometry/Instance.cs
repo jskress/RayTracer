@@ -66,11 +66,16 @@ public class Instance : Surface
         null => false,
 
         // A shape reachable from two places has no one place to be, and a light made of the stuff
-        // inside it has to be somewhere.
+        // inside it has to be somewhere: a volume light is made once for each surface that glows
+        // (`RenderInstruction.LightTheGlowingThings`), not once for each place it stands as a lamp in a
+        // group is (`LightPlacer`).  So a flame is built again for every call that makes one.
         _ when surface.GivesLightSamples is not null => false,
 
-        // The medium inside a thing is looked up by carrying a point into the *containing* surface's
-        // space, and that lookup has no hit to take a portal from.
+        // The medium inside a thing is looked up by carrying a point into the containing surface's
+        // space, and since 2026-10-19 every such lookup goes through the instances the surface was met
+        // through (`Intersection.Portals`, `Intersection.ContainerPortals`; TestMedium holds it to the
+        // same answer in an instance as outright).  It is still refused, so that no scene's sharing
+        // changes; lifting it is the first step should glowing shapes ever be shared.
         _ when surface.Material?.Interior?.Medium is not null => false,
 
         // Where a thing stands changes while the shutter is open, and an instance would have to carry

@@ -178,6 +178,12 @@ public class RenderContext
     public int ReflectionSamples { get; set; } = 16;
 
     /// <summary>
+    /// This property holds how many walks under its surface a material that scatters light inside takes, the
+    /// first time a ray from the eye meets one; see <see cref="Core.Subsurface"/>.
+    /// </summary>
+    public int SubsurfaceSamples { get; set; } = 64;
+
+    /// <summary>
     /// What every material's ambient is multiplied by once the scene is whole.
     /// <para>
     /// Ambient stands in for light that has bounced about the scene, which this renderer does not trace.

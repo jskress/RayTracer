@@ -219,8 +219,47 @@ public partial class LanguageParser
                 resolver.FilmResolver =
                     ParseObjectResolver<ThinFilmResolver>("filmEntryClause", HandleFilmEntryClause);
                 break;
+            case "subsurface":
+                resolver.SubsurfaceResolver =
+                    ParseObjectResolver<SubsurfaceResolver>("subsurfaceEntryClause", HandleSubsurfaceEntryClause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a subsurface block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSubsurfaceEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid subsurface property here.");
+
+        SubsurfaceResolver resolver = (SubsurfaceResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            // A number is the same distance for every color, and a color -- [1, 0.4, 0.2], say -- one for each.
+            case "radius":
+                resolver.RadiusResolver = new CoefficientResolver
+                {
+                    Term = clause.Term(),
+                    Validator = value => value.Red > 0 && value.Green > 0 && value.Blue > 0
+                        ? null
+                        : "How far light travels under a surface must be more than nothing, in every color."
+                };
+                break;
+            case "thickness":
+                resolver.ThicknessResolver = new TermResolver<double?>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value > 0 ? null : "A sheet must be more than nothing thick."
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown subsurface property found: {ToCmd(clause)}.");
         }
     }
 

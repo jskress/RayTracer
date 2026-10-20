@@ -1,0 +1,80 @@
+// A twig of leaves with the late sun behind them.
+//
+// A leaf is a sheet thinner than a postcard, and light goes into it, wanders among its cells and comes out of
+// both faces: so a leaf with the sun behind it glows, yellower and brighter than its own green, and one
+// turned to the sun shows its green as any surface would.  Each says so with `subsurface`: how far light
+// travels inside it, and how thick it is -- a third of a millimeter, about what a leaf is.  A matte sheet with
+// the sun behind it would be black.
+//
+// Everything is in meters: leaves seven centimeters long on a twig twenty-five long.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    subsurface samples 128
+    scale ambient by 0
+    info {
+        title 'Leaves Against the Sun'
+        author 'J. Stephen Kress'
+        description 'A twig of leaves with a low sun behind them, glowing with the light that comes through.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 0.05, -0.42]
+    look at [0, 0.06, 0]
+    field of view 36
+}
+
+// The sun, low and behind the twig, and the sky's light from in front, to find the leaves' faces by.
+distant light { direction [0.25, -0.2, -1]  temperature 3800  brightness 1.8 }
+distant light { direction [-0.2, -0.6, 1]  color [0.16, 0.20, 0.28] }
+
+// An evening sky, warm low down: the gradient spans the angles the camera sees and a little more, from two
+// fifths below level to two fifths above, since past either end it would start again.
+background linear Y gradient { [0, [0.95, 0.72, 0.42], 0.5, [0.62, 0.62, 0.62], 1, [0.34, 0.45, 0.62]]  scale 0.8  translate Y -0.4 }
+
+// The leaf's green, darker along the midrib down its middle, where the leaf is thicker.
+Green = material {
+    pigment linear X bouncing gradient {
+        [0, [0.10, 0.24, 0.03], 0.08, [0.20, 0.45, 0.06], 1, [0.22, 0.47, 0.07]]
+        scale 0.024
+    }
+    specular 0.25  shininess 30
+    subsurface { radius 0.0003  thickness 0.0004 }
+}
+
+// A leaf, its base at the origin and its tip seven centimeters up, facing along Z.
+Leaf = generic shape {
+    path {
+        move to 0, 0
+        curve 0.024, 0.012, 0.022, 0.05 to 0, 0.07
+        curve -0.022, 0.05, -0.024, 0.012 to 0, 0
+        close
+    }
+    material Green
+}
+
+// The twig.
+tube {
+    radius 0.0028 at [-0.14, -0.01, 0.03]
+    radius 0.0016 at [0.13, 0.09, 0.05]
+    material { pigment [0.22, 0.15, 0.09]  specular 0.1 }
+}
+
+// The leaves along it, turned this way and that: some facing the camera with the sun at their backs, some
+// tipped toward the sun.
+object Leaf { rotate X 15   rotate Z 50    translate [-0.11, 0.0, 0.032] }
+object Leaf { rotate X -25  rotate Z -40   translate [-0.07, 0.016, 0.035] }
+object Leaf { rotate X 35   rotate Z 70    translate [-0.03, 0.03, 0.037] }
+object Leaf { rotate X -10  rotate Z -15   translate [0.0, 0.042, 0.04] }
+object Leaf { rotate X 55   rotate Z 30    translate [0.03, 0.053, 0.042] }
+object Leaf { rotate X -35  rotate Z -60   translate [0.06, 0.065, 0.045] }
+object Leaf { rotate X 20   rotate Z 5     translate [0.09, 0.076, 0.047] }
+object Leaf { rotate X -50  rotate Z -35   translate [0.12, 0.087, 0.049] }

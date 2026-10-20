@@ -105,6 +105,15 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "subsurface":
+                updater.SubsurfaceSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "A surface whose light comes up from under it must take at least one walk."
+                        : null
+                };
+                break;
             case "film":
                 updater.FilmCurveResolver = new LiteralResolver<FilmCurve> { Value = FilmCurve.Named(clause.Text(2)) };
                 break;

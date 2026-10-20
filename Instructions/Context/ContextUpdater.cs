@@ -50,6 +50,11 @@ public class ContextUpdater : Instruction
     public Resolver<int> ReflectionSamplesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many walks a surface whose light comes up from under it takes.
+    /// </summary>
+    public Resolver<int> SubsurfaceSamplesResolver { get; set; }
+
+    /// <summary>
     /// What to multiply every material's ambient by once the scene is whole.
     /// </summary>
     public Resolver<double> AmbientScaleResolver { get; set; }
@@ -153,6 +158,7 @@ public class ContextUpdater : Instruction
         WidthResolver.AssignTo(context, target => target.Width, context, variables);
         MediumSamplesResolver.AssignTo(context, target => target.MediumSamples, context, variables);
         ReflectionSamplesResolver.AssignTo(context, target => target.ReflectionSamples, context, variables);
+        SubsurfaceSamplesResolver.AssignTo(context, target => target.SubsurfaceSamples, context, variables);
         AmbientScaleResolver.AssignTo(context, target => target.AmbientScale, context, variables);
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         DiffuseBouncesResolver.AssignTo(context, target => target.DiffuseBounces, context, variables);

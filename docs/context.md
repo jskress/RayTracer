@@ -260,6 +260,18 @@ Only the first rough surface a ray meets spreads it this way.  A ray already one
 every bounce after it, looks in one direction only, so two rough surfaces facing each other cost
 the samples once rather than raised to the power of the bounces.
 
+### Subsurface Samples
+
+A surface whose light [comes up from under it](materials.md#light-under-the-surface) -- wax,
+marble, skin -- follows many walks under itself at each place and averages them:
+
+```
+context { subsurface samples 128 }
+```
+
+The usual number is 64.  As with rough reflections, only the first such surface a ray from the
+eye meets takes them all; one met along a reflection or a bounce takes one walk.
+
 ### Trace Depth
 
 A ray from the eye that meets a mirror or glass goes on -- mirrored, and through -- and is followed four

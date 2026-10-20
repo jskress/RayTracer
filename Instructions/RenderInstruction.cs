@@ -91,6 +91,7 @@ public class RenderInstruction : Instruction
         scene.DiffuseSamples = context.DiffuseSamples;
         scene.DiffuseCacheError = context.DiffuseCacheError;
         scene.CausticPhotons = context.CausticPhotons;
+        scene.SubsurfaceSamples = context.SubsurfaceSamples;
         scene.CausticsSpectral = context.Spectral;
         scene.TraceDepth = context.TraceDepth ?? 4;
         scene.Bailout = context.TraceDepth is null ? 0 : RenderContext.Bailout;

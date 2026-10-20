@@ -226,7 +226,8 @@ public partial class Scene : NamedThing, IDisposable
 
         return interior.Medium is null
             ? color
-            : ThroughMedium(interior.Medium, color, RayThatReached(hit), hit.Distance, container);
+            : ThroughMedium(
+                interior.Medium, color, RayThatReached(hit), hit.Distance, container, hit.ContainerPortals);
     }
 
     /// <summary>
@@ -253,9 +254,12 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="color">The color arriving from beyond it.</param>
     /// <param name="ray">The ray that crossed it.</param>
     /// <param name="distance">How far the ray crossed it; may be endless.</param>
+    /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <returns>The color once the medium has had its say.</returns>
     private TS ThroughMedium<TS>(
-        Medium medium, TS color, Ray ray, double distance, Surface container = null)
+        Medium medium, TS color, Ray ray, double distance, Surface container = null,
+        Portals portals = default)
         where TS : struct, ISpectrum<TS>
     {
         // A medium with a shape has no answer to be written down and must be walked along instead.
@@ -272,7 +276,7 @@ public partial class Scene : NamedThing, IDisposable
                            GlowsAsALight(medium);
 
         if (withoutGlow || mixing is not null || (medium.HasShape && container is not null))
-            return MarchedThrough(medium, color, ray, distance, container, mixing, withoutGlow);
+            return MarchedThrough(medium, color, ray, distance, container, portals, mixing, withoutGlow);
 
         TS through = medium.ApplyOver(color, distance);
 
@@ -282,7 +286,7 @@ public partial class Scene : NamedThing, IDisposable
         if (!medium.Scatters || Lights.Count == 0)
             return through;
 
-        TS gathered = GatheredFromTheLights<TS>(medium, ray, distance, container);
+        TS gathered = GatheredFromTheLights<TS>(medium, ray, distance, container, portals);
 
         // The gathered light adds to what came through without covering the pixel any further: how
         // much of the pixel the medium stands in front of was settled by what it took out, and
@@ -307,7 +311,7 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="distance">How far the ray crosses it; may be endless.</param>
     /// <returns>The light the medium sends along the ray.</returns>
     private TS GatheredFromTheLights<TS>(
-        Medium medium, Ray ray, double distance, Surface container)
+        Medium medium, Ray ray, double distance, Surface container, Portals portals)
         where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
@@ -343,7 +347,7 @@ public partial class Scene : NamedThing, IDisposable
             double chance = extinction * Math.Exp(-extinction * along) / reach;
             Point where = ray.Origin + heading * along;
             TS arriving = GatheredAt<TS>(
-                medium, container, where, heading, ray.TimeIndex, index, crossings);
+                medium, container, portals, where, heading, ray.TimeIndex, index, crossings);
 
             if (arriving.IsBlack)
                 continue;
@@ -381,10 +385,11 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="ray">The ray crossing it.</param>
     /// <param name="distance">How far the ray crosses it.</param>
     /// <param name="container">The surface the medium fills.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <returns>The color once the medium has had its say.</returns>
     private TS MarchedThrough<TS>(
-        Medium medium, TS behind, Ray ray, double distance, Surface container, VolumeLight mixing = null,
-        bool withoutGlow = false)
+        Medium medium, TS behind, Ray ray, double distance, Surface container, Portals portals,
+        VolumeLight mixing = null, bool withoutGlow = false)
         where TS : struct, ISpectrum<TS>
     {
         int count = medium.Samples;
@@ -402,7 +407,7 @@ public partial class Scene : NamedThing, IDisposable
         {
             double along = (index + JitterFor(index, shift)) * step;
             Point where = ray.Origin + heading * along;
-            Point local = container.WorldToSurface(where, ray.TimeIndex);
+            Point local = container.WorldToSurface(where, ray.TimeIndex, portals);
             double density = medium.DensityAt(local);
 
             if (density <= 0)
@@ -418,7 +423,7 @@ public partial class Scene : NamedThing, IDisposable
             if (gathers)
             {
                 source += scattering * density * GatheredAt<TS>(
-                    medium, container, where, heading, ray.TimeIndex, index, crossings);
+                    medium, container, portals, where, heading, ray.TimeIndex, index, crossings);
             }
 
             // What this step's worth gives up to the eye, dimmed by everything nearer than it, and then
@@ -466,6 +471,7 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="medium">The medium being crossed.</param>
     /// <param name="container">The surface it fills.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="where">The place being asked about.</param>
     /// <param name="heading">The way the ray was travelling.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
@@ -473,12 +479,12 @@ public partial class Scene : NamedThing, IDisposable
     /// a walk does not allocate one per step.</param>
     /// <returns>The light the place sends along the ray.</returns>
     private TS GatheredAt<TS>(
-        Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
-        List<Intersection> crossings)
+        Medium medium, Surface container, Portals portals, Point where, Vector heading, int timeIndex,
+        int index, List<Intersection> crossings)
         where TS : struct, ISpectrum<TS>
     {
         TS arriving = GatheredDirectlyAt<TS>(
-            medium, container, where, heading, timeIndex, index, crossings);
+            medium, container, portals, where, heading, timeIndex, index, crossings);
 
         // Everything above is light that reached this place straight from a lamp.  What follows is
         // light that got here by being turned somewhere else first, which in anything thick is most of
@@ -486,8 +492,8 @@ public partial class Scene : NamedThing, IDisposable
         if (medium.Bounces > 0)
         {
             arriving += CarriedOnFrom<TS>(
-                medium, container, where, heading, medium.Bounces, ShiftFor(where, index), timeIndex,
-                crossings);
+                medium, container, portals, where, heading, medium.Bounces, ShiftFor(where, index),
+                timeIndex, crossings);
         }
 
         return arriving;
@@ -499,6 +505,7 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="medium">The medium being crossed.</param>
     /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="where">The place being asked about.</param>
     /// <param name="heading">The way the ray was travelling.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
@@ -506,8 +513,8 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="crossings">A list to find the shape's far side with.</param>
     /// <returns>The light the lamps send this way.</returns>
     private TS GatheredDirectlyAt<TS>(
-        Medium medium, Surface container, Point where, Vector heading, int timeIndex, int index,
-        List<Intersection> crossings)
+        Medium medium, Surface container, Portals portals, Point where, Vector heading, int timeIndex,
+        int index, List<Intersection> crossings)
         where TS : struct, ISpectrum<TS>
     {
         TS arriving = TS.Black;
@@ -533,7 +540,7 @@ public partial class Scene : NamedThing, IDisposable
             if (container is not null)
             {
                 reaching *= SurvivingTheMedium<TS>(
-                    medium, container, where, sample, timeIndex, crossings);
+                    medium, container, portals, where, sample, timeIndex, crossings);
             }
 
             if (reaching.IsBlack)
@@ -571,6 +578,7 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="medium">The medium the light is wandering in.</param>
     /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="from">The place the path is being followed back from.</param>
     /// <param name="heading">The way the light being followed is travelling.</param>
     /// <param name="left">How many more turns may be followed.</param>
@@ -579,8 +587,8 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="crossings">A list to find the shape's edge with.</param>
     /// <returns>The light that arrived here by way of somewhere else.</returns>
     private TS CarriedOnFrom<TS>(
-        Medium medium, Surface container, Point from, Vector heading, int left, double seed,
-        int timeIndex, List<Intersection> crossings)
+        Medium medium, Surface container, Portals portals, Point from, Vector heading, int left,
+        double seed, int timeIndex, List<Intersection> crossings)
         where TS : struct, ISpectrum<TS>
     {
         TS albedo = medium.AlbedoOf<TS>();
@@ -594,7 +602,7 @@ public partial class Scene : NamedThing, IDisposable
             Vector came = medium.SampleDirectionAround(
                 going, Fraction(seed, turn * 3), Fraction(seed, turn * 3 + 1));
             double howFar = TurnedAgainAfter(
-                medium, container, at, came, Fraction(seed, turn * 3 + 2), crossings);
+                medium, container, portals, at, came, Fraction(seed, turn * 3 + 2), timeIndex, crossings);
 
             // The path left the medium without being turned again.  Whatever lies out that way was
             // counted at the last turn, by asking the lights there; following it out as well would
@@ -610,7 +618,7 @@ public partial class Scene : NamedThing, IDisposable
                 break;
 
             carried += throughput * GatheredDirectlyAt<TS>(
-                medium, container, at, going, timeIndex, turn, crossings);
+                medium, container, portals, at, going, timeIndex, turn, crossings);
         }
 
         return carried;
@@ -624,16 +632,18 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="medium">The medium the path is in.</param>
     /// <param name="container">The surface it fills, or <c>null</c> for the surroundings.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="from">Where the path starts.</param>
     /// <param name="going">Which way it goes.</param>
     /// <param name="fraction">A number from nothing up to one, which picks the distance.</param>
+    /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
     /// <param name="crossings">A list to find the shape's edge with.</param>
     /// <returns>How far it goes before being turned, or <c>NaN</c> if it gets out.</returns>
     private static double TurnedAgainAfter(
-        Medium medium, Surface container, Point from, Vector going, double fraction,
-        List<Intersection> crossings)
+        Medium medium, Surface container, Portals portals, Point from, Vector going, double fraction,
+        int timeIndex, List<Intersection> crossings)
     {
-        double edge = EdgeOfTheMedium(container, new Ray(from, going, 0), crossings);
+        double edge = EdgeOfTheMedium(container, portals, new Ray(from, going, timeIndex), crossings);
         double wanted = -Math.Log(1 - fraction);
 
         if (!medium.HasShape)
@@ -658,7 +668,8 @@ public partial class Scene : NamedThing, IDisposable
         for (int index = 0; index < count; index++)
         {
             double along = (index + 0.5) * step;
-            double density = medium.DensityAt(container.WorldToSurface(from + going * along));
+            double density = medium.DensityAt(
+                container.WorldToSurface(from + going * along, timeIndex, portals));
 
             passed += medium.MeanExtinction / medium.Density * density * step;
 
@@ -671,20 +682,24 @@ public partial class Scene : NamedThing, IDisposable
 
     /// <summary>
     /// This method returns how far off the near edge of a medium's surface lies along a ray, or
-    /// infinity where the medium fills the surroundings and so has no edge.
+    /// infinity where the medium fills the surroundings and so has no edge.  The surface is crossed where
+    /// it stands, the ray carried into its parent's space first (see <see cref="IntoTheSpaceOf"/>): until
+    /// 2026-10-19 a medium in a group that was moved or scaled found its edge where the shape would be
+    /// had the group never been moved.
     /// </summary>
     /// <param name="container">The surface the medium fills, or <c>null</c>.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="ray">The ray to look along.</param>
     /// <param name="crossings">A list to find the crossings with.</param>
     /// <returns>How far off the edge is.</returns>
     private static double EdgeOfTheMedium(
-        Surface container, Ray ray, List<Intersection> crossings)
+        Surface container, Portals portals, Ray ray, List<Intersection> crossings)
     {
         if (container is null)
             return double.PositiveInfinity;
 
         crossings.Clear();
-        container.Intersect(ray, crossings);
+        container.Intersect(IntoTheSpaceOf(container, ray, portals), crossings);
 
         double edge = double.PositiveInfinity;
 
@@ -746,20 +761,22 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <param name="medium">The medium doing the shading.</param>
     /// <param name="container">The surface it fills.</param>
+    /// <param name="portals">The instances the surface was met through, if it was.</param>
     /// <param name="where">The place the light is heading for.</param>
     /// <param name="sample">Which way the light lies, and how far off.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
     /// <param name="crossings">A list to find the shape's far side with.</param>
     /// <returns>The fraction of each color that arrives.</returns>
     private static TS SurvivingTheMedium<TS>(
-        Medium medium, Surface container, Point where, LightSample sample, int timeIndex,
+        Medium medium, Surface container, Portals portals, Point where, LightSample sample, int timeIndex,
         List<Intersection> crossings)
         where TS : struct, ISpectrum<TS>
     {
         Ray toward = new (where, sample.Direction, timeIndex);
 
+        // Crossed where it stands, as the edge of a path's wandering is; see EdgeOfTheMedium.
         crossings.Clear();
-        container.Intersect(toward, crossings);
+        container.Intersect(IntoTheSpaceOf(container, toward, portals), crossings);
 
         double edge = double.PositiveInfinity;
 
@@ -794,7 +811,7 @@ public partial class Scene : NamedThing, IDisposable
         for (int index = 0; index < count; index++)
         {
             Point at = where + sample.Direction * ((index + 0.5) * step);
-            double density = medium.DensityAt(container.WorldToSurface(at, timeIndex));
+            double density = medium.DensityAt(container.WorldToSurface(at, timeIndex, portals));
 
             if (density > 0)
                 depth += medium.ExtinctionAt<TS>(density) * step;
@@ -1040,8 +1057,25 @@ public partial class Scene : NamedThing, IDisposable
         // A film shares the light out color by color, in place of Fresnel's one share for every color.
         FilmShares<TS>? film = material.Film?.SharesAt<TS>(intersection);
 
+        // A surface whose light comes up from under it takes none of the lamps' as a matte surface would:
+        // that light comes up from where its walks under the surface lead, and is added apart, while the
+        // rest of its shading -- its highlight, its ambient -- is as ever; see Scene.Subsurface.
+        bool underneath = ComesUpFromUnder(intersection, material, transparency);
+        bool through = !underneath && PassesThroughTheSheet(intersection, material, transparency);
+
+        if (underneath || through)
+            intersection.Material = material.WithoutDiffuse();
+
         foreach (Light light in Lights)
             surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough, film);
+
+        if (underneath || through)
+        {
+            intersection.Material = material;
+            surfaceColor += underneath
+                ? UnderTheSurface<TS>(intersection, material, ownShare, film)
+                : ThroughTheSheet<TS>(intersection, material, ownShare, film);
+        }
 
         // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp.
         if (material.Emission is { } glow)
@@ -1114,7 +1148,7 @@ public partial class Scene : NamedThing, IDisposable
             {
                 color = ThroughMedium(
                     material.Interior.Medium, color, RayThatReached(intersection),
-                    intersection.Distance, intersection.Surface);
+                    intersection.Distance, intersection.Surface, intersection.Portals);
             }
         }
 
@@ -1317,7 +1351,8 @@ public partial class Scene : NamedThing, IDisposable
                 IntersectionExtensions.InteriorOf(container).Medium is { } medium)
             {
                 reaching *= SurvivingTheMedium<TS>(
-                    medium, container, intersection.LitPoint, sample, intersection.TimeIndex, []);
+                    medium, container, intersection.ContainerPortals, intersection.LitPoint, sample,
+                    intersection.TimeIndex, []);
             }
 
             return reaching;

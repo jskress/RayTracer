@@ -291,7 +291,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `radians` | Angle unit: radians. | [Context](context.md#angles) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
-| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, and a hair's curl. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair) |
+| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, and how far light travels under a surface. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
@@ -350,6 +350,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `subsurface` | Material: light that wanders under the surface before coming out; `radius` and `thickness` go in it.  Context: `subsurface samples`, how many walks a place takes. | [Light under the surface](materials.md#light-under-the-surface), [Context](context.md#subsurface-samples) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
 | `surface` | The kind a `primitive` of your own gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
@@ -362,7 +363,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `taper` | How much a tapered extrusion's outline, or a tapered text's glyphs, are scaled by at the far end. | [Advanced Surfaces](advanced-surfaces.md#tapered-extrusion) |
 | `tapered` | Surface: an extrusion whose outline is scaled as it rises, or text whose glyphs are. | [Advanced Surfaces](advanced-surfaces.md#tapered-extrusion) |
 | `text` | Surface: letters turned into geometry; also a path source, text layout, and info. | [Text](advanced-surfaces.md#text), [Text as a Path](advanced-surfaces.md#text-as-a-path), [Context](context.md#image-information) |
-| `thickness` | Hair: how wide a strand is at its root.  Film: how thick it is, in nanometers, or `thickness a to b by <pattern>`. | [Advanced Surfaces](advanced-surfaces.md#hair), [Thin films](materials.md#thin-films) |
+| `thickness` | Hair: how wide a strand is at its root.  Film: how thick it is, in nanometers, or `thickness a to b by <pattern>`.  Subsurface: how thick a sheet is. | [Advanced Surfaces](advanced-surfaces.md#hair), [Thin films](materials.md#thin-films), [Light under the surface](materials.md#light-under-the-surface) |
 | `thin` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `threshold` | Blob: the field level that forms its skin. | [Surfaces](surfaces.md#blob) |
 | `temperature` | Light: the temperature, in kelvin, of the glow it gives instead of a color. | [Lights](lights.md#color-temperature) |

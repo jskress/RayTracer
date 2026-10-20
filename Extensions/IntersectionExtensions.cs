@@ -48,7 +48,7 @@ public static class IntersectionExtensions
     public static (Interior Before, Interior After) FindInteriors(
         this List<Intersection> intersections, Intersection hit)
     {
-        (Surface before, Surface after) = intersections.FindContainers(hit);
+        (Surface before, Surface after, _) = intersections.FindContainers(hit);
 
         return (before is null ? null : InteriorOf(before), after is null ? null : InteriorOf(after));
     }
@@ -56,12 +56,14 @@ public static class IntersectionExtensions
     /// <summary>
     /// This method works out what the ray was inside before the given hit and what it is inside after
     /// it: the innermost thing on each side, or <c>null</c> where it is inside nothing and so in the
-    /// surroundings.
+    /// surroundings.  The one before comes with the instances it was met through, since anything that
+    /// asks about its shape -- where a medium filling it ends -- must find it where it stands.
     /// </summary>
     /// <param name="intersections">The list of intersections to work with.</param>
     /// <param name="hit">The current "hit" intersection.</param>
-    /// <returns>The surfaces the ray is inside before and after the hit.</returns>
-    public static (Surface Before, Surface After) FindContainers(
+    /// <returns>The surfaces the ray is inside before and after the hit, and the instances the one
+    /// before was met through.</returns>
+    public static (Surface Before, Surface After, Portals BeforeThrough) FindContainers(
         this List<Intersection> intersections, Intersection hit)
     {
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
@@ -70,11 +72,12 @@ public static class IntersectionExtensions
         List<(Surface Surface, Portals Portals)> containers = [];
         Surface before = null;
         Surface after = null;
+        Portals beforeThrough = default;
 
         foreach (Intersection intersection in intersections)
         {
-            if (intersection == hit)
-                before = containers.IsEmpty() ? null : containers.Last().Surface;
+            if (intersection == hit && !containers.IsEmpty())
+                (before, beforeThrough) = containers.Last();
 
             // A strand is crossed once, as a ribbon, so it is never gone into: a ray passing one is in
             // whatever it was in before, and stays there.
@@ -103,7 +106,7 @@ public static class IntersectionExtensions
             }
         }
 
-        return (before, after);
+        return (before, after, beforeThrough);
     }
 
     /// <summary>

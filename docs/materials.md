@@ -45,6 +45,7 @@ The rest of the material describes how light behaves when it arrives.
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
 | `film` | none | A film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored; see [Thin films](#thin-films). |
+| `subsurface` | none | Light that goes in, wanders under the surface and comes out elsewhere — wax, marble, skin, a leaf; see [Light under the surface](#light-under-the-surface). |
 | `melanin` | none | For hair only: colors it as natural hair is colored; see [How hair is lit](advanced-surfaces.md#how-hair-is-lit). |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
 | `grain` | 0 | Roughens the diffuse falloff. |
@@ -368,6 +369,73 @@ no ray meets, gives one as usual.
 `gallery/Local/materials/soap-bubbles.igl` blows bubbles in a garden, and is as much about how to
 light a film as about the film: a film mirrors only a few percent, so it needs something bright to
 mirror and something dark to be seen against.
+
+#### Light under the surface
+
+Wax, marble, jade, milk and skin are not lit where the light lands.  Light goes into them, is
+turned over and over by what they are made of, and comes out again somewhere else -- so a candle
+glows round its rim, a lit ear goes red, and the shadowed side of a marble bust is never quite
+dark.  A surface says it is made of such stuff with `subsurface`, and how far the light travels
+inside it before it is turned:
+
+```
+material {
+    pigment [0.92, 0.82, 0.62]
+    specular 0.3  shininess 40
+    subsurface { radius [0.5, 0.25, 0.12] }
+}
+```
+
+**The pigment is still the color it shows**, times its `diffuse`, as for any other surface: lit
+evenly, a deep piece of it looks that color whatever the radius.  The renderer works out what
+the stuff must be made of to show it.  **The radius is how soft it is**, in the scene's own
+units: the distance light goes on average between turns.  Small next to the thing, and the
+surface looks nearly matte, with its edges and dents only a little softened; as large as the
+thing itself, and it is a jelly that glows right through.  It may be one distance, or one for
+each of red, green and blue -- skin carries red furthest, which is why it glows red where it is
+thin.  The rest of the material is the surface's coat: its highlight, its `reflective` and
+`fresnel` and `roughness`, are as they always are, and the light under it is what the coat
+does not mirror.
+
+What the renderer does is follow the light's path backwards: from where the eye meets the
+surface, a walk goes in, travels a distance, is turned every way alike, and goes on so until it
+comes out again, and the surface is lit there as a matte one would be.  Many walks are taken at
+each place and averaged:
+
+```
+context { subsurface samples 128 }
+```
+
+The usual number is 64.  Too few shows as grain, colored where each color travels its own
+distance; more is smoother and costs more on every pixel of the surface.  Anti-aliasing adds to
+it, as it does to [rough reflections](context.md#rough-reflections).
+
+**A sheet has no inside**, so a leaf, a sheet of paper or a lampshade is walked through as a
+slab as thick as it says it is:
+
+```
+material {
+    pigment [0.30, 0.55, 0.12]
+    subsurface { radius 0.0004  thickness 0.0003 }
+}
+```
+
+Lit from in front, a sheet shows what wanders back out of it; with the sun behind it, what
+wanders through -- which is how a leaf glows against the light.  A thickness left out is taken
+to be the radius.  What a sheet lets through falls away as it grows thicker than its radius,
+and faster the darker it is: at three times the radius a pale sheet still lets through more than
+a quarter of the light behind it and a dark one a twelfth, and at ten times a pale one a
+fifteenth and a dark one none.  A closed shape has no need of a thickness: its walks find their
+own way out, through its far side where it is thin.
+
+`gallery/Local/materials/wax-marble-and-jade.igl` shows a candle lit by its own flame beside marble and
+jade, and `gallery/Local/materials/leaves-against-the-sun.igl` a twig of leaves with the sun behind them.
+
+Two things are approximate.  Light bounced onto the surface from elsewhere, when a scene asks
+for [bounced light](context.md#bounced-light), and light gathered onto it by
+[caustics](context.md#caustics), are taken where they land, as a matte surface takes them,
+rather than walked.  And the stuff turns light every way alike, where skin, say, sends most of
+it on ahead.  A surface that lets light through, or one seen from inside, is lit as before.
 
 #### Brilliance and grain
 

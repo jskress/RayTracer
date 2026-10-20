@@ -97,7 +97,7 @@ public partial class LanguageParser
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
-            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'sun',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'title', 'to', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
@@ -317,6 +317,11 @@ public partial class LanguageParser
             film > curve ?? 'Expecting "curve" to follow "film" here.' >
             [ soft | neutral | agx | none ] ?? 'Expecting "soft", "neutral", "agx" or "none" to follow "film curve" here.'
         }
+        // How many walks a surface whose light comes up from under it takes, the first time a ray meets one.
+        subsurfaceSamplesClause:
+        {
+            subsurface > samples ?? 'Expecting "samples" to follow "subsurface" here.' > _expression
+        }
         // How many directions a rough surface looks in for what it mirrors, the first time a ray meets
         // one.
         reflectionSamplesClause:
@@ -336,7 +341,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
-            filmCurveClause |
+            filmCurveClause | subsurfaceSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
@@ -703,10 +708,21 @@ public partial class LanguageParser
         [
             { thickness > _expression > { to > _expression }{?} } | materialIorClause
         ] ?? 'Expecting a film property here.'
+        // Light that goes into the surface, wanders about under it and comes out somewhere else -- wax, marble,
+        // skin -- and how far it travels inside, one distance or one for each of red, green and blue.
+        startSubsurfaceClause:
+        {
+            subsurface > openBrace ?? 'Expecting an open brace to follow "subsurface" here.'
+        }
+        subsurfaceEntryClause:
+        [
+            { radius > _expression } | { thickness > _expression }
+        ] ?? 'Expecting a subsurface property here.'
         materialEntryClause:
         [
             pigment | normal | fresnel | materialValueClause | materialMetallicClause |
-            materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause
+            materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause |
+            startSubsurfaceClause
         ] ?? 'Expecting a material property here.'
 
         // Common surface clauses.

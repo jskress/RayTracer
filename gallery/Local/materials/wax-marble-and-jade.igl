@@ -1,0 +1,129 @@
+// A candle, a marble egg and a disc of jade on a table, lit by the candle and a window behind.
+//
+// None of the three is lit where the light lands.  Light goes into wax, marble and jade, is turned over and
+// over by what they are made of, and comes out again somewhere else: so the candle glows round its rim just
+// below the flame, where the flame's light has gone in and spread, the egg's shadowed side is never quite
+// dark, and the jade, thin at its edge, glows green with the window behind it.  Each says so with
+// `subsurface` and how far its light travels inside -- wax and marble about a centimeter, jade a few
+// millimeters -- and each is the color its pigment says, as it would be matte.
+//
+// Everything is in meters: a pillar candle seven centimeters across and twelve tall.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 500
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    // A candle lit from its own flame is lit in one small place, near the wick, and a walk from its side
+    // must wander up to it to find any light; most do not, and those that do bring back a great deal.  At
+    // the usual sixty-four the wax was grain; it takes this many to come out smooth.
+    subsurface samples 512
+    // A room lit by its candle and a window, with none of the libraries' ambient.
+    scale ambient by 0
+    // Balanced between the candle and the window, so that the flame reads warm and the window cool without
+    // either taking the picture over.
+    white balance 3600
+    info {
+        title 'Wax, Marble and Jade'
+        author 'J. Stephen Kress'
+        description 'A candle, a marble egg and a disc of jade, each glowing with light that has wandered under its surface.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-0.05, 0.16, -0.62]
+    look at [0.0, 0.065, 0]
+    field of view 30
+}
+
+background Black
+
+// The window, low, behind and to the right: a cool light from beyond the things on the table, which their
+// thin edges let through.  And a dim lamp over the camera's shoulder, to find their faces by.
+distant light { direction [-0.45, -0.3, -1]  temperature 4500  brightness 0.3 }
+point light { location [-0.3, 0.4, -0.8]  temperature 3200  brightness 0.06 }
+
+// The table, its top only, in a dark room: nothing stands between the window and the things on it.
+cube {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.5  octaves 2 }
+            [0, [0.30, 0.17, 0.08], 0.5, [0.42, 0.25, 0.12], 1, [0.30, 0.17, 0.08]]
+            scale [0.004, 0.004, 0.3]
+            rotate Y 80
+        }
+        specular 0.2  shininess 40
+    }
+    scale [0.6, 0.02, 0.3]
+    translate [0, -0.02, 0.05]
+}
+
+// The candle: wax that carries red a little furthest, under a little sheen.
+cylinder {
+    min Y 0  max Y 1
+    material {
+        pigment [0.93, 0.86, 0.72]
+        specular 0.25  shininess 50
+        subsurface { radius [0.010, 0.008, 0.006] }
+    }
+    scale [0.035, 0.12, 0.035]
+}
+
+// The wick and the flame: a glow to see, and a small lamp inside it to light by.
+cylinder {
+    min Y 0  max Y 1
+    material { pigment [0.10, 0.08, 0.07] }
+    scale [0.0012, 0.011, 0.0012]
+    rotate Z 6
+    translate Y 0.12
+}
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+        interior { ior 1.0  medium { emission kelvin(1900) * 60  absorption [0.5, 0.9, 1.6] } }
+    }
+    no shadow
+    scale [0.0055, 0.012, 0.0055]
+    translate Y 0.139
+}
+area light {
+    location [-0.0028, 0.133, -0.0028]
+    axisU [0.0056, 0, 0]
+    axisV [0, 0.010, 0.0056]
+    steps 3
+    temperature 1900
+    brightness 2.6
+    fade distance 0.08
+}
+
+// The egg: white marble, its light spread a centimeter -- marble is clearer than it looks -- close enough to
+// the candle to take its light.
+sphere {
+    material {
+        pigment [0.90, 0.89, 0.86]
+        specular 0.4  shininess 120
+        subsurface { radius [0.012, 0.011, 0.010] }
+    }
+    scale [0.026, 0.034, 0.026]
+    translate [0.072, 0.034, -0.005]
+}
+
+// The jade: a disc with a hole through it, standing on its edge facing the camera.  Its green is in what it
+// keeps, not in how far the green travels: a disc a centimeter thick that carried green furthest lost the
+// green out of its back, and showed blue in front.
+torus {
+    radii 0.022, 0.0085
+    material {
+        pigment [0.18, 0.48, 0.25]
+        specular 0.5  shininess 200
+        subsurface { radius [0.005, 0.006, 0.005] }
+    }
+    scale [1, 0.55, 1]
+    rotate X 80
+    rotate Y -18
+    translate [-0.085, 0.031, 0.02]
+}

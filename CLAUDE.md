@@ -186,7 +186,11 @@ and a shell at the surroundings' index, are untouched.  A container's interior (
 charged where a ray leaves it (end of `GetHitColor`) and, for anything met inside it, over the run to that
 (`Scene.ThroughTheInsideOf` from `Intersection.ContainerBefore`); a surface inside a medium is lit through it
 up to the container's edge (`SurvivingTheMedium` in `ReachingFrom`) -- so a log inside a flame keeps the glow
-in front of it.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
+in front of it.  Every medium helper finds its container's edges and density where it stands, the ray carried into
+its parent's space (`IntoTheSpaceOf`) through its portals (`Intersection.Portals` leaving it,
+`Intersection.ContainerPortals` inside it); until 2026-10-19 a medium in a moved group found its edge where the
+shape would be unmoved.  No scene's instance holds a medium even so: `Instance.MayBeShared` refuses one, and a glow
+must refuse, since a `VolumeLight` is made once per surface, not per placement as `LightPlacer` sets out lamps.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
 thinner than light, a soap bubble's or oil's: Airy's sum over both faces, s and p averaged, complex cosines past
 the critical angle, worked out over the 32 bands in every render (`FilmShares<TS>`: Mirrored, Passed, Highlight).
 It takes the place of `reflective`/`fresnel` (`GetReflectionColor` returns a film's mirror image whole; `GetHitColor`
@@ -194,6 +198,22 @@ charges Mirrored to it and Passed to what goes through), Passed scales ambient a
 from transparency as rough glass's is and tinted by R over its thickness-average, a light that `CanBeSeen` gives a
 film no highlight, and a shadow ray charges each face as met from the surroundings (it is not bent, so measuring
 from inside would fake total internal reflection).  The substrate is the material's interior index.
+
+A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
+that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
+`Material.WithoutDiffuse()` (swapped onto `Intersection.Material` for the light loop) and adds the walk's light; the
+pigment x diffuse stays the color shown, turned into a single-scattering albedo per band by `Subsurface.AlbedoFor`, a
+64-entry table of sqrt(1 - albedo) simulated for EXACTLY this walk (a million walks in a semi-infinite slab; within
+0.16% of Chiang-Kutz-Burley 2016 for colors of 0.3 and up, 0.5% at 0.2, and up to 2.8% lower below that).  The walk: enter cosine-weighted at the under point,
+extinction 1/radius per band, each step's band picked in proportion to throughput x albedo with balance-heuristic
+weights over all bands (picked evenly, red carried 10x further than blue came out 15% dark: weights went heavy-tailed),
+isotropic turns, Russian roulette under a quarter, at most 1024 turns, out at the first crossing of the SAME surface
+(`FirstCrossingOf`, the walk ray carried into the surface's parent space through `IntoTheSpaceOf` -- a surface
+applies only its own transform -- with the hit's portals stamped on the crossing), lit there as white matte with one
+sample per light.  `subsurface samples` (64) walks at the first hit from the eye, one after.  A SHEET walks through
+a virtual slab of its `thickness` (default the mean radius) tracking depth only (`SharedOutBy`), giving reflected and
+passed shares, lit from the front and from behind (`LitAsMatte`, every light sample).  Bounced light and caustics on
+a subsurface surface are still taken at the entry as matte.  Surfaces seen from inside, or transparent, are as before.
 
 Bounced light is path continuation, off by default: `context { diffuse bounces N  diffuse samples K }`
 (`Core/Scene.Bounces.cs`).  A matte surface sends K cosine-weighted rays at the first bounce (one after, with
