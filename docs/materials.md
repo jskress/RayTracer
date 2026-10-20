@@ -42,10 +42,13 @@ The rest of the material describes how light behaves when it arrives.
 | `reflective` | 0 | How much of its surroundings it mirrors. |
 | `fresnel` | off | Mirrors more at a slant, as every real surface does. |
 | `roughness` | 0 | Blurs what it mirrors and spreads its highlight, from 0 (a mirror) to 1 (matte). |
+| `anisotropy` | 0 | Brushes a rough surface, its highlight streaking across the grooves; `along` a direction or `around` an axis.  See [Brushed metal](#brushed-metal). |
 | `transparency` | 0 | How much light passes through it. |
 | `metallic` | 0 | Whether the highlight takes the surface's color. |
 | `film` | none | A film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored; see [Thin films](#thin-films). |
 | `subsurface` | none | Light that goes in, wanders under the surface and comes out elsewhere — wax, marble, skin, a leaf; see [Light under the surface](#light-under-the-surface). |
+| `coat` | none | A clear coat over the surface — lacquer, varnish, a glaze — that mirrors by its own index; see [A clear coat](#a-clear-coat). |
+| `sheen` | none | The soft shine of cloth toward a graze — velvet, satin, felt; see [Cloth](#cloth). |
 | `melanin` | none | For hair only: colors it as natural hair is colored; see [How hair is lit](advanced-surfaces.md#how-hair-is-lit). |
 | `brilliance` | 1 | How sharply the diffuse term falls off toward the edges. |
 | `grain` | 0 | Roughens the diffuse falloff. |
@@ -212,6 +215,13 @@ what it mirrors, sharply.  Left to the blur alone, a small bright lantern on a w
 glitter; shared, it is a smooth streak, at no extra cost.  A glowing volume inside a shell that bends
 light — glass with an index of its own — cannot be shared this way and is left to the blur.
 
+**An area light shows as one patch.**  An area light is lit from a few places across its face, and
+in a surface of little roughness the highlight of each place would be a dot, the window in a satin
+floor a grid of them.  So each place's highlight is spread over its own share of the face, and the
+window is one soft patch, giving the same light in all.  It is softer than a true mirror image, and
+dimmer in the middle; for a crisp window in a near-mirror, put something there for it to mirror, a
+panel glowing by its `emission`.  A lamp that is a point is a point, and is left alone.
+
 **Rough reflections cost more than sharp ones**, because a blur is found by looking in many
 directions and averaging: sixteen, unless the scene asks for a different number with
 [`reflection samples`](context.md#rough-reflections).  Only the first rough surface along a ray
@@ -227,6 +237,43 @@ to see; looked at directly, a mirror is a mirror.  A transparent shell with the 
 index, such as a lantern's, bends nothing and is left alone.
 
 `gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic.
+
+#### Brushed metal
+
+Brushing a metal, or turning it on a lathe, leaves grooves.  Along a groove the surface is nearly
+flat, and across it the surface rises and falls, so it mirrors a lamp as a streak square to the
+brushing rather than as a round spot: a long highlight down a brushed steel panel, and a bright
+line running out from the middle of a turned pan bottom or a record.  `anisotropy` says how much,
+and which way the grooves run:
+
+```
+material {
+    pigment color [0.62, 0.63, 0.66]
+    metallic reflective 0.85  roughness 0.35
+    anisotropy 0.8 along X
+}
+```
+
+It runs from 0, alike every way, to 1, where the surface is about a third as rough along the
+grooves as across them.  The `roughness` stays the average, so a value from the chart above still
+means what it says.  The grooves run `along` a direction, `X`, `Y`, `Z` or any vector, or `around`
+an axis, as circles:
+
+```
+material {
+    pigment color [0.62, 0.63, 0.66]
+    metallic reflective 0.85  roughness 0.35
+    anisotropy 0.9 around Y
+}
+```
+
+Both are in the surface's own space, as a pattern is, so the grooves turn and stretch with the
+surface, and `around` circles the middle of that space; a direction that leaves the surface is laid
+flat on it.  Left unsaid, the grooves run along X.  Only a rough, opaque surface is brushed: glass
+frosts alike every way.
+
+`gallery/Local/materials/brushed-steel.igl` sets a turned pan lid, a brushed box and a turned canister
+under small lamps.
 
 #### Frosted Glass
 
@@ -289,6 +336,90 @@ material {
 Written bare, `metallic` means fully metallic; give it a number between 0 and 1 to blend.
 Gold, copper and brass all want this, and all want a reflection too — a metal that mirrors
 nothing looks like painted plastic.
+
+#### A clear coat
+
+A car's paint, a varnished table, a glazed pot: each is a color under a layer of clear lacquer,
+and the lacquer has a surface of its own.  It mirrors as glass does, four percent square-on and
+nearly all of it at a graze, and everything beneath it is seen through it.  `coat` puts one over a
+material:
+
+```
+material {
+    pigment color [0.55, 0.04, 0.05]
+    coat { }
+}
+```
+
+The rest of the material is what lies beneath the coat: here, a red paint.  The coat mirrors the
+room by its own index of refraction and shows a lamp as a small, sharp glint.  The paint shows
+through it, charged for crossing the coat on the way in and again on the way out, so it is a little
+darker square-on and gives way to the mirror at a graze.  A coat takes the place of the surface's
+own highlight: `specular` and `shininess` are not used beneath one, since a lamp's mirror image is
+the coat's.
+
+Anything else the material says it mirrors, it mirrors beneath the coat.  Metallic paint is metal
+flakes under lacquer, a rough, metallic mirror beneath a smooth coat:
+
+```
+material {
+    pigment color [0.20, 0.32, 0.55]
+    metallic reflective 0.6  roughness 0.35
+    coat { }
+}
+```
+
+A coat may say three things, and all of them may be left out:
+
+| Entry | Default | What it does |
+| --- | --- | --- |
+| `roughness` | 0 | How rough the coat's own surface is: 0 is a mirror, an eggshell varnish perhaps 0.2. |
+| `ior` | 1.5 | Its index of refraction (or `index of refraction`); lacquer and varnish are about glass's. |
+| `tint` | clear | The color it gives what lies beneath it seen square-on, as amber varnish or candy paint does.  At a slant it is deeper, the light crossing more of the coat. |
+
+A smooth coat mirrors in one direction, as a mirror does.  But a lamp no ray can meet, a point, spot
+or area light, would show in a truly flat coat not at all, so its highlights come from facets a
+twentieth rough: a small, bright glint.  An area light shows in lacquer as one soft patch, as it
+does in any surface of little roughness (see [Roughness](#roughness)); for a crisp window, put
+something there for the coat to mirror, a panel glowing by its `emission`.  A rough coat costs what any rough surface does,
+looking in `reflection samples` directions.
+
+`gallery/Local/materials/lacquer-and-varnish.igl` sets a lacquered teapot, a ball in metallic paint
+and a jar in eggshell glaze on a varnished table.
+
+A coat goes over something opaque.  On glass, which it would only make more glass of, it is left
+out, and a material may have a film or a coat but not both.  What it leaves out is the light turned
+back and forth between the coat's underside and the paint, which deepens a real lacquered color a
+little.
+
+#### Cloth
+
+Velvet, satin, felt and the nap of a rug shine in a way nothing hard does.  The fibers stand out of
+the weave, so a cloth catches the light where it is seen and lit edge-on: velvet glows round its
+folds and darkens where it faces you, and satin shows a pale shine along every edge that turns away.
+`sheen` gives a surface that shine:
+
+```
+material {
+    pigment color [0.35, 0.03, 0.06]
+    specular 0
+    sheen { color [0.9, 0.55, 0.6]  roughness 0.4 }
+}
+```
+
+The `color` is what the fibers give back, which need not be the cloth's: satin's sheen is pale over
+a deep color, and velvet's is often its own color brightened.  The `roughness` runs from just above
+0, a narrow shine right at the edge, to 1, a felt's broad glow; left out it is 0.5.  Both may be
+left out, and `sheen { }` is a white sheen.  The rest of the material is the cloth beneath, and it
+shows less by as much as the sheen gives back, so a cloth with a bright sheen is darker where it
+faces the light.  A cloth usually wants `specular 0`: its shine is the sheen's.
+
+The shine is strongest with the light behind the eye and both low to the cloth, as at the rim of a
+velvet cushion.  It comes from the lamps, and from a sky light, but not from light bounced onto the
+cloth or gathered by caustics, which reach only the weave.  A sheen goes on something opaque, and a
+material with one may have no film or coat.
+
+`gallery/Local/materials/velvet-and-satin.igl` shows a velvet cushion, a fold of satin and a felt ball.
 
 #### Thin films
 

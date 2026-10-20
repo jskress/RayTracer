@@ -705,6 +705,28 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
+    /// This method handles converting a direction lying along the surface -- which way it is brushed, say --
+    /// from the surface's coordinate system to the world's.  A direction is carried as the surface itself is,
+    /// by its transforms and its parents' and the instances it was found through, without their moves; a
+    /// normal is not (see <see cref="NormalToWorld"/>).  It is not made a unit again.
+    /// </summary>
+    /// <param name="direction">The direction to convert.</param>
+    /// <param name="timeIndex">Which instant to convert at.</param>
+    /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <returns>The direction, in the world's coordinate system.</returns>
+    public Vector DirectionToWorld(Vector direction, int timeIndex = 0, Portals portals = default)
+    {
+        Matrix forward = _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
+
+        direction = forward * direction;
+
+        if (Parent != null)
+            return Parent.DirectionToWorld(direction, timeIndex, portals);
+
+        return portals.IsEmpty ? direction : portals.Through.DirectionToWorld(direction, timeIndex, portals.Outward);
+    }
+
+    /// <summary>
     /// This method handles converting the given normal from the surface's coordinate system
     /// to the world's
     /// </summary>

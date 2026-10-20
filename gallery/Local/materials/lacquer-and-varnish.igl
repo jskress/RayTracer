@@ -1,0 +1,111 @@
+// A lacquered teapot, a ball in metallic paint and a jar in eggshell glaze, on a varnished table.
+//
+// Each is a color under a clear coat, and the coat has a surface of its own: it mirrors as glass does, a few
+// percent seen square-on and nearly all of it at a slant, and the color beneath is seen through it.  So the
+// red pot is red where it faces the camera and carries the window and the softbox where it turns away; the
+// blue ball is metal flakes, a rough metallic mirror, under a smooth coat, so the window shows twice in it,
+// sharp in the coat and blurred in the flakes; the jar's glaze is rough, an eggshell finish, and mirrors
+// only softly; and the table's varnish is amber, deepening the wood beneath it and darker still at a slant.
+// Each says so with `coat { }`, and the rest of its material is what lies beneath.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    info {
+        title 'Lacquer and Varnish'
+        author 'J. Stephen Kress'
+        description 'A lacquered teapot, a ball in metallic paint and a jar in eggshell glaze, on a varnished table.'
+        copyright true
+        software __software__
+    }
+}
+
+include '../shapes/teapot.igl'
+
+camera {
+    location [9.0, 4.6, -11.5]
+    look at [0.2, 1.3, 0.3]
+    field of view 42
+}
+
+// A window off to the left, and daylight coming back off the room, cool and dim.
+area light {
+    location [-7, 7.5, -5.5]
+    axisU [4.5, 0, 0]
+    axisV [0, 3.6, 0]
+    steps 8
+    color [1.35, 1.28, 1.15]
+}
+point light {
+    location [11, 5.5, -3]
+    color [0.13, 0.15, 0.21]
+}
+
+background [0.055, 0.058, 0.068]
+
+// The wall behind, which the coats mirror.
+plane {
+    material { pigment [0.40, 0.365, 0.325]  ambient 0.20  diffuse 0.75  specular 0.02 }
+    rotate X -90
+    translate Z 6.5
+}
+
+// A softbox, out of the frame to the left: not a light, but something bright for the coats to mirror.
+cube {
+    material { pigment [1.0, 0.97, 0.92]  ambient 0  diffuse 0  specular 0  emission 1 }
+    scale [0.05, 2.9, 2.6]
+    translate [-6.4, 3.5, -7.4]
+}
+
+// The table: oak under an amber varnish.
+cube {
+    material {
+        pigment wood {
+            turbulence { amplitude 0.4  octaves 2 }
+            [0, [0.48, 0.31, 0.16], 0.5, [0.62, 0.43, 0.24], 1, [0.48, 0.31, 0.16]]
+            scale [0.08, 0.08, 4]
+            rotate Y 84
+        }
+        ambient 0.08  diffuse 0.75
+        coat { tint [0.92, 0.80, 0.58] }
+    }
+    scale [10, 0.45, 6]
+    translate Y -0.45
+}
+
+// The pot, in red lacquer.
+object Teapot() {
+    material {
+        pigment [0.56, 0.035, 0.045]
+        ambient 0.05  diffuse 0.85
+        coat { }
+    }
+    rotate Y -16
+    translate [-1.6, 0, 0.6]
+}
+
+// The ball, in metallic paint: blue metal flakes, a rough mirror, under a smooth coat.
+sphere {
+    material {
+        pigment [0.10, 0.22, 0.58]
+        ambient 0.04  diffuse 0.35
+        metallic reflective 0.55  roughness 0.35
+        coat { }
+    }
+    scale 1.25
+    translate [2.6, 1.25, 0.2]
+}
+
+// The jar, in an eggshell glaze: a rough coat over green.
+cylinder {
+    min Y 0  max Y 1
+    material {
+        pigment [0.16, 0.36, 0.22]
+        ambient 0.05  diffuse 0.85
+        coat { roughness 0.25 }
+    }
+    scale [0.6, 1.9, 0.6]
+    translate [3.8, 0, 3.6]
+}

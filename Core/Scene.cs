@@ -1057,6 +1057,24 @@ public partial class Scene : NamedThing, IDisposable
         // A film shares the light out color by color, in place of Fresnel's one share for every color.
         FilmShares<TS>? film = material.Film?.SharesAt<TS>(intersection);
 
+        // A brushed surface's facets lean further across its grooves than along them; see Facets.
+        Facets facets = Facets.At(
+            material, intersection.Surface, intersection.Point, intersection.Normal, intersection.TimeIndex,
+            intersection.Portals);
+
+        // A clear coat mirrors by its own index, and everything the surface beneath it gives back crosses it
+        // twice; see Coat.  A rough one looks in as many directions as a rough surface does.
+        Coat coat = CoatOn(intersection, material);
+        double cosEye = intersection.Eye.Dot(intersection.Normal);
+
+        // A cloth's sheen gives back its share of light from all round, which the weave beneath never gets.
+        Sheen sheen = material.SheenApplies ? material.Sheen : null;
+        (Coat, double, int)? coated = coat is null
+            ? null
+            : (coat, intersection.N1, coat.IsRough && remaining >= 1
+                ? _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples
+                : 0);
+
         // A surface whose light comes up from under it takes none of the lamps' as a matte surface would:
         // that light comes up from where its walks under the surface lead, and is added apart, while the
         // rest of its shading -- its highlight, its ambient -- is as ever; see Scene.Subsurface.
@@ -1067,24 +1085,52 @@ public partial class Scene : NamedThing, IDisposable
             intersection.Material = material.WithoutDiffuse();
 
         foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(light, intersection, ownShare, looks, glass, looksThrough, film);
+            surfaceColor += Illuminate<TS>(
+                light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets);
 
         if (underneath || through)
         {
             intersection.Material = material;
-            surfaceColor += underneath
+
+            TS walked = underneath
                 ? UnderTheSurface<TS>(intersection, material, ownShare, film)
                 : ThroughTheSheet<TS>(intersection, material, ownShare, film);
+
+            // The walks' light reached the surface from all round and leaves it through the coat.
+            if (coat is not null)
+                walked *= coat.ThroughFromAround<TS>(cosEye, intersection.N1);
+
+            if (sheen is not null)
+                walked *= sheen.Beneath(cosEye);
+
+            surfaceColor += walked;
         }
 
         // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp.
         if (material.Emission is { } glow)
-            surfaceColor += TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow);
+        {
+            TS given = TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow);
+
+            if (coat is not null)
+                given *= coat.ThroughOut<TS>(cosEye, intersection.N1);
+
+            surfaceColor += given;
+        }
 
         // The light mirrors and glass gather onto it from the lamps, when the scene asks for caustics, which
         // it takes as it takes a lamp's; see Scene.Caustics.
         if (_caustics is not null && material.Diffuse > 0 && transparency < 1)
-            surfaceColor += CausticsAt<TS>(intersection, material, ownShare, film);
+        {
+            TS gathered = CausticsAt<TS>(intersection, material, ownShare, film);
+
+            if (coat is not null)
+                gathered *= coat.ThroughFromAround<TS>(cosEye, intersection.N1);
+
+            if (sheen is not null)
+                gathered *= sheen.Beneath(cosEye);
+
+            surfaceColor += gathered;
+        }
 
         // And the light bounced onto it off everything else, which a surface takes as it takes a lamp's --
         // its own share of it, and a film's passing share -- when the scene asks for it; see Scene.Bounces.
@@ -1098,6 +1144,12 @@ public partial class Scene : NamedThing, IDisposable
 
                 if (film is { } passing)
                     bounced *= passing.Passed;
+
+                if (coat is not null)
+                    bounced *= coat.ThroughFromAround<TS>(cosEye, intersection.N1);
+
+                if (sheen is not null)
+                    bounced *= sheen.Beneath(cosEye);
 
                 surfaceColor += bounced;
             }
@@ -1241,6 +1293,18 @@ public partial class Scene : NamedThing, IDisposable
             passes *= 1 - reflectance;
         }
 
+        if (material.SheenApplies)
+            mirrors *= material.Sheen.Beneath(intersection.Eye.Dot(intersection.Normal));
+
+        // A coat mirrors its own share, and what the surface beneath mirrors crosses it twice.
+        if (CoatOn(intersection, material) is { } coat)
+        {
+            double cos = intersection.Eye.Dot(intersection.Normal);
+
+            mirrors = mirrors * coat.Through<TS>(cos, cos, intersection.N1).Sum / TS.Count +
+                      coat.ReflectanceAt(cos, intersection.N1);
+        }
+
         return (mirrors, passes);
     }
 
@@ -1263,7 +1327,8 @@ public partial class Scene : NamedThing, IDisposable
     /// <returns>The color the light lends the point.</returns>
     private TS Illuminate<TS>(
         Light light, Intersection intersection, double ownShare, int looks, (double, double)? glass,
-        int looksThrough, FilmShares<TS>? film)
+        int looksThrough, FilmShares<TS>? film, (Coat Coat, double Outside, int Looks)? coated = null,
+        Facets facets = null)
         where TS : struct, ISpectrum<TS>
     {
         // A light standing on something moving is where that stood at this ray's instant.
@@ -1287,8 +1352,9 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 only, ReachingFrom<TS>(intersection, only, glass, light),
                 intersection.Footprint, intersection.Portals, ownShare,
-                ShareOf(light, only, one, intersection, looks, glass, looksThrough), glass,
-                intersection.Material, film, highlights: _bounced == 0);
+                ShareOf(light, only, one, intersection, looks, glass, looksThrough, facets), glass,
+                intersection.Material, film, highlights: _bounced == 0,
+                coat: CoatShareOf(light, only, intersection, coated), facets: facets);
         }
 
         TS sum = TS.Black;
@@ -1302,8 +1368,9 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
                 sample, ReachingFrom<TS>(intersection, sample, glass, light),
                 intersection.Footprint, intersection.Portals, ownShare,
-                ShareOf(light, sample, index, intersection, looks, glass, looksThrough), glass,
-                intersection.Material, film);
+                ShareOf(light, sample, index, intersection, looks, glass, looksThrough, facets), glass,
+                intersection.Material, film, coat: CoatShareOf(light, sample, intersection, coated),
+                facets: facets);
         }
 
         return sum * (1.0 / count);
@@ -1376,10 +1443,10 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     private double? ShareOf(
         Light light, LightSample sample, int index, Intersection intersection, int looks,
-        (double, double)? glass, int looksThrough)
+        (double, double)? glass, int looksThrough, Facets facets = null)
     {
         if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
-            return HighlightShareOf(light, sample, intersection, looks);
+            return HighlightShareOf(light, sample, intersection, looks, facets);
 
         if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
             return light.CanBeSeen ? 0 : LookingShareOf(light, index, intersection);
@@ -1438,22 +1505,53 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="looks">How many directions the point's own reflection will look in.</param>
     /// <returns>The share, or <c>null</c> to leave it to the light, as for a surface that is not
     /// rough.</returns>
-    private double? HighlightShareOf(Light light, LightSample sample, Intersection intersection, int looks)
+    private double? HighlightShareOf(
+        Light light, LightSample sample, Intersection intersection, int looks, Facets facets = null)
     {
         Material material = intersection.Material;
 
         if (!material.IsRough)
             return null;
 
+        return LobeShareOf(light, sample, intersection, looks, material.Roughness * material.Roughness, facets);
+    }
+
+    /// <summary>
+    /// This method works out how much of a clear coat's highlight one sample of a light gives: a smooth coat's
+    /// mirror finds the lights a ray can meet and leaves the rest to its highlight, and a rough one shares
+    /// them between the two as a rough surface does.  See <see cref="HighlightShareOf"/>.
+    /// </summary>
+    /// <returns>The coat, the index outside it and the share, or <c>null</c> for a surface with no coat.</returns>
+    private (Coat Coat, double Outside, double Share)? CoatShareOf(
+        Light light, LightSample sample, Intersection intersection, (Coat Coat, double Outside, int Looks)? coated)
+    {
+        if (coated is not { } over)
+            return null;
+
+        double share = over.Coat.IsRough
+            ? LobeShareOf(light, sample, intersection, over.Looks, over.Coat.Alpha)
+            : light.CanBeSeen ? 0 : 1;
+
+        return (over.Coat, over.Outside, share);
+    }
+
+    /// <summary>
+    /// This method works out how much of one rough lobe's highlight -- a rough surface's, or a rough coat's,
+    /// its facets leaning as far as the given alpha says -- one sample of a light gives, against what the
+    /// lobe's own reflection finds in the given number of looks.  See <see cref="HighlightShareOf"/>.
+    /// </summary>
+    private double LobeShareOf(
+        Light light, LightSample sample, Intersection intersection, int looks, double alpha, Facets facets = null)
+    {
         if (light is SkyLight sky && ReferenceEquals(sky, PictureSky))
         {
             if (looks == 0)
                 return 1;
 
             double byTheSky = sky.OddsToward(sample.Direction, intersection.Normal);
-            double byReflecting = looks * Microfacets.DirectionOdds(
-                intersection.Normal, intersection.Eye, sample.Direction,
-                material.Roughness * material.Roughness);
+            double byReflecting = looks * (facets?.DirectionOdds(intersection.Eye, sample.Direction) ??
+                                           Microfacets.DirectionOdds(
+                                               intersection.Normal, intersection.Eye, sample.Direction, alpha));
 
             return byTheSky + byReflecting > 0 ? byTheSky / (byTheSky + byReflecting) : 1;
         }
@@ -1464,10 +1562,10 @@ public partial class Scene : NamedThing, IDisposable
         if (looks == 0)
             return 1;
 
-        double alpha = material.Roughness * material.Roughness;
         double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
-        double byLooking = looks * Microfacets.DirectionOdds(
-            intersection.Normal, intersection.Eye, sample.Direction, alpha);
+        double byLooking = looks * (facets?.DirectionOdds(intersection.Eye, sample.Direction) ??
+                                    Microfacets.DirectionOdds(
+                                        intersection.Normal, intersection.Eye, sample.Direction, alpha));
 
         return byLight / (byLight + byLooking);
     }
@@ -1869,7 +1967,13 @@ public partial class Scene : NamedThing, IDisposable
 
         // A film mirrors something whatever its reflective says.  What it mirrors is returned whole, and
         // the film's share of each color charged where the hit is shaded, beside what it lets through.
-        if (remaining < 1 || (material.Reflective == 0 && material.Film is null))
+        if (remaining < 1 || (material.Reflective == 0 && material.Film is null && !material.CoatApplies))
+            return TS.Black;
+
+        if (CoatOn(intersection, material) is { } coat)
+            return GetCoatedReflection<TS>(intersection, material, coat, remaining);
+
+        if (material.Reflective == 0 && material.Film is null)
             return TS.Black;
 
         TS color;
@@ -1894,6 +1998,10 @@ public partial class Scene : NamedThing, IDisposable
             color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
         }
 
+        // What a cloth's sheen gives back of what it faces, the weave beneath never mirrors.
+        if (material.SheenApplies)
+            color *= material.Sheen.Beneath(intersection.Eye.Dot(intersection.Normal));
+
         // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
         // surface throw back a gold scene rather than a plain one.  The angle here is the eye
         // against the normal, the true angle of incidence, rather than the approximation the
@@ -1907,6 +2015,72 @@ public partial class Scene : NamedThing, IDisposable
 
         return color;
     }
+
+    /// <summary>
+    /// This method works out what a surface under a clear coat mirrors toward the eye: what the coat mirrors
+    /// by its own index, and what the surface beneath it mirrors, charged for crossing the coat both ways.
+    /// <para>
+    /// **A smooth coat over a smooth mirror looks once**, the two mirroring in the same direction, and
+    /// whatever that one ray brings back is shared by them both.  Anything rough looks for itself, as a
+    /// rough surface does (see <see cref="GetRoughReflection{TS}"/>): a rough coat by its own facets, and
+    /// metal flakes under a smooth coat by theirs.
+    /// </para>
+    /// </summary>
+    private TS GetCoatedReflection<TS>(Intersection intersection, Material material, Coat coat, int remaining)
+        where TS : struct, ISpectrum<TS>
+    {
+        double outside = intersection.N1;
+        double cos = intersection.Eye.Dot(intersection.Normal);
+        TS color = TS.Black;
+        TS mirrorWeight = TS.Black;
+
+        if (material.Reflective > 0)
+        {
+            // What lies beneath mirrors as it would bare, then crosses the coat in and out again -- at the
+            // eye's angle both ways, the mirrored direction making the same angle with the normal.
+            TS beneath = coat.Through<TS>(cos, cos, outside);
+
+            if (material.Metallic != 0)
+            {
+                TS pigmentColor = TS.FromReflectance(material.GetColorFor(intersection));
+
+                beneath *= material.GetMetallicTint(pigmentColor, cos);
+            }
+
+            if (material.IsRough)
+                color += GetRoughReflection<TS>(intersection, material, remaining) * beneath;
+            else
+                mirrorWeight += beneath * material.ReflectanceAt(cos);
+        }
+
+        if (coat.IsRough)
+        {
+            color += LookedAtRoughly<TS>(
+                intersection, coat.Roughness, value => coat.ReflectanceAt(value, outside),
+                _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples, remaining);
+        }
+        else
+            mirrorWeight += TS.White * coat.ReflectanceAt(cos, outside);
+
+        if (!mirrorWeight.IsBlack)
+        {
+            Ray reflectedRay = new (
+                intersection.MirrorPoint, intersection.Reflect, intersection.TimeIndex,
+                intersection.ConeSpread, intersection.ConeTravelled);
+
+            color += GetColorFor<TS>(reflectedRay, remaining - 1) * mirrorWeight;
+        }
+
+        return color;
+    }
+
+    /// <summary>
+    /// This method returns the clear coat a hit is seen through, or <c>null</c> where there is none: the
+    /// material must have one that applies, and the hit must be on the outside of the surface, where the
+    /// coat is.
+    /// </summary>
+    private static Coat CoatOn(Intersection intersection, Material material) =>
+        !intersection.Inside && material.CoatApplies ? material.Coat : null;
 
     /// <summary>
     /// This field notes that a rough surface has already spread a ray out into many, somewhere back
@@ -1960,15 +2134,20 @@ public partial class Scene : NamedThing, IDisposable
         Material material = intersection.Surface.Material ?? Material.Default;
 
         // A film is never made rough: what it mirrors depends on its being smooth.
-        if (!_spreading || _spreadRoughness <= 0 || material.IsRough || material.Film is not null)
+        if (!_spreading || _spreadRoughness <= 0 || material.Film is not null)
             return material;
 
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
+        bool beneath = !material.IsRough &&
+                       (transmits ? intersection.N1 != intersection.N2 : material.Reflective > 0);
 
-        if (transmits ? intersection.N1 == intersection.N2 : material.Reflective <= 0)
+        // A smooth coat mirrors as a mirror does, whatever lies beneath it.
+        bool coat = material.CoatApplies && !material.Coat.IsRough;
+
+        if (!beneath && !coat)
             return material;
 
-        material = material.RoughAs(_spreadRoughness);
+        material = material.RoughAs(_spreadRoughness, beneath);
         intersection.Material = material;
 
         return material;
@@ -2041,14 +2220,6 @@ public partial class Scene : NamedThing, IDisposable
     private TS GetRoughReflection<TS>(Intersection intersection, Material material, int remaining)
         where TS : struct, ISpectrum<TS>
     {
-        Vector normal = intersection.Normal;
-        (Vector across, Vector along) = Microfacets.FrameAround(normal);
-        Vector eye = new (intersection.Eye.Dot(across), intersection.Eye.Dot(along), intersection.Eye.Dot(normal));
-
-        if (eye.Z <= 0)
-            return TS.Black;
-
-        double alpha = material.Roughness * material.Roughness;
         int count = _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples;
 
         // Rough glass mirrors by its own index, facet by facet, as it lets through the rest.
@@ -2056,6 +2227,33 @@ public partial class Scene : NamedThing, IDisposable
             ? cos => material.Reflective *
                      Microfacets.GlassReflectance(cos, intersection.N1, intersection.N2)
             : material.ReflectanceAt;
+
+        return LookedAtRoughly<TS>(
+            intersection, material.Roughness, reflectance, count, remaining,
+            Facets.At(material, intersection.Surface, intersection.Point, intersection.Normal,
+                intersection.TimeIndex, intersection.Portals));
+    }
+
+    /// <summary>
+    /// This method looks in the given number of directions off facets as rough as the given roughness, each
+    /// mirroring by the given share at the angle it is seen at, and averages what they bring back.  It is
+    /// <see cref="GetRoughReflection{TS}"/>'s looking, for any rough lobe: a rough surface's, or a coat's.
+    /// </summary>
+    private TS LookedAtRoughly<TS>(
+        Intersection intersection, double roughness, Func<double, double> reflectance, int count, int remaining,
+        Facets facets = null)
+        where TS : struct, ISpectrum<TS>
+    {
+        Vector normal = intersection.Normal;
+        (Vector across, Vector along) = facets is null
+            ? Microfacets.FrameAround(normal)
+            : (facets.Along, facets.Across);
+        Vector eye = new (intersection.Eye.Dot(across), intersection.Eye.Dot(along), intersection.Eye.Dot(normal));
+
+        if (eye.Z <= 0)
+            return TS.Black;
+
+        double alpha = roughness * roughness;
         double turnOut = ShiftFor(intersection.Point, 101);
         double turnRound = ShiftFor(intersection.Point, 102);
         TS sum = TS.Black;
@@ -2064,7 +2262,7 @@ public partial class Scene : NamedThing, IDisposable
         LookingRun? wasLooking = _looking;
 
         _spreading = true;
-        _spreadRoughness = Math.Max(wasRoughness, material.Roughness);
+        _spreadRoughness = Math.Max(wasRoughness, roughness);
 
         try
         {
@@ -2072,15 +2270,17 @@ public partial class Scene : NamedThing, IDisposable
             {
                 double first = (index + 0.5) / count + turnOut;
                 double second = index * 0.6180339887498949 + turnRound;
-                Vector facet = Microfacets.SampleVisibleNormal(
-                    eye, alpha, first - Math.Floor(first), second - Math.Floor(second));
+                Vector facet = facets?.SampleVisibleNormal(eye, first - Math.Floor(first), second - Math.Floor(second)) ??
+                               Microfacets.SampleVisibleNormal(
+                                   eye, alpha, first - Math.Floor(first), second - Math.Floor(second));
                 double cosFacet = eye.Dot(facet);
                 Vector mirrored = facet * (2 * cosFacet) - eye;
 
                 if (mirrored.Z <= 0)
                     continue;
 
-                double weight = reflectance(cosFacet) * Microfacets.Masking(mirrored.Z, alpha);
+                double weight = reflectance(cosFacet) *
+                                (facets?.Masking(mirrored) ?? Microfacets.Masking(mirrored.Z, alpha));
                 Vector direction = (across * mirrored.X + along * mirrored.Y + normal * mirrored.Z).Unit;
                 // From the lit point still, which for rough glass met from inside is just outside it: how a
                 // lamp's glow through rough glass is shared between its own light and these rays was worked
@@ -2092,7 +2292,9 @@ public partial class Scene : NamedThing, IDisposable
 
                 _looking = new LookingRun(
                     intersection.LitPoint, direction,
-                    Microfacets.Masking(eye.Z, alpha) * Microfacets.Distribution(facet.Z, alpha) / (4 * eye.Z),
+                    facets is null
+                        ? Microfacets.Masking(eye.Z, alpha) * Microfacets.Distribution(facet.Z, alpha) / (4 * eye.Z)
+                        : facets.Masking(eye) * facets.Distribution(facet) / (4 * eye.Z),
                     count, Mirror: normal);
 
                 sum += GetColorFor<TS>(ray, remaining - 1) * weight;

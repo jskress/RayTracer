@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
@@ -176,6 +177,49 @@ public partial class LanguageParser
             case "fresnel":
                 resolver.FresnelResolver = new LiteralResolver<bool> { Value = true };
                 break;
+            case "anisotropy":
+                resolver.AnisotropyResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = value => value is < 0 or > 1
+                        ? "How much a surface is brushed runs from nothing, alike every way, to one."
+                        : null
+                };
+
+                // Which way the grooves run, if it says: an axis by name, or any direction.
+                if (clause.Tokens.Count > 1)
+                {
+                    Resolver<Vector> direction = clause.Tokens.Count > 2
+                        ? new LiteralResolver<Vector>
+                        {
+                            Value = clause.Text(2) switch
+                            {
+                                "X" => new Vector(1, 0, 0),
+                                "Y" => new Vector(0, 1, 0),
+                                _ => new Vector(0, 0, 1)
+                            }
+                        }
+                        : new TermResolver<Vector>
+                        {
+                            Term = clause.Term(1),
+                            Validator = value => value.Magnitude > 0
+                                ? null
+                                : "The way a surface is brushed must be some way, not nothing."
+                        };
+
+                    if (clause.Text(1) == "around")
+                    {
+                        resolver.BrushedAroundResolver = direction;
+                        resolver.BrushedAlongResolver = null;
+                    }
+                    else
+                    {
+                        resolver.BrushedAlongResolver = direction;
+                        resolver.BrushedAroundResolver = null;
+                    }
+                }
+
+                break;
             case "melanin":
                 resolver.MelaninResolver = new MelaninResolver
                 {
@@ -223,8 +267,96 @@ public partial class LanguageParser
                 resolver.SubsurfaceResolver =
                     ParseObjectResolver<SubsurfaceResolver>("subsurfaceEntryClause", HandleSubsurfaceEntryClause);
                 break;
+            case "coat":
+                resolver.CoatResolver = ParseObjectResolver<CoatResolver>("coatEntryClause", HandleCoatEntryClause);
+                break;
+            case "sheen":
+                resolver.SheenResolver = ParseObjectResolver<SheenResolver>("sheenEntryClause", HandleSheenEntryClause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a sheen block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleSheenEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid sheen property here.");
+
+        SheenResolver resolver = (SheenResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "color":
+                resolver.ColorResolver = new CoefficientResolver
+                {
+                    Term = clause.Term(),
+                    Validator = value => value.Red is >= 0 and <= 1 && value.Green is >= 0 and <= 1 &&
+                                         value.Blue is >= 0 and <= 1
+                        ? null
+                        : "A sheen's color is the share of each color its fibers give back, from nothing to all of it."
+                };
+                break;
+            case "roughness":
+                resolver.RoughnessResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value is <= 0 or > 1
+                        ? "A sheen's roughness runs from just above nothing, a satin's edge, to one, a felt's glow."
+                        : null
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown sheen property found: {ToCmd(clause)}.");
+        }
+    }
+
+    /// <summary>
+    /// This method is used to handle an item clause of a coat block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    private void HandleCoatEntryClause(Clause clause)
+    {
+        if (clause == null)
+            throw CreateUnexpectedInputException("Expecting a valid coat property here.");
+
+        CoatResolver resolver = (CoatResolver) _context.CurrentTarget;
+
+        switch (ToCmd(clause))
+        {
+            case "roughness":
+                resolver.RoughnessResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value is < 0 or > 1
+                        ? "A coat's roughness runs from nothing, a mirror, to one, which is matte."
+                        : null
+                };
+                break;
+            case "index":
+            case "ior":
+                resolver.IndexOfRefractionResolver = new TermResolver<double>
+                {
+                    Term = clause.Term(),
+                    Validator = value => value >= 1 ? null : "A coat's index of refraction must be at least one."
+                };
+                break;
+            case "tint":
+                resolver.TintResolver = new CoefficientResolver
+                {
+                    Term = clause.Term(),
+                    Validator = value => value.Red is >= 0 and <= 1 && value.Green is >= 0 and <= 1 &&
+                                         value.Blue is >= 0 and <= 1
+                        ? null
+                        : "A coat's tint is the share of each color it lets through, from nothing to all of it."
+                };
+                break;
+            default:
+                throw new Exception($"Internal error: unknown coat property found: {ToCmd(clause)}.");
         }
     }
 

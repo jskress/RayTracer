@@ -121,6 +121,20 @@ public class AreaLight : PointLight
     }
 
     /// <summary>
+    /// This method returns the angle across the patch of the face one sample stands for, seen from where it
+    /// was looked at from: a step along each axis, the face being sampled a step apart, over the distance.
+    /// </summary>
+    /// <param name="sample">The sample.</param>
+    /// <returns>The angle, in radians.</returns>
+    public override double SpreadOf(LightSample sample)
+    {
+        double alongU = USteps > 1 ? Axis1.Magnitude / (USteps - 1) : 0;
+        double alongV = VSteps > 1 ? Axis2.Magnitude / (VSteps - 1) : 0;
+
+        return sample.Distance > 0 ? Math.Sqrt(alongU * alongU + alongV * alongV) / sample.Distance : 0;
+    }
+
+    /// <summary>
     /// This method picks a place anywhere on the light's face for a photon to set off from.
     /// </summary>
     /// <param name="point">Where the light is looked at from.</param>

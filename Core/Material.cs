@@ -134,6 +134,31 @@ public class Material
     public bool IsRough => Roughness > 0;
 
     /// <summary>
+    /// This property holds how much the surface is brushed, from nought, alike every way, toward one: its
+    /// facets leaning further across the grooves than along them, so that what it mirrors streaks square to
+    /// the brushing.  Its <see cref="Roughness"/> stays the average.  See <see cref="Facets"/>.
+    /// </summary>
+    public double Anisotropy { get; set; }
+
+    /// <summary>
+    /// This property holds which way a brushed surface's grooves run, in the surface's own space, or
+    /// <c>null</c> for along X -- unless it is brushed round an axis instead.
+    /// </summary>
+    public Vector BrushedAlong { get; set; }
+
+    /// <summary>
+    /// This property holds the axis, through the middle of the surface's own space, that a brushed surface's
+    /// grooves run round, as a turned pan bottom's do; or <c>null</c> for grooves running one way.
+    /// </summary>
+    public Vector BrushedAround { get; set; }
+
+    /// <summary>
+    /// This property reports whether the surface is brushed: it must be rough, opaque and say so.  What glass
+    /// frosts, it frosts alike every way.
+    /// </summary>
+    public bool IsAnisotropic => Anisotropy > 0 && IsRough && Transparency == 0 && !PigmentMayTransmit && Film is null;
+
+    /// <summary>
     /// This property holds how much of each melanin hair wearing this material holds, which colors it as
     /// natural hair is colored, in place of its pigment; or <c>null</c> to color it by its pigment.
     /// Only strands take any notice of it.
@@ -143,7 +168,8 @@ public class Material
     /// <summary>
     /// This method returns this material made rough, with the given roughness and everything else as
     /// it is.  It is what a smooth surface is shaded as when a ray that a rough surface has already
-    /// spread meets it; see <see cref="Scene"/>'s regularizing.
+    /// spread meets it; see <see cref="Scene"/>'s regularizing.  A smooth coat is made as rough too, and
+    /// the surface beneath it only if asked: a coat over paint mirrors where the paint does not.
     /// <para>
     /// The copy for each roughness is made once and kept, so that a surface met again and again along
     /// the same path is shaded as one material and not as a new one each time.  It shares this one's
@@ -151,23 +177,30 @@ public class Material
     /// </para>
     /// </summary>
     /// <param name="roughness">The roughness to give it.</param>
+    /// <param name="beneath">Whether to make the material itself rough, and not only its coat.</param>
     /// <returns>The rough copy.</returns>
-    public Material RoughAs(double roughness)
+    public Material RoughAs(double roughness, bool beneath = true)
     {
         LazyInitializer.EnsureInitialized(ref _roughCopies);
 
-        return _roughCopies.GetOrAdd(roughness, value =>
+        return _roughCopies.GetOrAdd((roughness, beneath), key =>
         {
             Material copy = (Material) MemberwiseClone();
 
-            copy.Roughness = value;
+            if (key.Beneath)
+                copy.Roughness = key.Roughness;
+
+            if (Coat is { IsRough: false })
+                copy.Coat = Coat.RoughAs(key.Roughness);
+
             copy._roughCopies = null;
+            copy._withoutDiffuse = null;
 
             return copy;
         });
     }
 
-    private ConcurrentDictionary<double, Material> _roughCopies;
+    private ConcurrentDictionary<(double Roughness, bool Beneath), Material> _roughCopies;
 
     /// <summary>
     /// This property holds how many directions a rough surface looks in to see what it mirrors, the
@@ -216,6 +249,33 @@ public class Material
     /// <see cref="Core.Subsurface"/>.  Its pigment, times its diffuse, is still the color it shows.
     /// </summary>
     public Subsurface Subsurface { get; set; }
+
+    /// <summary>
+    /// This property holds the clear coat over the surface, if it has one -- lacquer, varnish, a glaze --
+    /// which mirrors by its own index and over which everything the material gives back is seen; see
+    /// <see cref="Core.Coat"/>.  The material's own reflective, roughness and metallic say what lies
+    /// beneath it.
+    /// </summary>
+    public Coat Coat { get; set; }
+
+    /// <summary>
+    /// This property reports whether the material's coat has anything to do: it must have one, and be
+    /// opaque, since a coat on glass is only more glass, and have no film, which is a skin of its own.
+    /// </summary>
+    public bool CoatApplies => Coat is not null && Transparency == 0 && !PigmentMayTransmit && Film is null;
+
+    /// <summary>
+    /// This property holds the sheen of cloth on the surface, if it has one -- velvet, satin, felt -- a soft
+    /// shine coming up toward a graze, over whatever the material is beneath it; see <see cref="Core.Sheen"/>.
+    /// </summary>
+    public Sheen Sheen { get; set; }
+
+    /// <summary>
+    /// This property reports whether the material's sheen has anything to do: it must have one, be opaque,
+    /// and have no film or coat, each of which is a skin of its own.
+    /// </summary>
+    public bool SheenApplies =>
+        Sheen is not null && Transparency == 0 && !PigmentMayTransmit && Film is null && Coat is null;
 
     /// <summary>
     /// This method returns this material with no diffuse term, and everything else as it is: what a surface

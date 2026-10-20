@@ -199,6 +199,46 @@ from transparency as rough glass's is and tinted by R over its thickness-average
 film no highlight, and a shadow ray charges each face as met from the surroundings (it is not bent, so measuring
 from inside would fake total internal reflection).  The substrate is the material's interior index.
 
+A rough material's `anisotropy a [along <X|Y|Z|vector> | around <axis>]` (`Material.Anisotropy`, `BrushedAlong`,
+`BrushedAround`) brushes it: `Core/Facets.cs` is GGX stretched, leaning alpha x sqrt(1-0.9a) along the grooves and
+alpha / that across (so the roughness stays the average), with Heitz's VNDF and per-direction Smith masking, in a
+frame (Along, Across, Normal) from `Facets.At`: the direction said in the HIT surface's own space (`around` = axis x
+the local point, circles about the space's middle), carried out by `Surface.DirectionToWorld` (the transforms
+without their moves, through parents and portals) and laid flat on the surface.  `IsAnisotropic` needs rough and
+opaque; glass frosts alike every way.  A material that is not brushed gets `null` facets, and every site falls back
+to `Microfacets` untouched: `ApplyPhong(facets:)`, `LobeShareOf`, `LookedAtRoughly` (frame, sampler, weight,
+`LookingRun` odds) and the photons' `Turned`.
+
+A material's `coat { roughness r  ior n  tint c }` (`Core/Coat.cs`) is clear lacquer over the rest of the material,
+which is what lies BENEATH it (metal-flake paint = `metallic reflective 0.6 roughness 0.35 coat { }`).  `Material.CoatApplies`
+needs it opaque and filmless (film + coat is refused at parse), and `Scene.CoatOn` only from outside (not `Inside`).
+The coat mirrors by Schlick at its index against `Intersection.N1`; everything beneath is charged `Coat.Through`
+((1-F(eye))(1-F(light)) x tint^((1/mu'eye + 1/mu'light)/2), mu' the cosine bent into the coat) per lamp in
+`Light.ApplyPhong` (a `coat:` tuple: coat, outside index, highlight share), `ThroughFromAround` (the in-way averaged
+over the cosine-weighted hemisphere) for ambient, bounces, caustics gathered and subsurface walks, and `ThroughOut`
+for emission.  Under a coat the base's PHONG highlight is dropped (the coat is the skin now); a rough base keeps
+its GGX highlight, charged.  The coat's highlight is GGX at `Coat.HighlightAlpha` -- its own alpha, or for a smooth
+coat `LampRoughness` 0.05 for lamps no ray can meet (those that `CanBeSeen` give a smooth coat none: its mirror
+finds them); a rough coat shares seen lights by `LobeShareOf` with its own looks.  EVERY rough highlight (a rough
+surface's, a brushed one's, a coat's) from an area light is widened per sample by `Light.SpreadOf` (the light's cell
+over the distance) as `Microfacets.WidenedBy`: alpha = sqrt(a^2 + spread^2/4), so a window in satin or lacquer is
+one soft patch, not a grid of dots -- GGX's tail leaves its middle about half a true mirror's, measured; narrower
+rippled.  Point, spot and distant lights spread nothing.  The glow THROUGH frosted glass is not widened.
+`GetCoatedReflection`: a smooth coat over a smooth mirror is ONE ray weighted F + R x Through(v,v); a rough lobe
+looks by `LookedAtRoughly` (GetRoughReflection's loop, for any lobe).  `SharesOf` (bailout) counts the coat;
+`RegularizedFor` roughens a smooth coat (`Material.RoughAs(r, beneath)`, the base only if it would be).  Photons:
+`TurnsLight` includes coats; `Turned` merges a smooth coat with a smooth mirror beneath, else picks one by
+chance (`third`, free on opaque surfaces) in proportion to their shares.
+
+A material's `sheen { color c  roughness r }` (`Core/Sheen.cs`) is cloth: Filament's cloth lobe, Estevez-Kulla
+"Charlie" D (sin^(1/alpha), alpha = r^2, floored 1e-3) with Neubelt-Pettineo V = 1/4(nl + nv - nl nv), no Fresnel,
+in the sheen's color, added per lamp in `ApplyPhong` (not on bounce paths: `highlights: false`).  It peaks with the
+eye and lamp both low on the SAME side (halfway vector grazing); lit from the far side the halfway is square-on and
+the sheen faint.  The weave beneath is scaled by `Beneath`: 1 - max(color) x E, E the sheen's directional albedo
+(`ShareAt`, a 32-step table per alpha, shared statically), min over the eye's and lamp's per lamp (glTF), the eye's
+for ambient, bounces, caustics, walks and the base's mirror.  `SheenApplies` needs opaque, no film, no coat (sheen +
+coat or film is refused at parse).
+
 A material's `subsurface { radius r  [thickness t] }` (`Core/Subsurface.cs`, `Core/Scene.Subsurface.cs`) is light
 that goes in, wanders and comes out elsewhere: wax, marble, skin, leaves.  `GetHitColor` shades such a hit with
 `Material.WithoutDiffuse()` (swapped onto `Intersection.Material` for the light loop) and adds the walk's light; the

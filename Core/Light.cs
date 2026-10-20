@@ -209,6 +209,15 @@ public abstract class Light : NamedThing
     protected virtual bool HighlightsBySample => false;
 
     /// <summary>
+    /// This method returns the angle across the patch of this light that one of its samples stands for, seen
+    /// from where it is looked at from: nothing for a light that is a point, or a direction.  See
+    /// <see cref="Coat.HighlightAlphaFor"/>.
+    /// </summary>
+    /// <param name="sample">The sample.</param>
+    /// <returns>The angle, in radians.</returns>
+    public virtual double SpreadOf(LightSample sample) => 0;
+
+    /// <summary>
     /// This method works out one of the places this light is looked at from, of the
     /// <see cref="SampleCount"/> there are.  A light with no width is the whole of itself from its
     /// one place, so it ignores the index and answers as it lies; an area light spreads its
@@ -416,12 +425,19 @@ public abstract class Light : NamedThing
     /// <param name="highlights">Whether the surface shows a highlight at all: not where it is met along a
     /// path of bounced light, which carries light from one matte surface to the next and leaves light
     /// focused by shiny ones to the caustics.  See <see cref="Scene"/>'s bounces.</param>
+    /// <param name="coat">The surface's clear coat, for a surface that has one: the index of what lies
+    /// outside it, and how much of the coat's highlight this sample gives (see <paramref name="highlightShare"/>).
+    /// Everything the surface beneath gives back is charged for crossing the coat both ways, and the coat
+    /// adds a highlight of its own.  See <see cref="Coat"/>.</param>
+    /// <param name="facets">The facets of a brushed surface, which give its highlight in place of facets
+    /// leaning alike every way; <c>null</c> for any other.  See <see cref="Facets"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
         double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null,
-        FilmShares<TS>? film = null, bool highlights = true)
+        FilmShares<TS>? film = null, bool highlights = true, (Coat Coat, double Outside, double Share)? coat = null,
+        Facets facets = null)
         where TS : struct, ISpectrum<TS>
     {
         material ??= surface.Material ?? Material.Default;
@@ -444,6 +460,17 @@ public abstract class Light : NamedThing
         // Ambient light stands in for light that has bounced around the scene rather than come
         // straight from this source, so it is the one term a shadow does not take away.
         TS ambientColor = color * material.EffectiveAmbient;
+
+        // Under a coat, the light the ambient stands for reaches the surface from all round and leaves it
+        // toward the eye, crossing the coat both ways.
+        if (coat is { } over)
+            ambientColor *= over.Coat.ThroughFromAround<TS>(eye.Dot(normal), over.Outside);
+
+        // Under a sheen, what the cloth's fibers give back of it never reaches the weave.
+        Sheen sheen = material.SheenApplies ? material.Sheen : null;
+
+        if (sheen is not null)
+            ambientColor *= sheen.Beneath(eye.Dot(normal));
 
         // How much of the light is pointed this way at all, which is where a spotlight's cone comes
         // in.  It scales everything that depends on the light arriving, and leaves the ambient term
@@ -501,10 +528,16 @@ public abstract class Light : NamedThing
                 Func<double, double> reflectance = glass is { } sides
                     ? cos => material.Reflective * Microfacets.GlassReflectance(cos, sides.Near, sides.Far)
                     : material.ReflectanceAt;
+                // Spread over the patch of an area light the sample stands for, so that a window in a surface of
+                // little roughness is one patch of light and not a grid of dots; see Microfacets.WidenedBy.
+                double spread = SpreadOf(sample);
                 double factor = share == 0
                     ? 0
-                    : share * Microfacets.Highlight(
-                        normal, eye, vector, material.Roughness * material.Roughness, reflectance);
+                    : facets is not null
+                        ? share * facets.Highlight(eye, vector, reflectance, spread)
+                        : share * Microfacets.Highlight(
+                            normal, eye, vector, Microfacets.WidenedBy(material.Roughness * material.Roughness, spread),
+                            reflectance);
 
                 // The light along this sample, not the light's own color: a glowing volume's samples
                 // each carry what their share of the glow delivers here, which the highlight must take
@@ -515,7 +548,9 @@ public abstract class Light : NamedThing
                 if (factor != 0 && material.Metallic != 0)
                     specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
             }
-            else if (reflectDotEye < 0)
+            // Phong's highlight is a stand-in for the mirror image of a lamp in a surface's skin, and under a
+            // coat the skin is the coat's, which gives a highlight of its own below.
+            else if (reflectDotEye < 0 || coat is not null)
                 specularColor = TS.Black;
             else
             {
@@ -549,10 +584,53 @@ public abstract class Light : NamedThing
         // they were before any of this existed.  Floating point addition does not associate, so
         // regrouping them shifts the odd pixel by one level even when nothing has been lost -- and
         // a scene with nothing transparent in it should come out bit for bit unchanged.
+        // What the surface beneath a coat gives back crossed the coat coming in from the lamp and going out
+        // to the eye; and the coat mirrors the lamp itself, by its own facets and its own index.
+        TS coatColor = TS.Black;
+
+        if (coat is { } coated && lightDotNormal > 0)
+        {
+            TS through = coated.Coat.Through<TS>(eye.Dot(normal), lightDotNormal, coated.Outside);
+
+            diffuseColor *= through;
+            specularColor *= through;
+
+            double factor = !highlights || coated.Share == 0
+                ? 0
+                : coated.Share * Microfacets.Highlight(
+                    normal, eye, vector, coated.Coat.HighlightAlphaFor(SpreadOf(sample)),
+                    cos => coated.Coat.ReflectanceAt(cos, coated.Outside));
+
+            if (factor != 0)
+                coatColor = EmittedToward<TS>(sample) * factor;
+        }
+
+        // A cloth's fibers give back their share of the lamp's light toward a graze, and what they give back
+        // never reaches the weave beneath them.
+        TS sheenColor = TS.Black;
+
+        if (sheen is not null && lightDotNormal > 0)
+        {
+            double beneath = sheen.Beneath(eye.Dot(normal), lightDotNormal);
+
+            diffuseColor *= beneath;
+            specularColor *= beneath;
+
+            if (highlights)
+            {
+                sheenColor = EmittedToward<TS>(sample) * TS.FromReflectance(sheen.Color) *
+                             sheen.Highlight(normal, eye, vector);
+            }
+        }
+
         if (!highlights)
             return ambientColor + diffuseColor * reaching;
 
-        return ambientColor + diffuseColor * reaching + specularColor * reaching;
+        if (coat is null && sheen is null)
+            return ambientColor + diffuseColor * reaching + specularColor * reaching;
+
+        return ambientColor + diffuseColor * reaching + specularColor * reaching + coatColor * reaching +
+               sheenColor * reaching;
     }
 
     /// <summary>

@@ -1,0 +1,82 @@
+// A turned pan lid, a brushed steel box and a turned canister on a slate counter, under two small lamps.
+//
+// Brushing a metal, or turning it on a lathe, leaves grooves, and the grooves' sides are the facets that
+// mirror: they lean across the grooves and hardly at all along them.  So a lamp in brushed steel is a streak
+// square to the brushing rather than a round spot.  The lid was turned, its grooves circles about its middle,
+// and each lamp shows in it as a bright line running out from the middle; the box was brushed side to side,
+// and its lamps are tall streaks; the canister was turned too, its grooves running round it, and its lamps run
+// up and down it.  Each says so with `anisotropy`, and which way: `around Y`, or `along X`.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 2
+    antialiasing threshold 0.1
+    // A brushed surface's blur is narrow along its grooves: at sixty-four directions the canister was grainy,
+    // and here what is left of the grain is fine.
+    reflection samples 256
+    info {
+        title 'Brushed Steel'
+        author 'J. Stephen Kress'
+        description 'A turned pan lid, a brushed steel box and a turned canister, each lamp a streak across the grooves.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.6, 3.6, -6.8]
+    look at [0.2, 0.7, 0.8]
+    field of view 40
+}
+
+background [0.035, 0.035, 0.045]
+
+// Small lamps, so that the streaks are plain: a warm one to the left, a cool one to the right placed so that its
+// streak runs down the box's face, and a dim one beyond the box, whose streak runs along its top.
+point light { location [-3.2, 5.2, -1.6]  color [1.0, 0.95, 0.88] }
+point light { location [3.0, 3.4, -2.6]  color [0.60, 0.66, 0.78] }
+point light { location [1.45, 5.0, 4.0]  color [0.45, 0.42, 0.38] }
+
+// A pale wall behind, for the steel to mirror.
+plane {
+    material { pigment [0.46, 0.45, 0.43]  ambient 0.15  diffuse 0.7  specular 0 }
+    rotate X -90
+    translate Z 5
+}
+
+// The counter: dark honed slate.
+cube {
+    material { pigment [0.09, 0.095, 0.10]  ambient 0.1  diffuse 0.7  specular 0  roughness 0.5 }
+    scale [8, 0.3, 5]
+    translate Y -0.3
+}
+
+Steel = material {
+    pigment [0.62, 0.63, 0.66]
+    ambient 0.04  diffuse 0.15
+    metallic reflective 0.85  roughness 0.3
+}
+
+// The pan lid, lying flat, turned: its grooves are circles about its middle.
+cylinder {
+    min Y 0  max Y 1
+    material Steel { anisotropy 0.9 around Y }
+    scale [1.35, 0.05, 1.35]
+    translate [-1.55, 0, 0.3]
+}
+
+// The box, brushed side to side.
+cube {
+    material Steel { anisotropy 0.9 along X }
+    scale [1.0, 0.7, 0.55]
+    translate [1.45, 0.7, 1.4]
+}
+
+// The canister, turned: its grooves run round it.
+cylinder {
+    min Y 0  max Y 1
+    material Steel { anisotropy 0.9 around Y }
+    scale [0.48, 1.7, 0.48]
+    translate [-0.15, 0, 2.6]
+}
