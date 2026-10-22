@@ -2,6 +2,7 @@ using Lex.Clauses;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Surfaces.Shapes;
 using RayTracer.Instructions.Surfaces.Extrusions;
 using RayTracer.Instructions.Surfaces.LSystems;
 
@@ -142,6 +143,8 @@ public partial class LanguageParser
                 return ParseGrownClause(clause);
             case FractureResolver:
                 return ParseFractureClause(clause);
+            case ShapeGrammarResolver:
+                return ParseShapesClause(clause);
             case TaperedExtrusionResolver:
                 return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:

@@ -1,0 +1,66 @@
+// A shape grammar: rules that divide a box into a building.  One grammar, written once as a primitive,
+// raised three times with three seeds and two widths -- the wider one has more bays, not wider windows,
+// and the seed picks which bays have windows, which roofs are gabled and which hipped.
+context { angles are degrees  no gamma }
+
+camera {
+    location [-3, 7, -46]
+    look at [1, 6, 0]
+    field of view 48
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-30, 40, -40]  color [1, 0.97, 0.93] }
+point light { location [30, 12, -30]   color [0.30, 0.31, 0.35] }
+
+plane { material { pigment color [0.55, 0.57, 0.50]  specular 0 } }
+
+brick = material {
+    pigment brick {
+        brick size [0.215, 0.065, 100]  mortar size 0.01
+        [0.62, 0.60, 0.55], [0.50, 0.27, 0.20]
+        translate Z 50
+    }
+    specular 0.03
+}
+stone = material { pigment color [0.80, 0.77, 0.70]  specular 0.05 }
+slate = material { pigment color [0.30, 0.31, 0.34]  specular 0.10 }
+glass = material { pigment color [0.06, 0.08, 0.10]  specular 0.6  shininess 160  reflective 0.08 }
+paint = material { pigment color [0.10, 0.22, 0.16]  specular 0.3  shininess 60 }
+
+primitive Townhouse(wide, seed) -> shapes {
+    return shapes {
+        axiom Lot
+        size [wide, 0, 8]
+        rules {
+            // The lot raised into a mass, its faces handed on, a roof on top.
+            Lot -> extrude 9 { Mass }
+            Mass -> faces depth 0.3 { front: Facade  sides: Wall }
+                    choose { 1 { roof gable 40 overhang 0.3 material slate gables material brick }
+                             1 { roof hip 35 overhang 0.3 material slate } }
+
+            // The front: a plinth, floors, a cornice; each floor in bays of about two and a half meters.
+            Facade -> split Y { 0.5 Plinth  ~1 Floors  0.35 Cornice }
+            Floors -> repeat Y 2.8 index in floor { Floor }
+            Floor -> repeat X 2.5 { Bay }
+            Bay -> if (floor == 0 && index == count - 1) { Door }
+                   else { choose { 4 Window  1 Wall } }
+
+            // A window: wall round an opening set back into it, a sill standing proud below.
+            Window -> split X { ~1 Wall  1.1 { split Y { 0.8 Wall  1.5 Opening  ~1 Wall } }  ~1 Wall }
+            Opening -> move [0, 0, 0.12] { size [width, height, depth - 0.12] { fill material glass } }
+                       move [-0.08, -0.1, -0.06] { size [width + 0.16, 0.1, 0.06] { fill material stone } }
+            Door -> split X { ~1 Wall  1.1 { split Y { 2.2 { move [0, 0, 0.15] { size [width, height, depth - 0.15] { fill material paint } } }  ~1 Wall } }  ~1 Wall }
+
+            Wall -> fill material brick
+            Plinth -> fill material stone
+            Cornice -> move [0, 0, -0.15] { size [width, height, depth + 0.15] { fill material stone } }
+        }
+        with seed seed
+    }
+}
+
+object Townhouse(7.5, 3)  { translate X -10 }
+object Townhouse(7.5, 8)
+object Townhouse(10, 5)   { translate X 11 }

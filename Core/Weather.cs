@@ -19,7 +19,9 @@ namespace RayTracer.Core;
 /// (<see cref="EdgesPattern"/>): the material it says lies beneath, bared, or else the part's own made paler and
 /// smoother, as handling polishes paint.  Dust settles where it faces up (<see cref="FacingPattern"/>): sandy and
 /// matte.  Each comes on more widely the more of it there is, and its edge is broken by noise, as real dirt's
-/// is.  An amount of nought adds nothing, so a model weathered by nothing is exactly as it was.
+/// is.  Snow lies where it faces up too, but whole: white over everything flat enough to hold it, broken only
+/// along its edge, where a slope is getting too steep, and more snow holds on steeper slopes.  An amount of
+/// nought adds nothing, so a model weathered by nothing is exactly as it was.
 /// </para>
 /// <para>
 /// **A part's weather is its nearest**: what it says itself, or what the group round it says, and so on out --
@@ -53,6 +55,17 @@ public sealed class Weather
     /// This property holds the dust's color.
     /// </summary>
     public Color DustColor { get; set; } = new (0.66, 0.56, 0.42);
+
+    /// <summary>
+    /// This property holds how much snow has fallen, from nought to one: at one it lies on anything sloping less
+    /// than about fifty-eight degrees, at a half on anything under about thirty-five.
+    /// </summary>
+    public double Snow { get; set; }
+
+    /// <summary>
+    /// This property holds the snow's color.
+    /// </summary>
+    public Color SnowColor { get; set; } = new (0.93, 0.94, 0.97);
 
     /// <summary>
     /// This property holds how far the edges are worn, from nought to one.
@@ -90,7 +103,7 @@ public sealed class Weather
     /// <summary>
     /// This property reports whether this weather does anything at all.
     /// </summary>
-    public bool IsNothing => Grime <= 0 && Dust <= 0 && Wear <= 0 && Splash <= 0;
+    public bool IsNothing => Grime <= 0 && Dust <= 0 && Wear <= 0 && Splash <= 0 && Snow <= 0;
 
     private readonly ConcurrentDictionary<Material, Material> _weathered = new ();
 
@@ -103,7 +116,7 @@ public sealed class Weather
     public Material Weathered(Material material) =>
         IsNothing || material is null ? material : _weathered.GetOrAdd(material, Build);
 
-    // The layers, from the inside out: grime in the crevices, wear on the edges, dust on top.
+    // The layers, from the inside out: grime in the crevices, wear on the edges, dust on top, and snow over all.
     private Material Build(Material material)
     {
         Material layered = material;
@@ -141,6 +154,17 @@ public sealed class Weather
             Material broken = Blended(Noise(17), [0.4, 0.56], MaterialBlend.Mixed(material, dusty, 0.5), dusty);
 
             layered = Blended(new FacingPattern(), [from, Math.Min(from + 0.12, 0.999)], layered, broken);
+        }
+
+        if (Snow > 0)
+        {
+            // Whole where it lies, patchy along the edge it lies to: a band of slopes steep enough to lose some.
+            Material snowy = Snowy(material);
+            double from = 1 - 0.3 * Math.Min(Snow, 1);
+            Material patchy = Blended(Noise(23), [0.42, 0.58], layered, snowy);
+            Material lying = Blended(new FacingPattern(), [from + 0.05, from + 0.08], patchy, snowy);
+
+            layered = Blended(new FacingPattern(), [from, from + 0.03], layered, lying);
         }
 
         return layered;
@@ -237,6 +261,23 @@ public sealed class Weather
         dusty.Fresnel = false;
 
         return dusty;
+    }
+
+    // Snow: white and matte but for a little sheen, whatever lies beneath.
+    private Material Snowy(Material material)
+    {
+        Material snowy = Stripped(material);
+
+        snowy.Pigment = new SolidPigment(SnowColor);
+        snowy.Diffuse = 0.9;
+        snowy.Specular = 0.12;
+        snowy.Shininess = 20;
+        snowy.Reflective = 0;
+        snowy.Roughness = 0;
+        snowy.Metallic = 0;
+        snowy.Fresnel = false;
+
+        return snowy;
     }
 
     // Wear with nothing said to bare: the part's own, paler and smoother, as handling polishes paint.

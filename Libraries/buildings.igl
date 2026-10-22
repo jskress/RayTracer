@@ -6,14 +6,25 @@
 //     object Row(5, 'winter')      { translate X 12 }
 //     object Tower(14, 'summer', 3) { translate X -14 }
 //
+//     import 'buildings' { Terrace, Apartments, Chapel }
+//
+//     object Terrace(4)
+//     object Apartments(5, 'winter') { translate X 30 }
+//     object Chapel('summer', 2)      { translate X -28 }
+//
 // | `House` | One dwelling: plinth, walls, a gabled roof, a door and windows. |
 // | `Row` | Several houses joined shoulder to shoulder, as a terrace. |
 // | `Tower` | A taller block, bay after bay, with a parapet rather than a roof. |
+// | `Terrace` | Shops with flats over them, each its own height, brick, roof and paint -- built by rules. |
+// | `Apartments` | A block of flats over a stone base, with balconies -- built by rules. |
+// | `Chapel` | A nave and a tower with a spire, in dressed stone -- built by rules. |
 //
 // The three numbers mean what they mean in the other libraries -- **how big**, **what time of year**,
 // and **which one of that kind** -- and only the first is required.  Height is the eaves-to-ground
 // measure for a house and the whole height for a tower; for a `Row` the first number is **how many
-// houses**, since a terrace is counted rather than measured.
+// houses**, since a terrace is counted rather than measured, and so is a `Terrace`, in shops; for the
+// `Apartments` it is **how many floors**; and a `Chapel` takes none.  The last three are measured in
+// meters (see "Built by rules", below), and the first three in no unit in particular.
 //
 // **The season puts snow on the roofs** and does nothing else, which is the whole of what winter does
 // to a building from the outside.  A building is not deciduous; it takes the word so that a scene
@@ -59,7 +70,7 @@
 // scene can put the same sash in a wall it built itself, and that a `Tower` and a `House` can differ in
 // their *openings* rather than only in their proportions.
 import 'windows' { Sash, Casement }
-import 'doors'   { Door, GlazedDoor }
+import 'doors'   { Door, GlazedDoor, DoubleDoor }
 
 // -- What buildings are made of --------------------------------------------------------------------
 
@@ -526,5 +537,336 @@ primitive Tower(height, season = 'summer', variant = 1) -> group {
         object BuildFlatSnow(season, wide * 1.06, deep * 1.06) { translate Y height * 1.09 }
 
         rotate Y (random(variant, 74) - 0.5) * 6
+    }
+}
+
+// -- Built by rules --------------------------------------------------------------------------------
+
+// The three above are put together a part at a time, every window placed by arithmetic.  These are not:
+// each is a `shapes` grammar, a set of rules that divide a box into a building -- a lot raised into a
+// mass, the mass into its faces, a face into floors, a floor into bays, a bay into wall and window --
+// so a wider one has more bays rather than wider windows, a taller one more floors, and the variant picks
+// among the ways a rule may go.  They are measured in **meters**, as the vehicles and the roads are: a
+// floor is three, a shop four and a half.
+//
+// What the rules buy over arithmetic is depth.  A window is not stuck on a wall: its bay is split round
+// an opening, the opening set back into the wall, so the reveal shows the wall's thickness and throws a
+// shadow line down one side of every window; a lintel and a sill stand proud; a cornice reaches out over
+// a shopfront.  A grammar fills every part with a box in the building's own space, so the brick runs on
+// unbroken from one bay to the next -- and so it must be brick laid in meters, unscaled.
+//
+// **The brick never has a joint behind a face.**  The pattern lays joints in all three directions, and a
+// face lying in a joint plane turns every other course of itself to mortar -- the trap the walls above
+// dodge by shifting their pattern a little.  A grammar's faces lie wherever its rules put them, so no one
+// shift can dodge them all.  These bricks are a hundred meters deep instead, their depth joints fifty
+// meters off, and a wall facing X wears them turned a quarter: every face sees courses and the ends of
+// bricks, and none is ever in a joint.
+primitive BuildBrickFacing(variant) -> material {
+    return material {
+        pigment brick {
+            brick size [0.215, 0.065, 100]  mortar size 0.01
+            BuildMortarTint(variant), BuildBrickTint(variant)
+            translate Z 50
+        }
+        specular 0.03  shininess 8  brilliance 1.1
+    }
+}
+
+primitive BuildBrickFlank(variant) -> material {
+    return material {
+        pigment brick {
+            brick size [0.215, 0.065, 100]  mortar size 0.01
+            BuildMortarTint(variant), BuildBrickTint(variant)
+            translate Z 50
+            rotate Y 90
+        }
+        specular 0.03  shininess 8  brilliance 1.1
+    }
+}
+
+// Dressed stone, in blocks a meter long and a third of one high, laid the same way as the brick above and
+// for the same reason: a hundred meters deep, turned a quarter for a wall facing X.
+primitive BuildAshlarFacing(variant) -> material {
+    return material {
+        pigment brick {
+            brick size [0.9, 0.34, 100]  mortar size 0.012
+            (color BuildMortarTint(variant)) * 0.92, (color BuildMortarTint(variant)) * 1.04
+            translate Z 50
+        }
+        specular 0.04  shininess 10
+    }
+}
+
+primitive BuildAshlarFlank(variant) -> material {
+    return material {
+        pigment brick {
+            brick size [0.9, 0.34, 100]  mortar size 0.012
+            (color BuildMortarTint(variant)) * 0.92, (color BuildMortarTint(variant)) * 1.04
+            translate Z 50
+            rotate Y 90
+        }
+        specular 0.04  shininess 10
+    }
+}
+
+// A base of banded stone, its joints a dark line every half meter: a pattern read in the building's own
+// space, so the bands run level all along the front, beside the doors and over the windows alike.
+primitive BuildRusticated(variant) -> material {
+    return material {
+        pigment linear Y gradient {
+            [0.00, (color BuildMortarTint(variant)) * 1.02,
+             0.90, (color BuildMortarTint(variant)) * 0.96,
+             0.93, (color BuildMortarTint(variant)) * 0.55,
+             1.00, (color BuildMortarTint(variant)) * 0.55]
+            scale [1, 0.5, 1]
+        }
+        specular 0.04  shininess 10
+    }
+}
+
+// Railings and the like, painted iron.
+BuildIron = material { pigment [0.04, 0.045, 0.05]  specular 0.3  shininess 50 }
+
+// A shop's paint: its pilasters, its fascia, the frames of its windows.  Dark and glossy, since a shop
+// is repainted more often than a house is and painted to be seen.
+function BuildShopTint(variant) -> color {
+    switch (mod(floor(variant), 5)) {
+        case 0 { return color [0.06, 0.16, 0.11] }
+        case 1 { return color [0.30, 0.06, 0.06] }
+        case 2 { return color [0.06, 0.08, 0.20] }
+        case 3 { return color [0.05, 0.05, 0.05] }
+        default { return color [0.70, 0.66, 0.55] }
+    }
+}
+
+primitive BuildShopPaint(variant) -> material {
+    return material { pigment BuildShopTint(variant)  specular 0.30  shininess 60 }
+}
+
+// A shop window: the dark of the shop behind glass, mirroring the street at a slant.
+BuildShopGlass = material {
+    pigment [0.05, 0.06, 0.07]
+    specular 0.6  shininess 160  reflective 0.05  fresnel  ambient 0.03
+}
+
+// -- A terrace of shops ----------------------------------------------------------------------------
+
+// A row of shops with flats over them, as a high street is: six meters to a shop, two or three floors
+// above it, and each its own height, its own brick, its own roof -- gabled, its ridge along the street
+// and its gables in the walls between, or flat behind a parapet -- and its own paint.  The shopfront is
+// pilasters either side, a display window over a stall riser, a door set back in its own bay to one
+// side, a fascia for the name and a cornice over it all; the flats have two or three windows a floor
+// over a stone band.  Its first number is **how many shops**.  Its front is toward -Z, its middle over
+// the origin, eleven meters deep.
+//
+// The roofs reach past the front and back walls and **not** past the gables.  Each house's roof is its
+// own, and one reaching over the wall into the next would lie in the same plane as the next one's.
+primitive Terrace(shops = 4, season = 'summer', variant = 1) -> shapes {
+    return shapes {
+        axiom Street
+        size [shops * 6, 0, 11]
+        rules {
+            Street -> repeat X 6 index in shop { Plot }
+            Plot -> extrude 4.5 + (2 + floor(random(shop, 1, variant) * 2)) * 3.1 { Mass }
+            Mass -> faces depth 0.35 { front: Front  back: Brick  sides: Flank }
+                    if (random(shop, 2, variant) < 0.55) { Pitched } else { Parapet }
+
+            Pitched -> roof gable 40 overhang 0.3 verge 0 material BuildRoofOf(shop + variant)
+                                     gables material BuildBrickFlank(shop * 7 + variant)
+                       move [0.3, height, depth / 2 - 0.45] { size [0.9, depth / 2 * 0.84 + 1.1, 0.9] { Stack } }
+            Stack -> split Y { ~1 { fill material BuildChimney }  0.12 { move [-0.06, 0, -0.06] { size [width + 0.12, height, depth + 0.12] { fill material BuildTrim } } } }
+            Parapet -> roof flat material BuildRoof
+                       move [0, height, 0] { size [width, 0.8, depth] { faces depth 0.3 { front: Coped  back: Brick  sides: Flank } } }
+            Coped -> split Y { ~1 Brick  0.12 { move [0, 0, -0.06] { size [width, height, depth + 0.06] { fill material BuildTrim } } } }
+
+            Brick -> fill material BuildBrickFacing(shop * 7 + variant)
+            Flank -> fill material BuildBrickFlank(shop * 7 + variant)
+            Paint -> fill material BuildShopPaint(shop * 3 + variant)
+            Proud -> move [0, 0, -0.05] { size [width, height, depth + 0.05] { fill material BuildTrim } }
+
+            // The flats.
+            Front -> split Y { 4.5 Shop  0.2 Proud  ~1 Floors }
+            Floors -> repeat Y 3.1 { Floor }
+            Floor -> repeat X (random(shop, 3, variant) < 0.5 ? 3 : 2) { Bay }
+            Bay -> split X { ~1 Brick  min(1.1, width * 0.5) Opening  ~1 Brick }
+            Opening -> split Y { 0.8 Brick  1.75 Window  0.22 Lintel  ~1 Brick }
+            Window -> move [0, 0, 0.1] {
+                          size [width, height, depth - 0.1] {
+                              Brick
+                              place { object BuildOpening(width / 2.4, height / 2.4, 0.06, season, shop + variant) }
+                          }
+                      }
+            Lintel -> move [-0.08, 0, -0.03] { size [width + 0.16, height, depth + 0.03] { fill material BuildTrim } }
+
+            // The shop.
+            Shop -> split Y { ~1 ShopFront  0.75 Fascia  0.22 Cornice }
+            ShopFront -> if (random(shop, 4, variant) < 0.5) { split X { 0.45 Pier  ~1 Display  1.4 Doorway  0.45 Pier } }
+                         else { split X { 0.45 Pier  1.4 Doorway  ~1 Display  0.45 Pier } }
+            Pier -> move [0, 0, -0.05] { size [width, height, depth + 0.05] { Paint } }
+            Display -> split Y { 0.55 Riser  ~1 Glazing }
+            Riser -> move [0, 0, 0.08] { size [width, height, depth - 0.08] { Paint } }
+            Glazing -> move [0, 0, 0.15] { size [width, height, depth - 0.15] { split Y { ~1 Lights  0.07 Paint  0.5 Lights } } }
+            Lights -> repeat X 1.4 { split X { 0.05 Paint  ~1 { fill material BuildShopGlass }  0.05 Paint } }
+            Doorway -> split Y { ~1 Entry  0.07 Paint  0.6 { move [0, 0, 0.28] { size [width, height, depth - 0.28] { fill material BuildShopGlass } } } }
+            Entry -> move [0, 0, 0.28] {
+                         size [width, height, depth - 0.28] {
+                             Paint
+                             place { object BuildEntry(0.45, 1.1, 0.03, season, shop + variant) { translate Y 1.1 - height / 2 } }
+                         }
+                     }
+            Fascia -> move [0, 0, -0.1] { size [width, height, depth + 0.1] { Paint } }
+            Cornice -> move [0, 0, -0.22] { size [width, height, depth + 0.22] { fill material BuildTrim } }
+        }
+        weather { snow season == 'winter' ? 1 : 0 }
+        with seed variant
+    }
+}
+
+// -- An apartment block ----------------------------------------------------------------------------
+
+// Flats over a base of banded stone, as a city block is: a door in the middle of the base under a canopy,
+// windows either side, a stone band, then floor over floor of bays three point six meters wide -- every other
+// one a door onto a balcony, railed in iron, but for the top floor -- a cornice, and a parapet round a flat
+// roof with a plant room set back on it.  Its first number is **how many floors** over the base.  It is
+// eighteen to twenty-five meters wide by its variant, which also picks brick or render, the windows, and
+// whether every bay has a balcony, every other one, or none.  Its front is toward -Z, fourteen meters deep.
+primitive Apartments(floors = 5, season = 'summer', variant = 1) -> shapes {
+    return shapes {
+        axiom Block
+        size [18 + floor(random(variant, 91) * 3) * 3.6, 0, 14]
+        rules {
+            Block -> extrude 4.2 + 0.25 + floors * 3 + 0.45 { Mass }
+            Mass -> faces depth 0.35 { front: Front  back: Wall  sides: Flank }
+                    roof flat material BuildRoof
+                    move [0, height, 0] { size [width, 0.9, depth] { faces depth 0.3 { front: Coped  back: Coped  sides: CopedFlank } } }
+                    move [width * 0.35, height, depth * 0.4] {
+                        size [width * 0.3, 2.6, depth * 0.35] {
+                            faces depth 0.25 { front: Wall  back: Wall  sides: Flank }
+                            roof flat overhang 0.15 material BuildTrim
+                        }
+                    }
+
+            Wall -> if (variant % 2 == 0) { fill material BuildBrickFacing(variant) } else { fill material BuildWallOf(variant) }
+            Flank -> if (variant % 2 == 0) { fill material BuildBrickFlank(variant) } else { fill material BuildWallOf(variant) }
+            Stone -> fill material BuildRusticated(variant)
+            Trim -> fill material BuildTrim
+            Coped -> split Y { ~1 Wall  0.12 { move [0, 0, -0.06] { size [width, height, depth + 0.06] { Trim } } } }
+            CopedFlank -> split Y { ~1 Flank  0.12 { move [0, 0, -0.06] { size [width, height, depth + 0.06] { Trim } } } }
+            Recess -> move [0, 0, 0.1] { size [width, height, depth - 0.1] { Wall } }
+
+            Front -> split Y { 4.2 Base  0.25 { move [0, 0, -0.06] { size [width, height, depth + 0.06] { Trim } } }  ~1 Floors
+                               0.45 { move [0, 0, -0.3] { size [width, height, depth + 0.3] { Trim } } } }
+            Floors -> repeat Y 3 index in level { Level }
+            Level -> repeat X 3.6 index in bay {
+                         if (level < floors - 1 && (mod(variant, 3) == 0 || (mod(variant, 3) == 1 && bay % 2 == 1))) { Balcony }
+                         else { Bay }
+                     }
+            Bay -> split X { ~1 Wall  1.4 { split Y { 0.9 Wall  1.6 Window  ~1 Wall } }  ~1 Wall }
+            Window -> Recess
+                      place { object BuildOpening(width / 2.4, height / 2.4, 0.06, season, variant + 1) }
+
+            // A door onto a balcony: a tall window down to the floor, a slab in front of it and a railing.
+            Balcony -> split X { ~1 Wall  1.5 { split Y { 2.3 FrenchWindow  ~1 Wall } }  ~1 Wall }
+                       move [width * 0.12, 0, -1.2] { size [width * 0.76, 0.18, 1.2] { Trim } }
+                       move [width * 0.12, 0.18, -1.2] { size [width * 0.76, 0.95, 1.15] { faces depth 0.04 { front: Railing  sides: Railing } } }
+            FrenchWindow -> Recess
+                            place { object Casement(width / 2.4, height / 2.4, 0.06, season, variant + 1) }
+            Railing -> split Y { ~1 { repeat X 0.13 { split X { 0.025 { fill material BuildIron }  ~1 { } } } }  0.05 { fill material BuildIron } }
+
+            // The base: banded stone, a door under a canopy in the middle and windows either side.
+            Base -> split X { ~1 BaseSide  4.4 Entrance  ~1 BaseSide }
+            BaseSide -> repeat X 3.6 { split X { ~1 Stone  1.4 { split Y { 1.0 Stone  2.0 BaseWindow  ~1 Stone } }  ~1 Stone } }
+            BaseWindow -> move [0, 0, 0.15] { size [width, height, depth - 0.15] { Stone  place { object BuildOpening(width / 2.4, height / 2.4, 0.06, season, variant + 1) } } }
+            Entrance -> split X { ~1 Stone  2.4 { split Y { 3.0 Doorway  ~1 Stone } }  ~1 Stone }
+                        move [0, 3.15, -1.4] { size [width, 0.18, 1.4] { Trim } }
+            Doorway -> move [0, 0, 0.3] {
+                           size [width, height, depth - 0.3] {
+                               Stone
+                               place { object DoubleDoor(0.85, 1.25, 0.03, season, variant) { translate Y 1.25 - height / 2 } }
+                           }
+                       }
+        }
+        weather { snow season == 'winter' ? 1 : 0 }
+        with seed variant
+    }
+}
+
+// -- A chapel --------------------------------------------------------------------------------------
+
+// A nave and a tower: the nave's gable to the street over a porch, its sides in bays of tall windows between
+// buttresses, and the tower at one front corner -- which, by its variant -- with a clock, a belfry of
+// louvres, and a spire.  It is built of dressed stone under slate, twenty-two meters deep and fourteen wide,
+// its front toward -Z, and takes no size: a chapel is the size a chapel is.
+primitive Chapel(season = 'summer', variant = 1) -> shapes {
+    return shapes {
+        axiom Ground
+        size [14, 0, 22]
+        rules {
+            Ground -> if (random(variant, 92) < 0.5) { split X { 4.5 TowerSide  ~1 NaveLot } }
+                      else { split X { ~1 NaveLot  4.5 TowerSide } }
+            NaveLot -> extrude 9 { Nave }
+            Nave -> faces depth 0.6 { front: NaveFront  back: Wall  sides: NaveSide }
+                    roof gable 50 across overhang 0.35 material BuildRoof gables material BuildAshlarFacing(variant)
+
+            Wall -> fill material BuildAshlarFacing(variant)
+            Flank -> fill material BuildAshlarFlank(variant)
+            Trim -> fill material BuildTrim
+            Dark -> fill material BuildShopGlass
+
+            // The front: a porch over the door, a tall window over that, and a round one up in the gable.
+            NaveFront -> split X { ~1 Wall  3.2 { split Y { 3.4 Portal  1.5 Wall  ~1 GreatWindow  0.5 Wall } }  ~1 Wall }
+                         move [width / 2 - 1.8, 0, -2.2] { size [3.6, 3.4, 2.2] { Porch } }
+                         place {
+                             disc { material BuildShopGlass  center [0, 0, 0]  normal [0, 0, -1]  radius 0.75  translate [0, height / 2 + 2.6, -0.03] }
+                             disc { material BuildTrim  center [0, 0, 0]  normal [0, 0, -1]  radius 0.95  translate [0, height / 2 + 2.6, -0.02] }
+                         }
+            Portal -> move [0, 0, 0.45] {
+                          size [width, height, depth - 0.45] {
+                              Wall
+                              place { object DoubleDoor(0.8, 1.3, 0.03, season, variant) { translate Y 1.3 - height / 2 } }
+                          }
+                      }
+            Porch -> faces depth 0.35 { front: PorchFront  sides: PorchSide }
+                     roof gable 35 across overhang 0.15 material BuildRoof gables material BuildAshlarFacing(variant)
+            PorchFront -> split X { 0.5 Wall  ~1 { split Y { 2.7 { }  ~1 Wall } }  0.5 Wall }
+            PorchSide -> fill material BuildAshlarFlank(variant)
+            GreatWindow -> split X { ~1 Wall  2.4 Lights  ~1 Wall }
+            Lights -> move [0, 0, 0.25] { size [width, height, depth - 0.25] { split X { ~1 Dark  0.12 Trim  ~1 Dark  0.12 Trim  ~1 Dark } } }
+                      move [-0.12, height, -0.08] { size [width + 0.24, 0.16, 0.08] { Trim } }
+
+            // The sides: bays of tall windows between buttresses.
+            NaveSide -> split X { 1.2 Flank  ~1 { repeat X 3.6 { Bay } }  1.2 Flank }
+            Bay -> split X { 0.8 Buttress  ~1 { split X { ~1 Flank  1.1 { split Y { 1.8 Flank  4.0 Lancet  ~1 Flank } }  ~1 Flank } } }
+            Buttress -> Flank
+                        move [0, 0, -0.7] { size [width, height * 0.55, 0.7] { Flank } }
+                        move [0, 0, -0.4] { size [width, height * 0.8, 0.4] { Flank } }
+            Lancet -> move [0, 0, 0.25] { size [width, height, depth - 0.25] { split X { ~1 Dark  0.08 Trim  ~1 Dark } } }
+                      move [-0.1, height, -0.07] { size [width + 0.2, 0.14, 0.07] { Trim } }
+                      move [-0.12, -0.12, -0.12] { size [width + 0.24, 0.12, 0.12] { Trim } }
+
+            // The tower, square at the front corner: a clock, a belfry, and a spire.
+            TowerSide -> split Z { 4.5 { move [0, 0, -0.6] { size [width, height, depth] { extrude 17 { Tower } } } }  ~1 { } }
+            Tower -> faces depth 0.5 { front: TowerFront  back: TowerFace  sides: TowerFlank }
+                     move [-0.15, height, -0.15] { size [width + 0.3, 0.4, depth + 0.3] { Trim } }
+                     move [0, 0.4, 0] { roof hip 72 overhang 0.25 material BuildRoof }
+            TowerFront -> split Y { ~1 Wall  1.8 Clock  0.4 Wall  2.8 Belfry  0.3 Wall }
+            TowerFace -> split Y { ~1 Wall  2.6 Wall  2.8 Belfry  0.3 Wall }
+            TowerFlank -> split Y { ~1 Flank  2.6 Flank  2.8 Belfry  0.3 Flank }
+            Clock -> Wall
+                     place {
+                         disc { material BuildTrim  center [0, 0, 0]  normal [0, 0, -1]  radius 0.75  translate Z -0.03 }
+                         disc { material BuildIron  center [0, 0, 0]  normal [0, 0, -1]  radius 0.8  translate Z -0.02 }
+                         cube { material BuildIron  scale [0.03, 0.3, 0.01]  translate [0, 0.25, -0.05] }
+                         cube { material BuildIron  scale [0.03, 0.45, 0.01]  translate [0, 0.4, -0.06]  rotate Z -110 }
+                     }
+            Belfry -> split X { ~1 Wall  1.3 { split Y { 0.3 Wall  ~1 Louvres  0.3 Wall } }  ~1 Wall }
+            Louvres -> move [0, 0, 0.2] {
+                           size [width, height, depth - 0.2] {
+                               repeat Y 0.22 { split Y { 0.07 { move [0, 0, -0.12] { size [width, height, depth + 0.12] { Trim } } }  ~1 Dark } }
+                           }
+                       }
+        }
+        weather { snow season == 'winter' ? 1 : 0 }
+        with seed variant
     }
 }

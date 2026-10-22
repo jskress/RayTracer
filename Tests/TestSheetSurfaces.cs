@@ -152,6 +152,8 @@ public class TestSheetSurfaces
             "GrownTree",
             // A fracture holds its pieces, and each piece is a convex solid, sharp or worn round.
             "Fracture", "Polyhedron", "RoundedPolyhedron",
+            // A shape grammar holds the walls, roofs and placed things its rules made.
+            "ShapeGrammar",
             // A strand is hit as a ribbon but shaded as a rod: its normal always faces whoever is
             // looking, and a ray leaving it sets off from the round surface the shading pretends is
             // there (see HairIntersection.LeavingPoints), so it is never met from behind.

@@ -183,6 +183,13 @@ public partial class LanguageParser
                     resolver.DustColorResolver = new TermResolver<Color> { Term = clause.Term(1) };
 
                 break;
+            case "snow":
+                resolver.SnowResolver = amount;
+
+                if (clause.Expressions.Count > 1)
+                    resolver.SnowColorResolver = new TermResolver<Color> { Term = clause.Term(1) };
+
+                break;
             case "wear":
                 resolver.WearResolver = amount;
 

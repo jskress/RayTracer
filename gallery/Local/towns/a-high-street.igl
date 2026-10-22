@@ -1,0 +1,107 @@
+// A street of buildings that were not built so much as derived.
+//
+//     import 'buildings' { Terrace, Apartments, Chapel }
+//
+// Every building here is a `shapes` grammar: a few dozen rules that take a box standing on its lot and
+// divide it -- into faces, the front into floors, a floor into bays, a bay into wall round an opening -- until
+// what is left is wall, window, cornice and roof.  `a-street-at-the-edge-of-town` placed every window of its
+// houses by arithmetic.  These place none; a terrace five shops long has five because its lot is thirty
+// meters and a shop is six, and an apartment block's top floor has no balconies because a rule asked which
+// floor it was.
+//
+// **What the rules buy is depth, and the eye reads depth as building.**  A window here is not stuck on a
+// wall: its bay is split round an opening and the opening set back into the wall, so every window has a
+// reveal, and the low sun lays a shadow down one side of it.  The lintels and the string courses stand
+// proud, the cornices over the shops reach out further still, the balconies throw their railings' shadows
+// down the face below.  Look along the left-hand side of the street, where the light rakes across the
+// fronts: the facades are rows of small shadows, and that is most of what makes them facades.
+//
+// **The brick runs on unbroken from bay to bay**, because a grammar fills its parts with boxes in the
+// building's own space rather than with cubes stretched to fit -- and so the brick is laid in meters, a real
+// brick's two hundred and fifteen millimeters, and a taller building has more courses, not bigger bricks.
+//
+// **The street ends on the chapel**, which is what an old street does: a straight road with nothing at the
+// end of it runs out at the horizon and reads as a corridor.  Closed by a tower, it is a place.  The chapel
+// is turned to face down the street, and the sun is put round behind the camera's left shoulder so that its
+// front and the left-hand fronts are lit and the right-hand ones are in their own shade.
+//
+// You will need the libraries, which is a thing to ask for once:
+//
+//     dotnet run -- libraries --install
+
+import 'buildings'      { Terrace, Apartments, Chapel }
+import 'roads'          { Road, Curb, Pavement }
+import 'vehicles'       { Car, Van }
+import 'outdoor-lights' { StreetLamp }
+import 'daylight'       { ClearMorningFrom, ClearMorningLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    info {
+        title 'A High Street'
+        author 'J. Stephen Kress'
+        description 'Shops, flats and a chapel, every one of them built by a shape grammar.'
+        copyright true
+        software __software__
+    }
+}
+
+// Half a stop up: the street is a canyon, its floor in the buildings' shade, and exposed for the sky it
+// came out a cave.
+camera {
+    location [-36, 2.4, -1.4]
+    look at [6, 6.4, 1.2]
+    field of view 62
+    exposure 0.6
+}
+
+background ClearMorningFrom(-40)
+
+light ClearMorningLight
+
+// The ground beyond the pavements, a little below the road for the reason the roads library gives.
+plane { material { pigment [0.32, 0.34, 0.26] }  translate Y -0.12 }
+
+// The road, lifted by its crown, and the pavements either side of it.  It stops short of the chapel, at a
+// strip of pavement across its end.
+object Road(112, 8, 'summer', 1) { translate [6, 0.11, 0] }
+object Curb(112)                 { translate [6, 0, 4.1] }
+object Curb(112)                 { rotate Y 180  translate [6, 0, -4.1] }
+object Pavement(112, 3)          { translate [6, 0, 5.8] }
+object Pavement(112, 3)          { translate [6, 0, -5.8] }
+object Curb(8.2)                 { rotate Y -90  translate [62.1, 0, 0] }
+object Pavement(26, 4)           { rotate Y 90  translate [64.2, 0, 0] }
+
+// -- The buildings ---------------------------------------------------------------------------------
+
+// The far side, its fronts to the road.  Each stands on the pavement's top, its front on the pavement's
+// back edge; the apartments' balconies overhang it.
+object Terrace(5, 'summer', 1)    { translate [-14, 0.125, 12.8] }
+object Apartments(5, 'summer', 1) { translate [13, 0.125, 14.3] }
+object Terrace(4, 'summer', 4)    { translate [40, 0.125, 12.8] }
+
+// The near side, turned to face it.
+object Apartments(4, 'summer', 3) { rotate Y 180  translate [-17, 0.125, -14.3] }
+object Terrace(4, 'summer', 6)    { rotate Y 180  translate [10, 0.125, -12.8] }
+object Terrace(3, 'summer', 9)    { rotate Y 180  translate [36, 0.125, -12.8] }
+
+// The chapel across the end of the street, its porch a meter back from the pavement.
+object Chapel('summer', 2)        { rotate Y 90  translate [80.4, 0.125, 0] }
+
+// -- The street ------------------------------------------------------------------------------------
+
+// Lamps along both curbs, off: it is morning.
+for lamp in [0, 4] {
+    object StreetLamp(5.5, 'summer', 0) { translate [lamp * 22 - 30, 0.125, 4.7] }
+    object StreetLamp(5.5, 'summer', 0) { translate [lamp * 22 - 19, 0.125, -4.7] }
+}
+
+// Traffic, each vehicle at the height of the road where it stands: the camber puts a lane a quarter of the
+// crown below the middle, and the channel next to nothing.
+object Car(4.4, 'summer', 1)  { translate [-12, 0.0825, -2] }
+object Van(5.6, 'summer', 3)  { rotate Y 180  translate [9, 0.0825, 2] }
+object Car(4.5, 'summer', 0)  { rotate Y 180  translate [-4, 0.035, 3.3] }
+object Car(4.4, 'summer', 2)  { rotate Y 180  translate [3, 0.035, 3.3] }
+object Car(4.4, 'summer', 4)  { translate [24, 0.035, -3.3] }
+object Car(4.3, 'summer', 5)  { translate [-6, 0.035, -3.3] }

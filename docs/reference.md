@@ -33,6 +33,24 @@ Every word the language reserves, what it is for, and the chapter that explains 
 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
+| `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `fill` | Shape grammar: fills a scope with a box, in the grammar's own space. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `gables` | Shape grammar: the material of a gabled `roof`'s gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `hip` | Shape grammar: a `roof` sloping on all four sides. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `nothing` | Shape grammar: puts nothing in a scope. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `shapes` | Surface: a building described by a shape grammar's rules. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
+| `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `verge` | Shape grammar: how far a gabled `roof` reaches past its gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Z expression. | [Transforms](transforms.md#rotate) |
@@ -59,7 +77,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
 | `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point. | [Cameras](cameras.md#placing-a-camera) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
-| `axiom` | L-system: the starting string. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `axiom` | L-system: the starting string.  Shape grammar: the rule its first scope is handed to. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
 | `axisV` | Area light: the other edge of the panel. | [Lights](lights.md#area-lights) |
 | `azimuth` | `physical sky`: which way round the sun lies, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -129,7 +147,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `degrees` | Angle unit: degrees. | [Context](context.md#angles) |
 | `density` | Medium: how much of the stuff there is — evenly, as a `density function`, or shaped by a [pattern](scene-files.md#shaping-a-medium-with-a-pattern).  Also hair: how many strands grow on each unit of area. | [Scene Files](scene-files.md#giving-a-medium-a-shape), [Hair](advanced-surfaces.md#hair) |
 | `dents` | Pattern: pitted noise, for a battered surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `depth` | Normal: how deep the roughening bites; also an L-system material depth; context: `trace depth`. | [Materials](materials.md#roughening-the-surface), [Context](context.md#trace-depth) |
+| `depth` | Normal: how deep the roughening bites; also an L-system material depth; context: `trace depth`.  Shape grammar: how deep a `faces` scope reaches in. | [Materials](materials.md#roughening-the-surface), [Context](context.md#trace-depth), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `description` | Info: a description. | [Context](context.md#image-information) |
 | `diameter` | L-system control: the edge thickness. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `difference` | CSG: the first child with the rest carved out. | [Surfaces](surfaces.md#combining-surfaces) |
@@ -148,7 +166,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `edges` | Pattern: how far a place stands out, within a `radius` -- where paint wears. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `egg` | Surface: an egg. | [Surfaces](surfaces.md#egg) |
 | `elevation` | `physical sky`: how high the sun stands above the horizon, in degrees. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
-| `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
+| `else` | The second way out of a [choice](scene-files.md#choosing-inside-a-body) in a function or primitive, and the other way out of an `if` where surfaces are listed; optional there.  A shape grammar's `if`, the other way. | [Scene Files](scene-files.md#choosing-inside-a-body), [Surfaces](surfaces.md#choosing-what-to-make) |
 | `emission` | Medium: how much light it gives off per unit of distance, as one color or as a pigment.  Material: light the surface gives off of its own. | [Scene Files](scene-files.md#filling-that-space), [Materials](materials.md#emission) |
 | `error` | Context: `diffuse cache error`, how far the cache of bounced light may stray. | [Context](context.md#a-cache-of-bounced-light) |
 | `exposure` | Camera: how many stops brighter or darker it takes the light. | [Cameras](cameras.md#exposure) |
@@ -202,13 +220,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `hyperboloid` | Surface: a waisted surface of revolution. | [Surfaces](surfaces.md#hyperboloid) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
-| `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back, or which surfaces to make where they are listed. | [Surfaces](surfaces.md#choosing-what-to-make) |
+| `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back, or which surfaces to make where they are listed.  In a shape grammar, which way a scope goes by what its rule sees. | [Surfaces](surfaces.md#choosing-what-to-make), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
-| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`. | [Surfaces](surfaces.md#repeating-things) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`.  And a shape grammar's `repeat ... index in`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
-| `index` | Interior, film or coat: `index of refraction`, written out.  A `field`: `index in n` names each copy's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat), [Advanced Surfaces](advanced-surfaces.md#field) |
+| `index` | Interior, film or coat: `index of refraction`, written out.  A `field`: `index in n` names each copy's number.  A shape grammar's `repeat`: `index in n` names each part's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat), [Advanced Surfaces](advanced-surfaces.md#field), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
 | `inherited` | Material: take the material handed down from the surrounding group; with decals in a block, paint them on top of it. | [Materials](materials.md#markings-that-survive-a-repaint) |
 | `inner` | Disc: `inner radius`, making a washer. | [Surfaces](surfaces.md#disc) |
@@ -251,7 +269,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `motion` | Sets a surface moving, for motion blur. | [Transforms](transforms.md#setting-a-surface-moving), [Cameras](cameras.md#motion-blur) |
 | `mottled` | Pigment: a base color mottled by noise. | [Pigments & Patterns](pigments-and-patterns.md#mottling) |
-| `move` | Path/spline: lift the pen to a new point; also an L-system turtle move. | [Advanced Surfaces](advanced-surfaces.md#paths) |
+| `move` | Path/spline: lift the pen to a new point; also an L-system turtle move.  Shape grammar: moves a scope along its own axes. | [Advanced Surfaces](advanced-surfaces.md#paths), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `named` | Gives the thing being defined a name. | [Materials](materials.md#naming-and-reusing) |
 | `neutral` | Context: `film curve neutral`, which eases light brighter than eight tenths of white toward white, keeping its hue. | [Context](context.md#film-curve) |
 | `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading) |
@@ -346,7 +364,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
-| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair) |
+| `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |

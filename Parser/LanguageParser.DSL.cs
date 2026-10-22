@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -809,15 +809,15 @@ public partial class LanguageParser
             } |
             { facing > _expression > { by > _expression }{?} }
         ] ?? 'Expecting a hair property here.'
-        // The weather a group or object has been out in: grime in its crevices, dust on top, wear on its
-        // edges -- baring a material, if one is named -- and how far about each place to look.
+        // The weather a group or object has been out in: grime in its crevices, dust and snow on top, wear on
+        // its edges -- baring a material, if one is named -- and how far about each place to look.
         startWeatherClause:
         {
             weather > openBrace ?? 'Expecting an open brace to follow "weather" here.'
         }
         weatherEntryClause:
         [
-            { [ grime | dust | splash ] > _expression > { color > _expression }{?} } |
+            { [ grime | dust | splash | snow ] > _expression > { color > _expression }{?} } |
             { wear > _expression > to{?} } |
             { radius > _expression }
         ] ?? 'Expecting a weather property here.'
@@ -1491,6 +1491,23 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Shape grammar clauses: rules that divide a box into a building.  The rules themselves are read by
+        // hand, past the open brace after "rules".
+        startShapesClause:
+        {
+            shapes > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "shapes" here.'
+        }
+        shapesEntryClause:
+        [
+            { axiom > [ _identifier | _keyword ] ?? 'Expecting the name of the first rule here.' } |
+            { size > _expression } |
+            { rules > openBrace ?? 'Expecting an open brace to follow "rules" here.' } |
+            surfaceEntryClause
+        ]
+
         // Generic shape clauses.
         startGenericShapeClause:
         {
@@ -1805,6 +1822,7 @@ public partial class LanguageParser
             startSweepClause => 'sweep' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
+            startShapesClause => 'shapes' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1889,6 +1907,7 @@ public partial class LanguageParser
             startSweepClause => 'sweep' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
+            startShapesClause => 'shapes' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1950,6 +1969,7 @@ public partial class LanguageParser
             startSweepClause => 'sweep' |
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
+            startShapesClause => 'shapes' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -2044,7 +2064,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startGrownClause | startFractureClause | startTextClause |
+                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2083,7 +2103,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2207,6 +2227,7 @@ public partial class LanguageParser
             startSweepClause          => 'HandleStartSweepClause' |
             startGrownClause          => 'HandleStartGrownClause' |
             startFractureClause       => 'HandleStartFractureClause' |
+            startShapesClause         => 'HandleStartShapesClause' |
             startTextClause           => 'HandleStartTextClause' |
             startTaperedTextClause => 'HandleStartTaperedTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |
