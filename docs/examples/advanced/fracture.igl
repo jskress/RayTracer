@@ -1,0 +1,76 @@
+// A fracture: a solid broken into pieces, each the part of it nearest one of the seeds scattered
+// through it.  The same block four ways: broken with fine cracks; worn round and loose, in three
+// stones; blown apart; and a pane of glass struck at a point.
+context { angles are degrees  no gamma  trace depth 8 }
+
+camera {
+    location [0, 1.6, -12]
+    look at [0, 0.95, 0]
+    field of view 50
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-8, 12, -10]  color [1, 0.97, 0.93] }
+point light { location [9, 5, -8]     color [0.28, 0.29, 0.33] }
+
+plane {
+    material { pigment color [0.55, 0.57, 0.50]  specular 0 }
+}
+
+stone = material { pigment granite { [0, [0.78, 0.74, 0.68], 0.4, [0.50, 0.48, 0.45]]  scale 0.12 }  specular 0.03 }
+gray = material { pigment color [0.62, 0.62, 0.60]  specular 0.03 }
+buff = material { pigment color [0.74, 0.66, 0.52]  specular 0.03 }
+slate = material { pigment color [0.50, 0.54, 0.60]  specular 0.03 }
+glass = material {
+    pigment color [0.85, 0.92, 0.92]  transparency 0.86  reflective 0.08  diffuse 0.06
+    specular 0.7  shininess 260  interior { ior 1.5 }
+}
+
+// Broken, the pieces still where they were: cracks a hair wide.
+fracture {
+    solid { cube { scale 0.8  translate [0, 0.8, 0] } }
+    pieces 30
+    gap 0.02
+    with seed 4
+    material stone
+    translate X -4.2
+}
+
+// Worn round and loose: each piece a stone of its own color.
+fracture {
+    solid { cube { scale 0.8  translate [0, 0.8, 0] } }
+    pieces 30
+    gap 0.03
+    rounded 0.05
+    loose
+    materials gray, buff, slate
+    with seed 4
+    translate X -1.4
+}
+
+// Blown apart from its middle, each piece turned.
+fracture {
+    solid { cube { scale 0.8  translate [0, 0.8, 0] } }
+    pieces 30
+    gap 0.01
+    rounded 0.02
+    apart 0.28
+    tumble 25
+    with seed 4
+    material stone
+    translate X 1.4
+}
+
+// A pane struck at a point: rings and spokes round a hole.  It is held up against the sky, where
+// glass shows its cracks; against the ground it is all but invisible.
+fracture {
+    solid { cube { scale [0.8, 0.8, 0.008] } }
+    pieces 80
+    gap 0.006
+    toward [0.15, 0.2, 0]
+    hole 0.12
+    with seed 2
+    material glass
+    translate [4.2, 1.95, 0]
+}

@@ -15,6 +15,8 @@
 // | `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
 // | `MossyBoulder` | A boulder with moss on its top and its shaded side, in patches. |
 // | `MossyCobble` | A cobble capped with moss. |
+// | `DryStoneWall` | A wall of stones laid without mortar, battered in toward its coping of stones on edge. |
+// | `Rubble` | A heap of broken stone, whole stones tumbled on one another. |
 //
 // The first three arguments mean what they mean in the other libraries -- **how big**, **what time of
 // year**, and **which one of that kind** -- and only the first is ever required.  The mossy two take a
@@ -290,5 +292,174 @@ primitive Scree(shape, season = 'summer', variant = 1, size = 0.3, density = 1) 
         jitter 1.7
         turned 360
         sized 0.55 to 1.3
+    }
+}
+
+// -- Walls and rubble ------------------------------------------------------------------------------
+//
+// Stone that has been worked by hand, or brought down: a wall laid dry, and the heap a wall becomes.
+// Both are a solid broken into pieces by a `fracture` -- every stone the part of the solid nearest one
+// seed, so they fit together as laid stone does, each worn round at its edges and turned a little.
+//
+// **Four stones, not one.**  A wall is laid from whatever the field gave up, so no two stones are quite
+// the same color: gray, buff, blue-gray and brown, all as dark as real stone is (see the stone above --
+// a too-pale gray reads as plastic), and each stone in a place of its own in its grain (`loose`), so the
+// speckle of one does not run on into the next and give the wall away as one block cracked.
+
+RockWallGray = material {
+    pigment granite with seed 7 {
+    [0.06, color [0.102, 0.098, 0.094],
+     0.16, color [0.162, 0.156, 0.146],
+     0.22, color [0.222, 0.214, 0.199],
+     0.30, color [0.294, 0.283, 0.264],
+     0.41, color [0.390, 0.376, 0.350]]
+    scale 0.09
+    }
+    specular 0.03  shininess 9  ambient 0.06  brilliance 1.4
+}
+RockWallBuff = material {
+    pigment granite with seed 7 {
+    [0.06, color [0.114, 0.102, 0.084],
+     0.16, color [0.181, 0.162, 0.132],
+     0.22, color [0.249, 0.222, 0.179],
+     0.30, color [0.329, 0.295, 0.238],
+     0.41, color [0.437, 0.391, 0.315]]
+    scale 0.09
+    }
+    specular 0.03  shininess 9  ambient 0.06  brilliance 1.4
+}
+RockWallBlue = material {
+    pigment granite with seed 7 {
+    [0.06, color [0.095, 0.096, 0.099],
+     0.16, color [0.151, 0.153, 0.155],
+     0.22, color [0.206, 0.209, 0.211],
+     0.30, color [0.273, 0.278, 0.280],
+     0.41, color [0.363, 0.368, 0.371]]
+    scale 0.09
+    }
+    specular 0.03  shininess 9  ambient 0.06  brilliance 1.4
+}
+RockWallBrown = material {
+    pigment granite with seed 7 {
+    [0.06, color [0.112, 0.095, 0.082],
+     0.16, color [0.178, 0.151, 0.129],
+     0.22, color [0.244, 0.207, 0.175],
+     0.30, color [0.323, 0.275, 0.232],
+     0.41, color [0.429, 0.364, 0.308]]
+    scale 0.09
+    }
+    specular 0.03  shininess 9  ambient 0.06  brilliance 1.4
+}
+
+// The hearting: the small stone packed into the middle of a dry wall between its two faces.  It is dark,
+// because it is in shadow: a wall without it is a sieve, daylight showing through every joint, and its
+// joints come out pale where they should be the darkest thing on it.
+RockHearting = material { pigment [0.05, 0.048, 0.045]  specular 0  ambient 0.02 }
+
+// What lies along a wall's top in winter: snow on the coping, in lumps, some stones bare.
+primitive RockWallSnow(season, length, height, top, variant) -> group {
+    switch (season) {
+        case 'winter' {
+            lumps = floor(length / 0.3)
+
+            return group {
+                for lump in [0, lumps - 1] {
+                    if (random(lump, 71, variant) > 0.25) {
+                        sphere {
+                            material RockSnow
+                            scale [0.20 + random(lump, 72, variant) * 0.08, 0.045, top + 0.02]
+                            translate [(lump + 0.5) * length / lumps - length / 2, height + 0.25, 0]
+                        }
+                    }
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// A dry stone wall, its length along X, standing on the ground at its middle, its faces toward -Z and
+// +Z.  It is wider at the foot than the top -- battered, so it leans in on itself and stands without
+// mortar -- and topped with a row of stones set on edge across it, the coping, which is what keeps the
+// rain out of it and what anybody would draw first.
+//
+// The stones are longer than they are tall, and set lengthwise along the wall, which is the one rule a
+// waller keeps: the body is broken stretched along X and across it, so its stones come out in rough
+// courses, about as many as there would be in a wall of that size.  The coping's are stretched across
+// the wall instead, standing on edge.
+//
+// Its height is what you would measure to the top of the coping; its length is its length.
+primitive DryStoneWall(length, height = 1.2, season = 'summer', variant = 1) -> group {
+    // Half the width at the foot, half the width at the top of the body under the coping.
+    base = 0.32
+    top = 0.20
+    body = height - 0.24
+    batter = atan2(base - top, body) * 180 / 3.14159265
+
+    return group {
+        fracture {
+            solid {
+                intersection {
+                    cube { scale [length / 2, body / 2, base]  translate [0, body / 2, 0] }
+                    cube { scale [length, body * 2, base]  rotate X -batter }
+                    cube { scale [length, body * 2, base]  rotate X batter }
+                }
+            }
+            pieces length * body * (base + top) / 0.009
+            gap 0.02
+            rounded 0.025
+            stretched [2.2, 1, 1.3]
+            tumble 5
+            loose
+            materials RockWallGray, RockWallBuff, RockWallBlue, RockWallBrown
+            with seed variant
+        }
+
+        // The hearting, set back from both faces.
+        intersection {
+            cube { scale [length / 2 - 0.02, body / 2, base - 0.07]  translate [0, body / 2, 0] }
+            cube { scale [length, body * 2, base - 0.07]  rotate X -batter }
+            cube { scale [length, body * 2, base - 0.07]  rotate X batter }
+            material RockHearting
+        }
+
+        // The coping.
+        fracture {
+            solid { cube { scale [length / 2, 0.12, top + 0.03]  translate [0, body + 0.12, 0] } }
+            pieces length / 0.13
+            gap 0.016
+            rounded 0.03
+            flat
+            stretched [1, 1, 4]
+            tumble 9
+            loose
+            materials RockWallGray, RockWallBuff, RockWallBlue, RockWallBrown
+            with seed variant + 1
+        }
+
+        object RockWallSnow(season, length, body, top, variant)
+    }
+}
+
+// A heap of rubble: broken stone tumbled into a low mound, its size how far across it is.
+//
+// **Whole stones, not a mound cut into pieces.**  A heap broken from a smooth mound would wear the mound's
+// smooth skin on every outer stone; these are broken from the space round it (`whole`), and kept where
+// their middles fall inside the mound, so the outline is made of whole stones lying where they fell.
+primitive Rubble(size, season = 'summer', variant = 1) -> group {
+    return group {
+        fracture {
+            solid { sphere { scale [size * 0.5, size * 0.22, size * 0.42] } }
+            pieces 60
+            gap size * 0.02
+            rounded size * 0.018
+            tumble 25
+            whole
+            loose
+            materials RockWallGray, RockWallBuff, RockWallBlue, RockWallBrown
+            with seed variant
+        }
+
+        object RockCap(season, size * 0.5, 0.44, variant)
     }
 }

@@ -194,6 +194,9 @@ public partial class LanguageParser
                 case "grown":
                     resolver.SurfaceResolvers.Add(ParseGrownClause(clause));
                     break;
+                case "fracture":
+                    resolver.SurfaceResolvers.Add(ParseFractureClause(clause));
+                    break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;

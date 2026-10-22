@@ -2187,6 +2187,224 @@ public class TestShippedLibraries
             "of the bars and hiding them");
     }
 
+    [TestMethod]
+    public void TestABrokenWindowShowsTheRoomThroughTheRightPanes()
+    {
+        // The test owns its copy of the library, and paints the dark of the room magenta, so a hole in a
+        // pane is the only thing on the window that can show magenta.  A sash asked for three broken panes
+        // must show it in exactly three of its twelve, and a casement asked for one in exactly one of its
+        // three; a window asked for none must show none, and must be the very window it always was.
+        string library = Path.Combine(_directory, "windows.igl");
+
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "windows.igl"), library, true);
+        File.WriteAllText(library, File.ReadAllText(library).Replace(
+            "WindowDark = material { pigment [0.008, 0.008, 0.010]  specular 0  ambient 0 }",
+            "WindowDark = material { pigment [1, 0, 1]  ambient 1  diffuse 0  specular 0 }"));
+
+        Assert.Contains("pigment [1, 0, 1]  ambient 1", File.ReadAllText(library),
+            "the room's dark was not replaced, so this test would prove nothing");
+
+        // How many of a window's panes show magenta, the window filling the picture square on: panes are the
+        // cells of a grid across it, columns by rows.
+        int BrokenPanes(string call, int columns, int rows, double wide, double tall)
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            File.WriteAllText(scene, $$"""
+                import 'windows' { Sash, Casement }
+                context { angles are degrees  no gamma }
+                orthographic camera { location [0, 0, -50]  look at [0, 0, 0]  field of view {{2 * Math.Atan(wide / 50) * 180 / Math.PI}} }
+                point light { location [-4, 5, -6] }
+                background [0, 0, 0]
+                cube { material { pigment [0.55, 0.5, 0.44] }  scale [2, 2, 0.14]  translate Z 0.14 }
+                object {{call}}
+                """);
+
+            Assert.IsNull(Render(scene, 240, 240), $"{call} should render");
+
+            Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            HashSet<(int, int)> panes = [];
+
+            for (int x = 0; x < picture.Width; x++)
+            for (int y = 0; y < picture.Height; y++)
+            {
+                Color pixel = picture.GetPixel(x, y);
+
+                if (pixel.Red < 0.8 || pixel.Green > 0.2 || pixel.Blue < 0.8)
+                    continue;
+
+                // The picture spans the window's width; its panes lie across [-wide, wide] and [-tall, tall].
+                double across = (x + 0.5) / picture.Width * 2 * wide - wide;
+                double up = wide - (y + 0.5) / picture.Height * 2 * wide;
+
+                panes.Add(((int) Math.Floor((across + wide) / (2 * wide) * columns),
+                    (int) Math.Floor((up + tall) / (2 * tall) * rows)));
+            }
+
+            return panes.Count;
+        }
+
+        Assert.AreEqual(3, BrokenPanes("Sash(0.45, 0.65, 0.14, 'summer', 1, 3)", 3, 4, 0.45, 0.65));
+        Assert.AreEqual(5, BrokenPanes("Sash(0.45, 0.65, 0.14, 'summer', 2, 5)", 3, 4, 0.45, 0.65));
+        Assert.AreEqual(0, BrokenPanes("Sash(0.45, 0.65, 0.14, 'summer', 1, 0)", 3, 4, 0.45, 0.65));
+        Assert.AreEqual(1, BrokenPanes("Casement(0.45, 0.65, 0.14, 'summer', 1, 1)", 2, 1, 0.45, 0.65) +
+                           BrokenPanes("Casement(0.45, 0.65, 0.14, 'summer', 1, 0)", 2, 1, 0.45, 0.65));
+
+        // Unbroken, a window is the very picture it was before it could break.
+        Canvas Pictured(string call)
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            File.WriteAllText(scene, $$"""
+                import 'windows' { Sash, Casement }
+                context { angles are degrees  no gamma }
+                camera { location [0.4, 0.3, -3.5]  look at [0, 0, 0]  field of view 50 }
+                point light { location [-3, 4, -5] }
+                background [0.7, 0.8, 0.9]
+                cube { material { pigment [0.6, 0.55, 0.5] }  scale [2, 1.2, 0.08]  translate Z 0.08 }
+                object {{call}}
+                """);
+
+            Assert.IsNull(Render(scene, 160, 120), $"{call} should render");
+
+            return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        }
+
+        Assert.IsFalse(Differs(Pictured("Sash(0.4, 0.6, 0.08)"), Pictured("Sash(0.4, 0.6, 0.08, 'summer', 1, 0)")));
+        Assert.IsTrue(Differs(Pictured("Sash(0.4, 0.6, 0.08)"), Pictured("Sash(0.4, 0.6, 0.08, 'summer', 1, 2)")));
+    }
+
+    [TestMethod]
+    public void TestADryStoneWallStandsAsLongAndTallAsAsked()
+    {
+        // A wall is asked for by its length and its height to the top of its coping, and stands both, square
+        // on to a camera looking down its face.  Its stones are turned a little, so it may stand a hair over;
+        // never under, and never by more than a stone's tilt.  Winter lays snow along its coping, and the
+        // variant lays every stone afresh.
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "rocks.igl"), Path.Combine(_directory, "rocks.igl"), true);
+
+        (double Across, double Up) Wall(double length, double height, string season, int variant) => Measured(
+            "rocks", "DryStoneWall", $"DryStoneWall({length}, {height}, '{season}', {variant})", 8, 1);
+
+        foreach ((double length, double height) in new[] { (5.0, 1.2), (3.0, 0.9) })
+        {
+            (double across, double up) = Wall(length, height, "summer", 1);
+
+            Assert.AreEqual(length, across, 0.08, $"a wall {length} long is {across}");
+            Assert.AreEqual(height, up, 0.05, $"a wall {height} high is {up}");
+        }
+
+        Assert.IsTrue(Differs(Snapshot("rocks", "DryStoneWall", "DryStoneWall(3, 1, 'summer', 1)"),
+            Snapshot("rocks", "DryStoneWall", "DryStoneWall(3, 1, 'winter', 1)")), "a wall in winter took no snow");
+        Assert.IsTrue(Differs(Snapshot("rocks", "DryStoneWall", "DryStoneWall(3, 1, 'summer', 1)"),
+            Snapshot("rocks", "DryStoneWall", "DryStoneWall(3, 1, 'summer', 2)")), "two variants of a wall were laid alike");
+    }
+
+    [TestMethod]
+    public void TestRubbleLiesInEverySeason()
+    {
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "rocks.igl"), Path.Combine(_directory, "rocks.igl"), true);
+
+        (double across, _) = Measured("rocks", "Rubble", "Rubble(2, 'summer', 1)", 4, 0.5);
+
+        Assert.AreEqual(2, across, 0.4, $"a heap two across is {across}");
+        Assert.IsTrue(Differs(Snapshot("rocks", "Rubble", "Rubble(1.5, 'summer', 1)"),
+            Snapshot("rocks", "Rubble", "Rubble(1.5, 'winter', 1)")), "rubble in winter took no snow");
+        Assert.IsTrue(Differs(Snapshot("rocks", "Rubble", "Rubble(1.5, 'summer', 1)"),
+            Snapshot("rocks", "Rubble", "Rubble(1.5, 'summer', 2)")), "two heaps fell alike");
+    }
+
+    [TestMethod]
+    public void TestCrazyPavingIsLaidToTheSizeAsked()
+    {
+        // Looked at from straight above, a path is as long and as wide as it was asked to be; after rain it
+        // is wet, in winter it is snowed on along its edges, and each of those is a different path.
+        File.Copy(Shipped.First(path => Path.GetFileName(path) == "roads.igl"), Path.Combine(_directory, "roads.igl"), true);
+
+        (double along, double across) = Measured("roads", "CrazyPaving", "CrazyPaving(4, 1.2, 'summer', 1)", 6, 0, above: true);
+
+        Assert.AreEqual(4, along, 0.06, $"a path 4 long is {along}");
+        Assert.AreEqual(1.2, across, 0.06, $"a path 1.2 wide is {across}");
+
+        Canvas dry = Snapshot("roads", "CrazyPaving", "CrazyPaving(3, 1, 'summer', 1)");
+
+        Assert.IsTrue(Differs(dry, Snapshot("roads", "CrazyPaving", "CrazyPaving(3, 1, 'wet', 1)")), "a path after rain is not wet");
+        Assert.IsTrue(Differs(dry, Snapshot("roads", "CrazyPaving", "CrazyPaving(3, 1, 'winter', 1)")), "a path in winter took no snow");
+    }
+
+    /// <summary>
+    /// Measures one thing's silhouette, square on and far enough off that the view is parallel: how wide it is and
+    /// how tall, looking down -Z at its face -- or, from above, how long along X and how wide along Z.
+    /// </summary>
+    private (double, double) Measured(string library, string name, string call, double span, double middle,
+        bool above = false)
+    {
+        const int Pixels = 600;
+        string scene = Path.Combine(_directory, "scene.igl");
+        string camera = above
+            ? $"orthographic camera {{ location [0, 100, 0]  look at [0, 0, 0]  up [0, 0, 1]  field of view {2 * Math.Atan(span / 200) * 180 / Math.PI} }}"
+            : $"orthographic camera {{ location [0, {middle}, -100]  look at [0, {middle}, 0]  field of view {2 * Math.Atan(span / 200) * 180 / Math.PI} }}";
+
+        File.WriteAllText(scene, $$"""
+            import '{{library}}' { {{name}} }
+            context { angles are degrees  no gamma }
+            {{camera}}
+            background [1, 1, 1]
+            point light { location [0, 30, -100] }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, Pixels, Pixels), $"{call} should be made");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int leftmost = Pixels, rightmost = -1, topmost = Pixels, bottommost = -1;
+        int ground = above ? Pixels : (int) Math.Round(Pixels / 2.0 + middle * Pixels / span);
+
+        for (int x = 0; x < Pixels; x++)
+        for (int y = 0; y < Math.Min(ground, Pixels); y++)
+        {
+            Color pixel = picture.GetPixel(x, y);
+
+            if (pixel.Red >= 0.97 && pixel.Green >= 0.97 && pixel.Blue >= 0.97)
+                continue;
+
+            leftmost = Math.Min(leftmost, x);
+            rightmost = Math.Max(rightmost, x);
+            topmost = Math.Min(topmost, y);
+            bottommost = Math.Max(bottommost, y);
+        }
+
+        Assert.IsTrue(rightmost > leftmost, $"{call} was made of nothing at all");
+
+        double wide = (rightmost - leftmost + 1) * span / Pixels;
+
+        return above
+            ? (wide, (bottommost - topmost + 1) * span / Pixels)
+            : (wide, (ground - topmost) * span / Pixels);
+    }
+
+    /// <summary>
+    /// Renders one thing small, lit and looked at from the front and a little above, and hands back the picture.
+    /// </summary>
+    private Canvas Snapshot(string library, string name, string call)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import '{{library}}' { {{name}} }
+            context { angles are degrees  no gamma }
+            camera { location [0.5, 2.2, -4.5]  look at [0, 0.5, 0]  field of view 50 }
+            point light { location [-4, 8, -6] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, 160, 120), $"{call} should be made");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
     /// <summary>
     /// Fits one opening into a plain wall and hands back whatever stopped it.
     /// </summary>

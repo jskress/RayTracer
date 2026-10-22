@@ -140,6 +140,8 @@ public partial class LanguageParser
                 return ParseSweepClause(clause);
             case GrownTreeResolver:
                 return ParseGrownClause(clause);
+            case FractureResolver:
+                return ParseFractureClause(clause);
             case TaperedExtrusionResolver:
                 return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:

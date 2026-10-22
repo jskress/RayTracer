@@ -51,7 +51,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `angles` | `angles are degrees`/`radians`. | [Context](context.md#angles) |
 | `anisotropy` | Medium: which way it prefers to turn light.  Material: how much a rough surface is brushed, `anisotropy a along X` or `around Y`. | [Scene Files](scene-files.md#scattering), [Brushed metal](materials.md#brushed-metal) |
 | `antialiasing` | Context: `antialiasing depth`/`threshold`. | [Context](context.md#anti-aliasing) |
-| `apart` | Field: `rows <n> apart <d>`, how far apart its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
+| `apart` | Field: `rows <n> apart <d>`, how far apart its rows lie.  Fracture: how far its pieces are moved off. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path), [Fracture](advanced-surfaces.md#fracture) |
 | `aperture` | Camera: lens radius; larger blurs more. | [Cameras](cameras.md#depth-of-field) |
 | `apply` | Context: `apply gamma`. | [Context](context.md#gamma) |
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
@@ -166,11 +166,13 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `filter` | Interior: how much the substance colors light passing through. | [Materials](materials.md#transparency-and-interiors) |
 | `finer` | Turbulence/noise: shrinks each successive layer. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `fisheye` | Camera projection: a circular, very wide view. | [Cameras](cameras.md#projections) |
+| `flat` | Fracture: broken only across X and Z, every crack running straight down. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `flatness` | Patch: how flat before dicing stops. | [Surfaces](surfaces.md#patch) |
 | `flop` | Pattern: the angle a surface is seen at, against the light's reflection, for paint whose color shifts with it. | [Pigments & Patterns](pigments-and-patterns.md#a-color-that-shifts-with-the-angle) |
 | `focal` | Camera: `focal point`/`focal distance` for depth of field. | [Cameras](cameras.md#depth-of-field) |
 | `font` | Text: which font face to use, or a list of them to fall back through. | [Advanced Surfaces](advanced-surfaces.md#text), [Managing Fonts](fonts.md#falling-back-to-another-font) |
 | `for` | Repeats what stands in it, counting through a range. | [Surfaces](surfaces.md#repeating-things) |
+| `fracture` | Surface: a solid broken into pieces, each the part of it nearest a seed. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`; where a field's patches begin, `from <a> to <b>`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches) |
@@ -178,7 +180,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
 | `gamma` | Context: the display gamma to correct for. | [Context](context.md#gamma) |
-| `gap` | Text layout: `line gap`, the space between lines. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `gap` | Text layout: `line gap`, the space between lines.  Fracture: how wide the cracks are. | [Advanced Surfaces](advanced-surfaces.md#text), [Fracture](advanced-surfaces.md#fracture) |
 | `generations` | L-system: how many times to rewrite. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `generic` | `generic shape`: a flat surface from a 2D path. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
 | `gives` | Surface: `gives light`, so the glowing stuff inside it lights the scene. | [Surfaces](surfaces.md#a-surface-that-gives-light) |
@@ -196,6 +198,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
 | `heightfield` | Surface: terrain, from an image or a function. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `hole` | Fracture: how far round the point struck the pieces are gone. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `horizontal` | Text layout: horizontal placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `hyperboloid` | Surface: a waisted surface of revolution. | [Surfaces](surfaces.md#hyperboloid) |
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -234,10 +237,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `location` | Camera/light: where it sits. | [Cameras](cameras.md#placing-a-camera) |
 | `look` | Camera: `look at`, the point aimed at. | [Cameras](cameras.md#placing-a-camera) |
+| `loose` | Fracture: the pieces are separate stones, each in a place of its own in its pattern. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `lsystem` | Surface: a shape grown from an L-system. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `marble` | Pattern: veined, usually with turbulence. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `material` | A surface's whole appearance: pigment and finish. | [Materials](materials.md#the-finish) |
-| `materials` | L-system: maps characters or depths to materials. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `materials` | L-system: maps characters or depths to materials.  Fracture: the materials its pieces take one of. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Fracture](advanced-surfaces.md#fracture) |
 | `matrix` | Transform: a raw 4x4 matrix. | [Transforms](transforms.md#matrix) |
 | `max` | Extrusion: the high Y of the solid (`max Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the far end of a decal's reach (`max Y`, `max radius`).  Also `max()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach), [Functions](advanced-surfaces.md#what-a-function-may-hold) |
 | `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
@@ -282,6 +286,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `photons` | Context: `caustics photons`, how many are sent. | [Context](context.md#caustics) |
 | `picked` | Field: `picked by <pattern>`, which of its things stands at a place. | [Fields in patches](advanced-surfaces.md#fields-in-patches) |
 | `physical` | `physical sky`: a sky derived from what the air does to sunlight. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
+| `pieces` | Fracture: how many pieces it breaks into. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `pigment` | Material: what colors the surface; also a blob component's own color. | [Materials](materials.md#the-color) |
 | `pipes` | L-system control: draw edges as pipes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `pitchDown` | L-system turtle: pitch down. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -319,7 +324,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
 | `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Coat or sheen: how rough its own surface is.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [A clear coat](materials.md#a-clear-coat), [Cloth](materials.md#cloth), [Hair](advanced-surfaces.md#how-hair-is-lit) |
-| `rounded` | How far every edge of an extrusion is rounded. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
+| `rounded` | How far every edge of an extrusion, or of a fracture's pieces, is rounded. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Fracture](advanced-surfaces.md#fracture) |
 | `rows` | `physical sky`: how many heights in the sky are worked out and kept.  Also a field's `rows <n> apart <d>`, rows laid side by side along a path. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count, and context: `reflection samples`. | [Scene Files](scene-files.md#scattering) |
@@ -347,6 +352,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white. | [Context](context.md#film-curve) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
+| `solid` | Fracture: the thing that is broken. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `source` | Object file: the mesh file to read; also an info field. | [Advanced Surfaces](advanced-surfaces.md#object-files) |
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
@@ -365,6 +371,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
 | `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
+| `stretched` | Fracture: how much longer the pieces come out along each axis. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `stripes` | Pattern: parallel bands. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `subsurface` | Material: light that wanders under the surface before coming out; `radius` and `thickness` go in it.  Context: `subsurface samples`, how many walks a place takes. | [Light under the surface](materials.md#light-under-the-surface), [Context](context.md#subsurface-samples) |
 | `sun` | `physical sky`: introduces `sun elevation` or `sun azimuth`. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
@@ -389,7 +396,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
 | `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, and weather's `wear … to`, the material it bares. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films) |
 | `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
+| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most.  Fracture: the point its pieces grow smaller toward. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Fracture](advanced-surfaces.md#fracture) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -403,6 +410,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `tube` | Surface: a round tube of varying radius along a path. | [Advanced Surfaces](advanced-surfaces.md#tube) |
 | `tubes` | L-system control: draw edges as tapering tubes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `tumble` | Fracture: the most each piece is turned. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -433,6 +441,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `weathering` | Context: `weathering samples`, how many directions `crevices` and `edges` look about in. | [Context](context.md#weathering-samples) |
 | `weight` | Field: how often one of the things it is filled with is picked against the others. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `white` | Context: `white balance`, the temperature that comes out white. | [Context](context.md#white-balance) |
+| `whole` | Fracture: its pieces are whole cells, kept where their seeds lie inside the solid, never cut by it. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand) |
 | `with` | Introduces `with seed`, fixing a pattern's random start. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |

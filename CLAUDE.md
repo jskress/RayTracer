@@ -98,7 +98,20 @@ orange in autumn); a leaf that is an empty plain group keeps its share by standi
 leaves upright in the tree's space instead (willow strands, fruit).  Every tree in the trees library but `Palm` (it
 never branches) is grown so, and the undergrowth's `Boxwood`, in crowns of lobes placed by the variant (one ball
 grows a lollipop) whose LOWEST part is a middle lobe (a side lobe reaching the trunk first dog-legged it), each
-species' height factor measured over five variants.  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
+species' height factor measured over five variants.  A `Fracture` (`fracture { solid ... }`, a `Group`) breaks a
+solid into Voronoi cells when prepared: seeds by rejection (or, `toward` a point, rings and nine spokes held from ring to
+ring in the plane of a thin solid's two longest sides, else density falling off), each cell clipped from a start
+`Polytope` (`Geometry/Polytope.cs`: faces as plane + CCW polygon, Sutherland-Hodgman clipping, `Shrunk`, `Centroid`) by
+the bisector to each neighbor nearest first (in `stretched` space; `flat` drops Y), stopping once a neighbor lies past
+twice the cell's farthest corner, each plane drawn in by `gap`/2.  A box -- `Cube`, CSG intersection of them, or a
+group of ONE (a solid written in braces; missed, a pane went through the CSG path and speckled) -- is the start
+itself (`ConvexOf`); anything else starts from its box grown 1% (coincident faces in the CSG speckled glass) and each
+piece is `cell ∩ Instance(solid)`.  `whole` keeps cells whose seeds are inside, uncut, with ghost seeds round it.
+Pieces are `Polyhedron` (slab test over planes, `PrecomputedNormalIntersection`) or, `rounded`, `RoundedPolyhedron`:
+the cell shrunk by r grown back by a ball = face slabs, edge cylinders, corner balls; convex, so entry = nearest of
+their entries, exit = farthest exit, exact.  `loose` builds each piece in a randomly shifted space (pattern grain of
+its own); `apart`, `tumble`, `hole`, `materials A, B` per piece.  Uses: rocks `DryStoneWall`/`Rubble`, roads
+`CrazyPaving`, windows `Sash`/`Casement`'s trailing `broken` count (unbroken is the old surface list, pixel-identical).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
 several things (`of A, B weight 2`), each built once and stood by `Instance` where picked, `turned` and `sized`;
 what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
 in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The

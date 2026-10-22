@@ -174,6 +174,7 @@ branches, any one of the branches will do.
   - [Object Files](advanced-surfaces.md#object-files)
   - [L-Systems](advanced-surfaces.md#l-systems)
   - [Grown Tree](advanced-surfaces.md#grown-tree)
+  - [Fracture](advanced-surfaces.md#fracture)
 - [Pigments and Patterns](pigments-and-patterns.md)
   - [Solid Color](pigments-and-patterns.md#solid-color)
   - [Patterns](pigments-and-patterns.md#patterns)

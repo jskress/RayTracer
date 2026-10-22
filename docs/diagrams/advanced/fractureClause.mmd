@@ -1,0 +1,10 @@
+railroad-ebnf-beta
+title "A fracture"
+
+fracture = "fracture" [ name ] "{" { "solid" shape
+         | ( "pieces" | "gap" | "rounded" | "hole" | "apart" ) number | "tumble" angle
+         | "stretched" vector | "toward" point | "flat" | "loose" | "whole"
+         | "materials" material { "," material } | property } "}" ;
+
+shape = "{" { surface } "}"
+      | name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

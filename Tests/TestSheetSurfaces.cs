@@ -148,8 +148,10 @@ public class TestSheetSurfaces
             // A field is a holder too: it fills an outline with copies of something else, and what
             // answers a ray is whichever of those it hit.
             "Field",
-            // And a colonized tree: what answers a ray is one of the tube segments or leaves it grew.
+            // And a grown tree: what answers a ray is one of the tube segments or leaves it grew.
             "GrownTree",
+            // A fracture holds its pieces, and each piece is a convex solid, sharp or worn round.
+            "Fracture", "Polyhedron", "RoundedPolyhedron",
             // A strand is hit as a ribbon but shaded as a rod: its normal always faces whoever is
             // looking, and a ray leaving it sets off from the round surface the shading pretends is
             // there (see HairIntersection.LeavingPoints), so it is never met from behind.

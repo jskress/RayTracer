@@ -2139,3 +2139,77 @@ half a second.  What it grows renders like any other wood and leaves.  Every tre
 is to see.
 
 The complete scene is [`docs/examples/advanced/grown.igl`](examples/advanced/grown.igl).
+
+### Fracture
+
+A solid broken into pieces.  Seeds are scattered through it, and each piece is the part of the solid
+nearer its own seed than any other — the seed's Voronoi cell — so the pieces fit together exactly, the
+way the pieces of anything broken do.  Each is a convex polyhedron, found exactly: no tessellation, no
+marching, as cheap per face as a cube.  It is what the [rocks library](libraries.md#rocks)'s walls and
+rubble, the [roads library](libraries.md#roads)'s crazy paving and the
+[windows library](libraries.md#windows-and-doors)'s broken panes are made of.
+
+![A block broken four ways: cracked, worn and loose, blown apart, and a pane struck](images/figures/adv-fracture.png)
+
+```
+fracture {
+    solid { cube { scale 0.8  translate [0, 0.8, 0] } }
+    pieces 30
+    gap 0.03
+    rounded 0.05
+    loose
+    materials gray, buff, slate
+    with seed 4
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/fractureClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/fractureClause.svg">
+  <img alt="A fracture" src="images/advanced/fractureClause.svg">
+</picture>
+
+**`solid`** is what is broken: any closed surface, written in braces, named, or made by a primitive,
+as a [grown tree](#grown-tree)'s crown is.  A box — a cube under any transform, or an intersection of
+them, which is how a wall with sloping faces is written — is broken exactly, its own planes bounding
+every piece.  Anything else is broken by cutting each piece from it, so a ball breaks into pieces whose
+outer faces are the ball's.  A plane or an open-ended shape has no inside, and is refused.
+
+**`pieces`** is how many (20 unless you say), near enough.  **`gap`** is how wide the cracks between
+them are: nought, and they fit with no crack at all; a hair, and the thing reads as cracked; more, and
+as laid stones.  **`rounded`** wears every piece's edges and corners round by that much — exactly, the
+piece drawn in by the radius and grown back by a ball — while its faces stay where they were, so a slab
+broken and worn is still its full thickness.  A piece too small to be worn so far is worn by half as
+much, and if that is still too much, left sharp.
+
+**How a solid breaks:**
+
+- **`flat`** breaks it only across X and Z, every crack running straight down: paving, dried mud,
+  basalt columns.
+- **`stretched [x, y, z]`** makes the pieces that many times longer along each axis than across it.
+  `stretched [2.2, 1, 1.3]` breaks a wall into rough courses of stones laid lengthwise, which is the
+  one rule a waller keeps.
+- **`toward <point>`** makes the pieces smaller near a point, as a thing breaks round where it was
+  struck.  A thin solid — a pane, a slab — breaks there in rings and spokes, the radial cracks running
+  out from the point as they do in glass; a thick one only more finely.  **`hole r`** leaves out every
+  piece within that distance of the point, a hole struck through.
+- **`whole`** keeps the pieces whole: never cut by the solid, but kept where their seeds lie inside it.
+  The solid's outline is then made of whole stones rather than of its own smooth skin — a heap of rubble
+  broken from a mound, a cairn.  Seeds are scattered round the solid as well, so the outermost pieces are
+  no bigger than the rest.
+
+**Where the pieces go.**  **`apart d`** moves each piece that far out from the solid's middle — from the
+point struck, if there is one — and **`tumble a`** turns each about its own middle by up to that angle:
+a thing caught breaking, or stones not quite laid true.
+
+**What the pieces are made of.**  Unsaid, they wear the fracture's own `material`, and its pattern runs
+on from piece to piece, as it does across the cracks in a broken slab.  **`loose`** gives each piece a
+place of its own in its pattern instead, so the grain of one does not run on into the next — the
+pieces are separate stones, not one block cracked.  **`materials A, B, C`** gives them several to take
+one of at random, each a name, a primitive's parameter or a `material` written out.
+
+**What it costs.**  Breaking is done once, before rendering: a wall of three hundred stones breaks in a
+fifth of a second.  The pieces then render as any polyhedra do — a worn one a little dearer than a sharp
+one, since its edges and corners are cylinders and balls.
+
+The complete scene is [`docs/examples/advanced/fracture.igl`](examples/advanced/fracture.igl).
