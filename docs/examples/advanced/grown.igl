@@ -1,0 +1,73 @@
+// A grown tree.  Points are scattered through the space its crown is to fill, and each draws the
+// nearest twig toward it until twigs reach them all -- so the tree takes the shape of the room it is
+// given.  On the left, bare, in its crown (four balls, drawn faintly); on the right, the same crown
+// with leaves.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 4.2, -19]
+    look at [0, 4.1, 0]
+    field of view 52
+}
+
+background [0.66, 0.76, 0.88]
+
+point light { location [-12, 22, -16]  color [1, 0.97, 0.93] }
+point light { location [10, 8, -14]    color [0.25, 0.26, 0.30] }
+
+plane {
+    material { pigment color [0.42, 0.46, 0.36]  specular 0 }
+}
+
+bark = material { pigment color [0.42, 0.36, 0.30]  specular 0.1 }
+
+// The crown: four balls run together, the lowest in the middle, so the trunk climbs into it from
+// beneath rather than turning aside to a ball hanging low at one side.  Any closed surface will do --
+// a CSG, as here, or a group, whose parts may overlap.
+room = union {
+    sphere { scale 1.8  translate [0, 4.5, 0] }
+    sphere { scale 1.7  translate [-1.5, 5.2, 0] }
+    sphere { scale 1.7  translate [1.5, 5.5, 0.4] }
+    sphere { scale 1.6  translate [0, 6.5, -0.2] }
+}
+
+// A leaf grows up +Y from its base, the way its twig runs.
+leaf = group {
+    sphere {
+        material { pigment color [0.25, 0.45, 0.17]  specular 0.1 }
+        scale [0.09, 0.16, 0.025]
+        translate [0, 0.15, 0]
+    }
+}
+
+grown {
+    crown room
+    points 1500
+    reach 1.2
+    kill 0.24
+    step 0.12
+    twig 0.016
+    with seed 7
+    material bark
+    translate X -4.4
+}
+
+// The crown itself, so you can see what the tree grew into.
+union room {
+    material { pigment color [0.85, 0.92, 1]  transparency 0.85  specular 0  ambient 0.5 }
+    no shadow
+    translate X -4.4
+}
+
+grown {
+    crown room
+    points 1500
+    reach 1.2
+    kill 0.24
+    step 0.12
+    twig 0.016
+    leaf leaf
+    with seed 7
+    material bark
+    translate X 4.4
+}

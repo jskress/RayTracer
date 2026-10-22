@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "A grown tree"
+
+grown = "grown" [ name ] "{" { "crown" shape | "leaf" shape { "," shape } [ "hanging" ]
+      | ( "points" | "reach" | "kill" | "step" | "twig" | "joining"
+        | "susceptibility" ) number | "tropism" vector | property } "}" ;
+
+shape = "{" { surface } "}"
+      | name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

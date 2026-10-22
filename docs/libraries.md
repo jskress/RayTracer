@@ -155,16 +155,18 @@ object Elm(8, 'winter', 4)       { translate X -12 }
 
 | | |
 | --- | --- |
-| `Elm` | Reaching, the limbs sweeping up and out. |
-| `Oak` | Heavy and broad, throwing its weight sideways. |
+| `Elm` | Reaching, the limbs sweeping up and out into a crown wider at the top. |
+| `Oak` | Heavy and broad, its crown in clumps on long limbs thrown sideways. |
 | `Birch` | Slender, pale-barked, dividing into finer twigs than the others. |
-| `Fir` | A conifer: one trunk the whole height, with rings of branches coming off it.  Evergreen, so spring, summer and autumn are the same tree -- but ask one for winter and snow gathers along its boughs. |
+| `Maple` | Rounded and full, and the biggest leaves here — which is what makes its autumn read from further off than the others. |
+| `Beech` | A broad dome on a short, smooth gray trunk. |
+| `Poplar` | The narrow one: a column to the ground, its limbs held close to the leader, for a windbreak or an avenue. |
+| `Aspen` | Tall and narrow too, but a slender pale trunk under an oval crown. |
+| `Willow` | Curtains of foliage hanging from arching limbs. |
+| `Fir` | A conifer: a cone of drooping boughs to the ground.  Evergreen, so spring, summer and autumn are the same tree — but ask one for winter and snow lies on its shoots. |
 | `Pine` | The other conifer, and the other way round: a long clear trunk with the whole crown at the top.  A fir is a cone to the ground; a pine sheds its lower branches as it grows. |
-| `Willow` | Arching limbs with curtains of foliage hanging from along them. |
-| `Poplar` | The narrow one.  Limbs held close to the leader, for a windbreak or an avenue. |
-| `Maple` | Broad like an oak but lighter, and the biggest leaves here — which is what makes its autumn read from further off than the others. |
-| `Palm` | A bare leaning trunk with the whole of its foliage in one fountain at the top. |
 | `Snag` | A dead tree, standing.  Bare in every season, because that is what dead means. |
+| `Palm` | A bare leaning trunk with the whole of its foliage in one fountain at the top. |
 
 Three numbers, of which only the first is required: **how tall**, **what time of year**, and **which
 tree of that kind**.
@@ -175,16 +177,25 @@ because the obvious alternative is for the number to mean the trunk, and then no
 **The season is a word**: `'summer'`, `'autumn'` (or `'fall'`), `'winter'`, or anything else for
 spring.  A winter tree has no leaves at all and shows the shape they were hanging on.
 
-Three of them say nothing with it, and each for its own reason.  A `Palm` sheds and grows fronds the
-year round rather than by the calendar; a `Snag` is dead, and dead is bare in January and July alike;
-and a `Fir` does what an evergreen does, which is three seasons the same and snow in the fourth.  They
-all take the word anyway, so a scene that sets its season in one place can hand it to everything.
+Four of them say nothing with it, or nearly, and each for its own reason.  A `Palm` sheds and grows
+fronds the year round rather than by the calendar; a `Snag` is dead, and dead is bare in January and
+July alike; and a `Fir` and a `Pine` do what an evergreen does, which is three seasons the same and
+snow in the fourth.  They all take the word anyway, so a scene that sets its season in one place can
+hand it to everything.
 
-**Six of these eight are the same recipe with different numbers** — how far a limb leans, how much it
-sweeps, how fast it shrinks, how big a leaf is.  Two are not: a fir and a pine are a leader with whorls
-of boughs, and a willow is limbs drawn out by hand with curtains hung from points on their own curves.
-A weeping shape cannot be had from the recursive machinery at all, because that machinery never tells
-anyone where a limb went, and a curtain has to know.
+**Every tree here but the palm is grown, not built.**  Each is given room — a crown of a few
+overlapping balls placed by the variant, or for a fir a cone — and a [grown tree](advanced-surfaces.md#grown-tree)
+fills it by drawing its twigs toward points scattered through it.  No two forks divide alike, branches
+crowd where the crown is full and stretch where it is thin, and the outline is the room.  What makes one
+species another is that room and how far its points reach: an oak's reach far, so a few long limbs sweep
+out through clumps; a birch's barely at all, so it divides finely.  A willow hangs its leaves from its
+twigs in strands; a fir's and a pine's are needled shoots, which take snow on top.  The palm is still
+built, because a palm never branches — there is nothing in one trunk and a fountain of fronds for a
+crown of points to grow.
+
+Until 2026-10-22 the others were built too: a limb, and three smaller limbs on its end, all the way
+down, every fork dividing the way every other fork did.  Next to grown trees they read as diagrams of
+trees, which is why they went.
 
 **The variant is which tree of that kind you want.**  The same numbers always grow the same tree, down
 to the last twig — today, next year, and in every frame of an animation.  Change it and you get a
@@ -198,7 +209,7 @@ for tree in [0, 5] {
 ```
 
 The library keeps its own workings.  A scene that imports `Elm` does not also inherit the dozen
-functions and primitives an elm is built from — see
+functions and primitives an elm is grown from — see
 [Importing from a library](scene-files.md#importing-from-a-library) for the rule, and for the one
 exception: the barks are materials, and a material is looked up where it is *used*, so `TreeElmBark`
 and its siblings do arrive.  They carry the prefix so they will not collide with anything of yours.
@@ -223,7 +234,7 @@ picture of some trees from a picture of somewhere.
 | --- | --- |
 | `Grass` | An area of it, filling any outline you draw. |
 | `Tuft` | One clump on its own, for putting somewhere in particular. |
-| `Boxwood` | A dense clipped dome.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
+| `Boxwood` | A dense clipped dome, grown as the trees are: twigs filling a dome from a short stem, each ending in a spray of small leaves.  Evergreen, so like the fir it takes snow rather than ignoring winter. |
 | `Bramble` | Arching canes with leaves along them; berries in autumn, bare canes in winter. |
 | `Lavender` | A mound of fine stems, in flower through the summer and cut back by winter. |
 | `Fern` | Fronds rising from one crown and arching over.  A woodland floor without them reads as a lawn under trees. |
