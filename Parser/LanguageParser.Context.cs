@@ -146,6 +146,9 @@ public partial class LanguageParser
                             : null
                     };
                 break;
+            case "animation":
+                CreateAnimationResolvers(clause, updater);
+                break;
             case "diffuse":
                 if (clause.Text(1) == "cache")
                 {
@@ -283,6 +286,42 @@ public partial class LanguageParser
     /// </summary>
     /// <param name="clause">The clause to process.</param>
     /// <param name="contextUpdater">The context updater to add the resolver to.</param>
+    // `animation length <seconds> [rate <r>] [still <frame>]` or `animation frames <count> [rate <r>] [still <frame>]`.
+    private static void CreateAnimationResolvers(Clause clause, ContextUpdater contextUpdater)
+    {
+        bool inFrames = clause.Text(1) == "frames";
+
+        contextUpdater.AnimationRunResolver = new TermResolver<double>
+        {
+            Term = clause.Term(),
+            Validator = value => value > 0
+                ? null
+                : inFrames ? "An animation must run at least one frame." : "An animation must run longer than nothing."
+        };
+        contextUpdater.AnimationInFrames = inFrames;
+
+        // The rate and the still are each optional, so which expression is which is told by the words before them.
+        int next = 1;
+
+        if (clause.Tokens.Any(token => token.Text == "rate"))
+        {
+            contextUpdater.AnimationRateResolver = new TermResolver<double>
+            {
+                Term = clause.Term(next++),
+                Validator = value => value > 0 ? null : "An animation's rate must be more than nothing a second."
+            };
+        }
+
+        if (clause.Tokens.Any(token => token.Text == "still"))
+        {
+            contextUpdater.AnimationStillResolver = new TermResolver<double>
+            {
+                Term = clause.Term(next),
+                Validator = value => value >= 0 ? null : "An animation's still is one of its frames, from nought."
+            };
+        }
+    }
+
     private static void CreateScannerResolver(Clause clause, ContextUpdater contextUpdater)
     {
         Token first = clause.Tokens[0];

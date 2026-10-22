@@ -113,19 +113,19 @@ public class TestContextClauses
         // test beside the size so that the two cannot drift apart again.
         RenderContext context = new ();
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual(2.2, context.Gamma, 1e-9);
 
         context = new RenderContext { Gamma = 1.8 };
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual(1.8, context.Gamma, 1e-9, "the scene's gamma should have survived");
 
         context = new RenderContext { Gamma = 1.8 };
 
-        context.ApplyOptions(new RenderOptions { Gamma = 2.6 }, 0);
+        context.ApplyOptions(new RenderOptions { Gamma = 2.6 });
 
         Assert.AreEqual(2.6, context.Gamma, 1e-9, "the command line should have won");
     }
@@ -141,14 +141,14 @@ public class TestContextClauses
     {
         RenderContext context = new ();
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual(8, context.BitsPerChannel, "said nowhere, eight bits is the usual depth");
         Assert.IsFalse(context.Grayscale, "and an image has its color");
 
         context = new RenderContext { BitsPerChannel = 16, Grayscale = true };
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual(16, context.BitsPerChannel,
             "the scene's channel depth should have survived a silent command line");
@@ -156,7 +156,7 @@ public class TestContextClauses
 
         context = new RenderContext { BitsPerChannel = 16 };
 
-        context.ApplyOptions(new RenderOptions { BitsPerChannel = 8 }, 0);
+        context.ApplyOptions(new RenderOptions { BitsPerChannel = 8 });
 
         Assert.AreEqual(8, context.BitsPerChannel, "the command line should have won");
 
@@ -164,7 +164,7 @@ public class TestContextClauses
         // do.  Asking for it on the command line turns it on; not asking says nothing.
         context = new RenderContext();
 
-        context.ApplyOptions(new RenderOptions { Grayscale = true }, 0);
+        context.ApplyOptions(new RenderOptions { Grayscale = true });
 
         Assert.IsTrue(context.Grayscale, "the command line should be able to ask for no color");
     }
@@ -213,7 +213,7 @@ public class TestContextClauses
     {
         RenderContext context = new ();
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual("off", context.AntiAliasing.ToString(),
             "said nowhere, there should be no antialiasing");
@@ -221,7 +221,7 @@ public class TestContextClauses
         context = new RenderContext();
         context.AntiAliasing.AdaptiveDepth = 1;
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
 
         Assert.AreEqual("adaptive:1", context.AntiAliasing.ToString(),
             "the scene's antialiasing should have survived a command line that said nothing");
@@ -229,7 +229,7 @@ public class TestContextClauses
         context = new RenderContext();
         context.AntiAliasing.AdaptiveDepth = 1;
 
-        context.ApplyOptions(new RenderOptions { AntiAliasingText = "adaptive:4" }, 0);
+        context.ApplyOptions(new RenderOptions { AntiAliasingText = "adaptive:4" });
 
         Assert.AreEqual("adaptive:4", context.AntiAliasing.ToString(),
             "the command line should have won");
@@ -239,7 +239,7 @@ public class TestContextClauses
         context = new RenderContext();
         context.AntiAliasing.AdaptiveDepth = 1;
 
-        context.ApplyOptions(new RenderOptions { AntiAliasingText = "off" }, 0);
+        context.ApplyOptions(new RenderOptions { AntiAliasingText = "off" });
 
         Assert.AreEqual("off", context.AntiAliasing.ToString(),
             "the command line should be able to turn it off again");

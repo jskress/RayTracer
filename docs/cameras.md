@@ -152,7 +152,9 @@ moving thing runs the whole of its motion, at `0.5` it gets half way, and at `0`
 default — nothing smears however it is set moving.
 
 What actually moves is a property of the *surface*, not the camera; `motion { }` takes the
-same transforms a surface is placed with.  That is covered under *Transforms*.  Keeping the
+same transforms a surface is placed with.  In a frame of an [animation](animation.md#motion-blur-from-time), a
+surface placed in terms of `time` moves through the frame by itself, and the shutter blurs it along its way
+with no `motion` said at all.  That is covered under *Transforms*.  Keeping the
 two apart means a scene can leave its motions in place and simply shut the shutter to get a
 still picture out.
 

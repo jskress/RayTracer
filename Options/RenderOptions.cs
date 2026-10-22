@@ -122,9 +122,11 @@ public class RenderOptions
         }
     }
 
-    [Option('r', "frame-rate", Required = false, Default = 24,
-        HelpText = "The rate, in frames per second, to use when generating a series of images.")]
-    public int FrameRate
+    // Null until given, like the antialiasing, so that a rate the scene's animation asks for is not
+    // overruled by a command line that said nothing about it.
+    [Option('r', "frame-rate", Required = false,
+        HelpText = "The rate, in frames per second, an animation is rendered at (24 unless the scene says).")]
+    public int? FrameRate
     {
         get => field;
         // ReSharper disable once UnusedMember.Global
@@ -135,10 +137,10 @@ public class RenderOptions
 
             field = value;
         }
-    } = 24;
+    }
 
     [Option('m', "frame", Required = false,
-        HelpText = "The specific frame in an animation to render.")]
+        HelpText = "The one frame of an animation to render, as a still at that frame's time.")]
     public long? Frame
     {
         get => field;
@@ -150,6 +152,44 @@ public class RenderOptions
 
             field = value;
         }
+    }
+
+    [Option("frames", Required = false,
+        HelpText = "The frames of an animation to render: one, as 48, or a run of them, as 0-143.")]
+    public string Frames
+    {
+        get => field;
+        // ReSharper disable once UnusedMember.Global
+        set
+        {
+            FrameRun = FrameRunOf(value);
+            field = value;
+        }
+    }
+
+    [Option("still", Required = false,
+        HelpText = "Render an animation as its still: the one frame it names for that, or its first.")]
+    public bool Still { get; set; }
+
+    /// <summary>
+    /// This property holds the first and last frames <see cref="Frames"/> asks for, or null if it was not given.
+    /// </summary>
+    public (long First, long Last)? FrameRun { get; private set; }
+
+    private static (long First, long Last)? FrameRunOf(string text)
+    {
+        if (text is null)
+            return null;
+
+        string[] ends = text.Split('-');
+
+        if (ends.Length is 1 or 2 && long.TryParse(ends[0], out long first) &&
+            long.TryParse(ends[^1], out long last) && first >= 0 && last >= first)
+        {
+            return (first, last);
+        }
+
+        throw new ArgumentException($"Frames are given as one, like 48, or a run, like 0-143, not '{text}'.");
     }
 
     [Option('c', "bits-per-channel", Required = false,

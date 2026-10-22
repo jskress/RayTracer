@@ -34,22 +34,31 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `animation` | Context: how long a scene runs as an animation, `length` seconds or `frames`, its `rate` and its `still`. | [Saying How Long](animation.md#saying-how-long) |
 | `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `ease` | Keys: the value comes to the key slowly, `ease in`, `ease out` or `ease in out`. | [Keys](animation.md#keys) |
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `fill` | Shape grammar: fills a scope with a box, in the grammar's own space. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `frames` | Context's `animation`: how many frames it runs. | [Saying How Long](animation.md#saying-how-long) |
 | `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `gables` | Shape grammar: the material of a gabled `roof`'s gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `hip` | Shape grammar: a `roof` sloping on all four sides. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `hold` | Keys: the value waits for the key and then jumps to it. | [Keys](animation.md#keys) |
+| `keys` | A value given at moments, called with the time: `Lift = keys { 0: 0  2: 3 ease out }`. | [Keys](animation.md#keys) |
+| `loop` | Keys: begin again once the last key is reached. | [Keys](animation.md#keys) |
 | `nothing` | Shape grammar: puts nothing in a scope. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `rate` | Context's `animation`: frames a second, 24 unless said. | [Saying How Long](animation.md#saying-how-long) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `shapes` | Surface: a building described by a shape grammar's rules. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
 | `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `still` | Context's `animation`: the frame that stands for it as a still. | [Saying How Long](animation.md#saying-how-long) |
 | `verge` | Shape grammar: how far a gabled `roof` reaches past its gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
@@ -224,7 +233,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `image` | Pigment: paint a surface from an image file. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
-| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`.  And a shape grammar's `repeat ... index in`. | [Surfaces](surfaces.md#repeating-things) |
+| `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`.  And a shape grammar's `repeat ... index in`.  Keys: `ease in`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
 | `index` | Interior, film or coat: `index of refraction`, written out.  A `field`: `index in n` names each copy's number.  A shape grammar's `repeat`: `index in n` names each part's number. | [Materials](materials.md#transparency-and-interiors), [Thin films](materials.md#thin-films), [A clear coat](materials.md#a-clear-coat), [Advanced Surfaces](advanced-surfaces.md#field), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `info` | Context: descriptive fields stored with the image. | [Context](context.md#image-information) |
@@ -248,11 +257,11 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `leaf` | L-system or grown tree: the surface drawn for a leaf; a grown tree may name several, after commas. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `lean` | Hair: how far strands lean from straight out, as an angle. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `length` | L-system control: the step length.  Also hair: how long a strand is. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair) |
+| `length` | L-system control: the step length.  Also hair: how long a strand is.  Context's `animation`: how long it runs, in seconds. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair), [Saying How Long](animation.md#saying-how-long) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `light` | Font weight; also a light source, which may stand in a group. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things) |
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
-| `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
+| `linear` | Pattern qualifier: a `linear` stripe or gradient along an axis.  Keys: the value comes to the key at an even pace. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Keys](animation.md#keys) |
 | `location` | Camera/light: where it sits. | [Cameras](cameras.md#placing-a-camera) |
 | `look` | Camera: `look at`, the point aimed at. | [Cameras](cameras.md#placing-a-camera) |
 | `loose` | Fracture: the pieces are separate stones, each in a place of its own in its pattern. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
@@ -367,7 +376,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `sized` | Field: the range of sizes its copies are stood at, `sized 0.8 to 1.2`, and `by <pattern>` to set them by one. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `sky` | `sky light`: light arriving from every direction, as the sky gives it. | [Lights](lights.md#sky-lights) |
-| `smooth` | `smooth triangle`: one with per-corner normals. | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
+| `smooth` | `smooth triangle`: one with per-corner normals.  Keys: `keys smooth` passes through every key without stopping. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Keys](animation.md#keys) |
 | `soft` | Context: `film curve soft`, the default; eases each channel brighter than eight tenths of white toward white. | [Context](context.md#film-curve) |
 | `software` | Info: the software field (defaults to this ray tracer). | [Context](context.md#image-information) |
 | `solid` | Fracture: the thing that is broken. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
@@ -770,6 +779,16 @@ then three families of names: the colors, the indices of refraction, and the dir
 | `NegativeInfinity` | the smallest double | Negative infinity. |
 | `__software__` | this ray tracer's name and version | The default an image's software field is stamped with. |
 
+#### The frame
+
+Two more names are set for every frame of an [animation](animation.md), and for a still as well, where they
+are nought:
+
+| Name | What it is |
+| --- | --- |
+| `time` | The frame's moment, in seconds: its number over the rate. |
+| `frame` | The frame's number, from nought. |
+
 #### Functions
 
 Every function an [expression](scene-files.md#functions) may call.  Several take either numbers
@@ -957,8 +976,10 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--exposure` | How many [stops](cameras.md#exposure) to expose every camera by. |
 | `--film-curve` | The [film curve](context.md#film-curve) to develop the picture by: `soft`, `neutral`, `agx` or `none`. |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
-| `-r`, `--frame-rate` | Frames per second for a series of images (default 24). |
-| `-m`, `--frame` | Render one particular frame of an animation. |
+| `-r`, `--frame-rate` | Frames per second for an [animation](animation.md) (the scene's, or 24). |
+| `-m`, `--frame` | Render one frame of an animation alone, as a still at its time. |
+| `--frames` | Render a run of an animation's frames, as `0-143`. |
+| `--still` | Render an animation as the one frame it names as its still. |
 | `-l`, `--output-level` | How much to print: `quiet`, `normal`, `chatty` or `verbose`. |
 | `-p`, `--progress` | How to report progress: `bar`, `tool` or `none`. |
 | `--stats` | Print a report of what the render cost and what its scene held. |

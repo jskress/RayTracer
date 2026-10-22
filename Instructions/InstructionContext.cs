@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using RayTracer.General;
 using RayTracer.ImageIO;
+using RayTracer.Instructions.Context;
 using RayTracer.Options;
 
 namespace RayTracer.Instructions;
@@ -117,23 +118,52 @@ public class InstructionContext
             instruction.Execute(context, variables);
     }
 
+    /// <param name="output">Where a frame of an animation goes, or null for a still.</param>
     public void Execute(
-        RenderOptions options, RenderContext context, Variables variables, long frame)
+        RenderOptions options, RenderContext context, Variables variables, long frame, FrameOutput output = null)
     {
         if (_renderInstructions == 0)
             AddInstruction(new RenderInstruction(null, null));
+
+        if (output is not null && _renderInstructions > 1)
+        {
+            throw new Exception(
+                $"An animation is rendered through one render command, and this scene has {_renderInstructions}.");
+        }
+
+        // Each frame of an animation carries the scene out again from the start, and must not find the last
+        // frame's things still standing.
+        _objects.Clear();
 
         foreach (Instruction instruction in _instructions)
         {
             if (instruction is RenderInstruction renderInstruction)
             {
-                CreateImage(options, context, variables, renderInstruction, frame);
+                CreateImage(options, context, variables, renderInstruction, frame, output);
 
                 frame++;
             }
             else
                 instruction.Execute(context, variables);
         }
+    }
+
+    /// <summary>
+    /// This method returns the animation the scene's context asks for, or null if it asks for none.  It is
+    /// worked out before the scene is carried out at all, since every frame's time hangs on it, so it is read in
+    /// the given scope alone: the renderer's own names and the frame's, not the scene's.
+    /// </summary>
+    /// <param name="variables">The scope to read it in.</param>
+    /// <returns>The animation asked for, or null.</returns>
+    internal Animation AnimationOf(Variables variables)
+    {
+        RenderContext context = new ();
+        Animation animation = null;
+
+        foreach (ContextUpdater updater in _instructions.OfType<ContextUpdater>())
+            animation = updater.AnimationOf(context, variables) ?? animation;
+
+        return animation;
     }
 
     /// <summary>
@@ -144,11 +174,12 @@ public class InstructionContext
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="renderInstruction">The render instruction to use.</param>
     /// <param name="frame">The frame to render.</param>
+    /// <param name="output">Where a frame of an animation goes, or null for a still.</param>
     private void CreateImage(
         RenderOptions options, RenderContext context, Variables variables,
-        RenderInstruction renderInstruction, long frame)
+        RenderInstruction renderInstruction, long frame, FrameOutput output)
     {
-        context.ApplyOptions(options, frame);
+        context.ApplyOptions(options);
 
         renderInstruction.Objects = _objects;
 
@@ -160,11 +191,20 @@ public class InstructionContext
 
         stopwatch.Stop();
 
-        string fileName = GetOutputImageFile(options, frame);
+        if (output?.Movie is { } movie)
+        {
+            movie.Add(renderInstruction.Canvas, context);
+
+            Terminal.Out($"Done!  It took {stopwatch.Elapsed}");
+
+            return;
+        }
+
+        string fileName = GetOutputImageFile(options, frame, output?.Numbered == true);
         ImageFile outputFile = new ImageFile(fileName);
 
         Terminal.Out("Output file:", OutputLevel.Chatty);
-        Terminal.Out($"--> {options.OutputFileName}", OutputLevel.Chatty);
+        Terminal.Out($"--> {fileName}", OutputLevel.Chatty);
         Terminal.Out("Writing...");
 
         outputFile.Save(renderInstruction.Canvas, context, context.ImageInformation);
@@ -178,12 +218,13 @@ public class InstructionContext
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>
     /// <param name="frame">The frame to render.</param>
+    /// <param name="numbered">Whether the frame is one of several of an animation, and so carries its number.</param>
     /// <returns>The image file to write the generated image to.</returns>
-    private string GetOutputImageFile(RenderOptions options, long frame)
+    private string GetOutputImageFile(RenderOptions options, long frame, bool numbered)
     {
         string fileName = options.OutputFileName;
 
-        if (_renderInstructions > 1)
+        if (numbered || _renderInstructions > 1)
         {
             string directory = Path.GetDirectoryName(fileName);
             string name = Path.GetFileNameWithoutExtension(fileName);
@@ -195,3 +236,11 @@ public class InstructionContext
         return fileName;
     }
 }
+
+/// <summary>
+/// This record says where the frames of an animation go: each to a file of its own carrying its number, or all
+/// into one movie.
+/// </summary>
+/// <param name="Numbered">Whether each frame goes to a file of its own, its number in the name.</param>
+/// <param name="Movie">The movie every frame goes into instead, or null.</param>
+public sealed record FrameOutput(bool Numbered, MovieFile Movie);

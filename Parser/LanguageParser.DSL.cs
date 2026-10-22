@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -349,8 +349,16 @@ public partial class LanguageParser
             filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
-            colorDepthClause | grayscale | spectral | whiteBalanceClause | contextPropertyClause
+            colorDepthClause | grayscale | spectral | whiteBalanceClause | animationClause | contextPropertyClause
         ] ?? 'Expecting a context property here.'
+
+        // How long the scene runs as an animation, in seconds or in frames, at what rate, and which frame stands
+        // for it as a still.
+        animationClause:
+        {
+            animation > [ length | frames ] ?? 'Expecting "length" or "frames" to follow "animation" here.' >
+            _expression > { rate > _expression }{?} > { still > _expression }{?}
+        }
 
         // How much of each channel reaches the file, and whether any of it is color at all.  These
         // decide what the image on disk can hold, so a scene that wants sixteen bits -- or wants no
@@ -1326,6 +1334,11 @@ public partial class LanguageParser
         {
             path > openBrace ?? 'Expecting an open brace to follow "path" here.'
         }
+        // A value that changes over time, given at keys; read by hand past the open brace.
+        startKeysClause:
+        {
+            keys > smooth{?} > loop{?} > openBrace ?? 'Expecting an open brace to follow "keys" here.'
+        }
         startFieldClause:
         {
             field > [
@@ -2056,7 +2069,7 @@ public partial class LanguageParser
         {
             [ _identifier | _keyword ] > assignment >
             [
-                pigment | startPathClause |
+                pigment | startPathClause | startKeysClause |
                 { material > startThingClause } | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |

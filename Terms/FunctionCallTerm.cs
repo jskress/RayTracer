@@ -88,6 +88,20 @@ public class FunctionCallTerm : Term
             return own.Call(values, ErrorToken);
         }
 
+        // A value given at keys is called with the time, and answers with what it is then.
+        if (variables.GetValue(_name, typeof(Keyframes)) is Keyframes keys)
+        {
+            if (values is not [double time])
+            {
+                throw new TokenException($"'{_name}' is a run of keys, and is called with one number: the time.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
+            return keys.At(time);
+        }
+
         // A pigment a scene wrote for itself is named through an expression, so a call of one arrives
         // here rather than through a clause.  What goes back is not the pigment -- making one needs
         // the render's context, which an expression has no sight of -- but the makings of it, for
@@ -185,6 +199,14 @@ public class FunctionCallTerm : Term
                 .ToArray();
 
             return own.FoldableBody.ToField(own.ScopeForFolding(given));
+        }
+
+        if (variables.GetValue(_name, typeof(Keyframes)) is Keyframes)
+        {
+            throw new TokenException($"'{_name}' is a run of keys, which has no place in a density or an isosurface.")
+            {
+                Token = ErrorToken
+            };
         }
 
         FieldExpression[] arguments = _arguments

@@ -476,11 +476,11 @@ public class TestImageFile
 
         RenderContext unsaid = new ();
 
-        unsaid.ApplyOptions(new RenderOptions(), 0);
+        unsaid.ApplyOptions(new RenderOptions());
 
         Assert.AreSame(TransferFunction.Srgb, unsaid.OutputCurve, "a command line saying nothing says no gamma");
 
-        unsaid.ApplyOptions(new RenderOptions { Gamma = 2.6 }, 0);
+        unsaid.ApplyOptions(new RenderOptions { Gamma = 2.6 });
 
         Assert.AreEqual(Math.Pow(0.5, 1 / 2.6), unsaid.OutputCurve.FromLinear(0.5), 1e-12);
     }
