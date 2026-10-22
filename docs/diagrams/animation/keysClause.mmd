@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "Keys"
+
+keys = name "=" "keys" [ "smooth" ] [ "loop" ] "{" key { key } "}" ;
+
+key = number ":" value [ "linear" | "ease" [ "in" | "out" | "in" "out" ] | "hold" ] ;

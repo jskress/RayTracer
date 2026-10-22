@@ -271,9 +271,20 @@ public class RenderContext
     public const double Bailout = 1.0 / 1024;
 
     /// <summary>
-    /// This property holds the time value (in ticks) for the frame currently being rendered.
+    /// This property holds the animation a scene's context asks for, or null for a still.
     /// </summary>
-    public long Ticks { get; set; }
+    public Animation Animation { get; set; }
+
+    /// <summary>
+    /// This property holds the time, in seconds, of the frame being rendered: nought for a still.
+    /// </summary>
+    public double Time { get; set; }
+
+    /// <summary>
+    /// This property holds how long a frame lasts, in seconds, when the render is a frame of an animation, and
+    /// nought for a still.  A placement that follows the time is blurred over it, as far as the shutter is open.
+    /// </summary>
+    public double FrameInterval { get; set; }
 
     /// <summary>
     /// This property holds the progress bar we are using.
@@ -302,15 +313,8 @@ public class RenderContext
     /// the context.
     /// </summary>
     /// <param name="options">The command line options to apply.</param>
-    /// <param name="frame">The frame to render.</param>
-    public void ApplyOptions(RenderOptions options, long frame)
+    public void ApplyOptions(RenderOptions options)
     {
-        long seconds = frame / options.FrameRate;
-        double remainder = frame % options.FrameRate;
-        long fraction = remainder.Near(0)
-            ? 0
-            : (long) Math.Round(1_000 / (options.FrameRate / remainder));
-
         Width = options.Width ?? Width;
         Height = options.Height ?? Height;
         // Only a gamma actually given is assigned, since assigning one is what says it.
@@ -348,7 +352,6 @@ public class RenderContext
         // said nothing on the subject, or a sweep that renders the gallery strips every picture of
         // it without a word.
         AntiAliasing = options.AntiAliasing ?? AntiAliasing;
-        Ticks = seconds * 1_000 + fraction;
         SceneName = options.SceneName;
         CameraName = options.CameraName;
     }

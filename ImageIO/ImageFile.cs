@@ -120,32 +120,24 @@ public class ImageFile
     }
 
     /// <summary>
-    /// This method is used to save the given image to the file, in the format
-    /// indicated by its extension.
+    /// This method returns a canvas developed into an image: each pixel's light carried through the film's curve
+    /// and the output's, quantized to the context's channel depth, gray if asked for.  It is what a still is
+    /// written from, and each frame of a movie.
     /// </summary>
-    /// <param name="canvas">The image to save.</param>
-    /// <param name="context">The current render context, which carries the gamma
-    /// correction and color channel depth to render the colors with.</param>
-    /// <param name="info">The information about the image.</param>
-    public void Save(Canvas canvas, RenderContext context, ImageInformation info = null)
+    /// <param name="canvas">The canvas to develop.</param>
+    /// <param name="context">The render context that says how.</param>
+    /// <param name="anyTransparency">Whether any pixel came out less than opaque.</param>
+    /// <returns>The image, the caller's to dispose of.</returns>
+    internal static MagickImage Developed(Canvas canvas, RenderContext context, out bool anyTransparency)
     {
-        MagickFormat? format = MagickFormatInfo.Create(new FileInfo(_fileName))?.Format;
-
-        if (format is MagickFormat.Exr or MagickFormat.Hdr or MagickFormat.Pfm)
-        {
-            SaveLight(canvas, context, info);
-
-            return;
-        }
-
-        using MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
+        MagickImage image = new MagickImage(Transparent, (uint) canvas.Width, (uint) canvas.Height);
         using IPixelCollection<float> pixels = image.GetPixels();
 
         // Our channel values are quantized to the context's configured channel depth, so
         // scale them back up to fill out the 16-bit range each Magick.NET pixel expects.
         double scale = 65535.0 / context.MaxColorChannelValue;
 
-        bool anyTransparency = false;
+        anyTransparency = false;
 
         foreach (IPixel<float> pixel in pixels)
         {
@@ -173,6 +165,30 @@ public class ImageFile
                 (float) (blue * scale), (float) (alpha * scale)
             ]);
         }
+
+        return image;
+    }
+
+    /// <summary>
+    /// This method is used to save the given image to the file, in the format
+    /// indicated by its extension.
+    /// </summary>
+    /// <param name="canvas">The image to save.</param>
+    /// <param name="context">The current render context, which carries the gamma
+    /// correction and color channel depth to render the colors with.</param>
+    /// <param name="info">The information about the image.</param>
+    public void Save(Canvas canvas, RenderContext context, ImageInformation info = null)
+    {
+        MagickFormat? format = MagickFormatInfo.Create(new FileInfo(_fileName))?.Format;
+
+        if (format is MagickFormat.Exr or MagickFormat.Hdr or MagickFormat.Pfm)
+        {
+            SaveLight(canvas, context, info);
+
+            return;
+        }
+
+        using MagickImage image = Developed(canvas, context, out bool anyTransparency);
 
         if (info != null)
             AddInformation(image, info);

@@ -41,6 +41,8 @@ public partial class LanguageParser
             "pigment" => ParsePigmentClause(),
             // An outline is a value like any other now, so that a primitive may be handed one.
             "path" => ParseGeneralPathClause(),
+            // A value that changes over time is named, and called by its name with the time.
+            "keys" => ParseKeysClause(clause),
             "material" => GetMaterialResolver(clause),
             "interior" => GetInteriorResolver(clause),
             "medium" => GetMediumResolver(clause),

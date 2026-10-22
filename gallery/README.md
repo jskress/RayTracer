@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 144 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 148 images</summary>
 
 <details>
 <summary><b>Showcase</b> &mdash; 3 images &middot; whole pictures, made for their own sake</summary>
@@ -1184,6 +1184,22 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
+<summary><b>Animation</b> &mdash; 1 image &middot; scenes that move, each a still and a movie</summary>
+
+<table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/newtons-cradle.webp">
+      <img alt="A Newton's Cradle" height="120" src="Local/animation/newtons-cradle.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/newtons-cradle.igl">A Newton's Cradle</a> (<a href="Local/animation/newtons-cradle.webp">the movie</a>)
+    </td>
+  </tr>
+</table>
+
+</details>
+
+<details>
 <summary><b>Scene Building</b> &mdash; 6 images &middot; the language's own ways of saying a thing once</summary>
 
 <table style="width: 100%; border: none;">
@@ -1644,10 +1660,18 @@ list of which scene wants what:
 for scene in $(find gallery -name '*.igl'); do
     picture="${scene%.igl}.png"
     [ -f "$picture" ] || continue
-    dotnet run -- -i "$scene" -o "/tmp/$(basename "$picture")" \
+    dotnet run -- -i "$scene" -o "/tmp/$(basename "$picture")" --still \
         && mv "/tmp/$(basename "$picture")" "$picture"
+    movie="${scene%.igl}.webp"
+    [ -f "$movie" ] || continue
+    dotnet run -- -i "$scene" -o "/tmp/$(basename "$movie")" -w 400 -h 300 \
+        && mv "/tmp/$(basename "$movie")" "$movie"
 done
 ```
+
+`--still` is what lets one loop render every scene: an [animation](../docs/animation.md) asked for as a still
+renders the one frame it names as its still, and a scene that is no animation renders as it always does.  An
+animated scene's movie sits beside it as a `.webp`, rendered at 400 by 300.
 
 It renders to a scratch path and moves the result into place deliberately: a render that fails
 part way must not leave a tracked picture truncated or missing.  Expect roughly an hour for the

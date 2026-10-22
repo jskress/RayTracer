@@ -16,6 +16,50 @@ public class ContextUpdater : Instruction
     public ScannerResolver ScannerResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how long the scene runs as an animation, in seconds or, if
+    /// <see cref="AnimationInFrames"/>, in frames.
+    /// </summary>
+    public Resolver<double> AnimationRunResolver { get; set; }
+
+    /// <summary>
+    /// This property notes whether the animation's run was said in frames rather than seconds.
+    /// </summary>
+    public bool AnimationInFrames { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the rate the animation runs at, in frames a second.
+    /// </summary>
+    public Resolver<double> AnimationRateResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the frame that stands for the animation as a still.
+    /// </summary>
+    public Resolver<double> AnimationStillResolver { get; set; }
+
+    /// <summary>
+    /// This method returns the animation this block asks for, or null if it asks for none.  It is worked out
+    /// before anything else in the scene, since the frames' times must be known before the scene can be
+    /// carried out at any of them.
+    /// </summary>
+    /// <param name="context">A render context to work it out in.</param>
+    /// <param name="variables">The names it may be written in terms of.</param>
+    public Animation AnimationOf(RenderContext context, Variables variables)
+    {
+        if (AnimationRunResolver is null)
+            return null;
+
+        double run = AnimationRunResolver.Resolve(context, variables);
+
+        return new Animation
+        {
+            Length = AnimationInFrames ? null : run,
+            Frames = AnimationInFrames ? (long) Math.Round(run) : null,
+            Rate = AnimationRateResolver?.Resolve(context, variables),
+            Still = AnimationStillResolver is null ? 0 : (long) Math.Round(AnimationStillResolver.Resolve(context, variables))
+        };
+    }
+
+    /// <summary>
     /// This property provides the resolver, if any, for updating the "angles are radians"
     /// property in the rendering context.
     /// </summary>

@@ -125,7 +125,48 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         if (MotionResolver is not null)
             value.MotionAt = fraction => MotionResolver.ResolveAt(context, variables, fraction);
 
+        // A placement that follows the time is a motion too, through the frame: as far through it as the shutter
+        // is open, the surface stands where its placement puts it at that later time.  It is laid over the
+        // placement at the frame's own instant, after any motion said outright.
+        if (TimedMotionFor(context, variables, value.Transform) is { } timed)
+        {
+            Func<double, Matrix> said = value.MotionAt;
+
+            value.MotionAt = said is null ? timed : fraction => said(fraction) * timed(fraction);
+        }
+
         base.SetProperties(context, variables, value);
+    }
+
+    /// <summary>
+    /// This method returns, for a frame of an animation, the motion of a placement that follows the time: the
+    /// way from where it puts the surface at the frame's instant to where it puts it a share of a frame later.
+    /// A placement the time does not move -- it puts the surface in the same place a frame later -- has none.
+    /// </summary>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="now">Where the placement puts the surface at the frame's instant.</param>
+    /// <returns>The motion, or null.</returns>
+    private Func<double, Matrix> TimedMotionFor(RenderContext context, Variables variables, Matrix now)
+    {
+        if (TransformResolver is null || context.FrameInterval <= 0)
+            return null;
+
+        Matrix At(double fraction)
+        {
+            Variables later = new (variables);
+
+            later.SetValue("time", context.Time + fraction * context.FrameInterval);
+
+            return TransformResolver.Resolve(context, later);
+        }
+
+        if (At(1).Matches(now))
+            return null;
+
+        Matrix undo = now.Invert();
+
+        return fraction => At(fraction) * undo;
     }
 
     /// <summary>

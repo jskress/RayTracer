@@ -450,6 +450,24 @@ pixel for each of the 32 bands (pattern size by wavelength, first dark ring 1.5 
 the same share of any width; band weights the clipped unbalanced CIE->sRGB answer, each channel's adding to one),
 convolved by `Basics/Fourier.cs` (radix-2, grid twice the picture's sides) as (1-g) + g x pattern.
 
+Animation (`docs/animation.md`): `context { animation length L | frames N [rate R] [still S] }` makes a scene an
+animation; `ImageRenderer.Render` reads it first (`InstructionContext.AnimationOf`, ContextUpdaters' animation
+resolvers only, in the renderer's own scope -- so no scene names) and then carries the WHOLE scene out again per
+frame (`_objects` cleared each time), its scene scope a child of one holding `time` (n / rate, seconds) and `frame`
+(`FrameScope`; a still has both nought).  Frames go to `name-0000000.png`, or into one movie (`ImageIO/MovieFile.cs`,
+frames developed by `ImageFile.Developed`): `.webp` (the gallery's; lossy q90, delays in ms) or `.gif` (quantized,
+dithered, optimized; hundredths) looping, held until written; `.mp4` streamed as rgb24 to ffmpeg (libx264, crf 16,
+yuv420p, padded even) -- refused before any frame when `MovieFile.FfmpegOn(PATH)` finds none, and a non-animation
+makes a one-frame video; `-m n` is frame n
+alone, written as asked, `--frames a-b` a run, `--still` the named still (a non-animation renders as ever).  An
+animation renders through ONE render command.  `Name = keys [smooth] [loop] { t: v [linear|ease [in|out|in out]|hold]
+... }` (`General/Keyframes.cs`, `Instructions/Core/KeysResolver.cs`) is called as `Name(time)` (`FunctionCallTerm`
+looks a `Keyframes` up by name); numbers, tuples, points, vectors, colors; smooth = Catmull-Rom tangents in time.
+Blur from time: in a frame (`RenderContext.FrameInterval` > 0) a surface whose `TransformResolver` gives another
+matrix a frame later gets `MotionAt(f) = M(time + f x interval) M(time)^-1`, re-resolving in a child scope with
+`time` shifted (`SurfaceResolver.TimedMotionFor`), laid under any `motion { }`; values named from `time` beforehand,
+shapes and the camera are not blurred.
+
 ### Pigments and patterns (`Pigments/`, `Patterns/`)
 
 Pigments (`Pigments/`) define how color is derived at a surface point (solid, pattern-based,

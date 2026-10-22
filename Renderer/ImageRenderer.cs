@@ -3,6 +3,7 @@ using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Graphics;
+using RayTracer.ImageIO;
 using RayTracer.Instructions;
 using RayTracer.Options;
 
@@ -53,7 +54,61 @@ public class ImageRenderer
     /// <param name="options">The command line options supplied by the user.</param>
     public void Render(RenderOptions options)
     {
-        RenderImage(options, options.Frame ?? 0);
+        Animation animation = _instructionContext.AnimationOf(FrameScope(0, 0));
+
+        bool video = MovieFile.IsAVideo(options.OutputFileName);
+
+        // A scene that is no animation, rendered with no frame asked for, is a still, as it always was -- and so
+        // is one asked for as a still, which is how a gallery of stills is rendered whatever each scene is.  A
+        // video has no still to be, and is a movie of the one frame.
+        if (animation is null && options.Frame is null && options.FrameRun is null && !video)
+        {
+            RenderImage(options, 0, 0, 0, null);
+
+            return;
+        }
+
+        double rate = options.FrameRate ?? animation?.Rate ?? Animation.DefaultRate;
+        // One frame alone: the one asked for, the still asked for, or -- a video of a scene that is no animation,
+        // with no run of frames asked for -- the only one there is.
+        bool stillAsked = options.Still || (animation is null && options.FrameRun is null);
+        long? alone = options.Frame ?? (stillAsked ? animation?.Still ?? 0 : null);
+        (long first, long last) = alone is { } one
+            ? (one, one)
+            : options.FrameRun ?? (0, animation!.FrameCount(rate) - 1);
+        bool several = last > first;
+
+        // Made before the first frame is rendered, so that an MP4 with no ffmpeg to write it is refused at once
+        // rather than after the whole animation has been rendered for nothing.
+        MovieFile movie = (several && MovieFile.IsAMovie(options.OutputFileName)) || video
+            ? new MovieFile(options.OutputFileName, rate)
+            : null;
+        FrameOutput output = new (several && movie is null, movie);
+
+        for (long frame = first; frame <= last; frame++)
+        {
+            if (several)
+                Terminal.Out($"Frame {frame} ({frame - first + 1} of {last - first + 1})");
+
+            RenderImage(options, frame, frame / rate, 1 / rate, output);
+        }
+
+        movie?.Save();
+    }
+
+    /// <summary>
+    /// This method returns the scope a frame is carried out in: the renderer's own names, and the frame's number
+    /// and time, which a scene may write anything in terms of.  The scene's own names go in a scope of their own
+    /// within it, so a scene that names something `time` or `frame` for itself is free to.
+    /// </summary>
+    private Variables FrameScope(long frame, double time)
+    {
+        Variables scope = new (_globals);
+
+        scope.SetValue("time", time);
+        scope.SetValue("frame", (double) frame);
+
+        return scope;
     }
 
     /// <summary>
@@ -61,16 +116,21 @@ public class ImageRenderer
     /// </summary>
     /// <param name="options">The command line options supplied by the user.</param>
     /// <param name="frame">The frame to render.</param>
-    private void RenderImage(RenderOptions options, long frame)
+    /// <param name="time">The frame's time, in seconds.</param>
+    /// <param name="interval">How long a frame lasts, in seconds, or nought for a still.</param>
+    /// <param name="output">Where a frame of an animation goes, or null for a still.</param>
+    private void RenderImage(RenderOptions options, long frame, double time, double interval, FrameOutput output)
     {
         RenderContext context = new ()
         {
             Progress = ProgressReporterFor(options, _statistics),
-            Statistics = _statistics
+            Statistics = _statistics,
+            Time = time,
+            FrameInterval = interval
         };
-        Variables variables = new Variables(_globals);
+        Variables variables = new (FrameScope(frame, time));
 
-        _instructionContext.Execute(options, context, variables, frame);
+        _instructionContext.Execute(options, context, variables, frame, output);
 
         // The tool style's reader is a program, and gets the counts as the one line of key/value text
         // it has always had.  A person asks for them with `--stats`, and gets them laid out to read,

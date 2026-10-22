@@ -288,15 +288,15 @@ public class TestBandSpectrum
     {
         RenderContext context = new ();
 
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
         Assert.IsFalse(context.Spectral, "said nowhere, light is red, green and blue");
 
         context = new RenderContext();
-        context.ApplyOptions(new RenderOptions { Spectral = true }, 0);
+        context.ApplyOptions(new RenderOptions { Spectral = true });
         Assert.IsTrue(context.Spectral);
 
         context = new RenderContext { Spectral = true };
-        context.ApplyOptions(new RenderOptions(), 0);
+        context.ApplyOptions(new RenderOptions());
         Assert.IsTrue(context.Spectral, "a scene's asking for it should survive a silent command line");
     }
 

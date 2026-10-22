@@ -1,0 +1,107 @@
+// A Newton's cradle, swinging.
+//
+//     dotnet run -- -i newtons-cradle.igl -o newtons-cradle.webp -w 400 -h 300
+//     dotnet run -- -i newtons-cradle.igl -o newtons-cradle.png --still
+//
+// The first animation, and it is written the way every animation is: the scene says how long it runs, and
+// everything in it may be worked out from `time`, the frame's moment in seconds.  The whole scene is carried
+// out again for every frame, so whatever reads the time moves -- here, the turn of the two end balls.
+//
+// **A swing is two keys.**  An end ball goes out, slowing as it climbs, stops, and falls back faster and faster
+// until it strikes: `ease out` on the way up, `ease in` on the way down.  The keys `loop`, so the cycle runs for
+// ever, and the frames fill exactly one cycle, so the movie does too.  Its length, three quarters of a second,
+// is a real pendulum's for strings fourteen centimeters long -- two pi times the root of the length over the
+// fall of gravity -- so it swings at the pace a desk toy does.
+//
+// **The blur is free.**  The camera's shutter is open half a frame, as a film camera's is, and a ball whose
+// turn reads the time is blurred along its own arc across it, fastest at the bottom of its swing, where it
+// strikes, and sharp at the top where it stops.  Nothing in the scene says so but the shutter.
+
+context {
+    angles are degrees
+    animation frames 18  rate 24  still 4
+    info {
+        title "A Newton's Cradle"
+        author 'J. Stephen Kress'
+        description 'A desk toy swinging: the first animation, its end balls keyed and blurred.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-0.30, 0.21, -0.58]
+    look at [0.01, 0.105, 0]
+    field of view 33
+    shutter 0.5
+    blur samples 24
+}
+
+background [0.10, 0.11, 0.13]
+
+// A softbox above and to the left, and a dim fill from the right.  The panel the softbox light comes from is
+// there to be seen in the chrome; without something bright to mirror, chrome is black.
+area light { location [-0.35, 0.55, -0.35]  axisU [0.3, 0, 0]  axisV [0, 0, 0.3]  steps 4  color [1, 0.97, 0.92] }
+point light { location [0.6, 0.3, -0.4]  color [0.18, 0.19, 0.22] }
+parallelogram {
+    material { pigment White  emission 1.4  ambient 0  diffuse 0  specular 0 }
+    at [-0.5, 0.56, -0.5]  sides [0.3, 0, 0], [0, 0, 0.3]
+    no shadow
+}
+
+Chrome = material { pigment [0.80, 0.81, 0.83]  metallic reflective 0.92  roughness 0.04  specular 0.8  shininess 300 }
+Steel = material { pigment [0.62, 0.63, 0.65]  metallic reflective 0.6  roughness 0.25 }
+String = material { pigment [0.85, 0.84, 0.80]  specular 0.1 }
+Walnut = material {
+    pigment wood {
+        turbulence { amplitude 0.4  octaves 2 }
+        [0, [0.30, 0.17, 0.09], 0.6, [0.24, 0.13, 0.07], 1, [0.30, 0.17, 0.09]]
+        scale [0.006, 0.006, 0.4]  rotate Y 90
+    }
+    specular 0.35  shininess 60  reflective 0.03  fresnel
+}
+
+// The desk, and a wall behind it in the same paint, so there is no horizon to look at.
+plane { material { pigment [0.42, 0.40, 0.37]  specular 0.05 } }
+plane { material { pigment [0.30, 0.30, 0.32]  specular 0 }  rotate X -90  translate Z 0.45 }
+
+// The base and the two arches the strings hang from, front and back.
+cube { material Walnut  scale [0.15, 0.01, 0.075]  translate Y 0.01 }
+
+for side in [0, 1] {
+    tube {
+        discontinuous
+        material Steel
+        radius 0.004 at [-0.115, 0.02, (side - 0.5) * 0.09]
+        radius 0.004 at [-0.115, 0.20, (side - 0.5) * 0.09]
+        radius 0.004 at [0.115, 0.20, (side - 0.5) * 0.09]
+        radius 0.004 at [0.115, 0.02, (side - 0.5) * 0.09]
+    }
+}
+
+// Each end ball swings out and back in half a cycle while the other hangs still: out to thirty-two degrees,
+// slowing to a stop, and back faster and faster to the strike.
+Right = keys loop { 0: 0  0.1875: 32 ease out  0.375: 0 ease in  0.75: 0 }
+Left = keys loop { 0: 0  0.375: 0  0.5625: -32 ease out  0.75: 0 ease in }
+
+// One pendulum: a ball fourteen centimeters below the line between its two pins, a string up to each.
+primitive Pendulum(x, turn) -> group {
+    return group {
+        sphere { material Chrome  scale 0.0125  translate Y -0.14 }
+        for side in [0, 1] {
+            tube {
+                material String
+                radius 0.0004 at [0, 0, (side - 0.5) * 0.09]
+                radius 0.0004 at [0, -0.1285, 0]
+            }
+        }
+        rotate Z turn
+        translate [x, 0.20, 0]
+    }
+}
+
+object Pendulum(-0.05, Left(time))
+object Pendulum(-0.025, 0)
+object Pendulum(0, 0)
+object Pendulum(0.025, 0)
+object Pendulum(0.05, Right(time))
