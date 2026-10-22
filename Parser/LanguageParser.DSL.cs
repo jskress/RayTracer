@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -524,9 +524,15 @@ public partial class LanguageParser
             _expression ?? 'Expecting the name of the thing to place this against here.' >
             { by > _expression ?? 'Expecting how far past it to go here.' }{?}
         }
+        // A place along a spline: a share of its length, or a distance, the thing turned to run with it.
+        alongClause:
+        {
+            along > _expression > [ at | by ] ?? 'Expecting "at" or "by" to follow the spline here.' >
+            _expression > [ upright | banked ]{?} > { wheelbase > _expression }{?}
+        }
         transformClause:
         [
-            translateClause | scaleClause | rotateClause | shearClause | matrixClause
+            translateClause | scaleClause | rotateClause | shearClause | matrixClause | alongClause
         ]{*}
         
         // Pattern clauses.
@@ -1450,7 +1456,7 @@ public partial class LanguageParser
             } |
             {
                 discontinuous{?} > spline >
-                openBrace ?? 'Expecting an open brace after "spline" here.'
+                [ openBrace | _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
             } |
             { steps > _expression } |
             { no > center ?? 'Expecting "center" to follow "no" here.' } |
@@ -2070,6 +2076,7 @@ public partial class LanguageParser
             [ _identifier | _keyword ] > assignment >
             [
                 pigment | startPathClause | startKeysClause |
+                { discontinuous{?} > spline > openBrace ?? 'Expecting an open brace to follow "spline" here.' } |
                 { material > startThingClause } | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |

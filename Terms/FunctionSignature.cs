@@ -262,6 +262,9 @@ public class FunctionSignature
         if (type == typeof(Matrix))
             return "matrix";
 
+        if (type == typeof(Geometry.Spline))
+            return "spline";
+
         return type == typeof(NumberTuple) ? "tuple" : type.Name;
     }
 }

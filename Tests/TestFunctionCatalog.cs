@@ -221,7 +221,9 @@ public class TestFunctionCatalog
         Type[] usableTypes =
         [
             typeof(double), typeof(bool), typeof(string), typeof(Vector), typeof(Point),
-            typeof(Color), typeof(Matrix), typeof(NumberTuple), typeof(Sequence)
+            typeof(Color), typeof(Matrix), typeof(NumberTuple), typeof(Sequence),
+            // A spline is a value a scene names, `Track = spline { ... }`, and hands to what follows it.
+            typeof(RayTracer.Geometry.Spline)
         ];
         List<string> problems = [];
 

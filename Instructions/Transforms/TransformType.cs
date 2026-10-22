@@ -9,5 +9,6 @@ internal enum TransformType
     Scale,
     Rotate,
     Shear,
-    Matrix
+    Matrix,
+    Along
 }

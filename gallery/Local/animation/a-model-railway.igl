@@ -1,0 +1,81 @@
+// A model railway, an engine and its tender running round an oval of track on a baize board.
+//
+//     dotnet run -- -i a-model-railway.igl -o a-model-railway.webp -w 400 -h 300
+//     dotnet run -- -i a-model-railway.igl -o a-model-railway.png --still
+//
+// **The track and the train follow one spline.**  `Oval` is two straights and two half circles, each half circle
+// drawn as two quarter-circle cubics, and everything that runs round it says so by name: the trains library's
+// `TrackAlong` sweeps its rails and ballast along it and stands its sleepers along it, and the engine and the tender
+// are each put `along` it at a distance -- the tender at the engine's distance less the length between their
+// middles, so it stays coupled however the line bends.
+//
+// **Both ends on the rails.**  A rigid engine stood with its middle on a bend has its ends swung off the line, by
+// half a meter on a curve this tight.  `wheelbase` stands it on its end axles instead, both on the rails, its middle
+// a little inside the bend and its heading from one to the other, which is how a real engine takes a curve.
+//
+// **Measured by distance.**  A spline is followed by how far along it a thing is, not by how its curves were
+// drawn, so the engine goes at the same pace on the straights and round the bends -- the length of the oval over
+// four seconds -- and the oval being a loop, a distance past its end begins round it again, and the movie loops.
+//
+// The layout is built in the engine's own meters and the whole board scaled to a model's, so the train library is
+// used as it comes: one scale over the lot.
+
+import 'trains' { Locomotive, Tender, TrackAlong }
+
+context {
+    angles are degrees
+    animation length 4  still 12
+    info {
+        title 'A Model Railway'
+        author 'J. Stephen Kress'
+        description 'An engine and its tender running round an oval of track, laid and driven along one spline.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-1.20, 1.35, -2.30]
+    look at [-0.10, -0.04, -0.02]
+    field of view 50
+    shutter 0.5
+    blur samples 16
+}
+
+background [0.09, 0.10, 0.12]
+
+area light { location [-1.4, 2.6, -1.6]  axisU [0.8, 0, 0]  axisV [0, 0, 0.8]  steps 3  color [1, 0.96, 0.9] }
+point light { location [2.5, 1.2, -1.0]  color [0.16, 0.17, 0.20] }
+
+// The floor, and the board the layout stands on.
+plane { material { pigment [0.20, 0.18, 0.17]  specular 0 }  translate Y -0.80 }
+cube {
+    material { pigment granite { [0, [0.20, 0.33, 0.17], 1, [0.16, 0.27, 0.14]]  scale 0.02 }  specular 0.02 }
+    scale [1.25, 0.02, 0.80]
+    translate Y -0.04
+}
+
+// The layout in the engine's own meters: two straights thirty long joined by half circles of twenty radius.
+Oval = spline {
+    move to -15, 0, -20
+    line to 15, 0, -20
+    curve 26.05, 0, -20, 35, 0, -11.05 to 35, 0, 0
+    curve 35, 0, 11.05, 26.05, 0, 20 to 15, 0, 20
+    line to -15, 0, 20
+    curve -26.05, 0, 20, -35, 0, 11.05 to -35, 0, 0
+    curve -35, 0, -11.05, -26.05, 0, -20 to -15, 0, -20
+}
+
+// Once round in the length of the animation.
+Speed = length(Oval) / 4
+
+group {
+    object TrackAlong(Oval)
+    object Locomotive(11.6) { along Oval by time * Speed  wheelbase 7 }
+    object Tender(8.05)     { along Oval by time * Speed - 10.35  wheelbase 4.5 }
+
+    // Rail top at the board's top, and the whole layout to the size of a model.
+    translate Y 0.64
+    scale 1 / 32
+    translate Y -0.02
+}

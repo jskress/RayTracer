@@ -466,7 +466,15 @@ looks a `Keyframes` up by name); numbers, tuples, points, vectors, colors; smoot
 Blur from time: in a frame (`RenderContext.FrameInterval` > 0) a surface whose `TransformResolver` gives another
 matrix a frame later gets `MotionAt(f) = M(time + f x interval) M(time)^-1`, re-resolving in a child scope with
 `time` shifted (`SurfaceResolver.TimedMotionFor`), laid under any `motion { }`; values named from `time` beforehand,
-shapes and the camera are not blurred.
+shapes and the camera are not blurred.  Splines are values (`Name = [discontinuous] spline { ... }`; a sweep takes
+`spline Name`, a TermResolver so a primitive's parameter works), measured by `Spline.Measure` (`Geometry/SplineMeasure.cs`:
+64 chord steps a curve, distance found by binary search then on its curve; a spline ending at its start LOOPS, any
+other clamps).  The transform `along S at share | by distance [upright | banked] [wheelbase w]`
+(`Instructions/Transforms/AlongCreator.cs`, refused inside `motion { }` at parse) stands +X along the heading, +Y up,
++Z = X x Y (the thing's left): upright = world Y orthogonalized; banked = BendAt (kappa N) x speed^2 + g (9.81, so
+meters), the speed the amount's time derivative over 1 ms; a wheelbase puts both ends on the spline (chord middle,
+chord heading).  `length(spline)`, `pointAlong`, `headingAlong` (`Terms/SplineFunctions.cs`).  Trains `TrackAlong(S)`
+sweeps the rail and ballast sections along S, sleepers stood `along` it.
 
 ### Pigments and patterns (`Pigments/`, `Patterns/`)
 

@@ -199,7 +199,7 @@ and ignored.
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `-r`, `--frame-rate` | the scene's, or 24 | Frames per second, for an [animation](animation.md). |
+| `-r`, `--frame-rate` | the scene's, or 30 | Frames per second, for an [animation](animation.md). |
 | `-m`, `--frame` | | Render one frame of an animation alone, as a still at its time. |
 | `--frames` | | Render a run of an animation's frames, as `0-143`. |
 | `--still` | | Render an animation as the one frame it names as its still. |

@@ -1962,6 +1962,62 @@ public class TestShippedLibraries
         }
     }
 
+    [TestMethod]
+    public void TestATrackAlongAStraightSplineIsTheStraightTrack()
+    {
+        // `TrackAlong` sweeps the same cross-sections along a spline that `Track` lays straight, so along a
+        // straight spline its rails must fall where the straight track's do -- the same gauge, the same place --
+        // and round a bend, with a train on it, it must lay at all, summer or winter.
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trains.igl"),
+            Path.Combine(_directory, "trains.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        List<(int Left, int Right)> rails = [];
+
+        foreach (string laid in new[] { "object Track(12)", "object TrackAlong(Straight)" })
+        {
+            File.WriteAllText(scene, $$"""
+                import 'trains' { Track, TrackAlong }
+                context { angles are degrees  no gamma }
+                camera { location [0, 9, 0]  look at [0, 0, 0]  up [1, 0, 0]  field of view 30 }
+                point light { location [0, 14, 0] }
+                background [0, 0, 0]
+                Straight = spline { move to -6, 0, 0  line to 6, 0, 0 }
+                {{laid}}
+                """);
+
+            Assert.IsNull(Render(scene), $"{laid} should lay");
+
+            Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+            int half = picture.Width / 2;
+
+            rails.Add((BrightestColumn(picture, 0, half), BrightestColumn(picture, half, picture.Width)));
+        }
+
+        Assert.IsTrue(Math.Abs(rails[0].Left - rails[1].Left) <= 1 && Math.Abs(rails[0].Right - rails[1].Right) <= 1,
+            $"the straight track's rails are at {rails[0]} and the swept track's at {rails[1]}");
+
+        foreach (string season in (string[]) ["summer", "winter"])
+        {
+            File.WriteAllText(scene, $$"""
+                import 'trains' { Locomotive, Tender, TrackAlong }
+                camera { location [0, 30, -30]  look at [0, 0, 0] }
+                point light { location [-10, 40, -20] }
+                Bend = spline {
+                    move to -20, 0, -20
+                    line to 0, 0, -20
+                    curve 11.05, 0, -20, 20, 0, -11.05 to 20, 0, 0
+                }
+                object TrackAlong(Bend, '{{season}}')
+                object Locomotive(11.6, '{{season}}') { along Bend by 20  wheelbase 7 }
+                object Tender(8.05, '{{season}}') { along Bend by 20 - 10.35  wheelbase 4.5 }
+                """);
+
+            Assert.IsNull(Render(scene), $"a train on a bend should stand in {season}");
+        }
+    }
+
     private int? _gauge;
 
     /// <summary>

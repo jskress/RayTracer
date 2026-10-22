@@ -9,7 +9,7 @@ the camera.
 ![A Newton's cradle, swinging](../gallery/Local/animation/newtons-cradle.webp)
 
 ```
-context { animation length 2  rate 24 }
+context { animation length 2  rate 30 }
 
 Hop = keys loop {
     0: 0
@@ -32,7 +32,7 @@ is a whole scene built this way.
 </picture>
 
 A context's **`animation`** says how long the scene runs: **`length`** in seconds, or **`frames`** outright,
-at a **`rate`** of so many frames a second — 24 unless it says, or unless the command line's `-r` does.
+at a **`rate`** of so many frames a second — 30 unless it says, or unless the command line's `-r` does.
 **`still`** names the frame that stands for the animation as a single picture, the first unless it says.
 Frame *n*'s time is *n* over the rate, so the first frame is at time nought and the last a frame short of the
 length: a loop lasting exactly the length plays round without a doubled frame.
@@ -47,7 +47,7 @@ writes **one file** of all of them instead, each frame developed exactly as a st
 | | |
 | --- | --- |
 | **`.webp`** | The one to reach for.  Every color kept, frames timed to the thousandth of a second, looping for ever, and small: lossy, at a high quality. |
-| **`.gif`** | Opens anywhere, looping for ever, but in 256 colors a frame, dithered so that gradients do not band, and timed in hundredths of a second, so 24 frames a second plays at 25. |
+| **`.gif`** | Opens anywhere, looping for ever, but in 256 colors a frame, dithered so that gradients do not band, and timed in hundredths of a second, so 30 frames a second plays at 33. |
 | **`.mp4`** | A video, H.264, for anything that plays video rather than images.  It is written by **ffmpeg**, which must be on the path: without it the render is refused at once, before a frame is rendered, saying so.  A scene that is no animation makes a video of its one frame. |
 
 A WebP's or GIF's frames are kept until the last is done, so a long one is better made small: 400 by 300 is
@@ -61,7 +61,7 @@ The command line chooses frames, too:
 | `--frames 0-143` | That run of frames, each numbered. |
 | `-m 48`, `--frame 48` | Frame 48 alone, as a still at its time, written where it was asked to be. |
 | `--still` | The frame the animation names as its still, as a still.  A scene that is no animation renders as it always does, so a gallery of stills is rendered with `--still` whatever each scene is. |
-| `-r 30`, `--frame-rate 30` | Every frame at that rate rather than the scene's. |
+| `-r 60`, `--frame-rate 60` | Every frame at that rate rather than the scene's. |
 
 A scene that is no animation can still be asked for a frame: `time` is then the frame over the rate, and
 nought without one.
@@ -135,6 +135,76 @@ A swing is two keys — out, slowing to a stop at the top, and back faster and f
 ```
 Swing = keys loop { 0: 0  0.375: 32 ease out  0.75: 0 ease in }
 ```
+
+### Along a Spline
+
+![Darts along an oval: upright on the left, banked at nine meters a second on the right](images/figures/anim-along.png)
+
+A thing that goes somewhere along a way is put **`along`** a spline.  A spline is
+[written as a sweep's is](advanced-surfaces.md#sweep), and named so that what runs along it can say so:
+
+```
+Oval = spline {
+    move to -6, 0, -6
+    line to 6, 0, -6
+    curve 9.314, 0, -6, 12, 0, -3.314 to 12, 0, 0
+    ...
+}
+
+object Car(4.4) { along Oval by time * 12 }
+object LightPlane(8) { along Oval at time / 10 banked  translate Y 30 }
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/animation/alongClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/animation/alongClause.svg">
+  <img alt="Along a spline" src="images/animation/alongClause.svg">
+</picture>
+
+`along` is a transform, written among the others and applied in its turn: it stands the thing's origin on the
+spline and turns its **+X the way the spline runs** — the way the vehicles, the trains and the aircraft are all
+built to face — its +Y up and its +Z to its left.  **`at`** says how far along as a share of the spline's length,
+**`by`** as a distance.  A spline is followed by distance, not by how its curves were drawn, so a thing going
+`by time * 12` goes twelve units a second, on the straights and round the bends alike.  **A spline that ends where
+it began is a loop**, and a distance past its end begins round it again, as does one before its start; any other
+spline holds a thing at its ends.
+
+Which way is up:
+
+- **`upright`**, unless said: the world's up, as near as the spline lets it be.  A thing climbing a slope pitches
+  with it but never rolls — a car, a train, someone walking.
+- **`banked`**: the way a rider would feel to be up, leaning into a bend as a turning aircraft does or a banked
+  track is laid — by the arctangent of the speed squared over the radius and gravity, which is to say not at all
+  on a straight and further the faster and tighter the bend.  The speed is how fast the place along is changing
+  with the time, so a thing standing still does not lean.  Gravity is taken to be 9.81, so a banked scene is
+  written in meters and seconds, as the libraries are.
+
+**`wheelbase w`** stands a thing on two places `w` apart rather than one: a rigid vehicle rides on its end axles,
+so round a bend both ends are on the line, its middle a little inside it and its heading from one end to the other.
+Stood by its middle, an engine on a tight curve has its ends swung off the rails.  `a-model-railway` in the gallery
+runs an engine and its tender round an oval this way, each `by` its own distance along the one spline.
+
+Three functions ask a spline the same questions, for what is not put along it — most often a camera riding the
+spline or watching something that does:
+
+```
+camera {
+    location pointAlong(Oval, time / 10)
+    look at pointAlong(Oval, time / 10 + 0.02)
+}
+```
+
+| | |
+| --- | --- |
+| `length(spline)` | How long it is. |
+| `pointAlong(spline, share)` | The place that share of its length along it. |
+| `headingAlong(spline, share)` | The way it runs there, of unit length. |
+
+A sweep is carried along a spline by its name, too: `spline Oval` in place of one written out.  The trains
+library's `TrackAlong(spline)` lays rails, sleepers and ballast along one so that a train has something to run on.
+
+A field and a piece of text have an `along` of their own, which lays their copies or letters along a path; to move
+either along a spline, put it in a group and move the group.
 
 ### Motion Blur from Time
 

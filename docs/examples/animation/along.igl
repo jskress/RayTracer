@@ -1,0 +1,53 @@
+// Things along a spline: one oval, followed twice.  On the left, darts stood along it upright, each turned to run
+// the way the oval runs and level whatever the bend; on the right, the same oval flown banked at nine meters a
+// second, a little above the ground, each dart leaning into the bends by as much as a rider going round them at
+// that speed would feel to be up -- not at all on the straights, and hard over round the ends.
+context { angles are degrees  no gamma }
+
+camera {
+    location [0, 30, -50]
+    look at [0, 0, 1]
+    field of view 52
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-30, 60, -40]  color [1, 0.97, 0.93] }
+point light { location [40, 20, -30]   color [0.30, 0.31, 0.35] }
+
+plane { material { pigment color [0.55, 0.57, 0.50]  specular 0 } }
+
+// Two straights joined by two half circles of radius six, each drawn as two quarter-circle cubics.
+Oval = spline {
+    move to -6, 0, -6
+    line to 6, 0, -6
+    curve 9.314, 0, -6, 12, 0, -3.314 to 12, 0, 0
+    curve 12, 0, 3.314, 9.314, 0, 6 to 6, 0, 6
+    line to -6, 0, 6
+    curve -9.314, 0, 6, -12, 0, 3.314 to -12, 0, 0
+    curve -12, 0, -3.314, -9.314, 0, -6 to -6, 0, -6
+}
+
+// A dart, facing +X as everything that goes somewhere does: a body and a fin standing up from its tail.
+Dart = group {
+    cube { scale [1.2, 0.2, 0.45]  material { pigment color [0.85, 0.30, 0.20] } }
+    cube { scale [0.25, 0.7, 0.06]  translate [-1.0, 0.7, 0]  material { pigment color [0.95, 0.85, 0.30] } }
+}
+
+// The oval drawn on the ground twice, as a sweep along it by name, and the darts along each.
+for side in [0, 1] {
+    group {
+        sweep {
+            profile { move to -0.05, -0.4  line to 0.05, -0.4  line to 0.05, 0.4  line to -0.05, 0.4  close }
+            spline Oval
+            steps 200
+            material { pigment color [0.30, 0.30, 0.33] }
+        }
+        translate X side * 28 - 14
+    }
+}
+
+for dart in [0, 9] {
+    group { object Dart  along Oval at dart / 10  translate [-14, 0.3, 0] }
+    group { object Dart  along Oval by time * 9 + dart * length(Oval) / 10 banked  translate [14, 2.5, 0] }
+}

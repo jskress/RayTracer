@@ -18,7 +18,7 @@ public class SweepResolver : SurfaceResolver<Sweep>, IValidatable
     /// <summary>
     /// This property holds the resolver for the 3D path the profile is lofted along.
     /// </summary>
-    public SplineResolver SplineResolver { get; set; }
+    public Resolver<Spline> SplineResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the number of tessellation steps to take

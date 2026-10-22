@@ -6,9 +6,16 @@
 //     object Locomotive(11.6)
 //     object Tender(8.4) { translate X -10.2 }
 //
+//     import 'trains' { Locomotive, Tender, TrackAlong }
+//
+//     object TrackAlong(Line)
+//     object Locomotive(11.6) { along Line by time * 12  wheelbase 7 }
+//     object Tender(8.05)     { along Line by time * 12 - 10.35  wheelbase 4.5 }
+//
 // | `Locomotive` | A GWR 4-6-0: tapered boiler, copper-capped chimney, three coupled drivers on rods. |
 // | `Tender`     | The six-wheeled tender that goes behind it, coal heaped above the coping. |
 // | `Track`      | A length of line: rails on sleepers on ballast, at standard gauge. |
+// | `TrackAlong` | The same line laid along a spline, round its curves. |
 //
 // **The first number is a length**, as it is for the road vehicles and for the same reason -- an engine
 // is described by how long it is, not how tall.  The other two mean what they mean everywhere, **what
@@ -827,6 +834,86 @@ primitive Track(length, season = 'summer') -> group {
             min Y -length * 0.5
             max Y length * 0.5
             rotate Z 90
+        }
+    }
+}
+
+// -- A line laid along a spline --------------------------------------------------------------------
+
+// The same line as `Track` -- rails, sleepers, ballast, at standard gauge, rail top at y = 0 -- laid along
+// a spline rather than straight, round whatever curves it is drawn with.  The rails and the ballast are
+// sweeps of their own cross-sections along it, each rail's set off half the gauge to its side; the
+// sleepers are stood along it, spaced evenly enough that a loop's last meets its first with no gap.  An
+// engine and a tender run on it by `along` the same spline, at the distance between their middles, and
+// with a `wheelbase` so that round a bend both their ends stay on the rails.
+primitive TrackAlong(line, season = 'summer') -> group {
+    gauge = 1.435
+    sleepers = max(2, floor(length(line) / 0.65))
+    spacing = length(line) / sleepers
+    steps = max(64, floor(length(line) * 3))
+
+    return group {
+        // Each rail's cross-section, written as (height, across), its web and foot in one outline and its
+        // head in another, so the head can be the bright one.
+        for side in [0, 1] {
+            across = gauge * 0.5 - side * gauge
+
+            sweep {
+                profile {
+                    move to -0.188, across - 0.058
+                    line to -0.188, across + 0.058
+                    line to -0.160, across + 0.058
+                    line to -0.160, across + 0.021
+                    line to -0.036, across + 0.021
+                    line to -0.036, across - 0.021
+                    line to -0.160, across - 0.021
+                    line to -0.160, across - 0.058
+                    close
+                }
+                spline line
+                steps steps
+                no center
+                material TrainRailWeb
+            }
+            sweep {
+                profile {
+                    move to -0.036, across - 0.036
+                    line to -0.036, across + 0.036
+                    line to 0, across + 0.036
+                    line to 0, across - 0.036
+                    close
+                }
+                spline line
+                steps steps
+                no center
+                material TrainRailHead
+            }
+        }
+
+        for sleeper in [0, sleepers - 1] {
+            cube {
+                material TrainSleeper
+                scale [0.125, 0.063, 1.300]
+                translate Y -0.251
+                along line by (sleeper + 0.5) * spacing
+            }
+        }
+
+        // The ballast, the same heap `Track` lays, carried along the line.
+        sweep {
+            profile {
+                move to -0.640, -2.050
+                line to -0.640, 2.050
+                line to -0.337, 1.584
+                quad -0.250, 1.450 to -0.250, 1.290
+                line to -0.250, -1.290
+                quad -0.250, -1.450 to -0.337, -1.584
+                close
+            }
+            spline line
+            steps steps
+            no center
+            material TrainBallast
         }
     }
 }

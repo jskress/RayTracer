@@ -945,7 +945,9 @@ sweep {
 </picture>
 
 A spline is written like a path, except every point is a full 3D triple rather than an X,
-Y pair.  `steps` is how finely the profile is carried along it.  If there are too few, the
+Y pair.  It may be written out in the sweep, or named — `Rail = spline { ... }` — and the sweep given
+its name, `spline Rail`, which is how a sweep and the things [put along the spline](animation.md#along-a-spline)
+share one way.  `steps` is how finely the profile is carried along it.  If there are too few, the
 result is visibly faceted.  If there are too many, it costs more time to render than it
 needs to.
 

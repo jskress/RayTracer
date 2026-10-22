@@ -83,7 +83,7 @@ public abstract class TransformCreator : Resolver<Matrix>
     /// <param name="context">The current render context.</param>
     /// <param name="variables">The current set of scoped variables.</param>
     /// <param name="fraction">How much of the transform to apply, from zero to one.</param>
-    public Matrix ResolveAt(RenderContext context, Variables variables, double fraction)
+    public virtual Matrix ResolveAt(RenderContext context, Variables variables, double fraction)
     {
         object[] values = Terms
             .Select(term => term.GetValue(variables, _expectedTypes))

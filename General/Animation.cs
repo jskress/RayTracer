@@ -9,7 +9,7 @@ public sealed class Animation
     /// <summary>
     /// This is the rate an animation runs at when neither it nor the command line says.
     /// </summary>
-    public const double DefaultRate = 24;
+    public const double DefaultRate = 30;
 
     /// <summary>
     /// This property holds how long the animation runs, in seconds, if it was said that way.
