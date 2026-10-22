@@ -138,6 +138,8 @@ public partial class LanguageParser
                 return ParseFieldClause(clause);
             case SweepResolver:
                 return ParseSweepClause(clause);
+            case GrownTreeResolver:
+                return ParseGrownClause(clause);
             case TaperedExtrusionResolver:
                 return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:

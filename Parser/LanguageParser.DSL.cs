@@ -78,30 +78,30 @@ public partial class LanguageParser
             'anisotropy', 'antialiasing', 'apart', 'are', 'around', 'area', 'at', 'author', 'axiom', 'axisU', 'axisV', 'azimuth', 'background', 'banded',
             'align', 'back', 'baseline', 'behind', 'below', 'bilinear', 'centered', 'black', 'blades', 'blend', 'blob', 'blur', 'bold', 'bottom', 'bouncing',
             'balance', 'bounces', 'bounded', 'boxed', 'bozo', 'brick', 'brightness', 'brilliance',
-            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color', 'crevices',
+            'by', 'cache', 'camera', 'case', 'caustics', 'center', 'checker', 'clarity', 'clip', 'close', 'clump', 'coat', 'color', 'crevices', 'crown',
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
             'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file',
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
-            'grain', 'grayscale', 'group', 'hair', 'height', 'heightfield', 'hexagon', 'horizontal',
+            'grain', 'grayscale', 'group', 'hair', 'hanging', 'height', 'heightfield', 'hexagon', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
-            'in', 'ior', 'isosurface', 'italic', 'jitter', 'kern', 'kerning', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
+            'in', 'ior', 'isosurface', 'italic', 'jitter', 'joining', 'kern', 'kerning', 'kill', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'lsystem',
             'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
+            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
+            'gives', 'glass', 'grown', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
-            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
+            'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'step', 'strength', 'stripes', 'subsurface', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'toward', 'top', 'toroidal', 'torus',
             'toVertical',
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'twist',
-            'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
+            'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'width', 'with', 'within', 'wood',
             'wrinkles',
             'X', 'Y', 'Z'
@@ -1444,6 +1444,33 @@ public partial class LanguageParser
             open | surfaceEntryClause
         ]
 
+        // Grown tree clauses: a tree grown into the space it is given.
+        startGrownClause:
+        {
+            grown > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "grown" here.'
+        }
+        grownEntryClause:
+        [
+            {
+                [ crown | leaf ] > [ openBrace | { [ _identifier | _keyword ] > leftParen{?} } ]
+                    ?? 'Expecting surfaces in braces, a surface name or a call of a primitive here.'
+            } |
+            { points > _expression } | { reach > _expression } | { kill > _expression } |
+            { step > _expression } | { tropism > _expression } | { susceptibility > _expression } |
+            { twig > _expression } | { joining > _expression } |
+            surfaceEntryClause
+        ]
+        // What may follow a grown tree's leaf: another, after a comma, and then whether they hang.
+        grownLeafChoiceClause:
+        {
+            comma > [ openBrace | { [ _identifier | _keyword ] > leftParen{?} } ]
+                ?? 'Expecting surfaces in braces, a surface name or a call of a primitive to follow the comma here.'
+        }
+        grownHangingClause: { hanging }
+
         // Generic shape clauses.
         startGenericShapeClause:
         {
@@ -1756,6 +1783,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startGrownClause => 'grown' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1838,6 +1866,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startGrownClause => 'grown' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1897,6 +1926,7 @@ public partial class LanguageParser
             startStrandClause => 'strand' |
             startFieldClause => 'field' |
             startSweepClause => 'sweep' |
+            startGrownClause => 'grown' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1991,7 +2021,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startTextClause |
+                startSweepClause | startGrownClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2030,7 +2060,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2152,6 +2182,7 @@ public partial class LanguageParser
             startStrandClause => 'HandleStartStrandClause' |
             startFieldClause => 'HandleStartFieldClause' |
             startSweepClause          => 'HandleStartSweepClause' |
+            startGrownClause          => 'HandleStartGrownClause' |
             startTextClause           => 'HandleStartTextClause' |
             startTaperedTextClause => 'HandleStartTaperedTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |

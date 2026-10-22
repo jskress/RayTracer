@@ -289,9 +289,6 @@ primitive Grass(shape, season = 'summer', variant = 1, height = 0.3, density = 1
 
 // -- Boxwood ---------------------------------------------------------------------------------------
 
-// What settles on it, which is nothing at all for three seasons of the four.  A boxwood is evergreen,
-// so it would otherwise be the one plant here that took the word and ignored it -- and a clipped dome
-// under snow is what a garden looks like in January.
 // -- What a leaf is ---------------------------------------------------------------------------------
 
 // The blade of one leaf, authored growing along +Y from its base to a point at its tip, its width
@@ -339,33 +336,30 @@ primitive UnderLeaf(kind) -> group {
     }
 }
 
-// How many rings of leaves a boxwood's dome is built from.  It is a function rather than a number in
-// two places because the snow is laid along the very same rings, and the two must agree: raise the
-// leaves to fifteen rings while the snow still counts in tens and the snow settles between the
-// leaves instead of on them.
-function UnderBoxRings() -> number { return 15 }
-
+// What settles on a boxwood, which is nothing at all for three seasons of the four.  A boxwood is
+// evergreen, so it would otherwise be the one plant here that took the word and ignored it -- and a
+// clipped dome under snow is what a garden looks like in January.  The snow lies on the upper half of
+// the dome it grew into, in rings, each lump just proud of the leaves.  How many go round a ring is worked out from how wide the ring is,
+// rather than being the same number all the way up -- a fixed count crowds them at the top and leaves
+// the shoulder bald.
 primitive UnderBoxwoodSnow(season, height, variant) -> group {
     switch (season) {
         case 'winter' {
             return group {
-                // Laid along the same rings the foliage is, and only the upper ones: snow settles on
-                // what faces the sky.  Sitting it at a fixed height instead put it *inside* the dome,
-                // where it was worth nothing at all.
-                for ring in [floor(UnderBoxRings() * 0.6), UnderBoxRings() - 1] {
-                    up = ring / (UnderBoxRings() - 1)
-                    wide = height * 0.46 * sqrt(1 - up * up * 0.93)
-                    round = wide / height * 58
+                for ring in [0, 6] {
+                    up = (28 + ring * 10) degrees
+                    wide = height * 0.52 * cos(up)
+                    round = floor(wide / height * 40) + 1
 
-                    for step in [0, round] {
-                        if (random(ring, step, variant + 5) > 0.42) {
+                    for lump in [0, round] {
+                        if (random(ring, lump, variant + 5) > 0.42) {
                             sphere {
                                 material UnderSnowWhite
                                 scale [height * 0.075, height * 0.035, height * 0.075]
                                 translate X wide
-                                rotate Y step * 360 / (round + 1) + ring * 23 +
-                                       random(ring, step, variant + 1) * 18
-                                translate Y height * (0.13 + up * 0.81) + height * 0.055
+                                rotate Y lump * 360 / (round + 1) + ring * 23 +
+                                       random(ring, lump, variant + 1) * 18
+                                translate Y height * (0.56 + 0.46 * sin(up)) + height * 0.02
                             }
                         }
                     }
@@ -376,9 +370,6 @@ primitive UnderBoxwoodSnow(season, height, variant) -> group {
     }
 }
 
-// Which of the two greens a given cluster wears.  One flat green over the whole dome reads as a
-// green ball; a dome made of two, sprinkled, reads as a great many small leaves catching the light
-// differently, which is what a clipped shrub actually looks like.
 primitive UnderBoxShade(pick) -> material {
     if (pick > 0.58) {
         return material UnderBoxLeafLit
@@ -388,66 +379,48 @@ primitive UnderBoxShade(pick) -> material {
     }
 }
 
-// A clipped dome: rings of leaf clusters, each ring higher and narrower than the one below.  The
-// narrowing follows a circle rather than a straight taper, which is what gives it a shoulder instead
-// of a cone.
+// A spray of small leaves at the end of a twig, two shades of green among them so the dome is not one
+// flat color.
+primitive UnderBoxSpray(id, variant, size) -> group {
+    return group {
+        for leaf in [0, 3] {
+            object UnderLeaf('boxwood') {
+                material UnderBoxShade(random(id, leaf, variant + 9))
+                scale size * (0.7 + random(id, leaf, variant) * 0.6)
+                rotate X 35 + random(id, leaf, variant + 5) * 40
+                rotate Y leaf * 90 + random(id, leaf, variant + 1) * 50
+            }
+        }
+    }
+}
+
+// A clipped dome, GROWN: twigs fill it from a stem as a tree's fill its crown (see the trees library),
+// each ending in a spray.  So the surface of the bush is leaves at every angle on twigs of their own,
+// and a gap between them shows twigs and more leaves behind -- not the sky through the middle of the
+// bush, and not the tiled sphere that rings of leaves laid round a dome came to.
 //
-// How many clusters go round a ring is worked out from how wide that ring is, rather than being the
-// same number all the way up.  A fixed count crowds them at the top and leaves the bottom bald, which
-// is the tell-tale of a shape made by a loop that was not thinking.
+// The dome's underside stands a little off the ground, so the stem it was grown from just shows under
+// the skirt.  A dome sitting straight on the ground is a ball; a dome on a stem is a shrub.
 primitive Boxwood(height, season = 'summer', variant = 1) -> group {
-    rings = UnderBoxRings()
+    // Grown at the height asked, over five variants it stood 10.81 above the ground for a 10.
+    tall = height * 0.925
+    size = tall * 0.09
 
     return group {
-        // The stem it was grown from, just showing under the skirt.  A dome sitting straight on the
-        // ground is a ball; a dome on a stem is a shrub.
-        tube {
+        grown {
+            crown { sphere { scale [tall * 0.50, tall * 0.44, tall * 0.50]  translate [0, tall * 0.56, 0] } }
+            points 2600
+            reach tall * 0.10
+            kill tall * 0.022
+            step tall * 0.012
+            twig tall * 0.004
+            leaf UnderBoxSpray(1, variant, size), UnderBoxSpray(2, variant, size),
+                 UnderBoxSpray(3, variant, size), UnderBoxSpray(4, variant, size)
+            with seed variant
             material UnderCaneWood
-            radius height * 0.035 at [0, 0, 0]
-            radius height * 0.025 at [0, height * 0.22, 0]
         }
 
-        for ring in [0, rings - 1] {
-            up = ring / (rings - 1)
-            wide = height * 0.46 * sqrt(1 - up * up * 0.93)
-            round = wide / height * 58
-
-            for step in [0, round] {
-                object UnderLeaf('boxwood') {
-                    material UnderBoxShade(random(ring, step, variant + 9))
-                    scale height * 0.155 * (0.7 + random(ring, step, variant) * 0.6)
-                    // The blade grows along +Y and the shell is built out along +X, so it is turned a
-                    // quarter to face outward, then tipped by a random amount so the surface of the
-                    // bush is leaves at every angle rather than a tiled sphere.
-                    rotate X random(ring, step, variant + 5) * 60 - 30
-                    rotate Z -68 - random(ring, step, variant + 6) * 44
-                    translate X wide * (0.94 + random(ring, step, variant + 3) * 0.12)
-                    rotate Y step * 360 / (round + 1) + ring * 23 +
-                           random(ring, step, variant + 1) * 18
-                    translate Y height * (0.13 + up * 0.81)
-                }
-            }
-        }
-
-        // A few larger clusters set inside, so that a gap between the outer ones shows more foliage
-        // rather than showing the sky through the middle of the bush.
-        for ring in [0, 5] {
-            up = ring / 5
-            deep = height * 0.30 * sqrt(1 - up * up * 0.9)
-
-            for step in [0, 6] {
-                object UnderLeaf('boxwood') {
-                    material UnderBoxLeaf
-                    scale height * 0.20
-                    rotate Z -70
-                    translate X deep
-                    rotate Y step * 51 + ring * 29
-                    translate Y height * (0.18 + up * 0.68)
-                }
-            }
-        }
-
-        object UnderBoxwoodSnow(season, height, variant)
+        object UnderBoxwoodSnow(season, tall, variant)
     }
 }
 

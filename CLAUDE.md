@@ -83,7 +83,22 @@ seeding), and calls `camera.Render(...)`.
 `Geometry/` holds all `Surface` subclasses (`Sphere`, `Plane`, `Cube`, `Cylinder`, `Conic`,
 `Torus`, `Triangle`/`SmoothTriangle`, `Parallelogram`, `Group`, `CsgSurface`, `HeightField`,
 `Extrusion`/`ExtrudedSurface`, `Lathe`, `TextSolid`, and L-system-driven shapes under
-`Geometry/LSystems/`).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
+`Geometry/LSystems/`).  A `GrownTree` (`grown { crown ... }`, a `Group`) grows itself when prepared, by space
+colonization (Runions 2007): `points` scattered through the crown by rejection (inside = inside any part of a group
+or instance, else odd crossings on most of three looks), a trunk straight up +Y from the origin until one is within
+`reach` (refused once it climbs past them all), then rounds in which each point pulls its nearest node (a grid of
+reach-sized cells) and each pulled node grows one `step` toward the sum, points dying within `kill`.  A new node is
+skipped where one already lies within a quarter step: without that, a node pulled equally from two sides regrew the
+same twig every round and the pipe model (r^n = sum of children's, from `twig`, `joining` 2.5) swelled the limbs
+into sausages.  One-child nodes are smoothed twice, wood is straight `TubeSegment`s,
+and leaves (+Y along the twig -- the trees library's convention, not an L-system's +Z -- face +Z turned to the sky
+within 45 degrees, so snow on a shoot's +Z lies on top) are instances at each tip and up to two nodes back of
+`leaf A, B, ...`, each made once and picked at random per place (one shared cluster turned a whole tree one flat
+orange in autumn); a leaf that is an empty plain group keeps its share by standing nowhere, and `hanging` stands
+leaves upright in the tree's space instead (willow strands, fruit).  Every tree in the trees library but `Palm` (it
+never branches) is grown so, and the undergrowth's `Boxwood`, in crowns of lobes placed by the variant (one ball
+grows a lollipop) whose LOWEST part is a middle lobe (a side lobe reaching the trunk first dog-legged it), each
+species' height factor measured over five variants.  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
 several things (`of A, B weight 2`), each built once and stood by `Instance` where picked, `turned` and `sized`;
 what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
 in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The

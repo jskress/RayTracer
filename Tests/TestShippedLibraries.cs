@@ -351,7 +351,7 @@ public class TestShippedLibraries
     /// </para>
     /// </summary>
     private static readonly string[] Species =
-        ["Elm", "Oak", "Birch", "Fir", "Pine", "Willow", "Poplar", "Maple", "Palm"];
+        ["Elm", "Oak", "Birch", "Fir", "Pine", "Willow", "Poplar", "Maple", "Palm", "Beech", "Aspen"];
 
     /// <summary>
     /// The ones that do not answer the season the way a broadleaf does.  A fir and a pine keep
@@ -518,6 +518,111 @@ public class TestShippedLibraries
             Assert.IsFalse(Differs(Picture(tree, null), Picture(tree, "summer", null)),
                 $"a {tree} asked for with no season should be the same as one in summer");
         }
+    }
+
+    [TestMethod]
+    public void TestAGrownTreeStandsAsTallAsAskedInTheShapeOfItsKind()
+    {
+        // A grown tree's height is the room it was given less what its twigs stop short of, so it was
+        // measured for every species and folded in, as the built trees' was against a post: asked for nine,
+        // five oaks must stand nine on the whole, a single tree within an eighth either way.  (Unfolded, the
+        // snags stood 7.89 for a nine and the boxwoods 10.8 for a ten.)  The shapes are the promise the names
+        // make -- a beech about as broad as it is tall, a poplar barely a quarter as broad -- held to the
+        // range five variants came out in, with room to spare; and the variant is a different tree.
+        foreach (string library in new[] { "trees.igl", "undergrowth.igl" })
+        {
+            File.Copy(
+                Shipped.First(path => Path.GetFileName(path) == library),
+                Path.Combine(_directory, library), true);
+        }
+
+        foreach ((string library, string tree, double height, double narrowest, double broadest) in GrownKinds)
+        {
+            List<(double Up, double Across)> grown = Enumerable.Range(1, 5)
+                .Select(variant => TreeSilhouette(library, tree, height, variant))
+                .ToList();
+
+            foreach ((double up, double across) in grown)
+            {
+                Assert.AreEqual(height, up, height * 0.12, $"a {tree}({height}) stands {up} tall");
+                Assert.IsTrue(across >= height * narrowest && across <= height * broadest,
+                    $"a {tree}({height}) is {across} across");
+            }
+
+            Assert.AreEqual(height, grown.Average(one => one.Up), height * 0.025,
+                $"{tree}s asked for {height} stand {grown.Average(one => one.Up)} on the whole");
+            Assert.IsTrue(grown.Distinct().Count() == grown.Count, $"two variants of a {tree} grew alike");
+        }
+    }
+
+    /// <summary>
+    /// Every plant grown rather than built, the library it is in, the height it is measured at, and how narrow
+    /// and how broad one may come out, as a share of its height.
+    /// </summary>
+    private static readonly (string Library, string Tree, double Height, double Narrowest, double Broadest)[] GrownKinds =
+    [
+        // Broad ones: five variants came out between these, as a share of their height --
+        ("trees", "Elm", 10, 0.75, 1.05),        // 0.87 to 0.93
+        ("trees", "Oak", 9, 0.85, 1.40),         // 0.97 to 1.26: the broadest, its clumps flung wide
+        ("trees", "Maple", 9, 0.72, 1.02),       // 0.84 to 0.91
+        ("trees", "Beech", 9, 0.80, 1.15),       // 0.92 to 1.03
+        ("trees", "Willow", 10, 0.75, 1.25),     // 0.86 to 1.10
+        ("undergrowth", "Boxwood", 1.2, 0.92, 1.20), // 1.05 to 1.08: a dome a shade wider than tall
+        // -- conifers and the dead in between --
+        ("trees", "Fir", 11, 0.62, 0.86),        // 0.72 to 0.75
+        ("trees", "Pine", 12, 0.50, 0.82),       // 0.59 to 0.71
+        ("trees", "Snag", 9, 0.50, 0.95),        // 0.62 to 0.83
+        // -- and the narrow ones.
+        ("trees", "Birch", 9, 0.35, 0.60),       // 0.44 to 0.49
+        ("trees", "Aspen", 12, 0.25, 0.42),      // 0.30 to 0.36
+        ("trees", "Poplar", 13, 0.20, 0.37)      // 0.27 to 0.31
+    ];
+
+    /// <summary>
+    /// Grows one plant in summer and reports how tall it stands above the ground and how broad it is, looked at
+    /// square on from far enough off that the view is parallel.  A snag takes no season, being dead.
+    /// </summary>
+    private (double Up, double Across) TreeSilhouette(string library, string tree, double height, int variant)
+    {
+        // Twenty-four times the height of a unit across 480 pixels -- a twentieth of a unit to each for a
+        // tree, and less for a shrub -- the ground line across the middle of the picture's lower quarter.
+        const int Pixels = 480;
+        double across = height < 3 ? height * 2.4 : 24.0;
+        double middle = across / 2 - across / 8;
+        string scene = Path.Combine(_directory, "scene.igl");
+        string call = tree == "Snag" ? $"{tree}({height}, {variant})" : $"{tree}({height}, 'summer', {variant})";
+
+        File.WriteAllText(scene, $$"""
+            import '{{library}}' { {{tree}} }
+            context { angles are degrees  no gamma }
+            orthographic camera { location [0, {{middle}}, -100]  look at [0, {{middle}}, 0]  field of view {{2 * Math.Atan(across / 200) * 180 / Math.PI}} }
+            background [1, 1, 1]
+            point light { location [0, 30, -100] }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, Pixels, Pixels), $"{tree} should grow");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int ground = (int) Math.Round(Pixels / 2.0 + middle * Pixels / across);
+        int leftmost = Pixels, rightmost = -1, topmost = Pixels;
+
+        for (int x = 0; x < Pixels; x++)
+        for (int y = 0; y < ground; y++)
+        {
+            Color pixel = picture.GetPixel(x, y);
+
+            if (pixel.Red >= 0.97 && pixel.Green >= 0.97 && pixel.Blue >= 0.97)
+                continue;
+
+            leftmost = Math.Min(leftmost, x);
+            rightmost = Math.Max(rightmost, x);
+            topmost = Math.Min(topmost, y);
+        }
+
+        Assert.IsTrue(rightmost > leftmost, $"{tree} grew nothing at all");
+
+        return ((ground - topmost) * across / Pixels, (rightmost - leftmost + 1) * across / Pixels);
     }
 
     /// <summary>
@@ -1137,8 +1242,8 @@ public class TestShippedLibraries
     [TestMethod]
     public void TestATreeKeepsItsOwnWorkings()
     {
-        // The reason the library could not be written before the scoping went in.  A tree is a limb and
-        // a foliage and a wilt and a sway, and a scene that asked for an elm used to get all of them.
+        // The reason the library could not be written before the scoping went in.  A tree is a crown and
+        // clusters and leaf sizes and barks, and a scene that asked for an elm used to get all of them.
         File.Copy(
             Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
             Path.Combine(_directory, "trees.igl"), true);
@@ -1150,13 +1255,13 @@ public class TestShippedLibraries
             camera { location [12, 6, -18]  look at [0, 4, 0] }
             point light { location [-10, 14, -12] }
             object Elm(8)
-            sphere { scale TreeShrink('elm') }
+            sphere { scale TreeLeaf('elm') }
             """);
 
         string error = Render(scene);
 
         Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
-        StringAssert.Contains(error, "TreeShrink");
+        StringAssert.Contains(error, "TreeLeaf");
     }
 
     /// <summary>

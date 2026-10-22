@@ -115,6 +115,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `crackle` | Pattern: cracked-cell (Worley) noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `crevices` | Pattern: how closed in a place is, within a `radius` -- where dirt gathers. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `cross` | Quadric: the coefficients of `xy`, `xz` and `yz`. | [Surfaces](surfaces.md#quadric) |
+| `crown` | Grown tree: the space it grows to fill. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `csg` | Combines surfaces by a named set operation. | [Surfaces](surfaces.md#combining-surfaces) |
 | `cube` | Surface: a unit cube. | [Surfaces](surfaces.md#cube) |
 | `cubic` | Pattern (and wave shape): cubic-interpolated. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -189,7 +190,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `grime` | Weather: dirt in crevices, seams and corners. | [Weathering a Model](materials.md#weathering-a-model) |
 | `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
 | `group` | Gathers surfaces, and any lights standing on them, so a transform moves them together. | [Surfaces](surfaces.md#groups), [Lights on Things](lights.md#lights-on-things) |
+| `grown` | Surface: a tree grown by space colonization into the room it is given. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `hair` | Grows strands over the surface it is written in. | [Advanced Surfaces](advanced-surfaces.md#hair) |
+| `hanging` | Grown tree: its leaves hang plumb from the twigs rather than lying along them. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `height` | Context: image height; also a height field. | [Context](context.md#image-size) |
 | `heightfield` | Surface: terrain, from an image or a function. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `hexagon` | Pattern: a three-color hexagonal tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -213,13 +216,15 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `italic` | Font style: slanted. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `iterations` | Julia set: how many times the iteration is applied. | [Surfaces](advanced-surfaces.md#julia) |
 | `jitter` | Area light: `no jitter` turns off sample dithering. | [Lights](lights.md#area-lights) |
+| `joining` | Grown tree: the pipe model's exponent, how branches add up where they join. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `julia` | Surface: a quaternion Julia set. | [Surfaces](advanced-surfaces.md#julia) |
 | `kern` | Text: one kerning pair. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `kerning` | Text: a block of kerning pairs. | [Advanced Surfaces](advanced-surfaces.md#text) |
+| `kill` | Grown tree: how near a twig comes before a point is used up. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `lathe` | Surface: a profile spun about the Y axis. | [Advanced Surfaces](advanced-surfaces.md#lathe) |
 | `layer` | Pigment: stack pigments, the front ones showing through where clear. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering) |
 | `layout` | Text: alignment, positioning, line gap, and a path to lay the text along. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `leaf` | L-system: the surface drawn for a leaf. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `leaf` | L-system or grown tree: the surface drawn for a leaf; a grown tree may name several, after commas. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `lean` | Hair: how far strands lean from straight out, as an angle. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `length` | L-system control: the step length.  Also hair: how long a strand is. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair) |
@@ -285,7 +290,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `planar` | Pattern/image map: value from a plane; also `planar` image mapping, and a decal carried straight onto a surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `plane` | Surface: an infinite flat plane (also a blob component). | [Surfaces](surfaces.md#plane), [Blob](surfaces.md#a-plane-component) |
 | `point` | A `point light`; also `point at` and a `focal point`. | [Lights](lights.md#point-lights) |
-| `points` | Patch/triangle: the control or corner points. | [Surfaces](surfaces.md#patch) |
+| `points` | Patch/triangle: the control or corner points.  Grown tree: how many points fill its crown. | [Surfaces](surfaces.md#patch), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `poly` | Wave shape: a polynomial of a given power. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `position` | Text layout: `horizontal`/`vertical position`. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
@@ -300,6 +305,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, and how far `crevices` and `edges`, and weather, look. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
+| `reach` | Grown tree: how far a point reaches to draw a twig toward it. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
 | `reflective` | Finish: how mirror-like the surface is. | [Materials](materials.md#reflective) |
 | `refraction` | Interior: the second word of `index of refraction`. | [Materials](materials.md#transparency-and-interiors) |
@@ -355,6 +361,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `startBranch` | L-system turtle: push a branch point. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `steepest` | Field: the steepest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `steepness` | Swells: how tall a wave train is against its wavelength. | [Surfaces](surfaces.md#swells) |
+| `step` | Grown tree: how far a twig grows each round. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `steps` | Sweep/area light: how finely it is sampled. | [Sweep](advanced-surfaces.md#sweep), [Lights](lights.md#area-lights) |
 | `strand` | Surface: a single fiber running smoothly through a series of points. | [Advanced Surfaces](advanced-surfaces.md#strand) |
 | `strength` | Blob component: how strongly it pulls. | [Surfaces](surfaces.md#blob) |
@@ -364,7 +371,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `superellipsoid` | Surface: a rounded box/pillow. | [Surfaces](surfaces.md#superellipsoid) |
 | `surface` | The kind a `primitive` of your own gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `surfaces` | L-system: maps characters to surfaces. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `susceptibility` | L-system control: how readily segments bend toward the tropism. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism) |
+| `susceptibility` | L-system control or grown tree: how readily growth bends toward the tropism. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `svg` | Path: take the outline from an SVG path string. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `sweep` | Surface: a profile carried along a spline. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
 | `swells` | Surface: a body of water carrying wave trains. | [Surfaces](surfaces.md#swells) |
@@ -392,7 +399,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `transparency` | Finish: how much light passes through. | [Materials](materials.md#transparency-and-interiors) |
 | `triangle` | Shape: a flat triangle (also a wave shape). | [Surfaces](surfaces.md#triangle-and-smooth-triangle) |
 | `triangular` | Pattern: a three-color triangular tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
-| `tropism` | L-system control: the direction segments bend toward. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism) |
+| `tropism` | L-system control or grown tree: the direction growth bends toward. | [Advanced Surfaces](advanced-surfaces.md#bending-with-tropism), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `true` | Boolean literal. | [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `tube` | Surface: a round tube of varying radius along a path. | [Advanced Surfaces](advanced-surfaces.md#tube) |
 | `tubes` | L-system control: draw edges as tapering tubes. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
@@ -402,6 +409,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `twig` | Grown tree: how thick the end of a twig is. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
 | `twist` | How far a ribbon turns about its own length, end to end. | [Advanced Surfaces](advanced-surfaces.md#ribbon) |
 | `u` | Parametric surface: the span the first parameter runs over. | [Advanced Surfaces](advanced-surfaces.md#parametric) |
 | `ultraWide` | Camera projection: a rectangular wide-angle view. | [Cameras](cameras.md#projections) |

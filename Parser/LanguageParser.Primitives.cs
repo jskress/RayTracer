@@ -256,6 +256,7 @@ public partial class LanguageParser
             "strand" => ParseStrandClause(clause),
             "field" => ParseFieldClause(clause),
             "sweep" => ParseSweepClause(clause),
+            "grown" => ParseGrownClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "tapered extrusion" => ParseTaperedExtrusionClause(clause),
             "tapered text" => ParseTaperedTextClause(clause),
@@ -384,6 +385,8 @@ public partial class LanguageParser
                 "fieldEntryClause", HandleFieldEntryClause, validate: false),
             "sweep" => ParseObjectResolver<SweepResolver>(
                 "sweepEntryClause", HandleSweepEntryClause, validate: false),
+            "grown" => ParseObjectResolver<GrownTreeResolver>(
+                "grownEntryClause", HandleGrownEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
                 "extrusionEntryClause", HandleExtrusionEntryClause, validate: false),
             "tapered extrusion" => ParseObjectResolver<TaperedExtrusionResolver>(
@@ -449,6 +452,7 @@ public partial class LanguageParser
             "strand" => "startStrandClause",
             "field" => "startFieldClause",
             "sweep" => "startSweepClause",
+            "grown" => "startGrownClause",
             "extrusion" => "startExtrusionClause",
             "tapered extrusion" => "startTaperedExtrusionClause",
             "tapered text" => "startTaperedTextClause",

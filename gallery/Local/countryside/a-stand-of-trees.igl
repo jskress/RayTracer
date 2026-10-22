@@ -11,10 +11,11 @@
 // its author knowing how an elm is put together or what a clear evening sky is made of.
 //
 // That sentence has been the goal for a long while and everything under it had to be built first.  A
-// language to describe a tree in -- primitives that call themselves, a choice to stop the recursion, a
-// selection for the seasons, a loop for the leaves, a keyed random so no two limbs match.  Then a way
-// to hand such things out: libraries that ship with the ray tracer, and libraries that keep their own
-// workings so a scene asking for an elm does not also inherit `TreeWilt` and `TreeSway`.
+// language to describe a tree in -- first primitives that called themselves until a choice stopped the
+// recursion, and now a crown the engine grows a tree into -- a selection for the seasons, a keyed random
+// so no two trees match.  Then a way to hand such things out: libraries that ship with the ray tracer,
+// and libraries that keep their own workings so a scene asking for an elm does not also inherit
+// `TreeCluster` and `TreeShoots`.
 //
 // **The third number is which tree you want.**  Same species, same height, different tree, and the
 // same one every time you render it.  A row of identical elms reads as a diagram; that number is what
@@ -26,15 +27,15 @@
 //
 // The firs are asked for in summer, and that is a choice this scene is making rather than a limit.  A
 // fir keeps its needles the year round, so three of its four seasons look alike -- but ask one for
-// 'winter' and snow gathers along its boughs, and a snow-laden conifer standing beside a elm in full
+// 'winter' and snow lies on its shoots, and a snow-laden conifer standing beside an elm in full
 // leaf would look like a mistake rather than a demonstration.  Snow is a fact about the whole picture,
 // where a turning leaf is a fact about one tree.
 //
-// A fir is not an elm with different numbers, and the library does not pretend otherwise.  The three
-// broadleaves are made by forking -- a limb divides into limbs, and the shape falls out of how they
-// lean.  A conifer has one trunk the whole height of it with rings of branches coming off, a whorl a
-// year, each ring shorter than the one below.  That is a loop rather than a recursion, and the two
-// sit side by side in one library because the shapes are honestly different.
+// A fir is not an elm with different numbers, though the two are grown the same way.  What differs is
+// the room each was given: the elm's crown is a few balls held high on a clear trunk, the fir's a cone
+// to the ground -- and the points filling a cone grow one trunk the whole height of it, with boughs
+// leaving it all the way up, shorter toward the top.  Which is what a conifer is, without anybody
+// having had to say so.
 //
 // What is worth noticing about the sky is what it does *not* say.  `ClearMorning` is a real physical
 // sky -- the color of every part of the dome worked out from the way air scatters sunlight -- and the

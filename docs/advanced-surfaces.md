@@ -2019,3 +2019,123 @@ book's plants this way.
 
 The complete scene is [`docs/examples/advanced/lsystem.igl`](examples/advanced/lsystem.igl),
 and `gallery/Local/l-systems/` has a dozen more, from a Hilbert curve to a berry tree.
+
+### Grown Tree
+
+A tree grown rather than built.  An L-system says how a plant branches; a grown tree says only how
+much **room** it has, and the branching follows from that.  The room is scattered with points, and
+round after round each point draws the nearest twig within its reach a step toward it, until every
+point has a twig at it.  Branches crowd where the room is full and stretch where it is thin, no two
+forks divide alike, and the crown comes out the shape of the space it was given.  This is space
+colonization, from Runions, Lane and Prusinkiewicz, *Modeling Trees with a Space Colonization
+Algorithm* (2007).
+
+![A grown tree, bare in its crown and in leaf](images/figures/adv-grown.png)
+
+```
+room = union {
+    sphere { scale 1.8  translate [0, 4.5, 0] }
+    sphere { scale 1.7  translate [-1.5, 5.2, 0] }
+    sphere { scale 1.7  translate [1.5, 5.5, 0.4] }
+    sphere { scale 1.6  translate [0, 6.5, -0.2] }
+}
+
+grown {
+    crown room
+    points 1500
+    reach 1.2
+    kill 0.24
+    step 0.12
+    twig 0.016
+    leaf leaf
+    with seed 7
+    material bark
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/grownClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/grownClause.svg">
+  <img alt="A grown tree" src="images/advanced/grownClause.svg">
+</picture>
+
+**The tree stands on the origin** and grows straight up +Y until the crown's points can reach it, then
+out into the crown.  So the crown must stand over the origin, and come within `reach` of the line
+straight up from it; one off to the side is refused rather than grown into a trunk that never stops.
+
+**Put the lowest of the crown in the middle.**  The trunk climbs until the first of the crown's points
+can reach it, and if that point lies in a ball hanging low off to one side, the trunk turns hard toward
+it: a dog-leg at the foot of the crown.  A crown whose lowest part is over the trunk — a middle ball,
+with the others set no lower — is entered from beneath and divides there, as a tree does.
+
+**`crown`** is the room it has: any closed surface.  Write it out in braces, as a group's surfaces are
+— `crown { sphere { scale 3  translate [0, 6, 0] } }` — or name one, or call a primitive that makes
+one.  A group's parts may overlap; a point is room wherever any of them is, so a crown of three balls
+is three balls, not the places where an odd number of them overlap.  A CSG works as well, and so does
+anything else with an inside.  A plane or an open-ended cylinder has no inside to fill, and is refused.
+
+**`points`** is how many points fill the crown (1500 unless you say).  More points, more twigs, and
+growth that follows the crown's shape more closely.
+
+**`reach`** is how far a point reaches for a twig (1), **`kill`** how near a twig comes before the
+point is used up (0.25), and **`step`** how far a twig grows each round (0.1).  Together they set the
+tree's character more than anything else:
+
+- A far `reach` lets a point pull from across the crown, which grows a few long leaders; a near one
+  makes every twig answer only to what is close by, which branches finely.  A narrow crown wants a
+  near reach, or its points pull a handful of limbs its whole height and it grows a broom.  About a
+  tenth of the crown's breadth is a good start.
+- `kill` must be less than `reach`, or every point would be used up before it drew anything.  A
+  fifth of the reach leaves room between twigs for leaves.
+- `step` must be well under `kill` — a half or less — so a twig can reach a point rather than step
+  past it.
+
+**`tropism`** and **`susceptibility`** bend every step of growth toward a direction, as an L-system's
+do ([Bending, with `tropism`](#bending-with-tropism)): `tropism [0, -1, 0]  susceptibility 0.4` and
+the limbs arch as though weighed down.  Unsaid, nothing bends.
+
+**How thick the wood is** comes back from the twigs.  Every twig ends `twig` thick (0.01), and where
+branches meet, the wood below is as thick as those it feeds put together: its radius raised to the
+**`joining`** is the sum of theirs raised to it.  That is the pipe model, and Leonardo's rule for
+trees with an exponent of 2, which keeps the wood's cross-section the same across a fork; measured
+trees mostly fall between 2 and 3, and 2.5 is the default.  A higher joining gathers less of the
+twigs' thickness into each limb, for a slender trunk under a big crown.  Between forks the wood keeps
+its thickness, and each run is drawn as a chain of tapered [tube](#tube) segments meeting radius to
+radius, so no joint shows.
+
+**`leaf`** is what grows at the end of every twig and the two places behind it.  It is written the way
+the crown is — in braces, by name, or as a call — and authored **standing on the origin and growing up
++Y**, the way its twig runs, with its width along X and its face toward +Z.  (An L-system's leaf grows
+along +Z, its turtle's heading; the clusters the [trees library](libraries.md#trees) hangs on its twigs
+grow up +Y, and a grown tree takes those as they are.)  Laid along its twig, each leaf turns its face
+toward the sky, give or take an eighth of a turn — which is what a leaf does, and what lets snow laid on
+a shoot's +Z side lie on top of it.  A leaf is made once and shared by every place it stands, so a
+thousand leaves cost one leaf's geometry.  A leaf that keeps a material of its own wears it; the tree's
+`material` is the wood's.
+
+**Several leaves**, after commas, and each place takes one of them at random:
+
+```
+leaf Cluster(1), Cluster(2), Cluster(3), Cluster(4)
+```
+
+One leaf is a tree of one cluster, and in autumn that turns all at once, a flat orange; four that each
+turn their own way turn cluster by cluster, as a tree does.  A leaf that comes back an empty group, as a
+winter cluster can, keeps its share of the places by standing nowhere — so a winter tree of four
+clusters, two of them bare, is bare in half its places.
+
+**`hanging`**, written after the leaves, hangs them from the twig instead of laying them along it: each
+stands upright in the tree's own space, turned any way about the upright, authored hanging down −Y from
+the origin.  A willow's curtain hangs so — a strand laid along its twig flies sideways from any limb bent
+past level — and so does fruit.
+
+**`with seed`** scatters the points.  The same seed always grows the same tree, twig for twig; another
+grows another of the same kind.
+
+**What it costs.**  Growing is done once, before rendering: a tree of two thousand points grows in about
+half a second.  What it grows renders like any other wood and leaves.  Every tree in the
+[trees library](libraries.md#trees) but the palm is grown this way, and the undergrowth's `Boxwood`; and
+`gallery/Local/countryside/bare-wood.igl` shows a winter stand of them, where the branching is all there
+is to see.
+
+The complete scene is [`docs/examples/advanced/grown.igl`](examples/advanced/grown.igl).
