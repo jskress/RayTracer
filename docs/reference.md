@@ -35,6 +35,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | --- | --- | --- |
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `animation` | Context: how long a scene runs as an animation, `length` seconds or `frames`, its `rate` and its `still`. | [Saying How Long](animation.md#saying-how-long) |
+| `banked` | `along`: leaning into a bend as a rider would feel to be up, by the speed and the curvature. | [Along a Spline](animation.md#along-a-spline) |
 | `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `ease` | Keys: the value comes to the key slowly, `ease in`, `ease out` or `ease in out`. | [Keys](animation.md#keys) |
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -51,7 +52,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
-| `rate` | Context's `animation`: frames a second, 24 unless said. | [Saying How Long](animation.md#saying-how-long) |
+| `rate` | Context's `animation`: frames a second, 30 unless said. | [Saying How Long](animation.md#saying-how-long) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -59,7 +60,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
 | `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `still` | Context's `animation`: the frame that stands for it as a still. | [Saying How Long](animation.md#saying-how-long) |
+| `upright` | `along`: up the world's, as near as the spline allows; the default. | [Along a Spline](animation.md#along-a-spline) |
 | `verge` | Shape grammar: how far a gabled `roof` reaches past its gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `wheelbase` | `along`: ride on two places that far apart, both on the spline, as a rigid vehicle does. | [Along a Spline](animation.md#along-a-spline) |
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Z expression. | [Transforms](transforms.md#rotate) |
@@ -70,7 +73,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `agx` | Context: `film curve agx`, a film's curve over the whole range. | [Context](context.md#film-curve) |
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal) |
+| `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run.  Transform: `along <spline> at|by <amount>` puts a thing on a spline, turned to run with it. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal), [Along a Spline](animation.md#along-a-spline) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
@@ -84,7 +87,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
 | `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
-| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point. | [Cameras](cameras.md#placing-a-camera) |
+| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`. | [Cameras](cameras.md#placing-a-camera), [Along a Spline](animation.md#along-a-spline) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string.  Shape grammar: the rule its first scope is handed to. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
@@ -113,7 +116,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
-| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, and a `for` loop's range. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films) |
+| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, and a `for` loop's range.  `along <spline> by <distance>`. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films), [Along a Spline](animation.md#along-a-spline) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `cache` | Context: `diffuse cache`, blending bounced light between records worked out at scattered places. | [Context](context.md#a-cache-of-bounced-light) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
@@ -387,7 +390,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `splash` | Weather: dirt kicked up from the ground, up to a height in the model's own units. | [Weathering a Model](materials.md#weathering-a-model) |
-| `spline` | Sweep: the 3D path the profile follows. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `spline` | Sweep: the 3D path the profile follows.  Also named, `Name = spline { ... }`, to be followed by `along` and handed to a sweep by its name. | [Advanced Surfaces](advanced-surfaces.md#sweep), [Along a Spline](animation.md#along-a-spline) |
 | `spot` | A `spot light` (a cone). | [Lights](lights.md#spotlights) |
 | `square` | Pattern: a four-color square tiling. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `squares` | Quadric: the coefficients of `x²`, `y²` and `z²`. | [Surfaces](surfaces.md#quadric) |
@@ -796,17 +799,20 @@ or vectors; ask for a form that does not exist and the error names the ones that
 
 | | | | |
 | --- | --- | --- | --- |
-| `abs` | `cross` | `log10` | `sin` |
-| `acos` | `distance` | `magnitude` | `sinh` |
-| `asin` | `dot` | `max` | `smoothstep` |
-| `atan` | `exp` | `min` | `sqrt` |
-| `atan2` | `floor` | `mod` | `tan` |
-| `cbrt` | `item` | `noise` | `tanh` |
-| `ceil` | `kelvin` | `normalize` | `toDegrees` |
-| `clamp` | `length` | `pow` | `trunc` |
-| `cos` | `lerp` | `random` |  |
-| `cosh` | `list` | `round` |  |
-| `count` | `log` | `sign` |  |
+| `abs` | `cross` | `log` | `round` |
+| `acos` | `distance` | `log10` | `sign` |
+| `asin` | `dot` | `magnitude` | `sin` |
+| `atan` | `exp` | `max` | `sinh` |
+| `atan2` | `floor` | `min` | `smoothstep` |
+| `cbrt` | `headingAlong` | `mod` | `sqrt` |
+| `ceil` | `item` | `noise` | `tan` |
+| `clamp` | `kelvin` | `normalize` | `tanh` |
+| `cos` | `length` | `pointAlong` | `toDegrees` |
+| `cosh` | `lerp` | `pow` | `trunc` |
+| `count` | `list` | `random` |  |
+
+`pointAlong` and `headingAlong` take a spline and a share of its length — where along it that lies, and which way
+it runs there — and `length` takes a spline as well as a vector; see [Along a Spline](animation.md#along-a-spline).
 
 #### Colors
 
@@ -976,7 +982,7 @@ other two, `fonts` and `libraries`, have chapters of their own: [Managing Fonts]
 | `--exposure` | How many [stops](cameras.md#exposure) to expose every camera by. |
 | `--film-curve` | The [film curve](context.md#film-curve) to develop the picture by: `soft`, `neutral`, `agx` or `none`. |
 | `-c`, `--bits-per-channel` | How many bits each color channel gets in the file. |
-| `-r`, `--frame-rate` | Frames per second for an [animation](animation.md) (the scene's, or 24). |
+| `-r`, `--frame-rate` | Frames per second for an [animation](animation.md) (the scene's, or 30). |
 | `-m`, `--frame` | Render one frame of an animation alone, as a still at its time. |
 | `--frames` | Render a run of an animation's frames, as `0-143`. |
 | `--still` | Render an animation as the one frame it names as its still. |

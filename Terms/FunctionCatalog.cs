@@ -21,7 +21,8 @@ public class FunctionCatalog
     /// <summary>
     /// This property holds the catalog of functions the DSL itself uses.
     /// </summary>
-    public static FunctionCatalog Instance { get; } = new (typeof(MathFunctions), typeof(SequenceFunctions), typeof(ColorFunctions));
+    public static FunctionCatalog Instance { get; } = new (typeof(MathFunctions), typeof(SequenceFunctions), typeof(ColorFunctions),
+        typeof(SplineFunctions));
 
     /// <summary>
     /// This property reports the name of every function in the catalog.

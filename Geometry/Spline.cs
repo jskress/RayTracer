@@ -41,6 +41,19 @@ public class Spline
     public bool Discontinuous { get; set; }
 
     /// <summary>
+    /// This property provides the spline measured by distance, for putting things along it.  It is worked out the
+    /// first time it is asked for, the spline being finished by then.
+    /// </summary>
+    public SplineMeasure Measure => _measure.Value;
+
+    private readonly Lazy<SplineMeasure> _measure;
+
+    public Spline()
+    {
+        _measure = new Lazy<SplineMeasure>(() => new SplineMeasure(this));
+    }
+
+    /// <summary>
     /// This method builds the concrete, evaluable curve for each of our segments, threading
     /// each one's start through from the previous segment's end (or our own start, for the
     /// first one).

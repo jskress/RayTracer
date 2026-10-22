@@ -1,4 +1,6 @@
 using Lex.Clauses;
+using Lex.Tokens;
+using RayTracer.Geometry;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
@@ -55,13 +57,23 @@ public partial class LanguageParser
                 case "profile":
                     resolver.ProfileResolver = GetPathResolver(clause);
                     break;
-                case "spline":
-                    resolver.SplineResolver = ParseSplineClause();
+                case "spline" or "discontinuous":
+                {
+                    // A spline written out, or the name of one: a name is looked up where the sweep is made, so it
+                    // may be a primitive's parameter as well as one the scene set.
+                    Token last = clause.Tokens[^1];
+
+                    if (BounderToken.OpenBrace.Matches(last))
+                    {
+                        resolver.SplineResolver = clause.Text() == "discontinuous"
+                            ? ParseDiscontinuousSpline()
+                            : ParseSplineClause();
+                    }
+                    else
+                        resolver.SplineResolver = new TermResolver<Spline> { Term = new VariableTerm(last) };
+
                     break;
-                case "discontinuous":
-                    resolver.SplineResolver = ParseSplineClause();
-                    resolver.SplineResolver.DiscontinuousResolver = new LiteralResolver<bool> { Value = true };
-                    break;
+                }
                 case "steps":
                     resolver.StepsResolver = new TermResolver<int> { Term = clause.Term() };
                     break;

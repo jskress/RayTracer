@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using RayTracer.Extensions;
+using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
 using RayTracer.Terms;
 
@@ -32,6 +33,18 @@ public partial class LanguageParser
     /// with a "move to" command, and that command may not appear again after the first.
     /// </summary>
     /// <param name="clause">The clause to process.</param>
+    /// <summary>
+    /// This method reads a spline marked as kinked on purpose.
+    /// </summary>
+    private SplineResolver ParseDiscontinuousSpline()
+    {
+        SplineResolver resolver = ParseSplineClause();
+
+        resolver.DiscontinuousResolver = new LiteralResolver<bool> { Value = true };
+
+        return resolver;
+    }
+
     private void HandleSplineEntryClause(Clause clause)
     {
         SplineResolver resolver = (SplineResolver) _context.CurrentTarget;

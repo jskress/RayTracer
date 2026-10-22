@@ -155,8 +155,9 @@ public class TestParserConsistency
             // An outline is a value a scene may name, so that a primitive can be handed one; it is
             // not a surface and has no place in what may stand in a group.
             "path",
-            // So is a value given at keys, which is called with the time.
-            "keys",
+            // So is a value given at keys, which is called with the time, and a spline, which things are put
+            // along and sweeps carried along -- marked "discontinuous" when its kinks are meant.
+            "keys", "spline", "discontinuous",
             "light", "point", "distant", "spot", "area", "sky"
         });
 

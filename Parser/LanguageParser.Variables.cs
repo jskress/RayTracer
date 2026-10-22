@@ -43,6 +43,9 @@ public partial class LanguageParser
             "path" => ParseGeneralPathClause(),
             // A value that changes over time is named, and called by its name with the time.
             "keys" => ParseKeysClause(clause),
+            // A spline is named so that things may be put along it, and a sweep carried along it, by its name.
+            "spline" => ParseSplineClause(),
+            "discontinuous" when second == "spline" => ParseDiscontinuousSpline(),
             "material" => GetMaterialResolver(clause),
             "interior" => GetInteriorResolver(clause),
             "medium" => GetMediumResolver(clause),

@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 148 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 149 images</summary>
 
 <details>
 <summary><b>Showcase</b> &mdash; 3 images &middot; whole pictures, made for their own sake</summary>
@@ -1184,7 +1184,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Animation</b> &mdash; 1 image &middot; scenes that move, each a still and a movie</summary>
+<summary><b>Animation</b> &mdash; 2 images &middot; scenes that move, each a still and a movie</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1193,6 +1193,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/animation/newtons-cradle.igl">A Newton's Cradle</a> (<a href="Local/animation/newtons-cradle.webp">the movie</a>)
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/a-model-railway.webp">
+      <img alt="A Model Railway" height="120" src="Local/animation/a-model-railway.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/a-model-railway.igl">A Model Railway</a> (<a href="Local/animation/a-model-railway.webp">the movie</a>)
     </td>
   </tr>
 </table>

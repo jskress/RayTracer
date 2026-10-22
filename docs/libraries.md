@@ -1683,13 +1683,35 @@ object Tender(8.05) { translate X -10.35 }
 | `Locomotive` | A Great Western 4-6-0: coned boiler, copper-capped chimney, three coupled drivers on rods. |
 | `Tender` | The six-wheeled tender that runs behind it, coal heaped above the coping. |
 | `Track` | A length of line: rails on sleepers on ballast, at standard gauge. |
+| `TrackAlong` | The same line laid along a [spline](animation.md#along-a-spline), round whatever curves it is drawn with. |
 
 **The first number is a length**, as it is for the road [vehicles](#vehicles) and for the same reason —
-an engine is described by how long it is, not how tall.  For `Track` it is how much line you want.  The
-other two numbers mean what they mean everywhere, **what time of year** and **which one of that kind**.
+an engine is described by how long it is, not how tall.  For `Track` it is how much line you want, and
+`TrackAlong` takes the spline to lay it along instead.  The other two numbers mean what they mean
+everywhere, **what time of year** and **which one of that kind**.
 
 **These face `+X`**, like the road vehicles, so an engine runs to the right in a camera looking the usual
-way and a line laid left to right needs no turning.
+way and a line laid left to right needs no turning — and so an engine put [`along`](animation.md#along-a-spline)
+a spline runs the way the spline does.  On a curve, give it a `wheelbase`, so that it rides on its end axles
+with both on the rails, and put the tender at the engine's distance less the length between their middles:
+
+```
+import 'trains' { Locomotive, Tender, TrackAlong }
+
+Bend = spline {
+    move to -20, 0, -20
+    line to 0, 0, -20
+    curve 11.05, 0, -20, 20, 0, -11.05 to 20, 0, 0
+}
+
+object TrackAlong(Bend)
+object Locomotive(11.6) { along Bend by 20  wheelbase 7 }
+object Tender(8.05)     { along Bend by 20 - 10.35  wheelbase 4.5 }
+```
+
+The rails and the ballast are sweeps of their own cross-sections along the spline, and the sleepers are
+spaced evenly along it, so that a loop's last meets its first with no gap.  `a-model-railway` in the
+gallery runs a train round an oval of it.
 
 **Rail top is `y = 0`.**  Everything the engine is made of is measured up from the rail it stands on, and
 the sleepers and ballast hang below.  An engine and a length of track therefore drop into a scene at the

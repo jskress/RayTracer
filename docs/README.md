@@ -209,6 +209,7 @@ branches, any one of the branches will do.
   - [Saying How Long](animation.md#saying-how-long)
   - [Time in the Scene](animation.md#time-in-the-scene)
   - [Keys](animation.md#keys)
+  - [Along a Spline](animation.md#along-a-spline)
   - [Motion Blur from Time](animation.md#motion-blur-from-time)
   - [What It Costs](animation.md#what-it-costs)
 - [Reference](reference.md)

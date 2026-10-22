@@ -125,7 +125,7 @@ public class RenderOptions
     // Null until given, like the antialiasing, so that a rate the scene's animation asks for is not
     // overruled by a command line that said nothing about it.
     [Option('r', "frame-rate", Required = false,
-        HelpText = "The rate, in frames per second, an animation is rendered at (24 unless the scene says).")]
+        HelpText = "The rate, in frames per second, an animation is rendered at (30 unless the scene says).")]
     public int? FrameRate
     {
         get => field;
