@@ -2213,3 +2213,102 @@ fifth of a second.  The pieces then render as any polyhedra do — a worn one a 
 one, since its edges and corners are cylinders and balls.
 
 The complete scene is [`docs/examples/advanced/fracture.igl`](examples/advanced/fracture.igl).
+
+### Shape Grammar
+
+A building described by rules rather than by placing its parts.  Its first scope is a box standing on
+the ground, and each rule is handed a scope and does what it says with it: divides it and hands the
+parts on to other rules, or puts something in it — a wall, a window, a roof.  It goes on until nothing
+is left to hand on, and what was put in the scopes is the building.  This is the split grammar
+architects' tools use (CGA, after Müller and Wonka): a lot raised into a mass, the mass into its faces, a
+face into floors, a floor into bays, a bay into wall round a window.  It is what the
+[buildings library](libraries.md#built-by-rules)'s `Terrace`, `Apartments` and `Chapel` are made of.
+
+![One grammar raised three times, with three seeds and two widths](images/figures/adv-shapes.png)
+
+```
+shapes {
+    axiom Lot
+    size [10, 0, 8]
+    rules {
+        Lot -> extrude 9 { Mass }
+        Mass -> faces depth 0.3 { front: Facade  sides: Wall }
+                roof gable 40 overhang 0.3 material slate gables material brick
+        Facade -> split Y { 0.5 Plinth  ~1 Floors  0.35 Cornice }
+        Floors -> repeat Y 2.8 index in floor { Floor }
+        Floor -> repeat X 2.5 { Bay }
+        Bay -> if (floor == 0 && index == count - 1) { Door } else { choose { 4 Window  1 Wall } }
+        Window -> split X { ~1 Wall  1.1 { split Y { 0.8 Wall  1.5 Opening  ~1 Wall } }  ~1 Wall }
+        Opening -> move [0, 0, 0.12] { size [width, height, depth - 0.12] { fill material glass } }
+        Door -> fill material paint
+        Wall -> fill material brick
+        Plinth -> fill material stone
+        Cornice -> move [0, 0, -0.15] { size [width, height, depth + 0.15] { fill material stone } }
+    }
+    with seed 3
+}
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/shapesClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/shapesClause.svg">
+  <img alt="A shape grammar" src="images/advanced/shapesClause.svg">
+</picture>
+
+**`size`** is the first scope's: across X, up Y and back along Z.  It stands on the ground with its middle
+over the origin and its front toward `-Z`, which is the way the buildings library's buildings face; its
+height is usually nought, a lot, raised by the first rule.  **`axiom`** names the rule it is handed to.
+**`rules`** holds the rules, each a name, `->`, and what it does — any number of actions, one after another,
+each to the same scope — up to the next name and arrow.
+
+**A scope is a box with axes of its own**: X across it, Y up it, Z into what it stands for.  Every rule
+sees its scope's size as **`width`**, **`height`** and **`depth`**, so a window can be sized by its bay; the
+part of a split or repeat sees its number and how many there are as **`index`** and **`count`**; and the
+names of the scene, or of a primitive's parameters, are there too.  Where an action hands a scope on,
+it names a rule or writes actions in braces.
+
+**Dividing a scope:**
+
+- **`extrude h`** gives the scope a height: a lot raised into a mass.
+- **`split X|Y|Z { … }`** divides it along one of its axes into parts, each a size and where it goes: a
+  plain number is that size, and a number after **`~`** a share of what the plain ones leave.  Plain
+  sizes that will not fit are all shrunk alike to fit, and the shares come to nothing.
+- **`repeat X|Y|Z s`** tiles it with as many parts of about that size as fit, stretched to fit exactly —
+  a longer wall gets more bays, not wider ones.  **`index in name`** gives the part's number a name of its
+  own as well, so an inner rule can still tell which floor it is on after its own `index` has become the
+  bay's.
+- **`faces [depth d] { … }`** hands on the faces of a box, each as a scope standing on that face, d deep,
+  its Z pointing in — so its -Z faces out, the way a window from the windows library is built: **`front`**
+  (the side toward -Z), **`back`**, **`left`**, **`right`**, **`top`** and **`bottom`**, and **`sides`** for any
+  of the four upright faces not named.  The four walls overlap at the corners, which is what lets each be
+  built whole.
+- **`move v`** moves the scope along its own axes, and **`size v`** sets its size, its corner where it
+  was: a cornice is a band moved out and made deeper, a balcony a slab moved out in front of the wall.
+
+**Choosing:** **`choose { w a  w b … }`** goes one of several ways, each as likely as its weight — the
+same way for the same seed and the same place every time, so a scene renders alike twice and two
+choices at one place draw apart.  **`if (condition) a [else b]`** goes by what the rule sees, as the
+ground floor's last bay above is a door.  **`nothing`** puts nothing there.
+
+**Filling a scope:**
+
+- **`fill [material M]`** fills it with a box.  The box is a polyhedron in the grammar's own space, not a
+  cube stretched to fit, so **a material's pattern runs on unbroken** from one box to the next: a facade's
+  brick from bay to bay, its courses level all the way along.  That also means the pattern is in the
+  grammar's units — brick laid in meters, not undone from a cube's scale.
+- **`place { … }`** stands surfaces in it, written as a group's are: their own origin at the middle of
+  the scope's near face, their axes the scope's, unscaled — so a window from the windows library goes in
+  the wall it should, sized by the scope's `width` and `height` in its own arguments.
+- **`roof gable a | hip a | flat`** roofs a box scope over its top.  A gabled roof has its ridge along X,
+  or along Z if it is **`across`**, its slopes at the angle given, and its gable ends a solid of the
+  **`gables`** material standing in the walls; a hipped one slopes on all four sides — on a square, a
+  spire; a flat one is a slab.  **`overhang o`** reaches past the walls, and **`verge v`** past a gabled
+  one's gable ends instead — nought for a terrace, whose houses' roofs meet over the walls between them.
+
+**What it costs.**  A grammar is carried out once, as the scene is read; what it built is then an
+ordinary group of polyhedra and placed things.  A terrace of five shops with flats over them is under
+four hundred boxes and a hundred windows and doors placed — sixteen shapes, each made once and shared
+wherever it stands — and renders as fast as any group of boxes does.  A rule that hands its scope on two
+hundred deep is taken to be going round in a circle, and refused.
+
+The complete scene is [`docs/examples/advanced/shapes.igl`](examples/advanced/shapes.igl).

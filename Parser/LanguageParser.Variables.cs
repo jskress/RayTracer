@@ -78,6 +78,7 @@ public partial class LanguageParser
             "sweep" => ParseSweepClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
+            "shapes" => ParseShapesClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),
             "heightfield" => ParseHeightFieldClause(clause),

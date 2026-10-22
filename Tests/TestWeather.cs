@@ -92,6 +92,32 @@ public class TestWeather
     }
 
     /// <summary>
+    /// This tests snow: on a cube's top it is the snow's own color, whole, not broken as dust is; on its side
+    /// there is none; on a face sloping at forty-five degrees a full fall lies whole, while a light one, which
+    /// holds only on gentler slopes than that, leaves it bare.
+    /// </summary>
+    [TestMethod]
+    public void TestSnowLiesWholeOnWhatIsFlatEnoughToHoldIt()
+    {
+        Color snow = new Weather().SnowColor;
+        Scene flat = SceneOf(new Cube { Material = Glowing(Blue), Weather = new Weather { Snow = 1 } });
+
+        AssertSame(snow, Seen(flat, new Point(0.2, 3, 0.1), new Vector(0, -1, 0)), "the top");
+        AssertSame(snow, Seen(flat, new Point(-0.7, 3, -0.6), new Vector(0, -1, 0)), "another place on the top");
+        AssertSame(Blue, Seen(flat, new Point(0.2, 0.1, -3), new Vector(0, 0, 1)), "the side");
+
+        foreach ((double fall, Color expected) in new[] { (1.0, snow), (0.3, Blue) })
+        {
+            Scene sloping = SceneOf(new Cube
+            {
+                Material = Glowing(Blue), Weather = new Weather { Snow = fall }, Transform = Transforms.RotateAroundZ(45)
+            });
+
+            AssertSame(expected, Seen(sloping, new Point(0.4, 3, 0.1), new Vector(0, -1, 0)), $"a slope under {fall} of snow");
+        }
+    }
+
+    /// <summary>
     /// This tests grime: on a floor right beside a wall, deep in where it meets it, the floor is darkened toward
     /// the grime's color; out in the open it is untouched.
     /// </summary>
@@ -298,6 +324,9 @@ public class TestWeather
             Assert.IsFalse(Same(Rendered("weather { grime 0.6 }"), Rendered("weather { grime 0.6  radius 0.6 }")),
                 "the reach");
             Assert.IsFalse(Same(clean, Rendered("weather { splash 0.6 }")), "splash");
+            Assert.IsFalse(Same(clean, Rendered("weather { snow 1 }")), "snow");
+            Assert.IsFalse(Same(Rendered("weather { snow 1 }"), Rendered("weather { snow 1  color [1, 0, 0] }")),
+                "the snow's color");
             Assert.IsFalse(Same(Rendered("weather { splash 0.6 }"), Rendered("weather { splash 0.6  color [1, 0, 0] }")),
                 "the splash's color");
 

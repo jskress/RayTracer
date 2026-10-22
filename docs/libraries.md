@@ -513,10 +513,14 @@ object Tower(14, 'summer', 3) { translate X -14 }
 | `House` | One dwelling: plinth, brick walls, a boarded gable, a roof, a doorway and windows. |
 | `Row` | Several houses joined shoulder to shoulder, as a terrace. |
 | `Tower` | A taller block, bay after bay, with a parapet rather than a roof. |
+| `Terrace` | Shops with flats over them, each its own height, brick, roof and paint — [built by rules](#built-by-rules). |
+| `Apartments` | A block of flats over a base of banded stone, with balconies — built by rules. |
+| `Chapel` | A nave and a tower with a clock, a belfry and a spire, in dressed stone — built by rules. |
 
 The three numbers mean what they mean everywhere else — **how big**, **what time of year**, and **which
 one of that kind** — and only the first is required.  For a `Row` the first number is **how many
-houses**, since a terrace is counted rather than measured.
+houses**, since a terrace is counted rather than measured, and so it is for a `Terrace`, in shops.  For
+`Apartments` it is **how many floors**, and a `Chapel` takes none at all.
 
 **These face `-Z`**, which is the way a camera written the usual way is looking.  The windows, the door
 and the sills are all on that face; the other three sides are wall.  Turn a building with `rotate Y` to
@@ -599,6 +603,42 @@ For the boarding the useful trick is that `linear Y gradient` is a **sawtooth** 
 to one over each unit and starts again — so one unit is one board and the color map is a cross-section
 of it: bright at the proud bottom edge, receding up the face, dark in the last tenth where the board
 above laps over.  The drop back to nought *is* the board line, and there is nothing to smooth out.
+
+##### Built by rules
+
+```
+import 'buildings' { Terrace, Apartments, Chapel }
+
+object Terrace(4)
+object Apartments(5, 'winter') { translate X 30 }
+object Chapel('summer', 2)      { translate X -28 }
+```
+
+The first three are put together a part at a time, every window placed by arithmetic.  These three are
+not: each is a [shape grammar](advanced-surfaces.md#shape-grammar), a set of rules that divide a box into a
+building — a lot raised into a mass, the mass into its faces, a face into floors, a floor into bays, a bay
+into wall round a window — so a longer terrace has more shops rather than wider ones, a taller block more
+floors, and the variant picks among the ways each rule may go: which shops are gabled and which flat
+behind a parapet, how many floors each has, its brick and its paint, which side its door is on; whether a
+block has balconies on every bay, every other one or none; which corner a chapel's tower stands at.  They
+are measured in **meters**, as the vehicles and roads are, a floor three and a shop four and a half, and
+they stand like the others: middle over the origin, front toward `-Z`.  The `a-high-street` scene in the
+gallery is a street of them.
+
+What the rules buy over arithmetic is **depth**.  A window is not stuck on a wall: its bay is split round
+an opening and the opening set back into the wall, so every window has a reveal and throws a shadow down
+one side; lintels, sills and string courses stand proud of the brick; a cornice reaches out over each
+shopfront; balconies lay their railings' shadows down the face below.
+
+**Their brick never lands in a joint.**  A grammar fills its parts with boxes in the building's own space,
+so the brick runs on unbroken from one bay to the next — and so it is laid in meters, unscaled, a real
+brick's 215 by 65 millimeters.  But a grammar's faces lie wherever its rules put them, so the trap above —
+a face in a joint plane, every other course turned to mortar — cannot be dodged by shifting the pattern.
+These bricks are a hundred meters deep instead, their depth joints fifty meters off, and a wall facing X
+wears them turned a quarter: every face shows courses and brick ends, and none is ever in a joint.
+
+**Winter is `weather { snow }`**, which lays snow whole over everything flat enough to hold it — the
+roofs, the sills, the copings and the cornices — rather than slabs of white placed on each roof by hand.
 
 #### Plans
 

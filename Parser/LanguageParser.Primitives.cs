@@ -4,6 +4,7 @@ using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
+using RayTracer.Instructions.Surfaces.Shapes;
 using RayTracer.Instructions.Surfaces.Extrusions;
 using RayTracer.Instructions.Surfaces.LSystems;
 using RayTracer.Terms;
@@ -258,6 +259,7 @@ public partial class LanguageParser
             "sweep" => ParseSweepClause(clause),
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
+            "shapes" => ParseShapesClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "tapered extrusion" => ParseTaperedExtrusionClause(clause),
             "tapered text" => ParseTaperedTextClause(clause),
@@ -390,6 +392,8 @@ public partial class LanguageParser
                 "grownEntryClause", HandleGrownEntryClause, validate: false),
             "fracture" => ParseObjectResolver<FractureResolver>(
                 "fractureEntryClause", HandleFractureEntryClause, validate: false),
+            "shapes" => ParseObjectResolver<ShapeGrammarResolver>(
+                "shapesEntryClause", HandleShapesEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
                 "extrusionEntryClause", HandleExtrusionEntryClause, validate: false),
             "tapered extrusion" => ParseObjectResolver<TaperedExtrusionResolver>(
@@ -457,6 +461,7 @@ public partial class LanguageParser
             "sweep" => "startSweepClause",
             "grown" => "startGrownClause",
             "fracture" => "startFractureClause",
+            "shapes" => "startShapesClause",
             "extrusion" => "startExtrusionClause",
             "tapered extrusion" => "startTaperedExtrusionClause",
             "tapered text" => "startTaperedTextClause",

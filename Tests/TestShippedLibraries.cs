@@ -1493,6 +1493,165 @@ public class TestShippedLibraries
     }
 
     /// <summary>
+    /// The buildings built by rules, and what each takes for its first number: a terrace how many shops, an
+    /// apartment block how many floors, and a chapel nothing at all, a chapel being the size a chapel is.
+    /// </summary>
+    private static readonly (string Building, string Size)[] RuledBuildings =
+        [("Terrace", "3"), ("Apartments", "4"), ("Chapel", null)];
+
+    private static string RuledCall(string building, string size, string season, int? variant)
+    {
+        List<string> arguments = size is null ? [] : [size];
+
+        if (season is not null)
+            arguments.Add($"'{season}'");
+
+        if (variant is not null)
+            arguments.Add(variant.ToString());
+
+        return $"{building}({string.Join(", ", arguments)})";
+    }
+
+    private void CopyTheBuildings()
+    {
+        foreach (string library in new[] { "buildings.igl", "windows.igl", "doors.igl" })
+        {
+            File.Copy(
+                Shipped.First(path => Path.GetFileName(path) == library),
+                Path.Combine(_directory, library), true);
+        }
+    }
+
+    /// <summary>
+    /// Raises one building built by rules, seen from in front and above so its roof shows, and hands back the
+    /// picture, or fails with whatever stopped it.
+    /// </summary>
+    private Canvas RaisedByRules(string building, string call)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'buildings' { {{building}} }
+            context { angles are degrees  no gamma }
+            camera { location [0, 24, -46]  look at [0, 8, 0]  field of view 50 }
+            point light { location [-20, 40, -30] }
+            background [0.5, 0.6, 0.8]
+            plane { material { pigment [0.3, 0.3, 0.3] } }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, 160, 120), $"{call} should stand");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    [TestMethod]
+    public void TestEveryBuildingBuiltByRulesStandsInEverySeason()
+    {
+        // The season is the one word these take that has to do something -- snow on whatever faces up -- and
+        // asked for with none they stand in summer, like every other building.  The variant is a different
+        // building: other bricks, other paint, other windows.
+        CopyTheBuildings();
+
+        foreach ((string building, string size) in RuledBuildings)
+        {
+            Canvas summer = RaisedByRules(building, RuledCall(building, size, "summer", 2));
+
+            foreach (string season in new[] { "autumn", "fall", "spring" })
+            {
+                Assert.IsFalse(Differs(summer, RaisedByRules(building, RuledCall(building, size, season, 2))),
+                    $"a {building} in {season} should look as it does in summer");
+            }
+
+            Assert.IsTrue(Differs(summer, RaisedByRules(building, RuledCall(building, size, "winter", 2))),
+                $"a {building} in winter should not look like one in summer");
+            Assert.IsFalse(Differs(RaisedByRules(building, RuledCall(building, size, null, null)),
+                    RaisedByRules(building, RuledCall(building, size, "summer", null))),
+                $"a {building} asked for with no season should be the same as one in summer");
+            Assert.IsTrue(Differs(summer, RaisedByRules(building, RuledCall(building, size, "summer", 1))),
+                $"two variants of a {building} came out alike");
+        }
+    }
+
+    [TestMethod]
+    public void TestABuildingBuiltByRulesIsAsBigAsItsRulesSay()
+    {
+        // A terrace is six meters to a shop, and nothing reaches past the ends of its plots, so its width is
+        // its count exactly; its height is a shop of four and a half and two or three floors of three point one,
+        // under a roof.  An apartment block is three meters to a floor, so two more floors stand six taller,
+        // and it is five, six or seven bays of three point six wide by its variant, whatever its height -- and
+        // the coping along its parapet six centimeters more at either end.  A chapel is fourteen meters across
+        // its walls, with its buttresses seventy centimeters out on its open side and the spire's eaves a
+        // quarter of a meter past the tower's on the other, and its spire stands well over twenty.
+        CopyTheBuildings();
+
+        foreach (int shops in new[] { 2, 4 })
+        {
+            (double up, double across) = RuledSilhouette("Terrace", $"Terrace({shops}, 'summer', 3)");
+
+            Assert.AreEqual(shops * 6, across, 0.15, $"a terrace of {shops} is {across} across");
+            Assert.IsTrue(up is > 4.5 + 2 * 3.1 and < 4.5 + 3 * 3.1 + 5.5, $"a terrace stands {up} tall");
+        }
+
+        (double low, double narrow) = RuledSilhouette("Apartments", "Apartments(3, 'summer', 2)");
+        (double high, double wide) = RuledSilhouette("Apartments", "Apartments(5, 'summer', 2)");
+
+        Assert.AreEqual(6, high - low, 0.15, $"two floors more stood {high - low} taller");
+        Assert.AreEqual(narrow, wide, 0.11, "the floors changed the block's width");
+        Assert.IsTrue(new[] { 18, 21.6, 25.2 }.Any(width => Math.Abs(width + 0.12 - wide) < 0.15),
+            $"an apartment block is {wide} across");
+
+        (double spire, double chapel) = RuledSilhouette("Chapel", "Chapel('summer', 2)");
+
+        Assert.AreEqual(14 + 0.7 + 0.25, chapel, 0.15, $"a chapel is {chapel} across");
+        Assert.IsTrue(spire is > 22 and < 27, $"a chapel's spire stands {spire} tall");
+    }
+
+    /// <summary>
+    /// Raises one building built by rules in summer and reports how tall it stands and how wide it is, looked at
+    /// square on from far enough off that the view is parallel, a tenth of a meter to a pixel.
+    /// </summary>
+    private (double Up, double Across) RuledSilhouette(string building, string call)
+    {
+        const int Pixels = 600;
+        const double Across = 60;
+        const double Middle = Across / 2 - Across / 8;
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'buildings' { {{building}} }
+            context { angles are degrees  no gamma }
+            orthographic camera { location [0, {{Middle}}, -100]  look at [0, {{Middle}}, 0]  field of view {{2 * Math.Atan(Across / 200) * 180 / Math.PI}} }
+            background [1, 1, 1]
+            point light { location [0, 30, -100] }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, Pixels, Pixels), $"{call} should stand");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int ground = (int) Math.Round(Pixels / 2.0 + Middle * Pixels / Across);
+        int leftmost = Pixels, rightmost = -1, topmost = Pixels;
+
+        for (int x = 0; x < Pixels; x++)
+        for (int y = 0; y < ground; y++)
+        {
+            Color pixel = picture.GetPixel(x, y);
+
+            if (pixel.Red >= 0.97 && pixel.Green >= 0.97 && pixel.Blue >= 0.97)
+                continue;
+
+            leftmost = Math.Min(leftmost, x);
+            rightmost = Math.Max(rightmost, x);
+            topmost = Math.Min(topmost, y);
+        }
+
+        Assert.IsTrue(rightmost > leftmost, $"{call} built nothing at all");
+
+        return ((ground - topmost) * Across / Pixels, (rightmost - leftmost + 1) * Across / Pixels);
+    }
+
+    /// <summary>
     /// What the vehicles library holds out, written down here rather than read out of the file, for
     /// the same reason the tree species are: a test that learns the names from the thing it is testing
     /// cannot notice a rename.

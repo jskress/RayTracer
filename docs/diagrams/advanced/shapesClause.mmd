@@ -1,0 +1,22 @@
+railroad-ebnf-beta
+title "A shape grammar"
+
+shapes = "shapes" [ name ] "{" { "axiom" name | "size" vector
+       | "rules" "{" { name "->" action { action } } "}" | property } "}" ;
+
+action = "extrude" number target
+       | "split" axis "{" { [ "~" ] number target } "}"
+       | "repeat" axis number [ "index" "in" name ] target
+       | "faces" [ "depth" number ] "{" { face ":" target } "}"
+       | ( "move" | "size" ) vector target
+       | "roof" ( ( "gable" | "hip" ) angle | "flat" ) { "across" | ( "overhang" | "verge" ) number
+           | "material" material | "gables" material }
+       | "fill" [ "material" material ]
+       | "place" "{" { surface } "}"
+       | "choose" "{" { number target } "}"
+       | "if" "(" condition ")" target [ "else" target ]
+       | "nothing" | name ;
+
+target = name | "{" { action } "}" ;
+
+face = "front" | "back" | "left" | "right" | "sides" | "top" | "bottom" ;

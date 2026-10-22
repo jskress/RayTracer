@@ -5,7 +5,7 @@ using RayTracer.Graphics;
 namespace RayTracer.Instructions.Surfaces;
 
 /// <summary>
-/// This class is used to resolve the weather a group or object has been out in: grime, dust and wear.
+/// This class is used to resolve the weather a group or object has been out in: grime, dust, wear and snow.
 /// </summary>
 public class WeatherResolver : ObjectResolver<Weather>
 {
@@ -28,6 +28,16 @@ public class WeatherResolver : ObjectResolver<Weather>
     /// This property holds the resolver for the dust's color.
     /// </summary>
     public Resolver<Color> DustColorResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how much snow has fallen.
+    /// </summary>
+    public Resolver<double> SnowResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the snow's color.
+    /// </summary>
+    public Resolver<Color> SnowColorResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how far the edges are worn.
@@ -66,6 +76,8 @@ public class WeatherResolver : ObjectResolver<Weather>
         GrimeColorResolver.AssignTo(value, target => target.GrimeColor, context, variables);
         DustResolver.AssignTo(value, target => target.Dust, context, variables);
         DustColorResolver.AssignTo(value, target => target.DustColor, context, variables);
+        SnowResolver.AssignTo(value, target => target.Snow, context, variables);
+        SnowColorResolver.AssignTo(value, target => target.SnowColor, context, variables);
         WearResolver.AssignTo(value, target => target.Wear, context, variables);
         WearToResolver.AssignTo(value, target => target.WearTo, context, variables);
         RadiusResolver.AssignTo(value, target => target.Radius, context, variables);

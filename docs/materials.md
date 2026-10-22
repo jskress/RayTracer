@@ -820,6 +820,7 @@ object R2D2(2, 0) {
 | `dust d [color c]` | Dust or sand on whatever faces up, from 0 to 1: sandy and matte. |
 | `wear w [to <material>]` | Wear on the edges, from 0 to 1, baring the material named -- the metal under the paint -- or else the part's own, paler and smoother, as handling polishes it. |
 | `splash h [color c]` | Dirt kicked up from the ground, as high as `h` in the model's own units above its own `y = 0`, thickest at the ground. |
+| `snow s [color c]` | Snow, from 0 to 1, lying whole over whatever is flat enough to hold it -- at 1 anything sloping less than about fifty-eight degrees, at a half less than thirty-five -- broken only along its edge, where the slope is getting too steep. |
 | `radius r` | How far about a place grime and wear are looked for, in the units the parts stand in: 0.25 unless said. |
 
 **Every part is weathered from its own material**, so nothing about the model has to be written again:
@@ -828,6 +829,13 @@ by the [patterns that say where weather gathers](pigments-and-patterns.md#where-
 coming on more widely the more of it there is, and each with an edge broken by noise, as real dirt's is.
 An amount of nought adds nothing at all, so `weather { }`, or any weather of nothing, leaves a model
 exactly as it was.
+
+**Snow is not dust that has gone white.**  Dust is broken everywhere it lies, patches and bare places
+together, which is how dust settles; snow that has settled covers, and what is left bare is what was too
+steep to hold it.  So snow lies whole on a roof and only its edge, down where the slope steepens past what
+the snow can hold, is broken.  It goes over everything else the weather does.  It is how the
+[buildings library](libraries.md#built-by-rules)'s grammar buildings take winter: one `weather { snow }`
+and every roof, sill, coping and cornice is white.
 
 **A part's weather is the nearest it is given**: its own, or its group's, and so on out.  A shape shared
 in many places is weathered by the weather of the instance it is met through, so one object may stand

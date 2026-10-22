@@ -111,7 +111,23 @@ Pieces are `Polyhedron` (slab test over planes, `PrecomputedNormalIntersection`)
 the cell shrunk by r grown back by a ball = face slabs, edge cylinders, corner balls; convex, so entry = nearest of
 their entries, exit = farthest exit, exact.  `loose` builds each piece in a randomly shifted space (pattern grain of
 its own); `apart`, `tumble`, `hole`, `materials A, B` per piece.  Uses: rocks `DryStoneWall`/`Rubble`, roads
-`CrazyPaving`, windows `Sash`/`Casement`'s trailing `broken` count (unbroken is the old surface list, pixel-identical).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
+`CrazyPaving`, windows `Sash`/`Casement`'s trailing `broken` count (unbroken is the old surface list, pixel-identical).
+A `ShapeGrammar` (`shapes { axiom A  size v  rules { A -> ... } }`, a `Group`; CGA-style split grammar) is carried
+out when RESOLVED (`ShapeGrammarResolver.SetProperties`; a resolver with no rules -- the block on a primitive call --
+builds nothing): `Instructions/Surfaces/Shapes/` holds `ShapeScope` (oriented box: corner, unit X/Y/Z, sizes; Z INTO
+what it stands for, so a facade scope's -Z is outward as windows are built), the actions (`extrude`, `split` fixed /
+`~` shares, `repeat` round(L/s) stretched, `faces [depth d]` front/back/left/right/top/bottom/`sides` each standing on
+its face Z in, `move`/`size` in the scope's axes, `choose` -- drawn by a splitmix hash of (seed, the choice's parse
+id, the scope's corner and sizes), never `GetHashCode` -- `if`, `fill`, `place`, `roof gable|hip|flat [across]
+[overhang] [verge] [gables M]`, `nothing`, a rule name) and `ShapeDerivation` (rules see `width`/`height`/`depth`,
+parts `index`/`count` and `index in name`; 200 deep is refused as a loop).  A `fill` is a `Polyhedron` of the scope
+in the GRAMMAR's space (no transform), so patterns run on unbroken across tiles -- and a face of a scope lies wherever
+the rules put it, so the buildings library's grammar brick is 100 m deep with its joints 50 m off, and turned a
+quarter (`BuildBrickFlank`) on walls facing X: no face can land in a joint plane.  `place` stands surfaces on the
+middle of the scope's near face in its axes, unscaled.  A roof is convex polytopes in (u along ridge, y, v) carried
+by a handedness-keeping frame.  Uses: buildings `Terrace`/`Apartments`/`Chapel` (meters), winter as
+`weather { snow }` (`Weather.Snow`: facing-up blend, whole above the edge band, unlike `dust`'s noise-broken
+cover).  A `Field` fills a 2D outline in the X/Z plane on a jittered grid with copies of one or
 several things (`of A, B weight 2`), each built once and stood by `Instance` where picked, `turned` and `sized`;
 what stands at a place, its turn and its size are hashed from the place's grid cell (`Field.DrawFor`), never drawn
 in order, and the jitter keeps its old in-order stream so fields asking for none of it are unchanged.  The

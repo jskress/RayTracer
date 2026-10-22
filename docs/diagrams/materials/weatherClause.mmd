@@ -1,5 +1,5 @@
 railroad-ebnf-beta
 title "Weather"
 
-weather = "weather" "{" { ( "grime" | "dust" | "splash" ) number [ "color" color ]
+weather = "weather" "{" { ( "grime" | "dust" | "splash" | "snow" ) number [ "color" color ]
         | "wear" number [ "to" material ] | "radius" number } "}" ;

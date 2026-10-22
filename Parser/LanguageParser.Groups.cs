@@ -197,6 +197,9 @@ public partial class LanguageParser
                 case "fracture":
                     resolver.SurfaceResolvers.Add(ParseFractureClause(clause));
                     break;
+                case "shapes":
+                    resolver.SurfaceResolvers.Add(ParseShapesClause(clause));
+                    break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;
