@@ -8,7 +8,7 @@ namespace RayTracer.Geometry;
 /// This class represents an extrusion.  It is defined by one or more closed paths in 2D
 /// that are extruded along the Y axis.
 /// </summary>
-public class Extrusion : ExtrudedSurface
+public class Extrusion : ExtrudedSurface, IAssembled
 {
     /// <summary>
     /// This attribute holds the path that represents the outline of the extrusion in the
@@ -28,6 +28,31 @@ public class Extrusion : ExtrudedSurface
     /// </summary>
     public double Taper { get; set; } = 1;
 
+    /// <summary>
+    /// This property holds how far every edge of the extrusion is rounded -- where its top and bottom meet its
+    /// sides, and down each corner of its outline -- or nought for sharp edges.
+    /// <para>
+    /// **Nothing anyone makes has a perfectly sharp edge**, and an outline with sharp ones reads as cut from
+    /// sheet.  Rounded, the extrusion is the outline's own shape with a bead of the given radius along every
+    /// edge: the outline drawn in by the rounding and capped top and bottom, a tube of that radius along the
+    /// drawn-in outline at each face, and the sides standing where the outline was drawn, their corners rounded
+    /// by the same amount -- all exact surfaces but the drawn-in outline, which is fitted to within a hundred
+    /// thousandth of the outline's size (see <see cref="PathOffset"/>), and all held as one solid, so a rounded
+    /// extrusion may stand in a CSG as any extrusion does.  It cannot also taper, and its rounding cannot be more
+    /// than half its thickness or more than its outline's tightest curve.
+    /// </para>
+    /// </summary>
+    public double Rounded { get; set; }
+
+    /// <summary>
+    /// This property holds the union of a rounded extrusion's parts, once it is prepared; <c>null</c> for one
+    /// that is not rounded.
+    /// </summary>
+    public Surface Root => _rounded;
+
+    private Surface _rounded;
+    private GeneralPath _roundedSides;
+
     private readonly List<ExtrusionPathSurface> _surfaces = [];
     private readonly List<TaperedExtrusionPathSurface> _taperedSurfaces = [];
 
@@ -43,6 +68,16 @@ public class Extrusion : ExtrudedSurface
     {
         if (Taper < 0)
             throw new Exception("An extrusion's taper must not be negative.");
+
+        _rounded = null;
+        _roundedSides = null;
+
+        if (Rounded > 0)
+        {
+            PrepareRounded();
+
+            return;
+        }
 
         // The rate is how much of the outline's own size is gained or lost per unit of height.  It
         // is nought for an ordinary extrusion, and that is what the walls are chosen by: a taper of
@@ -80,6 +115,86 @@ public class Extrusion : ExtrudedSurface
     }
 
     /// <summary>
+    /// This method builds a rounded extrusion's parts and their union; see <see cref="Rounded"/>.
+    /// </summary>
+    private void PrepareRounded()
+    {
+        double thickness = MaximumY - MinimumY;
+
+        if (Taper != 1)
+            throw new Exception("An extrusion cannot both taper and be rounded.");
+
+        if (!Closed)
+            throw new Exception("An open extrusion has no edges to round; leave out \"open\" or \"rounded\".");
+
+        if (2 * Rounded > thickness * (1 + 1e-9))
+        {
+            throw new Exception(
+                $"An extrusion {thickness:0.###} thick cannot be rounded by {Rounded:0.###}, more than half of that.");
+        }
+
+        GeneralPath outline = Path.NormalizeFor3D();
+        double size = Math.Max(Math.Max(Path.MaxX - Path.MinX, Path.MaxY - Path.MinY), Rounded);
+        double tolerance = 1e-4 * size;
+        GeneralPath inner = PathOffset.Offset(outline, Rounded, tolerance);
+
+        PathOffset.EnsureUncrossed(inner, Rounded);
+
+        _roundedSides = PathOffset.RoundedCorners(outline, Rounded, tolerance);
+
+        List<Surface> parts = [new Extrusion { Path = inner, MinimumY = MinimumY, MaximumY = MaximumY }];
+
+        if (thickness - 2 * Rounded > 1e-9 * Math.Max(1, thickness))
+        {
+            parts.Add(new Extrusion
+            {
+                Path = _roundedSides, MinimumY = MinimumY + Rounded, MaximumY = MaximumY - Rounded
+            });
+        }
+
+        foreach (SubPath run in inner.FindAllSubPaths())
+        {
+            parts.Add(TubeAlong(run.Path, MinimumY + Rounded));
+            parts.Add(TubeAlong(run.Path, MaximumY - Rounded));
+        }
+
+        if (Material is not null)
+        {
+            Dictionary<Material, Material> merged = [];
+
+            foreach (Surface part in parts)
+                part.Material = Material.HandedDown(part.Material, Material, merged);
+        }
+
+        _rounded = parts.Skip(1).Aggregate(
+            parts[0], (union, part) => new CsgSurface { Operation = CsgOperation.Union, Left = union, Right = part });
+        _rounded.Parent = this;
+        _rounded.PrepareForRendering(SampleTimes);
+    }
+
+    // A tube of the rounding's radius along a run of the drawn-in outline, at the given height.
+    private Tube TubeAlong(GeneralPath run, double height)
+    {
+        TubeControlPoint At(TwoDPoint point) => new () { Center = new Point(point.X, height, point.Y), Radius = Rounded };
+
+        Tube tube = new () { Start = At(run.Segments[0].Points[0]), Discontinuous = true };
+
+        foreach (IPathSegment segment in run.Segments)
+        {
+            TwoDPoint[] points = segment.Points;
+
+            tube.Segments.Add(points.Length switch
+            {
+                2 => new TubeSegmentSpec { End = At(points[1]) },
+                3 => new TubeSegmentSpec { Control1 = At(points[1]), End = At(points[2]) },
+                _ => new TubeSegmentSpec { Control1 = At(points[1]), Control2 = At(points[2]), End = At(points[3]) }
+            });
+        }
+
+        return tube;
+    }
+
+    /// <summary>
     /// This property notes whether this extrusion's walls lean rather than run straight up.
     /// </summary>
     private bool IsTapered => _taperRate != 0;
@@ -107,6 +222,14 @@ public class Extrusion : ExtrudedSurface
     /// <returns>A default bounding box, if any, for the surface.</returns>
     protected override BoundingBox GetDefaultBoundingBox()
     {
+        // A rounded one stands within its rounded sides, top to bottom.
+        if (_roundedSides is not null)
+        {
+            return new BoundingBox()
+                .Add(new Point(_roundedSides.MinX, MinimumY, _roundedSides.MinY))
+                .Add(new Point(_roundedSides.MaxX, MaximumY, _roundedSides.MaxY));
+        }
+
         // The cross-section is the outline scaled by something between 1 and the taper, so the box
         // has to hold the outline at both.  Adding the two corners at each scale is enough for
         // that: scaling by a number that is never negative leaves the smaller corner the smaller
@@ -127,6 +250,14 @@ public class Extrusion : ExtrudedSurface
     /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
+        // A rounded one is met as its parts are; see Rounded.
+        if (_rounded is not null)
+        {
+            _rounded.Intersect(ray, intersections);
+
+            return;
+        }
+
         if (Closed)
         {
             AddCapIntersections(ray, intersections, _top, Taper);

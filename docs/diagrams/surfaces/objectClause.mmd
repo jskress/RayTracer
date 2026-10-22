@@ -1,0 +1,5 @@
+railroad-ebnf-beta
+title "Reusing a surface"
+
+reuse = ( "object" | kind | "csg" ) name [ "{" { entry } "}" ]
+      | "object" name "(" [ expression { "," expression } ] ")" [ "{" { entry } "}" ] ;

@@ -10,7 +10,7 @@ namespace RayTracer.Geometry;
 /// cables, pipes and wires -- anywhere the exactness (and CSG-compatibility) of an analytic
 /// surface matters more than the flexibility of an arbitrary swept profile.
 /// </summary>
-public class Tube : Surface
+public class Tube : Surface, IAssembled
 {
     /// <summary>
     /// This property holds the point the tube starts at.

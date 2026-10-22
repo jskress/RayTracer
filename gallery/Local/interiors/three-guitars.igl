@@ -1,0 +1,72 @@
+// Three guitars leaning against a wall, lit from a window to their left: an acoustic, an electric and a
+// bass from the `instruments` library, in inches, scaled into the scene's meters.
+//
+// Each leans back fourteen degrees with its headstock to the wall, so each stands as far out from the wall as
+// its headstock then reaches back -- worked out from where its headstock's end and its tuners' backs come to
+// once leant, the farthest of them touching.  The acoustic's headstock is tipped back from its neck by another
+// fourteen degrees, which is why it stands furthest out.
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    // The light bounced about the room, off the sunlit floor and wall onto the guitars' backs and into
+    // their shadows.
+    diffuse bounces 2
+    diffuse samples 1024
+    diffuse cache
+    info {
+        title 'Three Guitars'
+        author 'J. Stephen Kress'
+        description 'An acoustic, an electric and a bass leaning against a wall, in the light from a window.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'instruments' { AcousticGuitar, ElectricGuitar, BassGuitar }
+
+camera {
+    location [0.6, 0.8, -1.4]
+    look at [0.0, 0.47, 0.42]
+    field of view 50
+}
+
+background [0, 0, 0]
+
+Inch = 0.0254
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.62, 0.6, 0.55]  specular 0.03 }
+Boards = material {
+    pigment brick { [0.2, 0.12, 0.07], [0.28, 0.18, 0.11]  scale [0.9, 4, 0.12] }
+    reflective 0.04  fresnel  roughness 0.35
+}
+
+Wall = 0.6
+
+plane { material Boards }                                     // the floor
+plane { material Plaster  rotate X -90  translate Z Wall }    // the back wall
+plane { material Plaster  rotate Z -90  translate X -1.6 }    // the wall on the left
+
+// -- The light --------------------------------------------------------------------------------------
+
+// The window: out of the picture on the left, the daylight through it falling across the guitars.
+area light {
+    location [-1.55, 0.6, -1.2]
+    axisU [0, 0, 1.0]
+    axisV [0, 1.2, 0]
+    steps 10
+    color [1, 0.97, 0.92]
+    brightness 1.3
+}
+point light { location [1.5, 1.6, -2.5]  color [0.16, 0.17, 0.19] }
+
+// -- The guitars ------------------------------------------------------------------------------------
+
+// Each leans back fourteen degrees, its headstock to the wall: stood as far out from the wall as its
+// headstock then reaches back.
+object AcousticGuitar() { rotate X 14  rotate Y 10  scale Inch  translate [-0.58, 0, Wall - 11.73 * Inch] }
+object ElectricGuitar() { rotate X 14  rotate Y 4  scale Inch  translate [-0.03, 0, Wall - 9.78 * Inch] }
+object BassGuitar() { rotate X 14  rotate Y -6  scale Inch  translate [0.47, 0, Wall - 11.38 * Inch] }

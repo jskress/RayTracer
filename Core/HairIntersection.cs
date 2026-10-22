@@ -71,6 +71,21 @@ public class HairIntersection : Intersection
     public Vector Tangent { get; }
 
     /// <summary>
+    /// This property reports whether the strand is a wire rather than a fiber: one whose own material is a
+    /// metal, as a guitar's strings or a piano's are.  A wire is shaded as the round surface it is rather
+    /// than as a fiber, and stops the light falling on it; see <see cref="Scene"/>.  A strand wearing the
+    /// material of what it grows from is hair, whatever that is.
+    /// </summary>
+    public bool IsAWire =>
+        Surface is StrandSurface { WearsItsSkin: false } strands && (strands.Material?.Metallic ?? 0) > 0;
+
+    /// <summary>
+    /// This property reports whether the strand is a wire finer than the ray is wide, which the ray sees the
+    /// whole round of at once, and which is shaded round its whole round; see <see cref="Scene"/>.
+    /// </summary>
+    public bool IsAFineWire => Coverage < 1 && IsAWire;
+
+    /// <summary>
     /// This property holds the sine of the angle between the ray and the plane square to the strand,
     /// which is how steeply the ray crossed it.  It is what a shadow ray needs to know of a strand it
     /// crosses, and has it without working out anything in the world.

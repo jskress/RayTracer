@@ -2383,6 +2383,184 @@ His white is a gloss paint, so from the front with the light behind him it shows
 photographer would: the suns' light given again a little stronger, and a spotlight behind him narrowed
 to his dome and shoulders with a steep `fade` so that its cone dies before reaching the sand beyond him.
 
+#### Instruments
+
+```
+import 'instruments' { AcousticGuitar, ElectricGuitar, BassGuitar }
+
+object AcousticGuitar() { translate X -18  scale 0.0254 }
+object ElectricGuitar() { scale 0.0254 }
+object BassGuitar() { translate X 18  scale 0.0254 }
+```
+
+| | |
+| --- | --- |
+| `AcousticGuitar` | A steel-string acoustic with a cutaway: a Grand Performance body, a 14-fret neck on a 25.4 in scale, a pin bridge, a tortoiseshell guard and a label inside.  `maker` is what the label says, `'Hand Made'` unless you say. |
+| `ElectricGuitar` | A solid body with two cutaways: a bolt-on maple neck on a 25.5 in scale, three single-coil pickups under a white guard, and a vibrato bridge.  `finish` is the body's material, `GuitarTeal` unless you say. |
+| `BassGuitar` | Its partner, on a 34 in scale: one pickup, a bridge of four barrel saddles and four wound strings.  `finish`, `GuitarGlossBlack` unless you say. |
+| `GuitarTeal`, `GuitarGlossBlack` | The two finishes, each paint under a clear gloss coat.  Any material may be given as a `finish` instead: `object ElectricGuitar(GuitarGlossBlack)`. |
+| `GuitarStand(yoke)` | A stand: a padded cradle the body rests in and a yoke `yoke` up -- 27 unless you say -- holding the neck.  A guitar in it leans back `GuitarStandLean` degrees and stands `GuitarStandRise` up, as below. |
+
+**They are written in inches, and a scene unit is an inch**, the way the [furniture](#furniture) and the
+[droids](#droids) are, so the numbers in the library can be checked against the published figures
+directly; a scene in meters scales them by `0.0254`, as the example does.  **A guitar stands on its end pin
+or strap button, on `y = 0`, neck up, with its top facing `-Z`** and its bass side toward `-X` -- the way
+one stands on a stand, facing the room.  The acoustic stands 40.6 tall, the electric 38.3 and the bass 45.
+
+A guitar in its stand, the two turned and placed as one:
+
+```
+import 'instruments' { ElectricGuitar, GuitarStand, GuitarStandLean, GuitarStandRise }
+
+group {
+    object GuitarStand()
+    object ElectricGuitar() { rotate X GuitarStandLean  translate Y GuitarStandRise }
+    rotate Y -10
+    scale 0.0254
+}
+```
+
+##### What they are built from
+
+The acoustic's outline is traced from a photograph of its front taken square on, scaled by its lower
+bout, and its heel's fittings placed from one of its back; the dealers' figures for the same model give
+the rest, and they agree with the photograph to within a few hundredths of an inch -- the 14th fret of a
+25.4 in scale lands on the body's end, where a 14-fret neck joins it.  The electric and the bass are
+drawn to the published dimensions of the generic double cutaway, with no one maker's outline.  Neither
+photograph is reproduced here.
+
+Everything a close look finds is modeled: every fret, curved to its board's radius; the inlaid dots and the
+rosette; the bridge, its saddle slanted for intonation and its pins; the strings running on from the
+saddle round the tuners' posts; the tuners' bushings, gears and buttons; the electric's three-ply guard,
+its black middle ply showing as a line at the edge; the pickups' pole pieces, the knobs, the switch, the jack
+on the rim, the strap buttons -- the acoustic's on its heel, beside the heel's cap -- and the neck plate's
+screws.  The bodies' edges are [rounded extrusions](advanced-surfaces.md#extrusion).
+
+**The strings are wires**: [strands](advanced-surfaces.md#strand) whose material is metal, so each is as
+fine as its gauge and still holds together across a picture.  An acoustic's four lower strings are
+phosphor bronze wound over steel and its two highest plain steel; the electric's lower three are wound
+nickel; all four of the bass's are wound.  A wound string is [brushed](materials.md#brushed-metal) round
+itself, which is what its winding does to the light.
+
+**The rounded bodies are what they cost**: under two point lights and with antialiasing, an acoustic
+filling a 600 x 800 picture takes about fifteen seconds, and the three side by side in a 900 x 700 one
+about a minute and a half.
+`gallery/Local/interiors/three-guitars.igl` leans all three against a wall in the light from a window.
+
+##### The drums
+
+```
+import 'instruments' { DrumKit, DrumSparkle }
+
+Gold = material DrumSparkle([0.7, 0.52, 0.18])
+
+object DrumKit() { scale 0.0254 }
+object DrumKit(Gold) { translate X 80  scale 0.0254 }
+```
+
+Each drum, cymbal and stand is a piece of its own, made to whatever sizes it is asked for, and `DrumKit`
+sets out a five-piece kit from them.
+
+| | |
+| --- | --- |
+| `DrumKit` | A five-piece kit: a 22 x 18 bass drum with a 10 x 8 and a 12 x 9 tom on it, a 14 x 5.5 snare, a 16 x 16 floor tom, 14 in hi-hats, an 18 in crash and a 20 in ride, the pedal and the throne.  `finish` is the shells' wrap, `DrumRedSparkle` unless you say. |
+| `Drum(diameter, depth, lugs, finish)` | A tom: its shell, a coated head over a clear one, a triple-flanged hoop on each and its lugs. |
+| `SnareDrum(diameter, depth, finish)` | Ten lugs, a strainer and its butt plate, and twenty wires across the bottom head. |
+| `FloorTom(diameter, depth, top, finish)` | Eight lugs and three legs, its batter head `top` above the floor. |
+| `BassDrum(diameter, depth, finish)` | On its side on the floor, its front head toward `-Z` with a port in it, wooden hoops with claws and T-rods, and two spurs. |
+| `Cymbal(diameter)` | Turned bronze, its edge on `y = 0` and its bell up, its grooves running round it. |
+| `CymbalOnStand(diameter, height, tilt)` | A cymbal on a stand, its seat `height` up, tilted `tilt` toward the drummer. |
+| `HiHat(diameter, height)` | The pair on their stand and pedal, the lower one on the stand's cup at `height`. |
+| `SnareStand(height, diameter)`, `DrumThrone(height)`, `DrumPedal(center)` | The rest of the hardware. |
+| `DrumSparkle(hue)`, `DrumRedSparkle` | The sparkle wrap, in any color, and in red. |
+
+A drum's axis is upright with its batter head on top and its middle at the origin, so it can be stood
+or hung anywhere; everything else stands on `y = 0`.  **The kit faces the audience at `-Z`**, its
+drummer behind it at `+Z` on the throne; his left is `+X`, so the hi-hat is on the right as you face
+the kit.  It is about 62 across, 48 from front to back and 53 tall to the top of its crash.
+
+**The sparkle is glitter under a clear coat**: metal flakes, each tilted its own way by a fine
+[normal](materials.md#roughening-the-surface), so each catches a lamp from an angle of its own.  It is
+what makes a shell glitter, and it is also what makes one costly: detail that fine has antialiasing
+look again at nearly every pixel of a shell, so a close look at three toms took about eight minutes at
+900 x 400.
+
+##### The grand piano
+
+```
+import 'instruments' { GrandPiano, PianoBench }
+
+group {
+    object GrandPiano()
+    object PianoBench() { translate Z -17 }
+    scale 0.0254
+}
+object GrandPiano(0) { translate X 70  scale 0.0254 }
+```
+
+| | |
+| --- | --- |
+| `GrandPiano(lid)` | A six-foot grand, 58.7 across and 73.2 long, its lid raised `lid` degrees on its prop -- 38 unless you say, the long prop -- or at 0 closed, its front flap lying flat. |
+| `PianoBench(height)` | The pianist's bench: an adjustable artist's bench, a padded leather cushion 22.5 across and 14 deep on an ebony frame, its seat `height` up -- 19.5 unless you say.  It stands in the piano's own frame, so `translate Z -17` puts it where a pianist sits, and whatever then moves the piano moves it too. |
+
+**It stands with its keyboard's front edge along `z = 0` and the pianist in front of it at `-Z`**, so its
+spine, the bass side, is on his left at `-X`, its tail toward `+Z`, and its lid, hinged along the spine,
+opens on the bentside.  Its outline is drawn to a Yamaha C3X's published size, 149 x 186 cm; the keys to a
+6.48 in octave, 48.1 across, with the black keys in their twos and threes a little off the lines between
+the white ones.
+
+**With its lid up it is meant to be looked into.**  Under the lid are the soundboard and the gold iron plate
+over it, open in five places, and over that all 234 strings: one copper-wound string to each of the lowest
+ten notes and two to each of the next ten, all twenty overstrung across the tenor, and three plain steel
+strings to every note above.  Each runs from its tuning pin at the front to a hitch pin two inches or so
+inside the rim, wherever that falls, so the strings shorten toward the treble as the bentside sweeps in.  The
+hammers stand under them in a slot across the plate's front, and a damper rests on every note below the top
+twenty-one.
+
+##### The keyboard
+
+```
+import 'instruments' { StageKeyboard, KeyboardStand, KeyboardBench }
+
+group {
+    object KeyboardStand() { translate Z 6.5 }
+    object StageKeyboard() { translate Y 26 }
+    object KeyboardBench() { translate Z -16 }
+    scale 0.0254
+}
+object StageKeyboard(88) { translate [60, 26, 0]  scale 0.0254 }
+```
+
+| | |
+| --- | --- |
+| `StageKeyboard(keys)` | A stage keyboard of 61 keys unless you say -- or 73, 76 or 88, each beginning on its proper note -- in a black body with brushed aluminum end cheeks, its pitch and modulation wheels left of the keys, and on the slope behind them two rows of knobs, a lit display, buttons and a row of lit ones. |
+| `KeyboardStand(height)` | Its stand: a single X of black steel, a foot along the floor under each leg and an arm at each top, padded where the keyboard lies, `height` up -- 26 unless you say. |
+| `KeyboardBench(height)` | A padded vinyl bench on X legs, its seat `height` up -- 20 unless you say. |
+
+**The keyboard stands in a piano's own frame**: its keys' front edge along `z = 0`, its player in front of
+it at `-Z`, its bottom on `y = 0`.  On its stand it goes up the stand's height, and the stand goes under
+its middle, 6.5 back; the bench goes 16 in front of the keys, as the example does.  A 61-key keyboard is 41.7
+across and an 88-key one 56.5.
+
+##### The speakers
+
+```
+import 'instruments' { SpeakerStack }
+
+object SpeakerStack() { rotate Y -4  scale 0.0254  translate X -2.3 }
+object SpeakerStack() { rotate Y 4  scale 0.0254  translate X 2.3 }
+```
+
+| | |
+| --- | --- |
+| `SpeakerStack` | A stage's speaker stack: a subwoofer with an 18 in driver, and on it a full-range cabinet with a 15 in woofer under a horn, both in black textured vinyl with steel corners. |
+
+It stands on `y = 0` with its front toward `-Z`, 24 across -- its steel corners standing 0.4 proud either
+side -- 26 deep and 64 tall.  The drivers are there to
+be seen rather than behind a grille: each a steel frame, a rubber surround, a cone sunk back into the
+cabinet and a dust cap, and the horn's mouth flaring back to its throat.  Two of them, toed in a little
+toward the middle of the house, frame a stage in `gallery/Local/showcase/before-the-show.igl`.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the

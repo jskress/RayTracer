@@ -1438,6 +1438,15 @@ public class TestField
 
         Assert.IsNotNull(unfinished, "an edge with no end should have been refused");
         StringAssert.Contains(unfinished, "to");
+
+        // A pattern sets a size between two, so one size alone would leave it nothing to do.
+        string alone = ErrorFrom($$"""
+                                   {{Ball}}
+                                   field { of Ball(0)  {{Outline}}  spacing 0.1  sized 2 by bozo { scale 0.3 } }
+                                   """);
+
+        Assert.IsNotNull(alone, "a pattern setting one size should have been refused");
+        StringAssert.Contains(alone, "between two");
     }
 
     /// <summary>

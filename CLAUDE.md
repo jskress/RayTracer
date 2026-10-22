@@ -133,7 +133,21 @@ sixth of a strand's length IN THE WORLD, at most 2^18 cells, eight paths for eac
 power is tested against exact nought, never `IsBlack`, since it shrinks with the number of paths; each lobe reads
 the light arriving from its center direction, `HairLight.Here.From`).  Isotropic light was 1.5-2x too bright: the
 flow is what makes it match a brute-force path tracer (`TestHairLight`) within ~15%.  A non-hair surface's shadow
-ray keeps each crossed strand's forward share (`Fiber.SharesOf`).  Spectral renders take the absorption by
+ray keeps each crossed strand's forward share (`Fiber.SharesOf`).  A strand whose OWN material is `metallic` is a WIRE
+(`HairIntersection.IsAWire`; not hair wearing its skin): never a fiber -- opaque to shadow rays and photons, not a
+photon target, kept out of the bounce cache -- and shaded as a surface: at its true round normal when it covers the
+ray (brushed with no direction = grooves ROUND it, a wound string, `Facets.At`'s strand), and when finer than the ray
+(`IsAFineWire`, coverage < 1) by `Scene.ShadeWire` (`Core/Scene.Wires.cs`), the EXACT average over its round:
+diffuse in closed form (cos(axial)(sin psi + (pi - psi) cos psi)/4), each shadow ray from the side of the round facing
+its lamp, reflections at places spread evenly across its width, and each lamp's GGX highlight as pi/(8 cos eps) F
+times the integral round the wire of D G -- D stretched (lengthwise / round alphas), the lobe flattened by
+tan t = sqrt(P/R) tan v and summed by 16-point Gauss-Legendre, cut where the eye, the halfway and the lamp stop
+seeing the round (Phong's averaged by quadrature).  Measured against 4000 rays across a resolved wire, within 0.2%
+lit from front, side, behind or along it, seen square on (1% in a highlight's far tail seen at a slant).  Its mirror and
+bounce rays go by `Scene.RaysOf`: a wire whose Share x count is under one sends ONE ray with that chance, weighted 1/chance
+(salts 133/134) -- unweighted by share, a ray meeting a piano's 234 strings sent 16 mirror rays from each, which met them
+all again (the documented example took 52 min at 40x30; 1 s after).  Shading the place each sampled ray met made polished strings glitter, and
+a stretched-GGX stand-in (alpha 1 round the wire) was 4/pi too bright and lost backlit glints.  Spectral renders take the absorption by
 `FromUnbounded` and work the hair's own color out from it band by band.  A strand finer than a ray's cone is
 WIDENED to it and carries `HairIntersection.Coverage` (true width / widened); `Scene.GetColorFor` composites partly
 covering strands front to back (stopping at a thousandth left), each taking lights' samples in proportion to its
@@ -147,7 +161,18 @@ surfaces are untouched, so other scenes stay bit-identical. `Basics/` has the ma
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,
 `Line`, `QuadCurve`, `CubicCurve`, `TwoDPoint`/`TwoDVector`) used by extrusions, lathes and
-text layout to describe outlines in 2D before they're revolved/extruded into 3D surfaces.
+text layout to describe outlines in 2D before they're revolved/extruded into 3D surfaces.  An extrusion's wall
+segment skips a ray whose 2D line has every one of the segment's control points strictly to one side
+(`ExtrusionPathSurface.AllToOneSide`, the hull property: same crossings, 45% less time on a 13-segment body filling the picture).
+`extrusion { ... rounded r }` (`Extrusion.Rounded`, an `IAssembled` like `Tube`: the five places that walk into a
+tube's union walk into any `IAssembled`) is the CSG union of the outline drawn in by r (`Graphics/PathOffset.cs`:
+lines exact, cubics fitted by least squares with Schneider re-parameterizing and halved until within 1e-4 of the
+outline's size, measured geometrically; corners trimmed turning toward the side moved to, joined by arcs turning
+away), capped; the outline itself with its outward corners rounded by arcs (`PathOffset.RoundedCorners`) from
+min Y + r to max Y - r; and a `Tube` of radius r along each drawn-in run at both heights.  Refused: r over half the
+thickness, a curve tighter than r (`d kappa >= 1`), a drawn-in outline that crosses itself (`EnsureUncrossed`: an
+outline narrower than 2r; un-refused it overflowed the stack in path normalization), tapering.  Exact tubes cost:
+a rounded guitar body filling the frame ~4-5x a sharp one.
 
 Shading carries light in an `ISpectrum<TSelf>` struct (`Graphics/ISpectrum.cs`), not in `Color`:
 every shading method (`Scene`, `Light.ApplyPhong`, `Medium`, `Interior`/`Material` tints,

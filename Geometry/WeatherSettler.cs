@@ -49,8 +49,8 @@ internal static class WeatherSettler
                 Settle(csgSurface.Left, weather, shared, found);
                 Settle(csgSurface.Right, weather, shared, found);
                 break;
-            case Tube { Root: not null } tube:
-                Settle(tube.Root, weather, shared, found);
+            case IAssembled { Root: not null } assembled:
+                Settle(assembled.Root, weather, shared, found);
                 break;
             case Instance instance when shared.Add(instance.Prototype):
                 Settle(instance.Prototype, null, shared, found);

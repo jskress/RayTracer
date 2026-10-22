@@ -10,7 +10,11 @@ using RayTracer.Instructions.Pigments;
 using RayTracer.Instructions.Surfaces;
 using RayTracer.Instructions.Transforms;
 using RayTracer.Graphics;
+using RayTracer.ImageIO;
+using RayTracer.Options;
+using RayTracer.Parser;
 using RayTracer.Pigments;
+using RayTracer.Renderer;
 
 namespace Tests;
 
@@ -645,6 +649,75 @@ public class TestBlobComponents
     private static Resolver<double> Literal(double value)
     {
         return new LiteralResolver<double> { Value = value };
+    }
+
+    /// <summary>
+    /// This tests a component's transforms written either side of another of its entries: they are all kept,
+    /// in order, exactly as when they are written together -- for every kind of component, since they share the
+    /// one way of reading them.
+    /// </summary>
+    [TestMethod]
+    public void TestAComponentsTransformsSurviveAnEntryBetweenThem()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"blob-transforms-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            Canvas Render(string component)
+            {
+                string path = Path.Combine(directory, "scene.igl");
+                string output = Path.Combine(directory, "out.png");
+
+                File.WriteAllText(path,
+                    "context { no gamma }\n" +
+                    "camera { location [0, 0, -10]  look at [0, 0, 0]  field of view 50 }\n" +
+                    "background Black\n" +
+                    "blob { threshold 0.5  " + component + "  material { pigment White  ambient 0  diffuse 0  specular 0  emission 1 } }\n");
+
+                ImageRenderer renderer = new LanguageParser(path).Parse();
+
+                Assert.IsNotNull(renderer, component);
+                renderer.Render(new RenderOptions { OutputFileName = output, Width = 40, Height = 40, ProgressStyleText = "none" });
+
+                return new ImageFile(output).Load()[0];
+            }
+
+            static int Lit(Canvas canvas)
+            {
+                int count = 0;
+
+                for (int y = 0; y < canvas.Height; y++)
+                for (int x = 0; x < canvas.Width; x++)
+                    if (canvas.GetPixel(x, y).Red > 0.5)
+                        count++;
+
+                return count;
+            }
+
+            foreach ((string apart, string together) in new[]
+                     {
+                         ("sphere { scale 2  radius 1  translate X 1 }", "sphere { radius 1  scale 2  translate X 1 }"),
+                         ("cylinder { from [-1, 0, 0]  scale [1, 2, 1]  to [1, 0, 0]  radius 0.5  translate Y 1 }",
+                          "cylinder { from [-1, 0, 0]  to [1, 0, 0]  radius 0.5  scale [1, 2, 1]  translate Y 1 }")
+                     })
+            {
+                Canvas split = Render(apart), whole = Render(together);
+                int lit = Lit(whole);
+
+                Assert.IsGreaterThan(20, lit, $"nothing to compare for {together}");
+                Assert.AreEqual(lit, Lit(split), $"{apart} against {together}");
+
+                for (int y = 0; y < whole.Height; y++)
+                for (int x = 0; x < whole.Width; x++)
+                    Assert.AreEqual(whole.GetPixel(x, y).Red, split.GetPixel(x, y).Red, 1e-9, $"{apart}, pixel ({x}, {y})");
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
     }
 
     /// <summary>

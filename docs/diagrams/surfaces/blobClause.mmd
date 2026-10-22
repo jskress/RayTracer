@@ -1,0 +1,12 @@
+railroad-ebnf-beta
+title "A blob"
+
+blob = "blob" "{" { "threshold" number | sphere | cylinder | plane | property } "}" ;
+
+sphere = "sphere" "{" { "center" point | "radius" number | shared } "}" ;
+
+cylinder = "cylinder" "{" { ( "from" | "to" ) point | "radius" number | shared } "}" ;
+
+plane = "plane" "{" { "at" point | "normal" vector | "radius" number | shared } "}" ;
+
+shared = "strength" number | pigment | transform ;

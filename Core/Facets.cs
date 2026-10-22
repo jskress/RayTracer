@@ -95,6 +95,11 @@ public sealed class Facets
     /// the surface, or a point lies on the axis it is brushed round, there are no grooves to speak of, and
     /// the frame is any at all.
     /// </para>
+    /// <para>
+    /// **A wire brushed with no direction said is brushed round itself**, its grooves running round it as a
+    /// wound string's winding does, so its highlight is drawn out along its length.  A direction said is
+    /// kept, on a wire as anywhere.
+    /// </para>
     /// </summary>
     /// <param name="material">The material to shade with.</param>
     /// <param name="surface">The surface the ray met.</param>
@@ -102,17 +107,30 @@ public sealed class Facets
     /// <param name="normal">The surface's normal there, in the world.</param>
     /// <param name="timeIndex">Which instant of the shutter's opening to look at.</param>
     /// <param name="portals">The instances the surface was met through.</param>
+    /// <param name="strand">The crossing, where the surface is a strand: a wire, since a fiber is never
+    /// shaded as a surface.  A wire finer than the ray is shaded round its whole round at once; see
+    /// <see cref="Scene"/>'s shading of a wire.</param>
     /// <returns>The facets, or <c>null</c>.</returns>
     public static Facets At(
-        Material material, Surface surface, Point point, Vector normal, int timeIndex, Portals portals)
+        Material material, Surface surface, Point point, Vector normal, int timeIndex, Portals portals,
+        HairIntersection strand = null)
     {
         if (!material.IsAnisotropic)
             return null;
 
-        Vector local = material.BrushedAround is { } axis
-            ? axis.Cross(surface.WorldToSurface(point, timeIndex, portals) - Point.Zero)
-            : material.BrushedAlong ?? new Vector(1, 0, 0);
-        Vector world = surface.DirectionToWorld(local, timeIndex, portals);
+        Vector world;
+
+        if (strand?.Tangent is { } tangent && material.BrushedAround is null && material.BrushedAlong is null)
+            world = surface.DirectionToWorld(tangent, timeIndex, portals).Cross(normal);
+        else
+        {
+            Vector local = material.BrushedAround is { } axis
+                ? axis.Cross(surface.WorldToSurface(point, timeIndex, portals) - Point.Zero)
+                : material.BrushedAlong ?? new Vector(1, 0, 0);
+
+            world = surface.DirectionToWorld(local, timeIndex, portals);
+        }
+
         Vector along = world - normal * world.Dot(normal);
 
         along = along.Magnitude > 1e-9 ? along.Unit : Microfacets.FrameAround(normal).Across;

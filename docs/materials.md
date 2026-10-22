@@ -269,8 +269,9 @@ material {
 
 Both are in the surface's own space, as a pattern is, so the grooves turn and stretch with the
 surface, and `around` circles the middle of that space; a direction that leaves the surface is laid
-flat on it.  Left unsaid, the grooves run along X.  Only a rough, opaque surface is brushed: glass
-frosts alike every way.
+flat on it.  Left unsaid, the grooves run along X -- except on a [wire](advanced-surfaces.md#strand), a
+strand of metal, where they run round it, as a wound string's winding does.  Only a rough, opaque
+surface is brushed: glass frosts alike every way.
 
 `gallery/Local/materials/brushed-steel.igl` sets a turned pan lid, a brushed box and a turned canister
 under small lamps.
@@ -806,6 +807,12 @@ object R2D2(2, 0) {
     }
 }
 ```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/materials/weatherClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/materials/weatherClause.svg">
+  <img alt="Weather" src="images/materials/weatherClause.svg">
+</picture>
 
 | Entry | What it does |
 | --- | --- |

@@ -11,12 +11,14 @@ namespace RayTracer.Geometry;
 public class ExtrusionPathSurface
 {
     private readonly IPathSegment _segment;
+    private readonly TwoDPoint[] _points;
     private readonly double _minimumY;
     private readonly double _maximumY;
 
     public ExtrusionPathSurface(IPathSegment segment, double minimumY, double maximumY)
     {
         _segment = segment;
+        _points = segment.Points;
         _minimumY = minimumY;
         _maximumY = maximumY;
     }
@@ -31,8 +33,36 @@ public class ExtrusionPathSurface
     /// If the ray doesn't intersect the surface, the enumerable must be empty.</returns>
     internal IEnumerable<TwoDIntersection> GetTwoDIntersections(Ray ray, TwoDRay projectedRay)
     {
+        // A line or curve stays within the hull of the points that define it, so it cannot cross a line they
+        // all lie to one side of; such a segment is passed by without solving for crossings it cannot have.
+        // Only that is skipped, so what is found is what always was.
+        if (AllToOneSide(projectedRay))
+            return [];
+
         return _segment.GetIntersections(projectedRay)
             .Select(intersection => AdjustDistance(ray, intersection));
+    }
+
+    // Whether every point defining the segment lies strictly to one side of the ray's line.
+    private bool AllToOneSide(TwoDRay projectedRay)
+    {
+        double ox = projectedRay.Origin.X, oy = projectedRay.Origin.Y;
+        double dx = projectedRay.Direction.X, dy = projectedRay.Direction.Y;
+        int left = 0, right = 0;
+
+        foreach (TwoDPoint point in _points)
+        {
+            double side = dx * (point.Y - oy) - dy * (point.X - ox);
+
+            if (side > 0)
+                left++;
+            else if (side < 0)
+                right++;
+            else
+                return false;
+        }
+
+        return left == 0 || right == 0;
     }
 
     /// <summary>

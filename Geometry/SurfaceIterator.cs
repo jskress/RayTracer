@@ -52,8 +52,8 @@ public class SurfaceIterator
                     foreach (Surface child in GetSurfaces([csgSurface.Left, csgSurface.Right], shared))
                         yield return child;
                     break;
-                case Tube { Root: not null } tube:
-                    foreach (Surface child in GetSurfaces([tube.Root], shared))
+                case IAssembled { Root: not null } assembled:
+                    foreach (Surface child in GetSurfaces([assembled.Root], shared))
                         yield return child;
                     break;
 

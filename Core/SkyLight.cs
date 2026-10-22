@@ -63,7 +63,7 @@ public class SkyLight : Light
     /// every sample of a blue sky put a white highlight on a shiny surface -- a white sheen the sky did
     /// not have, as bright from the dim blue overhead as from the bright horizon.
     /// </summary>
-    protected override bool HighlightsBySample => true;
+    protected internal override bool HighlightsBySample => true;
 
     // The sky's light laid out by direction, made the first time it is wanted, once the picture it is
     // made from is loaded, and kept with the pigment it was made from so that a sky given another is

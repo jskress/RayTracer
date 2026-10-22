@@ -73,8 +73,8 @@ internal static class ShadowSettler
                 Settle(csgSurface.Left, noShadow, noCaustics, noShadowsAnywhere, shared);
                 Settle(csgSurface.Right, noShadow, noCaustics, noShadowsAnywhere, shared);
                 break;
-            case Tube { Root: not null } tube:
-                Settle(tube.Root, noShadow, noCaustics, noShadowsAnywhere, shared);
+            case IAssembled { Root: not null } assembled:
+                Settle(assembled.Root, noShadow, noCaustics, noShadowsAnywhere, shared);
                 break;
             case Instance instance when shared.Add(instance.Prototype):
                 Settle(instance.Prototype, noShadowsAnywhere, false, noShadowsAnywhere, shared);

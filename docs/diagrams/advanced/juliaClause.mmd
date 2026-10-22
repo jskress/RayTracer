@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "A Julia set"
+
+julia = "julia" "{" { "c" quaternion | ( "iterations" | "accuracy" ) number
+      | property } "}" ;
+
+quaternion = "[" number "," number "," number "," number "]" ;

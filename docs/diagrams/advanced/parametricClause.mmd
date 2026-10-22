@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "A parametric surface"
+
+parametric = "parametric" "{" { ( "X" | "Y" | "Z" ) "{" expression "}"
+           | ( "u" | "v" ) span | "accuracy" number | property } "}" ;
+
+span = ( "[" | "(" ) number "," number ( "]" | ")" ) ;

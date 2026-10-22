@@ -1,0 +1,24 @@
+railroad-ebnf-beta
+title "An L-system"
+
+lsystem = "lsystem" [ name ] "{" { "axiom" string | "generations" number | productions
+        | materials | controls | commands | surfaces | "leaf" name | ignore
+        | property } "}" ;
+
+productions = "productions" "{" { string [ "(" number [ "%" ] ")" ] "->" string } "}" ;
+
+materials = "materials" "{" { ( string | "depth" number ) "->" name } "}" ;
+
+controls = "controls" "{" { "tubes" | "pipes" | "extrusion" | "angle" angle
+         | ( "length" | "diameter" | "factor" | "susceptibility" ) number
+         | "tropism" vector } "}" ;
+
+commands = "commands" "{" { string "->" turtle } "}" ;
+
+turtle = "move" | "drawLine" | "turnLeft" | "turnRight" | "pitchUp" | "pitchDown"
+       | "rollLeft" | "rollRight" | "turnAround" | "toVertical" | "startBranch"
+       | "completeBranch" ;
+
+surfaces = "surfaces" "{" { string "->" name } "}" ;
+
+ignore = "ignore" ( "commands" [ "and" string ] | string ) ;

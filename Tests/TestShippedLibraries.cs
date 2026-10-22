@@ -2751,4 +2751,277 @@ public class TestShippedLibraries
             "a wing turned a quarter looks exactly like one that was not turned at all; the plan's " +
             "turn is not reaching the geometry");
     }
+
+    /// <summary>
+    /// Copies the instruments library beside the scenes this class writes.
+    /// </summary>
+    private void UseInstruments()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "instruments.igl"),
+            Path.Combine(_directory, "instruments.igl"), true);
+    }
+
+    [TestMethod]
+    public void TestEveryGuitarIsAsBigAsTheRealThing()
+    {
+        // Each guitar seen square on against white, from far enough off that the view is a plan of it, and
+        // measured: how wide it stands and how tall.  The widths are the published ones -- a 16 in lower bout
+        // on the acoustic, 12.75 on the electric with the jack a little proud of its rim, 13 on the bass --
+        // and the heights the ones the documentation gives, which are each within a few percent of what the
+        // dealers list.  A body drawn at the wrong scale, or a neck run out a fret too far, fails here.
+        UseInstruments();
+
+        (string guitar, double wide, double tall)[] expected =
+        [
+            ("AcousticGuitar", 16.0, 40.55),
+            ("ElectricGuitar", 12.85, 38.3),
+            ("BassGuitar", 13.0, 45.0)
+        ];
+
+        foreach ((string guitar, double wide, double tall) in expected)
+        {
+            (double across, double up) = GuitarSilhouette(guitar);
+
+            Assert.IsTrue(Math.Abs(across - wide) < 0.25,
+                $"{guitar} measured {across:F2} across where it should be {wide:F2}");
+            Assert.IsTrue(Math.Abs(up - tall) < 0.3,
+                $"{guitar} measured {up:F2} tall where it should be {tall:F2}");
+        }
+    }
+
+    /// <summary>
+    /// Renders one guitar square on against white and reports how wide and how tall its silhouette is, in
+    /// inches, checking that its lowest point stands on the ground.
+    /// </summary>
+    private (double Across, double Up) GuitarSilhouette(string guitar)
+    {
+        (double across, double up, double bottom) = Silhouette(guitar, $"{guitar}()", 23);
+
+        // Its lowest point is the end pin or strap button it stands on, on the ground.
+        Assert.IsTrue(Math.Abs(bottom) < 0.15, $"{guitar} stands at {bottom:F2}, not on the ground");
+
+        return (across, up);
+    }
+
+    /// <summary>
+    /// Renders one piece of the instruments library square on from in front against white, looking at
+    /// `middle` inches up, and reports how wide and how tall its silhouette is and where its lowest point is.
+    /// </summary>
+    private (double Across, double Up, double Bottom) Silhouette(string name, string call, double middle,
+        string camera = null)
+    {
+        // Fifty inches across 500 pixels, a tenth of an inch to each, looked at from far enough off that
+        // the view is all but parallel.
+        const int Pixels = 500;
+        const double Across = 50.0;
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            import 'instruments' { {{name}}, DrumRedSparkle }
+            context { angles are degrees  no gamma }
+            {{camera ?? $"orthographic camera {{ location [0, {middle}, -100]  look at [0, {middle}, 0]  field of view 28.0725 }}"}}
+            background [1, 1, 1]
+            point light { location [0, 30, -100] }
+            object {{call}}
+            """);
+
+        Assert.IsNull(Render(scene, Pixels, Pixels), $"{call} should build");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+        int leftmost = Pixels, rightmost = -1, topmost = Pixels, bottommost = -1;
+
+        for (int x = 0; x < Pixels; x++)
+        for (int y = 0; y < Pixels; y++)
+        {
+            Color pixel = picture.GetPixel(x, y);
+
+            if (pixel.Red >= 0.97 && pixel.Green >= 0.97 && pixel.Blue >= 0.97)
+                continue;
+
+            leftmost = Math.Min(leftmost, x);
+            rightmost = Math.Max(rightmost, x);
+            topmost = Math.Min(topmost, y);
+            bottommost = Math.Max(bottommost, y);
+        }
+
+        Assert.IsTrue(rightmost > leftmost, $"{call} rendered as nothing at all");
+
+        return ((rightmost - leftmost + 1) * Across / Pixels, (bottommost - topmost + 1) * Across / Pixels,
+            middle - (bottommost + 1 - Pixels / 2.0) * Across / Pixels);
+    }
+
+    [TestMethod]
+    public void TestEveryDrumAndCymbalIsAsBigAsItIsAskedFor()
+    {
+        // The drums are pieces made to whatever sizes they are asked for, so the sizes have to be what makes
+        // them: a drum is its diameter across plus the flanges of its hoops, 0.84 in all, and its depth plus
+        // its hoops standing over its heads, 0.99; a cymbal is its diameter across and its bow and bell
+        // high.  A size that stopped reaching the geometry -- a hoop drawn at a fixed radius, say -- fails here.
+        UseInstruments();
+
+        (string name, string call, double wide, double tall)[] expected =
+        [
+            ("Drum", "Drum(10, 8, 6, DrumRedSparkle)", 10.84, 8.99),
+            ("Drum", "Drum(16, 12, 8, DrumRedSparkle)", 16.84, 12.99),
+            // The snare's strainer lever stands 0.3 past its hoop's flange on the one side.
+            ("SnareDrum", "SnareDrum(14, 5.5, DrumRedSparkle)", 15.14, 6.49),
+            ("Cymbal", "Cymbal(18)", 18.0, 1.57)
+        ];
+
+        foreach ((string name, string call, double wide, double tall) in expected)
+        {
+            (double across, double up, _) = Silhouette(name, call, 0);
+
+            Assert.IsTrue(Math.Abs(across - wide) < 0.25, $"{call} measured {across:F2} across where it should be {wide:F2}");
+            Assert.IsTrue(Math.Abs(up - tall) < 0.25, $"{call} measured {up:F2} tall where it should be {tall:F2}");
+        }
+    }
+
+    [TestMethod]
+    public void TestAGrandPianoIsAsBigAsTheRealThing()
+    {
+        // Seen from straight above with its lid down, a grand is its case's outline, which is drawn to the
+        // published size of a six-foot grand: 58.7 across and 73.2 from its keys' front to its tail, the key
+        // slip standing a quarter inch further forward.  Eighty inches across 500 pixels here, the picture
+        // centered over the case.
+        UseInstruments();
+
+        (double across, double along, _) = Silhouette("GrandPiano", "GrandPiano(0)", 0,
+            "orthographic camera { location [0, 200, 36.6]  look at [0, 0, 36.6]  up [0, 0, 1]  field of view 22.62 }");
+        double scale = 80.0 / 50.0;
+
+        Assert.IsTrue(Math.Abs(across * scale - 58.7) < 0.4, $"the grand measured {across * scale:F2} across where it should be 58.7");
+        Assert.IsTrue(Math.Abs(along * scale - 73.45) < 0.4, $"the grand measured {along * scale:F2} long where it should be 73.45");
+    }
+
+    [TestMethod]
+    public void TestASpeakerStackIsTheSizeTheDocumentationSays()
+    {
+        // 24 across with its steel corners 0.4 proud either side, and 64 tall standing on the floor: the corners
+        // stand proud at the front and sides only, so the cabinets stand on one another and on the ground.  A
+        // hundred inches across 500 pixels here.
+        UseInstruments();
+
+        (double across, double up, double bottom) = Silhouette("SpeakerStack", "SpeakerStack()", 0,
+            "orthographic camera { location [0, 35, -200]  look at [0, 35, 0]  field of view 28.0725 }");
+
+        Assert.IsTrue(Math.Abs(across * 2 - 24.8) < 0.4, $"the stack measured {across * 2:F2} across where it should be 24.8");
+        Assert.IsTrue(Math.Abs(up * 2 - 64) < 0.4, $"the stack measured {up * 2:F2} tall where it should be 64");
+        // The helper measures from the middle it was told, nought, at its own scale; this camera looks at 35 up at
+        // twice that scale.
+        double footing = 35 + bottom * 2;
+
+        Assert.IsTrue(Math.Abs(footing) < 0.25, $"the stack stands at {footing:F2}, not on the ground");
+    }
+
+    [TestMethod]
+    public void TestAPianoBenchsSeatIsAsHighAsItIsAskedFor()
+    {
+        // The height asked for is the top of the seat; the bench is 22.5 across with its knobs a little
+        // further out, whatever its height.
+        UseInstruments();
+
+        foreach (double height in new[] { 19.5, 22.0 })
+        {
+            (double across, double up, double bottom) = Silhouette("PianoBench", $"PianoBench({height})", 12);
+
+            Assert.IsTrue(Math.Abs(up - height) < 0.25, $"a bench asked for {height} high measured {up:F2}");
+            Assert.IsTrue(Math.Abs(bottom) < 0.15, $"a bench {height} high stands at {bottom:F2}, not on the floor");
+            Assert.IsTrue(Math.Abs(across - 24.2) < 0.3, $"a bench {height} high measured {across:F2} across");
+        }
+    }
+
+    [TestMethod]
+    public void TestAKeyboardIsAsWideAsItsKeysAndItsStandAndBenchAsHigh()
+    {
+        // A keyboard is its white keys across, 0.925 each, and 8.4 of cheeks and wheels; its stand's arms and its
+        // bench's seat stand as high as they are asked.  A hundred inches across 500 pixels here.
+        UseInstruments();
+
+        const string Camera = "orthographic camera { location [0, 20, -200]  look at [0, 20, 0]  field of view 28.0725 }";
+
+        foreach ((int keys, double wide) in new[] { (61, 41.7), (88, 56.5) })
+        {
+            (double across, _, _) = Silhouette("StageKeyboard", $"StageKeyboard({keys})", 0, Camera);
+
+            Assert.IsTrue(Math.Abs(across * 2 - wide) < 0.4, $"a {keys}-key keyboard measured {across * 2:F2} across where it should be {wide}");
+        }
+
+        foreach ((string name, double height) in new[] { ("KeyboardStand", 26.0), ("KeyboardStand", 32.0), ("KeyboardBench", 20.0) })
+        {
+            (_, double up, double bottom) = Silhouette(name, $"{name}({height})", 0, Camera);
+            double footing = 20 + bottom * 2;
+
+            Assert.IsTrue(Math.Abs(up * 2 - height) < 0.4, $"{name}({height}) measured {up * 2:F2} high");
+            Assert.IsTrue(Math.Abs(footing) < 0.25, $"{name}({height}) stands at {footing:F2}, not on the floor");
+        }
+    }
+
+    [TestMethod]
+    public void TestAnAcousticsLowerFourStringsAreBronzeAndItsTopTwoSteel()
+    {
+        // A steel-string acoustic's low E, A, D and G are phosphor bronze wound over steel, and its B and high
+        // E plain steel -- silver against gold, which is what a close look at one shows first.  Seen square
+        // on across the neck, over the dark board, each string's brightest pixels should carry its metal's
+        // color: the bronze strongly warm, the steel neutral.
+        UseInstruments();
+
+        const int Wide = 600;
+        const int High = 60;
+        const double Across = 3.0;
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'instruments' { AcousticGuitar }
+            context { angles are degrees  no gamma }
+            orthographic camera { location [0, 27.28, -100]  look at [0, 27.28, 0]  field of view 1.7186 }
+            background [0.5, 0.5, 0.5]
+            point light { location [-20, 40, -100]  color [0.3, 0.3, 0.3] }
+            object AcousticGuitar()
+            """);
+
+        // Lit dimly against gray, so that neither the strings' highlights nor the backdrop they mirror
+        // reach white, where every metal looks alike.
+        Assert.IsNull(Render(scene, Wide, High), "the acoustic should build");
+
+        Canvas picture = new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+
+        for (int k = 0; k < 6; k++)
+        {
+            // Where the string crosses 27 in up the body, between the saddle and the nut.
+            double atSaddle = -1.09 + k * 0.436;
+            double saddleY = 8.83 + 0.055 * atSaddle;
+            double atNut = -0.725 + k * 0.29;
+            double x = atSaddle + (atNut - atSaddle) * (27 - saddleY) / (34.31 - saddleY);
+            int column = (int) Math.Round(Wide / 2.0 + x * Wide / Across);
+            double red = 0, blue = 0;
+            int counted = 0;
+
+            // The string's own pixels -- brighter than the dark board behind it -- leaving out the glint
+            // down its middle, where its round mirrors the lamp: that clips to white in every channel,
+            // and white says nothing about which metal it is.
+            for (int c = column - 6; c <= column + 6; c++)
+            for (int r = 5; r < High - 5; r++)
+            {
+                Color pixel = picture.GetPixel(c, r);
+
+                if (pixel.Red + pixel.Green + pixel.Blue < 0.3 || Math.Max(pixel.Red, Math.Max(pixel.Green, pixel.Blue)) >= 0.99)
+                    continue;
+
+                red += pixel.Red;
+                blue += pixel.Blue;
+                counted++;
+            }
+
+            Assert.IsTrue(counted > 20, $"string {k} was not found where it should cross the neck");
+
+            double warmth = red / Math.Max(blue, 1e-6);
+
+            if (k < 4)
+                Assert.IsTrue(warmth > 1.5, $"string {k} should be bronze, but it is only {warmth:F2} as red as blue");
+            else
+                Assert.IsTrue(warmth < 1.15, $"string {k} should be plain steel, but it is {warmth:F2} as red as blue");
+        }
+    }
 }

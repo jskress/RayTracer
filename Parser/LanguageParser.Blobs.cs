@@ -211,11 +211,16 @@ public partial class LanguageParser
     {
         if (clause is null)
         {
-            Instructions.Transforms.TransformResolver transformResolver = ParseTransformClause();
+            // **The transforms already gathered are handed back in, rather than replaced**, as a surface's are
+            // (see HandleTransformOnlyEntryClause): any other entry standing among them ends one run of
+            // transforms and starts another, and assigning here threw away everything before it --
+            // `sphere { scale 2  radius 1  translate X 1 }` lost its scale.
+            int gathered = resolver.TransformResolver?.TransformCreators.Count ?? 0;
+            Instructions.Transforms.TransformResolver transformResolver = ParseTransformClause(resolver.TransformResolver);
 
-            // A `{*}` (zero-or-more) transform clause "succeeds" with an empty resolver even when
-            // nothing was actually consumed, so a null check alone isn't enough here.
-            if (transformResolver == null || transformResolver.TransformCreators.Count == 0)
+            // A `{*}` (zero-or-more) transform clause "succeeds" with an empty resolver even when nothing was
+            // actually consumed, so "empty" has to mean "no bigger than it was".
+            if (transformResolver == null || transformResolver.TransformCreators.Count == gathered)
             {
                 throw CreateUnexpectedInputException(
                     $"Expecting a valid {noun} component property here.");

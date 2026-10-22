@@ -277,7 +277,9 @@ public partial class Scene
         return surface switch
         {
             CsgSurface csg => Math.Max(strength, Math.Max(StrengthWithin(csg.Left), StrengthWithin(csg.Right))),
-            Tube { Root: not null } tube => Math.Max(strength, StrengthWithin(tube.Root)),
+            IAssembled { Root: not null } assembled => Math.Max(strength, StrengthWithin(assembled.Root)),
+            // A string's glint is too fine a target to aim photons at.
+            StrandSurface => 0,
             Group group => group.Surfaces.Aggregate(strength, (most, child) => Math.Max(most, StrengthWithin(child))),
             _ => strength
         };
@@ -759,7 +761,7 @@ public partial class Scene
     {
         foreach (Intersection hit in hits)
         {
-            if (hit.Distance < 0 || hit is HairIntersection)
+            if (hit.Distance < 0 || hit is HairIntersection fiber && !IsAWire(fiber))
                 continue;
 
             if (hit.Surface.NoShadow || hit.Portals.CastsNoShadow)
@@ -829,7 +831,7 @@ public partial class Scene
             double alpha = material.Roughness * material.Roughness;
 
             // A brushed surface's facets, in its own frame, along its grooves and across them; see Facets.
-            Facets facets = Facets.At(material, hit.Surface, hit.Point, hit.Normal, 0, hit.Portals);
+            Facets facets = Facets.At(material, hit.Surface, hit.Point, hit.Normal, 0, hit.Portals, hit as HairIntersection);
             (Vector across, Vector along) = facets is null
                 ? Microfacets.FrameAround(hit.Normal)
                 : (facets.Along, facets.Across);

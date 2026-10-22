@@ -53,10 +53,18 @@ public partial class LanguageParser
 
         HandleEntryClause(resolver, clause, clause =>
         {
-            if (clause.Text() == "path")
-                resolver.GeneralPathResolver = GetPathResolver(clause);
-            else
-                HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
+            switch (clause.Text())
+            {
+                case "path":
+                    resolver.GeneralPathResolver = GetPathResolver(clause);
+                    break;
+                case "rounded":
+                    resolver.RoundedResolver = new TermResolver<double> { Term = clause.Term() };
+                    break;
+                default:
+                    HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
+                    break;
+            }
         });
     }
 
@@ -106,6 +114,9 @@ public partial class LanguageParser
                     break;
                 case "path":
                     resolver.GeneralPathResolver = GetPathResolver(clause);
+                    break;
+                case "rounded":
+                    resolver.RoundedResolver = new TermResolver<double> { Term = clause.Term() };
                     break;
                 default:
                     HandleExtrudedSurfaceClause(clause, resolver, "extrusion");
