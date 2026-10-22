@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "Triangle and smooth triangle"
+
+triangle = "triangle" "{" { corners | property } "}" ;
+
+smooth = "smooth" "triangle" "{" { corners | "normals" vector "," vector "," vector
+       | property } "}" ;
+
+corners = "points" point "," point "," point ;

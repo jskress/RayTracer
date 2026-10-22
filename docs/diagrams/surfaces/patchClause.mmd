@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "A bicubic patch"
+
+patch = "patch" "{" { "points" row "," row "," row "," row
+      | ( "uSteps" | "vSteps" | "flatness" ) number | property } "}" ;
+
+row = point "," point "," point "," point ;

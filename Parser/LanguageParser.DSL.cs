@@ -95,7 +95,7 @@ public partial class LanguageParser
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
             'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
-            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
+            'gives', 'glass', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'source',
             'specular', 'spectral', 'spacing', 'sphere', 'spherical', 'splash', 'squares', 'spline', 'spot', 'square', 'startBranch', 'steps', 'steepest', 'steepness', 'strand', 'strength', 'stripes', 'subsurface', 'sun',
             'superellipsoid', 'surface', 'surfaces', 'saddle', 'susceptibility', 'svg', 'sweep', 'swells', 'switch', 'taper', 'tapered', 'text', 'thin', 'threshold', 'tint', 'title', 'to', 'toward', 'top', 'toroidal', 'torus',
@@ -872,7 +872,7 @@ public partial class LanguageParser
         }
         extrudedSurfaceEntryClause:
         [
-            { [ min | max ] > Y ?? 'Expecting "X" or "Y" to follow "max" here.' > _expression } |
+            { [ min | max ] > Y ?? 'Expecting "Y" to follow "min" or "max" here.' > _expression } |
             open | surfaceEntryClause
         ]
 
@@ -1141,6 +1141,7 @@ public partial class LanguageParser
                 path > [ openBrace | [ _identifier | _keyword ] ]
                     ?? 'Expecting an outline, or the name of one, to follow "path" here.'
             } |
+            { rounded > _expression } |
             extrudedSurfaceEntryClause
         ]
         startTaperedExtrusionClause:
@@ -1695,7 +1696,7 @@ public partial class LanguageParser
         // Object file clauses.
         startObjectFileClause:
         {
-           object > file > openBrace ?? 'Expecting an open brece here.'
+           object > file > openBrace ?? 'Expecting an open brace here.'
         }
         objectFileEntryClause:
         [

@@ -1008,9 +1008,13 @@ public partial class Scene : NamedThing, IDisposable
     public TS GetHitColor<TS>(Intersection intersection, int remaining)
         where TS : struct, ISpectrum<TS>
     {
-        // A strand of hair is a fiber, and is shaded as one.
-        if (intersection is HairIntersection strand)
+        // A strand of hair is a fiber, and is shaded as one; a wire finer than the ray is shaded round its
+        // whole round at once, and one wide enough to be seen place by place as the metal it is, below.
+        if (intersection is HairIntersection strand && !strand.IsAWire)
             return ShadeFiber<TS>(strand);
+
+        if (intersection is HairIntersection { IsAFineWire: true } wire)
+            return ShadeWire<TS>(wire, remaining);
 
         // For the patterns that look about the place being shaded; see Surroundings.
         ShadeHere(intersection.TimeIndex);
@@ -1063,7 +1067,7 @@ public partial class Scene : NamedThing, IDisposable
         // A brushed surface's facets lean further across its grooves than along them; see Facets.
         Facets facets = Facets.At(
             material, intersection.Surface, intersection.Point, intersection.Normal, intersection.TimeIndex,
-            intersection.Portals);
+            intersection.Portals, intersection as HairIntersection);
 
         // A clear coat mirrors by its own index, and everything the surface beneath it gives back crosses it
         // twice; see Coat.  A rough one looks in as many directions as a rough surface does.
@@ -1771,11 +1775,11 @@ public partial class Scene : NamedThing, IDisposable
             if (housing is not null && housing.Contains((intersection.Surface, intersection.Portals)))
                 continue;
 
-            // A strand of hair sends most of the light onward.
+            // A strand of hair sends most of the light onward; a wire sends none of it.
             if (intersection is HairIntersection strand)
             {
                 // Only the share of the ray the strand covers is stopped or sent onward by it.
-                if (strandsStop)
+                if (strandsStop || IsAWire(strand))
                 {
                     if (strand.Coverage >= 1)
                         return TS.Black;
@@ -2253,7 +2257,7 @@ public partial class Scene : NamedThing, IDisposable
         return LookedAtRoughly<TS>(
             intersection, material.Roughness, reflectance, count, remaining,
             Facets.At(material, intersection.Surface, intersection.Point, intersection.Normal,
-                intersection.TimeIndex, intersection.Portals));
+                intersection.TimeIndex, intersection.Portals, intersection as HairIntersection));
     }
 
     /// <summary>

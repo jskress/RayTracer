@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "A sweep"
+
+sweep = "sweep" "{" { "profile" outline | spline | "steps" number
+      | "no" "center" | "open" | property } "}" ;
+
+outline = "{" { pathCommand } "}" | name ;

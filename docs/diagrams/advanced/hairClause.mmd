@@ -1,0 +1,8 @@
+railroad-ebnf-beta
+title "Hair"
+
+hair = "hair" "{" { ( "density" | "count" | "length" | "vary" | "thickness"
+     | "frizz" | "droop" ) number | "lean" angle | "comb" vector
+     | "curl" number [ "radius" number ] | "clump" number [ "size" number ]
+     | "patches" pattern | "facing" vector [ "by" number ]
+     | material | "with" "seed" number } "}" ;

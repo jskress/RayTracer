@@ -229,12 +229,28 @@ public partial class Scene
             return TS.Black;
 
         // The first matte surface along a path from the eye reads the cache, where the scene keeps one; every
-        // surface after it, along a bounce, follows its one direction as before.
-        TS arriving = _bounced == 0 && !_spreading && TS.Count > 1 && CacheFor<TS>() is { } cache
-            ? CachedArrivingAt(cache, intersection, remaining)
-            : ArrivingAt<TS>(intersection, remaining, _bounced > 0 || _spreading || TS.Count == 1
+        // surface after it, along a bounce, follows its one direction as before.  A wire keeps no records,
+        // being too fine to stand for the places round it, and looks round itself as a covered place does
+        // for what is near it.
+        bool first = _bounced == 0 && !_spreading && TS.Count > 1;
+
+        if (intersection is HairIntersection wire)
+        {
+            // A wire finer than the ray looks round itself in proportion to its share of it; see RaysOf.
+            (int count, double weight) = RaysOf(wire, !first
                 ? 1
-                : Math.Max(1, DiffuseSamples));
+                : CacheFor<TS>() is not null
+                    ? Math.Max(FewestNearSamples, DiffuseSamples / NearShare)
+                    : Math.Max(1, DiffuseSamples), 134);
+
+            return count == 0
+                ? TS.Black
+                : pigment * ArrivingAt<TS>(intersection, remaining, count) * (material.Diffuse * weight);
+        }
+
+        TS arriving = first && CacheFor<TS>() is { } cache
+            ? CachedArrivingAt(cache, intersection, remaining)
+            : ArrivingAt<TS>(intersection, remaining, !first ? 1 : Math.Max(1, DiffuseSamples));
 
         return pigment * arriving * material.Diffuse;
     }

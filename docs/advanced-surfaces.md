@@ -195,9 +195,41 @@ extrusion {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/extrusionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/extrusionClause.svg">
+  <img alt="An extrusion" src="images/advanced/extrusionClause.svg">
+</picture>
+
 `min Y` and `max Y` say how thick, exactly as they do for a
 [cylinder](surfaces.md#cylinder-and-conic), and `open` leaves the two ends off.  A path is
 drawn flat in X and Y, so an extrusion comes out lying down; `rotate X -90` stands it up.
+
+**`rounded r` rounds every edge.**  Nothing anyone makes has a perfectly sharp edge, and an outline
+extruded with sharp ones reads as cut from sheet.  Rounded, the extrusion keeps its outline's shape and
+size, and every edge -- where the top and bottom meet the sides, and down each corner of the outline that
+turns outward -- becomes a quarter round of radius `r`:
+
+```
+extrusion {
+    path Body
+    min Y 0
+    max Y 1.75
+    rounded 0.25
+}
+```
+
+The top and bottom are flat inside the outline drawn in by `r`, a quarter round runs from there to the
+sides, and the sides stand where the outline was drawn.  Every part is an exact surface but the outline
+drawn in, which is fitted to it within a ten-thousandth of the outline's size.  A rounded extrusion is
+still one solid, so it may be cut into as any extrusion may (a guitar's soundhole, say), and holes in
+the outline are rounded down into as its outside is rounded off.  It costs more to render than a sharp
+one: a guitar body's outline of eleven curves and two lines took about five times as long rounded as
+sharp, where it filled the picture.
+
+Refused, each saying where: a rounding more than half the thickness, one larger than the outline's
+tightest outward curve, and one wider than half the outline anywhere it is narrow.  An `open`
+extrusion has no edges to round, and a [tapered extrusion](#tapered-extrusion) cannot also be rounded.
 
 **`path` takes the name of an outline as readily as the block.**  A scene that draws one shape and
 raises it to several thicknesses says it once:
@@ -240,6 +272,12 @@ tapered extrusion {
     max Y 2.3
 }
 ```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/taperedExtrusionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/taperedExtrusionClause.svg">
+  <img alt="A tapered extrusion" src="images/advanced/taperedExtrusionClause.svg">
+</picture>
 
 Everything an [extrusion](#extrusion) takes, this takes too — several runs, holes, curves, `min Y`
 and `max Y`, `open`.  A taper asks nothing of the outline: quadratic and cubic runs come through it
@@ -289,15 +327,21 @@ anything else had to write a loop and a containment test of its own.
 It is not only for grass.  Balls in a pit, a stand of trees, soldiers drawn up in ranks — anything
 that is one thing in many places over an area, and none of it needing a loop.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/fieldClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/fieldClause.svg">
+  <img alt="A field" src="images/advanced/fieldClause.svg">
+</picture>
+
 | | |
 | --- | --- |
 | `within` | The outline to fill, in the X/Z plane. |
 | `along` | A path to lay the copies along instead, in the X/Z plane; see [Laying a field along a path](#laying-a-field-along-a-path). |
-| `of` | The surface to fill it with, by name or by a call of a primitive — or several, after commas, each with an optional `weight`. |
+| `of` | The surface to fill it with, by name or by a call of a primitive — or several, after commas, each with an optional `weight`.  A call may take a block after it, as a call anywhere may ([Things of Your Own](scene-files.md#things-of-your-own)): `of Tuft(2) { material Straw }`. |
 | `spacing` | How far apart the copies stand, before any jitter. |
 | `jitter` | How far a copy may stray from the grid, as a fraction of the spacing. |
 | `turned` | How far each copy may be turned about the up axis: the whole spread, centered on the way it faces as made.  `turned 360` faces each any way at all. |
-| `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size.  `sized 0.8 to 1.2 by <pattern> { … }` sets each by a pattern rather than chance. |
+| `sized` | `sized 0.8 to 1.2` stands each copy at a size from the first to the second, as a scale of it as made; `sized 2` stands all of them at that size.  `sized 0.8 to 1.2 by <pattern> { … }` sets each by a pattern rather than chance; a pattern needs both sizes, so it is refused after one alone. |
 | `cycle` | Take the things after `of` in turn rather than at random. |
 | `picked by <pattern> { … }` | Pick which of the things after `of` stands at a place by a pattern rather than chance; see [Fields in patches](#fields-in-patches). |
 | `patches <pattern> { … }` | A pattern saying where the field stands anything, its value the chance; `from <a> to <b>` gives it an edge. |
@@ -544,6 +588,12 @@ ribbon {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/ribbonClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/ribbonClause.svg">
+  <img alt="A ribbon" src="images/advanced/ribbonClause.svg">
+</picture>
+
 **It is the flat answer to the `tube`'s round one**, and which you want is decided by whether the
 thing has a face.  A stem, a wire or a cane is a rod: it looks the same from every side, and a tube
 is right.  A blade of grass is not — turned edge-on it very nearly disappears, and that flicker as
@@ -578,6 +628,12 @@ strand {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/strandClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/strandClause.svg">
+  <img alt="A strand" src="images/advanced/strandClause.svg">
+</picture>
+
 **It is hit as a flat strip that always faces the ray, and lit as the fiber it is.**  Where across the
 strip a ray passes says where on a round strand of the same width it would have struck, which is what
 a fiber's way with light needs to know — see [How hair is lit](#how-hair-is-lit).  Asked only that
@@ -587,6 +643,41 @@ as surfaces, and that is what lets a scene hold millions of them.
 The points are joined by a curve through every one of them, turning smoothly at each, so a few points
 make a smooth bend.  Widths are the whole width rather than a radius, as a ribbon's are, and two or
 more points are needed.
+
+**A strand of metal is a wire**, shaded as the round surface it is rather than as a fiber: a guitar's or
+a piano's strings, a wire fence, a whisk.  Its material says `metallic`, and with that it has the
+highlights, mirroring and roughness any metal has, and it stops the light that falls on it where a hair
+would let most of that through.
+
+```
+strand {
+    width 0.012 at [0, 0, 0]
+    width 0.012 at [25.5, 0, 0]
+    material { pigment [0.8, 0.8, 0.8]  metallic 1  reflective 0.7  roughness 0.12  diffuse 0 }
+}
+```
+
+**It stays whole however fine it is.**  A cylinder a hundredth of an inch across, seen from a few feet, is a
+fraction of a pixel wide, and the picture's samples land on it only now and then: a string drawn as a
+cylinder comes out as a dotted line.  A strand finer than a pixel is widened to it and seen for the share
+of it it covers, so it is a faint, continuous line instead.  And since the pixel then sees the whole of its
+round at once, it is shaded that way: each lamp's highlight, its diffuse light and what it mirrors
+averaged round it exactly, rather than wherever a sample happened to land, which would make a polished
+wire glitter.  A wire wide enough to be seen place by place is shaded place by place, and the two agree,
+so a string seen at a slant keeps its brightness where it narrows below a pixel.
+
+**A wire far finer than its pixel looks about itself in proportion.**  Seen from far enough off, a ray takes
+in every string of a piano at once, and each of them looking for what it mirrors with all of a mirror's
+rays -- each of which met the other strings and looked again -- made a piano take the best part of an hour
+at 40 x 30.  So a wire whose share of the ray, times the rays it would send to mirror or to gather bounced
+light, comes to less than one sends a single ray as often as that says and counts it for as much more.  It
+comes to the same on average, and the strings along a ray then send no more rays between them than one
+surface would.  A wire covering a sixteenth of its pixel or more is shaded as before.
+
+**A wound string is brushed round itself.**  The bass strings of a guitar are a core wire with another
+wound round it; give such a strand's material `anisotropy` and no direction, and its grooves run round
+it, drawing its highlight out along its length as the winding does.  See
+[Brushed metal](materials.md#brushed-metal).
 
 **Strands are rarely written one at a time.**  For fur, a pile or a head of hair, have a surface
 grow them: see [Hair](#hair), next.
@@ -609,6 +700,12 @@ sphere {
     scale 0.5
 }
 ```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/hairClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/hairClause.svg">
+  <img alt="Hair" src="images/advanced/hairClause.svg">
+</picture>
 
 | Property | What it does |
 | --- | --- |
@@ -793,6 +890,12 @@ lathe {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/latheClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/latheClause.svg">
+  <img alt="A lathe" src="images/advanced/latheClause.svg">
+</picture>
+
 The X of each point is how far that part of the profile stands from the axis and the Y is how
 high up it sits.  Anything round and symmetrical — a glass, a vase, a bottle, a chess
 piece — is quicker to write this way than any other.  A profile may be drawn on either side of
@@ -830,6 +933,12 @@ sweep {
 ```
 
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/sweepClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/sweepClause.svg">
+  <img alt="A sweep" src="images/advanced/sweepClause.svg">
+</picture>
+
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/advanced/splineClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/advanced/splineClause.svg">
   <img alt="A 3D spline" src="images/advanced/splineClause.svg">
@@ -864,6 +973,12 @@ drawn.  This matters most for an outline that lives off to one side, as a pasted
 centering the spline would run along the profile's edge rather than down its middle.  A sweep
 that means to keep the profile's own placement — to aim the spline at the profile's 2D
 origin — says `no center`.
+
+**Capped or open ends.**  A profile that ends with `close` is a solid's cross-section, so the
+sweep caps both of its ends with the profile filled in.  `open` leaves them uncapped: a hollow
+pipe, a gutter or a hose seen end on, whose outline is closed only so that it is smooth all the
+way round.  A profile that never closes is a ribbon whatever you say, since there is no inside
+to fill.
 
 **Tangent continuity.**  A sweep expects its spline to flow smoothly from one segment into the
 next, and refuses if it does not, telling you which control point is at fault and by how many
@@ -932,6 +1047,12 @@ isosurface {
     bounded by [-1.5, -0.5, -1.5], [1.5, 0.5, 1.5]
 }
 ```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/isosurfaceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/isosurfaceClause.svg">
+  <img alt="An isosurface" src="images/advanced/isosurfaceClause.svg">
+</picture>
 
 That one is a torus.  Change what is written and you change the shape rather than which sort of
 surface you are using, which is the point of it: the shapes an isosurface is *for* are the ones
@@ -1031,6 +1152,12 @@ a value rather than a distance, growing twice as fast at the surface — and dra
 out with pieces missing.  Write `sqrt(x² + y² + z²) - 1` instead, or use an isosurface, which takes
 anything at all and cannot miss a crossing.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/sdfClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/sdfClause.svg">
+  <img alt="A signed distance surface" src="images/advanced/sdfClause.svg">
+</picture>
+
 | Property | What it does |
 | --- | --- |
 | `function` | The arithmetic giving the distance. |
@@ -1073,6 +1200,12 @@ julia {
 meets it; this one cannot, because whether a point belongs is settled by iterating until the answer
 runs away.  What can be had instead is an *estimate* of how far the surface is, which is enough to
 walk a ray by — the same marching the [signed distance surface](#signed-distance-surface) uses.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/juliaClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/juliaClause.svg">
+  <img alt="A Julia set" src="images/advanced/juliaClause.svg">
+</picture>
 
 | Property | What it does |
 | --- | --- |
@@ -1185,6 +1318,12 @@ are lit, and it does not matter which way round you wrote it.
 
 #### The properties
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/parametricClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/parametricClause.svg">
+  <img alt="A parametric surface" src="images/advanced/parametricClause.svg">
+</picture>
+
 | Property | What it does |
 | --- | --- |
 | `u`, `v` | The spans the two parameters run over, written `[start, end]`.  Both are required. |
@@ -1194,6 +1333,11 @@ are lit, and it does not matter which way round you wrote it.
 The spans are what make the shape end.  A sheet is only drawn over the parameters you give, so
 halving the span of `v` above leaves you a shell of half as many turns, and there is no other way to
 stop it — the arithmetic itself would happily wind on forever.
+
+Either bracket of a span may be a parenthesis instead, `u (0, 6.283185307179586]` or `v (0, 1)`,
+since a span is written the same way wherever the language takes one.  To a surface they mean the
+same thing as the square brackets: whether a sheet's edge is in or out is a line's worth of points,
+which no ray can tell apart from its being there.
 
 #### What the expressions may hold
 
@@ -1250,6 +1394,12 @@ generic shape {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/genericShapeClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/genericShapeClause.svg">
+  <img alt="A generic shape" src="images/advanced/genericShapeClause.svg">
+</picture>
+
 The complete scene is
 [`docs/examples/advanced/generic-shape.igl`](examples/advanced/generic-shape.igl).
 
@@ -1287,7 +1437,26 @@ text {
 | `text` | What to write.  `\n` starts a new line. |
 | `font` | Which font face, or a list of them separated by commas, the first that can be had being used; see [Managing Fonts](fonts.md) and [Falling Back to Another Font](fonts.md#falling-back-to-another-font). |
 | `layout` | Alignment, positioning, the gap between lines, and a path to lay the text along; see [Laying out text](#laying-out-text). |
+| `kerning` | Gaps of your own between particular pairs of letters, for this text only. |
 | `open` | Leave the front and back faces off. |
+
+`kerning` takes the pairs one `kern` at a time, the left letter, then the right, then the
+adjustment, in the font's own design units, negative to draw the two together:
+
+```
+text {
+    text 'AVATAR'
+    font 'Merriweather'
+    kerning {
+        kern 'A', 'V', -120
+        kern 'T', 'A', -90
+    }
+}
+```
+
+A pair named here is used ahead of any the [font catalog](fonts.md#kerning) holds for the face,
+and those ahead of the font's own.  An adjustment of nought is read as "not said", so it cannot
+take back a pair the font carries; `1` comes as near to that as makes no difference.
 
 Like an extrusion, text is built lying flat, so it wants standing up.  Scaling Z before that
 is how you set how thick the letters are.
@@ -1383,6 +1552,12 @@ tapered text {
     rotate X -90
 }
 ```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/taperedTextClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/taperedTextClause.svg">
+  <img alt="Tapered text" src="images/advanced/taperedTextClause.svg">
+</picture>
 
 Everything ordinary [text](#text) takes, this takes too, and `taper` means what it means for an
 extrusion: what is left of the outline at the `max Y` end.
@@ -1556,6 +1731,12 @@ object file {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/objectFileClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/objectFileClause.svg">
+  <img alt="An object file" src="images/advanced/objectFileClause.svg">
+</picture>
+
 The triangles become [smooth triangles](surfaces.md#triangle-and-smooth-triangle) where the
 file carries normals, and plain ones where it does not.
 
@@ -1608,6 +1789,15 @@ every stem and leaf in the picture comes from the four rules above.
 | `materials` | Binds a character to a material, so parts can differ in color. |
 | `controls` | How the turtle draws: the turn angle, the stem diameter, and so on. |
 | `generations` | How many times to apply the rules. |
+| `commands` | Gives a letter of your own one of the turtle's commands. |
+| `leaf`, `surfaces` | The surfaces a `~` stamps. |
+| `ignore` | Letters a rule's context looks past. |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/advanced/lsystemClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/advanced/lsystemClause.svg">
+  <img alt="An L-system" src="images/advanced/lsystemClause.svg">
+</picture>
 
 The definition and the use are separate on purpose.  A named L-system may be drawn several
 times at different generation counts, which is how you show a thing growing.
@@ -1767,7 +1957,65 @@ trunk too** — at a high susceptibility a tree does not merely droop at the tip
 Values around 0.1 give a tree that has weathered something; 0.3 gives a weeping form.
 
 `controls` chooses `pipes` or `tubes` for the stems — `tubes` taper into one another and leave
-no shoulder at a joint, `pipes` are cheaper where the diameter never changes.
+no shoulder at a joint, `pipes` are cheaper where the diameter never changes.  The third choice,
+`extrusion`, draws no stems at all: it takes the turtle's track as an outline in the X/Z plane,
+closes it, and stands it a unit tall from `y = 0`, which is how a Koch snowflake becomes a solid
+(`gallery/Local/l-systems/snowflake.igl`).  The turtle starts at the origin heading along +X with
++Y up, so `+` and `-` keep it in that plane; only its drawing steps add corners to the outline.
+
+#### Letters of your own
+
+**`commands`** gives a letter a turtle command's meaning.  Many of the book's curves rewrite letters
+other than `F` and still mean every one of them as a step forward; the dragon curve is written in
+`L` and `R`:
+
+```
+lsystem {
+    axiom 'L'
+    productions {
+        'L' -> 'L+R+'
+        'R' -> '-L-R'
+    }
+    commands {
+        'L' -> drawLine
+        'R' -> drawLine
+    }
+    controls { angle 90 }
+    generations 10
+}
+```
+
+The commands a letter may be given are `move`, `drawLine`, `turnLeft`, `turnRight`, `pitchUp`,
+`pitchDown`, `rollLeft`, `rollRight`, `turnAround`, `toVertical`, `startBranch` and
+`completeBranch`.  A letter that is neither a command nor given one is carried along by the
+rewriting and passed over by the turtle, which is what `A` and `S` are in the bush above.
+
+**`leaf` and `surfaces`** say what a `~` stamps.  A bare `~` stamps the `leaf` surface, or the
+built-in green blade when there is none; `~` followed by a letter bound in `surfaces` stamps that
+letter's surface instead (`surfaces { 'B' -> berry }`, and then `~B`).  A stamped surface is drawn
+as if growing along +Z from its base at the origin, its width along X and its face toward +Y, and
+it is placed at the turtle with that frame turned to the turtle's heading and roll.  It is not
+scaled by `length`: it is the size you made it, in the L-system's own units.  A surface that brought
+a material of its own keeps it; a bare one takes whatever material a letter set before it, and only
+the built-in blade falls back on its own green.  `gallery/Local/l-systems/berry-tree.igl` stamps a
+flattened sphere.
+
+**`materials`** binds a material to a letter or to a depth.  Bound to a letter, it changes what the
+turtle draws with from that letter on, to the end of the branch it stands in.  Bound to a depth —
+`depth 0 -> bark` for the trunk, `depth 1 -> heartwood` for what forks from it, and so on — it
+colors a plant from trunk to twig without a rule for every level.  The depths need not run
+unbroken: a depth left out takes the material of the one above it, and anything deeper than the
+last takes the last.  A material by depth does not reach the leaves, which would otherwise come out
+the color of the twigs they grow from; a letter's does.  `gallery/Local/l-systems/materials.igl`
+does both.
+
+**`ignore`** is for rules with a context.  A rule may name the letter that has to stand before the
+one it rewrites and the one that has to follow it, `'0<1>1' -> '1'` rewriting a `1` only between a
+`0` and a `1`.  Turns and steps in between usually should not count, and `ignore '+-F'` says which
+letters a context looks past.  `ignore commands` looks past every command that turns the turtle or
+narrows the stem (`+ - ^ & \ / | $ !` and their alternate spellings), and `ignore commands and
+'F'` adds letters to those.  `gallery/Local/l-systems/context-sensitive.igl` grows three of the
+book's plants this way.
 
 The complete scene is [`docs/examples/advanced/lsystem.igl`](examples/advanced/lsystem.igl),
 and `gallery/Local/l-systems/` has a dozen more, from a Hilbert curve to a berry tree.

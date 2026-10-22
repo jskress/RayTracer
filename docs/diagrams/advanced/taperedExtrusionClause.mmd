@@ -1,0 +1,5 @@
+railroad-ebnf-beta
+title "A tapered extrusion"
+
+extrusion = "tapered" "extrusion" "{" { "taper" number | path | "path" name
+          | ( "min" | "max" ) "Y" number | "open" | property } "}" ;

@@ -1,0 +1,190 @@
+// An empty stage before the show: the band's instruments set out and waiting under the stage lights between
+// the two speaker stacks -- the drum kit on its riser at the back, the grand on the left with its lid up
+// toward the house, a keyboard on its stand to the right of the riser opposite it, and the three guitars on
+// their stands at the front.  Everything comes from the
+// `instruments` library, in inches, scaled into the scene's meters.
+//
+// The stacks stand just inside the picture's edges, placed by where their outer corners fall in it rather
+// than by eye: from this camera a stack's front at z = 0 and its middle 2.27 out put its outer edge at 96% of
+// the way to the edge at its foot and 98.5% at its top.
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    info {
+        title 'Before the Show'
+        author 'J. Stephen Kress'
+        description 'The instruments of a band on an empty stage, waiting under the lights.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'instruments' { AcousticGuitar, ElectricGuitar, BassGuitar, GuitarStand, GuitarStandLean, GuitarStandRise,
+                       DrumKit, GrandPiano, PianoBench, StageKeyboard, KeyboardStand, KeyboardBench,
+                       SpeakerStack }
+
+camera {
+    location [0, 1.45, -5.4]
+    look at [0, 0.85, 1.0]
+    field of view 52
+}
+
+background [0, 0, 0]
+
+Inch = 0.0254
+
+// -- The stage --------------------------------------------------------------------------------------
+
+// Stage boards, dark and matte but for a soft sheen.
+Boards = material {
+    pigment brick { [0.05, 0.035, 0.025], [0.075, 0.05, 0.035]  scale [1.2, 4, 0.14] }
+    specular 0.15  shininess 20
+}
+Velvet = material { pigment [0.22, 0.01, 0.02]  diffuse 0.8  specular 0  sheen { color [0.6, 0.08, 0.1]  roughness 0.5 } }
+Carpet = material { pigment [0.03, 0.03, 0.03]  diffuse 0.85  specular 0 }
+
+plane { material Boards }
+// The stage's front edge, and the dark of the house below it.
+cube { scale [7, 0.6, 0.02]  translate [0, -0.6, -2.4]  material Carpet }
+
+// The back curtain, hung in folds.
+extrusion {
+    path {
+    move to -6.500, 0
+    curve -6.430, 0.106, -6.360, 0.106 to -6.290, 0
+    curve -6.220, -0.106, -6.150, -0.106 to -6.080, 0
+    curve -6.010, 0.106, -5.940, 0.106 to -5.870, 0
+    curve -5.800, -0.106, -5.730, -0.106 to -5.660, 0
+    curve -5.590, 0.106, -5.520, 0.106 to -5.450, 0
+    curve -5.380, -0.106, -5.310, -0.106 to -5.240, 0
+    curve -5.170, 0.106, -5.100, 0.106 to -5.030, 0
+    curve -4.960, -0.106, -4.890, -0.106 to -4.820, 0
+    curve -4.750, 0.106, -4.680, 0.106 to -4.610, 0
+    curve -4.540, -0.106, -4.470, -0.106 to -4.400, 0
+    curve -4.330, 0.106, -4.260, 0.106 to -4.190, 0
+    curve -4.120, -0.106, -4.050, -0.106 to -3.980, 0
+    curve -3.910, 0.106, -3.840, 0.106 to -3.770, 0
+    curve -3.700, -0.106, -3.630, -0.106 to -3.560, 0
+    curve -3.490, 0.106, -3.420, 0.106 to -3.350, 0
+    curve -3.280, -0.106, -3.210, -0.106 to -3.140, 0
+    curve -3.070, 0.106, -3.000, 0.106 to -2.930, 0
+    curve -2.860, -0.106, -2.790, -0.106 to -2.720, 0
+    curve -2.650, 0.106, -2.580, 0.106 to -2.510, 0
+    curve -2.440, -0.106, -2.370, -0.106 to -2.300, 0
+    curve -2.230, 0.106, -2.160, 0.106 to -2.090, 0
+    curve -2.020, -0.106, -1.950, -0.106 to -1.880, 0
+    curve -1.810, 0.106, -1.740, 0.106 to -1.670, 0
+    curve -1.600, -0.106, -1.530, -0.106 to -1.460, 0
+    curve -1.390, 0.106, -1.320, 0.106 to -1.250, 0
+    curve -1.180, -0.106, -1.110, -0.106 to -1.040, 0
+    curve -0.970, 0.106, -0.900, 0.106 to -0.830, 0
+    curve -0.760, -0.106, -0.690, -0.106 to -0.620, 0
+    curve -0.550, 0.106, -0.480, 0.106 to -0.410, 0
+    curve -0.340, -0.106, -0.270, -0.106 to -0.200, 0
+    curve -0.130, 0.106, -0.060, 0.106 to 0.010, 0
+    curve 0.080, -0.106, 0.150, -0.106 to 0.220, 0
+    curve 0.290, 0.106, 0.360, 0.106 to 0.430, 0
+    curve 0.500, -0.106, 0.570, -0.106 to 0.640, 0
+    curve 0.710, 0.106, 0.780, 0.106 to 0.850, 0
+    curve 0.920, -0.106, 0.990, -0.106 to 1.060, 0
+    curve 1.130, 0.106, 1.200, 0.106 to 1.270, 0
+    curve 1.340, -0.106, 1.410, -0.106 to 1.480, 0
+    curve 1.550, 0.106, 1.620, 0.106 to 1.690, 0
+    curve 1.760, -0.106, 1.830, -0.106 to 1.900, 0
+    curve 1.970, 0.106, 2.040, 0.106 to 2.110, 0
+    curve 2.180, -0.106, 2.250, -0.106 to 2.320, 0
+    curve 2.390, 0.106, 2.460, 0.106 to 2.530, 0
+    curve 2.600, -0.106, 2.670, -0.106 to 2.740, 0
+    curve 2.810, 0.106, 2.880, 0.106 to 2.950, 0
+    curve 3.020, -0.106, 3.090, -0.106 to 3.160, 0
+    curve 3.230, 0.106, 3.300, 0.106 to 3.370, 0
+    curve 3.440, -0.106, 3.510, -0.106 to 3.580, 0
+    curve 3.650, 0.106, 3.720, 0.106 to 3.790, 0
+    curve 3.860, -0.106, 3.930, -0.106 to 4.000, 0
+    curve 4.070, 0.106, 4.140, 0.106 to 4.210, 0
+    curve 4.280, -0.106, 4.350, -0.106 to 4.420, 0
+    curve 4.490, 0.106, 4.560, 0.106 to 4.630, 0
+    curve 4.700, -0.106, 4.770, -0.106 to 4.840, 0
+    curve 4.910, 0.106, 4.980, 0.106 to 5.050, 0
+    curve 5.120, -0.106, 5.190, -0.106 to 5.260, 0
+    curve 5.330, 0.106, 5.400, 0.106 to 5.470, 0
+    curve 5.540, -0.106, 5.610, -0.106 to 5.680, 0
+    curve 5.750, 0.106, 5.820, 0.106 to 5.890, 0
+    curve 5.960, -0.106, 6.030, -0.106 to 6.100, 0
+    curve 6.170, 0.106, 6.240, 0.106 to 6.310, 0
+    curve 6.380, -0.106, 6.450, -0.106 to 6.520, 0
+    }
+    min Y 0  max Y 6
+    open
+    translate Z 4.6
+    material Velvet
+}
+
+// The drum riser, no wider than the kit needs, to leave the keyboard room beside it.
+cube { scale [0.95, 0.15, 1.15]  translate [0.45, 0.15, 3.4]  material Carpet }
+
+// -- The light --------------------------------------------------------------------------------------
+
+// The front wash, warm, from high over the house.
+spot light { location [0.5, 7, -7]  point at [0, 0.7, 0.8]  radius 24  falloff 34  tightness 2  color [1, 0.9, 0.78]  brightness 1.3 }
+// Back lights from over the curtain, magenta and blue, rimming everything.
+spot light { location [-3.0, 6.5, 4.2]  point at [-1.0, 0.8, 0.5]  radius 20  falloff 30  tightness 3  color [0.9, 0.25, 0.7] }
+spot light { location [3.0, 6.5, 4.2]  point at [1.0, 0.8, 0.5]  radius 20  falloff 30  tightness 3  color [0.25, 0.45, 1.0] }
+// A warm special on the piano.
+spot light { location [-1.6, 6, -2.2]  point at [-1.2, 0.9, 1.5]  radius 10  falloff 16  tightness 4  color [1, 0.85, 0.65]  brightness 0.8 }
+
+// -- The band's instruments -------------------------------------------------------------------------
+
+object DrumKit() { scale Inch  translate [0.5, 0.3, 2.85] }
+
+// The grand, turned so its bentside and its open lid face the house, its keyboard on the left, and its bench
+// where the pianist will sit, turned with it.
+group {
+    object GrandPiano()
+    object PianoBench() { translate Z -17 }
+    rotate Y 90
+    scale Inch
+    translate [-2.1, 0, 1.5]
+}
+
+// The keyboard on its stand to the right of the riser, its player facing the house as the drummer does, and
+// its bench behind it.
+group {
+    object KeyboardStand() { translate Z 6.5 }
+    object StageKeyboard() { translate Y 26 }
+    object KeyboardBench() { translate Z -16 }
+    rotate Y 180
+    scale Inch
+    translate [1.98, 0, 2.7]
+}
+
+// The guitars on their stands at the front, each turned a little toward the middle of the house.
+group {
+    object GuitarStand()
+    object AcousticGuitar() { rotate X GuitarStandLean  translate Y GuitarStandRise }
+    rotate Y 12
+    scale Inch
+    translate [-0.85, 0, -0.5]
+}
+group {
+    object GuitarStand()
+    object ElectricGuitar() { rotate X GuitarStandLean  translate Y GuitarStandRise }
+    rotate Y -4
+    scale Inch
+    translate [0.35, 0, -0.6]
+}
+group {
+    object GuitarStand()
+    object BassGuitar() { rotate X GuitarStandLean  translate Y GuitarStandRise }
+    rotate Y -14
+    scale Inch
+    translate [1.35, 0, -0.45]
+}
+
+// -- The speakers -----------------------------------------------------------------------------------
+
+// One each side, turned a little in toward the middle of the house.
+object SpeakerStack() { rotate Y -4  scale Inch  translate [-2.27, 0, 0] }
+object SpeakerStack() { rotate Y 4  scale Inch  translate [2.27, 0, 0] }

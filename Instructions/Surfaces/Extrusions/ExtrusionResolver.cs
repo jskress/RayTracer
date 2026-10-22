@@ -15,6 +15,11 @@ public class ExtrusionResolver : ExtrudedSurfaceResolver<Extrusion>
     public Resolver<GeneralPath> GeneralPathResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how far the extrusion's edges are rounded.
+    /// </summary>
+    public Resolver<double> RoundedResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of an
     /// extruded surface.
     /// </summary>
@@ -24,6 +29,7 @@ public class ExtrusionResolver : ExtrudedSurfaceResolver<Extrusion>
     protected override void SetProperties(RenderContext context, Variables variables, Extrusion value)
     {
         GeneralPathResolver.AssignTo(value, target => target.Path, context, variables);
+        RoundedResolver.AssignTo(value, target => target.Rounded, context, variables);
 
         base.SetProperties(context, variables, value);
     }

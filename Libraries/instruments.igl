@@ -1,0 +1,2501 @@
+// Instruments: the core of a stage band, built part by part from published measurements and photographs.
+//
+//     import 'instruments' { AcousticGuitar, ElectricGuitar, BassGuitar, DrumKit, GrandPiano }
+//
+//     object AcousticGuitar()      // a steel-string cutaway, standing on its end pin, its top toward -Z
+//
+// | `AcousticGuitar` | A steel-string acoustic: a cutaway Grand Performance body, a 14-fret neck, 25.4 scale.  `maker` is the label's first line. |
+// | `ElectricGuitar` | A double-cutaway solid body: three single coils, a vibrato bridge, 25.5 scale.  `finish` is its body's material, `GuitarTeal` unless said. |
+// | `BassGuitar` | Its partner: one pickup, four barrel saddles, 34 scale.  `finish`, `GuitarGlossBlack` unless said. |
+// | `DrumKit` | A five-piece kit facing -Z, its drummer at +Z: bass drum, two toms, snare, floor tom, hi-hat, crash, ride, pedal, throne.  `finish`, `DrumRedSparkle` unless said. |
+// | `Drum`, `SnareDrum`, `FloorTom`, `BassDrum`, `Cymbal`, `CymbalOnStand`, `HiHat`, ... | The kit's pieces, each to the sizes asked for. |
+// | `GrandPiano` | A six-foot grand, its keyboard toward -Z; `lid` is how far up it stands on its prop, 38 degrees unless said, 0 closed. |
+// | `PianoBench` | The pianist's bench, its seat `height` up, 19.5 unless said. |
+// | `StageKeyboard`, `KeyboardStand`, `KeyboardBench` | A stage keyboard of 61, 73, 76 or 88 keys, its X stand and its bench. |
+// | `SpeakerStack` | A stage's speaker stack, a subwoofer under a woofer and horn, its front toward -Z. |
+//
+// **It is written in inches, and a scene unit IS an inch**, as the furniture and the droids are: every
+// published figure for an instrument is in inches.  A scene in meters scales it by 0.0254.  **A guitar stands
+// on its end pin or strap button, `y = 0`, neck up, its top facing `-Z`** -- the top's face at `z = 0`, the body
+// behind it -- its bass side toward `-X`, as one stands on a stand facing a room.  Every height below is up
+// from the end of the body; the pin lifts the whole a quarter inch more.
+//
+// -- Where the shape comes from -----------------------------------------------------------------------
+//
+// The acoustic is a Grand Performance body with a cutaway below the neck on the treble side.  Its outline is
+// traced from a retailer's photograph of one, square on from the front, taken at 44.19 pixels to the inch by
+// its lower bout, which Martin's figures put at 16 in: the body then comes to 20.21 in long, 9.41 across the
+// waist and 11.45 across the upper bout, and the photograph's saddle, its middle 8.83 in up, puts the 14th
+// fret of a 25.4 in scale within a hundredth of an inch of the body's top, which is where a 14-fret neck joins
+// it.  A second photograph, of its back, places the heel's cap and the strap button beside it.  The dealers'
+// figures for the same model give the rest: a 1 3/4 in nut, 2 1/8 across the fingerboard at the 12th fret, 20
+// frets, a 16 in fingerboard radius and a body 4 5/8 deep.  Neither photograph is reproduced here.
+
+// -- Materials ----------------------------------------------------------------------------------------
+
+// The top, back and sides: mahogany, its grain in broad soft stripes down the body as a quartersawn board's
+// are, flecked along the grain by its open pores, under a satin finish.  **Its grain is read in each extruded
+// part's own space**, where the outline lies across X and Z and Z runs up the body: the rings stand about a
+// line along Z forty inches off to the side, so they cross every face as stripes running its length, and the
+// pores are speckle drawn out along Z, mostly clear so the stripes show through.
+GuitarMahogany = material {
+    pigment layer {
+        granite {
+            [0, [0.16, 0.06, 0.035, 0], 0.3, [0.16, 0.06, 0.035, 0], 0.42, [0.16, 0.06, 0.035, 0.42], 1, [0.16, 0.06, 0.035, 0.42]]
+            scale [0.16, 0.16, 1.2]
+        },
+        bozo {
+            [0, [0.37, 0.165, 0.1], 0.35, [0.42, 0.19, 0.113], 0.5, [0.47, 0.22, 0.13], 0.7, [0.5, 0.235, 0.14],
+             1, [0.44, 0.2, 0.12]]
+            scale [0.55, 2, 40]
+        }
+    }
+    diffuse 0.75  ambient 0.1
+    coat { roughness 0.25 }
+}
+
+// The neck's mahogany: its cone is drawn short and stretched along the neck, so a grain there would come out
+// squeezed; the neck shows the wood's color plain.
+GuitarMahoganyNeck = material { pigment [0.43, 0.2, 0.12]  diffuse 0.75  ambient 0.1  coat { roughness 0.25 } }
+
+// Inside the body: bare, unfinished wood, seen only through the soundhole.
+GuitarRawWood = material { pigment [0.09, 0.055, 0.035]  diffuse 0.7  specular 0  ambient 0.02 }
+
+// The fingerboard and the bridge: rosewood, dark, its grain close, oiled rather than lacquered -- the grain
+// running along an extruded part, as the mahogany's does.
+GuitarRosewood = material {
+    pigment wood {
+        turbulence { amplitude 0.2  octaves 3 }
+        [0, [0.12, 0.045, 0.028], 0.5, [0.085, 0.032, 0.02], 0.85, [0.06, 0.022, 0.014], 1, [0.12, 0.045, 0.028]]
+        scale [0.06, 0.06, 120]
+        translate [20, 0, 0]
+    }
+    diffuse 0.8  ambient 0.08  reflective 0.02  roughness 0.5
+}
+
+// A fingerboard's face is a cylinder as round as the board's radius, drawn as one a unit round scaled up, so
+// its grain is drawn that many times narrower across and turned to run along the cylinder's axis, up the neck.
+primitive GuitarRosewoodFace(radius) -> material {
+    return material {
+        pigment wood {
+            turbulence { amplitude 0.2  octaves 3 }
+            [0, [0.12, 0.045, 0.028], 0.5, [0.085, 0.032, 0.02], 0.85, [0.06, 0.022, 0.014], 1, [0.12, 0.045, 0.028]]
+            scale [0.06 / radius, 0.06 / radius, 120]
+            rotate X 90
+            translate [20 / radius, 0, 0]
+        }
+        diffuse 0.8  ambient 0.08  reflective 0.02  roughness 0.5
+    }
+}
+
+// The nut, the saddle and the pins: bone, or the plastic that stands in for it.
+GuitarBone = material { pigment [0.92, 0.9, 0.84]  diffuse 0.85  specular 0.3  shininess 40  ambient 0.12 }
+
+// Plastics: white for an electric's pickguard, pickup covers and knobs, black for the guard's middle ply, a
+// bass pickup's cover and an end pin.
+GuitarWhitePlastic = material { pigment [0.82, 0.82, 0.79]  diffuse 0.85  specular 0.4  shininess 90  reflective 0.03  fresnel  ambient 0.1 }
+GuitarBlackPlastic = material { pigment [0.02, 0.02, 0.02]  diffuse 0.8  specular 0.4  shininess 90  ambient 0.05 }
+
+// The pickguard: tortoiseshell, near black with streaks of amber drawn out on the slant, gathered in patches
+// where the dark top layer clears; glossy.
+GuitarTortoise = material {
+    pigment layer {
+        bozo {
+            [0, [0.014, 0.006, 0.0045], 0.52, [0.014, 0.006, 0.0045], 0.66, [0.014, 0.006, 0.0045, 0],
+             1, [0.014, 0.006, 0.0045, 0]]
+            scale 0.7
+        },
+        granite {
+            turbulence 0.5
+            [0, [0.014, 0.006, 0.0045], 0.3, [0.02, 0.007, 0.005], 0.34, [0.05, 0.014, 0.006], 0.38, [0.3, 0.075, 0.014],
+             0.42, [0.52, 0.16, 0.026], 0.47, [0.24, 0.05, 0.01], 0.53, [0.02, 0.008, 0.005], 1, [0.014, 0.006, 0.0045]]
+            scale [0.3, 1, 1.2]
+            rotate Y 28
+        }
+    }
+    diffuse 0.8  reflective 0.04  fresnel  specular 0.5  shininess 120
+}
+
+// The rosette: white rings with black lines between, inlaid flush round the soundhole.
+GuitarRosetteWhite = material { pigment [0.9, 0.88, 0.82]  diffuse 0.8  ambient 0.1 }
+GuitarRosetteBlack = material { pigment [0.05, 0.04, 0.035]  diffuse 0.8  ambient 0.05 }
+
+// The frets: nickel silver.  The tuners: chrome.
+GuitarNickel = material { pigment [0.78, 0.77, 0.74]  metallic 1  reflective 0.7  roughness 0.15  diffuse 0 }
+GuitarChrome = material { pigment [0.82, 0.82, 0.84]  metallic 1  reflective 0.85  roughness 0.06  diffuse 0 }
+
+// A strap button, standing out along +Y.
+GuitarStrapButton = group {
+    cylinder { min Y 0  max Y 0.18  scale [0.11, 1, 0.11] }
+    sphere { scale [0.21, 0.07, 0.21]  translate Y 0.2 }
+    material GuitarChrome
+}
+
+// The strings.  The four lower ones -- low E, A, D, G -- are phosphor bronze wound over a steel core, brushed
+// round themselves by the winding; the top two plain steel.
+GuitarBronzeString = material {
+    pigment [0.86, 0.6, 0.38]  metallic 1  reflective 0.6  roughness 0.3  anisotropy 0.8  diffuse 0  specular 0
+}
+GuitarSteelString = material {
+    pigment [0.82, 0.82, 0.82]  metallic 1  reflective 0.7  roughness 0.12  diffuse 0  specular 0
+}
+
+// -- The acoustic's numbers ---------------------------------------------------------------------------
+
+GuitarAcousticScale = 25.4
+// The saddle's middle; it stands a little further from the nut than the scale, as every saddle does, to keep
+// the strings in tune as they are pressed down, and it slants, the bass end furthest, by 0.055 an inch.
+GuitarAcousticSaddle = 8.83
+GuitarAcousticSaddleSlant = 0.055
+GuitarAcousticNut = GuitarAcousticSaddle + GuitarAcousticScale + 0.08
+GuitarAcousticDepth = 4.4
+GuitarAcousticTop = 0.12
+// The soundhole's middle, on the center line.
+GuitarAcousticHoleY = 14.25
+// Where the body ends under the neck.
+GuitarAcousticBodyEnd = 20.21
+
+// Where the n-th fret stands, up from the body's end: a twelfth root of two closer to the saddle at each.
+function GuitarAcousticFret(n) -> number { return GuitarAcousticNut - GuitarAcousticScale * (1 - pow(2, -n / 12)) }
+
+// How wide the fingerboard is at a height up the body: 1 3/4 at the nut, 2 1/8 at the 12th fret.
+function GuitarAcousticBoardWidth(y) -> number {
+    return 1.75 + (2.125 - 1.75) * (GuitarAcousticNut - y) / (GuitarAcousticNut - GuitarAcousticFret(12))
+}
+
+// -- The acoustic's outlines --------------------------------------------------------------------------
+
+// The body, its tail at the origin, its neck up +Y; traced, as said above.
+GuitarAcousticBody = path {
+    move to 0, 0
+    curve 4.066, 0, 7.989, 1.47 to 7.989, 5.997
+    curve 7.989, 10.715, 4.639, 10.998 to 4.639, 14.122
+    curve 4.639, 14.496, 5.499, 16.282 to 5.499, 16.679
+    curve 5.499, 17.538, 5.248, 17.833 to 4.345, 17.833
+    curve 3.9, 17.833, 3.4, 17.54 to 2.9, 17.54
+    curve 2.4, 17.54, 1.82, 17.826 to 1.6, 18.03
+    curve 1.381, 18.234, 1.018, 18.75 to 1.018, 19.214
+    line to 1.018, 20.209
+    line to -1.018, 20.209
+    curve -3.189, 20.209, -5.726, 19.282 to -5.726, 17.38
+    curve -5.726, 15.593, -4.775, 15.132 to -4.775, 13.375
+    curve -4.775, 11.656, -8.011, 10.136 to -8.011, 5.997
+    curve -8.011, 1.489, -4.29, 0 to 0, 0
+    close
+}
+
+// The body's inside: the outline shrunk by one and a half percent about its middle, 10.1 up, which leaves a
+// tenth of an inch or so of side all round -- it is seen only through the soundhole.
+GuitarAcousticInside = path {
+    move to 0, 0.152
+    curve 4.005, 0.152, 7.869, 1.6 to 7.869, 6.059
+    curve 7.869, 10.706, 4.57, 10.985 to 4.57, 14.061
+    curve 4.57, 14.43, 5.417, 16.189 to 5.417, 16.58
+    curve 5.417, 17.426, 5.169, 17.717 to 4.28, 17.717
+    curve 3.841, 17.717, 3.349, 17.428 to 2.857, 17.428
+    curve 2.364, 17.428, 1.793, 17.71 to 1.576, 17.911
+    curve 1.36, 18.112, 1.003, 18.62 to 1.003, 19.077
+    line to 1.003, 20.058
+    line to -1.003, 20.058
+    curve -3.141, 20.058, -5.64, 19.144 to -5.64, 17.271
+    curve -5.64, 15.511, -4.703, 15.056 to -4.703, 13.326
+    curve -4.703, 11.633, -7.891, 10.136 to -7.891, 6.059
+    curve -7.891, 1.618, -4.226, 0.152 to 0, 0.152
+    close
+}
+
+// The pickguard: a teardrop on the treble side, its inner edge following the rosette round the soundhole.
+GuitarAcousticPickguard = path {
+    move to 0.993, 16.38
+    curve 2.3, 16.45, 4.45, 13.9 to 4.37, 11.3
+    curve 4.32, 10.15, 3.3, 9.6 to 2, 9.62
+    curve 1.1, 9.64, 0.8, 10.6 to 0.81, 11.4
+    curve 0.81, 11.65, 0.8, 11.85 to 0.804, 12.042
+    curve 1.697, 12.367, 2.306, 13.198 to 2.348, 14.147
+    curve 2.389, 15.097, 1.855, 15.978 to 0.993, 16.38
+    close
+}
+
+// The bridge, seen from in front: a belly bridge, 6.03 across, its wings 1.07 tall and its middle swelling
+// 0.3 further toward the tail.
+GuitarAcousticBridgeOutline = path {
+    move to -2.86, 8.07
+    line to -2.0, 8.07
+    curve -1.72, 8.07, -1.62, 7.78 to -1.25, 7.78
+    line to 1.25, 7.78
+    curve 1.62, 7.78, 1.72, 8.07 to 2.0, 8.07
+    line to 2.86, 8.07
+    curve 2.98, 8.07, 3.03, 8.12 to 3.03, 8.24
+    line to 3.03, 8.97
+    curve 3.03, 9.09, 2.98, 9.14 to 2.86, 9.14
+    line to -2.86, 9.14
+    curve -2.98, 9.14, -3.03, 9.09 to -3.03, 8.97
+    line to -3.03, 8.24
+    curve -3.03, 8.12, -2.98, 8.07 to -2.86, 8.07
+    close
+}
+
+// -- The acoustic's parts -----------------------------------------------------------------------------
+
+// The body: hollow, its edges rounded where the binding is, a soundhole through its top.
+GuitarAcousticShell = difference {
+    extrusion {
+        path GuitarAcousticBody  min Y -GuitarAcousticDepth  max Y 0  rounded 0.09
+        rotate X -90
+        material GuitarMahogany
+    }
+    extrusion {
+        path GuitarAcousticInside  min Y -(GuitarAcousticDepth - 0.12)  max Y -GuitarAcousticTop
+        rotate X -90
+        material GuitarRawWood
+    }
+    cylinder {
+        min Y -1  max Y 0.5
+        scale [2, 1, 2]
+        rotate X 90
+        translate [0, GuitarAcousticHoleY, 0]
+        material GuitarRawWood
+    }
+}
+
+// The rosette: rings flush with the top round the soundhole, a black line either side of a white band.
+primitive GuitarRing(inner, outer) -> group {
+    return group {
+        disc {
+            center [0, GuitarAcousticHoleY, -0.002]  normal [0, 0, -1]
+            radius outer  inner radius inner
+        }
+    }
+}
+
+GuitarAcousticRosette = group {
+    object GuitarRing(2.02, 2.06) { material GuitarRosetteBlack }
+    object GuitarRing(2.06, 2.28) { material GuitarRosetteWhite }
+    object GuitarRing(2.28, 2.32) { material GuitarRosetteBlack }
+}
+
+// Where string k (0 the low E) crosses the saddle and stands in the bridge, across the guitar.
+function GuitarAcousticAtSaddle(k) -> number { return -1.09 + k * 0.436 }
+function GuitarAcousticAtNut(k) -> number { return -0.725 + k * 0.29 }
+function GuitarAcousticPinY(x) -> number { return 8.42 + 0.05 * x }
+
+// The maker's label, on the inside of the back under the soundhole: a card, and two lines printed on it.
+GuitarLabelCard = material { pigment [0.72, 0.69, 0.62]  diffuse 0.85  specular 0  ambient 0.1 }
+GuitarLabelInk = material { pigment [0.03, 0.025, 0.02]  diffuse 0.8  specular 0  ambient 0.05 }
+
+primitive GuitarAcousticLabel(maker) -> group {
+    back = GuitarAcousticDepth - 0.12
+    return group {
+        cube { scale [1.3, 1.15, 0.004]  translate [0.15, GuitarAcousticHoleY + 0.1, back - 0.004]  material GuitarLabelCard }
+        text {
+            text maker  font 'Merriweather' italic
+            layout { horizontal position center  vertical position center }
+            scale [0.26, 0.01, 0.26]  rotate X -90
+            translate [0.15, GuitarAcousticHoleY + 0.45, back - 0.008]
+            material GuitarLabelInk
+        }
+        text {
+            text 'Steel String Acoustic'  font 'Merriweather'
+            layout { horizontal position center  vertical position center }
+            scale [0.11, 0.01, 0.11]  rotate X -90
+            translate [0.15, GuitarAcousticHoleY - 0.15, back - 0.008]
+            material GuitarLabelInk
+        }
+    }
+}
+
+// The bridge, its saddle, and the six pins the strings are anchored by.  The saddle stands 0.13 proud of the
+// bridge, and the nut 0.03 over the first fret, which leaves the strings 0.09 over the 12th.
+GuitarAcousticBridge = group {
+    extrusion {
+        path GuitarAcousticBridgeOutline  min Y 0  max Y 0.32  rounded 0.06
+        rotate X -90
+        material GuitarRosewood
+    }
+    // Its crest is a round 0.09 across, at 0.45 in front of the top.
+    union {
+        cube { scale [1.45, 0.045, 0.0425] }
+        cylinder { min Y -1.45  max Y 1.45  scale [0.045, 1, 0.045]  rotate Z 90  translate Z -0.0425 }
+        rotate Z 3.15
+        translate [0, GuitarAcousticSaddle, -0.3625]
+        material GuitarBone
+    }
+    for k in [0, 5] {
+        x = GuitarAcousticAtSaddle(k)
+        sphere {
+            scale [0.135, 0.135, 0.07]
+            translate [x, GuitarAcousticPinY(x), -0.32]
+            material GuitarBone
+        }
+        disc {
+            center [x, GuitarAcousticPinY(x), -0.3905]  normal [0, 0, -1]  radius 0.035
+            material GuitarRosetteBlack
+        }
+    }
+}
+
+// The pickguard, a fiftieth of an inch thick.
+GuitarAcousticGuard = extrusion {
+    path GuitarAcousticPickguard  min Y 0  max Y 0.02  rounded 0.008
+    rotate X -90
+    material GuitarTortoise
+}
+
+// The neck behind the fingerboard: half an elliptic cone from the body to the nut, 2.24 across and 0.7 deep at
+// the body, 1.75 and 0.57 at the nut; and the heel where it meets the body.
+GuitarAcousticNeck = union {
+    intersection {
+        conic {
+            min Y 0.875  max Y 1.12
+            scale [1, (GuitarAcousticNut - 20.21) / 0.245, 0.65]
+            rotate Z 180
+            translate Y 20.21 + 1.12 * (GuitarAcousticNut - 20.21) / 0.245
+        }
+        cube { scale [2, 9, 1]  translate [0, 28, 1] }
+    }
+    // The heel, drawn from the side -- across its depth, behind the top, and up the neck -- standing the whole
+    // depth of the body where it meets it and sweeping up into the back of the neck, narrower than the neck so
+    // its end is lost inside it; turned so the drawing's first axis runs back through the body and its second
+    // up the neck, its thickness across.
+    extrusion {
+        path {
+            move to 0, 20.12
+            line to GuitarAcousticDepth - 0.12, 20.12
+            line to GuitarAcousticDepth - 0.12, 21.15
+            curve GuitarAcousticDepth - 0.12, 22.6, 0.6, 22.6 to 0.5, 24.6
+            line to 0, 24.6
+            close
+        }
+        min Y -0.75  max Y 0.75  rounded 0.2
+        rotate X -90
+        rotate Y 270
+    }
+    material GuitarMahoganyNeck
+}
+
+// The fingerboard: tapering from the nut to past the 20th fret, its face curved to a 16 in radius, the frets
+// curved with it -- each a slice of a ring -- and dots at the 3rd, 5th, 7th, 9th, 12th (two), 15th and 17th.
+GuitarAcousticBoardEnd = GuitarAcousticFret(20) - 0.25
+
+GuitarAcousticBoard = intersection {
+    extrusion {
+        path {
+            move to -GuitarAcousticBoardWidth(GuitarAcousticBoardEnd) / 2, GuitarAcousticBoardEnd
+            line to GuitarAcousticBoardWidth(GuitarAcousticBoardEnd) / 2, GuitarAcousticBoardEnd
+            line to 0.875, GuitarAcousticNut
+            line to -0.875, GuitarAcousticNut
+            close
+        }
+        min Y 0  max Y 0.3
+        rotate X -90
+    }
+    cylinder {
+        min Y 0  max Y 40
+        scale [16, 1, 16]
+        translate [0, 0, 16 - 0.25]
+        material GuitarRosewoodFace(16)
+    }
+    material GuitarRosewood
+}
+
+primitive GuitarAcousticFretWire(n) -> group {
+    y = GuitarAcousticFret(n)
+    half = GuitarAcousticBoardWidth(y) / 2
+    return group {
+        intersection {
+            torus { radii 16, 0.045  translate [0, y, 16 - 0.25] }
+            cube { scale [half, 0.1, 0.2]  translate [0, y, -0.25] }
+        }
+        material GuitarNickel
+    }
+}
+
+primitive GuitarAcousticDot(n, x = 0) -> group {
+    y = (GuitarAcousticFret(n) + GuitarAcousticFret(n - 1)) / 2
+    return group {
+        disc { center [x, y, -0.2515]  normal [0, 0, -1]  radius 0.1  material GuitarRosetteWhite }
+    }
+}
+
+GuitarAcousticFrets = group {
+    for n in [1, 20] {
+        object GuitarAcousticFretWire(n)
+    }
+    object GuitarAcousticDot(3)
+    object GuitarAcousticDot(5)
+    object GuitarAcousticDot(7)
+    object GuitarAcousticDot(9)
+    object GuitarAcousticDot(12, -0.35)
+    object GuitarAcousticDot(12, 0.35)
+    object GuitarAcousticDot(15)
+    object GuitarAcousticDot(17)
+}
+
+// The nut: bone, as wide as the fingerboard there, the strings over it 0.03 clear of the first fret.
+GuitarAcousticNutBlock = cube {
+    scale [0.875, 0.11, 0.14]
+    translate [0, GuitarAcousticNut + 0.11, -0.18]
+    material GuitarBone
+}
+
+// The headstock, leaning back fourteen degrees from the nut, faced with rosewood; and three tuners a side,
+// their posts through it and their buttons out to either side behind.  Its own space has the nut end at the
+// origin and runs up +Y; a point there is carried out to the guitar's by these two.
+GuitarAcousticHeadstockOutline = path {
+    move to -1.17, 0
+    line to 1.17, 0
+    line to 1.41, 5.6
+    curve 1.417, 5.766, 1.276, 5.9 to 1.11, 5.9
+    line to -1.11, 5.9
+    curve -1.276, 5.9, -1.417, 5.766 to -1.41, 5.6
+    close
+}
+
+function GuitarAcousticHeadY(y, z) -> number { return GuitarAcousticNut + 0.22 + y * 0.9703 - z * 0.24192 }
+function GuitarAcousticHeadZ(y, z) -> number { return y * 0.24192 + z * 0.9703 }
+function GuitarAcousticPostY(n) -> number { return 1.65 + n * 1.5 }
+
+GuitarButton = material { pigment [0.025, 0.025, 0.025]  diffuse 0.8  specular 0.6  shininess 150  reflective 0.04  fresnel }
+
+primitive GuitarAcousticTuner(side, n) -> group {
+    x = side * 0.85
+    y = GuitarAcousticPostY(n)
+    return group {
+        group {
+            // The post and the nut that holds its bushing to the face.
+            cylinder { min Y 0  max Y 0.48  scale [0.11, 1, 0.11]  rotate X 90  translate [x, y, -0.5] }
+            cylinder { min Y 0  max Y 0.07  scale [0.19, 1, 0.19]  rotate X 90  translate [x, y, -0.09] }
+            // Behind: the sealed gear's case, and the shaft out to the button.
+            cylinder { min Y 0  max Y 0.3  scale [0.26, 1, 0.26]  rotate X 90  translate [x, y, 0.55] }
+            cylinder { min Y 0  max Y 0.75  scale [0.05, 1, 0.05]  rotate Z -90 * side  translate [x, y, 0.7] }
+            cylinder { min Y 0  max Y 0.12  scale [0.08, 1, 0.08]  rotate Z -90 * side  translate [side * 1.4, y, 0.7] }
+            material GuitarChrome
+        }
+        sphere { scale [0.25, 0.34, 0.09]  translate [side * 1.77, y, 0.7]  material GuitarButton }
+    }
+}
+
+GuitarAcousticHeadstock = group {
+    extrusion {
+        path GuitarAcousticHeadstockOutline  min Y -0.55  max Y 0  rounded 0.06
+        rotate X -90
+        material GuitarMahogany
+    }
+    extrusion {
+        path GuitarAcousticHeadstockOutline  min Y 0  max Y 0.02
+        rotate X -90
+        material GuitarRosewood
+    }
+    for n in [0, 2] {
+        object GuitarAcousticTuner(-1, n)
+        object GuitarAcousticTuner(1, n)
+    }
+    rotate X 14
+    translate Y GuitarAcousticNut + 0.22
+}
+
+// The strings: anchored by their pins, over the saddle and the nut and round the tuners' posts, the low E on the
+// bass side and at the top of the headstock.  Their gauges are a light phosphor-bronze set: 0.053, 0.042,
+// 0.032, 0.024 wound, 0.016 and 0.012 plain.
+primitive GuitarAcousticString(k, gauge, side, n) -> group {
+    atSaddle = GuitarAcousticAtSaddle(k)
+    saddleY = GuitarAcousticSaddle + GuitarAcousticSaddleSlant * atSaddle
+    atNut = GuitarAcousticAtNut(k)
+    postY = GuitarAcousticPostY(n)
+    // Round the post on the side toward the middle of the headstock.
+    postX = side * (0.85 - 0.11 - gauge / 2)
+    return group {
+        strand {
+            width gauge at [atSaddle, GuitarAcousticPinY(atSaddle) + 0.06, -0.33]
+            width gauge at [atSaddle, saddleY, -0.45 - gauge / 2]
+        }
+        strand {
+            width gauge at [atSaddle, saddleY, -0.45 - gauge / 2]
+            width gauge at [atNut, GuitarAcousticNut + 0.11, -0.32 - gauge / 2]
+        }
+        strand {
+            width gauge at [atNut, GuitarAcousticNut + 0.11, -0.32 - gauge / 2]
+            width gauge at [postX, GuitarAcousticHeadY(postY, -0.27), GuitarAcousticHeadZ(postY, -0.27)]
+        }
+        // A few turns round the post.
+        cylinder {
+            min Y 0  max Y 0.1  scale [0.11 + gauge, 1, 0.11 + gauge]  rotate X 90
+            translate [side * 0.85, postY, -0.32]
+            rotate X 14
+            translate Y GuitarAcousticNut + 0.22
+        }
+    }
+}
+
+GuitarAcousticStrings = group {
+    object GuitarAcousticString(0, 0.053, -1, 2) { material GuitarBronzeString }
+    object GuitarAcousticString(1, 0.042, -1, 1) { material GuitarBronzeString }
+    object GuitarAcousticString(2, 0.032, -1, 0) { material GuitarBronzeString }
+    object GuitarAcousticString(3, 0.024, 1, 0) { material GuitarBronzeString }
+    object GuitarAcousticString(4, 0.016, 1, 1) { material GuitarSteelString }
+    object GuitarAcousticString(5, 0.012, 1, 2) { material GuitarSteelString }
+}
+
+// -- The acoustic --------------------------------------------------------------------------------------
+
+// At the heel: a black cap over its end where it meets the back, a pointed arch, and a strap button on its
+// treble side a little above the body.
+GuitarAcousticHeelFittings = group {
+    extrusion {
+        path {
+            move to -0.475, GuitarAcousticBodyEnd
+            line to 0.475, GuitarAcousticBodyEnd
+            curve 0.475, 20.6, 0.25, 20.95 to 0, 21.13
+            curve -0.25, 20.95, -0.475, 20.6 to -0.475, GuitarAcousticBodyEnd
+            close
+        }
+        min Y -0.02  max Y 0
+        rotate X -90
+        translate Z GuitarAcousticDepth - 0.12
+        material GuitarBlackPlastic
+    }
+    object GuitarStrapButton { rotate Z -90  translate [0.75, 20.8, GuitarAcousticDepth - 0.7] }
+}
+
+// The end pin the strap hangs from, at the tail.
+GuitarAcousticEndPin = group {
+    cylinder { min Y -0.22  max Y 0.05  scale [0.1, 1, 0.1] }
+    sphere { scale [0.17, 0.06, 0.17]  translate Y -0.22 }
+    translate Z GuitarAcousticDepth / 2
+    material GuitarBlackPlastic
+}
+
+primitive AcousticGuitar(maker = 'Hand Made') -> group {
+    return group {
+        object GuitarAcousticShell
+        object GuitarAcousticEndPin
+        object GuitarAcousticHeelFittings
+        object GuitarAcousticLabel(maker)
+        object GuitarAcousticRosette
+        object GuitarAcousticBridge
+        object GuitarAcousticGuard
+        object GuitarAcousticNeck
+        object GuitarAcousticBoard
+        object GuitarAcousticFrets
+        object GuitarAcousticNutBlock
+        object GuitarAcousticHeadstock
+        object GuitarAcousticStrings
+        // Lifted to stand on its end pin.
+        translate Y 0.28
+    }
+}
+
+// =====================================================================================================
+// -- The electric --------------------------------------------------------------------------------------
+//
+// A solid body with two cutaways, the bass horn the longer, a bolt-on maple neck with a rosewood board, three
+// single-coil pickups and a vibrato bridge: the generic double-cutaway, no maker's outline.  The body is
+// 12.75 across the lower bout, 17.9 long and 1.75 thick, its edges rounded; a 25.5 in scale, 22 frets, a 1.65
+// in nut and a 9.5 in board radius.  It stands as the acoustic does, on the end of its body, top toward -Z.
+
+// The finish: dark teal paint under a clear gloss coat.
+GuitarTeal = material { pigment [0.004, 0.06, 0.068]  diffuse 0.8  specular 0  ambient 0.06  coat { roughness 0.03 } }
+
+// The neck: maple under a gloss, with a touch of the amber old lacquer has.
+GuitarMaple = material { pigment [0.68, 0.47, 0.25]  diffuse 0.8  specular 0  ambient 0.1  coat { roughness 0.08 } }
+
+
+// The wound strings' nickel, brushed round by their winding.
+GuitarNickelString = material {
+    pigment [0.8, 0.79, 0.76]  metallic 1  reflective 0.6  roughness 0.3  anisotropy 0.8  diffuse 0  specular 0
+}
+
+GuitarElectricScale = 25.5
+GuitarElectricNut = 30.5
+GuitarElectricSaddle = GuitarElectricNut - GuitarElectricScale - 0.08
+GuitarElectricDepth = 1.75
+// The board's face on its middle line stands 0.37 proud of the top; its back, and the headstock's face, 0.12.
+GuitarElectricFace = -0.37
+GuitarElectricBack = -0.12
+GuitarElectricRadius = 9.5
+
+function GuitarElectricFret(n) -> number { return GuitarElectricNut - GuitarElectricScale * (1 - pow(2, -n / 12)) }
+GuitarElectricBoardEnd = GuitarElectricFret(22) - 0.25
+
+// How wide the neck is at a height up the body: 1.65 at the nut, the 2.24 of the body's pocket where it meets
+// the body, and that on down the pocket.
+function GuitarElectricWidth(y) -> number { return 1.65 + 0.59 * (GuitarElectricNut - y) / (GuitarElectricNut - 14.9) }
+
+function GuitarElectricAtNut(k) -> number { return -0.7 + k * 0.28 }
+function GuitarElectricAtSaddle(k) -> number { return -1.094 + k * 0.4375 }
+// Where a string crosses a height up the body, between the saddle and the nut.
+function GuitarElectricAt(k, y) -> number {
+    return GuitarElectricAtSaddle(k) + (GuitarElectricAtNut(k) - GuitarElectricAtSaddle(k)) * (y - GuitarElectricSaddle) / (GuitarElectricNut - GuitarElectricSaddle)
+}
+// Where the board's face is, a distance x off its middle line.
+function GuitarElectricFaceAt(x) -> number {
+    return GuitarElectricFace + GuitarElectricRadius - sqrt(GuitarElectricRadius * GuitarElectricRadius - x * x)
+}
+
+GuitarElectricBody = path {
+    move to 0, 0
+    curve 3.7, 0, 6.375, 2 to 6.375, 4.6
+    curve 6.375, 6.9, 5.15, 7.6 to 5.15, 9.2
+    curve 5.15, 10.6, 5.7, 11.2 to 5.7, 12.4
+    curve 5.7, 14.6, 5, 16.4 to 4.1, 16.4
+    curve 3.2, 16.4, 3.3, 12.9 to 2.35, 12.9
+    curve 1.55, 12.9, 1.12, 13.9 to 1.12, 14.9
+    line to -1.12, 14.9
+    curve -1.12, 14, -1.6, 13.5 to -2.4, 13.5
+    curve -3.4, 13.5, -3.3, 17.9 to -4.35, 17.9
+    curve -5.3, 17.9, -5.85, 15.9 to -5.85, 13.6
+    curve -5.85, 11.6, -5, 11.2 to -5, 9.9
+    curve -5, 8.3, -6.375, 7 to -6.375, 4.6
+    curve -6.375, 2, -3.7, 0 to 0, 0
+    close
+}
+
+GuitarElectricPickguard = path {
+    move to -1.7500, 5.6000
+    curve -1.2833, 5.5783, -0.5833, 5.6200 to 0.0000, 5.6200
+    curve 0.5833, 5.6200, 1.4250, 5.8200 to 1.7500, 5.6000
+    curve 2.0750, 5.3800, 1.8167, 4.8000 to 1.9500, 4.3000
+    curve 2.0833, 3.8000, 2.2917, 2.9833 to 2.5500, 2.6000
+    curve 2.8083, 2.2167, 3.1833, 2.0167 to 3.5000, 2.0000
+    curve 3.8167, 1.9833, 4.2000, 2.1583 to 4.4500, 2.5000
+    curve 4.7000, 2.8417, 4.9000, 3.4000 to 5.0000, 4.0500
+    curve 5.1000, 4.7000, 5.1167, 5.6417 to 5.0500, 6.4000
+    curve 4.9833, 7.1583, 4.6667, 7.9000 to 4.6000, 8.6000
+    curve 4.5333, 9.3000, 4.7250, 10.0083 to 4.6500, 10.6000
+    curve 4.5750, 11.1917, 4.5000, 11.8333 to 4.1500, 12.1500
+    curve 3.8000, 12.4667, 2.9917, 12.4750 to 2.5500, 12.5000
+    curve 2.1083, 12.5250, 1.7333, 12.3917 to 1.5000, 12.3000
+    curve 1.2667, 12.2083, 1.4000, 12.0117 to 1.1500, 11.9500
+    curve 0.9000, 11.8883, 0.3833, 11.9300 to 0.0000, 11.9300
+    curve -0.3833, 11.9300, -0.9000, 11.8717 to -1.1500, 11.9500
+    curve -1.4000, 12.0283, -1.2417, 12.2333 to -1.5000, 12.4000
+    curve -1.7583, 12.5667, -2.2750, 12.9417 to -2.7000, 12.9500
+    curve -3.1250, 12.9583, -3.7300, 12.8583 to -4.0500, 12.4500
+    curve -4.3700, 12.0417, -4.5033, 11.2417 to -4.6200, 10.5000
+    curve -4.7367, 9.7583, -4.8200, 8.7000 to -4.7500, 8.0000
+    curve -4.6800, 7.3000, -4.5250, 6.6750 to -4.2000, 6.3000
+    curve -3.8750, 5.9250, -3.2083, 5.8667 to -2.8000, 5.7500
+    curve -2.3917, 5.6333, -2.2167, 5.6217 to -1.7500, 5.6000
+    close
+}
+
+// The body, its edges rounded, in whatever finish it is given.
+primitive GuitarElectricBodyIn(finish) -> group {
+    return group {
+        extrusion {
+            path GuitarElectricBody  min Y -GuitarElectricDepth  max Y 0  rounded 0.25
+            rotate X -90
+            material finish
+        }
+    }
+}
+
+// The pickguard: three plies, white over black over white, the top one's edge rounded off so the black shows
+// as a line round it.
+GuitarElectricGuard = group {
+    extrusion { path GuitarElectricPickguard  min Y 0.05  max Y 0.09  rounded 0.018  rotate X -90  material GuitarWhitePlastic }
+    extrusion { path GuitarElectricPickguard  min Y 0.03  max Y 0.05  rotate X -90  material GuitarBlackPlastic }
+    extrusion { path GuitarElectricPickguard  min Y 0  max Y 0.03  rotate X -90  material GuitarWhitePlastic }
+}
+
+// A single-coil pickup: its cover a third of an inch over the guard, and six pole pieces through its top.
+GuitarSingleCoilOutline = path {
+    move to -1.125, -0.35
+    line to 1.125, -0.35
+    curve 1.263, -0.35, 1.375, -0.238 to 1.375, -0.1
+    line to 1.375, 0.1
+    curve 1.375, 0.238, 1.263, 0.35 to 1.125, 0.35
+    line to -1.125, 0.35
+    curve -1.263, 0.35, -1.375, 0.238 to -1.375, 0.1
+    line to -1.375, -0.1
+    curve -1.375, -0.238, -1.263, -0.35 to -1.125, -0.35
+    close
+}
+
+primitive GuitarSingleCoil(x, y, turn) -> group {
+    return group {
+        extrusion { path GuitarSingleCoilOutline  min Y 0.09  max Y 0.42  rounded 0.06  rotate X -90  material GuitarWhitePlastic }
+        for k in [0, 5] {
+            disc { center [-0.98 + k * 0.392, 0, -0.4215]  normal [0, 0, -1]  radius 0.09  material GuitarNickel }
+        }
+        rotate Z turn
+        translate [x, y, 0]
+    }
+}
+
+GuitarElectricPickups = group {
+    object GuitarSingleCoil(0, 11.375, 0)
+    object GuitarSingleCoil(0, 9.625, 0)
+    object GuitarSingleCoil(0.1, GuitarElectricSaddle + 1.55, -8)
+}
+
+// The controls: a volume and two tone knobs, skirted, on a line down toward the tail, and the pickup switch.
+primitive GuitarKnob(x, y) -> group {
+    return group {
+        cylinder { min Y 0.09  max Y 0.15  scale [0.33, 1, 0.33]  rotate X -90 }
+        conic { min Y 0.27  max Y 0.3  scale [1, 14, 1]  rotate X 90  translate Z 0.15 - 0.3 * 14 }
+        sphere { scale [0.27, 0.27, 0.04]  translate Z -0.57 }
+        translate [x, y, 0]
+        material GuitarWhitePlastic
+    }
+}
+
+GuitarElectricControls = group {
+    object GuitarKnob(2.75, 5.3)
+    object GuitarKnob(3.45, 4.15)
+    object GuitarKnob(4.05, 3.0)
+    group {
+        cube { scale [0.08, 0.42, 0.005]  translate Z -0.095  material GuitarBlackPlastic }
+        cube { scale [0.07, 0.13, 0.18]  translate Z -0.27  material GuitarWhitePlastic }
+        rotate Z -35
+        translate [2.85, 7.3, 0]
+    }
+}
+
+// The jack, on the rim at the widest of the lower bout, and the strap buttons at the tail and the bass horn.
+GuitarElectricFittings = group {
+    group {
+        disc { center [0, 0, 0]  normal [1, 0, 0]  radius 0.42 }
+        cylinder { min Y 0  max Y 0.12  scale [0.2, 1, 0.2]  rotate Z -90 }
+        material GuitarChrome
+        translate [6.38, 4.6, GuitarElectricDepth / 2]
+    }
+    disc { center [6.505, 4.6, GuitarElectricDepth / 2]  normal [1, 0, 0]  radius 0.12  material GuitarBlackPlastic }
+    object GuitarStrapButton { rotate Z 180  translate [0, 0, GuitarElectricDepth / 2] }
+    object GuitarStrapButton { translate [-4.35, 17.9, GuitarElectricDepth / 2] }
+}
+
+// The neck plate on the back, and its four screws.
+GuitarElectricNeckPlate = group {
+    extrusion {
+        path {
+            move to -1, 12.15  line to 1, 12.15  line to 1, 14.65  line to -1, 14.65  close
+        }
+        min Y -0.05  max Y 0  rounded 0.02
+        rotate X -90
+        translate Z GuitarElectricDepth
+    }
+    for i in [0, 3] {
+        sphere {
+            scale [0.11, 0.11, 0.04]
+            translate [-0.72 + 1.44 * mod(i, 2), 12.5 + 1.8 * floor(i / 2), GuitarElectricDepth + 0.05]
+        }
+    }
+    material GuitarChrome
+}
+
+// The vibrato bridge: a plate on six screws at its front edge, its back edge bent up, and six bent-steel
+// saddles, each its own string's height and set back for its intonation, the bass ones furthest.
+function GuitarElectricSaddleY(x) -> number { return GuitarElectricSaddle + 0.055 * x }
+// The strings' underside over the saddles: 0.52 proud of the top.
+GuitarElectricCrest = -0.52
+
+GuitarElectricBridge = group {
+    extrusion {
+        path {
+            move to -1.33, 3.77  line to 1.33, 3.77
+            curve 1.396, 3.77, 1.45, 3.824 to 1.45, 3.89
+            line to 1.45, 5.25
+            curve 1.45, 5.316, 1.396, 5.37 to 1.33, 5.37
+            line to -1.33, 5.37
+            curve -1.396, 5.37, -1.45, 5.316 to -1.45, 5.25
+            line to -1.45, 3.89
+            curve -1.45, 3.824, -1.396, 3.77 to -1.33, 3.77
+            close
+        }
+        min Y 0  max Y 0.08  rounded 0.02
+        rotate X -90
+    }
+    cube { scale [1.42, 0.04, 0.16]  translate [0, 3.81, -0.23] }
+    for i in [0, 5] {
+        sphere { scale [0.085, 0.085, 0.04]  translate [-1.25 + i * 0.5, 5.2, -0.08] }
+    }
+    for k in [0, 5] {
+        x = GuitarElectricAtSaddle(k)
+        y = GuitarElectricSaddleY(x)
+        // A strip of steel bent round at the front, where the string crosses it, and down at the back, standing
+        // on its two height screws, with the screw back to the plate's lip that sets where it stands.
+        group {
+            cube { scale [0.17, 0.33, 0.03]  translate [x, y - 0.38, GuitarElectricCrest + 0.08] }
+            cylinder { min Y -0.17  max Y 0.17  scale [0.05, 1, 0.05]  rotate Z 90  translate [x, y - 0.05, GuitarElectricCrest + 0.05] }
+            cube { scale [0.17, 0.03, 0.09]  translate [x, y - 0.68, GuitarElectricCrest + 0.2] }
+            cylinder { min Y -0.08  max Y -GuitarElectricCrest - 0.02  scale [0.04, 1, 0.04]  rotate X 90  translate [x - 0.09, y - 0.4, 0] }
+            cylinder { min Y -0.08  max Y -GuitarElectricCrest - 0.02  scale [0.04, 1, 0.04]  rotate X 90  translate [x + 0.09, y - 0.4, 0] }
+            cylinder { min Y 3.79  max Y y - 0.65  scale [0.025, 1, 0.025]  translate Z GuitarElectricCrest + 0.22 }
+        }
+    }
+    material GuitarChrome
+}
+
+// The neck: half an elliptic cone behind the board from the body to the nut, 2.24 across where it meets the
+// body and 1.65 at the nut, and the block of it that sits in the body's pocket.
+GuitarElectricNeck = union {
+    intersection {
+        conic {
+            min Y 0.825  max Y 1.12
+            scale [1, (GuitarElectricNut - 14.9) / 0.295, 0.66]
+            rotate Z 180
+            translate [0, 14.9 + 1.12 * (GuitarElectricNut - 14.9) / 0.295, GuitarElectricBack]
+        }
+        cube { scale [2, (GuitarElectricNut - 14.9) / 2, 1]  translate [0, (GuitarElectricNut + 14.9) / 2, GuitarElectricBack + 1] }
+    }
+    cube { scale [1.12, 1.5, 0.36]  translate [0, 13.4, GuitarElectricBack + 0.36] }
+    material GuitarMaple
+}
+
+// The board, its face curved to the 9.5 in radius, from past the 22nd fret to the nut.
+GuitarElectricBoard = intersection {
+    extrusion {
+        path {
+            move to -1.12, GuitarElectricBoardEnd
+            line to 1.12, GuitarElectricBoardEnd
+            line to 1.12, 14.9
+            line to GuitarElectricWidth(GuitarElectricNut) / 2, GuitarElectricNut
+            line to -GuitarElectricWidth(GuitarElectricNut) / 2, GuitarElectricNut
+            line to -1.12, 14.9
+            close
+        }
+        min Y -GuitarElectricBack  max Y 0.5
+        rotate X -90
+    }
+    cylinder {
+        min Y 0  max Y 40
+        scale [GuitarElectricRadius, 1, GuitarElectricRadius]
+        translate Z GuitarElectricFace + GuitarElectricRadius
+        material GuitarRosewoodFace(GuitarElectricRadius)
+    }
+    material GuitarRosewood
+}
+
+primitive GuitarElectricFretWire(n) -> group {
+    y = GuitarElectricFret(n)
+    half = GuitarElectricWidth(y) / 2
+    return group {
+        intersection {
+            torus { radii GuitarElectricRadius, 0.045  translate [0, y, GuitarElectricFace + GuitarElectricRadius] }
+            cube { scale [half, 0.1, 0.2]  translate [0, y, GuitarElectricFace] }
+        }
+        material GuitarNickel
+    }
+}
+
+primitive GuitarElectricDot(n, x = 0) -> group {
+    y = (GuitarElectricFret(n) + GuitarElectricFret(n - 1)) / 2
+    return group {
+        disc { center [x, y, GuitarElectricFaceAt(x) - 0.0015]  normal [0, 0, -1]  radius 0.1  material GuitarRosetteWhite }
+    }
+}
+
+GuitarElectricFrets = group {
+    for n in [1, 22] {
+        object GuitarElectricFretWire(n)
+    }
+    for n in list(3, 5, 7, 9, 15, 17, 19, 21) {
+        object GuitarElectricDot(n)
+    }
+    object GuitarElectricDot(12, -0.35)
+    object GuitarElectricDot(12, 0.35)
+}
+
+// The nut, on the end of the board, the strings over it 0.02 clear of the first fret.
+GuitarElectricNutBlock = cube {
+    scale [GuitarElectricWidth(GuitarElectricNut) / 2, 0.095, 0.16]
+    translate [0, GuitarElectricNut + 0.095, GuitarElectricBack - 0.16]
+    material GuitarBone
+}
+
+// The headstock: flat, six tuners in a line on its bass side, a string tree holding down the top two strings.
+// Its own space has the nut end at the origin and runs up +Y, its face at the neck's top.
+GuitarElectricHeadstockOutline = path {
+    move to -0.83, 0
+    line to 0.83, 0
+    curve 0.95, 0.6, 1.05, 1.4 to 0.95, 2.4
+    curve 0.82, 3.6, 0.5, 5.4 to 0.4, 6.4
+    curve 0.3, 7.3, -0.6, 7.6 to -1, 7.1
+    curve -1.3, 6.7, -1.2, 5.6 to -1.15, 4.6
+    curve -1.1, 3.4, -1.05, 1.6 to -0.95, 0.9
+    curve -0.9, 0.5, -0.86, 0.2 to -0.83, 0
+    close
+}
+
+GuitarElectricHeadAt = GuitarElectricNut + 0.19
+function GuitarElectricPostX(n) -> number { return -0.45 - n * 0.04 }
+function GuitarElectricPostY(n) -> number { return 1.3 + n * 0.95 }
+
+primitive GuitarElectricTuner(n) -> group {
+    x = GuitarElectricPostX(n)
+    y = GuitarElectricPostY(n)
+    return group {
+        cylinder { min Y 0  max Y 0.43  scale [0.1, 1, 0.1]  rotate X 90  translate [x, y, GuitarElectricBack - 0.43] }
+        cylinder { min Y 0  max Y 0.05  scale [0.17, 1, 0.17]  rotate X 90  translate [x, y, GuitarElectricBack - 0.05] }
+        cube { scale [0.26, 0.3, 0.15]  translate [x - 0.05, y, 0.43 + 0.15] }
+        cylinder { min Y 0  max Y 1.0  scale [0.045, 1, 0.045]  rotate Z 90  translate [x - 0.3, y, 0.58] }
+        sphere { scale [0.13, 0.27, 0.07]  translate [-1.62, y, 0.58] }
+        material GuitarChrome
+    }
+}
+
+GuitarElectricHeadstock = group {
+    extrusion {
+        path GuitarElectricHeadstockOutline  min Y -0.43  max Y -GuitarElectricBack  rounded 0.05
+        rotate X -90
+        material GuitarMaple
+    }
+    for n in [0, 5] {
+        object GuitarElectricTuner(n)
+    }
+    // The string tree.
+    group {
+        cylinder { min Y 0  max Y 0.25  scale [0.06, 1, 0.06]  rotate X 90  translate Z GuitarElectricBack - 0.25 }
+        cylinder { min Y 0  max Y 0.03  scale [0.2, 1, 0.2]  rotate X 90  translate Z GuitarElectricBack - 0.28 }
+        translate [0.18, 2.1, 0]
+        material GuitarChrome
+    }
+    translate Y GuitarElectricHeadAt
+}
+
+// The strings: up from the plate behind its saddle, over the saddle and the nut and round its post, the low E
+// on the bass side and at the nearest post.  A light set: 0.046, 0.036, 0.026 wound, 0.017, 0.013 and 0.010
+// plain.
+primitive GuitarElectricString(k, gauge) -> group {
+    atSaddle = GuitarElectricAtSaddle(k)
+    saddleY = GuitarElectricSaddleY(atSaddle)
+    atNut = GuitarElectricAtNut(k)
+    postX = GuitarElectricPostX(k) + 0.1 + gauge / 2
+    postY = GuitarElectricHeadAt + GuitarElectricPostY(k)
+    crest = GuitarElectricCrest - gauge / 2
+    top = GuitarElectricBack - 0.32 - gauge / 2
+    return group {
+        strand { width gauge at [atSaddle, saddleY - 0.62, -0.1]  width gauge at [atSaddle, saddleY - 0.05, crest] }
+        strand { width gauge at [atSaddle, saddleY - 0.05, crest]  width gauge at [atNut, GuitarElectricNut + 0.095, top] }
+        strand { width gauge at [atNut, GuitarElectricNut + 0.095, top]  width gauge at [postX, postY, GuitarElectricBack - 0.18] }
+        cylinder {
+            min Y 0  max Y 0.12  scale [0.1 + gauge, 1, 0.1 + gauge]  rotate X 90
+            translate [GuitarElectricPostX(k), postY, GuitarElectricBack - 0.24]
+        }
+    }
+}
+
+GuitarElectricStrings = group {
+    object GuitarElectricString(0, 0.046) { material GuitarNickelString }
+    object GuitarElectricString(1, 0.036) { material GuitarNickelString }
+    object GuitarElectricString(2, 0.026) { material GuitarNickelString }
+    object GuitarElectricString(3, 0.017) { material GuitarSteelString }
+    object GuitarElectricString(4, 0.013) { material GuitarSteelString }
+    object GuitarElectricString(5, 0.010) { material GuitarSteelString }
+}
+
+primitive ElectricGuitar(finish = GuitarTeal) -> group {
+    return group {
+        object GuitarElectricBodyIn(finish)
+        object GuitarElectricGuard
+        object GuitarElectricPickups
+        object GuitarElectricControls
+        object GuitarElectricFittings
+        object GuitarElectricNeckPlate
+        object GuitarElectricBridge
+        object GuitarElectricNeck
+        object GuitarElectricBoard
+        object GuitarElectricFrets
+        object GuitarElectricNutBlock
+        object GuitarElectricHeadstock
+        object GuitarElectricStrings
+        // Lifted to stand on its strap button.
+        translate Y 0.27
+    }
+}
+
+// =====================================================================================================
+// -- The bass ------------------------------------------------------------------------------------------
+//
+// The electric's partner: the same double-cutaway body grown to 13 across and 19.6 long, its bass horn longer
+// still; a 34 in scale, 20 frets, a 1.5 in nut, one pickup, a bridge of four barrel saddles and four wound
+// strings.  It stands as the others do, on the end of its body, top toward -Z.
+
+// The finish: black under a clear gloss coat.
+GuitarGlossBlack = material { pigment [0.012, 0.012, 0.013]  diffuse 0.8  specular 0  ambient 0.04  coat { roughness 0.03 } }
+
+GuitarBassScale = 34
+GuitarBassNut = 36.1
+GuitarBassSaddle = GuitarBassNut - GuitarBassScale - 0.1
+GuitarBassDepth = 1.75
+
+function GuitarBassFret(n) -> number { return GuitarBassNut - GuitarBassScale * (1 - pow(2, -n / 12)) }
+GuitarBassBoardEnd = GuitarBassFret(20) - 0.25
+
+// How wide the neck is at a height up the body: 1.5 at the nut, the 2.4 of the body's pocket where it meets it.
+function GuitarBassWidth(y) -> number { return 1.5 + 0.9 * (GuitarBassNut - y) / (GuitarBassNut - 15.6) }
+
+function GuitarBassAtNut(k) -> number { return -0.55 + k * 0.3667 }
+function GuitarBassAtSaddle(k) -> number { return -1.125 + k * 0.75 }
+function GuitarBassAt(k, y) -> number {
+    return GuitarBassAtSaddle(k) + (GuitarBassAtNut(k) - GuitarBassAtSaddle(k)) * (y - GuitarBassSaddle) / (GuitarBassNut - GuitarBassSaddle)
+}
+function GuitarBassSaddleY(x) -> number { return GuitarBassSaddle + 0.06 * x }
+// The strings' underside over the saddles: 0.57 proud of the top.
+GuitarBassCrest = -0.57
+
+GuitarBassBody = path {
+    move to 0, 0
+    curve 3.8, 0, 6.5, 2.1 to 6.5, 4.9
+    curve 6.5, 7.3, 5.25, 8 to 5.25, 9.8
+    curve 5.25, 11.3, 5.8, 11.9 to 5.8, 13.1
+    curve 5.8, 15.3, 5.1, 17 to 4.2, 17
+    curve 3.3, 17, 3.4, 13.5 to 2.4, 13.5
+    curve 1.6, 13.5, 1.2, 14.6 to 1.2, 15.6
+    curve 0.4, 15.6, -0.4, 15.6 to -1.2, 15.6
+    curve -1.2, 14.6, -1.7, 14 to -2.5, 14
+    curve -3.6, 14, -3.35, 19.6 to -4.45, 19.6
+    curve -5.45, 19.6, -6, 17.4 to -6, 14.6
+    curve -6, 12.3, -5.1, 11.8 to -5.1, 10.4
+    curve -5.1, 8.7, -6.5, 7.4 to -6.5, 4.9
+    curve -6.5, 2.1, -3.8, 0 to 0, 0
+    close
+}
+
+GuitarBassPickguard = path {
+    move to 1.22, 12.58
+    curve 1.4867, 12.645, 1.345, 12.8467 to 1.6, 12.95
+    curve 1.855, 13.0533, 2.3083, 13.2167 to 2.75, 13.2
+    curve 3.1917, 13.1833, 3.9083, 13.2 to 4.25, 12.85
+    curve 4.5917, 12.5, 4.7333, 11.6917 to 4.8, 11.1
+    curve 4.8667, 10.5083, 4.7417, 9.9 to 4.65, 9.3
+    curve 4.5583, 8.7, 4.5083, 8.05 to 4.25, 7.5
+    curve 3.9917, 6.95, 3.6083, 6.3133 to 3.1, 6
+    curve 2.5917, 5.6867, 1.95, 5.7033 to 1.2, 5.62
+    curve 0.45, 5.5367, -0.6333, 5.4867 to -1.4, 5.5
+    curve -2.1667, 5.5133, -2.8833, 5.5 to -3.4, 5.7
+    curve -3.9167, 5.9, -4.2667, 6.2 to -4.5, 6.7
+    curve -4.7333, 7.2, -4.7583, 7.9333 to -4.8, 8.7
+    curve -4.8417, 9.4667, -4.8417, 10.575 to -4.75, 11.3
+    curve -4.6583, 12.025, -4.5667, 12.6633 to -4.25, 13.05
+    curve -3.9333, 13.4367, -3.2917, 13.6367 to -2.85, 13.62
+    curve -2.4083, 13.6033, -1.8717, 13.1233 to -1.6, 12.95
+    curve -1.3283, 12.7767, -1.4867, 12.645 to -1.22, 12.58
+    curve -0.9533, 12.515, -0.4067, 12.56 to 0, 12.56
+    curve 0.4067, 12.56, 0.9533, 12.515 to 1.22, 12.58
+    close
+    move to -1.6, 6.195
+    curve -0.5333, 6.195, 0.5333, 6.195 to 1.6, 6.195
+    curve 1.727, 6.195, 1.83, 6.298 to 1.83, 6.425
+    curve 1.83, 6.5417, 1.83, 6.6583 to 1.83, 6.775
+    curve 1.83, 6.902, 1.727, 7.005 to 1.6, 7.005
+    curve 0.5333, 7.005, -0.5333, 7.005 to -1.6, 7.005
+    curve -1.727, 7.005, -1.83, 6.902 to -1.83, 6.775
+    curve -1.83, 6.6583, -1.83, 6.5417 to -1.83, 6.425
+    curve -1.83, 6.298, -1.727, 6.195 to -1.6, 6.195
+    close
+}
+
+GuitarBassPickupOutline = path {
+    move to -1.6, -0.375
+    curve -0.5333, -0.375, 0.5333, -0.375 to 1.6, -0.375
+    curve 1.7105, -0.375, 1.8, -0.2855 to 1.8, -0.175
+    curve 1.8, -0.0583, 1.8, 0.0583 to 1.8, 0.175
+    curve 1.8, 0.2855, 1.7105, 0.375 to 1.6, 0.375
+    curve 0.5333, 0.375, -0.5333, 0.375 to -1.6, 0.375
+    curve -1.7105, 0.375, -1.8, 0.2855 to -1.8, 0.175
+    curve -1.8, 0.0583, -1.8, -0.0583 to -1.8, -0.175
+    curve -1.8, -0.2855, -1.7105, -0.375 to -1.6, -0.375
+    close
+}
+
+GuitarBassControlPlateOutline = path {
+    move to -1.1, -0.6
+    curve -0.3667, -0.6, 0.3667, -0.6 to 1.1, -0.6
+    curve 1.4314, -0.6, 1.7, -0.3314 to 1.7, 0
+    curve 1.7, 0.3314, 1.4314, 0.6 to 1.1, 0.6
+    curve 0.3667, 0.6, -0.3667, 0.6 to -1.1, 0.6
+    curve -1.4314, 0.6, -1.7, 0.3314 to -1.7, 0
+    curve -1.7, -0.3314, -1.4314, -0.6 to -1.1, -0.6
+    close
+}
+
+primitive GuitarBassBodyIn(finish) -> group {
+    return group {
+        extrusion {
+            path GuitarBassBody  min Y -GuitarBassDepth  max Y 0  rounded 0.25
+            rotate X -90
+            material finish
+        }
+    }
+}
+
+// The pickguard, three plies as the electric's, round the pickup.
+GuitarBassGuard = group {
+    extrusion { path GuitarBassPickguard  min Y 0.05  max Y 0.09  rounded 0.018  rotate X -90  material GuitarWhitePlastic }
+    extrusion { path GuitarBassPickguard  min Y 0.03  max Y 0.05  rotate X -90  material GuitarBlackPlastic }
+    extrusion { path GuitarBassPickguard  min Y 0  max Y 0.03  rotate X -90  material GuitarWhitePlastic }
+}
+
+// The pickup: a black cover on the body through the guard, two pole pieces under each string.
+GuitarBassPickup = group {
+    extrusion { path GuitarBassPickupOutline  min Y 0  max Y 0.42  rounded 0.06  rotate X -90  material GuitarBlackPlastic }
+    for k in [0, 3] {
+        x = GuitarBassAt(k, GuitarBassSaddle + 4.6)
+        disc { center [x - 0.1, 0, -0.4215]  normal [0, 0, -1]  radius 0.085  material GuitarNickel }
+        disc { center [x + 0.1, 0, -0.4215]  normal [0, 0, -1]  radius 0.085  material GuitarNickel }
+    }
+    translate Y GuitarBassSaddle + 4.6
+}
+
+// The controls: a chrome plate on the lower treble side with a volume and a tone knob, and the jack at its end.
+GuitarBassControls = group {
+    extrusion {
+        path GuitarBassControlPlateOutline  min Y 0  max Y 0.06  rounded 0.02
+        rotate X -90
+        rotate Z -55
+        translate [2.95, 3.65, 0]
+    }
+    cylinder { min Y 0.06  max Y 0.6  scale [0.33, 1, 0.33]  rotate X -90  translate [2.319, 4.551, 0] }
+    cylinder { min Y 0.06  max Y 0.6  scale [0.33, 1, 0.33]  rotate X -90  translate [2.95, 3.65, 0] }
+    cylinder { min Y 0.06  max Y 0.13  scale [0.22, 1, 0.22]  rotate X -90  translate [3.581, 2.749, 0] }
+    material GuitarChrome
+}
+
+GuitarBassFittings = group {
+    disc { center [3.581, 2.749, -0.1315]  normal [0, 0, -1]  radius 0.13  material GuitarBlackPlastic }
+    object GuitarStrapButton { rotate Z 180  translate [0, 0, GuitarBassDepth / 2] }
+    object GuitarStrapButton { translate [-4.45, 19.6, GuitarBassDepth / 2] }
+    group {
+        extrusion {
+            path { move to -1.05, 12.85  line to 1.05, 12.85  line to 1.05, 15.35  line to -1.05, 15.35  close }
+            min Y -0.05  max Y 0  rounded 0.02
+            rotate X -90
+            translate Z GuitarBassDepth
+        }
+        for i in [0, 3] {
+            sphere {
+                scale [0.11, 0.11, 0.04]
+                translate [-0.75 + 1.5 * mod(i, 2), 13.2 + 1.8 * floor(i / 2), GuitarBassDepth + 0.05]
+            }
+        }
+        material GuitarChrome
+    }
+}
+
+// The bridge: a plate bent up at the back, where the strings are anchored, and four barrel saddles, each on
+// two height screws, with the screw back to the plate's lip that sets where it stands.
+GuitarBassBridge = group {
+    extrusion {
+        path {
+            move to -1.28, 0.5  line to 1.28, 0.5
+            curve 1.346, 0.5, 1.4, 0.554 to 1.4, 0.62
+            line to 1.4, 2.58
+            curve 1.4, 2.646, 1.346, 2.7 to 1.28, 2.7
+            line to -1.28, 2.7
+            curve -1.346, 2.7, -1.4, 2.646 to -1.4, 2.58
+            line to -1.4, 0.62
+            curve -1.4, 0.554, -1.346, 0.5 to -1.28, 0.5
+            close
+        }
+        min Y 0  max Y 0.08  rounded 0.02
+        rotate X -90
+    }
+    cube { scale [1.38, 0.04, 0.17]  translate [0, 0.54, -0.25] }
+    for i in [0, 3] {
+        sphere { scale [0.09, 0.09, 0.04]  translate [-1.1 + i * 0.733, 2.55, -0.08] }
+    }
+    for k in [0, 3] {
+        x = GuitarBassAtSaddle(k)
+        y = GuitarBassSaddleY(x)
+        group {
+            cylinder { min Y -0.25  max Y 0.25  scale [0.12, 1, 0.12]  rotate Z 90  translate [x, y, GuitarBassCrest + 0.12] }
+            cylinder { min Y -0.08  max Y -GuitarBassCrest - 0.12  scale [0.04, 1, 0.04]  rotate X 90  translate [x - 0.15, y, 0] }
+            cylinder { min Y -0.08  max Y -GuitarBassCrest - 0.12  scale [0.04, 1, 0.04]  rotate X 90  translate [x + 0.15, y, 0] }
+            cylinder { min Y 0.58  max Y y  scale [0.03, 1, 0.03]  translate Z GuitarBassCrest + 0.12 }
+        }
+    }
+    material GuitarChrome
+}
+
+// The neck: half an elliptic cone behind the board from the body to the nut, and its block in the pocket.
+GuitarBassNeck = union {
+    intersection {
+        conic {
+            min Y 0.75  max Y 1.2
+            scale [1, (GuitarBassNut - 15.6) / 0.45, 0.66]
+            rotate Z 180
+            translate [0, 15.6 + 1.2 * (GuitarBassNut - 15.6) / 0.45, GuitarElectricBack]
+        }
+        cube { scale [2, (GuitarBassNut - 15.6) / 2, 1]  translate [0, (GuitarBassNut + 15.6) / 2, GuitarElectricBack + 1] }
+    }
+    cube { scale [1.2, 1.52, 0.36]  translate [0, 14.08, GuitarElectricBack + 0.36] }
+    material GuitarMaple
+}
+
+GuitarBassBoard = intersection {
+    extrusion {
+        path {
+            move to -1.2, GuitarBassBoardEnd
+            line to 1.2, GuitarBassBoardEnd
+            line to 1.2, 15.6
+            line to 0.75, GuitarBassNut
+            line to -0.75, GuitarBassNut
+            line to -1.2, 15.6
+            close
+        }
+        min Y -GuitarElectricBack  max Y 0.5
+        rotate X -90
+    }
+    cylinder {
+        min Y 0  max Y 45
+        scale [GuitarElectricRadius, 1, GuitarElectricRadius]
+        translate Z GuitarElectricFace + GuitarElectricRadius
+        material GuitarRosewoodFace(GuitarElectricRadius)
+    }
+    material GuitarRosewood
+}
+
+primitive GuitarBassFretWire(n) -> group {
+    y = GuitarBassFret(n)
+    half = GuitarBassWidth(y) / 2
+    return group {
+        intersection {
+            torus { radii GuitarElectricRadius, 0.05  translate [0, y, GuitarElectricFace + GuitarElectricRadius] }
+            cube { scale [half, 0.1, 0.2]  translate [0, y, GuitarElectricFace] }
+        }
+        material GuitarNickel
+    }
+}
+
+primitive GuitarBassDot(n, x = 0) -> group {
+    y = (GuitarBassFret(n) + GuitarBassFret(n - 1)) / 2
+    return group {
+        disc { center [x, y, GuitarElectricFaceAt(x) - 0.0015]  normal [0, 0, -1]  radius 0.12  material GuitarRosetteWhite }
+    }
+}
+
+GuitarBassFrets = group {
+    for n in [1, 20] {
+        object GuitarBassFretWire(n)
+    }
+    for n in list(3, 5, 7, 9, 15, 17, 19) {
+        object GuitarBassDot(n)
+    }
+    object GuitarBassDot(12, -0.4)
+    object GuitarBassDot(12, 0.4)
+}
+
+GuitarBassNutBlock = cube {
+    scale [0.75, 0.095, 0.16]
+    translate [0, GuitarBassNut + 0.095, GuitarElectricBack - 0.16]
+    material GuitarBone
+}
+
+// The headstock: four tuners in a line on its bass side, their keys the broad ones a bass string needs.
+GuitarBassHeadstockOutline = path {
+    move to -0.75, 0
+    line to 0.75, 0
+    curve 0.9, 0.7, 1.05, 1.8 to 0.95, 3
+    curve 0.8, 4.6, 0.45, 6.6 to 0.35, 7.6
+    curve 0.25, 8.4, -0.6, 8.7 to -1.05, 8.2
+    curve -1.35, 7.8, -1.25, 6.4 to -1.2, 5.3
+    curve -1.15, 3.8, -1.05, 1.8 to -0.9, 0.9
+    curve -0.85, 0.5, -0.78, 0.2 to -0.75, 0
+    close
+}
+
+GuitarBassHeadAt = GuitarBassNut + 0.19
+function GuitarBassPostX(n) -> number { return -0.35 - n * 0.06 }
+function GuitarBassPostY(n) -> number { return 1.6 + n * 1.4 }
+
+primitive GuitarBassTuner(n) -> group {
+    x = GuitarBassPostX(n)
+    y = GuitarBassPostY(n)
+    return group {
+        cylinder { min Y 0  max Y 0.45  scale [0.15, 1, 0.15]  rotate X 90  translate [x, y, GuitarElectricBack - 0.45] }
+        cylinder { min Y 0  max Y 0.05  scale [0.22, 1, 0.22]  rotate X 90  translate [x, y, GuitarElectricBack - 0.05] }
+        cube { scale [0.36, 0.4, 0.18]  translate [x - 0.1, y, 0.43 + 0.18] }
+        cylinder { min Y 0  max Y 1.2  scale [0.06, 1, 0.06]  rotate Z 90  translate [x - 0.4, y, 0.61] }
+        sphere { scale [0.33, 0.5, 0.08]  translate [-2.0, y, 0.61] }
+        material GuitarChrome
+    }
+}
+
+GuitarBassHeadstock = group {
+    extrusion {
+        path GuitarBassHeadstockOutline  min Y -0.43  max Y -GuitarElectricBack  rounded 0.05
+        rotate X -90
+        material GuitarMaple
+    }
+    for n in [0, 3] {
+        object GuitarBassTuner(n)
+    }
+    group {
+        cylinder { min Y 0  max Y 0.25  scale [0.07, 1, 0.07]  rotate X 90  translate Z GuitarElectricBack - 0.25 }
+        cylinder { min Y 0  max Y 0.03  scale [0.24, 1, 0.24]  rotate X 90  translate Z GuitarElectricBack - 0.28 }
+        translate [0.15, 2.9, 0]
+        material GuitarChrome
+    }
+    translate Y GuitarBassHeadAt
+}
+
+// The strings, all four wound: 0.105, 0.085, 0.065 and 0.045.
+primitive GuitarBassString(k, gauge) -> group {
+    atSaddle = GuitarBassAtSaddle(k)
+    saddleY = GuitarBassSaddleY(atSaddle)
+    atNut = GuitarBassAtNut(k)
+    postX = GuitarBassPostX(k) + 0.15 + gauge / 2
+    postY = GuitarBassHeadAt + GuitarBassPostY(k)
+    crest = GuitarBassCrest - gauge / 2
+    top = GuitarElectricBack - 0.32 - gauge / 2
+    return group {
+        strand { width gauge at [atSaddle, 0.6, -0.3]  width gauge at [atSaddle, saddleY, crest] }
+        strand { width gauge at [atSaddle, saddleY, crest]  width gauge at [atNut, GuitarBassNut + 0.095, top] }
+        strand { width gauge at [atNut, GuitarBassNut + 0.095, top]  width gauge at [postX, postY, GuitarElectricBack - 0.22] }
+        cylinder {
+            min Y 0  max Y 0.14  scale [0.15 + gauge, 1, 0.15 + gauge]  rotate X 90
+            translate [GuitarBassPostX(k), postY, GuitarElectricBack - 0.3]
+        }
+    }
+}
+
+GuitarBassStrings = group {
+    object GuitarBassString(0, 0.105) { material GuitarNickelString }
+    object GuitarBassString(1, 0.085) { material GuitarNickelString }
+    object GuitarBassString(2, 0.065) { material GuitarNickelString }
+    object GuitarBassString(3, 0.045) { material GuitarNickelString }
+}
+
+primitive BassGuitar(finish = GuitarGlossBlack) -> group {
+    return group {
+        object GuitarBassBodyIn(finish)
+        object GuitarBassGuard
+        object GuitarBassPickup
+        object GuitarBassControls
+        object GuitarBassFittings
+        object GuitarBassBridge
+        object GuitarBassNeck
+        object GuitarBassBoard
+        object GuitarBassFrets
+        object GuitarBassNutBlock
+        object GuitarBassHeadstock
+        object GuitarBassStrings
+        translate Y 0.27
+    }
+}
+
+// A rod `radius` thick from point `a` to point `b`.
+primitive DrumRod(a, b, radius) -> group {
+    run = vector b - vector a
+    long = length(run)
+    return group {
+        cylinder {
+            min Y 0  max Y long  scale [radius, 1, radius]
+            rotate X toDegrees(acos(dot(run, vector [0, 1, 0]) / long))
+            rotate Y toDegrees(atan2(dot(run, vector [1, 0, 0]), dot(run, vector [0, 0, 1])))
+            translate a
+        }
+    }
+}
+
+// A guitar stand: a cradle of two padded arms the guitar's body rests in, a post up behind it to a padded yoke
+// that holds its neck, and three legs.  The guitar it holds leans back `GuitarStandLean` degrees and stands
+// `GuitarStandRise` up; `object ElectricGuitar() { rotate X GuitarStandLean  translate Y GuitarStandRise }`
+// with the stand, unturned, puts it there.  The yoke stands `yoke` up.
+GuitarStandLean = 12
+GuitarStandRise = 2.2
+GuitarFoam = material { pigment [0.02, 0.02, 0.02]  diffuse 0.8  specular 0.05  ambient 0.03 }
+
+primitive GuitarStand(yoke = 27) -> group {
+    // How far back the neck's back stands at the yoke, once the guitar leans in the stand, and the yoke's bar
+    // just behind it.
+    back = 0.2079 * (yoke - GuitarStandRise) + 0.99
+    return group {
+        group {
+            // The post, from the floor behind the guitar forward and up to the yoke.
+            object DrumRod([0, 0.6, back + 6], [0, yoke, back], 0.32)
+            // The cradle: a bar across under the guitar, its padded arms reaching forward.
+            object DrumRod([-4.5, 2.2, 1.4], [4.5, 2.2, 1.4], 0.3)
+            object DrumRod([0, 2.2, 1.4], [0, 1.6, back + 5.5], 0.3)
+            // The legs.
+            object DrumRod([0, 1.6, 1.4], [-7.5, 0.25, -1.5], 0.28)
+            object DrumRod([0, 1.6, 1.4], [7.5, 0.25, -1.5], 0.28)
+            material GuitarChrome
+        }
+        group {
+            object DrumRod([-4.4, 2.2, 1.4], [-4.4, 2.2, -2.0], 0.42)
+            object DrumRod([4.4, 2.2, 1.4], [4.4, 2.2, -2.0], 0.42)
+            // The yoke: a padded fork either side of the neck.
+            object DrumRod([-1.6, yoke, back], [1.6, yoke, back], 0.35)
+            object DrumRod([-1.5, yoke, back], [-1.5, yoke + 1.6, back - 0.4], 0.3)
+            object DrumRod([1.5, yoke, back], [1.5, yoke + 1.6, back - 0.4], 0.3)
+            sphere { scale [0.5, 0.3, 0.5]  translate [-7.5, 0.3, -1.5] }
+            sphere { scale [0.5, 0.3, 0.5]  translate [7.5, 0.3, -1.5] }
+            sphere { scale [0.5, 0.3, 0.5]  translate [0, 0.3, back + 6] }
+            material GuitarFoam
+        }
+    }
+}
+
+// =====================================================================================================
+// -- The drums -----------------------------------------------------------------------------------------
+//
+// Each drum, each cymbal and each stand is a piece of its own, made to the sizes it is asked for, and
+// `DrumKit` sets out a five-piece kit from them.  A drum's axis is upright and its batter head on top, the
+// drum's middle at the origin; a stand stands on `y = 0`.  The kit faces the audience at `-Z`, its drummer
+// behind it at `+Z`, sitting on the throne; his left is `+X`, so seen from in front the hi-hat is on the right.
+
+// The heads: a coated batter, white and dull; a clear resonant one over the dark inside of the drum; and the
+// bass drum's black front head.
+DrumCoatedHead = material { pigment [0.84, 0.83, 0.78]  diffuse 0.85  specular 0.12  shininess 8  ambient 0.1 }
+DrumClearHead = material { pigment [0.12, 0.12, 0.12]  diffuse 0.5  specular 0.7  shininess 250  reflective 0.05  fresnel  ambient 0.04 }
+DrumBlackHead = material { pigment [0.015, 0.015, 0.015]  diffuse 0.6  specular 0.6  shininess 200  reflective 0.04  fresnel  ambient 0.03 }
+DrumRubber = material { pigment [0.025, 0.025, 0.025]  diffuse 0.8  specular 0.1  shininess 10  ambient 0.04 }
+DrumFelt = material { pigment [0.82, 0.8, 0.74]  diffuse 0.9  specular 0  ambient 0.1 }
+DrumInside = material { pigment [0.2, 0.13, 0.08]  diffuse 0.7  specular 0  ambient 0.05 }
+
+// A triple-flanged steel hoop over a head whose face is at y = 0: its band rising 0.42 above the head and its
+// flange 0.45 below, a tension rod down through the flange at each lug, its head on the flange.
+primitive DrumHoop(diameter, lugs) -> group {
+    r = diameter / 2 + 0.1
+    return group {
+        cylinder { min Y -0.45  max Y 0.42  scale [r, 1, r]  open }
+        torus { radii r, 0.055  translate Y 0.42 }
+        disc { center [0, -0.45, 0]  normal [0, 1, 0]  radius r + 0.32  inner radius r }
+        cylinder { min Y -0.53  max Y -0.45  scale [r + 0.32, 1, r + 0.32]  open }
+        for k in [1, lugs] {
+            group {
+                cylinder { min Y -0.45  max Y -0.29  scale [0.13, 1, 0.13] }
+                disc { center [0, -0.449, 0]  normal [0, 1, 0]  radius 0.19 }
+                cylinder { min Y -1.3  max Y -0.45  scale [0.065, 1, 0.065] }
+                translate X r + 0.17
+                rotate Y 360 * (k - 0.5) / lugs
+            }
+        }
+        material GuitarChrome
+    }
+}
+
+// A head: its face at y = 0, its collar running down inside the hoop.
+primitive DrumHead(diameter, face) -> group {
+    return group {
+        disc { center [0, 0, 0]  normal [0, 1, 0]  radius diameter / 2 + 0.08 }
+        cylinder { min Y -0.4  max Y 0  scale [diameter / 2 + 0.08, 1, diameter / 2 + 0.08]  open }
+        material face
+    }
+}
+
+// A lug on the shell, `long` inches from end to end, its middle `at` up the drum, at angle `turn` round it,
+// standing `stand` out from the shell.
+primitive DrumLug(diameter, at, long, turn, stand = 0.38) -> group {
+    return group {
+        superellipsoid {
+            east 0.35  north 0.35
+            scale [stand / 2 + 0.03, long / 2, 0.26]
+            translate [diameter / 2 + stand / 2 - 0.02, at, 0]
+            rotate Y turn
+            material GuitarChrome
+        }
+    }
+}
+
+// The wrap: glitter under a clear coat -- metal flakes, each tilted its own way, so each catches a lamp from
+// its own angle.  `DrumSparkle(hue)` is any color of it: `Gold = material DrumSparkle([0.7, 0.52, 0.18])`.
+primitive DrumSparkle(hue) -> material {
+    return material {
+        pigment hue  metallic 1  reflective 0.55  roughness 0.08  diffuse 0.4  specular 0
+        normal granite { depth 1.6  scale 0.1 }
+        coat { }
+    }
+}
+DrumRedSparkle = material DrumSparkle([0.62, 0.05, 0.05])
+
+// A drum: its shell wrapped in `finish`, a coated head over a clear one, a hoop on each, and its lugs -- one
+// long one at each tension rod on a drum too shallow to take two, otherwise one under each hoop.
+primitive Drum(diameter, depth, lugs, finish) -> group {
+    h = depth / 2
+    return group {
+        cylinder { min Y -h  max Y h  scale [diameter / 2, 1, diameter / 2]  material finish }
+        object DrumHead(diameter, DrumCoatedHead) { translate Y h + 0.02 }
+        object DrumHead(diameter, DrumClearHead) { rotate X 180  translate Y -h - 0.02 }
+        object DrumHoop(diameter, lugs) { translate Y h + 0.02 }
+        object DrumHoop(diameter, lugs) { rotate X 180  translate Y -h - 0.02 }
+        for k in [1, lugs] {
+            turn = 360 * (k - 0.5) / lugs
+            if (depth < 7) {
+                object DrumLug(diameter, 0, depth - 2.4, turn)
+            }
+            else {
+                object DrumLug(diameter, h - 1.85, 1.3, turn)
+                object DrumLug(diameter, 1.85 - h, 1.3, turn)
+            }
+        }
+    }
+}
+
+
+// A snare drum: ten lugs, the strainer that throws its wires off on one side and the butt plate opposite,
+// and twenty wires across its bottom head.
+primitive SnareDrum(diameter, depth, finish) -> group {
+    h = depth / 2
+    r = diameter / 2
+    return group {
+        object Drum(diameter, depth, 10, finish)
+        group {
+            cube { scale [0.22, 0.95, 0.42]  translate [r + 0.2, -0.3, 0] }
+            cube { scale [0.07, 0.75, 0.2]  rotate Z -12  translate [r + 0.5, -0.25, 0] }
+            cylinder { min Y 0  max Y 0.45  scale [0.16, 1, 0.16]  translate [r + 0.25, 0.65, 0] }
+            cube { scale [0.2, 0.55, 0.36]  translate [-r - 0.18, -h + 0.75, 0] }
+            cube { scale [0.15, 0.02, 2.3]  translate [r - 1, -h - 0.1, 0] }
+            cube { scale [0.15, 0.02, 2.3]  translate [1 - r, -h - 0.1, 0] }
+            material GuitarChrome
+        }
+        for i in [0, 19] {
+            strand {
+                width 0.022 at [1.1 - r, -h - 0.1, -2.1 + i * 0.221]
+                width 0.022 at [r - 1.1, -h - 0.1, -2.1 + i * 0.221]
+                material GuitarSteelString
+            }
+        }
+    }
+}
+
+// A floor tom, its batter head `top` above the floor: eight lugs and three legs, each down from a bracket on
+// the shell to a rubber foot splayed out on the floor.
+primitive FloorTom(diameter, depth, top, finish) -> group {
+    h = depth / 2
+    r = diameter / 2
+    bracket = top - 3.2
+    return group {
+        object Drum(diameter, depth, 8, finish) { translate Y top - h }
+        for k in [0, 2] {
+            group {
+                cube { scale [0.28, 0.6, 0.45]  translate [r + 0.25, bracket, 0]  material GuitarChrome }
+                object DrumRod([r + 0.55, bracket + 1.2, 0], [r + 1.7, 0.25, 0], 0.24) { material GuitarChrome }
+                sphere { scale [0.38, 0.28, 0.38]  translate [r + 1.71, 0.28, 0]  material DrumRubber }
+                rotate Y 120 * k + 60
+            }
+        }
+    }
+}
+
+// A bass drum's hoop: wood, black, with a band of the drum's finish round it, over a head whose face is at
+// y = 0; a claw over its outer edge at each lug, the T-rod through it and the T on its end.
+primitive DrumBassHoop(diameter, lugs, finish) -> group {
+    r = diameter / 2
+    return group {
+        difference {
+            cylinder { min Y -0.5  max Y 0.6  scale [r + 0.6, 1, r + 0.6] }
+            cylinder { min Y -1  max Y 1  scale [r + 0.12, 1, r + 0.12] }
+            material DrumBlackHead
+        }
+        cylinder { min Y -0.2  max Y 0.3  scale [r + 0.605, 1, r + 0.605]  open  material finish }
+        for k in [1, lugs] {
+            group {
+                cube { scale [0.2, 0.1, 0.32]  translate [r + 0.62, 0.62, 0] }
+                cube { scale [0.12, 0.3, 0.32]  translate [r + 0.72, 0.4, 0] }
+                cylinder { min Y -2.6  max Y 0.95  scale [0.07, 1, 0.07]  translate X r + 0.86 }
+                cylinder { min Y -0.5  max Y 0.5  scale [0.09, 1, 0.09]  rotate X 90  translate [r + 0.86, 0.95, 0] }
+                rotate Y 360 * k / lugs
+                material GuitarChrome
+            }
+        }
+    }
+}
+
+// A bass drum lying on its side on the floor, its axis along Z, its front head toward -Z: hollow, so the port
+// in the front head looks into it; wooden hoops, ten lugs a side, and two spurs at the front.
+primitive BassDrum(diameter, depth, finish) -> group {
+    h = depth / 2
+    r = diameter / 2
+    return group {
+        group {
+            difference {
+                cylinder { min Y -h  max Y h  scale [r, 1, r] }
+                cylinder { min Y -h - 1  max Y h + 1  scale [r - 0.3, 1, r - 0.3]  material DrumInside }
+                material finish
+            }
+            object DrumHead(diameter, DrumCoatedHead) { translate Y h + 0.02 }
+            difference {
+                cylinder { min Y -0.01  max Y 0.01  scale [r + 0.08, 1, r + 0.08] }
+                cylinder { min Y -1  max Y 1  scale [2, 1, 2]  translate [5, 0, 4] }
+                translate Y -h - 0.02
+                material DrumBlackHead
+            }
+            torus { radii 2, 0.06  translate [5, -h - 0.03, 4]  material GuitarChrome }
+            object DrumBassHoop(diameter, 10, finish) { translate Y h + 0.02 }
+            object DrumBassHoop(diameter, 10, finish) { rotate X 180  translate Y -h - 0.02 }
+            // Lugs from straight across, so that lying on its side no lug stands straight down onto the floor or
+            // straight up under the toms' holder.
+            for k in [1, 10] {
+                turn = 360 * k / 10
+                object DrumLug(diameter, h - 3.3, 1.3, turn, 0.98)
+                object DrumLug(diameter, 3.3 - h, 1.3, turn, 0.98)
+            }
+            rotate X 90
+            translate Y r + 0.6
+        }
+        // The spurs: from brackets low on either side of the shell near the front, between its lugs, out and
+        // down to the floor.
+        for side in list(-1, 1) {
+            group {
+                cube { scale [0.3, 0.5, 0.5]  translate [side * (r + 0.1) * 0.951, r + 0.6 - (r + 0.1) * 0.309, 2.5 - h] }
+                object DrumRod([side * (r + 0.25) * 0.951, r + 0.6 - (r + 0.25) * 0.309, 2.5 - h], [side * (r + 2.2), 0.2, 0.5 - h], 0.22)
+                material GuitarChrome
+            }
+        }
+    }
+}
+
+// A cymbal, its edge on y = 0 and its bell up: a lathe of its section, thicker at the bell and thinning to
+// the edge, turned so its grooves run round it.
+CymbalBronze = material {
+    pigment [0.86, 0.63, 0.32]  metallic 1  reflective 0.75  roughness 0.18  anisotropy 0.85 around Y  diffuse 0  specular 0
+}
+
+primitive Cymbal(diameter) -> group {
+    r = diameter / 2
+    bell = 0.15 * diameter
+    high = 0.4 + 0.03 * diameter
+    rise = 0.035 * diameter
+    return group {
+        lathe {
+            path {
+                move to 0.3, rise + high
+                curve bell * 0.75, rise + high, bell * 0.95, rise + 0.35 to bell, rise + 0.08
+                curve bell + 0.35 * (r - bell), 0.85 * rise + 0.07, bell + 0.7 * (r - bell), 0.45 * rise + 0.045 to r, 0.035
+                line to r, 0
+                curve bell + 0.7 * (r - bell), 0.45 * rise, bell + 0.35 * (r - bell), 0.85 * rise to bell - 0.08, rise
+                curve bell * 0.93, rise + 0.3, bell * 0.72, rise + high - 0.12 to 0.3, rise + high - 0.12
+                close
+            }
+            material CymbalBronze
+        }
+    }
+}
+
+// How high a cymbal's mounting hole stands above its edge, which is where a stand's seat holds it.
+function CymbalSeat(diameter) -> number { return 0.035 * diameter + 0.4 + 0.03 * diameter - 0.12 }
+
+// A tripod: three legs from a collar `at` up a stand's tube out to rubber feet on the floor.
+primitive DrumTripod(at, spread) -> group {
+    return group {
+        cylinder { min Y at - 0.5  max Y at + 0.5  scale [0.62, 1, 0.62]  material GuitarChrome }
+        for k in [0, 2] {
+            group {
+                object DrumRod([0.5, at, 0], [spread, 0.3, 0], 0.22) { material GuitarChrome }
+                object DrumRod([0.4, at - 3.2, 0], [spread * 0.55, at * 0.45, 0], 0.13) { material GuitarChrome }
+                sphere { scale [0.4, 0.3, 0.4]  translate [spread + 0.02, 0.3, 0]  material DrumRubber }
+                rotate Y 120 * k + 90
+            }
+        }
+    }
+}
+
+// A cymbal stand: a tripod and two tubes up to its seat at `height`, a tilter and a wing nut there.
+primitive CymbalStand(height) -> group {
+    return group {
+        object DrumTripod(9, 11)
+        cylinder { min Y 3  max Y height * 0.55  scale [0.48, 1, 0.48] }
+        cylinder { min Y height * 0.55 - 0.3  max Y height * 0.55 + 0.4  scale [0.6, 1, 0.6] }
+        cylinder { min Y height * 0.55  max Y height - 1.3  scale [0.36, 1, 0.36] }
+        sphere { scale 0.45  translate Y height - 1.0 }
+        cylinder { min Y height - 1.0  max Y height + 0.4  scale [0.16, 1, 0.16] }
+        material GuitarChrome
+    }
+}
+
+// A cymbal on a stand, its seat `height` up, tilted `tilt` toward +Z, with felts above and below it.
+primitive CymbalOnStand(diameter, height, tilt) -> group {
+    seat = CymbalSeat(diameter)
+    return group {
+        object CymbalStand(height)
+        group {
+            object Cymbal(diameter) { translate Y -seat }
+            cylinder { min Y -0.45  max Y -0.12  scale [0.65, 1, 0.65]  material DrumFelt }
+            cylinder { min Y 0  max Y 0.25  scale [0.6, 1, 0.6]  material DrumFelt }
+            sphere { scale [0.5, 0.2, 0.2]  translate Y 0.4  material GuitarChrome }
+            rotate X tilt
+            translate Y height
+        }
+    }
+}
+
+// The hi-hat: a stand with its pedal toward the drummer at +Z and a pair of cymbals, the lower one upside down
+// on the stand's cup at `height`, the upper an inch over it on the clutch.
+primitive HiHat(diameter, height) -> group {
+    seat = CymbalSeat(diameter)
+    // The lower cymbal's hole sits on the stand's cup at `height`; the upper's edge stands an inch over the
+    // lower's, its hole held by the clutch on the pull rod.
+    upper = height + 2 * seat + 1
+    return group {
+        object DrumTripod(10, 10)
+        group {
+            cylinder { min Y 2  max Y height - 0.3  scale [0.5, 1, 0.5] }
+            cylinder { min Y height - 0.3  max Y height  scale [0.7, 1, 0.7] }
+            cylinder { min Y height  max Y upper + 1.6  scale [0.14, 1, 0.14] }
+            cylinder { min Y upper  max Y upper + 0.7  scale [0.45, 1, 0.45] }
+            // The pedal: a footboard rising from its heel on the floor toward the stand, and the rod up from its
+            // toe to the stand.
+            cube { scale [1.5, 0.08, 4.88]  rotate X 13  translate [0, 1.4, 7.25] }
+            cube { scale [1.6, 0.15, 0.9]  translate [0, 0.15, 12.2] }
+            object DrumRod([0, 2.5, 2.4], [0, 4.5, 0.3], 0.12)
+            material GuitarChrome
+        }
+        object Cymbal(diameter) { rotate X 180  translate Y height + seat }
+        object Cymbal(diameter) { translate Y upper - seat }
+    }
+}
+
+// A snare stand: a tripod and a tube up to a basket of three arms holding the drum's bottom hoop at `height`.
+primitive SnareStand(height, diameter) -> group {
+    return group {
+        object DrumTripod(8, 10)
+        cylinder { min Y 2  max Y height - 1.2  scale [0.45, 1, 0.45] }
+        sphere { scale 0.5  translate Y height - 1.2 }
+        for k in [0, 2] {
+            group {
+                object DrumRod([0, height - 1.2, 0], [diameter / 2 - 0.6, height - 0.9, 0], 0.15)
+                cylinder { min Y height - 0.9  max Y height + 0.4  scale [0.18, 1, 0.18]  translate X diameter / 2 - 0.6 }
+                rotate Y 120 * k + 30
+            }
+        }
+        material GuitarChrome
+    }
+}
+
+// A throne: a tripod and a column up to a round padded seat at `height`.
+DrumVinyl = material { pigment [0.02, 0.02, 0.022]  diffuse 0.8  specular 0.3  shininess 30  ambient 0.04 }
+
+primitive DrumThrone(height) -> group {
+    return group {
+        object DrumTripod(8, 11)
+        cylinder { min Y 2  max Y height - 2.5  scale [0.6, 1, 0.6]  material GuitarChrome }
+        superellipsoid { east 0.3  north 1  scale [7, 1.6, 7]  translate Y height - 1.6  material DrumVinyl }
+    }
+}
+
+// The bass drum's pedal, its beater against a batter head whose face stands at z = 0 and `center` up, its
+// footboard running back toward the drummer along +Z.
+primitive DrumPedal(center) -> group {
+    return group {
+        // The footboard and its heel plate.
+        extrusion {
+            path { move to -1.75, 0  line to 1.75, 0  line to 1.75, 9.5  curve 1.75, 10.6, -1.75, 10.6 to -1.75, 9.5  close }
+            min Y -0.2  max Y 0  rounded 0.05
+            rotate X -90
+            rotate X -70
+            translate [0, 1.6, 12.5]
+        }
+        cube { scale [1.8, 0.2, 1.8]  translate [0, 0.2, 13.3] }
+        // The frame either side, its axle, and the beater's shaft up from it to its felt.
+        cube { scale [2.6, 0.2, 1.2]  translate [0, 0.2, 2.8] }
+        cylinder { min Y 0.4  max Y 7.4  scale [0.35, 1, 0.35]  translate [-2.3, 0, 3] }
+        cylinder { min Y 0.4  max Y 7.4  scale [0.35, 1, 0.35]  translate [2.3, 0, 3] }
+        cylinder { min Y -2.3  max Y 2.3  scale [0.25, 1, 0.25]  rotate Z 90  translate [0, 7, 3] }
+        object DrumRod([0, 7, 3], [0, center, 1.4], 0.12)
+        material GuitarChrome
+    }
+}
+
+// The beater's felt, on the shaft's end.
+primitive DrumBeater(center) -> group {
+    return group {
+        cylinder { min Y -0.75  max Y 0.75  scale [1.2, 1, 1.2]  rotate Z 90  translate [0, center, 1.3]  material DrumFelt }
+    }
+}
+
+// The kit: a 22 x 18 bass drum with a 10 x 8 and a 12 x 9 tom on it, a 14 x 5.5 snare, a 16 x 16 floor tom,
+// 14 in hi-hats, an 18 in crash and a 20 in ride, the pedal and the throne, set out for a right-handed
+// drummer facing -Z.
+primitive DrumKit(finish = DrumRedSparkle) -> group {
+    return group {
+        object BassDrum(22, 18, finish)
+        object DrumPedal(11.6) { translate Z 9.05 }
+        object DrumBeater(11.6) { translate Z 9.05 }
+        object DrumThrone(21) { translate Z 31 }
+        object SnareDrum(14, 5.5, finish) { rotate X 6  translate [7.5, 22.4, 20] }
+        object SnareStand(19.4, 14) { translate [7.5, 0, 20] }
+        object HiHat(14, 34) { rotate Y 15  translate [18, 0, 19] }
+        // The rack toms on their holder on top of the bass drum, tilted toward the drummer.
+        object Drum(10, 8, 6, finish) { rotate X 14  rotate Z -8  translate [5.6, 28.4, 1.5] }
+        object Drum(12, 9, 6, finish) { rotate X 14  rotate Z 8  translate [-6.6, 29, 1.5] }
+        // The holder: a block on the bass drum, a post up between the toms, and a bar out to a bracket on the
+        // inside of each tom's shell.
+        group {
+            cube { scale [1.3, 0.35, 2.2]  translate [0, 22.75, 0] }
+            cylinder { min Y 22.6  max Y 27.9  scale [0.45, 1, 0.45]  translate Z 1 }
+            sphere { scale 0.6  translate [0, 27.6, 1] }
+            object DrumRod([-1.0, 27.6, 1], [1.0, 27.6, 1], 0.28)
+            cube { scale [0.3, 0.55, 0.5]  translate [0.95, 27.6, 1] }
+            cube { scale [0.3, 0.55, 0.5]  translate [-0.95, 27.6, 1] }
+            material GuitarChrome
+        }
+        object FloorTom(16, 16, 22, finish) { translate [-17.5, 0, 18] }
+        object CymbalOnStand(18, 52, 16) { rotate Y -20  translate [20, 0, 2] }
+        object CymbalOnStand(20, 41, 12) { rotate Y 25  translate [-22.5, 0, 6] }
+    }
+}
+
+// =====================================================================================================
+// -- The grand piano -----------------------------------------------------------------------------------
+//
+// A six-foot grand: 58.7 wide and 73.2 long (a Yamaha C3X's published 149 x 186 cm), 39.8 tall with its lid
+// down; 88 keys on a 6.48 in octave; its iron plate, its strings -- the bass copper-wound and overstrung across
+// the tenor, three plain steel strings to a note above -- its tuning pins, hitch pins, dampers and hammers all
+// there to be seen with the lid up.  It stands on the floor with its keyboard's front edge along `z = 0`, the
+// pianist in front of it at `-Z`, its spine (the bass side) on his left at `-X` and its tail toward `+Z`; the
+// lid hinges along the spine and opens on the bentside.  In plan its outline is drawn from the spine at x = 0
+// across to the treble cheek at 58.7, and the whole is moved over to stand on its middle.
+
+PianoEbony = material { pigment [0.008, 0.008, 0.009]  diffuse 0.8  specular 0  ambient 0.03  coat { } }
+PianoIvory = material { pigment [0.9, 0.88, 0.83]  diffuse 0.85  specular 0.5  shininess 90  reflective 0.03  fresnel  ambient 0.1 }
+PianoBlackKey = material { pigment [0.015, 0.015, 0.015]  diffuse 0.8  specular 0.4  shininess 40  ambient 0.03 }
+PianoSpruce = material {
+    pigment bozo { [0, [0.66, 0.5, 0.3], 0.5, [0.74, 0.58, 0.36], 1, [0.68, 0.52, 0.32]]  scale [0.35, 2, 30] }
+    diffuse 0.8  specular 0.1  shininess 20  ambient 0.08
+}
+PianoPlateGold = material { pigment [0.78, 0.6, 0.28]  metallic 1  reflective 0.45  roughness 0.35  diffuse 0.25  specular 0 }
+PianoCopper = material { pigment [0.85, 0.5, 0.32]  metallic 1  reflective 0.6  roughness 0.3  anisotropy 0.8  diffuse 0  specular 0 }
+PianoBrass = material { pigment [0.85, 0.68, 0.36]  metallic 1  reflective 0.7  roughness 0.15  diffuse 0  specular 0 }
+
+GrandCaseBottom = 25
+GrandKeyTop = 28.6
+GrandRimTop = 38.8
+GrandBoardTop = 31
+GrandPlateTop = 33
+// The front of the cavity: the belly rail, behind the music desk.
+GrandBelly = 13.3
+// Where the strings run: the tenor and treble over the plate, the bass higher, crossing over them.
+GrandStringY = 33.6
+GrandBassY = 34.4
+
+GrandCase = path {
+    move to 0, 0
+    line to 58.7, 0
+    line to 58.7, 10.5
+    curve 58.7, 24, 41.5, 30 to 33.5, 45.5
+    curve 26.528, 59.01, 25, 73.2 to 13.5, 73.2
+    curve 5, 73.2, 0, 69 to 0, 61
+    close
+}
+
+// The rim's inside, 1.6 in from the outline, and the plate's edge, 2.8 in: each curve refitted to points drawn
+// in along its normal, within 0.05.
+GrandInside = path {
+    move to 1.6, 1.6
+    line to 57.1, 1.6
+    line to 57.1, 10.5
+    curve 57.1, 23.003, 40.1, 29.224 to 32.078, 44.766
+    curve 25.649, 57.223, 23.768, 71.6 to 13.5, 71.6
+    curve 6.23, 71.6, 1.6, 68.392 to 1.6, 61
+    close
+}
+
+GrandPlateEdge = path {
+    move to 2.8, 2.8
+    line to 55.9, 2.8
+    line to 55.9, 10.5
+    curve 55.9, 22.269, 39.112, 28.521 to 31.012, 44.216
+    curve 24.354, 57.116, 22.764, 70.4 to 13.5, 70.4
+    curve 6.937, 70.4, 2.8, 67.743 to 2.8, 61
+    close
+}
+
+// Each note's strings: where they leave their tuning pins across the front, where they reach their hitch
+// pins at the back, how many there are, how thick, and whether they are wound -- worked out from the rim.
+GrandStrings = list(
+    list(3.6, 9.1, 68.522, 1, 0.2, 1),
+    list(4.24, 9.74, 68.663, 1, 0.194, 1),
+    list(4.88, 10.38, 68.775, 1, 0.188, 1),
+    list(5.52, 11.02, 68.862, 1, 0.182, 1),
+    list(6.16, 11.66, 68.926, 1, 0.176, 1),
+    list(6.8, 12.3, 68.969, 1, 0.17, 1),
+    list(7.44, 12.94, 68.993, 1, 0.164, 1),
+    list(8.08, 13.58, 68.999, 1, 0.158, 1),
+    list(8.72, 14.22, 68.976, 1, 0.152, 1),
+    list(9.36, 14.86, 68.911, 1, 0.146, 1),
+    list(10, 15.5, 68.802, 2, 0.13, 1),
+    list(10.64, 16.14, 68.645, 2, 0.125, 1),
+    list(11.28, 16.78, 68.436, 2, 0.12, 1),
+    list(11.92, 17.42, 68.169, 2, 0.115, 1),
+    list(12.56, 18.06, 67.841, 2, 0.11, 1),
+    list(13.2, 18.7, 67.444, 2, 0.105, 1),
+    list(13.84, 19.34, 66.974, 2, 0.1, 1),
+    list(14.48, 19.98, 66.422, 2, 0.095, 1),
+    list(15.12, 20.62, 65.783, 2, 0.09, 1),
+    list(15.76, 21.26, 65.05, 2, 0.085, 1),
+    list(17.4, 17.4, 68.778, 3, 0.046, 0),
+    list(17.89, 17.89, 68.535, 3, 0.046, 0),
+    list(18.379, 18.379, 68.252, 3, 0.046, 0),
+    list(18.869, 18.869, 67.928, 3, 0.045, 0),
+    list(19.358, 19.358, 67.559, 3, 0.045, 0),
+    list(19.848, 19.848, 67.143, 3, 0.045, 0),
+    list(20.337, 20.337, 66.677, 3, 0.045, 0),
+    list(20.827, 20.827, 66.157, 3, 0.044, 0),
+    list(21.316, 21.316, 65.58, 3, 0.044, 0),
+    list(21.806, 21.806, 64.944, 3, 0.044, 0),
+    list(22.296, 22.296, 64.246, 3, 0.044, 0),
+    list(22.785, 22.785, 63.483, 3, 0.044, 0),
+    list(23.275, 23.275, 62.655, 3, 0.043, 0),
+    list(23.764, 23.764, 61.761, 3, 0.043, 0),
+    list(24.254, 24.254, 60.803, 3, 0.043, 0),
+    list(24.743, 24.743, 59.784, 3, 0.043, 0),
+    list(25.233, 25.233, 58.708, 3, 0.042, 0),
+    list(25.722, 25.722, 57.583, 3, 0.042, 0),
+    list(26.212, 26.212, 56.418, 3, 0.042, 0),
+    list(26.701, 26.701, 55.221, 3, 0.042, 0),
+    list(27.191, 27.191, 54.005, 3, 0.042, 0),
+    list(27.681, 27.681, 52.78, 3, 0.041, 0),
+    list(28.17, 28.17, 51.558, 3, 0.041, 0),
+    list(28.66, 28.66, 50.348, 3, 0.041, 0),
+    list(29.149, 29.149, 49.16, 3, 0.041, 0),
+    list(29.639, 29.639, 47.999, 3, 0.041, 0),
+    list(30.128, 30.128, 46.871, 3, 0.04, 0),
+    list(30.618, 30.618, 45.78, 3, 0.04, 0),
+    list(31.107, 31.107, 44.729, 3, 0.04, 0),
+    list(31.597, 31.597, 43.719, 3, 0.04, 0),
+    list(32.087, 32.087, 42.75, 3, 0.039, 0),
+    list(32.576, 32.576, 41.834, 3, 0.039, 0),
+    list(33.066, 33.066, 40.973, 3, 0.039, 0),
+    list(33.555, 33.555, 40.16, 3, 0.039, 0),
+    list(34.045, 34.045, 39.387, 3, 0.039, 0),
+    list(34.534, 34.534, 38.651, 3, 0.038, 0),
+    list(35.024, 35.024, 37.945, 3, 0.038, 0),
+    list(35.513, 35.513, 37.267, 3, 0.038, 0),
+    list(36.003, 36.003, 36.614, 3, 0.038, 0),
+    list(36.493, 36.493, 35.982, 3, 0.037, 0),
+    list(36.982, 36.982, 35.371, 3, 0.037, 0),
+    list(37.472, 37.472, 34.777, 3, 0.037, 0),
+    list(37.961, 37.961, 34.2, 3, 0.037, 0),
+    list(38.451, 38.451, 33.637, 3, 0.037, 0),
+    list(38.94, 38.94, 33.088, 3, 0.036, 0),
+    list(39.43, 39.43, 32.551, 3, 0.036, 0),
+    list(39.919, 39.919, 32.024, 3, 0.036, 0),
+    list(40.409, 40.409, 31.507, 3, 0.036, 0),
+    list(40.899, 40.899, 30.999, 3, 0.035, 0),
+    list(41.388, 41.388, 30.499, 3, 0.035, 0),
+    list(41.878, 41.878, 30.005, 3, 0.035, 0),
+    list(42.367, 42.367, 29.518, 3, 0.035, 0),
+    list(42.857, 42.857, 29.037, 3, 0.035, 0),
+    list(43.346, 43.346, 28.559, 3, 0.034, 0),
+    list(43.836, 43.836, 28.086, 3, 0.034, 0),
+    list(44.325, 44.325, 27.616, 3, 0.034, 0),
+    list(44.815, 44.815, 27.148, 3, 0.034, 0),
+    list(45.304, 45.304, 26.681, 3, 0.033, 0),
+    list(45.794, 45.794, 26.216, 3, 0.033, 0),
+    list(46.284, 46.284, 25.75, 3, 0.033, 0),
+    list(46.773, 46.773, 25.283, 3, 0.033, 0),
+    list(47.263, 47.263, 24.815, 3, 0.033, 0),
+    list(47.752, 47.752, 24.344, 3, 0.032, 0),
+    list(48.242, 48.242, 23.869, 3, 0.032, 0),
+    list(48.731, 48.731, 23.389, 3, 0.032, 0),
+    list(49.221, 49.221, 22.903, 3, 0.032, 0),
+    list(49.71, 49.71, 22.41, 3, 0.031, 0),
+    list(50.2, 50.2, 21.908, 3, 0.031, 0)
+)
+
+// The case: the rim round the outline, open above its inside behind the belly rail; cut down in front for the
+// keys, between the cheek blocks, and the cheek blocks themselves lower than the rim.
+GrandCaseBody = difference {
+    extrusion { path GrandCase  min Y GrandCaseBottom  max Y GrandRimTop  rounded 0.3 }
+    intersection {
+        extrusion { path GrandInside  min Y GrandBoardTop  max Y GrandRimTop + 1 }
+        cube { scale [40, 5, 40]  translate [29.35, 36, GrandBelly + 40] }
+    }
+    cube { scale [24.05, 6, 4.2]  translate [29.35, GrandKeyTop - 0.9 + 6, 3.2] }
+    cube { scale [30, 6, 4.2]  translate [29.35, GrandKeyTop + 1.8 + 6, 3.2] }
+    material PianoEbony
+}
+
+// Inside: the soundboard, and the iron plate over it, open in five places and slotted across its front for the
+// hammers, the tuning pins in the band in front of the slot.
+GrandSoundboard = intersection {
+    extrusion { path GrandInside  min Y GrandBoardTop  max Y GrandBoardTop + 0.03 }
+    cube { scale [40, 1, 40]  translate [29.35, GrandBoardTop, GrandBelly + 40] }
+    material PianoSpruce
+}
+
+GrandPlate = difference {
+    intersection {
+        extrusion { path GrandPlateEdge  min Y GrandPlateTop - 0.6  max Y GrandPlateTop  rounded 0.12 }
+        cube { scale [40, 2, 40]  translate [29.35, GrandPlateTop, GrandBelly + 40] }
+    }
+    cylinder { min Y 30  max Y 35  scale [5.5, 1, 8]  translate [14, 0, 30] }
+    cylinder { min Y 30  max Y 35  scale [5, 1, 8.5]  translate [28, 0, 30] }
+    cylinder { min Y 30  max Y 35  scale [4.5, 1, 6.5]  translate [40.5, 0, 24] }
+    cylinder { min Y 30  max Y 35  scale [6, 1, 9]  translate [13, 0, 52] }
+    cylinder { min Y 30  max Y 35  scale [3.2, 1, 5]  translate [24, 0, 47] }
+    cube { scale [24.7, 2, 0.9]  translate [27.6, GrandPlateTop, 15.5] }
+    material PianoPlateGold
+}
+
+// Every note: its strings from their tuning pins to their hitch pins, its hammer under them in the plate's
+// slot, and -- below the top twenty-one notes -- its damper resting on them.
+primitive GrandNote(row, n) -> group {
+    front = item(row, 0)
+    back = item(row, 1)
+    end = item(row, 2)
+    count = item(row, 3)
+    gauge = item(row, 4)
+    wound = item(row, 5)
+    // The wound bass strings run higher, over the tenor.
+    y = GrandStringY + wound * (GrandBassY - GrandStringY)
+    // Where the strings are across, a distance along them from their tuning pins.
+    damperX = front + (back - front) * (17.3 - 14) / (end - 14)
+    return group {
+        for u in [1, count] {
+            if (wound > 0) {
+                strand {
+                    width gauge at [front + (u - (count + 1) / 2) * 0.12, y, 14]
+                    width gauge at [back + (u - (count + 1) / 2) * 0.12, y, end]
+                    material PianoCopper
+                }
+            }
+            else {
+                strand {
+                    width gauge at [front + (u - (count + 1) / 2) * 0.12, y, 14]
+                    width gauge at [back + (u - (count + 1) / 2) * 0.12, y, end]
+                    material GuitarSteelString
+                }
+            }
+            group {
+                cylinder { min Y GrandPlateTop  max Y y + 0.3  scale [0.13, 1, 0.13]  translate [front + (u - (count + 1) / 2) * 0.12, 0, 13.75 + 0.5 * mod(u + n, 2)] }
+                cylinder { min Y GrandPlateTop  max Y y + 0.2  scale [0.07, 1, 0.07]  translate [back + (u - (count + 1) / 2) * 0.12, 0, end + 0.3] }
+                material GuitarChrome
+            }
+        }
+        superellipsoid {
+            east 0.4  north 0.4
+            scale [0.21, 0.55, 0.42]
+            translate [front, y - gauge / 2 - 0.6, 15.5]
+            material DrumFelt
+        }
+        if (n < 67) {
+            cube { scale [0.22, 0.4, 0.65]  translate [damperX, y + gauge / 2 + 0.41, 17.3]  material PianoBlackKey }
+        }
+    }
+}
+
+GrandStringing = group {
+    for n in [0, 87] {
+        object GrandNote(item(GrandStrings, n), n)
+    }
+}
+
+// The keys: 52 white and 36 black, their fronts along z = 0, back to the fallboard 6.1 behind; the black keys
+// after an A, C, D, F or G, a little either side of the line between the white keys.
+PianoBlackAfter = list(1, 0, 1, 1, 0, 1, 1)
+PianoBlackShift = list(0.08, 0, -0.08, 0.08, 0, -0.1, 0)
+
+GrandKeys = group {
+    for i in [0, 51] {
+        cube { scale [0.43, 0.45, 3.04]  translate [5.3 + (i + 0.5) * 0.925, GrandKeyTop - 0.45, 3.06]  material PianoIvory }
+        if (i < 51) {
+            if (item(PianoBlackAfter, mod(i, 7)) > 0) {
+                cube {
+                    scale [0.24, 0.25, 1.9]
+                    translate [5.3 + (i + 1) * 0.925 + item(PianoBlackShift, mod(i, 7)), GrandKeyTop + 0.25, 4.2]
+                    material PianoBlackKey
+                }
+            }
+        }
+    }
+    // The key slip in front of them.
+    cube { scale [24.05, 0.75, 0.25]  translate [29.35, GrandKeyTop - 1.45, -0.25]  material PianoEbony }
+}
+
+// The fallboard, folded up behind the keys, and the music desk leaning back on the rim behind it.
+GrandFront = group {
+    cube { scale [24.05, 2.1, 0.35]  rotate X 12  translate [29.35, GrandKeyTop + 2.1, 6.9] }
+    cube { scale [16, 5.5, 0.3]  rotate X 16  translate [29.35, GrandRimTop + 5.3, 11.2] }
+    cube { scale [16, 0.25, 0.9]  translate [29.35, GrandRimTop + 0.25, 10.4] }
+    material PianoEbony
+}
+
+// The legs, square and tapering down to brass casters, and the pedal lyre with its three pedals.
+primitive GrandLeg(x, z) -> group {
+    return group {
+        tapered extrusion {
+            path { move to -1.8, -1.8  line to 1.8, -1.8  line to 1.8, 1.8  line to -1.8, 1.8  close }
+            taper 0.72
+            min Y 0  max Y GrandCaseBottom - 2.6
+            rotate X 180
+            translate Y GrandCaseBottom
+            material PianoEbony
+        }
+        cylinder { min Y -0.5  max Y 0.5  scale [1.1, 1, 1.1]  rotate Z 90  translate Y 1.1  material PianoBrass }
+        cylinder { min Y 2.2  max Y 2.65  scale [1.4, 1, 1.4]  material PianoBrass }
+        translate [x, 0, z]
+    }
+}
+
+GrandLegs = group {
+    object GrandLeg(4.5, 9)
+    object GrandLeg(54.2, 9)
+    object GrandLeg(17.5, 62)
+    // The lyre: two posts down from the case to the pedal box, and the pedals out toward the pianist.
+    cube { scale [0.6, (GrandCaseBottom - 5.5) / 2, 0.8]  translate [26.6, (GrandCaseBottom + 5.5) / 2, 9.5]  material PianoEbony }
+    cube { scale [0.6, (GrandCaseBottom - 5.5) / 2, 0.8]  translate [32.1, (GrandCaseBottom + 5.5) / 2, 9.5]  material PianoEbony }
+    cube { scale [4.2, 1.4, 2]  translate [29.35, 4.1, 9.5]  material PianoEbony }
+    for k in [-1, 1] {
+        object DrumRod([29.35 + k * 1.6, 3.4, 8.3], [29.35 + k * 1.6, 3.7, 4.2], 0.28) { material PianoBrass }
+    }
+    object DrumRod([29.35, 3.4, 8.3], [29.35, 3.7, 4.2], 0.28) { material PianoBrass }
+}
+
+// The lid: hinged along the spine and raised `lid` degrees on its prop, its front flap folded back over it; or,
+// at 0, closed, the flap lying flat in front.
+primitive GrandLid(lid) -> group {
+    return group {
+        group {
+            intersection {
+                extrusion { path GrandCase  min Y GrandRimTop  max Y GrandRimTop + 0.8  rounded 0.15 }
+                cube { scale [40, 2, 40]  translate [29.35, GrandRimTop, 20 + 40] }
+            }
+            if (lid > 0) {
+                // The front flap, turned over its hinge onto the lid.
+                intersection {
+                    extrusion { path GrandCase  min Y GrandRimTop  max Y GrandRimTop + 0.8  rounded 0.15 }
+                    cube { scale [40, 2, 6.3]  translate [29.35, GrandRimTop, 13.7] }
+                    rotate X 180
+                    translate [0, 2 * GrandRimTop + 1.6, 40]
+                }
+            }
+            else {
+                intersection {
+                    extrusion { path GrandCase  min Y GrandRimTop  max Y GrandRimTop + 0.8  rounded 0.15 }
+                    cube { scale [40, 2, 6.3]  translate [29.35, GrandRimTop, 13.7] }
+                }
+            }
+            translate Y -GrandRimTop
+            rotate Z lid
+            translate Y GrandRimTop
+            material PianoEbony
+        }
+        if (lid > 0) {
+            object DrumRod([40, GrandRimTop, 30], [40, GrandRimTop + 40 * tan(lid * 3.14159265 / 180), 30], 0.45) { material PianoEbony }
+        }
+    }
+}
+
+// The pianist's bench: an adjustable artist's bench, its padded black leather cushion on an ebony frame, square
+// tapered legs on brass glides joined low down by stretchers, and a knob on either side that raises it.  It stands
+// on y = 0 with its seat `height` up, its length across X and the pianist's side toward -Z, as the piano's own
+// frame has it: put it 17 in back from the keys, `translate Z -17`, and give it whatever moves the piano.
+PianoLeather = material {
+    pigment [0.015, 0.014, 0.014]  diffuse 0.8  specular 0.35  shininess 25  ambient 0.03
+    normal granite { depth 0.15  scale 0.08 }
+}
+
+primitive PianoBench(height = 19.5) -> group {
+    top = height - 3
+    return group {
+        // The cushion.
+        extrusion {
+            path {
+                move to -10.25, -7  line to 10.25, -7
+                curve 10.802, -7, 11.25, -6.552 to 11.25, -6
+                line to 11.25, 6
+                curve 11.25, 6.552, 10.802, 7 to 10.25, 7
+                line to -10.25, 7
+                curve -10.802, 7, -11.25, 6.552 to -11.25, 6
+                line to -11.25, -6
+                curve -11.25, -6.552, -10.802, -7 to -10.25, -7
+                close
+            }
+            min Y top  max Y height  rounded 0.8
+            material PianoLeather
+        }
+        // The frame under it, its legs, their stretchers and glides, and the knobs.
+        group {
+            cube { scale [10.9, 1.25, 6.7]  translate Y top - 1.25 }
+            for x in list(-1, 1) {
+                for z in list(-1, 1) {
+                    tapered extrusion {
+                        path { move to -0.9, -0.9  line to 0.9, -0.9  line to 0.9, 0.9  line to -0.9, 0.9  close }
+                        taper 0.67
+                        min Y 0  max Y top - 0.4
+                        rotate X 180
+                        translate [x * 10, top - 0.2, z * 5.8]
+                    }
+                }
+                cube { scale [0.35, 0.5, 5.4]  translate [x * 10, 5, 0] }
+                cylinder { min Y 0  max Y 0.7  scale [0.8, 1, 0.8]  rotate Z -90 * x  translate [x * 10.9, top - 1.25, 0] }
+                sphere { scale [0.45, 0.85, 0.85]  translate [x * 11.65, top - 1.25, 0] }
+            }
+            material PianoEbony
+        }
+        for x in list(-1, 1) {
+            for z in list(-1, 1) {
+                cylinder { min Y 0  max Y 0.3  scale [0.75, 1, 0.75]  translate [x * 10, 0, z * 5.8]  material PianoBrass }
+            }
+        }
+    }
+}
+
+primitive GrandPiano(lid = 38) -> group {
+    return group {
+        object GrandCaseBody
+        object GrandSoundboard
+        object GrandPlate
+        object GrandStringing
+        object GrandKeys
+        object GrandFront
+        object GrandLegs
+        object GrandLid(lid)
+        translate X -29.35
+    }
+}
+
+// =====================================================================================================
+// -- The keyboard --------------------------------------------------------------------------------------
+//
+// A stage keyboard: `keys` of them -- 61 unless said, or 73, 76 or 88 -- in a black body with brushed aluminum
+// end cheeks, its pitch and modulation wheels to the left of the keys, and behind them a sloping panel of
+// knobs, buttons and a lit display.  It stands in a piano's own frame: its keys' front edge along z = 0, the
+// player in front of it at -Z, its bottom on y = 0 -- on its stand, `translate Y` the stand's height.  Its X
+// stand and its bench are pieces of their own.
+
+KeyboardBody = material { pigment [0.02, 0.02, 0.022]  diffuse 0.8  specular 0.25  shininess 30  ambient 0.03 }
+KeyboardAluminum = material {
+    pigment [0.22, 0.22, 0.23]  metallic 1  reflective 0.4  roughness 0.3  anisotropy 0.7 along Z  diffuse 0.2  specular 0
+}
+KeyboardDisplay = material { pigment [0.35, 0.6, 0.9]  diffuse 0  specular 0  emission 0.6 }
+KeyboardLamp = material { pigment [1, 0.15, 0.1]  diffuse 0  specular 0  emission 1.2 }
+KeyboardLampGreen = material { pigment [0.2, 1, 0.3]  diffuse 0  specular 0  emission 1 }
+KeyboardSteel = material { pigment [0.03, 0.03, 0.032]  diffuse 0.8  specular 0.3  shininess 40  ambient 0.03 }
+
+// How many white keys a keyboard of so many keys has, and which letter its lowest key is, counting from A.
+function KeyboardWhites(keys) -> number {
+    switch (keys) {
+        case 88 { return 52 }
+        case 76 { return 45 }
+        case 73 { return 43 }
+        default { return 36 }
+    }
+}
+function KeyboardFirst(keys) -> number {
+    switch (keys) {
+        case 88 { return 0 }
+        case 76, 73 { return 4 }
+        default { return 2 }
+    }
+}
+
+// Its side, in (depth back from the keys' front, height): a lip under the keys, the key bed, a rise behind
+// them, the panel sloping up to the back.
+KeyboardSide = path {
+    move to 0, 0  line to 13, 0  line to 13, 4.3
+    line to 6.5, 3.4  line to 6.2, 3.3  line to 6.2, 1.6  line to 0.4, 1.6  line to 0.4, 1.4  line to 0, 1.4
+    close
+}
+KeyboardCheek = path {
+    move to 0, 0  line to 13, 0  line to 13, 4.5
+    line to 6.5, 3.6  line to 0.8, 3.3
+    curve 0.3, 3.3, 0, 3.0 to 0, 2.5
+    close
+}
+
+primitive StageKeyboard(keys = 61) -> group {
+    whites = KeyboardWhites(keys)
+    first = KeyboardFirst(keys)
+    span = whites * 0.925
+    wide = span + 8.4
+    // The keys' left edge: the left cheek and the wheels' bay take six inches, the right cheek two and a half.
+    left = -wide / 2 + 6
+    return group {
+        // The body, its two cheeks, and the bay the wheels sit in.
+        extrusion { path KeyboardSide  min Y -wide / 2 + 1.2  max Y wide / 2 - 1.2  rounded 0.12  rotate X -90  rotate Y 270  material KeyboardBody }
+        extrusion { path KeyboardCheek  min Y -wide / 2  max Y -wide / 2 + 1.2  rounded 0.2  rotate X -90  rotate Y 270  material KeyboardAluminum }
+        extrusion { path KeyboardCheek  min Y wide / 2 - 1.2  max Y wide / 2  rounded 0.2  rotate X -90  rotate Y 270  material KeyboardAluminum }
+        for x in list(-wide / 2 + 2.7, -wide / 2 + 4.0) {
+            cylinder { min Y -0.3  max Y 0.3  scale [1.05, 1, 1.05]  rotate Z 90  translate [x, 1.9, 3.1]  material GuitarFoam }
+        }
+        // The keys.
+        for i in [0, whites - 1] {
+            cube { scale [0.43, 0.45, 2.85]  translate [left + (i + 0.5) * 0.925, 2.05, 3.15]  material PianoIvory }
+            if (i < whites - 1) {
+                if (item(PianoBlackAfter, mod(i + first, 7)) > 0) {
+                    cube {
+                        scale [0.24, 0.24, 1.7]
+                        translate [left + (i + 1) * 0.925 + item(PianoBlackShift, mod(i + first, 7)), 2.74, 4.3]
+                        material PianoBlackKey
+                    }
+                }
+            }
+        }
+        // The panel's controls, laid out on the slope behind the keys: two rows of knobs on the left, a display
+        // and its buttons in the middle, a row of lit buttons on the right.
+        group {
+            for k in [0, 7] {
+                for row in list(1.6, 3.8) {
+                    group {
+                        cylinder { min Y 0  max Y 0.55  scale [0.42, 1, 0.42]  material KeyboardBody }
+                        cube { scale [0.04, 0.01, 0.2]  translate [0, 0.56, -0.18]  material PianoIvory }
+                        translate [-wide / 2 + 5 + k * 1.7, 0, row]
+                    }
+                }
+            }
+            cube { scale [3, 0.05, 1.0]  translate [0, 0.05, 2.6]  material KeyboardDisplay }
+            for k in [0, 5] {
+                cube { scale [0.3, 0.12, 0.22]  translate [-2.5 + k * 1, 0.12, 4.6]  material KeyboardBody }
+            }
+            for k in [0, 9] {
+                cube { scale [0.3, 0.12, 0.22]  translate [6 + k * 1, 0.12, 1.8]  material KeyboardBody }
+                cube { scale [0.06, 0.03, 0.06]  translate [6 + k * 1, 0.25, 1.65]  material KeyboardLamp }
+            }
+            sphere { scale 0.09  translate [-1, 0.06, 4.0]  material KeyboardLampGreen }
+            rotate X -8.4
+            translate [0, 3.4, 6.5]
+        }
+    }
+}
+
+// The keyboard's stand: an X of black steel tubes, each with a foot along the floor and an arm at its top on
+// which the keyboard lies, padded where it does, `height` up; the arms running front to back, under the
+// keyboard's middle, 26 apart.  It stands on y = 0, its middle at the origin: under a keyboard, `translate Z 6.5`.
+primitive KeyboardStand(height = 26) -> group {
+    rise = height - 1.6
+    long = sqrt(26 * 26 + rise * rise)
+    lean = toDegrees(atan2(rise, 26))
+    return group {
+        group {
+            cube { scale [long / 2, 0.6, 0.4]  rotate Z lean  translate [0, height / 2, -0.45] }
+            cube { scale [long / 2, 0.6, 0.4]  rotate Z -lean  translate [0, height / 2, 0.45] }
+            for x in list(-13, 13) {
+                cube { scale [0.6, 0.45, 8]  translate [x, 0.55, 0] }
+                cube { scale [0.6, 0.45, 8]  translate [x, height - 0.65, 0] }
+            }
+            cylinder { min Y -1.2  max Y 1.2  scale [0.35, 1, 0.35]  rotate X 90  translate Y height / 2 }
+            material KeyboardSteel
+        }
+        group {
+            sphere { scale [0.9, 0.9, 0.3]  translate [0, height / 2, -1.25] }
+            for x in list(-13, 13) {
+                for z in list(-8, 8) {
+                    cube { scale [0.7, 0.55, 0.35]  translate [x, 0.55, z] }
+                    cube { scale [0.7, 0.55, 0.35]  translate [x, height - 0.65, z] }
+                }
+                cube { scale [0.62, 0.1, 5]  translate [x, height - 0.1, 0] }
+            }
+            material GuitarFoam
+        }
+    }
+}
+
+// The keyboard's bench: a padded vinyl seat on a steel frame, its legs an X at either end, the seat `height`
+// up, its length across X; set 16 back from a keyboard's keys, `translate Z -16`.
+primitive KeyboardBench(height = 20) -> group {
+    top = height - 2.5
+    rise = top - 1.2
+    long = sqrt(10 * 10 + rise * rise)
+    lean = toDegrees(atan2(rise, 10))
+    return group {
+        extrusion {
+            path {
+                move to -13, -5.75  line to 13, -5.75
+                curve 13.552, -5.75, 14, -5.302 to 14, -4.75
+                line to 14, 4.75
+                curve 14, 5.302, 13.552, 5.75 to 13, 5.75
+                line to -13, 5.75
+                curve -13.552, 5.75, -14, 5.302 to -14, 4.75
+                line to -14, -4.75
+                curve -14, -5.302, -13.552, -5.75 to -13, -5.75
+                close
+            }
+            min Y top  max Y height  rounded 0.7
+            material DrumVinyl
+        }
+        group {
+            cube { scale [12, 0.4, 4.6]  translate Y top - 0.4 }
+            for x in list(-11, 11) {
+                cube { scale [0.35, 0.55, long / 2]  rotate X -lean  translate [x - 0.4, top / 2 + 0.3, 0] }
+                cube { scale [0.35, 0.55, long / 2]  rotate X lean  translate [x + 0.4, top / 2 + 0.3, 0] }
+                cube { scale [0.4, 0.4, 6]  translate [x, 0.4, 0] }
+            }
+            object DrumRod([-11, top / 2 + 0.3, 0], [11, top / 2 + 0.3, 0], 0.45)
+            material KeyboardSteel
+        }
+        for x in list(-11, 11) {
+            for z in list(-6, 6) {
+                cube { scale [0.5, 0.4, 0.3]  translate [x, 0.4, z]  material GuitarFoam }
+            }
+        }
+    }
+}
+
+// =====================================================================================================
+// -- The speakers --------------------------------------------------------------------------------------
+//
+// A stage's speaker stack: a subwoofer cabinet with an 18 in driver, and on it a full-range cabinet with a
+// 15 in woofer under a horn, both covered in black textured vinyl with steel corners.  It stands on y = 0,
+// its front toward -Z, 24 across, 26 deep and 64 tall.
+
+SpeakerCovering = material { pigment [0.025, 0.025, 0.027]  diffuse 0.85  specular 0.12  shininess 10  ambient 0.03  normal granite { depth 0.12  scale 0.3 } }
+SpeakerCone = material { pigment [0.04, 0.04, 0.045]  diffuse 0.8  specular 0.1  shininess 8  ambient 0.03 }
+SpeakerSteel = material { pigment [0.18, 0.18, 0.19]  metallic 1  reflective 0.35  roughness 0.35  diffuse 0.2  specular 0 }
+
+// A driver `size` inches across, its frame on the baffle at z = 0 and its cone sunk back into the cabinet,
+// which wants a hole a fifth of its size deep.
+primitive SpeakerDriver(size) -> group {
+    r = size / 2
+    return group {
+        // The frame's rim and the rubber surround.
+        torus { radii r - 0.4, 0.3  rotate X 90  translate Z -0.1  material SpeakerSteel }
+        torus { radii r - 1.1, 0.45  rotate X 90  translate Z 0.25  material SpeakerCone }
+        // The cone, sloping back to the voice coil, and the dust cap over its middle.
+        intersection {
+            conic { min Y 0.18  max Y 1  open  scale [r - 1.3, r * 0.42, r - 1.3]  rotate X -90  translate Z r * 0.42 + 0.3 }
+            cube { scale [r, r, r]  translate Z r }
+            material SpeakerCone
+        }
+        sphere { scale [r * 0.2, r * 0.2, r * 0.08]  translate Z r * 0.38 }
+        material SpeakerCone
+    }
+}
+
+// A cabinet `wide` x `high` x `deep`, its front at z = 0 and standing on y = 0, its edges rounded and its four
+// front corners capped in steel -- flush with its top and bottom, so cabinets stand on one another, and
+// standing a little proud at its front and sides.
+primitive SpeakerBox(wide, high, deep) -> group {
+    return group {
+        extrusion {
+            path { move to -wide / 2, 0  line to wide / 2, 0  line to wide / 2, deep  line to -wide / 2, deep  close }
+            min Y 0  max Y high  rounded 0.5
+            material SpeakerCovering
+        }
+        for corner in list(list(-1, 0), list(1, 0), list(-1, 1), list(1, 1)) {
+            superellipsoid {
+                east 0.3  north 0.3
+                scale [1.1, 1.1, 1.1]
+                translate [item(corner, 0) * (wide / 2 - 0.7), item(corner, 1) * (high - 2.2) + 1.1, 0.7]
+                material SpeakerSteel
+            }
+        }
+    }
+}
+
+primitive SpeakerStack() -> group {
+    return group {
+        // The subwoofer: 24 x 30 x 26, an 18 in driver sunk in its front.
+        difference {
+            object SpeakerBox(24, 30, 26)
+            cylinder { min Y -1  max Y 5  scale [8.6, 1, 8.6]  rotate X 90  translate [0, 15, 0] }
+            material SpeakerCovering
+        }
+        object SpeakerDriver(18) { translate [0, 15, 1.5] }
+        // The full-range cabinet on it: 24 x 34 x 22, a 15 in woofer low in its front and a horn over it.
+        group {
+            difference {
+                object SpeakerBox(24, 34, 22)
+                cylinder { min Y -1  max Y 4.5  scale [7.2, 1, 7.2]  rotate X 90  translate [0, 11.5, 0] }
+                // The horn's mouth, flaring out from its throat.
+                tapered extrusion {
+                    path { move to -8, -3.2  line to 8, -3.2  line to 8, 3.2  line to -8, 3.2  close }
+                    taper 0.12
+                    min Y 0  max Y 7
+                    rotate X 90
+                    translate [0, 26.5, -0.01]
+                }
+                material SpeakerCovering
+            }
+            object SpeakerDriver(15) { translate [0, 11.5, 1.5] }
+            // The horn's throat, dark, at the back of its flare.
+            cube { scale [1.2, 0.5, 0.1]  translate [0, 26.5, 7]  material SpeakerCone }
+            translate [0, 30, 2]
+        }
+    }
+}

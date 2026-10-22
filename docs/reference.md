@@ -313,6 +313,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
 | `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Coat or sheen: how rough its own surface is.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [A clear coat](materials.md#a-clear-coat), [Cloth](materials.md#cloth), [Hair](advanced-surfaces.md#how-hair-is-lit) |
+| `rounded` | How far every edge of an extrusion is rounded. | [Advanced Surfaces](advanced-surfaces.md#extrusion) |
 | `rows` | `physical sky`: how many heights in the sky are worked out and kept.  Also a field's `rows <n> apart <d>`, rows laid side by side along a path. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `saddle` | Surface: a hyperbolic paraboloid, cut to a rectangle. | [Surfaces](surfaces.md#saddle) |
 | `samples` | Medium: how many places along a crossing are asked about scattering.  Also camera: `blur samples` count, and context: `reflection samples`. | [Scene Files](scene-files.md#scattering) |

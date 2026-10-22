@@ -16,6 +16,23 @@ public partial class Scene
     private readonly ConcurrentDictionary<(Material, double), Dye> _steadyDyes = new ();
 
     /// <summary>
+    /// This method reports whether a strand is a wire rather than a fiber; see
+    /// <see cref="HairIntersection.IsAWire"/>.
+    /// <para>
+    /// **A wire is shaded as the surface it is** -- round, and met where the strand's normal says -- with
+    /// the highlights, mirroring and roughness any metal has, and it stops the light falling on it where a
+    /// fiber lets most of that through.  It is still hit as a strand is, so one finer than a pixel is
+    /// widened to it and seen for the share it covers, which is what keeps a string whole at a distance a
+    /// thin cylinder breaks up at; and one the ray sees the whole round of is shaded so, at once (see
+    /// <see cref="Facets"/>), rather than glittering where its narrow highlight is found by chance.
+    /// Brushed with no direction said, it is brushed round itself, as a wound string's winding runs.
+    /// </para>
+    /// </summary>
+    /// <param name="hit">The crossing.</param>
+    /// <returns>Whether the strand is a wire.</returns>
+    internal static bool IsAWire(HairIntersection hit) => hit.IsAWire;
+
+    /// <summary>
     /// This method works out the light a strand of hair sends toward the eye.
     /// <para>
     /// **A strand is shaded as the fiber it is, never as a surface.**  It has no inside a ray can be
@@ -249,6 +266,10 @@ public partial class Scene
     private double MostPassedBy<TS>(HairIntersection strand, Point where)
         where TS : struct, ISpectrum<TS>
     {
+        // A wire sends nothing onward, and lets by only what it does not cover.
+        if (IsAWire(strand))
+            return strand.Coverage >= 1 ? 0 : 1 - strand.Coverage;
+
         TS onward = OnwardThroughStrand<TS>(strand, where);
         double most = 0;
 

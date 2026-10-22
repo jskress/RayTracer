@@ -206,7 +206,7 @@ public abstract class Light : NamedThing
     /// light whose color differs from one sample to the next as much as a photographed sky's does,
     /// whose sun is a hundred thousand times the blue around it.
     /// </summary>
-    protected virtual bool HighlightsBySample => false;
+    protected internal virtual bool HighlightsBySample => false;
 
     /// <summary>
     /// This method returns the angle across the patch of this light that one of its samples stands for, seen

@@ -55,8 +55,22 @@ object pillar { translate [ 0, 0, 0] }
 object pillar { translate [ 4, 0, 0] }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/objectClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/objectClause.svg">
+  <img alt="Reusing a surface" src="images/surfaces/objectClause.svg">
+</picture>
+
 Each `object` is the same description placed somewhere new, and may add transforms and any
-other properties of its own.
+other properties of its own.  Those include the kind's own: a copy of the pillar may say
+`max Y 5` and stand taller than the rest, since what is laid over the description is read as a
+cylinder's clauses.
+
+The kind may be named in place of `object` — `cylinder pillar { max Y 5 }`, or `csg` for a union,
+difference or intersection — and it means the same, with one check more: the name has to be a
+surface of that kind, and the scene is refused where it is not.  Write it where a reader is better
+for knowing what the name stands for.  A call of a [primitive](scene-files.md#things-of-your-own),
+`object Pawn(1.0) { … }`, is placed the same way.
 
 #### `no shadow`
 
@@ -143,6 +157,12 @@ is the seventh, and it appears as the ground in almost every other picture here.
 An infinite flat surface lying in the X–Z plane at the origin — the ground, unless you turn
 it.  It has no properties of its own beyond the usual ones.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/simpleSurfaceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/simpleSurfaceClause.svg">
+  <img alt="Plane, sphere and cube" src="images/surfaces/simpleSurfaceClause.svg">
+</picture>
+
 ```
 plane {
     material { pigment checker { White, Gray30 } }
@@ -154,6 +174,12 @@ Being infinite, a plane has no bounding box and never will; every ray is tested 
 #### Sphere
 
 A ball of radius one at the origin.  No properties of its own.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/simpleSurfaceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/simpleSurfaceClause.svg">
+  <img alt="Plane, sphere and cube" src="images/surfaces/simpleSurfaceClause.svg">
+</picture>
 
 ```
 sphere {
@@ -170,6 +196,12 @@ Scaling it unevenly produces an ellipsoid.
 A box running from −1 to 1 along every axis, so two units on a side.  No properties of its
 own.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/simpleSurfaceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/simpleSurfaceClause.svg">
+  <img alt="Plane, sphere and cube" src="images/surfaces/simpleSurfaceClause.svg">
+</picture>
+
 ```
 cube { scale [2, 0.2, 3] }      // a slab
 ```
@@ -183,7 +215,7 @@ same way, and both share these:
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/extrudedSurface-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/surfaces/extrudedSurface.svg">
-  <img alt="Cylinder and conic" src="images/surfaces/extrudedSurface.svg">
+  <img alt="Cylinder, conic, paraboloid and hyperboloid" src="images/surfaces/extrudedSurface.svg">
 </picture>
 
 | Property | What it does |
@@ -207,6 +239,12 @@ capped; add `open` and they are not, which matters when you are going to see ins
 A ring about the Y axis.  It needs two radii: how far the ring's center is from the
 origin, and how thick the ring itself is.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/torusClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/torusClause.svg">
+  <img alt="A torus" src="images/surfaces/torusClause.svg">
+</picture>
+
 ```
 torus {
     radii 1, 0.25
@@ -218,6 +256,12 @@ torus {
 Two spheres about the Y axis, joined by a smooth fillet.  It also takes two radii, and they are
 the radii of those two spheres: the **bottom** one, centered on the origin, and the **top** one,
 centered on the bottom sphere's own north pole.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/eggClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/eggClause.svg">
+  <img alt="An egg" src="images/surfaces/eggClause.svg">
+</picture>
 
 ```
 egg {
@@ -243,6 +287,12 @@ where an egg's tip can only ever be as sharp as its smaller sphere.
 
 The family of shapes that runs from a box to a sphere to a pinched star, depending on two
 exponents.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/superellipsoidClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/superellipsoidClause.svg">
+  <img alt="A superellipsoid" src="images/surfaces/superellipsoidClause.svg">
+</picture>
 
 | Property | What it does |
 | --- | --- |
@@ -270,6 +320,12 @@ A bowl: the surface where `x² + z² = y`, opening upward with its nose at the o
 cylinder it takes no numbers of its own — scaling gives every opening rate there is — only where it
 starts and stops.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/extrudedSurface-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/extrudedSurface.svg">
+  <img alt="Cylinder, conic, paraboloid and hyperboloid" src="images/surfaces/extrudedSurface.svg">
+</picture>
+
 | Property | What it does |
 | --- | --- |
 | `min Y` | Where it starts.  Nought by default, which is its nose. |
@@ -287,17 +343,22 @@ a headlamp reflector, a telescope mirror and a solar collector all are, and it i
 worth having exactly rather than approximated by a [lathe](advanced-surfaces.md#lathe) of sampled
 points.  It is also the shape a spun liquid settles into.
 
-Worth being plain about what that does and does not buy you here.  A `reflective` dish shows the
-world **inverted and drawn together** — point it at a landscape and you see the landscape gathered
-into it, which is the focusing you can actually watch.  What this renderer does *not* do is carry
-light from a lamp off a mirror and onto something else: that is a caustic, and it needs a kind of
-light transport this engine deliberately does not have.  So a dish makes a convincing reflector and
-will not light a room by bouncing a lamp into it.
+A `reflective` dish shows the world **inverted and drawn together** — point it at a landscape and you
+see the landscape gathered into it, which is the focusing you can actually watch.  Carrying a lamp's
+light off the dish and onto something else is a caustic: ask for [caustics](context.md#caustics) and a
+dish behind a lamp throws its light forward as a reflector does, and gathers a sun to a bright spot
+where its focus falls.  Without them, a dish makes a convincing reflector but lights nothing.
 
 #### Hyperboloid
 
 A waisted surface of revolution: `x² + z² - y² = 1`, narrowest at the origin and flaring away above
 and below.  It takes the same three properties a paraboloid does, and no numbers of its own.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/extrudedSurface-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/extrudedSurface.svg">
+  <img alt="Cylinder, conic, paraboloid and hyperboloid" src="images/surfaces/extrudedSurface.svg">
+</picture>
 
 ```
 hyperboloid {
@@ -316,6 +377,12 @@ thing in a scene, and [`quadric`](#quadric) gives it to anyone who wants it.
 #### Saddle
 
 A hyperbolic paraboloid: `y = x² - z²`, rising along X and falling along Z, cut to a rectangle.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/saddleClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/saddleClause.svg">
+  <img alt="A saddle" src="images/surfaces/saddleClause.svg">
+</picture>
 
 | Property | What it does |
 | --- | --- |
@@ -342,6 +409,12 @@ rectangle: left endless it would divide space in two, which is what [`quadric`](
 Any surface of the second degree, written as its ten coefficients:
 
     Ax² + By² + Cz² + Dxy + Exz + Fyz + Gx + Hy + Iz + J = 0
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/quadricClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/quadricClause.svg">
+  <img alt="A quadric" src="images/surfaces/quadricClause.svg">
+</picture>
 
 | Property | What it does |
 | --- | --- |
@@ -374,6 +447,12 @@ it: most quadrics are endless, and nothing about ten coefficients says where to 
 A set of spheres, cylinders and planes that melt into one another rather than merely overlapping.
 Each contributes a field that falls off with distance, and the surface is drawn where the
 total crosses a `threshold`.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/blobClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/blobClause.svg">
+  <img alt="A blob" src="images/surfaces/blobClause.svg">
+</picture>
 
 ```
 blob {
@@ -526,6 +605,12 @@ That is how to make two components blend over a longer distance without either o
 A body of water: a stretch of surface carrying one or more trains of waves, lying in the X/Z plane
 with its rest level at `y = 0`.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/swellsClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/swellsClause.svg">
+  <img alt="Swells" src="images/surfaces/swellsClause.svg">
+</picture>
+
 ```
 swells {
     width 400  depth 400
@@ -539,6 +624,13 @@ swells {
 `width` and `depth` are how far the water reaches along X and Z, centered on the origin.  Make them
 larger than the picture needs rather than smaller: a box costs almost nothing to enlarge, and one cut
 too small ends in a straight edge in mid-water that reads as a cliff.
+
+`accuracy` is how short a stretch of a ray the search for the water will halve down to, in the
+surface's own units (a ten-thousandth by default).  A ray that dips into a crest and out again
+between two looks shows no change from above to below, so the search keeps halving where the water
+could be; a crest the ray passes through over less than `accuracy` is missed.  A crossing once found is pinned down to a
+thousandth of it.  The default is right for water measured in feet or meters; lower it only for a
+sea drawn very small.
 
 ##### The waves are not sines, and that is the point
 
@@ -605,6 +697,12 @@ A disc with an inner radius, a parallelogram, a triangle and a bicubic patch.  T
 A flat circle, given a center, the direction it faces, and a radius.  An `inner radius` makes
 it an annulus — a washer with a hole.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/discClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/discClause.svg">
+  <img alt="A disc" src="images/surfaces/discClause.svg">
+</picture>
+
 ```
 disc {
     center [0, 0, 0]
@@ -623,6 +721,12 @@ A flat four-sided patch, given one corner and the two edge vectors that leave it
 edges need not be perpendicular, which is what makes it a parallelogram rather than a
 rectangle.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/parallelogramClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/parallelogramClause.svg">
+  <img alt="A parallelogram" src="images/surfaces/parallelogramClause.svg">
+</picture>
+
 ```
 parallelogram {
     at [0, 0, 0]
@@ -637,6 +741,12 @@ Both `at` and `sides` are required.
 Three points.  A plain `triangle` is flat; a `smooth triangle` additionally takes a normal at
 each corner and blends between them, so a mesh of them looks curved rather than faceted.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/triangleClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/triangleClause.svg">
+  <img alt="Triangle and smooth triangle" src="images/surfaces/triangleClause.svg">
+</picture>
+
 ```
 triangle {
     points [0, 1, 0], [-1, -1, 0], [1, -1, 0]
@@ -648,9 +758,39 @@ triangle {
 A bicubic patch: a curved quadrilateral pulled into shape by a four-by-four grid of control
 points.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/patchClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/patchClause.svg">
+  <img alt="A bicubic patch" src="images/surfaces/patchClause.svg">
+</picture>
+
+`points` takes all sixteen at once, four rows of four, and the order is the shape: the first row
+is one edge of the patch and the last row the opposite edge, while the first and last point of each
+row make the other two.  The patch passes through its four corners only.  Each edge is the Bézier
+curve its own four points draw, and the four in the middle pull the inside of the patch toward them
+without the surface ever reaching them.  This is a dome three units across, its border lying flat
+on the floor and its middle raised:
+
+```
+patch {
+    points
+        [-1.5, 0, -1.5], [-0.5, 0, -1.5], [0.5, 0, -1.5], [1.5, 0, -1.5],
+        [-1.5, 0, -0.5], [-0.5, 1.4, -0.5], [0.5, 1.4, -0.5], [1.5, 0, -0.5],
+        [-1.5, 0, 0.5], [-0.5, 1.4, 0.5], [0.5, 1.4, 0.5], [1.5, 0, 0.5],
+        [-1.5, 0, 1.5], [-0.5, 0, 1.5], [0.5, 0, 1.5], [1.5, 0, 1.5]
+    uSteps 4  vSteps 4
+}
+```
+
+The middle points stand at 1.4, but the dome's top comes up only to 1.4 x 9/16, a little under
+0.8: that is how much of a Bézier patch's middle its inner points earn.
+
 A patch has no closed-form ray intersection, so it is diced into flat quads and the ray is tested
 against those.  `uSteps` and `vSteps` cap how many times it may be halved in each direction, and
-`flatness` says how close to a plane a piece has to be before halving it further stops paying.
+`flatness` says how close to a plane a piece has to be before halving it further stops paying:
+the farthest any of its sixteen control points may lie from a plane through three of its corners,
+in the patch's own units.  The steps are three each and the flatness a hundredth unless you say
+otherwise.
 
 **`flatness` sets the depth for the whole patch, not for each piece of it.**  That matters, and it is
 not how this started out.  Letting each branch stop as soon as its own piece was flat enough left
@@ -674,6 +814,12 @@ Give it four corners **in order around the quadrilateral** and it fills in betwe
 
 Four corners in a plane, one corner lifted, and two opposite corners lifted.  The scene is
 [`docs/examples/advanced/bilinear-patch.igl`](examples/advanced/bilinear-patch.igl).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/bilinearPatchClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/bilinearPatchClause.svg">
+  <img alt="A bilinear patch" src="images/surfaces/bilinearPatchClause.svg">
+</picture>
 
 ```
 bilinear patch {

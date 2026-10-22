@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "Swells"
+
+swells = "swells" "{" { ( "width" | "depth" | "accuracy" ) number | wave | property } "}" ;
+
+wave = "wave" "{" { ( "steepness" | "amplitude" | "wavelength" | "phase" ) number
+     | "direction" vector } "}" ;

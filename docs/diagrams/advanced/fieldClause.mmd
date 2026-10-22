@@ -1,0 +1,20 @@
+railroad-ebnf-beta
+title "A field"
+
+field = "field" "{" { placing | choosing | standing | dropping | property } "}" ;
+
+placing = ( "within" | "along" ) outline | "rows" number "apart" number
+        | ( "offset" | "spacing" | "jitter" ) number
+        | "patches" pattern [ "from" number "to" number ] ;
+
+choosing = "of" shape [ "weight" number ] { "," shape [ "weight" number ] }
+         | "cycle" | "picked" "by" pattern | "index" "in" name ;
+
+standing = "turned" angle | "sized" number [ "to" number [ "by" pattern ] ] ;
+
+dropping = "over" string | "tilted" | ( "above" | "below" | "sink" ) number
+         | "steepest" angle ;
+
+outline = "{" { pathCommand } "}" | name ;
+
+shape = name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "Tapered text"
+
+text = "tapered" "text" "{" { "taper" number | "text" string | font | layout | kerning
+     | "open" | property } "}" ;
+
+kerning = "kerning" "{" { "kern" string "," string "," number } "}" ;

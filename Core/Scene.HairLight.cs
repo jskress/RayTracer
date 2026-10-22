@@ -66,7 +66,7 @@ public partial class Scene
             {
                 Group group => group.Surfaces,
                 CsgSurface csg => [csg.Left, csg.Right],
-                Tube { Root: not null } tube => [tube.Root],
+                IAssembled { Root: not null } assembled => [assembled.Root],
                 _ => []
             };
 
@@ -217,7 +217,7 @@ public partial class Scene
             Point from;
             Vector onward;
 
-            if (hit is HairIntersection strand)
+            if (hit is HairIntersection strand && !IsAWire(strand))
             {
                 StrandFrame frame = FrameOf(strand);
                 Dye dye = DyeOf(strand, strand.Point);

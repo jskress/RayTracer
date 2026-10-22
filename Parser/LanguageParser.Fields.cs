@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
@@ -142,9 +143,21 @@ public partial class LanguageParser
                         Term = clause.Expressions.Count > 1 ? clause.Term(1) : clause.Term()
                     };
 
-                    // And, if the scene says, a pattern that sets each size rather than chance.
+                    // And, if the scene says, a pattern that sets each size rather than chance.  It
+                    // sets them between two sizes, so with only one said it would change nothing.
                     if (ParseClause("fieldSizedByClause") is { } sizedBy)
+                    {
+                        if (clause.Expressions.Count < 2)
+                        {
+                            throw new TokenException(
+                                "A pattern sets sizes between two; write the second after \"to\".")
+                            {
+                                Token = sizedBy.Tokens[0]
+                            };
+                        }
+
                         resolver.SizedByResolver = ParseDensityShapeClause(sizedBy);
+                    }
 
                     break;
                 case "patches":
