@@ -347,6 +347,8 @@ piece of ground needs before it stops looking swept.
 | `Scree` | An area of cobbles, thrown down thickly, filling any outline you draw. |
 | `MossyBoulder` | A boulder with moss on its top and down its shaded side, in patches. |
 | `MossyCobble` | A cobble capped with moss. |
+| `DryStoneWall` | A wall of stones laid without mortar, battered in toward its coping of stones on edge. |
+| `Rubble` | A heap of broken stone, whole stones tumbled on one another. |
 
 **The season does one thing here, and it is winter.**  A rock is not deciduous, so three seasons of
 the four are the same stone; in winter snow lies on top of it, as it gathers on the fir and the
@@ -410,6 +412,19 @@ scatters off a surface rough far below the scale of anything modeled, so what co
 dim: `specular 0.03` at `shininess 9`.  The ambient came down with it, from 0.16 to 0.06 — a sixth of
 the light arriving from nowhere in particular was lifting the crevices to the same tone as the faces,
 flattening the very shading that says *rough*.
+
+**`DryStoneWall(length, height, season, variant)` and `Rubble(size, season, variant)` are stone that
+has been worked by hand, or brought down.**  Both are a [fracture](advanced-surfaces.md#fracture): a
+solid broken into pieces, every stone the part of it nearest one seed, so the stones fit together as
+laid stone does, each worn round at its edges and turned a degree or two.  A wall is broken stretched
+along its length, so its stones lie in rough courses, lengthwise, as a waller lays them; it leans in on
+itself from a foot wider than its top, and is capped with a row of stones set on edge across it.  Its
+height is to the top of that coping.  Between its faces is a dark hearting of small stone: without it
+the wall is a sieve, daylight showing through every joint, and its joints came out pale where they
+should be the darkest thing on it.  A heap of rubble is broken *whole* — never cut by the mound it
+fills, but made of the stones whose middles fall inside it — so its outline is whole stones lying where
+they fell rather than a smooth mound cracked.  Both are laid from four stones, gray, buff, blue-gray
+and brown, each in a grain of its own; both take snow in winter.
 
 #### Fire
 
@@ -1330,6 +1345,15 @@ that.  **All three numbers are half-sizes**, matching that cube — which is not
 these libraries use, and is this way because every part of an opening is placed relative to a wall built
 the same way.
 
+**A sash or a casement can be broken.**  Each takes a last number, how many of its panes are smashed: a
+sash has twelve, a casement three, and which ones go is set by the variant — `Sash(0.30, 0.46, 0.14,
+'summer', 1, 3)` has three panes out of twelve broken.  Each is a [fracture](advanced-surfaces.md#fracture)
+of its pane, struck at a point of its own and shattered round a hole in rings and spokes, each shard
+turned a degree or two so it catches the light its own way — which is how a broken pane is seen at all,
+since glass this dark is black in its cracks either way — and the dark of the room behind shows through
+the hole rather than the wall the glass is set in.  Nought, or left off, and the window is whole, and
+exactly the window it always was.
+
 **[`buildings`](#buildings) imports both of them**, which is what these libraries are chiefly for: a
 `House` and a `Tower` now differ in their *openings* as well as their proportions, and a scene can put the
 same sash into a wall it built itself.  That was impossible until recently — a library could not import
@@ -1387,6 +1411,7 @@ object Pavement(80, 3) { translate Z 5.2 }
 | `Road` | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
 | `Curb` | A curb run, for the edge of a carriageway. |
 | `Pavement` | A footway in slabs, for behind the curb. |
+| `CrazyPaving` | A garden path of flagstones of every shape, laid in mortar. |
 | `Junction` | The mouth where a side road opens off a main one. |
 | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
 | `Crossing` | A zebra, laid on a carriageway of the same width. |
@@ -1409,6 +1434,13 @@ let the curb stand out of it.
 
 The variant picks the surface, and here that is a bigger choice than a color: `0` is new asphalt, nearly
 black; `1` is worn asphalt, grayed and cracked; `2` is concrete, pale and laid in bays.
+
+**`CrazyPaving` is the exception to both**: a garden path rather than a street, it lies on the ground at
+`y = 0` with its top five centimeters up, and its variant only lays its stones afresh.  It is a slab
+broken flat by a [fracture](advanced-surfaces.md#fracture), every joint running straight down to the
+mortar the stones are laid in, each stone worn at its edges, set a shade off level and in a grain of its
+own, in buff, gray and a warmer stone with some rose in it.  After rain it is wet; in winter snow lies
+along its edges, where nobody walks.
 
 The season is `'summer'` or `'winter'`, which lays snow along the crown and banks it in the channels — or
 **`'wet'`, the street after rain**.  `'wet'` is this library's alone: the others take a season they do not

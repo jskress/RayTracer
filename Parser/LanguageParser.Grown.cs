@@ -44,12 +44,13 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method reads a surface named after a word of a grown tree's: a group written out in a
-    /// block, if the word is followed by an open brace, else a named surface or a call of a primitive.
+    /// This method reads a surface named after a word -- a grown tree's crown or leaf, a fracture's solid: a group
+    /// written out in a block, if the word is followed by an open brace, else a named surface or a call of a
+    /// primitive.
     /// </summary>
     /// <param name="clause">The clause holding the word and what followed it.</param>
     /// <returns>The resolver for the surface.</returns>
-    private ISurfaceResolver ParseGrownSurface(Clause clause)
+    private ISurfaceResolver ParseSurfaceAfterAWord(Clause clause)
     {
         if (BounderToken.OpenBrace.Matches(clause.Tokens[1]))
         {
@@ -75,14 +76,14 @@ public partial class LanguageParser
             switch (clause.Text())
             {
                 case "crown":
-                    resolver.CrownResolver = ParseGrownSurface(clause);
+                    resolver.CrownResolver = ParseSurfaceAfterAWord(clause);
                     break;
                 case "leaf":
                     // One, or several after commas, and then whether they hang.
                     List<ISurfaceResolver> leaves = [];
 
                     for (Clause leaf = clause; leaf is not null; leaf = ParseClause("grownLeafChoiceClause"))
-                        leaves.Add(ParseGrownSurface(leaf));
+                        leaves.Add(ParseSurfaceAfterAWord(leaf));
 
                     resolver.LeafResolvers = leaves;
 

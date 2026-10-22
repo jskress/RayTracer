@@ -87,14 +87,6 @@ public class GrownTree : Group
     /// </summary>
     public bool Hanging { get; set; }
 
-    // The three ways looked out from a place to tell whether it is inside the crown, the place inside if most of
-    // them say so: none of them along an axis, so that none runs along the edge or the seam of anything ordinary.
-    private static readonly Vector[] Looks =
-    [
-        new Vector(0.267, 0.534, 0.802).Unit, new Vector(-0.873, 0.218, -0.436).Unit,
-        new Vector(0.408, -0.816, 0.408).Unit
-    ];
-
     // The most rounds a tree may grow: far past what any sensible tree needs, there only so that growth that
     // somehow never settles still stops.
     private const int MostRounds = 4000;
@@ -170,7 +162,7 @@ public class GrownTree : Group
                 low.Y + random.NextDouble() * size.Y,
                 low.Z + random.NextDouble() * size.Z);
 
-            if (Holds(Crown, place))
+            if (Containment.Holds(Crown, place))
                 points.Add(place);
         }
 
@@ -178,44 +170,6 @@ public class GrownTree : Group
             throw new Exception("A grown tree's crown has no inside to scatter its points through; it must be a closed surface.");
 
         return points;
-    }
-
-    /// <summary>
-    /// This method reports whether a place, in the space a surface stands in, is inside it: inside any of a group's
-    /// surfaces, inside what an instance shares, and otherwise inside by most of three looks out crossing it an odd
-    /// number of times.
-    /// <para>
-    /// A group is asked part by part, since its parts may overlap -- a crown of three spheres -- and a look out
-    /// through two of them crosses an even number of times from a place inside both.
-    /// </para>
-    /// </summary>
-    internal static bool Holds(Surface surface, Point place)
-    {
-        switch (surface)
-        {
-            case Group group:
-            {
-                Point inside = group.InverseTransformAt(0) * place;
-
-                return group.Surfaces.Any(child => Holds(child, inside));
-            }
-            case Instance instance:
-                return Holds(instance.Prototype, instance.InverseTransformAt(0) * place);
-        }
-
-        int odd = 0;
-
-        foreach (Vector look in Looks)
-        {
-            List<Intersection> crossings = [];
-
-            surface.Intersect(new Ray(place, look), crossings);
-
-            if (crossings.Count(crossing => crossing.Distance > 0) % 2 == 1)
-                odd++;
-        }
-
-        return odd >= 2;
     }
 
     /// <summary>

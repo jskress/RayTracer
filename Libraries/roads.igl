@@ -10,6 +10,7 @@
 // | `Road`     | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
 // | `Curb`     | A curb run and the channel beside it, for the edge of a carriageway. |
 // | `Pavement` | A footway in slabs, for behind the curb. |
+// | `CrazyPaving` | A path of flagstones of every shape, laid in mortar. |
 // | `Junction`   | The mouth where a side road opens off a main one. |
 // | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
 // | `Crossing`   | A zebra, laid on a carriageway of the same width. |
@@ -626,6 +627,126 @@ primitive Pavement(length, width, season = 'summer', variant = 1) -> group {
         }
 
         object RoadWinter(season, length, width * 0.42)
+    }
+}
+
+// -- Crazy paving ----------------------------------------------------------------------------------
+
+// Flagstones: three stones, so a path laid from a yard's worth of broken stone is not one color --
+// a buff sandstone, a gray, and a warmer one with some rose in it -- each wet after rain.
+RoadFlagBuffPigment = pigment granite with seed 53 {
+    [0.06, color [0.246, 0.223, 0.180],
+     0.16, color [0.290, 0.263, 0.212],
+     0.22, color [0.319, 0.289, 0.233],
+     0.30, color [0.354, 0.320, 0.258],
+     0.41, color [0.396, 0.359, 0.288]]
+    scale 0.07
+}
+RoadFlagBuff = material {
+    pigment RoadFlagBuffPigment
+    specular 0.05  shininess 14  ambient 0.06  brilliance 1.3
+}
+RoadFlagBuffWet = material {
+    pigment RoadFlagBuffPigment
+    diffuse 0.6  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.3
+}
+RoadFlagGrayPigment = pigment granite with seed 53 {
+    [0.06, color [0.205, 0.203, 0.196],
+     0.16, color [0.242, 0.239, 0.230],
+     0.22, color [0.266, 0.263, 0.253],
+     0.30, color [0.295, 0.291, 0.280],
+     0.41, color [0.330, 0.326, 0.313]]
+    scale 0.07
+}
+RoadFlagGray = material {
+    pigment RoadFlagGrayPigment
+    specular 0.05  shininess 14  ambient 0.06  brilliance 1.3
+}
+RoadFlagGrayWet = material {
+    pigment RoadFlagGrayPigment
+    diffuse 0.6  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.3
+}
+RoadFlagRosePigment = pigment granite with seed 53 {
+    [0.06, color [0.236, 0.203, 0.186],
+     0.16, color [0.278, 0.239, 0.218],
+     0.22, color [0.306, 0.263, 0.240],
+     0.30, color [0.339, 0.291, 0.266],
+     0.41, color [0.380, 0.326, 0.297]]
+    scale 0.07
+}
+RoadFlagRose = material {
+    pigment RoadFlagRosePigment
+    specular 0.05  shininess 14  ambient 0.06  brilliance 1.3
+}
+RoadFlagRoseWet = material {
+    pigment RoadFlagRosePigment
+    diffuse 0.6  ambient 0.036  brilliance 1.3  reflective 0.02  roughness 0.3
+}
+
+primitive RoadFlagIn(pick, season) -> material {
+    switch (season) {
+        case 'wet' {
+            switch (pick) {
+                case 0 { return material RoadFlagBuffWet }
+                case 1 { return material RoadFlagGrayWet }
+                default { return material RoadFlagRoseWet }
+            }
+        }
+        default {
+            switch (pick) {
+                case 0 { return material RoadFlagBuff }
+                case 1 { return material RoadFlagGray }
+                default { return material RoadFlagRose }
+            }
+        }
+    }
+}
+
+// Snow on a path: along both edges, where nobody walks, the middle trodden clear.
+primitive RoadPathWinter(season, length, width) -> group {
+    switch (season) {
+        case 'winter' {
+            return group {
+                for side in [0, 1] {
+                    cube {
+                        material RoadSnow
+                        scale [length * 0.5, 0.008, width * 0.16]
+                        translate [0, 0.056, (side * 2 - 1) * width * 0.34]
+                    }
+                }
+            }
+        }
+        default { return group { } }
+    }
+}
+
+// Crazy paving: a path of flagstones of every shape, laid in mortar, its length along X and its width
+// across Z, lying on the ground at its middle.  The stones are a slab broken flat (`fracture ... flat`),
+// so every joint runs straight down to the mortar under them, each stone worn at its edges, set a shade
+// off level and in a grain of its own.  It is low, a garden path, its top five centimeters up -- not the
+// curb height a `Pavement` stands at.
+primitive CrazyPaving(length, width, season = 'summer', variant = 1) -> group {
+    return group {
+        // The mortar the stones are laid in, which is what shows in the joints.
+        cube {
+            material RoadEdgeDirtIn(season)
+            scale [length * 0.5, 0.02, width * 0.5]
+            translate Y 0.02
+        }
+
+        fracture {
+            solid { cube { scale [length * 0.5, 0.02, width * 0.5]  translate Y 0.03 } }
+            pieces length * width / 0.09
+            gap 0.018
+            rounded 0.006
+            flat
+            tumble 0.8
+            loose
+            materials material RoadFlagIn(0, season), material RoadFlagIn(1, season), material RoadFlagIn(2, season)
+            with seed variant
+        }
+
+        object RoadPathWinter(season, length, width)
     }
 }
 

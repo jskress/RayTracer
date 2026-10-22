@@ -10,6 +10,11 @@
 // | `Casement` | Side-hung leaves either side of a mullion, with a transom near the head. |
 // | `Shutters` | A pair of louvred leaves, to flank a window that is already there. |
 //
+// `Sash` and `Casement` take a last number, how many of their panes are **broken**: a sash has twelve,
+// a casement three, and which ones go is set by the variant.  Each broken pane is struck at a point of
+// its own and shattered round a hole, the dark of the room behind showing through.  Nought, or left
+// off, and the window is whole.
+//
 // **These are placed with their middle on the face of the wall**, so the glass falls behind it and the
 // frame and sill stand in front.  `-Z` is outward, which is the direction a building faces -- so the
 // wall's outer face is `z = 0` and **anything at positive Z is buried inside the wall**.  So the three
@@ -59,6 +64,9 @@ WindowGlassPale = material {
     pigment [0.105, 0.125, 0.148]
     specular 0.60  shininess 160  reflective 0.04  fresnel  ambient 0.05
 }
+
+// What shows through a broken pane: the dark of the room behind, which is nearly nothing.
+WindowDark = material { pigment [0.008, 0.008, 0.010]  specular 0  ambient 0 }
 
 // Three paints, so a street does not come out as one window repeated.
 WindowWhite = material { pigment [0.855, 0.845, 0.820]  specular 0.22  shininess 44  ambient 0.08 }
@@ -123,9 +131,81 @@ primitive WindowSnow(season, wide, tall, deep) -> group {
 
 // Two sashes, one above the other, with the meeting rail where they overlap and two glazing bars up
 // each.  Six panes over six, which is the commonest window there has ever been.
-primitive Sash(wide, tall, deep, season = 'summer', variant = 1) -> group {
+// -- Broken glass ----------------------------------------------------------------------------------
+
+primitive WindowGlassOf(pale) -> material {
+    if (pale > 0) {
+        return material WindowGlassPale
+    }
+    else {
+        return material WindowGlass
+    }
+}
+
+// One pane of glass, its middle, half-sizes, half-thickness and depth given: whole, or broken -- struck at
+// a point in it of its own and shattered round a hole, in rings and spokes as a pane breaks (`fracture
+// ... toward`), each shard turned a degree or two so it catches the light its own way, which is how a
+// broken pane is seen at all: glass this dark is black in its cracks either way.  The dark of the room
+// lies just behind it, in front of the wall, so the hole shows a room and not the wall the glass is set in.
+primitive WindowPane(cx, cy, w, h, thick, z, pale, broken, id, variant) -> group {
+    short = w < h ? w : h
+
+    if (broken > 0) {
+        return group {
+            fracture {
+                solid { cube { scale [w, h, thick] } }
+                pieces 45
+                gap short * 0.008
+                toward [(random(id, 81, variant) - 0.5) * w, (random(id, 82, variant) - 0.5) * h, 0]
+                hole short * (0.18 + random(id, 83, variant) * 0.25)
+                tumble 1.5
+                material WindowGlassOf(pale)
+                with seed id + variant * 31
+                translate [cx, cy, z]
+            }
+            cube { material WindowDark  scale [w, h, thick * 0.05]  translate [cx, cy, z + thick * 0.08] }
+        }
+    }
+    else {
+        return group { cube { material WindowGlassOf(pale)  scale [w, h, thick]  translate [cx, cy, z] } }
+    }
+}
+
+// A sash's twelve panes, three across and four down, as many broken as asked: pane k goes if (7k + 5v)
+// mod 12 is under the number, which picks that many different ones and a different set for every variant.
+primitive WindowSashPanes(wide, tall, deep, broken, variant) -> group {
     return group {
-        cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
+        for row in [0, 3] {
+            for column in [0, 2] {
+                object WindowPane((column - 1) * wide * 2 / 3, (row - 1.5) * tall / 2, wide / 3, tall / 4,
+                                  deep * 0.25, -deep * 0.05, 0,
+                                  ((column + 3 * row) * 7 + variant * 5) % 12 < broken ? 1 : 0,
+                                  column + 3 * row, variant)
+            }
+        }
+    }
+}
+
+// A casement's three: the two leaves either side of the mullion, and the paler light above the transom.
+primitive WindowCasementPanes(wide, tall, deep, broken, variant) -> group {
+    return group {
+        for leaf in [0, 1] {
+            object WindowPane((leaf - 0.5) * wide, -tall * 0.22, wide / 2, tall * 0.78, deep * 0.25, -deep * 0.05,
+                              0, (leaf * 7 + variant * 5) % 3 < broken ? 1 : 0, leaf, variant)
+        }
+        object WindowPane(0, tall * 0.78, wide, tall * 0.22, deep * 0.24, -deep * 0.06,
+                          1, (14 + variant * 5) % 3 < broken ? 1 : 0, 2, variant)
+    }
+}
+
+primitive Sash(wide, tall, deep, season = 'summer', variant = 1, broken = 0) -> group {
+    return group {
+        if (broken > 0) {
+            object WindowSashPanes(wide, tall, deep, broken, variant)
+        }
+        else {
+            cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
+        }
 
         object WindowSurround(wide, tall, deep, variant)
 
@@ -155,12 +235,17 @@ primitive Sash(wide, tall, deep, season = 'summer', variant = 1) -> group {
 // Two leaves hung at their outer edges, meeting on a mullion down the middle, with a transom across near
 // the head and a small light above it.  Fewer, larger panes than a sash, which is what makes the two read
 // as different windows rather than as the same window twice.
-primitive Casement(wide, tall, deep, season = 'summer', variant = 1) -> group {
+primitive Casement(wide, tall, deep, season = 'summer', variant = 1, broken = 0) -> group {
     return group {
-        cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
-        // The light above the transom is paler: there is rarely anything hung across it.
-        cube { material WindowGlassPale
-               scale [wide, tall * 0.22, deep * 0.24]  translate [0, tall * 0.78, -deep * 0.06] }
+        if (broken > 0) {
+            object WindowCasementPanes(wide, tall, deep, broken, variant)
+        }
+        else {
+            cube { material WindowGlass  scale [wide, tall, deep * 0.25]  translate Z -deep * 0.05 }
+            // The light above the transom is paler: there is rarely anything hung across it.
+            cube { material WindowGlassPale
+                   scale [wide, tall * 0.22, deep * 0.24]  translate [0, tall * 0.78, -deep * 0.06] }
+        }
 
         object WindowSurround(wide, tall, deep, variant)
 

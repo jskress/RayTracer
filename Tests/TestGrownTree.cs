@@ -308,19 +308,19 @@ public class TestGrownTree
         crown.Add(new Sphere { Transform = Transforms.Translate(0.5, 0, 0) });
         crown.PrepareForRendering();
 
-        Assert.IsTrue(GrownTree.Holds(crown, Point.Zero));
-        Assert.IsTrue(GrownTree.Holds(crown, new Point(-1.2, 0, 0)));
-        Assert.IsTrue(GrownTree.Holds(crown, new Point(1.2, 0, 0)));
-        Assert.IsFalse(GrownTree.Holds(crown, new Point(0, 1.1, 0)));
-        Assert.IsFalse(GrownTree.Holds(crown, new Point(1.6, 0, 0)));
+        Assert.IsTrue(Containment.Holds(crown, Point.Zero));
+        Assert.IsTrue(Containment.Holds(crown, new Point(-1.2, 0, 0)));
+        Assert.IsTrue(Containment.Holds(crown, new Point(1.2, 0, 0)));
+        Assert.IsFalse(Containment.Holds(crown, new Point(0, 1.1, 0)));
+        Assert.IsFalse(Containment.Holds(crown, new Point(1.6, 0, 0)));
 
         // And through a group's own move.
         crown = new Group { Transform = Transforms.Translate(0, 6, 0) };
         crown.Add(new Sphere());
         crown.PrepareForRendering();
 
-        Assert.IsTrue(GrownTree.Holds(crown, new Point(0, 6.5, 0)));
-        Assert.IsFalse(GrownTree.Holds(crown, new Point(0, 0.5, 0)));
+        Assert.IsTrue(Containment.Holds(crown, new Point(0, 6.5, 0)));
+        Assert.IsFalse(Containment.Holds(crown, new Point(0, 0.5, 0)));
     }
 
     /// <summary>
