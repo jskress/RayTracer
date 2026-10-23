@@ -95,6 +95,19 @@ public class Group : Surface
     private List<Surface> _endless;
 
     /// <summary>
+    /// This method arranges the children again for searching, and works out the box again, once some of them have
+    /// been moved since they were prepared.
+    /// </summary>
+    internal override void Resettle()
+    {
+        ArrangeChildren();
+
+        _endless = Surfaces.Where(surface => surface.BoundingBox == null).ToList();
+
+        base.Resettle();
+    }
+
+    /// <summary>
     /// This method sorts the children into a tree of nested boxes, so that a ray reaching this group
     /// need not be shown every last thing in it.
     /// <para>

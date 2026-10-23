@@ -363,6 +363,152 @@ down to the pool: thrown at one speed within a few degrees, they all fall back w
 of one another.  `gallery/Local/animation/a-garden-fountain.igl` is built so, and runs `since -2`, so its jet is in
 full flow from the first frame and its movie loops with no seam.
 
+### Joints
+
+![Joints a second in: a door on its hinge stopped at its limit, a turret aiming at a ball going round it, an arm of two links reaching for a bead, and a strut stretched from a turning wheel to a post](images/figures/anim-joints.png)
+
+A thing built of parts that turn on one another — a door on its hinge, a wheel on its axle, a lamp's arms — is
+built of **`joint`**s.  A joint is a group that turns about a place in it:
+
+```
+joint {
+    axis Y  angle time * 60  limits 0 to 50
+    cube { scale [0.55, 0.8, 0.04]  translate [0.55, 0.85, 0] }
+    translate [-4.1, 0, 0]
+}
+```
+
+That door swings about its hinge at sixty degrees a second until it is fifty degrees open, and stands there.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/animation/jointClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/animation/jointClause.svg">
+  <img alt="A joint" src="images/animation/jointClause.svg">
+</picture>
+
+| | |
+| --- | --- |
+| `pivot` | The place it turns about, in its own space: its origin unless said. |
+| `axis` | What it turns about, through the pivot: `X`, `Y`, `Z` or any direction.  A joint with no axis turns any way it is asked to `aim`, and otherwise not at all. |
+| `angle` | How far it is turned about its axis.  Nought unless said. |
+| `limits a to b` | The least and the most it may be turned, as a hinge stops at its frame or an elbow at straight.  Whatever turns it — its angle, an aim or a reach — is held between the two. |
+| `aim at` | A place, or the name of a thing, to turn toward.  See below. |
+| `facing` | Which of its own ways is turned to face what it aims at: +X unless said. |
+| `reach ... with` | A place, or the name of a thing, for a thing inside it to reach.  See below. |
+
+Everything else a joint holds is what a group may: surfaces, other joints, lights, transforms.  **Its turn comes
+first**, in its own space, and its transforms then put it where it stands, wherever in the block either is written,
+so a joint is drawn about its pivot and placed as anything else is.  A joint turned in terms of the time is a
+placement that follows the time, and is [blurred](#motion-blur-from-time) through the frame as one.
+
+**A joint inside a joint is carried round by it**, as a forearm is by the upper arm, and turns on it about its own
+pivot.  A wheel with a crank pin standing out of it is a joint holding the pin; turn the wheel and the pin goes round.
+
+#### Aiming
+
+**`aim at`** turns a joint until its `facing` points at a place, or at a thing by its name: about its axis by the
+least turn that brings its facing round toward it, within its limits; with no axis, by the least turn that points
+its facing straight at it.  A thing is aimed at by where its own origin stands — where its transforms put it — and
+it may stand anywhere: in another group, placed by another, or a [body](#bodies) falling.
+
+```
+sphere { named 'ball'  scale 0.16  translate [cos(time * 120), 0.16, sin(time * 120)] }
+
+joint {
+    axis Y  aim at 'ball'
+    cylinder { min Y 0  max Y 0.35  scale [0.25, 1, 0.25] }
+    cylinder { min Y 0  max Y 0.6  scale [0.05, 1, 0.05]  rotate Z -90  translate Y 0.24 }
+}
+```
+
+That turret turns about its upright to keep its barrel — along +X — on the ball going round it.  An aim is
+worked out once everything stands where it will, and again at every instant the shutter is open, so a joint aiming
+at something that moves blurs with it.
+
+#### Reaching
+
+**`reach`** turns a joint and the joints inside it, each about its own axis and within its own limits, so that the
+thing named after **`with`** — inside it, most often a mark at the tip — comes as near the place as they can bring
+it:
+
+```
+joint {
+    pivot [0, 0.5, 0]  axis Z  angle 60  limits -90 to 120
+    reach point Bead with 'tip'
+    cube { scale [0.55, 0.05, 0.05]  translate [0.55, 0.5, 0] }
+    joint {
+        pivot [1.1, 0.5, 0]  axis Z  angle -90  limits -160 to 0
+        cube { scale [0.5, 0.04, 0.04]  translate [1.6, 0.5, 0] }
+        mark 'tip' at [2.1, 0.5, 0]
+    }
+}
+```
+
+The shoulder and the elbow are each turned in turn, from the tip inward, to swing the tip round toward the bead,
+and that again and again until it comes no nearer.  **Where the joints start is which way they bend**: an arm can
+reach most places two ways, elbow up and elbow down, and it bends the way its `angle`s start it — here the elbow
+up — while its limits keep it from bending the way a real one cannot.  A place beyond the arm's length finds it
+pointing straight out toward it.  A joint that reaches may be inside one that aims: the `indoor-lights` library's
+`Anglepoise` turns its turret to face the place lit, reaches with its two arms to hang its head over it, and turns
+the head at the wrist to look at it.
+
+#### Marks and Spans
+
+A **`mark`** is a named place on a thing, standing among a group's or a joint's entries and carried wherever they
+go.  It is not seen and casts no shadow; it is there to be aimed at, reached with, or spanned between.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/animation/markClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/animation/markClause.svg">
+  <img alt="A mark" src="images/animation/markClause.svg">
+</picture>
+
+A **`span`** stands any surface between two named places: its origin at the first and its +X running toward the
+second, its +Y as near its holder's up as that allows.  **`stretched`**, it is scaled along X by the distance
+between them, so a thing one long along X runs from one to the other however far apart they are — a spring, a
+strut, a cable.  Unstretched, it keeps its own length and only turns to point from the one to the other, as a rod
+of the right length does between the pins it joins.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/animation/spanClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/animation/spanClause.svg">
+  <img alt="A span" src="images/animation/spanClause.svg">
+</picture>
+
+```
+group {
+    joint {
+        axis Z  angle time * -180
+        cylinder { min Y -0.05  max Y 0.05  scale [0.45, 1, 0.45]  rotate X 90 }
+        mark 'pin' at [0.3, 0, -0.1]
+    }
+    mark 'post' at [1.3, 0.3, -0.1]
+    cylinder {
+        min Y 0  max Y 1  scale [0.03, 1, 0.03]  rotate Z -90
+        span from 'pin' to 'post' stretched
+    }
+}
+```
+
+The strut's own transforms come first — a cylinder one long, laid along X — and the span then stands it from the
+pin to the post, at every instant the shutter is open.  Spans are worked out after every joint has turned, so a
+thing spanned between parts of a machine follows wherever the machine puts them: the `trains` library's
+coupling rods are spanned between the drivers' crank pins, and its main rod between the crosshead and a pin.
+
+**A name means the nearest thing of that name**: the one that shares the most of the groups round whatever is
+asking.  So a primitive may name its marks plainly, and each of two engines' rods finds its own engine's pins; two
+things of a name, neither nearer than the other, are refused, as is a name nothing has.
+
+**A thing holding a joint that aims or reaches, a mark or a span stands in one place only.**  A shape used in many
+places is ordinarily built once and [shared](scene-files.md#things-of-your-own) between them, but each of these
+must be worked out where it actually stands, so whatever holds one is built for each place it is used, a field's
+copies included; a swarm, whose copies can only be shared, refuses one.  A joint that only turns by its angle is
+shared as anything else.
+
+`gallery/Local/animation/an-engine-under-way.igl` drives a locomotive round a curve by how far it has run, its
+wheels turning and its rods driving; `gallery/Local/animation/a-lamp-at-work.igl` moves only the place a desk lamp
+is to light, and the lamp does the rest.
+
 ### Motion Blur from Time
 
 A camera whose [shutter](cameras.md#motion-blur) is open catches what moves while it is: **a placement that

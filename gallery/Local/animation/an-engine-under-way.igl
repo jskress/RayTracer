@@ -1,0 +1,240 @@
+// An engine and its tender under way round a curve, seen from a camera car keeping pace alongside.
+//
+//     dotnet run -- -i an-engine-under-way.igl -o an-engine-under-way.webp -w 400 -h 300
+//     dotnet run -- -i an-engine-under-way.igl -o an-engine-under-way.png --still
+//
+// **The engine drives itself.**  The last thing `Locomotive` and `Tender` are handed is how far they have run, and
+// that is all it takes: every wheel is a `joint` turned by the distance over its own radius, the crank pins turn
+// with the drivers they stand in, and the coupling rod and the main rod are each a `span` between `mark`s on what
+// they join -- crank pin to crank pin, crosshead to pin -- so the rods rise, fall and swing because the pins went
+// round, not because anything works out where a rod should be.  Handed the same distance their `along ... by` is
+// handed, the wheels roll on the rails rather than sliding along them.
+//
+// **The camera rides a car on a road beside the line.**  `pointAlong` and `headingAlong` say where on the line a
+// distance lies and which way the line runs there, and the cross of that heading with up is the line's left: the
+// camera stands fifteen meters to the right of a place ten meters ahead of the engine and looks back at it.  Since
+// it moves exactly as the train does, the engine holds still in the picture while the ground runs past it, and
+// the curve comes round under it.
+//
+// **No shutter.**  A camera is never blurred, so in a frame that follows the train a shutter would smear the train
+// -- which is not moving in the picture -- and leave the ground sharp -- which is.  Without one every frame is an
+// instant, and the speed has to be one at which an instant reads: a spoked wheel turning more than half a spoke a
+// frame seems to stand or run backward, as wheels do on film.  The bogie's twelve spokes on wheels of 0.457 m
+// allow 3.6 m/s at thirty frames a second, and the train runs at 2.8, under four tenths of a spoke a frame.
+//
+// **The steam is left behind.**  A plume is a shape in the engine's own space, and a shape that rode along
+// unchanged would look like a hat.  Its noise is read further back and further up as time goes on, so the steam
+// streams off the chimney and away over the boiler, and no two frames of it are the same.
+//
+// **The wires are straight between the poles.**  The poles stand along the line, but a wire is drawn tight between
+// two of them, so its middle is the middle of the CHORD, a little sagged -- not the middle of the curve, which on
+// this bend lies a meter and a half outside it.
+
+import 'trains'      { Locomotive, Tender, TrackAlong }
+import 'trees'       { Oak, Birch, Fir }
+import 'undergrowth' { Grass }
+import 'daylight'    { ClearAfternoonFrom, ClearAfternoonLight }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    medium samples 40
+    animation length 5  still 75
+    info {
+        title 'An Engine Under Way'
+        author 'J. Stephen Kress'
+        description 'An engine and its tender running round a curve, its wheels turning and its rods driving, seen from a camera keeping pace.'
+        copyright true
+        software __software__
+    }
+}
+
+// A straight run in, a quarter circle of sixty meters' radius, and a straight run out.
+Line = spline {
+    move to -60, 0, 0
+    line to 0, 0, 0
+    curve 33.137, 0, 0, 60, 0, 26.863 to 60, 0, 60
+    line to 60, 0, 120
+}
+
+Length = length(Line)
+Speed = 2.8
+Run = 90 + time * Speed
+
+// The camera car: ten meters ahead of the engine's middle and fifteen out to the right of the line.
+Ahead = (Run + 10) / Length
+Car = pointAlong(Line, Ahead) - cross(headingAlong(Line, Ahead), vector [0, 1, 0]) * 15
+
+camera {
+    location Car + vector [0, 3.2, 0]
+    look at pointAlong(Line, (Run - 3) / Length) + vector [0, 1.4, 0]
+    field of view 50
+}
+
+// The sun over the camera's shoulder, raking down the engine's near flank.
+background ClearAfternoonFrom(55)
+
+light ClearAfternoonLight
+
+// The ground, set down so the ballast stands out of it.
+plane {
+    material {
+        pigment granite with seed 17 {
+            [0.06, color [0.115, 0.140, 0.082],
+             0.16, color [0.145, 0.175, 0.100],
+             0.22, color [0.170, 0.205, 0.118],
+             0.30, color [0.200, 0.238, 0.138],
+             0.41, color [0.240, 0.282, 0.165]]
+            scale 1.6
+        }
+        specular 0.03  shininess 8
+    }
+    translate Y -0.64
+}
+
+object TrackAlong(Line)
+object Locomotive(11.6, 'summer', 1, Run) { along Line by Run  wheelbase 7 }
+object Tender(8.05, 'summer', 1, Run - 10.35) { along Line by Run - 10.35  wheelbase 4.5 }
+
+// Grass either side of the line, kept off the ballast: the line offset three meters each way, the outside of the
+// bend thirty meters deep and the inside nineteen, the curves being quarter circles of the offset radii.
+Outside = path {
+    move to -40, -3
+    line to 0, -3
+    curve 34.79, -3, 63, 25.20 to 63, 60
+    line to 63, 100
+    line to 90, 100
+    line to 90, 60
+    curve 90, 10.29, 49.71, -30 to 0, -30
+    line to -40, -30
+    close
+}
+
+Inside = path {
+    move to -40, 3
+    line to 0, 3
+    curve 31.48, 3, 57, 28.52 to 57, 60
+    line to 57, 100
+    line to 38, 100
+    line to 38, 60
+    curve 38, 39.01, 20.99, 22 to 0, 22
+    line to -40, 22
+    close
+}
+
+object Grass(Outside, 'summer', 41, 0.45, 0.6) { translate Y -0.64 }
+object Grass(Inside, 'summer', 1, 0.54, 0.62)  { translate Y -0.64 }
+
+// Trees inside the bend and along the far end of the straight, behind the train as the camera sees it.
+object Oak(11.5, 'summer', 3)   { translate [12, -0.64, 30] }
+object Birch(9, 'summer', 7)    { translate [-6, -0.64, 26] }
+object Fir(13, 'summer', 2)     { translate [24, -0.64, 36] }
+object Oak(10, 'summer', 5)     { translate [-24, -0.64, 30] }
+object Birch(8.5, 'summer', 11) { translate [-42, -0.64, 14] }
+object Oak(12.5, 'summer', 8)   { translate [-55, -0.64, -22] }
+
+// -- Telegraph poles -----------------------------------------------------------------------------
+
+PoleWood = material { pigment [0.30, 0.24, 0.18]  specular 0.05 }
+Porcelain = material { pigment [0.85, 0.85, 0.82]  specular 0.6  shininess 80 }
+Copper = material { pigment [0.55, 0.36, 0.24]  metallic 1  reflective 0.4  roughness 0.3  diffuse 0.3 }
+
+PoleSide = 5.5      // to the left of the line, inside the bend
+PoleGap = 24        // along the line from pole to pole
+WireY = 6.95        // from the ground to the lower arm's wires
+
+// The place a distance along the line and some way to its left, as a vector so it can be added to.
+function Across(along, by) -> vector {
+    return vector pointAlong(Line, along / Length) + cross(headingAlong(Line, along / Length), vector [0, 1, 0]) * by
+}
+
+// A pole with two arms across the line and four insulators on each.
+primitive TelegraphPole() -> group {
+    return group {
+        cylinder { material PoleWood  min Y 0  max Y 7.9  scale [0.12, 1, 0.12] }
+        sphere { material PoleWood  scale [0.12, 0.05, 0.12]  translate Y 7.9 }
+        for arm in [0, 1] {
+            cube { material PoleWood  scale [0.05, 0.05, 0.75]  translate Y 7.25 - arm * 0.5 }
+            for cup in [0, 3] {
+                cylinder { material Porcelain  min Y 0  max Y 0.12  scale [0.035, 1, 0.035]
+                           translate [0, 7.30 - arm * 0.5, -0.6 + cup * 0.4] }
+            }
+        }
+    }
+}
+
+for pole in [0, 9] {
+    object TelegraphPole() { translate Z PoleSide  along Line by 16 + pole * PoleGap  translate Y -0.64 }
+}
+
+// Eight copper wires from each pole to the next, sagged thirty centimeters at the middle of the chord.
+for span in [0, 8] {
+    for wire in [0, 7] {
+        At = 16 + span * PoleGap
+        By = PoleSide - 0.6 + mod(wire, 4) * 0.4
+        Up = WireY + 0.47 - floor(wire / 4) * 0.5 - 0.64
+        First = Across(At, By) + vector [0, Up, 0]
+        Second = Across(At + PoleGap, By) + vector [0, Up, 0]
+        strand {
+            width 0.008 at point First
+            width 0.008 at point (First + (Second - First) * 0.5 - vector [0, 0.3, 0])
+            width 0.008 at point Second
+            material Copper
+        }
+    }
+}
+
+// -- Steam ---------------------------------------------------------------------------------------
+
+// The exhaust of an engine working, put `along` the line exactly as the engine is so it stays on the chimney: a
+// dark core of smoke over the cap, and the white steam it opens into, leaning back the way the engine leaves it.
+// Each is a shell with a medium inside and casts no shadow, since a shadow ray through a medium is walked as
+// carefully as an eye's and the shadow of a plume is a faint gray patch on the ballast.
+SteamShell = material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1 }
+
+group {
+    sphere {
+        material SteamShell {
+            interior {
+                ior 1.0
+                medium {
+                    scattering [6.8, 7.0, 7.4]
+                    absorption 0.05
+                    anisotropy 0.35
+                    // Wide where it is dense, leaning back as it rises, and broken up more the higher it goes, so
+                    // the column leaves the chimney whole.
+                    density function {
+                        max(0, (1 - (y + 1) * 0.43)
+                               * (1 - sqrt((x + (y + 1) * 0.55) * (x + (y + 1) * 0.55) + z * z)
+                                     / (0.22 + (y + 1) * 0.30))
+                               - (0.2 + (y + 1) * 0.3) * (noise(x * 3.6 + time * 1.2, y * 2.6 - time * 0.9, z * 3.6) - 0.33))
+                    }
+                }
+            }
+        }
+        no shadow
+        scale [2.6, 1.9, 1.9]
+        translate [3.75, 5.75, 0]
+    }
+    sphere {
+        material SteamShell {
+            interior {
+                ior 1.0
+                medium {
+                    scattering 1.2
+                    absorption [3.6, 3.5, 3.3]
+                    anisotropy 0.2
+                    density function {
+                        max(0, (1 - (y + 1) * 0.48)
+                               * (1 - sqrt((x + (y + 1) * 0.3) * (x + (y + 1) * 0.3) + z * z) / (0.26 + (y + 1) * 0.20))
+                               - 0.45 * (noise(x * 3.4 + time * 1.5, y * 2.4 + 2.1 - time * 1.4, z * 3.4) - 0.30))
+                    }
+                }
+            }
+        }
+        no shadow
+        scale [0.75, 1.28, 0.75]
+        translate [3.72, 5.06, 0]
+    }
+    along Line by Run  wheelbase 7
+}

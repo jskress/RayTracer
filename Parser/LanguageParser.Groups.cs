@@ -203,6 +203,17 @@ public partial class LanguageParser
                 case "swarm":
                     resolver.SurfaceResolvers.Add(ParseSwarmClause(clause));
                     break;
+                case "joint":
+                    resolver.SurfaceResolvers.Add(ParseJointClause(clause));
+                    break;
+                case "mark":
+                    resolver.SurfaceResolvers.Add(ParseMarkClause(clause));
+                    break;
+                case "jointProperty":
+                    throw new TokenException("Only a joint turns about a pivot, aims or reaches; a group does not.")
+                    {
+                        Token = clause.Tokens[0]
+                    };
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;

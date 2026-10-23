@@ -51,6 +51,7 @@ public partial class LanguageParser
             .On(nameof(HandleStartFractureClause), HandleStartFractureClause)
             .On(nameof(HandleStartShapesClause), HandleStartShapesClause)
             .On(nameof(HandleStartSwarmClause), HandleStartSwarmClause)
+            .On(nameof(HandleStartJointClause), HandleStartJointClause)
             .On(nameof(HandleStartTextClause), HandleStartTextClause)
             .On(nameof(HandleStartTaperedTextClause), HandleStartTaperedTextClause)
             .On(nameof(HandleStartLSystemClause), HandleStartLSystemClause)

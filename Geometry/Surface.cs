@@ -161,6 +161,12 @@ public abstract class Surface : NamedThing
     public Core.Physics.Body Body { get; set; }
 
     /// <summary>
+    /// This property holds the two named places this surface is stretched between, or null if its transforms alone
+    /// say where it stands: a connecting rod between its crosshead and its crank pin.
+    /// </summary>
+    public Span Span { get; set; }
+
+    /// <summary>
     /// This property notes whether this surface moves while the shutter is open.
     /// </summary>
     public bool Moves => _movingTransforms is not null;
@@ -262,7 +268,11 @@ public abstract class Surface : NamedThing
         if (MotionAt is not null && sampleTimes is { Length: > 1 })
             BuildMotionTransforms(sampleTimes);
 
-        BoundingBox ??= GetDefaultBoundingBox();
+        if (BoundingBox is null)
+        {
+            BoundingBox = GetDefaultBoundingBox();
+            _boxIsDerived = true;
+        }
 
         BoundingBox?.Expand();
 
@@ -303,6 +313,32 @@ public abstract class Surface : NamedThing
         if (motion is not null && SampleTimes is { Length: > 1 })
             BuildMotionTransforms(SampleTimes);
     }
+
+    /// <summary>
+    /// This method returns where this surface stands in its parent's space at one of the instants the camera looks
+    /// at: its transform, or, if it moves while the shutter is open, its transform at that instant.
+    /// </summary>
+    /// <param name="timeIndex">Which instant.</param>
+    /// <returns>The transform at that instant.</returns>
+    internal Matrix TransformAt(int timeIndex) => _movingTransforms is null ? Transform : _movingTransforms[timeIndex];
+
+    /// <summary>
+    /// This method works out again what this surface works out about the things inside it once they have been
+    /// prepared, when some of them have since been moved -- a joint turned to aim, a rod stretched between its marks:
+    /// its box, unless one was written for it, and, for a group, how its children are arranged for searching.  The
+    /// things inside it must have been worked out again first.
+    /// </summary>
+    internal virtual void Resettle()
+    {
+        if (!_boxIsDerived)
+            return;
+
+        BoundingBox = GetDefaultBoundingBox();
+        BoundingBox?.Expand();
+    }
+
+    // Whether the box was worked out from the surface rather than written for it.
+    private bool _boxIsDerived;
 
     private void BuildMotionTransforms(double[] sampleTimes)
     {

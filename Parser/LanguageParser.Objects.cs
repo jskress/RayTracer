@@ -177,6 +177,9 @@ public partial class LanguageParser
                 return ParseParametricClause(clause);
             case CsgSurfaceResolver:
                 return ParseCsgClause(clause);
+            // Before a group's: a joint's resolver is a group's too.
+            case JointResolver:
+                return ParseJointClause(clause);
             case GroupResolver:
                 return ParseGroupClause(clause);
             default:

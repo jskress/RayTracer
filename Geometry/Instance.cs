@@ -87,6 +87,14 @@ public class Instance : Surface
         // `Moves` alone was a guard that could never fire.
         _ when surface.Moves || surface.MotionAt is not null => false,
 
+        // What a joint aims at or reaches for, and what a span is stretched between, is somewhere in the scene, so a
+        // shape holding either is turned or stretched for the one place it stands, and has no one answer for many.
+        _ when surface.Span is not null => false,
+        Joint { IsSolved: true } => false,
+
+        // A mark is a named place, and a shape stood in many places would put it in all of them under the one name.
+        Mark => false,
+
         // An instance may stand in a shared shape like anything else: a crossing found through both
         // remembers both.  What it points at was asked these same questions when it was first shared.
         Instance => true,

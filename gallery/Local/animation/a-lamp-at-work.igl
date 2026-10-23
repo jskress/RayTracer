@@ -1,0 +1,167 @@
+// A desk at night and a sprung desk lamp turning from an open book to a pad of paper and back, its arms reaching
+// and its head turning to keep the light where it is wanted.
+//
+//     dotnet run -- -i a-lamp-at-work.igl -o a-lamp-at-work.webp -w 400 -h 300
+//     dotnet run -- -i a-lamp-at-work.igl -o a-lamp-at-work.png --still
+//
+// **The scene says where the light should fall, and nothing else.**  `Anglepoise` is handed a place, and the
+// place is all that moves: `keys` hold it on the book, carry it across to the pad, hold it there and bring it
+// back.  Everything the lamp does follows from four joints in the `indoor-lights` library: the turret `aim`s
+// about the upright toward the place; the two arms `reach`, turned at the shoulder and the elbow until the wrist
+// hangs a third of a meter over it, each within the limits a real one stops at; and the head `aim`s at the place
+// from the wrist, whatever the arms have done.  The springs at the foot are each a `span` from the turret to the
+// lower arm, `stretched`, so they lengthen as the arm leans out.
+//
+// **The pool of light follows because the light is in the head.**  The spotlight is written in the head's own
+// space, shining out of the shade, so wherever the joints put the head the beam goes too; nothing aims the light
+// but the lamp.
+//
+// **Book and pad lie either side of the lamp.**  An arm is seen best across the plane it moves in, and with the
+// two places to its right and its left the camera looks across that plane at both, while the turret swings round
+// between them and the arms fold up as the place passes close in front of the foot.
+//
+// **Night.**  The bulb glows at 2800 K and the picture is balanced at 3300, so the pool reads warm rather than
+// orange; ambient is turned well down and one faint lamp in another room stands in for the rest of the house, so
+// the desk outside the pool falls away into the dark.
+//
+// The furniture is the `furniture` library's, in inches, scaled into meters; the lamp is already in meters.
+
+import 'furniture'     { Desk }
+import 'indoor-lights' { Anglepoise }
+
+context {
+    angles are degrees
+    // Once over the edges, so that the print on the pages reads as lines of words rather than as stripes.
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    animation length 6  still 24
+    scale ambient by 0.15
+    white balance 3300
+    info {
+        title 'A Lamp at Work'
+        author 'J. Stephen Kress'
+        description 'A sprung desk lamp turning from an open book to a pad and back, reaching with its arms and aiming its head.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.12, 1.28, -1.02]
+    look at [0.0, 0.86, 0.02]
+    field of view 48
+}
+
+background [0, 0, 0]
+
+Inch = 0.0254
+Top = 30 * Inch
+
+// -- The room -----------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.60, 0.58, 0.52]  specular 0.03 }
+Boards = material {
+    pigment brick { [0.22, 0.14, 0.09], [0.31, 0.21, 0.13]  scale [0.9, 4, 0.12] }
+    specular 0.18  shininess 40
+}
+
+plane { material Boards }                                    // the floor
+plane { material Plaster  rotate X -90  translate Z 0.40 }   // the wall behind the desk
+
+// The light of the rest of the house, faint, from off to the left.
+point light { location [-2.2, 2.0, -1.6]  temperature 4200  brightness 0.035 }
+
+object Desk(48) { scale Inch }
+
+// -- On the desk ----------------------------------------------------------------------------------------
+
+Cloth = material { pigment [0.10, 0.20, 0.14]  specular 0.08 }
+Paper = material { pigment [0.86, 0.83, 0.74]  specular 0.04 }
+
+// Print: lines of words, each word a patch of broad noise squeezed along the line.
+Print = material {
+    pigment linear Z stripes {
+        color [0.86, 0.83, 0.74],
+        bozo { banded [0, [0.46, 0.44, 0.41], 0.55, [0.86, 0.83, 0.74]]  scale [0.004, 1, 0.01] }
+        scale 0.0025
+    }
+    specular 0.04
+}
+
+// An open book: its cover, and the two blocks of pages rising to the spine, each printed within its margins.
+group {
+    cube { material Cloth  scale [0.158, 0.0015, 0.115]  translate Y 0.0015 }
+    for side in [0, 1] {
+        group {
+            cube { material Paper  scale [0.074, 0.007, 0.108] }
+            parallelogram { material Print  at [-0.056, 0.0072, -0.084]  sides [0.112, 0, 0], [0, 0, 0.168] }
+            rotate Z 3 - side * 6
+            translate [-0.076 + side * 0.152, 0.009, 0]
+        }
+    }
+    rotate Y -14
+    translate [0.30, Top, -0.07]
+}
+
+// A ruled pad of paper, and a pencil lying across it.
+Pad = material { pigment [0.93, 0.92, 0.86]  specular 0.03 }
+Pencil = material { pigment [0.80, 0.58, 0.10]  specular 0.4  shininess 60 }
+group {
+    cube { material Pad  scale [0.105, 0.005, 0.148]  translate Y 0.005 }
+    parallelogram {
+        material {
+            pigment linear Z gradient { banded [0, [0.93, 0.92, 0.86], 0.82, [0.52, 0.62, 0.80]]  scale 0.0071 }
+            specular 0.03
+        }
+        at [-0.105, 0.0102, -0.148]  sides [0.21, 0, 0], [0, 0, 0.27]
+    }
+    group {
+        cylinder { material Pencil  min Y 0  max Y 0.15  scale [0.0035, 1, 0.0035] }
+        conic { material { pigment [0.82, 0.70, 0.52] }  min Y 0  max Y 1  scale [0.0035, 0.016, 0.0035]  rotate X 180 }
+        rotate Z 90  rotate Y 30  translate [0.04, 0.0135, -0.02]
+    }
+    rotate Y 10
+    translate [-0.31, Top, -0.09]
+}
+
+// A mug, left of the lamp where the arm passes over it.
+Glaze = material { pigment [0.20, 0.30, 0.48]  specular 0.5  shininess 90  reflective 0.05  fresnel }
+group {
+    difference {
+        cylinder { min Y 0  max Y 0.095  scale [0.042, 1, 0.042] }
+        cylinder { min Y 0.006  max Y 0.2  scale [0.037, 1, 0.037] }
+    }
+    torus { radii 0.026, 0.006  rotate X 90  translate X 0.044  translate Y 0.05 }
+    material Glaze
+    rotate Y 200
+    translate [-0.20, Top, 0.16]
+}
+
+// Books standing against the wall.
+for book in [0, 5] {
+    cube {
+        material {
+            pigment [0.25 + random(book, 1) * 0.3, 0.12 + random(book, 2) * 0.15, 0.08 + random(book, 3) * 0.12]
+            specular 0.1
+        }
+        scale [0.012 + random(book, 4) * 0.008, 0.10 + random(book, 5) * 0.04, 0.075]
+        translate [-0.52 + book * 0.04, Top + 0.10 + random(book, 5) * 0.04, 0.30]
+    }
+}
+
+// -- The lamp ---------------------------------------------------------------------------------------------
+
+// The middle of the open pages and of the pad.
+Book = [0.30, Top + 0.016, -0.07]
+Note = [-0.31, Top + 0.010, -0.09]
+
+// Where the light is wanted: on the book, over to the pad, and back, easing away and easing in.
+Lit = keys {
+    0: point Book
+    1.6: point Book
+    3.0: point Note ease in out
+    4.6: point Note
+    6.0: point Book ease in out
+}
+
+object Anglepoise(Lit(time), 0.32, 1, 1) { translate [0.0, Top, 0.21] }

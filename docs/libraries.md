@@ -1273,11 +1273,12 @@ look dusted with icing sugar rather than snowed on.
 #### Indoor Lights
 
 ```
-import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce, Anglepoise }
 
 object TableLamp(0.55)                        // lit, unlike a street lamp
 object FloorLamp(1.65, 2)  { translate X 2 }
 object Pendant(0.85)       { translate Y 2.6 }
+object Anglepoise([0.3, 0.76, 0.2])           // a desk lamp, reaching over to light that place
 ```
 
 | | |
@@ -1286,10 +1287,20 @@ object Pendant(0.85)       { translate Y 2.6 }
 | `FloorLamp` | The same light on a stem, standing on the floor. |
 | `Pendant` | A shade or an opal globe on a flex, hanging from the ceiling. |
 | `Sconce` | A bowl against a wall, throwing its light up it. |
+| `Anglepoise` | A sprung desk lamp on two arms, reaching over and turning its head to light a place. |
 
 The first number is a size and the second is which one of that kind — but there is **no season**, so
 `variant` is the *second* number here where the outdoor fittings take it third.  Nothing indoors knows
 what month it is, and a parameter that never means anything is worse than one that is missing.
+
+`Anglepoise` is the exception, and its first number is **the place it is to light**, with its height over
+that place after it.  Stood where it is put, the lamp turns its turret to face the place, reaches with its two
+arms — thirty centimeters each, from pivot to pivot — until its head hangs that height over it, and turns its
+head at the wrist to look at it; the spotlight is in the head, so the pool of light lands there.  A place out of
+reach finds the arms straight out toward it, and the elbow will not bend further than a real one does.  The
+springs at the foot are stretched between the turret and the lower arm.  These are
+[joints](animation.md#joints), so a lamp handed a place that moves follows it: `a-lamp-at-work` in the gallery
+moves only the place, from a book to a pad and back.
 
 ##### `lit` is on by default, which is the opposite of outdoors
 
@@ -1713,6 +1724,24 @@ The rails and the ballast are sweeps of their own cross-sections along the splin
 spaced evenly along it, so that a loop's last meets its first with no gap.  `a-model-railway` in the
 gallery runs a train round an oval of it.
 
+**The last number is how far it has run**, nought unless said, and it is what sets an engine in motion.
+Every wheel is a [`joint`](animation.md#joints) turned by that distance over its own radius, the crank pins
+turn with the drivers they stand in, the crosshead slides to wherever the main rod's length puts it, and the
+rods are [`span`s](animation.md#marks-and-spans) between marks on what they join — so the rods rise, fall and
+swing because the pins went round.  Hand it the distance its `along … by` is handed and the wheels roll rather
+than slide:
+
+```
+object Locomotive(11.6, 'summer', 1, Run) { along Bend by Run  wheelbase 7 }
+object Tender(8.05, 'summer', 1, Run - 10.35) { along Bend by Run - 10.35  wheelbase 4.5 }
+```
+
+The distance is a number by the time the engine has it, so the wheels are taken at the frame's instant rather
+than blurred through it.  Keep a train slow enough that a wheel turns less than half a spoke a frame, or the
+spokes seem to stand or run backward, as they do on film: the bogie's twelve spokes on wheels of 0.457 m allow
+3.6 meters a second at thirty frames a second.  `an-engine-under-way` in the gallery is shot from a camera car
+keeping pace, at 2.8.
+
 **Rail top is `y = 0`.**  Everything the engine is made of is measured up from the rail it stands on, and
 the sleepers and ballast hang below.  An engine and a length of track therefore drop into a scene at the
 same origin and simply fit — but it means a `plane` at `y = 0` is the wrong floor for a railway.  Put the
@@ -1736,9 +1765,9 @@ through the frames under the boiler.
 
 **Rods.**  Spoked wheels alone still read as a cart.  What says *engine* is the coupling rod tying all
 three drivers together and the main rod reaching back from the cylinder, because those are the only parts
-whose whole purpose is that the thing moves.  They are [`tube`s](advanced-surfaces.md#tube) — two points
-and a radius, no angles to work out — flattened along one axis, since a rod is forged flat and a round one
-reads as plumbing.
+whose whole purpose is that the thing moves.  They are [`tube`s](advanced-surfaces.md#tube) of their true
+length, flattened along one axis, since a rod is forged flat and a round one reads as plumbing, and each is
+spanned between the marks it joins, so it goes wherever they have gone.
 
 **A boiler that tapers.**  This is the Great Western signature and it is nearly free: one
 [`lathe`](advanced-surfaces.md#lathe) turns the barrel as a single revolved profile.  A parallel boiler is
