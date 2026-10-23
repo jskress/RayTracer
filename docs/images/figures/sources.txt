@@ -10,8 +10,11 @@
 #
 #   while IFS='|' read -r fig scene w h; do
 #       case "$fig" in '#'*|'') continue;; esac
-#       [ -n "$scene" ] && dotnet run -- -i "$scene" -o "docs/images/figures/$fig" -w "$w" -h "$h"
+#       [ -n "$scene" ] && dotnet run -- -i "$scene" -o "docs/images/figures/$fig" -w "$w" -h "$h" --still
 #   done < docs/images/figures/sources.txt
+#
+# (`--still` renders an animation as the one frame it names for that, and changes nothing for a
+# scene that is not one.)
 #
 # `Tests/TestDocumentation` holds this file to the figures: every figure must be listed, every
 # scene listed must exist, and every size must match the picture it names.  What no test can do
@@ -46,6 +49,7 @@ adv-grown.png|docs/examples/advanced/grown.igl|640|300
 adv-fracture.png|docs/examples/advanced/fracture.igl|640|300
 adv-shapes.png|docs/examples/advanced/shapes.igl|640|300
 anim-along.png|docs/examples/animation/along.igl|640|300
+anim-forces.png|docs/examples/animation/forces.igl|640|300
 adv-sweep.png|docs/examples/advanced/sweep.igl|320|240
 adv-text-along-a-path.png|docs/examples/advanced/text-along-a-path.igl|640|240
 adv-text.png|docs/examples/advanced/text.igl|320|240

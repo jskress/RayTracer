@@ -1,222 +1,89 @@
-// This file defines a single, 6-sided die.
+// This file defines a single, 6-sided die, a unit across and centered on the origin:
+//
+//     object Die()                     // black pips on a white die
+//
+//     Red = material { pigment [0.62, 0.05, 0.06]  specular 0.6  shininess 120 }
+//     object Die(DieWhite, Red)        // white pips on a red one
+//     object Die(DieWhite, Red, 0.08)  // and its edges sharper, as a casino's are
+//
+// The first material is the pips', the second the die's, and the third says how rounded its edges and corners are:
+// 0.2 unless said, smaller for sharper and larger for rounder, one being a ball.  Opposite faces add up to seven: one
+// at the back (+Z), six at the front (-Z), two on top, five underneath, three on the left (-X) and four on the right.
+//
+// The body is a superellipsoid, a box whose corners and edges round off into its faces.  The book builds it from
+// three boxes, eight balls and twelve cylinders, which make exactly the same rounded box, but a flat face meeting a
+// quarter-round edge turns from no curve at all to a tight one in a step, and that step reads as a seam, as though
+// each edge were a rod laid along the box.  The superellipsoid's faces curve ever more steeply toward the edges, so
+// it reads as one surface.  It costs a little more to draw: about a tenth more for a pair of dice tumbling across a
+// tray, about a fifth for a die filling the picture.
+//
+// The pips are dimples cut out of the body, and the hollows they leave are what the eye actually sees, so they need
+// a material of their own: a surface that names none inherits from the CSG that contains it, which would paint every
+// pip the same color as the die it is cut into.
 
-// The pips are cut out of the die's body, and the hollows they leave are what the eye actually
-// sees, so they need a material of their own: a surface that names none inherits from the CSG
-// that contains it, which would paint every pip the same color as the die it is cut into.
-pipMaterial = material { pigment White }
+DieWhite = material { pigment [0.93, 0.92, 0.88]  specular 0.6  shininess 120  reflective 0.04  fresnel }
+DieBlack = material { pigment [0.03, 0.03, 0.03]  specular 0.3  shininess 60 }
 
-rods = union {
-	cylinder {
-		material inherited
-		min Y -0.4
-		max Y 0.4
-		scale [0.1, 1, 0.1]
-		translate [0.4, 0, 0.4]
-	}
-	cylinder {
-		material inherited
-		min Y -0.4
-		max Y 0.4
-		scale [0.1, 1, 0.1]
-		translate [0.4, 0, -0.4]
-	}
-	cylinder {
-		material inherited
-		min Y -0.4
-		max Y 0.4
-		scale [0.1, 1, 0.1]
-		translate [-0.4, 0, -0.4]
-	}
-	cylinder {
-		material inherited
-		min Y -0.4
-		max Y 0.4
-		scale [0.1, 1, 0.1]
-		translate [-0.4, 0, 0.4]
-	}
-	material inherited
+// How far out the front face (-Z) stands at x and y on it: a rounded die's face curves away toward its edges, the more
+// the rounder it is, so each pip is cut from where the face really is.  Cut a fixed depth into a flat face, a die
+// rounded 0.6 had its pips all but lost.
+function DieFace(x, y, rounding) -> number {
+    return 0.5 * pow(max(0, 1 - pow(abs(2 * x), 2 / rounding) - pow(abs(2 * y), 2 / rounding)), rounding / 2)
 }
 
-dieBody = union {
-	cube {
-		material inherited
-		scale [0.4, 0.4, 0.5]
-	}
-	cube {
-		material inherited
-		scale [0.4, 0.5, 0.4]
-	}
-	cube {
-		material inherited
-		scale [0.5, 0.4, 0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [0.4, 0.4, 0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [-0.4, 0.4, 0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [-0.4, 0.4, -0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [0.4, 0.4, -0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [0.4, -0.4, 0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [-0.4, -0.4, 0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [-0.4, -0.4, -0.4]
-	}
-	sphere {
-		material inherited
-		scale 0.1
-		translate [0.4, -0.4, -0.4]
-	}
-	csg rods
-	csg rods {
-		rotate X 90
-	}
-	csg rods {
-	   rotate Z 90
-	}
-	material inherited
+// A pip, as a ball cut into the front face at x and y on it: a shallow dish a fifth of the die across, as the book's
+// are, and 0.035 deep, so that little of it lies in its own shadow.
+primitive DiePip(x, y, paint, rounding) -> sphere {
+    return sphere { scale 0.16  translate [x, y, -DieFace(x, y, rounding) - 0.125]  material paint }
 }
 
-onePip = sphere {
-	material pipMaterial
-	scale [0.1, 0.1, 0.02]
-	translate [0, 0, -0.5]
-	rotate X 180
-}
+primitive Die(pips = DieBlack, body = DieWhite, rounding = 0.2) -> difference {
+    return difference {
+        superellipsoid { east rounding  north rounding  scale 0.5  material body }
 
-twoPips = union {
-	material pipMaterial
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, -0.27, -0.5]
-	}
-	rotate X 90
-}
+        // Six, at the front.
+        object DiePip(-0.27, 0.27, pips, rounding)
+        object DiePip(0, 0.27, pips, rounding)
+        object DiePip(0.27, 0.27, pips, rounding)
+        object DiePip(-0.27, -0.27, pips, rounding)
+        object DiePip(0, -0.27, pips, rounding)
+        object DiePip(0.27, -0.27, pips, rounding)
 
-threePips = union {
-	material pipMaterial
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0, 0, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, -0.27, -0.5]
-	}
-	rotate Y 90
-}
+        // One, at the back.
+        object DiePip(0, 0, pips, rounding) { rotate X 180 }
 
-fourPips = union {
-	material pipMaterial
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, -0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, -0.27, -0.5]
-	}
-	rotate Y 270
-}
+        // Two, on top.
+        union {
+            object DiePip(-0.27, 0.27, pips, rounding)
+            object DiePip(0.27, -0.27, pips, rounding)
+            rotate X 90
+        }
 
-fivePips = union {
-	material pipMaterial
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0, 0, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, -0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, -0.27, -0.5]
-	}
-	rotate X 270
-}
+        // Five, underneath.
+        union {
+            object DiePip(0, 0, pips, rounding)
+            object DiePip(-0.27, 0.27, pips, rounding)
+            object DiePip(0.27, 0.27, pips, rounding)
+            object DiePip(-0.27, -0.27, pips, rounding)
+            object DiePip(0.27, -0.27, pips, rounding)
+            rotate X 270
+        }
 
-sixPips = union {
-	material pipMaterial
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, 0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0, -0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [-0.27, -0.27, -0.5]
-	}
-	sphere {
-		scale [0.1, 0.1, 0.02]
-		translate [0.27, -0.27, -0.5]
-	}
-}
+        // Three, on the left.
+        union {
+            object DiePip(0, 0, pips, rounding)
+            object DiePip(-0.27, 0.27, pips, rounding)
+            object DiePip(0.27, -0.27, pips, rounding)
+            rotate Y 90
+        }
 
-die = difference {
-	csg dieBody
-	csg sixPips
-	csg fivePips
-	object onePip
-	csg twoPips
-	csg threePips
-	csg fourPips
+        // Four, on the right.
+        union {
+            object DiePip(-0.27, 0.27, pips, rounding)
+            object DiePip(0.27, 0.27, pips, rounding)
+            object DiePip(-0.27, -0.27, pips, rounding)
+            object DiePip(0.27, -0.27, pips, rounding)
+            rotate Y 270
+        }
+    }
 }

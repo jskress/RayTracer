@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -349,8 +349,15 @@ public partial class LanguageParser
             filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
-            colorDepthClause | grayscale | spectral | whiteBalanceClause | animationClause | contextPropertyClause
+            colorDepthClause | grayscale | spectral | whiteBalanceClause | animationClause | physicsContextClause |
+            contextPropertyClause
         ] ?? 'Expecting a context property here.'
+
+        // How gravity pulls and the air moves, for the scene's bodies and swarms.
+        physicsContextClause:
+        {
+            [ gravity | wind ] > _expression
+        }
 
         // How long the scene runs as an animation, in seconds or in frames, at what rate, and which frame stands
         // for it as a still.
@@ -835,11 +842,25 @@ public partial class LanguageParser
             { wear > _expression > to{?} } |
             { radius > _expression }
         ] ?? 'Expecting a weather property here.'
+        // A body: a surface moved by gravity, the air, what it strikes and what it is tied to.
+        startBodyClause:
+        {
+            body > openBrace ?? 'Expecting an open brace to follow "body" here.'
+        }
+        bodyEntryClause:
+        [
+            { [ mass | bounce | friction | drag | radius | velocity | spin ] > _expression } |
+            { shape > [ sphere | box ] ?? 'Expecting "sphere" or "box" to follow "shape" here.' } |
+            {
+                tether > to ?? 'Expecting "to" to follow "tether" here.' > _expression >
+                { length > _expression }{?}
+            }
+        ] ?? 'Expecting a body property here.'
         surfaceEntryClause:
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
-            startHairClause | placementClause | startWeatherClause
+            startHairClause | placementClause | startWeatherClause | startBodyClause
         ]
         
         // Plane clause.
@@ -1510,6 +1531,27 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Swarm clauses: copies of one thing thrown from a place, falling and bouncing until their life is up.
+        startSwarmClause:
+        {
+            swarm > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "swarm" here.'
+        }
+        swarmEntryClause:
+        [
+            {
+                of > [ _identifier | _keyword ]
+                    ?? 'Expecting a surface name, or a call of a primitive, to follow "of" here.' >
+                leftParen{?}
+            } |
+            { [ from | toward ] > _expression } |
+            { [ spread | rate | since | bounce | friction | drag | radius ] > _expression } |
+            { [ speed | life ] > _expression > { to > _expression }{?} } |
+            surfaceEntryClause
+        ]
+
         // Shape grammar clauses: rules that divide a box into a building.  The rules themselves are read by
         // hand, past the open brace after "rules".
         startShapesClause:
@@ -1842,6 +1884,7 @@ public partial class LanguageParser
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
+            startSwarmClause => 'swarm' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1927,6 +1970,7 @@ public partial class LanguageParser
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
+            startSwarmClause => 'swarm' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1989,6 +2033,7 @@ public partial class LanguageParser
             startGrownClause => 'grown' |
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
+            startSwarmClause => 'swarm' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -2084,7 +2129,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startTextClause |
+                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2123,7 +2168,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | swarm | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2248,6 +2293,7 @@ public partial class LanguageParser
             startGrownClause          => 'HandleStartGrownClause' |
             startFractureClause       => 'HandleStartFractureClause' |
             startShapesClause         => 'HandleStartShapesClause' |
+            startSwarmClause          => 'HandleStartSwarmClause' |
             startTextClause           => 'HandleStartTextClause' |
             startTaperedTextClause => 'HandleStartTaperedTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |

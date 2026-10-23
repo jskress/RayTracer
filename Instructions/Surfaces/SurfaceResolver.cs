@@ -71,6 +71,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public WeatherResolver WeatherResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for what the scene says of the surface as a body, if it is one.
+    /// </summary>
+    public BodyResolver BodyResolver { get; set; }
+
+    /// <summary>
     /// This property notes whether this resolver would give the surface a material of its own.
     /// </summary>
     public bool SetsMaterial => MaterialResolver is not null;
@@ -106,6 +111,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
         WeatherResolver.AssignTo(value, target => target.Weather, context, variables);
+        BodyResolver.AssignTo(value, target => target.Body, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 

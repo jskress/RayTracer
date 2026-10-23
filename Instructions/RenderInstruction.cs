@@ -78,6 +78,10 @@ public class RenderInstruction : Instruction
         // same for its own children, from inside its preparation just above.
         PlacementSettler.Settle(scene.Surfaces);
 
+        // The scene's bodies and swarms are moved to where the frame's time finds them now, once everything else
+        // stands where it will -- it is what they strike -- and before anything is sorted for searching.
+        PhysicsSettler.Settle(scene, context, sampleTimes);
+
         // What casts no shadow is settled only now, when every surface a ray can meet exists -- a
         // tube builds its segments as it is readied -- and the command line has had its say.
         ShadowSettler.Settle(scene.Surfaces, context.SuppressAllShadows);

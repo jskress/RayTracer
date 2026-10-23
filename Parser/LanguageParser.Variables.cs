@@ -84,6 +84,7 @@ public partial class LanguageParser
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
+            "swarm" => ParseSwarmClause(clause),
             "isosurface" => ParseIsosurfaceClause(clause),
             "parametric" => ParseParametricClause(clause),
             "heightfield" => ParseHeightFieldClause(clause),

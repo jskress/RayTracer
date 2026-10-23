@@ -19,6 +19,25 @@ public class TestNoise
             yield return new Point(x, y, z);
     }
 
+    /// <summary>
+    /// Noise may be asked for anywhere: a ray grazing a ground plane near the horizon meets it a hundred thousand
+    /// kilometers off, which in a gravel's five-centimeter noise is billions of cells out -- past what a 32-bit
+    /// lattice index holds.  Taken as one, the renderer threw at such a pixel and a fountain's movie was lost after
+    /// half an hour of rendering.
+    /// </summary>
+    [TestMethod]
+    public void TestNoiseMayBeAskedForFarAway()
+    {
+        NoiseGenerator noise = NoiseGenerator.ForSeed(12345);
+
+        foreach (double far in new[] { 3e9, -3e9, 5e12, -7e15, 1e300, double.MaxValue })
+        {
+            double value = noise.Noise(far, 0.3, -far / 2);
+
+            Assert.IsTrue(value is >= 0 and <= 1, $"noise {far} out is {value}");
+        }
+    }
+
     [TestMethod]
     public void TestNoiseHonorsThePovRayZeroToOneContract()
     {

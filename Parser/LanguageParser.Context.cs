@@ -1,5 +1,6 @@
 using Lex.Clauses;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
 using RayTracer.Graphics;
@@ -148,6 +149,12 @@ public partial class LanguageParser
                 break;
             case "animation":
                 CreateAnimationResolvers(clause, updater);
+                break;
+            case "gravity":
+                updater.GravityResolver = new TermResolver<Vector> { Term = term };
+                break;
+            case "wind":
+                updater.WindResolver = new TermResolver<Vector> { Term = term };
                 break;
             case "diffuse":
                 if (clause.Text(1) == "cache")

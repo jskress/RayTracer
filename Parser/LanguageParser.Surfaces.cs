@@ -172,6 +172,9 @@ public partial class LanguageParser
             case "weather":
                 resolver.WeatherResolver = ParseObjectResolver<WeatherResolver>("weatherEntryClause", HandleWeatherEntryClause);
                 break;
+            case "body":
+                resolver.BodyResolver = ParseObjectResolver<BodyResolver>("bodyEntryClause", HandleBodyEntryClause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown {noun} property found: {field}.");
         }

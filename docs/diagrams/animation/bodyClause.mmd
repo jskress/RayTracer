@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A body"
+
+body = "body" "{" { ( "mass" | "bounce" | "friction" | "drag" | "radius" ) number
+     | ( "velocity" | "spin" ) vector | "shape" ( "sphere" | "box" )
+     | "tether" "to" ( point | string ) [ "length" number ] } "}" ;

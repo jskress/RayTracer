@@ -36,32 +36,26 @@ plane {
 
 include 'die.igl'
 
-object die {
-    material {
-        pigment BlueViolet
-        reflective 0.1
-    }
+// The book's dice have white pips.
+Pips = material { pigment White }
+Violet = material { pigment BlueViolet  reflective 0.1 }
+Brown = material { pigment SaddleBrown  reflective 0.1 }
+Green = material { pigment ForestGreen  reflective 0.1 }
+
+object Die(Pips, Violet) {
     rotate X 180
     rotate Z 270
     rotate Y 24
     translate [1.2, 0.5, 0]
 }
 
-object die {
-    material {
-        pigment SaddleBrown
-        reflective 0.1
-    }
+object Die(Pips, Brown) {
     rotate Z 180
     rotate Y 60
     translate [2.5, 0.5, -0.3]
 }
 
-object die {
-    material {
-        pigment ForestGreen
-        reflective 0.1
-    }
+object Die(Pips, Green) {
     rotate Z -270
     rotate Y -20
     translate [1.8, 1.5, 0]

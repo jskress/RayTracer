@@ -33,6 +33,7 @@ Whatever its shape, any surface accepts these:
 | `bounded by` | A box the renderer may use to skip it cheaply. |
 | `with seed` | Fixes the randomness anything about it draws on. |
 | `hair { }` | Grows hair over it; see [Hair](advanced-surfaces.md#hair). |
+| `body { }` | Moves it by gravity, the air and what it strikes, in an animation; see [Bodies](animation.md#bodies). |
 | *transforms* | `translate`, `scale`, `rotate` and the rest. |
 
 Anywhere those appear below as "the usual properties," this is what is meant.

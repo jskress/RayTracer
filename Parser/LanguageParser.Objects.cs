@@ -145,6 +145,8 @@ public partial class LanguageParser
                 return ParseFractureClause(clause);
             case ShapeGrammarResolver:
                 return ParseShapesClause(clause);
+            case SwarmResolver:
+                return ParseSwarmClause(clause);
             case TaperedExtrusionResolver:
                 return ParseTaperedExtrusionClause(clause, tokenOffset: 0);
             case ExtrusionResolver:

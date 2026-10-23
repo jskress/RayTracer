@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using RayTracer.General;
 using RayTracer.Graphics;
 
@@ -30,6 +31,16 @@ public class ContextUpdater : Instruction
     /// This property holds the resolver for the rate the animation runs at, in frames a second.
     /// </summary>
     public Resolver<double> AnimationRateResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how gravity pulls the scene's bodies and swarms.
+    /// </summary>
+    public Resolver<Vector> GravityResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how the air moves.
+    /// </summary>
+    public Resolver<Vector> WindResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the frame that stands for the animation as a still.
@@ -220,6 +231,8 @@ public class ContextUpdater : Instruction
         BitsPerChannelResolver.AssignTo(context, target => target.BitsPerChannel, context, variables);
         GrayscaleResolver.AssignTo(context, target => target.Grayscale, context, variables);
         SpectralResolver.AssignTo(context, target => target.Spectral, context, variables);
+        GravityResolver.AssignTo(context, target => target.Gravity, context, variables);
+        WindResolver.AssignTo(context, target => target.Wind, context, variables);
 
         if (WhiteBalanceResolver is not null)
             context.WhiteBalance = WhiteBalanceResolver.Resolve(context, variables);

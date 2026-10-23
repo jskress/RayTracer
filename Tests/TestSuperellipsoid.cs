@@ -78,6 +78,67 @@ public class TestSuperellipsoid
         Assert.IsTrue(6.0.Near(distances[1], 0.0001));
     }
 
+    /// <summary>
+    /// Rays closing in on the edge of the degenerate sphere -- to within a ten millionth of its radius -- still
+    /// cross it where the closed form says, and one just past the edge misses.  Near the edge a ray is inside the solid
+    /// for only a short way, between places where the function is well above nought, so a search that takes the
+    /// least of the values it has seen for the least there is says it misses: shadows grazing a rounded die came out
+    /// lit along their edges.
+    /// </summary>
+    [TestMethod]
+    public void TestRaysGrazingTheDegenerateSphereCrossItWhereTheClosedFormSays()
+    {
+        Superellipsoid superellipsoid = Create(1, 1);
+
+        foreach (double off in new[] { 0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999, 0.9999999 })
+        {
+            foreach (Vector across in new[] { new Vector(1, 0, 0), new Vector(1, 1, 0).Unit, new Vector(0.3, -0.9, 0).Unit })
+            {
+                Ray ray = new (new Point(0, 0, -5) + across * off, Directions.In);
+                List<Intersection> intersections = [];
+
+                superellipsoid.AddIntersections(ray, intersections);
+
+                double half = Math.Sqrt(1 - off * off);
+                List<double> distances = intersections.Select(intersection => intersection.Distance).Order().ToList();
+
+                Assert.AreEqual(2, distances.Count, $"a ray {off} off the middle");
+                Assert.AreEqual(5 - half, distances[0], 1e-6, $"the entry of a ray {off} off the middle");
+                Assert.AreEqual(5 + half, distances[1], 1e-6, $"the exit of a ray {off} off the middle");
+            }
+        }
+
+        List<Intersection> past = [];
+
+        superellipsoid.AddIntersections(new Ray(new Point(1.00001, 0, -5), Directions.In), past);
+
+        Assert.AreEqual(0, past.Count, "a ray just past the edge");
+    }
+
+    /// <summary>
+    /// A pinched superellipsoid -- exponents above two, so that it is no longer convex -- may be crossed four times by
+    /// one ray: in the plane z = 0 this one is an astroid, and a ray slanting past its middle goes in and out of one
+    /// arm and then of the next.  The search that serves a convex one would find only the first way in and the last
+    /// way out.
+    /// </summary>
+    [TestMethod]
+    public void TestARayThroughTwoArmsOfAPinchedSuperellipsoidCrossesItFourTimes()
+    {
+        Superellipsoid superellipsoid = Create(3, 3);
+        Ray ray = new (new Point(2.0, -1.25, 0), new Vector(-1, 1, 0).Unit);
+        List<Intersection> intersections = [];
+
+        superellipsoid.AddIntersections(ray, intersections);
+
+        List<double> distances = intersections.Select(intersection => intersection.Distance).Order().ToList();
+        double[] expected = [1.6957, 2.0001, 2.5962, 2.9006];
+
+        Assert.AreEqual(4, distances.Count);
+
+        for (int crossing = 0; crossing < 4; crossing++)
+            Assert.AreEqual(expected[crossing], distances[crossing], 2e-4, $"crossing {crossing + 1}");
+    }
+
     [TestMethod]
     public void TestSurfaceNormalOnTheDegenerateSphereMatchesTheClosedForm()
     {
