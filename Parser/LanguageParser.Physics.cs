@@ -1,4 +1,5 @@
 using Lex.Clauses;
+using Lex.Parser;
 using RayTracer.Basics;
 using RayTracer.Extensions;
 using RayTracer.Instructions;
@@ -99,7 +100,15 @@ public partial class LanguageParser
                         ? ParseCall(clause)
                         : GetExtensibleItem<ISurfaceResolver>(clause.Tokens[1], false);
                     break;
+                case "within":
+                    // Like the thing itself: a named surface, or a call of a primitive.
+                    RefuseBoth(resolver.FromResolver, clause);
+                    resolver.WithinResolver = clause.Tokens.Count > 2
+                        ? ParseCall(clause)
+                        : GetExtensibleItem<ISurfaceResolver>(clause.Tokens[1], false);
+                    break;
                 case "from":
+                    RefuseBoth(resolver.WithinResolver, clause);
                     resolver.FromResolver = new TermResolver<Point> { Term = clause.Term() };
                     break;
                 case "toward":
@@ -134,12 +143,38 @@ public partial class LanguageParser
                     resolver.LifeFromResolver = MoreThanNought(clause, "A copy's life");
                     resolver.LifeToResolver = clause.Expressions.Count > 1 ? MoreThanNought(clause, "A copy's life", 1) : null;
                     break;
+                case "spin":
+                    resolver.SpinFromResolver = Spin(clause, 0);
+                    resolver.SpinToResolver = clause.Expressions.Count > 1 ? Spin(clause, 1) : null;
+                    break;
+                case "falls":
+                    resolver.FallsFromResolver = MoreThanNought(clause, "How fast a copy falls");
+                    resolver.FallsToResolver = clause.Expressions.Count > 1 ? MoreThanNought(clause, "How fast a copy falls", 1) : null;
+                    break;
                 default:
                     HandleSurfaceClause(clause, resolver, "swarm");
                     break;
             }
         });
     }
+
+    // A swarm throws its copies from a place or from within a shape, not both.
+    private static void RefuseBoth(object other, Clause clause)
+    {
+        if (other is not null)
+        {
+            throw new TokenException("A swarm throws its copies from a place or from within a shape, not both.")
+            {
+                Token = clause.Tokens[0]
+            };
+        }
+    }
+
+    // How fast a copy spins, an angle a second.
+    private static AngleResolver Spin(Clause clause, int index) => new ()
+    {
+        Term = clause.Term(index), Validator = value => value >= 0 ? null : "A copy's spin may not be less than nothing."
+    };
 
     private static TermResolver<double> MoreThanNought(Clause clause, string what, int index = 0) => new ()
     {

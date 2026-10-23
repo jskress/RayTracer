@@ -1,8 +1,9 @@
 railroad-ebnf-beta
 title "A swarm"
 
-swarm = "swarm" [ name ] "{" { "of" shape | "from" point | "toward" vector | "spread" angle
+swarm = "swarm" [ name ] "{" { "of" shape | "from" point | "within" shape | "toward" vector | "spread" angle
       | ( "rate" | "since" | "bounce" | "friction" | "drag" | "radius" ) number
-      | ( "speed" | "life" ) number [ "to" number ] | property } "}" ;
+      | ( "speed" | "life" ) number [ "to" number ] | "spin" angle [ "to" angle ]
+      | "falls" "at" number [ "to" number ] | property } "}" ;
 
 shape = name [ "(" [ expression { "," expression } ] ")" [ "{" { property } "}" ] ] ;

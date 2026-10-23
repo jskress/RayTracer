@@ -47,6 +47,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `fill` | Shape grammar: fills a scope with a box, in the grammar's own space. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `falls` | Swarm: `falls at <speed> [to <speed>]`, how fast a copy comes down in still air. | [Swarms](animation.md#swarms) |
 | `frames` | Context's `animation`: how many frames it runs. | [Saying How Long](animation.md#saying-how-long) |
 | `friction` | Body or swarm: how hard it grips what it slides or rolls on. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -75,7 +76,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
 | `span` | Surface: `span from <name> to <name> [stretched]`, stood between two named places. | [Marks and Spans](animation.md#marks-and-spans) |
 | `speed` | Swarm: how fast a copy is thrown, `speed a to b`. | [Swarms](animation.md#swarms) |
-| `spin` | Body: how fast it is turning at time nought, about each axis, in degrees a second. | [Bodies](animation.md#bodies) |
+| `spin` | Body: how fast it is turning at time nought, about each axis, in degrees a second.  Swarm: how fast a copy tumbles, `spin a to b`. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `spread` | Swarm: how far from its way a copy may be thrown, an angle. | [Swarms](animation.md#swarms) |
 | `still` | Context's `animation`: the frame that stands for it as a still. | [Saying How Long](animation.md#saying-how-long) |
@@ -110,7 +111,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
 | `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
-| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, and where a `mark` stands. | [Cameras](cameras.md#placing-a-camera), [Along a Spline](animation.md#along-a-spline) |
+| `at` | Follows `look at`, `point at`, `radius … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, where a `mark` stands, and a swarm's `falls at`. | [Cameras](cameras.md#placing-a-camera), [Along a Spline](animation.md#along-a-spline) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string.  Shape grammar: the rule its first scope is handed to. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `axisU` | Area light: one edge of the panel. | [Lights](lights.md#area-lights) |
@@ -497,7 +498,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `whole` | Fracture: its pieces are whole cells, kept where their seeds lie inside the solid, never cut by it. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `width` | Context: image width in pixels.  Also a ribbon's or strand's width at a point. | [Context](context.md#image-size), [Ribbon](advanced-surfaces.md#ribbon), [Strand](advanced-surfaces.md#strand) |
 | `with` | Introduces `with seed`, fixing a pattern's random start.  A joint's `reach … with`, naming what reaches. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value), [Reaching](animation.md#reaching) |
-| `within` | The outline a `field` fills. | [Advanced Surfaces](advanced-surfaces.md#field) |
+| `within` | The outline a `field` fills.  Swarm: the shape it throws its copies from within. | [Advanced Surfaces](advanced-surfaces.md#field), [Swarms](animation.md#swarms) |
 | `wood` | Pattern: concentric growth rings. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `wrinkles` | Pattern: crumpled noise. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 

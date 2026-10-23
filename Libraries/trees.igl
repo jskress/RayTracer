@@ -21,6 +21,7 @@
 // | Pine   | The other conifer: a long clear trunk with the whole crown at the top. |
 // | Snag   | A dead tree, standing.  Bare in every season, because that is what dead means. |
 // | Palm   | A bare leaning trunk with the whole crown in one fountain at the top. |
+// | FallenLeaf | One leaf off a tree, for a swarm to throw down or a lawn to be strewn with. |
 //
 // **Height is what you would measure**, near enough -- `Elm(9)` stands about nine units high, which is
 // worth saying because the obvious alternative is for the number to mean the trunk, and then nobody can
@@ -442,6 +443,49 @@ primitive TreeCluster(species, season, id, variant, twig) -> group {
                 }
             }
         }
+    }
+}
+
+// -- A leaf on its own -----------------------------------------------------------------------------
+
+// How long one leaf is, as a leaf is rather than as a tree's clusters are drawn: those are blown up several times
+// over so that a crown reads from across a field, and a leaf that size lying on a lawn reads as a dinner plate.
+function TreeFallenLength(species) -> number {
+    switch (species) {
+        case 'oak' { return 0.11 }
+        case 'birch', 'aspen' { return 0.06 }
+        case 'maple' { return 0.12 }
+        default { return 0.09 }
+    }
+}
+
+// One leaf off a tree: its blade the length a leaf of that species is, in the color the season turns it, drawn
+// about its MIDDLE -- so a swarm tumbling it turns it about its middle rather than about its stalk -- and lying
+// flat across X and Y, its thinnest side +Z, which is the side a swarm lays it down on once it has landed.
+primitive FallenLeaf(species = 'oak', season = 'autumn', variant = 1) -> group {
+    turned = random(variant, 30)
+    long = TreeFallenLength(species) * (0.85 + random(variant, 31) * 0.3)
+
+    return group {
+        object TreeBlade(species) {
+            material {
+                pigment TreeFallenColor(season, turned)
+                specular 0.08
+                shininess 18
+                ambient 0.26
+            }
+            translate Y -0.5
+            scale long
+        }
+    }
+}
+
+// What color a fallen leaf is: an autumn one anywhere from a dull ochre to a red-brown, as the tree's own clusters
+// turn, and a leaf down in any other season gone brown.
+function TreeFallenColor(season, turned) -> color {
+    switch (season) {
+        case 'autumn', 'fall' { return color [0.34 + turned * 0.40, 0.30 - turned * 0.08, 0.10] }
+        default { return color [0.30, 0.22, 0.12] }
     }
 }
 

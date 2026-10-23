@@ -23,12 +23,18 @@ public class SwarmResolver : SurfaceResolver<Swarm>
     public Resolver<double> FrictionResolver { get; set; }
     public Resolver<double> DragResolver { get; set; }
     public Resolver<double> RadiusResolver { get; set; }
+    public ISurfaceResolver WithinResolver { get; set; }
+    public Resolver<double> SpinFromResolver { get; set; }
+    public Resolver<double> SpinToResolver { get; set; }
+    public Resolver<double> FallsFromResolver { get; set; }
+    public Resolver<double> FallsToResolver { get; set; }
 
     protected override void SetProperties(RenderContext context, Variables variables, Swarm value)
     {
         base.SetProperties(context, variables, value);
 
         value.Thing = ThingResolver?.ResolveToSurface(context, variables);
+        value.Within = WithinResolver?.ResolveToSurface(context, variables);
         FromResolver.AssignTo(value, target => target.From, context, variables);
         TowardResolver.AssignTo(value, target => target.Toward, context, variables);
         SpreadResolver.AssignTo(value, target => target.Spread, context, variables);
@@ -49,6 +55,18 @@ public class SwarmResolver : SurfaceResolver<Swarm>
         {
             value.LifeFrom = LifeFromResolver.Resolve(context, variables);
             value.LifeTo = LifeToResolver?.Resolve(context, variables) ?? value.LifeFrom;
+        }
+
+        if (SpinFromResolver is not null)
+        {
+            value.SpinFrom = SpinFromResolver.Resolve(context, variables);
+            value.SpinTo = SpinToResolver?.Resolve(context, variables) ?? value.SpinFrom;
+        }
+
+        if (FallsFromResolver is not null)
+        {
+            value.FallsFrom = FallsFromResolver.Resolve(context, variables);
+            value.FallsTo = FallsToResolver?.Resolve(context, variables) ?? value.FallsFrom;
         }
     }
 }

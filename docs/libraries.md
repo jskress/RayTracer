@@ -167,9 +167,17 @@ object Elm(8, 'winter', 4)       { translate X -12 }
 | `Pine` | The other conifer, and the other way round: a long clear trunk with the whole crown at the top.  A fir is a cone to the ground; a pine sheds its lower branches as it grows. |
 | `Snag` | A dead tree, standing.  Bare in every season, because that is what dead means. |
 | `Palm` | A bare leaning trunk with the whole of its foliage in one fountain at the top. |
+| `FallenLeaf` | One leaf off a tree, for a swarm to throw down or a lawn to be strewn with. |
 
 Three numbers, of which only the first is required: **how tall**, **what time of year**, and **which
 tree of that kind**.
+
+`FallenLeaf(species = 'oak', season = 'autumn', variant = 1)` takes the species first instead (`'oak'`,
+`'birch'`, `'maple'` and the rest) and is **one leaf the size a leaf is**, its color turned by the season
+and the variant: the tree's own leaves are drawn several times larger, so that a crown reads from across a
+field, and a leaf that size on a lawn reads as a dinner plate.  It lies across X and Y, thinnest along Z, and is
+drawn about its middle, so a [swarm](animation.md#swarms) tumbles it about its middle and lays it flat when it
+lands; laid on the ground by a field, give it `rotate X 90`.
 
 **Height is what you would measure** — `Elm(9)` stands about nine units high.  That is worth saying
 because the obvious alternative is for the number to mean the trunk, and then nobody can picture it.
