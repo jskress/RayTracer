@@ -76,6 +76,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public BodyResolver BodyResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the two named places the surface is stretched between, or null.
+    /// </summary>
+    public SpanResolver SpanResolver { get; set; }
+
+    /// <summary>
     /// This property notes whether this resolver would give the surface a material of its own.
     /// </summary>
     public bool SetsMaterial => MaterialResolver is not null;
@@ -112,6 +117,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
         WeatherResolver.AssignTo(value, target => target.Weather, context, variables);
         BodyResolver.AssignTo(value, target => target.Body, context, variables);
+        SpanResolver.AssignTo(value, target => target.Span, context, variables);
         BoundingBoxResolver.AssignTo(value, target => target.BoundingBox, context, variables);
         TransformResolver.AssignTo(value, target => target.Transform, context, variables);
 

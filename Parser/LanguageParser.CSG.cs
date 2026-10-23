@@ -177,6 +177,9 @@ public partial class LanguageParser
                 case "swarm":
                     resolver.SurfaceResolvers.Add(ParseSwarmClause(clause));
                     break;
+                case "joint":
+                    resolver.SurfaceResolvers.Add(ParseJointClause(clause));
+                    break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;

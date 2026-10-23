@@ -6,11 +6,13 @@
 //     object FloorLamp(1.6, 2)  { translate X 2 }
 //     object Pendant(0.9)       { translate Y 2.6 }   // hangs from where you put it
 //     object Sconce(0.30)       { translate [1, 1.7, 0] }
+//     object Anglepoise([0.3, 0.76, 0.2])          // a desk lamp, reaching over to light that place
 //
 // | `TableLamp` | A base with a shade on it, for a table or a sideboard. |
 // | `FloorLamp` | The same light on a stem, standing on the floor. |
 // | `Pendant`   | A shade or a globe on a flex, hanging from the ceiling. |
 // | `Sconce`    | A half shade against a wall, throwing its light up it. |
+// | `Anglepoise` | A sprung desk lamp on two arms, reaching over and turning its head to light a place. |
 //
 // **The first number is a size**, as it is everywhere but the vehicles -- a height for the two that
 // stand, the drop from the ceiling for a `Pendant`, and how tall the fitting is for a `Sconce`.
@@ -416,5 +418,141 @@ primitive Sconce(size, variant = 1, lit = 1) -> group {
         // is a downlighter with extra steps.
         object RoomBowl(size * 0.06, size * 0.36, size * 0.34, variant)
             { translate [0, size * 0.01, -size * 0.42] }
+    }
+}
+
+// -- An anglepoise ----------------------------------------------------------------------------------
+
+// The sprung desk lamp of the 1930s: a weighted foot, a turret, two arms and a head, and nothing said about
+// how any of them is turned.  `target` is the place it lights, in the scene's own space; the turret turns to
+// face it, the two arms reach so that the head hangs `height` above it, and the head turns to look at it.
+// Stand it on a desk and say where the work is, and it leans over the work as anyone using one would set it.
+//
+// **Its light is a spotlight in the head**, not a glowing bulb: a desk lamp throws a cone, which a spotlight
+// does at the price of a point light, and it stands in the head's own space so it goes wherever the arms and
+// the head have turned.  It is a filament at 2800 K, and `fade distance` makes it worth its color at the
+// height a head hangs over a page, so a scene lit by it wants `white balance 3300` as the others do.
+//
+// **The arms reach as far as they are long**, thirty centimeters each from pivot to pivot.  A place further
+// than the two of them can reach finds the arms straight out toward it, and the elbow will not bend down
+// past where a real one stops.  The springs at the foot are stretched between the turret and the lower arm,
+// so they lengthen as it leans.
+AnglepoiseBlack = material { pigment [0.035, 0.035, 0.038]  specular 0.55  shininess 110  ambient 0.05 }
+AnglepoiseCream = material { pigment [0.86, 0.82, 0.72]  specular 0.50  shininess 100  ambient 0.06 }
+AnglepoiseRed = material { pigment [0.55, 0.07, 0.06]  specular 0.55  shininess 110  ambient 0.05 }
+
+primitive RoomEnamelOf(variant) -> material {
+    switch (mod(floor(variant), 3)) {
+        case 0 { return material AnglepoiseRed }
+        case 1 { return material AnglepoiseBlack }
+        default { return material AnglepoiseCream }
+    }
+}
+
+// The glowing filament seen inside the shade, which lights nothing itself: the spotlight does that.
+primitive RoomFilament(lit, variant) -> group {
+    switch (floor(lit)) {
+        case 0 { return group { sphere { material RoomBulbCold  scale 0.024 } } }
+        default {
+            return group {
+                sphere {
+                    material { pigment RoomGlowOf(variant)  ambient 1  diffuse 0  specular 0 }
+                    no shadow
+                    scale 0.024
+                }
+                spot light {
+                    location [0, 0, 0]
+                    point at [1, 0, 0]
+                    radius 32  falloff 52  tightness 3
+                    temperature 2800  brightness 1.6
+                    fade distance 0.45
+                }
+            }
+        }
+    }
+}
+
+// An arm: two thin rods side by side, `long` up Y from its pivot, and the knuckle it turns on.
+primitive RoomArm(long, variant) -> group {
+    return group {
+        for side in [0, 1] {
+            cylinder {
+                material RoomSteel  min Y 0  max Y 1
+                scale [0.0045, long, 0.0045]
+                translate Z (side - 0.5) * 0.026
+            }
+        }
+        cylinder {
+            material RoomEnamelOf(variant)  min Y -1  max Y 1
+            scale [0.011, 0.022, 0.011]
+            rotate X 90
+        }
+    }
+}
+
+primitive Anglepoise(target, height = 0.32, variant = 1, lit = 1) -> group {
+    arm = 0.30
+    post = 0.075
+
+    return group {
+        // The weighted foot: a stepped disc.
+        cylinder { material RoomEnamelOf(variant)  min Y 0  max Y 1  scale [0.085, 0.022, 0.085] }
+        cylinder { material RoomEnamelOf(variant)  min Y 0  max Y 1  scale [0.052, 0.012, 0.052]  translate Y 0.022 }
+
+        // The turret turns about the upright to face the place lit, so that the arms lean toward it.
+        joint {
+            axis Y  aim at target
+            cylinder { material RoomEnamelOf(variant)  min Y 0  max Y 1  scale [0.014, post, 0.014] }
+
+            // The springs, pulling the lower arm back from low on the turret, stretched as it leans.
+            for side in [0, 1] {
+                mark $'AnglepoiseFoot${side}' at [-0.035, 0.040, (side - 0.5) * 0.050]
+                cylinder {
+                    material RoomSteel  min Y 0  max Y 1
+                    scale [0.0042, 1, 0.0042]
+                    rotate Z -90
+                    span from $'AnglepoiseFoot${side}' to $'AnglepoiseHook${side}' stretched
+                }
+            }
+
+            // The lower arm, leaning toward the place lit; it and the upper one reach so that the wrist comes to
+            // hang over the place.
+            joint {
+                axis Z  angle -30  limits -85 to 0
+                reach point target + vector [0, height, 0] with 'AnglepoiseWrist'
+                object RoomArm(arm, variant)
+                for side in [0, 1] {
+                    mark $'AnglepoiseHook${side}' at [-0.012, arm * 0.32, (side - 0.5) * 0.050]
+                }
+
+                // The upper arm, bent down at the elbow toward the place, but never past where a real one stops.
+                joint {
+                    axis Z  angle -100  limits -165 to -10
+                    object RoomArm(arm, variant)
+                    mark 'AnglepoiseWrist' at [0, arm, 0]
+
+                    // The head, turned at the wrist to look at the place: a shade opening along its +X, a filament
+                    // in it and the spotlight with it.
+                    joint {
+                        axis Z  aim at target  facing [1, 0, 0]
+                        conic {
+                            material RoomEnamelOf(variant)
+                            min Y -0.078  max Y -0.034
+                            open
+                            scale [1, 2.6, 1]
+                            rotate Z 90
+                            // Turned onto +X, the narrow end stands at 0.034 x 2.6 out; brought back to the wrist.
+                            translate X -0.088
+                        }
+                        sphere { material RoomEnamelOf(variant)  scale 0.036  translate X -0.012 }
+                        cylinder { material RoomEnamelOf(variant)  min Y -1  max Y 1  scale [0.010, 0.020, 0.010]  rotate X 90 }
+                        object RoomFilament(lit, variant) { translate X 0.040 }
+                        translate Y arm
+                    }
+                    translate Y arm
+                }
+                translate Y post
+            }
+        }
     }
 }

@@ -9,8 +9,8 @@
 //     import 'trains' { Locomotive, Tender, TrackAlong }
 //
 //     object TrackAlong(Line)
-//     object Locomotive(11.6) { along Line by time * 12  wheelbase 7 }
-//     object Tender(8.05)     { along Line by time * 12 - 10.35  wheelbase 4.5 }
+//     object Locomotive(11.6, 'summer', 1, time * 12) { along Line by time * 12  wheelbase 7 }
+//     object Tender(8.05, 'summer', 1, time * 12)     { along Line by time * 12 - 10.35  wheelbase 4.5 }
 //
 // | `Locomotive` | A GWR 4-6-0: tapered boiler, copper-capped chimney, three coupled drivers on rods. |
 // | `Tender`     | The six-wheeled tender that goes behind it, coal heaped above the coping. |
@@ -18,8 +18,16 @@
 // | `TrackAlong` | The same line laid along a spline, round its curves. |
 //
 // **The first number is a length**, as it is for the road vehicles and for the same reason -- an engine
-// is described by how long it is, not how tall.  The other two mean what they mean everywhere, **what
+// is described by how long it is, not how tall.  The next two mean what they mean everywhere, **what
 // time of year** and **which one of that kind**, and only the length is required.
+//
+// **The last is how far it has run**, nought unless said, and it is what sets an engine in motion: each
+// wheel is a `joint` turned by the distance over its own radius, the crank pins turn with the drivers,
+// the crosshead slides to wherever the main rod's length puts it, and both rods are `span`s between
+// marks on what they join.  Give it the same distance its `along ... by` is given, and the wheels roll
+// rather than slide.  The distance is a number by the time the engine has it, so the wheels are taken at
+// the frame's instant rather than blurred through it -- keep a train slow enough that a driver turns
+// less than half a spoke a frame, or the spokes seem to stand or run backward, as they do on film.
 //
 // **These face +X**, like the road vehicles, so an engine runs to the right in a camera looking the
 // usual way and a line laid left to right needs no turning.
@@ -53,9 +61,9 @@
 //
 // **Rods.**  Spoked wheels alone still read as a cart.  What says *engine* is the coupling rod tying
 // all three drivers together and the main rod reaching back from the cylinder, because those are the
-// only parts whose whole purpose is that the thing moves.  They are `tube`s -- two points and a radius,
-// no angles to work out -- flattened along Z into bars, since a rod is forged flat and a round one
-// reads as plumbing.
+// only parts whose whole purpose is that the thing moves.  They are `tube`s of their true length,
+// flattened along Z into bars, since a rod is forged flat and a round one reads as plumbing, and each is
+// a `span` between marks -- the crank pins, the crosshead -- so it goes wherever what it joins has gone.
 //
 // **A boiler that tapers.**  This is the Great Western signature and it is nearly free: one `lathe`
 // turns the smokebox, the shoulder behind it and the coned barrel as a single revolved profile.  A
@@ -224,37 +232,40 @@ primitive TrainWheel(radius, half, spokes, paint) -> group {
     }
 }
 
-// A driver is a wheel with a crank pin standing out of it, caught at the angle the rods are frozen in.
+// A driver is a wheel with a crank pin standing out of it, turned as a joint by how far the engine has
+// run, and a mark where a rod is pinned to it, `markZ` out from the wheel's middle to the rod's plane.
 //
 // The pin's offset is given as two numbers rather than as a radius and an angle, because the caller has
 // to work those two numbers out once for all three axles regardless: a coupling rod is only straight if
 // every pin sits at the same angle, so the offset is a property of the engine and not of the wheel.
-// (Trigonometry here would have been fine either way -- a postfix `degrees` operator keeps an angle in
-// the degrees the transforms use right up to the point it reaches `cos`.)
-primitive TrainDriver(radius, half, pinX, pinY, paint) -> group {
+primitive TrainDriver(radius, half, pinX, pinY, paint, turned = 0, pin = 'pin', markZ = 0) -> group {
     return group {
-        object TrainWheel(radius, half, 20, paint)
-        cylinder {
-            material TrainSteel
-            min Y -1  max Y 1
-            scale [radius * 0.062, half * 2.6, radius * 0.062]
-            rotate X 90
-            translate [pinX, pinY, 0]
+        joint {
+            axis Z  angle turned
+            object TrainWheel(radius, half, 20, paint)
+            cylinder {
+                material TrainSteel
+                min Y -1  max Y 1
+                scale [radius * 0.062, half * 2.6, radius * 0.062]
+                rotate X 90
+                translate [pinX, pinY, 0]
+            }
+            mark pin at [pinX, pinY, markZ]
         }
     }
 }
 
 // -- A rod -----------------------------------------------------------------------------------------
 
-// Two points and a thickness.  A `tube` needs no angle worked out for it, and flattening it along Z
-// afterwards turns a pipe into the forged bar a rod actually is.
-primitive TrainRod(x1, y1, x2, y2, wide, thick, z) -> tube {
+// A length and a thickness, spanned between two marks: a `tube` along X, flattened along Z into the forged
+// bar a rod actually is, and stood with its end at the first mark and running toward the second.
+primitive TrainRod(length, wide, thick, first, second) -> tube {
     return tube {
         material TrainSteel
-        radius wide at [x1, y1, 0]
-        radius wide at [x2, y2, 0]
+        radius wide at [0, 0, 0]
+        radius wide at [length, 0, 0]
         scale [1, 1, thick / wide]
-        translate Z z
+        span from first to second
     }
 }
 
@@ -282,7 +293,7 @@ primitive TrainSnowOn(season, alongHalf, acrossHalf) -> group {
 
 // -- A locomotive ----------------------------------------------------------------------------------
 
-primitive Locomotive(length, season = 'summer', variant = 1) -> group {
+primitive Locomotive(length, season = 'summer', variant = 1, travelled = 0) -> group {
     // One line fixes how long a meter is, and every number after it is a real measurement.  An engine
     // over buffers is thirty-eight feet.
     m = length / 11.6
@@ -305,6 +316,21 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
     axle1 = 4.35 * m
     axle2 = 6.56 * m
     axle3 = 9.07 * m
+
+    // How far the wheels have turned, in degrees, a driver and a bogie wheel each by the distance over its own
+    // radius.  Built facing -X, the engine runs toward -X in its own numbers, and a wheel rolling that way turns
+    // positively about Z.
+    driven = toDegrees(travelled / driverR)
+    bogied = toDegrees(travelled / bogieR)
+
+    // Where the middle driver's pin stands now, which is where the main rod's far end is; the crosshead slides to
+    // where the rod's own length puts its near end, along the line of the cylinder.  At nought it stands at 4.10.
+    crankAngle = atan2(pinY, pinX) + travelled / driverR
+    crank = sqrt(pinX * pinX + pinY * pinY)
+    pinNowX = axle2 + crank * cos(crankAngle)
+    pinNowY = driverR + crank * sin(crankAngle)
+    mainRod = sqrt((axle2 + pinX - 4.10 * m) * (axle2 + pinX - 4.10 * m) + (driverR + pinY - cylY) * (driverR + pinY - cylY))
+    crossX = pinNowX - sqrt(mainRod * mainRod - (pinNowY - cylY) * (pinNowY - cylY))
 
     return group {
         // -- The boiler.  One lathe turns the smokebox, the shoulder behind it and the coned barrel,
@@ -545,17 +571,28 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
         }
 
         // -- The wheels.  Three coupled axles and a four-wheel bogie under the front.
+        // Each driver is marked where its rod is pinned: the outer two in the coupling rod's plane, the middle one
+        // a little further out, in the main rod's.
         for side in [0, 1] {
-            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0, driven, $'pin${side}1',
+                               (rodZ - wheelZ) * (1 - 2 * side))
                 { translate [axle1, driverR, (wheelZ - side * 2 * wheelZ)] }
-            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0, driven, $'pin${side}2',
+                               (rodZ + 0.062 * m - wheelZ) * (1 - 2 * side))
                 { translate [axle2, driverR, (wheelZ - side * 2 * wheelZ)] }
-            object TrainDriver(driverR, driverHalf, pinX, pinY, 0)
+            object TrainDriver(driverR, driverHalf, pinX, pinY, 0, driven, $'pin${side}3',
+                               (rodZ - wheelZ) * (1 - 2 * side))
                 { translate [axle3, driverR, (wheelZ - side * 2 * wheelZ)] }
-            object TrainWheel(bogieR, 0.048 * m, 12, 1)
-                { translate [1.30 * m, bogieR, (wheelZ - side * 2 * wheelZ)] }
-            object TrainWheel(bogieR, 0.048 * m, 12, 1)
-                { translate [2.35 * m, bogieR, (wheelZ - side * 2 * wheelZ)] }
+            joint {
+                axis Z  angle bogied
+                object TrainWheel(bogieR, 0.048 * m, 12, 1)
+                translate [1.30 * m, bogieR, (wheelZ - side * 2 * wheelZ)]
+            }
+            joint {
+                axis Z  angle bogied
+                object TrainWheel(bogieR, 0.048 * m, 12, 1)
+                translate [2.35 * m, bogieR, (wheelZ - side * 2 * wheelZ)]
+            }
         }
         // The frames the drivers hang in, which is what daylight comes through under a boiler.
         for side in [0, 1] {
@@ -596,13 +633,14 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
                 material TrainSteel  min Y -1  max Y 1
                 scale [0.048 * m, 0.470 * m, 0.048 * m]
                 rotate Z 90
-                translate [3.62 * m, cylY, (rodZ - side * 2 * rodZ)]
+                translate [crossX - 0.48 * m, cylY, (rodZ - side * 2 * rodZ)]
             }
             cube {
                 material TrainBlack
                 scale [0.145 * m, 0.125 * m, 0.058 * m]
-                translate [4.10 * m, cylY, (rodZ - side * 2 * rodZ)]
+                translate [crossX, cylY, (rodZ - side * 2 * rodZ)]
             }
+            mark $'cross${side}' at [crossX, cylY, (rodZ + 0.062 * m) - side * 2 * (rodZ + 0.062 * m)]
             // The slide bars the crosshead runs between.
             for bar in [0, 1] {
                 cube {
@@ -615,11 +653,9 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
             // **The offset has to carry the side's sign with it.**  Written as
             // `(rodZ - side * 2 * rodZ) + 0.06`, the outboard nudge moved the rod outboard on one
             // side of the engine and inboard on the other, where it disappeared behind the wheel.
-            object TrainRod(4.10 * m, cylY, axle2 + pinX, driverR + pinY,
-                            0.078 * m, 0.038 * m,
-                            (rodZ + 0.062 * m) - side * 2 * (rodZ + 0.062 * m))
-            object TrainRod(axle1 + pinX, driverR + pinY, axle3 + pinX, driverR + pinY,
-                            0.072 * m, 0.034 * m, (rodZ - side * 2 * rodZ))
+            // The marks carry it now: each rod lies in the plane of the marks it is spanned between.
+            object TrainRod(mainRod, 0.078 * m, 0.038 * m, $'cross${side}', $'pin${side}2')
+            object TrainRod(axle3 - axle1, 0.072 * m, 0.034 * m, $'pin${side}1', $'pin${side}3')
         }
 
         // -- The front end: a buffer beam, two buffers and a coupling hook.
@@ -668,7 +704,7 @@ primitive Locomotive(length, season = 'summer', variant = 1) -> group {
 // the engine and gets its character from three things: the coping standing above the tank sides, the
 // coal heaped over the top of that, and the fact that it is the same crimson as the engine so the two
 // read as one machine rather than as a machine towing a box.
-primitive Tender(length, season = 'summer', variant = 1) -> group {
+primitive Tender(length, season = 'summer', variant = 1, travelled = 0) -> group {
     m = length / 8.05           // twenty-six feet six over buffers
 
     wheelR = 0.572 * m
@@ -726,12 +762,14 @@ primitive Tender(length, season = 'summer', variant = 1) -> group {
                 translate [3.86 * m, 0.900 * m, (0.640 - side * 1.28) * m]
             }
         }
-        // Six wheels, plain-spoked and smaller than a driver.
+        // Six wheels, plain-spoked and smaller than a driver, each turned by how far the tender has run.
         for side in [0, 1] {
             for axle in [0, 2] {
-                object TrainWheel(wheelR, 0.050 * m, 14, 0)
-                    { translate [(1.62 + axle * 2.12) * m, wheelR,
-                                 (wheelZ - side * 2 * wheelZ)] }
+                joint {
+                    axis Z  angle toDegrees(travelled / wheelR)
+                    object TrainWheel(wheelR, 0.050 * m, 14, 0)
+                    translate [(1.62 + axle * 2.12) * m, wheelR, (wheelZ - side * 2 * wheelZ)]
+                }
             }
         }
         // A buffer beam at each end, since a tender is coupled at both.

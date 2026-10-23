@@ -175,6 +175,9 @@ public partial class LanguageParser
             case "body":
                 resolver.BodyResolver = ParseObjectResolver<BodyResolver>("bodyEntryClause", HandleBodyEntryClause);
                 break;
+            case "span":
+                resolver.SpanResolver = ParseSpanClause(clause);
+                break;
             default:
                 throw new Exception($"Internal error: unknown {noun} property found: {field}.");
         }

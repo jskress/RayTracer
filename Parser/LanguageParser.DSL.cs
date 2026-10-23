@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -860,8 +860,15 @@ public partial class LanguageParser
         [
             namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
-            startHairClause | placementClause | startWeatherClause | startBodyClause
+            startHairClause | placementClause | startWeatherClause | startBodyClause | spanClause
         ]
+        // A surface stretched between two named places: its origin at the first, its +X running toward the second,
+        // and, stretched, its X scaled by the distance between them.
+        spanClause:
+        {
+            span > from ?? 'Expecting "from" to follow "span" here.' > _expression >
+            to ?? 'Expecting "to" and the name of the other place here.' > _expression > stretched{?}
+        }
         
         // Plane clause.
         startPlaneClause:
@@ -1531,6 +1538,34 @@ public partial class LanguageParser
             surfaceEntryClause
         ]
 
+        // Joint clauses: a group turned about a pivot by an angle about an axis, within limits; or turned to aim at
+        // something, or with the joints inside it to reach for it.
+        startJointClause:
+        {
+            joint > [
+                openBrace |
+                { [ _identifier | _keyword ] > openBrace{?} }
+            ] ?? 'Expecting an identifier or open brace to follow "joint" here.'
+        }
+        // A joint's own properties.  They stand among a group's entries, since a joint holds whatever a group may and
+        // a group's entries keep their tags only when read as a group's; a plain group refuses them.
+        jointPropertyClause:
+        [
+            { [ pivot | angle | facing ] > _expression } |
+            { axis > [ X | Y | Z | _expression ] ?? 'Expecting "X", "Y", "Z" or a direction to follow "axis" here.' } |
+            { limits > _expression > to ?? 'Expecting "to" and the most it may turn here.' > _expression } |
+            { aim > at ?? 'Expecting "at" to follow "aim" here.' > _expression } |
+            {
+                reach > _expression >
+                with ?? 'Expecting "with" and the name of what reaches here.' > _expression
+            }
+        ]
+        // A named place on a thing, carried wherever it goes.
+        markClause:
+        {
+            mark > _expression > at ?? 'Expecting "at" and where the mark stands here.' > _expression
+        }
+
         // Swarm clauses: copies of one thing thrown from a place, falling and bouncing until their life is up.
         startSwarmClause:
         {
@@ -1885,6 +1920,7 @@ public partial class LanguageParser
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
             startSwarmClause => 'swarm' |
+            startJointClause => 'joint' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1971,6 +2007,8 @@ public partial class LanguageParser
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
             startSwarmClause => 'swarm' |
+            startJointClause => 'joint' |
+            markClause => 'mark' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -1986,7 +2024,10 @@ public partial class LanguageParser
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
             surfaceEntryClause => 'surface' |
-            localClause => 'local'
+            localClause => 'local' |
+            // After a local name: `reach`, `angle` and the rest are names libraries keep, and a joint's property
+            // read first would take `reach = ...` for a reach and fail on the "=".
+            jointPropertyClause => 'jointProperty'
         ]
 
         // Scene clauses.
@@ -2034,6 +2075,7 @@ public partial class LanguageParser
             startFractureClause => 'fracture' |
             startShapesClause => 'shapes' |
             startSwarmClause => 'swarm' |
+            startJointClause => 'joint' |
             startTextClause => 'text' |
             startTaperedTextClause => 'taperedText' |
             startLsystemClause => 'lsystem' |
@@ -2129,7 +2171,7 @@ public partial class LanguageParser
                 startConicClause | startTorusClause | startExtrusionClause |
                 startTaperedExtrusionClause | startLatheClause |
                 startBlobClause | startSwellsClause | startTubeClause | startRibbonClause | startStrandClause | startFieldClause |
-                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startTextClause |
+                startSweepClause | startGrownClause | startFractureClause | startShapesClause | startSwarmClause | startJointClause | startTextClause |
                 startTaperedTextClause | startLsystemClause | startHeightFieldClause |
                 startTriangleClause |
                 startSmoothTriangleClause | startParallelogramClause | startDiscClause |
@@ -2168,7 +2210,7 @@ public partial class LanguageParser
                 group | union | difference | intersection |
                 plane | sphere | cube | cylinder | conic | torus | egg | superellipsoid |
                 isosurface | parametric | paraboloid | hyperboloid | saddle | quadric | sdf | julia |
-                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | swarm | extrusion | text | lsystem |
+                patch | lathe | blob | swells | tube | ribbon | strand | field | sweep | grown | fracture | shapes | swarm | joint | extrusion | text | lsystem |
                 heightfield | parallelogram | disc | triangle |
                 { smooth > triangle } | { tapered > extrusion } | { tapered > text } |
                 { bilinear > patch } |
@@ -2294,6 +2336,7 @@ public partial class LanguageParser
             startFractureClause       => 'HandleStartFractureClause' |
             startShapesClause         => 'HandleStartShapesClause' |
             startSwarmClause          => 'HandleStartSwarmClause' |
+            startJointClause          => 'HandleStartJointClause' |
             startTextClause           => 'HandleStartTextClause' |
             startTaperedTextClause => 'HandleStartTaperedTextClause' |
             startLsystemClause        => 'HandleStartLSystemClause' |

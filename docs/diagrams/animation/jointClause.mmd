@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A joint"
+
+joint = "joint" "{" { ( "pivot" point | "axis" ( "X" | "Y" | "Z" | vector ) | "angle" angle
+      | "limits" angle "to" angle | "aim" "at" ( point | string ) [ "facing" vector ]
+      | "reach" ( point | string ) "with" string | entry ) } "}" ;

@@ -514,6 +514,25 @@ rays against the colliders, an `Instance` of T at world scale with a `MotionAt` 
 other nor bodies.  A default radius, body or copy, is half the box's longest side (the ball round the box held a
 drop up off the ground).  No stacking, cloth, ropes or fluids.
 
+Kinematics: a `joint { pivot  axis X|Y|Z|v  angle  limits a to b  aim at <place|'name'> [facing v]  reach
+<place|'name'> with 'name' ... }` (`Geometry/Joint.cs`, a Group) is turned by a `JointCreator` the parser puts FIRST
+among its transforms (so a timed angle blurs as any timed placement; no axis or no angle = identity).  `mark 'n' at p`
+(`Geometry/Mark.cs`, an empty-boxed surface hitting nothing, among group entries only) names a place; `span from 'a'
+to 'b' [stretched]` on any surface (`Surface.Span`) stands its origin at a, +X toward b, +Y as near its parent's +Y as
+allowed, X scaled by the distance if stretched, laid over its own transforms.  `Geometry/KinematicsSettler.cs` runs
+after PhysicsSettler, before shadow settling and arrangement: per shutter instant (`Surface.TransformAt`, overrides
+laid over resolved matrices) solved joints outer-first -- aim (least turn about the axis, limited; free = `Turn.Between`),
+reach (CCD tip-inward over every joint between the named effector and the joint, 64 passes, each limited) -- then
+spans, then `StandAt(here, motion)` and every holder `Resettle`d deepest-first (`Group.Resettle` re-arranges, a box
+rebuilt only if it was derived).  A name is the NEAREST of that name (most shared enclosing groups; ties and nothing
+named refused), so library marks need no unique names.  `Instance.MayBeShared` refuses a solved joint, a mark and a
+span, and one inside an instance anyway (a swarm's copy) throws.  The joint's entries are `groupEntryClause`
+alternatives tagged 'jointProperty' (a nested alternative list loses its tags) placed AFTER `localClause`, or
+`reach = ...` in a library body parses as a joint's reach.  Trains: `Locomotive`/`Tender(..., travelled)` turn wheels
+as joints by distance / radius, rods `span` crank pins and the crosshead (placed by the main rod's length); the
+distance is a value, so spokes are not blurred.  Indoor lights: `Anglepoise(target, height, variant, lit)`, turret
+aims, two arms reach the wrist mark to height over the target, head aims, springs span stretched.
+
 ### Pigments and patterns (`Pigments/`, `Patterns/`)
 
 Pigments (`Pigments/`) define how color is derived at a surface point (solid, pattern-based,

@@ -42,7 +42,11 @@ public class TestParserConsistency
     private static readonly HashSet<string> NotSurfaces =
     [
         "for", "over", "if", "local", "surface", "object", "call", "background", "camera",
-        "environment", "environmentBlock", "light", "name"
+        "environment", "environmentBlock", "light", "name",
+
+        // A mark is a named place in whatever holds it, and a joint's own properties are written among a
+        // group's entries, since a joint holds what a group does: neither is a thing a CSG or a scene stands up.
+        "mark", "jointProperty"
     ];
 
     [TestMethod]
@@ -274,13 +278,16 @@ public class TestParserConsistency
     private static HashSet<string> CaseLabelsIn(string file, string method)
     {
         string source = Read(file);
-        int start = source.IndexOf(method, StringComparison.Ordinal);
+        int start = source.IndexOf($"void {method}(", StringComparison.Ordinal);
 
         Assert.IsTrue(start >= 0, $"{file} has no {method}");
 
-        return [..Regex.Matches(source[start..], @"case ""([a-zA-Z]+)""")
-            .TakeWhile(match => match.Index < 8000)
-            .Select(match => match.Groups[1].Value)];
+        // From the method itself, not the first call of it, to where the next method's documentation begins: a fixed
+        // number of characters, the way this read before, lost the last cases of a group's handler once it outgrew them.
+        int end = source.IndexOf("\n    /// <summary>", start, StringComparison.Ordinal);
+        string body = end < 0 ? source[start..] : source[start..end];
+
+        return [..Regex.Matches(body, @"case ""([a-zA-Z]+)""").Select(match => match.Groups[1].Value)];
     }
 
     /// <summary>

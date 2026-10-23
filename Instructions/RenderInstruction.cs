@@ -82,6 +82,10 @@ public class RenderInstruction : Instruction
         // stands where it will -- it is what they strike -- and before anything is sorted for searching.
         PhysicsSettler.Settle(scene, context, sampleTimes);
 
+        // Joints that aim or reach, and spans, are settled once everything they might be asked about stands where it
+        // will, bodies included, and before the scene is sorted for searching.
+        KinematicsSettler.Settle(scene, sampleTimes);
+
         // What casts no shadow is settled only now, when every surface a ray can meet exists -- a
         // tube builds its segments as it is readied -- and the command line has had its say.
         ShadowSettler.Settle(scene.Surfaces, context.SuppressAllShadows);
