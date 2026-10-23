@@ -1,0 +1,144 @@
+// An oak in autumn letting its leaves go, a light wind carrying them down onto the lawn round it.
+//
+//     dotnet run -- -i a-fall-of-leaves.igl -o a-fall-of-leaves.webp -w 400 -h 300
+//     dotnet run -- -i a-fall-of-leaves.igl -o a-fall-of-leaves.png --still
+//
+// **The leaves are thrown from within the crown.**  Each swarm says `within Crown`, a ball the size of the oak's
+// crown, and every leaf sets off from a place of its own inside it rather than all from one point -- found by
+// drawing places in the ball's box until one falls inside, the same for the same leaf in every frame.  A leaf
+// passes whatever is inside the ball with it, the oak's own leaves and twigs, and meets the scene only once it
+// has left: let them strike the crown and most came to rest on the leaves still hanging there.
+//
+// **They tumble as they fall.**  `spin 60 to 300` turns each leaf from a turn of its own, about a way of its own,
+// at so many degrees a second; and `falls at 0.9 to 1.6` says how fast each comes down in still air, which is the
+// whole of what a leaf's drag means to anyone watching one.  The wind (`wind` in the context) carries them toward
+// the camera as they come.
+//
+// **And they lie where they land.**  A tumbling copy that comes to rest stops turning and settles, over a moment,
+// onto its broadest side on what it came down on -- a leaf flat on the lawn, not on its edge as it happened to be
+// turned when it landed.
+//
+// **The lawn was already strewn.**  The leaves down before the animation began are two fields of the same leaf,
+// thick under the crown and thinning beyond it, lying flat at any turn: the swarms only began twelve seconds
+// before, so as not to work out a whole autumn's fall for every frame.  `FallenLeaf` is the `trees` library's leaf
+// on its own, drawn about its middle and the size a leaf is, where the tree's own clusters are drawn larger to
+// read from across a field.
+
+import 'trees'    { Oak, Beech, Birch, FallenLeaf }
+import 'daylight' { LateAfternoonFrom, LateAfternoonLight }
+
+context {
+    angles are degrees
+    animation length 6  still 90
+    wind [0.3, 0, -0.7]
+    info {
+        title 'A Fall of Leaves'
+        author 'J. Stephen Kress'
+        description 'An oak in autumn letting its leaves go, tumbling down on a light wind onto the lawn.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [2.2, 1.45, -9.5]
+    look at [0, 2.1, 0]
+    field of view 60
+    exposure 0.6
+}
+
+// The sun behind the camera and to its left.
+background LateAfternoonFrom(330)
+
+light LateAfternoonLight
+
+// A mown lawn: broad, soft patches of a darker and a lighter green.
+Lawn = material {
+    pigment bozo {
+        [0, granite { [0, [0.18, 0.27, 0.10], 1, [0.20, 0.29, 0.11]]  scale 0.03 },
+         1, granite { [0, [0.22, 0.31, 0.12], 1, [0.24, 0.33, 0.13]]  scale 0.03 }]
+        scale 2.5
+    }
+    normal granite { depth 0.05  scale 0.03 }
+    specular 0
+}
+
+plane { material Lawn }
+
+object Oak(10, 'autumn', 3)
+
+// Trees across the field, behind.
+object Beech(9, 'autumn', 2)  { translate [-26, 0, 38] }
+object Birch(11, 'autumn', 5) { translate [-9, 0, 46] }
+object Beech(10, 'autumn', 7) { translate [14, 0, 42] }
+object Oak(12, 'autumn', 6)   { translate [34, 0, 52] }
+
+// -- What has fallen already ---------------------------------------------------------------------------
+
+// A disc under the crown, set a little downwind, and a ring beyond it.
+Under = path {
+    move to 4.90, -0.80
+    curve 4.90, 1.74, 2.84, 3.80 to 0.30, 3.80
+    curve -2.24, 3.80, -4.30, 1.74 to -4.30, -0.80
+    curve -4.30, -3.34, -2.24, -5.40 to 0.30, -5.40
+    curve 2.84, -5.40, 4.90, -3.34 to 4.90, -0.80
+    close
+}
+
+Beyond = path {
+    move to 8.90, -1.40
+    curve 8.90, 3.29, 5.09, 7.10 to 0.40, 7.10
+    curve -4.29, 7.10, -8.10, 3.29 to -8.10, -1.40
+    curve -8.10, -6.09, -4.29, -9.90 to 0.40, -9.90
+    curve 5.09, -9.90, 8.90, -6.09 to 8.90, -1.40
+    close
+    move to 4.90, -0.80
+    curve 4.90, 1.74, 2.84, 3.80 to 0.30, 3.80
+    curve -2.24, 3.80, -4.30, 1.74 to -4.30, -0.80
+    curve -4.30, -3.34, -2.24, -5.40 to 0.30, -5.40
+    curve 2.84, -5.40, 4.90, -3.34 to 4.90, -0.80
+    close
+}
+
+// A leaf is drawn across X and Y; a field stands its copies up, so each is laid down first.
+field {
+    of FallenLeaf('oak', 'autumn', 1) { rotate X 90 }, FallenLeaf('oak', 'autumn', 8) { rotate X 90 },
+       FallenLeaf('oak', 'autumn', 15) { rotate X 90 }
+    within Under
+    spacing 0.2
+    jitter 1
+    turned 360
+    translate Y 0.002
+}
+
+field {
+    of FallenLeaf('oak', 'autumn', 2) { rotate X 90 }, FallenLeaf('oak', 'autumn', 9) { rotate X 90 },
+       FallenLeaf('oak', 'autumn', 16) { rotate X 90 }
+    within Beyond
+    spacing 0.45
+    jitter 1
+    turned 360
+    translate Y 0.002
+}
+
+// -- What is falling ------------------------------------------------------------------------------------
+
+// The room the leaves are let go from: about the oak's crown.
+Crown = sphere { scale [4.0, 2.4, 4.0]  translate Y 6.4 }
+
+// Three leaves of three colors, each its own swarm with its own seed, already falling when the animation begins.
+for kind in [0, 2] {
+    swarm {
+        of FallenLeaf('oak', 'autumn', kind * 7 + 3)
+        within Crown
+        speed 0
+        rate 5
+        since -12
+        life 60
+        spin 60 to 300
+        falls at 0.9 to 1.6
+        bounce 0
+        friction 0.8
+        with seed kind
+    }
+}

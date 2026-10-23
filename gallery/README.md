@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 153 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 154 images</summary>
 
 <details>
 <summary><b>Showcase</b> &mdash; 3 images &middot; whole pictures, made for their own sake</summary>
@@ -1184,7 +1184,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Animation</b> &mdash; 6 images &middot; scenes that move, each a still and a movie</summary>
+<summary><b>Animation</b> &mdash; 7 images &middot; scenes that move, each a still and a movie</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1233,6 +1233,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/animation/a-lamp-at-work.igl">A Lamp at Work</a> (<a href="Local/animation/a-lamp-at-work.webp">the movie</a>)
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/a-fall-of-leaves.webp">
+      <img alt="A Fall of Leaves" height="120" src="Local/animation/a-fall-of-leaves.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/a-fall-of-leaves.igl">A Fall of Leaves</a> (<a href="Local/animation/a-fall-of-leaves.webp">the movie</a>)
     </td>
   </tr>
 </table>

@@ -343,12 +343,15 @@ swarm {
 | --- | --- |
 | `of` | The thing every copy is, by its name or a primitive's call.  Every copy is that one thing in another place, so thousands cost little more than one. |
 | `from` | Where copies are thrown from, in the swarm's own space: its origin unless said. |
+| `within` | A shape to throw copies from within instead, by name or by a call of a primitive, in the swarm's own space: each copy sets off from a place of its own inside it.  See below. |
 | `toward` | The way they are thrown: up, unless said. |
 | `spread` | How far from that way a copy may be thrown, an angle; evenly over every way within it.  Nought, unless said, throws them all one way. |
 | `speed` | How fast, in meters a second: `speed a to b` anywhere between the two, a copy at a time.  One unless said. |
 | `rate` | How many copies a second, the first at time nought.  50 unless said. |
 | `since` | When it began throwing, in seconds: nought unless said, and before nought for one already in full flow when the animation begins — a fountain running, a fire long alight.  Copies whose life was up before the frame are not even looked at, so a swarm long in flow costs no more than one just begun. |
 | `life` | How long a copy lasts, in seconds, `life a to b` as a speed is; once it is up the copy is gone.  Two unless said. |
+| `spin` | How fast a copy tumbles as it flies, an angle a second, `spin a to b` as a speed is: each from a turn of its own, about a way of its own.  Nought unless said.  See below. |
+| `falls at` | How fast a copy comes down in still air, in meters a second, `falls at a to b` as a speed is: the drag on it is whatever holds it to that.  Unless said, the drag on a ball its size. |
 | `bounce`, `friction`, `drag` | As a body's, though a copy keeps only 0.3 of its speed into what it strikes unless said. |
 | `radius` | The radius of the ball a copy strikes things as; unless said, half its box's longest side, as a body's. |
 
@@ -357,6 +360,37 @@ copy's way, speed and life are drawn from the swarm's [seed](scene-files.md#maki
 and the copy's own number, so the fortieth copy thrown is the same copy in every frame, wherever its flight has
 taken it.  Copies strike the scene but neither one another nor the scene's bodies — which is what lets there be
 thousands — and a swarm stands at the top of the scene, as a body does.
+
+**A swarm thrown from `within` a shape** sets each copy off from a place of its own inside it — snow from a cloud,
+leaves from a crown, sparks from a fire's heart — found by drawing places in the shape's box until one falls inside,
+the same for the same copy in every frame.  The shape is not in the scene; it only says where.  A copy passes
+whatever lies inside the shape with it and meets the scene only once it has left, so leaves let go among a crown's
+leaves fall clear of them rather than coming to rest on the first they touch.  A shape must be closed, as a crown or
+a fracture's solid must.
+
+**A copy that spins tumbles as it flies** and, once it has come to rest on something, stops turning and settles over
+a moment onto its broadest side: a leaf lies flat on the lawn rather than on whatever edge it landed on.  A thing
+no thinner one way than the others, a ball or a die, lies as it landed.  It turns about its own origin, so draw it
+about its middle, as a body is.  `falls at` is what makes a leaf a leaf: anything as light for its size as a leaf
+or a snowflake falls a meter or two a second, where the drag on a ball its size would drop it like a stone.
+
+```
+Crown = sphere { scale [4, 2.4, 4]  translate Y 6.4 }
+
+swarm {
+    of FallenLeaf('oak', 'autumn', 3)
+    within Crown
+    speed 0
+    rate 5
+    life 60
+    spin 60 to 300
+    falls at 0.9 to 1.6
+    bounce 0
+}
+```
+
+`gallery/Local/animation/a-fall-of-leaves.igl` lets an oak's leaves go so, on a light wind, onto a lawn already
+strewn with them; `FallenLeaf` is the [`trees`](libraries.md#trees) library's leaf on its own.
 
 A copy striking water lies on it, as on anything else, so a fountain's drops are given lives that end as they come
 down to the pool: thrown at one speed within a few degrees, they all fall back within a few thousandths of a second

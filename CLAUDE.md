@@ -511,8 +511,17 @@ bounce friction drag radius }` (`Geometry/Swarm.cs`, a Group) is filled by the s
 way, speed and life hashed from (seed, k, purpose) -- never drawn in order -- flown from its birth at 1/500 s, to the
 frame's EXACT time (stopping within half a step left each copy up to 1 ms behind, by its birth's phase), with swept
 rays against the colliders, an `Instance` of T at world scale with a `MotionAt` for blur; copies strike neither each
-other nor bodies.  A default radius, body or copy, is half the box's longest side (the ball round the box held a
-drop up off the ground).  No stacking, cloth, ropes or fluids.
+other nor bodies.  `within S` (a surface value, in the swarm's space) starts each copy at its own place inside S (box
+draws by (seed, k, 100 + 3 x try), `Containment.Holds`, 256 tries, refused if 1024 probes find no inside), and a copy
+PASSES what is inside S until it leaves it (else leaves let go in a crown came to rest on its leaves); `falls at a to b`
+sets drag = g / v^2 per copy; `spin a to b` tumbles a copy from a Shoemake turn about a random way, and a tumbling copy
+RESTS once a contact leaves it under 0.05 m/s -- no more flight -- settling over 0.15 s (smoothstep, slerp) onto its
+thinnest box axis against the contact normal, lowered by a ray to half its thickness (at least 1% of its radius).  A
+copy's size is `BoxAround(Thing, true)`, its own transforms included: until 2026-10-23 it was the thing's own-space box,
+so a drop scaled to 7 mm was a 1 m ball, met the pool a meter early (the fountain's jet ended in an umbrella) and felt
+no drag.  Swarms that do not spin are bit-identical to before but for that size.  A default radius, body or copy,
+is half the box's longest side (the ball round the box held a drop up off the ground).  No stacking, cloth, ropes or
+fluids.
 
 Kinematics: a `joint { pivot  axis X|Y|Z|v  angle  limits a to b  aim at <place|'name'> [facing v]  reach
 <place|'name'> with 'name' ... }` (`Geometry/Joint.cs`, a Group) is turned by a `JointCreator` the parser puts FIRST

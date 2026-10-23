@@ -15,7 +15,7 @@
 //
 // **A drop is gone as it meets the water.**  Drops strike the scene, the pool's surface among it, and one that
 // struck the water would lie on it.  Thrown at one speed within eight degrees, every drop comes back down to the
-// pool between 0.932 and 0.940 seconds after it left -- worked out as the swarm flies them, drag and all -- so each
+// pool between 0.934 and 0.944 seconds after it left -- worked out as the swarm flies them, drag and all -- so each
 // lives 0.93 and is gone a centimeter or two above the water.
 //
 // **Lit from the front.**  The afternoon sky is turned so that its sun stands behind the camera and to its left
@@ -112,7 +112,7 @@ group {
 
 // ---------------------------------------------------------------------------------------------
 // The jet: drops thrown up from the nozzle at 4.4 meters a second, within eight degrees of upright.  Thrown so,
-// every drop comes down to the pool between 0.932 and 0.940 seconds later, so each lives 0.93 and is gone as it
+// every drop comes down to the pool between 0.934 and 0.944 seconds later, so each lives 0.93 and is gone as it
 // meets the water rather than lying on it.  It has been running for two seconds when the animation begins.
 // ---------------------------------------------------------------------------------------------
 

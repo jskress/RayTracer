@@ -556,6 +556,166 @@ public class TestPhysics
     }
 
     /// <summary>
+    /// A swarm thrown from within a shape sets each copy off from a place of its own inside it, over the whole of it;
+    /// a copy passes what lies inside the shape with it -- here a shelf through the middle of the ball -- and meets
+    /// the scene once it has left, coming down onto the ground under it.
+    /// </summary>
+    [TestMethod]
+    public void TestASwarmThrowsFromWithinAShape()
+    {
+        Sphere room = new () { Transform = Transforms.Translate(0, 5, 0) * Transforms.Scale(2, 2, 2) };
+        Swarm held = new ()
+        {
+            Thing = new Sphere { Transform = Transforms.Scale(0.01, 0.01, 0.01) }, Within = room, SpeedFrom = 0,
+            SpeedTo = 0, Rate = 2000, LifeFrom = 10, LifeTo = 10, Drag = 0
+        };
+
+        held.Fill(Nothing, Still, Still, 0.5, 0, []);
+
+        List<double> away = held.Surfaces.Select(copy => (copy.Transform * Point.Zero - new Point(0, 5, 0)).Magnitude).ToList();
+
+        Assert.AreEqual(1001, away.Count);
+        Assert.IsTrue(away.Max() <= 2, $"one started {away.Max()} from the middle of a ball of two");
+        Assert.IsTrue(away.Max() > 1.9 && away.Min() < 0.3, "they should start all through the ball");
+
+        // A shelf at the ball's middle, met from above, and the ground.
+        static (double Distance, Vector Normal)? Shelved(Point from, Vector direction, double within)
+        {
+            if (direction.Y < 0 && from.Y > 5 && (from.Y - 5) / -direction.Y <= within)
+                return ((from.Y - 5) / -direction.Y, new Vector(0, 1, 0));
+
+            return Ground(from, direction, within);
+        }
+
+        Swarm falling = new ()
+        {
+            Thing = new Sphere { Transform = Transforms.Scale(0.01, 0.01, 0.01) }, Within = room, SpeedFrom = 0,
+            SpeedTo = 0, Rate = 20, LifeFrom = 100, LifeTo = 100, Bounce = 0, Drag = 0
+        };
+
+        falling.Fill(Shelved, Down, Still, 3, 0, []);
+
+        List<Point> landed = falling.Surfaces.Take(20).Select(copy => copy.Transform * Point.Zero).ToList();
+
+        Assert.IsTrue(landed.All(place => Math.Abs(place.Y - 0.01) < 1e-6),
+            $"every copy should lie on the ground, not the shelf: {string.Join(", ", landed.Select(place => place.Y))}");
+    }
+
+    /// <summary>
+    /// A copy given a speed it falls at comes down at that speed once it has gathered it, whatever its size; and one
+    /// that spins turns at its rate, about a way of its own.
+    /// </summary>
+    [TestMethod]
+    public void TestACopyFallsAndSpinsAsSaid()
+    {
+        Swarm falling = new ()
+        {
+            Thing = new Sphere { Transform = Transforms.Scale(0.05, 0.05, 0.05) }, SpeedFrom = 0, SpeedTo = 0,
+            Rate = 0.01, LifeFrom = 100, LifeTo = 100, FallsFrom = 1.5
+        };
+
+        falling.Fill(Nothing, Down, Still, 10, 0, []);
+
+        double then = (falling.Surfaces[0].Transform * Point.Zero).Y;
+
+        falling.Fill(Nothing, Down, Still, 10.1, 0, []);
+
+        Assert.AreEqual(1.5, (then - (falling.Surfaces[0].Transform * Point.Zero).Y) / 0.1, 1e-3, "its falling speed");
+
+        Swarm spinning = new ()
+        {
+            Thing = new Cube { Transform = Transforms.Scale(0.04, 0.03, 0.002) }, SpeedFrom = 0, SpeedTo = 0,
+            Rate = 0.01, LifeFrom = 100, LifeTo = 100, SpinFrom = 2, SpinTo = 2
+        };
+
+        spinning.Fill(Nothing, Still, Still, 1, 0, []);
+
+        Matrix before = spinning.Surfaces[0].Transform;
+
+        spinning.Fill(Nothing, Still, Still, 1.25, 0, []);
+
+        Matrix turned = spinning.Surfaces[0].Transform * before.Invert();
+        double trace = Diagonal(turned);
+
+        Assert.AreEqual(2 * 0.25, Math.Acos(Math.Clamp((trace - 1) / 2, -1, 1)), 1e-9, "how far it turned in a quarter second");
+
+        // With the shutter open, it turns on through the frame as well.
+        spinning.Fill(Nothing, Still, Still, 1, 0.1, [0, 1]);
+
+        Matrix through = spinning.Surfaces[0].MotionAt(1);
+
+        Assert.AreEqual(2 * 0.1, Math.Acos(Math.Clamp((Diagonal(through) - 1) / 2, -1, 1)), 1e-9, "how far it turns through a frame");
+    }
+
+    // The sum of a turn's diagonal, from what it does to the three axes.
+    private static double Diagonal(Matrix turn) =>
+        (turn * new Vector(1, 0, 0)).X + (turn * new Vector(0, 1, 0)).Y + (turn * new Vector(0, 0, 1)).Z;
+
+    /// <summary>
+    /// A copy meets things at its own size as it is placed, its own transforms and all: a ball scaled to a
+    /// centimeter comes to rest with its middle a centimeter off the ground, not the unit it is in its own space.
+    /// </summary>
+    [TestMethod]
+    public void TestACopyMeetsThingsAtItsOwnSize()
+    {
+        Swarm dropped = new ()
+        {
+            Thing = new Sphere { Transform = Transforms.Scale(0.01, 0.01, 0.01) }, From = new Point(0, 1.5, 0),
+            SpeedFrom = 0, SpeedTo = 0, Rate = 0.1, LifeFrom = 10, LifeTo = 10, Bounce = 0, Drag = 0
+        };
+
+        dropped.Fill(Ground, Down, Still, 2, 0, []);
+
+        Assert.AreEqual(0.01, (dropped.Surfaces[0].Transform * Point.Zero).Y, 1e-6, "its middle, lying on the ground");
+    }
+
+    /// <summary>
+    /// A tumbling copy turns as it falls and, once it has come to rest, lies on its broadest side on what it landed
+    /// on: a thin card dropped spinning ends flat on the ground, its middle half its thickness up, and stays so.
+    /// </summary>
+    [TestMethod]
+    public void TestATumblingCopyComesToRestLyingFlat()
+    {
+        Swarm dropped = new ()
+        {
+            Thing = new Cube { Transform = Transforms.Scale(0.04, 0.03, 0.002) }, From = new Point(0, 1, 0),
+            SpeedFrom = 0, SpeedTo = 0, Rate = 0.1, LifeFrom = 100, LifeTo = 100, Bounce = 0, Friction = 0.8,
+            SpinFrom = 4, SpinTo = 4, FallsFrom = 1.2
+        };
+        Matrix placed = null;
+
+        foreach (double time in new[] { 0.3, 3, 3.5 })
+        {
+            dropped.Fill(Ground, Down, Still, time, 0, []);
+
+            Matrix now = dropped.Surfaces[0].Transform;
+            Point middle = now * Point.Zero;
+            Vector thin = (now * new Vector(0, 0, 1)).Unit;
+
+            if (time < 1)
+            {
+                Assert.IsTrue(middle.Y > 0.3, $"still falling at {time} s, at {middle.Y}");
+                continue;
+            }
+
+            Assert.AreEqual(0.002, middle.Y, 1e-6, $"its middle at {time} s");
+            Assert.AreEqual(1, Math.Abs(thin.Y), 1e-9, $"its thin side up at {time} s");
+
+            if (placed is not null)
+                Assert.IsTrue(Same(placed, now), "it lies still once at rest");
+
+            placed = now;
+        }
+    }
+
+    private static bool Same(Matrix a, Matrix b)
+    {
+        Point[] corners = [Point.Zero, new (1, 0, 0), new (0, 1, 0), new (0, 0, 1)];
+
+        return corners.All(corner => ((a * corner) - (b * corner)).Magnitude < 1e-12);
+    }
+
+    /// <summary>
     /// Renders a small scene with the given options and hands back its picture, or what stopped it.
     /// </summary>
     private static (Canvas Picture, string Error) Rendered(string directory, string body, long? frame = null,
@@ -627,6 +787,9 @@ public class TestPhysics
                 Spark = sphere { scale 0.02 }
                 swarm { of Spark  from [0, 0.1, 0]  toward [0, 1, 0]  spread 20  speed 2 to 3  rate 30  life 0.5 to 1
                         since -1  bounce 0.3  friction 0.5  drag 1  radius 0.02  with seed 3 }
+                Leaf = cube { scale [0.03, 0.02, 0.001] }
+                Room = sphere { scale 0.5  translate Y 2 }
+                swarm { of Leaf  within Room  speed 0  rate 20  life 5  since -2  spin 30 to 90  falls at 1 to 2  with seed 4 }
                 """;
 
             (Canvas later, string error) = Rendered(directory, world, frame: 6);
@@ -647,6 +810,18 @@ public class TestPhysics
             StringAssert.Contains(Rendered(directory, "sphere { body { tether to 3 } }").Error, "tied to a place");
             StringAssert.Contains(Rendered(directory, "sphere { body { bounce 2 } }").Error, "nothing to one");
             StringAssert.Contains(Rendered(directory, "sphere { body { mass 0 } }").Error, "more than nothing");
+            StringAssert.Contains(Rendered(directory,
+                "Leaf = cube { scale [0.03, 0.02, 0.001] }  Room = sphere { translate Y 3 }  " +
+                "swarm { of Leaf  within Room  from [0, 1, 0] }").Error, "not both");
+            StringAssert.Contains(Rendered(directory,
+                "Leaf = cube { scale 0.01 }  Room = plane { }  swarm { of Leaf  within Room }").Error, "no inside");
+            StringAssert.Contains(Rendered(directory,
+                "Leaf = cube { scale 0.01 }  Room = disc { center [0, 3, 0]  normal [0, 1, 0]  radius 2 }  swarm { of Leaf  within Room }").Error,
+                "must be a closed surface");
+            StringAssert.Contains(Rendered(directory,
+                "Leaf = cube { scale 0.01 }  swarm { of Leaf  spin -10 }").Error, "less than nothing");
+            StringAssert.Contains(Rendered(directory,
+                "Leaf = cube { scale 0.01 }  swarm { of Leaf  falls at 0 }").Error, "more than nothing");
         }
         finally
         {

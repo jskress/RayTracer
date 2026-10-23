@@ -103,7 +103,7 @@ public partial class LanguageParser
             'temperature', 'thickness', 'tightness', 'tilted', 'trace', 'transform', 'translate', 'transparency', 'triangle', 'triangular', 'tropism', 'true', 'tube', 'tubes', 'tumble', 'twist',
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
-            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span',
+            'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -1581,9 +1581,15 @@ public partial class LanguageParser
                     ?? 'Expecting a surface name, or a call of a primitive, to follow "of" here.' >
                 leftParen{?}
             } |
+            {
+                within > [ _identifier | _keyword ]
+                    ?? 'Expecting a surface name, or a call of a primitive, to follow "within" here.' >
+                leftParen{?}
+            } |
             { [ from | toward ] > _expression } |
             { [ spread | rate | since | bounce | friction | drag | radius ] > _expression } |
-            { [ speed | life ] > _expression > { to > _expression }{?} } |
+            { [ speed | life | spin ] > _expression > { to > _expression }{?} } |
+            { falls > at ?? 'Expecting "at" and how fast a copy falls here.' > _expression > { to > _expression }{?} } |
             surfaceEntryClause
         ]
 
