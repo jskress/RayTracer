@@ -530,12 +530,14 @@ public class TestDocumentation
                         continue;
                     }
 
-                    // Small, since this is about whether it works rather than what it looks like.
+                    // Small, since this is about whether it works rather than what it looks like, and
+                    // an animation as its still, as its figure is made.
                     renderer.Render(new RenderOptions
                     {
                         OutputFileName = Path.Combine(output, $"{Path.GetFileNameWithoutExtension(scene)}.png"),
                         Width = 40,
-                        Height = 30
+                        Height = 30,
+                        Still = true
                     });
 
                     if (captured.ToString().Contains("Error"))

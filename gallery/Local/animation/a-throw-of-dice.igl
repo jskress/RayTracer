@@ -1,0 +1,115 @@
+// A throw of dice: a white die and a red one tossed into a felt-lined tray, tumbling away to its far wall and
+// coming to rest.
+//
+//     dotnet run -- -i a-throw-of-dice.igl -o a-throw-of-dice.webp -w 400 -h 300
+//     dotnet run -- -i a-throw-of-dice.igl -o a-throw-of-dice.png --still
+//
+// **Nothing here says where the dice go.**  Each is a `body`, thrown over the near wall rolling forward -- a
+// meter and a bit a second, turning four times a second -- and from there gravity, the felt and the walls decide:
+// each lands on an edge or a corner, is tipped over and over by what its corners strike, grips the felt as it
+// slides and comes to rest on a face, all in under half a second, as dice do.  They are the die from chapter
+// sixteen, a unit across, made sixteen millimeters: the scene is in meters, as bodies are.
+//
+// **A die must say it is a box.**  A body strikes the scene as a ball unless it is a `cube`, and a die is a
+// superellipsoid with its pips cut out, so each says `shape box`: it then meets the felt and the walls
+// by the eight corners of its own box, which is what turns it over as it rolls.  Two bodies strike each other as
+// balls whatever they are, so the two dice are thrown apart and kept apart.
+//
+// **Coming to rest is the hard part.**  A box lying on a face is held at all four of its lowest corners at once,
+// each gripping the felt as hard as the step has pressed it -- held at its deepest corner alone, a die pivoted about
+// it and crept for ever.  And gravity sinks a resting corner a hundredth of a millimeter into the felt every step,
+// which is a great deal to a die, so a body nearly still for a fifth of a second falls asleep until something
+// strikes it: before it could, the dice settled and then turned slowly where they lay, a degree or two a second.
+//
+// **The felt is cloth**, a `sheen` over green, and the lamp is warm and fades with distance, so the room beyond the
+// tray is dark.  The shutter is open half a frame, so the dice blur as they tumble and sharpen as they stop.
+
+context {
+    angles are degrees
+    animation length 1.6  still 11
+    white balance 3400
+    info {
+        title 'A Throw of Dice'
+        author 'J. Stephen Kress'
+        description 'A white die and a red one thrown into a felt tray, tumbling to rest under gravity.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.03, 0.24, -0.15]
+    look at [0.04, 0, 0.075]
+    field of view 38
+    shutter 0.5
+    blur samples 24
+}
+
+background [0.01, 0.01, 0.012]
+
+// One warm lamp over the tray, fading with distance so that the room beyond falls away into the dark.
+area light {
+    location [-0.12, 0.55, -0.15]
+    axisU [0.2, 0, 0]
+    axisV [0, 0, 0.2]
+    steps 4
+    temperature 3000
+    fade distance 0.6
+}
+point light { location [0.6, 0.35, -0.5]  temperature 6500  brightness 0.12  fade distance 0.8 }
+
+// ---------------------------------------------------------------------------------------------
+// The dice: the book's die from chapter sixteen, a unit across, made sixteen millimeters.
+// ---------------------------------------------------------------------------------------------
+
+include '../../challenge-book/chapter-16/die.igl'
+
+Ruby = material { pigment [0.62, 0.05, 0.06]  specular 0.6  shininess 120  reflective 0.04  fresnel }
+
+// ---------------------------------------------------------------------------------------------
+// The tray: a felt floor at height nought, thirty-six by twenty-six centimeters, walled in walnut.
+// ---------------------------------------------------------------------------------------------
+
+Felt = material {
+    pigment [0.05, 0.26, 0.12]
+    diffuse 0.9  specular 0
+    sheen { color [0.20, 0.40, 0.26]  roughness 0.6 }
+}
+
+Walnut = material {
+    pigment wood {
+        turbulence { amplitude 0.30  octaves 3 }
+        [0, [0.27, 0.16, 0.10], 0.5, [0.20, 0.12, 0.07],
+         0.82, [0.14, 0.08, 0.05], 1, [0.27, 0.16, 0.10]]
+        scale [0.011, 0.011, 2]
+        rotate Y 90
+        translate [0, 0.06, 0]
+    }
+    specular 0.4  shininess 60  reflective 0.04  fresnel
+}
+
+plane { translate Y -0.012  material Walnut }
+
+cube { scale [0.18, 0.006, 0.13]  translate Y -0.006  material Felt }
+cube { scale [0.204, 0.031, 0.012]  translate [0, 0.019, -0.142]  material Walnut }
+cube { scale [0.204, 0.031, 0.012]  translate [0, 0.019, 0.142]  material Walnut }
+cube { scale [0.012, 0.031, 0.13]  translate [-0.192, 0.019, 0]  material Walnut }
+cube { scale [0.012, 0.031, 0.13]  translate [0.192, 0.019, 0]  material Walnut }
+
+// ---------------------------------------------------------------------------------------------
+// The throw: both dice from in front, over the near wall, rolling away toward the far one.
+// ---------------------------------------------------------------------------------------------
+
+object Die() {
+    scale 0.016
+    rotate X 30
+    translate [-0.035, 0.075, -0.19]
+    body { velocity [0.02, 0.15, 1.2]  spin [1500, 40, -60]  bounce 0.4  friction 0.35  shape box }
+}
+
+object Die(DieWhite, Ruby) {
+    scale 0.016
+    rotate Y 40  rotate X -25
+    translate [0.045, 0.08, -0.20]
+    body { velocity [0.0, 0.1, 1.1]  spin [1300, -150, 100]  bounce 0.4  friction 0.35  shape box }
+}

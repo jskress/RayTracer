@@ -1,0 +1,138 @@
+// A garden fountain: a jet of water thrown up from a stone basin, opening at the top and falling back into its pool.
+//
+//     dotnet run -- -i a-garden-fountain.igl -o a-garden-fountain.webp -w 400 -h 300
+//     dotnet run -- -i a-garden-fountain.igl -o a-garden-fountain.png --still
+//
+// **The jet is a swarm.**  Twelve hundred drops a second are thrown up from the nozzle, each a little copy of one
+// drop, at 4.4 meters a second within eight degrees of upright; gravity and the air do the rest, so the jet slows
+// as it climbs, opens into a crown at the top a meter above the nozzle and falls back in arcs.  Every drop's way
+// is drawn from its own number, so the drop thrown thousandth is the same drop in every frame.
+//
+// **A running fountain is already running.**  The swarm says `since -2`: it has been throwing for two seconds when
+// the animation begins, so the first frame shows the jet in full flow rather than the first drops leaving the
+// nozzle, and since the flow is steady, the movie loops with no seam.  The pool is held at one depth, as a
+// fountain's is: what the jet throws up is what falls back.
+//
+// **A drop is gone as it meets the water.**  Drops strike the scene, the pool's surface among it, and one that
+// struck the water would lie on it.  Thrown at one speed within eight degrees, every drop comes back down to the
+// pool between 0.932 and 0.940 seconds after it left -- worked out as the swarm flies them, drag and all -- so each
+// lives 0.93 and is gone a centimeter or two above the water.
+//
+// **Lit from the front.**  The afternoon sky is turned so that its sun stands behind the camera and to its left
+// (`ClearAfternoonFrom(320)`; azimuth runs from -Z toward +X, and the library's own 205 would light the hedge and
+// leave the basin in its shadow), and the yew hedge behind is dark enough for the spray to show against it and for
+// the pool to mirror it.  The shutter is open half a frame, so each drop is a short streak along its way.
+
+import 'water' { PoolWater }
+import 'daylight' { ClearAfternoonFrom, ClearAfternoonLight }
+
+context {
+    angles are degrees
+    animation length 2  still 30
+    info {
+        title 'A Garden Fountain'
+        author 'J. Stephen Kress'
+        description 'A jet of water thrown up from a stone basin and falling back into its pool, already in full flow.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 1.05, -4.2]
+    look at [0, 0.8, 0]
+    field of view 48
+    shutter 0.5
+    blur samples 24
+}
+
+// The sun behind the camera and to its left, so the spray and the basin are lit from the front.
+background ClearAfternoonFrom(320)
+light ClearAfternoonLight
+
+Limestone = material {
+    pigment granite {
+        [0, [0.80, 0.77, 0.70], 0.5, [0.74, 0.71, 0.64], 1, [0.66, 0.63, 0.56]]
+        scale 0.25
+    }
+    normal granite { depth 0.2  scale 0.05 }
+    specular 0.1  shininess 20
+}
+
+Gravel = material {
+    pigment granite {
+        [0, [0.60, 0.56, 0.50], 0.5, [0.57, 0.53, 0.48], 1, [0.53, 0.50, 0.45]]
+        scale 0.05
+    }
+    normal granite { depth 0.1  scale 0.04 }
+    specular 0
+}
+
+Yew = material {
+    pigment granite {
+        [0, [0.06, 0.16, 0.06], 0.5, [0.10, 0.22, 0.08], 1, [0.04, 0.11, 0.04]]
+        scale 0.06
+    }
+    normal granite { depth 0.8  scale 0.05 }
+    specular 0.05  shininess 10
+}
+
+plane { material Gravel }
+
+// A yew hedge behind, dark enough for the spray to show against and for the pool to mirror.
+cube { scale [6, 0.9, 0.4]  translate [0, 0.9, 3.2]  material Yew }
+
+// ---------------------------------------------------------------------------------------------
+// The basin: a wall 1.2 meters out and 0.45 high round a floor 0.08 up, its lip rounded, and the pool in it held
+// at 0.38 -- a running fountain's pool stays as full as it is.
+// ---------------------------------------------------------------------------------------------
+
+difference {
+    cylinder { min Y 0  max Y 0.45  scale [1.2, 1, 1.2] }
+    cylinder { min Y 0.08  max Y 0.5  scale [1.05, 1, 1.05] }
+    material Limestone
+}
+
+torus { radii 1.125, 0.075  translate Y 0.45  material Limestone }
+
+cylinder {
+    min Y 0.081  max Y 0.38
+    scale [1.049, 1, 1.049]
+    material PoolWater { normal ripples { depth 0.15  scale 0.08 } }
+}
+
+// The pedestal standing up out of the pool, and the nozzle on it.
+group {
+    cylinder { min Y 0.08  max Y 0.2  scale [0.18, 1, 0.18] }
+    cylinder { min Y 0.2  max Y 0.6  scale [0.07, 1, 0.07] }
+    cylinder { min Y 0.6  max Y 0.63  scale [0.11, 1, 0.11] }
+    cylinder { min Y 0.63  max Y 0.66  scale [0.02, 1, 0.02] }
+    material Limestone
+}
+
+// ---------------------------------------------------------------------------------------------
+// The jet: drops thrown up from the nozzle at 4.4 meters a second, within eight degrees of upright.  Thrown so,
+// every drop comes down to the pool between 0.932 and 0.940 seconds later, so each lives 0.93 and is gone as it
+// meets the water rather than lying on it.  It has been running for two seconds when the animation begins.
+// ---------------------------------------------------------------------------------------------
+
+Drop = sphere {
+    scale 0.007
+    material {
+        pigment [0.90, 0.95, 1]
+        transparency 0.6  reflective 0.2  fresnel
+        specular 1  shininess 300
+        interior { index of refraction Water }
+    }
+}
+
+swarm {
+    of Drop
+    from [0, 0.66, 0]
+    spread 8
+    speed 4.4
+    rate 1200
+    life 0.93
+    bounce 0
+    since -2
+}

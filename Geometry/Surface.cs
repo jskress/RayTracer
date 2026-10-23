@@ -155,6 +155,12 @@ public abstract class Surface : NamedThing
     public Func<double, Matrix> MotionAt { get; set; }
 
     /// <summary>
+    /// This property holds what the scene says of this surface as a body -- a thing moved by gravity, the air, what
+    /// it strikes and what it is tied to -- or null if its transforms alone say where it stands.
+    /// </summary>
+    public Core.Physics.Body Body { get; set; }
+
+    /// <summary>
     /// This property notes whether this surface moves while the shutter is open.
     /// </summary>
     public bool Moves => _movingTransforms is not null;
@@ -280,6 +286,24 @@ public abstract class Surface : NamedThing
     /// -- is done a handful of times for the whole render instead of millions.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// This method stands a surface that has been prepared somewhere else, moving as it is said to: a body, once the
+    /// world has moved it to where it stands at the frame's time and worked out how it moves through the frame.
+    /// </summary>
+    /// <param name="transform">Where it stands at the frame's instant.</param>
+    /// <param name="motion">How it moves from there while the shutter is open, or null if it holds still.</param>
+    internal void StandAt(Matrix transform, Func<double, Matrix> motion)
+    {
+        Transform = transform;
+        MotionAt = motion;
+        _movingTransforms = null;
+        _movingInverses = null;
+        _movingTransposedInverses = null;
+
+        if (motion is not null && SampleTimes is { Length: > 1 })
+            BuildMotionTransforms(SampleTimes);
+    }
+
     private void BuildMotionTransforms(double[] sampleTimes)
     {
         _movingTransforms = sampleTimes

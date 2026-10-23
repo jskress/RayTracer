@@ -3,27 +3,31 @@
 //     dotnet run -- -i newtons-cradle.igl -o newtons-cradle.webp -w 400 -h 300
 //     dotnet run -- -i newtons-cradle.igl -o newtons-cradle.png --still
 //
-// The first animation, and it is written the way every animation is: the scene says how long it runs, and
-// everything in it may be worked out from `time`, the frame's moment in seconds.  The whole scene is carried
-// out again for every frame, so whatever reads the time moves -- here, the turn of the two end balls.
+// **Nothing here says how the balls move.**  Each is a `body`: a steel ball of sixty-four grams tied by its two
+// strings to two pins on the rails, and the first is held out to the left at thirty-two degrees and let go.
+// Gravity swings it down -- slowing at the top of each swing and fastest at the bottom, a pendulum's pace for
+// strings fourteen centimeters long -- and it strikes the next ball; the strike passes along the row as one
+// impulse after another, ball to ball, and the last ball flies out while the middle three hardly stir.  Each ball
+// keeps 995 parts in a thousand of its speed in a strike, as hardened steel does, and the air drags a little, so
+// the swing dies slowly: by a fifth down in four seconds.  The animation is five swings long, 115 frames, ending
+// as the first ball comes back to the top, so the movie begins again where the ball stands still.
 //
-// **A swing is two keys.**  An end ball goes out, slowing as it climbs, stops, and falls back faster and faster
-// until it strikes: `ease out` on the way up, `ease in` on the way down.  The keys `loop`, so the cycle runs for
-// ever, and the frames fill exactly one cycle, so the movie does too.  Its length, three quarters of a second,
-// is a real pendulum's for strings fourteen centimeters long -- two pi times the root of the length over the
-// fall of gravity -- so it swings at the pace a desk toy does.
+// **A body is drawn about its middle.**  The world moves a body from its own origin and turns it about it, so
+// each pendulum is drawn about its ball's middle -- the strings reaching up from it to where the pins are -- and
+// put in its place by the call.  The strings are part of the body, and a body held by strings turns with them,
+// so they keep running to their pins as it swings.
 //
-// **The blur is free.**  The camera's shutter is open half a frame, as a film camera's is, and a ball whose
-// turn reads the time is blurred along its own arc across it, fastest at the bottom of its swing, where it
-// strikes, and sharp at the top where it stops.  Nothing in the scene says so but the shutter.
+// **The blur is free.**  The camera's shutter is open half a frame, as a film camera's is, and the world is
+// moved on through it, so each ball is blurred along its own arc: most at the bottom of its swing, where it
+// strikes, and not at all at the top, where it stops.
 
 context {
     angles are degrees
-    animation frames 18  rate 24  still 4
+    animation frames 115  still 11
     info {
         title "A Newton's Cradle"
         author 'J. Stephen Kress'
-        description 'A desk toy swinging: the first animation, its end balls keyed and blurred.'
+        description 'A desk toy swinging under gravity, its strike passed from ball to ball.'
         copyright true
         software __software__
     }
@@ -79,29 +83,39 @@ for side in [0, 1] {
     }
 }
 
-// Each end ball swings out and back in half a cycle while the other hangs still: out to thirty-two degrees,
-// slowing to a stop, and back faster and faster to the strike.
-Right = keys loop { 0: 0  0.1875: 32 ease out  0.375: 0 ease in  0.75: 0 }
-Left = keys loop { 0: 0  0.375: 0  0.5625: -32 ease out  0.75: 0 ease in }
+// Where a ball hangs: fourteen centimeters below the line between its pins, swung out by an angle.
+function BallX(x, swing) -> number { return x + 0.14 * sin(swing) }
+function BallY(swing) -> number { return 0.20 - 0.14 * cos(swing) }
 
-// One pendulum: a ball fourteen centimeters below the line between its two pins, a string up to each.
-primitive Pendulum(x, turn) -> group {
+// One pendulum: a ball and the two strings it hangs by, up to the pins on the front and back rails.  It is drawn
+// about the ball's middle, which is where the world moves a body from and what it turns it about, and put in its
+// place by the call; the strings are part of it, and a body held by strings is turned with them, so they keep
+// running to their pins.
+primitive Pendulum(x, swing) -> group {
     return group {
-        sphere { material Chrome  scale 0.0125  translate Y -0.14 }
+        sphere { material Chrome  scale 0.0125 }
         for side in [0, 1] {
             tube {
                 material String
-                radius 0.0004 at [0, 0, (side - 0.5) * 0.09]
-                radius 0.0004 at [0, -0.1285, 0]
+                radius 0.0004 at [0, 0.0115, 0]
+                radius 0.0004 at [x - BallX(x, swing), 0.20 - BallY(swing), (side - 0.5) * 0.09]
             }
         }
-        rotate Z turn
-        translate [x, 0.20, 0]
     }
 }
 
-object Pendulum(-0.05, Left(time))
-object Pendulum(-0.025, 0)
-object Pendulum(0, 0)
-object Pendulum(0.025, 0)
-object Pendulum(0.05, Right(time))
+// The five balls, a tenth of a millimeter apart, each a body: steel, keeping nearly all its speed in a strike,
+// and tied by its two strings to its two pins.  The first is held out to the left and let go.
+Spacing = 0.0251
+Held = -32 * π / 180
+
+for ball in [0, 4] {
+    object Pendulum((ball - 2) * Spacing, ball == 0 ? Held : 0) {
+        translate [BallX((ball - 2) * Spacing, ball == 0 ? Held : 0), BallY(ball == 0 ? Held : 0), 0]
+        body {
+            mass 0.064  bounce 0.995  friction 0.1  radius 0.0125
+            tether to [(ball - 2) * Spacing, 0.20, -0.045]
+            tether to [(ball - 2) * Spacing, 0.20, 0.045]
+        }
+    }
+}

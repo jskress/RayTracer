@@ -4,7 +4,7 @@ title "Properties every surface has"
 property = "named" name | material | "no" ( "shadow" | "caustics" )
          | "gives" "light" [ "samples" number ] | "bounded" "by" point "," point
          | "with" "seed" number | transform | "transform" name [ "{" { transform } "}" ]
-         | motion | hair | placement | weather ;
+         | motion | hair | placement | weather | body ;
 
 placement = ( "on" | "under" | "behind" | "centered" "on" | ( "left" | "right" | "front" ) "of"
             | "align" ( "left" | "right" | "top" | "bottom" | "front" | "back" ) "with" )

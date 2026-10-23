@@ -1,0 +1,65 @@
+// Bodies and a swarm, a second after they were let go.  On the left, three balls dropped together from a meter and
+// a half, bouncing 0.9, 0.6 and 0.3: the liveliest is at the top of its first bounce, the next coming down from a
+// lower one and the deadest all but still.  In the middle, a fountain of drops thrown up and out, each falling back
+// and splashing off the ground.  On the right, a ball on a string, let go out to the side and swung across, and a
+// box thrown spinning, come down on a corner and tumbling.  The shutter is open, so what moves is blurred along
+// its way.
+context { angles are degrees  no gamma  animation length 2  still 30 }
+
+camera {
+    location [0, 1.6, -7]
+    look at [0, 1, 0]
+    field of view 60
+    shutter 0.5
+    blur samples 16
+}
+
+background [0.66, 0.74, 0.84]
+
+point light { location [-4, 8, -6]  color [1, 0.97, 0.93] }
+point light { location [5, 3, -5]   color [0.30, 0.31, 0.35] }
+
+plane { material { pigment checker { color [0.62, 0.62, 0.60], color [0.50, 0.50, 0.48] scale 0.5 }  specular 0 } }
+
+// Each ball drawn about its middle and put in place by its translate: a body moves about its own origin.
+for ball in [0, 2] {
+    sphere {
+        scale 0.15
+        translate [-3.3 + ball * 0.5, 1.5, 0]
+        material { pigment color [0.85, 0.30, 0.20] }
+        body { bounce 0.9 - ball * 0.3 }
+    }
+}
+
+Drop = sphere { scale 0.025  material { pigment color [0.45, 0.65, 0.95] } }
+
+swarm {
+    of Drop
+    from [0, 0.05, 0]
+    spread 15
+    speed 4.5 to 5
+    rate 200
+    life 1.6
+    bounce 0.2
+}
+
+// The string is drawn with the ball, from its middle to the pin: a tied body is turned by its ties, so the string
+// stays pointing at the pin as the ball swings.
+Pin = [2.2, 2.4, 0]
+Swing = 50 * π / 180
+
+group {
+    sphere { scale 0.15  material { pigment color [0.20, 0.40, 0.90] } }
+    tube { radius 0.008 at [0, 0, 0]  radius 0.008 at [-1.2 * sin(Swing), 1.2 * cos(Swing), 0]  material { pigment color [0.2, 0.2, 0.2] } }
+    translate [2.2 + 1.2 * sin(Swing), 2.4 - 1.2 * cos(Swing), 0]
+    body { tether to Pin }
+}
+
+cylinder { min Y 0  max Y 0.05  scale [0.05, 1, 0.05]  translate Pin }
+
+cube {
+    scale 0.15
+    translate [1.0, 1.0, -1.2]
+    material { pigment color [0.95, 0.85, 0.30] }
+    body { velocity [0.6, 2.5, 0]  spin [0, 0, -360]  bounce 0.4 }
+}

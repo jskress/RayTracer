@@ -1,3 +1,4 @@
+using RayTracer.Basics;
 using System.Diagnostics.CodeAnalysis;
 using RayTracer.Extensions;
 using RayTracer.Graphics;
@@ -269,6 +270,16 @@ public class RenderContext
     /// scene has said how deep to trace.
     /// </summary>
     public const double Bailout = 1.0 / 1024;
+
+    /// <summary>
+    /// This property holds how gravity pulls the scene's bodies and swarms, in meters a second squared.
+    /// </summary>
+    public Vector Gravity { get; set; } = new (0, -9.81, 0);
+
+    /// <summary>
+    /// This property holds how the air moves, which is what drags the scene's bodies and swarms along with it.
+    /// </summary>
+    public Vector Wind { get; set; } = new (0, 0, 0);
 
     /// <summary>
     /// This property holds the animation a scene's context asks for, or null for a still.

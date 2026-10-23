@@ -36,33 +36,49 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `across` | Shape grammar: a gabled `roof` whose ridge runs along the scope's Z rather than its X. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `animation` | Context: how long a scene runs as an animation, `length` seconds or `frames`, its `rate` and its `still`. | [Saying How Long](animation.md#saying-how-long) |
 | `banked` | `along`: leaning into a bend as a rider would feel to be up, by the speed and the curvature. | [Along a Spline](animation.md#along-a-spline) |
+| `body` | Surface: moved by gravity, the air, what it strikes and what it is tied to, from where it stands at time nought. | [Bodies](animation.md#bodies) |
+| `bounce` | Body or swarm: how much of its speed into what it strikes it keeps coming away, nought to one. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
+| `box` | Body: `shape box`, striking the scene as its own box rather than as a ball. | [Bodies](animation.md#bodies) |
 | `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `drag` | Body or swarm: how much of the air's drag on a thing its size and shape it feels. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `ease` | Keys: the value comes to the key slowly, `ease in`, `ease out` or `ease in out`. | [Keys](animation.md#keys) |
 | `extrude` | Shape grammar: gives a scope a height, a lot raised into a mass. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `faces` | Shape grammar: hands on each face of a box as a scope standing on it, its Z pointing in. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `fill` | Shape grammar: fills a scope with a box, in the grammar's own space. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `frames` | Context's `animation`: how many frames it runs. | [Saying How Long](animation.md#saying-how-long) |
+| `friction` | Body or swarm: how hard it grips what it slides or rolls on. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `gable` | Shape grammar: a `roof` of two slopes meeting at a ridge, its gable ends in the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `gables` | Shape grammar: the material of a gabled `roof`'s gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `gravity` | Context: how gravity pulls bodies and swarms, 9.81 meters a second each second downward unless said. | [Bodies](animation.md#bodies) |
 | `hip` | Shape grammar: a `roof` sloping on all four sides. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `hold` | Keys: the value waits for the key and then jumps to it. | [Keys](animation.md#keys) |
 | `keys` | A value given at moments, called with the time: `Lift = keys { 0: 0  2: 3 ease out }`. | [Keys](animation.md#keys) |
+| `life` | Swarm: how long a copy lasts, in seconds, `life a to b`. | [Swarms](animation.md#swarms) |
 | `loop` | Keys: begin again once the last key is reached. | [Keys](animation.md#keys) |
+| `mass` | Body: its mass, in kilograms. | [Bodies](animation.md#bodies) |
 | `nothing` | Shape grammar: puts nothing in a scope. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
-| `rate` | Context's `animation`: frames a second, 30 unless said. | [Saying How Long](animation.md#saying-how-long) |
+| `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
 | `repeat` | Shape grammar: tiles a scope along an axis with as many parts of about a size as fit. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `shapes` | Surface: a building described by a shape grammar's rules. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `since` | Swarm: when it began throwing, before nought for one already in full flow. | [Swarms](animation.md#swarms) |
 | `snow` | Weather: snow lying whole over whatever is flat enough to hold it. | [Weathering a Model](materials.md#weathering-a-model) |
+| `speed` | Swarm: how fast a copy is thrown, `speed a to b`. | [Swarms](animation.md#swarms) |
+| `spin` | Body: how fast it is turning at time nought, about each axis, in degrees a second. | [Bodies](animation.md#bodies) |
 | `split` | Shape grammar: divides a scope along an axis into parts of fixed sizes and `~` shares. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `spread` | Swarm: how far from its way a copy may be thrown, an angle. | [Swarms](animation.md#swarms) |
 | `still` | Context's `animation`: the frame that stands for it as a still. | [Saying How Long](animation.md#saying-how-long) |
+| `swarm` | Surface: copies of one thing thrown from a place, falling and bouncing until their life is up. | [Swarms](animation.md#swarms) |
+| `tether` | Body: `tether to <place or name> [length <l>]`, a string tying it to a pin or another body. | [Tethers](animation.md#tethers) |
 | `upright` | `along`: up the world's, as near as the spline allows; the default. | [Along a Spline](animation.md#along-a-spline) |
+| `velocity` | Body: how fast it is moving at time nought, and which way. | [Bodies](animation.md#bodies) |
 | `verge` | Shape grammar: how far a gabled `roof` reaches past its gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `wheelbase` | `along`: ride on two places that far apart, both on the spline, as a rigid vehicle does. | [Along a Spline](animation.md#along-a-spline) |
+| `wind` | Context: how the air moves, dragging bodies and swarms with it; still unless said. | [Bodies](animation.md#bodies) |
 | `X` | Names the X axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's X expression. | [Transforms](transforms.md#rotate) |
 | `Y` | Names the Y axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Y expression. | [Transforms](transforms.md#rotate) |
 | `Z` | Names the Z axis, in a transform, a linear gradient or an axis value.  Also a parametric surface's Z expression. | [Transforms](transforms.md#rotate) |
@@ -205,7 +221,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `fracture` | Surface: a solid broken into pieces, each the part of it nearest a seed. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `frequency` | Shaping: scales a pattern's value before the wave. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `frizz` | Hair: how far strands wander. | [Advanced Surfaces](advanced-surfaces.md#hair) |
-| `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`; where a field's patches begin, `from <a> to <b>`. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches) |
+| `from` | Blob cylinder: its start point (also reads in an import); a decal's `fade from`; where a field's patches begin, `from <a> to <b>`; where a swarm throws its copies from. | [Surfaces](surfaces.md#blob), [Materials](materials.md#fading), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Swarms](animation.md#swarms) |
 | `fresnel` | Finish: mirror more at a slant, square-on share from `reflective`. | [Materials](materials.md#fresnel) |
 | `front` | With `of`, places a surface in front of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `function` | Declares a function of your own.  Also an isosurface's arithmetic, and a medium's `density function`. | [Scene Files](scene-files.md#functions-of-your-own), [Advanced Surfaces](advanced-surfaces.md#isosurface), [Media](scene-files.md#giving-a-medium-a-shape) |
@@ -260,7 +276,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `leaf` | L-system or grown tree: the surface drawn for a leaf; a grown tree may name several, after commas. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `lean` | Hair: how far strands lean from straight out, as an angle. | [Advanced Surfaces](advanced-surfaces.md#hair) |
 | `left` | Text layout: left-align; also an L-system turn. | [Advanced Surfaces](advanced-surfaces.md#text) |
-| `length` | L-system control: the step length.  Also hair: how long a strand is.  Context's `animation`: how long it runs, in seconds. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair), [Saying How Long](animation.md#saying-how-long) |
+| `length` | L-system control: the step length.  Also hair: how long a strand is.  Context's `animation`: how long it runs, in seconds.  A body's `tether`: how long the string is. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Hair](advanced-surfaces.md#hair), [Saying How Long](animation.md#saying-how-long), [Tethers](animation.md#tethers) |
 | `leopard` | Pattern: rounded spots. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `light` | Font weight; also a light source, which may stand in a group. | [Advanced Surfaces](advanced-surfaces.md#text), [Lights](lights.md), [Lights on Things](lights.md#lights-on-things) |
 | `line` | Path/spline: a straight segment; also `line gap` and the line scanner. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -295,7 +311,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `number` | The kind a [function of your own](scene-files.md#functions-of-your-own) gives back. | [Scene Files](scene-files.md#functions-of-your-own) |
 | `object` | `object file` (loads a mesh), or `object` (reuse by name). | [Advanced Surfaces](advanced-surfaces.md#object-files), [Surfaces](surfaces.md#reusing-a-surface) |
 | `octaves` | Turbulence/noise: how many layers of it. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
-| `of` | Follows `field of view` and `index of refraction`. | [Cameras](cameras.md#field-of-view) |
+| `of` | Follows `field of view` and `index of refraction`.  Swarm: the thing every copy is. | [Cameras](cameras.md#field-of-view), [Swarms](animation.md#swarms) |
 | `offset` | Field: how far to the left of the path it follows its rows lie. | [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `on` | Places a surface on top of another, touching. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `once` | Image map: show the image once rather than tiling it. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments) |
@@ -337,7 +353,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `radians` | Angle unit: radians. | [Context](context.md#angles) |
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
-| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, and how far `crevices` and `edges`, and weather, look. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers) |
+| `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, how far `crevices` and `edges`, and weather, look, and the ball a body or a swarm's copy strikes things as. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Bodies](animation.md#bodies) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reach` | Grown tree: how far a point reaches to draw a twig toward it. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
@@ -369,7 +385,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shadow` | `no shadow`: the surface casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `shadows` | `no shadows`: the whole scene casts none. | [Surfaces](surfaces.md#no-shadow) |
 | `sheen` | Material: the soft shine of cloth toward a graze; `color` and `roughness` go in it. | [Cloth](materials.md#cloth) |
-| `shape` | The second word of `generic shape`. | [Advanced Surfaces](advanced-surfaces.md#generic-shape) |
+| `shape` | The second word of `generic shape`.  Body: `shape sphere` or `shape box`, what it strikes the scene as. | [Advanced Surfaces](advanced-surfaces.md#generic-shape), [Bodies](animation.md#bodies) |
 | `shear` | Transform: slant one axis along another. | [Transforms](transforms.md#shear) |
 | `shininess` | Finish: how tight the highlight is. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
@@ -387,7 +403,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `spacing` | How far apart a `field` stands its copies. | [Advanced Surfaces](advanced-surfaces.md#field) |
 | `specular` | Finish: strength of the shiny highlight. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `spectral` | Context: carry light wavelength by wavelength rather than as red, green and blue. | [Context](context.md#spectral-light) |
-| `sphere` | Surface: a unit sphere (also a blob component). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob) |
+| `sphere` | Surface: a unit sphere (also a blob component, and a body's `shape sphere`). | [Surfaces](surfaces.md#sphere), [Blob](surfaces.md#blob), [Bodies](animation.md#bodies) |
 | `spherical` | Pattern/image map over a sphere; also a spherical (equirectangular) camera, and a decal wrapped over a sphere. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `splash` | Weather: dirt kicked up from the ground, up to a height in the model's own units. | [Weathering a Model](materials.md#weathering-a-model) |
 | `spline` | Sweep: the 3D path the profile follows.  Also named, `Name = spline { ... }`, to be followed by `along` and handed to a sweep by its name. | [Advanced Surfaces](advanced-surfaces.md#sweep), [Along a Spline](animation.md#along-a-spline) |
@@ -424,9 +440,9 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `tint` | Coat: the color it gives what lies beneath it, seen square-on. | [A clear coat](materials.md#a-clear-coat) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
-| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, and weather's `wear … to`, the material it bares. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films) |
+| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, weather's `wear … to`, the material it bares, a body's `tether to`, and a swarm's `speed … to` and `life … to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films), [Tethers](animation.md#tethers) |
 | `top` | Text layout: align the block by its top, the font's ascender line. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
-| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most.  Fracture: the point its pieces grow smaller toward. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Fracture](advanced-surfaces.md#fracture) |
+| `toward` | `facing` pattern: the direction, in the world, a surface faces to give it its most.  Fracture: the point its pieces grow smaller toward.  Swarm: the way it throws its copies. | [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Fracture](advanced-surfaces.md#fracture), [Swarms](animation.md#swarms) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |
 | `toVertical` | L-system turtle: level back to vertical. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |

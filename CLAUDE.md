@@ -208,6 +208,12 @@ precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPa
 text layout to describe outlines in 2D before they're revolved/extruded into 3D surfaces.  An extrusion's wall
 segment skips a ray whose 2D line has every one of the segment's control points strictly to one side
 (`ExtrusionPathSurface.AllToOneSide`, the hull property: same crossings, 45% less time on a 13-segment body filling the picture).
+A CONVEX `Superellipsoid` (both exponents <= 2, so its function is a norm less one) is searched along a ray by golden
+section for a place inside, each crossing bracketed from it, stopping at once when the function rises where the ray
+sets off (every ray leaving its surface) or when chords carried past their ends bound it above nought
+(`AddConvexIntersections`): a die filling the picture 7.9 s -> 4.0 s, a-bed-made-up 48 s -> 28 s, pictures alike to
+a few pixels; a pinched one keeps the nine-plane, 32-step search.  A faulty bound (the smaller sampled value) lit
+grazed shadows, caught only by rays grazing the degenerate sphere.
 `extrusion { ... rounded r }` (`Extrusion.Rounded`, an `IAssembled` like `Tube`: the five places that walk into a
 tube's union walk into any `IAssembled`) is the CSG union of the outline drawn in by r (`Graphics/PathOffset.cs`:
 lines exact, cubics fitted by least squares with Schneider re-parameterizing and halved until within 1e-4 of the
@@ -476,6 +482,38 @@ meters), the speed the amount's time derivative over 1 ms; a wheelbase puts both
 chord heading).  `length(spline)`, `pointAlong`, `headingAlong` (`Terms/SplineFunctions.cs`).  Trains `TrackAlong(S)`
 sweeps the rail and ballast sections along S, sleepers stood `along` it.
 
+Forces: a surface's `body { mass bounce friction drag radius velocity spin  shape sphere|box  tether to <pin | 'name'>
+[length l] }` (`Core/Physics/Body.cs`; meters, kg, s; mass unless said = volume x 1000) is moved by
+`Geometry/PhysicsSettler.cs`, run after PlacementSettler and before ArrangeSurfaces: TOP-LEVEL surfaces only (one in a
+group or CSG, or a swarm there, is refused -- a swarm would stay empty), the rest of the scene the colliders, found
+by rays through their own `ArrangedSurfaces` and taken to stand where they are at the frame's time.  `Core/Physics/World.cs`
+re-simulates from time nought EVERY frame (so a frame is the same alone or in a run; a late frame costs more: the
+cradle's 5 balls about 1.1 s at t = 4, 0.4 s with one round): dt 1 ms, push (context `gravity`, default
+(0, -9.81, 0), and drag 0.5 rho Cd A |u| u against `wind`, Cd 0.47 ball / 1.05 box), then 10 rounds of strings (pull
+only: position projection, then the outward speed removed), body pairs AS BALLS (sequential impulses at the lever,
+bounce the mean, friction sqrt(mu1 mu2)), and the scene (a ball looks 14 ways by rays of its radius, its deepest
+contact a round; a box casts to its 8 corners and is held at EVERY corner within 0.5% of its reach -- `Press`: pushed
+out once by the deepest, each corner's push ACCUMULATED over the step's rounds and clamped at nought, its friction
+capped by mu x that accumulated push, the bounce targets of all corners newly met settled BEFORE any is pushed
+(settled as each was met, a flat drop came away at 0.43 of its bounce and spun 6 rad/s); met afresh each round, the
+first corner took all of gravity and a die pivoted about it, creeping 4 mm/s; under 0.05 m/s into it keeps no
+bounce).  A body under 5 mm/s at its fastest point for 0.2 s falls ASLEEP (Push and Strike skip it; Part and a
+stretched string wake it): gravity sinks a resting corner g dt^2 = 1e-5 m a step whatever the size, so a die never
+quite settled.  A hanging ball is stretched every step, so never sleeps (the cradle was bit-identical).  Ten rounds
+measured no different from one on a cradle; they are kept for several contacts at once.  A tied body is turned by its ties
+(`TurnWithItsTies`: the least turn carrying the first string's way at time nought onto its way now, then about it
+for the second), others integrate spin.  **A body moves about its own origin**: a thing must be drawn about its
+middle and placed by its transforms (the cradle's primitive drew each ball off-center and every body stood at the
+world origin).  The settler records poses at the shutter's instants and `Surface.StandAt(here, motion)` rebuilds the
+moving transforms, so bodies blur.  A `swarm { of T  from toward spread speed a to b  rate  since  life a to b
+bounce friction drag radius }` (`Geometry/Swarm.cs`, a Group) is filled by the settler: copy k born at since + k / rate
+(`since` < 0: already in full flow at nought; only copies within the longest life of the time are looked at), its
+way, speed and life hashed from (seed, k, purpose) -- never drawn in order -- flown from its birth at 1/500 s, to the
+frame's EXACT time (stopping within half a step left each copy up to 1 ms behind, by its birth's phase), with swept
+rays against the colliders, an `Instance` of T at world scale with a `MotionAt` for blur; copies strike neither each
+other nor bodies.  A default radius, body or copy, is half the box's longest side (the ball round the box held a
+drop up off the ground).  No stacking, cloth, ropes or fluids.
+
 ### Pigments and patterns (`Pigments/`, `Patterns/`)
 
 Pigments (`Pigments/`) define how color is derived at a surface point (solid, pattern-based,
@@ -502,6 +540,8 @@ between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.
 paint.  A `Viewing` (eye, normal, light) is handed down only to a pigment whose `SeesTheViewer` (cached per pigment in
 `Material`), so every other pigment is asked exactly as before; it is worked out per light in `Light.ApplyPhong`, and
 with no particular light (transparency, refraction, metallic tint, shadow tint) the light is taken to be at the eye.
+`NoiseGenerator` takes a point's lattice cell in 64 bits masked to its 256: in 32 it threw past two billion cells, which
+a ground plane met near the horizon reaches in a fine gravel's noise (a fountain's movie died after half an hour).
 
 ### Expression language (`Terms/`)
 

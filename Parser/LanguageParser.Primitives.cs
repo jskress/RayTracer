@@ -260,6 +260,7 @@ public partial class LanguageParser
             "grown" => ParseGrownClause(clause),
             "fracture" => ParseFractureClause(clause),
             "shapes" => ParseShapesClause(clause),
+            "swarm" => ParseSwarmClause(clause),
             "extrusion" => ParseExtrusionClause(clause),
             "tapered extrusion" => ParseTaperedExtrusionClause(clause),
             "tapered text" => ParseTaperedTextClause(clause),
@@ -394,6 +395,8 @@ public partial class LanguageParser
                 "fractureEntryClause", HandleFractureEntryClause, validate: false),
             "shapes" => ParseObjectResolver<ShapeGrammarResolver>(
                 "shapesEntryClause", HandleShapesEntryClause, validate: false),
+            "swarm" => ParseObjectResolver<SwarmResolver>(
+                "swarmEntryClause", HandleSwarmEntryClause, validate: false),
             "extrusion" => ParseObjectResolver<ExtrusionResolver>(
                 "extrusionEntryClause", HandleExtrusionEntryClause, validate: false),
             "tapered extrusion" => ParseObjectResolver<TaperedExtrusionResolver>(
@@ -462,6 +465,7 @@ public partial class LanguageParser
             "grown" => "startGrownClause",
             "fracture" => "startFractureClause",
             "shapes" => "startShapesClause",
+            "swarm" => "startSwarmClause",
             "extrusion" => "startExtrusionClause",
             "tapered extrusion" => "startTaperedExtrusionClause",
             "tapered text" => "startTaperedTextClause",

@@ -217,13 +217,16 @@ public class NoiseGenerator
         double v = y.Fraction();
         double w = z.Fraction();
 
-        int i = Convert.ToInt32(Math.Floor(x));
-        int j = Convert.ToInt32(Math.Floor(y));
-        int k = Convert.ToInt32(Math.Floor(z));
+        // Only a cell's place among 256 matters, so the cell is taken in 64 bits and masked: taken in 32, a point more
+        // than two billion cells out -- a ground plane met near the horizon, in a fine gravel's noise -- threw, and
+        // took a whole movie with it.  Every cell that fitted in 32 bits gives the same bits as before.
+        int i = (int) ((long) Math.Floor(x) & 255);
+        int j = (int) ((long) Math.Floor(y) & 255);
+        int k = (int) ((long) Math.Floor(z) & 255);
 
-        int x0 = _x[i & 255], x1 = _x[(i + 1) & 255];
-        int y0 = _y[j & 255], y1 = _y[(j + 1) & 255];
-        int z0 = _z[k & 255], z1 = _z[(k + 1) & 255];
+        int x0 = _x[i], x1 = _x[(i + 1) & 255];
+        int y0 = _y[j], y1 = _y[(j + 1) & 255];
+        int z0 = _z[k], z1 = _z[(k + 1) & 255];
 
         // The smoothstep weights, and their complements.
         double uu = u * u * (3 - 2 * u);

@@ -200,6 +200,9 @@ public partial class LanguageParser
                 case "shapes":
                     resolver.SurfaceResolvers.Add(ParseShapesClause(clause));
                     break;
+                case "swarm":
+                    resolver.SurfaceResolvers.Add(ParseSwarmClause(clause));
+                    break;
                 case "text":
                     resolver.SurfaceResolvers.Add(ParseTextClause(clause));
                     break;
