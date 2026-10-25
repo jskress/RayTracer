@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -18,6 +19,52 @@ public abstract class Pigment
     /// needed.
     /// </summary>
     public int? Seed { get; set; }
+
+    /// <summary>
+    /// This property holds the surface whose color is being read on this thread, while it is: what a pigment says
+    /// nothing of for itself is the surface's to say, read as it is worn -- the randomness of noise given no seed
+    /// (<see cref="WearersSeed"/>), the way an image given no mapping is laid on.
+    /// <para>
+    /// **A pigment may be worn by many surfaces at once**: one given a name is one pigment wherever it is named,
+    /// and a material handed down a group or through the instances of a shared shape is one material on every part.
+    /// Settled onto the pigment itself, these were the first wearer's for every one -- a second surface's own seed
+    /// came out with the first's noise, and a cube wore a sphere's spherical map.
+    /// </para>
+    /// </summary>
+    internal static Surface Wearer => _wearer;
+
+    /// <summary>
+    /// This property holds the seed of the surface whose color is being read on this thread, if it has one, which
+    /// noise given no seed of its own draws on; see <see cref="Wearer"/>.
+    /// </summary>
+    internal static int? WearersSeed => _wearer?.Seed;
+
+    [ThreadStatic]
+    private static Surface _wearer;
+
+    /// <summary>
+    /// This method makes the given surface the one whose color is being read on this thread, until the scope it
+    /// returns is disposed of.
+    /// </summary>
+    /// <param name="surface">The surface being read.</param>
+    /// <returns>The scope, which puts back the surface being read before.</returns>
+    internal static WornScope WornBy(Surface surface)
+    {
+        WornScope scope = new (_wearer);
+
+        _wearer = surface;
+
+        return scope;
+    }
+
+    /// <summary>
+    /// This struct puts back, when it is disposed of, the surface that was being read before a
+    /// <see cref="WornBy"/>.
+    /// </summary>
+    internal readonly struct WornScope(Surface was) : IDisposable
+    {
+        public void Dispose() => _wearer = was;
+    }
 
     /// <summary>
     /// This property holds the transformation matrix for the pigmentation.
@@ -104,6 +151,12 @@ public abstract class Pigment
 
     /// <summary>
     /// This method accepts a point and produces a color for that point.
+    /// <para>
+    /// The point is carried into the surface's space as the surface stands at the instant of the shutter's opening
+    /// being shaded (<see cref="Scene.ShadingTime"/>), so that a moving thing's pattern moves with it and blurs as
+    /// its outline does; carried as the surface stood when the shutter opened, the pattern stood still in the world
+    /// and stayed sharp on a blurred ball.
+    /// </para>
     /// </summary>
     /// <param name="surface">The surface to get the color for.</param>
     /// <param name="point">The point to produce a color for.</param>
@@ -111,7 +164,9 @@ public abstract class Pigment
     /// <returns>The appropriate color at the given point.</returns>
     public Color GetColorFor(Surface surface, Point point, Portals portals = default)
     {
-        return GetTransformedColorFor(surface.WorldToSurface(point, 0, portals));
+        using WornScope _ = WornBy(surface);
+
+        return GetTransformedColorFor(surface.WorldToSurface(point, Scene.ShadingTime, portals));
     }
 
     /// <summary>
@@ -133,19 +188,21 @@ public abstract class Pigment
     public Color GetColorFor(
         Surface surface, Point point, Footprint footprint, Portals portals = default, Viewing viewing = default)
     {
+        using WornScope _ = WornBy(surface);
+
         if (!viewing.IsEmpty)
         {
             return GetTransformedColorFor(
-                surface.WorldToSurface(point, 0, portals),
-                footprint is null || footprint.IsEmpty ? Footprint.None : surface.WorldToSurface(footprint, 0, portals),
+                surface.WorldToSurface(point, Scene.ShadingTime, portals),
+                footprint is null || footprint.IsEmpty ? Footprint.None : surface.WorldToSurface(footprint, Scene.ShadingTime, portals),
                 viewing);
         }
 
         return footprint is null || footprint.IsEmpty
-            ? GetTransformedColorFor(surface.WorldToSurface(point, 0, portals))
+            ? GetTransformedColorFor(surface.WorldToSurface(point, Scene.ShadingTime, portals))
             : GetTransformedColorFor(
-                surface.WorldToSurface(point, 0, portals),
-                surface.WorldToSurface(footprint, 0, portals));
+                surface.WorldToSurface(point, Scene.ShadingTime, portals),
+                surface.WorldToSurface(footprint, Scene.ShadingTime, portals));
     }
 
     /// <summary>

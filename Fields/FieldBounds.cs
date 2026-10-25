@@ -97,13 +97,6 @@ public static class FieldBounds
     };
 
     /// <summary>
-    /// This method returns the range the named function could produce, or "anywhere" if there is no
-    /// rule for it.
-    /// </summary>
-    /// <param name="name">The name of the function.</param>
-    /// <param name="arguments">The ranges of what it is being called with.</param>
-    /// <returns>The range it could produce.</returns>
-    /// <summary>
     /// This method looks up the rule for a named function once, so that a caller asking about the same
     /// function over and over need not go through the dictionary -- and go through it keyed by a
     /// *string* -- on every one of the millions of times a marcher asks.
@@ -115,6 +108,13 @@ public static class FieldBounds
         return Rules.GetValueOrDefault(name);
     }
 
+    /// <summary>
+    /// This method returns the range the named function could produce, or "anywhere" if there is no
+    /// rule for it.
+    /// </summary>
+    /// <param name="name">The name of the function.</param>
+    /// <param name="arguments">The ranges of what it is being called with.</param>
+    /// <returns>The range it could produce.</returns>
     public static FieldRange RangeFor(string name, ReadOnlySpan<FieldRange> arguments)
     {
         foreach (FieldRange argument in arguments)
@@ -257,12 +257,6 @@ public static class FieldBounds
     }
 
     /// <summary>
-    /// The range of a power.  Only a fixed exponent is worked out here, since that is what every use
-    /// of it has been and since a range raised to a range is a good deal of case analysis for no known
-    /// gain.  An even whole power is a valley with its bottom at nought; an odd one only ever climbs;
-    /// anything else is left alone unless what is being raised is known to be positive.
-    /// </summary>
-    /// <summary>
     /// These three are the raising-to-a-power forms of the shapes below, taking the exponent itself
     /// rather than a function of it.  Written as a lambda, `number => Math.Pow(number, power)` closes
     /// over the exponent, and a closure means an allocation -- one for the captured value and one for
@@ -291,6 +285,12 @@ public static class FieldBounds
             : ends;
     }
 
+    /// <summary>
+    /// The range of a power.  Only a fixed exponent is worked out here, since that is what every use
+    /// of it has been and since a range raised to a range is a good deal of case analysis for no known
+    /// gain.  An even whole power is a valley with its bottom at nought; an odd one only ever climbs;
+    /// anything else is left alone unless what is being raised is known to be positive.
+    /// </summary>
     private static FieldRange Power(ReadOnlySpan<FieldRange> arguments)
     {
         FieldRange value = arguments[0];

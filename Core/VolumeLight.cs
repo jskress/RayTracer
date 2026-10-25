@@ -81,13 +81,17 @@ public class VolumeLight : Light
         }
 
         // How much stuff there is, as a volume: the average density over the box times the size of the
-        // box, and then times how much the surface's own transform stretches space.  Volume scales by
-        // the determinant, and the density function is written in the surface's own space while the
-        // light has to be right in the world's.
+        // box, and then times how much the surface's placement in the world stretches space -- its own
+        // transform and every group's round it.  Volume scales by the determinant, and the density function
+        // is written in the surface's own space while the light has to be right in the world's.  Taken from
+        // the surface's own transform alone, a fire in a group scaled to half kept its full-size light:
+        // eight times what its glow showed.
         double boxVolume = Math.Abs(_span.X * _span.Y * _span.Z);
         double average = total / _running.Length;
+        double stretch = Math.Abs(surface.DirectionToWorld(new Vector(1, 0, 0))
+            .Dot(surface.DirectionToWorld(new Vector(0, 1, 0)).Cross(surface.DirectionToWorld(new Vector(0, 0, 1)))));
 
-        _stuff = average * boxVolume * Math.Abs(surface.Transform.Determinant);
+        _stuff = average * boxVolume * stretch;
 
         // How close a point may get to one of these samples before the sample stops being a fair
         // stand-in for it.  Each sample speaks for a cell of the box, not for a point, and the inverse
@@ -96,10 +100,30 @@ public class VolumeLight : Light
         // A cell holds a finite amount of stuff spread over a finite space, and nothing can be nearer
         // to all of it than its own size; this is the radius of a ball of that volume, which is the
         // honest floor.
-        double cellVolume = boxVolume * Math.Abs(surface.Transform.Determinant) / _running.Length;
+        double cellVolume = boxVolume * stretch / _running.Length;
 
         _nearest = Math.Cbrt(cellVolume * 3 / (4 * Math.PI));
+        Size = Math.Cbrt(boxVolume * stretch);
     }
+
+    /// <summary>
+    /// This property holds how big the glow is in the world: the side of a cube as big as the box it was measured
+    /// over.  It is the length that turns the odds of picking a place in the glow, per unit of volume, into odds that
+    /// can be weighed against a direction's -- see <see cref="WeightOf"/>.
+    /// </summary>
+    public double Size { get; }
+
+    /// <summary>
+    /// This method returns what one of this light's ways of reaching a place in it weighs, against a rough surface's
+    /// looking toward it, in sharing the glow between the two: the light's samples times the odds of picking the
+    /// place, per unit of volume, times the square of its distance and the glow's size.  The odds of looking are per
+    /// unit of solid angle, and looking walks a whole run through the glow, so a length is wanted to weigh the two
+    /// alike: taken as one unit of whatever the scene was written in, the split between them shifted with the unit.
+    /// </summary>
+    /// <param name="odds">The odds of picking the place, per unit of volume in the world.</param>
+    /// <param name="distance">How far the place is from where it is seen from.</param>
+    /// <returns>The weight.</returns>
+    public double WeightOf(double odds, double distance) => SampleCount * odds * distance * distance * Size;
 
     /// <summary>
     /// This property reports whether there is anything here to light with.  A medium that emits
@@ -117,6 +141,13 @@ public class VolumeLight : Light
     /// This property notes that a ray can meet this light -- a glowing stuff, which shows in a mirror like anything else.
     /// </summary>
     public override bool CanBeSeen => true;
+
+    /// <summary>
+    /// A smooth surface's highlight from a glow takes what each sample delivers -- the glow's own color, fading with
+    /// distance as all its light does -- as the diffuse light does.  Taken from the light's color as a whole, it was
+    /// white and as bright from across a room as from an inch away: a fire put a gray sheen on a polished floor.
+    /// </summary>
+    protected internal override bool HighlightsBySample => true;
 
     /// <summary>
     /// This method answers where the middle of the stuff lies, for the one caller that wants a light

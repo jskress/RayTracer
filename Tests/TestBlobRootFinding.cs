@@ -1,4 +1,5 @@
 using MathNet.Numerics;
+using RayTracer.Basics;
 using RayTracer.Geometry;
 
 namespace Tests;
@@ -51,5 +52,20 @@ public class TestBlobRootFinding
         Assert.AreEqual(-1.0, roots[0], 1e-9);
         Assert.AreEqual(0.5, roots[1], 1e-9);
         Assert.AreEqual(1.5, roots[2], 1e-9);
+    }
+
+    /// <summary>
+    /// A root lying exactly on one of the walk's steps comes back once, reached from below nought or from above:
+    /// reached from below it came back twice, a doubled crossing that turned inside and outside about.
+    /// </summary>
+    [TestMethod]
+    public void TestARootOnAStepIsFoundOnce()
+    {
+        // Over 0 to 1 in 128 steps, a half is the sixty-fourth step exactly.
+        double[] rising = RootFinding.ByBisection([-0.5, 1], 0, 1).ToArray();
+        double[] falling = RootFinding.ByBisection([0.5, -1], 0, 1).ToArray();
+
+        CollectionAssert.AreEqual(new[] { 0.5 }, rising, $"rising through nought: {string.Join(", ", rising)}");
+        CollectionAssert.AreEqual(new[] { 0.5 }, falling, $"falling through nought: {string.Join(", ", falling)}");
     }
 }

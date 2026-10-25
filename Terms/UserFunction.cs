@@ -1,7 +1,9 @@
 using Lex.Parser;
 using Lex.Tokens;
+using RayTracer.Basics;
 using RayTracer.Fields;
 using RayTracer.General;
+using RayTracer.Graphics;
 
 namespace RayTracer.Terms;
 
@@ -186,7 +188,51 @@ public class UserFunction
 
         (object answer, Variables reached) = _body.Follow(scope);
 
-        return ((Term) answer).GetValue(reached);
+        return AsPromised(((Term) answer).GetValue(reached), errorToken);
+    }
+
+    /// <summary>
+    /// This method holds an answer to the kind the function says it gives back: what is already that kind, or turns
+    /// into it as a value written where that kind is wanted would -- three numbers into a color -- and anything else
+    /// refused here, where the function can be named, rather than wherever the answer was used.
+    /// </summary>
+    /// <param name="answer">What the function worked out to.</param>
+    /// <param name="errorToken">The token to hang any complaint on.</param>
+    /// <returns>The answer, as the kind promised.</returns>
+    private object AsPromised(object answer, Token errorToken)
+    {
+        Type promised = Kind switch
+        {
+            "number" => typeof(double),
+            "color" => typeof(Color),
+            "vector" => typeof(Vector),
+            _ => null
+        };
+
+        if (promised is null)
+            return answer;
+
+        (CoercionResult result, object coerced) = TypeConversions.Coerce(answer, promised);
+
+        if (result == CoercionResult.OfProperType && coerced is not null)
+            return coerced;
+
+        string gave = answer switch
+        {
+            null => "nothing",
+            double => "a number",
+            Color => "a color",
+            Point => "a point",
+            Vector => "a vector",
+            bool => "true or false",
+            string => "a piece of text",
+            _ => $"a {answer.GetType().Name.ToLowerInvariant()}"
+        };
+
+        throw new TokenException($"The function '{Name}' gives back a {Kind}, and this time worked out to {gave}.")
+        {
+            Token = errorToken
+        };
     }
 
     /// <summary>

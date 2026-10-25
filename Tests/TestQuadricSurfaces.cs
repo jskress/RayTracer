@@ -21,6 +21,34 @@ public class TestQuadricSurfaces
     private const int Rays = 500;
 
     /// <summary>
+    /// A quadric is drawn within the box it is bounded by and nowhere else: a ray through the box that meets the
+    /// endless surface beyond it is given only the crossing inside.
+    /// </summary>
+    [TestMethod]
+    public void TestAQuadricIsCutToItsBox()
+    {
+        // A two-sheet hyperboloid, x² + z² - y² = -1, its sheets' noses at y = ±1, boxed to y within ±2.
+        Quadric quadric = new ()
+        {
+            A = 1, B = -1, C = 1, J = 1,
+            BoundingBox = new BoundingBox().Add(new Point(-2, -2, -2)).Add(new Point(2, 2, 2))
+        };
+        // Down a slant through the upper sheet inside the box, and on to the lower sheet's far side out past it.
+        Ray ray = new (new Point(0, 1.5, -1), new Vector(0, -1, 0.9).Unit);
+        List<Intersection> crossings = [];
+
+        quadric.AddIntersections(ray, crossings);
+
+        Assert.IsTrue(crossings.Count > 0, "the sheet inside the box");
+        Assert.IsTrue(crossings.All(crossing =>
+        {
+            Point at = ray.At(crossing.Distance);
+
+            return Math.Abs(at.X) <= 2 && Math.Abs(at.Y) <= 2 && Math.Abs(at.Z) <= 2;
+        }), "every crossing within the box");
+    }
+
+    /// <summary>
     /// This tests that every crossing of a paraboloid lies on the paraboloid.
     /// </summary>
     [TestMethod]

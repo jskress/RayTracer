@@ -152,7 +152,7 @@ public class FontsOptions
     public FaceIdentifier RemoveKerningPair { get; private set; }
 
     [Option('p', "pair", Required = false,
-        HelpText = "Specifies the details of the kerning pair to add to, or remove from, the font catalog for the indicated font face.  Must be specified with the --add-kerning-for or --remove-kerning-pair option.")]
+        HelpText = "Specifies the details of the kerning pair to add to, or remove from, the font catalog for the indicated font face.  Must be specified with the --add-kerning-for or --remove-kerning-for option.")]
     public string KerningPairToAdd
     {
         get => field;

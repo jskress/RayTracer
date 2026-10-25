@@ -44,16 +44,16 @@ public class BlendedPigment : Pigment
     }
 
     /// <summary>
+    /// A blend lets light through if any of the pigments it blends does.
+    /// </summary>
+    public override bool MayTransmit => Pigments.Any(pigment => pigment.MayTransmit);
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we
     /// return is based on a blend of colors from our child pigments at the given point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
-    /// <summary>
-    /// A blend lets light through if any of the pigments it blends does.
-    /// </summary>
-    public override bool MayTransmit => Pigments.Any(pigment => pigment.MayTransmit);
-
     public override Color GetColorFor(Point point)
     {
         List<Color> colors = Pigments
@@ -82,11 +82,6 @@ public class BlendedPigment : Pigment
         return Layer ? Colors.Layer(colors) : Colors.Average(colors);
     }
 
-    /// <summary>
-    /// This method returns whether the given pigmentation matches this one.
-    /// </summary>
-    /// <param name="other">The pigmentation to compare to.</param>
-    /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
     /// <summary>
     /// This property reports whether any of the blended pigments depends on the directions a surface is
     /// seen and lit from.
@@ -117,6 +112,11 @@ public class BlendedPigment : Pigment
         return Layer ? Colors.Layer(colors) : Colors.Average(colors);
     }
 
+    /// <summary>
+    /// This method returns whether the given pigmentation matches this one.
+    /// </summary>
+    /// <param name="other">The pigmentation to compare to.</param>
+    /// <returns><c>true</c>, if the two pigmentations match, or <c>false</c>, if not.</returns>
     public override bool Matches(Pigment other)
     {
         if (other is not BlendedPigment blendedPigment ||

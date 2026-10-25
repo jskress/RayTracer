@@ -15,7 +15,7 @@ public class JointResolver : GroupResolver
     /// <summary>
     /// This property holds the joint's turn, which stands first among its transforms.
     /// </summary>
-    public JointCreator Turn { get; } = new ();
+    public JointCreator Turn { get; private set; } = new ();
 
     /// <summary>
     /// This property holds the resolver for the way the joint faces, or null.
@@ -52,21 +52,62 @@ public class JointResolver : GroupResolver
         return joint;
     }
 
+    // Each of a joint's own properties is set only if it was said, so that the block on a call of a primitive that
+    // gives back a joint -- `object Arm() { translate X 2 }` -- moves it without forgetting how it turns.
     protected override void SetProperties(RenderContext context, Variables variables, Group value)
     {
         Joint joint = (Joint) value;
 
-        joint.Pivot = Turn.PivotResolver?.Resolve(context, variables) ?? Point.Zero;
-        joint.Axis = Turn.AxisResolver?.Resolve(context, variables)?.Unit;
-        joint.Lowest = Turn.LowestResolver?.Resolve(context, variables);
-        joint.Highest = Turn.HighestResolver?.Resolve(context, variables);
-        joint.Angle = Turn.AngleResolver is null ? 0 : Turn.Limited(Turn.AngleResolver.Resolve(context, variables), context, variables);
-        joint.Facing = FacingResolver?.Resolve(context, variables) ?? joint.Facing;
-        joint.Aim = TargetOf(AimTerm, variables);
-        joint.Reach = TargetOf(ReachTerm, variables);
-        joint.Effector = EffectorTerm?.GetValue<string>(variables);
+        if (Turn.PivotResolver is not null)
+            joint.Pivot = Turn.PivotResolver.Resolve(context, variables);
+
+        if (Turn.AxisResolver is not null)
+            joint.Axis = Turn.AxisResolver.Resolve(context, variables).Unit;
+
+        if (Turn.LowestResolver is not null)
+            joint.Lowest = Turn.LowestResolver.Resolve(context, variables);
+
+        if (Turn.HighestResolver is not null)
+            joint.Highest = Turn.HighestResolver.Resolve(context, variables);
+
+        if (Turn.AngleResolver is not null)
+            joint.Angle = Turn.Limited(Turn.AngleResolver.Resolve(context, variables), context, variables);
+
+        if (FacingResolver is not null)
+            joint.Facing = FacingResolver.Resolve(context, variables);
+
+        if (AimTerm is not null)
+            joint.Aim = TargetOf(AimTerm, variables);
+
+        if (ReachTerm is not null)
+        {
+            joint.Reach = TargetOf(ReachTerm, variables);
+            joint.Effector = EffectorTerm?.GetValue<string>(variables);
+        }
 
         base.SetProperties(context, variables, value);
+    }
+
+    /// <summary>
+    /// This method creates a copy of this resolver, its turn a copy of its own: a named joint used with an angle of
+    /// its own (`joint Arm { angle 30 }`) writes the angle into the copy, which shared, every use of the name took.
+    /// </summary>
+    /// <returns>A clone of this resolver.</returns>
+    public override object Clone()
+    {
+        JointResolver resolver = (JointResolver) base.Clone();
+
+        resolver.Turn = Turn.Copy();
+
+        if (resolver.TransformResolver is { } transforms)
+        {
+            int at = transforms.TransformCreators.IndexOf(Turn);
+
+            if (at >= 0)
+                transforms.TransformCreators[at] = resolver.Turn;
+        }
+
+        return resolver;
     }
 
     // A place in the scene, or a thing by its name.

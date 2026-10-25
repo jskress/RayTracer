@@ -89,6 +89,12 @@ public class Ray
     /// </summary>
     public double NarrowsAt { get; init; } = double.PositiveInfinity;
 
+    /// <summary>
+    /// This property notes a camera's ray for a pixel outside what its lens sees -- a fisheye's corners -- which
+    /// shows the background and nothing in the scene.
+    /// </summary>
+    public bool Outside { get; init; }
+
     public Ray(Point origin, Vector direction, int timeIndex = 0, double spread = 0,
         double travelled = 0, double baseRadius = 0)
     {
@@ -111,11 +117,6 @@ public class Ray
     }
 
     /// <summary>
-    /// This method is used to determine whether the given point lies on the ray.
-    /// </summary>
-    /// <param name="point">The point to test.</param>
-    /// <returns><c>true</c>, if the point is on the ray, or <c>false</c>, if not.</returns>
-    /// <summary>
     /// This method works out how wide this ray's cone has grown by the time it has gone the given
     /// distance -- the radius of the disc it covers there.
     /// </summary>
@@ -128,6 +129,13 @@ public class Ray
         return double.IsPositiveInfinity(NarrowsAt) ? radius : radius * Math.Clamp(1 - distance / NarrowsAt, 0, 1);
     }
 
+    /// <summary>
+    /// This method reports whether a point lies near the ray: ahead of its origin and within 0.15 of the
+    /// place along it found by projecting the point onto the direction.  That place is the nearest only for
+    /// a direction of unit length; for any other it is somewhere else along the ray.
+    /// </summary>
+    /// <param name="point">The point to test.</param>
+    /// <returns><c>true</c>, if the point is that near the ray, or <c>false</c>, if not.</returns>
     public bool Contains(Point point)
     {
         Vector vector = point - Origin;

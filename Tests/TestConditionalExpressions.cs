@@ -147,6 +147,12 @@ public class TestConditionalExpressions
 
         // Two numbers are equal when they are near enough, as everything else here treats them.
         Assert.AreEqual(80, WidthFrom("0.1 + 0.2 == 0.3 ? 80 : 40"));
+
+        // And the orderings keep to the same rule: what equals 0.3 is no more than it, and neither less nor more.
+        Assert.AreEqual(80, WidthFrom("0.1 + 0.2 <= 0.3 ? 80 : 40"));
+        Assert.AreEqual(40, WidthFrom("0.1 + 0.2 > 0.3 ? 80 : 40"));
+        Assert.AreEqual(80, WidthFrom("0.3 >= 0.1 + 0.2 ? 80 : 40"));
+        Assert.AreEqual(40, WidthFrom("0.3 < 0.1 + 0.2 ? 80 : 40"));
     }
 
     /// <summary>

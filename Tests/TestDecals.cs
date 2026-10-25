@@ -157,7 +157,7 @@ public class TestDecals
     [TestMethod]
     public void TestAnAnchorAboveAnInstanceIsNotPlacedByItASecondTime()
     {
-        // A group holding an instance hands its material down into the shared shape.  The group stands
+        // A group holding an instance dresses the shared shape where it stands in it.  The group stands
         // in the scene's own chain, so the instance must play no part in reaching it: carried through
         // the instance anyway, the point would be moved by the instance's placing twice over.
         Sphere shape = new () { Transform = Transforms.Scale(2, 1, 1) };
@@ -171,7 +171,7 @@ public class TestDecals
         outer.Material = material;
         outer.PrepareForRendering();
 
-        Assert.AreSame(material, shape.Material,
+        Assert.AreSame(material, shape.MaterialThrough(new Portals(placed)),
             "the group's material should reach the shared shape, or this test proves nothing");
 
         Point there = new (0.2, -0.6, 0.9);

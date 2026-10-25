@@ -61,6 +61,93 @@ public class TestMaterialBlend
     }
 
     /// <summary>
+    /// This tests that a blend from a smooth material to a rough one runs smoothly from the first: a hair's breadth
+    /// into the blend the floor is the smooth paint's color, highlight and all, less a hair.  (Shaded as one material
+    /// between the two, the smallest roughness was facets too narrow to show, and the smooth paint's highlight
+    /// vanished at the blend's very edge: a hard seam in the gloss.)
+    /// </summary>
+    [TestMethod]
+    public void TestABlendFromSmoothToRoughHasNoSeam()
+    {
+        Material glossy = new ()
+        {
+            Pigment = new SolidPigment(new Color(0.6, 0.1, 0.1)), Ambient = 0, Diffuse = 0.5, Specular = 0.8,
+            Shininess = 30
+        };
+        Material rough = new ()
+        {
+            Pigment = new SolidPigment(new Color(0.6, 0.1, 0.1)), Ambient = 0, Diffuse = 0.5, Specular = 0.8,
+            Roughness = 0.6
+        };
+        Color At(Material material, double x)
+        {
+            (Scene scene, _) = FloorOf(material);
+
+            scene.Lights.Add(new PointLight { Location = new Point(x + 0.2, 2, 0.3) });
+
+            return scene.GetHitColor(HitAt(scene, x), 4);
+        }
+
+        Color smooth = At(glossy, 0.004), edge = At(Blended(AlongX(), [0, 1], glossy, rough), 0.004);
+
+        Assert.AreEqual(smooth.Red, edge.Red, 0.02, $"the glossy paint {smooth}, a hair into the blend {edge}");
+        Assert.AreEqual(smooth.Green, edge.Green, 0.02, $"the glossy paint {smooth}, a hair into the blend {edge}");
+    }
+
+    /// <summary>
+    /// This tests that each half of a blend from a smooth material to a rough one is made as rough as the surface
+    /// that spread the ray meeting it, as either would be alone: the blend is the mixture of the two halves so
+    /// shaded.  (Shaded as each, the smooth half was left a sharp mirror under a spread ray, which path
+    /// regularization exists to prevent.)
+    /// </summary>
+    [TestMethod]
+    public void TestEachHalfOfASmoothToRoughBlendIsMadeRoughUnderASpreadRay()
+    {
+        Material mirror = new ()
+        {
+            Pigment = new SolidPigment(new Color(0.2, 0.2, 0.2)), Ambient = 0, Diffuse = 0.3, Reflective = 0.8
+        };
+        Material rough = new ()
+        {
+            Pigment = new SolidPigment(new Color(0.6, 0.1, 0.1)), Ambient = 0, Diffuse = 0.5, Specular = 0.8,
+            Roughness = 0.6
+        };
+        Color sky = new (0.3, 0.5, 0.9);
+        Color At(Material material)
+        {
+            (Scene scene, _) = FloorOf(material, sky);
+
+            scene.Lights.Add(new PointLight { Location = new Point(0.6, 2, 0.3) });
+
+            return scene.GetHitColor(HitAt(scene, 0.25), 4);
+        }
+
+        System.Reflection.FieldInfo spreading = typeof(Scene).GetField(
+            "_spreading", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        System.Reflection.FieldInfo roughness = typeof(Scene).GetField(
+            "_spreadRoughness", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        Assert.IsNotNull(spreading);
+        Assert.IsNotNull(roughness);
+
+        try
+        {
+            spreading.SetValue(null, true);
+            roughness.SetValue(null, 0.3);
+
+            Color blend = At(Blended(AlongX(), [0, 1], mirror, rough));
+            Color halves = At(mirror.RoughAs(0.3)) * 0.75 + At(rough) * 0.25;
+
+            Assert.IsTrue(blend.Matches(halves), $"the blend {blend}, its halves made rough {halves}");
+        }
+        finally
+        {
+            spreading.SetValue(null, false);
+            roughness.SetValue(null, 0.0);
+        }
+    }
+
+    /// <summary>
     /// This tests a mixture of two materials: every number of their finishes mixed in proportion, their colors
     /// mixed, and what cannot be mixed -- here a coat -- the nearer's.
     /// </summary>

@@ -11,9 +11,10 @@
 // | `Truck` | A cab and a flat bed with a load on it, on six wheels. |
 //
 // **The first number is a length**, not a height, because that is how a vehicle is described -- a car
-// is four and a half meters long, not one and a half tall.  Everything else in these libraries is
-// measured by its height, and this is the one place that changes; the other two numbers mean what they
-// always mean, **what time of year** and **which one of that kind**, and only the length is required.
+// is four and a half meters long, not one and a half tall.  Most things in these libraries are measured
+// by their height, and everything that goes somewhere -- the vessels, the trains, the aircraft, the
+// spacecraft -- by its length, as here; the other two numbers mean what they always mean, **what time of
+// year** and **which one of that kind**, and only the length is required.
 //
 // **These face +X**, so a vehicle drives to the right in a camera looking the usual way, and a street
 // running left to right needs no turning at all.  `rotate Y 180` sends one the other way; `rotate Y 90`

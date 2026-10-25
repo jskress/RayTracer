@@ -106,9 +106,18 @@ public sealed class Keyframes
     }
 
     // How fast the value is changing at a key, its own parts per second: the slope across its neighbors, or to the
-    // one it has at an end.
+    // one it has at an end.  A smooth loop has no ends: its first and last keys are one place round the seam, whose
+    // neighbors are the key after the first and the key before the last, so the pace runs on round it unbroken.
     private double[] Slope(int index)
     {
+        if (Loops && Keys.Count > 2 && (index == 0 || index == Keys.Count - 1) && Keys[^1].Time > Keys[0].Time)
+        {
+            double[] last = Parts(Keys[^2].Value), next = Parts(Keys[1].Value);
+            double round = Keys[1].Time - Keys[0].Time + (Keys[^1].Time - Keys[^2].Time);
+
+            return last.Select((value, part) => (next[part] - value) / round).ToArray();
+        }
+
         int before = Math.Max(0, index - 1);
         int after = Math.Min(Keys.Count - 1, index + 1);
         double[] from = Parts(Keys[before].Value), to = Parts(Keys[after].Value);

@@ -153,7 +153,10 @@ public partial class Scene
                     int x = Math.Min(width - 1, index % across * stride + stride / 2);
                     int y = Math.Min(height - 1, index / across * stride + stride / 2);
 
-                    _pretraceKey = ((currentPass << 32) | ((long) y * width + x)) << 8;
+                    // Room for 65,536 records from one pixel before the next pixel's keys: with room for 256, a
+                    // pixel looking through deep glass could offer more and share keys with its neighbor, whose
+                    // records then merged in whatever order the threads left them.
+                    _pretraceKey = ((currentPass << 32) | ((long) y * width + x)) << 16;
                     _pretraceOrdinal = 0;
                     _pretracing = true;
 

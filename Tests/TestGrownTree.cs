@@ -296,6 +296,33 @@ public class TestGrownTree
     }
 
     /// <summary>
+    /// A closed mesh -- a group of triangles, as a Wavefront file or a closed sweep is -- holds what is inside it,
+    /// counted as one hull: asked triangle by triangle, as a group of solids is, nothing was ever inside it.
+    /// </summary>
+    [TestMethod]
+    public void TestAClosedMeshHoldsWhatIsInsideIt()
+    {
+        Point[] corners =
+        [
+            new (-1, -1, -1), new (1, -1, -1), new (1, 1, -1), new (-1, 1, -1),
+            new (-1, -1, 1), new (1, -1, 1), new (1, 1, 1), new (-1, 1, 1)
+        ];
+        int[][] faces = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]];
+        Group mesh = new ();
+
+        foreach (int[] face in faces)
+        {
+            mesh.Add(new Triangle { Point1 = corners[face[0]], Point2 = corners[face[1]], Point3 = corners[face[2]] });
+            mesh.Add(new Triangle { Point1 = corners[face[0]], Point2 = corners[face[2]], Point3 = corners[face[3]] });
+        }
+
+        mesh.PrepareForRendering();
+
+        Assert.IsTrue(Containment.Holds(mesh, new Point(0.1, 0.2, 0.3)), "the middle of a closed box of triangles");
+        Assert.IsFalse(Containment.Holds(mesh, new Point(1.5, 0.2, 0.3)), "a place outside it");
+    }
+
+    /// <summary>
     /// A crown written as several surfaces is room wherever any of them is, overlaps included: a place inside
     /// two overlapping balls looks out through both, crossing four times, and parity alone would call it outside.
     /// </summary>

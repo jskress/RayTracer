@@ -94,6 +94,7 @@ public class RenderInstruction : Instruction
         // keeps rather than on anything written beside it.
         SettleTheSky(context, scene);
         FinalizeSurfaceData(context, scene, scene.Surfaces, WeatherSettler.Settle(scene.Surfaces));
+        scene.Environment?.Medium?.TakeTheScenesCounts(context.MediumSamples, context.MediumBounces);
 
         scene.DiffuseBounces = context.DiffuseBounces;
         scene.DiffuseSamples = context.DiffuseSamples;
@@ -256,6 +257,10 @@ public class RenderInstruction : Instruction
         HashSet<Material> scaled = ambientScale.Near(1) ? null : [];
         Dictionary<Material, Material> orphaned = [];
 
+        // The first undressed part of each shared shape, found once however many instances stand for it: a wood of
+        // trees, every part of which has a material of its own, walked a whole tree for each of 145 thousand.
+        Dictionary<Surface, Surface> undressed = new (ReferenceEqualityComparer.Instance);
+
         foreach (Surface surface in new SurfaceIterator(surfaces).Surfaces)
         {
             Settle(surface);
@@ -278,11 +283,11 @@ public class RenderInstruction : Instruction
                 continue;
 
             bared.Ambient ??= whenUnsaid;
+            bared.ReflectionSamples = context.ReflectionSamples;
 
             if (scaled is not null && scaled.Add(bared))
                 bared.Ambient *= ambientScale;
 
-            bared.Pigment.Seed ??= surface.Seed;
             bared.Pigment.RenderingIsAboutToStart(context, surface);
         }
 
@@ -292,12 +297,31 @@ public class RenderInstruction : Instruction
         {
             // A surface with no material gets one of its own; one whose material only adds decals to
             // whatever it is handed, and was handed nothing, gets the same with its decals on top.
+            // Either is noted, for a surface of a shared shape: where a ray meets it, it wears what its holders gave
+            // that place instead (see Surface.MaterialThrough).
             if (surface.Material is null)
+            {
+                surface.WearsTheDefault = true;
+                surface.OwnBeforeTheDefault = null;
                 surface.Material = NewOrphanMaterial;
+            }
             else if (surface.Material.InheritsAppearance)
+            {
+                surface.WearsTheDefault = true;
+                surface.OwnBeforeTheDefault = surface.Material;
                 surface.Material = Material.HandedDown(surface.Material, NewOrphanMaterial, orphaned);
+            }
 
             surface.Material.Ambient ??= whenUnsaid;
+
+            // How many ways a rough surface looks is the scene's to say, and is said here, once every context block
+            // has had its say: copied in as each material was read, it was whatever the context said at that point
+            // in the file, so a `reflection samples` written after the objects did nothing.
+            surface.Material.ReflectionSamples = context.ReflectionSamples;
+
+            // And how hard a medium works, the same way: copied in as it was read, a `medium samples` written after
+            // the objects did nothing for them.
+            surface.Material.Interior?.Medium?.TakeTheScenesCounts(context.MediumSamples, context.MediumBounces);
 
             if (scaled is not null && scaled.Add(surface.Material))
                 surface.Material.Ambient *= ambientScale;
@@ -305,33 +329,51 @@ public class RenderInstruction : Instruction
             // Now that the surface certainly has a material, it gets its say over the pigment on it.
             surface.MaterialIsSettled();
 
-            Pigment pigment = surface.Material.Pigment;
+            // A material on an instance dresses the parts of its shared shape that were left undressed (see
+            // Surface.MaterialThrough), which are settled before it.  So it is readied for the first of them, as it
+            // was when it was handed down into them: an image takes its mapping from the shape it is on, and has
+            // none for an instance.
+            //
+            // **A surface's seed is not put on its pigment here**, nor on a blend's pattern.  A pigment, or a blend, may
+            // be worn by many surfaces -- a named one wherever it is named, a group's on every part -- and settled onto
+            // it, the first surface's seed was everyone's.  Noise given no seed of its own draws on the seed of the
+            // surface being read, as it is read; see Pigment.Wearer.
+            Surface wearer = surface is Instance instance
+                ? (undressed.TryGetValue(instance.Prototype, out Surface first)
+                      ? first
+                      : undressed[instance.Prototype] = FirstUndressedIn(instance)) ?? surface
+                : surface;
 
-            pigment.Seed ??= surface.Seed;
+            surface.Material.Pigment.RenderingIsAboutToStart(context, wearer);
 
-            pigment.RenderingIsAboutToStart(context, surface);
-
-            // A blend's materials are settled as the surface's own is, each of them, and its pattern seeded.
+            // A blend's materials are settled as the surface's own is, each of them.
             if (surface.Material.Blend is { } blend)
             {
-                if (surface.Seed is { } seed)
-                    blend.Pattern.SetSeed(seed);
-
                 foreach (Material each in blend.AllMaterials)
                 {
                     each.Ambient ??= whenUnsaid;
+                    each.ReflectionSamples = context.ReflectionSamples;
+                    each.Interior?.Medium?.TakeTheScenesCounts(context.MediumSamples, context.MediumBounces);
 
                     if (scaled is not null && scaled.Add(each))
                         each.Ambient *= ambientScale;
 
-                    each.Pigment.Seed ??= surface.Seed;
-                    each.Pigment.RenderingIsAboutToStart(context, surface);
-
-                    if (surface.Seed is { } inner)
-                        each.Blend?.Pattern.SetSeed(inner);
+                    each.Pigment.RenderingIsAboutToStart(context, wearer);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// This method returns the first part of an instance's shared shape that wears whatever the instance is
+    /// dressed in, or <c>null</c> if every part has a material of its own.
+    /// </summary>
+    /// <param name="instance">The instance to look inside.</param>
+    /// <returns>The first undressed part, if any.</returns>
+    private static Surface FirstUndressedIn(Instance instance)
+    {
+        return new SurfaceIterator([instance.Prototype]).Surfaces
+            .FirstOrDefault(part => part.WearsTheDefault && part is not (Group or CsgSurface or Instance));
     }
 
     /// <summary>

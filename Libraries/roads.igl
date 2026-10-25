@@ -1,24 +1,24 @@
 // The road the buildings stand along and the vehicles stand on.
 //
 //     import 'roads' { Road, Curb, Pavement, Junction, CurbCorner, Crossing }
-//     import 'roads' { Crossroads, Roundabout, CurbArc, CurbRing }
+//     import 'roads' { Crossroads, Roundabout, CurbArc, CurbRing, CrazyPaving, ParkingLot }
 //
 //     object Road(80, 7)
-//     object Curb(80)     { translate Z 4.1 }
-//     object Pavement(80, 3) { translate Z 5.8 }
+//     object Curb(80)        { translate Z 3.5 }
+//     object Pavement(80, 3) { translate Z 5.2 }
 //
-// | `Road`     | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
-// | `Curb`     | A curb run and the channel beside it, for the edge of a carriageway. |
-// | `Pavement` | A footway in slabs, for behind the curb. |
+// | `Road`        | A carriageway: cambered, worn where the wheels run, with a line down the middle. |
+// | `Curb`        | A curb run, for the edge of a carriageway. |
+// | `Pavement`    | A footway in slabs, for behind the curb. |
 // | `CrazyPaving` | A path of flagstones of every shape, laid in mortar. |
-// | `Junction`   | The mouth where a side road opens off a main one. |
-// | `CurbCorner` | A quarter circle of curb, for the corner where two roads meet. |
-// | `Crossing`   | A zebra, laid on a carriageway of the same width. |
-// | `Crossroads` | Where two roads cross, with a stop line across each side arm. |
-// | `Roundabout` | An island with a carriageway round it. |
-// | `CurbArc`    | A curb along part of a circle, for where a ring has to be broken. |
-// | `CurbRing`   | A whole circle of curb, for a roundabout's island. |
-// | `ParkingLot` | A rectangle of asphalt with bays marked on it. |
+// | `Junction`    | The mouth where a side road opens off a main one. |
+// | `CurbCorner`  | A quarter circle of curb, for the corner where two roads meet. |
+// | `Crossing`    | A zebra, laid on a carriageway of the same width. |
+// | `Crossroads`  | Where two roads cross, with a stop line across each side arm. |
+// | `Roundabout`  | An island with a carriageway round it. |
+// | `CurbArc`     | A curb along part of a circle, for where a ring has to be broken. |
+// | `CurbRing`    | A whole circle of curb, for a roundabout's island. |
+// | `ParkingLot`  | A rectangle of asphalt with bays marked on it. |
 //
 // **The first two numbers are a length and a width**, because a road is the one thing in these
 // libraries that genuinely has two sizes and no sensible ratio between them.  The two after them mean
@@ -124,7 +124,7 @@ RoadNewTrack = material {
 // dark end starts at 0.46 here -- about the 91st percentile, so roughly a twelfth of the surface.  Any
 // higher and it picks out only crackle's *vertices*, where three cells meet, and renders as scattered
 // dots rather than lines; 0.56 did exactly that.  A band this wide catches whole walls -- and the cells are 20 cm, not
-// the 55 cm they started at, because the top few per cent of crackle is a *ring* around every wall
+// the 55 cm they started at, because the top few percent of crackle is a *ring* around every wall
 // rather than a line: at 55 cm those rings render as dark blobs, and only at 20 cm do they read as
 // cracking.  The turbulence came down with them, since smearing a ring only makes it a wider ring.
 RoadWornAsphaltPigment = pigment crackle with seed 21 {
@@ -833,7 +833,7 @@ primitive CurbArc(radius, from, sweep, facing, season = 'summer', variant = 1) -
 // -- A rounded corner ------------------------------------------------------------------------------
 
 // A quarter circle of curb, for the corner where two roads meet.  It is what makes a junction read: two
-// straight curb runs mitred at a right angle look like a drawing, and a radius looks like a street.  The
+// straight curb runs mitered at a right angle look like a drawing, and a radius looks like a street.  The
 // arc runs from `+X` round to `+Z` with its center of curvature at the origin, so the pavement is on the
 // inside of it and the road outside -- which is the way round a street corner is.
 //

@@ -114,6 +114,10 @@ public partial class Scene : NamedThing, IDisposable
     public TS GetColorFor<TS>(Ray ray, int remaining = 4)
         where TS : struct, ISpectrum<TS>
     {
+        // A pixel the camera's lens does not reach shows the background alone.
+        if (ray.Outside)
+            return Background.GetTransformedLightFor<TS>(HeadingOf(ray));
+
         List<Intersection> hits = Intersect(ray);
 
         // Sorted again, as finding the nearest has always sorted it, so that crossings tied in distance
@@ -162,7 +166,7 @@ public partial class Scene : NamedThing, IDisposable
             // medium, when it crossed that thing's insides on the way -- a log inside a flame is seen
             // through the flame in front of it, and a flower set in tinted glass through the glass.
             color = hit.Inside ? color
-                : HasInsides(hit.ContainerBefore) ? ThroughTheInsideOf(hit.ContainerBefore, color, hit)
+                : HasInsides(hit.InteriorBefore) ? ThroughTheInsideOf(hit.ContainerBefore, color, hit)
                 : ThroughTheSurroundings(color, ray, hit.Distance);
 
             if (hit is not HairIntersection { Coverage: < 1 } strand)
@@ -198,17 +202,13 @@ public partial class Scene : NamedThing, IDisposable
     }
 
     /// <summary>
-    /// This method reports whether a surface something stands inside has anything to say about light
-    /// crossing it: a fade or a medium.  Plain glass, or nothing, has not.
+    /// This method reports whether what something stands inside has anything to say about light crossing
+    /// it: a fade or a medium.  Plain glass, or nothing, has not.
     /// </summary>
-    private static bool HasInsides(Surface container)
+    private static bool HasInsides(Interior interior)
     {
-        if (container is null)
-            return false;
-
-        Interior interior = IntersectionExtensions.InteriorOf(container);
-
-        return interior.Medium is not null || !double.IsPositiveInfinity(interior.Clarity);
+        return interior is not null &&
+               (interior.Medium is not null || !double.IsPositiveInfinity(interior.Clarity));
     }
 
     /// <summary>
@@ -220,7 +220,7 @@ public partial class Scene : NamedThing, IDisposable
     private TS ThroughTheInsideOf<TS>(Surface container, TS color, Intersection hit)
         where TS : struct, ISpectrum<TS>
     {
-        Interior interior = IntersectionExtensions.InteriorOf(container);
+        Interior interior = hit.InteriorBefore;
 
         color *= interior.GetFadeOver(hit.Distance);
 
@@ -525,8 +525,13 @@ public partial class Scene : NamedThing, IDisposable
 
             // One place on the lamp per sample, walking around it as the samples go.  An area light's
             // softness is then spread across the crossing for nothing, rather than each sample paying
-            // for the whole face of it.
-            LightSample sample = light.SampleToward(where, index % light.SampleCount);
+            // for the whole face of it.  The walk starts somewhere of the place's own: started at the lamp's
+            // first sample on every ray, a crossing of sixteen steps only ever asked a sky of thirty-two about
+            // its first sixteen -- its upper half, each counted as the whole sphere -- the same in every pixel,
+            // so it never averaged away.
+            int count = light.SampleCount;
+            int pick = count == 1 ? 0 : (index + (int) (ShiftFor(where, 141) * count)) % count;
+            LightSample sample = light.SampleToward(where, pick);
             TS reaching = GetLightReaching<TS>(
                 where, sample.Direction, sample.Distance, timeIndex, null, false, 0, light.Housing);
 
@@ -754,8 +759,8 @@ public partial class Scene : NamedThing, IDisposable
     /// place inside it.
     /// <para>
     /// Where the density is even this is a closed form, being a rate times a length.  Where it has a
-    /// shape it is walked, and coarsely -- a quarter of the steps the eye's walk takes -- because all
-    /// that is wanted of it is how much stuff stands in the way, not where any of it is.  Either way it
+    /// shape it is walked, and coarsely -- in a fixed sixteen steps, whatever the eye's walk takes --
+    /// because all that is wanted of it is how much stuff stands in the way, not where any of it is.  Either way it
     /// stops at the surface's own edge, since past that the medium is not there to shade anything.
     /// </para>
     /// </summary>
@@ -1008,10 +1013,44 @@ public partial class Scene : NamedThing, IDisposable
     public TS GetHitColor<TS>(Intersection intersection, int remaining)
         where TS : struct, ISpectrum<TS>
     {
+        // Along light gathered by a strand of hair, a place within the hair's reach gives only what came to it from
+        // beyond -- the lamps' light it takes there is the hair light's to carry -- and beyond the reach everything
+        // counts, from there on.  See ShadeFiber.
+        if (_hairDomain is null)
+            return ShadedAt<TS>(intersection, remaining, false);
+
+        if (WithinTheHair(intersection))
+            return ShadedAt<TS>(intersection, remaining, true);
+
+        HairLight domain = _hairDomain;
+
+        _hairDomain = null;
+
+        try
+        {
+            return ShadedAt<TS>(intersection, remaining, false);
+        }
+        finally
+        {
+            _hairDomain = domain;
+        }
+    }
+
+    /// <summary>
+    /// This method works out the light leaving the given intersection point toward the eye; see
+    /// <see cref="GetHitColor{TS}"/>.
+    /// </summary>
+    /// <param name="intersection">The intersection point to derive the light for.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <param name="fromBeyond">Whether the point gives only the light that came to it from beyond the reach of a
+    /// hair, its lamps' light left out.</param>
+    private TS ShadedAt<TS>(Intersection intersection, int remaining, bool fromBeyond)
+        where TS : struct, ISpectrum<TS>
+    {
         // A strand of hair is a fiber, and is shaded as one; a wire finer than the ray is shaded round its
         // whole round at once, and one wide enough to be seen place by place as the metal it is, below.
         if (intersection is HairIntersection strand && !strand.IsAWire)
-            return ShadeFiber<TS>(strand);
+            return ShadeFiber<TS>(strand, remaining, fromBeyond);
 
         if (intersection is HairIntersection { IsAFineWire: true } wire)
             return ShadeWire<TS>(wire, remaining);
@@ -1019,8 +1058,56 @@ public partial class Scene : NamedThing, IDisposable
         // For the patterns that look about the place being shaded; see Surroundings.
         ShadeHere(intersection.TimeIndex);
 
-        TS surfaceColor = TS.Black;
         Material material = RegularizedFor(intersection);
+
+        // A blend between a smooth material and a rough one is shaded as each and the two mixed, rather than as one
+        // material between them: a mirror's highlight is Phong's and a rough surface's is its facets', and a blend
+        // of the numbers gave the edge of a smooth paint going rough no highlight at all -- the smallest roughness is
+        // facets too narrow to show -- a hard seam in the gloss along the very edge of the blend.
+        if (material.Split is { } split)
+        {
+            // The light reaching the place from each lamp is the same whichever half is shading it, and is found
+            // once (see ReachingFrom): shaded twice over, a weathered droid's shadow rays all but doubled a scene.
+            Reached<TS>.Sharing++;
+
+            try
+            {
+                intersection.Material = split.From;
+
+                TS from = HitColorOf<TS>(intersection, Regularized(intersection, split.From), remaining, fromBeyond);
+
+                intersection.Material = split.To;
+
+                TS to = HitColorOf<TS>(intersection, Regularized(intersection, split.To), remaining, fromBeyond);
+
+                intersection.Material = material;
+
+                return from * (1 - split.Share) + to * split.Share;
+            }
+            finally
+            {
+                if (--Reached<TS>.Sharing == 0)
+                    Reached<TS>.Memo?.Clear();
+            }
+        }
+
+        return HitColorOf<TS>(intersection, material, remaining, fromBeyond);
+    }
+
+    /// <summary>
+    /// This method works out the light leaving a point on a surface toward the ray that found it, the material it
+    /// wears there settled: see <see cref="GetHitColor{TS}"/>.
+    /// </summary>
+    /// <param name="intersection">The intersection to shade.</param>
+    /// <param name="material">The material settled there.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
+    /// <param name="fromBeyond">Whether the point gives only the light that came to it from beyond the reach of a
+    /// hair, its lamps' light left out; see <see cref="GetHitColor{TS}"/>.</param>
+    /// <returns>The light to use.</returns>
+    private TS HitColorOf<TS>(Intersection intersection, Material material, int remaining, bool fromBeyond)
+        where TS : struct, ISpectrum<TS>
+    {
+        TS surfaceColor = TS.Black;
 
         // What a surface lets past, it cannot also show.  The pigment may say so color by color,
         // which is what lets one pattern be a window in some places and a wall in others, so the
@@ -1091,11 +1178,18 @@ public partial class Scene : NamedThing, IDisposable
         if (underneath || through)
             intersection.Material = material.WithoutDiffuse();
 
-        foreach (Light light in Lights)
-            surfaceColor += Illuminate<TS>(
-                light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets);
+        // Within the reach of a hair whose strand is gathering light, what the lamps give here, under the surface as
+        // well as on it, is the hair light's to carry; see GetHitColor.
+        if (!fromBeyond)
+        {
+            foreach (Light light in Lights)
+                surfaceColor += Illuminate<TS>(
+                    light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets);
+        }
 
-        if (underneath || through)
+        if ((underneath || through) && fromBeyond)
+            intersection.Material = material;
+        else if (underneath || through)
         {
             intersection.Material = material;
 
@@ -1113,13 +1207,22 @@ public partial class Scene : NamedThing, IDisposable
             surfaceColor += walked;
         }
 
-        // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp.
+        // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp -- and which
+        // leaves through the skin as everything else of its own does: its own share of what a Fresnel surface
+        // does not mirror, a film's passing share, a coat and a sheen.  (Charged by the coat alone, a glowing bulb
+        // that follows Fresnel showed all its glow at a graze on top of the mirror image that is all it shows there.)
         if (material.Emission is { } glow)
         {
-            TS given = TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow);
+            TS given = TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow) * ownShare;
+
+            if (film is { } passing)
+                given *= passing.Passed;
 
             if (coat is not null)
                 given *= coat.ThroughOut<TS>(cosEye, intersection.N1);
+
+            if (sheen is not null)
+                given *= sheen.Beneath(cosEye);
 
             surfaceColor += given;
         }
@@ -1357,7 +1460,7 @@ public partial class Scene : NamedThing, IDisposable
 
             return light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                only, ReachingFrom<TS>(intersection, only, glass, light),
+                only, ReachingFrom<TS>(intersection, only, glass, light, one),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, one, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, highlights: _bounced == 0,
@@ -1373,7 +1476,7 @@ public partial class Scene : NamedThing, IDisposable
 
             sum += light.ApplyPhong(
                 intersection.LitPoint, intersection.Eye, intersection.Normal, intersection.Surface,
-                sample, ReachingFrom<TS>(intersection, sample, glass, light),
+                sample, ReachingFrom<TS>(intersection, sample, glass, light, index),
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, coat: CoatShareOf(light, sample, intersection, coated),
@@ -1408,21 +1511,33 @@ public partial class Scene : NamedThing, IDisposable
     /// </para>
     /// </summary>
     private TS ReachingFrom<TS>(
-        Intersection intersection, LightSample sample, (double, double)? glass, Light light)
+        Intersection intersection, LightSample sample, (double, double)? glass, Light light, int index = -1)
         where TS : struct, ISpectrum<TS>
     {
+        // While a blend's two halves shade one place, each lamp's sample is looked for once; glass, whose shadow
+        // rays depend on the glass, is looked for each time.
+        if (Reached<TS>.Sharing > 0 && glass is null && index >= 0)
+        {
+            Reached<TS>.Memo ??= [];
+
+            if (Reached<TS>.Memo.TryGetValue((intersection, light, index), out TS known))
+                return known;
+
+            return Reached<TS>.Memo[(intersection, light, index)] = ReachingFrom<TS>(intersection, sample, null, light);
+        }
+
         if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
         {
             TS reaching = GetLightReaching<TS>(
                 intersection.LitPoint, sample.Direction, sample.Distance, intersection.TimeIndex,
-                glass is not null && intersection.Inside ? intersection.Surface.Material ?? Material.Default : null,
+                glass is not null && intersection.Inside ? intersection.SurfaceMaterial : null,
                 false, intersection.FootprintRadius, light.Housing);
 
             // Something standing inside a medium is lit through it, as the medium's own stuff is: the
             // medium stands in the light's way as far as the edge of the surface it fills.
             if (!intersection.Inside && !reaching.IsBlack &&
                 intersection.ContainerBefore is { } container &&
-                IntersectionExtensions.InteriorOf(container).Medium is { } medium)
+                intersection.InteriorBefore.Medium is { } medium)
             {
                 reaching *= SurvivingTheMedium<TS>(
                     medium, container, intersection.ContainerPortals, intersection.LitPoint, sample,
@@ -1436,8 +1551,24 @@ public partial class Scene : NamedThing, IDisposable
 
         return GetLightReaching<TS>(
             beyond, sample.Direction, sample.Distance, intersection.TimeIndex,
-            intersection.Surface.Material ?? Material.Default, false, intersection.FootprintRadius,
+            intersection.SurfaceMaterial, false, intersection.FootprintRadius,
             light.Housing);
+    }
+
+    /// <summary>
+    /// This class holds, for each kind of light carried, the light found reaching a place from each lamp's samples
+    /// while the two halves of a blend between a smooth material and a rough one shade it (see
+    /// <see cref="GetHitColor{TS}"/>), keyed by the place, the lamp and the sample: what reaches a place does not
+    /// depend on what it is made of.  It is emptied once the outermost such shading is done.
+    /// </summary>
+    private static class Reached<TS>
+        where TS : struct, ISpectrum<TS>
+    {
+        [ThreadStatic]
+        internal static int Sharing;
+
+        [ThreadStatic]
+        internal static Dictionary<(Intersection, Light, int), TS> Memo;
     }
 
     /// <summary>
@@ -1462,7 +1593,7 @@ public partial class Scene : NamedThing, IDisposable
             return 1;
 
         Material material = intersection.Material;
-        double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
+        double byLight = glow.WeightOf(sample.Odds, sample.Distance);
         double byLooking = looksThrough * Microfacets.RefractionOdds(
             intersection.Normal, intersection.Eye, sample.Direction, material.Roughness * material.Roughness,
             intersection.N1, intersection.N2);
@@ -1569,7 +1700,7 @@ public partial class Scene : NamedThing, IDisposable
         if (looks == 0)
             return 1;
 
-        double byLight = glow.SampleCount * sample.Odds * sample.Distance * sample.Distance;
+        double byLight = glow.WeightOf(sample.Odds, sample.Distance);
         double byLooking = looks * (facets?.DirectionOdds(intersection.Eye, sample.Direction) ??
                                     Microfacets.DirectionOdds(
                                         intersection.Normal, intersection.Eye, sample.Direction, alpha));
@@ -1649,7 +1780,7 @@ public partial class Scene : NamedThing, IDisposable
         LookingRun run = _looking!.Value;
         double distance = (where - run.Origin).Magnitude;
         double byLooking = run.Count * run.Odds;
-        double byLight = glow.SampleCount * glow.OddsAt(where, timeIndex) * distance * distance;
+        double byLight = glow.WeightOf(glow.OddsAt(where, timeIndex), distance);
 
         return byLooking + byLight > 0 ? byLooking / (byLooking + byLight) : 1;
     }
@@ -1664,8 +1795,9 @@ public partial class Scene : NamedThing, IDisposable
     /// gets to color it, which is what casts a green shadow under green glass.  What this
     /// deliberately does not do is bend the shadow ray on its way through: light really is
     /// refracted into the bright and dark bands of a caustic, but finding them means tracing
-    /// forward from the light rather than backward from the surface, which is a different
-    /// algorithm entirely -- POV-Ray needs its photon mapping for the same reason.
+    /// forward from the light rather than backward from the surface.  That is what the caustics'
+    /// photon map does when a scene asks for it (see <c>Scene.Caustics</c>), and then glass that bends
+    /// light stops the shadow ray instead, its light being the photons'.
     /// </para>
     /// </summary>
     /// <param name="light">The light source in question, looked at from where it lies.</param>
@@ -1799,7 +1931,7 @@ public partial class Scene : NamedThing, IDisposable
                 continue;
             }
 
-            Material material = intersection.Surface.Material ?? Material.Default;
+            Material material = intersection.SurfaceMaterial;
 
             if (glass is not null && ReferenceEquals(material, glass))
                 return TS.Black;
@@ -1854,9 +1986,10 @@ public partial class Scene : NamedThing, IDisposable
                 // glass from being invisible to its own shadow: struck head-on it lets nearly
                 // everything through, but around the rim, where the light only grazes it, most is
                 // turned away.  A glass ball therefore casts a faint shadow gathered into a dark
-                // ring, which is close to what one really does -- what is still missing is the
+                // ring, which is close to what one really does -- what this cannot give is the
                 // bright spot in the middle, where refraction gathers the light it bent aside.
-                // That is a caustic, and finding it means tracing forward from the light.
+                // That is a caustic, and finding it means tracing forward from the light, which a
+                // scene asking for caustics does; such glass has already stopped this ray above.
                 if (interior.Refracts && film is null)
                 {
                     Vector normal = intersection.Surface.NormalAt(where, intersection);
@@ -1876,7 +2009,7 @@ public partial class Scene : NamedThing, IDisposable
                 Vector normal = intersection.Surface.NormalAt(where, intersection);
                 double thickness = film.ThicknessAt(film.Pattern is null
                     ? null
-                    : intersection.Surface.WorldToSurface(where, 0, intersection.Portals));
+                    : intersection.Surface.WorldToSurface(where, intersection.TimeIndex, intersection.Portals));
 
                 reaching *= film.SharesAt<TS>(
                     thickness, Math.Abs(ray.Direction.Unit.Dot(normal)), Environment.IndexOfRefraction,
@@ -1921,6 +2054,15 @@ public partial class Scene : NamedThing, IDisposable
         List<Intersection> intersections = [];
 
         _arranged.IntersectWithin(ray, intersections, maxDistance, Surfaces);
+
+        // The ray's instant, which a crossing otherwise learns only when it is prepared -- and these are not --
+        // so that what is asked of one (its normal, for glass's Fresnel, a film or a decal's facing) is asked
+        // where the surface stands at that instant rather than where it stood as the shutter opened.
+        if (ray.TimeIndex != 0)
+        {
+            foreach (Intersection crossing in intersections)
+                crossing.TimeIndex = ray.TimeIndex;
+        }
 
         return intersections;
     }
@@ -2136,13 +2278,14 @@ public partial class Scene : NamedThing, IDisposable
     /// </summary>
     /// <para>
     /// A blend of whole materials by a pattern is settled here first, where the ray met it; see
-    /// <see cref="MaterialBlend"/>.
+    /// <see cref="MaterialBlend"/>.  A mixture of a smooth material and a rough one is left as it is: it is
+    /// shaded as each of them, and each is made rough there (see <see cref="GetHitColor{TS}"/>).
     /// </para>
     /// <param name="intersection">The hit about to be shaded.</param>
     /// <returns>The material to shade it with.</returns>
     private static Material RegularizedFor(Intersection intersection)
     {
-        Material material = intersection.Surface.Material ?? Material.Default;
+        Material material = intersection.SurfaceMaterial;
 
         // What weather the surface has been out in makes its material a blend; see Weather.
         if (WeatherSettler.At(intersection) is { } weather && weather.Weathered(material) is var weathered &&
@@ -2159,6 +2302,18 @@ public partial class Scene : NamedThing, IDisposable
             intersection.Material = material;
         }
 
+        return material.Split is null ? Regularized(intersection, material) : material;
+    }
+
+    /// <summary>
+    /// This method returns the given material as rough as the surface that spread the ray, if it is a smooth mirror,
+    /// clear glass or a smooth coat met by a spread ray; see <see cref="RegularizedFor"/>.
+    /// </summary>
+    /// <param name="intersection">The hit about to be shaded.</param>
+    /// <param name="material">The material it wears there.</param>
+    /// <returns>The material to shade it with.</returns>
+    private static Material Regularized(Intersection intersection, Material material)
+    {
         // A film is never made rough: what it mirrors depends on its being smooth.
         if (!_spreading || _spreadRoughness <= 0 || material.Film is not null)
             return material;
@@ -2389,7 +2544,27 @@ public partial class Scene : NamedThing, IDisposable
             if (direction is null)
                 return TS.Black;
 
-            color = GetColorFor<TS>(RefractedRay(intersection, direction), remaining - 1) * transparency;
+            Ray refracted = RefractedRay(intersection, direction);
+            BounceRun? wasBouncing = _bouncing;
+
+            // A search for bounced light goes on with its straight run through glass, bent or not, when the scene
+            // has no caustics: a shadow ray passes glass straight then, so the light's own samples have already
+            // counted the sky and the glows beyond it.  Bent off the run by a pane's index, the search found the sky
+            // a second time.
+            if (_caustics is null && wasBouncing is { } run && OnRun(new Ray(intersection.Point, -intersection.Eye),
+                    run.Origin, run.Direction))
+            {
+                _bouncing = new BounceRun(refracted.Origin, refracted.Direction.Unit);
+            }
+
+            try
+            {
+                color = GetColorFor<TS>(refracted, remaining - 1) * transparency;
+            }
+            finally
+            {
+                _bouncing = wasBouncing;
+            }
         }
 
         // Transparency says how much light gets through; the filter says what color it comes out.
@@ -2475,7 +2650,7 @@ public partial class Scene : NamedThing, IDisposable
         NearSide side = intersection.Inside || material.Interior.Medium is not null
             ? null
             : new NearSide(
-                intersection.Normal, intersection.Surface.Material ?? Material.Default, alpha,
+                intersection.Normal, intersection.SurfaceMaterial, alpha,
                 intersection.N1, intersection.N2);
 
         _spreading = true;
@@ -2598,7 +2773,7 @@ public partial class Scene : NamedThing, IDisposable
                 List<Intersection> hits = Intersect(ray);
                 Intersection exit = hits.Hit();
 
-                if (exit is null || !ReferenceEquals(exit.Surface.Material, side.Glass))
+                if (exit is null || !ReferenceEquals(exit.SurfaceMaterial, side.Glass))
                     continue;
 
                 exit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, TS.Wavelength);
@@ -2641,7 +2816,7 @@ public partial class Scene : NamedThing, IDisposable
     private static double LookingShareOf(Light light, int index, Intersection intersection)
     {
         if (_looking is not { Side: { } side } run || !intersection.Inside ||
-            !ReferenceEquals(intersection.Surface.Material, side.Glass) ||
+            !ReferenceEquals(intersection.SurfaceMaterial, side.Glass) ||
             !OnRun(RayThatReached(intersection), run.Origin, run.Direction))
             return 1;
 

@@ -54,10 +54,13 @@ public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
     /// <param name="cy">The Y coordinate of what to take as the center of our five points.</param>
     /// <param name="shift">The amount of shift to get the four surrounding points.</param>
     /// <param name="depth">The current recursion depth, aiming toward 0.</param>
+    /// <param name="known">The color already traced at the center, if it was: the corner of the square this one
+    /// subdivides, which is the middle of this one.  Traced again, a fifth of the rays where a pixel subdivides were
+    /// ones already followed.</param>
     /// <returns>The color for the given point within the pixel.</returns>
-    private Color Evaluate(Scene scene, int x, int y, double cx, double cy, double shift, int depth)
+    private Color Evaluate(Scene scene, int x, int y, double cx, double cy, double shift, int depth, Color known = null)
     {
-        Color center = Trace(scene, x, y, cx, cy);
+        Color center = known ?? Trace(scene, x, y, cx, cy);
         Color topLeft = Trace(scene, x, y, cx, cy, -shift, -shift);
         Color topRight = Trace(scene, x, y, cx, cy, shift, -shift);
         Color bottomLeft = Trace(scene, x, y, cx, cy, -shift, shift);
@@ -71,16 +74,16 @@ public class AdaptiveSuperSamplingPixelRenderer : PixelRenderer
             depth--;
 
             if (Differs(seen, topLeft))
-                topLeft = Evaluate(scene, x, y, cx - shift, cy - shift, nextShift, depth);
+                topLeft = Evaluate(scene, x, y, cx - shift, cy - shift, nextShift, depth, topLeft);
 
             if (Differs(seen, topRight))
-                topRight = Evaluate(scene, x, y, cx + shift, cy - shift, nextShift, depth);
+                topRight = Evaluate(scene, x, y, cx + shift, cy - shift, nextShift, depth, topRight);
 
             if (Differs(seen, bottomLeft))
-                bottomLeft = Evaluate(scene, x, y, cx - shift, cy + shift, nextShift, depth);
+                bottomLeft = Evaluate(scene, x, y, cx - shift, cy + shift, nextShift, depth, bottomLeft);
 
             if (Differs(seen, bottomRight))
-                bottomRight = Evaluate(scene, x, y, cx + shift, cy + shift, nextShift, depth);
+                bottomRight = Evaluate(scene, x, y, cx + shift, cy + shift, nextShift, depth, bottomRight);
         }
 
         return Colors.Average([center, topLeft, topRight, bottomLeft, bottomRight]);

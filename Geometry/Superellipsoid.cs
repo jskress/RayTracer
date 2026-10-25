@@ -6,8 +6,10 @@ namespace RayTracer.Geometry;
 
 /// <summary>
 /// This class represents a superellipsoid: an implicit "rounded box/pillow" surface whose
-/// shape ranges continuously from a sphere to a cube to an octahedron, controlled by two
-/// exponents.  Unlike this project's other quadric/quartic surfaces, a superellipsoid has no
+/// shape ranges continuously from a cube (exponents near nought) through a sphere (one) to an
+/// octahedron (two), and past two pinches inward into a star, controlled by two exponents: the
+/// east/west one across X and Y, the north/south one toward the poles, which lie along Z.  Unlike
+/// this project's other quadric/quartic surfaces, a superellipsoid has no
 /// closed-form ray intersection; hits are found by sampling the ray at a handful of
 /// analytically-known points and root-finding between samples where the implicit function
 /// changes sign.  Ported from POV-Ray's own superellipsoid primitive
@@ -18,16 +20,16 @@ namespace RayTracer.Geometry;
 /// secant march) can miss a genuine entry/exit pair that both fall inside one same-signed
 /// sample interval, which happens visibly near sharp edges (see
 /// <see cref="FindHitsWithinSameSignInterval"/> for the fixed-subdivision replacement used
-/// here instead).
+/// here instead).  A convex one, both exponents two or less, is searched another way altogether; see
+/// <see cref="AddConvexIntersections"/>.
 /// </summary>
 public class Superellipsoid : Surface
 {
     // The implicit surface is (|x|^(2/e) + |y|^(2/e))^(e/n) + |z|^(2/n) - 1 = 0.  All the ray
     // sampling below stays within this fixed local unit box (padded, exactly matching
     // POV-Ray's own MIN_VALUE/MAX_VALUE for its intersect_box search domain -- note this is
-    // deliberately more generous than the tight ±1.0001 box POV uses for external bounding-box
-    // culling elsewhere, which this project doesn't need since neither Torus nor Egg override
-    // GetDefaultBoundingBox either).
+    // deliberately more generous than the tight unit box GetDefaultBoundingBox gives the renderer
+    // to prune against, which the renderer pads in its own way).
     private const double BoxPadding = 0.01;
 
     /// <summary>Minimal intersection depth for a valid intersection.</summary>
@@ -68,6 +70,9 @@ public class Superellipsoid : Surface
     /// </summary>
     public double NorthSouth { get; set; }
 
+    // The powers the function is built from, as POV-Ray names them: 2/e for X and Y, 2/n for Z.  The
+    // middle one, e/n, is the outer power of the formula above; nothing here reads it, since the
+    // function is worked out as nested power means (EvaluateG), which need only the other two.
     private double _powerX;
     private double _powerY;
     private double _powerZ;

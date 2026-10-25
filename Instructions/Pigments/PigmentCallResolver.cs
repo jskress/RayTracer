@@ -33,8 +33,8 @@ public class PigmentCallResolver : IPigmentResolver
     public Token ErrorToken { get; init; }
 
     /// <summary>
-    /// This property is not used here; a call carries no turbulence of its own, whatever the pigment
-    /// it names may carry.
+    /// This property is not used here: a seed written before a call is given to what the call makes by the
+    /// <see cref="SinglePigmentResolver"/> the call stands in.
     /// </summary>
     public Resolver<int?> SeedResolver { get; init; }
 

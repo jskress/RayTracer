@@ -115,6 +115,9 @@ public sealed class MaterialBlend
     // shown the surroundings if it looks about the place.
     private double ValueAt(Intersection intersection, Scene scene)
     {
+        // Noise in the pattern given no seed of its own draws on the surface's, as a pigment's does; see Pigment.Wearer.
+        using Pigment.WornScope _ = Pigment.WornBy(intersection.Surface);
+
         Point point = intersection.Surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals);
 
         if (Transform is not null)
@@ -170,6 +173,11 @@ public sealed class MaterialBlend
         mixed.Grain = Between(from.Grain, to.Grain, share);
         mixed.Transparency = Between(from.Transparency, to.Transparency, share);
         mixed.ReflectionSamples = Math.Max(from.ReflectionSamples, to.ReflectionSamples);
+
+        // Between a smooth material and a rough one the two are shaded each as itself and mixed; see
+        // Scene.GetHitColor.  What asks of the mixture without a hit -- a shadow, a photon -- still has the numbers.
+        if (from.IsRough != to.IsRough)
+            mixed.Split = (from, to, share);
 
         return mixed;
     }

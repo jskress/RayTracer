@@ -58,14 +58,31 @@ public class PrimitiveCallResolver : ISurfaceResolver
         object[] given = Arguments
             .Select(argument => argument.GetValue(variables))
             .ToArray();
-        Surface made = BuildOrShare(context, primitive, given);
+        (Surface made, bool shared) = BuildOrShare(context, primitive, given);
 
         // And now whatever the call itself said, in the names the call was written among -- which is
         // how a loop may place a row of these by saying `translate X step` after the call.
         Extras?.ApplyToSurface(context, variables, made);
 
+        // A call may dress what it shares in a material of its own: each place wears what dresses it there (see
+        // Surface.MaterialThrough).  But not in one holding a medium, which no shared shape may hold (see
+        // Instance.MayBeShared), so such a call is given a shape of its own after all.
+        if (shared && HoldsAMedium(made.Material))
+        {
+            made = Build(context, primitive, given);
+
+            Extras?.ApplyToSurface(context, variables, made);
+        }
+
         return made;
     }
+
+    /// <summary>
+    /// This method reports whether a material holds a medium, itself or as one of a blend's materials.
+    /// </summary>
+    private static bool HoldsAMedium(Material material) =>
+        material is not null &&
+        (material.Interior?.Medium is not null || (material.Blend?.AllMaterials.Any(HoldsAMedium) ?? false));
 
     /// <summary>
     /// This method lays what a call says over a surface already made, which a call itself never has
@@ -121,8 +138,8 @@ public class PrimitiveCallResolver : ISurfaceResolver
     /// <param name="context">The current render context.</param>
     /// <param name="primitive">The primitive being called.</param>
     /// <param name="given">The values the call supplied.</param>
-    /// <returns>The surface for this call.</returns>
-    private Surface BuildOrShare(RenderContext context, UserPrimitive primitive, object[] given)
+    /// <returns>The surface for this call, and whether it stands for a shared shape.</returns>
+    private (Surface Made, bool Shared) BuildOrShare(RenderContext context, UserPrimitive primitive, object[] given)
     {
         // **Only a primitive that gives back a group may be shared, and the reason is the block a call
         // may carry.**  That block is laid over whatever the call made, by a resolver that knows the
@@ -133,21 +150,25 @@ public class PrimitiveCallResolver : ISurfaceResolver
         // was and the sharing hides inside it.
         //
         // That is no great loss: a primitive that makes anything worth building once makes a group.
-        string key = primitive.Kind == "group" && !(Extras?.SetsMaterial ?? false)
+        //
+        // A call whose own block makes it glow is not shared either; see ISurfaceResolver.GivesLight.  One that dresses
+        // it in a material is, since each place wears its own (unless the material holds a medium, which the caller
+        // finds once the block is laid on).
+        string key = primitive.Kind == "group" && !(Extras?.GivesLight ?? false)
             ? KeyFor(primitive, given)
             : null;
 
         if (key is not null && context.SharedShapes.TryGetValue(key, out Surface already))
-            return SharedAs(already);
+            return (SharedAs(already), true);
 
         Surface built = Build(context, primitive, given);
 
         if (key is null || !Instance.MayBeShared(built))
-            return built;
+            return (built, false);
 
         context.SharedShapes[key] = built;
 
-        return SharedAs(built);
+        return (SharedAs(built), true);
     }
 
     /// <summary>

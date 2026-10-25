@@ -11,7 +11,7 @@
 // | `DiningTable` | A table to eat at: top, apron and four legs. |
 // | `DiningChair` | One to sit at it on. |
 // | `LowTable` | The low one in front of a sofa. |
-// | `Sideboard` | A carcase on short legs, to stand against a wall. |
+// | `Sideboard` | A carcass on short legs, to stand against a wall. |
 // | `Armchair` | A seat, a back, two arms and four feet. |
 // | `Sofa` | The armchair, gone long, with cushions. |
 // | `Bookcase` | Sides, shelves, and as many books as fit. |
@@ -21,7 +21,7 @@
 // | `Range` | A cooker, flush with the counter. |
 // | `Refrigerator` | The tallest thing in a kitchen. |
 // | `Bed` | Frame, headboard, mattress, cover and two pillows. |
-// | `Wardrobe` | A tall carcase with two doors and a cornice. |
+// | `Wardrobe` | A tall carcass with two doors and a cornice. |
 // | `Dresser` | A chest of drawers. |
 // | `Nightstand` | The little one beside the bed. |
 //
@@ -207,7 +207,7 @@ primitive LowTable(long, wide = 0, coat = FurnitureOak) -> group {
 
 // -- Sideboard ------------------------------------------------------------------------------------
 
-// A carcase on short legs, against a wall: thirty-two inches to the top and eighteen deep, which is
+// A carcass on short legs, against a wall: thirty-two inches to the top and eighteen deep, which is
 // what one is.  **The depth does not follow the length**, for the same reason the height does not: a
 // sideboard is as deep as a person's reach across it, however long the wall it stands along.
 //
@@ -215,7 +215,7 @@ primitive LowTable(long, wide = 0, coat = FurnitureOak) -> group {
 primitive Sideboard(long, coat = FurnitureOak) -> group {
     return group {
         union {
-            // the carcase, from six inches up to thirty-two
+            // the carcass, from six inches up to thirty-two
             cube { scale [long / 2, 13, 9]  translate [0, 19, 0] }
 
             // a plinth rail under it, so it does not read as a box floating on sticks
@@ -576,12 +576,12 @@ primitive KitchenRun(long = 96, sink = -1, coat = FurnitureOak, top = FurnitureS
 
     return group {
         group {
-            // the carcase, standing on a recessed kick so the run does not look like a wall
+            // the carcass, standing on a recessed kick so the run does not look like a wall
             cube { scale [long / 2, (counter - 1.5 - kick) / 2, deep / 2]
                    translate [0, kick + (counter - 1.5 - kick) / 2, 0] }
             cube { scale [long / 2, kick / 2, deep / 2 - 3]  translate [0, kick / 2, -1.5] }
 
-            // a drawer over a door in each unit, standing proud of the carcase as fronts do
+            // a drawer over a door in each unit, standing proud of the carcass as fronts do
             group {
                 for unit in [0, units - 1] {
                     difference {
@@ -820,7 +820,7 @@ primitive Bed(wide = 60, cloth = FurnitureLinen, coat = FurnitureOak) -> group {
 // A wardrobe: seventy-two up, twenty-four deep, two doors and a cornice.  It faces `+Z`.
 //
 // **The cornice is the whole of why it reads as a wardrobe** and not as a very tall cupboard.  A
-// carcase that stops dead at its top edge looks unfinished at this height in a way it does not at a
+// carcass that stops dead at its top edge looks unfinished at this height in a way it does not at a
 // sideboard's, because the top is above the eye and what you see is the underside of nothing.
 primitive Wardrobe(long = 48, high = 72, coat = FurnitureOak) -> group {
     deep = 24
@@ -871,7 +871,7 @@ primitive Dresser(long = 54, rows = 3, coat = FurnitureOak) -> group {
             // **Each front gets a recessed panel, and that is what makes the drawers visible.**  The
             // first version stood plain fronts eight tenths of an inch proud with a thin gap between
             // courses, which is about right for a real chest and renders as a plain box: across a
-            // room that step is a pixel or two and the carcase behind it is lit the same as the front
+            // room that step is a pixel or two and the carcass behind it is lit the same as the front
             // in front of it.  A cut panel gives every drawer an edge that faces a different way, and
             // an edge facing a different way is the only thing that survives the distance.
             group {

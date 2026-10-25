@@ -46,18 +46,20 @@ TYPES = [
     "blob", "conic", "cube", "cylinder", "disc", "egg", "extrusion", "heightfield", "hyperboloid",
     "isosurface", "julia", "lathe", "lsystem", "paraboloid", "parallelogram", "parametric", "patch",
     "plane", "poly", "quadric", "ribbon", "saddle", "sdf", "sphere", "superellipsoid", "sweep", "text",
-    "torus", "triangle", "tube", "svg", "icon",
+    "torus", "triangle", "tube", "svg", "icon", "strand", "swells", "field", "grown", "fracture", "shapes",
+    "swarm", "joint", "mark",
     "union", "intersection", "difference", "group", "csg",
     "camera", "light", "context", "scene", "sky", "environment", "sun", "info", "render", "font",
-    "material", "materials", "pigment", "interior", "medium", "image", "path", "spline", "profile",
+    "material", "materials", "pigment", "interior", "medium", "image", "path", "spline", "profile", "keys",
+    "body", "hair", "weather", "coat", "sheen", "film", "subsurface", "decal",
 ]
 
 # The patterns a pigment or a density can be made from.
 PATTERNS = [
-    "agate", "blend", "bozo", "brick", "checker", "crackle", "cylindrical", "dents", "gradient",
-    "granite", "hexagon", "leopard", "marble", "mottled", "noise", "planar", "radial", "ripples",
-    "spherical", "square", "squares", "stripes", "swells", "toroidal", "triangular", "wave", "waves",
-    "wood", "wrinkles",
+    "agate", "blend", "boxed", "bozo", "brick", "checker", "crackle", "crevices", "cubic", "cylindrical",
+    "dents", "edges", "facing", "flop", "gradient", "granite", "hexagon", "leopard", "marble", "mottled",
+    "noise", "planar", "radial", "ripples", "spherical", "square", "squares", "stripes", "toroidal",
+    "triangular", "wave", "waves", "wood", "wrinkles",
 ]
 
 

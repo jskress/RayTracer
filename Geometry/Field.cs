@@ -267,6 +267,48 @@ public class Field : Group
         base.PrepareSurfaceForRendering();
     }
 
+    // What the field picks among: its choices, or its one prototype.
+    private List<FieldChoice> ChoicesToMake => Choices.Count > 0 ? Choices : [new FieldChoice(Prototype)];
+
+    // Each choice made once, numbered as the field numbers what it makes: a shape that may not be shared takes a number
+    // of its own, as it stands at the first place it is picked for.
+    private Surface[] _candidates;
+
+    /// <summary>
+    /// This method returns each of the field's choices made once -- what it shares among the places that pick it,
+    /// or stands at the first of them -- making them the first time it is asked.  It is asked when the field fills,
+    /// and before that whenever the field is asked whether it may be shared, so that what it will hold is known
+    /// then: a field is empty until it is prepared, and taken as empty, a field of flames was shared between places
+    /// and its flames lit from the one place a glow can stand.
+    /// </summary>
+    /// <returns>Each choice, made.</returns>
+    private Surface[] Candidates()
+    {
+        if (_candidates is not null)
+            return _candidates;
+
+        List<FieldChoice> choices = ChoicesToMake;
+        Surface[] made = new Surface[choices.Count];
+        int number = 0;
+
+        for (int index = 0; index < choices.Count; index++)
+        {
+            made[index] = choices[index].Make(number);
+
+            if (!Instance.MayBeShared(made[index]))
+                number++;
+        }
+
+        return _candidates = made;
+    }
+
+    /// <summary>
+    /// This method reports whether everything the field will hold may be shared between places, which the field
+    /// itself may be only if it may: see <see cref="Candidates"/>.
+    /// </summary>
+    internal bool MayShareWhatItHolds() =>
+        (Choices.Count > 0 || Prototype is not null) && Candidates().All(Instance.MayBeShared);
+
     /// <summary>
     /// This method stands a copy at every place of the grid that falls inside the outline, or at every
     /// stop along the path: on the field's own ground, or, given a surface to drop onto, wherever each
@@ -276,27 +318,27 @@ public class Field : Group
     /// field's own ground.</param>
     private void Fill(Surface ground)
     {
-        List<FieldChoice> choices = Choices.Count > 0 ? Choices : [new FieldChoice(Prototype)];
+        // (Made once, here or when the field was asked whether it may be shared: see Candidates.)
+        List<FieldChoice> choices = ChoicesToMake;
         int seed = Seed ?? DefaultSeed;
         Surface[] shared = new Surface[choices.Count];
         Surface[] first = new Surface[choices.Count];
         int number = 0;
+        Surface[] candidates = Copies ? null : Candidates();
 
         if (!Copies)
         {
             for (int index = 0; index < choices.Count; index++)
             {
                 // Built to be shared -- but not every shape may be, and asking is not fussiness.  A
-                // shape holding a light, or a medium, or one that moves has no single place to be;
-                // and an instance of a shape that is itself an instance cannot say which of the two a
-                // point lies in, which the instance refuses outright rather than getting quietly wrong.
+                // shape that glows, or holds a medium, or moves, or holds a joint that aims or
+                // reaches, a mark or a span, has no single place to be; see Instance.MayBeShared.
                 //
-                // **That last is the ordinary case, not an exotic one.**  A primitive that gives back
-                // a group hands out a group holding an instance, and most primitives worth calling
-                // give back a group.  A field of one used to end the render complaining about shapes
-                // holding shapes, which is true of the internals and no help at all to whoever wrote
-                // the scene.
-                Surface candidate = choices[index].Make(number);
+                // **A shape that is itself an instance is shared like any other.**  That is the
+                // ordinary case, not an exotic one: what a primitive hands back is an instance of
+                // what it built, and a crossing found through both instances remembers both (see
+                // Portals).  Before instances nested, a field of such things built each afresh.
+                Surface candidate = candidates[index];
 
                 if (Instance.MayBeShared(candidate))
                     shared[index] = candidate;

@@ -153,7 +153,7 @@ function BuildMortarTint(variant) -> color {
 // sixteen bricks, so the front and back faces sit precisely on a joint plane.  What saves them today is
 // the epsilon the pattern adds before it compares, which tips an exact landing to brick rather than
 // mortar -- far too fine a thing to rest a wall on.  Driving it the other way on purpose was measured:
-// sixty-one per cent of the wall came out mortar instead of twenty-two.  So the wall asks for a shift
+// sixty-one percent of the wall came out mortar instead of twenty-two.  So the wall asks for a shift
 // of a little under an inch, which puts its faces a third of the way into a brick.  The gables, at
 // three and a half inches, are already clear and ask for none.
 //
@@ -795,7 +795,7 @@ primitive Apartments(floors = 5, season = 'summer', variant = 1) -> shapes {
 
 // A nave and a tower: the nave's gable to the street over a porch, its sides in bays of tall windows between
 // buttresses, and the tower at one front corner -- which, by its variant -- with a clock, a belfry of
-// louvres, and a spire.  It is built of dressed stone under slate, twenty-two meters deep and fourteen wide,
+// louvers, and a spire.  It is built of dressed stone under slate, twenty-two meters deep and fourteen wide,
 // its front toward -Z, and takes no size: a chapel is the size a chapel is.
 primitive Chapel(season = 'summer', variant = 1) -> shapes {
     return shapes {

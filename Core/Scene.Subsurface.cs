@@ -83,6 +83,13 @@ public partial class Scene
         TS albedo = Subsurface.AlbedoOf(color);
         TS extinction = subsurface.ExtinctionOf<TS>();
         Surface container = intersection.Surface;
+
+        // The walk leaves by the solid's own surface: for a shape cut or joined by CSG, the whole of it, whose
+        // crossings are the solid's boundary.  Kept to the part that was hit, a walk wandering into where two wax
+        // spheres overlap left by the first sphere's surface inside the second, where no light reaches.
+        for (Surface up = container.Parent; up is CsgSurface csg; up = up.Parent)
+            container = csg;
+
         int walks = _bounced == 0 && !_spreading ? Math.Max(1, SubsurfaceSamples) : 1;
         Vector inward = -intersection.Normal;
         (Vector across, Vector along) = Microfacets.FrameAround(inward);
@@ -204,7 +211,7 @@ public partial class Scene
         (TS reflected, TS passed) = SharedOutBy(
             Subsurface.AlbedoOf(color), material.Subsurface.ExtinctionOf<TS>(), material.Subsurface.SheetThickness,
             walks, (ulong) (ShiftFor(intersection.Point, 137) * ulong.MaxValue));
-        double step = DoubleExtensions.Epsilon * intersection.Surface.SelfOffsetScale;
+        double step = intersection.SelfOffset;
         TS light = reflected * LitAsMatte<TS>(intersection, intersection.LitPoint, intersection.Normal);
 
         if (passed.Sum > 0)

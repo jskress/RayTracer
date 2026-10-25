@@ -17,8 +17,10 @@ have more than one of either).  The names of things must not be confused with *v
 which are also supported.  Variables do need to be assigned a value before they can be
 referenced.  So, they must appear in the file before they are used.  The value can be as
 complex an expression as you need, but it won't actually be *evaluated* until render time.
-Similarly, a file must be included above the point where you rely on what is in it.  This
-is the one way order matters.
+Similarly, a file must be included above the point where you rely on what is in it.  Those
+are the ways order matters, along with two more: a [`render` command](#the-render-command)
+draws only what is written above it, and [`angles are`](#angles-are-radians) holds only from where
+it is written.
 
 Everything else — cameras, lights, surfaces — may appear in any order.  Just remember that
 a file with no lights renders black, which is probably not what you want.
@@ -118,6 +120,15 @@ A file needs a `render` command only when there is a genuine choice to make.  Wi
 scene and a single camera — which is most files — you may leave it off, and that is why none
 of the examples so far have needed one.
 
+**A file may hold several `render` commands**, each drawing a picture of its own: the same scene
+from two cameras, say, or two scenes in turn.  A render draws what is written above it, and each
+one after the first carries the file out afresh up to itself, so that nothing one picture settled
+on its way — a material's ambient scaled, a physical sky's sun hung — is settled a second time
+for the next.  The pictures are numbered in the order the commands stand, after the name the
+picture would otherwise have had: `views.igl` writes `views-0000000.png`, `views-0000001.png` and
+on.  An [animation](animation.md) is rendered through one `render` command, and a file holding more
+is refused.
+
 The choice can also be made from the command line, with `--scene` and `--camera`, which take
 precedence over anything the file says.  That lets one file be rendered from any of its cameras,
 or as any of its scenes, without editing it — and lets a file with several of either be
@@ -140,7 +151,11 @@ Whether that transparency reaches the file is decided by the image itself.  A re
 out opaque everywhere — which is what setting a `background` to an opaque color gives you — is
 written without an alpha channel at all, since a fourth channel of nothing but "fully opaque"
 is a quarter of the file spent saying nothing.  A render with any transparency anywhere in it
-keeps the channel that records it.  Nothing needs to be asked for either way.
+keeps the channel that records it.  Nothing needs to be asked for either way.  A picture file
+keeps its alpha *straight*: a soft edge against the transparent background keeps its own color,
+and its alpha says how much of the pixel it covers, so the picture laid over anything else shows
+no dark or pale fringe.  A file of light (`.exr`, `.hdr`, `.pfm`) keeps it premultiplied instead,
+as OpenEXR's own convention has it.
 
 It takes a *pigment*, not merely a color, so a sky may be patterned:
 
@@ -365,8 +380,9 @@ without a shape is not walked, and is answered exactly as before.
 
 **And a shape stands in its own light.**  A cloud's underside is dark because its top was in the way,
 and nothing but the medium shadowing itself gives that.  So each place the walk asks about asks every
-lamp what reaches it, and each of *those* answers walks the shape again — coarsely, at a quarter of the
-steps, since all that is wanted is how much stuff is in the way rather than where it is.  This is the
+lamp what reaches it, and each of *those* answers walks the shape again — coarsely, in a fixed sixteen
+steps whatever the medium's samples, since all that is wanted is how much stuff is in the way rather than
+where it is.  This is the
 expensive part of a shaped medium, and it is what tells a cloud from a glowing blob.
 
 One thing worth knowing before tuning a cloud by eye: **thicker is not brighter**.  Past a point,
@@ -504,6 +520,12 @@ single direction costs one more path per turn instead of a tree of them, and sin
 every ray does it, the picture as a whole still averages over a great many directions.  The price is
 noise: the added light is an estimate, and a thin one at low sample counts.
 
+**Light turned more than once loses some of a medium's tint.**  A path followed past its first turn goes
+as far between turns as the average of the medium's colors would carry it, every color alike, so a
+medium that stops one color sooner than another -- a blue haze, a reddened smoke -- comes out a little
+grayer in the light it has turned twice or more than it should.  The first turn, straight from the
+lamps, keeps the tint, and so does what each turn keeps of each color.
+
 **What lights it, and what still does not.**  A [sky light](lights.md#sky-lights) is a light like any
 other here, so it is asked at every place along a ray and again at every turn of a followed path — and
 for a cloud that matters more than anything else on this page, real ones being lit mostly by *sky*.  It
@@ -628,6 +650,10 @@ sphere {
 Both of those names come built in, along with many others, and this is how they coexist.
 The same applies to names you set yourself.
 
+Where nothing in particular is asked for, a name holding two things cannot say which is meant,
+and is refused: `Shade = Turquoise` stops with an error naming what `Turquoise` holds.  Say which
+with a cast — `Shade = color Turquoise` — or use the name where only one of the two fits.
+
 ### Expressions
 
 Anywhere a value is wanted, an expression may be written instead.  The usual arithmetic
@@ -674,6 +700,29 @@ Several take either numbers or vectors, and which they mean follows from what yo
 `abs`, `min`, `max`, `clamp` and `lerp` all work on both, and `min` and `max` given a *single*
 vector return its smallest or largest component.  Ask for something that does not exist and
 the answer says what does — `dot(1, 2)` reports that `dot` takes `(vector, vector)`.
+
+Where a function takes more than one value, the order is worth having to hand:
+
+| Call | Gives |
+| --- | --- |
+| `pow(x, n)` | `x` to the power `n`. |
+| `mod(x, d)` | What is left of `x` after taking out whole multiples of `d`. |
+| `min(a, b)`, `max(a, b)` | The smaller or larger, component by component for vectors. |
+| `clamp(x, low, high)` | `x` held between `low` and `high`.  For vectors each component is held to its own. |
+| `lerp(from, to, t)` | The value `t` of the way from `from` to `to`; a `t` outside 0 to 1 carries on past the ends. |
+| `smoothstep(from, to, x)` | 0 below `from`, 1 above `to`, and a smooth climb between: the edges come first and the value last. |
+| `atan2(y, x)` | The angle, in radians from -π to π, of the direction from the origin to `(x, y)`: **`y` comes first**, as it does in most languages. |
+| `distance(p, q)` | How far apart two points are. |
+| `dot(a, b)`, `cross(a, b)` | The dot and cross products of two vectors, `a` first. |
+| `random(key, second, third)` | The number for that key; the second and third keys may be left off. |
+| `noise(p)`, `noise(x, y, z)` | The noise at a point, given as a point or as three numbers. |
+
+**`round` takes a half to whichever whole number beside it is even** — banker's rounding:
+`round(0.5)` is 0, `round(1.5)` is 2, `round(2.5)` is 2 again and `round(-1.5)` is -2.
+Rounding every half up would drift a column of halves upward; this does not.  `floor` goes down
+and `ceil` up whatever the fraction, and `trunc` drops the fraction, which for a negative number
+goes up toward nought — `trunc(-1.7)` is -1 where `floor(-1.7)` is -2.  `sign`
+is -1, 0 or 1, `log` is the natural logarithm and `log10` the common one.
 
 Two of them are worth a note.  `mod` is not the `%` operator: `%` takes its sign from the
 number being divided, so `-1 % 4` is -1, while `mod(-1, 4)` is 3.  That is the one that tiles,
@@ -758,6 +807,16 @@ whatever unit `angles are` says, so that would convert to radians and then be re
 all over again.  The postfix operators belong where radians are wanted, which is inside the
 functions above.
 
+**`angles are` holds from where it is written, not over the whole file.**  A context block is
+carried out in its place, along with everything else, and an angle is read in whatever unit holds
+when the thing it belongs to is made — and things are made as the file is carried out, from the
+top down.  So an `angles are radians` reaches what is made after it, and a rotation written above
+it is still read in degrees.  A primitive's body is made each time it is called, so it reads its
+angles in the unit that holds where the call is, not where the primitive was written; the
+libraries that ship with the ray tracer are written in degrees, and a scene calling them should
+leave the setting at degrees.  Put the context block at the top of the file and the setting does
+mean the whole of it.
+
 #### Mathematical symbols
 
 So that a formula can be pasted in as it was written rather than translated first, the
@@ -799,7 +858,8 @@ The comparisons are `<`, `<=`, `>`, `>=`, `==` and `!=`.  Numbers and text may b
 of the six ways; anything else may only be asked whether it is equal, since there is no order
 to put two colors in.  Two numbers count as equal when they are near enough to each other,
 which is how the rest of the ray tracer treats them — so `0.1 + 0.2 == 0.3` is true here, as it
-ought to be and as plain floating point would not have it.
+ought to be and as plain floating point would not have it.  The orderings agree: `0.1 + 0.2 <= 0.3`
+is true and `0.1 + 0.2 > 0.3` is false, so exactly one of less, equal and greater holds.
 
 `and` binds tighter than `or`, comparisons bind tighter than either, and only the side that is
 needed is evaluated: in `size != 0 && 10 / size < 1` the division is never reached when `size`
@@ -931,7 +991,7 @@ apart.
 | Part | Means |
 | --- | --- |
 | `(a, b = 2)` | The values it takes.  Anything with a fallback may be left out of a call, and those must come last, since a call leaves values off the end. |
-| `-> number` | The kind of thing it gives back: `number`, `color` or `vector`.  Required, so that a call can be checked where it is written rather than when it runs. |
+| `-> number` | The kind of thing it gives back: `number`, `color` or `vector`.  Required: each answer is held to it, taken as that kind where it would be anywhere that kind is wanted — three numbers as a color — and refused, naming the function, where it cannot be. |
 | `name = ...` | Worked out on the way to the answer.  Later ones may lean on earlier ones. |
 | `return ...` | The answer.  A function must have one, and nothing may follow it. |
 | `if (...) { } else { }` | Two ways out, each giving an answer of its own.  See [Choosing Inside a Body](#choosing-inside-a-body). |
@@ -1101,10 +1161,13 @@ primitive fence(count, spacing = 0.8) -> group {
         return group { cube { scale [0.07, 0.7, 0.07]  rotate Z lean } }
     }
     return group {
-        step = [0, 4]
-        object post(step * 1.5) { translate X step * spacing }
+        for step in [0, count - 1] {
+            object post(step * 1.5) { translate X step * spacing }
+        }
     }
 }
+
+object fence(5)
 ```
 
 A `function` may hold functions but never a primitive, which would not mean anything — a function
@@ -1120,6 +1183,12 @@ including the two-word ones (`smooth triangle`, `generic shape`, `object file`).
 
 A call's block need not repeat what the body already said.  It is laid *over* what the primitive made,
 so it holds only what that call wished to change.
+
+**A motion the body gives is the body's own.**  A body that sets what it makes moving — with
+`motion { }`, or, in an [animation](animation.md), with a placement that follows `time` — moves it in
+the primitive's own frame, inside whatever the call's block says.  So a bar the body spins about its
+own middle still spins about its middle when the call stands it somewhere else, and a call's own
+`motion { }` moves the spinning bar along rather than replacing its spin.
 
 #### One Shape, Many Places
 
@@ -1151,14 +1220,21 @@ tree, leaves and all.  A [field](advanced-surfaces.md#field) of them is a handfu
 places it fills — [A Great Wood](../gallery/Local/countryside/a-great-wood.igl) plants a whole forest
 out to the third ridge from seven.
 
+**A shared shape wears what each place dresses it in.**  Its parts with no material of their own take
+the material that call is dressed in — by its own block, or by a group around it — place by place, as
+[weather](materials.md#weathering-a-model) does, so one shape may be red in one place and blue in another.
+
 Sharing is quietly declined, and the call gets a shape of its own, when:
 
 | | |
 | --- | --- |
-| the call's block sets a `material` | a shared shape carries its own, and this one would be ignored |
+| the call's block gives it a `material` holding a `medium`, or says it `gives light` | what is inside a thing, and a light made of a glow, belong to the one place it stands |
 | the shape `gives light` | a light made of a thing's stuff has to be somewhere in particular |
 | the shape holds a `medium` | what is inside a thing is looked up through the thing itself |
-| the shape has `motion` | where it stands changes while the shutter is open |
+| the shape moves — `motion`, or, in an animation, a placement that follows `time` | where it stands changes while the shutter is open |
+| the shape holds a joint that aims or reaches, or anything that is a `span` | what it turns toward or is stretched between is somewhere in the scene, so it is settled for the one place it stands |
+| the shape holds a `mark` | a named place, which one shape standing in many places would put in all of them under the one name |
+| the shape holds a `body` or a `swarm` | each is moved or filled in the scene's own space, for one place |
 | the primitive gives back something other than a `group` | a group can hold a shared shape; a sphere cannot |
 
 None of these is anything to work around.  They are the cases where one shape in two places would mean

@@ -99,8 +99,24 @@ public class FractureResolver : SurfaceResolver<Fracture>, IValidatable
         // Only a resolver that says something replaces what is there: the block on a call of a primitive giving
         // back a fracture is read as another, holding a transform and no solid, and must not wipe what the
         // primitive just worked out.
+        // A piece's skin is the solid's own surface, which every piece stands as an instance, and a material handed
+        // into a shape shared so goes to whichever piece hands it first: every skin of a broken boulder came out the
+        // first of its materials.  So with more than one, each has a solid of its own, nothing in it shared.
         if (SolidResolver is not null)
-            value.Solid = SolidResolver.ResolveToSurface(context, variables);
+        {
+            if (MaterialResolvers.Count > 1)
+            {
+                value.Solids = MaterialResolvers
+                    .Select(_ => context.Unshared(() => SolidResolver.ResolveToSurface(context, variables)))
+                    .ToList();
+                value.Solid = value.Solids[0];
+            }
+            else
+            {
+                value.Solid = SolidResolver.ResolveToSurface(context, variables);
+                value.Solids = null;
+            }
+        }
 
         if (MaterialResolvers.Count > 0)
             value.PieceMaterials = MaterialResolvers.Select(material => material.Resolve(context, variables)).ToList();

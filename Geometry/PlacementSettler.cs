@@ -172,6 +172,16 @@ internal static class PlacementSettler
     /// <param name="byName">The named siblings, by name.</param>
     private static void Settle(Surface surface, Dictionary<string, Surface> byName)
     {
+        // A swarm fills itself once bodies are moved and a dropped field where it lands, both after placements are
+        // settled, so either is empty here and would be passed over as nothing to place.
+        if (surface is Swarm or Field { Over: not null })
+        {
+            throw new Exception(
+                $"A {(surface is Swarm ? "swarm" : "field dropped over something")} is placed " +
+                $"{surface.Placements[0]}, but it fills itself only after placements are settled, so there is " +
+                "nothing yet to place; say where it stands with its own transforms instead.");
+        }
+
         BoundingBox mine = Surface.BoxAround(surface, true);
 
         // Nothing to place, so there is nothing to do.  **An empty box is not the same as no box at
@@ -242,8 +252,21 @@ internal static class PlacementSettler
 
         // The boxes were measured in the space this surface shares with its siblings, so the move is
         // in that space too -- which is to say it goes on the far side of the surface's own transform
-        // rather than among it.
-        surface.Transform = Transforms.Translate(move[0], move[1], move[2]) * surface.Transform;
+        // rather than among it.  A surface that moves while the shutter is open is stood again, since
+        // where it stands at each instant was worked out when it was prepared: left, it was found
+        // where it stood before it was placed.  Its motion is carried round the move, so that it moves
+        // just as it was written to from where it is put.
+        Matrix shift = Transforms.Translate(move[0], move[1], move[2]);
+        Func<double, Matrix> motion = surface.MotionAt;
+
+        if (motion is null)
+            surface.Transform = shift * surface.Transform;
+        else
+        {
+            Matrix back = shift.Invert();
+
+            surface.StandAt(shift * surface.Transform, fraction => shift * motion(fraction) * back);
+        }
     }
 
     /// <summary>

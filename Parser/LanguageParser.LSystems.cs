@@ -24,7 +24,7 @@ public partial class LanguageParser
     /// <param name="clause">The clause that starts the L-system block.</param>
     private void HandleStartLSystemClause(Clause clause)
     {
-        VerifyDefaultSceneUsage(clause, "Text");
+        VerifyDefaultSceneUsage(clause, "L-system");
 
         LSystemResolver resolver = ParseLSystemClause(clause);
 

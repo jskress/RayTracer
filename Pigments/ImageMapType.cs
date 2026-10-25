@@ -55,14 +55,14 @@ public static class ImageMapTypeExtensions
     /// <returns>The X and Y coordinates within the image to use, or NaN for a point the map cannot
     /// place.</returns>
     public static (double, double) GetTexelLocationFor(
-        this ImageMapType? imageMapType, Point point, double width, double height)
+        this ImageMapType? imageMapType, Point point, double width, double height, double ring = 1)
     {
         return imageMapType switch
         {
             ImageMapType.Planar => (point.X * width, point.Z * height),
             ImageMapType.Spherical => GetSphericalImageLocationFor(point, width, height),
             ImageMapType.Cylindrical => GetCylindricalImageLocationFor(point, width, height),
-            ImageMapType.Toroidal => GetToroidalImageLocationFor(point, width, height),
+            ImageMapType.Toroidal => GetToroidalImageLocationFor(point, width, height, ring),
             _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
         };
     }
@@ -113,10 +113,10 @@ public static class ImageMapTypeExtensions
     /// <returns>How far across and down the image the edge reaches, or NaN where either end cannot be
     /// placed.</returns>
     public static (double, double) AxesFor(
-        this ImageMapType? imageMapType, Point point, Vector edge, double width, double height)
+        this ImageMapType? imageMapType, Point point, Vector edge, double width, double height, double ring = 1)
     {
-        (double u0, double v0) = imageMapType.GetTexelLocationFor(point - edge * 0.5, width, height);
-        (double u1, double v1) = imageMapType.GetTexelLocationFor(point + edge * 0.5, width, height);
+        (double u0, double v0) = imageMapType.GetTexelLocationFor(point - edge * 0.5, width, height, ring);
+        (double u1, double v1) = imageMapType.GetTexelLocationFor(point + edge * 0.5, width, height, ring);
         double du = u1 - u0;
         double dv = v1 - v0;
 
@@ -188,8 +188,10 @@ public static class ImageMapTypeExtensions
         Point point, double width, double height)
     {
         // Left unwrapped, as every place is; taken as a remainder, as it once was, a point below the
-        // axis's nought gave a negative row and took the render down with it.
-        double y = point.Y * height;
+        // axis's nought gave a negative row and took the render down with it.  Counted down from the top,
+        // as a picture's rows are and as the spherical map counts them: counted up, the picture stood on
+        // its head.
+        double y = height - point.Y * height;
 
         Vector vector = new Vector(point);
         double magnitude = vector.Magnitude;
@@ -230,7 +232,7 @@ public static class ImageMapTypeExtensions
     /// <param name="height">The height of the image.</param>
     /// <returns>The X and Y coordinates within the image to use.</returns>
     private static (double, double) GetToroidalImageLocationFor(
-        Point point, double width, double height)
+        Point point, double width, double height, double ring)
     {
         double length = Math.Sqrt(point.X * point.X + point.Z * point.Z);
         double theta;
@@ -249,9 +251,18 @@ public static class ImageMapTypeExtensions
         }
 
         theta = 0 - theta;
-        length = Math.Sqrt(point.X * point.X + point.Y * point.Y);
 
-        double phi = Math.Acos(-point.X / length);
+        // The angle round the tube, about the middle of the tube where this point is, not about the torus's own
+        // middle: measured from the axis, as it was, it pinched the picture to a band at one side of the ring and
+        // a single row at the other.
+        double outward = length - ring;
+
+        length = Math.Sqrt(outward * outward + point.Y * point.Y);
+
+        if (length == 0)
+            return (double.NaN, double.NaN);
+
+        double phi = Math.Acos(-outward / length);
         
         if (point.Y > 0)
             phi = TwoPi - phi;

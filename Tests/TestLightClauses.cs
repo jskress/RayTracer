@@ -99,6 +99,27 @@ public class TestLightClauses
         Assert.IsTrue(BrightnessAcross(image, 0.08) > 0.3, "the edge should be lit too");
     }
 
+    /// <summary>
+    /// A spotlight's cone is an angle like any other, read in whichever unit the scene says: the same cone written in
+    /// radians lights the same pool as in degrees.
+    /// </summary>
+    [TestMethod]
+    public void TestASpotlightsConeFollowsTheAngleUnit()
+    {
+        Canvas degrees = Render(
+            "spot light { location [0, 12, 0] point at [0, 0, 0] radius 8 falloff 14 color White }", out string error);
+        Canvas radians = Render(
+            "context { angles are radians }\n" +
+            $"spot light {{ location [0, 12, 0] point at [0, 0, 0] radius {8 * Math.PI / 180} falloff {14 * Math.PI / 180} color White }}",
+            out string radiansError);
+
+        Assert.IsNull(error);
+        Assert.IsNull(radiansError);
+
+        foreach (double across in new[] { 0.08, 0.3, 0.5 })
+            Assert.AreEqual(BrightnessAcross(degrees, across), BrightnessAcross(radians, across), 1e-6, $"at {across}");
+    }
+
     [TestMethod]
     public void TestASpotlightLeavesAPoolWithDarkAround()
     {

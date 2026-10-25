@@ -92,10 +92,10 @@ light GoldenHourLight { samples 64 }
 with the sun taken out of it is not the same thing as a cloudy one: cloud spreads the sun's light
 across the whole dome rather than hiding it, so the honest way to get an overcast day is to paint one.
 
-**Every one of these skies has its sun on the `+Z` side.**  That is worth knowing before you place a
-camera, because the consequence is invisible until you render: a wall, a row of buildings or a face
-of anything that points toward `-Z` is in shade under all six, and a camera sitting out at `-Z`
-looking back — which is the usual place to put one — sees the shaded side of everything.  The picture
+**Every one of these skies that has a sun has it on the `+Z` side.**  That is worth knowing before you
+place a camera, because the consequence is invisible until you render: a wall, a row of buildings or a
+face of anything that points toward `-Z` is in shade under all nine of them, and a camera sitting out
+at `-Z` looking back — which is the usual place to put one — sees the shaded side of everything.  The picture
 comes out a silhouette, and nothing in it says why.
 
 The sun's direction is worked out from its `elevation` and `azimuth`, and the azimuth runs the way a
@@ -297,15 +297,18 @@ many directions at every point it lights, and every one of those looks has to ge
 grass, so the sample count is most of the render time in a scene like that.  Turning it down where it
 is used costs less than it sounds — grass has no large flat surface for the grain to show on.
 
-`Grass` takes two more numbers after the usual three, and they come *after* rather than among them
-precisely so the first three keep their meaning:
+`Grass` takes two more numbers after the usual three — **how tall** its tufts stand, 0.3 unless said, and
+**how thickly**, 1 unless said — and they come *after* rather than among them precisely so the first
+three keep their meaning:
 
 ```
-object Grass(Lawn, 'summer', 1, 0.3, 0.5)  // half as many tufts, a quarter the surfaces
+object Grass(Lawn, 'summer', 1, 0.3, 0.5)  // half the density: a quarter as many tufts
 ```
 
-Halving the last one quarters the count, since the tufts thin out in both directions at once.  Grass
-seen from across a field does not need what grass seen from a foot away needs.
+The tufts stand about 0.63 of their height apart, over the density, so halving the last one quarters the
+count, since the tufts thin out in both directions at once.  Grass seen from across a field does not
+need what grass seen from a foot away needs.  `Reeds` and `Wheat` take the same two, at a height of 1.8
+and 1.1 unless said.
 
 **Three of these fill an outline, and the jitter is what tells them apart.**  `Grass` and `Reeds` want
 most of a cell of it, because a lattice is the one thing that gives an area of either away.  `Wheat`
@@ -393,6 +396,12 @@ find where it grows; a cobble is quicker.
 slope runs out, not along a line at right angles to another line.  Draw the outline for a heap and
 draw a hole in the grass to match, a little smaller, and the stones run in under the grass at the
 edge instead of leaving a bare ring between them.
+
+So its first argument is the outline rather than a size, and like `Grass` it takes two more after the
+usual three: **how big a stone is**, roughly how far across, 0.3 unless said — each place stands one from
+about half that to a third over it — and **how thickly they lie**, 1 unless said.  The stones stand a
+stone and a quarter apart over the density, so `Scree(Slope, 'summer', 1, 0.3, 2)` lays four times as
+many.
 
 ##### What makes a shape into stone
 
@@ -501,9 +510,10 @@ Sixty does for a flame across a room; a hundred and twenty for one filling the f
 forty a flame goes banded, and the bands are the steps of the walk showing through.
 
 **Two glowing volumes may overlap; three may not.**  Each shell a ray crosses spends one of the four
-refractions the renderer allows, and a ray that runs out comes back black wherever the stuff inside is
-thin.  That is why a campfire here is one shell whose density describes the coals and all three flames
-together, rather than four shells stacked — which is also cheaper, since a ray crosses one boundary
+refractions the renderer allows unless a scene asks for more with a
+[`trace depth`](context.md#trace-depth), and a ray that runs out comes back black wherever the stuff
+inside is thin.  That is why a campfire here is one shell whose density describes the coals and all
+three flames together, rather than four shells stacked — which is also cheaper, since a ray crosses one boundary
 instead of eight.
 
 #### Buildings
@@ -587,25 +597,20 @@ read in its space would run at forty-five degrees.
 face either misses the joints running that way or lands squarely in one — and landing in one turns
 *every other course of the whole face* to mortar, because those joints are staggered by course.  Worth
 measuring rather than trusting: driving a house wall into its depth joints on purpose took the face from
-twenty-two per cent mortar to sixty-one.
+twenty-two percent mortar to sixty-one.
 
 What no amount of care will do is turn a corner.  Real brickwork toothes at a quoin, alternate courses
 reaching round; a pattern is a lattice cut by the wall's faces, so courses line up in height all the way
 round a house and the bond does not interlock where two walls meet.  At the distance a building is seen
 from that is invisible, and it is the reason to reach for a pattern here rather than for geometry.
 
-**Frame a brick building near, or expect bands.**  A pattern is sampled at the point a ray hits, with no
-filtering over the area a pixel covers, so once a brick course falls below a pixel the lattice beats
-against the sample spacing.  Perspective makes that spacing vary smoothly across a wall, so the beat does
-too, and a distant terrace comes back covered in broad *curved* bands rather than in brick.  A course is
-about three and a half inches; at a distance giving nine pixels to the meter that is 0.8 of a pixel, which
-is where it starts.
-
-Antialiasing does not rescue it — the bands are low-frequency, and extra samples within a pixel average
-away fine noise rather than a slow beat.  It is also the worst case for the adaptive sampler, which finds
-real, unresolvable disagreement over every wall and subdivides all of it: `adaptive:3:0.1` on the night
-street ran past a hundred times the un-antialiased cost, against the 22x a normal scene pays.  The gallery's
-daylight scenes have no bands because they stand their houses close, which is the whole of the remedy.
+**A distant brick wall fades rather than bands.**  A lattice pattern — brick, checker, hexagons and their
+kind — is averaged over the patch of surface each ray covers, so once a brick course falls below a pixel the
+wall comes back as the mix of brick and mortar it is made of.  Sampled at a single point, as patterns were
+when this library was first written, the lattice beat against the sample spacing and a distant terrace came
+back covered in broad *curved* bands, which antialiasing could not average away and the adaptive sampler
+subdivided at great cost; the remedy then was to stand houses close.  Now a wall may stand as far off as the
+picture wants.
 
 For the boarding the useful trick is that `linear Y gradient` is a **sawtooth** — it climbs from nought
 to one over each unit and starts again — so one unit is one board and the color map is a cross-section
@@ -744,10 +749,11 @@ object Truck(8.5, 'summer', 3) { translate X -11 }
 | `Van` | A cab with a box behind it, taller than it is wide, and higher off the ground. |
 | `Truck` | A cab and a flat bed with a load on it, on six wheels. |
 
-**The first number is a length, not a height.**  This is the one library that changes what the first
-number means, and it changes it because that is how a vehicle is described — a car is four and a half
-meters long, not one and a half tall.  The other two numbers mean what they always mean, and only the
-length is required.
+**The first number is a length, not a height.**  That is how a vehicle is described — a car is four and a
+half meters long, not one and a half tall — and everything else here that goes somewhere is described the
+same way: the [vessels](#vessels), the [trains](#trains), the [aircraft](#aircraft), the
+[spacecraft](#spacecraft) and the [Enterprise](#enterprise) all take a length first too.  The other two
+numbers mean what they always mean, and only the length is required.
 
 **These face `+X`**, so a vehicle drives to the right in a camera looking the usual way, and a street
 running left to right needs no turning at all.  `rotate Y 180` sends one the other way.
@@ -763,7 +769,7 @@ was never quite the problem: what they lacked was the small stuff that **project
 distinction is the whole of this pass.  A detail painted flat onto a wall does nothing at the angles a
 street is actually seen from; a detail that stands out a hand's width catches the light on one side and
 throws a shadow on the other, and it is those two edges that say a thing was *built* rather than
-moulded.
+molded.
 
 On a house that meant a **chimney** tall enough to stand clear of the ridge with a cap slab on it
 (there was one before, whose top cleared the roof by a tenth of its height and read as a wart), a
@@ -826,8 +832,13 @@ object Submarine(70) { translate Z -60 }
 | `VesselAntifoul` | What a hull is below the waterline. |
 
 **The first number is a length**, as it is for the [vehicles](#vehicles) and for the same reason: a boat
-is a thirty-footer or a sixty-metre trawler, never so many metres tall.  These are in **meters** and
+is a thirty-footer or a sixty-meter trawler, never so many meters tall.  These are in **meters** and
 they **face `+X`**, like the vehicles and the [trains](#trains).
+
+There is no season, and the second number is **which one of that kind**, which for a `Sailboat` or a
+`Trawler` is the paint on its topsides: white, blue or green (`0`, `1`, `2`).  A `Submarine` takes a
+variant too and does nothing with it — it is the one dark steel whatever is asked — so that a call written
+for one vessel serves for any of them.
 
 ##### The waterline is `y = 0`, and that is the whole of the convention
 
@@ -882,7 +893,7 @@ the cloth.  That turned out to be the patch's own dicing and not anything the sa
 
 ##### A submarine is far thinner than it looks in a photograph
 
-Seventy metres by fifteen across is an airship.  A boat that length is about seven wide — a tenth of its
+Seventy meters by fifteen across is an airship.  A boat that length is about seven wide — a tenth of its
 length, not a quarter — and the first attempt here used 0.115 of the length as the *radius* and came out
 as a blimp.  It is also three shapes and not one: a single ellipsoid stretched to length has its
 greatest girth exactly amidships and tapers from there to both ends, which is a fish.  A real boat has a
@@ -904,14 +915,15 @@ object Water(700, 900, 'breezy') { material SeaWater  translate Z 300 }
 | `SeaWater` | Deep water: dark, blue-green, mostly a mirror. |
 | `LakeWater` | Fresh water over a bed near enough to see, letting more through. |
 | `PoolWater` | Clear water in a tiled pool, almost entirely a window. |
+| `WaterCrest(state)` | How far the water of a state can rise above its rest level: what to add to `y` to stand something on it rather than in it. |
 
 **The surface comes without a material, and you must give it one.**  What a body of water looks like is
 mostly its material, so shipping the surface with one would be shipping the half that matters least.
 This is the same bargain [the skies](#daylight) strike: take both halves or the picture disagrees with
 itself.
 
-The states run `glassy`, `calm`, `breezy`, `choppy`, `rough`.  Each sets four things — how tall the
-swell stands, how far apart the crests run, how sharply they peak, and how far they lean.  **The crests get longer as
+The states run `glassy`, `calm`, `breezy`, `choppy`, `rough`.  Each sets two things — how steep the
+swell is and how far apart the crests run, which between them say how tall it stands.  **The crests get longer as
 well as taller**, which is what makes a rough sea read as *large*: waves that grow taller without
 growing longer look like a scale model of themselves.
 
@@ -933,7 +945,7 @@ plane is still a straight line.
 **The shape is water's own, and it is no longer tuned.**  Each piece of water travels in a *circle* as
 a wave passes, so it bunches up under a crest and spreads out under a trough.  The crests draw up and
 the troughs flatten out because of that, and the crests lean into the direction they travel for the
-same reason — one cause, not three effects to be dialled in separately.
+same reason — one cause, not three effects to be dialed in separately.
 
 This library used to say all three by hand: a `crest` for height, a `sharpness` that raised a rectified
 sine to a power, and a `lean` that sheared the field sideways by its own height.  Each had to be found
@@ -1102,7 +1114,10 @@ object StreetLamp(5, 'summer', 2, 1)    // burning
 | `BollardLight` | A knee-high post with a lit band, for a path or a forecourt. |
 
 The first three numbers mean what they mean everywhere — **how tall**, **what time of year**, and **which
-one of that kind**.  There is a fourth here, and it is the interesting one.
+one of that kind** — except that a `WallLantern` takes the season and does nothing with it: winter caps a
+`StreetLamp`'s lantern and a `BollardLight`'s top with snow, and leaves the wall lantern as it is.  The
+season is there so that a scene handing every fitting the same three numbers can hand them to this one
+too.  There is a fourth here, and it is the interesting one.
 
 ##### `lit` is off by default, and that is arithmetic
 
@@ -1135,11 +1150,13 @@ ground under the column.
 **The light is linear in that number; what you see is not.**  This is worth keeping straight, because the
 table above looks like a square root and this section used to say it was one.  A volume light delivers
 emission times the amount of emitting stuff over the inverse square, and the amount of stuff *is* the
-density — there is no square root in it.  What bends the curve is
-[gamma](context.md#gamma): a scene is corrected unless it says `no gamma`, and gamma 2.2 puts a linear
-radiance on screen as its 1/2.2 power, which is 0.45 — near enough a square root to pass for one.
+density — there is no square root in it.  What bends the curve is the picture's
+[output curve](context.md#gamma): unless a scene says `no gamma`, light is encoded for the screen by the
+sRGB curve, which over most of its range is close to a 1/2.2 power — 0.45, near enough a square root to
+pass for one — and the brightest of it is eased further by the [film curve](context.md#film-curve).
 
-Measured over four doublings of the density, on the same scene rendered both ways:
+Measured over four doublings of the density, on the same scene rendered both ways (under the plain 2.2
+power that was the output curve when this was written; the sRGB curve bends it much the same way):
 
 | | exponent |
 | --- | --- |
@@ -1154,13 +1171,14 @@ what it says.
 from 61.6 to 59.1 — nothing, within the noise it exists to reduce — and tripled the render time.  It buys
 smoothness; only density buys light.
 
-##### What a light cannot do here
+##### Why these glow rather than carry a light
 
-**A light cannot live inside a fixture.**  `point light` inside a `group` is a parse error: a light is
-only valid at a scene's top level.  So there is no hybrid where a primitive carries a visible globe *and*
-a cheap point light doing the real work — for anything self-contained it is emissive or nothing.  If a
-scene wants a hard-edged key light it has to place one itself, and then it is that scene's job to keep it
-agreeing with the fitting it is pretending to come from.
+A fitting could carry a real light now: a `group` may hold [lights of its own](lights.md#lights-on-things),
+set out wherever the group is placed, and `indoor-lights`' `Anglepoise` does exactly that, a glowing
+filament that lights nothing and a spotlight in the head doing the real work.  These street fittings stay
+emissive because the thing you see glowing and the thing doing the lighting are then one object and cannot
+disagree, and because a lamp at the end of a street is seen as much as it lights.  A scene that wants a
+hard-edged key light from one is free to put a light in it.
 
 One consequence worth expecting: an emissive globe is an **area** source, so its shadows are soft.  That
 is more truthful than a point light's hard edge, and it does mean a lamp-lit scene looks gentler than a
@@ -1229,7 +1247,7 @@ The first number is a **length** for the things that run along a pavement — `B
 what time of year and which one of that kind.
 
 This is what goes on a pavement after [`roads`](#roads) has built one and [`outdoor-lights`](#outdoor-lights)
-has lit it, and it is the difference between a street that has been modelled and one that looks lived in.
+has lit it, and it is the difference between a street that has been modeled and one that looks lived in.
 
 ##### Everything with a front faces `-Z`
 
@@ -1243,7 +1261,7 @@ to furnish — everything faces the road, and the camera, with no rotation — w
 A turned shape — a bin, a bollard, a pillar box — is a `lathe` whose path is drawn to a radius of one and
 whatever height it needs.  Scaling that **uniformly** ties the thing's width to its height, and street
 furniture is exactly the family where that is wrong: a bin, a bollard and a post are each about the same
-width whatever height you ask for.  A metre-tall bin scaled uniformly came out **840 across**, which is a
+width whatever height you ask for.  A meter-tall bin scaled uniformly came out **840 across**, which is a
 water butt, and a bollard came out **780**, which is a stump.  Real ones are about 450 and 200.
 
 ```
@@ -1274,7 +1292,7 @@ What the number decides is **how much a shelter dims what is behind it**, which 
 `'winter'` puts a cap on a bench's slats, a bin's lid, the flat of a bollard, the crown of a pillar box
 and the top of a wall box, a railing's top rail, and a shelter's roof.  The `CycleStand` gets none, and
 deliberately: it is a round tube 70 across, which in life holds a line of snow about a pencil wide, and
-modelling that is a lot of geometry to put where nobody will look.  Getting this wrong in either
+modeling that is a lot of geometry to put where nobody will look.  Getting this wrong in either
 direction — snow down the sides of a bollard, or a shelter roof left bare — is what makes a snowy render
 look dusted with icing sugar rather than snowed on.
 
@@ -1308,7 +1326,9 @@ head at the wrist to look at it; the spotlight is in the head, so the pool of li
 reach finds the arms straight out toward it, and the elbow will not bend further than a real one does.  The
 springs at the foot are stretched between the turret and the lower arm.  These are
 [joints](animation.md#joints), so a lamp handed a place that moves follows it: `a-lamp-at-work` in the gallery
-moves only the place, from a book to a pad and back.
+moves only the place, from a book to a pad and back.  Its variant is the enamel (0 red, 1 black, 2 cream), and
+it is lit differently from the others: by a tungsten spotlight in the head, with a small glowing filament that
+lights nothing, rather than by the shared bulb, so it costs what a spotlight does.
 
 ##### `lit` is on by default, which is the opposite of outdoors
 
@@ -1340,7 +1360,7 @@ answer, because a shade is *supposed* to block the light sideways.  It is open t
 a table lamp really does is throw two cones, one at the ceiling and one at the table.
 
 So a shade here is a real open-ended `conic` with a translucent material.  `transparency` is how much
-crosses it and `interior { filter }` is what colour that comes out, and a shadow ray obeys both.
+crosses it and `interior { filter }` is what color that comes out, and a shadow ray obeys both.
 Measured on a wall beside a lamp, it is exactly linear: 0.07, 0.18 and 0.40 gave 1.95, 4.95 and 10.92,
 while the wall *above* held at 64.2 throughout — the up-cone leaves by the open top and does not care
 what the linen does.
@@ -1365,7 +1385,10 @@ measured against that surface *at that height*, not against the widest part of i
 ##### The bulbs glow at 2800 K, so balance the camera for them
 
 Every fitting's bulb is a [glow](lights.md#color-temperature) at a tungsten filament's real
-temperature, 2800 K, or 5800 K for the cool variant.  A filament really is that orange: left on the
+temperature, 2800 K, or 5800 K for the cool variant.  The variants run in fours: 0 is brass under linen,
+1 steel under linen and 2 bronze under a dark shade, each with a tungsten bulb, and 3 is steel under linen
+with the cool one — so a fitting left at its default is warm, and a daylight-colored lamp is asked for as
+variant 3.  A filament really is that orange: left on the
 default balance, which is daylight's, a room lit by these comes out deeply orange, the way a photograph
 taken on daylight film does.  What a room looks like to someone standing in it is a camera balanced
 for its bulbs:
@@ -1392,10 +1415,10 @@ object Door(0.28, 0.62, 0.14)  { translate [0, 0.64, -0.14] }
 | --- | --- |
 | `Sash` | Two sashes stacked, with a meeting rail across and glazing bars up each. |
 | `Casement` | Side-hung leaves either side of a mullion, with a transom near the head. |
-| `Shutters` | A pair of louvred leaves, to flank a window that is already there. |
-| `Door` | A panelled leaf, with a surround up both sides, a head across and a step at the foot. |
+| `Shutters` | A pair of louvered leaves, to flank a window that is already there. |
+| `Door` | A paneled leaf, with a surround up both sides, a head across and a step at the foot. |
 | `GlazedDoor` | The same, with the upper panels replaced by glass and a bar across it. |
-| `DoubleDoor` | Two leaves meeting on a centre stile. |
+| `DoubleDoor` | Two leaves meeting on a center stile. |
 | `Fanlight` | A light over a doorway, to sit above one already there. |
 
 **These are placed with their middle on the face of the wall**, so a wall built as a cube scaled
@@ -1403,6 +1426,13 @@ object Door(0.28, 0.62, 0.14)  { translate [0, 0.64, -0.14] }
 that.  **All three numbers are half-sizes**, matching that cube — which is not the convention the rest of
 these libraries use, and is this way because every part of an opening is placed relative to a wall built
 the same way.
+
+After the three sizes come the usual two, **what time of year** and **which one of that kind**.  Winter
+lays snow on a window's sill and a door's step.  The variant picks the paint: a window's frame is white,
+cream or green (`0`, `1`, `2`), a door's leaf black, red, blue or green (`0` to `3`).  `Shutters` and
+`Fanlight` take both and do nothing with either — the shutters are always the one green and the fanlight
+is glass in a stone surround — so that a wall handing its season and variant to every opening in it can
+hand them to these as well.
 
 **A sash or a casement can be broken.**  Each takes a last number, how many of its panes are smashed: a
 sash has twelve, a casement three, and which ones go is set by the variant — `Sash(0.30, 0.46, 0.14,
@@ -1440,7 +1470,7 @@ diagnose from the picture alone.
 
 **And a glazed door needs a hole, not merely fewer panels.**  Leaving the upper panels off changes
 nothing, because the leaf is a solid slab standing in front of wherever the glass goes: the door comes
-out looking exactly like a panelled one with a plain top half.  It takes a `difference` to make a real
+out looking exactly like a paneled one with a plain top half.  It takes a `difference` to make a real
 opening, and the reveal that leaves is what makes the glass read as set *into* the door.
 
 ##### What makes a hole in a wall into a window
@@ -1481,8 +1511,10 @@ object Pavement(80, 3) { translate Z 5.2 }
 | `ParkingLot` | A rectangle of asphalt with bays marked on it. |
 
 **The first two numbers are a length and a width**, because a road is the one thing in these libraries
-that genuinely has two sizes and no sensible ratio between them.  The two after them mean what they
-always mean, **what time of year** and **which one of that kind**.
+that genuinely has two sizes and no sensible ratio between them — though a `Curb` has only the length,
+and the curved curbs take a radius instead (a ring which way it faces as well, and an arc where it starts
+and how far it sweeps besides).  The two after them mean what they always mean, **what time of year**
+and **which one of that kind**; a `Crossing` takes only the season.
 
 **These run along `X`**, like the [vehicles](#vehicles) and the [trains](#trains).
 
@@ -1492,7 +1524,11 @@ a `plane` at `y = 0` is the wrong ground for a street: put the verge a little lo
 let the curb stand out of it.
 
 The variant picks the surface, and here that is a bigger choice than a color: `0` is new asphalt, nearly
-black; `1` is worn asphalt, grayed and cracked; `2` is concrete, pale and laid in bays.
+black; `1` is worn asphalt, grayed and cracked; `2` is concrete, pale and laid in bays.  A `Curb` and a
+`Pavement` take a variant and do nothing with it — curb stone is curb stone and a slab is a slab, whatever
+the carriageway beside them is laid in — and so do `CurbArc`, `CurbCorner` and `CurbRing`, which hand
+theirs on to `Curb`.  It is there so that a street can hand the same season and variant to every piece
+of it.
 
 **`CrazyPaving` is the exception to both**: a garden path rather than a street, it lies on the ground at
 `y = 0` with its top five centimeters up, and its variant only lays its stones afresh.  It is a slab
@@ -1586,7 +1622,7 @@ looks, and this went wrong in both directions before it came right:
   no cracks in it at all.
 - Moved to 0.56, they picked out only crackle's **vertices**, where three cells meet, and rendered as
   scattered dots.  Whole walls need a wider band: 0.46 is about the 91st percentile.
-- And the cells have to be small.  The top few per cent of crackle is a *ring* around every wall, so at
+- And the cells have to be small.  The top few percent of crackle is a *ring* around every wall, so at
   55 cm cells those rings render as dark blobs; only at 20 cm do they read as cracking.
 
 ##### Joining two roads
@@ -1609,7 +1645,7 @@ sits a radius *diagonally inside* the pavement at `(cx - r, cz - r)`, and the ar
 at `(cx - r, cz)` and `(cx, cz - r)` — so those runs stop a radius short of the corner.  Put the origin on
 the corner itself and the arc swings away into the pavement, leaving a gap at both ends.
 
-Two straight curbs mitred at a right angle look like a drawing; a radius looks like a street.  It is a
+Two straight curbs mitered at a right angle look like a drawing; a radius looks like a street.  It is a
 loop of short straight `Curb` runs turned around the arc, and the turn that points each face outward is
 `-90 - a`: a `Curb` runs along X with its face looking towards `-Z`, and under `rotate Y θ` that face
 lands on `(-sin θ, 0, -cos θ)`, which equals the outward normal `(cos a, 0, sin a)` exactly there.
@@ -1707,7 +1743,11 @@ object Tender(8.05) { translate X -10.35 }
 **The first number is a length**, as it is for the road [vehicles](#vehicles) and for the same reason —
 an engine is described by how long it is, not how tall.  For `Track` it is how much line you want, and
 `TrackAlong` takes the spline to lay it along instead.  The other two numbers mean what they mean
-everywhere, **what time of year** and **which one of that kind**.
+everywhere, **what time of year** and **which one of that kind**, but only the season does anything here.
+There is one engine and one tender, so `Locomotive` and `Tender` take a variant and ignore it: it is
+there so that a call reads like any other library's, and so that the distance run, which comes after it,
+is always the fourth number.  `Track` and `TrackAlong` take a season and nothing after it, and ignore that
+too — a line in winter is drawn as bare as one in summer.
 
 **These face `+X`**, like the road vehicles, so an engine runs to the right in a camera looking the usual
 way and a line laid left to right needs no turning — and so an engine put [`along`](animation.md#along-a-spline)
@@ -1839,7 +1879,7 @@ object Pawn(1.0, Ebony) { translate [ChessAt(8, 3), 0, ChessAt(8, 6)] }
 | `Pawn` | A ball on a collar. |
 | `Rook` | A tower, its battlements cut out of it afterwards. |
 | `Knight` | The horse's head — the one piece that is not turned. |
-| `Bishop` | A mitre, with the slit cut in its face. |
+| `Bishop` | A miter, with the slit cut in its face. |
 | `Queen` | A coronet of points. |
 | `King` | The tallest, carrying a cross. |
 | `Board` | Squares, a border, and nothing else. |
@@ -1928,7 +1968,7 @@ object Bed(60)                               // a queen; 38 is a twin and 76 a k
 | `DiningTable` | A table to eat at: top, apron and four legs. |
 | `DiningChair` | One to sit at it on. |
 | `LowTable` | The low one in front of a sofa. |
-| `Sideboard` | A carcase on short legs, to stand against a wall. |
+| `Sideboard` | A carcass on short legs, to stand against a wall. |
 | `Armchair` | A seat, a back, two arms and four feet. |
 | `Sofa` | The armchair, gone long, with cushions. |
 | `Bookcase` | Sides, shelves, and as many books as fit. |
@@ -1938,7 +1978,7 @@ object Bed(60)                               // a queen; 38 is a twin and 76 a k
 | `Range` | A cooker, flush with the counter. |
 | `Refrigerator` | The tallest thing in a kitchen. |
 | `Bed` | Frame, headboard, mattress, cover and two pillows. |
-| `Wardrobe` | A tall carcase with two doors and a cornice. |
+| `Wardrobe` | A tall carcass with two doors and a cornice. |
 | `Dresser` | A chest of drawers. |
 | `Nightstand` | The little one beside the bed. |
 | `FurnitureStone` | A counter. |
@@ -2082,7 +2122,7 @@ across a room — it carries a dim, distorted picture of that room on its door.
 
 ##### A door reveal has to be deep enough to cast a shadow
 
-The same lesson in a different place.  Cabinet fronts stand proud of their carcase and the gaps
+The same lesson in a different place.  Cabinet fronts stand proud of their carcass and the gaps
 between them are what say there is more than one door; at first those gaps were 0.8 inches and a
 run of four units rendered as a single wooden slab.  The gap has to be wide enough, and the front
 proud enough, to put a shadow line in it — and the light has to come from the side, because a kitchen
@@ -2109,7 +2149,7 @@ can be reached from the bed without sitting up.
 
 ##### A wardrobe needs a cornice and a bookcase does not
 
-A carcase that stops dead at its top edge looks unfinished at seventy-two inches in a way it does not
+A carcass that stops dead at its top edge looks unfinished at seventy-two inches in a way it does not
 at a sideboard's thirty-two, because the top is above the eye and what you see is the underside of
 nothing.  The overhang is what makes it read as a wardrobe rather than as a very tall cupboard.
 
@@ -2142,12 +2182,15 @@ it is one.
 The books are one cube each, stood at an even pitch with uneven widths, so the gaps come out irregular
 without anything having to work out where one book ends and the next begins.  Their heights and colors
 come from `random` rather than from arithmetic on the index, because arithmetic on an index repeats,
-and a repeat down a shelf is the one thing that says at a glance these are not books.  Pass `books 0`
-for an empty case.
+and a repeat down a shelf is the one thing that says at a glance these are not books.
+
+The third number, `books`, says whether there are any — it is a switch, not a count: `1`, the default,
+or anything above nought fills every shelf, and `0` leaves the case empty, as `Bookcase(36, 60, 0)`.  The
+wood comes after it, so a walnut case of books is `Bookcase(36, 60, 1, FurnitureWalnut)`.
 
 ##### Everything with a front faces `+Z`, and getting that wrong is invisible
 
-The sideboard, the bookcase, the wardrobe, the kitchen run and its wall cabinets are all carcases with
+The sideboard, the bookcase, the wardrobe, the kitchen run and its wall cabinets are all carcasses with
 a front and a blank back, and all are built facing `+Z` — so a piece standing against a wall that is
 *also* at `+Z` needs `rotate Y 180`.  The bed follows the same rule from the other end: its headboard
 is its back, at `-Z`, so the wall goes behind it.  Left out, the fronts face the plaster and the room
@@ -2217,22 +2260,29 @@ object Helicopter(14) { translate Z -40 }
 | | |
 | --- | --- |
 | `Airliner` | Swept wings, two engines on pylons, a fin and a tailplane, and a row of windows. |
-| `LightPlane` | High wing on a strut, a propeller, and gear that does not go away. |
+| `LightPlane` | High wing on a strut, a propeller, and fixed gear. |
 | `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
 | `AircraftWhite`, `AircraftBlue`, `AircraftRed` | Liveries. |
 | `AircraftMetal`, `AircraftGlass`, `AircraftTire` | The rest of it. |
 
 **The first number is a length**, as it is for the [vehicles](#vehicles) and the
-[vessels](#vessels) — a forty-metre airliner, not one thirteen metres tall.  These are in **meters**
+[vessels](#vessels) — a forty-meter airliner, not one thirteen meters tall.  These are in **meters**
 and they **face `+X`**.
+
+There is no season.  For an `Airliner` or a `LightPlane` the second number is **the gear** — `1` unless
+said, which puts the wheels down, and `0`, which takes them away — and the third is **which one of that
+kind**, the livery: white, blue or red (`0`, `1`, `2`), so `Airliner(40, 0, 2)` is a red airliner in the
+air.  A light plane's gear is fixed, as a trainer's is, but it takes the number all the same, and `0`
+leaves its wheels off.  A `Helicopter` stands on skids and has no gear to raise, so its second number is
+the livery.
 
 ##### The wheels are on `y = 0`, even when the wheels are not there
 
 The [vessels](#vessels) put their waterline at nought because a hull has no face it rests on.  An
-aeroplane does have one, so it is back to the usual convention: the wheels are at nought, like a
+airplane does have one, so it is back to the usual convention: the wheels are at nought, like a
 chair's feet.
 
-**And it stays at nought with the gear up.**  `gear 0` takes the legs away and leaves everything else
+**And it stays at nought with the gear up.**  A gear of `0` takes the legs away and leaves everything else
 exactly where it was, so a scene can put an aircraft on a runway, raise the gear, and fly it by
 translating in `Y` alone.  Retracting the gear by *lowering* the aircraft onto its belly is the other
 way to read it, and it would mean every flying scene had to know a number it should not have to care
@@ -2256,7 +2306,7 @@ A panel is built on `+Z` and the left one is mirrored with `scale [1, 1, -1]`.  
 the angles as well — `rotate Y (-side * sweep)` *and* then mirroring — negates the sweep twice, so one
 wing rakes back and the other rakes **forward**.
 
-It is worth knowing because of how well it hides.  The aeroplane looks like an aeroplane from almost
+It is worth knowing because of how well it hides.  The airplane looks like an airplane from almost
 every angle; it is only from above that the wings read as a Z rather than a V, and a swept wing seen
 in three-quarter view looks swept whichever way it actually goes.  I found it by rendering a plan
 view for a different reason.
@@ -2270,13 +2320,13 @@ flattening the nacelle; a library is better off standing a little taller and kee
 honest.
 
 **A helicopter's rotor is wider than the aircraft is long.**  A JetRanger is a shade over eleven
-metres nose to tail and its rotor is over ten across.  Drawn from instinct the cabin comes out far too
-big — at 0.155 of the length it was four metres wide on a fourteen-metre aircraft — and the blades
+meters nose to tail and its rotor is over ten across.  Drawn from instinct the cabin comes out far too
+big — at 0.155 of the length it was four meters wide on a fourteen-meter aircraft — and the blades
 look stubby when they are in fact the right length.  Shrinking the cabin is what fixes the rotor.
 
 ##### Two things that read as nothing at all
 
-**Glass has to sit above the axis.**  Sized to the fuselage and centred on it, a canopy wraps all the
+**Glass has to sit above the axis.**  Sized to the fuselage and centered on it, a canopy wraps all the
 way round and reads as a band of paint.  Held to the upper half and let out a shade wider than the
 skin, the same shape reads as a windscreen with side windows behind it.
 
@@ -2285,7 +2335,7 @@ joining nothing to nothing: the wing still floats and the strut reads as a rod s
 It has to run from the bottom of the fuselage out to half span, at whatever angle that takes.
 
 And the windows are what make an airliner an airliner rather than a missile.  One row down the side
-gives the fuselage a scale nothing else does — without them a tube with wings could be four metres
+gives the fuselage a scale nothing else does — without them a tube with wings could be four meters
 long or forty, and the eye has no way to tell.
 
 #### Spacecraft
@@ -2305,7 +2355,9 @@ object Satellite(6) { translate [0, 0, 60] }
 | `SpacecraftGlow`, `SpacecraftEmber` | And what glows. |
 
 **The first number is a length**, in **meters**, facing **`+X`**, like the [vehicles](#vehicles), the
-[vessels](#vessels) and the [aircraft](#aircraft).
+[vessels](#vessels) and the [aircraft](#aircraft).  Both take a variant after it and do nothing with
+it — there is one orbiter and one satellite, each in its own materials — so that a call written the way
+the other libraries' calls are written serves for these too.
 
 ##### The origin is the middle of the craft, and that is the third answer
 
@@ -2782,7 +2834,8 @@ This copies the file into the library directory under its own name, so `mine.igl
 library `mine`.  Before it copies anything it reads the file through, so a file that will not
 parse is turned away here rather than the first time a scene reaches for it.
 
-A library may hold **only definitions** — `Name = …` assignments.  A file that also carries a
+A library may hold **only definitions** — `Name = …` assignments, functions and primitives — and the
+imports they lean on, as `buildings` takes its windows from `windows`.  A file that also carries a
 surface, a camera, a light or a `render` command is refused, since an import is meant to bring
 across named definitions and nothing else; anything else would be dragged into every scene that
 imported it.  Use `--dry-run` to check a file and see what it would bring without writing
@@ -2933,9 +2986,9 @@ names an icon as `style:name`, or just `name` for the `regular` style; see
 
 ### A note on the command names
 
-Every one of these has a short form as well — `-i` for `--import`, `-p` for `--povray`, and
-`-l`, `-r`, `-o`, `-d`, `-n` for the rest — so converting a POV-Ray distribution is often
-written:
+Most of these have a short form as well — `-i` for `--import`, `-p` for `--povray`, and
+`-l`, `-r`, `-o`, `-d`, `-n` for the rest; only `--install` and `--fa-zip` have none — so converting
+a POV-Ray distribution is often written:
 
 ```bash
 RayTracer libraries -i /path/to/povray/include -p

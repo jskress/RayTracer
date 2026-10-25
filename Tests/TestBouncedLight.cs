@@ -98,6 +98,34 @@ public class TestBouncedLight
     }
 
     /// <summary>
+    /// This tests that a glow leaves through the skin as the rest of a surface's own light does: one that mirrors by
+    /// Fresnel shows its glow only for what it does not mirror, so a twentieth mirrored square on is a twentieth less
+    /// glow, and at a graze, where it mirrors nearly everything, next to none.
+    /// </summary>
+    [TestMethod]
+    public void TestAGlowUnderAFresnelSkinShowsWhatTheSkinLetsOut()
+    {
+        Plane floor = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Emission = new Color(1, 1, 1),
+                Diffuse = 0, Specular = 0, Reflective = 0.05, Fresnel = true
+            }
+        };
+        Scene scene = new ();
+
+        floor.PrepareForRendering();
+        scene.Surfaces.Add(floor);
+
+        Color square = Shade(scene, new Ray(new Point(0, 3, 0), Directions.Down));
+        Color graze = Shade(scene, new Ray(new Point(0, 0.01, 0), new Vector(1, -0.005, 0).Unit));
+
+        Assert.AreEqual(0.95, square.Red, 1e-6, "square on, a twentieth is mirrored");
+        Assert.IsTrue(graze.Red < 0.2, $"at a graze nearly everything is mirrored, and {graze.Red} glowed through");
+    }
+
+    /// <summary>
     /// This tests that emission lights what is near it by bouncing: under an endless ceiling giving off 0.4,
     /// a floor taking half the light falling on it, with no lamp anywhere, comes back as 0.2 -- the ceiling
     /// fills its whole view.
@@ -261,6 +289,45 @@ public class TestBouncedLight
         }
 
         Assert.IsTrue(Under(0).Matches(Under(2)), $"without bounces {Under(0)}, with two {Under(2)}");
+    }
+
+    /// <summary>
+    /// This tests that the sky through glass is not counted twice either.  With no caustics a shadow ray passes glass
+    /// straight, so the sky light counts the sky through a pane over the floor; a search for bounced light bent by
+    /// the pane's index came out of it beside its straight run, found the sky, and lit the floor twice over.
+    /// </summary>
+    [TestMethod]
+    public void TestAFloorUnderAPaneOfGlassBouncesNothingOfTheSky()
+    {
+        Color Under(int bounces)
+        {
+            Plane floor = new () { Material = Matte(Colors.White, 0.9) };
+            Cube pane = new ()
+            {
+                Transform = Transforms.Translate(0, 1, 0) * Transforms.Scale(50, 0.05, 50),
+                Material = new Material
+                {
+                    Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                    Transparency = 1, Interior = new Interior { IndexOfRefraction = 1.5 }
+                }
+            };
+            Scene scene = new ()
+            {
+                Background = new SolidPigment(new Color(0.3, 0.4, 0.6)), DiffuseBounces = bounces
+            };
+
+            floor.PrepareForRendering();
+            pane.PrepareForRendering();
+            scene.Surfaces.Add(floor);
+            scene.Surfaces.Add(pane);
+            scene.Lights.Add(new SkyLight { Pigment = scene.Background, Samples = 64 });
+
+            return Shade(scene, new Ray(new Point(0, 0.5, 0), Directions.Down));
+        }
+
+        Color without = Under(0), with = Under(1);
+
+        Assert.AreEqual(without.Blue, with.Blue, 0.02 * without.Blue, $"without bounces {without}, with one {with}");
     }
 
     /// <summary>

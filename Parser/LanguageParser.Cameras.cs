@@ -20,10 +20,27 @@ public partial class LanguageParser
     {
         VerifyDefaultSceneUsage(clause, "Camera");
 
-        CameraResolver resolver = ParseCameraClause();
+        CameraResolver resolver = ParseCameraClause(clause);
+
+        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
+        {
+            Context = _context.InstructionContext,
+            Resolver = resolver
+        });
+    }
+
+    /// <summary>
+    /// This method is used to create the resolver from a camera block, at the top of a scene or inside a `scene`.
+    /// </summary>
+    /// <param name="clause">The clause that opened the block.</param>
+    private CameraResolver ParseCameraClause(Clause clause)
+    {
+        CameraResolver resolver = ParseObjectResolver<CameraResolver>(
+            "cameraEntryClause", HandleCameraEntryClause);
 
         // The word that opened the block names the projection: "camera" on its own is the ordinary
-        // perspective sort, and any other word before it names one of the others.
+        // perspective sort, and any other word before it names one of the others.  Read here for both, since
+        // a camera inside a `scene` block was once quietly left perspective whatever it said.
         resolver.ProjectionType = clause.Tokens[0].Text switch
         {
             "perspective" => CameraProjectionType.Perspective,
@@ -35,20 +52,7 @@ public partial class LanguageParser
             _ => CameraProjectionType.Perspective
         };
 
-        _context.InstructionContext.AddInstruction(new TopLevelObjectCreator
-        {
-            Context = _context.InstructionContext,
-            Resolver = resolver
-        });
-    }
-
-    /// <summary>
-    /// This method is used to create the resolver from a camera block.
-    /// </summary>
-    private CameraResolver ParseCameraClause()
-    {
-        return ParseObjectResolver<CameraResolver>(
-            "cameraEntryClause", HandleCameraEntryClause);
+        return resolver;
     }
 
     /// <summary>

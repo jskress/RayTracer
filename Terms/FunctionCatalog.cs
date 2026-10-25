@@ -87,15 +87,6 @@ public class FunctionCatalog
     }
 
     /// <summary>
-    /// This method is used to check a call as far as it can be checked while it is being parsed,
-    /// which is its name and how many values it supplies.  This is the check worth making early:
-    /// a misspelled name or a missing argument is reported against the text the author wrote,
-    /// rather than waiting for the scene to be rendered.
-    /// </summary>
-    /// <param name="name">The name of the function called.</param>
-    /// <param name="argumentCount">The number of values the call supplies.</param>
-    /// <returns>What is wrong with the call, or <c>null</c> if nothing is.</returns>
-    /// <summary>
     /// This method reports whether a form can take the number of values a call supplies.  A form
     /// whose last parameter soaks up the rest takes anything from its fixed count upward.
     /// </summary>
@@ -109,6 +100,15 @@ public class FunctionCatalog
             : form.ParameterCount == argumentCount;
     }
 
+    /// <summary>
+    /// This method is used to check a call as far as it can be checked while it is being parsed,
+    /// which is its name and how many values it supplies.  This is the check worth making early:
+    /// a misspelled name or a missing argument is reported against the text the author wrote,
+    /// rather than waiting for the scene to be rendered.
+    /// </summary>
+    /// <param name="name">The name of the function called.</param>
+    /// <param name="argumentCount">The number of values the call supplies.</param>
+    /// <returns>What is wrong with the call, or <c>null</c> if nothing is.</returns>
     public string CheckCall(string name, int argumentCount)
     {
         if (!_signatures.TryGetValue(name, out List<FunctionSignature> forms))

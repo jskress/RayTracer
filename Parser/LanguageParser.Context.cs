@@ -265,7 +265,7 @@ public partial class LanguageParser
                 updater.GammaResolver = new TermResolver<double>
                 {
                     Term = term,
-                    Validator = value => value is < 0 or > 5 ? "Gamma correction must be between 0 and 5." : null
+                    Validator = value => value is <= 0 or > 5 ? "Gamma correction must be more than 0, and no more than 5." : null
                 };
                 break;
             default:
@@ -287,12 +287,6 @@ public partial class LanguageParser
         _context.PopTarget();
     }
 
-    /// <summary>
-    /// This method is used to create the appropriate resolver for the scanner clause
-    /// of a context block.
-    /// </summary>
-    /// <param name="clause">The clause to process.</param>
-    /// <param name="contextUpdater">The context updater to add the resolver to.</param>
     // `animation length <seconds> [rate <r>] [still <frame>]` or `animation frames <count> [rate <r>] [still <frame>]`.
     private static void CreateAnimationResolvers(Clause clause, ContextUpdater contextUpdater)
     {
@@ -329,6 +323,12 @@ public partial class LanguageParser
         }
     }
 
+    /// <summary>
+    /// This method is used to create the appropriate resolver for the scanner clause
+    /// of a context block.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="contextUpdater">The context updater to add the resolver to.</param>
     private static void CreateScannerResolver(Clause clause, ContextUpdater contextUpdater)
     {
         Token first = clause.Tokens[0];

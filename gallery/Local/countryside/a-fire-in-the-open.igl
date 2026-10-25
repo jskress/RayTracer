@@ -59,13 +59,18 @@ context {
     }
 }
 
+// A stop and a half over, as a camera opens up to a fire at night.  Until 2026-10-24 a glow's highlights were
+// white and as bright at any distance, and they lit much of this ground and the near boulder; what the fire
+// really gives them is this much dimmer.  The night behind is dimmed by as much, so only what the fire lights
+// comes up.
 camera {
     location [2.5, 1.55, -4.4]
     look at [-0.1, 0.75, 0]
     field of view 46.50
+    exposure 1.5
 }
 
-background [0.015, 0.016, 0.030]
+background [0.0053, 0.0057, 0.0106]
 
 // The ground: dark, and rough enough that the firelight has something to catch on.
 plane {

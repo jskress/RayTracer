@@ -397,7 +397,7 @@ EnterpriseSaucer = union {
         }
     }
     cylinder {
-        // the bridge's elevator housing: at the back of the bridge, its centre 98% of the way out
+        // the bridge's elevator housing: at the back of the bridge, its center 98% of the way out
         // to the bridge's rim as the cutaway draws it, so it straddles the bridge's aft wall; its
         // top stands just proud of the roof, and its foot is buried in the egg (whose top is 1.025
         // at the lowest under it)

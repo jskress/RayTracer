@@ -43,6 +43,17 @@ public class SwellsResolver : SurfaceResolver<Swells>, IValidatable
         value.Trains.AddRange(TrainResolvers
             .Select(resolver => (SwellTrain) resolver.ResolveToObject(context, variables)));
 
+        // Steepness adds: where the crests of every train meet, the water is as steep as all of them together, and
+        // at one it closes to a cusp.  Past that it would fold over, with no one height at a place, and the search
+        // for the surface lost its bound and halved every span down to the accuracy.
+        double steepness = value.Trains.Sum(train => Math.Abs(train.Steepness));
+
+        if (steepness >= 1)
+        {
+            throw new InvalidOperationException(
+                $"A swell's waves together are as steep as {steepness:0.###}; their steepnesses must add to less than one.");
+        }
+
         base.SetProperties(context, variables, value);
     }
 

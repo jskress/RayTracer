@@ -85,5 +85,8 @@ public class MixedPigment : Pigment
     public override bool Matches(Pigment other) =>
         other is MixedPigment mixed && From.Matches(mixed.From) && To.Matches(mixed.To) && Share.Near(mixed.Share);
 
-    private Color Mixed(Color from, Color to) => from * (1 - Share) + to * Share;
+    // Color and coverage both mixed: a color's arithmetic makes it whole, so mixed as colors alone, a material with
+    // holes blended toward another came out solid wherever the two were part way mixed.
+    private Color Mixed(Color from, Color to) =>
+        (from * (1 - Share) + to * Share).WithAlpha(from.Alpha * (1 - Share) + to.Alpha * Share);
 }

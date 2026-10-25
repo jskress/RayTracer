@@ -233,7 +233,7 @@ public class TestRgbSpectrum
         });
         scene.Lights.Add(new Spotlight
         {
-            Location = new Point(0, 6, -2), PointAt = new Point(1, 0, 0), Radius = 15, Falloff = 25,
+            Location = new Point(0, 6, -2), PointAt = new Point(1, 0, 0), Radius = 15 * Math.PI / 180, Falloff = 25 * Math.PI / 180,
             Color = new Color(0.6, 0.6, 0.5)
         });
         scene.Lights.Add(new SkyLight

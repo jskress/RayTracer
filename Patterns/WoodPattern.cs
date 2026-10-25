@@ -51,9 +51,12 @@ public class WoodPattern : Pattern
             // deterministic function of that point -- handed back the very same number both
             // times, displacing X and Y identically and collapsing the grain onto a diagonal.
             Vector turbulence = Turbulence.GenerateVector(point);
+            Vector amount = Turbulence.Amplitude;
 
-            x += Cycloidal(x + turbulence.X);
-            y += Cycloidal(y + turbulence.Y);
+            // Scaled by the turbulence's amount inside the wave, as POV-Ray's wood scales it: left
+            // unscaled, every amount drew the same rings.
+            x += Cycloidal((x + turbulence.X) * amount.X);
+            y += Cycloidal((y + turbulence.Y) * amount.Y);
         }
 
         double value = new Vector(x, y, 0).Magnitude;

@@ -64,6 +64,49 @@ public class TestImagePigment
     }
 
     /// <summary>
+    /// A toroidal map runs round the tube of its torus evenly: going once round the tube at any place on the ring
+    /// goes once down the picture, a quarter of the way round a quarter of the way down.
+    /// </summary>
+    [TestMethod]
+    public void TestAToroidalMapGoesEvenlyRoundTheTube()
+    {
+        ImageMapType? map = ImageMapType.Toroidal;
+        List<double> down = [];
+
+        for (int step = 0; step < 8; step++)
+        {
+            double angle = step * Math.PI / 4;
+
+            (_, double v) = map.GetTexelLocationFor(new Point(0.8 + 0.3 * Math.Cos(angle), 0.3 * Math.Sin(angle), 0), 100, 100, 0.8);
+            down.Add(v);
+        }
+
+        // Whichever way round the picture runs, every eighth of the tube is an eighth of it.
+        for (int step = 1; step < 8; step++)
+        {
+            double gap = ((down[step] - down[step - 1]) % 100 + 100) % 100;
+
+            Assert.AreEqual(12.5, Math.Min(gap, 100 - gap), 1e-9, $"an eighth of the way round the tube, at step {step}");
+        }
+    }
+
+    /// <summary>
+    /// A cylindrical map stands its picture the right way up, its top row at the top of the cylinder, as the
+    /// spherical map stands it.
+    /// </summary>
+    [TestMethod]
+    public void TestACylindricalMapIsTheRightWayUp()
+    {
+        ImageMapType? map = ImageMapType.Cylindrical;
+
+        (_, double nearTop) = map.GetTexelLocationFor(new Point(1, 0.9, 0), 100, 100);
+        (_, double nearBottom) = map.GetTexelLocationFor(new Point(1, 0.1, 0), 100, 100);
+
+        Assert.AreEqual(10, nearTop, 1e-9, "near the top of the cylinder, near the top of the picture");
+        Assert.AreEqual(90, nearBottom, 1e-9);
+    }
+
+    /// <summary>
     /// This tests that a mid-gray picture is read as the light it stands for.  Taken as the file held
     /// it, 128 was half of white's light and rendered as 186; it is a fifth of it, and renders as itself.
     /// </summary>

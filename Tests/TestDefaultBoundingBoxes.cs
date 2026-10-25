@@ -83,12 +83,6 @@ public class TestDefaultBoundingBoxes
     }
 
     /// <summary>
-    /// A superellipsoid lies inside the unit box whatever its two exponents are, since every term of
-    /// its function is positive and so none of them may exceed one.  The exponents are the thing to
-    /// vary here rather than the size: they are what changes the shape, and a box that held only for
-    /// the round ones would be no box at all.
-    /// </summary>
-    /// <summary>
     /// A bowl's radius is the square root of its height, so its box is widest at the top and its
     /// bottom is the narrow end -- the opposite way round from a conic, which is the easy thing to
     /// get backwards here.
@@ -130,10 +124,17 @@ public class TestDefaultBoundingBoxes
         AssertNothingEscapes(new Saddle { Width = 1, Depth = 4 }, 6);
     }
 
+    /// <summary>
+    /// A superellipsoid lies inside the unit box whatever its two exponents are, since every term of
+    /// its function is positive and so none of them may exceed one.  The exponents are the thing to
+    /// vary here rather than the size: they are what changes the shape, and a box that held only for
+    /// the round ones would be no box at all.
+    /// </summary>
     [TestMethod]
     public void TestASuperellipsoidIsInsideItsBox()
     {
-        // Nearly a box, nearly a sphere, and the pinched shapes either side of both.
+        // A sphere, nearly a box, nearly a diamond (exponents of two; a shape pinches only past two), and the
+        // two mixed either way.
         foreach ((double east, double north) in new[]
         {
             (1.0, 1.0), (0.2, 0.2), (1.8, 1.8), (0.25, 1.75), (1.75, 0.25), (0.4, 0.35)

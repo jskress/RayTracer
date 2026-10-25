@@ -4,7 +4,7 @@
 //
 //     object Track(60)
 //     object Locomotive(11.6)
-//     object Tender(8.4) { translate X -10.2 }
+//     object Tender(8.05) { translate X -10.35 }
 //
 //     import 'trains' { Locomotive, Tender, TrackAlong }
 //
@@ -19,7 +19,9 @@
 //
 // **The first number is a length**, as it is for the road vehicles and for the same reason -- an engine
 // is described by how long it is, not how tall.  The next two mean what they mean everywhere, **what
-// time of year** and **which one of that kind**, and only the length is required.
+// time of year** and **which one of that kind**, and only the length is required.  There is one engine
+// and one tender, so their variant is taken and ignored -- it holds the place that keeps the distance run
+// the fourth number -- and `Track` and `TrackAlong` take a season and ignore it: a winter line is bare.
 //
 // **The last is how far it has run**, nought unless said, and it is what sets an engine in motion: each
 // wheel is a `joint` turned by the distance over its own radius, the crank pins turn with the drivers,
@@ -86,7 +88,7 @@
 
 // -- What an engine is made of ---------------------------------------------------------------------
 
-// Crimson lake, and glossy, for the reason the road vehicles are: the highlight travelling along a
+// Crimson lake, and glossy, for the reason the road vehicles are: the highlight traveling along a
 // boiler is most of what says cold wet metal.  The ambient is set down on purpose -- left at the
 // default, locomotive black comes back as a mid gray and the crimson as a dusty pink, which is the
 // trap `daylight`'s notes describe.

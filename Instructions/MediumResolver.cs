@@ -137,6 +137,7 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
         value.Bounces = BouncesResolver is null
             ? context.MediumBounces
             : BouncesResolver.Resolve(context, variables);
+        value.LeftToTheScene = (SamplesResolver is null, BouncesResolver is null);
     }
 
     /// <summary>

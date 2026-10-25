@@ -41,7 +41,7 @@ public partial class LanguageParser
             {
                 Term term = (Term) clause.Expressions.RemoveFirst();
 
-                return new SinglePigmentResolver { Term = term };
+                return new SinglePigmentResolver { Term = term, SeedResolver = seedResolver };
             }
             case "blend" or "layer":
                 resolver = ParseBlendedPigmentClause(seedResolver, text is "layer");
@@ -52,6 +52,12 @@ public partial class LanguageParser
             // An image pigment may be written "uncached image ...", in which case "uncached" is
             // the first word and so is what Text() hands back.  Both spellings land here, and
             // ParseImageReference picks the flag back out of the clause for itself.
+            // Neither has noise for a seed to start, and a seed said and then dropped is a mistake left unsaid.
+            case "image" or "uncached" or "physical" when seedResolver is not null:
+                throw new TokenException($"A seed starts a pigment's noise, and {(text is "physical" ? "a physical sky" : "an image")} has none.")
+                {
+                    Token = clause.Tokens[0]
+                };
             case "image" or "uncached":
                 return ParseImagePigmentClause(clause);
             case "physical":

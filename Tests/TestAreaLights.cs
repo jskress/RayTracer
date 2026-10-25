@@ -49,38 +49,35 @@ public class TestAreaLights
     }
 
     [TestMethod]
-    public void TestTheSamplesSpanTheWholeFace()
+    public void TestTheSamplesStandInTheMiddlesOfTheirSquares()
     {
-        // A two-wide grid along each axis puts its samples at the four corners of the face, half a
-        // full axis either way of the center.  The face is two units across each way, so the
-        // corners sit at ±1.
+        // A two-wide grid along each axis cuts the face into four squares, and each sample stands in the middle
+        // of its own: a quarter of a full axis either way of the center.  The face is two units across each way,
+        // so the samples sit at ±0.5 -- within the face, not at its corners, which jittered half a square would
+        // have strayed past it.
         AreaLight light = PlainGrid(2, 2);
-        List<Point> corners = [];
-
-        // Read each sample's position back out by walking a unit along its direction from a known
-        // far-off point -- simplest is to place the shaded point at the origin's far side and use
-        // the distance, but cleaner here is to rebuild the point from direction and distance.
+        List<Point> places = [];
         Point from = new (0, -100, 0);
 
         for (int index = 0; index < light.SampleCount; index++)
         {
             LightSample sample = light.SampleToward(from, index);
 
-            corners.Add(from + sample.Direction * sample.Distance);
+            places.Add(from + sample.Direction * sample.Distance);
         }
 
-        // The four corners, in the grid's order.
-        Assert.IsTrue(corners[0].Matches(new Point(-1, 0, -1)));
-        Assert.IsTrue(corners[1].Matches(new Point(1, 0, -1)));
-        Assert.IsTrue(corners[2].Matches(new Point(-1, 0, 1)));
-        Assert.IsTrue(corners[3].Matches(new Point(1, 0, 1)));
+        // The four middles, in the grid's order.
+        Assert.IsTrue(places[0].Matches(new Point(-0.5, 0, -0.5)));
+        Assert.IsTrue(places[1].Matches(new Point(0.5, 0, -0.5)));
+        Assert.IsTrue(places[2].Matches(new Point(-0.5, 0, 0.5)));
+        Assert.IsTrue(places[3].Matches(new Point(0.5, 0, 0.5)));
     }
 
     [TestMethod]
     public void TestJitterMovesTheSamplesButKeepsThemNearTheirSquares()
     {
-        // With jitter on, the samples are nudged off the grid, so they no longer land on the exact
-        // corners -- but only within a grid square of them, never wildly.
+        // With jitter on, the samples are nudged off the middles of their squares, but never out of them: every
+        // one stays on the face.
         AreaLight jittered = new ()
         {
             Location = Point.Zero,
@@ -100,9 +97,10 @@ public class TestAreaLights
             Point plainPoint = from + Sample(plain, index);
             double moved = (jitteredPoint - plainPoint).Magnitude;
 
-            // A grid square here is 2/3 of a unit across; the nudge is at most half of one, so a
-            // sample never strays even a full square from where the plain grid put it.
-            Assert.IsTrue(moved < 2.0 / 3, $"sample {index} strayed {moved:F3}, further than a square");
+            // A square here is half a unit across, and the nudge at most half of one each way, so a sample
+            // never leaves its square, and never the face.
+            Assert.IsTrue(moved <= Math.Sqrt(0.5) * 0.5 + 1e-9, $"sample {index} strayed {moved:F3}, out of its square");
+            Assert.IsTrue(Math.Abs(jitteredPoint.X) <= 1 && Math.Abs(jitteredPoint.Z) <= 1, $"sample {index} left the face");
 
             if (moved > 1e-6)
                 anyMoved = true;

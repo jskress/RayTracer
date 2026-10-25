@@ -98,9 +98,11 @@ public partial class LanguageParser
             "disc" => ParseDiscClause(clause),
             "generic" when second == "shape" => ParseGenericShapeClause(clause),
             "object" when second == "file" => ParseObjectFileClause(clause),
+            // Another name for a thing already named, or a primitive's call, as `object` reads anywhere else.
+            "object" => GetSurfaceResolver(clause),
             "union" or "difference" or "intersection" or "csg" => ParseCsgClause(clause),
             "group" => ParseGroupClause(clause),
-            _ => null
+            _ => throw new Exception($"Internal error: a value of a kind the grammar allows was not handled: {type}.")
         };
 
         if (resolver != null)

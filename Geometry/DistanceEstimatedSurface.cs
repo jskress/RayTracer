@@ -59,6 +59,13 @@ public abstract class DistanceEstimatedSurface : Surface
         Math.Max(1, Accuracy / DoubleExtensions.Epsilon * 4);
 
     /// <summary>
+    /// This method returns how far off itself a ray sets off: four accuracies, in the world -- the accuracy is in
+    /// the shape's own units, so it is carried out by however much the shape is stretched there.
+    /// </summary>
+    internal override double SelfOffsetAt(int timeIndex, Portals portals) =>
+        Math.Max(DoubleExtensions.Epsilon, 4 * Accuracy * StretchInTheWorld(timeIndex, portals));
+
+    /// <summary>
     /// This method must be provided by subclasses to say how far the nearest surface is from a point.
     /// It is negative inside the shape, nought on it, and positive outside.
     /// </summary>
@@ -152,7 +159,6 @@ public abstract class DistanceEstimatedSurface : Surface
         // the accuracy of it, which is what sphere tracing does, so the step is free to shrink as the
         // march closes in.
         double outsideFloor = (to - from) / MaximumSteps;
-        bool settling = false;
 
         double previous = from;
 
@@ -169,16 +175,7 @@ public abstract class DistanceEstimatedSurface : Surface
             // and without it the answer is only ever as good as the last stride was short -- an
             // inside stride of a fortieth reported crossings a fortieth out, which is forty times the
             // accuracy asked for.
-            if (settling)
-            {
-                // Just past a surface that was met by arriving at it rather than by crossing it.
-                // Nothing is recorded until a sample confirms the far side, or the same surface is
-                // reported over and over as the march inches through it -- which is what a first
-                // attempt at this did, turning every crossing into four.
-                if (isInside == wasInside)
-                    settling = false;
-            }
-            else if (isInside != wasInside)
+            if (isInside != wasInside)
             {
                 intersections.Add(new Intersection(
                     this, Narrow(ox, oy, oz, dx, dy, dz, previous, distance, wasInside) / length));
@@ -188,12 +185,25 @@ public abstract class DistanceEstimatedSurface : Surface
             {
                 // **Arriving at the surface without crossing it**, which is how sphere tracing
                 // usually arrives: the estimate is a lower bound, so it shrinks towards nothing as
-                // the march closes in and the sign may never turn over at all.  Within the accuracy
-                // is met, and the march then settles onto the far side before it looks again.
-                intersections.Add(new Intersection(this, distance / length));
+                // the march closes in and the sign may never turn over at all.  So the far side is
+                // looked at, a little past: a crossing is recorded here only when the far side is
+                // the other side.  A ray that only grazed the surface comes back out on the side it
+                // was on, and is met nowhere -- taken as crossing, it turned inside and outside about
+                // for the rest of the ray, which then ran out "inside" and was closed at its box, a
+                // crossing far off the shape.  One not yet across finds the surface again on its
+                // next step, by the sign turning over.
+                double past = distance + 2 * Accuracy;
+                bool beyond = DistanceAt(ox + past * dx, oy + past * dy, oz + past * dz) < 0;
 
-                wasInside = !wasInside;
-                settling = true;
+                if (beyond != wasInside)
+                {
+                    intersections.Add(new Intersection(this, distance / length));
+
+                    wasInside = beyond;
+                    isInside = beyond;
+                    distance = past;
+                    room = DistanceAt(ox + distance * dx, oy + distance * dy, oz + distance * dz);
+                }
             }
 
 

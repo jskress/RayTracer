@@ -51,15 +51,25 @@ public partial class Scene
     /// with all the rest of the light scattered among the strands, gathered ahead of time; see
     /// <see cref="HairLight"/>.  A strand standing alone has no others to scatter light to it.
     /// </para>
+    /// <para>
+    /// **Light bounced about the scene reaches it as it reaches a surface**, when the scene asks for bounces: see
+    /// <see cref="BouncedOntoAFiber{TS}"/>.  Met along such light gathered by a strand of the same hair -- within its
+    /// reach -- the strand gives only what came to it from beyond: the lamps' light and what it does among the
+    /// strands is the hair light's to give, and is given there already.
+    /// </para>
     /// </summary>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="hit">Where the ray met the strand, already prepared.</param>
+    /// <param name="remaining">The remaining number of reflective recursions allowed, which bounced light found
+    /// along each direction may spend.</param>
+    /// <param name="withinTheHair">Whether the strand stands within the reach of the hair whose strand is gathering
+    /// the light it is met along; see <see cref="WithinTheHair"/>.</param>
     /// <returns>The light leaving it toward the eye.</returns>
-    private TS ShadeFiber<TS>(HairIntersection hit)
+    private TS ShadeFiber<TS>(HairIntersection hit, int remaining, bool withinTheHair)
         where TS : struct, ISpectrum<TS>
     {
         StrandSurface strands = (StrandSurface) hit.Surface;
-        Material material = strands.Material ?? Material.Default;
+        Material material = hit.SurfaceMaterial;
         Dye dye = DyeOf(hit, hit.Point);
         TS absorption = dye.Absorbing<TS>();
         TS own = dye.Showing<TS>();
@@ -70,7 +80,7 @@ public partial class Scene
         double ambient = material.EffectiveAmbient;
         TS color = TS.Black;
 
-        for (int number = 0; number < Lights.Count; number++)
+        for (int number = 0; number < (withinTheHair ? 0 : Lights.Count); number++)
         {
             Light light = Lights[number].At(hit.TimeIndex);
             int count = light.SampleCount;
@@ -113,7 +123,7 @@ public partial class Scene
         // The light scattered among the strands arrives from every way, more from some than others, and
         // each lobe sends toward the eye what arrives from where it draws its light; the last lobe draws
         // from every way round alike.
-        if (strands.HasNeighbors && HairOf(strands) is { } hair)
+        if (!withinTheHair && strands.HasNeighbors && HairOf(strands) is { } hair)
         {
             HairLight.Here here = LightAmong(hair, hit.Portals).At(frame.Center);
 
@@ -127,7 +137,137 @@ public partial class Scene
             color += Fiber.Carried(seen, 3) * here.Everywhere<TS>();
         }
 
+        if (_bounced < DiffuseBounces)
+            color += BouncedOntoAFiber(hit, fiber, seen, frame, remaining, withinTheHair);
+
         return color;
+    }
+
+    /// <summary>
+    /// This field holds, while light is being gathered by a strand of hair and followed back to where it came from,
+    /// the hair light of that strand's hair: the reach within which the light among its strands -- the lamps' light
+    /// scattered among them, and off what they grow from -- is carried by the hair light already; see
+    /// <see cref="WithinTheHair"/>.
+    /// </summary>
+    [ThreadStatic]
+    private static HairLight _hairDomain;
+
+    /// <summary>
+    /// This method reports whether a place met along light gathered by a strand of hair is one the hair light of
+    /// that strand's hair carries the lamps' light to already: inside its reach, and a strand or an opaque surface,
+    /// as the hair light's paths scatter off (see <see cref="Scene.GatherTheLightAmongHair"/>).  Such a place gives
+    /// only what came to it from beyond, or the light among the strands would be counted twice.
+    /// </summary>
+    /// <param name="intersection">The place met.</param>
+    /// <returns><c>true</c>, if the place gives only what came to it from beyond the hair.</returns>
+    private static bool WithinTheHair(Intersection intersection)
+    {
+        if (_hairDomain is not { } domain || !domain.Holds(intersection.Point))
+            return false;
+
+        if (intersection is HairIntersection strand)
+            return !strand.IsAWire;
+
+        Material material = intersection.Material;
+
+        return material.Transparency <= 0 && !material.PigmentMayTransmit;
+    }
+
+    /// <summary>
+    /// This method works out the light bounced about the scene that a strand of hair sends toward the eye: what it
+    /// finds looking out in directions spread evenly over the whole sphere round it -- a strand takes light from
+    /// behind as much as from in front -- each weighed by how the strand scatters light from there toward the eye.
+    /// <para>
+    /// A strand finer than the ray looks in as many directions as its share of the ray, by chance below one, as a
+    /// fine wire does (see <see cref="RaysOf"/>): a pixel's pile looks round itself about as often as one surface
+    /// would.  The first strand from the eye looks in as many as a place covered by the bounce cache gathers near
+    /// it, where the scene keeps one, or in all of <see cref="DiffuseSamples"/>; every one after, once.
+    /// </para>
+    /// <para>
+    /// **Without it, fur took no bounced light at all**: asking for bounces put every ambient out, so a rug's pile
+    /// and a bear's fur went darker as the room round them came up -- lit by the fire alone, when the walls the fire
+    /// lit were lighting everything else.
+    /// </para>
+    /// </summary>
+    private TS BouncedOntoAFiber<TS>(
+        HairIntersection hit, Fiber fiber, in Fiber.Seen<TS> seen, StrandFrame frame, int remaining,
+        bool withinTheHair)
+        where TS : struct, ISpectrum<TS>
+    {
+        bool first = _bounced == 0 && !_spreading && TS.Count > 1;
+        (int count, double weight) = RaysOf(hit, !first
+            ? 1
+            : CacheFor<TS>() is not null
+                ? Math.Max(FewestNearSamples, DiffuseSamples / NearShare)
+                : Math.Max(1, DiffuseSamples), 135);
+
+        if (count == 0)
+            return TS.Black;
+
+        StrandSurface strands = (StrandSurface) hit.Surface;
+
+        // Within a hair's reach the reach stays that hair's; otherwise it is this strand's own hair's, if it has one.
+        HairLight domain = withinTheHair
+            ? _hairDomain
+            : strands.HasNeighbors && HairOf(strands) is { } hair ? LightAmong(hair, hit.Portals) : null;
+        double turnUp = ShiftFor(frame.Center, 136);
+        double turnRound = ShiftFor(frame.Center, 137);
+        TS sum = TS.Black;
+        bool wasSpreading = _spreading;
+        BounceRun? wasBouncing = _bouncing;
+        bool wasMeasuring = _measuring;
+        double wasMet = _bounceMet;
+        Ray wasNearRay = _nearRay;
+        double wasNearLimit = _nearLimit;
+        double wasEscaped = _escaped;
+        HairLight wasDomain = _hairDomain;
+
+        _bounced++;
+        _spreading = true;
+        _hairDomain = domain;
+
+        try
+        {
+            for (int index = 0; index < count; index++)
+            {
+                double up = (index + 0.5) / count + turnUp;
+                double round = index * 0.6180339887498949 + turnRound;
+
+                up -= Math.Floor(up);
+                round -= Math.Floor(round);
+
+                // Even over the sphere: the sine out of the plane square to the strand even from -1 to 1, the way
+                // round it even too.
+                double sinTheta = 2 * up - 1;
+                double phi = 2 * Math.PI * round;
+                Vector direction = frame.Toward(sinTheta, phi);
+                Point origin = frame.Center + direction * frame.Radius;
+                Ray ray = new (origin, direction, hit.TimeIndex, hit.ConeSpread, hit.ConeTravelled);
+
+                _bouncing = new BounceRun(origin, direction);
+                _measuring = false;
+                _bounceMet = double.PositiveInfinity;
+                _nearRay = null;
+                _escaped = 0;
+
+                sum += fiber.Scattered(seen, sinTheta, phi) * GetColorFor<TS>(ray, remaining);
+            }
+        }
+        finally
+        {
+            _bounced--;
+            _spreading = wasSpreading;
+            _bouncing = wasBouncing;
+            _measuring = wasMeasuring;
+            _bounceMet = wasMet;
+            _nearRay = wasNearRay;
+            _nearLimit = wasNearLimit;
+            _escaped = wasEscaped;
+            _hairDomain = wasDomain;
+        }
+
+        // Each direction stands for a share of the whole sphere, 4π over how many there are.
+        return sum * (4 * Math.PI * weight / count);
     }
 
     /// <summary>
@@ -296,7 +436,7 @@ public partial class Scene
     internal Dye DyeOf(HairIntersection hit, Point where)
     {
         StrandSurface strands = (StrandSurface) hit.Surface;
-        Material material = strands.Material ?? Material.Default;
+        Material material = hit.SurfaceMaterial;
         double roughness = !strands.WearsItsSkin && material.Roughness > 0 ? material.Roughness : Fiber.DefaultRoughness;
 
         if (material.Melanin is { } melanin)

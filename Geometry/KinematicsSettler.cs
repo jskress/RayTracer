@@ -37,7 +37,7 @@ public static class KinematicsSettler
         List<Surface> spans = [];
         Dictionary<string, List<Surface>> named = [];
 
-        Find(scene.Surfaces, joints, spans, named, false);
+        Find(scene.Surfaces, joints, spans, named, false, new HashSet<Surface>(ReferenceEqualityComparer.Instance));
 
         if (joints.Count == 0 && spans.Count == 0)
             return;
@@ -64,15 +64,25 @@ public static class KinematicsSettler
             settled[instant] = now.Local;
         }
 
-        foreach (Surface surface in settled[0].Keys)
+        // What was turned at any instant: a joint may be left as it stood at one (what it aims at passing through its
+        // axis) and turned at another, and stands where it was resolved at the instants it was not turned.
+        List<Surface> moved = settled.SelectMany(local => local.Keys).Distinct(ReferenceEqualityComparer.Instance)
+            .Cast<Surface>().ToList();
+
+        foreach (Surface surface in moved)
         {
-            Matrix here = settled[0][surface];
+            Matrix[] at = Enumerable.Range(0, fractions.Length)
+                .Select(instant => settled[instant].TryGetValue(surface, out Matrix matrix)
+                    ? matrix
+                    : surface.TransformAt(instant))
+                .ToArray();
+            Matrix here = at[0];
             Func<double, Matrix> motion = null;
 
             if (fractions.Length > 1)
             {
                 Matrix undo = here.Invert();
-                Matrix[] there = settled.Select(local => local[surface] * undo).ToArray();
+                Matrix[] there = at.Select(matrix => matrix * undo).ToArray();
 
                 motion = fraction => there[Nearest(fractions, fraction)];
             }
@@ -80,7 +90,7 @@ public static class KinematicsSettler
             surface.StandAt(here, motion);
         }
 
-        Resettle(settled[0].Keys);
+        Resettle(moved);
     }
 
     // Everything the settling asks about, at one instant: where each surface stands in its parent's space -- what
@@ -267,10 +277,12 @@ public static class KinematicsSettler
     }
 
     // Finds every joint that aims or reaches, every span and every named thing, outer before inner; a shared shape
-    // holding either has one place for many, and is refused.
+    // holding either has one place for many, and is refused.  A shared shape is looked through once however many
+    // places it stands, since what it holds is the same in all of them: walked again for each, a wood of trees sharing
+    // their twigs and their leaves inside them was billions of places to look through, for nothing.
     private static void Find(
         IEnumerable<Surface> surfaces, List<Joint> joints, List<Surface> spans, Dictionary<string, List<Surface>> named,
-        bool shared)
+        bool shared, HashSet<Surface> walked)
     {
         foreach (Surface surface in surfaces)
         {
@@ -300,13 +312,13 @@ public static class KinematicsSettler
             switch (surface)
             {
                 case Group group:
-                    Find(group.Surfaces, joints, spans, named, shared);
+                    Find(group.Surfaces, joints, spans, named, shared, walked);
                     break;
                 case CsgSurface csg:
-                    Find([csg.Left, csg.Right], joints, spans, named, shared);
+                    Find([csg.Left, csg.Right], joints, spans, named, shared, walked);
                     break;
-                case Instance instance:
-                    Find([instance.Prototype], joints, spans, named, true);
+                case Instance instance when walked.Add(instance.Prototype):
+                    Find([instance.Prototype], joints, spans, named, true, walked);
                     break;
             }
         }

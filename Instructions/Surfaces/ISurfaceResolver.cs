@@ -9,16 +9,14 @@ namespace RayTracer.Instructions.Surfaces;
 public interface ISurfaceResolver : IObjectResolver, ICloneable
 {
     /// <summary>
-    /// This property notes whether this resolver would give the surface a material of its own.
+    /// This property notes whether this resolver would make the surface give light.
     /// <para>
-    /// It exists so that a call of a primitive can tell whether it may share the shape its body
-    /// makes.  A shared shape carries its own materials and a hit names one of *its* surfaces, so a
-    /// material written on the call would be quietly ignored -- and a scene asking two of a thing in
-    /// two colors would get two of the same color and nothing said.  Better to give that call a shape
-    /// of its own.
+    /// It exists so that a call of a primitive can tell whether it may share the shape its body makes.  A light made
+    /// of the glowing stuff inside a thing is made once for each surface that glows, not once for each place a shared
+    /// one stands, so a call that glows is given a shape of its own.
     /// </para>
     /// </summary>
-    public bool SetsMaterial => false;
+    public bool GivesLight => false;
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value as a surface.

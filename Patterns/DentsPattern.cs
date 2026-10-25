@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Patterns;
 
@@ -51,7 +52,7 @@ public class DentsPattern : Pattern, INoiseConsumer
         if (worth <= 0)
             return NoiseGenerator.AverageCubedValue;
 
-        double noise = NoiseGenerator.ForSeed(Seed).Noise(point);
+        double noise = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed).Noise(point);
 
         double value = noise * noise * noise;
 

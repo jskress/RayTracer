@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Patterns;
 
@@ -55,7 +56,7 @@ public class BozoPattern : Pattern, INoiseConsumer
         if (worth <= 0)
             return NoiseGenerator.AverageValue;
 
-        double value = NoiseGenerator.ForSeed(Seed).Noise(point);
+        double value = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed).Noise(point);
 
         return worth * value + (1 - worth) * NoiseGenerator.AverageValue;
     }

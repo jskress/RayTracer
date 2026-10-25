@@ -134,8 +134,11 @@ public partial class Scene
                 if (intensity <= 0)
                     continue;
 
-                // A light's color is the irradiance it gives a surface square to it, over π.
-                RgbSpectrum irradiance = light.EmittedToward<RgbSpectrum>(sample) * (Math.PI * intensity);
+                // A light's color is the irradiance it gives a surface square to it, over π -- and each of its
+                // samples stands for the whole light, as every shading loop averages them, so each beam carries its
+                // share.  Carrying the whole, an area light of sixteen samples lit the inside of a pelt sixteen times
+                // over, and a sky of thirty-two, thirty-two.
+                RgbSpectrum irradiance = light.EmittedToward<RgbSpectrum>(sample) * (Math.PI * intensity / count);
 
                 beams.Add(new Beam(sample.Direction, irradiance, sample.Distance, Math.Max(1, paths / count)));
             }

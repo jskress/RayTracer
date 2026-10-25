@@ -62,6 +62,13 @@ pigment linear X stripes { Red, Blue }
 
 Give the wrong number and the render stops and says so.
 
+**Seen from far off, one pixel takes in several cells at once**, and shows them mixed by how much
+of its patch each covers rather than whichever one its ray happened to strike — which is what
+keeps a distant checkerboard from breaking up into moiré.  A pattern picking between two pigments
+mixes the two.  One picking among three or more — `hexagon`, `square`, `cubic`, `triangular` —
+mixes each pigment by its own share of the patch, so a patch that is half the first color and half
+the third shows those two, and never the second, which lies between them only in the list.
+
 A plain color is simply the simplest sub-pattern there is, so anywhere one of these entries may
 take a color, it may take a whole pattern instead:
 
@@ -102,7 +109,7 @@ map*: pairs of a position and the color at that position, in square brackets.
 | Pattern | What it looks like |
 | --- | --- |
 | `linear gradient`, `cylindrical gradient`, `spherical gradient` | A smooth ramp. |
-| `marble` | Veins running through stone. |
+| `marble` | Veins running through stone: up its map and back down again, unless another wave is said. |
 | `wood` | Growth rings. |
 | `granite` | Fine speckle, noise at every scale. |
 | `agate` | Wandering bands. |
@@ -124,7 +131,10 @@ pigment marble {
 The map reads as position, color, position, color, and so on.  Positions run from 0 to 1, and
 the color between two entries is blended from them.  A map need not stop at 1; whatever the
 pattern hands back is wrapped, which is exactly what turns a marching value into repeated
-veins.
+veins.  `marble`'s value is a coordinate marching along X, and it runs a
+[`triangle` wave](#shaping-the-value) unless told otherwise, as POV-Ray's does: up the map and back
+down, so a map whose two ends differ meets itself at every turn rather than snapping from its end
+to its start in a hard seam down every vein.  Say `ramp wave` for the sawtooth.
 
 Adding `banded` before the opening bracket turns the blending off, so each entry holds until
 the next rather than fading into it.
@@ -160,15 +170,20 @@ material {
 ```
 
 **The angle is measured against the light**: it is the angle between the way to the eye and the way the
-light mirrors off the surface, from nought looking straight along the reflection to one looking straight
-back toward the light.  That is what makes the two sides of a panel differ — seen from the far side of the
+light mirrors off the surface, as a share of a half turn — nought looking straight along the reflection, a
+half looking square to it.  It nears one only where the eye and the reflection point opposite ways along
+the surface, which for a place lit from above it happens only at a graze, the eye low on the light's own
+side; an eye standing where the light is reads twice its angle from square-on, so nought square-on and a
+half at 45 degrees.  That is what makes the two sides of a panel differ — seen from the far side of the
 light, the eye looks along its reflection; seen from the light's own side, it does not — which measuring
 the eye alone could never tell apart.  So the color is worked out afresh for every light, each
 contributing its own, and a sky light's every sample with them.  Painters call the color seen away from
 square-on the *flop*, whence the name.
 
 Where no particular light is being shaded for — the tint a transparent surface gives what passes through
-it, or a metal's reflection — the light is taken to be at the eye.
+it, or a metal's reflection — the light is taken to be at the eye, so the value is twice the eye's angle
+from square-on, as a share of a half turn: the map's start seen square-on, its middle at 45 degrees and
+its end at a graze.
 
 **A clear coat is not a second pigment.**  A pigment says what color a surface is; the gloss over a car's
 paint is a reflection, which is the material's to give: `reflective` with `fresnel`, as above, and a little
@@ -244,15 +259,19 @@ pigment marble {
 }
 ```
 
-| Setting | What it does |
-| --- | --- |
-| `amplitude` | How far points are pushed about. |
-| `octaves` | How many scales of detail to pile up. |
-| `finer` | How much smaller each successive octave is. |
-| `fainter` | How much weaker each successive octave is. |
-| `with seed` | Fixes the randomness, so the result repeats. |
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `amplitude` | 1 | How far points are pushed about: one number for every axis, or `[x, y, z]` to give each its own. |
+| `octaves` | 1 | How many layers of noise, each a scale of detail, to pile up. |
+| `finer` | 2 | How much smaller each layer's detail is than the one before: POV-Ray's *lambda*. |
+| `fainter` | 0.5 | How much weaker each layer is than the one before: POV-Ray's *omega*. |
+| `with seed` | | Fixes the randomness, so the result repeats. |
 
-A bare number is shorthand for the amplitude alone, which is the common case:
+POV-Ray piles up six octaves unless told otherwise; here it is one, so a POV-Ray scene's turbulence
+that leaves its octaves unsaid wants `octaves 6` to come out as it did there.
+
+A bare number is shorthand for the amplitude alone, everything else left at its default, which is
+the common case:
 
 ```
 pigment marble { turbulence 0.6  [0, Red, 1, Blue] }
@@ -265,8 +284,16 @@ straight bands; with a little they wander; with a lot they break up into somethi
 to real stone.  The scene is
 [`docs/examples/pigments/turbulence.igl`](examples/pigments/turbulence.igl).
 
-Turbulence goes **before** the color map.  It belongs only to continuous patterns; a checker
-has no value to stir.
+Turbulence goes **before** the color map, or before the list of colors of a pattern that picks
+among them.  It stirs the points a pattern is asked about rather than the pattern itself, so it
+works on any pattern: a checker given some has wavering edges rather than straight ones.
+
+Three patterns take it into their own arithmetic instead, as POV-Ray's do.  **Marble** adds the
+turbulence, scaled by the X of its amplitude, to the coordinate its veins march along; **wood**
+bends each ring by a wave of the turbulence scaled by its amplitude, across X and Y; and **agate**
+takes only its turbulence's octaves and layers, never its amplitude, its bands being stirred by
+fixed amounts of their own.  (Until October 2026 marble and wood ignored the amplitude too, so a
+wood said to take `amplitude 0.25` was drawn as at one.)
 
 ### Shaping the Value
 
@@ -278,8 +305,21 @@ Between the pattern and the color map, the number a pattern produces can be resh
 | `phase` | Slides the value along, so the map starts somewhere else. |
 | `<name> wave` | Bends the value along a curve. |
 
-The waves are `ramp`, `sine`, `triangle`, `scallop`, `cubic` and `poly`.  A ramp is the plain
-sawtooth you get by default; a sine eases in and out; a triangle runs up and back down.
+The frequency and phase come first, and the value is wrapped back into nought to one after them;
+then the wave bends it.  With neither said the value is left exactly as the pattern gave it.
+`ripples` and `waves` are the exceptions: they read the frequency and phase as how close their
+rings lie and where they start, and are not wrapped again.
+
+| Wave | What it does to the value |
+| --- | --- |
+| `ramp` | Nothing: the plain sawtooth, and the default for every pattern but `marble`, whose default is `triangle`. |
+| `sine` | Swings smoothly about the middle of the map: starting there, reaching its end a quarter of the way through each repeat and its start at three quarters, and back to the middle at the end. |
+| `triangle` | Climbs the map over the first half and comes back down over the second, so it mirrors rather than repeats. |
+| `scallop` | A row of rounded arches, the map's start at each whole number and its end at each half, meeting in a cusp. |
+| `cubic` | Eases into and out of both ends, lingering on each: three times the value's square less twice its cube. |
+| `poly n` | The value to the power `n`, written with the power between the words: `poly 3 wave`.  Above one it lingers near the start of the map, below one near its end. |
+
+`cubic` and `poly` bend a value from nought to one, and are meant for patterns that give one.
 
 ```
 pigment bozo {
@@ -312,7 +352,15 @@ pigment granite with seed 5 {
 ```
 
 A seed may also be put on the pigment as a whole, in which case it reaches everything inside
-that has not been given one of its own.
+that has not been given one of its own — written `pigment with seed 5 granite { ... }`, and the
+same before a call of a primitive making a pigment, `pigment with seed 5 Stone(0.3)`.  A pigment given by its
+name is one pigment, worn by everything that names it, so it takes its seed where it is made; a seed
+written before its name is refused, as is one before an image or a physical sky, which have no
+noise for it to start.
+
+Noise that is given no seed at all takes the seed of the surface wearing it, from the surface's own
+[`with seed`](surfaces.md), if it has one: each surface its own, even where several wear one named
+pigment.
 
 ### Patterns Live in the Surface's Space
 
@@ -363,11 +411,27 @@ The mapping says how the flat picture is wrapped onto the surface:
 The same picture wrapped four ways, each onto the surface its mapping suits.  The scene is
 [`docs/examples/pigments/image-maps.igl`](examples/pigments/image-maps.igl).
 
+With no mapping named, the image is laid on each surface wearing it by that surface's shape: flat on a
+cube, a plane, a triangle or a parallelogram, and round a sphere, a cylinder or a torus by the mapping
+that suits it.  A pigment worn by several shapes — one given a name, or one on a group — is laid on each
+by its own.  Any other shape needs a mapping named.
+
 An image may be moved, turned or sized like any other pigment, in braces after it:
 
 ```
 pigment image 'earth.png' spherical { rotate Y 120 }
 ```
+
+The same braces take a `brightness`, written among the transforms in any order, which multiplies the
+image's colors and leaves how opaque they are alone:
+
+```
+background image 'sky.hdr' { brightness 0.6  rotate Y 200 }
+```
+
+That is the one thing a photograph of the sky needs said of it: it holds light in whatever units the
+camera that took it left it in, and this brings it to the scene's.  Being one number, it brightens or
+dims the sky and the sun in it together.  It is 1 unless said.
 
 `planar` and `cylindrical` may be followed by `once`, which draws the image a single time
 rather than repeating it.  Without it the image tiles, so a surface larger than one unit gets
@@ -544,8 +608,9 @@ two setting suns under a band of wisps.
 to disturb them.  Turning it up brightens the sun by exactly as much as it brightens the sky.
 
 At `1` the sky and its sun stand in the proportion the air actually puts them in.  Whether that is the
-right *exposure* for a picture is a separate question, and this renderer has no other exposure control,
-so something between `2` and `4` is usually what makes a frame read without blowing the highlights.
+right *exposure* for a picture is a separate question, which a camera's [`exposure`](cameras.md#exposure)
+answers for the whole picture; left to this alone, something between `2` and `4` is usually what makes a
+frame read without blowing the highlights.
 
 **What it does not follow.**  Light is followed round every turn it takes, not merely the first, which
 is what keeps the shaded side of things lit and what leaves a glow in the sky after the sun is down.

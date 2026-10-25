@@ -217,6 +217,31 @@ public class TestVariableScoping
         Assert.IsNotNull(image);
     }
 
+    /// <summary>
+    /// A function gives back the kind it says: what turns into that kind, as three numbers turn into a color, is
+    /// taken as it, and anything else is refused with the function named, rather than wherever the answer was used.
+    /// </summary>
+    [TestMethod]
+    public void TestAFunctionGivesBackTheKindItSays()
+    {
+        (Canvas image, string error) = Render($$"""
+            {{Staging}}
+            function tint(warm) -> color { return [warm, 0.4, 0.2] }
+            sphere { material { pigment tint(0.8) } }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsNotNull(image);
+
+        (_, error) = Render($$"""
+            {{Staging}}
+            function reach(step) -> number { return color [step, 0, 0] }
+            sphere { translate X reach(1) }
+            """);
+
+        StringAssert.Contains(error, "The function 'reach' gives back a number, and this time worked out to a color");
+    }
+
     [TestMethod]
     public void TestAFunctionMayHaveASmallerOneOfItsOwn()
     {

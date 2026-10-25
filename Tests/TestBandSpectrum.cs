@@ -246,6 +246,27 @@ public class TestBandSpectrum
     }
 
     /// <summary>
+    /// A sky light of plain colors given a temperature keeps its colors in a spectral render: each direction is the
+    /// pigment's light times the blackbody, near what an ordinary render takes, not the blackbody alone.
+    /// </summary>
+    [TestMethod]
+    public void TestASkyOfColorsKeepsThemUnderATemperature()
+    {
+        foreach (Color sky in new[] { new Color(0.2, 0.4, 0.9), new Color(0.9, 0.5, 0.2) })
+        {
+            SkyLight light = new () { Pigment = new SolidPigment(sky) };
+
+            light.SetColorTemperature(6500);
+
+            LightSample sample = light.SampleToward(Point.Zero, 3);
+            Color spectral = light.EmittedToward<BandSpectrum>(sample).ToColor();
+            Color rgb = light.EmittedToward<RgbSpectrum>(sample).ToColor();
+
+            AssertColor(rgb, spectral, 0.08 * Brightest(rgb), $"a sky of {sky}");
+        }
+    }
+
+    /// <summary>
     /// The sun a physical sky hangs carries its spectrum, and loses it the moment its color is set to
     /// something else, so that the two never describe different light.
     /// </summary>

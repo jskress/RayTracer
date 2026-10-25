@@ -1,5 +1,7 @@
 using RayTracer.Basics;
+using RayTracer.Graphics;
 using RayTracer.Patterns;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -67,6 +69,61 @@ public class TestPatternFiltering
         Assert.IsTrue(averaged is > 0.05 and < 0.95,
             $"asked about a patch forty units across, the brick answered {averaged:F4} -- it is " +
             "still answering for a point, so nothing is being filtered");
+    }
+
+    /// <summary>
+    /// A patch over a pattern picking among four pigments is the mix of those it covers, and of no others: half on
+    /// the square that picks the first and half on the one beside it that picks the fourth is half of each, not the
+    /// second and third its averaged index would be.
+    /// </summary>
+    [TestMethod]
+    public void TestAPatchAcrossManyPigmentsMixesOnlyThoseItCovers()
+    {
+        PigmentSet set = new ();
+
+        foreach (Color color in new[] { Colors.Red, Colors.Green, Colors.Blue, Colors.White })
+            set.AddEntry(new SolidPigment(color));
+
+        set.Banded = false;
+
+        PatternPigment squares = new () { Pattern = new SquarePattern(), PigmentSet = set };
+        Footprint patch = new (new Vector(0.4, 0, 0), new Vector(0, 0, 0.4));
+
+        Assert.IsTrue(squares.GetColorFor(new Point(1, 0, 0.5), patch).Matches(new Color(1, 0.5, 0.5)),
+            $"half red and half white, not {squares.GetColorFor(new Point(1, 0, 0.5), patch)}");
+
+        // Wholly within one square, a patch is that square's pigment exactly, as a point there is.
+        Assert.IsTrue(squares.GetColorFor(new Point(0.5, 0, 0.5), patch).Matches(Colors.Red));
+        Assert.IsTrue(squares.GetColorFor(new Point(1.5, 0, 0.5), new Footprint(new Vector(0.2, 0, 0),
+            new Vector(0, 0, 0.2))).Matches(Colors.White));
+    }
+
+    /// <summary>
+    /// A patch straddling a gradient's repeat mixes the colors at the two ends of its map, rather than taking the
+    /// color of the average value -- the middle of the map, a color the patch holds none of: a green seam down every
+    /// repeat of a red-to-blue gradient seen at a distance.  A patch away from the repeat is as it always was.
+    /// </summary>
+    [TestMethod]
+    public void TestAPatchAcrossAGradientsRepeatMixesItsEnds()
+    {
+        PigmentSet map = new ();
+
+        map.AddEntry(new SolidPigment(Colors.Red), 0);
+        map.AddEntry(new SolidPigment(Colors.Green), 0.5);
+        map.AddEntry(new SolidPigment(Colors.Blue), 0.99);
+
+        GradientPattern gradient = new () { BandType = BandType.LinearX };
+        PatternPigment pigment = new () { Pattern = gradient, PigmentSet = map };
+        Footprint patch = new (new Vector(0.2, 0, 0), new Vector(0, 0, 0.2));
+        Color seam = pigment.GetColorFor(new Point(1, 0, 0.5), patch);
+
+        Assert.IsTrue(seam.Green < 0.2 && seam.Red + seam.Blue > 0.6, $"across the repeat the patch came out {seam}");
+
+        Point away = new (0.4, 0, 0.5);
+        Footprint small = new (new Vector(0.05, 0, 0), new Vector(0, 0, 0.05));
+
+        Assert.IsTrue(pigment.GetColorFor(away, small).Matches(map.GetColorFor(away, gradient.ValueFor(away, small), small)),
+            "away from the repeat, the color of the average as before");
     }
 
     [TestMethod]

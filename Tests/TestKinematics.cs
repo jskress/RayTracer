@@ -276,6 +276,36 @@ public class TestKinematics
     }
 
     /// <summary>
+    /// A joint turned at one of the shutter's instants and not at another -- what it aims at passing through its
+    /// axis, where no turn is the right one -- stands as it was resolved at the instant it was not turned.
+    /// </summary>
+    [TestMethod]
+    public void TestAJointLeftUnturnedAtAnInstantStandsAsResolved()
+    {
+        double[] instants = [0, 0.5, 1];
+        Mark moving = MarkAt("moving", new Point(4, 0, 4));
+
+        // At the last instant the mark stands on the hinge's own axis, straight above its pivot.
+        moving.MotionAt = fraction => Transforms.Translate(-4 * fraction, 5 * fraction, -4 * fraction);
+
+        Joint hinge = new () { Axis = new Vector(0, 1, 0), Aim = new Target(null, "moving") };
+        Scene scene = new ();
+
+        scene.Surfaces.Add(hinge);
+        scene.Surfaces.Add(moving);
+        hinge.PrepareForRendering(instants);
+        moving.PrepareForRendering(instants);
+
+        KinematicsSettler.Settle(scene, instants);
+
+        Vector first = hinge.DirectionToWorld(hinge.Facing, 0);
+        Vector last = hinge.DirectionToWorld(hinge.Facing, 2);
+
+        Assert.AreEqual(Math.PI / 4, Math.Atan2(first.Z, first.X), 1e-9, "turned toward the mark at first");
+        Assert.IsTrue(last.Matches(hinge.Facing), "and as resolved once the mark is on its axis");
+    }
+
+    /// <summary>
     /// A shape holding a joint that aims or reaches, or a span, is not shared between places, and one that is
     /// shared anyway -- a joint the settler meets behind an instance -- is refused.
     /// </summary>

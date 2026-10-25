@@ -77,7 +77,7 @@ public class HairIntersection : Intersection
     /// material of what it grows from is hair, whatever that is.
     /// </summary>
     public bool IsAWire =>
-        Surface is StrandSurface { WearsItsSkin: false } strands && (strands.Material?.Metallic ?? 0) > 0;
+        Surface is StrandSurface { WearsItsSkin: false } && SurfaceMaterial.Metallic > 0;
 
     /// <summary>
     /// This property reports whether the strand is a wire finer than the ray is wide, which the ray sees the

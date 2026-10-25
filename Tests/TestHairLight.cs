@@ -1,4 +1,7 @@
 using RayTracer.Basics;
+using RayTracer.ImageIO;
+using RayTracer.Options;
+using RayTracer.Parser;
 using RayTracer.Core;
 using RayTracer.Geometry;
 using RayTracer.Graphics;
@@ -66,6 +69,36 @@ public class TestHairLight
             Assert.AreEqual(
                 light.At(point).From<RgbSpectrum>(new Vector(0, 0, -1)), again.At(point).From<RgbSpectrum>(new Vector(0, 0, -1)));
         }
+    }
+
+    /// <summary>
+    /// Each of a light's samples stands for the whole light, so a lamp looked at sixteen times lights the inside of
+    /// a pelt no more than one looked at once: a small area light gathers the same light among the strands as a
+    /// point light where it stands.
+    /// </summary>
+    [TestMethod]
+    public void TestALightsSamplesShareItsLightAmongTheStrands()
+    {
+        AreaLight small = new ()
+        {
+            Location = Lamp, Axis1 = new Vector(0.01, 0, 0), Axis2 = new Vector(0, 0, 0.01), USteps = 4, VSteps = 4
+        };
+        (Scene once, Sphere one) = FurBall(Melanin.Shades["blond"], 3000, 0.4);
+        (Scene sixteen, Sphere other) = FurBall(Melanin.Shades["blond"], 3000, 0.4, light: small);
+        HairLight byPoint = once.LightAmong(one.Hair, default);
+        HairLight byArea = sixteen.LightAmong(other.Hair, default);
+        double point = 0, area = 0;
+
+        for (double x = -1.2; x <= 1.2; x += 0.3)
+        {
+            Point place = new (x, 0.4, -0.9);
+
+            point += byPoint.At(place).From<RgbSpectrum>(new Vector(0, 0, -1)).Red;
+            area += byArea.At(place).From<RgbSpectrum>(new Vector(0, 0, -1)).Red;
+        }
+
+        Assert.IsTrue(point > 0, "some light should be gathered");
+        Assert.AreEqual(1, area / point, 0.15, $"sixteen samples against one: {area} against {point}");
     }
 
     /// <summary>
@@ -228,13 +261,55 @@ public class TestHairLight
         }
     }
 
+    /// <summary>
+    /// Light bounced onto fur from round it does not count again what the light among its strands carries: fur on
+    /// black skin, alone in the dark under one lamp, comes out the same with bounces asked for as without.  Every
+    /// direction a strand looks in meets another strand, the skin or nothing, and the light the lamp gives those --
+    /// scattered among the strands and off the skin -- is the hair light's, given already.
+    /// </summary>
+    [TestMethod]
+    public void TestTheLightAmongTheStrandsIsNotCountedAgainAsBouncedLight()
+    {
+        (Scene scene, _) = FurBall(new Melanin(0, 0), 6000, 0.5);
+        RgbSpectrum Gathered()
+        {
+            RgbSpectrum sum = RgbSpectrum.Black;
+            const int grid = 24;
+
+            for (int i = 0; i < grid; i++)
+            {
+                for (int j = 0; j < grid; j++)
+                {
+                    Ray ray = new (
+                        new Point(-1.6 + 3.2 * (i + 0.5) / grid, -1.6 + 3.2 * (j + 0.5) / grid, -10), new Vector(0, 0, 1));
+
+                    sum += scene.GetColorFor<RgbSpectrum>(ray);
+                }
+            }
+
+            return sum;
+        }
+
+        RgbSpectrum without = Gathered();
+
+        scene.DiffuseBounces = 2;
+        scene.DiffuseSamples = 64;
+
+        RgbSpectrum with = Gathered();
+
+        Assert.IsTrue(without[1] > 0, "the fur was not lit");
+        Assert.AreEqual(without[1], with[1], without[1] * 0.005,
+            $"bounces counted the light among the strands again: {without.ToColor()} without, {with.ToColor()} with");
+    }
+
     private static readonly Point Lamp = new (-10, 10, -10);
 
     /// <summary>
     /// This method returns a ball of skin, black unless told otherwise, of radius one, growing fur of the
     /// given melanin, lit by one lamp.
     /// </summary>
-    private static (Scene Scene, Sphere Ball) FurBall(Melanin melanin, int strands, double length, Color skin = null)
+    private static (Scene Scene, Sphere Ball) FurBall(
+        Melanin melanin, int strands, double length, Color skin = null, Light light = null)
     {
         Sphere sphere = new ()
         {
@@ -247,7 +322,7 @@ public class TestHairLight
         };
         Scene scene = new ();
 
-        scene.Lights.Add(new PointLight { Location = Lamp });
+        scene.Lights.Add(light ?? new PointLight { Location = Lamp });
         sphere.PrepareForRendering();
         scene.Surfaces.Add(sphere);
         scene.ArrangeSurfaces();
@@ -352,5 +427,58 @@ public class TestHairLight
         List<Intersection> hits = scene.Intersect(ray);
 
         return (hits, hits.FirstOrDefault(crossing => crossing.Distance > 0));
+    }
+
+    /// <summary>
+    /// The light among hair is the light, whatever number of samples it is taken in: a fur ball under a lamp the
+    /// size of a point comes out the same lit by one sample of it or sixteen.  (Each sample's beam carried the whole
+    /// light, so sixteen lit the pile sixteen times over: 90 levels in 255 became 245.)
+    /// </summary>
+    [TestMethod]
+    public void TestTheLightAmongHairDoesNotGrowWithALightsSamples()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"hair-light-tests-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            double Brightness(int steps)
+            {
+                string scene = Path.Combine(directory, $"fur{steps}.igl");
+                string output = Path.ChangeExtension(scene, "png");
+
+                File.WriteAllText(scene, $$"""
+                    context { no gamma }
+                    camera { location [0, 0.3, -3.2]  look at [0, 0, 0]  field of view 40 }
+                    background Black
+                    area light { location [-2, 3, -3] axisU [0.001, 0, 0] axisV [0, 0, 0.001] steps {{steps}} color White }
+                    sphere {
+                        material { pigment [0.85, 0.8, 0.7] }
+                        hair { density 3000  length 0.25  material { pigment [0.85, 0.8, 0.7] } }
+                    }
+                    """);
+                new LanguageParser(scene).Parse().Render(new RenderOptions { OutputFileName = output, Width = 40, Height = 30 });
+
+                Canvas picture = new ImageFile(output).Load()[0];
+                double sum = 0;
+
+                for (int x = 0; x < picture.Width; x++)
+                {
+                    for (int y = 0; y < picture.Height; y++)
+                        sum += picture.GetPixel(x, y).Red;
+                }
+
+                return sum / (picture.Width * picture.Height);
+            }
+
+            double one = Brightness(1), sixteen = Brightness(4);
+
+            Assert.AreEqual(one, sixteen, 0.05 * one, $"lit by one sample {one:F3}, by sixteen {sixteen:F3}");
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
     }
 }

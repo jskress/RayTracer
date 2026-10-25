@@ -124,7 +124,8 @@ FireShell = material {
 // Every glowing thing here is a *medium*, and a medium is carried inside a shell the ray passes
 // through.  Two such shells over one another are fine.  **Three are not**: measured, a ray crossing
 // three of them comes back black wherever the stuff inside is thin, because each crossing spends one
-// of the four refractions the renderer allows and there are none left to reach what lies beyond.
+// of the four refractions the renderer allows (unless a scene raises its `trace depth`) and there are
+// none left to reach what lies beyond.
 //
 // So a campfire here is not three flames and a bed of coals in four shells.  It is one shell with one
 // medium in it, whose density describes all of them at once -- and that is cheaper as well as
@@ -217,9 +218,12 @@ primitive Embers(size, variant = 1) -> group {
                         // flame.  At the same density that came out three times too faint to read as
                         // anything.  The alternative was a much taller shell, which would be mostly
                         // empty and marched for nothing.
+                        // The variant shifts where the noise cuts the coals, so each bed is its own; the first is
+                        // as it always was.
                         density function {
                             max(0, FireBed(x, y, z, 0.85) * 2.8
-                                   - 1.15 * (noise(x * 4.6 + 11, y * 3 + 5, z * 4.6 + 7) - 0.30))
+                                   - 1.15 * (noise(x * 4.6 + 11 + (variant - 1) * 7.31, y * 3 + 5,
+                                                   z * 4.6 + 7 + (variant - 1) * 3.17) - 0.30))
                         }
                     }
                 }

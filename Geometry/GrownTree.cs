@@ -80,6 +80,17 @@ public class GrownTree : Group
     /// </summary>
     public List<Func<Surface>> LeafFactories { get; set; } = [];
 
+    // Each way of making a leaf, made once: when the tree grows, or before, when it is asked whether it may be shared.
+    private Surface[] _leaves;
+
+    private Surface[] Leaves() => _leaves ??= LeafFactories.Select(factory => factory()).ToArray();
+
+    /// <summary>
+    /// This method reports whether the leaves the tree will hold may be shared between places, which the tree may be
+    /// only if they may: a tree has no leaves until it grows, after it has been shared.
+    /// </summary>
+    internal bool MayShareWhatItHolds() => Leaves().All(Instance.MayBeShared);
+
     /// <summary>
     /// This property notes whether the leaves hang: stood upright in the tree's own space from the end of the twig,
     /// turned at random about the upright, rather than laid along it.  A willow's curtain hangs so, and so does fruit:
@@ -382,7 +393,7 @@ public class GrownTree : Group
         // winter cluster comes back an empty group, and a thousand instances of it would cost a thousand boxes to
         // show nothing -- but it keeps its share of the places, so a winter tree of several clusters, some bare,
         // is bare in the same proportion.
-        Surface[] made = LeafFactories.Select(factory => factory()).ToArray();
+        Surface[] made = Leaves();
         bool[] empty = made.Select(leaf => leaf.GetType() == typeof(Group) && ((Group) leaf).Surfaces.Count == 0).ToArray();
         bool[] sharable = made.Select(Instance.MayBeShared).ToArray();
         bool[] used = new bool[made.Length];

@@ -9,6 +9,31 @@ namespace Tests;
 public class TestTubeSegment
 {
     /// <summary>
+    /// A straight segment keeps its wall however short it is: a ten-thousandth long and a tenth of that across, a ray
+    /// across its middle meets the wall, as it does a segment a thousand times the size.
+    /// </summary>
+    [TestMethod]
+    public void TestAShortSegmentKeepsItsWall()
+    {
+        foreach (double size in new[] { 1.0, 1e-4 })
+        {
+            TubeSegment segment = new ()
+            {
+                Start = new Point(0, 0, 0), StartRadius = size * 0.1,
+                End = new Point(0, size, 0), EndRadius = size * 0.1
+            };
+            Ray ray = new (new Point(-size, size / 2, 0), new Vector(1, 0, 0));
+            List<Intersection> intersections = [];
+
+            segment.PrepareForRendering();
+            segment.AddIntersections(ray, intersections);
+
+            Assert.IsTrue(intersections.Any(hit => Math.Abs(hit.Distance - size * 0.9) < size * 1e-6),
+                $"the near wall of a segment {size} long: {string.Join(", ", intersections.Select(hit => hit.Distance))}");
+        }
+    }
+
+    /// <summary>
     /// A segment with equal radii at both ends is just a plain cylinder.  A ray fired
     /// straight at the axis, perpendicular to it and far from either cap, should cross the
     /// lateral surface at exactly the radius on either side of the axis.

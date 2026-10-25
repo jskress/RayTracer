@@ -69,6 +69,48 @@ public class TestSignedDistanceSurfaces
     }
 
     /// <summary>
+    /// This tests that a ray cast off a distance-marched shape sets off clear of it however the shape is scaled: a
+    /// ball found to a ten-thousandth of its own unit and scaled up a thousandfold is found only to a tenth in the
+    /// world, and a ray leaving it from a ten-thousandth off set off inside it and met it again at once -- shadow
+    /// acne over the whole of a big shape.
+    /// </summary>
+    [TestMethod]
+    public void TestARayLeavesAScaledUpShapeClearOfIt()
+    {
+        SignedDistanceSurface ball = new ()
+        {
+            Function = BallDistance(1).ToField(new Variables()),
+            BoundingBox = new BoundingBox().Add(new Point(-3, -3, -3)).Add(new Point(3, 3, 3)),
+            Transform = Transforms.Scale(1000, 1000, 1000)
+        };
+        Random random = new (20261024);
+
+        ball.PrepareForRendering();
+
+        for (int index = 0; index < 50; index++)
+        {
+            Ray ray = new (new Point(random.NextDouble() * 1200 - 600, random.NextDouble() * 1200 - 600, -5000),
+                new Vector(0, 0, 1));
+            List<Intersection> hits = [];
+
+            ball.Intersect(ray, hits);
+
+            Intersection hit = hits.Where(crossing => crossing.Distance > 0).MinBy(crossing => crossing.Distance);
+
+            Assert.IsNotNull(hit, "a ray at the middle of the ball should meet it");
+
+            hit.PrepareUsing(ray, hits);
+
+            List<Intersection> again = [];
+
+            ball.Intersect(new Ray(hit.OverPoint, hit.Normal), again);
+
+            Assert.IsFalse(again.Any(crossing => crossing.Distance > 0),
+                $"a ray leaving the ball met it again {again.Where(c => c.Distance > 0).Min(c => c.Distance):E2} on");
+        }
+    }
+
+    /// <summary>
     /// This tests that a ball written as a distance is crossed where a ball is crossed.
     /// </summary>
     [TestMethod]
@@ -187,7 +229,9 @@ public class TestSignedDistanceSurfaces
     /// inside and positive outside.
     /// <para>
     /// There is nothing analytic to hold it to, so what is checked is the *contract* the marcher
-    /// relies on -- a signed answer, and a bound that does not lie.
+    /// relies on -- a signed answer, and a bound that does not lie: every crossing a ray from outside
+    /// finds lies within the ball, and a ray heading away from it finds none.  (A ray that grazed the
+    /// set was taken as crossing it, ran out "inside", and was closed at its box, far off the set.)
     /// </para>
     /// </summary>
     [TestMethod]
@@ -195,34 +239,41 @@ public class TestSignedDistanceSurfaces
     {
         JuliaFractal fractal = new () { C = [-0.2, 0.6, 0.2, 0.0], Iterations = 10 };
         Random random = new (20260904);
-        int inside = 0;
+        int met = 0;
 
         fractal.PrepareForRendering();
 
-        for (int index = 0; index < 4000; index++)
+        for (int index = 0; index < 400; index++)
         {
-            Point point = new (
-                random.NextDouble() * 8 - 4, random.NextDouble() * 8 - 4,
-                random.NextDouble() * 8 - 4);
-            double away = Math.Sqrt(
-                point.X * point.X + point.Y * point.Y + point.Z * point.Z);
-            List<Intersection> unused = [];
+            // A place well outside the ball, and a way toward somewhere near its middle.
+            Vector outward = new Vector(random.NextDouble() - 0.5, random.NextDouble() - 0.5, random.NextDouble() - 0.5).Unit;
+            Point from = Point.Zero + outward * (2.5 + random.NextDouble() * 2);
+            Point near = new (random.NextDouble() * 0.6 - 0.3, random.NextDouble() * 0.6 - 0.3, random.NextDouble() * 0.6 - 0.3);
+            Ray toward = new (from, (near - from).Unit);
+            List<Intersection> crossings = [];
 
-            fractal.AddIntersections(new Ray(point, new Vector(0, 0, 1)), unused);
+            fractal.AddIntersections(toward, crossings);
 
-            // Well outside the ball of radius two, nothing may be reported as inside the set.
-            if (away > 2.5)
+            // Every crossing found lies within the ball the set keeps to.
+            foreach (Intersection crossing in crossings)
             {
-                Assert.IsTrue(fractal.SurfaceNormalAt(point, null).Magnitude > 0,
-                    "a normal is always a direction, even out here");
+                double reach = (toward.At(crossing.Distance) - Point.Zero).Magnitude;
+
+                Assert.IsTrue(reach <= 2 + 1e-3, $"a crossing {reach:F4} from the middle, outside the ball of two");
             }
-            else if (away < 0.2)
-            {
-                inside++;
-            }
+
+            if (crossings.Any(crossing => crossing.Distance > 0))
+                met++;
+
+            // And looking away from the ball, from out here, a ray meets nothing ahead of it.
+            List<Intersection> away = [];
+
+            fractal.AddIntersections(new Ray(from, outward), away);
+
+            Assert.IsFalse(away.Any(crossing => crossing.Distance > 0), "a ray heading away from the ball met the set");
         }
 
-        Assert.IsTrue(inside > 0, "no points near the middle were looked at; the test proves little");
+        Assert.IsTrue(met > 40, $"only {met} rays toward the middle met the set; the test proves little");
     }
 
     /// <summary>

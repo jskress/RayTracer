@@ -53,13 +53,14 @@ public class FisheyeRayConverter : PixelToRayConverter
 
         Point origin = InverseTransform * Point.Zero;
 
-        // Outside the circle there is nothing to show, so send the ray away from the scene and let
-        // it come back the background color.
+        // Outside the circle there is nothing to show, so the ray shows the background and nothing else.  Only
+        // sent backward, as it once was, it found whatever stood behind the camera: the lit ground under an
+        // all-sky fisheye looking up, the wall of a room.
         if (r > 1)
         {
             Vector away = (InverseTransform * new Point(0, 0, 1) - origin).Unit;
 
-            return new Ray(origin, away, sampleIndex, _spread);
+            return new Ray(origin, away, sampleIndex, _spread) { Outside = true };
         }
 
         // How far a pixel lies from the middle is how far its ray tips away from straight ahead;

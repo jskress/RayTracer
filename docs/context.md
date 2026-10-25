@@ -65,8 +65,9 @@ The complete example is
 
 ### Angles
 
-Every angle in a scene — a rotation, a spotlight's cone, a camera's field of view — is read
-in whichever unit this setting names:
+The angles a scene writes in its clauses — a rotation, a spotlight's `radius` and `falloff`, a
+camera's field of view, a joint's turn, a field's `turned`, a roof's slope — are read in whichever
+unit this setting names:
 
 ```
 angles are degrees
@@ -76,8 +77,15 @@ angles are radians
 Degrees are the default, so `angles are degrees` says out loud what was already true.  Rather
 more than half the gallery scenes write it anyway, and that is a reasonable habit: a scene
 that turns things is easier to trust when it states which unit it means.  Write
-`angles are radians` only if you would rather work in radians throughout your scene since
-the setting applies to the whole scene.
+`angles are radians` only if you would rather work in radians.  The setting holds from where it
+is written onward, not over the whole file: an angle is read in whatever unit was last said above
+it, so write it before anything that turns (see
+[Angles are radians](scene-files.md#angles-are-radians)).
+
+Three things keep a unit of their own whatever this says.  A physical sky's `sun elevation` and
+`sun azimuth` are always in degrees, a ribbon's `twist` always in radians, and the trigonometric
+functions in an expression always work in radians — see
+[Angles are radians](scene-files.md#angles-are-radians).
 
 ### Gamma
 
@@ -160,10 +168,10 @@ same for a scene that does not ask for it.  To spare a single surface its shadow
 ### Ambient
 
 `ambient` is the fraction of its own color a surface shows regardless of any light reaching
-it.  It stands in for bounced light this renderer does not trace: without it, everything an
-actual light misses would be pure black, and a shadow would read as a hole rather than as a
-shadow.  Each material either names its own or takes what the scene settles on it — see
-[Materials](materials.md).
+it.  It stands in for light bounced about the scene, which this renderer follows only when a scene
+[asks it to](#bounced-light): without it, everything an actual light misses would be pure black,
+and a shadow would read as a hole rather than as a shadow.  Each material either names its own or
+takes what the scene settles on it — see [Materials](materials.md).
 
 That is a reasonable default for a scene lit like daylight, and quite wrong for one lit by a
 candle or a street lamp, where the fudge is the same size as the light.  A scene can turn the
@@ -204,7 +212,7 @@ A scanner decides how the work of tracing pixels is handed out.
 | Written | What it does |
 | --- | --- |
 | `serial scanner` | One pixel after another, on a single thread. |
-| `parallel line scanner` | Whole rows handed out across threads. |
+| `parallel line scanner` | Whole lines handed out across threads: rows when the picture is taller than wide, columns otherwise. |
 | `parallel pixel scanner` | Individual pixels handed out across threads. |
 
 The choice affects only how long the render takes; the picture is identical either way.
@@ -269,8 +277,10 @@ marble, skin -- follows many walks under itself at each place and averages them:
 context { subsurface samples 128 }
 ```
 
-The usual number is 64.  As with rough reflections, only the first such surface a ray from the
-eye meets takes them all; one met along a reflection or a bounce takes one walk.
+The usual number is 64.  A surface the eye sees directly, or in a smooth mirror or through clear
+glass, takes them all; one met along a spread of rays -- a rough surface's blurred reflection,
+frosted glass, glass splitting its colors, or bounced light -- takes one walk, since there many paths
+are averaged anyway.
 
 ### Weathering Samples
 
@@ -288,6 +298,34 @@ light finds, looks about in an eighth as many, since there many paths are averag
 weathered model beside rough metal took twenty-seven times as long to render.  Even so, weather costs: each
 place looked about is a hundred or so short rays, and a picture of two droids, one of them weathered, took
 eight to twelve times as long as the same picture with both clean.
+
+### Media
+
+How hard to work at a [medium](scene-files.md#filling-that-space) -- a haze, smoke, a cloud, the glow
+of a flame -- is said here, rather than with what the medium is made of:
+
+```
+context {
+    medium samples 48
+    medium bounces 3
+}
+```
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `medium samples` | 16 | How many places along a ray's crossing of a medium are asked what light reaches them, where the medium [scatters](scene-files.md#scattering), and how many steps it is walked in, where its density or its glow varies. |
+| `medium bounces` | 0 | How many further turns of the light's path through a scattering medium are [followed](scene-files.md#multiple-scattering) past the first. |
+
+Each is the default for every medium in the scene; a medium that needs more care than the rest may
+name its own `samples` or `bounces`.  Too few places show as speckle in a crisp shaft of light, the
+same in every render; the cure is more places.
+
+**Light turned more than once loses some of a medium's tint.**  A path followed past its first turn goes
+as far between turns as the average of the medium's colors would carry it, every color alike, so where
+a medium stops one color sooner than another -- a blue haze, a reddened smoke -- the stretches between
+the turns tint nothing, and what it has turned twice or more comes out grayer than it should.  The
+light of the first turn, straight from the lamps, keeps the tint, and so does what each turn keeps of
+each color.
 
 ### Trace Depth
 
@@ -347,11 +385,25 @@ samples` settles it further.
 has already counted, and a sky with no sky light is a backdrop rather than a light, so it brings back
 nothing; one that runs straight through a glowing volume that [gives light](surfaces.md#a-surface-that-gives-light)
 brings back only what the volume lets through.  Lamps, panels and suns cannot be met by a ray at all.
+A straight run goes on through smooth glass as though the glass did not bend it, unless the scene asks
+for [caustics](#caustics): a lamp's shadow ray passes such glass straight, so the sky seen through a
+window has been counted already, and found again through the pane it would be counted twice.
 Anything found another way -- the sky in a mirror, a lamp's pool of light on a wall, a glow that gives
 no light of its own -- is light no lamp could have found, and counts.  And bounced light passes what a shadow ray passes:
 anything set out with `no shadow` and the bulb round a lamp, which stand for a light rather than being lit
 by one.  So a lamp's glowing bulb, or a painted sun's disc, is not counted again as a glowing thing --
 and does not turn up, as it would, as bright specks wherever one bounce in thousands happened to find it.
+
+**Hair takes bounced light too.**  A strand of [hair](advanced-surfaces.md#how-hair-is-lit) looks round
+itself over the whole sphere -- it takes light from behind as much as from in front -- and takes what it
+finds by how it scatters light, a strand finer than a pixel looking in only its share of the directions,
+so that a pixel's pile looks round about as often as one surface would.  What the light among its own
+strands carries is not counted again: a direction that meets another strand of the same hair, or what it
+grows from, takes from there only the light that came from beyond the hair.  So fur by a fire is lit by
+the walls the fire lights, as everything else is.  A strand whose own material is a metal is a
+[wire](advanced-surfaces.md#strand), shaded as a surface, and takes bounced light as any surface does.  The light among a head of hair is gathered before the first pixel; hair on a shape that
+is shared among many places is gathered for each place it stands, as the first ray meets it there, at
+up to about 25 MB a place.
 
 #### A Cache of Bounced Light
 
@@ -418,9 +470,10 @@ mirrors, polished metal, glass and water -- and follows each through as many tur
 photon loses light exactly as a ray from the eye would: the mirror's share, Fresnel's share at each face
 of glass, the filter's tint, the fade or the medium through the inside -- of glass it goes through, or of
 water it lands in, so that a pool's floor is lit through the water over it, its red taken out on the way
-down as the eye's is on the way back up.  Where one lands on something matte it is
-kept, and a matte surface takes the light of the photons nearest it as it takes a lamp's.  Two million
-are sent unless the scene says otherwise:
+down as the eye's is on the way back up.  A medium whose density varies is walked in sixteen steps, as a
+shadow ray walks it, so a wisp of smoke takes only what the wisp holds.  Where a photon lands on something
+matte it is kept, and a matte surface takes the light of the photons nearest it as it takes a lamp's.
+Two million are sent unless the scene says otherwise:
 
 ```
 context { caustics photons 8000000 }
@@ -437,7 +490,8 @@ ray dead: all the light through it is the photons', gathered where the glass gat
 shadow is dark, with the sun brought to a bright spot in it.  A flat pane is the exception worth
 knowing.  Its two faces are parallel, so light leaves it going the way it came, and the old straight
 line is exact -- and sharper and cheaper than photons.  Say so with
-[`no caustics`](surfaces.md#no-caustics) on the pane.
+[`no caustics`](surfaces.md#no-caustics) on the pane.  Glass with no edges, which photons cannot be
+aimed at (see below), lets a shadow ray through as it would without caustics.
 
 **More photons, sharper caustics.**  Each place takes its light from the 200 photons nearest it, so where
 they lie thick -- a focus -- they are gathered from a small area and the caustic is sharp, and where they
@@ -445,12 +499,17 @@ lie thin, from a wide one, and it is soft.  More photons sharpen every caustic; 
 mottled glow.  They are aimed at each thing that turns light, in proportion to how much light the lamps
 bring it, and they are sent the same way every time, so a picture comes out the same.
 
-Every light sends photons: point lights, spotlights, area lights and suns; a sky light, from each of
-the directions it is looked at in, so that a photographed sky's sun is gathered by a lens as any other
-sun is; and a glowing volume that gives light, from each of its places, so that a candle's flame
-throws its light through the glass round it.  Rough mirrors and frosted glass turn them as they turn
-the eye's rays, facet by facet, and spread what they gather into a soft glow; a soap film throws its
-own colors.  Anything without edges -- a plane used as a mirror, an endless sea -- cannot be aimed at.
+Every light sends photons, and each photon sets off from a place of its own, picked anywhere on the
+light rather than from among the few places the light is looked at from: a point light or a spotlight
+from where it stands, a sun from its one direction, an area light from anywhere across its face, a sky
+light from any direction of the sky -- for a photograph, picked by where its light is or evenly, in the
+shares its samples are, so that a photographed sky's sun is gathered by a lens as any other sun is --
+and a glowing volume that gives light from anywhere in its glow, so that a candle's flame throws its
+light through the glass round it.  (Sent instead from the few dozen places a light is looked at from,
+photons would be brought by a lens to as many points, a bright speck for each round its focus.)  Rough
+mirrors and frosted glass turn them as they turn the eye's rays, facet by facet, and spread what they
+gather into a soft glow; a soap film throws its own colors.  Anything without edges -- a plane used as
+a mirror, an endless sea -- cannot be aimed at, and casts no caustics.
 
 **In a [spectral](#spectral-light) render, glass that spreads colors splits its light into them.**  Each
 photon that goes through glass with a `dispersion` (or a named `glass`) goes on as one of the bands the
@@ -553,7 +612,7 @@ candle's flame comes out white.
 | --- | --- |
 | 2500 | Candlelight that still looks warm. |
 | 3400 | A room lit by household bulbs, warm but not orange. |
-| 5500 | Daylight — the same as leaving it out. |
+| 5500 | Daylight — nearly the same as leaving it out. |
 
 The balance is applied to the finished picture, in red, green and blue and in a
 [spectral](#spectral-light) render alike, so it costs nothing to render.  `--white-balance` on the
@@ -578,4 +637,41 @@ Either dimension may be settled on its own, and the other falls back.  As with e
 here that the command line can also set, `-w` and `-h` win when they are given, this block is
 consulted next, and 800 by 600 is the last resort — see
 [How a setting is decided](getting-started.md#how-a-setting-is-decided).
+
+### Animation
+
+A scene that says how long it runs is an [animation](animation.md), rendered again for every frame:
+
+```
+context { animation length 2  rate 30 }               // two seconds, thirty frames a second
+context { animation frames 144  rate 24  still 48 }   // or 144 frames, frame 48 its still
+```
+
+| Written | What it does |
+| --- | --- |
+| `animation length L` | Run for `L` seconds. |
+| `animation frames N` | Run for `N` frames. |
+| `rate R` | So many frames a second: 30 unless said.  `-r` on the command line overrules it. |
+| `still S` | The frame that stands for the animation as a single picture: the first, frame 0, unless said. |
+
+The length and the rate are worked out before anything else in the scene, since every frame's time
+hangs on them, so they are numbers -- or arithmetic on the renderer's own names -- and not names the
+scene sets.  See [Saying How Long](animation.md#saying-how-long) for the files an animation writes and
+the command line's choice of frames.
+
+### Gravity and Wind
+
+What pushes a scene's [bodies](animation.md#bodies) and [swarms](animation.md#swarms) about:
+
+```
+context { gravity [0, -1.62, 0]  wind [4, 0, 1] }
+```
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `gravity` | `[0, -9.81, 0]` | How things fall, in meters a second each second: the Earth's, downward, unless said.  The Moon's is 1.62. |
+| `wind` | `[0, 0, 0]` | How the air moves, in meters a second, still unless said.  Every body, and every copy a swarm sets flying, is dragged toward moving with it, a light one more than a heavy one. |
+
+Neither touches anything that is not a body or a swarm, and a thing put [`along`](animation.md#along-a-spline)
+a spline and `banked` leans by the Earth's gravity whatever this says.
 

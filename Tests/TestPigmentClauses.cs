@@ -413,4 +413,86 @@ public class TestPigmentClauses
         Assert.IsNotNull(ErrorFrom("pigment granite { Red, Blue }"),
             "a granite is continuous and wants a map rather than two bare colors");
     }
+
+    /// <summary>
+    /// This tests that noise given no seed of its own takes the seed of the surface it is read on, each surface its
+    /// own, though the pigment is one: a named pigment is one pigment wherever it is named.  Settled onto the pigment
+    /// when the scene was, the first surface's seed was every surface's, and a ball seeded 7 wore the noise of the
+    /// one seeded 3.
+    /// </summary>
+    [TestMethod]
+    public void TestANamedPigmentTakesEachSurfacesOwnSeed()
+    {
+        string named = Picture("""
+            Stone = pigment granite { [0, [0.2, 0.2, 0.25], 1, [0.9, 0.85, 0.8]]  scale 0.4 }
+            sphere { material { pigment Stone  ambient 1  diffuse 0 }  with seed 3  translate X -1.1 }
+            sphere { material { pigment Stone  ambient 1  diffuse 0 }  with seed 7  translate X 1.1 }
+            """);
+        string own = Picture("""
+            sphere { material { pigment granite with seed 3 { [0, [0.2, 0.2, 0.25], 1, [0.9, 0.85, 0.8]]  scale 0.4 }
+                                ambient 1  diffuse 0 }  translate X -1.1 }
+            sphere { material { pigment granite with seed 7 { [0, [0.2, 0.2, 0.25], 1, [0.9, 0.85, 0.8]]  scale 0.4 }
+                                ambient 1  diffuse 0 }  translate X 1.1 }
+            """);
+
+        Assert.AreEqual(own, named, "a named pigment did not take each surface's own seed");
+    }
+
+    /// <summary>
+    /// This tests that an image given no map of its own is laid on each surface wearing it by that surface's shape:
+    /// flat on a cube, round a sphere.  Settled onto the pigment, the first surface's map was every surface's.
+    /// </summary>
+    [TestMethod]
+    public void TestANamedImageIsLaidOnEachSurfaceByItsOwnShape()
+    {
+        string image = Path.Combine(_directory, "quarters.png");
+        Canvas canvas = new (2, 2);
+
+        canvas.SetColor(Colors.Red, 0, 0);
+        canvas.SetColor(Colors.Yellow, 1, 0);
+        canvas.SetColor(Colors.Blue, 0, 1);
+        canvas.SetColor(Colors.Green, 1, 1);
+        new ImageFile(image).Save(canvas, new RenderContext { ApplyGamma = false });
+
+        string named = Picture($$"""
+            Picture = pigment image '{{image}}'
+            sphere { material { pigment Picture  ambient 1  diffuse 0 }  translate X -1.1 }
+            cube { material { pigment Picture  ambient 1  diffuse 0 }  scale 0.7  rotate Y 30  translate X 1.1 }
+            """);
+        string own = Picture($$"""
+            sphere { material { pigment image '{{image}}'  ambient 1  diffuse 0 }  translate X -1.1 }
+            cube { material { pigment image '{{image}}'  ambient 1  diffuse 0 }  scale 0.7  rotate Y 30  translate X 1.1 }
+            """);
+
+        Assert.AreEqual(own, named, "a named image was not laid on each surface by its own shape");
+    }
+
+    /// <summary>
+    /// Renders the given scene body, under a fixed camera and light with no gamma, and hands back every pixel as text.
+    /// </summary>
+    private string Picture(string body)
+    {
+        string path = Path.Combine(_directory, $"scene-{Guid.NewGuid():N}.igl");
+        string output = Path.ChangeExtension(path, ".png");
+
+        File.WriteAllText(path,
+            "context { no gamma  width 80  height 40 }\n" +
+            "camera { location [0, 0.5, -5]  look at [0, 0, 0]  field of view 50 }\n" +
+            "point light { location [-4, 6, -5] }\n" + body);
+
+        ImageRenderer renderer = new LanguageParser(path).Parse();
+
+        Assert.IsNotNull(renderer, "the scene did not parse");
+
+        renderer.Render(new RenderOptions { OutputFileName = output });
+
+        Canvas picture = new ImageFile(output).Load()[0];
+        System.Text.StringBuilder pixels = new ();
+
+        for (int y = 0; y < picture.Height; y++)
+        for (int x = 0; x < picture.Width; x++)
+            pixels.Append(picture.GetPixel(x, y)).Append(';');
+
+        return pixels.ToString();
+    }
 }

@@ -85,6 +85,87 @@ public class TestPhysics
     }
 
     /// <summary>
+    /// A body tied to the very place it starts, its string given a length, falls until the string is taut and
+    /// hangs there, rather than turning into nothing at all: it has no way to begin from, and is taken to hang down.
+    /// </summary>
+    [TestMethod]
+    public void TestABodyStartingOnItsPinFallsToTheEndOfItsString()
+    {
+        World world = new (Down, Still, Nothing);
+        Point pin = new (0, 2, 0);
+        Mover bob = world.Add(Ball(), pin, 0.02, null);
+
+        bob.Spec.Tethers.Add(new Tether(pin, null, 1));
+        world.Tie(new Dictionary<string, Mover>());
+        world.RunTo(3);
+
+        Assert.IsTrue(double.IsFinite(bob.Position.Y), $"it should stand somewhere: {bob.Position}");
+        Assert.AreEqual(1, (bob.Position - pin).Magnitude, 0.01, "hanging at the end of its string");
+        Assert.IsTrue(double.IsFinite(bob.Turn.W), "and turned somehow");
+    }
+
+    /// <summary>
+    /// A body turned by its ties is not turned by what strikes it, so none of an impulse is spent turning it: a knock
+    /// off its middle moves the place struck as much as one at its middle would.  (Counted, an impulse at a lever
+    /// was answered as though part went into a turn the ties never let it make.)
+    /// </summary>
+    [TestMethod]
+    public void TestATiedBodySpendsNoImpulseTurning()
+    {
+        World world = new (Down, Still, Nothing);
+        Point pin = new (0, 2, 0);
+        Mover bob = world.Add(Ball(), new Point(0, 1, 0), 0.1, null);
+        Mover free = world.Add(Ball(), new Point(3, 1, 0), 0.1, null);
+
+        bob.Spec.Tethers.Add(new Tether(pin, null, 1));
+        world.Tie(new Dictionary<string, Mover>());
+
+        Vector lever = new (0.1, 0, 0), across = new (0, 0, 1);
+
+        Assert.AreEqual(0, bob.Turning(lever, across), "a tied body turns with its ties alone");
+        Assert.IsTrue(free.Turning(lever, across) > 0, "and a free one turns at a lever");
+    }
+
+    /// <summary>
+    /// A ball on a slope stands on it, its middle its radius off the face, as on level ground: its looks reach the
+    /// face wherever it lies, and its depth into it is measured square across the face, the way it is pushed out.
+    /// (Its looks reaching its radius and measured along them, a ball on a slope of 30 degrees sank an eighth of its
+    /// radius into it.)
+    /// </summary>
+    [TestMethod]
+    public void TestABallOnASlopeStandsOnIt()
+    {
+        Vector up = new (Math.Sin(Math.PI / 6), Math.Cos(Math.PI / 6), 0);
+
+        (double Distance, Vector Normal)? Slope(Point from, Vector direction, double within)
+        {
+            double toward = up.Dot(direction);
+            double above = up.Dot(from - Point.Zero);
+
+            if (toward >= 0)
+                return null;
+
+            double distance = -above / toward;
+
+            return distance >= 0 && distance <= within ? (distance, up) : null;
+        }
+
+        World world = new (Down, Still, Slope);
+        Mover ball = world.Add(new Body { Drag = 0, Friction = 0.6, Bounce = 0 }, Point.Zero + up * 0.1, 0.1, null);
+
+        foreach (double time in new[] { 0.01, 0.05, 0.1, 0.3 })
+        {
+            world.RunTo(time);
+
+            Assert.AreEqual(0.1, up.Dot(ball.Position - Point.Zero), 0.0005, $"its middle a radius off the slope at {time}");
+        }
+
+        // And held to it by its friction, it rolls rather than slides: a solid ball rolling down a slope gathers
+        // speed at five sevenths of what a sliding one would, g sin 30 x 5/7.
+        Assert.AreEqual(9.81 * 0.5 * 5 / 7 * 0.3, ball.Velocity.Magnitude, 0.03, "rolling down it");
+    }
+
+    /// <summary>
     /// A ball on a string swings as a pendulum does: back to where it began in two pi times the root of its length
     /// over gravity, the string never longer than it is.
     /// </summary>
@@ -810,6 +891,24 @@ public class TestPhysics
             StringAssert.Contains(Rendered(directory, "sphere { body { tether to 3 } }").Error, "tied to a place");
             StringAssert.Contains(Rendered(directory, "sphere { body { bounce 2 } }").Error, "nothing to one");
             StringAssert.Contains(Rendered(directory, "sphere { body { mass 0 } }").Error, "more than nothing");
+            StringAssert.Contains(Rendered(directory, "sphere { body { tether to [0, 2, 0] length 0 } }").Error,
+                "longer than nothing");
+            StringAssert.Contains(Rendered(directory, "swarm { rate 10 }").Error, "needs something to throw");
+            StringAssert.Contains(Rendered(directory,
+                "Drop = sphere { scale 0.01 }  swarm { of Drop  rate 10  motion { translate X 1 } }").Error,
+                "must stand still while it throws");
+            StringAssert.Contains(Rendered(directory,
+                "Ember = sphere { scale 0.01  material { transparency 1  interior { medium { emission 2 } } }  gives light }  " +
+                "swarm { of Ember }").Error, "cannot be shared");
+            StringAssert.Contains(Rendered(directory,
+                "Drop = sphere { scale 0.01 }  primitive Fountain() -> group { return group { cylinder { }  swarm { of Drop } } }  " +
+                "object Fountain()").Error, "A swarm must stand");
+            StringAssert.Contains(Rendered(directory,
+                "primitive Dropped() -> group { return group { sphere { body { } } } }  object Dropped()").Error,
+                "A body must stand");
+            StringAssert.Contains(Rendered(directory,
+                "sphere { named 'twin'  translate X -1  body { } }  sphere { named 'twin'  translate X 1  body { } }").Error,
+                "Two bodies are named 'twin'");
             StringAssert.Contains(Rendered(directory,
                 "Leaf = cube { scale [0.03, 0.02, 0.001] }  Room = sphere { translate Y 3 }  " +
                 "swarm { of Leaf  within Room  from [0, 1, 0] }").Error, "not both");

@@ -148,8 +148,28 @@ public class Swarm : Group
     {
         Surfaces.Clear();
 
+        // Every copy is worked out as though thrown from where the swarm stands at the frame's time, so a swarm that
+        // moves -- a motion of its own, or a placement that follows the time -- would carry its whole plume along as
+        // one piece rather than leave a trail: refused, rather than drawn wrong.
+        if (MotionAt is not null)
+        {
+            throw new InvalidOperationException(
+                "A swarm throws its copies from where it stands, and one that moves would carry every copy in flight " +
+                "along with it rather than leave them behind; a swarm must stand still while it throws.");
+        }
+
         if (Thing is null || Rate <= 0)
             return;
+
+        // Every copy is the one thing in another place, so the thing must be one that can stand in many: a glow is
+        // lit once, where the thing was made, a medium found where it was drawn, a mark named in all the places at
+        // once -- and so on, for whatever an instance refuses.
+        if (!Instance.MayBeShared(Thing))
+        {
+            throw new InvalidOperationException(
+                "A swarm's copies are one thing in many places, and this thing cannot be shared between places: " +
+                "it glows, holds a medium, moves of itself, or holds a joint that aims or reaches, a mark or a span.");
+        }
 
         if (!Thing.SharedAndReady)
         {
@@ -433,7 +453,7 @@ public class Swarm : Group
 
     // A place of a copy's own inside the shape: the first of its draws in the shape's box that falls inside, or
     // none if all of them miss.
-    private Point? PlaceWithin(BoundingBox box, int seed, long number)
+    private Point PlaceWithin(BoundingBox box, int seed, long number)
     {
         for (int attempt = 0; attempt < Tries; attempt++)
         {

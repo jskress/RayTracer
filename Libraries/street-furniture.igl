@@ -23,7 +23,8 @@
 //
 // A bench has a front, a post box has a slot and a shelter has an open side, and all three face `-Z`,
 // which is the same way a window or a `WallLantern` faces.  So a bench put on the far pavement of a
-// street running along X wants `rotate Y 180`, and one on the near pavement wants no rotation at all.
+// street running along X faces the road with no rotation at all, and one on the near pavement wants
+// `rotate Y 180`.
 // The things with no front -- a bollard, a bin, a cycle stand -- do not care.
 //
 // -- Season -------------------------------------------------------------------------------------------
@@ -31,7 +32,7 @@
 // Snow settles on the horizontal, and that is the whole of what `'winter'` does here: a bench's slats, a
 // bin's lid, the flat of a bollard, the crown of a pillar box and the top of a wall box, a railing's top
 // rail, and the roof of a shelter.  The `CycleStand` is the one thing that gets none, and deliberately:
-// it is a round tube 70 across, which in life holds a line of snow about a pencil wide, and modelling
+// it is a round tube 70 across, which in life holds a line of snow about a pencil wide, and modeling
 // that is a lot of geometry to put somewhere nobody will look.
 //
 // It is the same trick `outdoor-lights` and `roads` use, written again rather than imported, because
@@ -61,15 +62,15 @@ StreetRed = material {
     specular 0.36  shininess 80  ambient 0.06
 }
 
-// Galvanised steel, which is what a modern bollard or a shelter frame is: pale, and duller than it
-// looks in a catalogue once it has stood outside for a winter.
+// Galvanized steel, which is what a modern bollard or a shelter frame is: pale, and duller than it
+// looks in a catalog once it has stood outside for a winter.
 StreetSteel = material {
     pigment [0.400, 0.415, 0.430]
     specular 0.50  shininess 110  reflective 0.12  ambient 0.06
 }
 
 // Hardwood slats, weathered.  A bench reads as a bench from its *slats* before anything else, so these
-// want to be a different colour from the frame rather than a different shade of it.
+// want to be a different color from the frame rather than a different shade of it.
 StreetTeak = material {
     pigment [0.300, 0.205, 0.125]
     specular 0.18  shininess 40  ambient 0.06
@@ -143,8 +144,8 @@ primitive StreetSnowCap(season, radius, thick) -> group {
 // Slatted seat and back on two cast ends.  `length` is how long it is; everything else follows from a
 // real bench, which is about 450 to the seat and 850 to the top of the back whatever its length.
 //
-// The slats are the whole of it.  A bench modelled as two solid slabs reads as a block of wood on legs;
-// the gaps between slats are what the eye recognises, and they cost four cubes to get.
+// The slats are the whole of it.  A bench modeled as two solid slabs reads as a block of wood on legs;
+// the gaps between slats are what the eye recognizes, and they cost four cubes to get.
 primitive Bench(length, season = 'summer', variant = 1) -> group {
     seat = 0.45
     tall = 0.85
@@ -255,7 +256,7 @@ primitive LitterBin(height, season = 'summer', variant = 1) -> group {
                         material StreetFrameOf(variant)
                         // Scaled across and up separately, and that is not fussiness.  The path is
                         // drawn to a radius of one and a height of 2.36, so scaling it *uniformly*
-                        // ties the bin's width to its height -- a metre-tall bin came out 840 across,
+                        // ties the bin's width to its height -- a meter-tall bin came out 840 across,
                         // which is a water butt.  A real one is about 450.
                         scale [height * 0.225, height * 0.424, height * 0.225]
                     }
@@ -282,7 +283,7 @@ primitive LitterBin(height, season = 'summer', variant = 1) -> group {
 primitive Bollard(height, season = 'summer', variant = 1) -> group {
     switch (mod(floor(variant), 2)) {
         case 1 {
-            // A galvanised tube with a domed cap, which is the modern one.
+            // A galvanized tube with a domed cap, which is the modern one.
             return group {
                 cylinder {
                     material StreetSteel  min Y 0  max Y 1
@@ -438,7 +439,7 @@ primitive PostBox(height, season = 'summer', variant = 1) -> group {
                 // Sized for the dome and not for the widest part of the box.  The crown narrows fast
                 // above the shoulder -- 0.45 of the path radius up here against 1.04 lower down -- so
                 // a cap measured off the drum overhangs the dome like a dinner plate.  `on` settles
-                // the height; the radius is still a judgement.
+                // the height; the radius is still a judgment.
                 object StreetSnowCap(season, height * 0.075, height * 0.016) { on 'crown' }
             }
         }

@@ -11,7 +11,7 @@
 // | `Submarine` | A teardrop hull, a sail, diving planes and a rudder. |
 //
 // **The first number is a length**, as it is for the [vehicles](#vehicles), and for the same reason: a
-// boat is a thirty-footer or a sixty-metre trawler, never so many metres tall.  These are in **meters**.
+// boat is a thirty-footer or a sixty-meter trawler, never so many meters tall.  These are in **meters**.
 //
 // **These face `+X`**, like the vehicles and the trains, so a vessel sails to the right in a camera
 // looking the usual way.  `rotate Y 180` turns it about.
@@ -67,7 +67,7 @@ VesselGreen = material {
 }
 
 // **Below the waterline a hull is red**, and it is worth the second material.  Antifouling is the one
-// colour on a boat nobody chooses for looks, and a hull that is one shade from sheer to keel reads as a
+// color on a boat nobody chooses for looks, and a hull that is one shade from sheer to keel reads as a
 // model of a boat rather than a boat -- most of all in clear water, where the join is what tells you
 // where the surface is.
 VesselAntifoul = material {
@@ -88,7 +88,7 @@ primitive VesselPaint(variant) -> material {
 // Teak, laid in strips along the boat.
 //
 // **The rings' axis is lifted to the deck**, for the reason the [furniture](#furniture) grain is: left
-// on the waterline, a deck a metre above it crosses the rings at a slant and the planks come out as
+// on the waterline, a deck a meter above it crosses the rings at a slant and the planks come out as
 // wide curved bands rather than as strips running fore and aft.
 VesselDeck = material {
     pigment wood {
@@ -184,7 +184,7 @@ primitive VesselBody(long, beam, draft, free, full = 1.15, stern = 0.22, deep = 
 //
 // These were flat triangles for a while, because a bellied patch rendered with single pixels of sky
 // scattered through the cloth.  That was an engine fault and not a thing to work around here: the
-// subdivision tree stopped each branch as soon as its own subpatch was flat enough, so neighbouring
+// subdivision tree stopped each branch as soon as its own subpatch was flat enough, so neighboring
 // leaves sat at different depths and left slivers no leaf covered.  It is fixed, and the belly is
 // back.
 primitive VesselSailcloth(hx, hy, tx, ty, cx, cy, belly) -> group {
@@ -208,7 +208,7 @@ primitive VesselSailcloth(hx, hy, tx, ty, cx, cy, belly) -> group {
 // is a thirty-three footer.
 //
 // **The keel is a separate fin and not part of the hull**, which is how a modern yacht is built and
-// also the only way the numbers work: the canoe body draws well under a metre and the keel three times
+// also the only way the numbers work: the canoe body draws well under a meter and the keel three times
 // that, and one shape cannot be both without the middle of the boat being as deep as the keel.
 primitive Sailboat(long = 10, variant = 1) -> group {
     beam = long * 0.31
@@ -385,7 +385,7 @@ primitive Trawler(long = 22, variant = 1) -> group {
 // **It floats low**, as a surfaced boat does: the hull's axis is set below the waterline so only the
 // top of the casing is dry.  Translating the whole thing down puts it under.
 primitive Submarine(long = 70, variant = 1) -> group {
-    // **A submarine is far thinner than it looks in a photograph.**  Seventy metres by fifteen across
+    // **A submarine is far thinner than it looks in a photograph.**  Seventy meters by fifteen across
     // is an airship; a boat that length is about seven wide, which is a tenth of its length and not a
     // quarter.  The first attempt used 0.115 of the length as the RADIUS and came out as a blimp.
     across = long * 0.055                       // the hull's radius

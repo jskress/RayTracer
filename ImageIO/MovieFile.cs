@@ -204,8 +204,8 @@ public sealed class MovieFile
 
         if (_kind == ".gif")
         {
-            // A GIF has 256 colors a frame; dithering keeps the gradients of a render from banding, and laying each
-            // frame over the last where they agree keeps the file small.
+            // A GIF has 256 colors, quantized here as one palette for the whole movie; dithering keeps the gradients of
+            // a render from banding, and laying each frame over the last where they agree keeps the file small.
             _frames.Quantize(new QuantizeSettings { Colors = 256, DitherMethod = DitherMethod.FloydSteinberg });
             _frames.Optimize();
             _frames.Write(_fileName);

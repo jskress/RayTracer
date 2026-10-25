@@ -14,8 +14,9 @@
 // | `Sconce`    | A half shade against a wall, throwing its light up it. |
 // | `Anglepoise` | A sprung desk lamp on two arms, reaching over and turning its head to light a place. |
 //
-// **The first number is a size**, as it is everywhere but the vehicles -- a height for the two that
-// stand, the drop from the ceiling for a `Pendant`, and how tall the fitting is for a `Sconce`.
+// **The first number is a size**, as it is for most things here that stand rather than travel -- a
+// height for the two that stand, the drop from the ceiling for a `Pendant`, and how tall the fitting is
+// for a `Sconce`.
 // **The second is which one of that kind**, as it always is.
 //
 // There is no season here.  Nothing indoors knows what month it is, and a parameter that never means
@@ -44,7 +45,7 @@
 // the table, with the shade itself glowing softly between them.
 //
 // So the shade here is a real open-ended cone with a translucent material on it.  `transparency` is what
-// gets through and `interior { filter }` is what colour it comes out, and a shadow ray obeys both, so
+// gets through and `interior { filter }` is what color it comes out, and a shadow ray obeys both, so
 // the light that crosses the shade arrives dimmed and warmed while the light out of the ends arrives
 // whole.  Measured on a wall beside a lamp, that part is exactly linear in the number: 0.07, 0.18 and
 // 0.40 gave 1.95, 4.95 and 10.92, while the wall *above* stayed at 64.2 throughout, the up-cone coming
@@ -106,7 +107,7 @@ RoomShadeDark = material {
 }
 
 // Opal glass, which is what a pendant globe is: more of it gets through than linen, and it scatters
-// rather than colours.
+// rather than colors.
 RoomOpal = material {
     pigment [0.95, 0.94, 0.90]
     specular 0.30  shininess 80  ambient 0.12
@@ -114,19 +115,22 @@ RoomOpal = material {
     interior { ior 1.05  filter 0.30 }
 }
 
+// The variants run in fours: 0 brass under linen, 1 steel under linen, 2 bronze under a dark shade, all with a
+// tungsten bulb, and 3 steel under linen with the cool one.  The one asked for unless said, 1, is warm, as a room
+// lamp is: it was the cool one once, and every lamp left at its default came out blue in a room balanced for
+// tungsten.
 primitive RoomShadeOf(variant) -> material {
-    switch (mod(floor(variant), 3)) {
-        case 0 { return material RoomLinen }
-        case 1 { return material RoomLinen }
-        default { return material RoomShadeDark }
+    switch (mod(floor(variant), 4)) {
+        case 2 { return material RoomShadeDark }
+        default { return material RoomLinen }
     }
 }
 
 primitive RoomMetalOf(variant) -> material {
-    switch (mod(floor(variant), 3)) {
+    switch (mod(floor(variant), 4)) {
         case 0 { return material RoomBrass }
-        case 1 { return material RoomSteel }
-        default { return material RoomBronze }
+        case 2 { return material RoomBronze }
+        default { return material RoomSteel }
     }
 }
 
@@ -144,8 +148,8 @@ RoomTungsten = pigment kelvin(2800) * 1.34
 RoomCool = pigment kelvin(5800) * 0.98
 
 primitive RoomGlowOf(variant) -> pigment {
-    switch (mod(floor(variant), 3)) {
-        case 1 { return RoomCool }
+    switch (mod(floor(variant), 4)) {
+        case 3 { return RoomCool }
         default { return RoomTungsten }
     }
 }
@@ -155,7 +159,7 @@ primitive RoomGlowOf(variant) -> pigment {
 // fittings can agree about how bright they are.  What a volume light delivers goes as the *volume* of
 // the emitting stuff, so a bulb scaled to its fitting makes a floor lamp several times a table lamp and
 // a pendant several times again, from the same density.  The first cut of this library did exactly that
-// and the pendant and the sconce blew out while the table lamp sat at a third of them.  Three centimetres
+// and the pendant and the sconce blew out while the table lamp sat at a third of them.  Three centimeters
 // of radius is about a real bulb, and it fits inside the smallest shade here with room to spare.
 RoomBulbSize = 0.030
 
@@ -437,26 +441,27 @@ primitive Sconce(size, variant = 1, lit = 1) -> group {
 // than the two of them can reach finds the arms straight out toward it, and the elbow will not bend down
 // past where a real one stops.  The springs at the foot are stretched between the turret and the lower arm,
 // so they lengthen as it leans.
-AnglepoiseBlack = material { pigment [0.035, 0.035, 0.038]  specular 0.55  shininess 110  ambient 0.05 }
-AnglepoiseCream = material { pigment [0.86, 0.82, 0.72]  specular 0.50  shininess 100  ambient 0.06 }
-AnglepoiseRed = material { pigment [0.55, 0.07, 0.06]  specular 0.55  shininess 110  ambient 0.05 }
+RoomAnglepoiseBlack = material { pigment [0.035, 0.035, 0.038]  specular 0.55  shininess 110  ambient 0.05 }
+RoomAnglepoiseCream = material { pigment [0.86, 0.82, 0.72]  specular 0.50  shininess 100  ambient 0.06 }
+RoomAnglepoiseRed = material { pigment [0.55, 0.07, 0.06]  specular 0.55  shininess 110  ambient 0.05 }
 
 primitive RoomEnamelOf(variant) -> material {
     switch (mod(floor(variant), 3)) {
-        case 0 { return material AnglepoiseRed }
-        case 1 { return material AnglepoiseBlack }
-        default { return material AnglepoiseCream }
+        case 0 { return material RoomAnglepoiseRed }
+        case 1 { return material RoomAnglepoiseBlack }
+        default { return material RoomAnglepoiseCream }
     }
 }
 
-// The glowing filament seen inside the shade, which lights nothing itself: the spotlight does that.
-primitive RoomFilament(lit, variant) -> group {
+// The glowing filament seen inside the shade, which lights nothing itself: the spotlight does that.  It is
+// tungsten whatever the enamel, since the spotlight is.
+primitive RoomFilament(lit) -> group {
     switch (floor(lit)) {
         case 0 { return group { sphere { material RoomBulbCold  scale 0.024 } } }
         default {
             return group {
                 sphere {
-                    material { pigment RoomGlowOf(variant)  ambient 1  diffuse 0  specular 0 }
+                    material { pigment RoomTungsten  ambient 1  diffuse 0  specular 0 }
                     no shadow
                     scale 0.024
                 }
@@ -546,7 +551,7 @@ primitive Anglepoise(target, height = 0.32, variant = 1, lit = 1) -> group {
                         }
                         sphere { material RoomEnamelOf(variant)  scale 0.036  translate X -0.012 }
                         cylinder { material RoomEnamelOf(variant)  min Y -1  max Y 1  scale [0.010, 0.020, 0.010]  rotate X 90 }
-                        object RoomFilament(lit, variant) { translate X 0.040 }
+                        object RoomFilament(lit) { translate X 0.040 }
                         translate Y arm
                     }
                     translate Y arm

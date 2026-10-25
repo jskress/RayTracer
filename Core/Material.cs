@@ -31,9 +31,6 @@ public class Material
     public Pigment Pigment { get; set; } = SolidPigment.White;
 
     /// <summary>
-    /// The amount of ambient light for the material.
-    /// </summary>
-    /// <summary>
     /// How lit the surface is regardless of any light reaching it.  It is <c>null</c> until the scene is
     /// whole, because what it ought to default to depends on the company it keeps: a scene with no sky
     /// light gets the tenth it has always had, standing in for the bounced light this renderer does not
@@ -134,6 +131,14 @@ public class Material
     public bool IsRough => Roughness > 0;
 
     /// <summary>
+    /// This property holds, for a blend settled between a smooth material and a rough one, the two and how far
+    /// toward the second it is: such a mixture is shaded as each and the two mixed (see
+    /// <see cref="Scene.GetHitColor{TS}"/>), there being no single material between a mirror and facets.  Null for
+    /// every other material.
+    /// </summary>
+    internal (Material From, Material To, double Share)? Split { get; set; }
+
+    /// <summary>
     /// This property holds how much the surface is brushed, from nought, alike every way, toward one: its
     /// facets leaning further across the grooves than along them, so that what it mirrors streaks square to
     /// the brushing.  Its <see cref="Roughness"/> stays the average.  See <see cref="Facets"/>.
@@ -193,6 +198,8 @@ public class Material
             if (Coat is { IsRough: false })
                 copy.Coat = Coat.RoughAs(key.Roughness);
 
+            // Made rough as the spreading ray that met it, a mixture is rough on both sides, and shaded as one.
+            copy.Split = null;
             copy._roughCopies = null;
             copy._withoutDiffuse = null;
 
@@ -280,12 +287,37 @@ public class Material
         Material copy = (Material) MemberwiseClone();
 
         copy.Blend = null;
-        copy._roughCopies = null;
-        copy._withoutDiffuse = null;
-        copy._sight = null;
-        copy._looks = null;
+
+        return copy.Forgetting();
+    }
+
+    /// <summary>
+    /// This method returns a copy of this material wearing another pigment: everything else it says, and none of
+    /// what it has worked out and kept for itself.
+    /// </summary>
+    /// <param name="pigment">The pigment to wear.</param>
+    internal Material WearingPigment(Pigment pigment)
+    {
+        Material copy = ((Material) MemberwiseClone()).Forgetting();
+
+        copy.Pigment = pigment;
 
         return copy;
+    }
+
+    /// <summary>
+    /// This method clears from a fresh copy of a material what the original worked out and kept for itself.
+    /// </summary>
+    private Material Forgetting()
+    {
+        Split = null;
+        _roughCopies = null;
+        _withoutDiffuse = null;
+        _sight = null;
+        _looks = null;
+        _handedDownTo = null;
+
+        return this;
     }
 
     /// <summary>
@@ -313,6 +345,7 @@ public class Material
             Material copy = (Material) MemberwiseClone();
 
             copy.Diffuse = 0;
+            copy.Split = null;
             copy._roughCopies = null;
             copy._withoutDiffuse = null;
 
@@ -435,7 +468,7 @@ public class Material
     /// </summary>
     private static Point ToAnchor(Surface anchor, Surface surface, Point point, Portals portals)
     {
-        return anchor.WorldToSurface(point, 0, PortalTo(anchor, surface, portals));
+        return anchor.WorldToSurface(point, Scene.ShadingTime, PortalTo(anchor, surface, portals));
     }
 
     /// <summary>
@@ -456,7 +489,7 @@ public class Material
     /// </summary>
     private static Footprint ToAnchor(Surface anchor, Surface surface, Footprint footprint, Portals portals)
     {
-        return anchor.WorldToSurface(footprint, 0, PortalTo(anchor, surface, portals));
+        return anchor.WorldToSurface(footprint, Scene.ShadingTime, PortalTo(anchor, surface, portals));
     }
 
     /// <summary>
@@ -543,6 +576,22 @@ public class Material
     /// <param name="merged">The copies made so far in this handing down, by the material each was
     /// made for.</param>
     /// <returns>The material the surface is to have.</returns>
+    /// <summary>
+    /// This method returns this material -- one that adds decals to whatever it is handed -- handed down from the
+    /// given one, where a ray met a shared shape: made once for each material it is handed and kept, since the same
+    /// place is met by ray after ray.
+    /// </summary>
+    /// <param name="from">The material it is handed.</param>
+    /// <returns>The two merged.</returns>
+    internal Material HandedDownTo(Material from)
+    {
+        LazyInitializer.EnsureInitialized(ref _handedDownTo);
+
+        return _handedDownTo.GetOrAdd(from, outer => HandedDown(this, outer, []));
+    }
+
+    private System.Collections.Concurrent.ConcurrentDictionary<Material, Material> _handedDownTo;
+
     public static Material HandedDown(Material current, Material from, Dictionary<Material, Material> merged)
     {
         if (current is null)
@@ -560,6 +609,7 @@ public class Material
             decal.Anchor ??= current.Anchor;
 
         result = (Material) from.MemberwiseClone();
+        result._handedDownTo = null;
         result.Decals = [..from.Decals ?? [], ..current.Decals ?? []];
         merged[current] = result;
 
@@ -849,11 +899,14 @@ public class Material
     }
 
     /// <summary>
-    /// This method returns whether this material matches the given one.  This will be
-    /// true if the colors match and all the other properties match as well.
+    /// This method returns whether this material matches the given one in the terms of the book's
+    /// Phong model: their pigments match, and so do their effective ambient, diffuse, specular and
+    /// shininess, each to within a small tolerance.  Nothing else is compared -- not what it mirrors
+    /// or lets through, its roughness, interior, skins, decals or blend -- so two materials that match
+    /// may still render differently.
     /// </summary>
     /// <param name="other">The material to compare to.</param>
-    /// <returns><c>true</c>if this matrix matches the given one.</returns>
+    /// <returns><c>true</c> if this material matches the given one.</returns>
     public bool Matches(Material other)
     {
         return Pigment.Matches(other.Pigment) &&

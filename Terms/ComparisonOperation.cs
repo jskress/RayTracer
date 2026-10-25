@@ -30,8 +30,10 @@ public enum Comparison
 /// bits match, which is the same rule <see cref="NumberTuple.Matches"/> and the geometry all through
 /// this ray tracer already use.  Exact equality of two computed numbers is almost never what is
 /// meant, and a scene that asks whether a number it worked out equals 0.3 should not have the answer
-/// turn on the arithmetic it happened to be worked out by.  The orderings are exact, since an
-/// epsilon there would only move the boundary rather than remove it.
+/// turn on the arithmetic it happened to be worked out by.  The orderings keep to the same rule, so
+/// that exactly one of less, equal and greater holds of any two numbers: 0.1 + 0.2 is equal to 0.3,
+/// so it is no more than 0.3 and not less than it.  (Exact orderings beside a near equality had both
+/// `==` and `>` true of them, and `<=` false.)
 /// </para>
 /// </summary>
 public class ComparisonOperation : BinaryOperation
@@ -81,10 +83,10 @@ public class ComparisonOperation : BinaryOperation
         {
             Comparison.Equal => left.Near(right),
             Comparison.NotEqual => !left.Near(right),
-            Comparison.Less => left < right,
-            Comparison.LessOrEqual => left <= right,
-            Comparison.Greater => left > right,
-            Comparison.GreaterOrEqual => left >= right,
+            Comparison.Less => left < right && !left.Near(right),
+            Comparison.LessOrEqual => left < right || left.Near(right),
+            Comparison.Greater => left > right && !left.Near(right),
+            Comparison.GreaterOrEqual => left > right || left.Near(right),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

@@ -358,6 +358,62 @@ public class FontManager
     }
 
     /// <summary>
+    /// This method is used to replace a face already in the catalog with one had afresh -- fetched again, or
+    /// imported from another file.  The old face is set aside while the new one is had, so that one that cannot be
+    /// had leaves the old face just as it was, and the kerning pairs added to the old face are kept for the new.
+    /// </summary>
+    /// <param name="id">The ID of the font face.</param>
+    /// <param name="have">What has the new face, finding no face of that ID in the catalog.</param>
+    public void ReplaceFontFace(FaceIdentifier id, Action have)
+    {
+        FontFamily family = Catalog.FontFamilies?
+            .FirstOrDefault(id.BelongsTo);
+        FontFace old = family?.Faces
+            .FirstOrDefault(id.MatchesFace);
+
+        if (old == null)
+        {
+            have();
+
+            return;
+        }
+
+        string path = Path.Combine(FontsDirectory, old.FileName);
+        string aside = path + ".replaced";
+
+        family.Faces.Remove(old);
+
+        if (File.Exists(path))
+            File.Move(path, aside, true);
+
+        try
+        {
+            have();
+        }
+        catch
+        {
+            if (File.Exists(aside))
+                File.Move(aside, path, true);
+
+            family.Faces.Add(old);
+
+            throw;
+        }
+
+        if (File.Exists(aside))
+            File.Delete(aside);
+
+        FontFace made = GetFontFace(id, false);
+
+        if (made != null)
+            made.KerningData = old.KerningData;
+
+        _kerning.Remove(old.FileName);
+
+        RewriteCatalog();
+    }
+
+    /// <summary>
     /// This method is used to remove a font face from our catalog.
     /// If the face is the last face in its family, the family is also removed.
     /// </summary>

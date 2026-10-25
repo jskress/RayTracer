@@ -253,6 +253,21 @@ public class BicubicPatch : Surface
     /// </summary>
     private (Point Position, Vector Normal) EvaluatePatch(double u, double v)
     {
+        (Point position, Vector normal) = EvaluatePatchAt(u, v);
+
+        // Where an edge of the patch is drawn to a point -- the top of a teapot's lid -- one tangent there is nothing
+        // and the normal is undefined at the point itself, though it has a limit approaching it.  So it is taken a
+        // little way in toward the patch's middle.  Left as the fallback, every triangle touching the point was
+        // shaded half toward a direction that had nothing to do with the patch, a streak round each pole.
+        if (normal is null)
+            (_, normal) = EvaluatePatchAt(u + (0.5 - u) * 1e-4, v + (0.5 - v) * 1e-4);
+
+        return (position, normal ?? new Vector(1, 0, 0));
+    }
+
+    // The place and normal at a point of the patch; the normal is null where the patch has no direction to face.
+    private (Point Position, Vector Normal) EvaluatePatchAt(double u, double v)
+    {
         double[] uPow = new double[4];
         double[] uInv = new double[4];
         double[] vPow = new double[4];
@@ -302,9 +317,9 @@ public class BicubicPatch : Surface
         double uLengthSquared = uTangent.Dot(uTangent);
         double vLengthSquared = vTangent.Dot(vTangent);
 
-        normal = normalLengthSquared > PlaneEpsilon * uLengthSquared * vLengthSquared
+        normal = normalLengthSquared > PlaneEpsilon * uLengthSquared * vLengthSquared && normalLengthSquared > 0
             ? normal / Math.Sqrt(normalLengthSquared)
-            : new Vector(1, 0, 0);
+            : null;
 
         return (new Point(position.X, position.Y, position.Z), normal);
     }

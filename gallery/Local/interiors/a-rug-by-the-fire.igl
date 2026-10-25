@@ -15,10 +15,16 @@
 // frame, and the pile shows its lie -- the tufts lit on the side toward the fire, shadowed on the
 // other, as a shag rug looks by a hearth.
 //
-// **Ambient is turned up, not down,** the opposite of `a-room-after-dark`.  A room lit by a fire is lit
-// as much by what its walls send back as by the fire itself, and ambient is all that stands in for that
-// here; at a quarter, as there, the armchair and the brick were black and the room was a fire floating
-// in nothing.
+// **What the walls send back is followed, not stood in for.**  A room lit by a fire is lit as much by what
+// its walls, its floor and its ceiling send back as by the fire itself, so the light is bounced once about
+// the room -- fire to wall to rug -- and fur takes it as everything else does.  A second bounce added
+// next to nothing in a room this dark, at three times the cost.  Nothing here has any `ambient`: until
+// 2026-10-24 the scene tripled it to stand in for the bounced light, which lit everything evenly gray and
+// left the pile no lie to show.
+//
+// **The camera opens up to the fire, as a camera must.**  Lit by one fire, the room really is this dark;
+// the rug and the bear come out of it by exposure, not by more light, and the fire itself is left to burn
+// bright.
 //
 // The libraries are written in inches and this scene in meters, so each piece is scaled by an inch,
 // as in `a-room-after-dark`.  A rug's pile is grown in the space its slab is placed in, so it is two
@@ -31,7 +37,9 @@ context {
     angles are degrees
     // A flame is walked rather than solved for; this many places along each crossing.
     medium samples 28
-    scale ambient by 3
+    diffuse bounces 1
+    diffuse samples 512
+    diffuse cache
     info {
         title 'A Rug by the Fire'
         author 'J. Stephen Kress'
@@ -46,10 +54,14 @@ import 'fur' { ShagRug, Sheepskin, TeddyBear, Wool, Fleece }
 import 'furniture' { Armchair }
 import 'indoor-lights' { FloorLamp }
 
+// Four and a half stops over: the fire lights the room as a fire does, a little, and the camera opens up to
+// it as far as the rug and the bear need.  (Until 2026-10-23 the light among the fur was counted once for
+// each of the fire's samples, which lit the pile many times over and left everything else black.)
 camera {
     location [1.9, 0.8, -0.95]
     look at [-0.35, 0.3, 0.85]
     field of view 56.71
+    exposure 4.5
 }
 
 background [0, 0, 0]
@@ -58,18 +70,18 @@ Inch = 0.0254
 
 // -- The room ---------------------------------------------------------------------------------------
 
-Plaster = material { pigment [0.74, 0.71, 0.64]  specular 0.03  ambient 0.10 }
+Plaster = material { pigment [0.74, 0.71, 0.64]  specular 0.03 }
 Boards = material {
     pigment brick {
         [0.20, 0.13, 0.08], [0.30, 0.20, 0.12]
         scale [0.9, 4, 0.12]
     }
-    specular 0.16  shininess 40  ambient 0.06
+    specular 0.16  shininess 40
 }
-Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.22  shininess 45  ambient 0.06 }
-Velvet = material { pigment [0.30, 0.09, 0.08]  specular 0.05  ambient 0.07 }
-Hearthstone = material { pigment [0.30, 0.29, 0.27]  specular 0.08  shininess 20  ambient 0.06 }
-Soot = material { pigment [0.05, 0.045, 0.04]  specular 0  ambient 0.02 }
+Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.22  shininess 45 }
+Velvet = material { pigment [0.30, 0.09, 0.08]  specular 0.05 }
+Hearthstone = material { pigment [0.30, 0.29, 0.27]  specular 0.08  shininess 20 }
+Soot = material { pigment [0.05, 0.045, 0.04]  specular 0 }
 
 // Brickwork, laid at a real brick's size however the box it covers was stretched: a pattern is read in
 // the space of the surface it is on, so a cube scaled into a chimney breast would stretch its bricks
@@ -82,7 +94,7 @@ primitive Bricks(sx, sy, sz) -> material {
             color [0.40, 0.17, 0.11], [0.52, 0.49, 0.44]
             scale [1 / sx, 1 / sy, 1 / sz]
         }
-        specular 0.04  ambient 0.06
+        specular 0.04
     }
 }
 

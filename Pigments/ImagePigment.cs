@@ -37,8 +37,10 @@ public class ImagePigment : Pigment
     public double Brightness { get; set; } = 1;
 
     private Texture _texture;
-    private TextureWrap _wrapAcross;
-    private TextureWrap _wrapDown;
+
+    // How the image is laid on the surface it was readied for, and the radius of the ring a toroidal map's tube runs
+    // round there: the answer for anything that does not say otherwise (see Laying).
+    private Laying _readied = new (ImageMapType.Spherical, 1, TextureWrap.Repeat, TextureWrap.Repeat);
 
     /// <summary>
     /// This property holds how many texels the image has across, once it is loaded, and nought before.
@@ -55,26 +57,72 @@ public class ImagePigment : Pigment
     /// <param name="surface">The surface that this pigment is set on.</param>
     protected override void PrepareForRendering(RenderContext context, Surface surface)
     {
-        // First, try to default the map type if we weren't given one.
-        MapType ??= surface switch
-        {
-            Cube or Plane or Triangle or Parallelogram => ImageMapType.Planar,
-            Sphere => ImageMapType.Spherical,
-            Cylinder => ImageMapType.Cylindrical,
-            Torus => ImageMapType.Toroidal,
-            // No surface at all means we are a scene's background, and the sky a background is asked
-            // about is a sphere of radius one, infinitely far off.
-            null => ImageMapType.Spherical,
-            _ => throw new Exception("Cannot determine image map type for surface.")
-        };
+        // First, check that the image can be laid on the surface if no way was given, which a shape with no map of
+        // its own cannot say.  No surface at all means we are a scene's background; a group, a combination or an
+        // instance is never read itself, its parts are, so it says nothing of how the image is laid.
+        bool holder = surface is Group or CsgSurface or Instance;
 
-        // Next, load the image and settle what lies past its edges.  The image is read as the light it
-        // stands for when the render turns its light back into a picture's values at the end, and as
-        // the values it holds when the scene writes no gamma -- in such a scene a color is the value
-        // that reaches the file, and an image's colors must mean what the scene's own do, or a texture
-        // under white light would not come back as itself.
+        if (MapType is null && surface is not null && !holder && DefaultMapFor(surface) is null)
+            throw new Exception("Cannot determine image map type for surface.");
+
+        // Next, load the image.  The image is read as the light it stands for when the render turns its light back
+        // into a picture's values at the end, and as the values it holds when the scene writes no gamma -- in such
+        // a scene a color is the value that reaches the file, and an image's colors must mean what the scene's own
+        // do, or a texture under white light would not come back as itself.
         _texture = ImageReference.TextureFor(context.ApplyGamma);
-        (_wrapAcross, _wrapDown) = MapType.WrapFor(Once);
+
+        if (!holder)
+            _readied = LayingFor(MapType ?? DefaultMapFor(surface) ?? ImageMapType.Spherical, surface);
+    }
+
+    /// <summary>
+    /// This record holds how the image is laid on one surface: the map, the radius of the ring a toroidal map's tube
+    /// runs round, and what lies past the image's edges each way.
+    /// </summary>
+    private readonly record struct Laying(ImageMapType Map, double Ring, TextureWrap WrapAcross, TextureWrap WrapDown);
+
+    /// <summary>
+    /// This method returns the map an image given none is laid on a surface by, from the shape it is, or
+    /// <c>null</c> for a shape that has none: a background, standing for the sky -- a sphere of radius one,
+    /// infinitely far off -- is spherical.
+    /// </summary>
+    private static ImageMapType? DefaultMapFor(Surface surface) => surface switch
+    {
+        Cube or Plane or Triangle or Parallelogram => ImageMapType.Planar,
+        Sphere => ImageMapType.Spherical,
+        Cylinder => ImageMapType.Cylindrical,
+        Torus => ImageMapType.Toroidal,
+        null => ImageMapType.Spherical,
+        _ => null
+    };
+
+    /// <summary>
+    /// This method returns how the image is laid by the given map on the given surface: round the surface's own ring,
+    /// for a toroidal map on a torus.
+    /// </summary>
+    private Laying LayingFor(ImageMapType map, Surface surface)
+    {
+        (TextureWrap across, TextureWrap down) = ((ImageMapType?) map).WrapFor(Once);
+
+        return new Laying(map, surface is Torus torus ? torus.MajorRadius : 1, across, down);
+    }
+
+    /// <summary>
+    /// This method returns how the image is laid on the surface being read (see <see cref="Pigment.Wearer"/>): by the
+    /// map it was given, or the one the surface's own shape implies, worked out for the surface being read rather
+    /// than once for the pigment -- a pigment worn by a cube and a sphere lays the image flat on the one and round the
+    /// other.  Read for no surface, or for one whose shape implies nothing, it is laid as it was readied.
+    /// </summary>
+    private Laying Laid()
+    {
+        Surface wearer = Wearer;
+
+        if (wearer is null || (MapType ?? DefaultMapFor(wearer)) is not { } map)
+            return _readied;
+
+        double ring = wearer is Torus torus ? torus.MajorRadius : 1;
+
+        return map == _readied.Map && ring == _readied.Ring ? _readied : LayingFor(map, wearer);
     }
 
     /// <summary>
@@ -89,11 +137,13 @@ public class ImagePigment : Pigment
     /// <returns>The appropriate color at the given point.</returns>
     public override Color GetColorFor(Point point)
     {
-        (double u, double v) = MapType.GetTexelLocationFor(point, _texture.Width, _texture.Height);
+        Laying laid = Laid();
+        ImageMapType? map = laid.Map;
+        (double u, double v) = map.GetTexelLocationFor(point, _texture.Width, _texture.Height, laid.Ring);
 
         return double.IsNaN(u) || double.IsNaN(v)
             ? Colors.Transparent
-            : Brightened(_texture.Bilinear(u, v, _wrapAcross, _wrapDown));
+            : Brightened(_texture.Bilinear(u, v, laid.WrapAcross, laid.WrapDown));
     }
 
     /// <summary>
@@ -109,18 +159,20 @@ public class ImagePigment : Pigment
         if (footprint is null || footprint.IsEmpty)
             return GetColorFor(point);
 
+        Laying laid = Laid();
+        ImageMapType? map = laid.Map;
         int width = _texture.Width, height = _texture.Height;
-        (double u, double v) = MapType.GetTexelLocationFor(point, width, height);
+        (double u, double v) = map.GetTexelLocationFor(point, width, height, laid.Ring);
 
         if (double.IsNaN(u) || double.IsNaN(v))
             return Colors.Transparent;
 
-        (double du0, double dv0) = MapType.AxesFor(point, footprint.Across, width, height);
-        (double du1, double dv1) = MapType.AxesFor(point, footprint.Along, width, height);
+        (double du0, double dv0) = map.AxesFor(point, footprint.Across, width, height, laid.Ring);
+        (double du1, double dv1) = map.AxesFor(point, footprint.Along, width, height, laid.Ring);
 
         return Brightened(double.IsNaN(du0 + dv0 + du1 + dv1)
-            ? _texture.Bilinear(u, v, _wrapAcross, _wrapDown)
-            : _texture.Filtered(u, v, du0, dv0, du1, dv1, _wrapAcross, _wrapDown));
+            ? _texture.Bilinear(u, v, laid.WrapAcross, laid.WrapDown)
+            : _texture.Filtered(u, v, du0, dv0, du1, dv1, laid.WrapAcross, laid.WrapDown));
     }
 
     /// <summary>

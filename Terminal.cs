@@ -48,19 +48,19 @@ public static class Terminal
         List<TextAlignment> alignments = null, OutputLevel outputLevel = OutputLevel.Normal)
     {
         int[] widths = GetColumnWidths(lines);
-        string sp = prefix;
         bool first = true;
 
         alignments ??= [];
 
-        while (alignments.Count > lines[0].Count)
+        while (alignments.Count < widths.Length)
             alignments.Add(TextAlignment.Left);
 
         foreach (List<string> line in lines)
         {
             for (int index = 0; index < line.Count; index++)
             {
-                TextAlignment alignment = hasHeadings && index == 0
+                // The headings are centered over their columns; every other row takes its column's alignment.
+                TextAlignment alignment = hasHeadings && first
                     ? TextAlignment.Center
                     : alignments[index];
                 string text = alignment switch
@@ -71,7 +71,7 @@ public static class Terminal
                     _ => throw new NotSupportedException($"Unsupported text alignment {alignments[index]}")
                 };
 
-                Out(sp, outputLevel, false);
+                Out(index == 0 ? prefix : spacing, outputLevel, false);
                 Out(text, outputLevel, false);
             }
 
@@ -83,11 +83,9 @@ public static class Terminal
                     spacing, widths.Select(width => new string('-', width)));
 
                 Out(dashes, outputLevel);
-
-                first = false;
             }
 
-            sp = spacing;
+            first = false;
         }
     }
 

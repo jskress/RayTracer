@@ -58,6 +58,14 @@ public class BodyResolver : ObjectResolver<Body>
                 object to = tether.To.GetValue(variables);
                 double? length = tether.Length?.GetValue<double>(variables);
 
+                if (length is <= 0)
+                {
+                    throw new TokenException("A string must be longer than nothing.")
+                    {
+                        Token = tether.Length.ErrorToken
+                    };
+                }
+
                 return to switch
                 {
                     string name => new Tether(null, name, length),

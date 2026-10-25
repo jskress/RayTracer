@@ -36,6 +36,10 @@ public sealed class World
     // How near the scene a box's corner may lie, as a share of its reach from the middle, and still touch it.
     private const double Touching = 0.005;
 
+    // How far a ball's looks reach, in radii: past the radius by as much as a face square to none of them can lie off
+    // the nearest, 36 degrees among these fourteen.
+    private const double LookReach = 1.25;
+
     // A body whose fastest point has gone slower than this for as long as `Drowsy` falls asleep: it stands still,
     // untouched by gravity or the scene, until another body strikes it or a string pulls it.  Gravity sinks a
     // resting corner a hundredth of a millimeter into the scene every step, whatever the body's size, and to a die
@@ -107,9 +111,20 @@ public sealed class World
                     throw new InvalidOperationException($"A body is tied to '{tether.Name}', and no body has that name.");
 
                 Point to = other?.Position ?? tether.Pin;
-                double length = tether.Length ?? (mover.Position - to).Magnitude;
+                Vector away = mover.Position - to;
+                double length = tether.Length ?? away.Magnitude;
 
-                mover.Ties.Add(new Tie(tether.Pin, other, length, (mover.Position - to).Unit));
+                if (length <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "A body tied with no length said starts on what it is tied to, so its string would be no length at all.");
+                }
+
+                // Which way the string runs at the start, which the body is turned by as it swings.  A body starting on
+                // its pin, its string slack, has none: it is taken to hang straight down, as it will once it falls.
+                Vector way = away.Magnitude > 1e-12 ? away.Unit : new Vector(0, -1, 0);
+
+                mover.Ties.Add(new Tie(tether.Pin, other, length, way));
             }
         }
     }
@@ -263,13 +278,22 @@ public sealed class World
         {
             (Vector Normal, double Depth, Vector Lever)? deepest = null;
 
+            // How deep the ball is into the scene is how far short of its radius the face met lies from its middle,
+            // measured square across the face, which is the way it is pushed out.  Every look reaches past the radius
+            // by as much as a face can lie off the nearest look (36 degrees, so 1.24 radii): a ball on a slope no look
+            // ran square to was found only once it had sunk far enough for a slanting look to reach the face inside
+            // the radius, and with its depth measured along that look it was pushed out only that far -- on a slope
+            // of 30 degrees it stood sunk an eighth of its radius.
             foreach (Vector look in Looks)
             {
-                if (_strike(mover.Position, look, mover.Radius) is { } hit && hit.Distance < mover.Radius &&
-                    (deepest is null || mover.Radius - hit.Distance > deepest.Value.Depth))
-                {
-                    deepest = (hit.Normal, mover.Radius - hit.Distance, look * hit.Distance);
-                }
+                if (_strike(mover.Position, look, mover.Radius * LookReach) is not { } hit)
+                    continue;
+
+                double across = hit.Distance * Math.Abs(look.Dot(hit.Normal));
+                double depth = mover.Radius - across;
+
+                if (depth > 0 && (deepest is null || depth > deepest.Value.Depth))
+                    deepest = (hit.Normal, depth, hit.Normal * -across);
             }
 
             if (deepest is { } meeting)
@@ -564,10 +588,13 @@ public sealed class Mover
 
     /// <summary>
     /// This method returns how much an impulse along a direction at a lever is spent turning it rather than moving
-    /// it -- what is added to one over its mass to find how much the impulse moves the place.
+    /// it -- what is added to one over its mass to find how much the impulse moves the place.  A body turned by its
+    /// ties spends none of it turning, as <see cref="Apply"/> gives it none: counted, every knock off its middle was
+    /// answered as though part of it went into a turn that never came, and the place struck went on into what struck
+    /// it.
     /// </summary>
     public double Turning(Vector lever, Vector direction) =>
-        direction.Dot(TurnedBy(lever.Cross(direction)).Cross(lever));
+        Ties.Count == 0 ? direction.Dot(TurnedBy(lever.Cross(direction)).Cross(lever)) : 0;
 
     /// <summary>
     /// This method gives it an impulse at a lever from its middle.

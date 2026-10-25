@@ -49,8 +49,8 @@ public abstract class FlatSurface : Surface
     }
 
     /// <summary>
-    /// This method finds the distance, along the given ray, to this surface's plane,
-    /// rejecting rays parallel to the plane and hits behind the ray's origin.  It's exposed
+    /// This method finds the distance, along the given ray, to this surface's plane, rejecting
+    /// rays parallel to the plane but not hits behind the ray's origin, which a CSG needs.  It's exposed
     /// (rather than folded entirely into <see cref="AddIntersections"/>) so that subclasses
     /// needing just the raw plane-hit distance, without allocating an intersection list, can
     /// reuse the same math -- <see cref="Parallelogram"/>'s <c>GetIntersection</c> is used

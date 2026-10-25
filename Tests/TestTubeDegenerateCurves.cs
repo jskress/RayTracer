@@ -201,6 +201,28 @@ public class TestTubeDegenerateCurves
         Assert.IsFalse(exception.Message.Contains("NaN"), "the message should not report a NaN");
     }
 
+    /// <summary>
+    /// A curve whose control point stands on the end it belongs to has no pace there, but a way to go -- toward its
+    /// next point -- and a length: it is taken, and drawn, rather than refused as a segment of no length.
+    /// </summary>
+    [TestMethod]
+    public void TestAControlOnItsEndIsStillACurve()
+    {
+        Point start = new (0, 0, 0);
+        Point end = new (0, 2, 0);
+        Tube tube = Cubic(start, start, new Point(0.8, 1.6, 0), end);
+        List<Intersection> intersections = [];
+
+        // Half way along, the curve stands at (start + 3 x control1 + 3 x control2 + end) / 8.
+        tube.AddIntersections(new Ray(new Point(0.3, 0.85, -5), Directions.In), intersections);
+
+        Assert.IsTrue(intersections.Count > 0, "a cubic whose first control is its start rendered no body");
+
+        Tube quad = Quad(start, end, end);
+
+        Assert.IsTrue(HitsAcrossTheMiddle(quad, start, end) > 0, "a quad whose control is its end rendered no body");
+    }
+
     [TestMethod]
     public void TestDiscontinuousDoesNotExcuseASegmentOfNoLength()
     {

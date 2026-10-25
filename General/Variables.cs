@@ -16,6 +16,26 @@ public class Variables
     }
 
     /// <summary>
+    /// This method returns the names in scope as they stand now: a copy of this scope and every one around it, but
+    /// the outermost, which is the renderer's own and never changes.  Something worked out later from names --
+    /// a motion, asked about only once the camera says when it looks -- is handed this, so that a name set again
+    /// further down the file does not reach back and change it.
+    /// </summary>
+    /// <returns>The scopes as they stand.</returns>
+    internal Variables AsTheyStand()
+    {
+        if (_parent is null)
+            return this;
+
+        Variables copy = new (_parent.AsTheyStand());
+
+        foreach ((string name, Dictionary<RuntimeTypeHandle, object> values) in _variables)
+            copy._variables[name] = new Dictionary<RuntimeTypeHandle, object>(values);
+
+        return copy;
+    }
+
+    /// <summary>
     /// This method returns whether we carry a variable by the given name.
     /// </summary>
     /// <param name="key">The name of the variable to check.</param>
@@ -23,6 +43,20 @@ public class Variables
     public bool ContainsKey(string key)
     {
         return _variables.ContainsKey(key) || (_parent?.ContainsKey(key) ?? false);
+    }
+
+    /// <summary>
+    /// This method returns the values a name holds in the nearest scope that holds it at all: one, nearly always,
+    /// and several for a name that is, say, both a color and an index of refraction.
+    /// </summary>
+    /// <param name="key">The name.</param>
+    /// <returns>Its values there, or none.</returns>
+    internal IReadOnlyCollection<object> ValuesOf(string key)
+    {
+        if (_variables.TryGetValue(key, out Dictionary<RuntimeTypeHandle, object> values))
+            return values.Values;
+
+        return _parent?.ValuesOf(key) ?? [];
     }
 
     /// <summary>
@@ -65,12 +99,6 @@ public class Variables
     }
 
     /// <summary>
-    /// This method is used to set the value for a variable.  Passing <c>null</c> for
-    /// <c>value</c> will remove the variable if there is only one value for that variable.
-    /// </summary>
-    /// <param name="key">The name of the desired variable.</param>
-    /// <param name="value">The value to set.</param>
-    /// <summary>
     /// This method copies the named values this scope holds <i>itself</i> into another one, which is
     /// how a library hands a scene the few names it asked for while keeping the rest to itself.
     /// <para>
@@ -94,6 +122,12 @@ public class Variables
         }
     }
 
+    /// <summary>
+    /// This method is used to set the value for a variable.  Passing <c>null</c> for
+    /// <c>value</c> will remove the variable if there is only one value for that variable.
+    /// </summary>
+    /// <param name="key">The name of the desired variable.</param>
+    /// <param name="value">The value to set.</param>
     public void SetValue(string key, object value)
     {
         if (!_variables.TryGetValue(key, out Dictionary<RuntimeTypeHandle, object> values))

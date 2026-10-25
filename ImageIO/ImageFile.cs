@@ -141,7 +141,7 @@ public class ImageFile
 
         foreach (IPixel<float> pixel in pixels)
         {
-            Color color = canvas.GetPixel(pixel.X, pixel.Y);
+            Color color = Straight(canvas.GetPixel(pixel.X, pixel.Y));
             int red, green, blue, alpha;
 
             // Asked for a gray image, each color is weighted down to the one value that stands for
@@ -167,6 +167,22 @@ public class ImageFile
         }
 
         return image;
+    }
+
+    /// <summary>
+    /// This method returns a pixel's color apart from how much of the pixel it covers, as a picture file keeps it.
+    /// A canvas holds what a pixel's samples added up to, the transparent background adding nothing, so a pixel half
+    /// covered by something white holds half white: written as it stood, every soft edge against nothing was a gray
+    /// fringe wherever the picture was laid over anything light.  A file of light is left premultiplied, as
+    /// OpenEXR's own convention has it.
+    /// </summary>
+    /// <param name="color">The pixel as the canvas holds it.</param>
+    /// <returns>Its color, and how much of the pixel it covers.</returns>
+    private static Color Straight(Color color)
+    {
+        return color.Alpha is > 0 and < 1
+            ? new Color(color.Red / color.Alpha, color.Green / color.Alpha, color.Blue / color.Alpha, color.Alpha)
+            : color;
     }
 
     /// <summary>

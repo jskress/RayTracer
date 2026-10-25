@@ -293,6 +293,10 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         // copy, so a list shared with the original would carry the copy's decals back into it.
         resolver.DecalResolvers = [..DecalResolvers];
 
+        // And so with its interior, which an addition's `interior { ... }` is parsed into: shared, the copy's
+        // index or filter became every user's of the name.
+        resolver.InteriorResolver = (InteriorResolver) InteriorResolver?.Clone();
+
         return resolver;
     }
 }

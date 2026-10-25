@@ -56,13 +56,16 @@ LSystems, HeightFields, etc.). The actual grammar is a single large embedded DSL
 in `LanguageParser.DSL.cs` (`LanguageDslSpecification`), written against the third-party
 `Lex` package (`Lex.Dsl`, `Lex.Clauses`, `Lex.Tokens`, `Lex.Parser`). It defines keywords,
 expression syntax, and named "clauses" (grammar rules) which are wired to C# handler methods
-via string-tag dispatch tables in `LanguageParser.Dispatch.cs` (`_blockStartHandlers` /
-`_clauseHandlers`, keyed by the `=>` tag names used in the grammar spec). When adding a new
-DSL construct: extend the grammar spec, add a `Handle...Clause` method in the relevant
-`LanguageParser.<Topic>.cs` partial file, and register it in `FillDispatchTables()`.
+by a `ClauseDispatcher` built in `LanguageParser.Dispatch.cs` (`CreateDispatcher()`, one
+`.On(nameof(HandleXxxClause), ...)` per handler, keyed by the `=> 'HandleXxxClause'` tags in the
+grammar spec). When adding a new DSL construct: extend the grammar spec, add a `Handle...Clause`
+method in the relevant `LanguageParser.<Topic>.cs` partial file, and register it in
+`CreateDispatcher()`.
 
 `include '<file>'` is handled by pushing/popping a stack of `(fileName, LexicalParser)`
-entries, so multiple `.igl` files can be composed.
+entries, so multiple `.igl` files can be composed; a file already being read is refused (an
+include cycle).  `import 'library' { Names }` reads a library (definitions and imports only, see
+`InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.
 
 ### Instructions and resolvers (`Instructions/`)
 
@@ -76,7 +79,9 @@ tracks the current resolver target stack and variable scope while parsing.
 `RenderInstruction` (`Instructions/RenderInstruction.cs`) is the terminal instruction: at
 execute time it resolves the `Scene` and `Camera` to use (from an explicit `scene { }` block,
 or an implicit scene built from top-level objects), finalizes surfaces (materials, pigment
-seeding), and calls `camera.Render(...)`.
+seeding), and calls `camera.Render(...)`.  A file with several `render` commands carries itself out afresh, up
+to each later render, into a fresh context (`InstructionContext.Execute`, `RenderContext.Afresh`): settling the
+first render's objects again scaled named materials' ambient twice and hung a physical sky's sun again.
 
 ### Geometry and rendering (`Geometry/`, `Core/`, `Basics/`)
 
@@ -110,7 +115,9 @@ piece is `cell ∩ Instance(solid)`.  `whole` keeps cells whose seeds are inside
 Pieces are `Polyhedron` (slab test over planes, `PrecomputedNormalIntersection`) or, `rounded`, `RoundedPolyhedron`:
 the cell shrunk by r grown back by a ball = face slabs, edge cylinders, corner balls; convex, so entry = nearest of
 their entries, exit = farthest exit, exact.  `loose` builds each piece in a randomly shifted space (pattern grain of
-its own); `apart`, `tumble`, `hole`, `materials A, B` per piece.  Uses: rocks `DryStoneWall`/`Rubble`, roads
+its own); `apart`, `tumble`, `hole`, `materials A, B` per piece -- with more than one, a solid that is not a box is
+resolved once per material, nothing in it shared (`Fracture.Solids`, `RenderContext.Unshared`), since a material
+handed into one solid every piece stands as an instance went to whichever piece handed it first.  Uses: rocks `DryStoneWall`/`Rubble`, roads
 `CrazyPaving`, windows `Sash`/`Casement`'s trailing `broken` count (unbroken is the old surface list, pixel-identical).
 A `ShapeGrammar` (`shapes { axiom A  size v  rules { A -> ... } }`, a `Group`; CGA-style split grammar) is carried
 out when RESOLVED (`ShapeGrammarResolver.SetProperties`; a resolver with no rules -- the block on a primitive call --
@@ -144,6 +151,29 @@ Instances NEST: a hit carries `Intersection.Portals` (`Geometry/Portals.cs`: the
 hits), every walk continues at each shared shape's root with the next portal, CSG membership asks the OUTERMOST
 stamped so far, `no shadow` holds if any instance in the chain says it, hair light is keyed by the whole chain, and
 `Material.PortalTo` hands an anchor only the portals beyond it.  So a tree holding shared leaves is shared itself.
+A shared shape is DRESSED PER PLACEMENT: a group's or CSG's hand-down stops at an instance (`SurfaceIterator(...,
+intoShared: false)`), settling marks a part left the default (`Surface.WearsTheDefault`, with any decals-only material
+it had in `OwnBeforeTheDefault`), and at a hit `Surface.MaterialThrough(portals)` -- `Intersection.SurfaceMaterial`,
+cached and cleared when an outer instance stamps the hit -- gives it the material of the innermost instance in the chain
+that was dressed (`DressedThrough`: an instance adding only decals -- `material inherited` -- lays them over whatever
+dresses it from further out, or over its settled default; the part's own decals laid over by `Material.HandedDownTo`,
+kept per material; `Surface.Wearing` lets a blob put its components' mixture on it).  Interiors (`FindContainers` returns both sides' portals, `InteriorOf(surface, portals)`),
+caustic targets (walked into instances with their portals), wires and fibers ask through it; hair wearing its skin
+takes the skin's mark (`Hair.WearsWhatItsSkinWears`); and an instance's material is readied for the first undressed
+part inside it (`FirstUndressedIn`, found once per shared shape: an image picks its mapping from the shape).
+A walk through the scene before rendering goes into each shared shape ONCE (`walked`/`shared` sets: kinematics'
+`Find`, physics' `RefuseBuriedBodies`, shadow and weather settling) or prunes by a per-shape memo (`LightPlacer`'s
+`HoldsALight`, caustics' `MayTurnLight` -- a part left to be dressed may turn light): walked per placement, a-great-
+wood's nested twigs and leaves (2 billion placements) took 3.5 minutes to look through for joints that were not there.  A blob dresses its own copy of a
+material handed to it (`Blob.Wearing`): wrapped in place, the group's one material put the first blob's mixture on
+every sibling, the second blob included.
+Handed into the one shape at settling, the first holder's material went to every place.  A call whose own block sets a
+material is shared too (`PrimitiveCallResolver`), unless the block `GivesLight` (decided before building) or its
+material holds a medium (found once the block is laid on; the call is then built apart and the block laid on again).  `MayBeShared` asks a self-filling group (Field, GrownTree, LSystem, Fracture) what it
+WILL hold (`MayShareWhatItHolds`: its candidates or leaves made once and kept for the fill), being empty when asked.
+An area light's samples stand at the middles of its cells, jittered within them, so every one is on its face
+(POV-Ray's grid ran edge to edge and its jitter spilled past it); a spotlight's `radius` and `falloff` are angles
+read as `angles are` says (degrees unless told), the falloff 30 degrees unless said.
 A `group` may hold point, spot and area lights in its own space (`Group.Lights`; a light travels through surface lists
 as a `ListedLight`, so loops and choices may set lights out, at a scene's top level too).  `LightPlacer` sets each out
 in the world after the scene is arranged -- once for every placement, walking instance chains, and once for every
@@ -166,14 +196,22 @@ asked for the true extent, and CSG keeps or drops strand hits without counting t
 Strands are never Phong: `Scene.GetHitColor` hands a `HairIntersection` to `Scene.ShadeFiber` (`Core/Scene.Fibers.cs`),
 the Chiang 2016 / PBRT fiber model in `Core/Fiber.cs` (R, TT, TRT and the rest; index 1.55, tilt 2 degrees, the
 material's `roughness` or 0.3), lit from every light at the strand's middle with shadow rays setting off a radius
-toward the light, and the sky sampled over the whole sphere (`Light.SampleAround`, weight 4).  Color is matched by
+toward the light, and the sky sampled over the whole sphere (`Light.SampleAround`, weight 4).  With `diffuse
+bounces` a strand also gathers bounced light (`Scene.BouncedOntoAFiber`): directions even over the sphere in its frame,
+weighed by `Fiber.Scattered` x 4pi / count, as many as `RaysOf` gives its share (salts 135-137).  Along such a gather a
+place within the gathering hair's `HairLight` box (`_hairDomain`, `WithinTheHair`: a non-wire strand or an opaque
+surface, what the hair light's photons scatter off) gives only what came from beyond (`ShadedAt(fromBeyond)`: no lamps,
+no hair light, no walks); a place outside clears the domain for everything after it.  Without the rule the light among
+strands was counted twice (2.3x on a fur ball); without the gather, fur under bounces had no fill at all.  Color is matched by
 Chiang's inversion from the pigment -- read at each strand's ROOT in the skin's space when the hair wears its skin's
 material -- or set by a material's `melanin`.  A strand's shadow rays treat other strands as OPAQUE; light bounced
 among strands comes from a `HairLight` gathered per (hair, instance) before the first pixel
 (`Scene.GatherTheLightAmongHair`; behind an instance, when first met) (`Core/Scene.HairLight.cs`: photons from each
 light sample as a beam over the hair, scattered by `Fiber.Sample` and bounced off the skin or anything else inside
 the grid by its diffuse color, recorded after their first scattering as fluence AND net flow in a grid of cells a
-sixth of a strand's length IN THE WORLD, at most 2^18 cells, eight paths for each cell the strands occupy; a path's
+sixth of a strand's length IN THE WORLD, at most 2^18 cells, eight paths for each cell the strands occupy, each light
+sample's beam carrying its share of the light, irradiance over the sample count (until 2026-10-23 each carried the
+whole light, every fur scene lit as many times over as its lamps had samples); a path's
 power is tested against exact nought, never `IsBlack`, since it shrinks with the number of paths; each lobe reads
 the light arriving from its center direction, `HairLight.Here.From`).  Isotropic light was 1.5-2x too bright: the
 flow is what makes it match a brute-force path tracer (`TestHairLight`) within ~15%.  A non-hair surface's shadow
@@ -201,7 +239,7 @@ narrowing to nothing at the light (`Ray.NarrowsAt`), and a `StrandTally` that st
 nothing gets past the strands.  For this `Matrix.Transform` keeps a ray's cone in a surface's space (scaled), and a
 `BoundingBox` holding strands is marked `Widens` and grown by the ray's width at its widest side -- other boxes and
 surfaces are untouched, so other scenes stay bit-identical. `Basics/` has the math primitives (`NumberTuple`, `Point`, `Vector`,
-`Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `Polynomials`). `Core/` has scene-
+`Matrix`, `Ray`, `Interval`, `Transforms`, `NoiseGenerator`, `RootFinding`). `Core/` has scene-
 graph level types: `Scene`, `Camera`, `Material`, `PointLight`, `Intersection` and its
 precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPath`,
 `Line`, `QuadCurve`, `CubicCurve`, `TwoDPoint`/`TwoDVector`) used by extrusions, lathes and
@@ -212,7 +250,17 @@ A CONVEX `Superellipsoid` (both exponents <= 2, so its function is a norm less o
 section for a place inside, each crossing bracketed from it, stopping at once when the function rises where the ray
 sets off (every ray leaving its surface) or when chords carried past their ends bound it above nought
 (`AddConvexIntersections`): a die filling the picture 7.9 s -> 4.0 s, a-bed-made-up 48 s -> 28 s, pictures alike to
-a few pixels; a pinched one keeps the nine-plane, 32-step search.  A faulty bound (the smaller sampled value) lit
+a few pixels; a pinched one keeps the nine-plane, 32-step search.  A distance-estimated surface (`sdf`, `julia`,
+`DistanceEstimatedSurface.March`) counts an arrival within its accuracy as a crossing only when a look two
+accuracies past finds the other side: taken as crossing, a graze turned inside and outside about, the ray ran out
+"inside" and was closed at its box, and shadow rays met the phantom (a Julia set came out peppered).  An isosurface's and
+`swells`' interval march (`March`) narrows a span whose ends differ in sign only once it is under 64 accuracies
+(`StraddleSpan`), else subdivides it as any other: narrowed at once, a span holding three crossings recorded one, and
+a ray skimming a swell's crest went through it (complete over cheap, the user's call 2026-10-24: 4.5-9x on those scenes).
+Every surface sets a ray off from itself by `Surface.SelfOffsetAt(time, portals)` (`Intersection.SelfOffset`, the
+nudge for over/under/lit points, weathering's looks and subsurface steps): the usual epsilon, or for a surface found to
+an accuracy in its OWN units (isosurface, sdf) that accuracy times `StretchInTheWorld` -- scaled up a thousandfold, a
+shape found to a ten-thousandth in its own units is a tenth off in the world, and an absolute nudge put rays inside.  A faulty bound (the smaller sampled value) lit
 grazed shadows, caught only by rays grazing the degenerate sphere.
 `extrusion { ... rounded r }` (`Extrusion.Rounded`, an `IAssembled` like `Tube`: the five places that walk into a
 tube's union walk into any `IAssembled`) is the CSG union of the outline drawn in by r (`Graphics/PathOffset.cs`:
@@ -248,7 +296,9 @@ with Fresnel implied, looking in `reflection samples` directions at the first ro
 (`Scene.GetRoughReflection`) and one thereafter. Lights a ray can meet (`Light.CanBeSeen`) are not counted
 twice: the sky reaches a rough surface through its reflection only, and a glowing volume is shared between
 its own samples and the reflection by Veach's balance heuristic (`Scene.HighlightShareOf` /
-`ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering. Rough glass
+`ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering; a glow's weight is
+`VolumeLight.WeightOf` (count x odds x d^2 x `Size`, the cube root of its box's volume in the world), so the share
+does not hang on the scene's unit (it did, a length short). Rough glass
 (`roughness` on something transparent) frosts: `Scene.GetRoughRefraction` bends a fan of rays through visible
 facets, each facet mirroring and passing by the glass's own index, and a lamp behind it glows through it
 (`Microfacets.TransmittedHighlight`) -- given only at the LAST of the glass before the lamp
@@ -265,7 +315,12 @@ in front of it.  Every medium helper finds its container's edges and density whe
 its parent's space (`IntoTheSpaceOf`) through its portals (`Intersection.Portals` leaving it,
 `Intersection.ContainerPortals` inside it); until 2026-10-19 a medium in a moved group found its edge where the
 shape would be unmoved.  No scene's instance holds a medium even so: `Instance.MayBeShared` refuses one, and a glow
-must refuse, since a `VolumeLight` is made once per surface, not per placement as `LightPlacer` sets out lamps.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
+must refuse, since a `VolumeLight` is made once per surface, not per placement as `LightPlacer` sets out lamps.  A medium that says no `samples` or `bounces` takes the context's
+when the scene is settled (`Medium.TakeTheScenesCounts`), wherever the context is written.  A glow's
+power takes its parents' scale (`VolumeLight`: the stretch is |DirectionToWorld(x) . (y x z)|); its smooth (Phong)
+highlights take each sample's delivered light (`HighlightsBySample`; until 2026-10-24 the light's own white, unfaded:
+a fire put a gray sheen across a polished floor); and a medium lit by
+a light of several samples picks the sample per point (`Scene.ShiftFor`, salt 141), not the same few for every place.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
 thinner than light, a soap bubble's or oil's: Airy's sum over both faces, s and p averaged, complex cosines past
 the critical angle, worked out over the 32 bands in every render (`FilmShares<TS>`: Mirrored, Passed, Highlight).
 It takes the place of `reflective`/`fresnel` (`GetReflectionColor` returns a film's mirror image whole; `GetHitColor`
@@ -327,7 +382,11 @@ space the surface STANDS IN (parent's or instance's, never its own scale); memo 
 scene, surface, time, point)) and `facing { toward d }` ((1 + n.d)/2, WORLD space).  `material blend <pattern> { [v, M, ...] }` (`Core/MaterialBlend.cs`; or N materials
 for a discrete pattern) is settled per hit in `Scene.RegularizedFor` -> `intersection.Material`: scalars and pigment
 (`Pigments/MixedPigment.cs`) mixed, skins (coat, sheen, film, interior, decals) the nearer's, mixtures cached at 256
-steps; a blend's own properties are its FIRST material's for whatever asks without a hit (shadows, photons);
+steps; a blend's own properties are its FIRST material's for whatever asks without a hit (shadows, photons); a
+mixture of a smooth and a rough material carries `Material.Split` and `GetHitColor` shades the hit as EACH, each
+regularized for a spread ray (`Regularized`), and mixes the answers (`HitColorOf`), each lamp sample's light reaching
+the place found once for both (`Scene.Reached<TS>`, keyed by intersection, light and sample; not through rough glass)
+-- still ~1.6x on a weathered R2 at 200x150 (Tatooine), the smooth half's own mirror ray being real work: one mixed material changed path at the first trace of roughness, a seam in the gloss;
 components are settled in `RenderInstruction` (ambient default and scale, pigment prep).  `weather { grime g [color
 c]  dust d [color c]  wear w [to M]  splash h [color c]  radius r }` on any surface (`Core/Weather.cs`, settled down
 groups by `Geometry/WeatherSettler.cs`, nearest wins, and at the hit through the portal chain, so a shared shape is
@@ -356,12 +415,15 @@ Bounced light is path continuation, off by default: `context { diffuse bounces N
 `_spreading` set), each bringing back `GetColorFor`'s whole answer; their average times pigment and diffuse joins
 the surface's own color in `GetHitColor`, under its Fresnel share and film.  On a bounce's straight run the sky
 counts nothing and a glow that `gives light` lends no glow (`SeenAlongABounce`, `MarchedThrough`'s `withoutGlow`), as
-the sky light and volume lights count those directly; all along a bounce path (`_bounced > 0`) what a shadow ray
+the sky light and volume lights count those directly -- and with no caustics the run carries on through smooth glass
+(`GetRefractedColor` moves `_bouncing` onto the bent ray), since a shadow ray passes glass straight then: bent off its
+run by a pane, a bounce found the sky again and a floor under a window came out 2.2x; all along a bounce path (`_bounced > 0`) what a shadow ray
 passes -- `no shadow` stand-ins, light housings -- is passed (`PassedByBouncedLight`), and surfaces show no highlight
 (`ApplyPhong(highlights: false)`), glossy-to-matte light being the caustics'.  A lamp at a bounce point gives one sample
 picked per point (`Illuminate`); bounces do not spend the mirrors' `remaining`.  Asking for bounces scales EVERY
 ambient to 0, a library's named ones included; what glows of its own says `emission` (`Material.Emission`, a number or
-color tinted by the pigment, the same under any lamps, unlike ambient which each lamp lends).  An opaque closed surface
+color tinted by the pigment, the same under any lamps, unlike ambient which each lamp lends; it leaves through the
+skin as the rest of the surface's own light does -- its Fresnel share, a film's Passed, a coat, a sheen).  An opaque closed surface
 hit from inside is lit from the eye's side (`Intersection.LitPoint`); glass met from within keeps the outside over
 point, so its inner face takes the light falling on its outer one.  `diffuse cache [error e]` (default 0.15) is Ward's
 irradiance cache (`Core/IrradianceCache.cs`) for the FIRST matte hit from the eye only (`_bounced == 0`, not spreading,
@@ -391,7 +453,8 @@ absence of falloff does not) times its share of the beam's cross-section -- and 
 rays shade (`Turned`: film shares; a VNDF facet each way for rough, weight F x G1(out); else ReflectanceAt, metallic
 tint, Fresnel split via `Reflectance`, `Bent`, filter tint), and charged for each run as an eye ray is: the insides
 it leaves, else those of what the place stands inside (`ContainerBefore`, fade and medium -- until 2026-10-19 a pool's
-floor took the sun unfaded by the water over it), else the surroundings.  At a fork the greater way always goes
+floor took the sun unfaded by the water over it), else the surroundings; a medium whose density varies is walked in
+16 steps, as a shadow ray walks it.  At a fork the greater way always goes
 on and the lesser by chance lesser/greater, so all photons carry alike; none is killed for losing light; choices
 come from digit-scrambled Halton sequences (`Pick`, `Bases`) at the first surfaces, hashes after; power is tested
 against exact nought (IsBlack's allowance ate a glow's photons).  Kept where a TURNED photon meets a diffuse
@@ -430,12 +493,16 @@ Rendering itself is dispatched through `Scanners/` (`SingleThreadScanner`,
 `LineParallelScanner`, `PixelParallelScanner` — implementations of `IScanner`, selected via
 the `context { scanner ... }` DSL block or command line) and `Pixels/` (anti-aliasing
 strategies: `NoAntiAliasingPixelRenderer`, `AdaptiveSuperSamplingPixelRenderer`, controlled by
-`AliasingOption`). Output goes through `ImageIO/` (`ImageFile`, `ImageCache`,
+`AliasingOption`; a subdivided quarter hands its corner, already traced, down as the quarter's own, rather than
+tracing it again -- a fifth of the subdivided rays). Output goes through `ImageIO/` (`ImageFile`, `ImageCache`,
 `ImageReference`) which wraps SkiaSharp/Magick.NET for reading/writing image formats.
 
 The camera's response, from light to picture: a camera's `exposure` (stops; `Camera.Exposure`, or `--exposure` as
 `RenderContext.Exposure` over every camera) scales each finished pixel in `Camera.Render`, after white balance, so the
-canvas holds exposed LIGHT.  A picture file is developed only when written: `Color.ToChannelValues` takes
+canvas holds exposed LIGHT, premultiplied: a pixel half covered against the transparent background holds half its
+color.  A picture file is written with STRAIGHT alpha (`ImageFile.Straight`, before developing: a soft edge kept its
+premultiplied gray and fringed whatever the picture was laid on); a file of light stays premultiplied, as OpenEXR's
+convention has it.  A picture file is developed only when written: `Color.ToChannelValues` takes
 `RenderContext.Shown` -- the `FilmCurve` (`Graphics/FilmCurve.cs`: `soft` by default, each channel identity below
 0.8 and eased above it by Khronos PBR Neutral's shoulder, so bright orange runs through yellow to white as film's;
 `neutral`, that shoulder on the brightest channel with the hue kept and paled, WITHOUT Khronos's toe -- the default
@@ -465,14 +532,23 @@ frames developed by `ImageFile.Developed`): `.webp` (the gallery's; lossy q90, d
 dithered, optimized; hundredths) looping, held until written; `.mp4` streamed as rgb24 to ffmpeg (libx264, crf 16,
 yuv420p, padded even) -- refused before any frame when `MovieFile.FfmpegOn(PATH)` finds none, and a non-animation
 makes a one-frame video; `-m n` is frame n
-alone, written as asked, `--frames a-b` a run, `--still` the named still (a non-animation renders as ever).  An
+alone, written as asked, `--frames a-b` a run (numbered however short: `--frames 7` writes `name-0000007.png`),
+`--still` the named still (a non-animation renders as ever; a still that is not one of the frames is refused); each
+frame counts its own statistics.  An
 animation renders through ONE render command.  `Name = keys [smooth] [loop] { t: v [linear|ease [in|out|in out]|hold]
 ... }` (`General/Keyframes.cs`, `Instructions/Core/KeysResolver.cs`) is called as `Name(time)` (`FunctionCallTerm`
 looks a `Keyframes` up by name); numbers, tuples, points, vectors, colors; smooth = Catmull-Rom tangents in time.
 Blur from time: in a frame (`RenderContext.FrameInterval` > 0) a surface whose `TransformResolver` gives another
 matrix a frame later gets `MotionAt(f) = M(time + f x interval) M(time)^-1`, re-resolving in a child scope with
-`time` shifted (`SurfaceResolver.TimedMotionFor`), laid under any `motion { }`; values named from `time` beforehand,
-shapes and the camera are not blurred.  Splines are values (`Name = [discontinuous] spline { ... }`; a sweep takes
+`time` shifted (`SurfaceResolver.TimedMotionFor`, only while `time` is the frame's: a scene naming its own is
+left alone), laid under any `motion { }`; values named from `time` beforehand, shapes and the camera are not blurred.
+A motion recipe (`motion { }` or the timed one) reads its names AS THEY STAND where it is written
+(`Variables.AsTheyStand`, `RenderContext.AsItStands`, snapshots taken at resolve): read lazily at render, a name
+reassigned later in the same scope moved the earlier surface by the later value.
+A primitive's body's motion is in the primitive's frame, carried out through the call's transform beneath the call's
+own motion (`SurfaceResolver.ApplyToSurface`).  Pigments, decals and films are read where the thing stands at the
+instant being shaded (`Scene.ShadingTime`, a hit's `TimeIndex`), so a moving pattern blurs with its outline.  A
+placement moves a moving surface through `StandAt`, its motion carried round the move, measuring all it sweeps.  Splines are values (`Name = [discontinuous] spline { ... }`; a sweep takes
 `spline Name`, a TermResolver so a primitive's parameter works), measured by `Spline.Measure` (`Geometry/SplineMeasure.cs`:
 64 chord steps a curve, distance found by binary search then on its curve; a spline ending at its start LOOPS, any
 other clamps).  The transform `along S at share | by distance [upright | banked] [wheelbase w]`
@@ -491,8 +567,10 @@ re-simulates from time nought EVERY frame (so a frame is the same alone or in a 
 cradle's 5 balls about 1.1 s at t = 4, 0.4 s with one round): dt 1 ms, push (context `gravity`, default
 (0, -9.81, 0), and drag 0.5 rho Cd A |u| u against `wind`, Cd 0.47 ball / 1.05 box), then 10 rounds of strings (pull
 only: position projection, then the outward speed removed), body pairs AS BALLS (sequential impulses at the lever,
-bounce the mean, friction sqrt(mu1 mu2)), and the scene (a ball looks 14 ways by rays of its radius, its deepest
-contact a round; a box casts to its 8 corners and is held at EVERY corner within 0.5% of its reach -- `Press`: pushed
+bounce the mean, friction sqrt(mu1 mu2); a body turned by its ties spends no impulse turning, `Mover.Turning` 0), and
+the scene (a ball looks 14 ways by rays reaching 1.25 radii -- the widest gap between the looks is 36 degrees -- its
+depth measured square across the face met, the deepest a round: by its radius along the look, a ball on a 30-degree
+slope stood sunk an eighth of its radius; a box casts to its 8 corners and is held at EVERY corner within 0.5% of its reach -- `Press`: pushed
 out once by the deepest, each corner's push ACCUMULATED over the step's rounds and clamped at nought, its friction
 capped by mu x that accumulated push, the bounce targets of all corners newly met settled BEFORE any is pushed
 (settled as each was met, a flat drop came away at 0.43 of its bounce and spun 6 rad/s); met afresh each round, the
@@ -511,7 +589,9 @@ bounce friction drag radius }` (`Geometry/Swarm.cs`, a Group) is filled by the s
 way, speed and life hashed from (seed, k, purpose) -- never drawn in order -- flown from its birth at 1/500 s, to the
 frame's EXACT time (stopping within half a step left each copy up to 1 ms behind, by its birth's phase), with swept
 rays against the colliders, an `Instance` of T at world scale with a `MotionAt` for blur; copies strike neither each
-other nor bodies.  `within S` (a surface value, in the swarm's space) starts each copy at its own place inside S (box
+other nor bodies.  A swarm that MOVES (`MotionAt`) is refused: its copies would be carried along in flight rather
+than left behind.  A swarm needs an `of`, and T must be shareable (`Instance.MayBeShared`); a swarm, or a field
+dropped `over` something, cannot be placed `on`/`under`/... (both fill themselves after placements).  `within S` (a surface value, in the swarm's space) starts each copy at its own place inside S (box
 draws by (seed, k, 100 + 3 x try), `Containment.Holds`, 256 tries, refused if 1024 probes find no inside), and a copy
 PASSES what is inside S until it leaves it (else leaves let go in a crown came to rest on its leaves); `falls at a to b`
 sets drag = g / v^2 per copy; `spin a to b` tumbles a copy from a Shoemake turn about a random way, and a tumbling copy
@@ -548,7 +628,19 @@ Pigments (`Pigments/`) define how color is derived at a surface point (solid, pa
 image-mapped, blended/layered, noisy). Patterns (`Patterns/`) define the underlying spatial
 functions (stripes, checker, gradient, agate, wood, granite, brick, hexagon, etc.) that
 pigments sample. Each has a corresponding DSL resolver under `Instructions/Patterns/` and
-`Instructions/Pigments/`.  An image pigment reads a `Texture` (`Graphics/Texture.cs`, cached per file in
+`Instructions/Pigments/`.  What a pigment says nothing of for itself is the surface's being read (`Pigment.Wearer`, a
+thread-static set by `Pigment.GetColorFor(surface, ...)` and `MaterialBlend.ValueAt`): noise given no seed takes
+`Pigment.WearersSeed` as it is read, and an image given no map is laid by the wearer's shape (`ImagePigment.Laid`,
+holders never asked).  Settling put both ON the pigment, so a pigment worn by many surfaces -- named, or a group's --
+was the first wearer's everywhere; settling seeds nothing now.  A pattern picking among three or more pigments is filtered by each one's share of the
+patch (`Pattern.SharesOver`, `PigmentSet.GetMixedColorFor`): averaging its index made a hexagon's border with a
+third color down it; two-pigment patterns keep the averaged index, which is the same thing -- except across a value
+that wraps (`Pattern.MayWrap`: a repeating, unbounced `gradient`), where a patch straddling the jump from 1 to 0
+averaged to the middle color; there `PatternPigment.FromItsSamples` averages the COLORS at its samples
+(`Pattern.SamplesOver`, which also gives the patch's value from the same pass -- sampled twice, a turbulent desert
+took twice its time), for patterns averaged over the base grid only (a noise pattern filters itself).  Marble's wave is a
+triangle by default (POV-Ray's), and it and wood take turbulence's amplitude as POV-Ray's do (marble x + A.X t, wood
+cycloidal((x + t) A) per axis); agate takes only its turbulence's octaves.  An image pigment reads a `Texture` (`Graphics/Texture.cs`, cached per file in
 `ImageCache.GetTexture`): the file turned into light by the curve it declares (`TransferFunction`: sRGB for PNG/JPEG,
 linear for `.hdr`/`.exr`, which keep light above white), premultiplied by alpha, with a pyramid of halved copies, and
 read by EWA over the footprint's two edges carried into texels (`ImageMapType.AxesFor`), the ellipse's half-axes 0.78
@@ -578,7 +670,13 @@ vector casts) compile down to a `Term` tree (`Term`, `LiteralTerm`, `VariableTer
 `BinaryOperation`/`UnaryOperation` subclasses, `TupleTerm`). `ExpressionTreeBuilder`
 (`Parser/ExpressionTreeBuilder.cs`) is plugged into the `Lex` expression parser as the
 `TreeBuilder` to build these from parsed tokens. Terms are evaluated against `Variables`
-(`General/Variables.cs`) at instruction-execution time, so DSL variables are late-bound.
+(`General/Variables.cs`) at instruction-execution time, so DSL variables are late-bound.  A name holds a value
+per type; read where no type is asked (`Shade = Coral`) a name holding several is refused, naming them
+(`VariableTerm`, `Variables.ValuesOf`).  Numbers compare near (`ComparisonOperation`: `==` by `Near`, and the
+orderings agree, so exactly one of less, equal, greater holds).  A `function`'s answer is held to its declared kind,
+coerced as a value written there would be (`UserFunction.AsPromised`); a built-in's `ArgumentException` or
+`InvalidOperationException` is rethrown carrying the call's token (`FunctionCallTerm`).  A loop's range open at its
+end leaves out only the end itself (`Interval.IsAtEnd`).
 
 ### Fonts and text (`Fonts/`)
 
@@ -588,8 +686,10 @@ type — glyph outlines are converted into `GeneralPath`s and extruded like any 
 ### Entry point and CLI (`Program.cs`, `Commands/`, `Options/`)
 
 `Program.cs` uses `CommandLineParser` to dispatch to verbs: `render` (default,
-`RenderOptions`/`RenderCommand`) and `fonts` (`FontsOptions`/`FontsCommand`, for managing the
-font catalog). `RenderCommand.Render` builds a `LanguageParser`, parses the input file into an
+`RenderOptions`/`RenderCommand`), `fonts` (`FontsOptions`/`FontsCommand`, for managing the
+font catalog; `--overwrite` replaces a face through `FontManager.ReplaceFontFace`, keeping its
+kerning) and `libraries` (`LibrariesOptions`/`LibrariesCommand`: list, check and `--install` the
+shipped libraries into `~/.rayTracer/Libraries`, read from the build output). `RenderCommand.Render` builds a `LanguageParser`, parses the input file into an
 `ImageRenderer`, and calls `Render(options)`. Output level (`Terminal.OutputLevel`) is set
 from CLI options and consumed globally via the static `Terminal` class (`Terminal.cs`) for
 progress/error output.

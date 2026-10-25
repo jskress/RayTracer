@@ -7,6 +7,7 @@ using RayTracer.Graphics;
 using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
+using RayTracer.Patterns;
 using RayTracer.Pigments;
 using RayTracer.Renderer;
 
@@ -114,6 +115,21 @@ public class TestCaustics
     }
 
     /// <summary>
+    /// With caustics on, glass that bends light stops shadow rays, the photons bringing what comes through it --
+    /// but only glass the photons could be aimed at.  An endless sea, a plane, has no edges to aim at and is sent
+    /// none, so the floor under it is lit through it as it would be without caustics, not left in the dark.
+    /// </summary>
+    [TestMethod]
+    public void TestTheFloorUnderAnEndlessSeaIsLit()
+    {
+        Plane sea = new () { Material = Glass(0), Transform = Transforms.Translate(0, 1, 0) };
+        Plane floor = new () { Material = Matte() };
+        Scene scene = SceneOf(20000, new DistantLight { Direction = new Vector(0, -1, 0) }, floor, sea);
+
+        Assert.IsTrue(Shade(scene, new Point(0, 0.5, 0)) > 0.5, "the sun should reach the floor through the water");
+    }
+
+    /// <summary>
     /// This method makes a square mirror a unit on a side, centered at the given place and tipped so that
     /// a sun shining along +X is thrown straight down: its face looks back along -X and down.
     /// </summary>
@@ -181,7 +197,7 @@ public class TestCaustics
         PointLight lamp = new () { Location = new Point(-10, 2, 0) };
         Spotlight spot = new ()
         {
-            Location = new Point(-10, 2, 0), PointAt = new Point(0, 2.6, 0), Radius = 2, Falloff = 6
+            Location = new Point(-10, 2, 0), PointAt = new Point(0, 2.6, 0), Radius = 2 * Math.PI / 180, Falloff = 6 * Math.PI / 180
         };
 
         foreach (PointLight light in new[] { lamp, spot })
@@ -319,6 +335,42 @@ public class TestCaustics
 
         Assert.AreEqual(0.96 * Math.Exp(-0.5), absorbed.Red, 0.01);
         Assert.AreEqual(0.96, absorbed.Green, 0.01);
+    }
+
+    /// <summary>
+    /// This tests that photons cross a medium whose density varies as the eye's rays do, walking it: in water filled
+    /// with a checker of murk, a square of floor under a block of the checker that is clear takes the sun as clear
+    /// water lets it through.  Charged at the murk's even density everywhere, it lost e^-0.5 of its red there.
+    /// </summary>
+    [TestMethod]
+    public void TestPhotonsWalkAMediumWhoseDensityVaries()
+    {
+        Scene scene = SceneOf(
+            200_000, new DistantLight { Direction = new Vector(0, -1, 0) }, new Plane { Material = Matte() },
+            new Cube
+            {
+                Material = new Material
+                {
+                    Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                    Transparency = 1, Reflective = 1,
+                    Interior = new Interior
+                    {
+                        IndexOfRefraction = 1.5,
+                        Medium = new Medium
+                        {
+                            Absorption = new Color(0.5, 0, 0), Density = 1,
+                            DensityPattern = new DensityShape { Pattern = new CheckerPattern() }
+                        }
+                    }
+                },
+                Transform = Transforms.Scale(3, 1, 3)
+            });
+
+        // Over x and z from 0.3 to 0.9, the cube's own space runs from 0.1 to 0.3 across and 0 to 1 up: one block
+        // of the checker, and a clear one.
+        Color clear = LandedOver(scene, 0.6, 0.6, 0.3);
+
+        Assert.AreEqual(0.96, clear.Red, 0.02, "the sun through the clear block of the murk");
     }
 
     /// <summary>

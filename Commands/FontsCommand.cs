@@ -207,8 +207,9 @@ public static class FontsCommand
     private static void FetchFontFace(FontsOptions options)
     {
         FaceIdentifier id = options.FetchFontFace;
+        bool known = FontManager.Instance.IsKnownTypeFace(id);
 
-        if (FontManager.Instance.IsKnownTypeFace(id))
+        if (known)
         {
             if (!options.Replace)
                 Terminal.ShowError($"The {id.ForDisplay()} font face already exists.  Specify --overwrite if you want to overwrite it.");
@@ -219,8 +220,12 @@ public static class FontsCommand
 
         try
         {
-            _ = FontManager.Instance.GetTypeFace(id);
-            
+            // Asked for again, a face already in the catalog would only be read back from it.
+            if (known)
+                FontManager.Instance.ReplaceFontFace(id, () => _ = FontManager.Instance.GetTypeFace(id));
+            else
+                _ = FontManager.Instance.GetTypeFace(id);
+
             Terminal.Out($"The font face, {id.ForDisplay()} has been fetched.");
         }
         catch (Exception exception)
@@ -259,8 +264,9 @@ public static class FontsCommand
 
         try
         {
-            FontManager.Instance.ImportTypeFace(id, path);
-            
+            FontManager.Instance.ReplaceFontFace(id, () => FontManager.Instance.ImportTypeFace(id, path));
+
+
             Terminal.Out($"The font face, {id.ForDisplay()} has been imported.");
         }
         catch (Exception exception)
@@ -342,16 +348,17 @@ public static class FontsCommand
         FontWeight weight = FontWeight.Regular;
         bool italic = false;
 
-        if (split.Length > 1)
+        // An empty weight is the regular one, as in `Merriweather::italic`; a weight is named in any case, or given
+        // as one of the standard numbers, never any other number.
+        if (split.Length > 1 && split[1].Length > 0)
         {
-            if (!Enum.TryParse(split[1], out weight))
+            if (!Enum.TryParse(split[1], true, out weight) || !Enum.IsDefined(weight))
                 throw new ArgumentException($"\"{spec}\" is not a valid font face specification.");
         }
 
-        if (split.Length > 2)
+        if (split.Length > 2 && split[2].Length > 0)
         {
-            if (!string.IsNullOrEmpty(split[2]) &&
-                !"italic".StartsWith(split[2], StringComparison.CurrentCultureIgnoreCase))
+            if (!"italic".StartsWith(split[2], StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException($"\"{spec}\" is not a valid font face specification.");
 
             italic = true;

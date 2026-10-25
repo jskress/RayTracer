@@ -10,8 +10,9 @@ surface by giving it coordinates — you describe it in its own terms and then m
 
 ![The primitives at natural size](images/figures/surface-primitives.png)
 
-Those six are written with nothing but a material and a translation, so what you see is each
-one's natural size.  Not one of them has been scaled.  The complete scene is
+Those six are written with nothing but a material and a translation — and, for the torus and
+the egg, the radii they cannot do without — so what you see is each one's natural size.  Not one
+of them has been scaled.  The complete scene is
 [`docs/examples/surfaces/primitives.igl`](examples/surfaces/primitives.igl).
 
 ### What Every Surface Has
@@ -26,15 +27,20 @@ Whatever its shape, any surface accepts these:
 
 | Property | What it does |
 | --- | --- |
-| `named` | Gives the surface a name, so it can be reused. |
+| `named` | Gives the surface a name that other things may find it by: something [placed against it](transforms.md#placing-one-thing-against-another), a field dropped [`over`](advanced-surfaces.md#dropping-a-field-onto-the-ground) it, a joint [aiming](animation.md#aiming) at it, a body [tethered](animation.md#tethers) to it.  To use a surface more than once, give it to a name as a value instead; see [Reusing a surface](#reusing-a-surface). |
 | `material` | How it takes the light; see [Materials](materials.md). |
 | `no shadow` | The surface is visible but casts no shadow. |
 | `no caustics` | The surface turns none of a scene's caustics. |
+| `gives light` | The glowing stuff inside it lights what is around it; see [below](#a-surface-that-gives-light). |
 | `bounded by` | A box the renderer may use to skip it cheaply. |
 | `with seed` | Fixes the randomness anything about it draws on. |
 | `hair { }` | Grows hair over it; see [Hair](advanced-surfaces.md#hair). |
+| `weather { }` | The grime, dust, wear and snow of having stood out in the weather; see [Weathering a Model](materials.md#weathering-a-model). |
+| `motion { }` | Moves it while the camera's shutter is open; see [Setting a Surface Moving](transforms.md#setting-a-surface-moving). |
 | `body { }` | Moves it by gravity, the air and what it strikes, in an animation; see [Bodies](animation.md#bodies). |
-| *transforms* | `translate`, `scale`, `rotate` and the rest. |
+| `on`, `under`, `left of` and the rest | Places it against another named thing; see [Placing One Thing Against Another](transforms.md#placing-one-thing-against-another). |
+| `span from 'a' to 'b'` | Stands it between two named places; see [Marks and Spans](animation.md#marks-and-spans). |
+| *transforms* | `translate`, `scale`, `rotate` and the rest, or a [named `transform`](transforms.md#naming-a-transform). |
 
 Anywhere those appear below as "the usual properties," this is what is meant.
 
@@ -150,8 +156,10 @@ those surfaces could not be rendered.
 
 ### Solids
 
-These enclose a volume.  Six of them are in the picture at the top of this chapter; the plane
-is the seventh, and it appears as the ground in almost every other picture here.
+These enclose a volume.  Six of them are in the picture at the top of this chapter, and the plane
+is the ground in almost every other picture here.  The [saddle](#saddle) is the one exception: it
+stands among them for its kinship with the paraboloid and the quadric, but it is a sheet, as the
+[shapes](#shapes) are.
 
 #### Plane
 
@@ -221,7 +229,7 @@ same way, and both share these:
 
 | Property | What it does |
 | --- | --- |
-| `min Y`, `max Y` | Where to cut it off.  Left alone, both run to infinity. |
+| `min Y`, `max Y` | Where to cut it off.  −1 and 1 unless you say, so left alone it is as tall as a cube. |
 | `open` | Leave the ends as holes rather than capping them. |
 
 ```
@@ -232,8 +240,9 @@ cylinder {
 }
 ```
 
-A cylinder given neither `min Y` nor `max Y` is an infinite pipe.  Cut it and the ends are
-capped; add `open` and they are not, which matters when you are going to see inside.
+The ends are capped unless you say `open`, which matters when you are going to see inside.  For a
+pipe that runs on for ever, say so: `min Y NegativeInfinity  max Y PositiveInfinity`, and an end that
+goes on for ever has no cap to leave off.
 
 #### Torus
 
@@ -284,10 +293,14 @@ genuinely sharp, or a drop with a waist or a shoulder partway up, draw the profi
 [lathe](advanced-surfaces.md#lathe) instead — a lathe meets its axis at whatever angle you draw,
 where an egg's tip can only ever be as sharp as its smaller sphere.
 
+Both radii must be more than nought, and the top one less than twice the bottom: any bigger and the
+top sphere would swallow the bottom one whole, leaving nothing egg-shaped to join.  Either is refused.
+
 #### Superellipsoid
 
-The family of shapes that runs from a box to a sphere to a pinched star, depending on two
-exponents.
+The family of shapes that runs from a box through a sphere and a diamond to a pinched star,
+depending on two exponents.  Unlike the torus and the egg, it stands with its poles along **Z**,
+as POV-Ray's does, its equator in the X–Y plane.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/superellipsoidClause-dark.svg">
@@ -297,8 +310,8 @@ exponents.
 
 | Property | What it does |
 | --- | --- |
-| `east` | The exponent around the equator. |
-| `north` | The exponent from pole to pole. |
+| `east` | The exponent around the equator, across X and Y.  Required. |
+| `north` | The exponent from pole to pole, along Z.  Required. |
 
 ```
 superellipsoid {
@@ -310,9 +323,11 @@ superellipsoid {
 ![Three superellipsoids](images/figures/superellipsoids.png)
 
 Those are exponents of 0.2, 1 and 2.5.  Small values give a box with rounded edges, one gives
-a sphere, and anything much above one pinches the shape inward into a star.  The two need not
-match: a low `east` with a high `north` gives a square cross-section drawn to points at the
-poles.  The scene is
+a sphere, and from one to two the edges sharpen until, at two, it is a diamond, an octahedron with
+its points on the axes.  Past two the faces pinch inward into a star.  The two need not match: a
+low `east` with a high `north` gives a square cross-section drawn to points at the poles.  Both
+must be more than nought; nought or less is refused.  A shape with neither exponent over two is
+convex and found along a ray by a quicker search, so the pinched ones cost more.  The scene is
 [`docs/examples/surfaces/superellipsoids.igl`](examples/surfaces/superellipsoids.igl).
 
 #### Paraboloid
@@ -353,7 +368,8 @@ where its focus falls.  Without them, a dish makes a convincing reflector but li
 #### Hyperboloid
 
 A waisted surface of revolution: `x² + z² - y² = 1`, narrowest at the origin and flaring away above
-and below.  It takes the same three properties a paraboloid does, and no numbers of its own.
+and below.  It takes the same three properties a paraboloid does, and no numbers of its own; left
+alone, it runs from −1 to 1, as a cylinder does.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/extrudedSurface-dark.svg">
@@ -441,7 +457,10 @@ scene should reach for.  What this adds is the rest of the family: the two-sheet
 elliptic or hyperbolic cylinder, a cone about an axis of its own, a pair of planes.
 
 `bounded by` is required for the reason an [isosurface](advanced-surfaces.md#isosurface) requires
-it: most quadrics are endless, and nothing about ten coefficients says where to stop looking.
+it: most quadrics are endless, and nothing about ten coefficients says where to stop looking.  **The box
+cuts the surface**: it is drawn within the box and nowhere else, and the box's own faces are no part of
+it, so where the box cuts through it a quadric is open there — in a [CSG](#combining-surfaces), give it a
+box that holds all of what is to be kept.
 
 #### Blob
 
@@ -655,8 +674,10 @@ crests are spaced.
 | 1.0 | the crest closes to a cusp — the wave breaking |
 
 Past 1 the water would fold over itself and there would no longer be a single height at a place, so
-that is the ceiling.  Real water never gets there: it breaks at about 0.45, so the whole useful range
-sits well inside what this can draw.
+that is the ceiling — and it is a ceiling on **all the waves together**, since where every train's crest
+meets the water is as steep as all of them: their steepnesses must add to less than one, and more is
+refused.  Real water never gets there: it breaks at about 0.45, so the whole useful range sits well
+inside what this can draw.
 
 You may give a `wave` an `amplitude` instead of a `steepness` if you would rather say how tall it is
 outright, but not both — each says the same thing and they would disagree.  Steepness is usually the
@@ -808,7 +829,8 @@ neighbours exactly.  `gallery/Local/shapes/patch.igl` is the example to read.
 
 #### Bilinear Patch
 
-The warped quadrilateral four corners span — the one shape in this group that need not be flat.
+The warped quadrilateral four corners span — which need not be flat, as a bicubic patch need not,
+but is set by its corners alone.
 Give it four corners **in order around the quadrilateral** and it fills in between them.
 
 ![Bilinear patches](images/figures/surface-bilinear-patch.png)
@@ -1220,6 +1242,13 @@ The four complete scenes are in [`docs/examples/surfaces/`](examples/surfaces/),
 CSG nests, and that is where its power is: a difference whose first surface is itself a union,
 and so on down.
 
+**A side is gone into and out of at every one of its crossings**, so each side must have one skin.
+A group whose parts overlap has more than one: a ray that has gone into one part and then into
+another is taken to have come out again, and the CSG goes wrong wherever the parts overlap — faces
+from inside the group show, and the other side's go missing, so a difference cut into the overlap
+shows a hole into it.  Make such a side a `union` of the parts instead, which settles its own inside
+first.  A group whose parts only touch, or stand apart, is a side like any other.
+
 ### Bounding
 
 Testing a ray against every surface in a large scene is what makes rendering slow, so the
@@ -1230,8 +1259,9 @@ Most surfaces do this for themselves and you need not think about it.  Two cases
 knowing:
 
 **Some surfaces cannot be bounded.**  A plane is infinite, and so are a cylinder and conic
-that were never cut to length.  These have no box, and a group holding one has no box either,
-since the group cannot promise a ray missing its box has missed everything within.
+given an end at `PositiveInfinity` or `NegativeInfinity`.  These have no box, and a group holding
+one has no box either, since the group cannot promise a ray missing its box has missed everything
+within.
 
 **You can supply one.**  `bounded by` takes the two opposite corners of a box you promise the
 surface lies inside:

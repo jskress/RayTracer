@@ -45,7 +45,9 @@ public record Interval
     /// <para>
     /// The end itself is still taken when it is landed on, which is what the check against
     /// <see cref="DoubleExtensions.Near"/> is for: a step of a quarter reaches one as 0.99999999, and
-    /// a range written to include its end must include it.
+    /// a range written to include its end must include it.  A range open at its end leaves out only
+    /// the end itself: <c>[0, 3.5)</c> by ones goes 0, 1, 2, 3, as <c>[0, 3.5]</c> does, and
+    /// <c>[0, 3)</c> stops at 2.  (Taken as stopping a step short of the end, the first lost its 3.)
     /// </para>
     /// </summary>
     public bool IsAtEnd
@@ -53,14 +55,14 @@ public record Interval
         get
         {
             double next = _value + _step;
+            bool past = _step > 0 ? next > End : next < End;
 
-            return !next.Near(_stopAt) && (_step > 0 ? next > _stopAt : next < _stopAt);
+            return IsEndOpen ? past || next.Near(End) : past && !next.Near(End);
         }
     }
 
     private double _value;
     private double _step;
-    private double _stopAt;
 
     /// <summary>
     /// This method is used to set up the interval to produce values.  It must be called
@@ -74,7 +76,6 @@ public record Interval
     {
         _value =  Start - (IsStartOpen ? 0 : step);
         _step = step;
-        _stopAt = End - (IsEndOpen ? step : 0);
 
         return this;
     }

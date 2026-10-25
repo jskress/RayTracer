@@ -72,7 +72,8 @@ The third part need only begin with `i` — `:i` will do.
 
 Beyond the automatic fetch a render does for itself, there are two ways to put a face into the
 catalog by hand.  Neither will quietly replace one already there; pass `--overwrite` when you
-mean to.
+mean to.  The face is then fetched or imported afresh, keeping any kerning pairs you added to it, and
+one that cannot be had leaves the old face as it was.
 
 #### From Google Fonts
 

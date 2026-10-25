@@ -696,7 +696,8 @@ public partial class LanguageParser
         // interior block more than once.
         if (clause.Tokens.Count > 1 && !BounderToken.OpenBrace.Matches(clause.Tokens[1]))
         {
-            resolver.InteriorResolver = GetInteriorResolver(clause);
+            // A copy of it, since a later `interior { ... }` in the same material adds to what is there.
+            resolver.InteriorResolver = (InteriorResolver) GetInteriorResolver(clause).Clone();
 
             return;
         }

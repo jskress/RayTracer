@@ -15,7 +15,6 @@ namespace RayTracer.Renderer;
 public class ImageRenderer
 {
     private readonly InstructionContext _instructionContext;
-    private readonly Statistics _statistics;
     private readonly Variables _globals;
 
     public ImageRenderer(InstructionContext instructionsContext)
@@ -23,7 +22,6 @@ public class ImageRenderer
         string software = HeadingInfo.Default.ToString();
 
         _instructionContext = instructionsContext;
-        _statistics = new Statistics();
         _globals = new Variables();
 
         _globals.SetValue("__software__", software);
@@ -72,18 +70,28 @@ public class ImageRenderer
         // One frame alone: the one asked for, the still asked for, or -- a video of a scene that is no animation,
         // with no run of frames asked for -- the only one there is.
         bool stillAsked = options.Still || (animation is null && options.FrameRun is null);
+
+        if (animation is not null && (animation.Still < 0 || animation.Still >= animation.FrameCount(rate)))
+        {
+            throw new ArgumentException(
+                $"The animation names frame {animation.Still} as its still, but its frames run from 0 to " +
+                $"{animation.FrameCount(rate) - 1}.");
+        }
         long? alone = options.Frame ?? (stillAsked ? animation?.Still ?? 0 : null);
         (long first, long last) = alone is { } one
             ? (one, one)
             : options.FrameRun ?? (0, animation!.FrameCount(rate) - 1);
         bool several = last > first;
+        // A run of frames is numbered however many it holds: `--frames 7` is the run of frame 7 alone, and writes
+        // the very file a run of 0-143 writes for it.
+        bool run = alone is null;
 
         // Made before the first frame is rendered, so that an MP4 with no ffmpeg to write it is refused at once
         // rather than after the whole animation has been rendered for nothing.
-        MovieFile movie = (several && MovieFile.IsAMovie(options.OutputFileName)) || video
+        MovieFile movie = (run && MovieFile.IsAMovie(options.OutputFileName)) || video
             ? new MovieFile(options.OutputFileName, rate)
             : null;
-        FrameOutput output = new (several && movie is null, movie);
+        FrameOutput output = new (run && movie is null, movie);
 
         for (long frame = first; frame <= last; frame++)
         {
@@ -121,10 +129,13 @@ public class ImageRenderer
     /// <param name="output">Where a frame of an animation goes, or null for a still.</param>
     private void RenderImage(RenderOptions options, long frame, double time, double interval, FrameOutput output)
     {
+        // Counted afresh for every frame, so that what a frame reports is that frame's alone rather than the sum of
+        // every frame so far.
+        Statistics statistics = new ();
         RenderContext context = new ()
         {
-            Progress = ProgressReporterFor(options, _statistics),
-            Statistics = _statistics,
+            Progress = ProgressReporterFor(options, statistics),
+            Statistics = statistics,
             Time = time,
             FrameInterval = interval
         };
@@ -136,13 +147,13 @@ public class ImageRenderer
         // it has always had.  A person asks for them with `--stats`, and gets them laid out to read,
         // with what the scene held, however progress was reported.
         if (options.ProgressStyle == ProgressStyle.Tool)
-            Terminal.OutLine(_statistics.AsText());
+            Terminal.OutLine(statistics.AsText());
 
         if (options.ReportStatistics)
         {
             Terminal.OutLine("");
 
-            foreach (string line in _statistics.AsReport(Path.GetFileName(options.InputFileName)))
+            foreach (string line in statistics.AsReport(Path.GetFileName(options.InputFileName)))
                 Terminal.OutLine(line);
         }
     }

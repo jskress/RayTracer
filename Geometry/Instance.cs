@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Geometry.LSystems;
 
 namespace RayTracer.Geometry;
 
@@ -95,9 +96,21 @@ public class Instance : Surface
         // A mark is a named place, and a shape stood in many places would put it in all of them under the one name.
         Mark => false,
 
+        // A body is moved in the scene's own space, and a swarm filled there, so neither can be had once for many
+        // places: shared, a body never moved and a swarm stayed empty, with nothing said.  Built for its one place,
+        // either is then refused for standing inside a group, which is what the scene is told.
+        _ when surface.Body is not null => false,
+        Swarm => false,
+
         // An instance may stand in a shared shape like anything else: a crossing found through both
         // remembers both.  What it points at was asked these same questions when it was first shared.
         Instance => true,
+
+        // A group that fills itself when prepared is empty when it is asked, so it says what it will hold.
+        Field field => field.MayShareWhatItHolds() && field.Surfaces.All(MayBeShared),
+        GrownTree tree => tree.MayShareWhatItHolds() && tree.Surfaces.All(MayBeShared),
+        LSystem lsystem => lsystem.MayShareWhatItHolds() && lsystem.Surfaces.All(MayBeShared),
+        Fracture fracture => fracture.MayShareWhatItHolds() && fracture.Surfaces.All(MayBeShared),
 
         Group group => group.Surfaces.All(MayBeShared),
         CsgSurface csg => MayBeShared(csg.Left) && MayBeShared(csg.Right),

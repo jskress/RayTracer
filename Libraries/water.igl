@@ -43,10 +43,11 @@
 //
 // **Worked out from the trains rather than named**, so that it cannot drift away from the surface it
 // claims to describe.  Each train's amplitude is its steepness times its wavelength over two pi, and
-// all four can crest together, so this is their sum -- which is what to add to `y` to stand something
-// on the water rather than in it.
+// all five can crest together, so this is their sum -- which is what to add to `y` to stand something
+// on the water rather than in it.  The 1.6954 is the five trains' steepness shares times their
+// wavelength shares, 1 + 0.75 x 0.69 + 0.6 x 0.2 + 0.45 x 0.094 + 0.3 x 0.052, as `Water` below writes them.
 function WaterCrest(state) -> number {
-    return WaterSteepness(state) * WaterLength(state) * 1.2337 / 6.283185
+    return WaterSteepness(state) * WaterLength(state) * 1.6954 / 6.283185
 }
 
 // How far apart the crests run.  Longer with a bigger sea, which is what makes a rough sea read as
@@ -159,7 +160,7 @@ primitive Water(across, along, state = 'calm', variant = 1) -> swells {
 // showed sky whichever way it was facing, at every angle, and came out a uniform pale white.  It read
 // as fresh snow.
 //
-// Clarity is the honest fix rather than putting a floor in: light fades over distance travelled
+// Clarity is the honest fix rather than putting a floor in: light fades over distance traveled
 // through the substance, by Beer's law, so a ray heading down into deep water is simply absorbed and
 // comes back with nothing.  That is what deep water *is*.  Nine units to fade to a third is dark
 // enough to read as depth at the scale these wavelengths are written in.

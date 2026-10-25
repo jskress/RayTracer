@@ -180,10 +180,19 @@ public class Camera : NamedThing
         WhiteBalance balance = context.WhiteBalance is { } kelvin ? new WhiteBalance(kelvin) : null;
         double gain = Math.Pow(2, context.Exposure ?? Exposure);
 
-        // The sampler tells samples apart as the picture will show them -- exposed, and developed by the film
-        // curve -- unless the picture shows the light just as it is.
-        if (gain != 1 || (context.ApplyGamma && context.FilmCurve != FilmCurve.None))
-            renderer.Seen = light => context.Shown(Exposed(light, gain));
+        // The sampler tells samples apart as the picture will show them -- balanced, exposed, and developed by
+        // the film curve -- unless the picture shows the light just as it is.  The balance first, as each finished
+        // pixel takes it: left out, a balance for 2800 K, which brings blue up fourfold, left blue edges refined a
+        // quarter as often as they should be.
+        if (balance is not null || gain != 1 || (context.ApplyGamma && context.FilmCurve != FilmCurve.None))
+        {
+            renderer.Seen = light =>
+            {
+                Color balanced = balance is null ? light : balance.Apply(light);
+
+                return context.Shown(Exposed(balanced, gain));
+            };
+        }
 
         context.Progress?.SetTotal(canvas.Width * canvas.Height);
 
@@ -226,10 +235,13 @@ public class Camera : NamedThing
         new (light.Red * gain, light.Green * gain, light.Blue * gain, light.Alpha);
 
     /// <summary>
-    /// This method fills the scene's cache of bounced light, if it keeps one, by looking at the scene through
-    /// this camera in passes over ever finer grids of the picture's pixels; see
-    /// <see cref="Scene.FillTheBounceCache{TS}"/>.  It looks through each pixel's middle, at the first
-    /// instant and from the middle of the lens, which is where every sample of the pixel will look near.
+    /// This method fills the scene's cache of bounced light, if it keeps one -- it follows bounces and asks for
+    /// a cache -- by looking at the scene through this camera in passes over ever finer grids of the picture's
+    /// pixels, in light of whichever kind the picture is rendered in; see <see cref="Scene.FillTheBounceCache{TS}"/>.
+    /// It looks through each pixel's middle with the camera's first sample: for a pinhole whose shutter does not
+    /// linger, the one place and instant it has, and otherwise the first of its places across the lens and the
+    /// first of its instants while the shutter is open -- which need be neither the lens's middle nor the moment
+    /// the shutter opens.  Every sample of the pixel will look near there.
     /// </summary>
     /// <param name="context">The current rendering context.</param>
     /// <param name="scene">The scene to fill the cache of.</param>

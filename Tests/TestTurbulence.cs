@@ -44,13 +44,39 @@ public class TestTurbulence
         // apply it twice.  POV-Ray carves out exactly the same two exceptions, and for the same
         // reason: what they want stirred is the one coordinate they are built from.
         Turbulence turbulence = new () { Octaves = 3, Seed = 5 };
-        MarblePattern marble = new () { Turbulence = turbulence };
+        // On a plain ramp, so that the value is the pattern's own arithmetic and nothing more: marble's own wave is
+        // a triangle, which shapes the value as it should, and is not what this is about.
+        MarblePattern marble = new () { Turbulence = turbulence, Wave = WaveType.Ramp };
         WoodPattern wood = new () { Turbulence = turbulence };
 
         Assert.AreEqual(marble.Evaluate(Somewhere), marble.ValueFor(Somewhere), 1e-12,
             "marble's points were stirred on top of the turbulence it applies itself");
         Assert.AreEqual(wood.Evaluate(Somewhere), wood.ValueFor(Somewhere), 1e-12,
             "wood's points were stirred on top of the turbulence it applies itself");
+    }
+
+    /// <summary>
+    /// Marble and wood take turbulence's amount as POV-Ray's do -- marble's veins pushed by it along X, wood's rings
+    /// by it inside their wave -- so a turbulence of nought draws their plain bands, and another amount other veins.
+    /// Agate, as POV-Ray's, takes only its turbulence's octaves.  (All three ignored the amount, so `turbulence 0.4`
+    /// and `turbulence 2` drew the same veins.)
+    /// </summary>
+    [TestMethod]
+    public void TestMarbleAndWoodTakeTheAmountAndAgateDoesNot()
+    {
+        Turbulence Amount(double amount) => new () { Octaves = 3, Seed = 5, Amplitude = new Vector(amount, amount, amount) };
+
+        MarblePattern plain = new () { Wave = WaveType.Ramp };
+
+        Assert.AreEqual(plain.Evaluate(Somewhere),
+            new MarblePattern { Turbulence = Amount(0), Wave = WaveType.Ramp }.Evaluate(Somewhere), 1e-12,
+            "marble with no amount of turbulence is plain marble");
+        Assert.AreNotEqual(new MarblePattern { Turbulence = Amount(0.4) }.Evaluate(Somewhere),
+            new MarblePattern { Turbulence = Amount(2) }.Evaluate(Somewhere), 1e-6, "marble takes the amount");
+        Assert.AreNotEqual(new WoodPattern { Turbulence = Amount(0.4) }.Evaluate(Somewhere),
+            new WoodPattern { Turbulence = Amount(2) }.Evaluate(Somewhere), 1e-6, "wood takes the amount");
+        Assert.AreEqual(new AgatePattern { Turbulence = Amount(0.4) }.Evaluate(Somewhere),
+            new AgatePattern { Turbulence = Amount(2) }.Evaluate(Somewhere), 1e-12, "agate takes only the octaves");
     }
 
     [TestMethod]

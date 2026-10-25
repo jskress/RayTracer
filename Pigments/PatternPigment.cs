@@ -45,16 +45,16 @@ public class PatternPigment : Pigment
     }
 
     /// <summary>
+    /// A pattern is only as transmitting as the colors it chooses between.
+    /// </summary>
+    public override bool MayTransmit => PigmentSet?.MayTransmit ?? false;
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  The color we
     /// return is based on a blend of colors from our child pigments at the given point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
-    /// <summary>
-    /// A pattern is only as transmitting as the colors it chooses between.
-    /// </summary>
-    public override bool MayTransmit => PigmentSet?.MayTransmit ?? false;
-
     public override Color GetColorFor(Point point)
     {
         return GetColorFor(point, Footprint.None);
@@ -68,7 +68,9 @@ public class PatternPigment : Pigment
     /// -- cannot be: an averaged index means nothing, since half way between the first pigment and
     /// the second is not a color, it is a pigment that does not exist.  Such a pattern hands back a
     /// fractional index instead, and the pigment set mixes the two it lies between in that
-    /// proportion, which is what a half-brick-half-mortar patch really looks like.
+    /// proportion, which is what a half-brick-half-mortar patch really looks like.  One that picks
+    /// among three or more hands back each pigment's share of the patch, since an index averaged
+    /// between the first and the third is the second, which may cover none of it.
     /// </para>
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
@@ -76,11 +78,71 @@ public class PatternPigment : Pigment
     /// <returns>The appropriate color.</returns>
     public override Color GetColorFor(Point point, Footprint footprint)
     {
+        if (Pattern.DiscretePigmentsNeeded > 2)
+        {
+            Span<double> shares = stackalloc double[Pattern.DiscretePigmentsNeeded];
+
+            if (Pattern.SharesOver(point, footprint, shares))
+                return PigmentSet.GetMixedColorFor(point, shares, footprint);
+        }
+
+        if (Pattern.DiscretePigmentsNeeded == 0 && Pattern.MayWrap && FromItsSamples(point, footprint, default) is { } color)
+            return color;
+
         double value = Pattern.ValueFor(point, footprint);
 
         return Pattern.DiscretePigmentsNeeded > 0
             ? PigmentSet.GetBlendedColorFor(point, value, footprint)
             : PigmentSet.GetColorFor(point, value, footprint);
+    }
+
+    /// <summary>
+    /// This method returns the color of a patch of a pattern whose value may wrap -- a gradient's repeat, say -- from
+    /// one sampling of it: for a patch that straddles the wrap, the colors its values pick, mixed, and for one that
+    /// does not, the color of its average value, as for any pattern; or <c>null</c> for a patch too small to sample.
+    /// Averaged across the wrap, the values came to the middle of the range: a seam of a color the patch holds none
+    /// of, down every repeat of a gradient seen at a distance.
+    /// </summary>
+    /// <param name="point">The point to produce a color for.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="viewing">The directions the surface is being shaded between, if any.</param>
+    /// <returns>The color, or <c>null</c>.</returns>
+    private Color FromItsSamples(Point point, Footprint footprint, Viewing viewing)
+    {
+        Span<double> values = stackalloc double[96];
+        int count = Pattern.SamplesOver(point, footprint, values, out double value);
+
+        if (count == 0)
+            return null;
+
+        double low = values[0], high = values[0];
+
+        for (int index = 1; index < count; index++)
+        {
+            low = Math.Min(low, values[index]);
+            high = Math.Max(high, values[index]);
+        }
+
+        // Half the range apart: no smooth stretch of a pattern changes so fast within one patch, and a wrap always does.
+        if (high - low <= 0.5)
+        {
+            return viewing.IsEmpty
+                ? PigmentSet.GetColorFor(point, value, footprint)
+                : PigmentSet.GetColorFor(point, value, footprint, viewing);
+        }
+
+        Color sum = Colors.Black;
+        double alpha = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            Color color = PigmentSet.GetColorFor(point, values[index], footprint, viewing);
+
+            sum += color;
+            alpha += color.Alpha;
+        }
+
+        return (sum * (1.0 / count)).WithAlpha(alpha / count);
     }
 
     /// <summary>
@@ -108,6 +170,17 @@ public class PatternPigment : Pigment
     {
         if (viewing.IsEmpty)
             return base.GetColorFor(point, footprint, viewing);
+
+        if (Pattern.DiscretePigmentsNeeded > 2)
+        {
+            Span<double> shares = stackalloc double[Pattern.DiscretePigmentsNeeded];
+
+            if (Pattern.SharesOver(point, footprint, shares))
+                return PigmentSet.GetMixedColorFor(point, shares, footprint, viewing);
+        }
+
+        if (Pattern.DiscretePigmentsNeeded == 0 && Pattern.MayWrap && FromItsSamples(point, footprint, viewing) is { } color)
+            return color;
 
         double value = Pattern.ValueFor(point, footprint, viewing);
 
