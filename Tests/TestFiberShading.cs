@@ -224,6 +224,36 @@ public class TestFiberShading
     }
 
     /// <summary>
+    /// A strand takes the light bounced about a scene, from all round, as a surface does: a clear strand in a room
+    /// that glows evenly comes out as bright as the room, as it does under an even white sky.  Asking for bounces
+    /// puts every ambient out, and a strand that took no bounced light was black here -- a rug's pile went darker as
+    /// the room round it came up.
+    /// </summary>
+    [TestMethod]
+    public void TestAStrandTakesTheLightBouncedOntoItFromAllRound()
+    {
+        Scene scene = new () { DiffuseBounces = 1, DiffuseSamples = 4096 };
+        Sphere room = new ()
+        {
+            Material = new Material
+            {
+                Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0,
+                Emission = new Color(1, 1, 1)
+            },
+            Transform = Transforms.Scale(20)
+        };
+
+        room.PrepareForRendering();
+        scene.Surfaces.Add(room);
+        scene.Surfaces.Add(Horizontal(new Material { Melanin = new Melanin(0, 0), Ambient = 0 }));
+        scene.ArrangeSurfaces();
+
+        Color seen = scene.GetColorFor(new Ray(new Point(0, 0.03, -5), new Vector(0, 0, 1)));
+
+        Assert.AreEqual(1, seen.Red, 0.03, $"came out {seen}");
+    }
+
+    /// <summary>
     /// This method returns a strand two long along X, through the origin, a fifth wide.
     /// </summary>
     private static Strand Horizontal(Material material)

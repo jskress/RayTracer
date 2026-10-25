@@ -101,6 +101,17 @@ public class TestOptionText
         StringAssert.Contains(style.Message, "bar, tool or none");
     }
 
+    /// <summary>
+    /// A gamma is a power the light is raised to one over, so nought would send every color to infinity: refused on
+    /// the command line, as in a scene.
+    /// </summary>
+    [TestMethod]
+    public void TestAGammaOfNoughtIsRefused()
+    {
+        Assert.ThrowsExactly<ArgumentException>(() => new RenderOptions { Gamma = 0 });
+        Assert.AreEqual(1.8, new RenderOptions { Gamma = 1.8 }.Gamma);
+    }
+
     [TestMethod]
     public void TestBothValuesReadBackAsTheyWereWritten()
     {

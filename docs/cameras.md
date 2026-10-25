@@ -108,7 +108,7 @@ camera {
 The aperture models a real lens, so how much a thing blurs follows from where it stands.
 Wider means shallower depth of field.
 
-Specify where the focus lies with either `focal point` or 'focal distance`.  `focal point`
+Specify where the focus lies with either `focal point` or `focal distance`.  `focal point`
 is exactly that — a point in space, written as coordinates, where focus should be sharpest:
 
 ```
@@ -117,8 +117,8 @@ focal point [-0.2, 0.9, 1.5]
 
 The point doesn't need to lie on a surface, but you'll want it near, or even in the middle
 of, the surface you want to be in the sharpest focus.  The camera then works out for itself how
-far ahead the point lies, so the focus stays on it even if the camera later moves.  `focal
- distance` instead states that distance outright — a single number — for when that's the
+far ahead the point lies, so the focus stays on it even if the camera later moves.
+`focal distance` instead states that distance outright — a single number — for when that's the
 easier way.  Said neither way, the camera focuses on whatever it was aimed at.
 
 Two things worth knowing.  **Blur samples alone do nothing without an aperture** — there is
@@ -154,9 +154,13 @@ default — nothing smears however it is set moving.
 What actually moves is a property of the *surface*, not the camera; `motion { }` takes the
 same transforms a surface is placed with.  In a frame of an [animation](animation.md#motion-blur-from-time), a
 surface placed in terms of `time` moves through the frame by itself, and the shutter blurs it along its way
-with no `motion` said at all.  That is covered under *Transforms*.  Keeping the
-two apart means a scene can leave its motions in place and simply shut the shutter to get a
-still picture out.
+with no `motion` said at all.  That is covered under
+[Setting a Surface Moving](transforms.md#setting-a-surface-moving).  Keeping the two apart means a scene
+can leave its motions in place and simply shut the shutter to get a still picture out.
+
+**What a moving thing is painted with moves with it.**  Its pattern is read where the thing stands at
+each instant the shutter catches, so the squares of a checkered ball crossing the frame smear along its
+path with the ball, rather than the ball sliding under a pattern that stays put.
 
 The lens and the shutter **share one set of samples**, so asking for both costs no more rays
 than asking for either.  `blur samples` sets the count for both.

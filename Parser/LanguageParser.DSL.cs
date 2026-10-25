@@ -226,9 +226,10 @@ public partial class LanguageParser
         // belongs to any pattern in particular.
         waveClause:
         {
+            // Not insisting on "wave": `cubic` begins a pattern too, and a pigment may be named `sine`.
             [ ramp | sine | triangle | scallop | cubic |
               { poly > _expression } ] >
-            wave ?? 'Expecting "wave" to follow the wave name here.'
+            wave
         }
         patternShapingClause:
         [
@@ -259,7 +260,7 @@ public partial class LanguageParser
             { 
                 parallel >
                 [ line | pixel ] ?? 'Expecting "line" or "pixel" to follow "parallel" here.' >
-                scanner ?? 'Expecting "scanner" to follow "serial" here.'
+                scanner ?? 'Expecting "scanner" to follow "line" or "pixel" here.'
             }
         ]
         anglesClause:
@@ -438,9 +439,9 @@ public partial class LanguageParser
             bladesClause | { glare > _expression }
         ] ?? 'Expecting a camera property here.'
 
-        // Light clauses.  One opener serves all three sorts, told apart by the word before
-        // "light": nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone.
-        // The word before "light", if any, names the sort.  What follows is either a block describing
+        // Light clauses.  One opener serves every sort, told apart by the word before "light":
+        // nothing or "point" for a lamp, "distant" for the sun, "spot" for a cone, "area" for a
+        // glowing panel, "sky" for the light of the whole sky.  What follows is either a block describing
         // one or the name of a light already described, which may carry a block of its own to adjust
         // what it found -- the same shape "object <name>" has for a surface.
         startLightClause:
@@ -653,8 +654,9 @@ public partial class LanguageParser
         materialMetallicClause:
         {
             metallic > [
-                pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | startInteriorClause |
-                startDecalClause | startFilmClause | startSubsurfaceClause | startCoatClause | _expression{?}
+                pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMelaninClause |
+                startInteriorClause | startDecalClause | startFilmClause | startSubsurfaceClause | startCoatClause |
+                startSheenClause | _expression{?}
             ]
         }
         // An interior may be written out in full, named, or named and then added to, much as a
@@ -1487,7 +1489,8 @@ public partial class LanguageParser
                 [ openBrace | _identifier | _keyword ] ?? 'Expecting a spline, or the name of one, after "spline" here.'
             } |
             { steps > _expression } |
-            { no > center ?? 'Expecting "center" to follow "no" here.' } |
+            // No insisting on "center": `no shadow` and `no caustics` belong to every surface, and are read below.
+            { no > center } |
             open | surfaceEntryClause
         ]
 
@@ -1787,7 +1790,7 @@ public partial class LanguageParser
             heightfield > [
                 openBrace |
                 { [ _identifier | _keyword ] > openBrace{?} }
-            ] ?? 'Expecting an identifier or open brace to follow "field" here.'
+            ] ?? 'Expecting an identifier or open brace to follow "heightfield" here.'
         }
         heightFieldEntryClause:
         [
@@ -1977,6 +1980,10 @@ public partial class LanguageParser
         }
         groupEntryClause:
         [
+            // A local name first: `left`, `body`, `reach` and the rest are names a scene may keep, and any clause
+            // beginning with that word read first insists on its own next word and fails on the "=".  A local name
+            // gives way quietly to anything not followed by "=".
+            localClause => 'local' |
             startForClause => 'for' |
             startOverClause => 'over' |
             startIfClause => 'if' |
@@ -2030,9 +2037,6 @@ public partial class LanguageParser
             startCsgClause => 'csg' |
             startGroupClause => 'group' |
             surfaceEntryClause => 'surface' |
-            localClause => 'local' |
-            // After a local name: `reach`, `angle` and the rest are names libraries keep, and a joint's property
-            // read first would take `reach = ...` for a reach and fail on the "=".
             jointPropertyClause => 'jointProperty'
         ]
 
@@ -2043,6 +2047,7 @@ public partial class LanguageParser
         }
         sceneEntryClause:
         [
+            localClause => 'local' |
             startForClause => 'for' |
             startOverClause => 'over' |
             startIfClause => 'if' |
@@ -2098,8 +2103,7 @@ public partial class LanguageParser
             startGroupClause => 'group' |
             background => 'background' |
             startEnvironmentClause => 'environmentBlock' |
-            environmentClause => 'environment' |
-            localClause => 'local'
+            environmentClause => 'environment'
         ] ?? 'Unsupported scene property found.'
 
         // What is true of the space between a scene's objects rather than of any object.  It is
@@ -2170,7 +2174,7 @@ public partial class LanguageParser
             [
                 pigment | startPathClause | startKeysClause |
                 { discontinuous{?} > spline > openBrace ?? 'Expecting an open brace to follow "spline" here.' } |
-                { material > startThingClause } | { transform > startThingClause } |
+                startMaterialClause | { transform > startThingClause } |
                 { interior > startThingClause } | { medium > startThingClause } |
                 startLightClause |
                 startPlaneClause | startSphereClause | startCubeClause | startCylinderClause |

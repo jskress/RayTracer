@@ -59,6 +59,12 @@ public class JointCreator : TransformCreator
     }
 
     /// <summary>
+    /// This method returns a copy of this turn, for a copy of the joint it belongs to.
+    /// </summary>
+    /// <returns>The copy.</returns>
+    public JointCreator Copy() => (JointCreator) MemberwiseClone();
+
+    /// <summary>
     /// This method returns an angle held within the joint's limits.
     /// </summary>
     /// <param name="angle">The angle, in radians.</param>

@@ -193,4 +193,18 @@ public class TestInterval
         }.Reset(1)).Count);
     }
 
+    [TestMethod]
+    public void TestAnOpenEndTheStepDoesNotLandOnLeavesNothingOut()
+    {
+        // An open end leaves out the end itself and nothing else: short of 3.5 by ones still reaches 3, as it
+        // does counting down, and an open end the step does land on is the one value left out.
+        CollectionAssert.AreEqual(new List<double> { 0, 1, 2, 3 },
+            Walk(new Interval { Start = 0, End = 3.5, IsEndOpen = true }.Reset(1)));
+        CollectionAssert.AreEqual(new List<double> { 5, 4, 3 },
+            Walk(new Interval { Start = 5, End = 2.6, IsEndOpen = true }.Reset(-1)));
+        CollectionAssert.AreEqual(new List<double> { 0, 0.25, 0.5, 0.75 },
+            Walk(new Interval { Start = 0, End = 1, IsEndOpen = true }.Reset(0.25))
+                .Select(value => Math.Round(value, 10)).ToList());
+    }
+
 }

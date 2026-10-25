@@ -48,6 +48,12 @@ public class LSystem : Group
     public Func<Surface> LeafFactory { get; set; } = DefaultLeaf.Create;
 
     /// <summary>
+    /// This method reports whether the leaves the L-system will hold may be shared between places, which it may be
+    /// only if they may: it holds nothing until it is drawn, after it has been shared.
+    /// </summary>
+    internal bool MayShareWhatItHolds() => LeafFactory is null || Instance.MayBeShared(LeafFactory());
+
+    /// <summary>
     /// This property notes whether <see cref="LeafFactory"/> is still the built-in leaf rather than
     /// one the scene named.  It matters only for color: the built-in leaf carries a green to fall
     /// back on, so that a bare tree reads as leaves rather than as bark, and that green is the last

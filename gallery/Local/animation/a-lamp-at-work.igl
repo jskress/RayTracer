@@ -71,7 +71,22 @@ plane { material Plaster  rotate X -90  translate Z 0.40 }   // the wall behind 
 // The light of the rest of the house, faint, from off to the left.
 point light { location [-2.2, 2.0, -1.6]  temperature 4200  brightness 0.035 }
 
-object Desk(48) { scale Inch }
+// The desk is the library's oak with its grain drawn at full strength, as it was before 2026-10-23: wood then
+// ignored its turbulence's amount, and the library's quarter-strength figure, honored since, reads as a plain
+// brown top under the lamp.
+DeskOak = material {
+    pigment wood {
+        turbulence { amplitude 1  octaves 3 }
+        [0, [0.52, 0.38, 0.23], 0.5, [0.44, 0.31, 0.18],
+         0.82, [0.34, 0.23, 0.13], 1, [0.52, 0.38, 0.23]]
+        scale [0.5, 0.5, 90]
+        rotate Y 90
+        translate [0, 26, 0]
+    }
+    reflective 0.04  roughness 0.3  ambient 0.12
+}
+
+object Desk(48, 28, DeskOak) { scale Inch }
 
 // -- On the desk ----------------------------------------------------------------------------------------
 

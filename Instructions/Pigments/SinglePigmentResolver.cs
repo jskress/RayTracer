@@ -37,12 +37,32 @@ public class SinglePigmentResolver : PigmentResolver<Pigment>
             };
         }
 
-        return result switch
+        Pigment made = result switch
         {
             Color color => new SolidPigment(color),
             IPigmentResolver resolver => resolver.ResolveToPigment(context, variables),
             Pigment pigment => pigment,
             _ => throw new TokenException("Could not resolve this to a color or pigment.")
         };
+
+        // A seed said before the pigment is given to it, when it was made here -- a color, or what a pigment
+        // function's call made.  A pigment named is one pigment, worn by everything that names it, so a seed given
+        // to it here would reseed them all.
+        if (SeedResolver is not null)
+        {
+            if (result is Pigment)
+            {
+                throw new TokenException(
+                    "A named pigment is one pigment, shared by everything that wears it, so it cannot be given a " +
+                    "seed of its own here; give it its seed where it is made.")
+                {
+                    Token = Term.ErrorToken
+                };
+            }
+
+            SetProperties(context, variables, made);
+        }
+
+        return made;
     }
 }

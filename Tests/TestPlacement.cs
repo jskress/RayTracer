@@ -68,6 +68,36 @@ public class TestPlacement
         }
     }
 
+    /// <summary>
+    /// A thing that moves while the shutter is open is placed by all it covers while it is open, as a still one is
+    /// by all it covers, and moves from there as it was written to: a ball sliding one along X on the anchor slides
+    /// from half a unit one side of the anchor's middle to half the other.  (Its instants were worked out when it was
+    /// prepared, before it was placed, so it was found where it stood unplaced, inside the anchor.)
+    /// </summary>
+    [TestMethod]
+    public void TestAMovingThingIsPlacedAndMovesFromThere()
+    {
+        const string open = "camera { location [4, 3, -6]  look at [0, 0, 0]  field of view 55  shutter 1  blur samples 8 }\n";
+        Canvas placed = Rendered(Anchor + $"sphere {{ scale 0.25  motion {{ translate X 1 }}  on 'anchor'  {Probe} }}\n", open);
+        Canvas byHand = Rendered(
+            Anchor + $"sphere {{ scale 0.25  translate [-0.5, 1.25, 0]  motion {{ translate X 1 }}  {Probe} }}\n", open);
+
+        // Alike rather than the same to the last bit: where a placement puts a thing is measured, and a blur sample
+        // grazing the ball's edge may fall either side of it on a rounding.
+        int differing = 0;
+
+        for (int y = 0; y < placed.Height; y++)
+        {
+            for (int x = 0; x < placed.Width; x++)
+            {
+                if (Math.Abs(placed.GetPixel(x, y).Red - byHand.GetPixel(x, y).Red) > 0.05)
+                    differing++;
+            }
+        }
+
+        Assert.IsTrue(differing <= 3, $"a moving thing placed on the anchor did not land on it ({differing} pixels differ)");
+    }
+
     [TestMethod]
     public void TestEverySideLinesUpWithTheMatchingSide()
     {
@@ -360,6 +390,23 @@ public class TestPlacement
                 "cube { translate X 3  named 'a' }\n" +
                 "sphere { on 'a' }\n"),
             "cannot say which was meant");
+    }
+
+    /// <summary>
+    /// A swarm and a dropped field fill themselves only after placements are settled, so either is still empty when
+    /// it would be placed: refused, rather than passed over as nothing to place.
+    /// </summary>
+    [TestMethod]
+    public void TestWhatFillsItselfLaterCannotBePlaced()
+    {
+        StringAssert.Contains(
+            WhatWentWrong(Anchor + "Ball = sphere { scale 0.05 }\nswarm { of Ball  rate 10  on 'anchor' }\n"),
+            "fills itself only after placements");
+        StringAssert.Contains(
+            WhatWentWrong(Anchor + "Ball = sphere { scale 0.05 }\n" +
+                "field { of Ball  within { move to -1, -1  line to 1, -1  line to 1, 1  close }  " +
+                "spacing 0.5  over 'anchor'  left of 'anchor' }\n"),
+            "fills itself only after placements");
     }
 
     [TestMethod]

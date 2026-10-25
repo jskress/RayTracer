@@ -24,7 +24,7 @@ public class Spotlight : PointLight
     public Point PointAt { get; set; } = Point.Zero;
 
     /// <summary>
-    /// This property notes the half-angle, in degrees, of the fully-lit inner cone: out to here
+    /// This property notes the half-angle, in radians, of the fully-lit inner cone: out to here
     /// from the axis the light is at full strength, and past here it begins to fall away.  Zero
     /// leaves no flat core at all, so the light is brightest exactly on the axis and softening
     /// everywhere off it.
@@ -32,10 +32,10 @@ public class Spotlight : PointLight
     public double Radius { get; set; }
 
     /// <summary>
-    /// This property notes the half-angle, in degrees, at which the light has fallen to nothing.
-    /// Between the radius and here the light eases down; beyond here it is dark.
+    /// This property notes the half-angle, in radians, at which the light has fallen to nothing.
+    /// Between the radius and here the light eases down; beyond here it is dark.  Thirty degrees unless said.
     /// </summary>
-    public double Falloff { get; set; } = 30;
+    public double Falloff { get; set; } = Math.PI / 6;
 
     /// <summary>
     /// This property notes how sharply the light gathers toward the axis within the cone, as an
@@ -75,12 +75,12 @@ public class Spotlight : PointLight
         if (cosine <= 0)
             return 0;
 
-        // Angles are given in degrees but compared as cosines, since that is what the dot product
+        // Angles are held in radians but compared as cosines, since that is what the dot product
         // hands back.  A wider angle has a smaller cosine, so the fully-lit core is where the
         // cosine is *above* the radius cosine, and the dark beyond is where it is below the
         // falloff cosine.
-        double cosineRadius = Math.Cos(Radius * Math.PI / 180);
-        double cosineFalloff = Math.Cos(Falloff * Math.PI / 180);
+        double cosineRadius = Math.Cos(Radius);
+        double cosineFalloff = Math.Cos(Falloff);
 
         double intensity = Tightness == 0 ? 1 : Math.Pow(cosine, Tightness);
 

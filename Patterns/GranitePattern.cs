@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Patterns;
 
@@ -70,7 +71,7 @@ public class GranitePattern : Pattern, INoiseConsumer
             {
                 Vector vector2 = vector1 * frequency;
 
-                number = Math.Abs(0.5 - NoiseGenerator.ForSeed(Seed).Noise(
+                number = Math.Abs(0.5 - NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed).Noise(
                     new Point(vector2.X, vector2.Y, vector2.Z)));
                 number = worth * number + (1 - worth) * NoiseGenerator.AverageRectifiedValue;
             }

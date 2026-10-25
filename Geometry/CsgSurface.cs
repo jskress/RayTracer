@@ -73,7 +73,8 @@ public class CsgSurface : Surface
         {
             Dictionary<Material, Material> merged = [];
 
-            foreach (Surface surface in new SurfaceIterator([Left, Right]).Surfaces)
+            // As far as each instance and no further; see Group.
+            foreach (Surface surface in new SurfaceIterator([Left, Right], intoShared: false).Surfaces)
                 surface.Material = Material.HandedDown(surface.Material, Material, merged);
         }
 

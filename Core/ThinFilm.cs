@@ -96,7 +96,7 @@ public class ThinFilm
     {
         double thickness = ThicknessAt(Pattern is null
             ? null
-            : intersection.Surface.WorldToSurface(intersection.Point, 0, intersection.Portals));
+            : intersection.Surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals));
 
         return SharesAt<TS>(
             thickness, intersection.Eye.Dot(intersection.Normal), intersection.N1, intersection.N2);

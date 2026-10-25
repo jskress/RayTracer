@@ -7,7 +7,7 @@ namespace RayTracer.Instructions.Surfaces;
 /// <summary>
 /// This class is used to resolve a swarm: the thing every copy is, and how copies are thrown and fly.
 /// </summary>
-public class SwarmResolver : SurfaceResolver<Swarm>
+public class SwarmResolver : SurfaceResolver<Swarm>, IValidatable
 {
     public ISurfaceResolver ThingResolver { get; set; }
     public Resolver<Point> FromResolver { get; set; }
@@ -69,4 +69,12 @@ public class SwarmResolver : SurfaceResolver<Swarm>
             value.FallsTo = FallsToResolver?.Resolve(context, variables) ?? value.FallsFrom;
         }
     }
+
+    /// <summary>
+    /// This method validates the state of the object and returns the text of any error message, or <c>null</c>,
+    /// if all is well: a swarm with nothing to throw drew nothing, and said nothing about it.
+    /// </summary>
+    /// <returns>The text of an error message or <c>null</c>.</returns>
+    public string Validate() =>
+        ThingResolver is null ? "A swarm needs something to throw: say what with \"of\"." : null;
 }

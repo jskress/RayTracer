@@ -377,6 +377,40 @@ public class TestFrostedGlass
     }
 
     /// <summary>
+    /// Glass made clear by its pigment's alpha, rather than by `transparency`, glows with a lamp behind it as
+    /// brightly: the glow is charged what the point lets through, and the pigment has its say in that.
+    /// </summary>
+    [TestMethod]
+    public void TestGlassClearByItsPigmentGlowsAsBrightly()
+    {
+        double[,] Pane(string clear)
+        {
+            Canvas canvas = RenderedCanvas("color depth 16  reflection samples 64",
+                "camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 12 }\n" +
+                "background Black\n" +
+                "point light { location [0, 0, 1.5]  color [0.4, 0.4, 0.4] }\n" +
+                $"cube {{ scale [2, 2, 0.05]  material {{ {clear}  ambient 0  diffuse 0  specular 0  roughness 0.3\n" +
+                "    interior { ior 1.5 } } }\n",
+                8, 8);
+            double[,] red = new double[8, 8];
+
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = 0; x < 8; x++)
+                    red[y, x] = canvas.GetPixel(x, y).Red;
+            }
+
+            return red;
+        }
+
+        double[,] byTransparency = Pane("pigment White  transparency 1");
+        double[,] byPigment = Pane("pigment color [1, 1, 1, 0]");
+
+        Assert.IsTrue(byTransparency[4, 4] > 0.05, $"the lamp should glow through: {byTransparency[4, 4]}");
+        Assert.AreEqual(byTransparency[4, 4], byPigment[4, 4], 0.01, "the glow through glass clear by its pigment");
+    }
+
+    /// <summary>
     /// Rough glass keeps its glints: a lamp mirrored in it shows, though the glass lets all the rest of
     /// the light through.
     /// </summary>

@@ -382,11 +382,17 @@ field {
 The number is set in a scope of its own for each copy, so it does not overwrite a name the field was
 written among and does not outlive the field.
 
-**A shape that cannot stand in two places is copied whether you ask or not.**  Anything holding a
-light, anything with a medium inside it, anything that moves while the shutter is open, and
-anything that is already an instance — which is what a primitive returning a group hands out —
-is built afresh at each place.  The field works that out from the shape rather than from what the
-scene said, so there is nothing to remember and nothing to get wrong.
+**A shape that cannot stand in two places is copied whether you ask or not.**  Anything that
+[`gives light`](surfaces.md#a-surface-that-gives-light) or has a medium inside it, anything that
+moves while the shutter is open, and anything holding a [joint](animation.md#joints) that aims or
+reaches, a mark or a span, is built afresh at each place, since each of those has to be worked out
+where it actually stands.  (A [body](animation.md#bodies) or a [swarm](animation.md#swarms) cannot be
+a field's copy at all: each must stand at the top of the scene.)  A lamp in a group is no bar to
+sharing — it is lit at every place the group stands — and nor is a shape that is itself shared, as
+what a primitive hands back usually is: a shared shape may hold shared shapes, so a wood of shared
+trees hung with shared leaves builds each kind of tree, and each leaf, once.  The field works that
+out from the shape rather than from what the scene said, so there is nothing to remember and nothing
+to get wrong.
 
 So the clause is all of it or none of it: `index` has to name a number, because naming one is the
 only thing left for it to do.  Asking for copies of a shape that *may* be shared would build the
@@ -490,7 +496,10 @@ shares with the ground, and `steepest` is an angle from level in the scene's own
 
 **The ground has to stand beside the field**, in the same group or both at the top of the scene, as
 anything placed against another does; it is dropped onto only once it has been placed itself.  A field
-from a primitive is dropped by the block on its call, as the grass above is.
+from a primitive is dropped by the block on its call, as the grass above is.  A dropped field cannot
+itself be placed against anything — `on`, `under`, `left of` and the rest are refused — since it is
+empty until its copies land, which is after placing is done; say where it stands with its own
+transforms.
 
 The grid is laid out level, so ground that slopes away holds its copies a little further apart along
 its surface than level ground does — at thirty degrees, by about fifteen percent.
@@ -663,8 +672,11 @@ cylinder comes out as a dotted line.  A strand finer than a pixel is widened to 
 of it it covers, so it is a faint, continuous line instead.  And since the pixel then sees the whole of its
 round at once, it is shaded that way: each lamp's highlight, its diffuse light and what it mirrors
 averaged round it exactly, rather than wherever a sample happened to land, which would make a polished
-wire glitter.  A wire wide enough to be seen place by place is shaded place by place, and the two agree,
-so a string seen at a slant keeps its brightness where it narrows below a pixel.
+wire glitter.  A wire wide enough to be seen place by place is shaded place by place, and in what both
+see -- the lamps' light, the mirror, the glow and what is bounced onto it -- the two agree, so a string seen
+at a slant keeps its brightness where it narrows below a pixel.  A fine wire is shaded as plain metal, though:
+a coat, a sheen, a film or light gathered from caustics shows only where the wire is wide enough to be seen
+place by place.
 
 **A wire far finer than its pixel looks about itself in proportion.**  Seen from far enough off, a ray takes
 in every string of a piano at once, and each of them looking for what it mirrors with all of a mirror's
@@ -841,7 +853,9 @@ twenty-two seconds to grow, gather the light among and render at 160 by 120, and
 about twelve seconds before the first pixel, most of it following the light among the strands, and
 ten drawing them, since at that size each pixel sees through dozens of them.  Gathering the light is
 done once for each head of hair and each light, before the first pixel, and takes about a third of a
-second for a fur ball of six thousand strands.  A surface may grow at most two million.
+second for a fur ball of six thousand strands.  Hair on a shape shared between places gathers its light
+once for each place, the first time a ray meets it there, and keeps up to about 25 MB a place to read it
+from.  A surface may grow at most two million.
 
 **A low light raking across a rug costs more than one overhead**, since each shadow ray toward it runs
 through the pile on the way; a ray stops looking once next to nothing gets past the strands it has
@@ -982,6 +996,9 @@ pipe, a gutter or a hose seen end on, whose outline is closed only so that it is
 way round.  A profile that never closes is a ribbon whatever you say, since there is no inside
 to fill.
 
+**One outline.**  A profile is a single run, drawn from its one `move to`: a second run, or a hole in
+it, is refused, since only one outline can be carried along the spline.
+
 **Tangent continuity.**  A sweep expects its spline to flow smoothly from one segment into the
 next, and refuses if it does not, telling you which control point is at fault and by how many
 degrees it bends:
@@ -995,6 +1012,11 @@ each other.  Mark it "discontinuous" if this kink is intentional.
 That is a genuine kindness — handwritten control points almost never line up by accident, and
 a kink you did not mean is much easier to fix when something says exactly where it is.  When
 you did mean it, write `discontinuous` before `spline`, as the example above does.
+
+A curve whose control point stands on its own end — as a curve that eases out of a straight is often
+drawn — is no kink and no fault: its way there is the way toward its next point that differs, as the
+curve itself sets off.  Only a segment whose points are all the one place is refused, `discontinuous`
+or not, having no way to go at all.
 
 The complete scene is [`docs/examples/advanced/sweep.igl`](examples/advanced/sweep.igl).
 
@@ -1026,8 +1048,8 @@ A bare `radius … at …` is a straight segment.  `quad` takes two such points 
 them; `curve` takes three.  The radius is interpolated along with the position, which is what
 gives the taper.
 
-A tube checks for tangent continuity exactly as a sweep does, and `discontinuous` says the
-kinks are meant.
+A tube checks for tangent continuity exactly as a sweep does, a control point on its own end
+included, and `discontinuous` says the kinks are meant.
 
 Where a sweep carries an arbitrary profile, a tube is always round — which makes it the right
 tool for cables, pipes, handles and stems, and it is what the
@@ -1429,7 +1451,7 @@ text {
         vertical position center
     }
 
-    scale [1, 1, 0.35]
+    scale [1, 2, 1]      // letters 0.2 deep rather than 0.1
     rotate X -90
 }
 ```
@@ -1460,8 +1482,10 @@ A pair named here is used ahead of any the [font catalog](fonts.md#kerning) hold
 and those ahead of the font's own.  An adjustment of nought is read as "not said", so it cannot
 take back a pair the font carries; `1` comes as near to that as makes no difference.
 
-Like an extrusion, text is built lying flat, so it wants standing up.  Scaling Z before that
-is how you set how thick the letters are.
+Like an extrusion, text is built lying flat: its letters in the X–Z plane, their tops toward +Z,
+each line a unit tall, and given depth up Y, a tenth of a unit of it.  So it wants standing up, and
+`rotate X -90` does that, its letters reading the right way round from −Z.  **Scaling Y before that
+is how you set how thick the letters are**; scaling Z there would squash them shorter instead.
 
 The font need not already be in your catalog — a font Google Fonts carries is fetched the
 first time a scene asks for it.  [Managing Fonts](fonts.md) covers the catalog, and how to add
@@ -1585,7 +1609,7 @@ letter but the first sits well off the axis a taper draws towards.  Tapering the
 would pull them all in towards one point and leave a starburst rather than a word.
 
 How thick the letters are decides how steep the chisel is, since the taper is spread over that
-depth — so scaling Z before standing the text up changes the bevel as well as the depth.
+depth — so scaling Y before standing the text up changes the bevel as well as the depth.
 
 The complete scene is
 [`docs/examples/advanced/tapered-text.igl`](examples/advanced/tapered-text.igl).
@@ -1635,7 +1659,7 @@ and then scaled to whatever size the scene wants.
 | `image` | The picture to read.  A path or a web address. |
 | `function` | An expression giving the height, in place of an image. |
 | `samples` | How many points across a function is sampled at.  256 by default. |
-| `clip` | Ignore anything below a given height, cutting the terrain off. |
+| `clip` | Ignore anything darker than a given brightness, from nought to one, cutting the terrain off there. |
 | `open` | Leave the sides and underside off. |
 | `smooth` | Shade the terrain as the smooth surface it stands for. |
 
@@ -1643,6 +1667,14 @@ A field takes its heights from an `image` or from a `function`, never both.  `sa
 the function form — a picture brings its own size with it — and `clip` to the image form, since a
 picture's pixels cannot be reached from the scene while a function can simply say `max(..., 0)`.
 Saying otherwise is refused rather than quietly ignored.
+
+**A closed field stands on a floor at height nought**, whichever form it takes: its walls run down
+from the edge of the terrain to nought, and its underside is the unit square there.  An image's
+heights never go below it, but a function's may, and where one does the terrain dips through its own
+floor — so lift such a function clear of nought, or make the field `open`.  A `clip` on a closed
+field raises everything darker than the clip to the height the clip's brightness stands for — a
+quarter of it, as with any brightness — in a level plain; `open`, the field leaves that plain out,
+and the terrain stops at the clip with nothing beneath it.
 
 #### Terrain from a function
 
@@ -2102,8 +2134,9 @@ branches meet, the wood below is as thick as those it feeds put together: its ra
 trees with an exponent of 2, which keeps the wood's cross-section the same across a fork; measured
 trees mostly fall between 2 and 3, and 2.5 is the default.  A higher joining gathers less of the
 twigs' thickness into each limb, for a slender trunk under a big crown.  Between forks the wood keeps
-its thickness, and each run is drawn as a chain of tapered [tube](#tube) segments meeting radius to
-radius, so no joint shows.
+its thickness, so each run is drawn as a chain of straight [tube](#tube) segments of that one radius,
+end to end with round ends, and no joint shows along it; it thins only at a fork, where each branch
+sets off from inside the thicker wood below.
 
 **`leaf`** is what grows at the end of every twig and the two places behind it.  It is written the way
 the crown is — in braces, by name, or as a call — and authored **standing on the origin and growing up
@@ -2175,7 +2208,9 @@ fracture {
 as a [grown tree](#grown-tree)'s crown is.  A box — a cube under any transform, or an intersection of
 them, which is how a wall with sloping faces is written — is broken exactly, its own planes bounding
 every piece.  Anything else is broken by cutting each piece from it, so a ball breaks into pieces whose
-outer faces are the ball's.  A plane or an open-ended shape has no inside, and is refused.
+outer faces are the ball's.  A plane or an open-ended shape has no inside, and is refused; so, unless
+it is a box or the pieces are `whole`, is a solid that glows, holds a medium or moves, since every piece
+is cut from the one solid shared among them.
 
 **`pieces`** is how many (20 unless you say), near enough.  **`gap`** is how wide the cracks between
 them are: nought, and they fit with no crack at all; a hair, and the thing reads as cracked; more, and
@@ -2208,7 +2243,9 @@ a thing caught breaking, or stones not quite laid true.
 on from piece to piece, as it does across the cracks in a broken slab.  **`loose`** gives each piece a
 place of its own in its pattern instead, so the grain of one does not run on into the next — the
 pieces are separate stones, not one block cracked.  **`materials A, B, C`** gives them several to take
-one of at random, each a name, a primitive's parameter or a `material` written out.
+one of at random, each a name, a primitive's parameter or a `material` written out.  A piece of a solid
+that is not a box has the solid's own skin for its outer faces, and wears its material there as well as
+on its broken faces: the solid is made once for each of the materials, so that each skin is its own.
 
 **What it costs.**  Breaking is done once, before rendering: a wall of three hundred stones breaks in a
 fifth of a second.  The pieces then render as any polyhedra do — a worn one a little dearer than a sharp

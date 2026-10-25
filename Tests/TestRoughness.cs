@@ -389,8 +389,8 @@ public class TestRoughness
             {
                 for (int v = 0; v < 5; v++)
                 {
-                    Vector toPlace = new Point(-1 + u * 0.5, 10, -1 + v * 0.5) - middle.LitPoint;
-                    double spread = Math.Sqrt(0.5 * 0.5 + 0.5 * 0.5) / toPlace.Magnitude;
+                    Vector toPlace = new Point(-0.8 + u * 0.4, 10, -0.8 + v * 0.4) - middle.LitPoint;
+                    double spread = Math.Sqrt(0.4 * 0.4 + 0.4 * 0.4) / toPlace.Magnitude;
 
                     expected += (facets is null
                         ? Microfacets.Highlight(

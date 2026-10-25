@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using RayTracer.Pigments;
 
 namespace RayTracer.Basics;
 
@@ -50,7 +51,7 @@ public class LayeredNoise : INoiseConsumer
     /// <returns>The summed noise at that point.</returns>
     public double Generate(Point point)
     {
-        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed);
 
         if (Octaves == 0)
             return generator.Noise(point);
@@ -72,15 +73,6 @@ public class LayeredNoise : INoiseConsumer
         // wrongly centered on zero -- see NoiseGenerator.Noise.)
         return noise;
     }
-
-    /// <summary>
-    /// This method sums the layers as a vector rather than a single number, so that a caller with
-    /// more than one axis to move gets a genuinely different amount for each.  It is the
-    /// counterpart to <see cref="Generate"/>, mirroring the way POV-Ray pairs its own
-    /// <c>Turbulence()</c> with <c>DTurbulence()</c>.
-    /// </summary>
-    /// <param name="point">The point to determine some noise for.</param>
-    /// <returns>The summed noise at that point, as a vector.</returns>
 
     /// <summary>
     /// This method reports how much of a layer is worth summing, given how much of the world one
@@ -152,7 +144,7 @@ public class LayeredNoise : INoiseConsumer
         if (width <= 0 || Octaves == 0)
             return GenerateVector(point);
 
-        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed);
         Vector result = new (0, 0, 0);
         double weight = 1.0;
         Point sample = point;
@@ -188,7 +180,7 @@ public class LayeredNoise : INoiseConsumer
         if (width <= 0 || Octaves == 0)
             return Generate(point);
 
-        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed);
         double noise = 0.0;
         double weight = 1.0;
         Point sample = point;
@@ -211,9 +203,17 @@ public class LayeredNoise : INoiseConsumer
         return noise;
     }
 
+    /// <summary>
+    /// This method sums the layers as a vector rather than a single number, so that a caller with
+    /// more than one axis to move gets a genuinely different amount for each.  It is the
+    /// counterpart to <see cref="Generate(Point)"/>, mirroring the way POV-Ray pairs its own
+    /// <c>Turbulence()</c> with <c>DTurbulence()</c>.
+    /// </summary>
+    /// <param name="point">The point to determine some noise for.</param>
+    /// <returns>The summed noise at that point, as a vector.</returns>
     public Vector GenerateVector(Point point)
     {
-        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed);
 
         if (Octaves == 0)
             return generator.DNoise(point);

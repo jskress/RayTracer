@@ -31,7 +31,20 @@ public class Intersection : IComparable<Intersection>
     /// out.  See <see cref="Geometry.Portals"/>.
     /// </para>
     /// </summary>
-    public Portals Portals { get; set; }
+    public Portals Portals
+    {
+        get => _portals;
+        set
+        {
+            _portals = value;
+
+            // What a shared shape wears depends on the instances it was met through, so an outer one stamping
+            // the hit must not find an answer worked out before it had.
+            _surfaceMaterial = null;
+        }
+    }
+
+    private Portals _portals;
 
     /// <summary>
     /// This holds the material the surface is shaded with here: its own, unless the ray that found it
@@ -41,11 +54,20 @@ public class Intersection : IComparable<Intersection>
     /// </summary>
     public Material Material
     {
-        get => _material ?? Surface.Material ?? Material.Default;
+        get => _material ?? SurfaceMaterial;
         set => _material = value;
     }
 
     private Material _material;
+
+    /// <summary>
+    /// This property holds the material the surface wears where the ray met it -- before any blend or weather is
+    /// settled on it: its own, or, for a surface of a shared shape left the default, the material its holders gave
+    /// the place it stands in (see <see cref="Surface.MaterialThrough"/>).
+    /// </summary>
+    public Material SurfaceMaterial => _surfaceMaterial ??= Surface.MaterialThrough(Portals) ?? Material.Default;
+
+    private Material _surfaceMaterial;
 
     /// <summary>
     /// This holds the point of intersection.
@@ -154,8 +176,11 @@ public class Intersection : IComparable<Intersection>
     public int TimeIndex { get; internal set; }
 
     /// <summary>
-    /// This property exposes the reflectance for this intersection.
+    /// This property holds how far off the surface, in the world, a ray cast from this crossing sets off; see
+    /// <see cref="Surface.SelfOffsetAt"/>.
     /// </summary>
+    public double SelfOffset { get; private set; }
+
     /// <summary>
     /// This property holds how fast the ray that found this point was widening, so that anything
     /// born of it can carry on at the same rate.
@@ -182,6 +207,9 @@ public class Intersection : IComparable<Intersection>
     /// </summary>
     public double FootprintRadius { get; private set; }
 
+    /// <summary>
+    /// This property exposes the reflectance for this intersection.
+    /// </summary>
     public double Reflectance => GetReflectance();
 
     /// <summary>
@@ -239,7 +267,9 @@ public class Intersection : IComparable<Intersection>
             Inside = !Inside;
         }
 
-        Vector adjustment = Normal * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale);
+        SelfOffset = Surface.SelfOffsetAt(TimeIndex, Portals);
+
+        Vector adjustment = Normal * SelfOffset;
 
         (OverPoint, UnderPoint) = LeavingPoints(adjustment);
 
@@ -271,7 +301,7 @@ public class Intersection : IComparable<Intersection>
         bool opaque = material.Transparency <= 0 && !material.PigmentMayTransmit;
 
         LitPoint = Inside && (Surface.IsASheet || opaque)
-            ? Point + Eye * (DoubleExtensions.Epsilon * Surface.SelfOffsetScale)
+            ? Point + Eye * SelfOffset
             : OverPoint;
 
         // **But what glass mirrors from inside stays inside.**  Set off from the over point, a ray mirrored
@@ -281,12 +311,13 @@ public class Intersection : IComparable<Intersection>
         MirrorPoint = Inside && !(Surface.IsASheet || opaque) ? UnderPoint : LitPoint;
         Reflect = ray.Direction.Reflect(Normal);
 
-        (Surface before, Surface after, Portals beforeThrough) = intersections.FindContainers(this);
+        (Surface before, Surface after, Portals beforeThrough, Portals afterThrough) =
+            intersections.FindContainers(this);
 
         ContainerBefore = before;
         ContainerPortals = beforeThrough;
-        InteriorBefore = before is null ? null : IntersectionExtensions.InteriorOf(before);
-        InteriorAfter = after is null ? null : IntersectionExtensions.InteriorOf(after);
+        InteriorBefore = before is null ? null : IntersectionExtensions.InteriorOf(before, beforeThrough);
+        InteriorAfter = after is null ? null : IntersectionExtensions.InteriorOf(after, afterThrough);
         _environmentIndexOfRefraction = environmentIndexOfRefraction;
         (N1, N2) = IndicesAt(wavelength);
 

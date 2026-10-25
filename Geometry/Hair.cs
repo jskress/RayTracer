@@ -73,32 +73,51 @@ public class Hair : StrandSurface
     internal void WearWhatItGrewFrom()
     {
         Dictionary<Material, int> worn = new (ReferenceEqualityComparer.Instance);
-        List<Material> materials = [];
+        List<(Material Material, Surface From)> materials = [];
         int[] partOfSource = new int[_sources.Count];
 
         for (int source = 0; source < _sources.Count; source++)
         {
-            Material material = _sources[source].Material ?? Host.Material ?? Material.Default;
+            Surface from = _sources[source].Material is not null ? _sources[source] : Host;
+            Material material = from.Material ?? Material.Default;
 
             if (!worn.TryGetValue(material, out int part))
             {
                 worn[material] = part = materials.Count;
-                materials.Add(material);
+                materials.Add((material, from));
             }
 
             partOfSource[source] = part;
         }
 
         _wearsItsSkin = true;
-        Material = materials.Count > 0 ? materials[0] : Host.Material;
+
+        (Material first, Surface skin) = materials.Count > 0 ? materials[0] : (Host.Material, Host);
+
+        Material = first;
+        WearsWhatItsSkinWears(this, skin);
 
         if (materials.Count < 2)
             return;
 
         _parts = materials
-            .Select(material => (Surface) new HairPart { Parent = this, Material = material, NoShadow = NoShadow, Seed = Seed })
+            .Select(each => WearsWhatItsSkinWears(
+                new HairPart { Parent = this, Material = each.Material, NoShadow = NoShadow, Seed = Seed }, each.From))
             .ToArray();
         _partOf = _sourceOf.Select(source => partOfSource[source]).ToArray();
+    }
+
+    /// <summary>
+    /// This method marks hair, or a part of it, as wearing whatever its skin wears: where the skin is a part of a
+    /// shared shape left undressed, what dresses it differs from place to place (see
+    /// <see cref="Surface.MaterialThrough"/>), and the hair grown from it is dressed the same.
+    /// </summary>
+    private static Surface WearsWhatItsSkinWears(Surface hair, Surface skin)
+    {
+        hair.WearsTheDefault = skin.WearsTheDefault;
+        hair.OwnBeforeTheDefault = skin.OwnBeforeTheDefault;
+
+        return hair;
     }
 
     /// <summary>

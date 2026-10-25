@@ -24,7 +24,48 @@ public class RenderContext
     /// render would find it already prepared and never notice.
     /// </para>
     /// </summary>
-    internal Dictionary<string, Surface> SharedShapes { get; } = new ();
+    internal Dictionary<string, Surface> SharedShapes { get; private set; } = new ();
+
+    /// <summary>
+    /// This method returns a context such as a render starts with: told only what the renderer tells it before the
+    /// scene is carried out -- how to report, what to count into, and the frame's time -- and holding nothing a
+    /// render has built.
+    /// </summary>
+    /// <returns>The fresh context.</returns>
+    /// <summary>
+    /// This method returns the context's settings as they stand now -- whether angles are degrees among them -- for
+    /// something worked out later than it is written, as a motion is: see <see cref="Variables.AsTheyStand"/>.
+    /// </summary>
+    /// <returns>A copy of the context.</returns>
+    internal RenderContext AsItStands() => (RenderContext) MemberwiseClone();
+
+
+    internal RenderContext Afresh() => new ()
+    {
+        Progress = Progress, Statistics = Statistics, Time = Time, FrameInterval = FrameInterval
+    };
+
+    /// <summary>
+    /// This method makes something with nothing shared into it: every primitive called while it is made builds
+    /// afresh, and what it builds is shared with nothing made before or after.
+    /// </summary>
+    /// <param name="make">What makes the thing.</param>
+    /// <returns>What was made.</returns>
+    internal T Unshared<T>(Func<T> make)
+    {
+        Dictionary<string, Surface> was = SharedShapes;
+
+        SharedShapes = new Dictionary<string, Surface>();
+
+        try
+        {
+            return make();
+        }
+        finally
+        {
+            SharedShapes = was;
+        }
+    }
 
     /// <summary>
     /// This property reports the width of the target image.

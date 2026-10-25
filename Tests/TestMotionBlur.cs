@@ -1,6 +1,9 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
+using RayTracer.Patterns;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -139,6 +142,42 @@ public class TestMotionBlur
 
         Assert.IsTrue(ball.Moves);
         Assert.AreEqual(3, ball.TransformsThroughShutter.Count());
+    }
+
+    /// <summary>
+    /// A moving thing's pattern moves with it: shaded at an instant, a point is read where the thing stands then, so
+    /// the pattern blurs as its outline does.  (Read where it stood as the shutter opened, the pattern held still in
+    /// the world and stayed sharp on a blurred ball.)
+    /// </summary>
+    [TestMethod]
+    public void TestAMovingSurfacesPatternMovesWithIt()
+    {
+        PigmentSet squares = new ();
+
+        squares.AddEntry(new SolidPigment(Colors.Black));
+        squares.AddEntry(new SolidPigment(Colors.White), 1);
+
+        Sphere ball = new ()
+        {
+            MotionAt = SlideAlongX(1),
+            Material = new Material { Pigment = new PatternPigment { Pattern = new CheckerPattern(), PigmentSet = squares } }
+        };
+        Scene scene = new ();
+        Point world = new (1.5, 0.5, 0.5);
+
+        ball.PrepareForRendering([0, 1]);
+
+        (Scene, int) was = scene.ShadeHere(0);
+        Color whenOpened = ball.Material.GetColorFor(ball, world);
+
+        scene.ShadeHere(1);
+
+        Color whenClosed = ball.Material.GetColorFor(ball, world);
+
+        Scene.ShadeAgain(was);
+
+        Assert.IsTrue(whenOpened.Matches(Colors.White), "1.5 along the ball as the shutter opens");
+        Assert.IsTrue(whenClosed.Matches(Colors.Black), "and 0.5 along it once it has moved one");
     }
 
     [TestMethod]

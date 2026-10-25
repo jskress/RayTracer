@@ -32,7 +32,8 @@ public partial class LanguageParser
     /// <summary>
     /// This method reads a light block and returns the resolver for whichever sort it turned out
     /// to be.  Which sort is decided by the word before "light": "distant" for the sun, "spot" for
-    /// a cone, and nothing or "point" for a plain lamp.
+    /// a cone, "area" for a glowing panel, "sky" for the sky's own light, and nothing or "point" for
+    /// a plain lamp.
     /// </summary>
     /// <param name="clause">The clause that opened the block.</param>
     /// <returns>The resolver for the light.</returns>
@@ -259,11 +260,12 @@ public partial class LanguageParser
             case "point":
                 resolver.PointAtResolver = new TermResolver<Point> { Term = term };
                 break;
+            // Angles, in whichever unit the scene's `angles are` names, as every other angle is.
             case "radius":
-                resolver.RadiusResolver = new TermResolver<double> { Term = term };
+                resolver.RadiusResolver = new AngleResolver { Term = term };
                 break;
             case "falloff":
-                resolver.FalloffResolver = new TermResolver<double> { Term = term };
+                resolver.FalloffResolver = new AngleResolver { Term = term };
                 break;
             case "tightness":
                 resolver.TightnessResolver = new TermResolver<double> { Term = term };

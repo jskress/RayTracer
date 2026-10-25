@@ -686,7 +686,9 @@ public abstract class Light : NamedThing
         if (factor <= 0)
             return TS.Black;
 
-        TS glow = EmittedToward<TS>(sample) * (factor * material.Transparency);
+        // As much as gets through here, which is the pigment's own say as well as the material's: glass made
+        // clear by its pigment's alpha, as the docs suggest writing it, otherwise glowed with none of its lamp.
+        TS glow = EmittedToward<TS>(sample) * (factor * (1 - (1 - material.Transparency) * pigmentColor.Alpha));
 
         // Coming through this surface, the light is colored by it as any ray crossing it is.
         if (material.Interior.Filter > 0)

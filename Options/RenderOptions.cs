@@ -68,7 +68,7 @@ public class RenderOptions
     }
 
     [Option('e', "output-extension", Required = false, SetName = "outputExtension",
-        HelpText = "The name of the output file to write the rendered image to.")]
+        HelpText = "The kind of image file to write, by its extension (png, jpg, exr, webp, mp4, ...): the image is named after the input file, with this extension in place of its own.")]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public string OutputFileExtension
     {
@@ -217,8 +217,8 @@ public class RenderOptions
         // ReSharper disable once UnusedMember.Global
         set
         {
-            if (value is < 0 or > 5)
-                throw new ArgumentException("Gamma correction must be between 0 and 5.");
+            if (value is <= 0 or > 5)
+                throw new ArgumentException("Gamma correction must be more than 0, and no more than 5.");
 
             field = value;
         }

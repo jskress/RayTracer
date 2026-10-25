@@ -81,9 +81,9 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public SpanResolver SpanResolver { get; set; }
 
     /// <summary>
-    /// This property notes whether this resolver would give the surface a material of its own.
+    /// This property notes whether this resolver would make the surface give light.
     /// </summary>
-    public bool SetsMaterial => MaterialResolver is not null;
+    public bool GivesLight => GivesLightResolver is not null;
 
     /// <summary>
     /// This method is used to execute the resolver to produce a value as a surface.
@@ -133,9 +133,15 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
 
         // A motion is handed over as a recipe rather than a matrix, since how far through it to go
         // cannot be known until the camera says how many instants it will look at, which is settled
-        // well after this.
+        // well after this -- with the names and settings as they stand here, so that one set again
+        // further down the file does not change it after the fact, as it changed nothing else here.
         if (MotionResolver is not null)
-            value.MotionAt = fraction => MotionResolver.ResolveAt(context, variables, fraction);
+        {
+            RenderContext then = context.AsItStands();
+            Variables names = variables.AsTheyStand();
+
+            value.MotionAt = fraction => MotionResolver.ResolveAt(then, names, fraction);
+        }
 
         // A placement that follows the time is a motion too, through the frame: as far through it as the shutter
         // is open, the surface stands where its placement puts it at that later time.  It is laid over the
@@ -164,6 +170,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         if (TransformResolver is null || context.FrameInterval <= 0)
             return null;
 
+        // A scene that names something `time` of its own means that by it, not the frame's time: shifting the frame's
+        // under it would make a motion of nothing.
+        if (variables.GetValue("time", typeof(double)) is not double time || time != context.Time)
+            return null;
+
         Matrix At(double fraction)
         {
             Variables later = new (variables);
@@ -176,9 +187,21 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         if (At(1).Matches(now))
             return null;
 
+        // Worked out later, with the names and settings as they stand here; see the motion above.
+        RenderContext then = context.AsItStands();
+        Variables names = variables.AsTheyStand();
         Matrix undo = now.Invert();
 
-        return fraction => At(fraction) * undo;
+        Matrix Later(double fraction)
+        {
+            Variables later = new (names);
+
+            later.SetValue("time", then.Time + fraction * then.FrameInterval);
+
+            return TransformResolver.Resolve(then, later);
+        }
+
+        return fraction => Later(fraction) * undo;
     }
 
     /// <summary>
@@ -219,8 +242,15 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
             return;
 
         Matrix already = value.Transform;
+        Func<double, Matrix> moving = value.MotionAt;
+
+        // The call's own motions -- said outright, or a placement that follows the time -- are worked out alone,
+        // and the body's laid beneath them below.
+        value.MotionAt = null;
 
         ApplyTo(context, variables, value);
+
+        Matrix outer = already is not null && TransformResolver is not null ? value.Transform : Matrix.Identity;
 
         // What the call said belongs *outside* what the primitive already made.  The body's transform
         // is written in the primitive's own frame and the call's is written in the caller's, so the
@@ -234,5 +264,19 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
         // threw the size away.
         if (already is not null && TransformResolver is not null)
             value.Transform = value.Transform * already;
+
+        // And a motion the body gave is written in the primitive's frame too, inside the call's transform, as a
+        // child's motion is inside its group's: carried out through that transform, beneath the call's own.  Left
+        // as it was, it moved the thing about the caller's origin, a bar the body spun swinging round it; and a
+        // call's motion threw it away.
+        if (moving is not null)
+        {
+            Matrix undo = outer.Invert();
+            Func<double, Matrix> called = value.MotionAt;
+
+            value.MotionAt = called is null
+                ? fraction => outer * moving(fraction) * undo
+                : fraction => called(fraction) * outer * moving(fraction) * undo;
+        }
     }
 }

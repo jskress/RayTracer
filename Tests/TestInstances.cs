@@ -370,6 +370,107 @@ public class TestInstances
     }
 
     [TestMethod]
+    public void TestASharedShapeWearsWhatEachPlaceDressesItIn()
+    {
+        // A shape left undressed takes the material of whatever holds it, and a shared one is held in
+        // several places at once.  Handed down when the scene was settled, the first holder's material
+        // went into the one shape and every place wore it: two calls dressed red and blue came out both
+        // red.  So a shared shape's surfaces wear, at each hit, what the instances it was met through
+        // give that place -- as weather is settled.  Both ways of dressing a call are tried: on the call
+        // itself, and by the group it stands in.
+        string twice = Rendered("""
+            primitive ball() -> group {
+                return group { sphere { scale 0.42 } }
+            }
+            object ball() { material { pigment Red }  translate X -0.7 }
+            object ball() { material { pigment Blue }  translate X 0.7 }
+            group { object ball() { translate X -0.7 }  material { pigment Green }  translate Y -0.9 }
+            group { object ball() { translate X 0.7 }  material { pigment Yellow }  translate Y -0.9 }
+            """);
+        string longhand = Rendered("""
+            group { sphere { scale 0.42 }  material { pigment Red }  translate X -0.7 }
+            group { sphere { scale 0.42 }  material { pigment Blue }  translate X 0.7 }
+            group { group { sphere { scale 0.42 }  translate X -0.7 }  material { pigment Green }  translate Y -0.9 }
+            group { group { sphere { scale 0.42 }  translate X 0.7 }  material { pigment Yellow }  translate Y -0.9 }
+            """);
+
+        Assert.AreEqual(longhand, twice, "a shared shape does not wear what each place dresses it in");
+    }
+
+    [TestMethod]
+    public void TestAnImageOnWhatHoldsASharedShapeIsMappedForTheShape()
+    {
+        // An image takes its mapping from the shape it is put on when none is said: a ball's is
+        // spherical.  Dressing a shared ball from the group holding it puts the material on the
+        // instance, which has no mapping of its own; the material must be readied for the ball.
+        string image = Path.Combine(_directory, "two-color.png");
+        Canvas canvas = new (2, 2);
+
+        canvas.SetColor(Colors.Red, 0, 0);
+        canvas.SetColor(Colors.Red, 1, 0);
+        canvas.SetColor(Colors.Blue, 0, 1);
+        canvas.SetColor(Colors.Blue, 1, 1);
+        new ImageFile(image).Save(canvas, new RenderContext { ApplyGamma = false });
+
+        string shared = Rendered($$"""
+            primitive ball() -> group {
+                return group { sphere { scale 0.42 } }
+            }
+            group { object ball()  material { pigment image '{{image}}' } }
+            """);
+        string longhand = Rendered($$"""
+            group { group { sphere { scale 0.42 } }  material { pigment image '{{image}}' } }
+            """);
+
+        Assert.AreEqual(longhand, shared, "an image on what holds a shared shape is not mapped for the shape");
+    }
+
+    [TestMethod]
+    public void TestHairOnASharedShapeWearsWhatEachPlaceDressesItIn()
+    {
+        // Hair with no material of its own wears its skin's, taken when the scene is settled -- and the skin of a
+        // shared shape left undressed wears, in each place, what holds it there.  So must its hair: dressed once,
+        // the fur on both balls was the plain white of a surface given nothing (a half's mean 0.05 red, 0.027
+        // green, against 0.09 and 0.0015).  The strands fall differently shared and written out, so it is each
+        // half's color that is compared, not each pixel.
+        Canvas shared = Picture("""
+            primitive furry() -> group {
+                return group { sphere { scale 0.42  hair { count 20000  length 0.35 } } }
+            }
+            group { object furry() { translate X -0.7 }  material { pigment Red } }
+            group { object furry() { translate X 0.7 }  material { pigment Blue } }
+            """);
+        Canvas longhand = Picture("""
+            group { group { sphere { scale 0.42  hair { count 20000  length 0.35 } }  translate X -0.7 }
+                    material { pigment Red } }
+            group { group { sphere { scale 0.42  hair { count 20000  length 0.35 } }  translate X 0.7 }
+                    material { pigment Blue } }
+            """);
+
+        foreach ((int from, int to) in new[] { (0, 45), (45, 90) })
+        {
+            Color mine = MeanOver(shared, from, to);
+            Color written = MeanOver(longhand, from, to);
+
+            Assert.IsTrue(Math.Abs(mine.Red - written.Red) < 0.005 && Math.Abs(mine.Green - written.Green) < 0.005 &&
+                          Math.Abs(mine.Blue - written.Blue) < 0.005,
+                $"hair on a shared shape is {mine} where written out it is {written}");
+        }
+    }
+
+    private static Color MeanOver(Canvas picture, int from, int to)
+    {
+        Color sum = Colors.Black;
+        int count = 0;
+
+        for (int y = 0; y < picture.Height; y++)
+        for (int x = from; x < to; x++, count++)
+            sum += picture.GetPixel(x, y);
+
+        return sum * (1.0 / count);
+    }
+
+    [TestMethod]
     public void TestAnEmptyGroupIsNotSharedSoWhatHoldsItMayBe()
     {
         // **A fir's bough carries the snow lying on it, and in summer that is an empty group.**  Shared
@@ -421,6 +522,104 @@ public class TestInstances
             "the tree was not shared, or its leaves were not counted in each; the report said:\n" + report);
     }
 
+    [TestMethod]
+    public void TestACallDressedByItsOwnBlockIsShared()
+    {
+        // A material written on the call dresses the shape where that call stands (TestASharedShapeWearsWhatEachPlace-
+        // DressesItIn holds the picture to it), so the call no longer needs a shape of its own.
+        string report = StatisticsOf("""
+            primitive ball() -> group {
+                return group { sphere { scale 0.42 } }
+            }
+            object ball() { material { pigment Red }  translate X -0.7 }
+            object ball() { material { pigment Blue }  translate X 0.7 }
+            """);
+
+        StringAssert.Contains(report, "1 shape, shown 2 times",
+            "a call dressed by its own block was not shared; the report said:\n" + report);
+    }
+
+    [TestMethod]
+    public void TestACallWhoseMaterialHoldsAMediumOrThatGlowsIsNotShared()
+    {
+        // What is inside a thing is not shared, and a light made of a glow is made once for each surface that glows,
+        // not once for each place it stands: such a call keeps a shape of its own.
+        foreach (string block in new[]
+                 {
+                     "material { pigment White  transparency 1  interior { medium { absorption [0.5, 0.5, 0.5] } } }",
+                     "material { pigment White  transparency 1  interior { medium { emission [2, 1.5, 1] } } }  gives light"
+                 })
+        {
+            string report = StatisticsOf($$"""
+                primitive ball() -> group {
+                    return group { sphere { scale 0.42 } }
+                }
+                object ball() { {{block}}  translate X -0.7 }
+                object ball() { {{block}}  translate X 0.7 }
+                """);
+
+            Assert.IsFalse(report.Contains("Shared"),
+                $"a call dressed with `{block}` was shared; the report said:\n" + report);
+        }
+    }
+
+    [TestMethod]
+    public void TestDecalsOnASharedCallLieOverWhatHoldsIt()
+    {
+        // A call whose block only adds decals (`material inherited`) wears them over whatever dresses it, as the same
+        // parts written out would: over the default when nothing does, and over the material of a shared shape it
+        // stands in when that is dressed.  Walking out through the instances, a call adding only decals was passed
+        // over as undressed, and its decals were lost.  (Held by a dressed group the call is handed a whole material
+        // before any walk, so that is not the case to try.)
+        const string decal =
+            "decal { path { text { text 'R'  font 'Merriweather' } }  color Yellow  planar  min Y -1  max Y 1  " +
+            "scale 0.6  translate [-0.2, 0, -0.3] }";
+        string shared = Rendered($$"""
+            primitive ball() -> group {
+                return group { sphere { scale 0.42 } }
+            }
+            primitive held() -> group {
+                return group { object ball() { material inherited { {{decal}} } } }
+            }
+            object ball() { material inherited { {{decal}} }  translate X -0.7 }
+            object held() { material { pigment Red }  translate X 0.7 }
+            """);
+        string longhand = Rendered($$"""
+            group { group { group { sphere { scale 0.42 } }  material inherited { {{decal}} } }  translate X -0.7 }
+            group {
+                group { group { group { sphere { scale 0.42 } }  material inherited { {{decal}} } } }
+                material { pigment Red }
+                translate X 0.7
+            }
+            """);
+
+        Assert.AreEqual(longhand, shared, "decals on a shared call did not lie over what dresses it");
+    }
+
+    [TestMethod]
+    public void TestASharedShapeDressedInGlassByItsHolderCastsItsCaustic()
+    {
+        // Photons are aimed at what turns light, found by walking every place a shared shape stands -- but only into
+        // shapes that could hold any, as a wood holding no glass is billions of places to walk for nothing.  A part
+        // left undressed may be dressed in glass by its holder, so it must count as one that could.
+        string glass = "material { pigment White  ambient 0  diffuse 0  specular 0  transparency 1  interior { ior 1.5 } }";
+        string shared = Rendered($$"""
+            context { caustics photons 20000 }
+            primitive ball() -> group {
+                return group { sphere { scale 0.42 } }
+            }
+            plane { translate Y -0.6  material { pigment White } }
+            object ball() { {{glass}} }
+            """);
+        string longhand = Rendered($$"""
+            context { caustics photons 20000 }
+            plane { translate Y -0.6  material { pigment White } }
+            group { group { sphere { scale 0.42 } }  {{glass}} }
+            """);
+
+        Assert.AreEqual(longhand, shared, "a shared shape dressed in glass by its holder cast no caustic");
+    }
+
     /// <summary>
     /// Renders a scene written in the language and hands back the statistics reported for it.
     /// </summary>
@@ -467,6 +666,18 @@ public class TestInstances
     /// <returns>The picture, as a string of pixels.</returns>
     private string Rendered(string body)
     {
+        Canvas picture = Picture(body);
+        System.Text.StringBuilder pixels = new ();
+
+        for (int y = 0; y < picture.Height; y++)
+        for (int x = 0; x < picture.Width; x++)
+            pixels.Append(picture.GetPixel(x, y)).Append(';');
+
+        return pixels.ToString();
+    }
+
+    private Canvas Picture(string body)
+    {
         string path = Path.Combine(_directory, $"scene-{Guid.NewGuid():N}.igl");
         string output = Path.ChangeExtension(path, ".png");
 
@@ -481,14 +692,7 @@ public class TestInstances
 
         renderer.Render(new RenderOptions { OutputFileName = output });
 
-        Canvas picture = new ImageFile(output).Load()[0];
-        System.Text.StringBuilder pixels = new ();
-
-        for (int y = 0; y < picture.Height; y++)
-        for (int x = 0; x < picture.Width; x++)
-            pixels.Append(picture.GetPixel(x, y)).Append(';');
-
-        return pixels.ToString();
+        return new ImageFile(output).Load()[0];
     }
 
     /// <summary>

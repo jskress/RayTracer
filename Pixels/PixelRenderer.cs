@@ -1,4 +1,5 @@
 
+using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Graphics;
 
@@ -99,19 +100,33 @@ public abstract class PixelRenderer
 
         if (count == 1)
         {
-            return scene.GetColorFor<TS>(
-                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY), scene.TraceDepth).ToColor();
+            Ray ray = Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY);
+
+            // What this thread is shading is this scene, at this ray's instant, from the start: until a hit set it,
+            // a pattern looking about from a shadow ray could look about the last frame's scene.
+            scene.ShadeHere(ray.TimeIndex);
+
+            return scene.GetColorFor<TS>(ray, scene.TraceDepth).ToColor();
         }
 
         TS sum = TS.Black;
+        double alpha = 0;
 
+        // Light adds, and coverage averages: summed as light, every pixel came out opaque, so a camera with a lens
+        // or an open shutter filled the transparent background and lost the soft edge of what stood against it.
         for (int index = 0; index < count; index++)
         {
-            sum += scene.GetColorFor<TS>(
-                Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index), scene.TraceDepth);
+            Ray ray = Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index);
+
+            scene.ShadeHere(ray.TimeIndex);
+
+            TS seen = scene.GetColorFor<TS>(ray, scene.TraceDepth);
+
+            sum += seen;
+            alpha += seen.Alpha;
         }
 
-        return (sum * (1.0 / count)).ToColor();
+        return (sum * (1.0 / count)).WithAlpha(alpha / count).ToColor();
     }
 
     /// <summary>

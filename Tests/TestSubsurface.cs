@@ -71,6 +71,32 @@ public class TestSubsurface
     }
 
     /// <summary>
+    /// A walk under a solid made by CSG leaves by the solid's own surface: two wax balls a hair apart, joined,
+    /// glow as one ball does, where walks leaving by one ball's surface inside the other found no light there.
+    /// </summary>
+    [TestMethod]
+    public void TestAWalkUnderAUnionLeavesByTheUnionsSurface()
+    {
+        Material wax = Scattering(new Color(0.9, 0.9, 0.9), new Color(0.3, 0.3, 0.3));
+        Sphere one = new () { Material = wax };
+        CsgSurface joined = new ()
+        {
+            Operation = CsgOperation.Union,
+            Left = new Sphere { Material = wax },
+            Right = new Sphere { Material = wax, Transform = Transforms.Translate(0.03, 0, 0) }
+        };
+        PointLight lamp = new () { Location = new Point(0, 10, -2) };
+        Scene alone = SceneOf(lamp, 64, one);
+        Scene union = SceneOf(lamp, 64, joined);
+        Point from = new (0, 0.3, -5);
+        Vector toward = (new Point(0, 0.3, 0) - from).Unit;
+        double single = ShadeColor(alone, from, toward).Red;
+        double both = ShadeColor(union, from, toward).Red;
+
+        Assert.AreEqual(single, both, single * 0.15, "two balls a hair apart, joined, should glow as one");
+    }
+
+    /// <summary>
     /// This tests the table that turns a color into the share kept at each turn: nought for black, rising to
     /// one for white, and the values the walk was worked out to give -- a color of 0.6 needs 95% kept at
     /// every turn, which is what makes a pale surface's light wander so far.

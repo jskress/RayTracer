@@ -237,9 +237,6 @@ public class ProductionRule : ProductionRuleBase
     }
 
     /// <summary>
-    /// This method provides a string representation of this production rule.
-    /// </summary>
-    /// <summary>
     /// This method writes a production out the way it was written.
     /// </summary>
     private static string AsText(ModuleTemplate[] production)
@@ -247,6 +244,9 @@ public class ProductionRule : ProductionRuleBase
         return string.Concat(production.Select(module => module.ToString()));
     }
 
+    /// <summary>
+    /// This method provides a string representation of this production rule.
+    /// </summary>
     /// <returns>This rule, as a string.</returns>
     public override string ToString()
     {

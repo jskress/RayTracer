@@ -47,6 +47,7 @@ background [0.10, 0.11, 0.14]
 Marble = material {
     pigment marble {
         turbulence { amplitude 0.55  octaves 4 }
+        ramp wave
         [0, [0.93, 0.91, 0.87], 0.42, [0.86, 0.84, 0.79],
          0.74, [0.68, 0.67, 0.64], 1, [0.93, 0.91, 0.87]]
         scale [0.38, 0.38, 0.38]
@@ -61,6 +62,7 @@ Marble = material {
 Jade = material {
     pigment marble {
         turbulence { amplitude 0.65  octaves 4 }
+        ramp wave
         [0, [0.042, 0.125, 0.088], 0.40, [0.022, 0.078, 0.054],
          0.72, [0.068, 0.170, 0.118], 1, [0.042, 0.125, 0.088]]
         scale [0.32, 0.32, 0.32]

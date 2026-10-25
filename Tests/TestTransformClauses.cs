@@ -159,6 +159,39 @@ public class TestTransformClauses
         return count;
     }
 
+    /// <summary>
+    /// A named transform happens where it is written and belongs to no one surface: the same name used by
+    /// three balls, each moved on afterwards its own way, leaves each where its own steps put it, and what a
+    /// ball says before the name is kept.
+    /// </summary>
+    [TestMethod]
+    public void TestANamedTransformIsUsedNotChanged()
+    {
+        string path = Path.Combine(_directory, "named.igl");
+        string output = Path.ChangeExtension(path, "png");
+
+        File.WriteAllText(path, """
+            camera { location [0, 0, -12] look at [0, 0, 0] }
+            light { location [0, 0, -12] }
+            Small = transform { scale 0.4 }
+            Lit = material { pigment color [1, 1, 1] ambient 1 diffuse 0 specular 0 }
+            sphere { material Lit  transform Small  translate X -3 }
+            sphere { material Lit  transform Small  translate X 3 }
+            sphere { material Lit  translate Y 2  transform Small }
+            """);
+
+        new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 120, Height = 120 });
+
+        Canvas image = new ImageFile(output).Load()[0];
+
+        // Small balls at the two sides, and the third scaled after it was raised: at y 0.8, a fifth of the
+        // way up from the middle, not at the middle where losing its raise would leave it.
+        Assert.IsTrue(image.GetPixel(30, 60).Red > 0.5, "the ball to the left");
+        Assert.IsTrue(image.GetPixel(90, 60).Red > 0.5, "the ball to the right");
+        Assert.IsTrue(image.GetPixel(60, 48).Red > 0.5, "the raised ball, raised then made small");
+        Assert.IsTrue(image.GetPixel(60, 60).Red < 0.5, "nothing in the middle");
+    }
+
     [TestMethod]
     public void TestAPropertyStandingBetweenTwoTransformsKeepsBoth()
     {

@@ -39,9 +39,4 @@ public class SkyLightResolver : LightResolver<SkyLight>
 
         base.SetProperties(context, variables, value);
     }
-    /// <summary>
-    /// This method returns a copy of this resolver, so that a scene using a named light again may
-    /// adjust its copy without touching the one the name still stands for.
-    /// </summary>
-    /// <returns>A copy of this resolver.</returns>
 }

@@ -145,7 +145,7 @@ primitive UnderCoat(kind, season) -> material {
                 case 'winter' { return material UnderFernDead }
                 case 'autumn', 'fall' { return material UnderFernTurned }
                 // Spring fronds are fresh and light; summer's have hardened off.  These were the
-                // same colour until a test held one season against the other.
+                // same color until a test held one season against the other.
                 case 'summer' { return material UnderFernFrond }
                 default { return material UnderFernNew }
             }
@@ -155,7 +155,7 @@ primitive UnderCoat(kind, season) -> material {
                 case 'winter' { return material UnderBladeStraw }
                 case 'autumn', 'fall' { return material UnderBladeTawny }
                 case 'summer' { return material UnderReedBlade }
-                // New growth, as with the fern: spring and summer were one colour until a test put
+                // New growth, as with the fern: spring and summer were one color until a test put
                 // them side by side.  **Every arm of a season switch has to answer for itself**, and
                 // a `default` that quietly serves two of them is the way that goes wrong.
                 default { return material UnderReedNew }
@@ -525,7 +525,7 @@ primitive Bramble(height, season = 'summer', variant = 1) -> group {
         for cane in [0, 8] {
             reach = height * (0.26 + random(cane, 41, variant) * 0.10)
 
-            // A group of its own, because the turn that sets this cane apart from its neighbours
+            // A group of its own, because the turn that sets this cane apart from its neighbors
             // belongs to the cane; a loop is a way of writing and has nothing for a transform to be
             // about.
             group {
@@ -731,7 +731,7 @@ primitive Reeds(shape, season = 'summer', variant = 1, height = 1.8, density = 1
 // -- Wheat -----------------------------------------------------------------------------------------
 
 // One stalk with its ear, which ripens: green in spring, greening still in summer, straw and gold in
-// autumn, and grey stubble in winter.
+// autumn, and gray stubble in winter.
 //
 // **It was straw the year round until a test held one season against another.**  The reasoning was
 // that a crop is cut rather than turned -- true, but a crop is *green* for most of the time it is

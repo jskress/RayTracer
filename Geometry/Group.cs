@@ -82,7 +82,10 @@ public class Group : Surface
         {
             Dictionary<Material, Material> merged = [];
 
-            foreach (Surface surface in new SurfaceIterator(Surfaces).Surfaces)
+            // As far as each instance and no further: what an instance shares stands in many places and wears each
+            // one's material, found where a ray meets it (see Surface.MaterialThrough).  Handed in, the material went to
+            // whichever holder got there first, and every other place wore it too.
+            foreach (Surface surface in new SurfaceIterator(Surfaces, intoShared: false).Surfaces)
                 surface.Material = Material.HandedDown(surface.Material, Material, merged);
         }
 
@@ -181,12 +184,6 @@ public class Group : Surface
     }
 
     /// <summary>
-    /// This method is used to determine whether the given ray intersects the cube and,
-    /// if so, where.
-    /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
-    /// <summary>
     /// This method answers a shadow query, which differs from an ordinary one in what it may throw
     /// away rather than in how far it looks.  The two are kept as separate paths on purpose: sharing
     /// one, with an infinite bound standing for "unbounded", conflates a sky light -- whose distance
@@ -202,6 +199,12 @@ public class Group : Surface
         intersections.AddRange(ours);
     }
 
+    /// <summary>
+    /// This method is used to determine whether the given ray meets anything in the group and,
+    /// if so, where.
+    /// </summary>
+    /// <param name="ray">The ray to test.</param>
+    /// <param name="intersections">The list to add any intersections to.</param>
     public override void AddIntersections(Ray ray, List<Intersection> intersections)
     {
         List<Intersection> ours = [];

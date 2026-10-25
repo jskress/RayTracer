@@ -1,3 +1,4 @@
+using System.Globalization;
 using RayTracer.Core;
 using RayTracer.Extensions;
 
@@ -83,7 +84,8 @@ public class AliasingOption
             double threshold = AdaptiveSuperSamplingPixelRenderer.DefaultThreshold;
 
             if (parts.Length > 2 &&
-                (!double.TryParse(parts[2], out threshold) || threshold <= 0 || threshold > 1))
+                (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out threshold) ||
+                 threshold <= 0 || threshold > 1))
             {
                 throw new ArgumentException(
                     $"\"{text}\" is not a valid anti-aliasing option; the threshold must be more " +
@@ -130,7 +132,8 @@ public class AliasingOption
             AdaptiveSuperSampling =>
                 _adaptiveThreshold.Near(AdaptiveSuperSamplingPixelRenderer.DefaultThreshold)
                     ? $"{AdaptiveSuperSampling}:{_adaptiveSuperSamplingDepth}"
-                    : $"{AdaptiveSuperSampling}:{_adaptiveSuperSamplingDepth}:{_adaptiveThreshold}",
+                    : string.Create(CultureInfo.InvariantCulture,
+                        $"{AdaptiveSuperSampling}:{_adaptiveSuperSamplingDepth}:{_adaptiveThreshold}"),
             _ => throw new NotSupportedException($"Unsupported aliasing type: {_type}")
         };
     }

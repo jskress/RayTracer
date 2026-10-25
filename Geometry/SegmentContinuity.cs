@@ -103,11 +103,18 @@ internal static class SegmentContinuity
             return (direction, direction);
         }
 
+        // A control point standing on the end it belongs to leaves the curve no pace there, but not no way to go:
+        // it sets off toward the next point that differs, as its next derivative does.  Taken as no way at all, a
+        // curve drawn so was refused as a segment of no length.
         if (control2 is null)
-            return (2 * (control1 - start), 2 * (end - control1));
+            return (FirstOf(control1 - start, end - start), FirstOf(end - control1, end - start));
 
-        return (3 * (control1 - start), 3 * (end - control2));
+        return (FirstOf(control1 - start, control2 - start, end - start),
+            FirstOf(end - control2, end - control1, end - start));
     }
+
+    // The first of some ways that is any way at all, or the last if none is.
+    private static Vector FirstOf(params Vector[] ways) => ways.FirstOrDefault(way => !IsEmpty(way)) ?? ways[^1];
 
     /// <summary>
     /// This method determines whether two directions are close enough to call "the same",

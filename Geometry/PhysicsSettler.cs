@@ -25,7 +25,7 @@ internal static class PhysicsSettler
     /// <param name="sampleTimes">How far through the shutter each of the camera's instants looks.</param>
     internal static void Settle(Scene scene, RenderContext context, double[] sampleTimes)
     {
-        RefuseBuriedBodies(scene.Surfaces, true);
+        RefuseBuriedBodies(scene.Surfaces, true, new HashSet<Surface>(ReferenceEqualityComparer.Instance));
 
         List<Surface> bodies = scene.Surfaces.Where(surface => surface.Body is not null).ToList();
         List<Swarm> swarms = scene.Surfaces.OfType<Swarm>().ToList();
@@ -50,8 +50,9 @@ internal static class PhysicsSettler
 
     // A body moves in the scene's own space, so it must stand there: one inside a group would be moved in the
     // group's space, and a group moved or shared would carry it somewhere the world never put it.  A swarm is only
-    // filled at the top, so one buried would stay empty.
-    private static void RefuseBuriedBodies(IEnumerable<Surface> surfaces, bool top)
+    // filled at the top, so one buried would stay empty.  A shared shape is looked through once, however many places
+    // it stands.
+    private static void RefuseBuriedBodies(IEnumerable<Surface> surfaces, bool top, HashSet<Surface> walked)
     {
         foreach (Surface surface in surfaces)
         {
@@ -66,10 +67,13 @@ internal static class PhysicsSettler
                 case Swarm:
                     break;
                 case Group group:
-                    RefuseBuriedBodies(group.Surfaces, false);
+                    RefuseBuriedBodies(group.Surfaces, false, walked);
                     break;
                 case CsgSurface csg:
-                    RefuseBuriedBodies([csg.Left, csg.Right], false);
+                    RefuseBuriedBodies([csg.Left, csg.Right], false, walked);
+                    break;
+                case Instance instance when walked.Add(instance.Prototype):
+                    RefuseBuriedBodies([instance.Prototype], false, walked);
                     break;
             }
         }
@@ -130,8 +134,8 @@ internal static class PhysicsSettler
 
             moving.Add((surface, mover, start));
 
-            if (surface.Name is { } name)
-                named[name] = mover;
+            if (surface.Name is { } name && !named.TryAdd(name, mover))
+                throw new InvalidOperationException($"Two bodies are named '{name}', so a string tied to it would not know which.");
         }
 
         world.Tie(named);

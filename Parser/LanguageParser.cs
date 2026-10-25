@@ -73,6 +73,12 @@ public partial class LanguageParser
                 HandleIncludes();
                 HandleImports();
                 HandleIncludeEnd();
+
+                // An include or an import may have been the last thing in the file, and nothing is then left to
+                // read a clause from: asked anyway, it stopped the render with a null reference.
+                if (IsAtEnd())
+                    break;
+
                 _dispatcher.Dispatch(LanguageDsl.ParseNextClause(CurrentParser));
                 HandleIncludeEnd();
             }
@@ -176,6 +182,17 @@ public partial class LanguageParser
             if (!File.Exists(path))
             {
                 throw new TokenException($"The file, '{path}', does not exist.")
+                {
+                    Token = includeClause.Tokens[1]
+                };
+            }
+
+            // A file that includes itself, or another that includes it back, would be read without end.
+            if (_entries.Any(entry => string.Equals(Path.GetFullPath(entry.FileName), path, StringComparison.Ordinal)))
+            {
+                throw new TokenException(
+                    $"'{Path.GetFileName(path)}' is already being read, so including it here would go round for ever: " +
+                    string.Join(" -> ", _entries.Reverse().Select(entry => Path.GetFileName(entry.FileName))) + ".")
                 {
                     Token = includeClause.Tokens[1]
                 };

@@ -30,7 +30,10 @@ internal static class Containment
     {
         switch (surface)
         {
-            case Group group:
+            // A group built of sheets -- a mesh of triangles, from a Wavefront file, a closed sweep or a height field
+            // -- is one hull, and asked part by part no triangle holds anything, so nothing was ever inside it.  It
+            // is counted whole, by crossings, as a single closed surface is.
+            case Group group when !HoldsSheets(group):
             {
                 Point inside = group.InverseTransformAt(0) * place;
 
@@ -54,4 +57,8 @@ internal static class Containment
 
         return odd >= 2;
     }
+
+    // Whether a group is made, anywhere in it, of sheets rather than of closed solids.
+    private static bool HoldsSheets(Surface surface) =>
+        surface.IsASheet || (surface is Group group && group.Surfaces.Any(HoldsSheets));
 }

@@ -34,7 +34,15 @@ public class LathePathSurface
         // width of a rounding error.
         _side = segment.Points.MaxBy(point => Math.Abs(point.X)).X < 0 ? -1 : 1;
 
-        if (segment.Points.Length == 2 && segment.Points[0].Y != segment.Points[1].Y)
+        // A line that rises is solved along the ray -- but only one that rises by more than rounding: one a hair off
+        // level, as a profile turned in 2D or written `0.1 + 0.2` comes out, spread its radius over a rise of
+        // nothing, its sums ran to 1e32 and its crossings were lost.  Near enough level, it is the flat ring a
+        // level line is.
+        double rise = Math.Abs(segment.Points[1].Y - segment.Points[0].Y);
+        double size = Math.Max(rise, Math.Max(Math.Abs(segment.Points[1].X - segment.Points[0].X),
+            Math.Max(Math.Abs(segment.Points[0].X), Math.Abs(segment.Points[1].X))));
+
+        if (segment.Points.Length == 2 && rise > 1e-9 * size)
         {
             _slopedLine = (segment.Points[0].X, segment.Points[0].Y, segment.Points[1].X, segment.Points[1].Y);
         }

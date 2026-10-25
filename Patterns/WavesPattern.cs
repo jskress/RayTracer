@@ -23,6 +23,10 @@ public class WavesPattern : Pattern
     /// </summary>
     public override int DiscretePigmentsNeeded => 0;
 
+    // The frequency and phase set how tightly the rings are spaced, and are not read a second time on the value: there
+    // they cut each smooth ring into a sawtooth, which a `normal` turned into creases.
+    protected override bool SpacesItselfByFrequency => true;
+
     /// <summary>
     /// This method is used to determine an appropriate value, typically between 0 and 1,
     /// for the given point.

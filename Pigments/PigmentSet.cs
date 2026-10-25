@@ -147,6 +147,37 @@ public class PigmentSet
     }
 
     /// <summary>
+    /// This method mixes the pigments a pattern picks among by the share of a patch each covers.
+    /// </summary>
+    /// <param name="point">The point to get the color for.</param>
+    /// <param name="shares">Each pigment's share of the patch, by index, adding to one.</param>
+    /// <param name="footprint">The patch around the point.</param>
+    /// <param name="viewing">The directions the surface is being shaded between, if any.</param>
+    /// <returns>The mixed color.</returns>
+    public Color GetMixedColorFor(Point point, ReadOnlySpan<double> shares, Footprint footprint, Viewing viewing = default)
+    {
+        Color mixed = Colors.Black;
+        double alpha = 0;
+
+        for (int index = 0; index < shares.Length; index++)
+        {
+            if (shares[index] <= 0)
+                continue;
+
+            Color color = GetColorFor(point, index, footprint, viewing);
+
+            // A patch wholly one pigment is that pigment, as a point inside it would be.
+            if (shares[index] >= 1)
+                return color;
+
+            mixed += color * shares[index];
+            alpha += color.Alpha * shares[index];
+        }
+
+        return mixed.WithAlpha(alpha);
+    }
+
+    /// <summary>
     /// This method is used to resolve a given number to the proper corresponding color.
     /// </summary>
     /// <param name="point">The point to get the color for.</param>

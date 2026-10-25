@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Patterns;
 
@@ -30,18 +31,18 @@ public class CracklePattern : Pattern, INoiseConsumer
     public override int DiscretePigmentsNeeded => 0;
 
     /// <summary>
-    /// This method is used to determine an appropriate value, typically between 0 and 1,
-    /// for the given point.
-    /// </summary>
-    /// <param name="point">The point from which the pattern value is to be derived.</param>
-    /// <returns>The derived pattern value.</returns>
-    /// <summary>
     /// Crackle scatters one feature point to a unit cell, so a cell is the whole of its scale --
     /// there are no finer layers under it the way there are in granite.  Once a ray covers more than
     /// a cell, the cells it covers are averaged over the patch rather than one of them picked.
     /// </summary>
     protected override double FinestDetail => 1;
 
+    /// <summary>
+    /// This method is used to determine an appropriate value, typically between 0 and 1,
+    /// for the given point.
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
         int cellX = (int) Math.Floor(point.X);
@@ -90,7 +91,7 @@ public class CracklePattern : Pattern, INoiseConsumer
     /// <returns>The cell's feature point.</returns>
     private Point FeaturePointIn(int x, int y, int z)
     {
-        uint hash = Hash(x, y, z, Seed ?? 0);
+        uint hash = Hash(x, y, z, Seed ?? Pigment.WearersSeed ?? 0);
 
         return new Point(
             x + Fraction(hash),

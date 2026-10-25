@@ -135,7 +135,7 @@ for fern in [0, 4] {
 }
 
 // A dead one standing in the crop, because a stand where everything is alive reads as planted.
-object Snag(7.2, 4) { translate [6.5, 0, 7.5] }
+object Snag(7.2, Season, 4) { translate [6.5, 0, 7.5] }
 
 // And a windbreak along the far side, which is what a poplar is for.
 for tree in [0, 3] {

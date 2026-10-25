@@ -140,7 +140,10 @@ public class Conic : ExtrudedSurface
         double x = ray.Origin.X + t * ray.Direction.X;
         double z = ray.Origin.Z + t * ray.Direction.Z;
 
-        return x * x + z * z <= Math.Abs(y);
+        // The cone's radius at a height is that height, so a cap reaches out as far as its height squared, not
+        // its height: compared with |y|, a cap at 0.3 reached out to 0.55, a flange past the wall, and one at 2
+        // stopped at 1.4, a ring of hole inside it.  The two agree only at 0 and 1, which is where the book's tests sit.
+        return x * x + z * z <= y * y;
     }
 
     /// <summary>
@@ -155,10 +158,10 @@ public class Conic : ExtrudedSurface
     {
         double distance = point.X * point.X + point.Z * point.Z;
 
-        if (distance < Math.Abs(MaximumY) && point.Y >= MaximumY - DoubleExtensions.Epsilon)
+        if (distance < MaximumY * MaximumY && point.Y >= MaximumY - DoubleExtensions.Epsilon)
             return Directions.Up;
 
-        if (distance < Math.Abs(MinimumY) && point.Y <= MinimumY + DoubleExtensions.Epsilon)
+        if (distance < MinimumY * MinimumY && point.Y <= MinimumY + DoubleExtensions.Epsilon)
             return Directions.Down;
 
         double y = Math.Sqrt(distance);

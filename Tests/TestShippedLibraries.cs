@@ -359,6 +359,27 @@ public class TestShippedLibraries
     /// </summary>
     private static readonly string[] Evergreens = ["Fir", "Pine"];
 
+    /// <summary>
+    /// A snag, the dead tree, is no species -- it keeps no leaves to answer the season by -- but it grows in every
+    /// season and every variant, and its variants are trees of their own: the margin of a field stands variant 4.
+    /// </summary>
+    [TestMethod]
+    public void TestASnagGrowsInEverySeasonAndVariant()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "trees.igl"),
+            Path.Combine(_directory, "trees.igl"), true);
+
+        foreach (string season in new[] { "summer", "autumn", "winter", "spring" })
+        {
+            foreach (int variant in new[] { 1, 2, 3, 4 })
+                Assert.IsNull(Grow("Snag", season, variant), $"a snag should grow in {season}, variant {variant}");
+        }
+
+        Assert.IsTrue(Differs(Picture("Snag", "summer", 1), Picture("Snag", "summer", 4)),
+            "a snag's variants 1 and 4 grew the same tree");
+    }
+
     [TestMethod]
     public void TestEveryTreeGrowsInEverySeason()
     {
@@ -590,7 +611,7 @@ public class TestShippedLibraries
         double across = height < 3 ? height * 2.4 : 24.0;
         double middle = across / 2 - across / 8;
         string scene = Path.Combine(_directory, "scene.igl");
-        string call = tree == "Snag" ? $"{tree}({height}, {variant})" : $"{tree}({height}, 'summer', {variant})";
+        string call = $"{tree}({height}, 'summer', {variant})";
 
         File.WriteAllText(scene, $$"""
             import '{{library}}' { {{tree}} }
@@ -1135,6 +1156,10 @@ public class TestShippedLibraries
 
         foreach (string fire in Fires)
             Assert.IsNotNull(Lit(fire, 1, 1), $"{fire} should light");
+
+        // And a fire's variant is another fire: two beds of embers, or two torches, side by side are not one twice.
+        foreach (string fire in (string[]) ["Embers", "Torch"])
+            Assert.IsTrue(Differs(Lit(fire, 1, 1), Lit(fire, 1, 2)), $"{fire}'s variants 1 and 2 came out the same");
     }
 
     [TestMethod]
@@ -2754,10 +2779,39 @@ public class TestShippedLibraries
             Shipped.First(path => Path.GetFileName(path) == "indoor-lights.igl"),
             Path.Combine(_directory, "indoor-lights.igl"), true);
 
+        // The variants run in fours: brass, steel and bronze under a tungsten bulb, then steel under the cool one.
         foreach (string fitting in Fittings)
-        foreach (int variant in (int[]) [0, 1, 2])
+        foreach (int variant in (int[]) [0, 1, 2, 3])
         foreach (int lit in (int[]) [0, 1])
             Assert.IsNull(Fit(fitting, variant, lit), $"{fitting} should stand ({variant}, {lit})");
+    }
+
+    /// <summary>
+    /// The desk lamp stands lit and unlit in each of its enamels, turned to look at what it is told to.
+    /// </summary>
+    [TestMethod]
+    public void TestTheAnglepoiseStandsLitAndUnlit()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "indoor-lights.igl"),
+            Path.Combine(_directory, "indoor-lights.igl"), true);
+
+        foreach (int variant in (int[]) [0, 1, 2, 3])
+        foreach (int lit in (int[]) [0, 1])
+        {
+            string scene = Path.Combine(_directory, "scene.igl");
+
+            File.WriteAllText(scene, $$"""
+                import 'indoor-lights' { Anglepoise }
+                context { angles are degrees  no gamma  medium samples 12 }
+                camera { location [0.6, 0.6, -1.2]  look at [0, 0.2, 0]  field of view 50 }
+                background [0, 0, 0]
+                plane { material { pigment [0.6, 0.6, 0.6]  ambient 0.05 } }
+                object Anglepoise([0.35, 0, 0.1], 0.32, {{variant}}, {{lit}})
+                """);
+
+            Assert.IsNull(Render(scene, 60, 45), $"the anglepoise should stand ({variant}, {lit})");
+        }
     }
 
     [TestMethod]

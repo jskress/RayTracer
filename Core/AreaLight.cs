@@ -95,9 +95,9 @@ public class AreaLight : PointLight
     }
 
     /// <summary>
-    /// This method works out one of the places on the face the light is looked at from, following
-    /// POV-Ray: the grid square is turned into an offset running from half the face one way to half
-    /// the other, nudged off its square by the jitter, and added to the center.
+    /// This method works out one of the places on the face the light is looked at from: the middle of the
+    /// sample's own square of the face, as an offset running from half the face one way to half the other,
+    /// nudged about within its square by the jitter, and added to the center.
     /// </summary>
     /// <param name="point">The point being lit.</param>
     /// <param name="index">Which sample, counted across <see cref="Axis1"/> first.</param>
@@ -109,10 +109,13 @@ public class AreaLight : PointLight
         int v = index / USteps;
         (double[] jitterU, double[] jitterV) = _jitter.Value;
 
-        // A single step along an axis has no spread to place a sample within, so it sits at the
-        // center; POV-Ray guards the division by the step count less one the same way.
-        double alongU = USteps > 1 ? (u + jitterU[index]) / (USteps - 1) - 0.5 : 0;
-        double alongV = VSteps > 1 ? (v + jitterV[index]) / (VSteps - 1) - 0.5 : 0;
+        // Each sample stands in the middle of its own square of the face, nudged about within it by the jitter,
+        // so the samples cover the face the light was given and no more.  Spaced from edge to edge as POV-Ray
+        // spaces them, and then jittered half a square, they spread past it -- by a third at the four steps
+        // given unless said, by half at two -- so a light's size changed with how many samples it took.  A single
+        // step along an axis has nothing to spread over, and sits at the middle.
+        double alongU = USteps > 1 ? (u + 0.5 + jitterU[index]) / USteps - 0.5 : 0;
+        double alongV = VSteps > 1 ? (v + 0.5 + jitterV[index]) / VSteps - 0.5 : 0;
 
         Point on = Location + Axis1 * alongU + Axis2 * alongV;
         Vector toward = on - point;
@@ -128,8 +131,8 @@ public class AreaLight : PointLight
     /// <returns>The angle, in radians.</returns>
     public override double SpreadOf(LightSample sample)
     {
-        double alongU = USteps > 1 ? Axis1.Magnitude / (USteps - 1) : 0;
-        double alongV = VSteps > 1 ? Axis2.Magnitude / (VSteps - 1) : 0;
+        double alongU = USteps > 1 ? Axis1.Magnitude / USteps : 0;
+        double alongV = VSteps > 1 ? Axis2.Magnitude / VSteps : 0;
 
         return sample.Distance > 0 ? Math.Sqrt(alongU * alongU + alongV * alongV) / sample.Distance : 0;
     }
@@ -153,7 +156,7 @@ public class AreaLight : PointLight
     /// <summary>
     /// This method works out the jitter offsets once, so that they are fixed for the whole render
     /// and the same from one render to the next.  Each is a nudge between minus and plus a half a
-    /// grid square, which is POV-Ray's own, and all zero when the jitter is turned off.
+    /// sample's square, and all zero when the jitter is turned off.
     /// </summary>
     /// <returns>The offsets along each axis, one per sample.</returns>
     private (double[], double[]) BuildJitter()

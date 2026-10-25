@@ -141,6 +141,38 @@ public class TestChoices
         return width;
     }
 
+    /// <summary>
+    /// A list of surfaces may name a value with a word that also begins a property or a placement -- `left`,
+    /// `body`, `reach` -- in a group and in a scene, as a function's body may.
+    /// </summary>
+    [TestMethod]
+    public void TestALocalNameMayBeAPropertyWord()
+    {
+        foreach (string word in new[] { "left", "body", "reach", "span", "hair", "front" })
+        {
+            (Canvas group, string error) = Render($$"""
+                camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+                point light { location [-10, 10, -10] }
+                group { {{word}} = 1  sphere { translate [0, {{word}}, 0] } }
+                """);
+
+            Assert.IsNull(error, $"in a group, '{word}': {error}");
+            Assert.IsNotNull(group);
+
+            (Canvas scene, string sceneError) = Render($$"""
+                scene {
+                    {{word}} = 1
+                    camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+                    point light { location [-10, 10, -10] }
+                    sphere { translate [0, {{word}}, 0] }
+                }
+                """);
+
+            Assert.IsNull(sceneError, $"in a scene, '{word}': {sceneError}");
+            Assert.IsNotNull(scene);
+        }
+    }
+
     [TestMethod]
     public void TestAFunctionMayChooseItsAnswer()
     {

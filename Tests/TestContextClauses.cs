@@ -75,6 +75,40 @@ public class TestContextClauses
         }
     }
 
+    /// <summary>
+    /// A context block is the whole scene's however late in the file it comes: `reflection samples` written after
+    /// a rough ball is the ball's, as it is written before it.
+    /// </summary>
+    [TestMethod]
+    public void TestReflectionSamplesAreTheScenesWhereverTheyAreWritten()
+    {
+        Canvas Picture(string text)
+        {
+            string path = Path.Combine(_directory, $"samples-{Guid.NewGuid():N}.igl");
+            string output = Path.ChangeExtension(path, "png");
+
+            File.WriteAllText(path, text);
+            new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 24, Height = 18 });
+
+            return new ImageFile(output).Load()[0];
+        }
+
+        const string World = """
+            camera { location [0, 1.5, -5]  look at [0, 1, 0] }
+            point light { location [-10, 10, -10]  color White }
+            plane { material { pigment checker { White, Black } } }
+            sphere { translate [0, 1, 0]  material { pigment White  reflective 1  roughness 0.4  diffuse 0.1 } }
+            """;
+        Canvas first = Picture("context { no gamma  reflection samples 64 }\n" + World);
+        Canvas last = Picture(World + "context { no gamma  reflection samples 64 }\n");
+        Canvas fewer = Picture("context { no gamma  reflection samples 4 }\n" + World);
+        bool Same(Canvas a, Canvas b) =>
+            Enumerable.Range(0, 24 * 18).All(index => a.GetPixel(index % 24, index / 24).Matches(b.GetPixel(index % 24, index / 24)));
+
+        Assert.IsFalse(Same(first, fewer), "the number of samples should show");
+        Assert.IsTrue(Same(first, last), "written after the ball, the samples should still be the ball's");
+    }
+
     [TestMethod]
     public void TestASceneMaySettleItsOwnSize()
     {
@@ -447,6 +481,79 @@ public class TestContextClauses
         }
 
         Assert.Contains("Ambient cannot be scaled by less than nothing", captured.ToString());
+    }
+
+    /// <summary>
+    /// A file rendering twice renders the same picture twice: each render settles a scene of its own, so a named
+    /// material's ambient is scaled once for each, not once more for the second, and a physical sky hangs one sun.
+    /// </summary>
+    [TestMethod]
+    public void TestASecondRenderSettlesAfresh()
+    {
+        string path = Path.Combine(_directory, "twice.igl");
+
+        File.WriteAllText(path, """
+            context { no gamma  scale ambient by 0.5 }
+            camera { location [0, 0, -4]  look at [0, 0, 1] }
+            background physical sky { sun elevation 30 }
+            Paint = material { pigment [0.8, 0.6, 0.4]  ambient 0.6 }
+            sphere { material Paint }
+            render
+            render
+            """);
+
+        new LanguageParser(path).Parse().Render(new RenderOptions
+        {
+            OutputFileName = Path.Combine(_directory, "twice.png"), Width = 16, Height = 16
+        });
+
+        Canvas first = new ImageFile(Path.Combine(_directory, "twice-0000000.png")).Load()[0];
+        Canvas second = new ImageFile(Path.Combine(_directory, "twice-0000001.png")).Load()[0];
+
+        for (int x = 0; x < 16; x++)
+        {
+            for (int y = 0; y < 16; y++)
+                Assert.IsTrue(first.GetPixel(x, y).Matches(second.GetPixel(x, y)), $"the pixel at {x}, {y}");
+        }
+    }
+
+    /// <summary>
+    /// A scene's gamma is a power its light is raised to one over, so a gamma of nought is refused, as it is on the
+    /// command line.
+    /// </summary>
+    [TestMethod]
+    public void TestAGammaOfNoughtIsRefused()
+    {
+        string path = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(path,
+            "context { gamma 0 }\n" +
+            "camera { location [0, 0, -4]  look at [0, 0, 1] }\n" +
+            "point light { location [0, 3, -3] }\n" +
+            "sphere { }");
+
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        Console.SetOut(captured);
+
+        try
+        {
+            new LanguageParser(path).Parse()?.Render(new RenderOptions
+            {
+                OutputFileName = Path.Combine(_directory, "out.png"), Width = 8, Height = 8
+            });
+        }
+        catch (Exception exception)
+        {
+            Console.Write(exception);
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        Assert.Contains("Gamma correction must be more than 0", captured.ToString());
     }
 
 

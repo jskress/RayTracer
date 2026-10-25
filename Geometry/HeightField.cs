@@ -106,7 +106,10 @@ public class HeightField : Group
 
         _columns = canvas.Width;
         _rows = canvas.Height;
-        _floor = Clip;
+        // In the heights' own units: a brightness clipped at becomes a height a quarter of it, as every height
+        // does.  Left a brightness, the floor sat four times too high, so `clip 0.1` dropped everything darker
+        // than 0.4 and a clip of a quarter or more left nothing at all.
+        _floor = Clip * 0.25;
 
         if (_columns < 2 || _rows < 2)
             return;

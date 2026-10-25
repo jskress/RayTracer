@@ -19,10 +19,6 @@ public class InstructionContext
     private int _renderInstructions;
 
     /// <summary>
-    /// This method is used to add a new instruction to the set.
-    /// </summary>
-    /// <param name="instruction">The instruction to add.</param>
-    /// <summary>
     /// This property reports the names of the variables set so far, in the order the instructions
     /// setting them were added.  An import uses it to tell which names a library brought.
     /// </summary>
@@ -32,10 +28,6 @@ public class InstructionContext
         .ToList();
 
     /// <summary>
-    /// This property reports the names of the functions declared so far.  An import uses it the same
-    /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
-    /// </summary>
-    /// <summary>
     /// This property reports the names of the primitives declared so far.  An import uses it the same
     /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
     /// </summary>
@@ -44,6 +36,10 @@ public class InstructionContext
         .Select(instruction => instruction.Primitive.Name)
         .ToList();
 
+    /// <summary>
+    /// This property reports the names of the functions declared so far.  An import uses it the same
+    /// way it uses <see cref="VariableNames"/>: to tell which names a library brought.
+    /// </summary>
     internal IReadOnlyList<string> FunctionNames => _instructions
         .OfType<DeclareFunctionInstruction>()
         .Select(instruction => instruction.Function.Name)
@@ -54,12 +50,14 @@ public class InstructionContext
     /// value or a thing.  A file offered as a library must be, since anything else (a surface, a
     /// camera, a render command) would be dragged into every scene that imported it.
     /// </summary>
-    internal bool HoldsOnlyDefinitions => _instructions.All(IsADefinition);
+    internal bool HoldsOnlyDefinitions => _instructions.All(instruction =>
+        IsADefinition(instruction) || instruction is ImportInstruction);
 
     /// <summary>
     /// This method reports whether one instruction merely gives something a name.  A value, a thing, a
     /// function and a primitive all count: each leaves a name behind and nothing else, which is the
-    /// whole of what a library is for.
+    /// whole of what a library is for.  An import does not count as one, though a library may hold it:
+    /// it brings in names for the library's own use, as `buildings` takes its windows from `windows`.
     /// </summary>
     /// <param name="instruction">The instruction to judge.</param>
     /// <returns>Whether it is a definition.</returns>
@@ -74,6 +72,10 @@ public class InstructionContext
     /// </summary>
     internal int DefinitionCount => _instructions.Count(IsADefinition);
 
+    /// <summary>
+    /// This method is used to add a new instruction to the set.
+    /// </summary>
+    /// <param name="instruction">The instruction to add.</param>
     public void AddInstruction(Instruction instruction)
     {
         ArgumentNullException.ThrowIfNull(instruction);
@@ -96,13 +98,6 @@ public class InstructionContext
     }
 
     /// <summary>
-    /// This method is used to run all our instructions.
-    /// </summary>
-    /// <param name="options">The command line options supplied by the user.</param>
-    /// <param name="context">The current render context.</param>
-    /// <param name="variables">The current set of scoped variables.</param>
-    /// <param name="frame">The frame to render.</param>
-    /// <summary>
     /// This method carries out the definitions this context holds against the given names, and does
     /// nothing else.
     /// <para>
@@ -118,6 +113,13 @@ public class InstructionContext
             instruction.Execute(context, variables);
     }
 
+    /// <summary>
+    /// This method is used to run all our instructions.
+    /// </summary>
+    /// <param name="options">The command line options supplied by the user.</param>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <param name="frame">The frame to render.</param>
     /// <param name="output">Where a frame of an animation goes, or null for a still.</param>
     public void Execute(
         RenderOptions options, RenderContext context, Variables variables, long frame, FrameOutput output = null)
@@ -135,16 +137,31 @@ public class InstructionContext
         // frame's things still standing.
         _objects.Clear();
 
-        foreach (Instruction instruction in _instructions)
+        bool rendered = false;
+
+        for (int index = 0; index < _instructions.Count; index++)
         {
-            if (instruction is RenderInstruction renderInstruction)
+            if (_instructions[index] is RenderInstruction renderInstruction)
             {
+                // A second render carries the file out again, up to itself, into a context of its own, so that it
+                // settles things of its own: settling the first render's again scaled their ambient twice, hung a
+                // physical sky's sun a second time, and rendered a scene the first had already put away.
+                if (rendered)
+                {
+                    context = context.Afresh();
+                    _objects.Clear();
+
+                    foreach (Instruction earlier in _instructions.Take(index).Where(earlier => earlier is not RenderInstruction))
+                        earlier.Execute(context, variables);
+                }
+
                 CreateImage(options, context, variables, renderInstruction, frame, output);
 
                 frame++;
+                rendered = true;
             }
             else
-                instruction.Execute(context, variables);
+                _instructions[index].Execute(context, variables);
         }
     }
 

@@ -49,6 +49,23 @@ public class TestLibraryImport
         Assert.AreEqual(3, renderer.DefinitionCount);
     }
 
+    /// <summary>
+    /// A library may lean on another, as the shipped `buildings` takes its windows from `windows`: an import is
+    /// no surface, camera or render, so it does not stop a file being a library.
+    /// </summary>
+    [TestMethod]
+    public void TestALibraryMayImportAnother()
+    {
+        File.WriteAllText(Path.Combine(_directory, "glazing.igl"), "Pane = material { pigment color White }\n");
+
+        ImageRenderer renderer = Parse(
+            "import 'glazing' { Pane }\n" +
+            "Window = cube { material Pane }\n");
+
+        Assert.IsTrue(renderer.HoldsOnlyDefinitions, "an import does not stop a file being a library");
+        Assert.AreEqual(1, renderer.DefinitionCount, "the import is not itself a definition");
+    }
+
     [TestMethod]
     public void TestAFileWithASurfaceIsNotALibrary()
     {

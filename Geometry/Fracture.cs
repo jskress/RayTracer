@@ -22,6 +22,22 @@ public class Fracture : Group
     public Surface Solid { get; set; }
 
     /// <summary>
+    /// This property holds, when there is more than one of <see cref="PieceMaterials"/>, a solid for each, alike and
+    /// made apart, the first of them <see cref="Solid"/>: a piece cut from a solid that is not a box stands its
+    /// material's own as its skin, so that the material it is handed is its own.  Null, every piece stands the one.
+    /// </summary>
+    public List<Surface> Solids { get; set; }
+
+    /// <summary>
+    /// This method reports whether the pieces the fracture will hold may be shared between places, which the
+    /// fracture may be only if they may: it holds no pieces until it breaks, after it has been shared.  A piece wears
+    /// one of its materials -- one filled with a medium may not be shared -- and stands its solid.
+    /// </summary>
+    internal bool MayShareWhatItHolds() =>
+        PieceMaterials.All(material => material?.Interior?.Medium is null) &&
+        (Solids ?? (Solid is null ? [] : [Solid])).All(Instance.MayBeShared);
+
+    /// <summary>
     /// This property holds how many pieces it breaks into, near enough: as many seeds as this are scattered, and a
     /// seed whose cell is gone to nothing makes no piece.
     /// </summary>
@@ -121,7 +137,17 @@ public class Fracture : Group
         if (Stretched is not null && (Stretched.X <= 0 || Stretched.Y <= 0 || Stretched.Z <= 0))
             throw new Exception("A fracture's stretch must be more than nought along every axis.");
 
-        Solid.PrepareForRendering();
+        // Readied once, and marked so: every piece cut from it stands it as an instance, and an instance readies a
+        // shape not yet marked ready -- so a solid readied here unmarked was readied twice, and anything that builds
+        // itself when readied (a text's letters, an L-system) built itself twice over, every crossing doubled.
+        foreach (Surface solid in Solids ?? [Solid])
+        {
+            if (!solid.SharedAndReady)
+            {
+                solid.SharedAndReady = true;
+                solid.PrepareForRendering();
+            }
+        }
 
         Polytope exact = Whole ? null : ConvexOf(Solid);
         Polytope start = exact;
@@ -143,7 +169,7 @@ public class Fracture : Group
             start = Polytope.Box(box.Minimum - margin, box.Maximum + margin);
         }
 
-        if (exact is null && !Whole && !Instance.MayBeShared(Solid))
+        if (exact is null && !Whole && !(Solids ?? [Solid]).All(Instance.MayBeShared))
             throw new Exception("A fracture can break only a solid that may be shared among its pieces; one that glows, holds a medium or moves cannot.");
 
         Random random = new (Seed ?? 0);
@@ -193,7 +219,11 @@ public class Fracture : Group
 
             if (exact is null && !Whole)
             {
-                Surface solid = new Instance { Prototype = Solid, Transform = Transforms.Translate(Point.Zero - offset) };
+                Surface solid = new Instance
+                {
+                    Prototype = Solids is { } solids && pick < solids.Count ? solids[pick] : Solid,
+                    Transform = Transforms.Translate(Point.Zero - offset)
+                };
 
                 piece = new CsgSurface { Operation = CsgOperation.Intersection, Left = piece, Right = solid };
             }

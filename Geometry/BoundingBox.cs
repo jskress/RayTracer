@@ -48,6 +48,11 @@ public class BoundingBox
     /// <param name="point">The point to add.</param>
     public BoundingBox Add(Point point)
     {
+        // A point that is not a number is nowhere, and taken in it would make the box nowhere too -- and every box
+        // gathered round it, so that one broken thing hid everything sharing a group or a branch with it.
+        if (double.IsNaN(point.X) || double.IsNaN(point.Y) || double.IsNaN(point.Z))
+            return this;
+
         _xMin = Math.Min(_xMin, point.X);
         _yMin = Math.Min(_yMin, point.Y);
         _zMin = Math.Min(_zMin, point.Z);
@@ -71,7 +76,7 @@ public class BoundingBox
         // is still empty.  The element-wise arithmetic below already leaves the extents alone, since
         // an empty box carries its minima at the largest possible number and its maxima at the
         // smallest, but it would otherwise leave this box marked as no longer empty.
-        if (other is { IsEmpty: false })
+        if (other is { IsEmpty: false } && !double.IsNaN(other._xMin + other._yMin + other._zMin + other._xMax + other._yMax + other._zMax))
         {
             Widens |= other.Widens;
             _xMin = Math.Min(_xMin, other._xMin);
@@ -222,14 +227,6 @@ public class BoundingBox
     }
 
     /// <summary>
-    /// This method handles finding intersection points for a specific pair of axis planes.
-    /// </summary>
-    /// <param name="origin">The origin value for the axis.</param>
-    /// <param name="direction">The direction value for the axis.</param>
-    /// <param name="axisMin">The minimum allowed value for the axis.</param>
-    /// <param name="axisMax">The maximum allowed value for the axis.</param>
-    /// <returns>The min and max intersection points for the axis being tested.</returns>
-    /// <summary>
     /// This method returns how wide a ray is, as a radius, where it is widest across the box: as far along
     /// itself as the box's furthest corner, or its nearest, for a shadow ray narrowing toward its light.
     /// </summary>
@@ -246,6 +243,14 @@ public class BoundingBox
         return ray.RadiusAt(Math.Max(0, along / squared));
     }
 
+    /// <summary>
+    /// This method handles finding intersection points for a specific pair of axis planes.
+    /// </summary>
+    /// <param name="origin">The origin value for the axis.</param>
+    /// <param name="direction">The direction value for the axis.</param>
+    /// <param name="axisMin">The minimum allowed value for the axis.</param>
+    /// <param name="axisMax">The maximum allowed value for the axis.</param>
+    /// <returns>The min and max intersection points for the axis being tested.</returns>
     private static (double min, double max) CheckAxis(
         double origin, double direction, double axisMin, double axisMax)
     {

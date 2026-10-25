@@ -9,7 +9,7 @@
 // | `Pawn` | The smallest piece: a ball on a collar. |
 // | `Rook` | A castle: a straight tower with a crenellated top. |
 // | `Knight` | The horse's head -- the one piece that is not turned. |
-// | `Bishop` | A mitre, with the slit cut in it. |
+// | `Bishop` | A miter, with the slit cut in it. |
 // | `Queen` | A coronet of points. |
 // | `King` | The tallest, with a cross on top. |
 // | `Board` | Squares, a border, and nothing else. |
@@ -29,7 +29,7 @@
 //
 // -- How a set is styled ------------------------------------------------------------------------
 //
-// **The colour is an argument, and deliberately not a block on the call.**  Either would work:
+// **The color is an argument, and deliberately not a block on the call.**  Either would work:
 //
 //     object Pawn(1.0, Ebony)                  // this
 //     object Pawn(1.0) { material { ... } }    // or this
@@ -52,7 +52,7 @@
 // -- What a set comes in ------------------------------------------------------------------------
 
 // Bone, or the cream plastic that stands in for it.  Not white: a true white piece loses its own
-// modelling under a bright light, and the turned rings on a rook stop reading at all.
+// modeling under a bright light, and the turned rings on a rook stop reading at all.
 Ivory = material {
     pigment [0.88, 0.84, 0.74]
     specular 0.34  shininess 60  ambient 0.20
@@ -94,7 +94,7 @@ ChessFootProfile = path {
 
 // A ball on a collar.  Half a king tall, and the piece there are eight of a side.
 // Foot 0.723: top at 0.119, radius 0.101.
-PawnProfile = path {
+ChessPawnProfile = path {
     move to 0.000, 0.119
     line to 0.101, 0.119
     quad 0.090, 0.160 to 0.074, 0.196
@@ -111,7 +111,7 @@ primitive Pawn(size, coat = Ivory) -> group {
     return group {
         union {
             lathe { path ChessFootProfile  scale 0.723 }
-            lathe { path PawnProfile }
+            lathe { path ChessPawnProfile }
         }
         material coat
         scale size
@@ -122,7 +122,7 @@ primitive Pawn(size, coat = Ivory) -> group {
 
 // A tower, and the only turned piece that is not finished on the lathe: its battlements are cut out
 // afterwards.  Foot 0.889: top at 0.147, radius 0.124.
-RookProfile = path {
+ChessRookProfile = path {
     move to 0.000, 0.147
     line to 0.124, 0.147
     quad 0.114, 0.200 to 0.106, 0.272
@@ -143,7 +143,7 @@ primitive Rook(size, coat = Ivory) -> group {
         difference {
             union {
                 lathe { path ChessFootProfile  scale 0.889 }
-                lathe { path RookProfile }
+                lathe { path ChessRookProfile }
             }
             // **The well has to come out as well as the gaps.**  Four slabs laid across the whole
             // diameter do remove the middle, but only where they actually overlap -- and between
@@ -176,9 +176,9 @@ primitive Rook(size, coat = Ivory) -> group {
 
 // -- Bishop -----------------------------------------------------------------------------------------
 
-// The mitre, and the slit cut in its face that tells it from a pawn at a glance.
+// The miter, and the slit cut in its face that tells it from a pawn at a glance.
 // Foot 0.850: top at 0.140, radius 0.119.
-BishopProfile = path {
+ChessBishopProfile = path {
     move to 0.000, 0.140
     line to 0.119, 0.140
     quad 0.106, 0.186 to 0.086, 0.232
@@ -200,9 +200,9 @@ primitive Bishop(size, coat = Ivory) -> group {
         difference {
             union {
                 lathe { path ChessFootProfile  scale 0.850 }
-                lathe { path BishopProfile }
+                lathe { path ChessBishopProfile }
             }
-            // the slit, cut down the face and leaning back as a mitre's does
+            // the slit, cut down the face and leaning back as a miter's does
             cube {
                 scale [0.017, 0.108, 0.120]
                 rotate X -22
@@ -217,7 +217,7 @@ primitive Bishop(size, coat = Ivory) -> group {
 // -- Queen ------------------------------------------------------------------------------------------
 
 // A coronet of points on a tall body.  Foot 0.865: top at 0.143, radius 0.121.
-QueenProfile = path {
+ChessQueenProfile = path {
     move to 0.000, 0.143
     line to 0.121, 0.143
     quad 0.108, 0.196 to 0.088, 0.248
@@ -243,7 +243,7 @@ primitive Queen(size, coat = Ivory) -> group {
         difference {
             union {
                 lathe { path ChessFootProfile  scale 0.865 }
-                lathe { path QueenProfile }
+                lathe { path ChessQueenProfile }
             }
             group {
                 for notch in [0, 7] {
@@ -263,7 +263,7 @@ primitive Queen(size, coat = Ivory) -> group {
 // -- King -------------------------------------------------------------------------------------------
 
 // The tallest, and the one that carries a cross.  Foot 1.000: top at 0.165, radius 0.140.
-KingProfile = path {
+ChessKingProfile = path {
     move to 0.000, 0.165
     line to 0.140, 0.165
     quad 0.124, 0.228 to 0.102, 0.296
@@ -286,7 +286,7 @@ primitive King(size, coat = Ivory) -> group {
     return group {
         union {
             lathe { path ChessFootProfile }
-            lathe { path KingProfile }
+            lathe { path ChessKingProfile }
             // the cross: an upright and an arm, squared off
             cube { scale [0.021, 0.052, 0.021]  translate [0, 0.948, 0] }
             cube { scale [0.046, 0.018, 0.018]  translate [0, 0.952, 0] }
@@ -494,7 +494,7 @@ primitive Knight(size, coat = Ivory) -> group {
     
         // The mane: the K-rail-ish crest carried along the back of the neck and up over the skull,
         // finishing just forward of the ears.  `no center` is what makes the placement work -- a sweep
-        // centres its profile about the 2D origin by default, which would thread the spline through the
+        // centers its profile about the 2D origin by default, which would thread the spline through the
         // middle of the crest and bury half of it; with `no center` the spline is aimed at the profile's
         // own origin, which sits on the middle of its bottom line, so the spline can ride the surface
         // and the crest stands proud of it.
@@ -505,9 +505,9 @@ primitive Knight(size, coat = Ivory) -> group {
         // across.  Drawn the natural way round, the mane lies on its side.
         //
         // The spline is the tube's own back edge as far as t = 0.88, then the head's crest from 222 to
-        // 52 degrees about the head mass's centre.  Both were measured rather than guessed: the tube
+        // 52 degrees about the head mass's center.  Both were measured rather than guessed: the tube
         // from its own Bezier, offset by the interpolated radius square to the spine, and the head by
-        // marching rays out from its centre until the blob field crosses its threshold.  Both are
+        // marching rays out from its center until the blob field crosses its threshold.  Both are
         // inset 0.03 so the flat bottom bites in rather than floating.
         sweep {
             no center
@@ -610,10 +610,10 @@ ChessOak = material {
 
 primitive Board(across, light = Ivory, dark = Ebony, border = ChessOak) -> group {
     return group {
-        // The squares.  **The two colours cannot be one checker pattern here**, however much cheaper
+        // The squares.  **The two colors cannot be one checker pattern here**, however much cheaper
         // that would be: a pattern carries pigments, and what a board wants styled is the whole
         // material -- a polished dark square and a matt light one differ in their specular before
-        // they differ in their colour.  So they are laid as separate solids and the `if` picks which
+        // they differ in their color.  So they are laid as separate solids and the `if` picks which
         // material each gets, which is what `across * across` cubes cost and it is not much.
         group {
             for index in [0, across * across - 1] {

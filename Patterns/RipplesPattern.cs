@@ -21,14 +21,16 @@ public class RipplesPattern : Pattern
     /// </summary>
     public override int DiscretePigmentsNeeded => 0;
 
+    // The frequency and phase set how tightly the rings are spaced, and are not read a second time on the value: there
+    // they cut each smooth ring into a sawtooth, which a `normal` turned into creases.
+    protected override bool SpacesItselfByFrequency => true;
+
     /// <summary>
     /// This method is used to determine an appropriate value, typically between 0 and 1,
     /// for the given point.
     /// <para>
-    /// The frequency and phase are read here as well as where every pattern's value is shaped,
-    /// which looks like saying them twice and is POV-Ray's arrangement rather than an oversight.
-    /// Here they set how tightly the rings are spaced; there they scale the number that comes out.
-    /// Left alone, as they nearly always are, the second reading changes nothing.
+    /// The frequency and phase are read here, as how tightly the rings are spaced, and only here: read again where
+    /// every other pattern's value is shaped, a frequency of 7 cut each ring into seven teeth.
     /// </para>
     /// </summary>
     /// <param name="point">The point from which the pattern value is to be derived.</param>

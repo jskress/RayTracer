@@ -1,6 +1,9 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.General;
+using RayTracer.Geometry;
+using RayTracer.Graphics;
+using RayTracer.Pigments;
 
 namespace Tests;
 
@@ -73,10 +76,17 @@ public class TestCameraProjections
         Assert.IsTrue(above.Direction.Y > 0, "a pixel above the middle should tip the ray up");
         Assert.IsTrue(above.Direction.Z < 0, "and it should still look ahead, not behind");
 
-        // A corner sits outside the circle, so its ray is sent away from the scene (behind).
+        // A corner sits outside the circle, so its ray shows the background and nothing in the scene.
         Ray corner = converter.GetRayForPixel(0, 0);
 
-        Assert.IsTrue(corner.Direction.Z > 0, "a corner outside the circle should look behind");
+        Assert.IsTrue(corner.Outside, "a corner outside the circle should be left to the background");
+
+        Scene scene = new () { Background = new SolidPigment(Colors.Blue) };
+
+        scene.Surfaces.Add(new Plane());
+        scene.Lights.Add(new PointLight { Location = new Point(0, 5, 0) });
+
+        Assert.IsTrue(scene.GetColorFor(corner).Matches(Colors.Blue), "however much is behind the camera");
     }
 
     [TestMethod]

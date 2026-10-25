@@ -1,4 +1,7 @@
+using System.Globalization;
+using RayTracer.Basics;
 using RayTracer.Core;
+using RayTracer.Extensions;
 using RayTracer.General;
 using RayTracer.Pixels;
 using RayTracer.Renderer;
@@ -46,6 +49,27 @@ public class TestAliasingOption
         Assert.AreEqual("adaptive:5:0.2", Configured("adaptive:5:0.2").ToString());
     }
 
+    /// <summary>
+    /// A threshold is written with a point wherever the render runs: a machine set to write a comma in its numbers
+    /// read "0.35" as thirty-five, and refused it.
+    /// </summary>
+    [TestMethod]
+    public void TestAThresholdIsReadTheSameInEveryLocale()
+    {
+        CultureInfo was = CultureInfo.CurrentCulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+
+            Assert.AreEqual("adaptive:3:0.35", Configured("adaptive:3:0.35").ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = was;
+        }
+    }
+
     [TestMethod]
     public void TestTheUsualThresholdIsNotWrittenBackOut()
     {
@@ -86,6 +110,33 @@ public class TestAliasingOption
         // And the tight one must actually be subdividing, or this is comparing two of nothing.
         Assert.IsTrue(tight > 121 * 5,
             $"{tight} samples over 121 pixels is not enough subdivision to be measuring anything");
+    }
+
+    /// <summary>
+    /// A square the sampler looks closer at shares its middle with the corner of the square it subdivides, so it
+    /// traces four new places rather than five: a pixel on a ball's edge, looked at to one level, takes five places
+    /// and four more for each corner it looks closer at.  (Traced again, that middle was a fifth of every
+    /// subdivision's rays, and taken five at a time the count came out a multiple of five over the first five.)
+    /// </summary>
+    [TestMethod]
+    public void TestASubdivisionDoesNotTraceItsMiddleAgain()
+    {
+        Scene scene = TestScenes.DefaultScene();
+        // The default scene's ball, looked at from where its edge falls in the middle of one tiny pixel.
+        Camera camera = new () { LookAt = new Point(1.0206, 0, 0), FieldOfView = 0.5.ToRadians() };
+        Statistics statistics = new ();
+        RenderContext context = new ()
+        {
+            Width = 1, Height = 1, AntiAliasing = Configured("adaptive:1:0.02"), Statistics = statistics
+        };
+
+        camera.Render(context, scene);
+
+        long more = statistics.Samples - 5;
+
+        Assert.IsTrue(more > 0, "the pixel on the ball's edge should have been looked at closer");
+        Assert.AreEqual(0, more % 4, $"{statistics.Samples} places: four new for each corner looked at closer");
+        Assert.AreNotEqual(0, more % 5, $"{statistics.Samples} places: the middle of each was traced again");
     }
 
     /// <summary>

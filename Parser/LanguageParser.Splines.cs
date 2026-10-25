@@ -29,11 +29,6 @@ public partial class LanguageParser
     }
 
     /// <summary>
-    /// This method is used to handle an item clause of a spline block.  A spline must start
-    /// with a "move to" command, and that command may not appear again after the first.
-    /// </summary>
-    /// <param name="clause">The clause to process.</param>
-    /// <summary>
     /// This method reads a spline marked as kinked on purpose.
     /// </summary>
     private SplineResolver ParseDiscontinuousSpline()
@@ -45,6 +40,11 @@ public partial class LanguageParser
         return resolver;
     }
 
+    /// <summary>
+    /// This method is used to handle an item clause of a spline block.  A spline must start
+    /// with a "move to" command, and that command may not appear again after the first.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
     private void HandleSplineEntryClause(Clause clause)
     {
         SplineResolver resolver = (SplineResolver) _context.CurrentTarget;

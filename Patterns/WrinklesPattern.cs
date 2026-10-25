@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Pigments;
 
 namespace RayTracer.Patterns;
 
@@ -45,7 +46,7 @@ public class WrinklesPattern : Pattern, INoiseConsumer
     public override double Evaluate(Point point, Footprint footprint)
     {
         double width = footprint?.Width ?? 0;
-        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed);
+        NoiseGenerator generator = NoiseGenerator.ForSeed(Seed ?? Pigment.WearersSeed);
         Vector vector = new (point);
         double first = LayeredNoise.WorthSummingAt(1, width);
         double value = first <= 0

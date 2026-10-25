@@ -59,6 +59,7 @@ sphere {
     material {
         pigment marble {
             turbulence { amplitude 0.95  octaves 5 }
+            ramp wave
             [0, [0.03, 0.10, 0.26], 0.30, [0.05, 0.17, 0.38],
              0.52, [0.09, 0.28, 0.44], 0.72, [0.80, 0.84, 0.90],
              1, [0.03, 0.10, 0.26]]

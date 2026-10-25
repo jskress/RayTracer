@@ -399,7 +399,7 @@ public class TestCoat
     }
 
     /// <summary>
-    /// This tests a smooth coat under an area light, its 25 places half a unit apart and ten units off: the
+    /// This tests a smooth coat under an area light, its 25 places in the middles of squares 0.4 across, ten units off: the
     /// window shows as one even patch rather than as 25 dots, each place's glint spread over its share of
     /// the face (a step along each axis, over the distance), and the middle is exactly that.
     /// </summary>
@@ -438,8 +438,8 @@ public class TestCoat
         {
             for (int v = 0; v < 5; v++)
             {
-                Vector toPlace = new Point(-1 + u * 0.5, 10, -1 + v * 0.5) - middle.LitPoint;
-                double spread = Math.Sqrt(0.5 * 0.5 + 0.5 * 0.5) / toPlace.Magnitude;
+                Vector toPlace = new Point(-0.8 + u * 0.4, 10, -0.8 + v * 0.4) - middle.LitPoint;
+                double spread = Math.Sqrt(0.4 * 0.4 + 0.4 * 0.4) / toPlace.Magnitude;
                 double alpha = Math.Sqrt(0.0025 * 0.0025 + spread * spread / 4);
 
                 expected += Microfacets.Highlight(Up, middle.Eye, toPlace.Unit, alpha, cos => Schlick(cos)) / 25;

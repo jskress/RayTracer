@@ -13,12 +13,17 @@ public class SurfaceIterator
     public IEnumerable<Surface> Surfaces => GetSurfaces();
 
     private readonly Surface[] _surfaces;
+    private readonly bool _intoShared;
 
     public SurfaceIterator(Surface surface) : this([surface]) {}
 
-    public SurfaceIterator(IEnumerable<Surface> surfaces)
+    /// <param name="surfaces">The surfaces to walk.</param>
+    /// <param name="intoShared">Whether to walk into the shapes instances share, or stop at each instance: a
+    /// material handed down stops there, since a shared shape stands in many places and wears each one's.</param>
+    public SurfaceIterator(IEnumerable<Surface> surfaces, bool intoShared = true)
     {
         _surfaces = surfaces.ToArray();
+        _intoShared = intoShared;
     }
 
     /// <summary>
@@ -28,7 +33,7 @@ public class SurfaceIterator
     /// <returns>An enumerator over our surfaces, in a top-down order.</returns>
     private IEnumerable<Surface> GetSurfaces()
     {
-        return GetSurfaces(_surfaces, []);
+        return GetSurfaces(_surfaces, _intoShared ? [] : null);
     }
 
     /// <summary>
@@ -65,7 +70,7 @@ public class SurfaceIterator
                 //
                 // Once, because the shape is one shape however many instances point at it, and
                 // handing it out again per instance would settle it over and over.
-                case Instance instance when shared.Add(instance.Prototype):
+                case Instance instance when shared is not null && shared.Add(instance.Prototype):
                     foreach (Surface child in GetSurfaces([instance.Prototype], shared))
                         yield return child;
                     break;

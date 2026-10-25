@@ -1,6 +1,8 @@
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Geometry;
+using RayTracer.Graphics;
+using RayTracer.ImageIO;
 using RayTracer.Options;
 using RayTracer.Parser;
 using RayTracer.Renderer;
@@ -42,6 +44,34 @@ public class TestFracture
                 low.Y + random.NextDouble() * (high.Y - low.Y),
                 low.Z + random.NextDouble() * (high.Z - low.Z)))
             .ToList();
+    }
+
+    // A group that counts how often it is readied, as a text's letters or an L-system's parts are built.
+    private sealed class Counted : Group
+    {
+        public int Readied { get; private set; }
+
+        protected override void PrepareSurfaceForRendering()
+        {
+            Readied++;
+            base.PrepareSurfaceForRendering();
+        }
+    }
+
+    /// <summary>
+    /// A solid broken into pieces is readied once, however many pieces stand it: readied twice, a solid that builds
+    /// itself when readied -- a text, an L-system -- built itself twice, coincident, and its pieces came out hollow.
+    /// </summary>
+    [TestMethod]
+    public void TestASolidIsReadiedOnce()
+    {
+        Counted solid = new ();
+
+        solid.Add(new Sphere());
+
+        Broken(fracture => fracture.Pieces = 12, solid);
+
+        Assert.AreEqual(1, solid.Readied);
     }
 
     /// <summary>
@@ -427,6 +457,56 @@ public class TestFracture
             "no less than nought");
         StringAssert.Contains(Assert.ThrowsExactly<Exception>(() =>
             Broken(fracture => fracture.Stretched = new Vector(1, 0, 1))).Message, "more than nought");
+    }
+
+    /// <summary>
+    /// A solid that is not a box, broken into pieces of several materials, shows each piece's material on its skin as
+    /// well as on its broken faces.  (Every piece stood the one solid, and the material handed into it was the first
+    /// piece's, so a boulder broken into four stones came out one stone's color all over.)
+    /// </summary>
+    [TestMethod]
+    public void TestEachPieceWearsItsOwnMaterialOnItsSkin()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"fracture-tests-{Guid.NewGuid():N}");
+        string scene = Path.Combine(directory, "skins.igl");
+        string output = Path.Combine(directory, "skins.png");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            File.WriteAllText(scene, """
+                context { no gamma }
+                camera { location [0, 0, -4]  look at [0, 0, 0] }
+                point light { location [-5, 8, -6] }
+                Red = material { pigment [1, 0, 0]  ambient 1  diffuse 0  specular 0 }
+                Blue = material { pigment [0, 0, 1]  ambient 1  diffuse 0  specular 0 }
+                fracture { solid { sphere { } }  pieces 12  materials Red, Blue  with seed 5 }
+                """);
+            new LanguageParser(scene).Parse().Render(new RenderOptions { OutputFileName = output, Width = 40, Height = 40 });
+
+            Canvas picture = new ImageFile(output).Load()[0];
+            int red = 0, blue = 0;
+
+            for (int x = 0; x < 40; x++)
+            {
+                for (int y = 0; y < 40; y++)
+                {
+                    Color color = picture.GetPixel(x, y);
+
+                    if (color.Red > 0.8 && color.Blue < 0.2)
+                        red++;
+                    else if (color.Blue > 0.8 && color.Red < 0.2)
+                        blue++;
+                }
+            }
+
+            Assert.IsTrue(red > 100 && blue > 100, $"{red} red pixels and {blue} blue");
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
     }
 
     /// <summary>

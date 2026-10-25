@@ -101,15 +101,6 @@ public class SkyTable
     }
 
     /// <summary>
-    /// This method reads the table at a place that will generally fall between entries, mixing the
-    /// four around it in proportion to how near each one is.
-    /// </summary>
-    /// <param name="row">Which row is wanted, possibly between two.</param>
-    /// <param name="column">Which column is wanted, possibly between two.</param>
-    /// <param name="firstRow">The lowest row it may be read from.</param>
-    /// <param name="lastRow">The highest row it may be read from.</param>
-    /// <returns>The color there.</returns>
-    /// <summary>
     /// This method returns the sky's light in the given direction, wavelength by wavelength, mixed
     /// between the four entries around it exactly as <see cref="Toward"/> mixes their colors.
     /// </summary>
@@ -162,6 +153,15 @@ public class SkyTable
         return first + (second - first) * howFar;
     }
 
+    /// <summary>
+    /// This method reads the table at a place that will generally fall between entries, mixing the
+    /// four around it in proportion to how near each one is.
+    /// </summary>
+    /// <param name="row">Which row is wanted, possibly between two.</param>
+    /// <param name="column">Which column is wanted, possibly between two.</param>
+    /// <param name="firstRow">The lowest row it may be read from.</param>
+    /// <param name="lastRow">The highest row it may be read from.</param>
+    /// <returns>The color there.</returns>
     private Color Between(double row, double column, int firstRow, int lastRow)
     {
         int lowRow = Math.Clamp((int) Math.Floor(row), firstRow, lastRow);

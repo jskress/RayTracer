@@ -258,6 +258,31 @@ public class TestMediumClauses
             "a fog that only swallows light should show nothing of a lamp inside it");
     }
 
+    /// <summary>
+    /// A medium is lit from all of a light's samples, not the same few: fog under a sky that is bright only below
+    /// the horizon is lit by it, where asking a sky of thirty-two samples about only its first sixteen -- its upper
+    /// half -- at every place of every crossing left it dark.
+    /// </summary>
+    [TestMethod]
+    public void TestAMediumIsLitFromAllOfALightsSamples()
+    {
+        (Canvas image, string error) = Render("""
+            camera { location [0, 0, -5]  look at [0, 0, 0]  field of view 30 }
+            background Black
+            sky light { pigment linear Y stripes { Black, White } }
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior { ior 1.0  medium { scattering 2 } }
+                }
+                no shadow
+            }
+            """);
+
+        Assert.IsNull(error, error);
+        Assert.IsTrue(image.GetPixel(20, 20).Red > 0.02, $"the fog should be lit from below, and came out {image.GetPixel(20, 20)}");
+    }
+
     [TestMethod]
     public void TestWhichWayAMediumTurnsLightShows()
     {
@@ -351,6 +376,38 @@ public class TestMediumClauses
             Assert.IsTrue(overridden.GetPixel(x, y).Matches(careful.GetPixel(x, y)),
                 $"the medium's own count did not stand at {x}, {y}");
         }
+    }
+
+    /// <summary>
+    /// The context's count is the context as it stands once the whole file is read, wherever it is written: a
+    /// `medium samples` after the medium is the careful render exactly.  (Copied in as the medium was read, it did
+    /// nothing for anything written before it.)
+    /// </summary>
+    [TestMethod]
+    public void TestTheContextsCountReachesAMediumWrittenBeforeIt()
+    {
+        const string fog = """
+            camera { location [0, 0, -5]  look at [0, 0, 1]  field of view 60 }
+            point light { location [1, 1, 2]  color White }
+            background Black
+            """;
+        (Canvas before, string first) = Render("""
+            context { medium samples 64 }
+            environment { medium { scattering 0.3  anisotropy 0.5 } }
+            {{fog}}
+            """.Replace("{{fog}}", fog));
+        (Canvas after, string second) = Render("""
+            environment { medium { scattering 0.3  anisotropy 0.5 } }
+            {{fog}}
+            context { medium samples 64 }
+            """.Replace("{{fog}}", fog));
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+
+        for (int x = 0; x < after.Width; x++)
+        for (int y = 0; y < after.Height; y++)
+            Assert.IsTrue(after.GetPixel(x, y).Matches(before.GetPixel(x, y)), $"the pixel at {x}, {y}");
     }
 
     [TestMethod]

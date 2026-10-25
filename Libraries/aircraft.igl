@@ -11,14 +11,14 @@
 // | `Helicopter` | A cabin, a tail boom, a main rotor and a tail rotor, on skids. |
 //
 // **The first number is a length**, as it is for the [vehicles](#vehicles) and the
-// [vessels](#vessels), because that is how an aeroplane is described -- a forty-metre airliner, not
-// one thirteen metres tall.  These are in **meters** and they **face `+X`**, like everything else here
+// [vessels](#vessels), because that is how an airplane is described -- a forty-meter airliner, not
+// one thirteen meters tall.  These are in **meters** and they **face `+X`**, like everything else here
 // that goes somewhere.
 //
 // -- The wheels are on `y = 0`, even when the wheels are not there -------------------------------------
 //
 // The [vessels](#vessels) put their waterline at nought because a hull has no face it rests on.  An
-// aeroplane does have one -- it stands on its wheels -- so that is what sits at nought here, the same
+// airplane does have one -- it stands on its wheels -- so that is what sits at nought here, the same
 // as a chair's feet and a building's footings.
 //
 // **And it stays at nought with the gear up.**  `gear 0` takes the legs away and leaves everything
@@ -47,7 +47,7 @@
 //
 // **And the windows are what make it an airliner rather than a missile.**  One row of them down the
 // side gives the fuselage a scale that nothing else does -- without them a tube with wings could be
-// four metres long or forty, and the eye has no way to tell.
+// four meters long or forty, and the eye has no way to tell.
 
 // -- What aircraft are made of ------------------------------------------------------------------------
 
@@ -102,12 +102,12 @@ primitive AircraftPaint(variant) -> material {
 // **It is built lying flat and then turned**, which is the only way the two angles compose properly: a
 // panel swept first and canted second sweeps in the plane it is going to end up in, which is what a
 // real wing does.  Canting first and sweeping second rakes the tip backward *and downward* and the
-// aeroplane comes out looking like it is falling over.
+// airplane comes out looking like it is falling over.
 //
 // **Both panels are built on `+Z` and the left one is mirrored, and `side` appears once.**  Folding it
 // into the angles as well -- `rotate Y (-side * sweep)` and then `scale [1, 1, side]` -- negates the
-// sweep twice on the left wing, so one side rakes back and the other rakes *forward*.  The aeroplane
-// still looks like an aeroplane from almost everywhere; it is only from above that the wings read as a
+// sweep twice on the left wing, so one side rakes back and the other rakes *forward*.  The airplane
+// still looks like an airplane from almost everywhere; it is only from above that the wings read as a
 // Z rather than a V, and by then you have stopped looking for it.  The mirror is what puts a panel on
 // the left, and the angles must not know which side they are on.
 primitive AircraftPanel(side, chord, thick, span, sweep, rise) -> group {
@@ -212,7 +212,7 @@ primitive Airliner(long = 40, gear = 1, variant = 1) -> group {
         }
 
         // **A row of windows, which is the only thing here that gives the fuselage a scale.**  Without
-        // them a tube with wings could be four metres long or forty and nothing in the picture says
+        // them a tube with wings could be four meters long or forty and nothing in the picture says
         // which.  They sit a little proud of the skin, up where a window actually is rather than on
         // the widest part of the side.
         group {
@@ -282,13 +282,13 @@ primitive Airliner(long = 40, gear = 1, variant = 1) -> group {
 
 // -- Light plane --------------------------------------------------------------------------------------
 
-// A high-wing single, the shape of almost every aeroplane anybody learns to fly in.  `long` is overall,
+// A high-wing single, the shape of almost every airplane anybody learns to fly in.  `long` is overall,
 // so eight is about a Cessna 172.
 //
 // **The wing is on top and the strut is what says so.**  A high wing drawn without one reads as a
 // parasol balanced on a fuselage -- there is visibly nothing holding it up, and the eye notices even
 // when it could not tell you what is missing.  One strut a side, from the bottom of the fuselage out
-// to half span, and the aeroplane stops looking like a model of itself.
+// to half span, and the airplane stops looking like a model of itself.
 primitive LightPlane(long = 8, gear = 1, variant = 1) -> group {
     across = long * 0.078                       // the cabin's half-width
     stand = long * 0.145                         // how high its axis rides
@@ -343,7 +343,7 @@ primitive LightPlane(long = 8, gear = 1, variant = 1) -> group {
             material AircraftMetal
         }
 
-        // **Glass sits above the axis, or it is a stripe.**  Sized to the fuselage and centred on it,
+        // **Glass sits above the axis, or it is a stripe.**  Sized to the fuselage and centered on it,
         // a canopy wraps all the way round and reads as a band of paint -- which is exactly what the
         // first render of both of these came back as.  Held to the upper half and let out a shade
         // wider than the skin, the same shape reads as a windscreen with side windows behind it.
@@ -425,14 +425,14 @@ primitive LightPlane(long = 8, gear = 1, variant = 1) -> group {
 // fourteen is about a JetRanger.
 //
 // **The rotor disc is wider than the aircraft is long**, which is the proportion everybody gets wrong
-// from memory.  A JetRanger is a shade over eleven metres nose to tail and its rotor is over ten across,
+// from memory.  A JetRanger is a shade over eleven meters nose to tail and its rotor is over ten across,
 // so the blades reach nearly to the nose and well past the tail.  Drawn to the size instinct suggests
 // it looks like a toy, and no amount of detail on the cabin repairs it.
 primitive Helicopter(long = 14, variant = 1) -> group {
     // **The cabin is smaller than it feels like it should be.**  At 0.155 of the length it came out
-    // four metres wide on a fourteen-metre aircraft and swallowed the rotor whole -- the blades looked
+    // four meters wide on a fourteen-meter aircraft and swallowed the rotor whole -- the blades looked
     // stubby when they were in fact the right length.  A light single's cabin is about two and a half
-    // metres across, and getting that down is what let the rotor read at the size it always was.
+    // meters across, and getting that down is what let the rotor read at the size it always was.
     body = long * 0.090                         // the cabin's half-width
     stand = long * 0.080                        // how high the cabin floor rides on its skids
     mast = stand + body * 2.55                  // and where the rotor turns

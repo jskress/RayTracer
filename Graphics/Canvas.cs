@@ -17,7 +17,8 @@ public class Canvas
     public int Height { get; }
 
     /// <summary>
-    /// This property reports whether this image makes any use of the alpha channel.
+    /// This property reports whether any pixel of this image is less than opaque -- as every pixel of a new
+    /// canvas is until it is set.  It looks at every pixel each time it is read.
     /// </summary>
     public bool NeedsAlphaChannel => HasAlphaValues();
 
@@ -61,7 +62,7 @@ public class Canvas
     /// </summary>
     /// <param name="color">The color to set in the given pixel.</param>
     /// <param name="x">The x coordinate of the pixel to set the color for.</param>
-    /// <param name="y">The x coordinate of the pixel to set the color for.</param>
+    /// <param name="y">The y coordinate of the pixel to set the color for.</param>
     public void SetColor(Color color, int x, int y)
     {
         _pixels[y][x] = color;

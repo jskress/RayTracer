@@ -8,7 +8,7 @@
 //
 // | `Sash`     | Two sashes stacked, with a meeting rail across and glazing bars up each. |
 // | `Casement` | Side-hung leaves either side of a mullion, with a transom near the head. |
-// | `Shutters` | A pair of louvred leaves, to flank a window that is already there. |
+// | `Shutters` | A pair of louvered leaves, to flank a window that is already there. |
 //
 // `Sash` and `Casement` take a last number, how many of their panes are **broken**: a sash has twelve,
 // a casement three, and which ones go is set by the variant.  Each broken pane is struck at a point of
@@ -263,7 +263,7 @@ primitive Casement(wide, tall, deep, season = 'summer', variant = 1, broken = 0)
 
 // -- Shutters --------------------------------------------------------------------------------------
 
-// A pair of louvred leaves, folded back against the wall either side of a window that is already there.
+// A pair of louvered leaves, folded back against the wall either side of a window that is already there.
 // They are their own primitive rather than an option on the windows, because whether a window has them
 // is a matter of where the building is and not of what sort of window it is.
 primitive Shutters(wide, tall, deep, season = 'summer', variant = 1) -> group {
@@ -272,7 +272,7 @@ primitive Shutters(wide, tall, deep, season = 'summer', variant = 1) -> group {
             group {
                 cube { material WindowShutter
                        scale [wide * 0.52, tall * 1.02, deep * 0.7] }
-                // The louvres: enough of them to read as louvres and no more.  They are laid on the
+                // The louvers: enough of them to read as louvers and no more.  They are laid on the
                 // face rather than cut into it, which at the size a shutter is drawn is the same thing.
                 for slat in [0, 5] {
                     cube { material WindowShutter

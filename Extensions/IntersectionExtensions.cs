@@ -48,22 +48,26 @@ public static class IntersectionExtensions
     public static (Interior Before, Interior After) FindInteriors(
         this List<Intersection> intersections, Intersection hit)
     {
-        (Surface before, Surface after, _) = intersections.FindContainers(hit);
+        (Surface before, Surface after, Portals beforeThrough, Portals afterThrough) =
+            intersections.FindContainers(hit);
 
-        return (before is null ? null : InteriorOf(before), after is null ? null : InteriorOf(after));
+        return (
+            before is null ? null : InteriorOf(before, beforeThrough),
+            after is null ? null : InteriorOf(after, afterThrough));
     }
 
     /// <summary>
     /// This method works out what the ray was inside before the given hit and what it is inside after
     /// it: the innermost thing on each side, or <c>null</c> where it is inside nothing and so in the
-    /// surroundings.  The one before comes with the instances it was met through, since anything that
-    /// asks about its shape -- where a medium filling it ends -- must find it where it stands.
+    /// surroundings.  Each comes with the instances it was met through, since anything that asks about
+    /// its shape -- where a medium filling it ends -- must find it where it stands, and a shared shape
+    /// is filled with what the holder it was met through dresses it in.
     /// </summary>
     /// <param name="intersections">The list of intersections to work with.</param>
     /// <param name="hit">The current "hit" intersection.</param>
-    /// <returns>The surfaces the ray is inside before and after the hit, and the instances the one
-    /// before was met through.</returns>
-    public static (Surface Before, Surface After, Portals BeforeThrough) FindContainers(
+    /// <returns>The surfaces the ray is inside before and after the hit, and the instances each was met
+    /// through.</returns>
+    public static (Surface Before, Surface After, Portals BeforeThrough, Portals AfterThrough) FindContainers(
         this List<Intersection> intersections, Intersection hit)
     {
         // **A shape and the place it is standing in**, because a shared shape gives the same surface
@@ -73,6 +77,7 @@ public static class IntersectionExtensions
         Surface before = null;
         Surface after = null;
         Portals beforeThrough = default;
+        Portals afterThrough = default;
 
         foreach (Intersection intersection in intersections)
         {
@@ -86,7 +91,7 @@ public static class IntersectionExtensions
                 if (intersection != hit)
                     continue;
 
-                after = before;
+                (after, afterThrough) = (before, beforeThrough);
 
                 break;
             }
@@ -100,20 +105,24 @@ public static class IntersectionExtensions
 
             if (intersection == hit)
             {
-                after = containers.IsEmpty() ? null : containers.Last().Surface;
+                if (!containers.IsEmpty())
+                    (after, afterThrough) = containers.Last();
 
                 break;
             }
         }
 
-        return (before, after, beforeThrough);
+        return (before, after, beforeThrough, afterThrough);
     }
 
     /// <summary>
-    /// This method returns what a surface is filled with.
+    /// This method returns what a surface is filled with where it stands: a shape shared between holders
+    /// dressed differently is filled with what the one it was met through gives it.
     /// </summary>
-    internal static Interior InteriorOf(Surface surface)
+    /// <param name="surface">The surface to look inside.</param>
+    /// <param name="portals">The instances the surface was met through.</param>
+    internal static Interior InteriorOf(Surface surface, Portals portals)
     {
-        return (surface.Material ?? Material.Default).Interior;
+        return (surface.MaterialThrough(portals) ?? Material.Default).Interior;
     }
 }

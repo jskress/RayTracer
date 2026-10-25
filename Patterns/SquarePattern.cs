@@ -16,18 +16,18 @@ public class SquarePattern : Pattern
     public override int DiscretePigmentsNeeded => 4;
 
     /// <summary>
-    /// This method is used to determine an appropriate value, typically between 0 and 1,
-    /// for the given point.
-    /// </summary>
-    /// <param name="point">The point from which the pattern value is to be derived.</param>
-    /// <returns>The derived pattern value.</returns>
-    /// <summary>
     /// Squares a unit across, so a unit is the whole of its detail.  Anything finer than this in a picture is
     /// past what a pixel can hold, and is averaged over the patch a ray covers
     /// rather than sampled at its middle -- see <see cref="Pattern.Evaluate"/>.
     /// </summary>
     protected override double FinestDetail => 1;
 
+    /// <summary>
+    /// This method is used to determine an appropriate value, typically between 0 and 1,
+    /// for the given point.
+    /// </summary>
+    /// <param name="point">The point from which the pattern value is to be derived.</param>
+    /// <returns>The derived pattern value.</returns>
     public override double Evaluate(Point point)
     {
         bool xIsOdd = (int) Math.Floor(point.X) % 2 != 0;

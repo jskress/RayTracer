@@ -93,7 +93,7 @@ public class Quadric : Surface
         if (a.IsNegligibleSquaredBeside(directionSquared))
         {
             if (!(b * b).IsNegligibleSquaredBeside(directionSquared))
-                intersections.Add(new Intersection(this, -c / b));
+                AddWithin(ray, -c / b, intersections);
 
             return;
         }
@@ -105,8 +105,24 @@ public class Quadric : Surface
 
         double root = Math.Sqrt(discriminant);
 
-        intersections.Add(new Intersection(this, (-b - root) / (2 * a)));
-        intersections.Add(new Intersection(this, (-b + root) / (2 * a)));
+        AddWithin(ray, (-b - root) / (2 * a), intersections);
+        AddWithin(ray, (-b + root) / (2 * a), intersections);
+    }
+
+    // Adds a crossing only where it lies within the region the surface was bounded by: the box is where the surface
+    // is drawn, not merely where rays are looked at, and a ray through it once drew the endless surface far past it.
+    private void AddWithin(Ray ray, double distance, List<Intersection> intersections)
+    {
+        if (BoundingBox is { IsEmpty: false } box)
+        {
+            Point at = ray.At(distance);
+
+            if (at.X < box.Minimum.X || at.X > box.Maximum.X || at.Y < box.Minimum.Y || at.Y > box.Maximum.Y ||
+                at.Z < box.Minimum.Z || at.Z > box.Maximum.Z)
+                return;
+        }
+
+        intersections.Add(new Intersection(this, distance));
     }
 
     /// <summary>

@@ -11,6 +11,45 @@ namespace Tests;
 [TestClass]
 public class TestPatterns
 {
+    /// <summary>
+    /// Marble runs up and back down through its map unless told otherwise, as POV-Ray's does: across a whole
+    /// number of X its value turns round rather than snapping back to nought, so a vein has no seam.
+    /// </summary>
+    [TestMethod]
+    public void TestMarbleTurnsRoundRatherThanSnappingBack()
+    {
+        MarblePattern marble = new ();
+
+        Assert.AreEqual(WaveType.Triangle, marble.Wave);
+        Assert.AreEqual(marble.ValueFor(new Point(0.999, 0, 0)), marble.ValueFor(new Point(1.001, 0, 0)), 0.01,
+            "either side of a whole X");
+    }
+
+    /// <summary>
+    /// Ripples and waves read their frequency as how close their rings are, and not again on the value: raised to
+    /// seven, the value along a line still runs smoothly, where cut a second time it jumped from one to nought
+    /// seven times a ring.
+    /// </summary>
+    [TestMethod]
+    public void TestRipplesAndWavesReadTheirFrequencyOnce()
+    {
+        foreach (Pattern pattern in new Pattern[] { new RipplesPattern { Frequency = 7 }, new WavesPattern { Frequency = 7 } })
+        {
+            double largest = 0;
+            double was = pattern.ValueFor(new Point(0, 0, 0));
+
+            for (int step = 1; step <= 2000; step++)
+            {
+                double now = pattern.ValueFor(new Point(step * 0.0005, 0, step * 0.0003));
+
+                largest = Math.Max(largest, Math.Abs(now - was));
+                was = now;
+            }
+
+            Assert.IsTrue(largest < 0.1, $"{pattern.GetType().Name} jumped by {largest}");
+        }
+    }
+
     [TestMethod]
     public void TestTurbulenceMayBeLeftOffAnyPatternThatUsesIt()
     {

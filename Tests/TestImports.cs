@@ -145,11 +145,6 @@ public class TestImports
     }
 
     /// <summary>
-    /// Parses the given scene and then runs it, which is what a parse alone cannot do: a name that
-    /// was never defined is only discovered when something goes looking for it, and that happens
-    /// while the image is being made rather than while it is being read.
-    /// </summary>
-    /// <summary>
     /// Renders the given scene and reports what stopped it, or <c>null</c> if nothing did.
     /// <para>
     /// Parsing is not enough to ask this question.  A name that is not there is discovered when

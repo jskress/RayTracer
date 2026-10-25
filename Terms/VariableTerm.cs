@@ -1,4 +1,6 @@
 using Lex.Tokens;
+using RayTracer.Basics;
+using RayTracer.Graphics;
 using RayTracer.General;
 using Lex.Parser;
 using RayTracer.Fields;
@@ -40,7 +42,26 @@ public class VariableTerm : Term
         }
 
         if (targetTypes.Length == 0)
+        {
+            // A name holding more than one thing -- `Coral` is a color and an index of refraction both -- says
+            // nothing of which is meant where nothing in particular is asked for, as in `Shade = Coral`; it came
+            // back as nothing, and failed far off where the nothing was used.
+            IReadOnlyCollection<object> held = variables.ValuesOf(_name);
+
+            if (held.Count > 1)
+            {
+                string kinds = string.Join(" and ", held.Select(value => KindOf(value)).Order());
+
+                throw new TokenException(
+                    $"'{_name}' names more than one thing here -- {kinds} -- so which is meant cannot be told; " +
+                    $"say which with a cast, as in \"color {_name}\", or use it where only one of them fits.")
+                {
+                    Token = ErrorToken
+                };
+            }
+
             return variables.GetValue(_name);
+        }
 
         object found = targetTypes
             .Select(type => variables.GetValue(_name, type))
@@ -55,6 +76,17 @@ public class VariableTerm : Term
         // never turned up under one, though it converts to one readily enough.
         return found ?? variables.GetValue(_name);
     }
+
+    // What a value is, as a scene's author would name it.
+    private static string KindOf(object value) => value switch
+    {
+        double => "a number",
+        Color => "a color",
+        Point => "a point",
+        Vector => "a vector",
+        string => "a piece of text",
+        _ => $"a {value?.GetType().Name.ToLowerInvariant()}"
+    };
 
     /// <summary>
     /// This method is used to lower this variable into a field expression.  The names x, y and z are

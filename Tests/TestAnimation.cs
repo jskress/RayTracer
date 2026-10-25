@@ -118,6 +118,16 @@ public class TestAnimation
 
         foreach (double time in new[] { 1.25, 1.5, 1.8 })
             Assert.AreEqual(time, (double) straight.At(time), 1e-12, $"the straight run at {time}");
+
+        // A smooth loop runs round its seam with no kink either: the pace into the last key is the pace out of the
+        // first, the slope from the key before the last to the key after the first.
+        Keyframes round = Keys(true, true, (0, 0.0, Keyframes.Way.Linear), (1, 2.0, Keyframes.Way.Linear),
+            (3, -1.0, Keyframes.Way.Linear), (4, 0.0, Keyframes.Way.Linear));
+        double into = ((double) round.At(4) - (double) round.At(4 - d)) / d;
+        double outOf = ((double) round.At(4 + d) - (double) round.At(4)) / d;
+
+        Assert.AreEqual(into, outOf, 1e-3, "the pace either side of the seam");
+        Assert.AreEqual(1.5, outOf, 1e-3, "the slope from the key before the last to the key after the first");
     }
 
     /// <summary>
@@ -193,6 +203,49 @@ public class TestAnimation
         Assert.IsNull(Run(Turning, "run.png", frames: "2-4"));
         Assert.AreEqual(3, Directory.GetFiles(_directory, "run-*.png").Length);
         Assert.IsTrue(File.Exists(Path.Combine(_directory, "run-0000004.png")));
+
+        // A run of one frame is numbered as any run is: it is the file the whole run writes for that frame.
+        StringAssert.Contains(Run(Turning.Replace("rate 3", "rate 3  still 6"), "late.png", still: true),
+            "its frames run from 0 to 5");
+
+        Assert.IsNull(Run(Turning, "single.png", frames: "4"));
+        Assert.IsTrue(File.Exists(Path.Combine(_directory, "single-0000004.png")), "a run of one is numbered");
+        Assert.IsFalse(File.Exists(Path.Combine(_directory, "single.png")));
+    }
+
+    /// <summary>
+    /// What a frame reports is that frame's own counting, not the sum of every frame so far: each of a run's frames
+    /// counts the same pixels.
+    /// </summary>
+    [TestMethod]
+    public void TestEachFrameReportsItsOwnStatistics()
+    {
+        string scene = Path.Combine(_directory, "counted.igl");
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        File.WriteAllText(scene, "camera { location [0, 1, -6]  look at [0, 0.5, 0] }\n" + Turning);
+        Console.SetOut(captured);
+
+        try
+        {
+            new LanguageParser(scene).Parse().Render(new RenderOptions
+            {
+                OutputFileName = Path.Combine(_directory, "counted.png"), Width = 8, Height = 8, Frames = "0-2",
+                ProgressStyleText = "tool"
+            });
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        string[] reports = captured.ToString().Split('\n').Where(line => line.StartsWith("statistics ")).ToArray();
+
+        Assert.AreEqual(3, reports.Length, captured.ToString());
+
+        foreach (string report in reports)
+            StringAssert.Contains(report, "pixels=64 ", report);
     }
 
     /// <summary>
@@ -347,8 +400,7 @@ public class TestAnimation
     }
 
     /// <summary>
-    /// Counts the pixels of a picture that are partly the ball's, in front of a black ground: neither black nor
-    /// the ball's full white.
+    /// Counts the pixels of a picture that are partly the ball's, in front of nothing: partly covered.
     /// </summary>
     private static int Smeared(Canvas picture)
     {
@@ -358,9 +410,10 @@ public class TestAnimation
         {
             for (int y = 0; y < picture.Height; y++)
             {
-                double red = picture.GetPixel(x, y).Red;
+                // By how much of the pixel the ball covers: a picture file keeps the ball's own white at its edge.
+                double covered = picture.GetPixel(x, y).Alpha;
 
-                if (red is > 0.1 and < 0.9)
+                if (covered is > 0.1 and < 0.9)
                     count++;
             }
         }
@@ -392,6 +445,13 @@ public class TestAnimation
 
         Assert.IsTrue(moving > shut * 3, $"blurred, {moving} pixels were part ball, against {shut} with the shutter shut");
         Assert.IsTrue(still < moving / 3, $"a ball holding still smeared {still} pixels");
+
+        // A scene that names a `time` of its own means that by it, and a ball placed by it holds still.
+        Assert.IsNull(Run("time = 0.3\n" + Ball("time * 4 - 1.5"), "own.png", frame: 1, size: 48, camera: Camera(1)));
+
+        int own = Smeared(Picture("own.png"));
+
+        Assert.IsTrue(own < moving / 3, $"a ball placed by the scene's own time smeared {own} pixels");
     }
 
     /// <summary>

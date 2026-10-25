@@ -34,7 +34,8 @@ another.
 
 A context's **`animation`** says how long the scene runs: **`length`** in seconds, or **`frames`** outright,
 at a **`rate`** of so many frames a second — 30 unless it says, or unless the command line's `-r` does.
-**`still`** names the frame that stands for the animation as a single picture, the first unless it says.
+**`still`** names the frame that stands for the animation as a single picture, the first unless it says;
+it must be one of the animation's own frames, from nought to the last, or the scene is refused.
 Frame *n*'s time is *n* over the rate, so the first frame is at time nought and the last a frame short of the
 length: a loop lasting exactly the length plays round without a doubled frame.
 
@@ -48,7 +49,7 @@ writes **one file** of all of them instead, each frame developed exactly as a st
 | | |
 | --- | --- |
 | **`.webp`** | The one to reach for.  Every color kept, frames timed to the thousandth of a second, looping for ever, and small: lossy, at a high quality. |
-| **`.gif`** | Opens anywhere, looping for ever, but in 256 colors a frame, dithered so that gradients do not band, and timed in hundredths of a second, so 30 frames a second plays at 33. |
+| **`.gif`** | Opens anywhere, looping for ever, but in one palette of 256 colors chosen for the whole movie, every frame dithered in it so that gradients do not band, and timed in hundredths of a second, so 30 frames a second plays at 33. |
 | **`.mp4`** | A video, H.264, for anything that plays video rather than images.  It is written by **ffmpeg**, which must be on the path: without it the render is refused at once, before a frame is rendered, saying so.  A scene that is no animation makes a video of its one frame. |
 
 A WebP's or GIF's frames are kept until the last is done, so a long one is better made small: 400 by 300 is
@@ -59,13 +60,16 @@ The command line chooses frames, too:
 
 | Option | What it renders |
 | --- | --- |
-| `--frames 0-143` | That run of frames, each numbered. |
+| `--frames 0-143` | That run of frames, each numbered — or, asked for a movie, a movie of them.  `--frames 7` is a run of one, numbered as in any run: `cradle-0000007.png`. |
 | `-m 48`, `--frame 48` | Frame 48 alone, as a still at its time, written where it was asked to be. |
 | `--still` | The frame the animation names as its still, as a still.  A scene that is no animation renders as it always does, so a gallery of stills is rendered with `--still` whatever each scene is. |
 | `-r 60`, `--frame-rate 60` | Every frame at that rate rather than the scene's. |
 
 A scene that is no animation can still be asked for a frame: `time` is then the frame over the rate, and
 nought without one.
+
+Asked for `--stats`, each frame reports its own figures once it is done, never the sum of the frames
+before it.
 
 ### Time in the Scene
 
@@ -129,7 +133,9 @@ How a value comes to a key from the key before is said after it:
 (a Catmull-Rom curve, measured in time so that keys unevenly spaced still pass evenly); its keys take no
 easing, being eased already.  **`keys loop`** begins again once the last key is reached, so a cycle written
 once runs for ever: make the last key's value the first's, and it runs round without a jump.  Both together
-are `keys smooth loop`.
+are `keys smooth loop`, whose pace runs on round the seam as well: the last key and the first are taken as
+one place, passed through on the way from the key before the last to the key after the first, so it goes
+round without a kink as well as without a jump.
 
 A swing is two keys — out, slowing to a stop at the top, and back faster and faster:
 
@@ -259,9 +265,10 @@ moved or shared, would carry it out of.  One inside a group, or inside a CSG, is
 **What a body strikes is the rest of the scene** — the ground, walls, steps, a cradle's frame — standing where it
 stands at the frame's time, as though it had stood there all along: something keyed to move does not knock a body
 aside.  Bodies strike one another, too, always as balls, whatever their shape.  A ball looks for the scene in
-fourteen ways round it, enough for floors, walls, slopes and steps, though something thinner than the ball, such as
-a wire, can slip between them; a box finds it by its eight corners, landing on one, tipping and coming to rest on a
-face, held there by every corner that touches.  **A body that has stayed nearly still for a fifth of a second falls
+fourteen ways round it, enough for floors, walls, slopes and steps — a ball on a slope stands on it and rolls
+down it, as a ball does — though something thinner than the ball, such as a wire, can slip between them; a box
+finds it by its eight corners, landing on one, tipping and coming to rest on a face, held there by every corner
+that touches.  **A body that has stayed nearly still for a fifth of a second falls
 asleep**, and stands quite still until something strikes it or a string pulls it: without that, a die on felt
 settled and then turned slowly where it lay, a degree or two a second, for as long as it was watched.
 `gallery/Local/animation/a-throw-of-dice.igl` throws two dice into a felt tray.
@@ -306,13 +313,16 @@ sphere {
 
 Those two make a double pendulum, let go together.  A string is as long as the distance between its ends at time
 nought, unless **`length`** says, and it pulls but never pushes: a body may come nearer its pin, as a ball swung
-over the top does, but never further away.  A body may have as many strings as it likes.
+over the top does, but never further away.  A body may have as many strings as it likes.  A string must be
+longer than nothing, so a body that starts on what it is tied to says its `length`, and falls until the
+string is taut; and two bodies of one name are refused, since a string tied to it would not know which.
 
-**A tied body is turned by its strings**, so whatever is drawn with it turns as they do.  A string drawn with the
-ball, from its middle to the pin, stays pointing at the pin as it swings; with two, as each of a Newton's cradle's
-balls hangs, the ball keeps its face to both.  `gallery/Local/animation/newtons-cradle.igl` is built so: five
-bodies, each on two strings, the first let go from the side, its strike passed along the row by the balls
-themselves.
+**A tied body is turned by its strings**, so whatever is drawn with it turns as they do — and by nothing
+else: struck off its middle, it is pushed as though struck through it, none of the knock spent turning it.  A
+string drawn with the ball, from its middle to the pin, stays pointing at the pin as it swings; with two, as each
+of a Newton's cradle's balls hangs, the ball keeps its face to both.  `gallery/Local/animation/newtons-cradle.igl`
+is built so: five bodies, each on two strings, the first let go from the side, its strike passed along the row by
+the balls themselves.
 
 ### Swarms
 
@@ -341,7 +351,7 @@ swarm {
 
 | | |
 | --- | --- |
-| `of` | The thing every copy is, by its name or a primitive's call.  Every copy is that one thing in another place, so thousands cost little more than one. |
+| `of` | The thing every copy is, by its name or a primitive's call; required.  Every copy is that one thing in another place, so thousands cost little more than one — and so a thing that cannot be shared among places, one that glows, holds a medium, moves of itself, or holds a joint that aims or reaches, a mark or a span, is refused. |
 | `from` | Where copies are thrown from, in the swarm's own space: its origin unless said. |
 | `within` | A shape to throw copies from within instead, by name or by a call of a primitive, in the swarm's own space: each copy sets off from a place of its own inside it.  See below. |
 | `toward` | The way they are thrown: up, unless said. |
@@ -359,7 +369,15 @@ The swarm's transforms move the place it throws from and the way, with its other
 copy's way, speed and life are drawn from the swarm's [seed](scene-files.md#making-things-differ-from-one-another)
 and the copy's own number, so the fortieth copy thrown is the same copy in every frame, wherever its flight has
 taken it.  Copies strike the scene but neither one another nor the scene's bodies — which is what lets there be
-thousands — and a swarm stands at the top of the scene, as a body does.
+thousands — and a swarm stands at the top of the scene, as a body does.  Nor can a swarm be placed against
+anything — `on`, `under`, `left of` and the rest are refused — since it is filled only once placing is done,
+and would be empty when placed; its own transforms say where it stands.
+
+**A swarm stands still while it throws.**  Every copy is worked out as though thrown from where the swarm stands
+at the frame's time, not where it stood when the copy was thrown, so a swarm that moved -- a `motion { }` of its
+own, or transforms that follow the time -- would carry every copy in flight along with it, as one piece, rather
+than leave a trail behind it.  So one that moves is refused rather than drawn wrong: sparks from something moving,
+or a hose swung about, are not yet something a swarm can make.
 
 **A swarm thrown from `within` a shape** sets each copy off from a place of its own inside it — snow from a cloud,
 leaves from a crown, sparks from a fire's heart — found by drawing places in the shape's box until one falls inside,
@@ -423,9 +441,9 @@ That door swings about its hinge at sixty degrees a second until it is fifty deg
 | | |
 | --- | --- |
 | `pivot` | The place it turns about, in its own space: its origin unless said. |
-| `axis` | What it turns about, through the pivot: `X`, `Y`, `Z` or any direction.  A joint with no axis turns any way it is asked to `aim`, and otherwise not at all. |
-| `angle` | How far it is turned about its axis.  Nought unless said. |
-| `limits a to b` | The least and the most it may be turned, as a hinge stops at its frame or an elbow at straight.  Whatever turns it — its angle, an aim or a reach — is held between the two. |
+| `axis` | What it turns about, through the pivot: `X`, `Y`, `Z` or any direction.  A joint with no axis is a ball joint: it turns freely, any way at all, as an `aim` or a reach asks, by the least turn that serves; asked by neither, it does not turn. |
+| `angle` | How far it is turned about its axis.  Nought unless said; with no axis, it turns nothing. |
+| `limits a to b` | The least and the most it may be turned, as a hinge stops at its frame or an elbow at straight.  Whatever turns it — its angle, an aim or a reach — is held between the two.  On a joint with no axis they hold nothing back. |
 | `aim at` | A place, or the name of a thing, to turn toward.  See below. |
 | `facing` | Which of its own ways is turned to face what it aims at: +X unless said. |
 | `reach ... with` | A place, or the name of a thing, for a thing inside it to reach.  See below. |
@@ -461,7 +479,8 @@ at something that moves blurs with it.
 
 #### Reaching
 
-**`reach`** turns a joint and the joints inside it, each about its own axis and within its own limits, so that the
+**`reach`** turns a joint and the joints inside it, each about its own axis and within its own limits — or, for one
+with no axis, freely, by the least turn that swings the tip toward the place — so that the
 thing named after **`with`** — inside it, most often a mark at the tip — comes as near the place as they can bring
 it:
 
@@ -556,7 +575,13 @@ function or to keys, as `translate Lift(time)` does.  A value worked out from th
 `x = time * 2` and then `translate X x`, is taken at the frame's own instant, and is not blurred.  Only
 placement is blurred: a shape that changes with the time is taken at the frame's instant, and a camera that
 moves is not blurred by its own motion.  A [`motion { }`](cameras.md#motion-blur) said outright works as it always
-did, and is laid over the timed one.
+did, and is laid over the timed one.  A scene that names a `time` of its own means its own by it, not the frame's,
+so nothing is blurred through that.
+
+A thing that moves and is [placed against another](transforms.md#placing-one-thing-against-another) — `on 'table'`
+and the rest — is placed by everything it covers while the shutter is open, and moves from there as it was written
+to: a ball placed `on 'table'` that moves downward through the frame is set so that the lowest it comes rests on
+the table.
 
 Bodies and a swarm's copies are blurred along their ways through the frame too, since the world is worked out on
 through it as far as the shutter is open.

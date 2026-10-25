@@ -10,8 +10,10 @@
 // | `WallLantern`  | A lantern on a bracket, for the wall of a building. |
 // | `BollardLight` | A knee-high post with a lit band, for a path or a forecourt. |
 //
-// **The first number is a height**, as it is everywhere but the vehicles.  The two after it mean what
-// they always mean, **what time of year** and **which one of that kind**.
+// **The first number is a height**, as it is for most things here that stand rather than travel.  The
+// two after it mean what they always mean, **what time of year** and **which one of that kind** -- though
+// a `WallLantern` takes the season and does nothing with it: winter caps a street lamp's lantern and a
+// bollard's top with snow, and leaves the wall lantern as it is.
 //
 // -- The fourth number, and why it is off by default -----------------------------------------------
 //
@@ -87,7 +89,7 @@ primitive LampFlame(size, lit, variant, samples) -> group {
                                 emission pigment LampGlowOf(variant)
                                 // **Times two thousand**, and that number was measured rather than
                                 // guessed.  What a medium gives back is its emission times its density
-                                // times how far the ray travelled through it, and a lamp's globe is a
+                                // times how far the ray traveled through it, and a lamp's globe is a
                                 // few tenths of a unit across -- so a density peaking at one integrates
                                 // to a fraction of a lamp and lights nothing at all.  It is the same
                                 // compensation `fire` makes for its coal bed.
@@ -98,11 +100,12 @@ primitive LampFlame(size, lit, variant, samples) -> group {
                                 // over the inverse square, and the amount of stuff is the density --
                                 // no square root anywhere in it.
                                 //
-                                // But a scene is gamma-corrected unless it says `no gamma`, and gamma
-                                // 2.2 puts a linear radiance on screen as its 1/2.2 power, which is
-                                // 0.45 -- near enough a square root that it reads as one.  Measured
-                                // both ways over four doublings of the density, the exponent came out
-                                // 0.93 with `no gamma` and 0.43 with correction on.
+                                // But a picture is encoded for the screen unless it says `no gamma`,
+                                // and the sRGB curve that does it is, over most of its range, close to
+                                // a 1/2.2 power -- 0.45, near enough a square root that it reads as
+                                // one.  Measured both ways over four doublings of the density (under
+                                // the plain 2.2 power the output then was), the exponent came out 0.93
+                                // with `no gamma` and 0.43 with correction on.
                                 //
                                 // So for the ordinary corrected picture the rule of thumb holds: five
                                 // times the number buys about twice the light, and there is no point

@@ -54,6 +54,46 @@ public class TestSwells
     }
 
     /// <summary>
+    /// A ray skimming the water, in and out of crest after crest before it goes under for good, finds every
+    /// crossing a fine walk along it finds, nearest first.  (Its two ends either side of the water, it was given
+    /// whichever crossing the halving landed nearest and went through the crests before it -- a dark seam where the
+    /// eye saw the underside of the swell.)
+    /// </summary>
+    [TestMethod]
+    public void TestARaySkimmingTheWaterFindsEveryCrossing()
+    {
+        Swells water = Water();
+        Point origin = new (-90, 1.0, 0.3);
+        Vector direction = new Vector(1, -0.02, 0).Unit;
+        List<double> walked = [];
+        double step = 0.0005;
+        bool under = origin.Y < water.Field.HeightAt(origin.X, origin.Z);
+
+        for (double t = step; t < 180; t += step)
+        {
+            Point at = origin + direction * t;
+            bool now = at.Y < water.Field.HeightAt(at.X, at.Z);
+
+            if (now != under)
+                walked.Add(t);
+
+            under = now;
+        }
+
+        List<Intersection> found = [];
+
+        water.Intersect(new Ray(origin, direction), found);
+
+        double[] crossings = found.Where(hit => hit.Distance > 0).Select(hit => hit.Distance).Order().ToArray();
+
+        Assert.IsTrue(walked.Count >= 3, $"the ray should go in and out of crests first, and crossed {walked.Count} times");
+        Assert.AreEqual(walked.Count, crossings.Length, $"walked {walked.Count} crossings, found {crossings.Length}");
+
+        foreach ((double expected, double actual) in walked.Zip(crossings))
+            Assert.AreEqual(expected, actual, 0.01, "a crossing out of place");
+    }
+
+    /// <summary>
     /// **A ray starting under the water must find its way out.**  Refraction through the surface and
     /// any CSG that holds it both walk the crossings from inside, and a surface that only ever looks
     /// forward from outside would leave them with nothing to walk.

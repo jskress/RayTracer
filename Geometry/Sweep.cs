@@ -89,7 +89,14 @@ public class Sweep : Group
         List<ISplineCurve> curves = Spline.GetCurves();
         (List<Point> positions, List<Vector> tangents, List<double> scales) = SampleSpline(curves);
         List<SweepFrame> frames = RotationMinimizingFrame.Compute(positions, tangents);
-        List<TwoDPoint> profilePoints = Profile.NormalizeFor3D().Sample(ProfileSteps);
+        GeneralPath profile = Profile.NormalizeFor3D();
+
+        // One outline is lofted, start to end: a second run -- a hole, a second shape -- was bridged to the first by
+        // a strip the length of the sweep, uncapped, and nothing said so.
+        if (profile.FindAllSubPaths().Count > 1)
+            throw new Exception("A sweep's profile must be a single outline; a second run, or a hole, cannot be swept with it.");
+
+        List<TwoDPoint> profilePoints = profile.Sample(ProfileSteps);
 
         if (Center)
             profilePoints = CenterProfile(profilePoints);

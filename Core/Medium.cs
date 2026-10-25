@@ -12,9 +12,9 @@ namespace RayTracer.Core;
 /// Two things happen to a ray crossing a span of a medium.  Light is absorbed, so what lies beyond
 /// arrives dimmer -- and dimmer color by color, which is why a haze can be blue rather than merely
 /// gray.  And the medium's own light is added all along the way, each bit of it dimmed in turn by
-/// however much medium still lies between it and the eye.  With the density the same throughout,
-/// both have an answer that can simply be written down, so nothing here is sampled or stepped
-/// along; a span costs one exponential per color.
+/// however much medium still lies between it and the eye.  With the density and the glow the same
+/// throughout, both have an answer that can simply be written down, so such a span is neither
+/// sampled nor stepped along; it costs one exponential per color.
 /// </para>
 /// <para>
 /// Written out, for a span of length <c>d</c>, where <c>σ</c> is what the medium absorbs per unit of
@@ -39,10 +39,16 @@ namespace RayTracer.Core;
 /// the honest answer for a fog that has no light of its own.
 /// </para>
 /// <para>
-/// This medium neither scatters nor varies from place to place.  Scattering -- light arriving from a
-/// lamp off to one side and being turned toward the eye, which is what a shaft of light through a
-/// window is -- is what comes next, and needs the medium to be sampled along the ray rather than
-/// answered in closed form.
+/// Two things take a medium past that closed form.  It may <see cref="Scattering">scatter</see>: light
+/// arriving from a lamp off to one side is turned toward the eye, which is what a shaft of light through
+/// a window is, and that has no answer to be written down, so the crossing is asked about at
+/// <see cref="Samples"/> places, each asking every light what reaches it -- and, with
+/// <see cref="Bounces"/>, following the light back through further turns.  And it may vary from place
+/// to place, in how much of it there is (<see cref="DensityField"/>, <see cref="DensityPattern"/>) or in
+/// the light it gives off (<see cref="EmissionPigment"/>), when what survives a crossing and what is
+/// given off along it are integrals, and the crossing is walked in steps instead (see
+/// <see cref="HasShape"/>).  This class says what the medium is and what it does at a place; the
+/// sampling and the walking are the scene's.
 /// </para>
 /// </summary>
 public class Medium
@@ -152,10 +158,32 @@ public class Medium
 
     /// <summary>
     /// This property holds how many places along a ray's crossing the medium is asked what light
-    /// reaches it.  Only scattering needs this; what a medium absorbs and gives off is answered
+    /// reaches it, and how many steps a crossing of it is walked in where it has a shape.  A medium of
+    /// even density that does not scatter needs neither: what it absorbs and gives off is answered
     /// exactly, at no cost per sample at all.
     /// </summary>
     public int Samples { get; set; } = 16;
+
+    /// <summary>
+    /// This property notes whether the medium left its <see cref="Samples"/> and <see cref="Bounces"/> to the
+    /// scene's context, so that they are the context's as it stands once the whole file is read (see
+    /// <see cref="TakeTheScenesCounts"/>), not as it stood where the medium was written.
+    /// </summary>
+    internal (bool Samples, bool Bounces) LeftToTheScene { get; set; }
+
+    /// <summary>
+    /// This method gives the medium the scene's counts for whatever it left to the scene.
+    /// </summary>
+    /// <param name="samples">The context's medium samples.</param>
+    /// <param name="bounces">The context's medium bounces.</param>
+    internal void TakeTheScenesCounts(int samples, int bounces)
+    {
+        if (LeftToTheScene.Samples)
+            Samples = samples;
+
+        if (LeftToTheScene.Bounces)
+            Bounces = bounces;
+    }
 
     /// <summary>
     /// This property holds a plain multiplier on all three coefficients, so that how much of the
@@ -208,13 +236,6 @@ public class Medium
     public bool DensityVaries => DensityField is not null || DensityPattern is not null;
 
     /// <summary>
-    /// This method returns how much of the stuff there is at the given place.  A shape that would go
-    /// negative is taken as empty: a density below nothing has no meaning, and left alone it would
-    /// have a ray gaining light for crossing the stuff rather than losing it.
-    /// </summary>
-    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
-    /// <returns>The density there.</returns>
-    /// <summary>
     /// This method returns what the medium gives off at the given place.
     /// </summary>
     /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
@@ -237,6 +258,13 @@ public class Medium
         return TS.FromIlluminant(EmissionAt(point));
     }
 
+    /// <summary>
+    /// This method returns how much of the stuff there is at the given place.  A shape that would go
+    /// negative is taken as empty: a density below nothing has no meaning, and left alone it would
+    /// have a ray gaining light for crossing the stuff rather than losing it.
+    /// </summary>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <returns>The density there.</returns>
     public double DensityAt(Point point)
     {
         if (DensityField is not null)

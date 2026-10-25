@@ -1,4 +1,5 @@
 using RayTracer.Basics;
+using RayTracer.Extensions;
 using RayTracer.Core;
 
 namespace RayTracer.Geometry;
@@ -287,16 +288,6 @@ public abstract class Surface : NamedThing
     }
 
     /// <summary>
-    /// This method works out where this surface stands at each instant the camera looks, and the
-    /// matrices for carrying rays into its space and normals back out at each of them.
-    /// <para>
-    /// They are worked out once, here, rather than for every ray, which is the whole reason a ray
-    /// carries which instant it sees the scene at rather than the instant itself: there are only
-    /// ever as many places to stand as there are samples, so the inverting -- much the dearest part
-    /// -- is done a handful of times for the whole render instead of millions.
-    /// </para>
-    /// </summary>
-    /// <summary>
     /// This method stands a surface that has been prepared somewhere else, moving as it is said to: a body, once the
     /// world has moved it to where it stands at the frame's time and worked out how it moves through the frame.
     /// </summary>
@@ -340,6 +331,18 @@ public abstract class Surface : NamedThing
     // Whether the box was worked out from the surface rather than written for it.
     private bool _boxIsDerived;
 
+    /// <summary>
+    /// This method works out where this surface stands at each instant the camera looks, and the
+    /// matrices for carrying rays into its space and normals back out at each of them.
+    /// <para>
+    /// They are worked out once, here, rather than for every ray, which is the whole reason a ray
+    /// carries which instant it sees the scene at rather than the instant itself: there are only
+    /// ever as many places to stand as there are samples, so the inverting -- much the dearest part
+    /// -- is done a handful of times for the whole render instead of millions.
+    /// </para>
+    /// </summary>
+    /// <param name="sampleTimes">How far through the shutter's opening each of the camera's samples
+    /// looks.</param>
     private void BuildMotionTransforms(double[] sampleTimes)
     {
         _movingTransforms = sampleTimes
@@ -360,19 +363,6 @@ public abstract class Surface : NamedThing
     protected virtual void PrepareSurfaceForRendering() {}
 
     /// <summary>
-    /// This method returns the box a child of ours occupies in <i>our</i> space, or <c>null</c> when
-    /// the child cannot say where it is and so nothing may be ruled out on its behalf.
-    /// <para>
-    /// A child that moves is taken in every place it stands while the shutter is open, not merely
-    /// where it starts.  A box drawn around its first position alone would turn away rays that ought
-    /// to have found it further along its travels, and the thing would be cut off part way through
-    /// its own blur.  Since a ray only ever sees one of the instants sampled, gathering exactly those
-    /// is no approximation of the path swept -- it is the whole of what any ray can find.
-    /// </para>
-    /// </summary>
-    /// <param name="surface">The child to place.</param>
-    /// <returns>The box it occupies here, or <c>null</c> if it has none.</returns>
-    /// <summary>
     /// This method returns the region this surface really occupies, rather than the slightly generous
     /// one the ray tester is given.
     /// <para>
@@ -389,6 +379,21 @@ public abstract class Surface : NamedThing
         return BoundingBox?.WithoutPadding();
     }
 
+    /// <summary>
+    /// This method returns the box a child of ours occupies in <i>our</i> space, or <c>null</c> when
+    /// the child cannot say where it is and so nothing may be ruled out on its behalf.
+    /// <para>
+    /// A child that moves is taken in every place it stands while the shutter is open, not merely
+    /// where it starts.  A box drawn around its first position alone would turn away rays that ought
+    /// to have found it further along its travels, and the thing would be cut off part way through
+    /// its own blur.  Since a ray only ever sees one of the instants sampled, gathering exactly those
+    /// is no approximation of the path swept -- it is the whole of what any ray can find.
+    /// </para>
+    /// </summary>
+    /// <param name="surface">The child to place.</param>
+    /// <param name="trueExtent">Whether to take the region it really covers, padding taken off, and its
+    /// hair left out, rather than the box the ray tester is given.</param>
+    /// <returns>The box it occupies here, or <c>null</c> if it has none.</returns>
     internal static BoundingBox BoxAround(Surface surface, bool trueExtent = false)
     {
         BoundingBox box = new ();
@@ -461,6 +466,100 @@ public abstract class Surface : NamedThing
     public virtual double SelfOffsetScale => 1;
 
     /// <summary>
+    /// This property notes that the surface was given the default material when the scene was settled, nothing
+    /// having dressed it -- or having dressed it only with decals over whatever it is handed (see
+    /// <see cref="OwnBeforeTheDefault"/>).  A surface of a shape shared between places that wears the default wears,
+    /// where a ray meets it, the material its holders gave that place instead: see <see cref="MaterialThrough"/>.
+    /// </summary>
+    internal bool WearsTheDefault { get; set; }
+
+    /// <summary>
+    /// This property holds what the surface had of its own when it was given the default: nothing, or a material
+    /// that only adds decals to whatever it is handed.
+    /// </summary>
+    internal Material OwnBeforeTheDefault { get; set; }
+
+    /// <summary>
+    /// This method returns the material this surface wears where a ray met it through the given instances: its own,
+    /// or, for a surface of a shared shape left the default, the material the nearest of the instances was dressed
+    /// in by its holders -- with this surface's own decals over it, if it had any.  So a shape shared between two
+    /// groups of different materials wears each group's where it stands in it, as weather does.
+    /// </summary>
+    /// <param name="portals">The instances the ray met the surface through.</param>
+    /// <returns>The material.</returns>
+    internal Material MaterialThrough(Portals portals)
+    {
+        // Before the scene is settled, a surface with nothing of its own is as undressed as one given the default.
+        if (!WearsTheDefault && Material is not null)
+            return Material;
+
+        if (DressedThrough(portals) is not { } dressed)
+            return Material;
+
+        return Wearing(OwnBeforeTheDefault is null ? dressed : OwnBeforeTheDefault.HandedDownTo(dressed));
+    }
+
+    /// <summary>
+    /// This method returns what the instances a shape was met through dress it in: the material of the innermost one
+    /// dressed, with the decals of any between that only add decals to what they are handed (`material inherited`)
+    /// laid over it, as a group hands its material down through such parts.  It is <c>null</c> if none of them is
+    /// dressed and none adds decals.
+    /// </summary>
+    /// <param name="portals">The instances, innermost first.</param>
+    /// <returns>The material, or <c>null</c>.</returns>
+    private static Material DressedThrough(Portals portals)
+    {
+        for (Portals through = portals; !through.IsEmpty; through = through.Outward)
+        {
+            Surface instance = through.Through;
+
+            if (instance.Material is not { } its)
+                continue;
+
+            if (!instance.WearsTheDefault)
+                return its;
+
+            // Decals over whatever dresses it from further out, or over the default it was settled with.
+            if (instance.OwnBeforeTheDefault is { } decals)
+                return DressedThrough(through.Outward) is { } beyond ? decals.HandedDownTo(beyond) : its;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// This method returns the material this surface wears when dressed in the given one: that one, unless the
+    /// surface has something of its own to add to whatever it wears, as a blob's components have their pigments.
+    /// </summary>
+    /// <param name="material">The material the surface is dressed in.</param>
+    /// <returns>The material it wears.</returns>
+    internal virtual Material Wearing(Material material) => material;
+
+    /// <summary>
+    /// This method returns how far, in the world, a ray cast from this surface sets off from it: the usual nudge
+    /// times <see cref="SelfOffsetScale"/>.  A surface whose crossings are found to an accuracy in its own units
+    /// says so here instead, since in the world that accuracy is as large as the surface is stretched -- a shape
+    /// marched to a ten-thousandth and scaled up a thousandfold is found only to a tenth, and a nudge of a
+    /// ten-thousandth left every ray from it starting inside it.
+    /// </summary>
+    /// <param name="timeIndex">Which instant of the shutter's opening the crossing was found at.</param>
+    /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <returns>How far off itself a ray sets off.</returns>
+    internal virtual double SelfOffsetAt(int timeIndex, Portals portals) => DoubleExtensions.Epsilon * SelfOffsetScale;
+
+    /// <summary>
+    /// This method returns how much this surface's own space is stretched in the world, at its most: the longest
+    /// of its three axes carried out to the world, through its parents and the instances it was found through.
+    /// </summary>
+    /// <param name="timeIndex">Which instant to measure at.</param>
+    /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <returns>The greatest stretch.</returns>
+    internal double StretchInTheWorld(int timeIndex, Portals portals) => Math.Max(
+        DirectionToWorld(new Vector(1, 0, 0), timeIndex, portals).Magnitude,
+        Math.Max(DirectionToWorld(new Vector(0, 1, 0), timeIndex, portals).Magnitude,
+            DirectionToWorld(new Vector(0, 0, 1), timeIndex, portals).Magnitude));
+
+    /// <summary>
     /// This property reports whether the surface is a sheet: a thing with two faces and no inside.
     /// <para>
     /// **What it settles is which side a ray leaving the surface starts on.**  For a solid, the nudge
@@ -507,12 +606,6 @@ public abstract class Surface : NamedThing
         return null;
     }
 
-    /// <summary>
-    /// This method must be provided by subclasses to determine whether the given
-    /// ray intersects the geometry and, if so, where.
-    /// </summary>
-    /// <param name="ray">The ray to test.</param>
-    /// <param name="intersections">The list to add any intersections to.</param>
     /// <summary>
     /// This method finds where a ray crosses this surface, but only within a stretch of the ray, and
     /// is for asking whether anything stands between a point and a light.

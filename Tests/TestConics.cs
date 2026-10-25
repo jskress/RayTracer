@@ -79,6 +79,29 @@ public class TestConics
         }
     }
 
+    /// <summary>
+    /// A closed cone's cap is as wide as the cone is at its height: a ray straight down just inside the wall at
+    /// heights other than 0 and 1 meets the cap, and one just outside meets nothing of it, at 0.3 and at 2 alike.
+    /// </summary>
+    [TestMethod]
+    public void TestACapIsAsWideAsTheConeWhereItStands()
+    {
+        foreach (double top in new[] { 0.3, 2.0 })
+        {
+            Conic conic = new () { MinimumY = 0.1, MaximumY = top, Closed = true };
+
+            List<Intersection> inside = [];
+            List<Intersection> outside = [];
+
+            conic.AddIntersections(new Ray(new Point(top * 0.98, top + 1, 0), new Vector(0, -1, 0)), inside);
+            conic.AddIntersections(new Ray(new Point(top * 1.02, top + 1, 0), new Vector(0, -1, 0)), outside);
+
+            Assert.IsTrue(inside.Any(hit => Math.Abs(hit.Distance - 1) < 1e-9), $"just inside the rim of a cap at {top}");
+            Assert.IsFalse(outside.Any(hit => Math.Abs(hit.Distance - 1) < 1e-9), $"just outside the rim of a cap at {top}");
+            Assert.AreEqual(new Vector(0, 1, 0), conic.SurfaceNormalAt(new Point(top * 0.98, top, 0), null), $"the cap's normal at {top}");
+        }
+    }
+
     [TestMethod]
     public void TestConicNormals()
     {

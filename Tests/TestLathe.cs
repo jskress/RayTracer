@@ -90,6 +90,33 @@ public class TestLathe
     }
 
     /// <summary>
+    /// A line a hair off level -- as `0.1 + 0.2` comes out, or a profile turned in 2D -- is the flat ring a level
+    /// line is: a ray straight down onto it meets it, where solving it as a line that rises lost it in rounding.
+    /// </summary>
+    [TestMethod]
+    public void TestALineAHairOffLevelIsMet()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(0, 0.3)
+            .LineTo(1, 0.1 + 0.2)
+            .LineTo(1, 2)
+            .LineTo(0, 2);
+        Lathe lathe = new () { Path = profile };
+        lathe.PrepareForRendering();
+
+        foreach (Vector way in new[] { new Vector(0, 1, 0), new Vector(0.3, 1, 0.1), new Vector(-0.2, 1, 0.4), new Vector(0.05, 1, -0.6) })
+        {
+            Ray ray = new (new Point(0.4, -1, 0.1), way.Unit);
+            List<Intersection> intersections = [];
+
+            lathe.AddIntersections(ray, intersections);
+
+            Assert.IsTrue(intersections.Any(hit => Math.Abs(ray.At(hit.Distance).Y - 0.3) < 1e-6),
+                $"the base should be met at 0.3 going {way}: {string.Join(", ", intersections.Select(hit => ray.At(hit.Distance).Y))}");
+        }
+    }
+
+    /// <summary>
     /// Same ray as above, but this time going through the full Lathe (bottom cap, wall,
     /// top cap) via its public AddIntersections(), to confirm the fix holds end to end and
     /// not just for one isolated segment.  Since direction.Y != 0, the ray crosses every

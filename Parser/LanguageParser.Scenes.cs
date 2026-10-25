@@ -41,7 +41,7 @@ public partial class LanguageParser
                 resolver.NameResolver = new TermResolver<string> { Term = term };
                 break;
             case "camera":
-                resolver.CameraResolvers.Add(ParseCameraClause());
+                resolver.CameraResolvers.Add(ParseCameraClause(clause));
                 break;
             case "light":
                 resolver.LightResolvers.Add(ParseLightClause(clause));

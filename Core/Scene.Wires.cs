@@ -113,9 +113,10 @@ public partial class Scene
         if (material.Reflective > 0 && remaining >= 1)
             color += MirroredRound<TS>(hit, material, frame, eye, pigment, remaining);
 
-        // The light it gives off of its own, which its color tints, as any surface's.
+        // The light it gives off of its own, which its color tints, as any surface's -- and, as any surface's,
+        // only the share its skin does not mirror.
         if (material.Emission is { } glow)
-            color += pigment * TS.FromIlluminant(glow);
+            color += pigment * TS.FromIlluminant(glow) * ownShare;
 
         // Bounced light, taken at its middle as any matte surface's is.
         color += BouncedOnto<TS>(hit, material, remaining) * ownShare;

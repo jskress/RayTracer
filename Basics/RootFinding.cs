@@ -60,6 +60,12 @@ public static class RootFinding
     /// This method finds roots the way that cannot fail: it walks the interval, and wherever the
     /// polynomial changes sign between one step and the next it has a root bracketed, which it
     /// then closes in on by halving.
+    /// <para>
+    /// A root lying exactly on a step comes back once, as the step whose value is nought, from
+    /// whichever side it is reached.  (Reached from below nought it came back twice, closed in on
+    /// from the step before as well, since nought is not below nought -- a doubled crossing, which
+    /// turns inside and outside about for anything counting them.)
+    /// </para>
     /// </summary>
     /// <param name="coefficients">The polynomial's coefficients, in ascending order.</param>
     /// <param name="intervalStart">The start of the sub-interval to walk.</param>
@@ -96,7 +102,7 @@ public static class RootFinding
 
             if (low == 0)
                 yield return lowT;
-            else if (low < 0 != high < 0)
+            else if (high != 0 && low < 0 != high < 0)
                 yield return Bisect(coefficients, lowT, highT, low);
 
             lowT = highT;

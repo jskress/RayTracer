@@ -42,6 +42,9 @@ public class Swells : Surface
     /// </summary>
     private const int MaximumDepth = 30;
 
+    // How short, in accuracies, a span that straddles the water is halved to before it is narrowed.
+    private const double StraddleSpan = 64;
+
     /// <summary>
     /// This property holds the wave trains this water carries.
     /// </summary>
@@ -148,7 +151,12 @@ public class Swells : Surface
         if (CannotReach(origin, direction, start, end))
             return;
 
-        if (atStart < 0 != atEnd < 0)
+        // A span whose ends straddle the water crosses it an odd number of times, not once -- a ray through a
+        // crest to the sea beyond crosses it three -- so it is halved as any other span is until it is short,
+        // and only then narrowed; see Isosurface.March.
+        bool straddles = atStart < 0 != atEnd < 0;
+
+        if (straddles && (end - start <= Accuracy * StraddleSpan || depth == 0))
         {
             intersections.Add(new Intersection(this,
                 Narrow(origin, direction, start, atStart, end) / length));

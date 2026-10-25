@@ -41,8 +41,8 @@ public class TestDistantAndSpotLights
     {
         Location = new Point(0, 10, 0),
         PointAt = new Point(0, 0, 0),
-        Radius = 15,
-        Falloff = 25
+        Radius = 15 * Math.PI / 180,
+        Falloff = 25 * Math.PI / 180
     };
 
     [TestMethod]
@@ -103,8 +103,8 @@ public class TestDistantAndSpotLights
         {
             Location = new Point(0, 10, 0),
             PointAt = new Point(0, 0, 0),
-            Radius = 15,
-            Falloff = 25,
+            Radius = 15 * Math.PI / 180,
+            Falloff = 25 * Math.PI / 180,
             Tightness = 20
         };
 

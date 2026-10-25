@@ -73,6 +73,36 @@ public class TestIsosurface
     }
 
     /// <summary>
+    /// This tests that a ray whose two ends lie either side of the surface finds every crossing between them, not
+    /// one: through a ball to a wall beyond, it goes in and out of the ball and into the wall.  (Narrowed at once,
+    /// such a ray halved its way to whichever crossing the halving landed nearest -- here the wall -- and went
+    /// through the ball; a ray through a hill to the ground beyond went through the hill.)
+    /// </summary>
+    [TestMethod]
+    public void TestARayFromOneSideToTheOtherFindsEveryCrossing()
+    {
+        // A ball of radius one about x = -3, and everything past x = 4.
+        Term ball = new BinaryMinusOperation(
+            new BinaryPlusOperation(
+                new BinaryPlusOperation(
+                    new SquareOperation(new BinaryPlusOperation(Named("x"), Number(3))), new SquareOperation(Named("y"))),
+                new SquareOperation(Named("z"))),
+            Number(1));
+        Term wall = new BinaryMinusOperation(Number(4), Named("x"));
+        Isosurface isosurface = Create(Call("min", ball, wall), half: 5);
+        List<Intersection> crossings = [];
+
+        isosurface.AddIntersections(new Ray(new Point(-6, 0, 0), new Vector(1, 0, 0)), crossings);
+
+        double[] found = crossings.Where(hit => hit.Distance > 0).Select(hit => hit.Distance).Order().ToArray();
+
+        Assert.AreEqual(3, found.Length, $"found {string.Join(", ", found.Select(t => t.ToString("F3")))}");
+        Assert.AreEqual(2, found[0], 1e-3, "into the ball");
+        Assert.AreEqual(4, found[1], 1e-3, "out of the ball");
+        Assert.AreEqual(10, found[2], 1e-3, "into the wall");
+    }
+
+    /// <summary>
     /// This tests that a function whose surface is a sphere is crossed where that sphere is, to the
     /// accuracy asked for -- checked against the analytic sphere rather than against expected numbers,
     /// so that the two must agree rather than merely each look reasonable.

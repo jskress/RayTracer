@@ -47,6 +47,45 @@ public class TestBicubicPatch
     }
 
     /// <summary>
+    /// A flat patch with one edge drawn to a point -- a fan, as the top of a teapot's lid is -- faces the way the
+    /// plane does right up to the point.  (At the point one tangent is nothing, and the normal fell back to X,
+    /// which tilted every triangle touching it.)
+    /// </summary>
+    [TestMethod]
+    public void TestAPatchDrawnToAPointFacesTheWayItsPlaneDoes()
+    {
+        Point[,] points = new Point[4, 4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                double angle = j * Math.PI / 6;
+
+                points[i, j] = new Point(i * Math.Cos(angle), i * Math.Sin(angle), 0);
+            }
+        }
+
+        BicubicPatch patch = new () { ControlPoints = points };
+
+        patch.PrepareForRendering();
+
+        foreach (double from in new[] { 0.05, 0.2, 0.6 })
+        {
+            Ray ray = new (new Point(from, from * 0.5, -5), new Vector(0, 0, 1));
+            List<Intersection> intersections = [];
+
+            patch.AddIntersections(ray, intersections);
+
+            Assert.AreEqual(1, intersections.Count, $"a ray at {from} along should meet the fan once");
+
+            Vector normal = patch.SurfaceNormalAt(ray.At(intersections[0].Distance), intersections[0]);
+
+            Assert.AreEqual(1, Math.Abs(normal.Z), 1e-6, $"near the point, at {from} along, the fan faced {normal}");
+        }
+    }
+
+    /// <summary>
     /// Every ray aimed squarely at the middle of a patch must hit it.
     /// <para>
     /// The subdivision tree stops a branch as soon as its subpatch is flat enough, so a gently

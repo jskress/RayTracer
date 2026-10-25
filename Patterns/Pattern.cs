@@ -118,21 +118,7 @@ public abstract class Pattern
         // features are going unmeasured.  Sampling by the max got the structured error only halfway
         // down; sampling each edge for what it actually spans is what a filter has to do to match a
         // box over the pixel.
-        double spanAcross = footprint.Across.Magnitude / finest;
-        double spanAlong = footprint.Along.Magnitude / finest;
-        int stepsAcross = Math.Clamp((int) Math.Ceiling(spanAcross * 2), 2, 24);
-        int stepsAlong = Math.Clamp((int) Math.Ceiling(spanAlong * 2), 2, 24);
-
-        // With a cap on the pair of them, since the long axis of a very flat patch would otherwise
-        // ask for more samples than the picture is worth.
-        while (stepsAcross * stepsAlong > 96)
-        {
-            if (stepsAcross > stepsAlong)
-                stepsAcross--;
-            else
-                stepsAlong--;
-        }
-
+        (int stepsAcross, int stepsAlong) = StepsOver(footprint, finest);
         double total = 0;
 
         // Stratified rather than scattered: the samples are spread evenly across the patch, which
@@ -159,6 +145,148 @@ public abstract class Pattern
         }
 
         return total / (stepsAcross * stepsAlong);
+    }
+
+    // How many samples a patch takes along each of its edges: as many as it spans the pattern's finest features,
+    // twice over, with a cap on the pair of them, since the long axis of a very flat patch would otherwise ask for
+    // more samples than the picture is worth.
+    private static (int Across, int Along) StepsOver(Footprint footprint, double finest)
+    {
+        double spanAcross = footprint.Across.Magnitude / finest;
+        double spanAlong = footprint.Along.Magnitude / finest;
+        int stepsAcross = Math.Clamp((int) Math.Ceiling(spanAcross * 2), 2, 24);
+        int stepsAlong = Math.Clamp((int) Math.Ceiling(spanAlong * 2), 2, 24);
+
+        while (stepsAcross * stepsAlong > 96)
+        {
+            if (stepsAcross > stepsAlong)
+                stepsAcross--;
+            else
+                stepsAlong--;
+        }
+
+        return (stepsAcross, stepsAlong);
+    }
+
+    /// <summary>
+    /// This property reports whether the pattern's value can wrap round from one end of its range to the other
+    /// between two places close together: a gradient's repeat, or any pattern whose frequency or phase wraps its
+    /// value.  An average taken across such a wrap is a value from the middle of the range, which is a color the
+    /// patch holds none of; see <see cref="SamplesOver"/>.
+    /// <para>
+    /// Only a pattern whose patch is the plain average over <see cref="Evaluate(Point, Footprint)"/>'s grid is
+    /// looked at so.  A noise pattern filters a patch its own way, leaving out what is too fine to see, and every
+    /// one of its octaves at every point of the grid cost a desert twice its time; a pattern read from where it is
+    /// seen has no one value at a point.
+    /// </para>
+    /// </summary>
+    public bool MayWrap =>
+        (WrapsItself || ((Frequency != 1 || Phase != 0) && !SpacesItselfByFrequency)) &&
+        AveragedOverAGrid.GetOrAdd(GetType(), type =>
+            type.GetMethod(nameof(Evaluate), [typeof(Point), typeof(Footprint)])?.DeclaringType == typeof(Pattern) &&
+            type.GetMethod(nameof(Evaluate), [typeof(Point), typeof(Footprint), typeof(Viewing)])?.DeclaringType ==
+            typeof(Pattern));
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, bool> AveragedOverAGrid = new ();
+
+    /// <summary>
+    /// This property reports whether the pattern's own value wraps round, as a gradient's does at each repeat.
+    /// </summary>
+    protected virtual bool WrapsItself => false;
+
+    /// <summary>
+    /// This method returns the pattern's values, shaped, at the places across a patch that
+    /// <see cref="Evaluate(Point, Footprint)"/> averages, and the value <see cref="ValueFor(Point, Footprint)"/>
+    /// gives the patch, worked out from the same samples, so that a pigment reading a pattern that <see cref="MayWrap"/>
+    /// samples the patch once: where its values straddle the wrap it mixes the colors they pick, and elsewhere it
+    /// takes the color of the patch's value, as any pigment does.
+    /// </summary>
+    /// <param name="point">The point the pattern is being asked about.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="values">Where to put the shaped values; at least 96 long.</param>
+    /// <param name="value">The patch's value, exactly as <see cref="ValueFor(Point, Footprint)"/> gives it.</param>
+    /// <returns>How many values there are, or nought if the patch is too small to be sampled.</returns>
+    public int SamplesOver(Point point, Footprint footprint, Span<double> values, out double value)
+    {
+        double finest = FinestDetail;
+
+        value = 0;
+
+        if (finest <= 0 || footprint is null || footprint.IsEmpty)
+            return 0;
+
+        if (Turbulence is not null && !StirsItsOwnPoints)
+            point = Turbulence.Warp(point, footprint.Width);
+
+        (int stepsAcross, int stepsAlong) = StepsOver(footprint, finest);
+        int count = 0;
+        double total = 0;
+
+        // The same grid as the averaging, summed in the same order.
+        for (int down = 0; down < stepsAlong; down++)
+        {
+            for (int across = 0; across < stepsAcross; across++)
+            {
+                double u = (across + 0.5) / stepsAcross - 0.5;
+                double v = (down + 0.5) / stepsAlong - 0.5;
+                double raw = Evaluate(point + footprint.Across * u + footprint.Along * v);
+
+                total += raw;
+                values[count++] = Shape(raw);
+            }
+        }
+
+        value = Shape(total / (stepsAcross * stepsAlong));
+
+        return count;
+    }
+
+    /// <summary>
+    /// This method works out, for a pattern that picks among pigments, how much of a patch each pigment covers: the
+    /// share of the samples <see cref="Evaluate(Point, Footprint)"/> would average that pick it.
+    /// <para>
+    /// A pattern picking between two pigments needs none of this, since the average of its picks is the share of the
+    /// second.  Among three or more it is not: a patch half the first and half the third averages to the second,
+    /// which covers none of it -- a hexagon's border with a third color running down it.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point the pattern is being asked about.</param>
+    /// <param name="footprint">How much of the surface the ray covers there.</param>
+    /// <param name="shares">Where to put each pigment's share, by index; it is cleared first.</param>
+    /// <returns><c>true</c>, if the patch was sampled, or <c>false</c>, if it is too small to be, and the pattern's
+    /// value at the point is the answer.</returns>
+    public bool SharesOver(Point point, Footprint footprint, Span<double> shares)
+    {
+        double finest = FinestDetail;
+
+        if (finest <= 0 || footprint is null || footprint.IsEmpty)
+            return false;
+
+        if (Turbulence is not null && !StirsItsOwnPoints)
+            point = Turbulence.Warp(point, footprint.Width);
+
+        (int stepsAcross, int stepsAlong) = StepsOver(footprint, finest);
+        double count = stepsAcross * stepsAlong;
+
+        // Counted in whole samples and shared out once, so that a patch wholly one pigment has a share of exactly one.
+        shares.Clear();
+
+        for (int down = 0; down < stepsAlong; down++)
+        {
+            for (int across = 0; across < stepsAcross; across++)
+            {
+                double u = (across + 0.5) / stepsAcross - 0.5;
+                double v = (down + 0.5) / stepsAlong - 0.5;
+                int index = (int) Shape(Evaluate(point + footprint.Across * u + footprint.Along * v));
+
+                shares[Math.Clamp(index, 0, shares.Length - 1)]++;
+            }
+        }
+
+        for (int index = 0; index < shares.Length; index++)
+            shares[index] /= count;
+
+        return true;
     }
 
     /// <summary>
@@ -251,6 +379,10 @@ public abstract class Pattern
         return Evaluate(point, footprint);
     }
 
+    // Whether the pattern reads the frequency and phase itself, as how far apart its rings are, so that reading them
+    // again here would cut its smooth value into a sawtooth.
+    protected virtual bool SpacesItselfByFrequency => false;
+
     /// <summary>
     /// This method takes the number a pattern produced and shapes it on its way to the color map:
     /// scaled and slid by the frequency and phase, wrapped back into range, and then bent by
@@ -269,7 +401,7 @@ public abstract class Pattern
         // POV-Ray wraps whenever its frequency is non-zero, and wrapping unbidden would break every
         // pattern that deliberately hands back a value outside [0, 1] -- marble most of all, whose
         // value is a coordinate that the color map is meant to wrap for itself.
-        if (Frequency != 1 || Phase != 0)
+        if ((Frequency != 1 || Phase != 0) && !SpacesItselfByFrequency)
         {
             // The wrap is what turns a raised frequency into repetition rather than a stretch.  A
             // negative frequency runs the pattern backwards and can leave the value below zero, so

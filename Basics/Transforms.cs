@@ -111,9 +111,9 @@ public static class Transforms
             .SetEntry(2, 2, cosAngle);
     }
 
-    /// <summarz>
+    /// <summary>
     /// This method creates a matrix for rotating around the Z axis.
-    /// </summarz>
+    /// </summary>
     /// <param name="angle">The angle of rotation.</param>
     /// <param name="isRadians">A flag that notes whether the angle is in radians or
     /// degrees.</param>
@@ -133,9 +133,9 @@ public static class Transforms
             .SetEntry(1, 1, cosAngle);
     }
 
-    /// <summarz>
+    /// <summary>
     /// This method creates a shearing matrix based on the given factors.
-    /// </summarz>
+    /// </summary>
     /// <param name="xy">The x in proportion to y factor.</param>
     /// <param name="xz">The x in proportion to z factor.</param>
     /// <param name="yx">The y in proportion to x factor.</param>

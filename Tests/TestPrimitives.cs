@@ -517,6 +517,68 @@ public class TestPrimitives
             "a call that places what it made should keep the size the body gave it");
     }
 
+    /// <summary>
+    /// A motion the body gives the thing it makes is written in the primitive's own frame, inside whatever the call
+    /// says, as a child's motion is inside its group's transform: a bar the body spins spins where the call puts it.
+    /// (Laid over the call's transform rather than under it, the bar swung round the caller's origin.)
+    /// </summary>
+    [TestMethod]
+    public void TestABodysMotionMovesTheThingWhereTheCallPutsIt()
+    {
+        const string blurred = """
+            camera { location [1, 1.6, -3]  look at [1, 0.3, 0]  field of view 45  shutter 1  blur samples 16 }
+            point light { location [-5, 7, -6] }
+            background [0.6, 0.7, 0.85]
+            Rock = material { pigment [0.55, 0.53, 0.5] }
+            """;
+        (Canvas made, string first) = Render($$"""
+            {{blurred}}
+            primitive Bar() -> cube { return cube { material Rock  scale [0.4, 0.05, 0.05]  motion { rotate Y 60 } } }
+            object Bar() { translate [1, 0.3, 0] }
+            """);
+        (Canvas written, string second) = Render($$"""
+            {{blurred}}
+            group {
+                cube { material Rock  scale [0.4, 0.05, 0.05]  motion { rotate Y 60 } }
+                translate [1, 0.3, 0]
+            }
+            """);
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+        Assert.IsFalse(Differs(made, written), "the bar should spin where the call put it");
+    }
+
+    /// <summary>
+    /// A motion is worked out later than it is written -- when the camera says when it looks -- but from the names as
+    /// they stood where it was written: a name set again further down the file does not reach back and change it, as
+    /// it changes nothing else written before it.
+    /// </summary>
+    [TestMethod]
+    public void TestAMotionReadsItsNamesWhereItIsWritten()
+    {
+        const string blurred = """
+            camera { location [0, 0.5, -3]  look at [0, 0.3, 0]  field of view 45  shutter 1  blur samples 16 }
+            point light { location [-5, 7, -6] }
+            background [0.6, 0.7, 0.85]
+            """;
+        (Canvas later, string first) = Render($$"""
+            {{blurred}}
+            Shift = 0.3
+            sphere { scale 0.2  translate Y 0.3  motion { translate X Shift } }
+            Shift = 2
+            """);
+        (Canvas only, string second) = Render($$"""
+            {{blurred}}
+            Shift = 0.3
+            sphere { scale 0.2  translate Y 0.3  motion { translate X Shift } }
+            """);
+
+        Assert.IsNull(first, first);
+        Assert.IsNull(second, second);
+        Assert.IsFalse(Differs(later, only), "a name set again after the motion changed the motion");
+    }
+
     [TestMethod]
     public void TestACallMayPlaceSomethingBuiltOutOfACombination()
     {

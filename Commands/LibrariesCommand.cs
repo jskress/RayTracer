@@ -342,7 +342,7 @@ public static class LibrariesCommand
         {
             Terminal.ShowError(
                 $"'{Path.GetFileName(source)}' cannot be a library: a library may hold only " +
-                "definitions (name = ...), but this holds other things as well.");
+                "definitions -- values, functions, primitives -- and imports, but this holds other things as well.");
         }
 
         if (renderer.DefinitionCount == 0)

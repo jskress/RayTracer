@@ -59,12 +59,12 @@ public class NoiseGenerator
     // These scale and bias the raw gradient noise below into the [0, 1] interval, with a mean
     // of about 0.5.  Every pattern that consumes noise here was ported from POV-Ray and so
     // assumes POV's own contract for Noise(): 0 to 1, never negative, mean ~0.49.  Raw gradient
-    // noise is instead centered on 0 and runs about -0.63 to 0.66, so handing it to those
-    // patterns unadjusted puts their carefully-chosen bias points (e.g. granite's "0.5 -
+    // noise is instead centered on 0 and runs about -0.72 to 0.69 (see RawNoise), so handing it
+    // to those patterns unadjusted puts their carefully-chosen bias points (e.g. granite's "0.5 -
     // noise") at the tail of the distribution rather than the middle of it.  These are POV's
     // own constants, from Noise() in source/backend/texture/texture.cpp; they map a raw range
-    // of [-0.6195, 0.6384] onto [0, 1], which fits this generator's measured range closely
-    // enough that the resulting mean lands on ~0.491 against POV's documented ~0.49.
+    // of [-0.6195, 0.6384] onto [0, 1], and Noise clamps the little that falls outside it.  The
+    // resulting mean lands on ~0.491 against POV's documented ~0.49.
     private const double NoiseScale = 1.59;
     private const double NoiseBias = 0.985;
 
@@ -272,9 +272,12 @@ public class NoiseGenerator
     }
 
     /// <summary>
-    /// This is a helper method for generating a random unit vector in a given cube.  By
-    /// default, the cube is the [-1, -1, -1]/[1, 1, 1] space.
+    /// This is a helper method for generating a random unit vector: the way to a point drawn evenly
+    /// from a cube, the [-1, -1, -1]/[1, 1, 1] one by default, made of unit length.  The ways are
+    /// therefore not quite even over the sphere -- a cube's corners reach further than its faces --
+    /// which is how the gradient tables have always been drawn.
     /// </summary>
+    /// <param name="rng">The random number generator to draw from.</param>
     /// <param name="min">The minimum of the interval.</param>
     /// <param name="max">The maximum of the interval.</param>
     /// <returns>A random vector in the space.</returns>

@@ -34,7 +34,7 @@ text {
         reflective 0.15
     }
 
-    // A text solid is built lying flat, so stand it up before placing it.
-    scale [1, 1, 0.35]
+    // A text solid is built lying flat, its letters 0.1 deep along Y, so stand it up before placing it.
+    scale [1, 2, 1]      // letters 0.2 deep rather than 0.1
     rotate X -90
 }

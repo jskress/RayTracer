@@ -85,10 +85,6 @@ public class ProductionRuleSet
     /// <summary>
     /// This method is used to locate the particular rule
     /// </summary>
-    /// <param name="source">The source set of runes.</param>
-    /// <param name="index">The index of the current rune in the source.</param>
-    /// <param name="random">The random number generator to use, when necessary.</param>
-    /// <returns>The appropriate production.</returns>
     /// <param name="modules">The word being rewritten.</param>
     /// <param name="letters">The word's letters on their own, kept for the callers that only need
     /// to know what stands where.</param>

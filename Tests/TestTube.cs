@@ -11,6 +11,48 @@ namespace Tests;
 public class TestTube
 {
     /// <summary>
+    /// A tube's true extent is the tube's, its radius out from the ends, with no padding left in it: a straight
+    /// tube of radius two from -10 to 10 covers exactly -12 to 12 along its length and -2 to 2 across.
+    /// </summary>
+    [TestMethod]
+    public void TestATubesTrueExtentIsExact()
+    {
+        Tube tube = new ()
+        {
+            Start = new TubeControlPoint { Center = new Point(0, -10, 0), Radius = 2 },
+            Segments =
+            {
+                new TubeSegmentSpec { End = new TubeControlPoint { Center = new Point(0, 10, 0), Radius = 2 } }
+            }
+        };
+
+        tube.PrepareForRendering();
+
+        BoundingBox box = tube.TrueBoundingBox();
+
+        Assert.AreEqual(-12, box.Minimum.Y, 1e-9);
+        Assert.AreEqual(12, box.Maximum.Y, 1e-9);
+        Assert.AreEqual(2, box.Maximum.X, 1e-9);
+    }
+
+    /// <summary>
+    /// A box takes in no place that is not a number, so one broken thing cannot make the box round its fellows
+    /// nowhere: what is added after it is still held.
+    /// </summary>
+    [TestMethod]
+    public void TestABoxIgnoresWhatIsNotANumber()
+    {
+        BoundingBox box = new ();
+
+        box.Add(new Point(double.NaN, 0, 0));
+        box.Add(new Point(1, 2, 3));
+        box.Add(new BoundingBox().Add(new Point(double.NaN, 1, 1)));
+
+        Assert.AreEqual(new Point(1, 2, 3), box.Minimum);
+        Assert.AreEqual(new Point(1, 2, 3), box.Maximum);
+    }
+
+    /// <summary>
     /// A tube with exactly two control points is just a single segment, so it should behave
     /// identically to a standalone <see cref="TubeSegment"/> built from the same values.
     /// </summary>

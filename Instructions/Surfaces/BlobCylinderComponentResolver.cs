@@ -37,6 +37,11 @@ public class BlobCylinderComponentResolver : BlobComponentResolver<BlobCylinderC
         StartResolver.AssignTo(value, target => target.Start, context, variables);
         EndResolver.AssignTo(value, target => target.End, context, variables);
         RadiusResolver.AssignTo(value, target => target.Radius, context, variables);
+
+        // A cylinder needs a way to run: from a place to itself it has none, and its box came out not a number,
+        // which hid the whole blob and everything boxed with it.  A ball is what such a component means.
+        if ((value.End - value.Start).Magnitude < 1e-12)
+            throw new InvalidOperationException("A blob's cylinder component must run from one place to another; for a ball, use a sphere component.");
     }
 
     /// <summary>

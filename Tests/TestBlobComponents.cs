@@ -421,6 +421,47 @@ public class TestBlobComponents
     }
 
     /// <summary>
+    /// **Two blobs handed one material each mix their own components.**  A group hands its one material
+    /// to every child, and the mixture was put on that material where it stood: the first blob wrapped
+    /// its pigment, the second found it wrapped already and was colored by the first's components, and
+    /// every sibling's color ran through the first blob's field.
+    /// </summary>
+    [TestMethod]
+    public void TestBlobsSharingAMaterialEachMixTheirOwnComponents()
+    {
+        Material shared = new () { Pigment = new SolidPigment(Colors.Green) };
+
+        Blob Colored(Color color, double x) => new ()
+        {
+            Threshold = 0.125,
+            Components =
+            {
+                new BlobSphereComponent
+                {
+                    Center = new Point(x, 0, 0), Radius = 2, Strength = 1, Pigment = new SolidPigment(color)
+                }
+            }
+        };
+
+        Blob red = Colored(Colors.Red, 0);
+        Blob blue = Colored(Colors.Blue, 0);
+        Sphere plain = new ();
+        Group group = new () { Material = shared };
+
+        group.Add(red).Add(blue).Add(plain);
+        group.PrepareForRendering();
+
+        foreach (Surface surface in new Surface[] { red, blue, plain })
+            surface.MaterialIsSettled();
+
+        Assert.IsTrue(red.Material.Pigment.GetColorFor(red, Point.Zero).Matches(Colors.Red));
+        Assert.IsTrue(blue.Material.Pigment.GetColorFor(blue, Point.Zero).Matches(Colors.Blue),
+            "the second blob was colored by the first one's components");
+        Assert.AreSame(shared, plain.Material);
+        Assert.IsInstanceOfType<SolidPigment>(shared.Pigment, "a blob dressed its siblings in its mixture");
+    }
+
+    /// <summary>
     /// A blob none of whose components carry a color is left entirely alone, which is what keeps
     /// every scene written before any of this existed rendering exactly as it did.
     /// </summary>

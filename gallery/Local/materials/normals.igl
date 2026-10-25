@@ -120,11 +120,13 @@ sphere {
     material {
         pigment marble {
             turbulence { amplitude 0.9 octaves 4 }
+            ramp wave
             [0, [0.22, 0.20, 0.24], 0.35, [0.62, 0.60, 0.58], 1, [0.88, 0.87, 0.84]]
             scale 0.7
         }
         normal marble {
             turbulence { amplitude 0.9 octaves 4 }
+            ramp wave
             depth 0.3
             scale 0.7
         }

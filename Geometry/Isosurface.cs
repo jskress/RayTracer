@@ -43,6 +43,21 @@ public class Isosurface : Surface
     /// </summary>
     private const int MaximumDepth = 30;
 
+    // How short, in accuracies, a span that straddles the surface is halved to before it is narrowed to its
+    // crossing: crossings closer together than this along a ray are a ridge thinner than it.
+    private const double StraddleSpan = 64;
+
+    // How closely, in accuracies, a crossing is narrowed in on.
+    private const double NarrowedTo = 0.001;
+
+    /// <summary>
+    /// This method returns how far off itself a ray sets off: four times how closely a crossing is narrowed in on,
+    /// in the world -- the accuracy is in the shape's own units, so it is carried out by however much the shape is
+    /// stretched there.  At its own scale that is less than the usual nudge, which is kept.
+    /// </summary>
+    internal override double SelfOffsetAt(int timeIndex, Portals portals) =>
+        Math.Max(DoubleExtensions.Epsilon, 4 * Accuracy * NarrowedTo * StretchInTheWorld(timeIndex, portals));
+
     /// <summary>
     /// This property holds the function whose value makes the surface.
     /// </summary>
@@ -166,7 +181,14 @@ public class Isosurface : Surface
         if (!bound.IsAnywhere && !bound.Contains(Threshold))
             return;
 
-        if (atStart < 0 != atEnd < 0)
+        // **A span whose ends straddle the surface crosses it an odd number of times, not once.**  So it is
+        // halved as any other span is until it is short, the bound throwing away whichever half the surface
+        // cannot reach, and only then narrowed to its crossing.  Narrowed at once, a ray through a hill to the
+        // ground beyond -- three crossings, its ends on either side -- was given whichever of the three the
+        // halving happened on, and went through the hill.
+        bool straddles = atStart < 0 != atEnd < 0;
+
+        if (straddles && (end - start <= Accuracy * StraddleSpan || depth == 0))
         {
             intersections.Add(new Intersection(this,
                 Narrow(origin, direction, start, atStart, end) / length));
@@ -212,7 +234,7 @@ public class Isosurface : Surface
     private double Narrow(
         Point origin, Vector direction, double start, double atStart, double end)
     {
-        double tolerance = Accuracy * 0.001;
+        double tolerance = Accuracy * NarrowedTo;
 
         for (int step = 0; step < 60 && end - start > tolerance; step++)
         {

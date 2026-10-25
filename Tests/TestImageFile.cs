@@ -252,7 +252,9 @@ public class TestImageFile
                         };
                         Canvas canvas = new (2, 1);
                         Color first = new (0.3, 0.6, 0.9);
-                        Color second = opaque ? new Color(1, 0.25, 0.5) : new Color(1, 0.25, 0.5, 0.5);
+                        // A canvas holds a pixel as its samples add up, so the half-covered one is half its color:
+                        // (1, 0.25, 0.5) half there.
+                        Color second = opaque ? new Color(1, 0.25, 0.5) : new Color(0.5, 0.125, 0.25, 0.5);
 
                         canvas.SetColor(first, 0, 0);
                         canvas.SetColor(second, 1, 0);
@@ -280,9 +282,14 @@ public class TestImageFile
                         Assert.AreEqual(2, reloaded.Width, $"{what}: width");
                         Assert.AreEqual(1, reloaded.Height, $"{what}: height");
 
+                        // A file keeps the color apart from how much of the pixel it covers, so the half-covered
+                        // pixel reads back as its own color, half there.
                         foreach ((Color was, int x) in new[] { (first, 0), (second, 1) })
                         {
-                            Color wanted = grayscale ? was.AsGray() : was;
+                            Color straight = was.Alpha < 1
+                                ? new Color(was.Red / was.Alpha, was.Green / was.Alpha, was.Blue / was.Alpha, was.Alpha)
+                                : was;
+                            Color wanted = grayscale ? straight.AsGray() : straight;
                             Color got = reloaded.GetPixel(x, 0);
 
                             AssertColorsClose(wanted, got);

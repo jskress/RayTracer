@@ -25,6 +25,11 @@ public class BlobPigment : Pigment
     public override bool MayTransmit => _fallback.MayTransmit ||
         _pigments.Any(pigment => pigment is not null && pigment.MayTransmit);
 
+    /// <summary>
+    /// This property holds the blob whose components this pigment mixes.
+    /// </summary>
+    internal Blob Blob => _blob;
+
     private readonly Blob _blob;
     private readonly Pigment _fallback;
     private readonly Pigment[] _pigments;

@@ -12,6 +12,13 @@ namespace RayTracer.Parser;
 public partial class LanguageParser
 {
     /// <summary>
+    /// The libraries currently being read, innermost last.  A library may import another, so this is
+    /// what keeps a cycle from becoming a recursion that ends in a stack overflow: the message a scene
+    /// author gets should name the loop, not the call depth.
+    /// </summary>
+    private readonly List<string> _importing = [];
+
+    /// <summary>
     /// This method is used to handle any import statement we may be looking at.
     /// <para>
     /// An import reads a library file exactly as an include would, and then throws away every
@@ -20,13 +27,6 @@ public partial class LanguageParser
     /// the other ninety-eight.
     /// </para>
     /// </summary>
-    /// <summary>
-    /// The libraries currently being read, innermost last.  A library may import another, so this is
-    /// what keeps a cycle from becoming a recursion that ends in a stack overflow: the message a scene
-    /// author gets should name the loop, not the call depth.
-    /// </summary>
-    private readonly List<string> _importing = [];
-
     private void HandleImports()
     {
         Clause clause = LanguageDsl.ParseClause(CurrentParser, "importClause");

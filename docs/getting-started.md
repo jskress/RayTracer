@@ -84,26 +84,41 @@ RayTracer -i gallery/challenge-book/chapter-16/csg.igl
 
 #### How a setting is decided
 
-Several settings can be given in two places — here on the command line, or in the scene's own
-[context block](context.md).  Where both could apply, the same rule applies every time:
+Many settings can be given in two places — here on the command line, or in the scene itself,
+mostly in its [context block](context.md).  Where both could apply, the same rule applies every
+time:
 
 1. what the command line says, if it says anything;
-2. otherwise what the scene's context block asked for;
+2. otherwise what the scene asked for;
 3. otherwise the built-in default.
 
 So a scene can fix how it wants to be rendered and still be overridden for a quick look at
-something, and passing no options at all gets you the defaults.  The settings that work this
-way are the image's `width` and `height`, the `gamma` value, and the switches for gamma
-correction and shadows.
+something, and passing no options at all renders it the way it asked to be.  These settings work
+this way:
 
-Two things do not follow the rule, simply because they exist in only one of the two places.
-Antialiasing, grayscale, bits per channel, the output paths, the chattiness and the animation
-options are all command line only; the scanner, the angle units and the `info` block are scene
-only.
+| On the command line | In the scene |
+| --- | --- |
+| `-w`, `-h` | `width`, `height` in the context block |
+| `-a` | `antialiasing depth` and `antialiasing threshold` |
+| `-c` | `color depth` |
+| `-g` | `gamma` |
+| `--white-balance` | `white balance` |
+| `--film-curve` | `film curve` |
+| `--exposure` | each camera's own `exposure` |
+| `-r` | the `rate` of the context's `animation` |
+| `--scene`, `--camera` | the file's `render` command |
 
-For some items, there is no way to override what the scene asks for.  For example, if a
-scene's context block contains `no shadows`, there is no command line option to override it
-to say you want shadows after all.
+**The switches only work one way.**  `--no-gamma`, `--no-shadows`, `--grayscale` and `--spectral`
+turn their setting on (or, for gamma, off) whatever the scene says, and leaving them out leaves
+the scene's choice standing.  None of them can undo what a scene asked for, though: a scene whose
+context block says `no shadows`, `no gamma`, `grayscale` or `spectral` is rendered that way
+however it is run, since there is no option to say you want shadows after all.
+
+Everything else is said in only one of the two places.  The output paths, the chattiness, the
+progress style, `--stats`, and which frames of an animation to render (`-m`, `--frames`,
+`--still`) are the command line's alone.  The scanner, the angle units, the `info` block, the
+sample counts, bounced light, caustics, the trace depth, the ambient scale, gravity and wind,
+and how long an animation runs are the scene's alone.
 
 #### Where the image goes
 
@@ -118,11 +133,15 @@ to say you want shadows after all.
 or the other and not both.  If you don't specify `--output-dir`, it will default to the
 directory where the input file sits.
 
-A PNG, JPEG or any other picture format is written as a picture, for a screen.  An OpenEXR
-(`.exr`), Radiance (`.hdr`) or portable float map (`.pfm`) file is written as the light itself:
-no [gamma](context.md#gamma) curve, nothing cut off at white, and every value kept to the
-format's own precision rather than to eight bits -- for an image to be graded or developed
-elsewhere, or lit by in another scene.
+A PNG, JPEG or any other picture format is written as a picture, for a screen.  Where a picture
+is partly clear — the soft edge of something against a [transparent background](scene-files.md#background)
+— each pixel keeps its own color, and its alpha says how much of the pixel it covers, which is
+what anything laying the picture over another expects.  An OpenEXR (`.exr`), Radiance (`.hdr`)
+or portable float map (`.pfm`) file is written as the light itself: no [gamma](context.md#gamma)
+curve, nothing cut off at white, and every value kept to the format's own precision rather than
+to eight bits -- for an image to be graded or developed elsewhere, or lit by in another scene.
+What transparency such a file holds it holds premultiplied, its colors already scaled by their
+alpha, as OpenEXR's own convention has it.
 
 #### Which scene, and which camera
 
@@ -141,10 +160,10 @@ for within the chosen scene, so two scenes may each have a camera of the same na
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `-w`, `--width` | 800 | The image width, in pixels. |
-| `-h`, `--height` | 600 | The image height, in pixels. |
-| `-a`, `--antialias` | off | Anti-aliasing; see below. |
-| `-c`, `--bits-per-channel` | 8 | How many bits each color channel gets in the file; `8` or `16`. |
+| `-w`, `--width` | the scene's, or 800 | The image width, in pixels. |
+| `-h`, `--height` | the scene's, or 600 | The image height, in pixels. |
+| `-a`, `--antialias` | the scene's, or off | Anti-aliasing; see below. |
+| `-c`, `--bits-per-channel` | the scene's, or 8 | How many bits each color channel gets in the file; `8` or `16`. |
 
 Antialiasing is written either as `off`, or as `adaptive` with a depth: `adaptive:5`, or
 just `5`, which means the same.  `adaptive` alone means `adaptive:5`.
@@ -162,8 +181,12 @@ of a flat expanse costs five rays; one on the edge of something costs more, whic
 the extra rays are worth paying for.
 
 **"By enough to notice" is a number, and you may say what it is** — a third part after the
-depth, as `adaptive:3:0.35`.  It is how far apart two colors must be before the sampler
-subdivides, from just above nought to one, and it defaults to `0.1`.
+depth, as `adaptive:3:0.35`, written with a point whatever your locale.  It is how far apart two
+samples must be before the sampler subdivides, and it defaults to `0.1`.  The distance is the
+differences in red, green and blue, and in how opaque the two are, added together, each taken
+as the picture will show it, from nought to one — so black beside white is 3 apart, and a gray
+beside one a shade paler a few hundredths.  The threshold may be anything above nought, up to
+one.
 
 That default is cautious, and on a scene with a lot of fine detail it is worth raising.
 Measured on a sea of isosurface waves at 300×225:
@@ -178,15 +201,15 @@ Two and a fifth times faster for a mean difference of a quarter of one level in 
 scene where the two pictures cannot be told apart side by side.  The dial is worth knowing
 about before waiting out a long render at the default.
 
-Raise it too far and anti-aliasing quietly stops happening: past `1` no two colors can differ
-enough to subdivide at all, which is why anything above that is refused rather than accepted
-and ignored.
+Raise it too far and anti-aliasing quietly stops happening at all but the starkest edges: at
+`1` a corner must differ from the center by more than a whole channel's range, all told, before
+it is looked at more closely, and anything above that is refused.
 
 #### Color and light
 
 | Option | What it does |
 | --- | --- |
-| `-g`, `--gamma` | Write with a plain gamma power instead of the sRGB curve. |
+| `-g`, `--gamma` | Write with a plain gamma power instead of the sRGB curve: more than 0, and no more than 5. |
 | `--no-gamma` | Write the light as it stands, with no curve at all. |
 | `--grayscale` | Render in shades of gray. |
 | `--spectral` | Carry light [wavelength by wavelength](context.md#spectral-light). |

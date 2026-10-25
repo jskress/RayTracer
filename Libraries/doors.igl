@@ -6,9 +6,9 @@
 //     object GlazedDoor(0.45, 1.0, 0.05) { translate X 2 }
 //     object DoubleDoor(0.70, 1.0, 0.05) { translate X 4 }
 //
-// | `Door`       | A panelled leaf, with a surround up both sides, a head across and a step at the foot. |
+// | `Door`       | A paneled leaf, with a surround up both sides, a head across and a step at the foot. |
 // | `GlazedDoor` | The same, with the upper panels replaced by glass and a bar across it. |
-// | `DoubleDoor` | Two leaves meeting on a centre stile, for something that is not a house. |
+// | `DoubleDoor` | Two leaves meeting on a center stile, for something that is not a house. |
 // | `Fanlight`   | A light over a doorway, to sit above one that is already there. |
 //
 // **These follow the same conventions as `windows`**, which they are meant to sit beside: placed with
@@ -141,7 +141,7 @@ primitive DoorLeaf(wide, tall, deep, variant, upper) -> group {
     return group {
         // **When the upper part is glazed the leaf needs a hole in it, not merely fewer panels.**
         // Leaving the panels off changes nothing: the leaf is a solid slab and it stands in front of
-        // wherever the glass goes, so a glazed door came out looking exactly like a panelled one with
+        // wherever the glass goes, so a glazed door came out looking exactly like a paneled one with
         // its top half plain.  A `difference` gives a real opening, and the reveal it leaves is what
         // makes the glass read as set *into* the door.
         if (upper == 1) {
@@ -174,7 +174,7 @@ primitive DoorLeaf(wide, tall, deep, variant, upper) -> group {
     }
 }
 
-// -- A panelled door -------------------------------------------------------------------------------
+// -- A paneled door -------------------------------------------------------------------------------
 
 primitive Door(wide, tall, deep, season = 'summer', variant = 1) -> group {
     return group {
@@ -188,7 +188,7 @@ primitive Door(wide, tall, deep, season = 'summer', variant = 1) -> group {
 // -- A glazed door ---------------------------------------------------------------------------------
 
 // The upper panels replaced by glass, with one bar across it.  This is the door a shop or a stair hall
-// has, and next to a panelled one it is what stops a terrace reading as the same house repeated.
+// has, and next to a paneled one it is what stops a terrace reading as the same house repeated.
 primitive GlazedDoor(wide, tall, deep, season = 'summer', variant = 1) -> group {
     return group {
         object DoorLeaf(wide, tall, deep, variant, 0)
@@ -210,7 +210,7 @@ primitive GlazedDoor(wide, tall, deep, season = 'summer', variant = 1) -> group 
 
 // -- A pair of doors -------------------------------------------------------------------------------
 
-// Two leaves meeting on a centre stile.  A house does not have these; a warehouse, a chapel or anything
+// Two leaves meeting on a center stile.  A house does not have these; a warehouse, a chapel or anything
 // with a yard behind it does, which is most of what makes such a building read as not-a-house.
 primitive DoubleDoor(wide, tall, deep, season = 'summer', variant = 1) -> group {
     return group {

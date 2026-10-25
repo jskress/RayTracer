@@ -117,7 +117,7 @@ public static class Weathering
         Scene scene = here.Scene;
         Vector normal = outward ? here.Normal : -here.Normal;
         (Vector across, Vector along) = Microfacets.FrameAround(normal);
-        double offset = Math.Max(DoubleExtensions.Epsilon * here.Surface.SelfOffsetScale, reach * 1e-4);
+        double offset = Math.Max(here.Surface.SelfOffsetAt(here.TimeIndex, here.Portals), reach * 1e-4);
         Point origin = here.Point + normal * offset;
         // All of them where the eye looks first; elsewhere -- in a rough surface's blur, along bounced light -- an
         // eighth, since there the many paths average what each one lacks.  Without that a droid's rough aluminum

@@ -21,6 +21,16 @@ public class MarblePattern : Pattern
     public override int DiscretePigmentsNeeded => 0;
 
     /// <summary>
+    /// A marble's value runs up and back down through its color map, a triangle wave, as POV-Ray's marble does unless
+    /// told otherwise: run up and snapped back to the start, as every other pattern's is, a map whose two ends differ
+    /// drew a hard seam down every vein.  A scene that says a wave keeps it.
+    /// </summary>
+    public MarblePattern()
+    {
+        Wave = WaveType.Triangle;
+    }
+
+    /// <summary>
     /// This pattern folds turbulence into its own arithmetic, so its points are left alone.
     /// </summary>
     protected override bool StirsItsOwnPoints => true;
@@ -46,9 +56,11 @@ public class MarblePattern : Pattern
     {
         // Note this deliberately isn't held to the [0, 1] interval: the value is a coordinate,
         // and the color map wraps whatever it is given.  That wrapping is the whole point --
-        // it is what turns a marching X into repeated veins.
+        // it is what turns a marching X into repeated veins.  The turbulence is scaled by its
+        // amount along X, as POV-Ray's marble scales it: left unscaled, `turbulence 0.4` and
+        // `turbulence 2` drew the same veins.
         return Turbulence is null
             ? point.X
-            : point.X + Turbulence.Generate(point);
+            : point.X + Turbulence.Amplitude.X * Turbulence.Generate(point);
     }
 }

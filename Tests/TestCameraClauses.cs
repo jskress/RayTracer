@@ -34,6 +34,101 @@ public class TestCameraClauses
     }
 
     /// <summary>
+    /// A camera that gathers several rays a pixel, through a lens or an open shutter, keeps what they saw of the
+    /// background as clear as one ray does: a pixel that met nothing stays transparent rather than turning black.
+    /// </summary>
+    [TestMethod]
+    public void TestALensKeepsTheBackgroundTransparent()
+    {
+        string path = Path.Combine(_directory, "clear.igl");
+        string output = Path.ChangeExtension(path, "png");
+
+        File.WriteAllText(path, """
+            context { no gamma }
+            camera { location [0, 0, -5]  look at [0, 0, 0]  aperture 0.05  focal distance 5  blur samples 8 }
+            point light { location [0, 0, -5] }
+            sphere { scale 0.5 }
+            """);
+        new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 20, Height = 20 });
+
+        Canvas image = new ImageFile(output).Load()[0];
+
+        Assert.IsTrue(image.GetPixel(0, 0).Alpha < 0.01, $"a corner that met nothing: alpha {image.GetPixel(0, 0).Alpha}");
+        Assert.IsTrue(image.GetPixel(10, 10).Alpha > 0.99, "the ball in the middle is solid");
+    }
+
+    /// <summary>
+    /// A picture file keeps a pixel's color apart from how much of it is covered: the edge of a white ball against
+    /// nothing is white, part there.  (Written as the samples added up, the transparent part adding nothing, the edge
+    /// was gray, and a gray fringe wherever the picture was laid over anything light.)
+    /// </summary>
+    [TestMethod]
+    public void TestASoftEdgeIsWrittenItsOwnColor()
+    {
+        string path = Path.Combine(_directory, "edge.igl");
+        string output = Path.ChangeExtension(path, "png");
+
+        File.WriteAllText(path, """
+            context { no gamma  antialiasing depth 3 }
+            camera { location [0, 0, -4]  look at [0, 0, 0] }
+            point light { location [0, 0, -5] }
+            sphere { material { pigment White  ambient 1  diffuse 0  specular 0 } }
+            """);
+        new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 40, Height = 40 });
+
+        Canvas image = new ImageFile(output).Load()[0];
+        int edges = 0;
+
+        for (int x = 0; x < 40; x++)
+        {
+            for (int y = 0; y < 40; y++)
+            {
+                Color pixel = image.GetPixel(x, y);
+
+                if (pixel.Alpha is > 0.05 and < 0.95)
+                {
+                    edges++;
+                    Assert.IsTrue(pixel.Red > 0.98, $"the edge at {x}, {y} was written {pixel}");
+                }
+            }
+        }
+
+        Assert.IsTrue(edges > 20, $"only {edges} pixels were part covered");
+    }
+
+    /// <summary>
+    /// The word before `camera` names its projection inside a `scene` block as it does at the top of a file: a
+    /// fisheye written in a scene sees what the same fisheye written outside one sees, which a perspective does not.
+    /// </summary>
+    [TestMethod]
+    public void TestAProjectionIsReadInsideAScene()
+    {
+        Canvas Picture(string text)
+        {
+            string path = Path.Combine(_directory, $"projection-{Guid.NewGuid():N}.igl");
+            string output = Path.ChangeExtension(path, "png");
+
+            File.WriteAllText(path, "context { no gamma }\n" + text);
+            new LanguageParser(path).Parse().Render(new RenderOptions { OutputFileName = output, Width = 40, Height = 40 });
+
+            return new ImageFile(output).Load()[0];
+        }
+
+        const string World = """
+            light { location [0, 0, -5] }
+            sphere { material { pigment color [1, 1, 1] ambient 1 diffuse 0 specular 0 }  translate [1.6, 0, 0] }
+            """;
+        Canvas outside = Picture("fisheye camera { location [0, 0, -4] look at [0, 0, 0] }\n" + World);
+        Canvas inside = Picture("scene { fisheye camera { location [0, 0, -4] look at [0, 0, 0] }\n" + World + "}");
+        Canvas flat = Picture("scene { camera { location [0, 0, -4] look at [0, 0, 0] }\n" + World + "}");
+        bool Same(Canvas a, Canvas b) =>
+            Enumerable.Range(0, 40 * 40).All(index => a.GetPixel(index % 40, index / 40).Matches(b.GetPixel(index % 40, index / 40)));
+
+        Assert.IsTrue(Same(outside, inside), "a fisheye in a scene is a fisheye");
+        Assert.IsFalse(Same(inside, flat), "and not a perspective camera");
+    }
+
+    /// <summary>
     /// Renders a flat white ball on a black background through a camera written as given, and
     /// returns the row of brightnesses through its middle.
     /// <para>

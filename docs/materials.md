@@ -15,8 +15,10 @@ Five spheres of the same color, differing only in their material: matte, glossy,
 metallic and glass.  The scene is
 [`docs/examples/materials/finishes.igl`](examples/materials/finishes.igl).
 
-Every surface has a material whether you give it one or not.  The default is a white, fairly
-glossy plastic — which is what an unadorned `sphere { }` looks like.
+Every surface has a material whether you give it one or not.  A surface given none, and handed
+none by a [group](#materials-on-a-group-or-csg), is a fairly glossy plastic in `Gray40`, a gray
+four tenths of white — which is what an unadorned `sphere { }` looks like.  A material that names
+no pigment of its own is white, with the same finish.
 
 ### The Color
 
@@ -89,6 +91,8 @@ material names its own.  Emission is the surface's own, the same with any lamps 
 that follows bounced light it lights what is near it: a glowing lampshade lights the wall beside it.  A
 surface that stands for a light already in the scene -- the bulb round a lamp, a painted sun's disc set
 out with `no shadow` -- is passed by bounced light, as by a shadow, so its glow is not counted twice.
+A glow leaves through whatever skin the surface has, as the rest of its own light does: under `fresnel` it
+shows only for what the surface does not mirror, and a film, a coat or a sheen takes its share of it.
 
 **`diffuse`** is the ordinary business of a surface catching light: brightest where it faces
 the light square-on, falling away as it turns aside.  This is what gives a sphere its
@@ -165,8 +169,10 @@ material to the next:
 A `reflective` value chosen for a surface without `fresnel` is usually far too high with it.
 Such values were set to give a surface some gloss head-on, and with `fresnel` the edges supply
 that gloss themselves.  A transparent surface already shares its light between what it mirrors
-and what it lets through by its index of refraction, so `fresnel` changes nothing there.  Nor
-does it change a surface that mirrors nothing.
+and what it lets through by its index of refraction, so `fresnel` changes nothing there — though
+how much of that share it mirrors is still its `reflective`'s to say, and only `reflective 1` mirrors
+all of it; see [Transparency and Interiors](#transparency-and-interiors).  Nor does `fresnel` change
+a surface that mirrors nothing.
 
 #### Roughness
 
@@ -270,8 +276,9 @@ material {
 Both are in the surface's own space, as a pattern is, so the grooves turn and stretch with the
 surface, and `around` circles the middle of that space; a direction that leaves the surface is laid
 flat on it.  Left unsaid, the grooves run along X -- except on a [wire](advanced-surfaces.md#strand), a
-strand of metal, where they run round it, as a wound string's winding does.  Only a rough, opaque
-surface is brushed: glass frosts alike every way.
+strand whose own material is `metallic` (not hair wearing the material of what it grows from), where
+they run round it, as a wound string's winding does.  Only a rough, opaque surface is brushed: glass
+frosts alike every way.
 
 `gallery/Local/materials/brushed-steel.igl` sets a turned pan lid, a brushed box and a turned canister
 under small lamps.
@@ -310,7 +317,8 @@ face being found by the glass's sixteen directions.
 
 Glass that spreads colors bends each band through a facet of its own, so a frosted prism blurs its
 rainbow without costing more than a clear one.  Shadows cast by frosted glass are as they were —
-colored by the glass's `filter`, not blurred.
+colored by the glass's `filter`, not blurred — unless the scene asks for [caustics](context.md#caustics),
+when the light through the glass is the photons', spread by its facets into a soft glow.
 
 **Frosting needs an index.**  It is the bending at each facet that blurs, so a rough surface between
 two substances of the same index — a thin open sheet, say, which has no inside to bend into — lets
@@ -540,7 +548,10 @@ context { subsurface samples 128 }
 
 The usual number is 64.  Too few shows as grain, colored where each color travels its own
 distance; more is smoother and costs more on every pixel of the surface.  Anti-aliasing adds to
-it, as it does to [rough reflections](context.md#rough-reflections).
+it, as it does to [rough reflections](context.md#rough-reflections).  That many are taken where the
+eye sees the surface directly, or in a smooth mirror or through clear glass.  Seen in a rough
+surface's blurred reflection, through frosted glass, or by bounced light, a place takes one walk,
+since there many paths are averaged anyway.
 
 **A sheet has no inside**, so a leaf, a sheet of paper or a lampshade is walked through as a
 slab as thick as it says it is:
@@ -554,8 +565,8 @@ material {
 
 Lit from in front, a sheet shows what wanders back out of it; with the sun behind it, what
 wanders through -- which is how a leaf glows against the light.  A thickness left out is taken
-to be the radius.  What a sheet lets through falls away as it grows thicker than its radius,
-and faster the darker it is: at three times the radius a pale sheet still lets through more than
+to be the radius -- the average of its three distances, where it gives one for each color.  What a
+sheet lets through falls away as it grows thicker than its radius, and faster the darker it is: at three times the radius a pale sheet still lets through more than
 a quarter of the light behind it and a dark one a twelfth, and at ten times a pale one a
 fifteenth and a dark one none.  A closed shape has no need of a thickness: its walks find their
 own way out, through its far side where it is thin.
@@ -610,6 +621,17 @@ material {
 
 `ior` may also be written out as `index of refraction`, which reads better in a scene meant to
 be shown to someone else.
+
+**Clear glass mirrors as Fresnel says only at `reflective 1`.**  A smooth surface that lets light
+through shares the light meeting it between what it mirrors and what it lets through by the indices
+either side of it, as Fresnel's equations do: a few percent mirrored square-on, nearly all of it at a
+graze.  Its `reflective` then scales the mirrored share.  At 1 it mirrors exactly what its index says,
+which is what real glass and water do; the example above, at 0.1, mirrors a tenth of that, and the
+rest is lost rather than let through instead; at 0, the default, it mirrors nothing and lets through
+all its `transparency` says, unshared.  `fresnel` is not needed for any of this and changes nothing.
+Rough glass that names no `reflective` is given 1 (see [Roughness](#roughness)).  A shadow cast
+through glass with an index is dimmed by Fresnel's share at its faces whatever its `reflective`, unless
+the scene asks for [caustics](context.md#caustics), which change that.
 
 Glass is about 1.5, water about 1.33, diamond about 2.4.  But you need not remember any of
 them, because they already have names:
@@ -671,11 +693,13 @@ anywhere else.
 
 What dispersion shows is what an eye looking through the glass sees: edges fringed with color, and a
 bright slit drawn out into a full spectrum —
-`gallery/Local/materials/a-rainbow-through-a-prism.igl` is built around that.  What it does not show
-is the rainbow a prism casts on a wall when a beam is shone through it.  That is a caustic, light
-carried forward from a lamp, through the glass, onto a surface, and this renderer traces backward
-from the eye: when a point on the wall asks whether it can see the lamp, the question goes in a
-straight line and does not bend through the glass.
+`gallery/Local/materials/a-rainbow-through-a-prism.igl` is built around that.  The rainbow a prism
+casts on a wall when a beam is shone through it is another matter.  That is a caustic, light carried
+forward from a lamp, through the glass, onto a surface, and a ray traced backward from the eye never
+finds it: when a point on the wall asks whether it can see the lamp, the question goes in a straight
+line and does not bend through the glass.  A spectral render that also asks for
+[caustics](context.md#caustics) follows the light forward from the lamp, splitting it into its colors
+in the glass, and the wall shows the rainbow.
 
 ### Filling a Surface
 
@@ -772,7 +796,10 @@ materials, as a pigment's map has values and colors, and then the pattern's tran
 value the first material is whole, above the last the last; between two, the surface is shaded with a
 material part way between them, every number of its finish -- `diffuse`, `specular`, `reflective`,
 `roughness`, `metallic` and the rest -- mixed in proportion, and its color mixed too.  What cannot be
-mixed, a coat, a sheen, a film, an interior, decals, is the nearer material's.  The materials may be named
+mixed, a coat, a sheen, a film, an interior, decals, is the nearer material's.  Between a smooth material
+and a rough one, the surface is shaded as each and the two looks are mixed, since a smooth mirror and a
+rough one are worked out in different ways and a mixture of the numbers would jump from one way to the
+other at the first trace of roughness.  The materials may be named
 or written out in full, and either may be a blend itself, which is how grime gets a broken edge:
 
 ```
@@ -785,6 +812,13 @@ material blend crevices {
 
 A pattern that picks among a fixed number of things picks a material outright: `material blend checker
 { Slate, Marble }` is a floor of two stones.
+
+Some blends are refused rather than guessed at.  A map must hold at least two materials, and its values
+must not run backwards, each at least the one before it; a pattern that picks among a fixed number of
+things takes exactly that many materials, separated by commas.  Each material in a blend is held to the
+rules any material is: one may not have both a film and a coat, a sheen with either, or a film and a
+`roughness`.  Materials that differ in those skins may be blended, though, since each place takes the
+nearer one's.
 
 The blend is settled where a ray meets the surface.  Whatever asks a surface for its material without
 meeting it there -- a shadow ray finding whether it is transparent, a photon -- is given the first
@@ -891,6 +925,10 @@ group {
     sphere { material { pigment color Red }  translate [0, 2.4, 0] }
 }
 ```
+
+The same holds for a thing a [primitive](scene-files.md#things-of-your-own) builds once and stands in many
+places: its parts with no material of their own wear, in each place, the material of whatever holds it
+there.  One shared tree may stand in a group painted for summer and in another painted for autumn.
 
 This saves a great deal of repetition in anything built of many pieces, and it is how a whole
 assembly gets one consistent look.

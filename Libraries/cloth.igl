@@ -127,7 +127,7 @@ function SheetRise(across, along, state) -> number {
 
 // A loose horizontal cloth: a sheet, a tablecloth's top, a tarpaulin.  Held nowhere, so the ripples
 // run right to the edges, and made of two waves crossing rather than one -- a single wave gives
-// parallel ridges, which reads as a ploughed field rather than as fabric.
+// parallel ridges, which reads as a plowed field rather than as fabric.
 //
 // **Its lowest point is at y = 0, not its middle**, so it is laid on a table by translating it to the
 // table's top and nothing more.  A wave written the obvious way swings equally either side of nought,

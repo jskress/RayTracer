@@ -23,6 +23,11 @@ public class GradientPattern : BandPattern
     public bool Bouncing { get; set; }
 
     /// <summary>
+    /// A gradient that does not bounce runs up its range and starts again at each repeat.
+    /// </summary>
+    protected override bool WrapsItself => !Bouncing;
+
+    /// <summary>
     /// This method is used to adjust the value determined by the band type.
     /// </summary>
     /// <param name="value">The value to adjust.</param>

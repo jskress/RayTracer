@@ -98,7 +98,12 @@ public class TubeSegment : Surface
         // K2 near zero means the radius changes at exactly the rate needed to make the
         // envelope's half-angle 90 degrees -- a flat-disk degenerate case we don't attempt
         // to model; only the end caps contribute in that case.
-        if (_k2.Near(0))
+        //
+        // Near zero against the segment's own size: an absolute allowance of a millionth took every straight segment
+        // shorter than a thousandth for this case, and drew it without its wall.
+        double size = _deltaCenter.Dot(_deltaCenter) + _deltaRadius * _deltaRadius;
+
+        if (Math.Abs(_k2) <= 1e-9 * size)
             return;
 
         Vector q = ray.Origin - Start;
@@ -111,6 +116,16 @@ public class TubeSegment : Surface
         double a = 4 * _k2 * k0C - k1B * k1B;
         double b = 4 * _k2 * k0B - 2 * k1A * k1B;
         double c = 4 * _k2 * k0A - k1A * k1A;
+
+        // The quadratic's terms go as the segment's size squared, and its solver judges a leading term of a
+        // millionth to be none: for a segment under a hundredth long, it is put back to the size of one first,
+        // which leaves its roots where they are.
+        if (size < 1e-4)
+        {
+            a /= size;
+            b /= size;
+            c /= size;
+        }
 
         foreach (double t in TubeCurveMath.SolveQuadratic(a, b, c))
         {

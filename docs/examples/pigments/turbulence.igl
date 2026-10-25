@@ -1,4 +1,4 @@
-// The same marble at three turbulence amplitudes.  Nothing else differs between the three.
+// The same marble three times: unstirred, stirred a little, and stirred a lot in five octaves.
 context { angles are degrees  no gamma }
 
 camera {

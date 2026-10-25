@@ -120,6 +120,37 @@ public class TestHeightField
     }
 
     /// <summary>
+    /// A clip is a brightness, and cuts the terrain where the picture is that bright: clipped at half the
+    /// brightest, an open field keeps the triangles that rise above a quarter of that and drops the rest -- it
+    /// does not, as it did when the clip was compared with the quartered heights unquartered, drop everything.
+    /// </summary>
+    [TestMethod]
+    public void TestAClipCutsAtTheBrightnessItSays()
+    {
+        ImageReference reference = new ()
+        {
+            ImageName = "terrain.png",
+            SourceDirectory = Path.Combine(TestDocumentation.RepositoryRoot, "docs", "examples", "advanced")
+        };
+        Canvas canvas = reference.Canvas.ToGrayScale();
+        double brightest = 0;
+
+        for (int y = 0; y < canvas.Height; y++)
+        {
+            for (int x = 0; x < canvas.Width; x++)
+                brightest = Math.Max(brightest, canvas.GetPixel(x, y).Red);
+        }
+
+        HeightField whole = new () { ImageReference = reference, Closed = false };
+        HeightField clipped = new () { ImageReference = reference, Closed = false, Clip = brightest / 2 };
+        int all = CornersOf(whole).Count;
+        int kept = CornersOf(clipped).Count;
+
+        Assert.IsTrue(kept > 0, "half the brightest should leave the higher half of the terrain");
+        Assert.IsTrue(kept < all, "and drop the lower");
+    }
+
+    /// <summary>
     /// The function is evaluated over the same unit square the picture covers, so a function of
     /// <c>x</c> alone must give back exactly the X it was asked at.  That settles the domain and the
     /// axis convention together, and neither is guessable from the outside.

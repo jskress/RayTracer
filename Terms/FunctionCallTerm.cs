@@ -155,7 +155,16 @@ public class FunctionCallTerm : Term
         if (!match.IsMatch)
             throw new TokenException(match.Error) { Token = ErrorToken };
 
-        return match.Invoke();
+        // What a built-in function refuses it refuses in its own words, knowing nothing of where it was called: so
+        // the call's place is put to them here, or the scene's author is told what went wrong and not where.
+        try
+        {
+            return match.Invoke();
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            throw new TokenException(exception.Message) { Token = ErrorToken };
+        }
     }
 
     /// <summary>

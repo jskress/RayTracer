@@ -414,19 +414,39 @@ public class Blob : Surface
 
     /// <summary>
     /// This method dresses the blob's material in a pigment that mixes its components' own, when any
-    /// of them asked for one.  Whatever the material already wore is kept underneath, and is what
-    /// components that named no pigment go on being colored with.
-    /// <para>
-    /// The check for one already in place is not tidiness: a process that renders twice -- and the
-    /// tests do -- would otherwise wrap the wrap, and each layer would mix the mixture again.
-    /// </para>
+    /// of them asked for one; see <see cref="Wearing"/>.
     /// </summary>
     public override void MaterialIsSettled()
     {
-        if (Material.Pigment is not BlobPigment &&
-            Components.Any(component => component.Pigment is not null))
-            Material.Pigment = new BlobPigment(this, Material.Pigment);
+        Material = Wearing(Material);
     }
+
+    /// <summary>
+    /// This method returns the given material with a pigment that mixes the components' own, when any of
+    /// them asked for one.  Whatever the material wore is kept underneath, and is what components that
+    /// named no pigment go on being colored with.
+    /// <para>
+    /// **It is a copy, made once for each material.**  A group hands its one material to every child, so
+    /// re-dressing it where it stood put this blob's mixture on its siblings -- another blob in the group
+    /// mixed by this one's components -- and a shared blob is dressed at each hit by whatever holds it.
+    /// And a material already wearing this blob's mixture is kept as it is: a process that renders twice --
+    /// the tests do -- would otherwise wrap the wrap, and each layer would mix the mixture again.
+    /// </para>
+    /// </summary>
+    /// <param name="material">The material the blob is dressed in.</param>
+    /// <returns>The material it wears.</returns>
+    internal override Material Wearing(Material material)
+    {
+        if (material.Pigment is BlobPigment { Blob: var mine } && mine == this ||
+            Components.All(component => component.Pigment is null))
+            return material;
+
+        LazyInitializer.EnsureInitialized(ref _wearing);
+
+        return _wearing.GetOrAdd(material, dressed => dressed.WearingPigment(new BlobPigment(this, dressed.Pigment)));
+    }
+
+    private System.Collections.Concurrent.ConcurrentDictionary<Material, Material> _wearing;
 
     /// <summary>
     /// This method reports how much of the field at a point each component is answerable for, which

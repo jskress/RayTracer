@@ -58,6 +58,11 @@ public partial class Scene
 
     private PhotonMap _caustics;
 
+    // What turns light but could not be aimed at, having no edges -- a plane of water, an endless sea -- and so
+    // was sent no photons: a shadow ray crossing it is let through as it would be without caustics, or what lay
+    // beneath it would get no light at all.
+    private HashSet<Surface> _unaimed;
+
     // Whether the scene's sky is a light, and so sends photons of its own.
     private bool _skyIsALight;
 
@@ -102,6 +107,7 @@ public partial class Scene
     public void ShootCausticPhotons()
     {
         _caustics = null;
+        _unaimed = null;
         _skyIsALight = Lights.Any(light => light is SkyLight);
 
         if (CausticPhotons <= 0)
@@ -178,8 +184,12 @@ public partial class Scene
     {
         List<(BoundingBox Box, double Strength)> found = [];
 
+        _unaimed = new HashSet<Surface>(ReferenceEqualityComparer.Instance);
+
+        Dictionary<Surface, bool> mayTurn = new (ReferenceEqualityComparer.Instance);
+
         foreach (Surface surface in Surfaces)
-            CollectTargets(surface, Matrix.Identity, false, found);
+            CollectTargets(surface, Matrix.Identity, false, found, _unaimed, default, mayTurn);
 
         if (found.Count <= MostTargets)
             return found.Select(each => TargetOf(each.Box, each.Strength)).ToList();
@@ -230,10 +240,14 @@ public partial class Scene
     /// <summary>
     /// This method collects the boxes in the world round the things a surface holds that turn light.  A
     /// solid built of others -- a union, a tube -- is taken whole, since what it turns light with is its
-    /// whole shape.
+    /// whole shape.  A shared shape is walked once for each place it stands, with the instances it is
+    /// standing in, since what it is dressed in may differ from place to place -- but only one that could hold
+    /// something turning light (see <see cref="MayTurnLight"/>): a wood of trees sharing their twigs and leaves inside
+    /// them is billions of places, none of them glass.
     /// </summary>
     private static void CollectTargets(
-        Surface surface, Matrix outer, bool noCaustics, List<(BoundingBox Box, double Strength)> found)
+        Surface surface, Matrix outer, bool noCaustics, List<(BoundingBox Box, double Strength)> found,
+        HashSet<Surface> unaimed, Portals portals, Dictionary<Surface, bool> mayTurn)
     {
         Matrix toWorld = outer * surface.Transform;
 
@@ -242,47 +256,92 @@ public partial class Scene
         switch (surface)
         {
             case Instance instance:
-                CollectTargets(instance.Prototype, toWorld, noCaustics, found);
+                if (!noCaustics && MayTurnLight(instance.Prototype, mayTurn))
+                {
+                    CollectTargets(
+                        instance.Prototype, toWorld, noCaustics, found, unaimed, Into(instance, portals), mayTurn);
+                }
+
                 return;
             case Group group:
                 foreach (Surface child in group.Surfaces)
-                    CollectTargets(child, toWorld, noCaustics, found);
+                    CollectTargets(child, toWorld, noCaustics, found, unaimed, portals, mayTurn);
                 return;
         }
 
         if (noCaustics)
             return;
 
-        double strength = StrengthWithin(surface);
+        double strength = StrengthWithin(surface, portals);
         BoundingBox box = surface.TrueBoundingBox();
 
-        if (strength <= 0 || box is null || box.IsEmpty)
+        if (strength <= 0 || (box is not null && box.IsEmpty))
             return;
 
-        BoundingBox world = box.TransformedBy(toWorld);
-        Vector extent = world.Maximum - world.Minimum;
+        BoundingBox world = box?.TransformedBy(toWorld);
+        Vector extent = world is null ? null : world.Maximum - world.Minimum;
 
-        if (double.IsFinite(extent.X) && double.IsFinite(extent.Y) && double.IsFinite(extent.Z))
+        if (extent is not null && double.IsFinite(extent.X) && double.IsFinite(extent.Y) && double.IsFinite(extent.Z))
             found.Add((world, strength));
+        else
+            unaimed.Add(surface);
     }
 
     /// <summary>
     /// This method returns how strongly the strongest thing within a surface turns light: what it mirrors,
     /// or what it lets through where it bends it.
     /// </summary>
-    private static double StrengthWithin(Surface surface)
+    private static double StrengthWithin(Surface surface, Portals portals)
     {
-        double strength = surface.NoCaustics ? 0 : StrengthOf(surface.Material ?? Material.Default);
+        double strength = surface.NoCaustics ? 0 : StrengthOf(surface.MaterialThrough(portals) ?? Material.Default);
 
         return surface switch
         {
-            CsgSurface csg => Math.Max(strength, Math.Max(StrengthWithin(csg.Left), StrengthWithin(csg.Right))),
-            IAssembled { Root: not null } assembled => Math.Max(strength, StrengthWithin(assembled.Root)),
+            CsgSurface csg => Math.Max(
+                strength, Math.Max(StrengthWithin(csg.Left, portals), StrengthWithin(csg.Right, portals))),
+            IAssembled { Root: not null } assembled => Math.Max(strength, StrengthWithin(assembled.Root, portals)),
+            Instance instance => Math.Max(strength, StrengthWithin(instance.Prototype, Into(instance, portals))),
             // A string's glint is too fine a target to aim photons at.
             StrandSurface => 0,
-            Group group => group.Surfaces.Aggregate(strength, (most, child) => Math.Max(most, StrengthWithin(child))),
+            Group group => group.Surfaces.Aggregate(
+                strength, (most, child) => Math.Max(most, StrengthWithin(child, portals))),
             _ => strength
         };
+    }
+
+    /// <summary>
+    /// This method returns the instances a shape stands in once it is entered through one more, walking
+    /// in from the world: the new one is the innermost.
+    /// </summary>
+    private static Portals Into(Surface instance, Portals portals)
+    {
+        return new Portals(instance, portals.IsEmpty ? null : new PortalChain(portals.Through, portals.Beyond));
+    }
+
+    /// <summary>
+    /// This method reports whether anything in a shape could turn light wherever the shape stands: a part whose own
+    /// material does, or a part left to be dressed by what holds the shape, which might be dressed in glass.  It is
+    /// worked out once for each shape and remembered.
+    /// </summary>
+    private static bool MayTurnLight(Surface surface, Dictionary<Surface, bool> known)
+    {
+        if (known.TryGetValue(surface, out bool may))
+            return may;
+
+        may = !surface.NoCaustics && surface switch
+        {
+            StrandSurface => false,
+            Instance instance => MayTurnLight(instance.Prototype, known),
+            Group group => group.Surfaces.Any(child => MayTurnLight(child, known)),
+            CsgSurface csg => surface.WearsTheDefault || TurnsLight(surface.Material ?? Material.Default) ||
+                              MayTurnLight(csg.Left, known) || MayTurnLight(csg.Right, known),
+            IAssembled { Root: not null } assembled => surface.WearsTheDefault ||
+                                                      TurnsLight(surface.Material ?? Material.Default) ||
+                                                      MayTurnLight(assembled.Root, known),
+            _ => surface.WearsTheDefault || TurnsLight(surface.Material ?? Material.Default)
+        };
+
+        return known[surface] = may;
     }
 
     private static double StrengthOf(Material material)
@@ -331,7 +390,16 @@ public partial class Scene
     /// <returns><c>true</c>, if no light comes straight through.</returns>
     private bool StopsTheShadowRay(Intersection intersection, Material material)
     {
-        return _caustics is not null && material.Interior.Refracts && TurnsPhotons(intersection, material);
+        if (_caustics is null || !material.Interior.Refracts || !TurnsPhotons(intersection, material))
+            return false;
+
+        for (Surface surface = intersection.Surface; surface is not null; surface = surface.Parent)
+        {
+            if (_unaimed?.Contains(surface) ?? false)
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -348,8 +416,9 @@ public partial class Scene
         {
             int count = light.SampleCount;
 
-            foreach (Target target in targets)
+            for (int aim = 0; aim < targets.Count; aim++)
             {
+                Target target = targets[aim];
                 double weight = 0;
 
                 for (int index = 0; index < count; index++)
@@ -375,7 +444,9 @@ public partial class Scene
                 }
 
                 if (weight > 0)
-                    beams.Add(new PhotonBeam(light, target, targets.IndexOf(target), weight));
+                    // By its place in the list: two targets alike in every number are still two, and found by
+                    // their value both beams took the first's, so the light under the pair was counted twice.
+                    beams.Add(new PhotonBeam(light, target, aim, weight));
             }
         }
 
@@ -494,11 +565,45 @@ public partial class Scene
     /// This method returns what is left of a photon's light over a way through the insides of something:
     /// its fade, and what any medium filling it takes out.
     /// </summary>
-    private static RgbSpectrum Across(Interior interior, double distance, Hue hue)
+    private static RgbSpectrum Across(
+        Interior interior, Surface container, Portals portals, Ray ray, double distance, Hue hue)
     {
         RgbSpectrum left = RgbSpectrum.White * interior.GetFadeOver(distance);
 
-        return interior.Medium is null ? left : left * Across(interior.Medium, distance, hue);
+        return interior.Medium is null ? left : left * Across(interior.Medium, container, portals, ray, distance, hue);
+    }
+
+    /// <summary>
+    /// This method returns what is left of a photon's light over a way through a medium filling a shape, walked as a
+    /// shadow ray walks it where its density varies: charged at its even density, a photon crossed a wisp of smoke
+    /// as though the smoke filled the whole of its shape.
+    /// </summary>
+    private static RgbSpectrum Across(
+        Medium medium, Surface container, Portals portals, Ray ray, double distance, Hue hue)
+    {
+        if (!medium.HasShape || container is null)
+            return Across(medium, distance, hue);
+
+        const int count = 16;
+        double step = distance / count;
+        RgbSpectrum depth = RgbSpectrum.Black;
+        double bandDepth = 0;
+
+        for (int index = 0; index < count; index++)
+        {
+            Point at = ray.Origin + ray.Direction * ((index + 0.5) * step);
+            double density = medium.DensityAt(container.WorldToSurface(at, ray.TimeIndex, portals));
+
+            if (density <= 0)
+                continue;
+
+            if (hue.IsEvery)
+                depth += medium.ExtinctionAt<RgbSpectrum>(density) * step;
+            else
+                bandDepth += medium.ExtinctionAt<BandSpectrum>(density)[hue.Band] * step;
+        }
+
+        return hue.IsEvery ? Transmitted(depth, 1) : RgbSpectrum.White * Math.Exp(-bandDepth);
     }
 
     /// <summary>
@@ -558,7 +663,7 @@ public partial class Scene
 
             hit.PrepareUsing(ray, hits, Environment.IndexOfRefraction, hue.Wavelength);
 
-            Material material = hit.Surface.Material ?? Material.Default;
+            Material material = hit.SurfaceMaterial;
             bool turnsHere = TurnsPhotons(hit, material);
 
             // **A photon is the light of the target it was aimed at, and of no other.**  Beams aimed at things
@@ -595,9 +700,13 @@ public partial class Scene
             // something standing inside it -- a pool's floor is lit through the water above it, as it is seen
             // through it -- and anything else crossed the surroundings.
             if (hit.Inside)
-                carried *= Across(material.Interior, hit.Distance, hue);
-            else if (HasInsides(hit.ContainerBefore))
-                carried *= Across(IntersectionExtensions.InteriorOf(hit.ContainerBefore), hit.Distance, hue);
+                carried *= Across(material.Interior, hit.Surface, hit.Portals, ray, hit.Distance, hue);
+            else if (HasInsides(hit.InteriorBefore))
+            {
+                carried *= Across(
+                    hit.InteriorBefore, hit.ContainerBefore, hit.ContainerPortals,
+                    ray, hit.Distance, hue);
+            }
             else if (Environment.Medium is not null)
                 carried *= Across(Environment.Medium, hit.Distance, hue);
 
@@ -1006,7 +1115,7 @@ public partial class Scene
         {
             double thickness = film.ThicknessAt(film.Pattern is null
                 ? null
-                : hit.Surface.WorldToSurface(hit.Point, 0, hit.Portals));
+                : hit.Surface.WorldToSurface(hit.Point, hit.TimeIndex, hit.Portals));
 
             reaching *= film.SharesAt<RgbSpectrum>(
                 thickness, Math.Abs(ray.Direction.Dot(hit.Normal)), Environment.IndexOfRefraction,
@@ -1145,32 +1254,6 @@ public partial class Scene
             result += shuffle[index % radix] * scale;
             index /= (uint) radix;
             scale /= radix;
-        }
-
-        return result;
-    }
-
-    private static double RadicalInverse2(uint index)
-    {
-        index = (index << 16) | (index >> 16);
-        index = ((index & 0x00ff00ff) << 8) | ((index & 0xff00ff00) >> 8);
-        index = ((index & 0x0f0f0f0f) << 4) | ((index & 0xf0f0f0f0) >> 4);
-        index = ((index & 0x33333333) << 2) | ((index & 0xcccccccc) >> 2);
-        index = ((index & 0x55555555) << 1) | ((index & 0xaaaaaaaa) >> 1);
-
-        return index * (1.0 / 4294967296.0);
-    }
-
-    private static double RadicalInverse3(uint index)
-    {
-        double result = 0;
-        double scale = 1.0 / 3;
-
-        while (index > 0)
-        {
-            result += index % 3 * scale;
-            index /= 3;
-            scale /= 3;
         }
 
         return result;

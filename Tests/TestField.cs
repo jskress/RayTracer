@@ -41,6 +41,46 @@ public class TestField
     }
 
     /// <summary>
+    /// A field is empty until it is prepared, so it says what it will hold when it is asked whether it may be shared:
+    /// a field of glowing things may not be -- a glow has one place to be -- and a field of plain ones may.  Asking
+    /// makes each of its choices then, and the field fills with the very same ones rather than making them again.
+    /// (Taken as empty, a primitive's field of flames was shared between its calls, and its flames lit from the one
+    /// place a glow can stand.)
+    /// </summary>
+    [TestMethod]
+    public void TestAFieldSaysWhatItWillHoldWhenAskedToBeShared()
+    {
+        Field Of(Func<Surface> make) => new () { Outline = Square(), Spacing = 0.5, Prototype = _ => make() };
+
+        Assert.IsFalse(Instance.MayBeShared(Of(() => new Sphere { GivesLightSamples = 8 })),
+            "a field of glowing balls may not be shared");
+
+        int made = 0;
+        Field plain = Of(() =>
+        {
+            made++;
+
+            return new Sphere();
+        });
+
+        Assert.IsTrue(Instance.MayBeShared(plain), "a field of plain balls may be shared");
+
+        plain.PrepareForRendering();
+
+        Assert.AreEqual(1, made, "the ball made when the field was asked is the one it shares");
+        Assert.AreEqual(16, plain.Surfaces.Count);
+
+        // And the same of a tree's leaves and an L-system's.
+        Assert.IsFalse(Instance.MayBeShared(new GrownTree { LeafFactories = [() => new Sphere { GivesLightSamples = 8 }] }),
+            "a tree hung with glowing leaves may not be shared");
+        Assert.IsTrue(Instance.MayBeShared(new GrownTree { LeafFactories = [() => new Sphere()] }));
+        Assert.IsFalse(Instance.MayBeShared(new RayTracer.Geometry.LSystems.LSystem
+        {
+            LeafFactory = () => new Sphere { GivesLightSamples = 8 }
+        }), "an L-system of glowing leaves may not be shared");
+    }
+
+    /// <summary>
     /// The outline is filled cell by cell, so a square two units across at a spacing of half a unit
     /// holds four rows of four.  The count is checked rather than merely that something was made:
     /// a fill that ran a row over the edge, or stopped a row short, gives 25 or 9 instead.

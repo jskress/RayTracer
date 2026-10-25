@@ -480,7 +480,7 @@ primitive FallenLeaf(species = 'oak', season = 'autumn', variant = 1) -> group {
     }
 }
 
-// What color a fallen leaf is: an autumn one anywhere from a dull ochre to a red-brown, as the tree's own clusters
+// What color a fallen leaf is: an autumn one anywhere from a dull ocher to a red-brown, as the tree's own clusters
 // turn, and a leaf down in any other season gone brown.
 function TreeFallenColor(season, turned) -> color {
     switch (season) {
@@ -864,7 +864,7 @@ primitive Willow(height, season = 'summer', variant = 1) -> group {
 // summer and autumn.  Winter is the exception, and not a small one: snow lies on top of the shoots,
 // which is how anybody would draw a fir from memory.  It lies on top because a grown tree turns each
 // shoot's face to the sky; which shoots catch it is decided shoot by shoot, so a tree comes out with
-// snow on some and none on others -- a fir under an even coating looks moulded rather than snowed on.
+// snow on some and none on others -- a fir under an even coating looks molded rather than snowed on.
 
 // What lies on a shoot, which in three seasons out of four is nothing.
 primitive TreeSnowOn(season, long, id, variant) -> group {
@@ -973,7 +973,9 @@ primitive Pine(height, season = 'summer', variant = 1) -> group {
 
 // What is left of a tree: no leaves, few twigs and those broken off thick, in a crown that was never
 // filled.  Few points, drawn from far, make the sparse, crooked limbs.
-primitive Snag(height, variant = 1) -> group {
+// It takes the season, as every tree here does, so that a scene setting its season in one place can hand it to
+// everything -- and, being dead, does nothing with it.
+primitive Snag(height, season = 'summer', variant = 1) -> group {
     // Grown at the height asked, over five variants it stood 7.89 above the ground for a 9.
     tall = height * 1.141
 

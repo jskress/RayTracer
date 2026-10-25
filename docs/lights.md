@@ -1,12 +1,24 @@
 ## Lights
 
-A scene with no lights renders black.  Nothing in the world glows of its own accord — even a
-surface with an ambient term needs a light present before that term counts for anything — so
-a light is one of the three things every scene needs.
+A scene with no lights renders black, but for its background and whatever glows of its own — a
+material's [`emission`](materials.md#emission), a medium that glows.  Even a surface with an ambient
+term needs a light present before that term counts for anything, since each light lends it that share
+of itself — so a light is one of the three things every scene needs.
 
-There are four sorts, and they differ in only two respects: where a point being lit should
-look to find the light, and how much of the light is aimed that way.  Everything else about
-shading is the same for all of them.
+There are five sorts:
+
+- a [point light](#point-lights), a lamp at a place, shining every way;
+- a [distant light](#distant-lights), a sun, coming from the same direction everywhere;
+- a [spotlight](#spotlights), a lamp throwing a cone;
+- an [area light](#area-lights), a lit rectangle, which casts soft shadows;
+- a [sky light](#sky-lights), light arriving from every direction at once, as outdoors.
+
+One more thing lights a scene without being written as a light: a glowing volume — a flame, the glow
+of a lantern — that says it [gives light](surfaces.md#a-surface-that-gives-light).  They differ in
+where a point being lit should look to find the light, how much of the light is aimed that way, and
+from how many places it is looked at: a point light, a sun and a spotlight from one, an area light
+from a grid across its face, a sky light from many directions and a glow from many places within it.
+Everything else about shading is the same for all of them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/lights/lightClause-dark.svg">
@@ -21,7 +33,9 @@ Any number of lights, of any sort, may share a scene and their contributions add
 
 All light types carry a color.  If you don't specify one, `White` is the default.  A light may
 instead be given the [temperature](#color-temperature) of something glowing, and either way a
-`brightness` to multiply it by.
+`brightness` to multiply it by, which is 1 unless said.  A light that stands somewhere — a point,
+spot or area light — may also [fade with distance](#fading-with-distance), and may
+[stand on a thing](#lights-on-things) and go wherever it goes.
 
 ### Point Lights
 
@@ -42,6 +56,8 @@ point light {
 ```
 
 ![A point light](images/figures/light-point.png)
+
+A point light with no `location` stands at the origin.
 
 Note the shadows: point lights cast very sharp shadows.  If you want softer, more realistic
 shadows, given that nothing in the world casts a shadow that hard, you'll want the
@@ -71,7 +87,8 @@ distant light {
 ![A distant light](images/figures/light-distant.png)
 
 The direction notes the way the light *travels*, so a sun overhead is written `[0, -1, 0]`
-(or `Down`) — pointing down, the way its rays go.
+(or `Down`) — pointing down, the way its rays go.  That is also the direction a distant light
+given none shines in.
 
 Two things follow from the rays being parallel.  Shadows are all cast in the same direction
 and stay the same width however far they are thrown.  Also, a flat surface facing the light
@@ -104,16 +121,19 @@ spot light {
 
 ![A spotlight](images/figures/light-spot.png)
 
-| Property | What it means |
-| --- | --- |
-| `location` | Where the lamp stands. |
-| `point at` | What it is aimed at.  The cone's axis runs from the one to the other. |
-| `radius` | The half-angle of the fully lit inner cone. |
-| `falloff` | The half-angle beyond which nothing is lit at all. |
-| `tightness` | How hard the light gathers toward the axis. |
+| Property | Default | What it means |
+| --- | --- | --- |
+| `location` | the origin | Where the lamp stands. |
+| `point at` | the origin | What it is aimed at.  The cone's axis runs from the one to the other. |
+| `radius` | 0 | The half-angle of the fully lit inner cone.  At 0 there is no evenly lit core: the light is brightest on the axis and eases off everywhere away from it. |
+| `falloff` | 30° | The half-angle beyond which nothing is lit at all. |
+| `tightness` | 0 | How hard the light gathers toward the axis.  At 0 it is spread evenly across the cone. |
 
 `radius` and `falloff` are angles, so whether you write them in degrees or radians depends on
-what the [context block](context.md#angles) says.  These examples set `angles are degrees`.
+what the [context block](context.md#angles) says, as for every other angle a scene writes.  These
+examples set `angles are degrees`, which is the default.  A falloff left unsaid is thirty degrees
+whichever unit the scene writes in.  (Until October 2026 the two were read in degrees even in a scene
+that said `angles are radians`.)
 
 Between `radius` and `falloff` the light eases off along a cubic curve.  Setting `falloff`
 equal to `radius` gives a hard-edged pool; leaving a wide gap between them gives a very
@@ -128,8 +148,8 @@ The complete example is [`docs/examples/lights/spot-light.igl`](examples/lights/
 ### Area Lights
 
 A lit rectangle rather than a point or direction.  This is the light that casts a shadow
-with a soft edge, and it is the only one of the four that costs more than a single shadow
-ray.
+with a soft edge, and, like a sky light, it costs a shadow ray for each place it is looked at
+from rather than a single one.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/lights/areaLight-dark.svg">
@@ -155,24 +175,28 @@ the edge of a shadow, a spot on the floor can see part of the lit rectangle past
 while the rest of it is hidden, and it is lit by just that fraction.  That band is the
 penumbra.
 
-| Property | What it means |
-| --- | --- |
-| `location` | The center of the lit rectangle. |
-| `axisU`, `axisV` | The two edges, given as **full** edge vectors rather than half. |
-| `steps` | The grid across the face, both ways at once. |
-| `uSteps`, `vSteps` | The grid each way separately, when it should not be square. |
-| `seed` | The seed the scatter is drawn from. |
-| `no jitter` | Sample an exact grid instead of a scattered one. |
+| Property | Default | What it means |
+| --- | --- | --- |
+| `location` | the origin | The center of the lit rectangle. |
+| `axisU`, `axisV` | `[1, 0, 0]`, `[0, 0, 1]` | The two edges, given as **full** edge vectors rather than half. |
+| `steps` | 4 | The grid across the face, both ways at once. |
+| `uSteps`, `vSteps` | 4 each | The grid each way separately, when it should not be square. |
+| `seed` | 0 | The seed the scatter is drawn from. |
+| `no jitter` | scattered | Sample the middle of each square instead of a place scattered within it. |
 
 The light is looked at once per grid square and the results averaged, so `steps 8` costs 64
-shadow rays for every point it lights.  That is the price of a soft shadow, and the reason to
-ask for one only where you want it.  Too few steps show as banding across the penumbra rather
-than smooth shading.
+shadow rays for every point it lights, and the four steps given unless said cost 16.  That is the
+price of a soft shadow, and the reason to ask for one only where you want it.  Too few steps show
+as banding across the penumbra rather than smooth shading.
 
-The samples are scattered slightly within their squares to break up that banding, and the
-scatter is fixed rather than drawn afresh — so a render repeats exactly from one run to the
-next.  `seed` changes the pattern; `no jitter` turns the scatter off altogether and samples
-the bare grid.
+Each sample stands in its own square of the face, scattered about within it to break up that
+banding, so every sample lies on the face the light was given and the light is the size it says
+whatever its steps.  (POV-Ray spaces its samples from edge to edge and then scatters them, so its
+lights reach past their sides — by a third at four steps; this renderer did the same until October
+2026.)  The scatter is fixed rather than drawn afresh, so a render repeats exactly from one run to
+the next.  `seed` changes the pattern; `no jitter` turns the scatter off altogether and samples the
+middle of each square.  A single step along an edge puts every sample on the face's middle line that
+way, so a light of `steps 1` is looked at from its center alone.
 
 A useful thing to know: the nearer a blocker sits to the surface it shadows, the tighter its
 penumbra.  A tall post's shadow is therefore crisp at the foot and blurred at the tip, which
@@ -309,7 +333,8 @@ and a photographed sky's sun a sun-colored glint.
 
 **It replaces `ambient`, and takes ambient's default with it.** The [ambient
 term](materials.md#ambient-diffuse-and-specular) is a fudge: a flat amount added everywhere, shadow or
-no shadow, standing in for the bounced light this renderer does not trace. A sky light is the real
+no shadow, standing in for the light bounced about the scene, which this renderer follows only when a
+scene [asks it to](context.md#bounced-light). A sky light is the real
 thing that fudge was imitating. So **a scene with a sky light gives every material an ambient of 0
 rather than the usual 0.1**, unless the material names its own — which it still may, since a sky light
 is not bounced light off the walls and there are scenes that want a little of both.

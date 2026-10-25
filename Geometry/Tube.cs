@@ -196,6 +196,25 @@ public class Tube : Surface, IAssembled
     private const double StraightTolerance = 1e-9;
 
     /// <summary>
+    /// This method returns the region the tube really covers: its segments' own true extents gathered, rather than
+    /// its box -- which is gathered from the segments' padded boxes and then padded again -- with the padding taken
+    /// off once, which left a segment's whisker inside it.
+    /// </summary>
+    /// <returns>The region the tube occupies, or <c>null</c>, if it has no segments.</returns>
+    internal override BoundingBox TrueBoundingBox()
+    {
+        if (_segments.Count == 0)
+            return null;
+
+        BoundingBox box = new ();
+
+        foreach (Surface segment in _segments)
+            box.Add(segment.TrueBoundingBox());
+
+        return box;
+    }
+
+    /// <summary>
     /// This method returns a default bounding box that encloses every segment.
     /// </summary>
     /// <returns>A bounding box enclosing the tube, or <c>null</c>, if it has no segments.</returns>

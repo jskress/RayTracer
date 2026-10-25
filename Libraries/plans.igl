@@ -107,7 +107,7 @@ function OpenAir(wings, x, z) -> number { return OpenAirFrom(wings, x, z, 0) }
 
 // -- One face's worth of windows -----------------------------------------------------------------
 
-// A row of windows along one face, two storeys of them, spaced so a long wall gets more than a short
+// A row of windows along one face, two stories of them, spaced so a long wall gets more than a short
 // one, and each one placed only where there is daylight.
 //
 // The face is dressed lying along X and facing -Z, and the caller turns the whole wing to wherever

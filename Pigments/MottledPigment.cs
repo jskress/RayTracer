@@ -54,19 +54,21 @@ public class MottledPigment : Pigment
     }
 
     /// <summary>
+    /// Dimming a color cannot make it let light through, so this is wholly the wrapped pigment's answer.
+    /// </summary>
+    public override bool MayTransmit => Pigment.MayTransmit;
+
+    /// <summary>
     /// This method accepts a point and produces a color for that point.  We return the color our
     /// wrapped pigment gives, dimmed by the noise at that point.
     /// </summary>
     /// <param name="point">The point to produce a color for.</param>
     /// <returns>The appropriate color at the given point.</returns>
-    /// <summary>
-    /// Dimming a color cannot make it let light through, so this is wholly the wrapped pigment's answer.
-    /// </summary>
-    public override bool MayTransmit => Pigment.MayTransmit;
-
     public override Color GetColorFor(Point point)
     {
-        return Pigment.GetColorFor(point) * Noise.Generate(point);
+        // The wrapped pigment is read through its own transforms, as a blend's or a layer's is: read without them,
+        // `mottled { leopard { ... scale 0.5 } }` lost its scale.
+        return Mottled(Pigment.GetTransformedColorFor(point), Noise.Generate(point));
     }
 
     /// <summary>
@@ -83,7 +85,7 @@ public class MottledPigment : Pigment
     /// <returns>The appropriate color.</returns>
     public override Color GetColorFor(Point point, Footprint footprint)
     {
-        return Pigment.GetColorFor(point, footprint) * Noise.Generate(point, footprint?.Width ?? 0);
+        return Mottled(Pigment.GetTransformedColorFor(point, footprint), Noise.Generate(point, footprint?.Width ?? 0));
     }
 
     /// <summary>
@@ -110,7 +112,8 @@ public class MottledPigment : Pigment
         if (viewing.IsEmpty)
             return base.GetColorFor(point, footprint, viewing);
 
-        return Pigment.GetColorFor(point, footprint, viewing) * Noise.Generate(point, footprint?.Width ?? 0);
+        return Mottled(
+            Pigment.GetTransformedColorFor(point, footprint, viewing), Noise.Generate(point, footprint?.Width ?? 0));
     }
 
     /// <summary>
@@ -123,4 +126,7 @@ public class MottledPigment : Pigment
         return other is MottledPigment pigmentation &&
                Pigment.Matches(pigmentation.Pigment);
     }
+
+    // Dimmed, and as clear as it was: a color times a number comes out whole, so a mottled pane let nothing through.
+    private static Color Mottled(Color color, double dimming) => (color * dimming).WithAlpha(color.Alpha);
 }

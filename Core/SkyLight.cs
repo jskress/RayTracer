@@ -356,7 +356,13 @@ public class SkyLight : Light
     /// <returns>The light of that piece of sky.</returns>
     public override TS EmittedToward<TS>(LightSample sample)
     {
-        if (!TS.IsSpectral || Pigment is null || !Pigment.IsSpectral)
+        if (!TS.IsSpectral || Pigment is null)
+            return base.EmittedToward<TS>(sample);
+
+        // A sky of plain colors -- a gradient, a photograph -- under a light with a spectrum of its own (a
+        // `temperature`) is the pigment's light times that spectrum, as an RGB render takes pigment times color;
+        // handed to the base method it was the blackbody alone, the same from every direction, the sky dropped.
+        if (!Pigment.IsSpectral && (Spectrum is null || sample.Carried is not null))
             return base.EmittedToward<TS>(sample);
 
         Vector heading = sample.Direction;

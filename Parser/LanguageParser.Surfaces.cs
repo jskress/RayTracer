@@ -161,8 +161,17 @@ public partial class LanguageParser
                 };
                 break;
             case "transform":
-                resolver.TransformResolver = GetTransformResolver(clause);
+            {
+                // A named transform happens where it is written: its steps are added to what the surface has
+                // gathered so far, in a list of the surface's own.  Handed the named resolver itself, a surface
+                // dropped the transforms written before it and wrote the ones after it into the name, so that
+                // every later surface using it carried them too.
+                Instructions.Transforms.TransformResolver named = GetTransformResolver(clause);
+
+                resolver.TransformResolver ??= new Instructions.Transforms.TransformResolver();
+                resolver.TransformResolver.TransformCreators.AddRange(named.TransformCreators);
                 break;
+            }
             case "motion":
                 resolver.MotionResolver = ParseMotionClause();
                 break;
