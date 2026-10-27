@@ -4,6 +4,7 @@ using Lex.Tokens;
 using RayTracer.Basics;
 using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
@@ -64,7 +65,7 @@ public partial class LanguageParser
         {
             MaterialCallResolver call = new ()
             {
-                Name = token.Text, Arguments = given, ErrorToken = token
+                Name = token.Text, Arguments = given, ErrorToken = token, WrittenIn = LibraryScope.BeingRead
             };
 
             if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
@@ -730,7 +731,7 @@ public partial class LanguageParser
         {
             InteriorCallResolver call = new ()
             {
-                Name = token.Text, Arguments = given, ErrorToken = token
+                Name = token.Text, Arguments = given, ErrorToken = token, WrittenIn = LibraryScope.BeingRead
             };
 
             if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))

@@ -1438,6 +1438,24 @@ object twig(1)       // "nothing named twig is a primitive this scene has declar
 up.  Ask for `twig` by name and you get it; nothing here is secret, it is simply not handed
 over unasked.
 
+**So does a value the library made by calling them.**  A library's value is a recipe your scene
+makes for itself, among your scene's names — which is what lets you add to it where you use it —
+but every call written in the library looks for what it calls in the library first:
+
+```
+// trees.igl
+Grove = group { object twig(1)  object twig(2) { translate X 3 } }
+```
+
+```
+import 'trees' { Grove }
+
+object Grove { translate Z step }    // fine: Grove finds twig, and step is your scene's
+```
+
+A primitive of your own called `twig` does not stand in for the library's, and neither does
+another library's of the same name.
+
 **Values and things are handed over whole**, and it is worth knowing why the two differ.  A
 color or a material remembers nothing about where it was written: it is looked up wherever it
 is *used*, so a material given to your scene is resolved among your scene's names.  Hold back

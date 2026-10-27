@@ -1,6 +1,7 @@
 using Lex.Clauses;
 using Lex.Dsl;
 using Lex.Parser;
+using RayTracer.General;
 using RayTracer.Instructions;
 using Lex.Tokens;
 
@@ -95,6 +96,11 @@ public partial class LanguageParser
         InstructionContext scene = _context.InstructionContext;
         InstructionContext library = new ();
         int depth = _entries.Count;
+        // Every call read from here to the library's end is stamped with this, so that, made among a scene's
+        // names, it still finds what the library gave it to call; see LibraryScope.  A library imported by this one
+        // stamps its own calls with its own, and this one's is put back after it.
+        LibraryScope written = new ();
+        LibraryScope outer = LibraryScope.BeingRead;
 
         // The library's definitions are gathered on their own rather than mixed into the scene's, so
         // that they can be carried out among names of the library's own.  That is what lets a name be
@@ -117,6 +123,8 @@ public partial class LanguageParser
         _importing.Add(path);
 
         PushEntry(path);
+
+        LibraryScope.BeingRead = written;
 
         try
         {
@@ -155,6 +163,7 @@ public partial class LanguageParser
         finally
         {
             _context.InstructionContext = scene;
+            LibraryScope.BeingRead = outer;
 
             _importing.RemoveAt(_importing.Count - 1);
         }
@@ -185,10 +194,11 @@ public partial class LanguageParser
 
         // What may be kept back, and what may not.  A function and a primitive carry the scope they
         // were written in, so holding one back costs the library's exports nothing -- they go on
-        // looking where they were written.  A value or a thing carries nothing: it is looked up
-        // wherever it is used, so a material handed to a scene is resolved among the scene's names, and
-        // holding back the color it was written against would leave it pointing at nothing.  Those go
-        // over whole, which is what they have always done.
+        // looking where they were written, and so does every call of one written in the library,
+        // stamped above.  A value or a thing is made wherever it is used, among the names there, so a
+        // material handed to a scene is resolved among the scene's names, and holding back the color
+        // it was written against would leave it pointing at nothing.  Those go over whole, which is
+        // what they have always done.
         HashSet<string> published =
         [
             ..library.VariableNames,
@@ -196,7 +206,7 @@ public partial class LanguageParser
             ..library.PrimitiveNames.Where(wanted.Contains)
         ];
 
-        scene.AddInstruction(new ImportInstruction { Library = library, Published = published });
+        scene.AddInstruction(new ImportInstruction { Library = library, Published = published, Scope = written });
 
         // The two tables the parser keeps for itself are pruned here rather than at render time, since
         // both are consulted while the *scene* is being read: a name left in either would let a scene

@@ -65,7 +65,13 @@ method in the relevant `LanguageParser.<Topic>.cs` partial file, and register it
 `include '<file>'` is handled by pushing/popping a stack of `(fileName, LexicalParser)`
 entries, so multiple `.igl` files can be composed; a file already being read is refused (an
 include cycle).  `import 'library' { Names }` reads a library (definitions and imports only, see
-`InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.
+`InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.  Values go over whole; functions and
+primitives only when asked for.  An imported value is a recipe made among the SCENE's names (so a scene may add to
+it), so every call written in a library -- a primitive call of any kind, a function call -- is stamped with the
+library's `LibraryScope` (`General/LibraryScope.cs`: thread-static `BeingRead` while the parser reads the library,
+its `Variables` filled when the import runs) and finds what it calls there first, then where it is made.  Until
+2026-10-26 a value calling a helper the scene was not given failed ("nothing named X is a primitive"), and one the
+scene had named alike was called instead.
 
 ### Instructions and resolvers (`Instructions/`)
 

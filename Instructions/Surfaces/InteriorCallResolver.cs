@@ -27,6 +27,12 @@ public class InteriorCallResolver : InteriorResolver
     public Token ErrorToken { get; init; }
 
     /// <summary>
+    /// This property holds the scope of the library the call was written in, or <c>null</c> for one a scene wrote:
+    /// where to look first for what it calls.  See <see cref="LibraryScope"/>.
+    /// </summary>
+    public LibraryScope WrittenIn { get; init; }
+
+    /// <summary>
     /// This method makes the interior this call describes.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -34,7 +40,7 @@ public class InteriorCallResolver : InteriorResolver
     /// <returns>The interior this call makes.</returns>
     public override Interior Resolve(RenderContext context, Variables variables)
     {
-        if (variables.GetValue(Name, typeof(UserPrimitive)) is not UserPrimitive primitive)
+        if (LibraryScope.Find(WrittenIn, variables, Name, typeof(UserPrimitive)) is not UserPrimitive primitive)
             throw new Exception($"Internal error: nothing named {Name} is a primitive.");
 
         object[] given = Arguments

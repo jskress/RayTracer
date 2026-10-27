@@ -2,6 +2,7 @@ using Lex.Clauses;
 using Lex.Tokens;
 using RayTracer.Core;
 using RayTracer.Extensions;
+using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Patterns;
@@ -192,7 +193,8 @@ public partial class LanguageParser
         {
             MediumCallResolver call = new ()
             {
-                Name = token.Text, Arguments = given, ErrorToken = token, Validator = validator
+                Name = token.Text, Arguments = given, ErrorToken = token, Validator = validator,
+                WrittenIn = LibraryScope.BeingRead
             };
 
             if (BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))

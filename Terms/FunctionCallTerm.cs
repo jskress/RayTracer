@@ -22,6 +22,11 @@ public class FunctionCallTerm : Term
     private readonly string _name;
     private readonly List<Term> _arguments;
 
+    // The scope of the library this call was written in, if it was written in one: where a function or a primitive
+    // it names is looked for first.  Taken as the call is read, from the parser, since the expression parser that
+    // builds a call is shared and knows nothing of which file it is reading.  See LibraryScope.
+    private readonly LibraryScope _writtenIn = LibraryScope.BeingRead;
+
     public FunctionCallTerm(Token token, List<Term> arguments) : this(token, token.Text, arguments) {}
 
     /// <summary>
@@ -78,7 +83,7 @@ public class FunctionCallTerm : Term
         // A scene's own function is looked for first, so that a scene may name one as it likes without
         // having to know what the built-in catalog happens to hold.  It is found by the same walk out
         // through enclosing scopes that finds any other name, which is what makes it obey scope.
-        if (variables.GetValue(_name, typeof(UserFunction)) is UserFunction own)
+        if (LibraryScope.Find(_writtenIn, variables, _name, typeof(UserFunction)) is UserFunction own)
         {
             string wrong = own.CheckCall(values.Length);
 
@@ -106,7 +111,7 @@ public class FunctionCallTerm : Term
         // here rather than through a clause.  What goes back is not the pigment -- making one needs
         // the render's context, which an expression has no sight of -- but the makings of it, for
         // whoever asked to finish once they have the context.
-        if (variables.GetValue(_name, typeof(UserPrimitive)) is UserPrimitive primitive)
+        if (LibraryScope.Find(_writtenIn, variables, _name, typeof(UserPrimitive)) is UserPrimitive primitive)
         {
             string amiss = primitive.CheckCall(values.Length);
 
@@ -182,7 +187,7 @@ public class FunctionCallTerm : Term
         // arithmetic it can still do, differentiation included.  That only works while the body is a
         // single expression; one with workings before its answer is a small procedure, and there is
         // no way to fold a procedure into arithmetic.
-        if (variables.GetValue(_name, typeof(UserFunction)) is UserFunction own)
+        if (LibraryScope.Find(_writtenIn, variables, _name, typeof(UserFunction)) is UserFunction own)
         {
             string wrong = own.CheckCall(_arguments.Count);
 
