@@ -2566,7 +2566,7 @@ Everything is modeled rather than painted on: the dome's panels are separate pie
 them, the body's panels are grooves cut into it, and the vents, arms, coin slots and returns, the
 power couplers, the octagonal ports, the radar eye's coated lens, the holoprojectors and the logic
 displays, the shoulders' hubs, the legs' brackets, pistons and grooves, the booster covers, the ankle
-cylinders, the hoses and the feet with their slotted soles are all geometry.  That is what lets him be
+cylinders, the hoses and the feet with their paneled sides, plates and slotted soles are all geometry.  That is what lets him be
 looked at from anywhere, and it is also what he costs: about a minute for an 800 x 600 picture of him
 filling the frame under an area light.
 

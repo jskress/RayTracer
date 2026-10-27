@@ -43,7 +43,8 @@
 // of 4), which scales by the dome to 33.97 pixels to the inch: the body's barrel running down to 10.55 in,
 // a flat step in from its edge and the skirt narrowing from there to its bottom; the leg's round top
 // centered on its shoulder hub, narrowing in a V to its shank and widening again at its ankle; and the
-// foot, a long base under a shorter top.  Its heights are taken a fiftieth larger, the drawings standing
+// foot, a long base under a shorter top, with the panel sunk in its side and the block and slots on its
+// wheel's housing.  Its heights are taken a fiftieth larger, the drawings standing
 // 42.2 in to the finished droid's 43.  Those drawings are of an early unit, so where the finished droid
 // differs the finished droid wins: the leg's widths are the published ones, and the foot is as long,
 // against the body, as a five-view drawing of the finished droid makes it (Onno van Braam,
@@ -1328,15 +1329,74 @@ R2FootSoleSlots = group {
     material R2Dark
 }
 
+// The panel on a foot's leaning side, seen from the side: a rim round the face's edge, 0.27 wide along its
+// top, 0.25 in from its sloping ends and 0.22 over its sole, rounded at its bottom corners, within which the
+// face is sunk -- all but a band across its top and a pad in either lower corner, which stand at the face as
+// the rim does, with the wheel's housing standing out between the pads.  A pad's outer edge runs with the
+// foot's end 0.45 in from it, its inner edge round the housing 0.4 out from it, from the housing's foot 1.8
+// up to 3.31.  The 1977 side elevation draws them all, on a foot longer than this one: the rim and the gaps
+// are its own, and the band and the pads are drawn in to fit.  One run for the rim's inside and one for each
+// thing standing within it, so that even-odd filling leaves only the sunken part.
+R2FootField = path {
+    move to -5.3212, 1.02
+    line to 5.3212, 1.02
+    curve 5.5899, 1.02, 5.7584, 1.3103 to 5.6251, 1.5436
+    line to 3.4043, 5.43
+    line to -3.4043, 5.43
+    line to -5.6251, 1.5436
+    curve -5.7584, 1.3103, -5.5899, 1.02 to -5.3212, 1.02
+    close
+    move to 3.6, 1.8
+    line to 5.2786, 1.8
+    line to 4.4157, 3.31
+    line to 3.268, 3.31
+    curve 3.4867, 2.8366, 3.6, 2.3214 to 3.6, 1.8
+    close
+    move to -3.6, 1.8
+    curve -3.6, 2.3214, -3.4867, 2.8366 to -3.268, 3.31
+    line to -4.4157, 3.31
+    line to -5.2786, 1.8
+    close
+    move to -3.3271, 5.04
+    line to 3.3271, 5.04
+    line to 3.1671, 5.32
+    line to -3.1671, 5.32
+    close
+}
+
+// The cut that sinks it 0.08 into the face, measured square to the face: the panel seen from the side, out
+// across the face, kept beyond a plane 0.08 inside it.  The face leans in 17.02 degrees.  In the foot's frame,
+// for its +X side.
+R2FootSideCut = intersection {
+    extrusion { path R2FootField  min Y -3.7  max Y 0  rotate X -90  rotate Y 90 }
+    cube { scale [1, 7, 7]  translate X 1  rotate Z 17.0205  translate [3.5235, 0.7766, 0] }
+    material R2White
+}
+
+// The block on a wheel's housing, standing 0.06 out of its face: 2.48 across, from the housing's foot up to
+// its round, with two dark slots across it 2.1 long, 0.13 tall and 0.04 deep, 4.52 and 4.02 up.  The 1977
+// side elevation draws the block and the slots.  In the foot's frame, for its +X side.
+R2FootArchBlock = difference {
+    intersection {
+        cylinder { min Y 3.29  max Y 3.354  scale [3.2, 1, 3.2]  rotate Z -90  translate Y 1.8 }
+        cube { scale [0.1, 1.6, 1.24]  translate [3.32, 3.4, 0] }
+    }
+    cube { scale [0.04, 0.065, 1.05]  translate [3.354, 4.52, 0]  material R2Dark }
+    cube { scale [0.04, 0.065, 1.05]  translate [3.354, 4.02, 0]  material R2Dark }
+    material R2White
+}
+
 // A foot, in its own frame with its outer face toward +X: the block its two views make, on its sole, with
 // the half-round housing over its wheel standing out of its leaning face -- 3.2 round about an axle 1.8 up,
 // its flat face upright and flush with the leaning face at its own bottom edge, so that it stands proud as
-// the face leans away above it.  `both` puts a leaning face and a housing on each side, as a center foot
-// has.  Down its middle a slot 1.2 wide runs right through it from front to back, from the top down to
-// 3.74, which the fin under its leg stands in on its pivot; and on its front, under the slot, a plate
-// as wide and 3.1 long lies on the sloping face, its bottom 1.05 up, which the hoses come into on an outer
-// foot.  The front elevation and the photographs show the plate and the slot over it.  The front slopes
-// back 29.74 degrees.  Front is toward -Z.
+// the face leans away above it -- a block with two slots on the housing, and the face round it sunk within a
+// rim but for a band and two pads (`R2FootField`).  `both` puts a leaning face and a housing on each side,
+// as a center foot has.  Down its middle a slot 1.2 wide runs right through it from front to back, from the
+// top down to 3.74, which the fin under its leg stands in on its pivot; and on its front and its back, under
+// the slot, a plate as wide and 3.1 long lies on the sloping face, its bottom 1.05 up, which the hoses come
+// into on an outer foot's front.  The front elevation and the photographs show the front plate and the slot
+// over it; the five-view drawing of the finished droid shows the back one.  The ends slope 29.74 degrees.
+// Front is toward -Z.
 primitive R2Foot(both = 0) -> group {
     return group {
         if (both == 1) {
@@ -1346,7 +1406,10 @@ primitive R2Foot(both = 0) -> group {
                     extrusion { path R2FootFrontBoth  min Y -6.4  max Y 6.4  rotate X -90 }
                 }
                 cube { scale [0.6, 1.4, 7]  translate Y 5.14 }
+                object R2FootSideCut
+                object R2FootSideCut { scale [-1, 1, 1] }
             }
+            object R2FootArchBlock { scale [-1, 1, 1] }
         }
         else {
             difference {
@@ -1355,9 +1418,12 @@ primitive R2Foot(both = 0) -> group {
                     extrusion { path R2FootFront  min Y -6.4  max Y 6.4  rotate X -90 }
                 }
                 cube { scale [0.6, 1.4, 7]  translate Y 5.14 }
+                object R2FootSideCut
             }
         }
+        object R2FootArchBlock
         cube { scale [0.6, 1.55, 0.08]  rotate X 29.74  translate [0, 2.435, -5.458] }
+        cube { scale [0.6, 1.55, 0.08]  rotate X -29.74  translate [0, 2.435, 5.458] }
         intersection {
             cylinder {
                 min Y both == 1 ? -3.294 : 0  max Y 3.294
