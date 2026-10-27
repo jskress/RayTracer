@@ -620,6 +620,90 @@ public class TestLathe
     }
 
     /// <summary>
+    /// A segment's surface is solved only for a ray that comes within its radii while within its heights, and a
+    /// segment passed by must never have had a crossing to find: rays from everywhere, level and sloped, rays leaving
+    /// the surface itself in every direction (grazing it included), and rays leaving it a hair beyond a segment's end,
+    /// where a crossing is still accepted and a curve running outward is past its control points' reach.
+    /// </summary>
+    [TestMethod]
+    public void TestASegmentPassedByHadNothingToFind()
+    {
+        GeneralPath profile = new GeneralPath()
+            .MoveTo(0, 0)
+            .LineTo(1, 0)
+            .CubicTo(1.6, 0.3, 0.4, 1.2, 1.3, 2)
+            .QuadTo(1.8, 2.5, 0.6, 3)
+            .LineTo(0.6, 3.5)
+            .LineTo(-0.2, 3.9)
+            .LineTo(0, 3.5)
+            .ClosePath();
+        Lathe lathe = new () { Path = profile };
+        Random random = new (1999);
+        int passedBy = 0;
+
+        double Any(double low, double high) => low + random.NextDouble() * (high - low);
+        Vector AnyWay() => new Vector(Any(-1, 1), Any(-1, 1), Any(-1, 1)).Unit;
+
+        foreach (IPathSegment piece in profile.Segments)
+        {
+            LathePathSurface segment = new (piece);
+            List<Ray> rays = [];
+
+            for (int index = 0; index < 4000; index++)
+            {
+                Point origin = new (Any(-3, 3), Any(-1, 5), Any(-3, 3));
+                Vector way = AnyWay();
+
+                rays.Add(new Ray(origin, way));
+                rays.Add(new Ray(origin, new Vector(way.X, 0, way.Z)));
+                rays.Add(new Ray(origin, new Vector(way.X, 1e-9, way.Z)));
+
+                // From the surface itself, a hair beyond either end included.
+                double u = (index % 5) switch
+                {
+                    0 => -DoubleExtensions.Epsilon / 2,
+                    1 => 1 + DoubleExtensions.Epsilon / 2,
+                    2 => 0,
+                    3 => 1,
+                    _ => random.NextDouble()
+                };
+                TwoDPoint place = BezierAt(piece.Points, u);
+                double angle = Any(0, 2 * Math.PI);
+                Point on = new (place.X * Math.Cos(angle), place.Y, place.X * Math.Sin(angle));
+
+                rays.Add(new Ray(on - way * 2, way));
+                rays.Add(new Ray(on - new Vector(-Math.Sin(angle), 0.3, Math.Cos(angle)), new Vector(-Math.Sin(angle), 0.3, Math.Cos(angle))));
+            }
+
+            foreach (Ray ray in rays.Where(ray => !segment.MayCross(ray)))
+            {
+                passedBy++;
+                Assert.IsFalse(segment.Solve(lathe, ray).Any(), $"A ray passed by would have crossed: {ray}.");
+            }
+        }
+
+        Assert.IsGreaterThan(10000, passedBy);
+    }
+
+    /// <summary>
+    /// This method returns the point a Bézier curve of any degree reaches at u, by de Casteljau's construction.
+    /// </summary>
+    private static TwoDPoint BezierAt(TwoDPoint[] points, double u)
+    {
+        TwoDPoint[] here = points.ToArray();
+
+        for (int count = here.Length - 1; count > 0; count--)
+        {
+            for (int index = 0; index < count; index++)
+                here[index] = new TwoDPoint(
+                    here[index].X + (here[index + 1].X - here[index].X) * u,
+                    here[index].Y + (here[index + 1].Y - here[index].Y) * u);
+        }
+
+        return here[0];
+    }
+
+    /// <summary>
     /// This method returns a lathe that is a solid cylinder about the Y axis, capped at both ends.
     /// </summary>
     private static Lathe SolidCylinder(double radius, double bottom, double top)

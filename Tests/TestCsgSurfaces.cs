@@ -540,6 +540,54 @@ public class TestCsgSurfaces
     }
 
     /// <summary>
+    /// A combination of many things written as one is a chain of links, listed once by the link at its top for
+    /// every link in it: which of the things written each surface stands in tells each link its sides.  Five balls
+    /// in a row, each overlapping the next, are one solid to a ray along the row; a long box with three balls taken
+    /// out of it is entered and left at each hole, and the holes' faces are turned over as cut faces are.
+    /// </summary>
+    [TestMethod]
+    public void TestAChainOfManyKnowsEachLinksSides()
+    {
+        Ray along = new (new Point(-5, 0, 0), new Vector(1, 0, 0));
+        CsgSurface row = Chain(CsgOperation.Union,
+            [..new[] { 0, 1.5, 3, 4.5, 6 }.Select(x => new Sphere { Transform = Transforms.Translate(x, 0, 0) })]);
+
+        row.PrepareForRendering();
+
+        AssertCrossings(row, along, [4, 12], "the row of balls");
+
+        Sphere[] holes = [..new[] { 1.0, 3, 5 }.Select(x => new Sphere
+            { Transform = Transforms.Translate(x, 0, 0) * Transforms.Scale(0.5, 0.5, 0.5) })];
+        CsgSurface holed = Chain(CsgOperation.Difference,
+            [new Cube { Transform = Transforms.Translate(3, 0, 0) * Transforms.Scale(4, 1, 1) }, ..holes]);
+
+        holed.PrepareForRendering();
+
+        AssertCrossings(holed, along, [4, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 12], "the holed box");
+
+        List<Intersection> hits = [];
+
+        holed.Intersect(along, hits);
+
+        foreach (Intersection hit in hits)
+            Assert.AreEqual(holes.Contains(hit.Surface), hit.ShouldFlipInsideForOut, $"at {hit.Distance}");
+    }
+
+    /// <summary>
+    /// This method builds a combination of many things as the parser does: a chain of links, each holding all
+    /// before it on its left, the last one marked as no link.
+    /// </summary>
+    private static CsgSurface Chain(CsgOperation operation, Surface[] things)
+    {
+        Surface left = things[0];
+
+        for (int index = 1; index < things.Length - 1; index++)
+            left = new CsgSurface { Operation = operation, Left = left, Right = things[index], IsChainLink = true };
+
+        return new CsgSurface { Operation = operation, Left = left, Right = things[^1] };
+    }
+
+    /// <summary>
     /// This method asserts that a surface keeps exactly the crossings of a ray at the given distances.
     /// </summary>
     private static void AssertCrossings(Surface surface, Ray ray, double[] expected, string what)

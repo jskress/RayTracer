@@ -2755,6 +2755,136 @@ be seen rather than behind a grille: each a steel frame, a rubber surround, a co
 cabinet and a dust cap, and the horn's mouth flaring back to its throat.  Two of them, toed in a little
 toward the middle of the house, frame a stage in `gallery/Local/showcase/before-the-show.igl`.
 
+#### Eagle
+
+```
+import 'eagle' { Eagle }
+
+object Eagle() { rotate Y 30 }
+```
+
+| | |
+| --- | --- |
+| `Eagle` | The transporter of Moonbase Alpha, from *Space: 1999*: the command module, the spine, the fore and aft sections with their leg pods and landing legs, the four main engines, and the pod slung under the spine. |
+| `EagleLaunchPad` | A launch pad of Moonbase Alpha: its flight deck, the elevator's cross in it ringed by landing lights, the flight control complex with the travel tube's terminal on it, the boarding tube, the travel tube on its pylons, and the service platform with its antenna. |
+| `EagleLegTravel`, `EagleLength`, `EagleFullLength` | The numbers a landing is keyed by: how far the legs run out, at the drawings' size, the drawings' length and the length it is grown to. |
+
+`Eagle(length, pod, extension, stowed)` takes a length, a name and two numbers, every one of them optional.
+
+**The first is its length**, in **meters**: 30.48, a hundred feet, unless you say.  It **faces `+X`**,
+port toward `+Z`, and the middle of its length is over `x = 0`, as the [spacecraft](#spacecraft) do -- but
+it **stands on `y = 0`**, on the soles of its landing pads, since an Eagle is a thing that lands as well as
+one that flies.
+
+**The second is the pod slung under its spine**, by name:
+
+- `'transporter'`, unless you say: the passenger module, a sliding door in either side and a door in either end;
+- `'rescue'`: the same module, banded red;
+- `'laboratory'`: the science pod, its airlocks standing out to either side;
+- `'freighter'`: a cargo pallet, black hazard stripes across its end blocks;
+- `'none'`: nothing, the bare spine -- as any name it does not know is.
+
+**The third is how far its legs are run out**, from 0, standing with its weight on their shock struts,
+to 1, hanging free in flight with its pads 0.197 lower: `EagleLegTravel`, 0.15 at the drawings' size, and
+grown with it.  The knee link behind each strut folds and opens to follow, solved as
+[joints](animation.md#joints).  **The fourth is how far they are stowed**, from 0, out, to 1, drawn up
+into their pods, each pad filling the cutout in its pod's underside, the faces cut back on its four wings
+lying in the pod's lower slopes.
+
+```
+import 'eagle' { Eagle }
+
+object Eagle(30.48, 'laboratory', 1, 1) { translate Y 12 }
+```
+
+##### A hundred feet, because the drawings' size is too small for a person
+
+No size was ever given on screen.  The particulars on Geoffrey Mandel's general layout give one, 76 ft
+(23.16 m), and at that size the passenger module's ceiling, by his own figure, is 1.54 m.  The cutaway of
+its internal arrangement stands a crewman beside the craft about a thirtieth of its length tall, which makes
+a six-foot man of an Eagle about 30.4 m long.  So the library draws it at the particulars' size, which every
+measurement on the drawings can be checked against, and grows it to a hundred feet unless a scene says
+otherwise: the ceiling then comes to 2.03 m and the sliding doors to 2.6.  `object Eagle(23.16)` is the
+particulars' craft.
+
+##### Built from the drawings, and from the studio models where they say nothing
+
+The skeleton is Mandel's general layout of 1977 (Technical Schema TS-1075A): an outboard profile, the bow
+and the stern, and a top plan, with scales and the particulars -- 23.16 m long, 9.2 m across the leg
+pods, 4.26 m high, the passenger module 8.15 m long and 4.55 m wide.  Its three sheets agree with one
+another to a sixth of a percent, and where they disagree in a detail the view that sees it end on wins.
+The command module's panels and grooves, the leg pods' shape and the sections' bracing are from Briedis's
+and Munro's drawings of the studio model, the inside of the engines' bells from the SpaceCraft sheet's
+stern view, and the pods other than the passenger module from photographs of the studio models.  None of
+them is reproduced here.
+
+Everything is modeled rather than painted on:
+
+- the command module's four windows are recesses, flat across and upright, cut into an egg whose panels
+  are separated by grooves with rounded lips;
+- the leg pods are octagonal all the way round, a square top and bottom sloping to a band whose outer
+  face carries the thrusters;
+- the sections' cross bracing leans in along the top and along the bottom, so that each is an octagon seen
+  end on;
+- the legs are struts, pistons and links, and stow;
+- the engines' bells are shells with grooves round them and five nozzles inside each, behind which their
+  tanks and the frame of paired struts between them stand;
+- the passenger module's ribbed panels and door are recesses, its window panel stands proud with a
+  bullnose along its eave, and each end of it, and of each section facing it, has a door: a trapezoid of
+  eight triangular recesses.
+
+The markings are [decals](materials.md#decals): the Moonbase Alpha emblem on the command module, the
+passenger module and the laboratory pod, the leg pods' black crosses, the spine's red bands, the tanks'
+orange bars, the checks round the spheres between the tanks, the rescue Eagle's bands and the freighter's
+stripes.  The emblem is traced from a drawing of it, its white a plaque and its black the deep blue the
+models carry.
+
+All of this is what it costs: about three seconds to build each Eagle before the first ray, two of them the
+command module's ninety-seven swept grooves, and the same again for every Eagle called with different
+numbers.  Eagles called with the same numbers are built once and [shared](scene-files.md#one-shape-many-places).
+
+##### Landing one on its pad
+
+```
+import 'eagle' { Eagle, EagleLaunchPad, EagleLegTravel, EagleLength, EagleFullLength }
+
+Height = keys { 0: 12  4: 0 ease in out }
+Legs = keys { 0: 1  4: 1  4.5: 0 ease out }
+Tube = keys { 0: 0  5: 0  7: 1 ease in out }
+Hang = EagleLegTravel * EagleFullLength / EagleLength
+
+object EagleLaunchPad(Tube(time))
+object Eagle(EagleFullLength, 'transporter', Legs(time)) {
+    rotate Y 180
+    translate [-0.1875, 4.6 + Height(time) + Hang * Legs(time), 0]
+}
+```
+
+It comes down with its legs hanging free, touches at four seconds, and in the next half a second its
+legs take its weight: as `extension` runs from 1 to 0 the struts run in, and the craft is lowered by
+exactly what they ran in, `EagleLegTravel` grown to its length, so that its pads stay where they touched.
+Then the boarding tube runs out to its side.
+
+**The pad is written in meters too, east along `+X` and north along `+Z`**, about its own middle, on the
+ground at `y = 0`; its deck stands 4.6 up.  It comes from a schematic of one at 1:762 with scales in feet
+and meters.  An Eagle lands on the cross's east-to-west bar with a side to the boarding tube, which is to
+the north.  **Its door is not at its middle**: its pod hangs 0.1875 aft of it, at its usual length, so nose
+west, starboard to the tube, it stands at `x = -0.1875`, as above, and nose east, port to the tube, at
+`0.1875`.  `EagleLaunchPad`'s number is how far the tube's cab is run out, from 0, drawn back into its
+housing, to 1, its face against the bullnose along the eave of such an Eagle's pod -- the furthest out its
+side reaches within the cab's height -- and its door square with the Eagle's.  Both are worked out for an
+Eagle of the usual length: one longer or shorter has its door elsewhere and its side nearer or further, and
+the cab runs into it or stops short of it.
+
+The landing lights glow by [`emission`](materials.md#emission), so they read the same in sunlight and in
+shadow.
+
+`gallery/Local/animation/an-eagle-lands.igl` is a landing on the floor of the crater Plato, where the
+series put the base, lit as the Moon is: one hard sun low over the rim, a black sky with the Earth in it,
+and nothing but a faint earthshine in the shadows.  Its ground is NASA's elevation model of the Moon, made
+into two height maps that are not part of the repository; the scene says where the data is to be had and
+how the maps are made from it.
+
 ### Where Libraries Live
 
 Libraries live under your home directory, at `.rayTracer/Libraries`, beside the
