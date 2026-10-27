@@ -32,6 +32,7 @@ public class CsgSurface : Surface
             value.Parent = this;
             field = value;
             _leftMembers = null;
+            _chain = null;
         }
     }
 
@@ -46,6 +47,7 @@ public class CsgSurface : Surface
             value.Parent = this;
             field = value;
             _rightMembers = null;
+            _chain = null;
         }
     }
 
@@ -59,6 +61,11 @@ public class CsgSurface : Surface
 
     private HashSet<Surface> _leftMembers;
     private HashSet<Surface> _rightMembers;
+
+    // In a chain, which of the things written each surface stands in, shared by every link, and which of them is
+    // this link's right side: everything before it is its left.
+    private Dictionary<Surface, int> _chain;
+    private int _place;
 
     /// <summary>
     /// This method is called once prior to rendering to give the surface a chance to
@@ -84,8 +91,84 @@ public class CsgSurface : Surface
         // over and over for every ray.  What stands on each side cannot change while it renders, so
         // it is listed once, here -- after the sides are ready, since a tube builds the segments its
         // crossings come from only when it is readied.
-        _leftMembers = MembersOf(Left);
-        _rightMembers = MembersOf(Right);
+        //
+        // **A chain is listed once, by the link at its top, for every link in it.**  Listed link by
+        // link, each link's left side held everything before it, so the lists came to the square of
+        // the things written: a hundred grooves swept along a hull, each a few hundred facets, took
+        // twelve seconds to list before the first ray.  Which of the things written a surface stands
+        // in says which side of any link it is on.
+        if (IsChainLink)
+            return;
+
+        if (Left is CsgSurface { IsChainLink: true, Operation: var operation } && operation == Operation)
+            ListTheChain();
+        else
+        {
+            _leftMembers = MembersOf(Left);
+            _rightMembers = MembersOf(Right);
+        }
+    }
+
+    /// <summary>
+    /// This method lists, for this link at the top of a chain and every link below it, which of the things written
+    /// each surface stands in.  The first thing written is the left side of the lowest link; each link's right side
+    /// is the next.
+    /// </summary>
+    private void ListTheChain()
+    {
+        List<CsgSurface> links = [this];
+
+        while (links[^1].Left is CsgSurface { IsChainLink: true } below && below.Operation == Operation)
+            links.Add(below);
+
+        links.Reverse();
+
+        Dictionary<Surface, int> chain = new (ReferenceEqualityComparer.Instance);
+
+        Enlist(chain, links[0].Left, 0);
+
+        for (int index = 0; index < links.Count; index++)
+        {
+            Enlist(chain, links[index].Right, index + 1);
+            links[index]._chain = chain;
+            links[index]._place = index + 1;
+        }
+    }
+
+    /// <summary>
+    /// This method notes that everything standing in one of a chain's things stands in that one.
+    /// </summary>
+    /// <param name="chain">Which thing each surface stands in.</param>
+    /// <param name="side">The thing.</param>
+    /// <param name="place">Its place among those written.</param>
+    private static void Enlist(Dictionary<Surface, int> chain, Surface side, int place)
+    {
+        foreach (Surface surface in MembersOf(side))
+            chain[surface] = place;
+    }
+
+    /// <summary>
+    /// This method reports whether a surface a crossing was found on stands on this shape's left side.
+    /// </summary>
+    /// <param name="hit">The surface.</param>
+    /// <returns><c>true</c>, if it stands on the left side.</returns>
+    private bool OnTheLeft(Surface hit)
+    {
+        return _chain is not null && _chain.TryGetValue(hit, out int place)
+            ? place < _place
+            : IsOrIncludes(Left, _leftMembers, hit);
+    }
+
+    /// <summary>
+    /// This method reports whether a surface a crossing was found on stands on this shape's right side.
+    /// </summary>
+    /// <param name="hit">The surface.</param>
+    /// <returns><c>true</c>, if it stands on the right side.</returns>
+    private bool OnTheRight(Surface hit)
+    {
+        return _chain is not null && _chain.TryGetValue(hit, out int place)
+            ? place == _place
+            : IsOrIncludes(Right, _rightMembers, hit);
     }
 
     /// <summary>
@@ -266,7 +349,7 @@ public class CsgSurface : Surface
                 // the outermost stamped so far: any instance further out has yet to stamp the crossing,
                 // and any further in stands inside the shape this one points at.
                 Surface hit = intersection.Portals.Outermost ?? Hair.StandingFor(intersection.Surface);
-                bool leftHit = IsOrIncludes(Left, _leftMembers, hit);
+                bool leftHit = OnTheLeft(hit);
                 bool result = !IsIntersectionAllowed(leftHit, inLeft, inRight);
 
                 if (intersection.Surface is StrandSurface)
@@ -278,8 +361,7 @@ public class CsgSurface : Surface
                 // already and is turned back here.  Marking it twice as turned left a pocket cut by a
                 // shape with a hole in it facing into the solid -- shaded from inside and shadowed by
                 // its own floor.
-                if (!result && Operation == CsgOperation.Difference &&
-                    IsOrIncludes(Right, _rightMembers, hit))
+                if (!result && Operation == CsgOperation.Difference && OnTheRight(hit))
                     intersection.ShouldFlipInsideForOut = !intersection.ShouldFlipInsideForOut;
 
                 if (leftHit)

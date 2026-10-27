@@ -1,0 +1,162 @@
+// An Eagle lands: a transporter comes in low over the Moon from the east, slows to a hover over a launch pad of
+// Moonbase Alpha, settles onto the pad's elevator, and the boarding tube runs out to its door -- on the floor of the
+// crater Plato, where the series put the base, its rim on the horizon.
+//
+//     dotnet run -- -i an-eagle-lands.igl -o an-eagle-lands.webp -w 480 -h 360
+//     dotnet run -- -i an-eagle-lands.igl -o an-eagle-lands.png --still
+//
+// **It needs two height maps that are not in the repository**: Plato, from NASA's lunar elevation model; see "The
+// ground" below for where they come from and how they were made.
+//
+// **Both are the `eagle` library's**, the Eagle at its usual hundred feet and the pad at the size its schematic
+// gives, both in meters.  The pad's deck stands 4.6 above the ground, so the Eagle is stood 4.6 up, its feet on the
+// east-to-west bar of the cross, its nose west and its starboard side to the boarding tube, its door square with the
+// tube.
+//
+// **The flight is five sets of keys.**  It comes in decelerating, sinking from 24 meters over the deck to 12 as it
+// arrives over the pad, its nose up a little as it brakes; hangs there a moment; and sinks the last 12 meters, slowing
+// to touch down at nine seconds.  Its legs hang free until then, and take its weight over the next half second:
+// their shock struts run in, their knee links folding, and the craft settles by what they ran in.  Then the boarding
+// tube runs out to its side.
+//
+// **The light is the Moon's**: no air, so a black sky with stars in it and the Earth, and one hard sun low in the
+// north-west, throwing long shadows south-east; what the sun does not reach is lit only by a faint, blue
+// earthshine.  The shutter is open half a frame, so the Eagle blurs as it comes in and sharpens as it slows.
+//
+// **The camera stands north-west of the pad**, west of the flight control complex, so that it sees past the complex to
+// the boarding tube run out to the Eagle's starboard side -- the side away from the terminal is all a camera south of
+// the pad would see -- and the Eagle comes in nose first toward it.
+
+context {
+    angles are degrees
+    animation length 12.5  rate 24  still 288
+    scale ambient by 0.35
+    antialiasing depth 1
+    antialiasing threshold 0.5
+    info {
+        title 'An Eagle Lands'
+        author 'J. Stephen Kress'
+        description 'An Eagle transporter landing on a launch pad of Moonbase Alpha, its legs taking its weight.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'eagle' { Eagle, EagleLaunchPad, EagleLegTravel, EagleLength, EagleFullLength }
+
+// -- The flight ---------------------------------------------------------------------------------------
+
+// How far east its middle is, how high its feet are over the deck, how far its nose is up, how far its legs hang
+// out, and how far the boarding tube has run out.
+East = keys { 0: 95  5: -0.1875 ease out }
+Height = keys { 0: 24  5: 12 ease out  9: 0 ease in out }
+Pitch = keys { 0: 5  5: 0 ease out }
+Legs = keys { 0: 1  9: 1  9.5: 0 ease out }
+Tube = keys { 0: 0  10: 0  12: 1 ease in out }
+
+// What the legs hang below the craft, at its full size.
+Hang = EagleLegTravel * EagleFullLength / EagleLength
+
+// -- The camera ---------------------------------------------------------------------------------------
+
+// North-west of the pad and clear of the terminal, drawing in a little as the Eagle lands, and turning to follow it in.
+Stand = keys smooth { 0: [-86, 30, 50]  12.5: [-60, 23, 33] }
+
+camera {
+    location point Stand(time)
+    look at [East(time) * 0.8 - 1, 4.6 + Height(time) * 0.75 + 5, 5]
+    field of view 46
+    shutter 0.5
+    blur samples 8
+}
+
+// -- The sky ------------------------------------------------------------------------------------------
+
+// Stars: a `granite` pattern whose map was measured (see High Orbit), so that only its highest values show as stars.
+background granite {
+    [0, Black, 0.548, Black, 0.57, [0.30, 0.32, 0.40], 0.61, White, 1, White]
+    scale [0.05, 0.05, 0.05]
+}
+
+// The sun, low in the north-west, and the earthshine, faint and blue, from the Earth's way.
+distant light { direction [0.76, -0.38, -0.53]  color [1.08, 1.06, 1.02] }
+point light { location [3.027e+08, 1.476e+07, -2.365e+08]  color [0.05, 0.06, 0.09] }
+
+// The Earth, where it is: 384,400 km away and 6,371 km round, so a little under two degrees across.  It stands just
+// over Plato's rim in the east-south-east, low enough that the mountains hide the foot of it.  It casts no shadow: at
+// that distance there is nothing it could fall on.
+sphere {
+    material {
+        pigment bozo {
+            turbulence 0.6
+            [0, [0.04, 0.12, 0.38], 0.5, [0.06, 0.18, 0.48], 0.56, [0.22, 0.32, 0.16], 0.64, [0.42, 0.36, 0.22],
+             0.7, [0.85, 0.87, 0.9], 1, [0.95, 0.96, 0.98]]
+            scale 0.3
+        }
+        specular 0.1  ambient 0
+    }
+    no shadow
+    scale 6371000
+    translate [3.027e+08, 1.476e+07, -2.365e+08]
+}
+
+// -- The ground ---------------------------------------------------------------------------------------
+
+// The floor of Plato, where the series put the base, and its rim, from NASA's elevation model of the Moon: heights
+// from the Lunar Reconnaissance Orbiter's laser altimeter and the Kaguya terrain camera, 59 m to the pixel
+// (SLDEM2015).  Two height maps are made from it, each in the azimuthal equidistant projection about 51.62 N 350.62 E,
+// so that a pixel's distance from the middle is its distance over the ground; each height is taken from the pad's,
+// with the Moon's curvature taken off, and the pad's site leveled within 85 m of the middle, eased back into the
+// ground by 200 m.  The near map is 24 km square, 800 pixels (30 m apart, from the data's 59); the far one 150 km
+// square, 768 pixels, sunk where the near one lies.  From twenty meters up the horizon is only nine kilometers away,
+// so where the two meet lies beyond it, out of sight; Plato's rim stands over it, up to 1.8 km high some fifty
+// kilometers off all round.
+//
+// The maps are not part of the repository.  They are made from the tile sldem2015_512_30n_60n_315_360_float.img of
+// the PDS Geosciences Node,
+//
+//     https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/sldem2015/tiles/float_img/
+//
+// of which lines 3021 to 5580 (49.1 to 54.1 N) are all they need, and saved as 16-bit PNGs, plato-near.png spanning
+// -404.87 m (black) to 106.34 m (white) and plato-far.png -3721.36 m to 2421.55 m, beside the solar system's images.
+
+// The regolith, fine-grained and lighter and darker over tens of meters, read in each map's own unit square.
+primitive Regolith(span) -> material {
+    return material {
+        pigment bozo {
+            turbulence 0.4
+            [0, granite { [0, [0.25, 0.25, 0.245], 1, [0.36, 0.355, 0.345]]  scale 6 / span },
+             1, granite { [0, [0.37, 0.365, 0.355], 1, [0.47, 0.465, 0.45]]  scale 6 / span }]
+            scale 45 / span
+        }
+        specular 0
+    }
+}
+
+heightfield {
+    image '../solar-system/images/plato-near.png'
+    open  smooth
+    material Regolith(24000)
+    translate [-0.5, 0, -0.5]
+    scale [24000, 2044.84, 24000]
+    translate Y -404.87
+}
+
+heightfield {
+    image '../solar-system/images/plato-far.png'
+    open  smooth
+    material Regolith(150000)
+    translate [-0.5, 0, -0.5]
+    scale [150000, 24571.64, 150000]
+    translate Y -3721.36
+}
+
+// -- The pad and the Eagle ----------------------------------------------------------------------------
+
+object EagleLaunchPad(Tube(time))
+
+object Eagle(EagleFullLength, 'transporter', Legs(time)) {
+    rotate Z Pitch(time)
+    rotate Y 180
+    translate [East(time), 4.6 + Height(time) + Hang * Legs(time), 0]
+}

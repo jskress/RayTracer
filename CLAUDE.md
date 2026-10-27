@@ -65,7 +65,13 @@ method in the relevant `LanguageParser.<Topic>.cs` partial file, and register it
 `include '<file>'` is handled by pushing/popping a stack of `(fileName, LexicalParser)`
 entries, so multiple `.igl` files can be composed; a file already being read is refused (an
 include cycle).  `import 'library' { Names }` reads a library (definitions and imports only, see
-`InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.
+`InstructionContext.HoldsOnlyDefinitions`) from `~/.rayTracer/Libraries`.  Values go over whole; functions and
+primitives only when asked for.  An imported value is a recipe made among the SCENE's names (so a scene may add to
+it), so every call written in a library -- a primitive call of any kind, a function call -- is stamped with the
+library's `LibraryScope` (`General/LibraryScope.cs`: thread-static `BeingRead` while the parser reads the library,
+its `Variables` filled when the import runs) and finds what it calls there first, then where it is made.  Until
+2026-10-26 a value calling a helper the scene was not given failed ("nothing named X is a primitive"), and one the
+scene had named alike was called instead.
 
 ### Instructions and resolvers (`Instructions/`)
 
@@ -246,6 +252,15 @@ precomputed variants. `Graphics/` holds the 2D path/curve primitives (`GeneralPa
 text layout to describe outlines in 2D before they're revolved/extruded into 3D surfaces.  An extrusion's wall
 segment skips a ray whose 2D line has every one of the segment's control points strictly to one side
 (`ExtrusionPathSurface.AllToOneSide`, the hull property: same crossings, 45% less time on a 13-segment body filling the picture).
+A lathe's segment is solved only for a ray that, while within the segment's heights, comes within its radii of the
+axis (`LathePathSurface.MayCross`: its control points' bands, padded far past rounding and the hair a crossing may
+fall beyond an end; a segment drawn across the axis reaches it): pixel-identical, an Eagle command module close-up
+with four windows cut from 21-segment lathes 26.8 s -> 4.6 s.
+A CSG of many things written as one (`union { a b c ... }`) is a chain of links (`CsgSurface.IsChainLink`), each
+holding all before it on its left; the top link lists the whole chain ONCE (`ListTheChain`: which thing written each
+surface stands in, shared by every link, a link's left being the things before its place), where per-link side
+lists came to the square of what was written (97 swept grooves, each hundreds of facets: 12 s before the first
+ray, 2.5 s after; pixel-identical).
 A CONVEX `Superellipsoid` (both exponents <= 2, so its function is a norm less one) is searched along a ray by golden
 section for a place inside, each crossing bracketed from it, stopping at once when the function rises where the ray
 sets off (every ray leaving its surface) or when chords carried past their ends bound it above nought

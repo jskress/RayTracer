@@ -128,14 +128,17 @@ makes X grow with Y, so an upright cube leans to one side.
 
 ### Matrix
 
-The transform of last resort: sixteen numbers, given row by row, used as-is.
+The transform of last resort: sixteen numbers, given row by row, used as-is.  A point is a column
+it multiplies, so a move is the fourth column, and the last row stays `0, 0, 0, 1`:
 
 ```
-matrix [1, 0, 0, 0,
+matrix [1, 0, 0, 1,
         0, 1, 0, 0,
         0, 0, 1, 0,
-        1, 0, 0, 1]
+        0, 0, 0, 1]
 ```
+
+That one moves a surface one unit along X.
 
 Almost nothing needs this.  It is here for transforms brought in from elsewhere, and for the
 rare cases that none of the others can express.

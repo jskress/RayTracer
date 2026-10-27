@@ -2,6 +2,7 @@ using Lex.Clauses;
 using Lex.Parser;
 using Lex.Tokens;
 using RayTracer.Extensions;
+using RayTracer.General;
 using RayTracer.Instructions;
 using RayTracer.Instructions.Surfaces;
 using RayTracer.Instructions.Surfaces.Shapes;
@@ -192,7 +193,8 @@ public partial class LanguageParser
             Name = name,
             Arguments = arguments,
             Extras = ParseCallBlock(primitive.Kind),
-            ErrorToken = nameToken
+            ErrorToken = nameToken,
+            WrittenIn = LibraryScope.BeingRead
         };
     }
 

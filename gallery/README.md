@@ -1243,6 +1243,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
       <a href="Local/animation/a-fall-of-leaves.igl">A Fall of Leaves</a> (<a href="Local/animation/a-fall-of-leaves.webp">the movie</a>)
     </td>
   </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/an-eagle-lands.webp">
+      <img alt="An Eagle Lands" height="120" src="Local/animation/an-eagle-lands.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/an-eagle-lands.igl">An Eagle Lands</a> (<a href="Local/animation/an-eagle-lands.webp">the movie</a>)
+    </td>
+  </tr>
 </table>
 
 </details>

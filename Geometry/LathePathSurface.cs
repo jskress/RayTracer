@@ -22,6 +22,12 @@ public class LathePathSurface
     // and solved as one, along the ray; see GetIntersectionsForSlopedLine.
     private readonly (double Radius0, double Height0, double Radius1, double Height1)? _slopedLine;
 
+    // The heights and the radii the segment's surface keeps within, padded; see MayCross.
+    private readonly double _lowest;
+    private readonly double _highest;
+    private readonly double _nearest;
+    private readonly double _farthest;
+
     public LathePathSurface(IPathSegment segment)
     {
         _radius = BuildPolynomial(segment.Points, point => point.X);
@@ -46,6 +52,63 @@ public class LathePathSurface
         {
             _slopedLine = (segment.Points[0].X, segment.Points[0].Y, segment.Points[1].X, segment.Points[1].Y);
         }
+
+        // A Bézier segment lies within its control points' hull, so its surface lies within their heights and, round
+        // the axis, their radii -- from the axis itself if they lie on both sides of it.  A crossing may fall a hair
+        // beyond either end, where the curve runs on by at most its degree times its longest step times that hair;
+        // the padding is far more than that, and than any rounding in a solve, so a segment passed by never had a
+        // crossing to find.
+        TwoDPoint[] points = segment.Points;
+        double longest = points.Zip(points.Skip(1), (a, b) => Math.Max(Math.Abs(b.X - a.X), Math.Abs(b.Y - a.Y))).Max();
+        double reach = points.Max(point => Math.Max(Math.Abs(point.X), Math.Abs(point.Y)));
+        double pad = 1e-4 * reach + 4 * (points.Length - 1) * longest * DoubleExtensions.Epsilon;
+        bool straddles = points.Min(point => point.X) < 0 && points.Max(point => point.X) > 0;
+
+        _lowest = points.Min(point => point.Y) - pad;
+        _highest = points.Max(point => point.Y) + pad;
+        _nearest = straddles ? 0 : Math.Max(0, points.Min(point => Math.Abs(point.X)) - pad);
+        _farthest = points.Max(point => Math.Abs(point.X)) + pad;
+    }
+
+    /// <summary>
+    /// This method tells whether the ray could cross this segment's surface at all: whether, while it is within the
+    /// segment's heights, it comes within the segment's radii of the axis.  It costs a few multiplications, where a
+    /// curve's solve costs a polynomial's roots, and most rays at a lathe of many segments pass most of them by.
+    /// </summary>
+    /// <param name="ray">The ray, in the lathe's space.</param>
+    /// <returns><c>true</c> if the ray may cross the segment's surface; <c>false</c> if it certainly does not.</returns>
+    internal bool MayCross(Ray ray)
+    {
+        double ox = ray.Origin.X, oy = ray.Origin.Y, oz = ray.Origin.Z;
+        double dx = ray.Direction.X, dy = ray.Direction.Y, dz = ray.Direction.Z;
+        // How far from the axis the ray is, squared, as it goes: a t^2 + b t + c.
+        double a = dx * dx + dz * dz;
+        double b = 2 * (ox * dx + oz * dz);
+        double c = ox * ox + oz * oz;
+
+        // A ray solved as level is taken to stay at its own height, and to go on forever both ways at it.
+        if ((dy * dy).IsNegligibleSquaredBeside(ray.Direction.Dot(ray.Direction)))
+        {
+            if (oy < _lowest || oy > _highest)
+                return false;
+
+            double closest = a > 0 ? c - b * b / (4 * a) : c;
+
+            return closest <= _farthest * _farthest;
+        }
+
+        double first = (_lowest - oy) / dy;
+        double last = (_highest - oy) / dy;
+
+        if (first > last)
+            (first, last) = (last, first);
+
+        double Squared(double t) => (a * t + b) * t + c;
+        double turn = a > 0 ? Math.Clamp(-b / (2 * a), first, last) : first;
+        double least = Squared(turn);
+        double most = Math.Max(Squared(first), Squared(last));
+
+        return least <= _farthest * _farthest && most >= _nearest * _nearest;
     }
 
     /// <summary>
@@ -101,6 +164,17 @@ public class LathePathSurface
     /// <returns>An enumeration of the intersections found with this segment, and where along
     /// it each one falls.</returns>
     internal IEnumerable<(Intersection Hit, double Along)> GetCrossings(Surface surface, Ray ray)
+    {
+        return MayCross(ray) ? Solve(surface, ray) : [];
+    }
+
+    /// <summary>
+    /// This method works out where the ray crosses this segment's surface, without first asking whether it could.
+    /// </summary>
+    /// <param name="surface">The surface we are supporting.</param>
+    /// <param name="ray">The 3D ray we are evaluating.</param>
+    /// <returns>The crossings, with how far along the segment each lies.</returns>
+    internal IEnumerable<(Intersection Hit, double Along)> Solve(Surface surface, Ray ray)
     {
         // Whether the ray counts as horizontal is a question about its angle, not about the size
         // of its Y component, which shrinks as the lathe is scaled up.

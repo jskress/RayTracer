@@ -22,10 +22,17 @@ namespace RayTracer.Instructions;
 /// <b>Not everything can be kept back, and the line falls where it must.</b>  A function and a
 /// primitive each remember the scope they were written in, so one the scene did not ask for may be
 /// held back without the ones it did ask for losing sight of it.  A value or a thing -- a color, a
-/// material, a surface -- remembers nothing: it is looked up wherever it is used, and a material
-/// published to a scene is resolved among the <i>scene's</i> names.  Hold back the color such a
-/// material was written against and it finds nothing at render time.  So those are handed over whole,
-/// as they always have been, and only what carries its own scope is filtered.
+/// material, a surface -- is a recipe the scene makes for itself, among the <i>scene's</i> names, since
+/// the scene may add to it.  Hold back the color such a material was written against and it finds
+/// nothing at render time.  So those are handed over whole, as they always have been, and only what
+/// carries its own scope is filtered.
+/// </para>
+/// <para>
+/// <b>A call in such a recipe is the exception</b>, and it is what makes holding back a library's
+/// helpers safe: each call written in a library carries the library's <see cref="Scope"/>, filled in
+/// here, and finds what it calls there first.  A value made among the scene's names still reaches
+/// the primitives and functions it was written against, which the scene was never given -- and a
+/// primitive the scene names alike, or another library's of the same name, cannot stand in for them.
 /// </para>
 /// </summary>
 public class ImportInstruction : Instruction
@@ -34,6 +41,12 @@ public class ImportInstruction : Instruction
     /// This property holds the definitions the library makes.
     /// </summary>
     public InstructionContext Library { get; init; }
+
+    /// <summary>
+    /// This property holds the scope the calls written in the library find what they call in, filled in
+    /// each time the import is carried out.
+    /// </summary>
+    public LibraryScope Scope { get; init; }
 
     /// <summary>
     /// This property holds the names the scene is to be given.
@@ -48,6 +61,10 @@ public class ImportInstruction : Instruction
     public override void Execute(RenderContext context, Variables variables)
     {
         Variables scope = new (variables);
+
+        // Before the definitions are carried out, since a value is made as it is defined, and the calls
+        // in it look here.
+        Scope.Variables = scope;
 
         Library.CarryOutDefinitions(context, scope);
 

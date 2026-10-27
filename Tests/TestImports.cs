@@ -571,4 +571,128 @@ public class TestImports
             """);
     }
 
+    // -- What a library's values call ----------------------------------------------------------------
+
+    /// <summary>
+    /// Writes a library whose exports are values made by calling helpers it keeps to itself: a primitive of each
+    /// sort that can be named in a value -- a surface, a material, an interior and a medium -- and a function.
+    /// </summary>
+    private void WritePottery()
+    {
+        Write("pottery.igl", """
+            function flared(n) -> number { return n * 1.1 }
+
+            primitive lump(size) -> sphere { return sphere { scale size } }
+            primitive glazed(hue) -> material { return material { pigment hue  specular 0.6 } }
+            primitive glassy(index) -> interior { return interior { ior index } }
+            primitive smoky(thickness) -> medium {
+                return medium { scattering thickness  absorption thickness * 0.1 }
+            }
+
+            Bowl = group { object lump(1)  object lump(0.5) { translate Y 1 } }
+            Jar = sphere { scale flared(1) }
+            Vase = cylinder { min Y 0  max Y 1  material glazed([0.2, 0.4, 0.7]) }
+            Bottle = sphere { material { transparency 0.9  interior glassy(1.5) } }
+            Smoke = sphere { material { transparency 1  interior { medium smoky(0.5) } } }
+            """);
+    }
+
+    [TestMethod]
+    public void TestAValueKeepsSightOfTheHelpersItCalls()
+    {
+        // A value a scene imports is a recipe the scene makes for itself, and a call inside it names a helper the
+        // library kept back.  Until 2026-10-26 the recipe was made among the scene's names alone, so every one of
+        // these failed -- "nothing named lump is a primitive" -- unless the scene asked for the helpers too, which it
+        // has no business knowing about.  The Eagle's command module was the first value to find it.
+        WritePottery();
+
+        foreach (string value in new[] { "Bowl", "Jar", "Vase", "Bottle", "Smoke" })
+        {
+            string error = ErrorFromRendering($$"""
+                import 'pottery' { {{value}} }
+                object {{value}}
+                """);
+
+            Assert.IsNull(error, $"{value} could not find what it calls: {error}");
+        }
+    }
+
+    [TestMethod]
+    public void TestWhatASceneAddsToAValueIsReadAmongTheScenesOwnNames()
+    {
+        // The other half: a value the scene adds to is read in two sets of names at once.  What the library wrote
+        // finds the library's helpers, and what the scene wrote -- here a loop's own counter, which nothing but
+        // the loop can see, and a value the scene names after the import -- finds the scene's.  Making the whole
+        // value among the library's names would lose the counter.
+        WritePottery();
+
+        Assert.IsNull(ErrorFromRendering("""
+            import 'pottery' { Bowl }
+            spacing = 3
+            group {
+                for i in [0, 2] {
+                    object Bowl { translate X i * spacing }
+                }
+            }
+            """));
+    }
+
+    [TestMethod]
+    public void TestAValueCallsItsOwnLibrarysHelperAndNotOneTheSceneNamedAlike()
+    {
+        // The scene was never given `lump`, so it may name a primitive of its own so.  The library's bowl must go on
+        // calling the library's: the scene's takes two values, so a bowl that reached for it would be refused.
+        WritePottery();
+
+        Assert.IsNull(ErrorFromRendering("""
+            import 'pottery' { Bowl }
+            primitive lump(across, high) -> cube { return cube { scale [across, high, across] } }
+            object Bowl
+            object lump(1, 2) { translate X 3 }
+            """));
+    }
+
+    [TestMethod]
+    public void TestTwoLibrariesMayKeepHelpersOfTheSameName()
+    {
+        // Two libraries, each keeping a helper called `part` that takes a different number of values.  Each one's
+        // value has to find its own; handing the scene every library's helpers would leave the second import's
+        // `part` standing where the first library's value went looking for its own, and the call refused.
+        Write("left.igl", """
+            primitive part() -> sphere { return sphere { } }
+            LeftThing = group { object part() }
+            """);
+        Write("right.igl", """
+            primitive part(across, high) -> cube { return cube { scale [across, high, across] } }
+            RightThing = group { object part(1, 2) }
+            """);
+
+        Assert.IsNull(ErrorFromRendering("""
+            import 'left' { LeftThing }
+            import 'right' { RightThing }
+            object LeftThing
+            object RightThing { translate X 3 }
+            """));
+    }
+
+    [TestMethod]
+    public void TestAValueFromALibraryALibraryImportsKeepsSightOfItsHelpers()
+    {
+        // A layer down, where a fix for one level shows itself: the inner library's value calls a helper the inner
+        // library keeps back, the outer library builds a value of its own round it, and the scene asks for that.
+        Write("inner.igl", """
+            primitive knob(size) -> sphere { return sphere { scale size } }
+            Handle = group { object knob(0.3) }
+            """);
+        Write("outer.igl", """
+            import 'inner' { Handle }
+            primitive drawer(wide) -> cube { return cube { scale [wide, 0.5, 0.5] } }
+            Chest = group { object drawer(2)  object Handle { translate Z -0.6 } }
+            """);
+
+        Assert.IsNull(ErrorFromRendering("""
+            import 'outer' { Chest }
+            object Chest
+            """));
+    }
 }

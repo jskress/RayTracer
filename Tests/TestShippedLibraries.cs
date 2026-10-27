@@ -3616,4 +3616,258 @@ public class TestShippedLibraries
                 Assert.IsTrue(warmth < 1.15, $"string {k} should be plain steel, but it is {warmth:F2} as red as blue");
         }
     }
+
+    /// <summary>
+    /// Copies the eagle library beside the scenes this class writes.
+    /// </summary>
+    private void UseEagle()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "eagle.igl"),
+            Path.Combine(_directory, "eagle.igl"), true);
+    }
+
+    /// <summary>
+    /// Whether a pixel of a picture of the eagle library's things is the backdrop they stand against: a green that
+    /// nothing in the library is, counted only where it is that green and nothing else.  White will not do here, as it
+    /// does for the instruments, since the Eagle's windows and lamps are glass, and glass seen at a graze mirrors
+    /// whatever is behind it.
+    /// </summary>
+    private static bool IsTheBackdrop(Color pixel) => pixel.Red < 0.03 && pixel.Blue < 0.03 && pixel.Green > 0.97;
+
+    /// <summary>
+    /// Renders things from the eagle library, each written out whole, against the backdrop, through an orthographic
+    /// camera looking at `at` from the way `back` points with `up` up, `size` meters to a pixel and `wide` by `high`
+    /// pixels, lit from the way `light` points by a dim light, so that nothing in it reaches white.
+    /// </summary>
+    private Canvas EagleView(IEnumerable<string> things, (double X, double Y, double Z) at,
+        (double X, double Y, double Z) back, string up, double size, int wide, int high, string light)
+    {
+        // An orthographic camera's field of view spans the picture's longer side.
+        const double Distance = 200;
+        double angle = 2 * Math.Atan(Math.Max(wide, high) * size / 2 / Distance) * 180 / Math.PI;
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene,
+            "import 'eagle' { Eagle, EaglePod, EagleLaunchPad }\n" +
+            "context { angles are degrees  no gamma }\n" +
+            $"orthographic camera {{ location [{at.X + back.X * Distance}, {at.Y + back.Y * Distance}, " +
+            $"{at.Z + back.Z * Distance}]  look at [{at.X}, {at.Y}, {at.Z}]  up {up}  field of view {angle:F10} }}\n" +
+            "background [0, 1, 0]\n" +
+            $"distant light {{ direction {light}  color [0.5, 0.5, 0.5] }}\n" +
+            string.Join("\n", things) + "\n");
+
+        Assert.IsNull(Render(scene, wide, high), "the eagle library's things should build");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// How far what stands in the columns `from` to `to` of a picture from <see cref="EagleView"/> reaches, in meters
+    /// from the picture's middle along its right and its up, `size` meters to a pixel: each to the outer edge of the
+    /// outermost pixel that is not the backdrop.
+    /// </summary>
+    private static (double Left, double Right, double Bottom, double Top) ReachIn(Canvas picture, int from, int to,
+        double size)
+    {
+        int left = int.MaxValue, right = -1, top = int.MaxValue, bottom = -1;
+
+        for (int x = from; x < to; x++)
+        for (int y = 0; y < picture.Height; y++)
+        {
+            if (IsTheBackdrop(picture.GetPixel(x, y)))
+                continue;
+
+            left = Math.Min(left, x);
+            right = Math.Max(right, x);
+            top = Math.Min(top, y);
+            bottom = Math.Max(bottom, y);
+        }
+
+        Assert.IsTrue(right >= 0, $"nothing was rendered between columns {from} and {to}");
+
+        return ((left - picture.Width / 2.0) * size, (right + 1 - picture.Width / 2.0) * size,
+            (picture.Height / 2.0 - bottom - 1) * size, (picture.Height / 2.0 - top) * size);
+    }
+
+    /// <summary>
+    /// Stands things from the eagle library in a row along X, 40 meters apart, the first at the origin, and reports how
+    /// far each reaches along X and up, in meters, seen square on from their port sides `size` meters to a pixel, over
+    /// a band from a meter under the ground to seven over it.
+    /// </summary>
+    private (double From, double To, double Bottom, double Top)[] EagleLineUp(string[] things, double size)
+    {
+        const double Apart = 40;
+        int across = (int) Math.Round(Apart / size);
+        double middle = (things.Length - 1) * Apart / 2;
+        Canvas picture = EagleView(
+            things.Select((thing, k) => $"group {{ object {thing}  translate X {k * Apart} }}"),
+            (middle, 3, 0), (0, 0, 1), "[0, 1, 0]", size, things.Length * across, (int) Math.Round(8 / size),
+            "[0, -1, -1]");
+
+        return things
+            .Select((_, k) =>
+            {
+                // Seen from port, +X runs to the picture's left, so the first thing stands at its right.
+                int from = (things.Length - 1 - k) * across;
+                (double left, double right, double bottom, double top) = ReachIn(picture, from, from + across, size);
+
+                return (middle - right, middle - left, 3 + bottom, 3 + top);
+            })
+            .ToArray();
+    }
+
+    [TestMethod]
+    public void TestAnEagleIsAsBigAsItIsAskedForAndStandsOnItsPads()
+    {
+        // Mandel's particulars make the craft 23.16 m from its engine bells' mouths to its nose and 4.26 high from its
+        // pads' soles to the top of its spine, and the library grows it to a hundred feet unless asked otherwise.
+        // Across, it reaches 4.725 either side of its middle at the drawings' size, to the lamps on its leg pods'
+        // thrusters.  Seen square on from their port sides, four centimeters to a pixel, each Eagle here has to be as
+        // long and as high as that says, its middle over its own place and its soles on the ground -- the third turned
+        // a quarter, so that its width shows.  An Eagle grown wrong, drawn off its middle or standing in the ground fails.
+        UseEagle();
+
+        const double Grown = 30.48 / 23.16;
+        string[] eagles = ["Eagle()", "Eagle(23.16)", "Eagle() { rotate Y 90 }"];
+        (double Long, double High)[] expected = [(30.48, 4.26 * Grown), (23.16, 4.26), (2 * 4.725 * Grown, 4.26 * Grown)];
+        (double From, double To, double Bottom, double Top)[] reached = EagleLineUp(eagles, 0.04);
+
+        for (int k = 0; k < eagles.Length; k++)
+        {
+            (double from, double to, double bottom, double top) = reached[k];
+            double middle = (from + to) / 2 - k * 40;
+
+            Assert.AreEqual(expected[k].Long, to - from, 0.06, $"{eagles[k]} measured {to - from:F3} along X");
+            Assert.AreEqual(expected[k].High, top - bottom, 0.06, $"{eagles[k]} measured {top - bottom:F3} high");
+            Assert.AreEqual(0, middle, 0.06, $"{eagles[k]}'s middle stands {middle:F3} off its place along X");
+            Assert.AreEqual(0, bottom, 0.06, $"{eagles[k]} stands at {bottom:F3}, not on the ground");
+        }
+    }
+
+    [TestMethod]
+    public void TestAnEaglesLegsRunOutAsFarAsTheyAreToldAndStowIntoTheirPods()
+    {
+        // Hanging free, its legs' shock struts run out EagleLegTravel, 0.15 at the drawings' size, and its pads' soles
+        // hang that much under the ground it would stand on, grown with it; stowed, each pad fills the cutout in its
+        // pod's underside, so that nothing stands below the leg pods' undersides, 0.99 up at the drawings' size.  The
+        // Eagles here carry no pod, since the passenger module hangs lower than the leg pods.  Two centimeters to a pixel.
+        UseEagle();
+
+        const double Grown = 30.48 / 23.16;
+        string[] eagles = ["Eagle(30.48, 'none', 1)", "Eagle(30.48, 'none', 0, 1)"];
+        double[] lowest = [-0.15 * Grown, 0.99 * Grown];
+        (double From, double To, double Bottom, double Top)[] reached = EagleLineUp(eagles, 0.02);
+
+        for (int k = 0; k < eagles.Length; k++)
+        {
+            Assert.AreEqual(lowest[k], reached[k].Bottom, 0.03,
+                $"{eagles[k]}'s lowest point stands at {reached[k].Bottom:F3}, where it should be {lowest[k]:F3}");
+        }
+    }
+
+    [TestMethod]
+    public void TestEveryPodIsItsOwnAndOneNotKnownIsNone()
+    {
+        // The pods an Eagle may carry, side by side and seen from their port sides: each has to look unlike every other
+        // -- a pod that stopped reaching its geometry, or two names that came to the same pod, fails -- and a name the
+        // library does not know has to carry nothing at all, exactly as 'none' does.  They are asked of `EaglePod`, which
+        // `Eagle` hands its second argument to, at the drawings' size: building a whole Eagle round each, its command
+        // module's grooves and all, would take twenty seconds to say the same thing.
+        UseEagle();
+
+        const double Size = 0.05;
+        const double Apart = 12;
+        string[] pods = ["transporter", "rescue", "laboratory", "freighter", "none", "shuttle"];
+        int across = (int) Math.Round(Apart / Size);
+        Canvas picture = EagleView(
+            pods.Select((pod, k) => $"group {{ object EaglePod('{pod}')  translate X {k * Apart} }}"),
+            ((pods.Length - 1) * Apart / 2, 2.5, 0), (0, 0, 1), "[0, 1, 0]", Size, pods.Length * across,
+            (int) Math.Round(5 / Size), "[0, -1, -1]");
+
+        // How many pixels differ between the places of two pods.  Neither the light nor the camera has any part along X,
+        // so the same thing stood in two places looks the same in both.
+        int Differing(int one, int other)
+        {
+            int first = (pods.Length - 1 - one) * across;
+            int second = (pods.Length - 1 - other) * across;
+            int count = 0;
+
+            for (int x = 0; x < across; x++)
+            for (int y = 0; y < picture.Height; y++)
+            {
+                Color a = picture.GetPixel(first + x, y);
+                Color b = picture.GetPixel(second + x, y);
+
+                if (Math.Abs(a.Red - b.Red) + Math.Abs(a.Green - b.Green) + Math.Abs(a.Blue - b.Blue) > 0.05)
+                    count++;
+            }
+
+            return count;
+        }
+
+        for (int one = 0; one < 5; one++)
+        for (int other = one + 1; other < 5; other++)
+        {
+            Assert.IsTrue(Differing(one, other) > 100,
+                $"the '{pods[one]}' pod looks just like the '{pods[other]}' pod");
+        }
+
+        Assert.AreEqual(0, Differing(4, 5), "a pod named 'shuttle', which the library does not know, should be none at all");
+    }
+
+    [TestMethod]
+    public void TestTheBoardingTubeRunsOutToAnEaglesSideAndNoFurther()
+    {
+        // An Eagle of the usual length docked as the documentation says -- nose west on the deck, 4.6 up, 0.1875 west of
+        // the pad's middle -- has to have its door square with the boarding tube, and the tube's cab, run all the way
+        // out, has to stand against its side without passing into it: its face just clear of the bullnose along the eave
+        // of the pod's window panel, the furthest out the Eagle's side reaches within the cab's height (3.07 from the
+        // middle, the upright wall below it 2.99).  Each is cut by a slab and seen square on to the cut, the cab and the
+        // Eagle apart: cut together, a CSG would count where they overlapped as outside both.
+        UseEagle();
+
+        const string Docked = "object Eagle() { rotate Y 180  translate [-0.1875, 4.6, 0] }";
+
+        // A thing cut across the cab's door frame, x 1.0 to 1.1, clear of the recess in its middle, and seen end on
+        // from the west, four millimeters to a pixel, over the cab's height and from `near` to `far` toward the tube:
+        // how near and how far it reaches.
+        (double Nearest, double Furthest) AcrossTheDoorFrame(string thing, double near, double far)
+        {
+            const double Size = 0.004;
+            double middle = (near + far) / 2;
+            Canvas picture = EagleView(
+                [$"intersection {{ {thing}  cube {{ scale [0.05, 20, 20]  translate X 1.05 }} }}"],
+                (0, 7.6, middle), (-1, 0, 0), "[0, 1, 0]", Size, (int) Math.Round((far - near) / Size),
+                (int) Math.Round(3.4 / Size), "[1, -1, 0]");
+            (double left, double right, _, _) = ReachIn(picture, 0, picture.Width, Size);
+
+            // Seen from the west, north -- +Z, toward the tube -- runs to the picture's left.
+            return (middle - right, middle - left);
+        }
+
+        double side = AcrossTheDoorFrame(Docked, 2.6, 3.4).Furthest;
+        double cab = AcrossTheDoorFrame("object EagleLaunchPad(1)", 2.6, 9.4).Nearest;
+        double drawnBack = AcrossTheDoorFrame("object EagleLaunchPad(0)", 2.6, 9.4).Nearest;
+
+        Assert.AreEqual(3.072, side, 0.008, $"the docked Eagle's side reaches {side:F3} toward the tube");
+        Assert.IsTrue(cab > side && cab - side < 0.02,
+            $"run out, the cab's face stands at {cab:F3}, where the Eagle's side reaches {side:F3}");
+        Assert.AreEqual(5.92, drawnBack - cab, 0.01, $"drawn back, the cab stands only {drawnBack - cab:F3} further off");
+
+        // Cut level through the pod's side at the door's height and seen from above, along one line 2.925 from the
+        // middle -- inside the upright wall, 2.99, and the ribbed panels' recesses either side of the door, 2.95, but
+        // outside the door's, 2.89 -- the door is the gap in the cut, and its middle has to be the tube's, x = 0.
+        const double Across = 0.004;
+        Canvas line = EagleView(
+            [$"intersection {{ {Docked}  cube {{ scale [20, 0.05, 20]  translate Y 7.4 }} }}"],
+            (0, 7.4, 2.925), (0, 1, 0), "[0, 0, 1]", Across, 1000, 1, "[0, -1, 0]");
+        int[] open = Enumerable.Range(0, line.Width).Where(x => IsTheBackdrop(line.GetPixel(x, 0))).ToArray();
+
+        Assert.IsNotEmpty(open, "no door was found in the docked Eagle's side");
+
+        double door = ((open.Min() + open.Max() + 1) / 2.0 - line.Width / 2.0) * Across;
+
+        Assert.AreEqual(0, door, 0.01, $"the docked Eagle's door stands {door:F3} off the tube's line");
+    }
 }
