@@ -3643,13 +3643,24 @@ public class TestShippedLibraries
     private Canvas EagleView(IEnumerable<string> things, (double X, double Y, double Z) at,
         (double X, double Y, double Z) back, string up, double size, int wide, int high, string light)
     {
+        return OrthographicView("import 'eagle' { Eagle, EaglePod, EagleLaunchPad }", things, at, back, up, size,
+            wide, high, light);
+    }
+
+    /// <summary>
+    /// Renders things after the given import, as <see cref="EagleView"/> does: each written out whole, against the
+    /// backdrop, through an orthographic camera.
+    /// </summary>
+    private Canvas OrthographicView(string import, IEnumerable<string> things, (double X, double Y, double Z) at,
+        (double X, double Y, double Z) back, string up, double size, int wide, int high, string light)
+    {
         // An orthographic camera's field of view spans the picture's longer side.
         const double Distance = 200;
         double angle = 2 * Math.Atan(Math.Max(wide, high) * size / 2 / Distance) * 180 / Math.PI;
         string scene = Path.Combine(_directory, "scene.igl");
 
         File.WriteAllText(scene,
-            "import 'eagle' { Eagle, EaglePod, EagleLaunchPad }\n" +
+            import + "\n" +
             "context { angles are degrees  no gamma }\n" +
             $"orthographic camera {{ location [{at.X + back.X * Distance}, {at.Y + back.Y * Distance}, " +
             $"{at.Z + back.Z * Distance}]  look at [{at.X}, {at.Y}, {at.Z}]  up {up}  field of view {angle:F10} }}\n" +
@@ -3657,7 +3668,7 @@ public class TestShippedLibraries
             $"distant light {{ direction {light}  color [0.5, 0.5, 0.5] }}\n" +
             string.Join("\n", things) + "\n");
 
-        Assert.IsNull(Render(scene, wide, high), "the eagle library's things should build");
+        Assert.IsNull(Render(scene, wide, high), "the library's things should build");
 
         return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
     }
@@ -3869,5 +3880,133 @@ public class TestShippedLibraries
         double door = ((open.Min() + open.Max() + 1) / 2.0 - line.Width / 2.0) * Across;
 
         Assert.AreEqual(0, door, 0.01, $"the docked Eagle's door stands {door:F3} off the tube's line");
+    }
+
+    /// <summary>
+    /// Copies the droids library beside the scenes this class writes.
+    /// </summary>
+    private void UseDroids()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "droids.igl"),
+            Path.Combine(_directory, "droids.igl"), true);
+    }
+
+    /// <summary>
+    /// The columns of a picture `wide` across, `size` to a pixel, that show the span `from` to `to` of whatever runs
+    /// to the picture's LEFT, measured from its middle.
+    /// </summary>
+    private static (int From, int To) ColumnsOf(int wide, double size, double from, double to) =>
+        ((int) Math.Round(wide / 2.0 - to / size), (int) Math.Round(wide / 2.0 - from / size));
+
+    [TestMethod]
+    public void TestAnR2FootsSideIsSunkWithinItsRimButForItsBandAndPads()
+    {
+        // A foot's outer side, cut level 2.5 up -- through the rim, the sunken face, a pad either end and the wheel's
+        // housing with its block -- and seen from above, +X up the picture, so its back, +Z, runs to the left.  The
+        // side leans in by 1.5 over 4.9, so the cut's foot, 2.49 up, is where it reaches furthest: 3.6 less 1.69 x
+        // 1.5 / 4.9; sunk 0.08 square to the side, it stands 0.08 / cos 17.02 less.
+        UseDroids();
+
+        const double Size = 0.005;
+        const double Face = 3.6 - 1.69 * 1.5 / 4.9;
+        const double Sunk = Face - 0.08 / 0.95620;
+        Canvas cut = OrthographicView("import 'droids' { R2Foot }",
+            ["intersection { object R2Foot()  cube { scale [8, 0.01, 8]  translate Y 2.5 } }"],
+            (3, 2.5, 0), (0, 1, 0), "[1, 0, 0]", Size, 2700, 300, "[0, -1, 0]");
+
+        // Column by column, so that a part present over only some of its span is caught: the nearest and furthest
+        // any column of the span reaches.
+        (double Least, double Most) OutAt(double from, double to)
+        {
+            (int first, int last) = ColumnsOf(cut.Width, Size, from, to);
+            double[] reach = Enumerable.Range(first, last - first)
+                .Select(column => 3 + ReachIn(cut, column, column + 1, Size).Top)
+                .ToArray();
+
+            return (reach.Min(), reach.Max());
+        }
+
+        (string Part, double From, double To, double Out)[] parts =
+        [
+            ("rim", 5.12, 5.2, Face), ("sunken face by the rim", 4.93, 5.03, Sunk), ("pad", 3.7, 4.75, Face),
+            ("sunken face by the housing", 3.2, 3.45, Sunk), ("housing", 1.5, 2.9, 3.294), ("block", 0.1, 1.1, 3.354)
+        ];
+
+        foreach ((string part, double from, double to, double expected) in parts)
+        foreach (int end in new[] { 1, -1 })
+        {
+            (double least, double most) = end == 1 ? OutAt(from, to) : OutAt(-to, -from);
+            string where = $"the {part} {(end == 1 ? "behind" : "before")} the middle";
+
+            Assert.AreEqual(expected, least, 0.012, $"{where} reaches only {least:F3} out in places, not {expected:F3}");
+            Assert.AreEqual(expected, most, 0.012, $"{where} reaches {most:F3} out in places, not {expected:F3}");
+        }
+
+        // Cut again 5.18 up, through the band across the top: it stands at the face, with the face sunk between its
+        // ends and the rim.
+        const double High = 3.6 - 4.37 * 1.5 / 4.9;
+        Canvas top = OrthographicView("import 'droids' { R2Foot }",
+            ["intersection { object R2Foot()  cube { scale [8, 0.01, 8]  translate Y 5.18 } }"],
+            (2.2, 5.18, 0), (0, 1, 0), "[1, 0, 0]", Size, 2700, 300, "[0, -1, 0]");
+
+        foreach ((string part, double from, double to, double expected) in new[]
+                 {
+                     ("band", -3.1, 3.1, High), ("sunken face past the band's back", 3.3, 3.5, High - 0.08 / 0.95620),
+                     ("sunken face past the band's front", -3.5, -3.3, High - 0.08 / 0.95620), ("rim", 3.6, 3.75, High)
+                 })
+        {
+            (int first, int last) = ColumnsOf(top.Width, Size, from, to);
+
+            for (int column = first; column < last; column++)
+            {
+                double reach = 2.2 + ReachIn(top, column, column + 1, Size).Top;
+
+                Assert.AreEqual(expected, reach, 0.012, $"the {part} reaches {reach:F3} out in places, not {expected:F3}");
+            }
+        }
+
+        // Cut upright down its middle and seen from in front, +X up the picture, so up runs to the left: the block's
+        // face 3.354 out but in its two slots, sunk 0.04 at 4.52 and 4.02 up.
+        Canvas upright = OrthographicView("import 'droids' { R2Foot }",
+            ["intersection { object R2Foot()  cube { scale [8, 8, 0.01] } }"],
+            (3.2, 4, 0), (0, 0, -1), "[1, 0, 0]", Size, 740, 120, "[0, 0, 1]");
+
+        void AssertFaceAt(double from, double to, double expected, string what)
+        {
+            (int first, int last) = ColumnsOf(upright.Width, Size, from - 4, to - 4);
+
+            for (int column = first; column < last; column++)
+            {
+                double reach = 3.2 + ReachIn(upright, column, column + 1, Size).Top;
+
+                Assert.AreEqual(expected, reach, 0.012, $"{what}: {reach:F3} out in places");
+            }
+        }
+
+        AssertFaceAt(4.49, 4.55, 3.314, "the upper slot is not sunk 0.04 into the block");
+        AssertFaceAt(3.99, 4.05, 3.314, "the lower slot is not sunk 0.04 into the block");
+        AssertFaceAt(4.2, 4.35, 3.354, "the block between the slots does not stand 0.06 out");
+        AssertFaceAt(2.5, 3.8, 3.354, "the block under the slots does not stand 0.06 out");
+    }
+
+    [TestMethod]
+    public void TestAnR2FootHasAPlateUnderItsSlotAtEitherEnd()
+    {
+        // A foot cut upright down its middle and seen from its outer side, +Z up the picture: below its slot, from 2
+        // up to 2.8, its back has to reach as far as its front, each sloping end with a plate 0.16 thick lying on it.
+        UseDroids();
+
+        const double Size = 0.01;
+        Canvas cut = OrthographicView("import 'droids' { R2Foot }",
+            ["intersection { object R2Foot()  cube { scale [0.01, 8, 8] } }"],
+            (0, 2.4, 0), (1, 0, 0), "[0, 0, 1]", Size, 200, 1400, "[-1, 0, 0]");
+        (int first, int last) = ColumnsOf(cut.Width, Size, 2 - 2.4, 2.8 - 2.4);
+        (_, _, double front, double back) = ReachIn(cut, first, last, Size);
+        double bare = 6.3 - 1.2 * 2.8 / 4.9;
+
+        Assert.AreEqual(-front, back, 0.02, $"the foot's back reaches {back:F3}, where its front reaches {-front:F3}");
+        Assert.AreEqual(bare + 0.16 / Math.Cos(29.74 * Math.PI / 180), back, 0.02,
+            $"the plate on the foot's back stands out to {back:F3}");
     }
 }
