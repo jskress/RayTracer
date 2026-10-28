@@ -128,6 +128,10 @@ public class RenderInstruction : Instruction
         // -- once the lights standing on things are set out, since the bulbs round them are left out of it.
         scene.LightTheGlowingSurfaces(context.EmissionSamples, sampleTimes.Length);
 
+        // And the openings the sky comes into a room through are found, now that the scene can be looked out of
+        // to tell which side of each the sky is on.
+        scene.OpenTheSky();
+
         // What the scene holds is counted only now that the sky and anything glowing have added the
         // lights they bring, and the render is timed on its own, without the building before it.
         context.Statistics?.Describe(scene, context.Width, context.Height);

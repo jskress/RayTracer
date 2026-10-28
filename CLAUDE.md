@@ -686,9 +686,26 @@ after it (parsed by hand in `ParseImagePigmentClause`).  A sky light carrying an
 image-based lighting: half its samples are picked by a `SkyMap` (luminance on a grid twice the image's width, at most
 4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),
 and the pattern is turned per point (`Scene.ShiftFor`, salts 107/108) so a cloudy sky is grain, not blotches.  When it
-carries the shown background untinted (`Scene.PictureSky`), a rough surface shares it with its reflection, direction
+carries the shown background untinted (`Scene.SharedSky`), a rough surface shares it with its reflection, direction
 by direction (`HighlightShareOf`, `SkyShareOf` on a `LookingRun` with a `Mirror`).  Pattern skies keep the even
-fixed pattern.  A smooth highlight from ANY sky light takes each sample's own light (`Light.HighlightsBySample`); until
+fixed pattern.  A surface marked `portal` (`Surface.OpensToTheSky`; the cube a window is cut from a wall with) is an
+opening the sky comes into a room through: `Scene.OpenTheSky` (after LightPlacer and the glowing surfaces) finds every
+one per placement, takes the middle of its TRUE box between its two widest sides (refused: empty, endless, sheared,
+or no sky either side -- which side is found by 64 shadow-rule looks out of each face) and hands them to every sky
+light (`SkyLight.Openings`, `SkyPortal`).  At a point on the room's side of any opening with light beyond it
+(`SkyPortals.Faces`), three in four of the sky's samples (`SharesAt`; all of one) go THROUGH the openings
+(`SkyPortals.Pick`, salts 151/152): an opening picked by the sky's light through it, then a direction by Bitterli 2015
+via PBRT's `PortalImageInfiniteLight` -- the sky re-mapped per wall frame by (atan2(x,z), atan2(y,z)), so an opening
+from ANY point is an axis-aligned window of one map (`PortalMap`: a summed-area table read bilinearly, exact for even
+cells, halved across then down the column; weight = brightness x pi^2 (1-x^2)(1-y^2)/z; 128 cells for a pattern sky,
+each the mean of 16 reads -- read at middles, a 4-degree bright patch came out an eighth dark -- a picture's
+clamp(texels, 128, 1024)); openings in one wall share a map.  The rest are looked at as anywhere (a picture half by
+its map), every one TURNED per point (fixed, the rare even sample through a window left a 1% window-shaped step),
+all counted by the balance heuristic (`MixedOdds`).  PBRT's portal is exclusive (no sky behind it); ours never is,
+so an unmarked door, or the roof outside, is still lit rightly.  A point facing no opening is looked at as before,
+bit for bit.  A sky with openings is shared with rough reflection as a picture is (`SharedSky`; `OddsToward` takes the
+point).  Caustic photons from the sky (`PhotonSample`) ignore openings.  A test room (one window, 24 samples): RMS a tenth of
+before, the window-shaped stamps gone.  A smooth highlight from ANY sky light takes each sample's own light (`Light.HighlightsBySample`); until
 2026-10-17 it took the light's white color, a white sheen under a blue sky.  One pattern
 depends on direction rather than place: `flop` (`FlopPattern`), the angle
 between the eye and the light's mirror direction (`Basics/Viewing.cs`, `Viewing.Aspecular`), for color-shifting

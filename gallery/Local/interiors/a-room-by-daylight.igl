@@ -1,0 +1,189 @@
+// The other half of a pair: `a-room-after-dark` is this room at night, lit by the fittings standing in
+// it, and this is the same room in the afternoon, lit by nothing but the sky and the sun coming in at
+// its windows.  The lamps are all here, and all out.
+//
+// **The sky comes in through portals.**  A sky light looks at the sky in a few dozen directions from
+// every place it lights, and from the middle of a floor a window is a fiftieth of the sky it could see:
+// one direction in two dozen finds it, and the rest end on plaster.  Looked at that way, every direction
+// that does find the window throws the window's shape across the floor, and the room is lit by a
+// scatter of hard-edged copies of it.  Each window here is cut out of its wall by a cube marked
+// `portal`, and the sky light looks into the room through those: three in four of its directions go
+// through a window, the rest are spread as they would be anywhere, and each is counted by how likely
+// either way was to pick it.  Nothing hangs on the portals being right -- a window left unmarked is still
+// found, only found less well -- and nothing needs to be said about which way a window faces: which side
+// of it the sky is on is found by looking.
+//
+// **The sun is not a portal's business.**  A physical sky hangs its sun as a light of its own, and a sun
+// finds a window from every place it can reach through one; the patches on the floor were always right.
+// What the portals bring is the rest of the sky, the blue fill that comes in at every window and is most
+// of what lights a room on a day the sun is round the other side.
+//
+// **And the light goes on from there.**  The patches of sun on the boards and the rug are bright, and
+// what makes the room read as a room is the light they throw back up -- onto the ceiling over them, into
+// the corner behind the chair -- which is the bounced light, two bounces of it, gathered by the cache.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    diffuse bounces 2
+    diffuse samples 2048
+    diffuse cache
+    info {
+        title 'A Room by Daylight'
+        author 'J. Stephen Kress'
+        description 'The room after dark, in the afternoon: lit by the sky and the sun through its windows.'
+        copyright true
+        software __software__
+    }
+}
+
+import 'daylight' { ClearAfternoonFrom }
+import 'indoor-lights' { TableLamp, FloorLamp, Pendant, Sconce }
+import 'furniture' { Sideboard, Armchair, LowTable }
+
+camera {
+    location [2.45, 1.62, -3.15]
+    look at [-0.35, 1.05, 0.9]
+    field of view 56.32
+    // Exposed for the room, as a photograph of a room by day is: the windows burn out, and the walls the
+    // sky lights from across the room come up to where an eye standing in it would see them.
+    exposure 2.5
+}
+
+// Low in the west, off the room's left-hand side, so that the sun comes in at the windows in that wall
+// and lies across the floor toward the chair.
+background ClearAfternoonFrom(290)
+
+sky light { samples 32 }
+
+// -- The room ---------------------------------------------------------------------------------------
+
+// **The wood and the paint have a sheen, not a blurred reflection.**  Given `roughness`, the boards and the
+// sideboard looked about them in eight directions for what they mirror, and in a room lit like this one what
+// a satin surface mirrors is mostly dim plaster and, here and there, a patch of sun on the rug a hundred times
+// as bright: the odd direction that found one put a single bright pixel down, red off the rug, and the boards
+// came out as a field of sparks.  A sheen takes its light from the sky light's own samples instead -- which,
+// looked at through the portals, are almost all at the windows -- so the windows' glow on the table top is
+// smooth, and the sun's patches stay on the rug.
+Plaster = material { pigment [0.78, 0.75, 0.69]  specular 0 }
+Boards = material {
+    pigment brick {
+        [0.20, 0.13, 0.08], [0.30, 0.20, 0.12]
+        scale [0.9, 4, 0.12]
+    }
+    specular 0.12  shininess 25
+}
+Rug = material { pigment [0.34, 0.16, 0.15]  specular 0 }
+Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.25  shininess 40 }
+Cloth = material { pigment [0.30, 0.30, 0.27]  specular 0 }
+Paint = material { pigment [0.86, 0.85, 0.82]  specular 0.1  shininess 20 }
+Glass = material {
+    pigment White
+    transparency 1  reflective 1  fresnel
+    interior { ior 1.52 }
+}
+Lawn = material {
+    pigment granite {
+        [0, [0.16, 0.24, 0.08], 0.6, [0.22, 0.30, 0.11], 1, [0.28, 0.33, 0.14]]
+        scale 0.6
+    }
+    specular 0
+}
+Hedge = material {
+    pigment granite {
+        [0, [0.06, 0.12, 0.04], 1, [0.12, 0.20, 0.07]]
+        scale 0.25
+    }
+    specular 0
+}
+
+// The walls, floor and ceiling are one shell, a box with a smaller one taken out of it, so that every
+// wall has its thickness and a window cut through one has a reveal for the sun to fall on.  Inside it is
+// five and a half meters across X and nearly six along Z, as the room after dark is; its walls are 22
+// centimeters thick.
+//
+// **Each window is cut by a cube marked `portal`, and the cube reaches past both faces of the wall.**  A
+// face of the cutter lying on a face of the wall would leave a speckled skin across the opening, and the
+// portal is the middle of the cutter's box between its two widest sides -- so the opening itself, whatever
+// is set in it.
+difference {
+    cube { scale [2.97, 1.545, 3.17]  translate [0.15, 1.225, -0.75] }
+    cube { scale [2.75, 1.28, 2.95]  translate [0.15, 1.27, -0.75] }
+
+    // Two in the wall on the left, the near one out of the picture...
+    cube { scale [0.2, 0.7, 0.55]  translate [-2.71, 1.55, -1.2]  portal }
+    cube { scale [0.2, 0.7, 0.55]  translate [-2.71, 1.55, 0.95]  portal }
+
+    // ... and one in the wall at the back, behind where the pendant hangs.
+    cube { scale [0.6, 0.7, 0.2]  translate [-1.3, 1.55, 2.31]  portal }
+
+    material Plaster
+}
+
+// The boards, a whisker above the shell's own floor so the two never share a face.
+cube { material Boards  scale [2.75, 0.005, 2.95]  translate [0.15, 0.002, -0.75] }
+
+parallelogram {
+    material Rug
+    at [-2.2, 0.012, -0.9]
+    sides [3.5, 0, 0], [0, 0, 2.4]
+}
+
+// -- The windows ------------------------------------------------------------------------------------
+
+// A sash window six over six, built in the opening's own frame: the opening's middle at the origin, `wide`
+// and `tall` its whole size, the wall's thickness along Z with the room at +Z.  The frame stands toward the
+// outer face, which leaves the deep inner reveal a sunny window has, and a painted board for a sill.
+primitive Sash(wide, tall) -> group {
+    bar = 0.045
+    return group {
+        // The frame round the opening, and the meeting rail across its middle.
+        cube { material Paint  scale [bar, tall / 2, 0.035]  translate [-wide / 2 + bar, 0, -0.05] }
+        cube { material Paint  scale [bar, tall / 2, 0.035]  translate [wide / 2 - bar, 0, -0.05] }
+        cube { material Paint  scale [wide / 2, bar, 0.035]  translate [0, tall / 2 - bar, -0.05] }
+        cube { material Paint  scale [wide / 2, bar, 0.035]  translate [0, -tall / 2 + bar, -0.05] }
+        cube { material Paint  scale [wide / 2, 0.028, 0.03]  translate [0, 0, -0.05] }
+
+        // The glazing bars: two up each sash and one across it.
+        cube { material Paint  scale [0.011, tall / 2, 0.018]  translate [-wide / 6, 0, -0.05] }
+        cube { material Paint  scale [0.011, tall / 2, 0.018]  translate [wide / 6, 0, -0.05] }
+        cube { material Paint  scale [wide / 2, 0.011, 0.018]  translate [0, tall / 4, -0.05] }
+        cube { material Paint  scale [wide / 2, 0.011, 0.018]  translate [0, -tall / 4, -0.05] }
+
+        // The glass, one sheet behind the bars.
+        cube { material Glass  scale [wide / 2, tall / 2, 0.003]  translate [0, 0, -0.07] }
+
+        // The sill, standing out a little into the room.
+        cube { material Paint  scale [wide / 2 + 0.05, 0.016, 0.085]  translate [0, -tall / 2 - 0.016, 0.06] }
+    }
+}
+
+object Sash(1.1, 1.4) { rotate Y 90  translate [-2.71, 1.55, -1.2] }
+object Sash(1.1, 1.4) { rotate Y 90  translate [-2.71, 1.55, 0.95] }
+object Sash(1.2, 1.4) { rotate Y 180  translate [-1.3, 1.55, 2.31] }
+
+// -- Outside ----------------------------------------------------------------------------------------
+
+// A lawn a little below the floor, and a hedge round it at the far side, which is all a window from
+// inside needs to show: something that is not sky below the sky.
+plane { material Lawn  translate Y -0.3 }
+cube { material Hedge  scale [0.8, 1.1, 14]  translate [-12, 0.8, 0] }
+cube { material Hedge  scale [14, 1.1, 0.8]  translate [0, 0.8, 12] }
+
+// -- What is in it ----------------------------------------------------------------------------------
+
+// As after dark: the library is written in inches, so each piece is scaled into the room by what an inch
+// is in meters.
+Inch = 0.0254
+
+object Sideboard(48, Oak) { rotate Y 180  scale Inch  translate [1.35, 0, 1.95] }
+object Armchair(32, Cloth, Oak) { scale Inch  translate [-1.30, 0, 0.55] }
+object LowTable(36, 24, Oak) { scale Inch  translate [0.15, 0, 0.30] }
+
+// And the four fittings, every one of them out.
+object TableLamp(0.56, 0, 0) { translate [1.35, 0.8128, 1.95] }
+object FloorLamp(1.58, 0, 0) { translate [-1.85, 0, 1.35] }
+object Pendant(0.78, 0, 0) { translate [0.15, 2.55, 0.30] }
+object Sconce(0.32, 1, 0) { translate [1.35, 1.66, 2.19] }

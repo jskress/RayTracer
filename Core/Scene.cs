@@ -928,29 +928,30 @@ public partial class Scene : NamedThing, IDisposable
     }
 
     /// <summary>
-    /// This property holds the sky light that carries the sky the scene shows, when that sky is a
-    /// picture and is shared between a rough surface's highlight and its reflection; see
-    /// <see cref="HighlightShareOf"/>.  Found the first time it is asked for, once the lights are all
-    /// in place.
+    /// This property holds the sky light that carries the sky the scene shows, when that sky is shared
+    /// between a rough surface's highlight and its reflection -- a picture, or any sky looked at through
+    /// portals; see <see cref="HighlightShareOf"/>.  Found the first time it is asked for, once the lights
+    /// are all in place.
     /// </summary>
-    private SkyLight PictureSky
+    private SkyLight SharedSky
     {
         get
         {
-            if (!_pictureSkyFound)
+            if (!_sharedSkyFound)
             {
-                _pictureSky = Lights.OfType<SkyLight>()
-                    .FirstOrDefault(sky => ReferenceEquals(sky.Pigment, Background) && sky.IsAPicture &&
+                _sharedSky = Lights.OfType<SkyLight>()
+                    .FirstOrDefault(sky => ReferenceEquals(sky.Pigment, Background) &&
+                                           (sky.IsAPicture || sky.Openings is { Count: > 0 }) &&
                                            sky.Color.Matches(Colors.White));
-                _pictureSkyFound = true;
+                _sharedSkyFound = true;
             }
 
-            return _pictureSky;
+            return _sharedSky;
         }
     }
 
-    private SkyLight _pictureSky;
-    private bool _pictureSkyFound;
+    private SkyLight _sharedSky;
+    private bool _sharedSkyFound;
 
     /// <summary>
     /// This method returns the share of the sky that belongs to the ray reading it: all of it, unless
@@ -962,12 +963,12 @@ public partial class Scene : NamedThing, IDisposable
     /// <returns>The ray's share of the sky.</returns>
     private double SkyShareOf(Ray ray)
     {
-        if (_looking is not { Mirror: { } mirror } run || PictureSky is not { } sky ||
+        if (_looking is not { Mirror: { } mirror } run || SharedSky is not { } sky ||
             !OnRun(ray, run.Origin, run.Direction))
             return 1;
 
         double byReflecting = run.Count * run.Odds;
-        double byTheSky = sky.OddsToward(run.Direction, mirror);
+        double byTheSky = sky.OddsToward(run.Origin, run.Direction, mirror);
 
         return byReflecting + byTheSky > 0 ? byReflecting / (byReflecting + byTheSky) : 1;
     }
@@ -1683,12 +1684,12 @@ public partial class Scene : NamedThing, IDisposable
     private double LobeShareOf(
         Light light, LightSample sample, Intersection intersection, int looks, double alpha, Facets facets = null)
     {
-        if (light is SkyLight sky && ReferenceEquals(sky, PictureSky))
+        if (light is SkyLight sky && ReferenceEquals(sky, SharedSky))
         {
             if (looks == 0)
                 return 1;
 
-            double byTheSky = sky.OddsToward(sample.Direction, intersection.Normal);
+            double byTheSky = sky.OddsToward(intersection.LitPoint, sample.Direction, intersection.Normal);
             double byReflecting = looks * (facets?.DirectionOdds(intersection.Eye, sample.Direction) ??
                                            Microfacets.DirectionOdds(
                                                intersection.Normal, intersection.Eye, sample.Direction, alpha));

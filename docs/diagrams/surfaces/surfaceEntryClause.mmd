@@ -1,7 +1,7 @@
 railroad-ebnf-beta
 title "Properties every surface has"
 
-property = "named" name | material | "no" ( "shadow" | "caustics" )
+property = "named" name | material | "no" ( "shadow" | "caustics" ) | "portal"
          | "gives" "light" [ "samples" number ] | "bounded" "by" point "," point
          | "with" "seed" number | transform | "transform" name [ "{" { transform } "}" ]
          | motion | hair | placement | weather | body ;

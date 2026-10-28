@@ -61,6 +61,14 @@ public abstract class Surface : NamedThing
     public bool NoCaustics { get; set; }
 
     /// <summary>
+    /// This property says that the sky comes into a room through this object -- a window's glass, a sash, or
+    /// the cube cut out of a wall for a window or a door -- so that a sky light looks through it from inside
+    /// (see <see cref="Core.SkyPortals"/>).  The opening is the middle of the object's box, between its two
+    /// widest sides.  It changes nothing about the object itself.
+    /// </summary>
+    public bool OpensToTheSky { get; set; }
+
+    /// <summary>
     /// This property holds the weather this surface says it has been out in, if it says so; see
     /// <see cref="Core.Weather"/>.  It reaches every part of a group or object that says it.
     /// </summary>

@@ -93,7 +93,7 @@ public partial class LanguageParser
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
             'pitchDown', 'pitchUp', 'pixel', 'planar', 'plane', 'point', 'points', 'poly',
-            'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
+            'portal', 'position', 'power', 'productions', 'profile', 'quad', 'radial', 'radians', 'radii', 'radius', 'reach', 'reflection', 'reflective', 'return',
             'refraction', 'regular', 'render', 'ribbon', 'right', 'ripples', 'rollLeft', 'rollRight',
             'gives', 'glass', 'grown', 'ramp', 'rayleigh', 'rotate', 'roughness', 'rounded', 'rows', 'samples', 'scale', 'scallop', 'scanner', 'scattering', 'scene', 'seed', 'serial', 'shadow', 'shadows', 'sheen',
             'shape', 'shear', 'shininess', 'shutter', 'sides', 'sine', 'sink', 'size', 'sized', 'sky', 'smooth', 'soft', 'software', 'solid', 'source',
@@ -800,6 +800,8 @@ public partial class LanguageParser
         {
             no > [ shadow | caustics ] ?? 'Expecting "shadow" or "caustics" to follow "no" here.'
         }
+        // A surface the sky comes into a room through: a window, a door, a skylight.
+        portalClause: { portal }
         // A surface saying that the stuff inside it lights what is around, and not merely itself.
         givesLightClause:
         {
@@ -866,7 +868,7 @@ public partial class LanguageParser
         ] ?? 'Expecting a body property here.'
         surfaceEntryClause:
         [
-            namedClause | startMaterialClause | surfaceTransformClause | noShadowClause |
+            namedClause | startMaterialClause | surfaceTransformClause | noShadowClause | portalClause |
             givesLightClause | boundedByClause | withSeedClause | startMotionClause |
             startHairClause | placementClause | startWeatherClause | startBodyClause | spanClause
         ]
