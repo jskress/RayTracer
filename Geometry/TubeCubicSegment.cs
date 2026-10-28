@@ -151,6 +151,14 @@ public class TubeCubicSegment : Surface
     }
 
     /// <summary>
+    /// This method returns boxes laid along the segment, a piece of its curve in each, that it lies within
+    /// between them: a curve fills its own box with nothing but a thin line.
+    /// </summary>
+    /// <returns>The boxes.</returns>
+    public override IEnumerable<Casing> Casings() =>
+        Casing.AlongATube([Start, Control1, Control2, End], Math.Max(Math.Max(StartRadius, Control1Radius), Math.Max(Control2Radius, EndRadius)), 8);
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the segment and,
     /// if so, where.
     /// </summary>

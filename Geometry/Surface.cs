@@ -582,6 +582,15 @@ public abstract class Surface : NamedThing
     public virtual bool IsASheet => false;
 
     /// <summary>
+    /// This method returns the boxes, in the surface's own space, that the surface lies wholly within between
+    /// them, for the light of the glowing surfaces to look at it by (see <see cref="Casing"/>): its own box,
+    /// unless it can do better.  A surface without end has none.
+    /// </summary>
+    /// <returns>The boxes.</returns>
+    public virtual IEnumerable<Casing> Casings() =>
+        BoundingBox is { IsEmpty: false } box ? [Casing.Of(box)] : [];
+
+    /// <summary>
     /// This method is called once the surface is certain to have a material, and before that
     /// material's pigment is given its chance to get ready.  It is where a surface that wants a hand
     /// in its own pigment may take one -- a blob whose components carry colors of their own wraps

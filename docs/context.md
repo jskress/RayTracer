@@ -368,10 +368,27 @@ do: what the fudge stood in for is now being followed.  What glows of its own sa
 [`emission`](materials.md#emission) instead, and is seen by its neighbors as the light it is, which is
 how a lit window or a glowing lampshade lights the room around it.
 
+**What glows is looked at directly, as a lamp is.**  A small bright thing -- a lampshade across the room,
+a lit panel -- is found by one direction in hundreds, and every time it is, it lights the place looking as
+brightly as all the other directions together: the nook under a desk lit by a lampshade came out
+blotched however many directions were taken.  So in a scene that follows bounced light, every surface
+that glows is also one light: each of its samples picks one of the glowing surfaces, in proportion to how
+bright it is and how much of the view it may fill -- the ball round it, or a row of small ones along
+anything long and thin, as a neon tube is -- picks a direction toward it, and sends a shadow ray.  The
+place takes on average exactly what its directions found by chance, only steadily, and right beside a
+glowing panel or a sign as steadily as across the room.  A glowing surface also puts its highlight
+on a shiny one, as a lamp does, and is shared with a rough surface's reflection rather than found by it
+alone, so a lampshade in a varnished desk is a soft patch rather than glitter.  However many things glow,
+it costs `emission samples` shadow rays a place; a scene without bounced light has no such light, and
+its glows light nothing, as ever.  A thread of neon a meter long fills so thin a slice of the view that a
+place beside it wants more than the default -- `gallery/Local/lights/a-bar-after-hours.igl`, a bar lit by
+nothing but its signs and a strip of LEDs, looks at them from 64.
+
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `diffuse bounces` | 0 | How many times light is followed from one matte surface to the next. |
 | `diffuse samples` | 32 | How many directions the first matte surface along a path looks in -- or, with a [cache](#a-cache-of-bounced-light), each of its records, the pixels looking round themselves in a sixteenth as many. |
+| `emission samples` | 16 | How many places the glowing surfaces are looked at from, as a light, at every surface a ray from the eye meets, directly or in a mirror or a rough reflection; a surface met along a bounce looks at one. |
 
 **Each bounce is fainter than the last** by the surfaces' own color: a room of white walls taking 0.8
 of the light gives back 0.8 of it, then 0.64, then about half, so two or three bounces is most of it in
@@ -384,7 +401,9 @@ samples` settles it further.
 **Nothing is counted twice.**  A direction that runs straight out to the sky finds what a sky light
 has already counted, and a sky with no sky light is a backdrop rather than a light, so it brings back
 nothing; one that runs straight through a glowing volume that [gives light](surfaces.md#a-surface-that-gives-light)
-brings back only what the volume lets through.  Lamps, panels and suns cannot be met by a ray at all.
+brings back only what the volume lets through; one that runs straight into a glowing surface finds it
+black, its light having been counted by the light of the glowing surfaces.  Lamps, panels and suns
+cannot be met by a ray at all.
 A straight run goes on through smooth glass as though the glass did not bend it, unless the scene asks
 for [caustics](#caustics): a lamp's shadow ray passes such glass straight, so the sky seen through a
 window has been counted already, and found again through the pane it would be counted twice.
@@ -446,9 +465,10 @@ of records rather than hundreds of thousands of pixels, so each can look in far 
 couple of thousand is a usual `diffuse samples` with a cache, where a few hundred is a usual one without.
 Too few shows not as grain but as blotches -- a slow wash of lighter and darker patches the size of the
 records -- and more samples are the cure.  Blotches come first where a nook is lit mostly by something
-small and bright across the room, a glowing lampshade or a lamp's pool on a wall, which only a few of a
-record's directions find; the nook under a desk is the usual place to look, and a room lit that way may
-want several thousand more.  A tight corner, where much
+small and bright across the room -- a lamp's pool on a wall, which only a few of a record's directions
+find; the nook under a desk is the usual place to look, and a room lit that way may want several thousand
+more.  (A glowing lampshade no longer does it: the glowing surfaces are a light, and each pixel looks at
+them itself.)  A tight corner, where much
 is near, shows a little grain instead, from the pixel's own look round it.  A smaller `diffuse cache error` holds each record good for
 less far round it, which makes more of them and follows fine changes more closely.  The records are
 worked out in passes over ever finer grids of the picture, each pass reading only what earlier ones set

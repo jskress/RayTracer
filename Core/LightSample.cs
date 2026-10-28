@@ -26,7 +26,12 @@ namespace RayTracer.Core;
 /// over part of itself rather than the whole -- a sky looked at over the half a surface faces counts each
 /// of those samples double, the cosine weighing they are about to be given averaging a half.</param>
 /// <param name="Odds">How likely the light was to pick this place, per unit of volume, for a light that
-/// picks its places within a volume -- which is what lets a rough surface share such a light fairly
-/// between its highlight and its reflection.  Nought for every other light.</param>
+/// picks its places within a volume, or this direction, per unit of solid angle, for the light of the
+/// glowing surfaces -- which is what lets a rough surface share such a light fairly between its highlight
+/// and its reflection.  Nought for every other light.</param>
+/// <param name="Seen">The place on a glowing surface this sample found, for the light of the glowing
+/// surfaces (see <see cref="EmissionLight"/>), which works out its glow there band by band in a spectral
+/// render.  Null for every other light.</param>
 public readonly record struct LightSample(
-    Vector Direction, double Distance, double Cone, Color Carried = null, double Odds = 0);
+    Vector Direction, double Distance, double Cone, Color Carried = null, double Odds = 0,
+    Intersection Seen = null);

@@ -435,4 +435,6 @@ That is still far cheaper than a lamp lit by a glowing [medium](surfaces.md#a-su
 looks toward every part of the glow.
 
 The [Reading Corner](../gallery/Local/lights/a-reading-corner.igl) is a room lit by two lamps carrying
-their own lights.
+their own lights.  [A Bar After Hours](../gallery/Local/lights/a-bar-after-hours.igl) has no lamp at all:
+in a scene that follows [bounced light](context.md#bounced-light), whatever glows of its own lights the room,
+and there its neon signs and a strip of LEDs are the only light there is.

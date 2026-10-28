@@ -124,6 +124,10 @@ public class RenderInstruction : Instruction
         // it will and the scene can be searched for what closes round each of them.
         LightPlacer.Place(scene, sampleTimes.Length);
 
+        // And, where the scene follows bounced light, the surfaces that glow of their own are looked at as a light
+        // -- once the lights standing on things are set out, since the bulbs round them are left out of it.
+        scene.LightTheGlowingSurfaces(context.EmissionSamples, sampleTimes.Length);
+
         // What the scene holds is counted only now that the sky and anything glowing have added the
         // lights they bring, and the render is timed on its own, without the building before it.
         context.Statistics?.Describe(scene, context.Width, context.Height);

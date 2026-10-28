@@ -23,6 +23,15 @@ public class Sphere : Surface
     }
 
     /// <summary>
+    /// This method returns the box a sphere lies within, marked as holding the ball touching its faces: the
+    /// ball itself is the tightest thing round a sphere, where the ball round its box fills three times as much of
+    /// the view.
+    /// </summary>
+    /// <returns>The box.</returns>
+    public override IEnumerable<Casing> Casings() =>
+        [new Casing(new Point(-1, -1, -1), new Vector(2, 0, 0), new Vector(0, 2, 0), new Vector(0, 0, 2), true)];
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the sphere and,
     /// if so, where.
     /// </summary>

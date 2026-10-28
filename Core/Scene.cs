@@ -1207,22 +1207,15 @@ public partial class Scene : NamedThing, IDisposable
             surfaceColor += walked;
         }
 
-        // The light it gives off of its own, which its color tints, as it tints what it takes from a lamp -- and which
-        // leaves through the skin as everything else of its own does: its own share of what a Fresnel surface
-        // does not mirror, a film's passing share, a coat and a sheen.  (Charged by the coat alone, a glowing bulb
-        // that follows Fresnel showed all its glow at a graze on top of the mirror image that is all it shows there.)
-        if (material.Emission is { } glow)
+        // The light it gives off of its own (see GlowGiven), of which a glowing surface the scene looks at as a light
+        // gives a ray only what the light's samples leave it.
+        if (material.Emission is not null)
         {
-            TS given = TS.FromReflectance(material.GetColorFor(intersection)) * TS.FromIlluminant(glow) * ownShare;
+            TS given = GlowGiven(intersection, material, ownShare, film, coat, cosEye, sheen);
 
-            if (film is { } passing)
-                given *= passing.Passed;
-
-            if (coat is not null)
-                given *= coat.ThroughOut<TS>(cosEye, intersection.N1);
-
-            if (sheen is not null)
-                given *= sheen.Beneath(cosEye);
+            if (GlowingSurfaces is not null && GlowingSurfaces.Holds(intersection) &&
+                GlowShareOf(intersection) is var share and < 1)
+                given *= share;
 
             surfaceColor += given;
         }
@@ -1514,6 +1507,11 @@ public partial class Scene : NamedThing, IDisposable
         Intersection intersection, LightSample sample, (double, double)? glass, Light light, int index = -1)
         where TS : struct, ISpectrum<TS>
     {
+        // A sample worth nothing -- a spotlight's, past the edge of its cone; the glowing surfaces', where it found
+        // none of them -- is worth nothing however much of it would reach, and is spared its shadow ray.
+        if (sample.Cone == 0)
+            return TS.Black;
+
         // While a blend's two halves shade one place, each lamp's sample is looked for once; glass, whose shadow
         // rays depend on the glass, is looked for each time.
         if (Reached<TS>.Sharing > 0 && glass is null && index >= 0)
@@ -1586,14 +1584,18 @@ public partial class Scene : NamedThing, IDisposable
         if (glass is null || sample.Direction.Dot(intersection.Normal) >= 0)
             return HighlightShareOf(light, sample, intersection, looks, facets);
 
-        if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
+        bool glowing = light is EmissionLight && sample.Odds > 0;
+
+        if (!glowing && (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0))
             return light.CanBeSeen ? 0 : LookingShareOf(light, index, intersection);
 
         if (looksThrough == 0)
             return 1;
 
         Material material = intersection.Material;
-        double byLight = glow.WeightOf(sample.Odds, sample.Distance);
+        double byLight = glowing
+            ? light.SampleCount * sample.Odds
+            : ((VolumeLight) light).WeightOf(sample.Odds, sample.Distance);
         double byLooking = looksThrough * Microfacets.RefractionOdds(
             intersection.Normal, intersection.Eye, sample.Direction, material.Roughness * material.Roughness,
             intersection.N1, intersection.N2);
@@ -1692,6 +1694,22 @@ public partial class Scene : NamedThing, IDisposable
                                                intersection.Normal, intersection.Eye, sample.Direction, alpha));
 
             return byTheSky + byReflecting > 0 ? byTheSky / (byTheSky + byReflecting) : 1;
+        }
+
+        // The glowing surfaces' light picks its ways as the reflection does, per unit of solid angle, so the two
+        // are weighed with no distance between them; what the highlight is given here, the reflection is given
+        // in GlowShareOf.
+        if (light is EmissionLight && sample.Odds > 0)
+        {
+            if (looks == 0)
+                return 1;
+
+            double byGlowing = light.SampleCount * sample.Odds;
+            double byLookingAt = looks * (facets?.DirectionOdds(intersection.Eye, sample.Direction) ??
+                                          Microfacets.DirectionOdds(
+                                              intersection.Normal, intersection.Eye, sample.Direction, alpha));
+
+            return byGlowing / (byGlowing + byLookingAt);
         }
 
         if (light is not VolumeLight glow || !Mixes(glow) || sample.Odds <= 0)
@@ -2285,6 +2303,19 @@ public partial class Scene : NamedThing, IDisposable
     /// <returns>The material to shade it with.</returns>
     private static Material RegularizedFor(Intersection intersection)
     {
+        Material material = SettledFor(intersection);
+
+        return material.Split is null ? Regularized(intersection, material) : material;
+    }
+
+    /// <summary>
+    /// This method returns the material a hit wears where the ray met it, its weather and any blend settled
+    /// there, before anything is made rough for a spread ray; see <see cref="RegularizedFor"/>.
+    /// </summary>
+    /// <param name="intersection">The hit.</param>
+    /// <returns>The material it wears there.</returns>
+    private static Material SettledFor(Intersection intersection)
+    {
         Material material = intersection.SurfaceMaterial;
 
         // What weather the surface has been out in makes its material a blend; see Weather.
@@ -2302,7 +2333,7 @@ public partial class Scene : NamedThing, IDisposable
             intersection.Material = material;
         }
 
-        return material.Split is null ? Regularized(intersection, material) : material;
+        return material;
     }
 
     /// <summary>
@@ -2547,12 +2578,12 @@ public partial class Scene : NamedThing, IDisposable
             Ray refracted = RefractedRay(intersection, direction);
             BounceRun? wasBouncing = _bouncing;
 
-            // A search for bounced light goes on with its straight run through glass, bent or not, when the scene
-            // has no caustics: a shadow ray passes glass straight then, so the light's own samples have already
-            // counted the sky and the glows beyond it.  Bent off the run by a pane's index, the search found the sky
-            // a second time.
-            if (_caustics is null && wasBouncing is { } run && OnRun(new Ray(intersection.Point, -intersection.Eye),
-                    run.Origin, run.Direction))
+            // A search for bounced light goes on with its straight run through glass, bent or not, that a shadow ray
+            // passes straight -- every glass, when the scene has no caustics -- since the lights' own samples have
+            // already counted the sky, the glows and the glowing surfaces beyond it.  Bent off the run by a pane's
+            // index, the search found the sky a second time.
+            if (wasBouncing is { } run && !StopsTheShadowRay(intersection, material) &&
+                OnRun(new Ray(intersection.Point, -intersection.Eye), run.Origin, run.Direction))
             {
                 _bouncing = new BounceRun(refracted.Origin, refracted.Direction.Unit);
             }

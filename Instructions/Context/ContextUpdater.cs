@@ -137,6 +137,12 @@ public class ContextUpdater : Instruction
     public Resolver<int> DiffuseSamplesResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how many places the surfaces that glow of their own are looked at
+    /// from, as a light.
+    /// </summary>
+    public Resolver<int> EmissionSamplesResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how far a cache of bounced light may stray, when it is asked for.
     /// </summary>
     public Resolver<double> DiffuseCacheResolver { get; set; }
@@ -224,6 +230,7 @@ public class ContextUpdater : Instruction
         MediumBouncesResolver.AssignTo(context, target => target.MediumBounces, context, variables);
         DiffuseBouncesResolver.AssignTo(context, target => target.DiffuseBounces, context, variables);
         DiffuseSamplesResolver.AssignTo(context, target => target.DiffuseSamples, context, variables);
+        EmissionSamplesResolver.AssignTo(context, target => target.EmissionSamples, context, variables);
         DiffuseCacheResolver.AssignTo(context, target => target.DiffuseCacheError, context, variables);
         CausticPhotonsResolver.AssignTo(context, target => target.CausticPhotons, context, variables);
         TraceDepthResolver.AssignTo(context, target => target.TraceDepth, context, variables);

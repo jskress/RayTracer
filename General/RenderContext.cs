@@ -269,6 +269,12 @@ public class RenderContext
     public int DiffuseSamples { get; set; } = 32;
 
     /// <summary>
+    /// This property holds how many places the surfaces that glow of their own are looked at from, as one light,
+    /// in a scene that follows bounced light; see <see cref="Core.EmissionLight"/>.
+    /// </summary>
+    public int EmissionSamples { get; set; } = Core.EmissionLight.DefaultSamples;
+
+    /// <summary>
     /// This property holds how far the cache of bounced light may stray, as a share of the light, or nought
     /// for no cache -- the default, every place working its bounced light out for itself.  Asked for, the
     /// light is worked out at scattered places and blended between them, which is smoother for far fewer

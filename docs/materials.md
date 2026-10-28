@@ -88,7 +88,11 @@ color.  It is not ambient, though for a long time ambient was what made things g
 the lamps -- each shows the surface by that share of its light, whether that light reaches it or not --
 and stands in for bounced light, so a scene that asks for bounced light drops it altogether, even where a
 material names its own.  Emission is the surface's own, the same with any lamps or none, and in a scene
-that follows bounced light it lights what is near it: a glowing lampshade lights the wall beside it.  A
+that follows bounced light it lights what is near it: a glowing lampshade lights the wall beside it.
+There every glowing surface is looked at directly, as a lamp is, so its light is steady rather than
+found by chance, and a shiny surface shows its highlight; see
+[Bounced Light](context.md#bounced-light).  In a scene that does not follow bounced light a glow is only
+seen: it lights nothing, which is what a softbox put in for a mirror to show wants.  A
 surface that stands for a light already in the scene -- the bulb round a lamp, a painted sun's disc set
 out with `no shadow` -- is passed by bounced light, as by a shadow, so its glow is not counted twice.
 A glow leaves through whatever skin the surface has, as the rest of its own light does: under `fresnel` it
