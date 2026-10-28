@@ -454,6 +454,26 @@ for covered places and never gathers near.  `Camera.FillTheBounceCache` pretrace
 pixel grids at strides 32 down to 1 before rendering; each pass reads only earlier passes, its offers merged in key
 order (`EndPass`), so a cached render is deterministic however threads share the work.  With a cache K is per record,
 so it can be thousands; too few shows as blotches, not grain.
+In a scene with bounces, every surface whose material glows (`emission`) is also ONE light, `EmissionLight`
+(`Core/EmissionLight.cs`, made by `Scene.LightTheGlowingSurfaces` after LightPlacer, since bulbs -- light housings --
+are left out, and so is anything `no shadow` and strands; walked through instances per placement, dressed by
+`MaterialThrough`): a sample picks one of the BALLS round the glowing surfaces by brightness x the solid angle it fills
+from the point (normal-free, so a reflection run's odds can be worked out from its origin), a direction even over
+that cone (the whole sphere from inside the ball).  The balls are round each of a surface's `Surface.Casings` (its box;
+a `Sphere`'s is round, and standing even in the world is its exact ball; a tube segment lays boxes ALONG itself,
+`Geometry/Casing.cs`, a curve's eight by de Casteljau) carried into the world and cut along the longest edge into
+pieces no longer than twice the next (at most 256: a 3.4 m LED strip capped at 64 lit its wall in grain): one ball round a slanted neon stroke was found by 19 looks in
+1024 and the wall behind, inside it, came out grain; 254 now.  A direction's odds are brightness x the number of
+the surface's balls holding it / total (a ball's share over its cone is the brightness; `OddsAlong`, `Holds` by the
+ray's miss distance, never counting a ball behind).  It finds the surface ALONE along it (`Scene.FindTheGlow`: the outermost
+CSG/IAssembled it is part of, its first crossing must be the surface), and carries `GlowSeenAt` there -- the very
+reckoning `HitColorOf` gives a ray meeting it (`GlowGiven`, transparency included) -- over pi x the odds; a miss has
+Cone 0, which skips its shadow ray (`ReachingFrom`, for spotlights too).  A bounce's straight run finds a held glow
+black (`GlowShareOf`), and a rough lobe's run shares it by the balance heuristic with `SampleCount x Odds`
+(`LobeShareOf`/`ShareOf`), as a `VolumeLight`'s.  No photons (`BeamsAt` skips it), so a bounce's straight run now
+carries on through any glass a shadow ray passes straight, caustics or not (`StopsTheShadowRay`).  Without bounces
+there is no such light and a glow lights nothing (lacquer-and-varnish's softbox is "not a light" on purpose).
+`context { emission samples N }` (16).
 
 Caustics are a photon map, off by default: `context { caustics [photons N] }` (2M by default; `Core/Scene.Caustics.cs`,
 `Core/PhotonMap.cs`).  Before the first pixel (before hair light and the bounce cache), photons go from EVERY light at the world

@@ -323,6 +323,12 @@ public partial class LanguageParser
         {
             subsurface > samples ?? 'Expecting "samples" to follow "subsurface" here.' > _expression
         }
+        // How many places the surfaces that glow of their own are looked at from, as a light, in a scene that
+        // follows bounced light.
+        emissionSamplesClause:
+        {
+            emission > samples ?? 'Expecting "samples" to follow "emission" here.' > _expression
+        }
         // How many directions the weathering patterns look about in at each place they are asked about.
         weatheringSamplesClause:
         {
@@ -347,7 +353,7 @@ public partial class LanguageParser
         [
             startInfoClause | scannerClause | anglesClause | settingOnClause |
             settingOffClause | mediumSamplesClause | diffuseLightClause | causticsClause | traceDepthClause |
-            filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause |
+            filmCurveClause | subsurfaceSamplesClause | weatheringSamplesClause | emissionSamplesClause |
             reflectionSamplesClause | antiAliasingClause |
             scaleAmbientClause |
             colorDepthClause | grayscale | spectral | whiteBalanceClause | animationClause | physicsContextClause |

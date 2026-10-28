@@ -406,7 +406,8 @@ public partial class Scene
     /// This method aims the scene's lights at its targets, a beam from each light at each target, weighed by
     /// how much light it brings there -- reckoned over the light's samples, each of which stands for its share
     /// of the light.  The sky sends a beam as a sun from every direction would, and a glowing volume as a lamp
-    /// at every place in it would.
+    /// at every place in it would.  The glowing surfaces send none: their light found in mirrors and glass is
+    /// found by bounced light (see <see cref="EmissionLight"/>).
     /// </summary>
     private List<PhotonBeam> BeamsAt(List<Target> targets)
     {
@@ -414,6 +415,9 @@ public partial class Scene
 
         foreach (Light light in Lights)
         {
+            if (light is EmissionLight)
+                continue;
+
             int count = light.SampleCount;
 
             for (int aim = 0; aim < targets.Count; aim++)

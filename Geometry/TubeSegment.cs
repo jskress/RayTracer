@@ -71,6 +71,14 @@ public class TubeSegment : Surface
     }
 
     /// <summary>
+    /// This method returns the box laid along the segment that it lies within: a stroke at a slant fills its
+    /// own box with nothing but a thin line.
+    /// </summary>
+    /// <returns>The box.</returns>
+    public override IEnumerable<Casing> Casings() =>
+        Casing.AlongATube([Start, End], Math.Max(StartRadius, EndRadius), 1);
+
+    /// <summary>
     /// This method is used to determine whether the given ray intersects the segment and,
     /// if so, where.
     /// </summary>

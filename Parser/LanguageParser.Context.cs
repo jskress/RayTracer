@@ -115,6 +115,15 @@ public partial class LanguageParser
                         : null
                 };
                 break;
+            case "emission":
+                updater.EmissionSamplesResolver = new TermResolver<int>
+                {
+                    Term = term,
+                    Validator = value => value < 1
+                        ? "The glowing surfaces must be looked at from at least one place."
+                        : null
+                };
+                break;
             case "subsurface":
                 updater.SubsurfaceSamplesResolver = new TermResolver<int>
                 {

@@ -1,0 +1,394 @@
+// A bar after closing, lit by nothing but its own signs.
+//
+// There is no lamp anywhere in this scene.  Everything that gives light is a surface that glows of its own:
+// the neon tubes on the wall -- the red OPEN in its blue border, the cocktail glass and its olive -- and a
+// strip of warm LEDs under the lip of the back bar.  The scene follows bounced light, and that is what makes
+// a glow a light: each of them lights the brick round it in its own color, the red and blue meeting on the
+// wall between the signs, and shows in the varnish of the counter, in the bottles and in the glasses on it.
+//
+// A neon tube is a hard thing to light a room with.  It is a thread a centimeter across and a meter long, a
+// sliver of anything's view, and found only by looking about at random, the wall behind a sign came out as
+// grain however long it was looked at.  Looked at directly, by a row of small balls laid along each stroke,
+// it lights the wall as smoothly as a lampshade lights a corner.
+//
+// Everything is in meters.  The signs are bent from tube 12 mm across, standing out from the brick on the
+// dark housings of their electrodes.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    // The light bounced about the room: off the lit brick onto the ceiling and the back bar, off the counter
+    // into the shadows under it.
+    diffuse bounces 2
+    diffuse samples 2048
+    diffuse cache
+    // Each place looks at the glowing tubes from many places: a stroke of neon a hand's breadth away fills a
+    // long thin slice of the view, and a few looks at it would leave the wall behind the sign speckled.
+    emission samples 64
+    // The varnish is a little rough, and blurs what it mirrors; eight looks at the blur at each place are
+    // plenty, since the signs in it are found by their light rather than by the looks.
+    reflection samples 8
+    // Looked through, a glass of whisky is four surfaces deep, and the bottles behind it as many again.
+    trace depth 10
+    info {
+        title 'A Bar After Hours'
+        author 'J. Stephen Kress'
+        description 'A bar after closing, lit by nothing but its neon signs and a strip of LEDs.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.15, 1.32, -2.05]
+    look at [0.05, 1.2, 0.95]
+    field of view 60
+    // A neon tube is far brighter than anything it lights, and a lens spreads a little of that round it.
+    glare 0.08
+}
+
+background [0, 0, 0]
+
+// -- The room -------------------------------------------------------------------------------------------
+
+// Old brick in pale mortar, the mortar first.  A pattern is read in the space of the surface wearing it,
+// and the wall is a plane stood up, whose own face is its floor: turned up with it, the courses stack up
+// the wall rather than running back into it.  A brick's joints run back into the wall too, a course's at
+// every brick's depth and the next course's halfway between; the bricks here are two meters deep, set so
+// the face of the wall is a quarter of the way into one, well clear of both.
+Brick = material {
+    pigment brick {
+        brick size [0.225, 0.075, 2]
+        mortar size 0.012
+        granite { [0, [0.42, 0.4, 0.36], 1, [0.55, 0.53, 0.48]]  scale 0.05 },
+        bozo { [0, [0.3, 0.13, 0.09], 0.5, [0.42, 0.2, 0.13], 1, [0.36, 0.19, 0.14]]  scale 0.14 }
+        translate Z -0.5
+        rotate X 90
+    }
+    diffuse 0.9  specular 0.02
+}
+Plaster = material { pigment [0.18, 0.17, 0.16]  diffuse 0.9  specular 0 }
+Boards = material {
+    pigment brick { [0.1, 0.07, 0.05], [0.14, 0.1, 0.07]  scale [0.9, 4, 0.12] }
+    specular 0.1  shininess 30
+}
+
+plane { material Boards }                                     // the floor
+plane { material Brick  rotate X -90  translate Z 1 }         // the back wall
+plane { material Plaster  rotate X 180  translate Y 2.9 }     // the ceiling
+plane { material Plaster  rotate Z -90  translate X -3.2 }    // the wall on the left
+plane { material Plaster  rotate Z 90  translate X 3.2 }      // the wall on the right
+plane { material Plaster  rotate X 90  translate Z -3.5 }     // the wall behind the camera
+
+// -- The neon -------------------------------------------------------------------------------------------
+
+// Each color is the gas or the glass it glows in: neon's own red-orange, argon in blue glass, mercury in
+// a tube coated turquoise, and in uranium glass the green.
+NeonRed = material { pigment [1, 0.1, 0.02]  emission 40  diffuse 0  specular 0 }
+NeonBlue = material { pigment [0.06, 0.16, 1]  emission 40  diffuse 0  specular 0 }
+NeonTeal = material { pigment [0.12, 0.95, 0.85]  emission 30  diffuse 0  specular 0 }
+NeonGreen = material { pigment [0.45, 1, 0.12]  emission 30  diffuse 0  specular 0 }
+NeonPink = material { pigment [1, 0.3, 0.55]  emission 30  diffuse 0  specular 0 }
+Housing = material { pigment [0.025, 0.025, 0.025]  specular 0.3  shininess 40 }
+
+Bore = 0.006
+Stand = 0.05
+
+// Where a tube ends it turns back into the wall through the dark housing of its electrode.
+primitive Electrode(x, y) -> group {
+    return group {
+        cylinder { min Y 0  max Y Stand  scale [0.009, 1, 0.009]  rotate X 90  translate [x, y, 0]  material Housing }
+    }
+}
+
+// The letters of OPEN, each 22 cm tall and standing on its left edge, x.
+primitive LetterO(x) -> group {
+    return group {
+        // An oval, as four quarter arcs.
+        tube {
+            radius Bore at [x + 0.08, -0.11, 0]
+            curve radius Bore at [x + 0.124, -0.11, 0]  radius Bore at [x + 0.16, -0.061, 0]  radius Bore at [x + 0.16, 0, 0]
+            curve radius Bore at [x + 0.16, 0.061, 0]  radius Bore at [x + 0.124, 0.11, 0]  radius Bore at [x + 0.08, 0.11, 0]
+            curve radius Bore at [x + 0.036, 0.11, 0]  radius Bore at [x, 0.061, 0]  radius Bore at [x, 0, 0]
+            curve radius Bore at [x, -0.061, 0]  radius Bore at [x + 0.036, -0.11, 0]  radius Bore at [x + 0.08, -0.11, 0]
+            material NeonRed
+        }
+        object Electrode(x + 0.08, -0.11)
+    }
+}
+
+primitive LetterP(x) -> group {
+    return group {
+        tube {
+            discontinuous
+            radius Bore at [x, -0.11, 0]
+            radius Bore at [x, 0.11, 0]
+            radius Bore at [x + 0.065, 0.11, 0]
+            curve radius Bore at [x + 0.138, 0.11, 0]  radius Bore at [x + 0.138, 0, 0]  radius Bore at [x + 0.065, 0, 0]
+            radius Bore at [x, 0, 0]
+            material NeonRed
+        }
+        object Electrode(x, -0.11)
+        object Electrode(x, 0)
+    }
+}
+
+primitive LetterE(x) -> group {
+    return group {
+        tube {
+            discontinuous
+            radius Bore at [x + 0.12, 0.11, 0]
+            radius Bore at [x, 0.11, 0]
+            radius Bore at [x, -0.11, 0]
+            radius Bore at [x + 0.12, -0.11, 0]
+            material NeonRed
+        }
+        tube {
+            radius Bore at [x, 0, 0]
+            radius Bore at [x + 0.095, 0, 0]
+            material NeonRed
+        }
+        object Electrode(x + 0.12, 0.11)
+        object Electrode(x + 0.12, -0.11)
+        object Electrode(x + 0.095, 0)
+    }
+}
+
+primitive LetterN(x) -> group {
+    return group {
+        tube {
+            discontinuous
+            radius Bore at [x, -0.11, 0]
+            radius Bore at [x, 0.11, 0]
+            radius Bore at [x + 0.14, -0.11, 0]
+            radius Bore at [x + 0.14, 0.11, 0]
+            material NeonRed
+        }
+        object Electrode(x, -0.11)
+        object Electrode(x + 0.14, 0.11)
+    }
+}
+
+// A rounded frame round a sign, wide by high, its corners turned on a radius of 5 cm, with a gap at the
+// bottom where it goes into the wall.
+primitive Border(wide, high) -> group {
+    W = wide / 2
+    H = high / 2
+    C = 0.05
+    K = 0.5523 * C
+    return group {
+        tube {
+            radius Bore at [-0.03, -H, 0]
+            radius Bore at [-W + C, -H, 0]
+            curve radius Bore at [-W + C - K, -H, 0]  radius Bore at [-W, -H + C - K, 0]  radius Bore at [-W, -H + C, 0]
+            radius Bore at [-W, H - C, 0]
+            curve radius Bore at [-W, H - C + K, 0]  radius Bore at [-W + C - K, H, 0]  radius Bore at [-W + C, H, 0]
+            radius Bore at [W - C, H, 0]
+            curve radius Bore at [W - C + K, H, 0]  radius Bore at [W, H - C + K, 0]  radius Bore at [W, H - C, 0]
+            radius Bore at [W, -H + C, 0]
+            curve radius Bore at [W, -H + C - K, 0]  radius Bore at [W - C + K, -H, 0]  radius Bore at [W - C, -H, 0]
+            radius Bore at [0.03, -H, 0]
+            material NeonBlue
+        }
+        object Electrode(-0.03, -H)
+        object Electrode(0.03, -H)
+    }
+}
+
+// OPEN in its frame.
+group {
+    object LetterO(-0.37)
+    object LetterP(-0.15)
+    object LetterE(0.05)
+    object LetterN(0.23)
+    object Border(1.0, 0.42)
+    translate [-0.62, 1.78, 1 - Stand]
+}
+
+// A cocktail glass with an olive on a pick.
+group {
+    tube {
+        discontinuous
+        radius Bore at [-0.16, 0.16, 0]
+        radius Bore at [0.16, 0.16, 0]
+        radius Bore at [0, -0.06, 0]
+        radius Bore at [-0.16, 0.16, 0]
+        material NeonTeal
+    }
+    tube { radius Bore at [0, -0.06, 0]  radius Bore at [0, -0.24, 0]  material NeonTeal }
+    tube {
+        radius Bore at [-0.09, -0.24, 0]
+        quad radius Bore at [0, -0.225, 0]  radius Bore at [0.09, -0.24, 0]
+        material NeonTeal
+    }
+    // The olive, as four quarter arcs, and the pick through it, set back behind it.
+    tube {
+        radius Bore at [-0.04, 0.081, 0]
+        curve radius Bore at [-0.0245, 0.081, 0]  radius Bore at [-0.012, 0.0935, 0]  radius Bore at [-0.012, 0.109, 0]
+        curve radius Bore at [-0.012, 0.1245, 0]  radius Bore at [-0.0245, 0.137, 0]  radius Bore at [-0.04, 0.137, 0]
+        curve radius Bore at [-0.0555, 0.137, 0]  radius Bore at [-0.068, 0.1245, 0]  radius Bore at [-0.068, 0.109, 0]
+        curve radius Bore at [-0.068, 0.0935, 0]  radius Bore at [-0.0555, 0.081, 0]  radius Bore at [-0.04, 0.081, 0]
+        material NeonGreen
+    }
+    tube { radius Bore at [-0.09, 0.03, 0.014]  radius Bore at [0.05, 0.25, 0.014]  material NeonPink }
+    object Electrode(-0.16, 0.16)
+    object Electrode(0, -0.24)
+    object Electrode(-0.09, -0.24)
+    object Electrode(0.09, -0.24)
+    object Electrode(0.05, 0.25)
+    translate [0.78, 1.8, 1 - Stand]
+}
+
+// -- The back bar ---------------------------------------------------------------------------------------
+
+DarkWood = material {
+    pigment wood {
+        turbulence { amplitude 0.25  octaves 3 }
+        [0, [0.13, 0.07, 0.04], 0.6, [0.1, 0.055, 0.03], 1, [0.13, 0.07, 0.04]]
+        scale [0.006, 0.006, 1]
+        rotate Y 90
+    }
+    specular 0.2  shininess 40
+}
+Varnished = material {
+    pigment wood {
+        turbulence { amplitude 0.25  octaves 3 }
+        [0, [0.2, 0.1, 0.05], 0.6, [0.15, 0.075, 0.04], 1, [0.2, 0.1, 0.05]]
+        scale [0.008, 0.008, 1]
+        rotate Y 90
+    }
+    diffuse 0.85
+    coat { roughness 0.1 }
+}
+
+// A cabinet against the wall, its top standing out over its doors.
+cube { scale [1.7, 0.46, 0.27]  translate [0, 0.46, 0.73]  material DarkWood }
+cube { scale [1.75, 0.02, 0.3]  translate [0, 0.94, 0.7]  material Varnished }
+
+// A strip of warm LEDs along the back of the top, hidden behind a rail, lighting the bottles from behind
+// and washing the brick from below.
+cube { scale [1.75, 0.02, 0.006]  translate [0, 0.98, 0.955]  material DarkWood }
+cube {
+    scale [1.7, 0.003, 0.005]
+    translate [0, 0.966, 0.975]
+    material { pigment White  emission 12 * kelvin(2700)  diffuse 0  specular 0 }
+}
+
+// The bottles on it.  Each is solid glass in the color of what it holds, under a dark cap.
+primitive Bottle(wide, tall, tint) -> group {
+    return group {
+        lathe {
+            path {
+                move to 0, 0
+                line to wide, 0
+                line to wide, tall * 0.62
+                curve wide, tall * 0.76, 0.014, tall * 0.74 to 0.014, tall * 0.84
+                line to 0.014, tall
+                line to 0, tall
+                close
+            }
+            material {
+                pigment tint  ambient 0  diffuse 0  specular 1  shininess 600
+                transparency 1  reflective 1  fresnel
+                interior { ior 1.5  filter 1 }
+            }
+        }
+        cylinder { min Y tall - 0.002  max Y tall + 0.025  scale [0.016, 1, 0.016]  material Housing }
+    }
+}
+
+Amber = color [0.85, 0.5, 0.18]
+GreenGlass = color [0.35, 0.6, 0.3]
+Clear = color [0.92, 0.94, 0.95]
+
+object Bottle(0.04, 0.3, Amber)  { translate [-1.3, 0.96, 0.75] }
+object Bottle(0.036, 0.33, GreenGlass) { translate [-1.12, 0.96, 0.8] }
+object Bottle(0.042, 0.28, Clear) { translate [-0.94, 0.96, 0.72] }
+object Bottle(0.038, 0.31, Amber)  { translate [-0.2, 0.96, 0.78] }
+object Bottle(0.04, 0.29, GreenGlass) { translate [-0.02, 0.96, 0.74] }
+object Bottle(0.036, 0.32, Clear) { translate [0.35, 0.96, 0.8] }
+object Bottle(0.04, 0.3, Amber)  { translate [1.15, 0.96, 0.74] }
+object Bottle(0.037, 0.27, Clear) { translate [1.33, 0.96, 0.8] }
+
+// -- The counter ----------------------------------------------------------------------------------------
+
+cube { scale [3, 0.025, 0.34]  translate [0, 1.055, -1.42]  material Varnished }
+cube { scale [3, 0.515, 0.03]  translate [0, 0.515, -1.5]  material DarkWood }
+
+// A card coaster under each glass, white, to show what light falls on the counter.
+Card = material { pigment [0.86, 0.84, 0.8]  diffuse 0.9  specular 0 }
+
+cylinder { min Y 0  max Y 0.003  scale [0.05, 1, 0.05]  translate [-0.04, 1.08, -1.4]  material Card }
+cylinder { min Y 0  max Y 0.003  scale [0.05, 1, 0.05]  translate [0.3, 1.08, -1.3]  material Card }
+
+Glass = material {
+    pigment White  ambient 0  diffuse 0  specular 1  shininess 600
+    transparency 1  reflective 1  fresnel
+    interior { ior 1.5 }
+}
+
+// A tumbler of whisky: a straight wall 3 mm thick on a heavy base, and the whisky reaching a hair into the
+// wall so a ray going from glass into whisky knows which it is in.
+group {
+    lathe {
+        path {
+            move to 0, 0
+            line to 0.041, 0
+            line to 0.043, 0.095
+            line to 0.04, 0.095
+            line to 0.038, 0.016
+            line to 0, 0.016
+            close
+        }
+        material Glass
+    }
+    lathe {
+        path {
+            move to 0, 0.0155
+            line to 0.0382, 0.0155
+            line to 0.0396, 0.05
+            line to 0, 0.05
+            close
+        }
+        material {
+            pigment [0.8, 0.42, 0.12]  ambient 0  diffuse 0  specular 1  shininess 600
+            transparency 1  reflective 1  fresnel
+            interior { ior 1.36  filter 1 }
+        }
+    }
+    translate [-0.04, 1.0832, -1.4]
+}
+
+// A coupe of something pink, on a stem.
+group {
+    lathe {
+        path {
+            move to 0, 0
+            line to 0.04, 0
+            line to 0.04, 0.003
+            line to 0.004, 0.008
+            line to 0.004, 0.1
+            curve 0.03, 0.1, 0.055, 0.115 to 0.058, 0.142
+            line to 0.055, 0.142
+            curve 0.05, 0.12, 0.03, 0.105 to 0, 0.104
+            close
+        }
+        material Glass
+    }
+    lathe {
+        path {
+            move to 0, 0.1035
+            curve 0.03, 0.1045, 0.049, 0.118 to 0.0525, 0.132
+            line to 0, 0.132
+            close
+        }
+        material {
+            pigment [0.95, 0.45, 0.5]  ambient 0  diffuse 0  specular 1  shininess 600
+            transparency 1  reflective 1  fresnel
+            interior { ior 1.34  filter 1 }
+        }
+    }
+    translate [0.3, 1.0832, -1.3]
+}
