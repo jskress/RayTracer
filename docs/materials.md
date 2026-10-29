@@ -46,7 +46,8 @@ The rest of the material describes how light behaves when it arrives.
 | `roughness` | 0 | Blurs what it mirrors and spreads its highlight, from 0 (a mirror) to 1 (matte). |
 | `anisotropy` | 0 | Brushes a rough surface, its highlight streaking across the grooves; `along` a direction or `around` an axis.  See [Brushed metal](#brushed-metal). |
 | `transparency` | 0 | How much light passes through it. |
-| `metallic` | 0 | Whether the highlight takes the surface's color. |
+| `metal` | none | A real metal, by name or by the color it mirrors, which mirrors as that metal does and shows no color of its own; see [Metals](#metals). |
+| `metallic` | 0 | POV-Ray's tint: the highlight and what is mirrored take the surface's color.  See [Metallic](#metallic). |
 | `film` | none | A film thinner than light's wavelength — a soap bubble, oil on water — that colors what is mirrored; see [Thin films](#thin-films). |
 | `subsurface` | none | Light that goes in, wanders under the surface and comes out elsewhere — wax, marble, skin, a leaf; see [Light under the surface](#light-under-the-surface). |
 | `coat` | none | A clear coat over the surface — lacquer, varnish, a glaze — that mirrors by its own index; see [A clear coat](#a-clear-coat). |
@@ -166,9 +167,9 @@ material to the next:
 | Water | 0.02 |
 | Glass, plastic, paint, varnish, lacquer | 0.04 |
 | Diamond | 0.17 |
-| Iron, chrome | 0.55 |
-| Gold, copper | 0.6 to 0.95, best colored with `metallic` |
-| Aluminum, silver | 0.9 to 0.95 |
+
+A metal mirrors far more, and in its own color; say what it is with [`metal`](#metals) rather than
+choosing a `reflective` for it.
 
 A `reflective` value chosen for a surface without `fresnel` is usually far too high with it.
 Such values were set to give a surface some gloss head-on, and with `fresnel` the edges supply
@@ -330,11 +331,99 @@ light straight through.  Give the glass a body and an `ior`.
 
 `gallery/Local/materials/frosted-glass.igl` shows four panes from clear to deeply frosted.
 
+#### Metals
+
+A metal is a conductor: light that gets into one is swallowed within a few dozen nanometers, so it
+shows no color of its own the way paint does.  Everything it gives back it mirrors, and its color is
+how much of each color it mirrors.  Gold mirrors most of the red and green that reach it and a third
+of the blue, which is why everything seen in it is gold.  `metal` makes a surface a real one:
+
+```
+material {
+    metal 'gold'
+    roughness 0.15
+}
+```
+
+![Ten metals](images/figures/material-metals.png)
+
+The ten metals the renderer knows, in a row of balls under a bright panel, each mirroring the same
+studio.  The scene is [`docs/examples/materials/metals.igl`](examples/materials/metals.igl).
+
+A metal named here mirrors what it was measured to, color by color and at every angle.  Its
+complex index of refraction comes from measurements (refractiveindex.info, which places them in the
+public domain) and goes through Fresnel's equations for a conductor.  So a metal holds near its
+square-on share most of the way to a graze, dips a little, and climbs to all of it at the very edge,
+its color washing out toward white as it climbs.  The metals are:
+
+| Name | Square-on: red, green, blue | |
+| --- | --- | --- |
+| `aluminum` | 0.91, 0.92, 0.92 | |
+| `brass` | 0.90, 0.78, 0.41 | |
+| `chromium` | 0.55, 0.56, 0.55 | Chrome plate. |
+| `copper` | 0.93, 0.64, 0.53 | |
+| `gold` | 0.99, 0.79, 0.34 | |
+| `iron` | 0.57, 0.57, 0.56 | Close to polished steel. |
+| `nickel` | 0.65, 0.61, 0.53 | |
+| `platinum` | 0.68, 0.64, 0.58 | |
+| `silver` | 0.97, 0.96, 0.91 | |
+| `titanium` | 0.62, 0.58, 0.54 | The measurements give back a few hundredths more than published values. |
+
+A metal not here — bronze, pewter, gunmetal, an alloy no one has measured — may be given by the color
+it mirrors square-on:
+
+```
+material { metal [0.80, 0.50, 0.25]  roughness 0.3 }    // bronze
+```
+
+It mirrors that color square-on, and as a metal does at a slant: each color stays near its
+square-on share most of the way to a graze and then climbs to all of it.  `edge` and a second color say
+more about how each color fares on the way: where the edge color is bright, that color climbs early
+as the surface turns away, and where it is dark, it dips first.  A color mirrored at 0.64 square-on
+mirrors 0.74 at eighty degrees with no edge, 0.90 with an edge of 1, and 0.49 with an edge of 0.  So
+copper's salmon turning orange toward its edge is an edge brighter in red and green than in blue:
+
+```
+material { metal [0.93, 0.64, 0.53]  edge [1, 0.9, 0.6] }
+```
+
+The index is Gulbrandsen's (*Artist Friendly Metallic Fresnel*, 2014), worked out band by band, so
+a metal given by its color is as real a conductor as a named one.
+
+**A metal shows nothing but what it mirrors.**  Where it is bare, its `pigment`, `ambient`,
+`diffuse`, `reflective`, `fresnel` and `metallic` do nothing.  So a metal with nothing to mirror — a
+ball under one lamp against a black background — is black but for its highlight.  That is how metals
+are, and why they are photographed in rooms and under softboxes: give one a sky, a room or a bright
+panel to mirror.  Where a metal is not bare, the rest of the material says what is there instead.
+Under a [decal](#decals), that is the decal's paint, lit by the material's `diffuse` and `ambient`.
+Where [weathering](#weathering-a-model) or a [blend](#blending-materials) lays grime over it, it is the
+grime, and weathering's grime leaves three tenths of the metal showing through.
+
+A metal's highlight is the lamp's light in the metal's own color: Phong's for a smooth metal, whose
+`specular` and `shininess` still say how strong and how tight it is, and its facets' for a rough one.
+Everything else a surface may be works on a metal:
+
+- `roughness`, and `anisotropy` for [brushed metal](#brushed-metal): brushed steel is
+  `metal 'iron'  roughness 0.3  anisotropy 0.8 along X`.
+- A [clear coat](#a-clear-coat): lacquered brass.  The metal then mirrors against the coat's own index,
+  a little less than it would in air.
+- A [film](#thin-films): anodized titanium, blued steel.
+- [Fine wires](advanced-surfaces.md#strand), caustics and spectral renders.  A spectral render carries
+  each metal's measurements band by band.
+
+A metal under water mirrors against the water's index, as it does under a coat.  A metal lets no
+light through, so `transparency` is refused beside `metal`.
+
+`gallery/Local/materials/metal-in-the-sun.igl` sets gold, silver, copper, brass, steel, bronze and
+anodized titanium on a sunlit table under a window, the gold bangle throwing the sun onto the cloth inside
+it.
+
 #### Metallic
 
 Ordinarily a highlight is the color of the *light*: a white lamp on a red ball gives a white
 highlight.  Metals do not behave that way — their highlights take the color of the metal.
-`metallic` switches that on:
+`metallic` is POV-Ray's way of saying so, kept for scenes written that way; a real metal is better
+said with [`metal`](#metals).  It tints the highlight, and what is mirrored, by the surface's color:
 
 ```
 material {
@@ -347,8 +436,10 @@ material {
 ```
 
 Written bare, `metallic` means fully metallic; give it a number between 0 and 1 to blend.
-Gold, copper and brass all want this, and all want a reflection too — a metal that mirrors
-nothing looks like painted plastic.
+A material written this way wants a reflection too — a metal that mirrors nothing looks like
+painted plastic — and how much is the author's guess, which is the trouble with it: the metals
+in the libraries, tuned by eye, mirror anything from a twentieth to nearly one and a half times what
+the real metal does.  `metallic` does nothing to a material that says `metal`.
 
 #### A clear coat
 
@@ -371,8 +462,10 @@ darker square-on and gives way to the mirror at a graze.  A coat takes the place
 own highlight: `specular` and `shininess` are not used beneath one, since a lamp's mirror image is
 the coat's.
 
-Anything else the material says it mirrors, it mirrors beneath the coat.  Metallic paint is metal
-flakes under lacquer, a rough, metallic mirror beneath a smooth coat:
+Anything else the material says it mirrors, it mirrors beneath the coat.  A [metal](#metals) beneath
+one — lacquered brass, a varnished copper pan — mirrors against the coat's own index rather than
+air's, at the angle the light is bent to inside the coat.  Metallic paint is metal flakes under
+lacquer, a rough, metallic mirror beneath a smooth coat:
 
 ```
 material {
@@ -468,6 +561,18 @@ until they run into white, which is why a thick pane of glass shows no colors at
 beneath the film is whatever the material is made of, by the index of refraction of its
 [interior](#transparency-and-interiors).  A bubble is clear and holds nothing but air, which is an
 interior's default, so it bends nothing that passes through it.
+
+On a [metal](#metals), the film lies on the metal itself, and the metal's own index, color by color,
+is what lies beneath it.  That is where anodized titanium and heat-tinted steel get their colors: an
+oxide a few dozen nanometers thick on bare metal, bronze where it is thinnest, then purple, blue and
+gold as it thickens.
+
+```
+material {
+    metal 'titanium'
+    film { thickness 30 to 160 by linear Y gradient { }  ior 2.4 }
+}
+```
 
 The film works out what it mirrors for itself, from those indices and the angle, so a material with
 a film does not use `reflective` or `fresnel`.  It mirrors a few percent square-on, more at a slant,

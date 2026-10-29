@@ -384,6 +384,24 @@ the sheen faint.  The weave beneath is scaled by `Beneath`: 1 - max(color) x E, 
 for ambient, bounces, caustics, walks and the base's mirror.  `SheenApplies` needs opaque, no film, no coat (sheen +
 coat or film is refused at parse).
 
+A material's `metal 'gold'` or `metal <color> [edge <color>]` (`Core/Metal.cs`, `Core/Metals.cs`, `MetalResolver`) is
+a conductor: a complex index per band -- ten named, from refractiveindex.info (CC0): Ag Al Au Cu CuZn by way of pbrt-v4,
+Cr Ti Johnson-Christy 1974, Ni Pt Rakić 1998, Fe Querry 1985, each the set whose square-on share matches published
+values (zinc left out: no set in the database holds up in the visible) -- or Gulbrandsen's from a face and edge color
+band by band (pbrt's n = 1 with no edge).  It mirrors by the exact unpolarized conductor Fresnel against the index
+outside it (`N1`; under a coat the coat's, at the cosine bent into it, `Coat.Within`), tabled over 1024 cosine steps
+per outside index as 32 bands and as RGB (`SpectralColor.ToColor`, clamped: gold's red lies past sRGB).  `metal` sets
+`Metallic` 1, which for a material with a `Metal` is how much of the surface is BARE (`BareMetalAt`: Metallic x (1 -
+decal coverage), the decals `Painted` over transparent): bare metal shows nothing of its own (`ownShare *= 1 - share`:
+ambient, diffuse, emission; the bounce and caustic gathers skip a place with no own share left), and mirrors and
+highlights by `BareMetal.Mirrors` = share x F + (1 - share) x the rest's reflectance, per band (a rough highlight worked
+out with R = 1 and charged at eye.halfway after; `LookedAtRoughly`'s `tinted`).  POV's tint is skipped wherever there
+is a `Metal`.  `MaterialBlend.Mixed` mixes bare shares and weighs the rest's numbers (pigment, ambient, diffuse,
+emission, reflective) by how much of each side is NOT metal, so grime over brass is the grime's own; two metals mix as
+`Metal.Mixed`.  A film on a metal lies on its index band by band (`ThinFilm.InnerFaceOver`); photons turn at a metal
+by its RGB share (spectral photons take it by `Hue.Of`); a metal strand is a wire (`Metallic > 0`).  `transparency`
+beside `metal` is refused at parse.  Scenes that never say `metal` are pixel-identical.
+
 Weathering: three patterns LOOK ABOUT a place rather than at a point (`Pattern.SeesTheSurroundings`, handed a
 thread-static `Surroundings` -- scene, surface, world point, normal, portals, time index; `Scene.Shading` and
 `ShadingTime` are set by `GetHitColor` and by the photon and hair-light passes -- by `Material.GetColorFor` only for a

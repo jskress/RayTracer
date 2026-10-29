@@ -351,9 +351,12 @@ public partial class Scene
 
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
 
+        // A metal turns what it mirrors square-on, on average over the colors, where it is bare.
+        double metal = material.MetalApplies ? material.Metal.AverageAt(1, 1) * Math.Min(material.Metallic, 1) : 0;
+
         return Math.Max(
             Math.Max(
-                Math.Max(material.Reflective, material.Film is null ? 0 : 0.25),
+                Math.Max(Math.Max(material.Reflective, metal), material.Film is null ? 0 : 0.25),
                 material.CoatApplies ? material.Coat.AverageReflectance(1) : 0),
             transmits && material.Interior.Refracts ? Math.Max(material.Transparency, 0.5) : 0);
     }
@@ -369,7 +372,7 @@ public partial class Scene
 
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
 
-        return material.Reflective > 0 || (transmits && material.Interior.Refracts);
+        return material.Reflective > 0 || material.MetalApplies || (transmits && material.Interior.Refracts);
     }
 
     /// <summary>
@@ -718,8 +721,9 @@ public partial class Scene
             if (turns == 0 && !turnsHere && !LetsLightBy(material))
                 return;
 
-            // Where a turned photon lands on something matte, it is kept.
-            if (turns > 0 && material.Diffuse > 0 && material.Transparency < 1)
+            // Where a turned photon lands on something matte, it is kept: not on bare metal, which has nothing of
+            // its own for it to light.
+            if (turns > 0 && material.Diffuse > 0 && material.Transparency < 1 && !material.IsBareMetal)
             {
                 landed.Add(PhotonMap.Photon.At(
                     hit.Point, carried.ToColor(), ray.Direction, hit.Normal,
@@ -922,7 +926,10 @@ public partial class Scene
         RgbSpectrum mirrored = RgbSpectrum.Black;
         RgbSpectrum passed = RgbSpectrum.Black;
 
-        if (material.Film?.SharesAt<RgbSpectrum>(hit) is { } film)
+        // Bare metal mirrors each color by its own share; under a film, the film's shares say it all.
+        BareMetal? metal = material.Film is null ? material.BareMetalAt(hit) : null;
+
+        if (material.Film?.SharesAt<RgbSpectrum>(hit, material.MetalApplies ? material.Metal : null) is { } film)
         {
             // A film mirrors and lets on its shares of each color, as GetHitColor has it, whatever its
             // reflective says.
@@ -950,7 +957,7 @@ public partial class Scene
                 : (facets.Along, facets.Across);
             Vector eye = new (hit.Eye.Dot(across), hit.Eye.Dot(along), hit.Eye.Dot(hit.Normal));
 
-            if (material.Reflective > 0 && eye.Z > 0)
+            if ((material.Reflective > 0 || metal is not null) && eye.Z > 0)
             {
                 Vector facet = facets?.SampleVisibleNormal(eye, first, second) ??
                                Microfacets.SampleVisibleNormal(eye, alpha, first, second);
@@ -962,10 +969,12 @@ public partial class Scene
                     double reflectance = transmits
                         ? material.Reflective * Microfacets.GlassReflectance(cosFacet, hit.N1, hit.N2)
                         : material.ReflectanceAt(cosFacet);
+                    double masking = facets?.Masking(away) ?? Microfacets.Masking(away.Z, alpha);
 
                     mirrorRay = new Ray(hit.MirrorPoint, (across * away.X + along * away.Y + hit.Normal * away.Z).Unit);
-                    mirrored = RgbSpectrum.White *
-                               (reflectance * (facets?.Masking(away) ?? Microfacets.Masking(away.Z, alpha)));
+                    mirrored = metal is { } bare
+                        ? bare.Mirrors<RgbSpectrum>(cosFacet, reflectance) * masking
+                        : RgbSpectrum.White * (reflectance * masking);
                 }
             }
 
@@ -986,10 +995,12 @@ public partial class Scene
             // GetRefractedColor has it -- glass sharing what reaches it between the two by one Fresnel share.
             Vector bent = transparency > 0 ? Bent(hit, hit.N1, hit.N2) : null;
 
-            if (material.Reflective > 0)
+            if (material.Reflective > 0 || metal is not null)
             {
                 mirrorRay = new Ray(hit.MirrorPoint, hit.Reflect);
-                mirrored = RgbSpectrum.White * material.ReflectanceAt(cosine);
+                mirrored = metal is { } bare
+                    ? bare.Mirrors<RgbSpectrum>(cosine, material.ReflectanceAt(cosine))
+                    : RgbSpectrum.White * material.ReflectanceAt(cosine);
             }
 
             if (bent is not null)
@@ -1008,7 +1019,7 @@ public partial class Scene
         }
 
         // A metal tints what it mirrors, and the filter what is let through, at every surface.
-        if (material.Metallic != 0 && mirrored.Sum > 0)
+        if (material.Metallic != 0 && material.Metal is null && mirrored.Sum > 0)
             mirrored *= material.GetMetallicTint(RgbSpectrum.From(pigment), cosine);
 
         // A coat mirrors by its own index over whatever lies beneath it, and what lies beneath mirrors

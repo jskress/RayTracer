@@ -1,0 +1,44 @@
+// The ten metals the renderer knows, each mirroring the same studio: a checked floor, a sky going from pale
+// overhead to gray at the horizon, and a broad bright panel behind the camera.  Back row, left to right:
+// aluminum, brass, chromium, copper, gold.  Front row: iron, nickel, platinum, silver, titanium.
+context { angles are degrees }
+
+background linear Y gradient { [0, color [0.30, 0.31, 0.34], 1, color [0.85, 0.87, 0.92]]  scale 30 }
+
+camera {
+    location [0, 7.5, -15]
+    look at [0, -0.1, 0.2]
+    field of view 42
+}
+
+point light { location [-6, 9, -9]  color [1, 0.97, 0.93] }
+point light { location [7, 4, -5]   color [0.3, 0.31, 0.36] }
+
+plane {
+    material {
+        pigment checker { color [0.55, 0.55, 0.6], color [0.2, 0.2, 0.25] scale 1.6 }
+        specular 0.1
+    }
+    translate [0, -0.85, 0]
+}
+
+// A broad bright panel behind the camera, as a photographer's softbox is: a metal shows nothing but what
+// it mirrors, and wants something bright to mirror.
+cube {
+    material { pigment White  ambient 1.6  diffuse 0  specular 0 }
+    scale [30, 12, 0.05]
+    translate [0, 9, -20]
+    no shadow
+}
+
+sphere { material { metal 'aluminum' }  scale 0.85  translate [-4.2, 0, 1.9] }
+sphere { material { metal 'brass' }  scale 0.85  translate [-2.1, 0, 1.9] }
+sphere { material { metal 'chromium' }  scale 0.85  translate [0, 0, 1.9] }
+sphere { material { metal 'copper' }  scale 0.85  translate [2.1, 0, 1.9] }
+sphere { material { metal 'gold' }  scale 0.85  translate [4.2, 0, 1.9] }
+
+sphere { material { metal 'iron' }  scale 0.85  translate [-4.2, 0, -1.9] }
+sphere { material { metal 'nickel' }  scale 0.85  translate [-2.1, 0, -1.9] }
+sphere { material { metal 'platinum' }  scale 0.85  translate [0, 0, -1.9] }
+sphere { material { metal 'silver' }  scale 0.85  translate [2.1, 0, -1.9] }
+sphere { material { metal 'titanium' }  scale 0.85  translate [4.2, 0, -1.9] }

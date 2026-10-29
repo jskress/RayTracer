@@ -90,8 +90,10 @@ public class ThinFilm
     /// </summary>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     /// <param name="intersection">The hit, prepared.</param>
+    /// <param name="metal">The metal the film lies on, or <c>null</c> for one on whatever the hit's far side
+    /// is.</param>
     /// <returns>The shares.</returns>
-    public FilmShares<TS> SharesAt<TS>(Intersection intersection)
+    public FilmShares<TS> SharesAt<TS>(Intersection intersection, Metal metal = null)
         where TS : struct, ISpectrum<TS>
     {
         double thickness = ThicknessAt(Pattern is null
@@ -99,7 +101,7 @@ public class ThinFilm
             : intersection.Surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals));
 
         return SharesAt<TS>(
-            thickness, intersection.Eye.Dot(intersection.Normal), intersection.N1, intersection.N2);
+            thickness, intersection.Eye.Dot(intersection.Normal), intersection.N1, intersection.N2, metal);
     }
 
     /// <summary>
@@ -117,12 +119,14 @@ public class ThinFilm
     /// <param name="cosAngle">The cosine of the angle the light meets the surface at.</param>
     /// <param name="outside">The index of refraction on the side the light comes from.</param>
     /// <param name="beneath">The index of refraction of what is under the film.</param>
+    /// <param name="metal">The metal under the film, in place of <paramref name="beneath"/>, or <c>null</c>.</param>
     /// <returns>The shares.</returns>
-    public FilmShares<TS> SharesAt<TS>(double thickness, double cosAngle, double outside, double beneath)
+    public FilmShares<TS> SharesAt<TS>(
+        double thickness, double cosAngle, double outside, double beneath, Metal metal = null)
         where TS : struct, ISpectrum<TS>
     {
         Span<double> perBand = stackalloc double[SpectralColor.Bands];
-        double average = ReflectanceAt(thickness, cosAngle, outside, beneath, perBand);
+        double average = ReflectanceAt(thickness, cosAngle, outside, beneath, perBand, metal);
         TS mirrored = TS.FromSampled(perBand);
         TS highlight = average > 1e-12 ? mirrored * (1 / average) : TS.White;
 
@@ -131,16 +135,23 @@ public class ThinFilm
 
     /// <summary>
     /// This method works out how much of the light meeting the film it mirrors, band by band.
+    /// <para>
+    /// **A film on a metal** -- the oxide on anodized titanium or heat-tinted steel, oil on a pan -- lies on
+    /// something whose index is complex, and differs from band to band.  The arithmetic is the same, the
+    /// metal's index taking the place of the real one beneath, band by band: the light reaching the metal does
+    /// not cross it but dies away in it, which is what the imaginary part of its cosine says.
+    /// </para>
     /// </summary>
     /// <param name="thickness">How thick the film is there, in nanometers.</param>
     /// <param name="cosAngle">The cosine of the angle the light meets the surface at.</param>
     /// <param name="outside">The index of refraction on the side the light comes from.</param>
     /// <param name="beneath">The index of refraction of what is under the film.</param>
     /// <param name="perBand">Where to put the share mirrored in each band.</param>
+    /// <param name="metal">The metal under the film, in place of <paramref name="beneath"/>, or <c>null</c>.</param>
     /// <returns>What the film mirrors on average over every thickness: the share a film too thick to
     /// show colors would mirror.</returns>
     public double ReflectanceAt(
-        double thickness, double cosAngle, double outside, double beneath, Span<double> perBand)
+        double thickness, double cosAngle, double outside, double beneath, Span<double> perBand, Metal metal = null)
     {
         double film = IndexOfRefraction;
 
@@ -154,14 +165,12 @@ public class ThinFilm
         // a little way in and dies away, and a film thin enough is crossed by that tail.  The root
         // taken is the one whose imaginary part is positive, which makes the tail die away.
         Complex cos1 = Complex.Sqrt(1 - outside * outside / (film * film) * sinSquared);
-        Complex cos2 = Complex.Sqrt(1 - outside * outside / (beneath * beneath) * sinSquared);
 
         // How much each face mirrors, as waves rather than as shares of light, for light polarized
         // across the plane it travels in and along it.
         Complex s01 = Face(outside * cos0, film * cos1);
-        Complex s12 = Face(film * cos1, beneath * cos2);
         Complex p01 = Face(film * cos0, outside * cos1);
-        Complex p12 = Face(beneath * cos1, film * cos2);
+        (Complex s12, Complex p12) = InnerFaceOver(beneath, outside, sinSquared, film, cos1);
 
         // How far behind the second reflection falls, as an angle, is this over the wavelength.
         Complex lag = 4 * Math.PI * film * thickness * cos1;
@@ -174,10 +183,18 @@ public class ThinFilm
         double swing = Math.Abs(lag.Real) * bandWidth / (shortest * shortest);
         int samples = Math.Clamp((int) Math.Ceiling(swing / (Math.PI / 2)), 1, MostSamples);
 
+        double average = 0;
+
         for (int band = 0; band < SpectralColor.Bands; band++)
         {
             double start = SpectralColor.WavelengthOf(band) - bandWidth / 2;
             double sum = 0;
+
+            if (metal is not null)
+            {
+                (s12, p12) = InnerFaceOver(metal.IndexIn(band), outside, sinSquared, film, cos1);
+                average += (Incoherent(s01, s12) + Incoherent(p01, p12)) / 2;
+            }
 
             for (int sample = 0; sample < samples; sample++)
             {
@@ -190,7 +207,29 @@ public class ThinFilm
             perBand[band] = sum / samples;
         }
 
-        return (Incoherent(s01, s12) + Incoherent(p01, p12)) / 2;
+        return metal is null
+            ? (Incoherent(s01, s12) + Incoherent(p01, p12)) / 2
+            : average / SpectralColor.Bands;
+    }
+
+    /// <summary>
+    /// This method returns how much the film's inner face mirrors, as waves, for light polarized across the plane
+    /// it travels in and along it: against what lies beneath, whose index may be complex.
+    /// </summary>
+    /// <param name="beneath">The index of what lies beneath the film.</param>
+    /// <param name="outside">The index of refraction on the side the light comes from.</param>
+    /// <param name="sinSquared">The square of the sine of the angle the light meets the surface at.</param>
+    /// <param name="film">The film's own index.</param>
+    /// <param name="cos1">The cosine of the angle inside the film.</param>
+    /// <returns>The coefficients, across and along.</returns>
+    private static (Complex Across, Complex Along) InnerFaceOver(
+        Complex beneath, double outside, double sinSquared, double film, Complex cos1)
+    {
+        // The cosine of the angle beneath, by Snell's law: imaginary past the angle at which light can enter,
+        // and complex in a metal.  Its root is the one that dies away.
+        Complex cos2 = Complex.Sqrt(1 - outside * outside / (beneath * beneath) * sinSquared);
+
+        return (Face(film * cos1, beneath * cos2), Face(beneath * cos1, film * cos2));
     }
 
     /// <summary>

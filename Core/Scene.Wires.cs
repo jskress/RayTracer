@@ -55,6 +55,12 @@ public partial class Scene
         double cosEye = Math.Max(1e-9, eye.Dot(frame.Face));
         TS pigment = TS.FromReflectance(material.GetColorFor(hit));
         double ownShare = material.FresnelApplies ? 1 - material.ReflectanceAt(cosEye) : 1;
+        BareMetal? metal = material.Film is null ? material.BareMetalAt(hit) : null;
+
+        // Bare metal shows nothing of its own, as at any surface.
+        if (metal is { } bare)
+            ownShare *= 1 - bare.Share;
+
         double ambient = material.EffectiveAmbient * ownShare;
         TS color = TS.Black;
 
@@ -104,14 +110,14 @@ public partial class Scene
                 }
 
                 if (_bounced == 0 && !light.CanBeSeen)
-                    sum += GlintOf(material, frame, eye, cosEye, toward, light, sample, pigment) * reaching;
+                    sum += GlintOf(material, frame, eye, cosEye, toward, light, sample, pigment, metal) * reaching;
             }
 
             color += one >= 0 || count == 1 ? sum : sum * (1.0 / count);
         }
 
-        if (material.Reflective > 0 && remaining >= 1)
-            color += MirroredRound<TS>(hit, material, frame, eye, pigment, remaining);
+        if ((material.Reflective > 0 || metal is not null) && remaining >= 1)
+            color += MirroredRound<TS>(hit, material, frame, eye, pigment, remaining, metal);
 
         // The light it gives off of its own, which its color tints, as any surface's -- and, as any surface's,
         // only the share its skin does not mirror.
@@ -129,7 +135,7 @@ public partial class Scene
     /// </summary>
     private static TS GlintOf<TS>(
         Material material, StrandFrame frame, Vector eye, double cosEye, Vector toward, Light light,
-        LightSample sample, TS pigment)
+        LightSample sample, TS pigment, BareMetal? metal)
         where TS : struct, ISpectrum<TS>
     {
         Vector halfway = (eye + toward).Unit;
@@ -158,7 +164,7 @@ public partial class Scene
             around = Microfacets.WidenedBy(around, spread);
 
             factor = Math.PI * RoundTheLobe(frame, eye, toward, lengthwise, around, sinAxial, cosAxial, at) *
-                     material.ReflectanceAt(eye.Dot(halfway)) / (8 * cosEye);
+                     (metal is null ? material.ReflectanceAt(eye.Dot(halfway)) : 1) / (8 * cosEye);
         }
         else
         {
@@ -174,7 +180,18 @@ public partial class Scene
         TS glint = (material.IsRough || light.HighlightsBySample ? light.EmittedToward<TS>(sample) : light.Emitted<TS>()) *
                    factor;
 
-        return material.Metallic != 0 ? glint * material.GetMetallicTint(pigment, peak.Dot(toward)) : glint;
+        // Bare metal's glint is its own share of each band: at the angle the eye meets the facets for a rough wire,
+        // as the facets' share was taken, and at the light's against the place that mirrors it for Phong's.
+        if (metal is { } bare)
+        {
+            double cos = material.IsRough ? eye.Dot(halfway) : peak.Dot(toward);
+
+            return glint * bare.Mirrors<TS>(cos, material.IsRough ? material.ReflectanceAt(cos) : 1);
+        }
+
+        return material.Metallic != 0 && material.Metal is null
+            ? glint * material.GetMetallicTint(pigment, peak.Dot(toward))
+            : glint;
     }
 
     /// <summary>
@@ -313,7 +330,8 @@ public partial class Scene
     /// each mirroring the eye's ray as the round does there.
     /// </summary>
     private TS MirroredRound<TS>(
-        HairIntersection hit, Material material, StrandFrame frame, Vector eye, TS pigment, int remaining)
+        HairIntersection hit, Material material, StrandFrame frame, Vector eye, TS pigment, int remaining,
+        BareMetal? metal)
         where TS : struct, ISpectrum<TS>
     {
         (int count, double weight) = RaysOf(hit, _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples, 133);
@@ -383,9 +401,19 @@ public partial class Scene
                 Ray ray = new (
                     frame.Center + normal * (frame.Radius * (1 + 1e-6) + 1e-9), direction, hit.TimeIndex,
                     hit.ConeSpread, hit.ConeTravelled);
+                if (metal is { } bare)
+                {
+                    sum += GetColorFor<TS>(ray, remaining - 1) *
+                           bare.Mirrors<TS>(cosFacet, material.ReflectanceAt(cosFacet)) * masking;
+
+                    continue;
+                }
+
                 TS seen = GetColorFor<TS>(ray, remaining - 1) * (material.ReflectanceAt(cosFacet) * masking);
 
-                sum += material.Metallic != 0 ? seen * material.GetMetallicTint(pigment, eye.Dot(normal)) : seen;
+                sum += material.Metallic != 0 && material.Metal is null
+                    ? seen * material.GetMetallicTint(pigment, eye.Dot(normal))
+                    : seen;
             }
         }
         finally

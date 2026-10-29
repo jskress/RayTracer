@@ -368,8 +368,61 @@ public class Material
     /// it toward 1 tints reflections with the surface's own color.  Without it, gold renders as
     /// yellow plastic -- a yellow surface wearing an incongruous white glint.
     /// </para>
+    /// <para>
+    /// The tint is POV-Ray's fit, and does nothing to a material that is a <see cref="Metal"/>: for one, this
+    /// is how much of the surface is bare metal -- all of it, unless weathering or a blend has covered some.
+    /// </para>
     /// </summary>
     public double Metallic { get; set; }
+
+    /// <summary>
+    /// This property holds the metal the material is, if it is one: what it mirrors is then the metal's own,
+    /// worked out from its index band by band, and it shows no color of its own.  See <see cref="Core.Metal"/>.
+    /// <para>
+    /// The material's other numbers -- its pigment, diffuse, ambient, reflective -- are what it is where it is
+    /// not bare metal: under a decal's paint, and in the share <see cref="Metallic"/> leaves to grime or to
+    /// whatever a blend mixes in.  A material wholly metal uses none of them.
+    /// </para>
+    /// </summary>
+    public Metal Metal { get; set; }
+
+    /// <summary>
+    /// This property reports whether the material is a metal that has anything to do: a metal lets no light
+    /// through, so one that does is shaded as the rest of the material says.
+    /// </summary>
+    public bool MetalApplies => Metal is not null && Transparency == 0 && !PigmentMayTransmit;
+
+    /// <summary>
+    /// This property reports whether a surface wearing the material is bare metal all over -- nothing weathered or
+    /// blended into it, no decal painted on it -- and so has no color of its own anywhere to light.
+    /// </summary>
+    public bool IsBareMetal => MetalApplies && Metallic >= 1 && Decals is null;
+
+    /// <summary>
+    /// This method returns what is bare metal where a ray met a surface wearing this material, or <c>null</c>
+    /// where none is: all of it, for a metal, but where a decal's paint covers it, or weathering or a blend has
+    /// put something else in its place.
+    /// </summary>
+    /// <param name="intersection">Where the ray met the surface, prepared.</param>
+    /// <returns>What is bare metal there, or <c>null</c>.</returns>
+    public BareMetal? BareMetalAt(Intersection intersection)
+    {
+        if (!MetalApplies || Metallic <= 0)
+            return null;
+
+        double share = Math.Min(Metallic, 1);
+
+        if (Decals is not null)
+        {
+            share *= 1 - Painted(
+                Colors.Transparent, intersection.Surface, intersection.Point, intersection.Normal, null,
+                intersection.Portals).Alpha;
+        }
+
+        return share <= 0
+            ? null
+            : new BareMetal(Metal, share, intersection.N1, !intersection.Inside && CoatApplies ? Coat : null);
+    }
 
     /// <summary>
     /// This property holds how sharply the material's diffuse lighting falls away as a surface
@@ -728,9 +781,23 @@ public class Material
                 surface, point, footprint, portals, viewing.IsEmpty || !PigmentSeesTheViewer ? default : viewing);
         }
 
-        if (Decals is null)
-            return color;
+        return Decals is null ? color : Painted(color, surface, point, normal, footprint, portals);
+    }
 
+    /// <summary>
+    /// This method lays the material's decals over a color at a point on a surface wearing it.  Laid over nothing
+    /// at all -- a color no one can see -- what comes back covers just as much as the decals do there.
+    /// </summary>
+    /// <param name="color">The color to lay them over.</param>
+    /// <param name="surface">The surface the point was found on, which wears this material.</param>
+    /// <param name="point">The point, in the world's coordinate system.</param>
+    /// <param name="normal">The surface's normal there, or <c>null</c>.</param>
+    /// <param name="footprint">How much of the surface the ray covers there, or <c>null</c>.</param>
+    /// <param name="portals">The instances the point was found through, if it was.</param>
+    /// <returns>The color with the decals laid over it.</returns>
+    private Color Painted(
+        Color color, Surface surface, Point point, Vector normal, Footprint footprint, Portals portals)
+    {
         // Each decal is read in the space of the surface it was written on.  Nearly always that is the
         // same surface for every decal a material has, so the point is carried there once and kept
         // for as long as the next decal shares it; a material handed down onto one that inherits it
