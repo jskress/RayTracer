@@ -79,6 +79,11 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public Resolver<double> MetallicResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the metal the material is, if it is one.
+    /// </summary>
+    public MetalResolver MetalResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how much of each melanin hair wearing the material holds.
     /// </summary>
     public Resolver<Melanin?> MelaninResolver { get; set; }
@@ -177,7 +182,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                         ShininessResolver is not null || ReflectiveResolver is not null ||
                         FresnelResolver is not null || RoughnessResolver is not null ||
                         BrillianceResolver is not null || GrainResolver is not null ||
-                        MetallicResolver is not null || TransparencyResolver is not null ||
+                        MetallicResolver is not null || MetalResolver is not null || TransparencyResolver is not null ||
                         MelaninResolver is not null || FilmResolver is not null || SubsurfaceResolver is not null ||
                         CoatResolver is not null || AnisotropyResolver is not null || SheenResolver is not null ||
                         InteriorResolver is not null || SurfaceNormalResolver is not null;
@@ -187,6 +192,10 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
             return "An inherited material takes everything but its decals from the material handed down " +
                    "to it, so only decals may be written in one.";
         }
+
+        if (MetalResolver is not null && TransparencyResolver is not null)
+            return "A metal swallows whatever light gets into it, so a material may not be a metal and let " +
+                   "light through.";
 
         if (FilmResolver is not null && CoatResolver is not null)
             return "A film and a coat are each a skin over the surface, so a material may have one or the other.";
@@ -239,6 +248,13 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         BrillianceResolver.AssignTo(value, target => target.Brilliance, context, variables);
         GrainResolver.AssignTo(value, target => target.Grain, context, variables);
         MetallicResolver.AssignTo(value, target => target.Metallic, context, variables);
+
+        // A metal is bare metal all over, whatever metallic says; see Material.Metal.
+        if (MetalResolver is not null)
+        {
+            value.Metal = MetalResolver.Resolve(context, variables);
+            value.Metallic = 1;
+        }
         MelaninResolver.AssignTo(value, target => target.Melanin, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
 

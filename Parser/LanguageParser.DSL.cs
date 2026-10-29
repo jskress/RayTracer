@@ -82,13 +82,13 @@ public partial class LanguageParser
             'columns', 'comb', 'commands', 'comment', 'completeBranch', 'conic', 'context', 'controls',
             'copyright', 'count', 'crackle', 'csg', 'cube', 'cubic', 'curl', 'curve', 'cycle', 'cylinder', 'cylindrical',
             'decal', 'default', 'degrees', 'density', 'dents', 'depth', 'description', 'diameter', 'difference', 'diffuse', 'direction', 'disc',
-            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file', 'flat', 'fracture',
+            'disclaimer', 'discontinuous', 'dispersion', 'distance', 'distant', 'elevation', 'drawLine', 'droop', 'dust', 'east', 'edge', 'edges', 'egg', 'else', 'emission', 'environment', 'error', 'exposure', 'extrusion', 'factor', 'facing', 'fade', 'falloff', 'false', 'field', 'file', 'flat', 'fracture',
             'fainter', 'film', 'filter', 'finer', 'fisheye', 'flatness', 'flop', 'focal', 'font', 'for', 'frequency', 'fresnel', 'frizz', 'front', 'from', 'function', 'gamma', 'gap', 'generations', 'generic', 'glare', 'gradient', 'granite', 'grime',
             'grain', 'grayscale', 'group', 'hair', 'hanging', 'height', 'heightfield', 'hexagon', 'hole', 'horizontal',
             'icon', 'if', 'ignore', 'image', 'import', 'include', 'index', 'info', 'inherited', 'inner', 'interior', 'intersection',
             'in', 'ior', 'isosurface', 'italic', 'jitter', 'joining', 'kern', 'kerning', 'kill', 'lathe', 'layer', 'layout', 'leaf', 'lean', 'left', 'length',
             'leopard', 'light', 'line', 'linear', 'location', 'look', 'loose', 'lsystem',
-            'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metallic', 'min', 'mortar',
+            'marble', 'material', 'materials', 'matrix', 'max', 'medium', 'melanin', 'metal', 'metallic', 'min', 'mortar',
             'motion', 'mottled', 'move', 'named', 'neutral', 'no', 'noise', 'none', 'number', 'octaves', 'normal', 'normals', 'north', 'not', 'null', 'object', 'of', 'offset', 'on', 'once',
             'open', 'or', 'orthographic', 'paraboloid', 'over', 'panoramic', 'parallel', 'parallelogram', 'hyperboloid', 'quadric', 'cross', 'constant',
             'sdf', 'julia', 'iterations', 'c', 'parametric', 'patch', 'path', 'patches', 'perspective', 'phase', 'photons', 'physical', 'picked', 'pieces', 'pigment', 'pipes', 'primitive',
@@ -661,9 +661,15 @@ public partial class LanguageParser
         {
             metallic > [
                 pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMelaninClause |
-                startInteriorClause | startDecalClause | startFilmClause | startSubsurfaceClause | startCoatClause |
-                startSheenClause | _expression{?}
+                materialMetalClause | startInteriorClause | startDecalClause | startFilmClause |
+                startSubsurfaceClause | startCoatClause | startSheenClause | _expression{?}
             ]
+        }
+        // A real metal: by name, measured, or by the color it mirrors square-on and, if said, an edge color for how
+        // each color fares at a slant.
+        materialMetalClause:
+        {
+            metal > _expression > { edge > _expression }{?}
         }
         // An interior may be written out in full, named, or named and then added to, much as a
         // material may.  What a surface is made of is worth keeping and reusing on its own terms:
@@ -791,7 +797,7 @@ public partial class LanguageParser
         materialEntryClause:
         [
             pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMetallicClause |
-            materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause |
+            materialMetalClause | materialMelaninClause | startInteriorClause | startDecalClause | startFilmClause |
             startSubsurfaceClause | startCoatClause | startSheenClause
         ] ?? 'Expecting a material property here.'
 

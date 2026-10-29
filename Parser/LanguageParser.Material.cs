@@ -403,6 +403,12 @@ public partial class LanguageParser
                 }
 
                 break;
+            case "metal":
+                resolver.MetalResolver = new MetalResolver
+                {
+                    Term = term, Edge = clause.Expressions.Count > 1 ? clause.Term(1) : null
+                };
+                break;
             case "transparency":
                 resolver.TransparencyResolver = new TermResolver<double>() { Term = term };
                 break;

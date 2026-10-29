@@ -654,15 +654,15 @@ make a smooth bend.  Widths are the whole width rather than a radius, as a ribbo
 more points are needed.
 
 **A strand of metal is a wire**, shaded as the round surface it is rather than as a fiber: a guitar's or
-a piano's strings, a wire fence, a whisk.  Its material says `metallic`, and with that it has the
-highlights, mirroring and roughness any metal has, and it stops the light that falls on it where a hair
-would let most of that through.
+a piano's strings, a wire fence, a whisk.  Its material is a [`metal`](materials.md#metals), or says
+`metallic`, and with that it has the highlights, mirroring and roughness any metal has, and it stops the
+light that falls on it where a hair would let most of that through.
 
 ```
 strand {
     width 0.012 at [0, 0, 0]
     width 0.012 at [25.5, 0, 0]
-    material { pigment [0.8, 0.8, 0.8]  metallic 1  reflective 0.7  roughness 0.12  diffuse 0 }
+    material { metal 'iron'  roughness 0.12 }
 }
 ```
 

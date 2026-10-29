@@ -95,11 +95,15 @@ public partial class Scene
             double cosEye = seen.Eye.Dot(seen.Normal);
             double ownShare = material.FresnelApplies ? 1 - material.ReflectanceAt(cosEye) : 1;
 
+            if (material.BareMetalAt(seen) is { } bare)
+                ownShare *= 1 - bare.Share;
+
             if (sparesHighlight)
                 ownShare *= 1 - transparency;
 
+            FilmShares<TS>? film = material.Film?.SharesAt<TS>(seen, material.MetalApplies ? material.Metal : null);
             TS glow = GlowGiven(
-                seen, material, ownShare, material.Film?.SharesAt<TS>(seen), CoatOn(seen, material), cosEye,
+                seen, material, ownShare, film, CoatOn(seen, material), cosEye,
                 material.SheenApplies ? material.Sheen : null);
 
             return sparesHighlight ? glow : glow * (1 - transparency);

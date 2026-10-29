@@ -219,6 +219,46 @@ public class TestWire
     }
 
     /// <summary>
+    /// This tests a fine wire of real metal: its glint in the sun alone, and with what it mirrors of a bright wall
+    /// behind the eye, come color by color to what the round of a wide wire shows on average -- in gold's own color.
+    /// </summary>
+    [TestMethod]
+    public void TestAFineWireOfMetalShowsItsRoundOnAverage()
+    {
+        foreach (double roughness in new[] { 0.0, 0.2 })
+        {
+            foreach (bool walled in new[] { false, true })
+            {
+                Material material = new ()
+                {
+                    Metal = RayTracer.Core.Metal.Named("gold"), Metallic = 1, Specular = 0.6, Roughness = roughness,
+                    Reflective = roughness > 0 ? 0.04 : 0, ReflectionSamples = 4096
+                };
+                Plane wall = new ()
+                {
+                    Material = new Material { Pigment = new SolidPigment(Colors.White), Ambient = 0, Diffuse = 0, Specular = 0, Emission = Colors.White },
+                    Transform = Transforms.Translate(0, 0, -6) * Transforms.RotateAroundX(90)
+                };
+                Scene fine = walled ? SceneOf(Sun(), Wire(0.01, material), wall) : SceneOf(Sun(), Wire(0.01, material));
+                Scene wide = walled ? SceneOf(Sun(), Wire(0.2, material), wall) : SceneOf(Sun(), Wire(0.2, material));
+                Color middle = Seen(fine, 0, 0.01) * (1 / 0.2);
+                const int across = 4000;
+                Color average = Colors.Black;
+                string what = $"roughness {roughness}, {(walled ? "with" : "without")} the wall";
+
+                for (int index = 0; index < across; index++)
+                    average += Seen(wide, 0.1 * ((index + 0.5) / across * 2 - 1)) * (1.0 / across);
+
+                Assert.IsGreaterThan(0.001, average.Red, $"nothing to compare, {what}");
+                Assert.IsLessThan(0.6 * average.Red, average.Blue, $"the wire was not gold, {what}");
+                Assert.AreEqual(average.Red, middle.Red, 0.01 * average.Red + 1e-5, $"red, {what}");
+                Assert.AreEqual(average.Green, middle.Green, 0.01 * average.Green + 1e-5, $"green, {what}");
+                Assert.AreEqual(average.Blue, middle.Blue, 0.01 * average.Blue + 1e-5, $"blue, {what}");
+            }
+        }
+    }
+
+    /// <summary>
     /// This tests a wound wire, brushed with no direction said: its grooves run round it, so its facets lean
     /// further along its length than round it.  A direction said is kept, on a wire as anywhere.
     /// </summary>

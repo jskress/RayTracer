@@ -76,6 +76,7 @@ light-spot.png|docs/examples/lights/spot-light.igl|400|300
 material-decal-projections.png|docs/examples/materials/decal-projections.igl|640|240
 material-decals.png|docs/examples/materials/decals.igl|640|240
 material-finishes.png|docs/examples/materials/finishes.igl|640|240
+material-metals.png|docs/examples/materials/metals.igl|640|300
 material-thin-films.png|docs/examples/materials/thin-films.igl|640|240
 pattern-combining.png|docs/examples/pigments/combining.igl|660|190
 pattern-maps.png|docs/examples/pigments/maps.igl|600|190

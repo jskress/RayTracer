@@ -185,7 +185,7 @@ public sealed class Coat
     /// been bent going in.  It never falls to nothing: a coat of a lower index than what lies outside it
     /// would turn back light at a graze, and the little that is left is taken as crossing steeply.
     /// </summary>
-    private double Within(double cos, double outside)
+    internal double Within(double cos, double outside)
     {
         double ratio = outside / IndexOfRefraction;
         double sin2 = ratio * ratio * (1 - Math.Clamp(cos, 0, 1) * Math.Clamp(cos, 0, 1));

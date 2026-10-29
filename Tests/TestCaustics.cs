@@ -185,6 +185,29 @@ public class TestCaustics
     }
 
     /// <summary>
+    /// This tests a metal throwing the sun: a mirror of gold, tipped at 45 degrees, throws onto the floor
+    /// under it the sun's light by gold's own share of each color at that angle -- photons are sent at it with
+    /// nothing said of its reflectance, and it is not lit as matte.
+    /// </summary>
+    [TestMethod]
+    public void TestAMetalThrowsTheSunInItsOwnColor()
+    {
+        Parallelogram gold = MirrorAt(new Point(0, 2, 0), 0);
+
+        gold.Material.Metal = Metal.Named("gold");
+        gold.Material.Metallic = 1;
+
+        Scene scene = SceneOf(
+            200_000, new DistantLight { Direction = new Vector(1, 0, 0) }, new Plane { Material = Matte() }, gold);
+        RgbSpectrum share = Metal.Named("gold").ShareAt<RgbSpectrum>(Math.Sqrt(0.5), 1);
+        Color seen = ShadeColor(scene, new Point(0.05, 1, 0.1));
+
+        Assert.AreEqual(share.Red, seen.Red, 0.03 * share.Red, "red");
+        Assert.AreEqual(share.Green, seen.Green, 0.03 * share.Green, "green");
+        Assert.AreEqual(share.Blue, seen.Blue, 0.03 * share.Blue, "blue");
+    }
+
+    /// <summary>
     /// This tests a mirror throwing a lamp rather than a sun.  This renderer's lamps do not fall off with
     /// distance unless they fade, so the light the mirror gets is the lamp's own; but what it throws spreads
     /// from the lamp's image behind it, ten units off, and has spread over twelve by the time it reaches the

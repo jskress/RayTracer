@@ -1126,6 +1126,12 @@ public partial class Scene : NamedThing, IDisposable
             ? 1 - material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
             : 1;
 
+        // And bare metal shows nothing of its own: what gets into it, it swallows.
+        BareMetal? metal = material.BareMetalAt(intersection);
+
+        if (metal is { } bare)
+            ownShare *= 1 - bare.Share;
+
         // Rough glass shows only what it stops of its own color, as any glass does, but keeps its
         // highlight whole: that is what its facets mirror, and letting light through takes none of it
         // away.  So its own share is cut here, where the highlight is spared, rather than below.  A
@@ -1138,7 +1144,7 @@ public partial class Scene : NamedThing, IDisposable
 
         // How many directions this point's own reflection will look in, which a glowing volume's
         // samples are weighed against.  None, where it will not look at all.
-        int looks = material.IsRough && remaining >= 1 && material.Reflective > 0
+        int looks = material.IsRough && remaining >= 1 && (material.Reflective > 0 || metal is not null)
             ? _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples
             : 0;
         (double, double)? glass = roughGlass ? (intersection.N1, intersection.N2) : null;
@@ -1149,8 +1155,9 @@ public partial class Scene : NamedThing, IDisposable
             ? _spreading || TS.Count == 1 || (TS.IsSpectral && intersection.Disperses) ? 1 : material.ReflectionSamples
             : 0;
 
-        // A film shares the light out color by color, in place of Fresnel's one share for every color.
-        FilmShares<TS>? film = material.Film?.SharesAt<TS>(intersection);
+        // A film shares the light out color by color, in place of Fresnel's one share for every color -- over a
+        // metal, by the metal's own index beneath it.
+        FilmShares<TS>? film = material.Film?.SharesAt<TS>(intersection, material.MetalApplies ? material.Metal : null);
 
         // A brushed surface's facets lean further across its grooves than along them; see Facets.
         Facets facets = Facets.At(
@@ -1183,9 +1190,11 @@ public partial class Scene : NamedThing, IDisposable
         // well as on it, is the hair light's to carry; see GetHitColor.
         if (!fromBeyond)
         {
+            // Under a film, the film colors a metal's highlight as it colors what the metal mirrors.
             foreach (Light light in Lights)
                 surfaceColor += Illuminate<TS>(
-                    light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets);
+                    light, intersection, ownShare, looks, glass, looksThrough, film, coated, facets,
+                    film is null ? metal : null);
         }
 
         if ((underneath || through) && fromBeyond)
@@ -1223,7 +1232,7 @@ public partial class Scene : NamedThing, IDisposable
 
         // The light mirrors and glass gather onto it from the lamps, when the scene asks for caustics, which
         // it takes as it takes a lamp's; see Scene.Caustics.
-        if (_caustics is not null && material.Diffuse > 0 && transparency < 1)
+        if (_caustics is not null && material.Diffuse > 0 && transparency < 1 && (metal is null || ownShare > 0))
         {
             TS gathered = CausticsAt<TS>(intersection, material, ownShare, film);
 
@@ -1237,8 +1246,9 @@ public partial class Scene : NamedThing, IDisposable
         }
 
         // And the light bounced onto it off everything else, which a surface takes as it takes a lamp's --
-        // its own share of it, and a film's passing share -- when the scene asks for it; see Scene.Bounces.
-        if (DiffuseBounces > 0)
+        // its own share of it, and a film's passing share -- when the scene asks for it; see Scene.Bounces.  Bare
+        // metal has no share of it to take.
+        if (DiffuseBounces > 0 && (metal is null || ownShare > 0))
         {
             TS bounced = BouncedOnto<TS>(intersection, material, remaining);
 
@@ -1262,7 +1272,7 @@ public partial class Scene : NamedThing, IDisposable
         // How much of the light the path brings back each way will be worth, so that a way worth next to
         // nothing is not followed, when the scene says to stop there; see Bailout.
         (double mirrors, double passes) = Bailout > 0
-            ? SharesOf(intersection, material, transparency, film)
+            ? SharesOf(intersection, material, transparency, film, metal)
             : (1, 1);
         TS reflectedColor = Worth(mirrors) ? FollowedFor<TS>(mirrors, intersection, remaining, true) : TS.Black;
         TS refractedColor = Worth(passes) ? FollowedFor<TS>(passes, intersection, remaining, false) : TS.Black;
@@ -1377,7 +1387,7 @@ public partial class Scene : NamedThing, IDisposable
     /// through, as GetHitColor will weigh them: enough to say whether either is worth following.
     /// </summary>
     private static (double Mirrors, double Passes) SharesOf<TS>(
-        Intersection intersection, Material material, double transparency, FilmShares<TS>? film)
+        Intersection intersection, Material material, double transparency, FilmShares<TS>? film, BareMetal? metal)
         where TS : struct, ISpectrum<TS>
     {
         bool transmits = material.Transparency > 0 || material.PigmentMayTransmit;
@@ -1388,6 +1398,9 @@ public partial class Scene : NamedThing, IDisposable
 
         if (film is { } shares)
             return (shares.Mirrored.Sum / TS.Count, shares.Passed.Sum / TS.Count * transparency);
+
+        if (metal is { } bare)
+            mirrors = bare.Average(intersection.Eye.Dot(intersection.Normal), mirrors);
 
         if (material.Reflective > 0 && transmits && !material.IsRough)
         {
@@ -1428,11 +1441,12 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="ownShare">How much of the light reaching the point the surface keeps to show as
     /// its own color rather than mirroring; see <see cref="Material.Fresnel"/>.</param>
     /// <param name="film">How the surface's film shares out the light, for a surface that has one.</param>
+    /// <param name="metal">What is bare metal there, whose highlight takes the metal's color, or <c>null</c>.</param>
     /// <returns>The color the light lends the point.</returns>
     private TS Illuminate<TS>(
         Light light, Intersection intersection, double ownShare, int looks, (double, double)? glass,
         int looksThrough, FilmShares<TS>? film, (Coat Coat, double Outside, int Looks)? coated = null,
-        Facets facets = null)
+        Facets facets = null, BareMetal? metal = null)
         where TS : struct, ISpectrum<TS>
     {
         // A light standing on something moving is where that stood at this ray's instant.
@@ -1458,7 +1472,7 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, only, one, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, highlights: _bounced == 0,
-                coat: CoatShareOf(light, only, intersection, coated), facets: facets);
+                coat: CoatShareOf(light, only, intersection, coated), facets: facets, metal: metal);
         }
 
         TS sum = TS.Black;
@@ -1474,7 +1488,7 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.Footprint, intersection.Portals, ownShare,
                 ShareOf(light, sample, index, intersection, looks, glass, looksThrough, facets), glass,
                 intersection.Material, film, coat: CoatShareOf(light, sample, intersection, coated),
-                facets: facets);
+                facets: facets, metal: metal);
         }
 
         return sum * (1.0 / count);
@@ -2133,26 +2147,33 @@ public partial class Scene : NamedThing, IDisposable
     {
         Material material = intersection.Material;
 
+        // What is bare metal mirrors by the metal's own share of each band; under a film, the film's shares
+        // say it all.
+        BareMetal? metal = material.Film is null ? material.BareMetalAt(intersection) : null;
+
         // A film mirrors something whatever its reflective says.  What it mirrors is returned whole, and
         // the film's share of each color charged where the hit is shaded, beside what it lets through.
-        if (remaining < 1 || (material.Reflective == 0 && material.Film is null && !material.CoatApplies))
+        if (remaining < 1 ||
+            (material.Reflective == 0 && material.Film is null && !material.CoatApplies && metal is null))
             return TS.Black;
 
         if (CoatOn(intersection, material) is { } coat)
-            return GetCoatedReflection<TS>(intersection, material, coat, remaining);
+            return GetCoatedReflection<TS>(intersection, material, coat, remaining, metal);
 
-        if (material.Reflective == 0 && material.Film is null)
+        if (material.Reflective == 0 && material.Film is null && metal is null)
             return TS.Black;
 
         TS color;
 
         if (material.IsRough)
-            color = GetRoughReflection<TS>(intersection, material, remaining);
+            color = GetRoughReflection<TS>(intersection, material, remaining, metal);
         else
         {
+            double cos = intersection.Eye.Dot(intersection.Normal);
+
             // How much is mirrored depends on the angle it is seen at, for a surface that says so.
             double reflective = material.Film is null
-                ? material.ReflectanceAt(intersection.Eye.Dot(intersection.Normal))
+                ? material.ReflectanceAt(cos)
                 : 1;
 
             // The cone goes on widening past the mirror, so what is seen in a reflection is filtered
@@ -2163,7 +2184,9 @@ public partial class Scene : NamedThing, IDisposable
                 intersection.MirrorPoint, intersection.Reflect, intersection.TimeIndex,
                 intersection.ConeSpread, intersection.ConeTravelled);
 
-            color = GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
+            color = metal is { } bare
+                ? GetColorFor<TS>(reflectedRay, remaining - 1) * bare.Mirrors<TS>(cos, reflective)
+                : GetColorFor<TS>(reflectedRay, remaining - 1) * reflective;
         }
 
         // What a cloth's sheen gives back of what it faces, the weave beneath never mirrors.
@@ -2173,8 +2196,8 @@ public partial class Scene : NamedThing, IDisposable
         // A metal colors what it mirrors, not just its highlight -- it is what makes a gold
         // surface throw back a gold scene rather than a plain one.  The angle here is the eye
         // against the normal, the true angle of incidence, rather than the approximation the
-        // highlight has to settle for.
-        if (material.Metallic != 0)
+        // highlight has to settle for.  A material that is a metal has colored it already, by the metal's own.
+        if (material.Metallic != 0 && material.Metal is null)
         {
             TS pigmentColor = TS.FromReflectance(material.GetColorFor(intersection));
 
@@ -2194,7 +2217,8 @@ public partial class Scene : NamedThing, IDisposable
     /// metal flakes under a smooth coat by theirs.
     /// </para>
     /// </summary>
-    private TS GetCoatedReflection<TS>(Intersection intersection, Material material, Coat coat, int remaining)
+    private TS GetCoatedReflection<TS>(
+        Intersection intersection, Material material, Coat coat, int remaining, BareMetal? metal)
         where TS : struct, ISpectrum<TS>
     {
         double outside = intersection.N1;
@@ -2202,13 +2226,14 @@ public partial class Scene : NamedThing, IDisposable
         TS color = TS.Black;
         TS mirrorWeight = TS.Black;
 
-        if (material.Reflective > 0)
+        if (material.Reflective > 0 || metal is not null)
         {
             // What lies beneath mirrors as it would bare, then crosses the coat in and out again -- at the
-            // eye's angle both ways, the mirrored direction making the same angle with the normal.
+            // eye's angle both ways, the mirrored direction making the same angle with the normal.  A metal
+            // beneath mirrors against the coat's own index, at the angle bent to inside it.
             TS beneath = coat.Through<TS>(cos, cos, outside);
 
-            if (material.Metallic != 0)
+            if (material.Metallic != 0 && material.Metal is null)
             {
                 TS pigmentColor = TS.FromReflectance(material.GetColorFor(intersection));
 
@@ -2216,7 +2241,9 @@ public partial class Scene : NamedThing, IDisposable
             }
 
             if (material.IsRough)
-                color += GetRoughReflection<TS>(intersection, material, remaining) * beneath;
+                color += GetRoughReflection<TS>(intersection, material, remaining, metal) * beneath;
+            else if (metal is { } bare)
+                mirrorWeight += beneath * bare.Mirrors<TS>(cos, material.ReflectanceAt(cos));
             else
                 mirrorWeight += beneath * material.ReflectanceAt(cos);
         }
@@ -2430,7 +2457,8 @@ public partial class Scene : NamedThing, IDisposable
     /// <param name="material">The surface's material.</param>
     /// <param name="remaining">The remaining number of reflective recursions allowed.</param>
     /// <returns>The light the surface mirrors toward the eye.</returns>
-    private TS GetRoughReflection<TS>(Intersection intersection, Material material, int remaining)
+    private TS GetRoughReflection<TS>(
+        Intersection intersection, Material material, int remaining, BareMetal? metal = null)
         where TS : struct, ISpectrum<TS>
     {
         int count = _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples;
@@ -2440,21 +2468,31 @@ public partial class Scene : NamedThing, IDisposable
             ? cos => material.Reflective *
                      Microfacets.GlassReflectance(cos, intersection.N1, intersection.N2)
             : material.ReflectanceAt;
+        Facets facets = Facets.At(
+            material, intersection.Surface, intersection.Point, intersection.Normal, intersection.TimeIndex,
+            intersection.Portals, intersection as HairIntersection);
 
-        return LookedAtRoughly<TS>(
-            intersection, material.Roughness, reflectance, count, remaining,
-            Facets.At(material, intersection.Surface, intersection.Point, intersection.Normal,
-                intersection.TimeIndex, intersection.Portals, intersection as HairIntersection));
+        // Bare metal mirrors each band by its own share, facet by facet.
+        if (metal is { } bare)
+        {
+            return LookedAtRoughly<TS>(
+                intersection, material.Roughness, _ => 1, count, remaining, facets,
+                cos => bare.Mirrors<TS>(cos, material.ReflectanceAt(cos)));
+        }
+
+        return LookedAtRoughly<TS>(intersection, material.Roughness, reflectance, count, remaining, facets);
     }
 
     /// <summary>
     /// This method looks in the given number of directions off facets as rough as the given roughness, each
     /// mirroring by the given share at the angle it is seen at, and averages what they bring back.  It is
-    /// <see cref="GetRoughReflection{TS}"/>'s looking, for any rough lobe: a rough surface's, or a coat's.
+    /// <see cref="GetRoughReflection{TS}"/>'s looking, for any rough lobe: a rough surface's, or a coat's.  A
+    /// metal's facets mirror each band by its own share, which <paramref name="tinted"/> gives, beside the share
+    /// for every band.
     /// </summary>
     private TS LookedAtRoughly<TS>(
         Intersection intersection, double roughness, Func<double, double> reflectance, int count, int remaining,
-        Facets facets = null)
+        Facets facets = null, Func<double, TS> tinted = null)
         where TS : struct, ISpectrum<TS>
     {
         Vector normal = intersection.Normal;
@@ -2510,7 +2548,9 @@ public partial class Scene : NamedThing, IDisposable
                         : facets.Masking(eye) * facets.Distribution(facet) / (4 * eye.Z),
                     count, Mirror: normal);
 
-                sum += GetColorFor<TS>(ray, remaining - 1) * weight;
+                sum += tinted is null
+                    ? GetColorFor<TS>(ray, remaining - 1) * weight
+                    : GetColorFor<TS>(ray, remaining - 1) * tinted(cosFacet) * weight;
             }
         }
         finally

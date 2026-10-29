@@ -157,18 +157,39 @@ public sealed class MaterialBlend
     {
         Material mixed = (share < 0.5 ? from : to).CopiedForBlending();
 
-        mixed.Pigment = new MixedPigment { From = from.Pigment, To = to.Pigment, Share = share };
-        mixed.Ambient = Between(from.EffectiveAmbient, to.EffectiveAmbient, share);
+        // Between a metal and something else, the something else is what the metal is not: so how much of each
+        // is bare metal mixes, and what is not bare metal -- its color, its own light, what it mirrors -- mixes
+        // by how much of each is not.  A metal's own such numbers count for nothing where it is all metal.
+        double fromMetal = from.Metal is null ? 0 : Math.Min(from.Metallic, 1);
+        double toMetal = to.Metal is null ? 0 : Math.Min(to.Metallic, 1);
+        double rest = share;
+
+        if (from.Metal is not null || to.Metal is not null)
+        {
+            double fromRest = (1 - share) * (1 - fromMetal);
+            double toRest = share * (1 - toMetal);
+            double metal = (1 - share) * fromMetal + share * toMetal;
+
+            rest = fromRest + toRest > 0 ? toRest / (fromRest + toRest) : share;
+            mixed.Metal = from.Metal is null ? to.Metal
+                : to.Metal is null ? from.Metal
+                : Metal.Mixed(from.Metal, to.Metal, metal > 0 ? share * toMetal / metal : share);
+        }
+
+        mixed.Pigment = new MixedPigment { From = from.Pigment, To = to.Pigment, Share = rest };
+        mixed.Ambient = Between(from.EffectiveAmbient, to.EffectiveAmbient, rest);
         mixed.Emission = from.Emission is null && to.Emission is null
             ? null
-            : (from.Emission ?? Colors.Black) * (1 - share) + (to.Emission ?? Colors.Black) * share;
-        mixed.Diffuse = Between(from.Diffuse, to.Diffuse, share);
+            : (from.Emission ?? Colors.Black) * (1 - rest) + (to.Emission ?? Colors.Black) * rest;
+        mixed.Diffuse = Between(from.Diffuse, to.Diffuse, rest);
         mixed.Specular = Between(from.Specular, to.Specular, share);
         mixed.Shininess = Between(from.Shininess, to.Shininess, share);
-        mixed.Reflective = Between(from.Reflective, to.Reflective, share);
+        mixed.Reflective = Between(from.Reflective, to.Reflective, rest);
         mixed.Roughness = Between(from.Roughness, to.Roughness, share);
         mixed.Anisotropy = Between(from.Anisotropy, to.Anisotropy, share);
-        mixed.Metallic = Between(from.Metallic, to.Metallic, share);
+        mixed.Metallic = mixed.Metal is null
+            ? Between(from.Metallic, to.Metallic, share)
+            : Between(fromMetal, toMetal, share);
         mixed.Brilliance = Between(from.Brilliance, to.Brilliance, share);
         mixed.Grain = Between(from.Grain, to.Grain, share);
         mixed.Transparency = Between(from.Transparency, to.Transparency, share);

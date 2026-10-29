@@ -431,13 +431,16 @@ public abstract class Light : NamedThing
     /// adds a highlight of its own.  See <see cref="Coat"/>.</param>
     /// <param name="facets">The facets of a brushed surface, which give its highlight in place of facets
     /// leaning alike every way; <c>null</c> for any other.  See <see cref="Facets"/>.</param>
+    /// <param name="metal">What is bare metal where the surface is being lit, whose highlight takes the metal's
+    /// share of each band in place of the light's own color; <c>null</c> where none is.  See
+    /// <see cref="BareMetal"/>.</param>
     /// <typeparam name="TS">The kind of light being carried.</typeparam>
     public TS ApplyPhong<TS>(
         Point point, Vector eye, Vector normal, Surface surface, LightSample sample,
         TS lightReaching, Footprint footprint = null, Portals portals = default, double ownShare = 1,
         double? highlightShare = null, (double Near, double Far)? glass = null, Material material = null,
         FilmShares<TS>? film = null, bool highlights = true, (Coat Coat, double Outside, double Share)? coat = null,
-        Facets facets = null)
+        Facets facets = null, BareMetal? metal = null)
         where TS : struct, ISpectrum<TS>
     {
         material ??= surface.Material ?? Material.Default;
@@ -531,6 +534,12 @@ public abstract class Light : NamedThing
                 // Spread over the patch of an area light the sample stands for, so that a window in a surface of
                 // little roughness is one patch of light and not a grid of dots; see Microfacets.WidenedBy.
                 double spread = SpreadOf(sample);
+
+                // Bare metal's facets mirror each band by the metal's share at the angle the eye meets them; the
+                // highlight is worked out for facets that mirror it all, and given that share after.
+                if (metal is not null)
+                    reflectance = _ => 1;
+
                 double factor = share == 0
                     ? 0
                     : facets is not null
@@ -545,7 +554,13 @@ public abstract class Light : NamedThing
                 // an inch away.
                 specularColor = factor == 0 ? TS.Black : EmittedToward<TS>(sample) * factor;
 
-                if (factor != 0 && material.Metallic != 0)
+                if (factor != 0 && metal is { } bare)
+                {
+                    double cos = eye.Dot((eye + vector).Unit);
+
+                    specularColor *= bare.Mirrors<TS>(cos, material.ReflectanceAt(cos));
+                }
+                else if (factor != 0 && material.Metallic != 0 && material.Metal is null)
                     specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
             }
             // Phong's highlight is a stand-in for the mirror image of a lamp in a surface's skin, and under a
@@ -569,8 +584,10 @@ public abstract class Light : NamedThing
                 // A metal's highlight takes the color of the metal rather than of the light.  The
                 // angle used is the light against the normal, which is the approximation POV-Ray
                 // makes here too: the halfway vector would be more correct, but Phong exists
-                // precisely to avoid computing it.
-                if (material.Metallic != 0)
+                // precisely to avoid computing it.  Bare metal's is its own share of each band, at the same angle.
+                if (metal is { } bare)
+                    specularColor *= bare.Mirrors<TS>(lightDotNormal, 1);
+                else if (material.Metallic != 0 && material.Metal is null)
                     specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
             }
         }

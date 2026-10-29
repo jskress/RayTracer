@@ -1,0 +1,256 @@
+// Metal on a table under a window, in the afternoon sun: a gold bangle, a silver spoon, a copper saucepan,
+// a brass candlestick, a steel tumbler, a ring of anodized titanium and a few bronze coins.
+//
+// **Each is a real metal.**  Gold, silver, copper, brass, iron and titanium are named, and mirror what they
+// were measured to, color by color and at every angle: gold a third of the blue square-on and nearly all
+// of it toward its edges, copper salmon turning orange.  The coins are bronze, an alloy no one has
+// measured, given by the color it mirrors.  None of them shows a color of its own; everything each shows
+// is the room, the window and the sun, mirrored in its color.
+//
+// **The bangle throws the sun onto the cloth inside it.**  Its inner wall is a mirror bent round, and every
+// part of it throws the sun a little further round than the part before; where those pile up they draw
+// the cusped curve that sits in the bottom of a teacup -- in gold, since gold is what mirrored it.
+//
+// **The titanium's colors are an oxide on it**, a film a few dozen nanometers thick, mirroring bronze where
+// it is thinnest and purple, blue and gold as it thickens.  The film lies on the metal, so what the light
+// beneath it meets is titanium's own index.
+//
+// **Every piece is polished.**  Given a little roughness, the pan and the tumbler looked about them in
+// sixteen directions for what they mirror, and where one found the cloth, the cloth's own bounced light was
+// a single look of its own -- now and then at the sun's patch on the runner, thirty times as bright as the
+// shade -- and they came out glittering.  A polished metal sees the cloth as the eye does, by the cache.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    width 800
+    height 600
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    diffuse bounces 2
+    diffuse samples 1024
+    diffuse cache
+    caustics photons 4000000
+    info {
+        title 'Metal in the Sun'
+        author 'J. Stephen Kress'
+        description 'Gold, silver, copper, brass, steel, titanium and bronze on a table under a window in the afternoon sun.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0.03, 1.21, -0.12]
+    look at [0, 0.82, 0.57]
+    field of view 52
+    exposure 1.5
+}
+
+// Low and from behind the window, a little to the left, so the sun comes in over the table toward the camera.
+background physical sky { sun elevation 22  sun azimuth 195  turbidity 2.8  brightness 3 }
+
+sky light { samples 32 }
+
+// -- The room ---------------------------------------------------------------------------------------
+
+Plaster = material { pigment [0.84, 0.82, 0.77]  specular 0 }
+Boards = material {
+    pigment brick {
+        [0.20, 0.13, 0.08], [0.30, 0.20, 0.12]
+        scale [0.9, 4, 0.12]
+    }
+    specular 0.12  shininess 25
+}
+Oak = material { pigment [0.26, 0.16, 0.10]  specular 0.25  shininess 40 }
+Linen = material { pigment [0.86, 0.84, 0.78]  specular 0 }
+Paint = material { pigment [0.86, 0.85, 0.82]  specular 0.1  shininess 20 }
+Glass = material {
+    pigment White
+    transparency 1  reflective 1  fresnel
+    interior { ior 1.52 }
+}
+Lawn = material {
+    pigment granite {
+        [0, [0.16, 0.24, 0.08], 0.6, [0.22, 0.30, 0.11], 1, [0.28, 0.33, 0.14]]
+        scale 0.6
+    }
+    specular 0
+}
+Hedge = material {
+    pigment granite {
+        [0, [0.06, 0.12, 0.04], 1, [0.12, 0.20, 0.07]]
+        scale 0.25
+    }
+    specular 0
+}
+
+// The walls, floor and ceiling as one shell, 3.2 meters across and 3.5 deep, with a window cut through the
+// wall at the back by a cube marked `portal`, so that the sky light looks in through it.
+difference {
+    cube { scale [1.8, 1.45, 1.95]  translate [0, 1.25, -0.75] }
+    cube { scale [1.6, 1.25, 1.75]  translate [0, 1.25, -0.75] }
+    cube { scale [0.5, 0.55, 0.2]  translate [0, 1.36, 1.1]  portal }
+    material Plaster
+}
+
+cube { material Boards  scale [1.6, 0.005, 1.75]  translate [0, 0.002, -0.75] }
+
+// A sash window two over two, in the opening's own frame: its middle at the origin, the wall's thickness
+// along Z with the room at +Z.  The pane is flat, and lets the sun straight through rather than being a
+// lens the photons are followed through.
+primitive Sash(wide, tall) -> group {
+    bar = 0.04
+    return group {
+        cube { material Paint  scale [bar, tall / 2, 0.035]  translate [-wide / 2 + bar, 0, -0.05] }
+        cube { material Paint  scale [bar, tall / 2, 0.035]  translate [wide / 2 - bar, 0, -0.05] }
+        cube { material Paint  scale [wide / 2, bar, 0.035]  translate [0, tall / 2 - bar, -0.05] }
+        cube { material Paint  scale [wide / 2, bar, 0.035]  translate [0, -tall / 2 + bar, -0.05] }
+        cube { material Paint  scale [wide / 2, 0.026, 0.03]  translate [0, 0, -0.05] }
+        cube { material Paint  scale [0.011, tall / 2, 0.018]  translate [0, 0, -0.05] }
+        cube { material Glass  scale [wide / 2, tall / 2, 0.003]  translate [0, 0, -0.07]  no caustics }
+        cube { material Paint  scale [wide / 2 + 0.05, 0.016, 0.085]  translate [0, -tall / 2 - 0.016, 0.06] }
+    }
+}
+
+object Sash(1.0, 1.1) { rotate Y 180  translate [0, 1.36, 1.1] }
+
+// Outside: a lawn and a hedge across the far side of it, so the window shows something that is not sky
+// below the sky.
+plane { material Lawn  translate Y -0.3 }
+cube { material Hedge  scale [30, 1.2, 1]  translate [0, 0.9, 30] }
+
+// -- The table --------------------------------------------------------------------------------------
+
+// Pushed against the wall under the window, its top a little below the sill, with a linen runner down it.
+cube { material Oak  scale [0.72, 0.02, 0.42]  translate [0, 0.74, 0.55] }
+cube { material Oak  scale [0.025, 0.36, 0.025]  translate [-0.67, 0.36, 0.18] }
+cube { material Oak  scale [0.025, 0.36, 0.025]  translate [0.67, 0.36, 0.18] }
+cube { material Oak  scale [0.025, 0.36, 0.025]  translate [-0.67, 0.36, 0.92] }
+cube { material Oak  scale [0.025, 0.36, 0.025]  translate [0.67, 0.36, 0.92] }
+cube { material Linen  scale [0.6, 0.002, 0.37]  translate [0, 0.762, 0.55] }
+
+// The top of the runner, which everything stands on.
+Top = 0.764
+
+// -- The metal --------------------------------------------------------------------------------------
+
+// A copper saucepan, with a brass handle riveted to its side.
+lathe {
+    path {
+        move to 0, 0
+        line to 0.076, 0
+        quad 0.09, 0 to 0.09, 0.014
+        line to 0.09, 0.084
+        quad 0.09, 0.09 to 0.094, 0.09
+        line to 0.087, 0.09
+        line to 0.087, 0.016
+        quad 0.087, 0.004 to 0.075, 0.004
+        line to 0, 0.004
+    }
+    material { metal 'copper' }
+    translate [-0.23, Top, 0.72]
+}
+cube {
+    material { metal 'brass' }
+    scale [0.075, 0.004, 0.009]
+    rotate Z -14
+    translate [-0.23 - 0.090 - 0.072, Top + 0.078, 0.72]
+}
+
+// A brass candlestick, turned, with a beeswax candle in it.
+lathe {
+    path {
+        move to 0, 0
+        line to 0.056, 0
+        quad 0.061, 0 to 0.061, 0.006
+        curve 0.061, 0.018, 0.03, 0.02 to 0.02, 0.034
+        line to 0.015, 0.052
+        quad 0.026, 0.06 to 0.015, 0.07
+        line to 0.011, 0.16
+        quad 0.022, 0.168 to 0.012, 0.176
+        line to 0.014, 0.19
+        curve 0.036, 0.192, 0.038, 0.204 to 0.036, 0.208
+        line to 0.032, 0.211
+        line to 0.013, 0.206
+        line to 0, 0.206
+    }
+    material { metal 'brass' }
+    translate [0.23, Top, 0.74]
+}
+cylinder {
+    min Y 0  max Y 1
+    material { pigment [0.93, 0.86, 0.66]  specular 0.2  shininess 30  subsurface { radius 0.004 } }
+    scale [0.0115, 0.085, 0.0115]
+    translate [0.23, Top + 0.206, 0.74]
+}
+
+// A steel tumbler.
+lathe {
+    path {
+        move to 0, 0
+        line to 0.032, 0
+        quad 0.034, 0 to 0.034, 0.003
+        line to 0.037, 0.095
+        line to 0.0355, 0.095
+        line to 0.0325, 0.005
+        line to 0, 0.005
+    }
+    material { metal 'iron' }
+    translate [0.02, Top, 0.84]
+}
+
+// A gold bangle lying flat, its band rounded at the edges.
+lathe {
+    path {
+        move to 0.0365, 0
+        line to 0.0385, 0
+        quad 0.0395, 0 to 0.0395, 0.002
+        line to 0.0395, 0.012
+        quad 0.0395, 0.014 to 0.0385, 0.014
+        line to 0.0365, 0.014
+        quad 0.0355, 0.014 to 0.0355, 0.012
+        line to 0.0355, 0.002
+        quad 0.0355, 0 to 0.0365, 0
+    }
+    material { metal 'gold' }
+    translate [-0.06, Top, 0.46]
+}
+
+// A ring of anodized titanium: an oxide on the metal, thicker toward one side, so its colors run round it.
+torus {
+    radii 0.016, 0.0034
+    material {
+        metal 'titanium'
+        film { thickness 30 to 160 by linear X gradient { scale 0.04  translate X -0.02 }  ior 2.4 }
+    }
+    translate [0.05, Top + 0.0034, 0.40]
+}
+
+// A silver spoon on its back: its bowl the lower half of an egg, hollowed, and its handle running from the
+// bowl's rim down to rest its broad end on the cloth.
+union {
+    difference {
+        sphere { scale [0.021, 0.008, 0.031] }
+        sphere { scale [0.0195, 0.0068, 0.0295]  translate Y 0.0011 }
+        cube { scale 0.05  translate Y 0.05 }
+    }
+    cube { scale [0.0048, 0.0011, 0.056]  rotate X 3.6  translate [0, -0.00345, 0.085] }
+    sphere { scale [0.0095, 0.0012, 0.02]  translate [0, -0.0062, 0.14] }
+    material { metal 'silver' }
+    rotate Y -128
+    translate [0.17, Top + 0.008, 0.44]
+}
+
+// Bronze coins in the shade of the pan: an alloy given by the color it mirrors.
+Bronze = material { metal [0.80, 0.52, 0.30]  edge [0.95, 0.75, 0.45] }
+
+cylinder { min Y 0  max Y 1  material Bronze  scale [0.0125, 0.0018, 0.0125]  translate [-0.21, Top, 0.54] }
+cylinder { min Y 0  max Y 1  material Bronze  scale [0.0105, 0.0016, 0.0105]  translate [-0.182, Top, 0.51] }
+cylinder {
+    min Y 0  max Y 1
+    material Bronze
+    scale [0.0125, 0.0018, 0.0125]
+    rotate X 6
+    translate [-0.195, Top + 0.0018, 0.532]
+}

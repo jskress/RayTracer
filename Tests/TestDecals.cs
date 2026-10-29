@@ -744,6 +744,26 @@ public class TestDecals
     }
 
     [TestMethod]
+    public void TestPaintOnARealMetalCoversIt()
+    {
+        // Paint on a real metal is paint: where it lies the surface shows the paint's color and mirrors
+        // nothing of the metal; beside it the bare gold mirrors the green world by gold's own share and shows
+        // nothing of its own, for all the ambient light its material would take.
+        Scene scene = SceneWithAPane(Colors.Blue, material =>
+        {
+            material.Pigment = new SolidPigment(Colors.White);
+            material.Metal = Metal.Named("gold");
+            material.Metallic = 1;
+        });
+        Color painted = LookingDownAt(scene, 0);
+        Color bare = LookingDownAt(scene, 1.5);
+        double gold = Metal.Named("gold").ShareAt<RgbSpectrum>(1, 1).Green;
+
+        Assert.IsTrue(Colors.Blue.Matches(painted), $"the paint looked {painted}");
+        Assert.IsTrue(new Color(0, Colors.Green.Green * gold, 0).Matches(bare), $"the bare gold mirrored {bare}");
+    }
+
+    [TestMethod]
     public void TestPaintOnAFaceTurnedAwayIsNotThereForAnything()
     {
         // The same pane, turned 80 degrees beneath paint that still comes straight down: past the
