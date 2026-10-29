@@ -31,6 +31,7 @@ Whatever its shape, any surface accepts these:
 | `material` | How it takes the light; see [Materials](materials.md). |
 | `no shadow` | The surface is visible but casts no shadow. |
 | `no caustics` | The surface turns none of a scene's caustics. |
+| `portal` | The sky comes into a room through it; see [below](#portal). |
 | `gives light` | The glowing stuff inside it lights what is around it; see [below](#a-surface-that-gives-light). |
 | `bounded by` | A box the renderer may use to skip it cheaply. |
 | `with seed` | Fixes the randomness anything about it draws on. |
@@ -96,6 +97,28 @@ and the light through it comes as photons.  A surface with `no caustics` turns n
 shadow rays, go straight past it, dimmed and tinted by it as a shadow ray always was.  It is meant for a
 flat pane, whose two parallel faces send light on the way it came, so that the straight line is exact
 -- and sharper and cheaper than photons.  Like `no shadow`, it covers what a group or an `object` holds.
+
+#### `portal`
+
+The sky comes into a room through this: a window, a door, a skylight.  A [sky light](lights.md#sky-lights)
+then looks into the room through it, rather than at the whole sky from every place in the room -- most of
+which is plaster -- so that a room lit by daylight through its windows comes out smooth at an ordinary number
+of samples; see [Through a Window](lights.md#through-a-window).
+
+```
+difference {
+    cube { scale [3, 1.5, 3] }
+    cube { scale [2.8, 1.3, 2.8] }
+    cube { scale [0.2, 0.6, 0.5]  translate [-2.9, 0.2, 0]  portal }
+}
+```
+
+The opening is the middle of the thing's box, between its two widest sides, wherever the thing stands -- so
+the cube a window is cut out of a wall with is the window, and so is its glass, or a sash from the `windows`
+library, or a thin stand-in with `no shadow`.  It must be a rectangle, turned and sized as it likes but not
+sheared, and it must have the sky on one side of it; which side that is, is found by looking.  Marking
+something a portal changes nothing about the thing itself.  A thing in a group or an `object` is a portal
+wherever it stands, and what a portal holds is not looked into for more.
 
 #### A surface that gives light
 

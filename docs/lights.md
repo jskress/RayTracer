@@ -385,6 +385,47 @@ medium extinguishes it completely, exactly as it does a `distant light`. That is
 question as asked — an infinitely deep fog really does hide the sky — and the remedy is the same, which
 is to give the fog a surface to fill.
 
+#### Through a Window
+
+**Indoors, a sky light finds next to nothing.**  It looks at the sky in its few dozen directions from every
+place it lights, and from the middle of a floor a window is a fiftieth of the sky the floor could see: of
+twenty-four directions, half of one goes through the window and the rest end on plaster.  Worse, a smooth
+sky is looked at in the same directions from every place, so each direction that does go through throws
+the window's shape across the room, and the room is lit by a scatter of hard-edged windows.  More samples
+soften them, slowly: in a test room with one window, a thousand still left faint streaks, at fifteen times
+the time two dozen took.
+
+**Mark the openings as portals, and it looks in through them.**  Any surface may say
+[`portal`](surfaces.md#portal), and the cube a window is cut out of a wall with is the natural one to mark:
+
+```
+difference {
+    cube { scale [3, 1.5, 3] }
+    cube { scale [2.8, 1.3, 2.8] }
+    cube { scale [0.2, 0.6, 0.5]  translate [-2.9, 0.2, 0]  portal }
+}
+
+sky light { }
+```
+
+Then, from any place that sees the sky through an opening, three in four of the sky's directions go through
+one -- picked by the light of the sky beyond each, so a photograph's sun is found through a window as it is
+found in the open -- and the rest are spread as they would be anywhere.  In that test room, twenty-four
+samples then strayed from the right answer a tenth as far as twenty-four did without, and twice as far as a
+thousand did, in a twelfth of the thousand's time (a third more than twenty-four without).  Each direction is
+counted by how likely either way was to pick it, so **nothing hangs on the portals being all the sky there
+is**: a door left unmarked, a place outside the room on the wrong side of a wall, is still lit rightly, only
+less smoothly.  Places that see the sky through no opening are looked at exactly as they always were.
+
+Nothing need be said about which way an opening faces; which side of it the sky is on is found by looking.
+The sun of a [physical sky](pigments-and-patterns.md#a-physical-sky) is a light of its own and finds the
+windows by itself — the portals are for the rest of the sky, the fill that comes in at every window.  And a
+sky looked at through portals is shared with a [rough](materials.md#roughness) surface's reflection, as a
+photograph's is, so a window's smear on a satin floor is smooth.  The gallery's
+[A Room by Daylight](../gallery/Local/interiors/a-room-by-daylight.igl) is a room lit this way, by an
+afternoon sky and its sun through three windows, with [bounced light](context.md#bounced-light) carrying
+the sun's patches round the room.
+
 ### Lights on Things
 
 A lamp is a thing, and its light belongs to it: set the lamp on a table and the light goes with it,

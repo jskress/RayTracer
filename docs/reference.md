@@ -328,6 +328,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `point` | A `point light`; also `point at` and a `focal point`.  Casts a tuple to a point. | [Lights](lights.md#point-lights), [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `points` | Patch/triangle: the control or corner points.  Grown tree: how many points fill its crown. | [Surfaces](surfaces.md#patch), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `poly` | Wave shape: the value to a given power, written `poly 3 wave`. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
+| `portal` | Surface: the sky comes into a room through it -- a window, a door, a skylight -- and a sky light looks in through it. | [Surfaces](surfaces.md#portal), [Lights](lights.md#through-a-window) |
 | `position` | Text layout: `horizontal`/`vertical position`. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
 | `primitive` | Declares a [thing of your own](scene-files.md#things-of-your-own) that a scene can make. | [Scene Files](scene-files.md#things-of-your-own) |

@@ -34,6 +34,11 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
     public Resolver<bool> NoCausticsResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for whether the sky comes into a room through the surface.
+    /// </summary>
+    public Resolver<bool> PortalResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how many places the stuff inside the surface is
     /// looked at from when it lights the scene.
     /// </summary>
@@ -113,6 +118,7 @@ public class SurfaceResolver<TValue> : NamedObjectResolver<TValue>, ISurfaceReso
 
         NoShadowResolver.AssignTo(value, target => target.NoShadow, context, variables);
         NoCausticsResolver.AssignTo(value, target => target.NoCaustics, context, variables);
+        PortalResolver.AssignTo(value, target => target.OpensToTheSky, context, variables);
         GivesLightResolver.AssignTo(value, target => target.GivesLightSamples, context, variables);
         HairResolver.AssignTo(value, target => target.HairGrowth, context, variables);
         WeatherResolver.AssignTo(value, target => target.Weather, context, variables);

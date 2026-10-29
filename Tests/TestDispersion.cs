@@ -137,7 +137,7 @@ public class TestDispersion
         string dispersive = Rendered("", "glass 'SF10'");
         string plain = Rendered("", $"ior {index}");
 
-        CollectionAssert.AreEqual(File.ReadAllBytes(plain), File.ReadAllBytes(dispersive),
+        CollectionAssert.AreEqual(Pixels(plain), Pixels(dispersive),
             "in red, green and blue, a glass's dispersion should change nothing");
 
         Assert.IsTrue(Colorful(Rendered("spectral", "glass 'SF10'")) > 20,
@@ -178,6 +178,29 @@ public class TestDispersion
         });
 
         return output;
+    }
+
+    /// <summary>
+    /// This method reads an image's size and every channel of every pixel, in order.  Two renders are
+    /// compared by these rather than by their files' bytes: a picture file records the second it was
+    /// written, so two renders alike to the pixel differed whenever a second turned between them.
+    /// </summary>
+    private static double[] Pixels(string path)
+    {
+        Canvas canvas = new ImageFile(path).Load()[0];
+        List<double> channels = [canvas.Width, canvas.Height];
+
+        for (int y = 0; y < canvas.Height; y++)
+        {
+            for (int x = 0; x < canvas.Width; x++)
+            {
+                Color color = canvas.GetPixel(x, y);
+
+                channels.AddRange([color.Red, color.Green, color.Blue, color.Alpha]);
+            }
+        }
+
+        return channels.ToArray();
     }
 
     /// <summary>

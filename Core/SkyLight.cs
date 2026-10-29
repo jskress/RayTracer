@@ -111,6 +111,9 @@ public class SkyLight : Light
     /// <returns>The sample: which way the sky lies, how far off, and all of the light.</returns>
     public override LightSample SampleToward(Point point, int index, Vector normal = null)
     {
+        if (SharesAt(point) is { Openings: > 0 } shares)
+            return MixedSample(point, index, normal, normal is null ? 4 : 1, shares);
+
         if (IsAPicture)
             return PictureSample(point, index, normal, normal is null ? 4 : 1);
 
@@ -148,6 +151,9 @@ public class SkyLight : Light
     /// <returns>The sample.</returns>
     public override LightSample SampleAround(Point point, int index)
     {
+        if (SharesAt(point) is { Openings: > 0 } shares)
+            return MixedSample(point, index, null, 1, shares);
+
         if (IsAPicture)
             return PictureSample(point, index, null, 1);
 
@@ -176,7 +182,7 @@ public class SkyLight : Light
         Vector direction = third * Samples < byLight
             ? Map.Pick(first, second)
             : OverTheWholeSphere(first, second);
-        double odds = OddsToward(direction, null);
+        double odds = OddsWithoutOpenings(direction, null);
 
         return new LightSample(direction, double.PositiveInfinity, odds > 0 ? Samples / (Math.PI * odds) : 0);
     }
@@ -241,10 +247,114 @@ public class SkyLight : Light
                 : OverTheHalfFacing(normal, alongOne, alongTwo);
         }
 
-        double odds = OddsToward(direction, normal);
+        double odds = OddsWithoutOpenings(direction, normal);
 
         return new LightSample(
             direction, double.PositiveInfinity, odds > 0 ? Samples / (Math.PI * odds) / scale : 0);
+    }
+
+    /// <summary>
+    /// This method picks one of the directions the sky is looked at from, at a point that sees it through a
+    /// portal: most of them through the openings, by the sky's light through each, and the rest as the sky is
+    /// looked at anywhere else.
+    /// <para>
+    /// **Every one is counted by how likely any of the ways was to pick it** (Veach's balance heuristic), as a
+    /// picture's two ways are.  So nothing hangs on the openings being all the sky there is: a door left
+    /// unmarked, a gap under the eaves, a point outside the room on the wrong side of a wall, are all still
+    /// found by the rest, and only found less well.  The directions through the openings are turned by an amount
+    /// that is a fixed function of the point, as a picture's are, so a room is lit with fine grain rather than
+    /// with a few windows' shapes thrown across it.
+    /// </para>
+    /// </summary>
+    /// <param name="point">The point being lit.</param>
+    /// <param name="index">Which sample this is.</param>
+    /// <param name="normal">The surface normal, or <c>null</c> where the sky is looked at over the whole
+    /// sphere.</param>
+    /// <param name="scale">What a sample is worth for each π of the share of the sky it stands for; see
+    /// <see cref="PictureSample"/>.</param>
+    /// <param name="shares">How many of the samples are picked each way at this point.</param>
+    /// <returns>The sample.</returns>
+    private LightSample MixedSample(Point point, int index, Vector normal, double scale, Shares shares)
+    {
+        Vector direction;
+
+        if (index < shares.Openings)
+        {
+            direction = ThroughTheOpenings.Pick(
+                point, ((index + 0.5) / shares.Openings + Scene.ShiftFor(point, 151)) % 1,
+                (index * 0.7548776662466927 + Scene.ShiftFor(point, 152)) % 1);
+
+            if (direction is null)
+                return new LightSample(Directions.Up, double.PositiveInfinity, 0);
+        }
+        else if (index < shares.Openings + shares.ByLight)
+        {
+            int byLight = index - shares.Openings;
+
+            direction = Map.Pick(
+                ((byLight + 0.5) / shares.ByLight + Scene.ShiftFor(point, 107)) % 1,
+                (byLight * 0.7548776662466927 + Scene.ShiftFor(point, 108)) % 1);
+        }
+        else
+        {
+            int even = index - shares.Openings - shares.ByLight;
+            double alongOne = (even + 0.5) / shares.Even;
+            double alongTwo = even * 0.7548776662466927 % 1;
+
+            // Turned point by point here, for a smooth sky too: the same few everywhere, the rare one of them
+            // through an opening threw its shape on the floor, a step of a percent or so -- faint, but a step.
+            alongOne = (alongOne + Scene.ShiftFor(point, 107)) % 1;
+            alongTwo = (alongTwo + Scene.ShiftFor(point, 108)) % 1;
+
+            direction = normal is null
+                ? OverTheWholeSphere(alongOne, alongTwo)
+                : OverTheHalfFacing(normal, alongOne, alongTwo);
+        }
+
+        double odds = MixedOdds(point, direction, normal, shares);
+
+        return new LightSample(
+            direction, double.PositiveInfinity, odds > 0 ? Samples / (Math.PI * odds) / scale : 0);
+    }
+
+    /// <summary>
+    /// This record holds how many of the sky's samples are picked each way at a point: through the openings, by
+    /// a picture's light, and evenly.
+    /// </summary>
+    private readonly record struct Shares(int Openings, int ByLight, int Even);
+
+    /// <summary>
+    /// This method works out how many of the sky's samples are picked each way at a point.
+    /// <para>
+    /// **Three in four go through the openings, where a point sees the sky through any**, and the rest are
+    /// looked at as they are anywhere else -- half by a picture's light and half evenly, or all evenly for a smooth
+    /// sky.  A point that sees nothing through them, or a sky with none, is looked at exactly as it always was.
+    /// A sky of a single sample gives it to the openings where it may: one alone cannot be shared.
+    /// </para>
+    /// </summary>
+    private Shares SharesAt(Point point)
+    {
+        int openings = Openings is { Count: > 0 } && ThroughTheOpenings is { } through && through.Faces(point)
+            ? Samples == 1 ? 1 : Samples - Math.Max(1, Samples / 4)
+            : 0;
+        int rest = Samples - openings;
+        int byLight = IsAPicture ? rest - rest / 2 : 0;
+
+        return new Shares(openings, byLight, rest - byLight);
+    }
+
+    /// <summary>
+    /// This method returns how likely the sky's samples, all of them together, are to look in a direction from a
+    /// point that sees the sky through the openings.  See <see cref="OddsToward"/>.
+    /// </summary>
+    private double MixedOdds(Point point, Vector direction, Vector normal, Shares shares)
+    {
+        double evenOdds = normal is null
+            ? 1 / (4 * Math.PI)
+            : direction.Dot(normal) > 0 ? 1 / (2 * Math.PI) : 0;
+        double odds = shares.Even * evenOdds + shares.Openings * ThroughTheOpenings.OddsOf(point, direction);
+
+        return shares.ByLight > 0 ? odds + shares.ByLight * Map.OddsOf(direction) : odds;
     }
 
     /// <summary>
@@ -254,19 +364,107 @@ public class SkyLight : Light
     /// angle.  It is what a sample's worth is reckoned from, and what a rough surface's reflection weighs
     /// itself against when it finds the same piece of sky.
     /// </summary>
+    /// <param name="point">The point the sky is looked at from.</param>
     /// <param name="direction">The direction, which must be a unit vector.</param>
     /// <param name="normal">The way the surface faces, or <c>null</c> where the even samples are spread
     /// over the whole sphere.</param>
     /// <returns>The sky's odds of looking that way.</returns>
-    public double OddsToward(Vector direction, Vector normal)
+    public double OddsToward(Point point, Vector direction, Vector normal)
     {
-        int even = Samples / 2;
-        int byLight = Samples - even;
+        Shares shares = SharesAt(point);
+
+        return shares.Openings > 0
+            ? MixedOdds(point, direction, normal, shares)
+            : OddsWithoutOpenings(direction, normal);
+    }
+
+    /// <summary>
+    /// This method returns how likely the sky's samples are to look in a direction where it is not looked at
+    /// through any openings: evenly for a smooth sky, and for a picture half by its light and half evenly.
+    /// </summary>
+    private double OddsWithoutOpenings(Vector direction, Vector normal)
+    {
         double evenOdds = normal is null
             ? 1 / (4 * Math.PI)
             : direction.Dot(normal) > 0 ? 1 / (2 * Math.PI) : 0;
 
+        if (!IsAPicture)
+            return Samples * evenOdds;
+
+        int even = Samples / 2;
+        int byLight = Samples - even;
+
         return even * evenOdds + byLight * Map.OddsOf(direction);
+    }
+
+    /// <summary>
+    /// This property holds the openings the sky comes in through, when the scene marks any as portals; see
+    /// <see cref="SkyPortals"/>.  Set by the scene once it is settled.
+    /// </summary>
+    public IReadOnlyList<SkyPortal> Openings
+    {
+        get => _openings;
+        set
+        {
+            _openings = value;
+            _opened = null;
+        }
+    }
+
+    private IReadOnlyList<SkyPortal> _openings;
+
+    // The sky laid out as seen through the openings, made the first time it is wanted, as the map is, and kept
+    // with the pigment it was made from.
+    private sealed record Opened(Pigment Pigment, SkyPortals Portals);
+
+    private Opened _opened;
+
+    /// <summary>
+    /// This property holds the sky as seen through the openings, laid out the first time it is asked for.
+    /// <para>
+    /// **Each wall's map is about as fine as the sky's own map**, a picture's twice as fine as the picture up to
+    /// a thousand cells across the half of the sky beyond the wall, and a smooth sky's a hundred and twenty-eight,
+    /// each cell weighed by the sky at its middle.
+    /// </para>
+    /// </summary>
+    private SkyPortals ThroughTheOpenings
+    {
+        get
+        {
+            Pigment pigment = Pigment;
+            Opened opened = Volatile.Read(ref _opened);
+
+            if (opened is not null && ReferenceEquals(opened.Pigment, pigment))
+                return opened.Portals;
+
+            lock (_mapping)
+            {
+                opened = _opened;
+
+                if (opened is not null && ReferenceEquals(opened.Pigment, pigment))
+                    return opened.Portals;
+
+                int texels = pigment is ImagePigment picture ? picture.TexelsAcross : 0;
+                int size = texels > 0 ? Math.Clamp(texels, 128, 1024) : 128;
+                bool finer = 2 * size >= texels;
+                SkyPortals portals = SkyPortals.Of(_openings, (middle, side, down) =>
+                {
+                    Color color = pigment switch
+                    {
+                        null => Color,
+                        ImagePigment when finer => pigment.GetTransformedColorFor(PlaceOf(middle)) * Color,
+                        ImagePigment => pigment.GetTransformedColorFor(PlaceOf(middle), new Footprint(side, down)) * Color,
+                        _ => AveragedOver(pigment, middle, side, down) * Color
+                    };
+
+                    return 0.2126 * color.Red + 0.7152 * color.Green + 0.0722 * color.Blue;
+                }, size);
+
+                Volatile.Write(ref _opened, new Opened(pigment, portals));
+
+                return portals;
+            }
+        }
     }
 
     /// <summary>
@@ -369,6 +567,41 @@ public class SkyLight : Light
 
         return Pigment.GetTransformedLightFor<TS>(new Point(heading.X, heading.Y, heading.Z)) *
                Emitted<TS>();
+    }
+
+    /// <summary>
+    /// This method returns where on the sphere a direction reads a sky.
+    /// </summary>
+    private static Point PlaceOf(Vector direction) => new (direction.X, direction.Y, direction.Z);
+
+    /// <summary>
+    /// This method returns a sky of patterns averaged over a patch of it, read at sixteen places spread evenly
+    /// across it: a patch of a smooth sky may hold the edge of something small and bright -- the glow round a
+    /// sun -- that its middle alone would miss or take for the whole.
+    /// </summary>
+    /// <param name="pigment">The sky.</param>
+    /// <param name="middle">The direction of the patch's middle.</param>
+    /// <param name="side">The patch's edge across.</param>
+    /// <param name="down">Its edge down.</param>
+    /// <returns>The sky's color averaged over the patch.</returns>
+    private static Color AveragedOver(Pigment pigment, Vector middle, Vector side, Vector down)
+    {
+        double red = 0, green = 0, blue = 0;
+
+        for (int across = 0; across < 4; across++)
+        {
+            for (int along = 0; along < 4; along++)
+            {
+                Vector there = (middle + side * ((across + 0.5) / 4 - 0.5) + down * ((along + 0.5) / 4 - 0.5)).Unit;
+                Color color = pigment.GetTransformedColorFor(PlaceOf(there));
+
+                red += color.Red;
+                green += color.Green;
+                blue += color.Blue;
+            }
+        }
+
+        return new Color(red / 16, green / 16, blue / 16);
     }
 
     /// <summary>
