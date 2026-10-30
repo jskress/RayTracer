@@ -1,0 +1,97 @@
+// A fireball at dusk: a ball of burning gas over open ground, glowing yellow in the hearts of its billows, orange
+// and red toward their edges and black with soot where they thin, and lighting the ground and the rocks round it.
+//
+//     dotnet run -- -i a-fireball.igl -o a-fireball.png
+//
+// **Its light follows its density.**  The ball is a medium shaped by a function: a ball with three layers of noise
+// eaten into its edge, so that what is left is billows.  Seen where it is thick, a glow shows only its emission
+// over its extinction, and both go with how much stuff there is -- so with one color, or a pigment's color by
+// place, the density cancels out, and the billows show only at the thin edges, where the sky shows through.
+// `emission by density` reads the color from a map at the density instead: the dense heart of each billow glows
+// yellow, the thinner stuff round it orange and red, and where it thins to nothing it gives off nothing and only
+// its soot shows.
+//
+// **It lights what is round it.**  The sphere it fills `gives light`, so the stuff inside is a light of its own,
+// read in the same colors: the ground and the rocks are lit from the fireball's heart, warm against the cold blue
+// the dusk sky fills the shadows with.
+
+import 'daylight' { Dusk, DuskLight }
+import 'rocks' { Boulder }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    medium samples 80
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'A Fireball'
+        author 'J. Stephen Kress'
+        description 'A fireball over open ground at dusk, glowing in the hearts of its billows and lighting the ground.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-9, 2.2, -44]
+    look at [0, 7.5, 0]
+    field of view 46
+}
+
+background Dusk
+light DuskLight
+
+// -- Ground ---------------------------------------------------------------------------------------
+
+plane {
+    material {
+        pigment granite {
+            [0, [0.36, 0.30, 0.23], 0.5, [0.42, 0.35, 0.27], 1, [0.31, 0.26, 0.20]]
+            scale 0.6
+        }
+        specular 0.02
+    }
+}
+
+object Boulder(2.6, 'summer', 3) { translate [-14, 0.5, -6] }
+object Boulder(1.8, 'summer', 7) { translate [11, 0.35, -12] }
+object Boulder(3.2, 'summer', 11) { translate [18, 0.6, 9] }
+
+// -- The fireball ----------------------------------------------------------------------------------
+
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+        interior {
+            ior 1.0
+            medium {
+                // Soot: what it stops it keeps, a little bluer than red, and it turns nothing aside.  A glow that
+                // scatters is lit by its own light, each step of a ray through it from some one place in it, and at
+                // full size that came out a fine speckle all over.
+                absorption [1.3, 1.35, 1.4]
+                // A ball with three layers of noise eaten into its edge, going on down past nought outside so that
+                // the noise erodes it rather than lifting a fog round it.  Written to run from nought at the edge to
+                // about one at the heart, the range the map below is read over; `density` says how much stuff that
+                // is, apart from its colors.
+                density function {
+                    max(0, 0.6 * (1 - sqrt(x * x + y * y + z * z) / 0.86)
+                           + 0.7 * (noise(2.6 * x + 4.1, 2.6 * y, 2.6 * z + 7.3)
+                                    + 0.5 * noise(5.7 * x + 1.7, 5.7 * y, 5.7 * z + 3.9)
+                                    + 0.25 * noise(12.1 * x + 6.2, 12.1 * y, 12.1 * z + 0.8) - 0.875))
+                }
+                density 3
+                // Each color the light given off for each unit of density: black where it is thin, through
+                // red and orange to yellow at the dense hearts of the billows.
+                emission by density [
+                    0, Black, 0.1, [0.4, 0.04, 0.01], 0.25, [1.6, 0.35, 0.04], 0.45, [3, 1.1, 0.18],
+                    0.7, [3.6, 1.8, 0.4], 1, [4.2, 2.9, 1.2]
+                ]
+            }
+        }
+    }
+    no shadow
+    gives light samples 64
+    scale 7
+    translate Y 7.5
+}

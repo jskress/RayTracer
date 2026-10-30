@@ -959,4 +959,48 @@ public class TestMedium
             Absorption = new Color(0.1, 0.1, 0), Emission = new Color(0.1, 0.1, 0.1)
         }.MustBeBounded);
     }
+
+    /// <summary>
+    /// A medium's light read by its density is read at the value its shape has, before the density that scales it, so
+    /// thinning the medium with one number leaves its colors alone.  Past the map's top, its last color -- not wrapped
+    /// round to its first, as a pigment map's values are -- and where the shape would go below nothing, its first.
+    /// Given the density the march already worked out, the answer is the same without the shape being asked again.
+    /// </summary>
+    [TestMethod]
+    public void TestAMediumsLightMayBeReadByItsDensity()
+    {
+        static Medium Of(double shape, double density)
+        {
+            PigmentSet map = new ();
+
+            map.AddEntry(new SolidPigment(new Color(1, 0, 0)), 0);
+            map.AddEntry(new SolidPigment(new Color(0, 0, 1)), 1);
+
+            return new Medium
+            {
+                Absorption = new Color(1, 1, 1), Density = density, EmissionByDensity = map,
+                DensityField = FieldFunction.Compile(new FieldConstant(shape))
+            };
+        }
+
+        static void Near(Color expected, Color actual, string what)
+        {
+            Assert.AreEqual(expected.Red, actual.Red, 1e-9, what);
+            Assert.AreEqual(expected.Green, actual.Green, 1e-9, what);
+            Assert.AreEqual(expected.Blue, actual.Blue, 1e-9, what);
+        }
+
+        Point here = new (0.1, 0.2, 0.3);
+
+        Near(new Color(0.75, 0, 0.25), Of(0.25, 1).EmissionAt(here), "a quarter of the way along the map");
+        Near(Of(0.25, 1).EmissionAt(here), Of(0.25, 0.1).EmissionAt(here), "thinning the medium leaves its colors alone");
+        Near(new Color(0, 0, 1), Of(1.7, 1).EmissionAt(here), "past the map's top, its last color");
+        Near(new Color(1, 0, 0), Of(-0.5, 1).EmissionAt(here), "a shape below nothing, the first");
+
+        Medium medium = Of(0.6, 2.5);
+
+        Near(medium.EmissionAt(here), medium.EmissionAt<RgbSpectrum>(here, medium.DensityAt(here)).ToColor(),
+            "the same with the density already known");
+        Assert.IsTrue(medium.HasShape && medium.MustBeBounded is false, "a map read by the density is a shape of light");
+    }
 }

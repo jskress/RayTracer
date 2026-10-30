@@ -1,0 +1,11 @@
+railroad-ebnf-beta
+title "A medium"
+
+medium = "medium" [ name ] "{" { ( "absorption" | "scattering" ) color | "emission" emission
+       | "anisotropy" number | "density" density | ( "samples" | "bounces" ) number | "phase" "rayleigh" } "}" ;
+
+emission = color | "pigment" pigment | "by" "density" map ;
+
+density = number | "function" "{" expression "}" | pattern "{" { property } "}" ;
+
+map = [ "banded" ] "[" number "," pigment { "," number "," pigment } "]" ;

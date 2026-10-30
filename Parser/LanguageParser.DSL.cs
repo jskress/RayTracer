@@ -2145,8 +2145,11 @@ public partial class LanguageParser
         [
             { absorption > _expression } |
             // The pigment form first, since "emission pigment ..." would otherwise be tried as
-            // an expression, which it is not.
-            { emission > pigment } | { emission > _expression } |
+            // an expression, which it is not; and the map read by the density, which is read past
+            // its words by hand, for the same reason.
+            { emission > pigment } |
+            { emission > by > density ?? 'Expecting "density" to follow "emission by" here.' } |
+            { emission > _expression } |
             { scattering > _expression } | { anisotropy > _expression } |
             {
                 density > function > openBrace ?? 'Expecting an open brace to follow "function" here.' >

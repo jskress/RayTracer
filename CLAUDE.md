@@ -341,7 +341,12 @@ when the scene is settled (`Medium.TakeTheScenesCounts`), wherever the context i
 power takes its parents' scale (`VolumeLight`: the stretch is |DirectionToWorld(x) . (y x z)|); its smooth (Phong)
 highlights take each sample's delivered light (`HighlightsBySample`; until 2026-10-24 the light's own white, unfaded:
 a fire put a gray sheen across a polished floor); and a medium lit by
-a light of several samples picks the sample per point (`Scene.ShiftFor`, salt 141), not the same few for every place.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
+a light of several samples picks the sample per point (`Scene.ShiftFor`, salt 141), not the same few for every place.
+`emission by density [map]` (`Medium.EmissionByDensity`, a `PigmentSet`) reads a medium's light from the map at its
+shape's RAW value (`ShapeAt`, before `Density` scales it), held under one (a map wraps its values round), the march
+handing over the density it has (`EmissionAt(point, density)`, so the shape is not asked twice); refused for an even
+density, the last emission said wins.  A thick glow shows emission over extinction, density cancelling: with a
+pigment by place a fireball's billows showed only at its thin edges.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
 thinner than light, a soap bubble's or oil's: Airy's sum over both faces, s and p averaged, complex cosines past
 the critical angle, worked out over the 32 bands in every render (`FilmShares<TS>`: Mirrored, Passed, Highlight).
 It takes the place of `reflective`/`fresnel` (`GetReflectionColor` returns a film's mirror image whole; `GetHitColor`
