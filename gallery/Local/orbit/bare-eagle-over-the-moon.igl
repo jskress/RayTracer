@@ -1,0 +1,12 @@
+// A bare Eagle, low over the Moon: no pod slung under its spine.
+//
+//     dotnet run -- -i bare-eagle-over-the-moon.igl -o bare-eagle-over-the-moon.png -w 800 -h 600
+//
+// The flight itself is eagle-over-the-moon-setup.igl, shared by an Eagle carrying each of the five pods and one
+// carrying none; it tells how the ground is made, and names the two pictures it needs that are not in the repository.
+
+sceneTitle = 'Bare Eagle over the Moon'
+sceneDescription = 'An Eagle with no pod flying low over a cratered plain, the Earth over the mountains beyond.'
+pod = 'none'
+
+include 'eagle-over-the-moon-setup.igl'

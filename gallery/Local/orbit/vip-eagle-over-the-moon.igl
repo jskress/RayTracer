@@ -1,0 +1,13 @@
+// A VIP Eagle, low over the Moon: the passenger module painted orange, its sliding doors white but for the hourglass
+// panel on each.
+//
+//     dotnet run -- -i vip-eagle-over-the-moon.igl -o vip-eagle-over-the-moon.png -w 800 -h 600
+//
+// The flight itself is eagle-over-the-moon-setup.igl, shared by an Eagle carrying each of the five pods and one
+// carrying none; it tells how the ground is made, and names the two pictures it needs that are not in the repository.
+
+sceneTitle = 'VIP Eagle over the Moon'
+sceneDescription = 'A VIP Eagle flying low over a cratered plain, the Earth over the mountains beyond.'
+pod = 'vip'
+
+include 'eagle-over-the-moon-setup.igl'

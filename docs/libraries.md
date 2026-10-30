@@ -2784,6 +2784,7 @@ one that flies.
 
 - `'transporter'`, unless you say: the passenger module, a sliding door in either side and a door in either end;
 - `'rescue'`: the same module, banded red;
+- `'vip'`: the same module, painted orange, its sliding doors white but for the hourglass panel on each;
 - `'laboratory'`: the science pod, its airlocks standing out to either side;
 - `'freighter'`: a cargo pallet, black hazard stripes across its end blocks;
 - `'none'`: nothing, the bare spine -- as any name it does not know is.
@@ -2839,8 +2840,8 @@ Everything is modeled rather than painted on:
 
 The markings are [decals](materials.md#decals): the Moonbase Alpha emblem on the command module, the
 passenger module and the laboratory pod, the leg pods' black crosses, the spine's red bands, the tanks'
-orange bars, the checks round the spheres between the tanks, the rescue Eagle's bands and the freighter's
-stripes.  The emblem is traced from a drawing of it, its white a plaque and its black the deep blue the
+orange bars, the checks round the spheres between the tanks, the rescue Eagle's bands, the VIP Eagle's
+orange and the freighter's stripes.  The emblem is traced from a drawing of it, its white a plaque and its black the deep blue the
 models carry.
 
 All of this is what it costs: about three seconds to build each Eagle before the first ray, two of them the
