@@ -1,0 +1,12 @@
+// An Eagle freighter, low over the Moon: a cargo pallet slung under its spine.
+//
+//     dotnet run -- -i freighter-eagle-over-the-moon.igl -o freighter-eagle-over-the-moon.png -w 800 -h 600
+//
+// The flight itself is eagle-over-the-moon-setup.igl, shared by an Eagle carrying each of the five pods and one
+// carrying none; it tells how the ground is made, and names the two pictures it needs that are not in the repository.
+
+sceneTitle = 'Freighter Eagle over the Moon'
+sceneDescription = 'An Eagle freighter flying low over a cratered plain, the Earth over the mountains beyond.'
+pod = 'freighter'
+
+include 'eagle-over-the-moon-setup.igl'

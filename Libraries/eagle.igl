@@ -17,6 +17,7 @@
 // show fit it -- the cutaway's crewman stands a fifth of the way up its side, and the passenger module's ceiling
 // comes to two meters.  **The second is the pod slung under its spine**, by name: `'transporter'`, the passenger
 // module and the Eagle unless said; `'rescue'`, the same module banded red and white as a rescue Eagle's is;
+// `'vip'`, the same module painted orange, its sliding doors white but for their hourglass panels, as a VIP Eagle's is;
 // `'laboratory'`, the science pod with its airlocks out to either side; `'freighter'`, a cargo pallet; or `'none'`,
 // nothing -- as any name it does not know is.  **The third is how far its legs are run out**, from 0, standing on them with its
 // weight on their shock struts (unless said), to 1, hanging free in flight, the pads 0.15 m lower at the drawings'
@@ -73,12 +74,14 @@ EagleWorks = material { pigment [0.5, 0.5, 0.52]  specular 0.2  shininess 20 }
 EagleHole = color [0.06, 0.06, 0.07]
 
 // The markings' colors: the Moonbase Alpha emblem's white and deep blue, the black of the leg pods' crosses and the
-// freighter's hazard stripes, the warning red of the spine's bands and the rescue Eagle's, and the tanks' orange.
+// freighter's hazard stripes, the warning red of the spine's bands and the rescue Eagle's, the tanks' orange, and the
+// VIP Eagle's: matched to a photograph of a model of it, whose white doors read as `EagleWhite` does.
 EagleEmblemWhite = color [0.94, 0.94, 0.92]
 EagleEmblemBlue = color [0.08, 0.2, 0.55]
 EagleBlack = color [0.035, 0.035, 0.04]
 EagleRed = color [0.72, 0.07, 0.05]
 EagleOrange = color [0.95, 0.45, 0.07]
+EagleVipOrange = color [0.78, 0.21, 0.03]
 EagleRedPaint = material { pigment EagleRed  specular 0.25  shininess 40 }
 EagleBlackPaint = material { pigment EagleBlack  specular 0.25  shininess 40 }
 
@@ -110,7 +113,7 @@ EagleCommandWidening = 1.6
 // -- Markings ----------------------------------------------------------------------------------------
 
 // The outlines of the markings, as Briedis and Munro's drawings and the studio models have them (the rescue Eagle's
-// bands from a replica of it), worked out by a script and placed where each is laid on:
+// bands as most pictures of it show them), worked out by a script and placed where each is laid on:
 //   - the Moonbase Alpha emblem -- "ALPHA" over the Earth and the Moon on an Eagle's figure-eight, "MOONBASE" under
 //     them, in a trapezoid -- traced from a black-and-white drawing of it (cited, not reproduced) at a third of a
 //     pixel in a drawing 560 wide, its width one and its rows running down; its white a plaque, its black the deep
@@ -119,7 +122,9 @@ EagleCommandWidening = 1.6
 //   - each leg pod's black cross, four triangles meeting at its thrusters and white between them along the
 //     diagonals;
 //   - the freighter's hazard stripes, across the end of each of its end blocks;
-//   - the rescue module's red bands, half a meter wide a meter apart, red at either end;
+//   - the rescue module's five red bands, each a little narrower than the white between them (0.85 to 0.96), red
+//     at either end; the middle one runs round the sliding door, which is left white;
+//   - the VIP module's orange, over all of it but its sliding doors, whose hourglass panels it takes;
 //   - two orange bars across the top of each engine's tank.
 EagleEmblemPlaque = path {
     move to 0.4874, 0.3158  line to 0.4937, 0.3155  line to 0.4973, 0.3143  line to 0.4999, 0.3105  line to 0.4998, 0.3069
@@ -339,27 +344,33 @@ EaglePalletStripes = path {
 }
 
 EagleRescueSides = path {
-    move to -4.1950, -3.7500  line to -3.8925, -3.7500  line to -3.8925, -1.1500  line to -4.1950, -1.1500  close
-    move to -3.3925, -3.7500  line to -2.8925, -3.7500  line to -2.8925, -1.1500  line to -3.3925, -1.1500  close
-    move to -2.3925, -3.7500  line to -1.8925, -3.7500  line to -1.8925, -1.1500  line to -2.3925, -1.1500  close
-    move to -1.3925, -3.7500  line to -0.8925, -3.7500  line to -0.8925, -1.1500  line to -1.3925, -1.1500  close
-    move to -0.3925, -3.7500  line to 0.1075, -3.7500  line to 0.1075, -1.1500  line to -0.3925, -1.1500  close
-    move to 0.6075, -3.7500  line to 1.1075, -3.7500  line to 1.1075, -1.1500  line to 0.6075, -1.1500  close
-    move to 1.6075, -3.7500  line to 2.1075, -3.7500  line to 2.1075, -1.1500  line to 1.6075, -1.1500  close
-    move to 2.6075, -3.7500  line to 3.1075, -3.7500  line to 3.1075, -1.1500  line to 2.6075, -1.1500  close
-    move to 3.6075, -3.7500  line to 3.9100, -3.7500  line to 3.9100, -1.1500  line to 3.6075, -1.1500  close
+    move to -4.1950, -3.7500  line to -3.3450, -3.7500  line to -3.3450, -1.1500  line to -4.1950, -1.1500  close
+    move to -2.38125, -3.7500  line to -1.53125, -3.7500  line to -1.53125, -1.1500  line to -2.38125, -1.1500  close
+    move to -0.5675, -3.7500  line to 0.2825, -3.7500  line to 0.2825, -3.0000  line to -0.5675, -3.0000  close
+    move to -0.5675, -1.4500  line to 0.2825, -1.4500  line to 0.2825, -1.1500  line to -0.5675, -1.1500  close
+    move to 1.24625, -3.7500  line to 2.09625, -3.7500  line to 2.09625, -1.1500  line to 1.24625, -1.1500  close
+    move to 3.0600, -3.7500  line to 3.9100, -3.7500  line to 3.9100, -1.1500  line to 3.0600, -1.1500  close
 }
 
 EagleRescueTop = path {
-    move to -4.1950, -2.4500  line to -3.8925, -2.4500  line to -3.8925, 2.4500  line to -4.1950, 2.4500  close
-    move to -3.3925, -2.4500  line to -2.8925, -2.4500  line to -2.8925, 2.4500  line to -3.3925, 2.4500  close
-    move to -2.3925, -2.4500  line to -1.8925, -2.4500  line to -1.8925, 2.4500  line to -2.3925, 2.4500  close
-    move to -1.3925, -2.4500  line to -0.8925, -2.4500  line to -0.8925, 2.4500  line to -1.3925, 2.4500  close
-    move to -0.3925, -2.4500  line to 0.1075, -2.4500  line to 0.1075, 2.4500  line to -0.3925, 2.4500  close
-    move to 0.6075, -2.4500  line to 1.1075, -2.4500  line to 1.1075, 2.4500  line to 0.6075, 2.4500  close
-    move to 1.6075, -2.4500  line to 2.1075, -2.4500  line to 2.1075, 2.4500  line to 1.6075, 2.4500  close
-    move to 2.6075, -2.4500  line to 3.1075, -2.4500  line to 3.1075, 2.4500  line to 2.6075, 2.4500  close
-    move to 3.6075, -2.4500  line to 3.9100, -2.4500  line to 3.9100, 2.4500  line to 3.6075, 2.4500  close
+    move to -4.1950, -2.4500  line to -3.3450, -2.4500  line to -3.3450, 2.4500  line to -4.1950, 2.4500  close
+    move to -2.38125, -2.4500  line to -1.53125, -2.4500  line to -1.53125, 2.4500  line to -2.38125, 2.4500  close
+    move to -0.5675, -2.4500  line to 0.2825, -2.4500  line to 0.2825, 2.4500  line to -0.5675, 2.4500  close
+    move to 1.24625, -2.4500  line to 2.09625, -2.4500  line to 2.09625, 2.4500  line to 1.24625, 2.4500  close
+    move to 3.0600, -2.4500  line to 3.9100, -2.4500  line to 3.9100, 2.4500  line to 3.0600, 2.4500  close
+}
+
+// The VIP module's paint: all of each side but its sliding door, the door's hourglass panel in it, and the top.
+EagleVipSides = path {
+    move to -4.1950, -3.7500  line to 3.9100, -3.7500  line to 3.9100, -1.1500  line to -4.1950, -1.1500  close
+    move to -1.0425, -1.4500  line to 0.7575, -1.4500  line to 0.7575, -3.0000  line to -1.0425, -3.0000  close
+    move to -0.8925, -1.8200  line to -0.4625, -2.2200  line to -0.8925, -2.6200  line to -0.8925, -2.9000
+    line to 0.6075, -2.9000  line to 0.6075, -2.6200  line to 0.1775, -2.2200  line to 0.6075, -1.8200
+    line to 0.6075, -1.5500  line to -0.8925, -1.5500  close
+}
+
+EagleVipTop = path {
+    move to -4.1950, -2.4500  line to 3.9100, -2.4500  line to 3.9100, 2.4500  line to -4.1950, 2.4500  close
 }
 
 EagleTankBars = path {
@@ -1743,6 +1754,25 @@ primitive EaglePod(pod) -> group {
                     decal {
                         path { move to -3.75, -2.45  line to -1.15, -2.45  line to -1.15, 2.45  line to -3.75, 2.45  close }
                         color EagleRed  planar  min Y 4.1  max Y 4.3  rotate Z -90  scale [-1, 1, 1]
+                    }
+                }
+            }
+        }
+    }
+    else if (pod == 'vip') {
+        return group {
+            group {
+                object EaglePassengerModule
+                material inherited {
+                    decal { path EagleVipSides  color EagleVipOrange  planar  min Y -2.4  max Y 2.4  rotate X 90 }
+                    decal { path EagleVipTop  color EagleVipOrange  planar  min Y 2.9  max Y 3.7 }
+                    decal {
+                        path { move to -3.75, -2.45  line to -1.15, -2.45  line to -1.15, 2.45  line to -3.75, 2.45  close }
+                        color EagleVipOrange  planar  min Y 3.8  max Y 4.0  rotate Z -90
+                    }
+                    decal {
+                        path { move to -3.75, -2.45  line to -1.15, -2.45  line to -1.15, 2.45  line to -3.75, 2.45  close }
+                        color EagleVipOrange  planar  min Y 4.1  max Y 4.3  rotate Z -90  scale [-1, 1, 1]
                     }
                 }
             }

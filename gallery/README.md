@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 159 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 164 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 8 images &middot; scenes that move, each a still and a movie</summary>
@@ -1240,9 +1240,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Orbit</b> &mdash; 2 images &middot; what flies where there is nothing to fly in</summary>
+<summary><b>Orbit</b> &mdash; 7 images &middot; what flies where there is nothing to fly in</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/bare-eagle-over-the-moon.png">
+      <img alt="Bare Eagle over the Moon" height="120" src="Local/orbit/bare-eagle-over-the-moon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/bare-eagle-over-the-moon.igl">Bare Eagle over the Moon</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/orbit/eagle-over-the-moon.png">
       <img alt="Eagle over the Moon" height="120" src="Local/orbit/eagle-over-the-moon.png" width="160"/>
@@ -1252,11 +1260,43 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </td>
   </tr>
   <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/freighter-eagle-over-the-moon.png">
+      <img alt="Freighter Eagle over the Moon" height="120" src="Local/orbit/freighter-eagle-over-the-moon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/freighter-eagle-over-the-moon.igl">Freighter Eagle over the Moon</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
     <td style="border: none;"><a href="Local/orbit/high-orbit.png">
       <img alt="High Orbit" height="120" src="Local/orbit/high-orbit.png" width="160"/>
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/orbit/high-orbit.igl">High Orbit</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/laboratory-eagle-over-the-moon.png">
+      <img alt="Laboratory Eagle over the Moon" height="120" src="Local/orbit/laboratory-eagle-over-the-moon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/laboratory-eagle-over-the-moon.igl">Laboratory Eagle over the Moon</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/rescue-eagle-over-the-moon.png">
+      <img alt="Rescue Eagle over the Moon" height="120" src="Local/orbit/rescue-eagle-over-the-moon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/rescue-eagle-over-the-moon.igl">Rescue Eagle over the Moon</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/orbit/vip-eagle-over-the-moon.png">
+      <img alt="VIP Eagle over the Moon" height="120" src="Local/orbit/vip-eagle-over-the-moon.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/orbit/vip-eagle-over-the-moon.igl">VIP Eagle over the Moon</a>
     </td>
   </tr>
 </table>

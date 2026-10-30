@@ -1,0 +1,12 @@
+// A rescue Eagle, low over the Moon: the passenger module banded red, as a rescue Eagle's is.
+//
+//     dotnet run -- -i rescue-eagle-over-the-moon.igl -o rescue-eagle-over-the-moon.png -w 800 -h 600
+//
+// The flight itself is eagle-over-the-moon-setup.igl, shared by an Eagle carrying each of the five pods and one
+// carrying none; it tells how the ground is made, and names the two pictures it needs that are not in the repository.
+
+sceneTitle = 'Rescue Eagle over the Moon'
+sceneDescription = 'A rescue Eagle flying low over a cratered plain, the Earth over the mountains beyond.'
+pod = 'rescue'
+
+include 'eagle-over-the-moon-setup.igl'
