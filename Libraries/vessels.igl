@@ -109,15 +109,9 @@ VesselCanvas = material {
     specular 0.04  shininess 10  ambient 0.20
 }
 
-VesselSpar = material {
-    pigment [0.72, 0.72, 0.70]
-    ambient 0.12  reflective 0.10  roughness 0.3
-}
+VesselSpar = material { metal 'aluminum'  roughness 0.35 }
 
-VesselSteel = material {
-    pigment [0.24, 0.26, 0.27]
-    ambient 0.10  reflective 0.14  roughness 0.35
-}
+VesselSteel = material { metal 'iron'  roughness 0.35 }
 
 VesselDark = material {
     pigment [0.10, 0.10, 0.11]

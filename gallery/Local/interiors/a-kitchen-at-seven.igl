@@ -15,6 +15,9 @@ context {
     antialiasing depth 1
     antialiasing threshold 0.5
     angles are degrees
+    // The stove and the refrigerator are brushed steel, which shows nothing but the blurred room it mirrors,
+    // so every look at the blur shows: at sixteen they were grainy.
+    reflection samples 64
     info {
         title 'A Kitchen at Seven'
         author 'J. Stephen Kress'

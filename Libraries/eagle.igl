@@ -55,8 +55,8 @@
 // The hull is white, a warm, slightly gray white, painted.
 EagleWhite = material { pigment [0.80, 0.80, 0.78]  specular 0.25  shininess 40 }
 
-// The engine bells are bare metal.
-EagleBell = material { pigment [0.55, 0.55, 0.57]  metallic 0.8  specular 0.5  shininess 30  reflective 0.08 }
+// The engine bells are bare metal, steel turned and left dull.
+EagleBell = material { metal 'iron'  roughness 0.3 }
 
 // The command module's windows: dark, smoked glass, with the gloss of glass.
 EagleGlass = material { pigment [0.025, 0.03, 0.04]  specular 0.9  shininess 250  reflective 0.12  fresnel }
@@ -605,7 +605,7 @@ primitive EagleLegPod(middle, end, side) -> group {
 // -- The landing legs --------------------------------------------------------------------------------
 
 // The landing gear's metal: the struts and links painted gray, the shock strut's piston bare and bright.
-EagleChrome = material { pigment [0.62, 0.62, 0.64]  metallic 0.9  specular 0.6  shininess 80  reflective 0.25 }
+EagleChrome = material { metal 'chromium' }
 
 // How far a leg's shock strut runs out from where it stands, loaded, to where it hangs free, in the drawings'
 // meters: the knee link it is held by straightens at 0.20.

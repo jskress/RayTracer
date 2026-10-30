@@ -66,13 +66,9 @@ AircraftRed = material {
     specular 0.58  shininess 165  ambient 0.11  reflective 0.05  fresnel
 }
 
-// Bare metal, for a cowling or a spinner.  Dark, for the reason the [furniture](#furniture)'s steel is:
-// a metal gets its brightness from what it reflects, and one painted as light as it looks goes white
-// under a working light and takes every edge with it.
-AircraftMetal = material {
-    pigment [0.34, 0.35, 0.37]
-    ambient 0.11  reflective 0.26  roughness 0.25
-}
+// Bare metal, for a cowling or a spinner: aluminum, a little rough.  A metal shows nothing of its own and
+// gets all its brightness from what it mirrors, so it keeps its edges under a working light.
+AircraftMetal = material { metal 'aluminum'  roughness 0.25 }
 
 AircraftGlass = material {
     pigment [0.06, 0.09, 0.13]

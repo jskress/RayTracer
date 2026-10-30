@@ -63,10 +63,7 @@ SpacecraftHull = material {
     specular 0.30  shininess 90  ambient 0.28  reflective 0.05  fresnel
 }
 
-SpacecraftMetal = material {
-    pigment [0.38, 0.39, 0.41]
-    ambient 0.16  reflective 0.24  roughness 0.3
-}
+SpacecraftMetal = material { metal 'aluminum'  roughness 0.3 }
 
 // Solar cells: very dark, very blue, and glossy, which is what a panel actually looks like.
 SpacecraftCell = material {
@@ -74,11 +71,10 @@ SpacecraftCell = material {
     specular 0.75  shininess 200  ambient 0.14  reflective 0.04  fresnel
 }
 
-// Thermal foil, which is the one warm color on most of these.
-SpacecraftFoil = material {
-    pigment [0.72, 0.56, 0.18]
-    ambient 0.22  reflective 0.18  roughness 0.35
-}
+// Thermal foil, which is the one warm color on most of these: aluminized film, amber over the metal, given by
+// the color it mirrors.  It is crinkled, so very rough: smoother, a face caught the sun in one patch and
+// mirrored black space everywhere else, and the bus went dark.
+SpacecraftFoil = material { metal [0.78, 0.58, 0.22]  roughness 0.75 }
 
 // **A glow is a material at `ambient 1`.**  It owes nothing to where the sun is, which is the whole
 // point: an engine that dims when the craft turns away from the light is an engine that is not lit.

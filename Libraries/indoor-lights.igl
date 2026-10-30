@@ -66,18 +66,12 @@
 
 // -- What a fitting is made of ------------------------------------------------------------------------
 
-RoomBrass = material {
-    pigment [0.60, 0.46, 0.20]
-    specular 0.62  shininess 150  reflective 0.16  ambient 0.06
-}
-RoomBronze = material {
-    pigment [0.20, 0.16, 0.12]
-    reflective 0.10  roughness 0.35  ambient 0.05
-}
-RoomSteel = material {
-    pigment [0.42, 0.44, 0.46]
-    reflective 0.20  roughness 0.3  ambient 0.06
-}
+RoomBrass = material { metal 'brass' }
+// Oil-rubbed bronze, darkened: a metal given by the color it mirrors.
+RoomBronze = material { metal [0.34, 0.26, 0.19]  roughness 0.35 }
+// Steel, polished: rough, a sconce's open bowl took scattered looks at the window across a dim room, and in a
+// scene following bounced light it came out grainy and threw sparks onto the wall round it.
+RoomSteel = material { metal 'iron' }
 RoomCeramic = material {
     pigment [0.78, 0.74, 0.68]
     specular 0.40  shininess 70  ambient 0.08

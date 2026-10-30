@@ -105,25 +105,15 @@ TrainSmokebox = material {
     pigment [0.052, 0.050, 0.048]
     specular 0.22  shininess 60  ambient 0.040
 }
-TrainCopper = material {
-    pigment [0.55, 0.26, 0.12]
-    specular 0.90  shininess 240  reflective 0.34  ambient 0.06  brilliance 1.6
-}
-TrainBrass = material {
-    pigment [0.60, 0.47, 0.15]
-    specular 0.88  shininess 220  reflective 0.30  ambient 0.06  brilliance 1.55
-}
+TrainCopper = material { metal 'copper' }
+TrainBrass = material { metal 'brass' }
 // The lining, and the buffer beam it also serves.
 TrainGold = material {
     pigment [0.72, 0.58, 0.22]  specular 0.70  shininess 160  reflective 0.05  fresnel  ambient 0.07
 }
-TrainSteel = material {
-    pigment [0.30, 0.31, 0.33]  reflective 0.18  roughness 0.3  ambient 0.05
-}
+TrainSteel = material { metal 'iron'  roughness 0.3 }
 // A tire is wiped bright by the rail it runs on; the wheel behind it is not.
-TrainTire = material {
-    pigment [0.255, 0.262, 0.275]  specular 0.72  shininess 180  reflective 0.24  ambient 0.05
-}
+TrainTire = material { metal 'iron'  roughness 0.1 }
 TrainGlass = material {
     pigment [0.07, 0.09, 0.11]  specular 0.60  shininess 190  reflective 0.04  fresnel  ambient 0.04
 }

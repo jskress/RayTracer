@@ -123,18 +123,13 @@ FurnitureStone = material {
     specular 0.55  shininess 140  ambient 0.11  reflective 0.05  fresnel
 }
 
-// Steel, for the things in a kitchen that are not made of wood.
+// Steel, for the things in a kitchen that are not made of wood: stainless, brushed.
 //
-// **Its reflectivity is what makes it metal, not its color, and its color has to be DARK.**  The
-// first try was a light gray -- roughly what stainless looks like to the eye -- and under a working
-// light it went to white and took every edge on the appliance with it: the door lines, the handles
-// and the oven front all disappeared into one blank panel.  A metal is dark and gets its brightness
-// back from what it reflects, which is also the only reason an appliance is recognizable across a
+// **A metal shows nothing of its own.**  Painted the light gray stainless looks to the eye, the first try
+// went white under a working light and took every edge on the appliance with it.  A metal gets all its
+// brightness from what it mirrors, which is also the only reason an appliance is recognizable across a
 // room: it carries a dim picture of that room on its door -- blurred, since kitchen steel is brushed.
-FurnitureSteel = material {
-    pigment [0.30, 0.31, 0.33]
-    ambient 0.10  reflective 0.24  roughness 0.3
-}
+FurnitureSteel = material { metal 'iron'  roughness 0.3 }
 
 // -- Dining table ---------------------------------------------------------------------------------
 
