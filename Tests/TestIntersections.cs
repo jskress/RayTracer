@@ -174,4 +174,55 @@ public class TestIntersections
 
         Assert.IsTrue(0.48873.Near(reflectance));
     }
+
+    /// <summary>
+    /// This tests that a ray cast from a crossing a long way from the world's middle sets off outside the surface it
+    /// left.  A ball the Earth's size, seen from as far off as the Moon sees it and from ten, a hundred and a
+    /// thousand times as far: every ray leaving its surface straight out must leave it.  At the Moon's distance the
+    /// sphere's own arithmetic put its crossings inside it; further off, the rounding of the places themselves did,
+    /// past the millionth a ray sets off by -- a planet in a space scene came out speckled with its own shadow.
+    /// </summary>
+    [TestMethod]
+    public void TestARayFromAFarCrossingLeavesTheSurface()
+    {
+        Random random = new (2026);
+        Point eye = new (0, 23.9, 0);
+
+        foreach (double further in new[] { 1.0, 10, 100, 1000 })
+        {
+            double radius = 6.371e6 * further;
+            Point middle = new (4.8108e7 * further, 2.0788e7 * further, -3.8081e8 * further);
+            Sphere planet = new ()
+            {
+                Transform = Transforms.Translate(middle.X, middle.Y, middle.Z) * Transforms.Scale(radius)
+            };
+            Vector toward = (middle - eye).Unit;
+            Vector side = toward.Cross(new Vector(0, 1, 0)).Unit;
+            Vector up = side.Cross(toward).Unit;
+
+            for (int index = 0; index < 100; index++)
+            {
+                double across = (random.NextDouble() * 2 - 1) * 0.9;
+                double down = (random.NextDouble() * 2 - 1) * Math.Sqrt(0.81 - across * across);
+                Point target = middle + (side * across + up * down) * radius;
+                Ray ray = new (eye, (target - eye).Unit);
+                List<Intersection> hits = [];
+
+                planet.Intersect(ray, hits);
+
+                Intersection hit = hits.Where(crossing => crossing.Distance > 0).MinBy(crossing => crossing.Distance);
+
+                Assert.IsNotNull(hit, "a ray aimed at the planet should meet it");
+
+                hit.PrepareUsing(ray, hits);
+
+                List<Intersection> again = [];
+
+                planet.Intersect(new Ray(hit.OverPoint, hit.Normal), again);
+
+                Assert.IsFalse(again.Any(crossing => crossing.Distance > 0),
+                    $"{further} times the Moon's distance off, a ray leaving the planet met it again");
+            }
+        }
+    }
 }

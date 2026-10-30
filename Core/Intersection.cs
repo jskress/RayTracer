@@ -177,9 +177,25 @@ public class Intersection : IComparable<Intersection>
 
     /// <summary>
     /// This property holds how far off the surface, in the world, a ray cast from this crossing sets off; see
-    /// <see cref="Surface.SelfOffsetAt"/>.
+    /// <see cref="Surface.SelfOffsetAt"/>, and <see cref="FarShare"/> for a crossing a long way from the world's
+    /// middle.
     /// </summary>
     public double SelfOffset { get; private set; }
+
+    /// <summary>
+    /// This is the least share of a crossing's distance from the world's middle -- its largest coordinate -- a ray
+    /// cast from it sets off by, 2^-40.
+    /// <para>
+    /// **A place a long way off is known only to a share of how far off it is.**  Its coordinates are rounded to
+    /// about a ten-thousand-trillionth of themselves, and carrying it into a surface's own space rounds it again by
+    /// as much as the surface stands off -- so 384,000 km off, where the Moon sees the Earth, a crossing is known
+    /// only to some hundred-millionths of a meter, and ten or a hundred times further off to more than the
+    /// millionth every surface sets off itself by: its shadow rays began inside it, and a planet came out speckled
+    /// all over.  Four thousand times the rounding is ample; and it passes the millionth only past 1,100 km from
+    /// the middle, so a scene of any ordinary size sets off exactly as it always did.
+    /// </para>
+    /// </summary>
+    private const double FarShare = 1.0 / (1L << 40);
 
     /// <summary>
     /// This property holds how fast the ray that found this point was widening, so that anything
@@ -267,7 +283,9 @@ public class Intersection : IComparable<Intersection>
             Inside = !Inside;
         }
 
-        SelfOffset = Surface.SelfOffsetAt(TimeIndex, Portals);
+        SelfOffset = Math.Max(
+            Surface.SelfOffsetAt(TimeIndex, Portals),
+            Math.Max(Math.Abs(Point.X), Math.Max(Math.Abs(Point.Y), Math.Abs(Point.Z))) * FarShare);
 
         Vector adjustment = Normal * SelfOffset;
 

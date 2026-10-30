@@ -275,7 +275,13 @@ a ray skimming a swell's crest went through it (complete over cheap, the user's 
 Every surface sets a ray off from itself by `Surface.SelfOffsetAt(time, portals)` (`Intersection.SelfOffset`, the
 nudge for over/under/lit points, weathering's looks and subsurface steps): the usual epsilon, or for a surface found to
 an accuracy in its OWN units (isosurface, sdf) that accuracy times `StretchInTheWorld` -- scaled up a thousandfold, a
-shape found to a ten-thousandth in its own units is a tenth off in the world, and an absolute nudge put rays inside.  A faulty bound (the smaller sampled value) lit
+shape found to a ten-thousandth in its own units is a tenth off in the world, and an absolute nudge put rays inside.
+Whatever the surface, the nudge is never under 2^-40 of the crossing's largest world coordinate
+(`Intersection.FarShare`; it passes the millionth only past 1,100 km, so ordinary scenes are untouched): a place far
+off is rounded by a share of how far off it is, and a planet ten times the Moon's distance off came out speckled with
+its own shadow.  A `Sphere` is solved without cancelling (Ray Tracing Gems ch. 7: the discriminant from the ray's
+nearest approach to the middle, the near root from the product of the roots): the book's b^2 - 4ac lost the square of
+the ray's distance in radii, and the Earth seen from the Moon was speckled the same way.  A faulty bound (the smaller sampled value) lit
 grazed shadows, caught only by rays grazing the degenerate sphere.
 `extrusion { ... rounded r }` (`Extrusion.Rounded`, an `IAssembled` like `Tube`: the five places that walk into a
 tube's union walk into any `IAssembled`) is the CSG union of the outline drawn in by r (`Graphics/PathOffset.cs`:
