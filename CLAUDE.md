@@ -644,8 +644,9 @@ middle and placed by its transforms (the cradle's primitive drew each ball off-c
 world origin).  The settler records poses at the shutter's instants and `Surface.StandAt(here, motion)` rebuilds the
 moving transforms, so bodies blur.  A `swarm { of T  from toward spread speed a to b  rate  since  life a to b
 bounce friction drag radius }` (`Geometry/Swarm.cs`, a Group) is filled by the settler: copy k born at since + k / rate
-(`since` < 0: already in full flow at nought; only copies within the longest life of the time are looked at), its
-way, speed and life hashed from (seed, k, purpose) -- never drawn in order -- flown from its birth at 1/500 s, to the
+(`since` < 0: already in full flow at nought; only copies within the longest life of the time are looked at) -- or,
+`burst n [at t] [over d]` in place of rate and since (refused beside them), copy k of n born at t + d k / n, a flow at
+n / d that stops at its last copy, every one at t when d is nought -- its way, speed and life hashed from (seed, k, purpose) -- never drawn in order -- flown from its birth at 1/500 s, to the
 frame's EXACT time (stopping within half a step left each copy up to 1 ms behind, by its birth's phase), with swept
 rays against the colliders, an `Instance` of T at world scale with a `MotionAt` for blur; copies strike neither each
 other nor bodies.  A swarm that MOVES (`MotionAt`) is refused: its copies would be carried along in flight rather

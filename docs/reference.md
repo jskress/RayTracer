@@ -57,7 +57,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `are` | The second word of `angles are …`. | [Context](context.md#angles) |
 | `area` | An `area light` (soft-edged). | [Lights](lights.md#area-lights) |
 | `around` | Material: the axis a brushed surface's grooves run round, as circles. | [Brushed metal](materials.md#brushed-metal) |
-| `at` | Follows `look at`, `point at`, a tube's `radius … at`, a ribbon's or strand's `width … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, where a `mark` stands, and a swarm's `falls at`. | [Cameras](cameras.md#placing-a-camera), [Ribbon](advanced-surfaces.md#ribbon), [Along a Spline](animation.md#along-a-spline) |
+| `at` | Follows `look at`, `point at`, a tube's `radius … at`, a ribbon's or strand's `width … at`, parallelogram `at`; a blob plane's point.  `along <spline> at <share>`.  A joint's `aim at`, where a `mark` stands, and a swarm's `falls at` and when it bursts, `burst … at`. | [Cameras](cameras.md#placing-a-camera), [Ribbon](advanced-surfaces.md#ribbon), [Along a Spline](animation.md#along-a-spline) |
 | `author` | Info: who made it. | [Context](context.md#image-information) |
 | `axiom` | L-system: the starting string.  Shape grammar: the rule its first scope is handed to. | [Advanced Surfaces](advanced-surfaces.md#l-systems), [Shape Grammar](advanced-surfaces.md#shape-grammar) |
 | `axis` | Joint: what it turns about, through its pivot: `X`, `Y`, `Z` or a direction. | [Joints](animation.md#joints) |
@@ -91,6 +91,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brick` | Pattern: running-bond brickwork. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by; an image pigment's `{ brightness b }`: what its colors are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Image Pigments](pigments-and-patterns.md#image-pigments) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
+| `burst` | Swarm: `burst <count> [at <time>] [over <time>]`, its copies thrown all at once, or evenly over a while, rather than in a steady flow. | [Swarms](animation.md#swarms) |
 | `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, and a `for` or `over` loop's range.  `along <spline> by <distance>`.  A placement's gap or inset, `on 'x' by 0.1`. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films), [Along a Spline](animation.md#along-a-spline), [Transforms](transforms.md#placing-one-thing-against-another) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `cache` | Context: `diffuse cache`, blending bounced light between records worked out at scattered places. | [Context](context.md#a-cache-of-bounced-light) |
@@ -302,7 +303,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `or` | True when either condition is; the same operator as `\|\|`. | [Scene Files](scene-files.md#expressions) |
 | `orthographic` | Camera projection: parallel, with no perspective shrink. | [Cameras](cameras.md#projections) |
 | `out` | Keys: `ease out`, slowing as it arrives. | [Keys](animation.md#keys) |
-| `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
+| `over` | A `for` loop with no name for its count.  Also a field's `over '<name>'`, dropping its copies onto that surface, and how long a swarm's `burst … over` takes. | [Surfaces](surfaces.md#repeating-things), [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground), [Swarms](animation.md#swarms) |
 | `overhang` | Shape grammar: how far a `roof` reaches past the walls. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `panoramic` | Camera projection: a cylindrical, wide horizontal view. | [Cameras](cameras.md#projections) |
 | `paraboloid` | Surface: a bowl that gathers to a focus. | [Surfaces](surfaces.md#paraboloid) |
@@ -343,7 +344,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `radii` | Torus/egg: the two radii. | [Surfaces](surfaces.md#torus) |
 | `radius` | A radius: sphere blob, disc, spotlight, tube point, a toroidal decal's ring, a wrapped decal's reach, a hair's curl, how far light travels under a surface, how far `crevices` and `edges`, and weather, look, and the ball a body or a swarm's copy strikes things as. | [Disc](surfaces.md#disc), [Blob](surfaces.md#blob), [Lights](lights.md#spotlights), [Tube](advanced-surfaces.md#tube), [Materials](materials.md#projections), [Hair](advanced-surfaces.md#hair), [Light under the surface](materials.md#light-under-the-surface), [Where weather gathers](pigments-and-patterns.md#where-weather-gathers), [Bodies](animation.md#bodies) |
 | `ramp` | Wave shape: a sawtooth. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
-| `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
+| `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second, in a steady flow rather than a `burst`. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reach` | Grown tree: how far a point reaches to draw a twig toward it.  Joint: `reach <place or name> with <name>`, turning it and the joints in it to bring the named thing there. | [Advanced Surfaces](advanced-surfaces.md#grown-tree), [Reaching](animation.md#reaching) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
@@ -383,7 +384,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `shininess` | Finish: how tight the highlight is. | [Materials](materials.md#ambient-diffuse-and-specular) |
 | `shutter` | Camera: how long the shutter is open, for motion blur. | [Cameras](cameras.md#motion-blur) |
 | `sides` | Parallelogram: its two edge vectors. | [Surfaces](surfaces.md#parallelogram) |
-| `since` | Swarm: when it began throwing, before nought for one already in full flow. | [Swarms](animation.md#swarms) |
+| `since` | Swarm: when it began throwing, before nought for one already in full flow; a `burst` says `at` instead. | [Swarms](animation.md#swarms) |
 | `sine` | Wave shape: a smooth sine. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `sink` | Field: how far a dropped copy is sunk into the ground. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `size` | Brick pattern: `brick size`/`mortar size`.  Also hair: `clump ... size`.  Shape grammar: the first scope's size, or `size v` setting a scope's. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Hair](advanced-surfaces.md#hair), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |

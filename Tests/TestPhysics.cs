@@ -462,6 +462,62 @@ public class TestPhysics
     }
 
     /// <summary>
+    /// A burst throws nothing before its time and every copy at it: thrown all round with nothing to pull them, they
+    /// fly out as a ball growing at their speed, each the same copy whenever it is looked at, until their life is up.
+    /// One that takes a while throws its copies evenly through it, and stops at its last.
+    /// </summary>
+    [TestMethod]
+    public void TestASwarmBurstsAllAtOnce()
+    {
+        static List<Point> Places(Swarm swarm) => swarm.Surfaces.Select(copy => copy.Transform * Point.Zero).ToList();
+
+        static Swarm Bursting(double over) => new ()
+        {
+            Thing = new Sphere(), Burst = 200, BurstAt = 0.5, BurstOver = over, Spread = Math.PI, SpeedFrom = 2,
+            SpeedTo = 2, LifeFrom = 1, LifeTo = 1, Drag = 0, Radius = 0.01
+        };
+
+        Swarm burst = Bursting(0);
+
+        burst.Fill(Nothing, Still, Still, 0.49, 0, []);
+        Assert.AreEqual(0, burst.Surfaces.Count, "nothing before the burst");
+
+        burst.Fill(Nothing, Still, Still, 0.75, 0, []);
+
+        List<Point> early = Places(burst);
+
+        Assert.AreEqual(200, early.Count, "every copy at once");
+
+        foreach (Point place in early)
+            Assert.AreEqual(0.5, (place - Point.Zero).Magnitude, 1e-9, "every copy a quarter second out at two meters a second");
+
+        Assert.IsTrue(early.Any(place => place.Y > 0.4) && early.Any(place => place.Y < -0.4), "thrown all round");
+
+        burst.Fill(Nothing, Still, Still, 1.25, 0, []);
+
+        List<Point> later = Places(burst);
+
+        for (int copy = 0; copy < later.Count; copy++)
+            Assert.IsTrue((later[copy] - (Point.Zero + (early[copy] - Point.Zero) * 3)).Magnitude < 1e-9, $"copy {copy} changed its way");
+
+        burst.Fill(Nothing, Still, Still, 1.5, 0, []);
+        Assert.AreEqual(0, burst.Surfaces.Count, "every copy's life is up a second after the burst");
+
+        Swarm spread = Bursting(0.1);
+
+        spread.Fill(Nothing, Still, Still, 0.55025, 0, []);
+        Assert.AreEqual(101, spread.Surfaces.Count, "half the copies thrown halfway through a tenth of a second");
+
+        spread.Fill(Nothing, Still, Still, 0.9, 0, []);
+
+        List<double> distances = Places(spread).Select(place => (place - Point.Zero).Magnitude).ToList();
+
+        Assert.AreEqual(200, distances.Count, "and no more than the burst's copies after it");
+        Assert.AreEqual(0.8, distances.Max(), 1e-9, "the first thrown as the burst began");
+        Assert.AreEqual(0.601, distances.Min(), 1e-9, "the last a two-hundredth of its tenth of a second before it ended");
+    }
+
+    /// <summary>
     /// A ball lying still on the ground falls asleep, and wakes when another ball rolls into it: struck, it moves off.
     /// </summary>
     [TestMethod]
@@ -838,6 +894,47 @@ public class TestPhysics
         Enumerable.Range(0, one.Width * one.Height)
             .All(index => one.GetPixel(index % one.Width, index / one.Width)
                 .Matches(other.GetPixel(index % one.Width, index / one.Width)));
+
+    /// <summary>
+    /// The scene language's burst: when it comes and how long it takes are each told by the word before it, so a
+    /// burst over a while begins at nought and one at a time begins then; and a burst is one thing a swarm does, so it
+    /// is refused beside a flow, as a part of a copy or a negative while are.
+    /// </summary>
+    [TestMethod]
+    public void TestTheSceneLanguageBursts()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"physics-tests-{Guid.NewGuid():N}");
+
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            Canvas empty = Rendered(directory, "").Picture;
+
+            bool Shows(string burst, long frame) => !Same(Rendered(directory,
+                $"Ball = sphere {{ scale 0.4 }}  swarm {{ of Ball  from [0, 1, 0]  speed 0  life 10  {burst} }}",
+                frame).Picture, empty);
+
+            Assert.IsTrue(Shows("burst 1 over 0.3", 0), "a burst over a while begins at nought");
+            Assert.IsFalse(Shows("burst 1 at 0.3", 0), "a burst at a time throws nothing before it");
+            Assert.IsTrue(Shows("burst 1 at 0.3", 3), "and its copy at it");
+            Assert.IsFalse(Shows("burst 2 at 0.4 over 5", 3), "both said, nothing before its time");
+            Assert.IsTrue(Shows("burst 2 at 0.2 over 5", 3), "both said, its first copy once it has come");
+            Assert.IsTrue(Shows("burst 2 at 0.1 over 0.4  life 0.15", 4), "both said, its second copy halfway through, the first gone");
+
+            const string drop = "Drop = sphere { scale 0.01 }  ";
+
+            StringAssert.Contains(Rendered(directory, drop + "swarm { of Drop  rate 10  burst 5 }").Error, "or one burst, not both");
+            StringAssert.Contains(Rendered(directory, drop + "swarm { of Drop  burst 5  since 1 }").Error, "or one burst, not both");
+            StringAssert.Contains(Rendered(directory, drop + "swarm { of Drop  burst 2.5 }").Error, "whole number");
+            StringAssert.Contains(Rendered(directory, drop + "swarm { of Drop  burst 0 }").Error, "whole number");
+            StringAssert.Contains(Rendered(directory, drop + "swarm { of Drop  burst 5 over -1 }").Error, "less than nothing");
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
 
     /// <summary>
     /// The scene language: a body with every property said, tied to a pin and to another body by name; a box; a

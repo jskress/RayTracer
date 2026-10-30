@@ -3,6 +3,7 @@ title "A swarm"
 
 swarm = "swarm" [ name ] "{" { "of" shape | "from" point | "within" shape | "toward" vector | "spread" angle
       | ( "rate" | "since" | "bounce" | "friction" | "drag" | "radius" ) number
+      | "burst" number [ "at" number ] [ "over" number ]
       | ( "speed" | "life" ) number [ "to" number ] | "spin" angle [ "to" angle ]
       | "falls" "at" number [ "to" number ] | property } "}" ;
 
