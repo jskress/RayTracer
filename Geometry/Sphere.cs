@@ -34,6 +34,17 @@ public class Sphere : Surface
     /// <summary>
     /// This method is used to determine whether the given ray intersects the sphere and,
     /// if so, where.
+    /// <para>
+    /// **Worked out so that nothing large is taken from anything nearly as large** (Haines et al., "Precision
+    /// Improvements for Ray/Sphere Intersection", Ray Tracing Gems, 2019).  The book's discriminant, b^2 - 4ac,
+    /// subtracts two numbers each about the square of the ray's distance from the sphere in radii, so its error
+    /// grows as that square: seen from the Moon, the Earth's crossings came out a few millionths of a meter
+    /// off -- more than the millionth a ray sets off itself by -- and half its shadow rays began inside it, a
+    /// speckle all over the planet.  The same quarter discriminant is a(r^2 - l^2), l the ray's nearest
+    /// approach to the middle, and l is found directly, with nothing cancelling.  The roots are then taken one
+    /// by a sum of like signs and the other from their product, so that the one near nought -- a ray leaving
+    /// the sphere's own surface -- is not a difference of near-equal numbers either.
+    /// </para>
     /// </summary>
     /// <param name="ray">The ray to test.</param>
     /// <param name="intersections">The list to add any intersections to.</param>
@@ -41,19 +52,17 @@ public class Sphere : Surface
     {
         Vector sphereToRay = ray.Origin - Point.Zero;
         double a = ray.Direction.Dot(ray.Direction);
-        double b = 2 * ray.Direction.Dot(sphereToRay);
+        double halfB = ray.Direction.Dot(sphereToRay);
         double c = sphereToRay.Dot(sphereToRay) - 1;
-        double discriminant = b * b - 4 * a * c;
+        Vector nearest = sphereToRay - ray.Direction * (halfB / a);
+        double discriminant = a * (1 - nearest.Dot(nearest));
 
         if (discriminant < 0)
             return;
 
-        discriminant = Math.Sqrt(discriminant);
-        a *= 2;
-        b = -b;
-
-        double t1 = (b - discriminant) / a;
-        double t2 = (b + discriminant) / a;
+        double q = -(halfB + Math.CopySign(Math.Sqrt(discriminant), halfB));
+        double t1 = q == 0 ? 0 : c / q;
+        double t2 = q / a;
 
         if (t1 > t2)
             (t1, t2) = (t2, t1);

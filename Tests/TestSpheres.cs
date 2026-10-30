@@ -262,4 +262,52 @@ public class TestSpheres
             Assert.AreEqual(expected[index].N2, intersections[index].N2);
         }
     }
+
+    /// <summary>
+    /// This tests that a sphere seen from far off is met on its surface.  From a hundred thousand radii away, at
+    /// places all over the side facing the ray, every first crossing must lie on the ball: the book's formula
+    /// subtracted two numbers each the square of that distance, and put them a few millionths of a radius off it --
+    /// enough, for a planet seen from its moon, to start every other shadow ray inside the planet.
+    /// </summary>
+    [TestMethod]
+    public void TestASphereSeenFromFarOffIsMetOnItsSurface()
+    {
+        Sphere sphere = new ();
+        Random random = new (1999);
+
+        for (int index = 0; index < 200; index++)
+        {
+            Vector away = RandomUnit(random);
+            Point origin = new (away.X * 1e5, away.Y * 1e5, away.Z * 1e5);
+            Vector onIt = RandomUnit(random);
+
+            if (onIt.Dot(away) < 0.2)
+                onIt = (onIt + away * (0.2 - onIt.Dot(away) + 0.1)).Unit;
+
+            Ray ray = new (origin, (new Point(onIt.X, onIt.Y, onIt.Z) - origin).Unit);
+            List<Intersection> hits = [];
+
+            sphere.Intersect(ray, hits);
+
+            Intersection hit = hits.Where(crossing => crossing.Distance > 0).MinBy(crossing => crossing.Distance);
+
+            Assert.IsNotNull(hit, "a ray aimed at the ball should meet it");
+
+            double off = (ray.At(hit.Distance) - Point.Zero).Magnitude - 1;
+
+            Assert.AreEqual(0, off, 1e-9, $"a crossing seen from far off lay {off:E2} off the ball");
+        }
+    }
+
+    /// <summary>
+    /// This method returns a direction picked evenly over the sphere of directions.
+    /// </summary>
+    private static Vector RandomUnit(Random random)
+    {
+        double z = random.NextDouble() * 2 - 1;
+        double angle = random.NextDouble() * Math.PI * 2;
+        double across = Math.Sqrt(1 - z * z);
+
+        return new Vector(across * Math.Cos(angle), across * Math.Sin(angle), z);
+    }
 }
