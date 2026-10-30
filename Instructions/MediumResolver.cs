@@ -4,6 +4,7 @@ using RayTracer.Fields;
 using RayTracer.General;
 using RayTracer.Graphics;
 using RayTracer.Instructions.Pigments;
+using RayTracer.Pigments;
 
 namespace RayTracer.Instructions;
 
@@ -28,6 +29,11 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
     /// that is not the same everywhere.
     /// </summary>
     public IPigmentResolver EmissionPigmentResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for what the medium gives off read by how much of it there is at a place.
+    /// </summary>
+    public Resolver<PigmentSet> EmissionByDensityResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how much light the medium turns aside per unit of
@@ -92,7 +98,12 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
     public override Medium Resolve(RenderContext context, Variables variables)
     {
         Medium medium = base.Resolve(context, variables);
-        string message = Validator?.Invoke(medium);
+
+        // A medium of one density everywhere has one value of its shape everywhere, so its light read by its density
+        // could only ever be one color: say that color, or give the medium a shape.
+        string message = medium.EmissionByDensity is not null && !medium.DensityVaries
+            ? "A medium's light read by its density needs a density that varies, by a function or a pattern."
+            : Validator?.Invoke(medium);
 
         if (message != null)
             throw new TokenException(message);
@@ -113,6 +124,9 @@ public class MediumResolver : ObjectResolver<Medium>, ICloneable
 
         if (EmissionPigmentResolver is not null)
             value.EmissionPigment = EmissionPigmentResolver.ResolveToPigment(context, variables);
+
+        if (EmissionByDensityResolver is not null)
+            value.EmissionByDensity = EmissionByDensityResolver.Resolve(context, variables);
         ScatteringResolver.AssignTo(value, target => target.Scattering, context, variables);
         AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
         PhaseFunctionResolver.AssignTo(value, target => target.PhaseFunction, context, variables);

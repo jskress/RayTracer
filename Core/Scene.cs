@@ -415,7 +415,7 @@ public partial class Scene : NamedThing, IDisposable
 
             // Asked at the same point the density was, so that a medium whose color varies and a
             // medium whose amount varies are describing the same place.
-            TS source = withoutGlow ? TS.Black : medium.EmissionAt<TS>(local) * density;
+            TS source = withoutGlow ? TS.Black : medium.EmissionAt<TS>(local, density) * density;
 
             if (mixing is not null)
                 source *= ReflectionShareAt(mixing, where, ray.TimeIndex);

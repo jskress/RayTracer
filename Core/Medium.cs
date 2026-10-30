@@ -81,6 +81,24 @@ public class Medium
     public Pigment EmissionPigment { get; set; }
 
     /// <summary>
+    /// This property holds what the medium gives off read by how much of it there is: a map of colors, each the light
+    /// given off for each unit of density, read at the value the medium's shape has at a place -- the function's or
+    /// the pattern's own, before <see cref="Density"/> scales it -- and at its end colors past its ends.
+    /// <para>
+    /// **A thick glow shows its emission over its extinction, and the density cancels out of that**, since both are
+    /// in proportion to it.  So a fireball's billows, which are all density, could not be seen at all where it is
+    /// thick, whatever color its pigment gave each place: only a color that changes with the density can show them.
+    /// Read so, the dense heart of a billow can glow white and its thin edges red, and where the stuff thins to
+    /// nothing the light does too.
+    /// </para>
+    /// </summary>
+    public PigmentSet EmissionByDensity { get; set; }
+
+    // The largest number below one: a map's break values lie in [0, 1), and it wraps anything at or past one back
+    // round to its start, where a density past the top of the map must keep the map's last color.
+    private static readonly double BelowOne = Math.BitDecrement(1.0);
+
+    /// <summary>
     /// This property holds how much light the medium turns aside for each unit of distance, color by
     /// color -- light that came from somewhere else and leaves in a new direction.
     /// <para>
@@ -223,7 +241,7 @@ public class Medium
     /// This property reports whether the medium's density varies from place to place, and so whether a
     /// crossing of it has to be marched rather than answered.
     /// </summary>
-    public bool HasShape => DensityVaries || EmissionPigment is not null;
+    public bool HasShape => DensityVaries || EmissionPigment is not null || EmissionByDensity is not null;
 
     /// <summary>
     /// This property reports whether it is the <i>amount</i> of the stuff that differs from place
@@ -242,6 +260,9 @@ public class Medium
     /// <returns>What it gives off there.</returns>
     public Color EmissionAt(Point point)
     {
+        if (EmissionByDensity is not null)
+            return EmissionByDensity.GetColorFor(point, Math.Min(ShapeAt(point), BelowOne));
+
         return EmissionPigment is null ? Emission : EmissionPigment.GetTransformedColorFor(point);
     }
 
@@ -259,6 +280,23 @@ public class Medium
     }
 
     /// <summary>
+    /// This method returns the light the medium gives off at a place whose density is already known, so that a
+    /// medium whose light is read by its density does not work its shape out twice.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <param name="density">The density there, as <see cref="DensityAt"/> gives it.</param>
+    /// <returns>The light it gives off there.</returns>
+    public TS EmissionAt<TS>(Point point, double density)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (EmissionByDensity is null || Density <= 0)
+            return EmissionAt<TS>(point);
+
+        return TS.FromIlluminant(EmissionByDensity.GetColorFor(point, Math.Min(density / Density, BelowOne)));
+    }
+
+    /// <summary>
     /// This method returns how much of the stuff there is at the given place.  A shape that would go
     /// negative is taken as empty: a density below nothing has no meaning, and left alone it would
     /// have a ray gaining light for crossing the stuff rather than losing it.
@@ -267,13 +305,24 @@ public class Medium
     /// <returns>The density there.</returns>
     public double DensityAt(Point point)
     {
+        return DensityVaries ? Density * ShapeAt(point) : Density;
+    }
+
+    /// <summary>
+    /// This method returns the value the medium's shape has at the given place, before <see cref="Density"/> scales
+    /// it, and nought where it would go negative; one where the medium has no shape.
+    /// </summary>
+    /// <param name="point">Where to ask, in the space of the surface the medium fills.</param>
+    /// <returns>The shape's value there.</returns>
+    public double ShapeAt(Point point)
+    {
         if (DensityField is not null)
-            return Density * Math.Max(0, DensityField.Evaluate(point.X, point.Y, point.Z));
+            return Math.Max(0, DensityField.Evaluate(point.X, point.Y, point.Z));
 
         if (DensityPattern is not null)
-            return Density * Math.Max(0, DensityPattern.ValueAt(point));
+            return Math.Max(0, DensityPattern.ValueAt(point));
 
-        return Density;
+        return 1;
     }
 
     /// <summary>
@@ -323,12 +372,9 @@ public class Medium
         // black, so one is taken as emitting in every color.  Erring this way turns away a medium
         // that might have been harmless; erring the other way lets an endless one through, and
         // that is a picture of infinity rather than a picture of anything.
-        (EmissionPigment is not null || Emission.Red > 0) &&
-            ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
-        (EmissionPigment is not null || Emission.Green > 0) &&
-            ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
-        (EmissionPigment is not null || Emission.Blue > 0) &&
-            ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
+        (EmitsByPlace || Emission.Red > 0) && ExtinctionOf(Absorption.Red, Scattering.Red) <= 0 ||
+        (EmitsByPlace || Emission.Green > 0) && ExtinctionOf(Absorption.Green, Scattering.Green) <= 0 ||
+        (EmitsByPlace || Emission.Blue > 0) && ExtinctionOf(Absorption.Blue, Scattering.Blue) <= 0;
 
     /// <summary>
     /// This method returns what share of the light stopped in one color carried on rather than being
@@ -410,9 +456,11 @@ public class Medium
     }
 
     private bool Absorbs => Absorption.Red > 0 || Absorption.Green > 0 || Absorption.Blue > 0;
-    private bool Emits =>
-        EmissionPigment is not null ||
-        Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;
+    private bool Emits => EmitsByPlace || Emission.Red > 0 || Emission.Green > 0 || Emission.Blue > 0;
+
+    // Whether what the medium gives off is read place by place, by a pigment or by the density, either of which is
+    // taken as giving off light in every color, since neither can be asked whether it is ever anything but black.
+    private bool EmitsByPlace => EmissionPigment is not null || EmissionByDensity is not null;
 
     /// <summary>
     /// This method returns how much light of one color stops coming this way per unit of distance,

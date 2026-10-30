@@ -869,4 +869,132 @@ public class TestMediumClauses
         StringAssert.Contains(error, "must absorb or scatter wherever it emits");
     }
 
+    /// <summary>
+    /// A ball whose medium is twice as dense in its top half as in its bottom, and so thick that a ray sees only a
+    /// little way into either -- walked in steps fine enough to see that -- given whatever light is said.
+    /// </summary>
+    private static string ThickTwoDensityBall(string emission) => $$"""
+        {{Glowing}}
+        sphere {
+            material {
+                pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                interior {
+                    ior 1.0
+                    medium {
+                        absorption [12, 12, 12]
+                        density function { 0.3 + 0.6 * smoothstep(-0.1, 0.1, y) }
+                        samples 256
+                        {{emission}}
+                    }
+                }
+            }
+            no shadow
+        }
+        """;
+
+    // Whether two pictures are the same to the last bit.
+    private static bool Same(Canvas one, Canvas other) =>
+        one.Width == other.Width && one.Height == other.Height &&
+        Enumerable.Range(0, one.Width * one.Height).All(index =>
+            one.GetPixel(index % one.Width, index / one.Width).Matches(other.GetPixel(index % one.Width, index / one.Width)));
+
+    [TestMethod]
+    public void TestAThickGlowShowsItsDensityOnlyWhenItsLightIsReadByIt()
+    {
+        // The case it is for.  A glow too thick to see far into shows its emission over its extinction, and both go
+        // with the density, so one color comes out the same however dense the stuff: the two halves look alike, and
+        // a fireball's billows, which are all density, cannot be seen.  Read by the density, each half shows the
+        // map's color for its own density.
+        (Canvas flat, string flatError) = Render(ThickTwoDensityBall("emission [9, 6, 2.4]"));
+        (Canvas read, string readError) = Render(ThickTwoDensityBall(
+            "emission by density [0, [9, 1, 1], 1, [1, 1, 9]]"));
+
+        Assert.IsNull(flatError, flatError);
+        Assert.IsNull(readError, readError);
+
+        Color flatTop = flat.GetPixel(20, 12), flatBottom = flat.GetPixel(20, 28);
+
+        Assert.AreEqual(flatTop.Red, flatBottom.Red, 0.03, $"one color, the same either half: {flatTop} and {flatBottom}");
+        Assert.AreEqual(flatTop.Blue, flatBottom.Blue, 0.03, $"one color, the same either half: {flatTop} and {flatBottom}");
+
+        Color top = read.GetPixel(20, 12), bottom = read.GetPixel(20, 28);
+
+        Assert.IsTrue(top.Blue > 2 * top.Red, $"the denser half shows the map's blue end, and got {top}");
+        Assert.IsTrue(bottom.Red > 1.5 * bottom.Blue, $"the thinner half shows its red end, and got {bottom}");
+    }
+
+    [TestMethod]
+    public void TestALightReadByDensityInOneColorIsThatColor()
+    {
+        // A map of one color says what one color says, to the last bit; and whichever light is said last is the one,
+        // so a light read by the density said first and one color after it is the one color.
+        (Canvas flat, _) = Render(ThickTwoDensityBall("emission [9, 6, 2.4]"));
+        (Canvas mapped, string error) = Render(ThickTwoDensityBall("emission by density [0, [9, 6, 2.4], 1, [9, 6, 2.4]]"));
+        (Canvas replaced, _) = Render(ThickTwoDensityBall("emission by density [0, Black, 1, White]  emission [9, 6, 2.4]"));
+
+        Assert.IsNull(error, error);
+        Assert.IsTrue(Same(flat, mapped), "a map of one color should be that color");
+        Assert.IsTrue(Same(flat, replaced), "the light said last should be the light");
+    }
+
+    [TestMethod]
+    public void TestAGlowReadByItsDensityLightsItsSurroundingsInThatColor()
+    {
+        // A glow that gives light carries the color its map gives its density, as what the eye sees of it does:
+        // below the map's middle it is black and lights nothing; above, red.
+        string Lit(double density) => $$"""
+            camera { location [0, 3, -6]  look at [0, 0, 0]  field of view 50 }
+            background Black
+            plane { material { pigment White  ambient 0  specular 0 } }
+            sphere {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior {
+                        ior 1.0
+                        medium {
+                            absorption [1, 1, 1]
+                            density function { {{density}} }
+                            emission by density [0, Black, 0.5, Black, 0.6, [4, 0.2, 0.2], 1, [4, 0.2, 0.2]]
+                        }
+                    }
+                }
+                translate Y 1.5
+                gives light
+            }
+            """;
+
+        (Canvas dark, string darkError) = Render(Lit(0.3));
+        (Canvas lit, string litError) = Render(Lit(0.8));
+
+        Assert.IsNull(darkError, darkError);
+        Assert.IsNull(litError, litError);
+
+        Color unlit = dark.GetPixel(20, 37), red = lit.GetPixel(20, 37);
+
+        Assert.IsTrue(unlit.Red < 0.01, $"a glow black at its density lights nothing, and the floor came out {unlit}");
+        Assert.IsTrue(red.Red > 0.05 && red.Red > 4 * red.Blue, $"a glow red at its density lights the floor red, and got {red}");
+    }
+
+    [TestMethod]
+    public void TestALightReadByDensityNeedsADensityThatVaries()
+    {
+        // A medium of one density has one value of its shape everywhere, so its light read by its density could only
+        // be one color: it should say the color.
+        (Canvas even, string error) = Render(Glowing + "\n" + """
+            sphere {
+                material {
+                    transparency 1
+                    interior { ior 1.0  medium { absorption 2  emission by density [0, Black, 1, White] } }
+                }
+            }
+            """);
+        (Canvas unfinished, string unsaid) = Render(Glowing + "\n" + """
+            sphere { material { transparency 1  interior { medium { emission by [0, Black, 1, White] } } } }
+            """);
+
+        Assert.IsNull(even);
+        StringAssert.Contains(error, "needs a density that varies");
+        Assert.IsNull(unfinished);
+        StringAssert.Contains(unsaid, "Expecting \"density\" to follow \"emission by\" here");
+    }
 }

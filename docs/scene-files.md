@@ -207,6 +207,12 @@ Light travels differently through different stuff, and a scene says how a *solid
 [`interior { ior … }`](materials.md#transparency-and-interiors).  What surrounds those solids has an
 index of its own, and `environment ior` is how a scene says what it is:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/environmentClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/environmentClause.svg">
+  <img alt="The environment" src="images/scene-files/environmentClause.svg">
+</picture>
+
 ```
 environment ior Air
 ```
@@ -249,6 +255,12 @@ environment {
 }
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/mediumClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/mediumClause.svg">
+  <img alt="A medium" src="images/scene-files/mediumClause.svg">
+</picture>
+
 A medium is something a ray passes *through* rather than strikes.  Two things happen to a ray
 crossing it: light is taken out, so what lies beyond arrives dimmer; and the medium's own light is
 added all along the way, each bit of it dimmed in turn by however much medium still lies between it
@@ -257,7 +269,7 @@ and the eye.  Together those are haze, fog, smoke, and the glow of a gas.
 | Property | Default | What it does |
 | --- | --- | --- |
 | `absorption` | none | How much light the medium takes out for each unit of distance. |
-| `emission` | none | How much light it gives off for each unit of distance.  May be a [pigment](#a-medium-whose-light-varies), for light that differs from place to place. |
+| `emission` | none | How much light it gives off for each unit of distance.  May be a [pigment](#a-medium-whose-light-varies), for light that differs from place to place, or [read by its density](#a-medium-whose-light-follows-its-density). |
 | `density` | 1 | A plain multiplier on both, so how *much* of the stuff there is can be said apart from what the stuff does. |
 
 The first two are colors, because a haze that dims red more than blue is the whole reason far hills
@@ -480,6 +492,45 @@ is a scene with no light written in it at all.
 A scene may still prefer a lamp of its own — [`candle.igl`](../gallery/Local/interiors/candle.igl) does,
 because it is a demonstration of [`fade distance`](lights.md), and a volume light has its falloff built
 in and takes no fade at all.
+
+#### A medium whose light follows its density
+
+A pigment says what color each *place* gives off, and a flame is shaped by place.  A fireball is not:
+what shapes it is its billows, and those are all density.  Density is the one thing a glow's color
+cannot show where the glow is thick.  A ray sees only a little way in, and what reaches it is the
+medium's emission over its extinction; both go with how much stuff there is, so the density cancels
+out.  With one color, or a pigment's color by place, a fireball's billows show only at its thin edges,
+where the sky shows through, and its middle is one even glow.
+
+So `emission` may also be read **by density**, from a map of colors like a pattern's, at the value the
+medium's shape has at each place:
+
+```
+medium {
+    absorption [0.95, 1.0, 1.05]
+    density function { … }
+    density 3
+    emission by density [0, Black, 0.1, [0.4, 0.04, 0.01], 0.45, [3, 1.1, 0.18], 1, [4.2, 2.9, 1.2]]
+}
+```
+
+Each color is the light given off for each unit of density, as `emission`'s one color is, and a map
+of one color is exactly that color.  The dense heart of a billow glows yellow, the thinner stuff round
+it orange and red, and where the shape thins to nothing the light goes with it -- so nothing glows
+outside the stuff, however large the surface it fills.
+
+**It is read at the shape's own value**, the function's or the pattern's, before a plain `density`
+scales it.  Write the shape to run from nothing to about one, the range the map covers, and say how
+much stuff that is with `density`: thinning the medium then dims it and leaves its colors where they
+were.  Past the ends of the map are its end colors.  A shape that climbs past one keeps the last
+color, rather than starting the map over as a pigment's pattern would.
+
+**It needs a density that varies**, since a medium of one density has one value everywhere and could
+only ever give one color; say that color instead.  Whichever of `emission`, `emission pigment` and
+`emission by density` comes last is the medium's light.  A surface it fills that
+[`gives light`](surfaces.md#a-surface-that-gives-light) lights its surroundings in the colors of its
+density too.  [`gallery/Local/media/a-fireball.igl`](../gallery/Local/media/a-fireball.igl) is a
+fireball lit so, and lighting the ground it hangs over.
 
 #### Multiple scattering
 

@@ -247,10 +247,23 @@ public partial class LanguageParser
                 if (clause.Text(1) == "pigment")
                 {
                     resolver.EmissionPigmentResolver = ParsePigmentClause();
+                    resolver.EmissionByDensityResolver = null;
 
                     break;
                 }
 
+                // One whose light follows how much of it there is says so as a map read by its density, and
+                // takes the place of any light said before it, as one said after it takes its place.
+                if (clause.Text(1) == "by")
+                {
+                    resolver.EmissionByDensityResolver = ParsePigmentMapClause();
+                    resolver.EmissionResolver = null;
+                    resolver.EmissionPigmentResolver = null;
+
+                    break;
+                }
+
+                resolver.EmissionByDensityResolver = null;
                 resolver.EmissionResolver = new CoefficientResolver
                 {
                     Term = term, Validator = ValidateCoefficient("emit")

@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 165 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 166 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 9 images &middot; scenes that move, each a still and a movie</summary>
@@ -1184,9 +1184,17 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Media</b> &mdash; 7 images &middot; light in the air rather than on a surface</summary>
+<summary><b>Media</b> &mdash; 8 images &middot; light in the air rather than on a surface</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/media/a-fireball.png">
+      <img alt="A Fireball" height="120" src="Local/media/a-fireball.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/media/a-fireball.igl">A Fireball</a>
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/media/medium.png">
       <img alt="A Medium" height="120" src="Local/media/medium.png" width="160"/>

@@ -1,6 +1,7 @@
 railroad-ebnf-beta
 title "An interior"
 
-interior = "interior" "{" { ior | "filter" number | "clarity" number } "}" ;
+interior = "interior" [ name ] "{" { ior | "filter" number | "clarity" number | "dispersion" number | "glass" name
+         | medium } "}" ;
 
 ior = ( "ior" | "index" "of" "refraction" ) number ;
