@@ -17,6 +17,9 @@ public class SwarmResolver : SurfaceResolver<Swarm>, IValidatable
     public Resolver<double> SpeedToResolver { get; set; }
     public Resolver<double> RateResolver { get; set; }
     public Resolver<double> SinceResolver { get; set; }
+    public Resolver<double> BurstResolver { get; set; }
+    public Resolver<double> BurstAtResolver { get; set; }
+    public Resolver<double> BurstOverResolver { get; set; }
     public Resolver<double> LifeFromResolver { get; set; }
     public Resolver<double> LifeToResolver { get; set; }
     public Resolver<double> BounceResolver { get; set; }
@@ -44,6 +47,13 @@ public class SwarmResolver : SurfaceResolver<Swarm>, IValidatable
         FrictionResolver.AssignTo(value, target => target.Friction, context, variables);
         DragResolver.AssignTo(value, target => target.Drag, context, variables);
         value.Radius = RadiusResolver?.Resolve(context, variables);
+
+        if (BurstResolver is not null)
+        {
+            value.Burst = (long) BurstResolver.Resolve(context, variables);
+            BurstAtResolver.AssignTo(value, target => target.BurstAt, context, variables);
+            BurstOverResolver.AssignTo(value, target => target.BurstOver, context, variables);
+        }
 
         if (SpeedFromResolver is not null)
         {

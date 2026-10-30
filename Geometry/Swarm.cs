@@ -4,9 +4,9 @@ using RayTracer.Core.Physics;
 namespace RayTracer.Geometry;
 
 /// <summary>
-/// This class represents a swarm: many small copies of one thing thrown from a place, a few at a time, each falling
-/// under gravity, dragged by the air and bouncing off the scene until its life is up -- sparks, the water of a
-/// fountain, leaves, snow.  It is a group of instances of the one thing, filled when the scene's bodies are moved
+/// This class represents a swarm: many small copies of one thing thrown from a place, a few at a time or all in one
+/// burst, each falling under gravity, dragged by the air and bouncing off the scene until its life is up -- sparks,
+/// the water of a fountain, leaves, snow, a firework.  It is a group of instances of the one thing, filled when the scene's bodies are moved
 /// (<see cref="PhysicsSettler"/>), each copy moved on its own from the moment it was thrown: copies do not strike
 /// one another or the scene's bodies, which is what lets there be thousands.
 /// <para>
@@ -63,6 +63,23 @@ public class Swarm : Group
     /// full flow when the animation begins -- a fountain running, a fire long alight.
     /// </summary>
     public double Since { get; set; }
+
+    /// <summary>
+    /// This property holds how many copies the swarm throws in one burst, or null for a swarm that throws a steady
+    /// flow, <see cref="Rate"/> a second from <see cref="Since"/> on.
+    /// </summary>
+    public long? Burst { get; set; }
+
+    /// <summary>
+    /// This property holds when a burst is thrown: nought unless said.
+    /// </summary>
+    public double BurstAt { get; set; }
+
+    /// <summary>
+    /// This property holds how long a burst takes, its copies born evenly over it: nought unless said, every copy at
+    /// the one instant.
+    /// </summary>
+    public double BurstOver { get; set; }
 
     /// <summary>
     /// This property holds the least time a copy lives.
@@ -201,17 +218,24 @@ public class Swarm : Group
         (Vector Axis, double Half)? broadest = Spins ? BroadestSideOf(half) : null;
         double pull = gravity.Magnitude > 1e-12 ? gravity.Magnitude : 9.81;
 
-        if (time < Since)
+        // A burst is a flow of its copies over how long it takes, from its time, stopping at its last copy; one that
+        // takes no time throws them all at once.
+        double since = Burst is null ? Since : BurstAt;
+        double rate = Burst is not { } count ? Rate : BurstOver > 0 ? count / BurstOver : double.PositiveInfinity;
+        long final = Burst is { } thrown ? thrown - 1 : long.MaxValue;
+        bool atOnce = double.IsPositiveInfinity(rate);
+
+        if (time < since)
             return;
 
         // Only the copies thrown within the longest life of the time can be alive, so a swarm long in flow costs no
         // more than one just begun.
-        long last = (long) Math.Floor((time - Since) * Rate);
-        long first = Math.Max(0, (long) Math.Floor((time - Math.Max(LifeFrom, LifeTo) - Since) * Rate));
+        long last = atOnce ? final : Math.Min(final, (long) Math.Floor((time - since) * rate));
+        long first = atOnce ? 0 : Math.Max(0, (long) Math.Floor((time - Math.Max(LifeFrom, LifeTo) - since) * rate));
 
         for (long number = first; number <= last; number++)
         {
-            double born = Since + number / Rate;
+            double born = atOnce ? since : since + number / rate;
             double life = LifeFrom + (LifeTo - LifeFrom) * Draw(seed, number, 1);
 
             if (time - born >= life)

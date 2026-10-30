@@ -1,0 +1,98 @@
+// A firework over a lake at night: a shell goes up from a barge, bursts into a ball of gold stars, and the stars
+// droop and go out, every one of them mirrored in the water.
+//
+//     dotnet run -- -i a-firework.igl -o a-firework.webp -w 400 -h 300
+//     dotnet run -- -i a-firework.igl -o a-firework.png --still
+//
+// **The shell and its stars are two swarms, each a burst.**  The shell is a burst of one, thrown straight up from a
+// barge 350 meters out at 34.17 meters a second with nothing dragging it, so it climbs for 3.48 seconds to 60 meters
+// and goes out there; it was thrown half a second before the animation begins, so the first frame finds it already
+// climbing.  The stars are a burst of three hundred from that place at that time, thrown all round over three
+// hundredths of a second: no real shell bursts in an instant, and copies a little apart in age do not fly out as one
+// perfect shell.
+//
+// **`falls at` makes it a firework rather than a bomb.**  A burning star is light for its size, so the air holds it
+// to a dozen or so meters a second as it falls: thrown at 40 to 44, the stars slow as they spread and droop as they
+// slow.  Their lives run from 1.6 to 2.6 seconds, so they go out a few at a time rather than all at once.  They light
+// nothing: a glow lights its surroundings only with bounced light, which this scene does without, and a shell 350
+// meters off lights nothing near it in any case.
+//
+// **The water is not quite still.**  Fine ripples, long across the view and short along it, break each star's
+// mirror image into a column of glints, as a lake does.  The camera keeps its shutter open a whole frame, so each
+// star is a short streak along its way and the shell a dash as it climbs.
+
+context {
+    angles are degrees
+    animation length 6  still 126
+    antialiasing depth 2
+    antialiasing threshold 0.2
+    info {
+        title 'A Firework'
+        author 'J. Stephen Kress'
+        description 'A firework shell bursting into gold stars over a lake at night, mirrored in the water.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [0, 3, 0]
+    look at [0, 0, -350]
+    field of view 41
+    shutter 1
+    blur samples 16
+}
+
+// The night: a deep blue, and stars in it -- a granite pattern whose map shows only its highest values.
+background granite {
+    [0, [0.006, 0.008, 0.020], 0.58, [0.006, 0.008, 0.020], 0.6, [0.25, 0.27, 0.34], 0.64, [0.9, 0.9, 0.95], 1, White]
+    scale 0.02
+}
+
+// The lake: dark water, mirroring a fiftieth of what meets it square on and far more at the graze the camera sees
+// it at.
+plane {
+    material {
+        pigment [0.004, 0.006, 0.010]  reflective 0.02  fresnel  specular 0
+        normal wrinkles { depth 0.08  scale [6, 1, 0.4] }
+    }
+}
+
+// The far shore: a ridge of low hills across the water, three quarters of a kilometer off and more, darker than
+// the sky behind them.  Two noises make its line, and it rises out of the water over its nearest quarter.
+heightfield {
+    function {
+        (0.6 * noise(x * 7, 1.3, z * 3) + 0.4 * noise(x * 19, 7.1, z * 7)) * min(1, (1 - z) * 4)
+    }
+    samples 256
+    open  smooth
+    material { pigment [0.0015, 0.002, 0.0015]  specular 0 }
+    scale [2400, 90, 300]
+    translate [-1200, -40, -1050]
+}
+
+// The shell, climbing: a burst of one, thrown straight up with nothing to drag it, out at the top of its climb.
+Shell = sphere { scale 0.45  material { pigment [1, 0.6, 0.25]  emission 8  diffuse 0  specular 0 } }
+
+swarm {
+    of Shell
+    from [0, 0.5, -350]
+    burst 1 at -0.5
+    speed 34.17
+    life 3.48
+    drag 0
+}
+
+// The stars: three hundred thrown all round from where the shell went out, slowing as they spread and drooping.
+Star = sphere { scale 0.35  material { pigment [1, 0.78, 0.4]  emission 4  diffuse 0  specular 0 } }
+
+swarm {
+    of Star
+    from [0, 60, -350]
+    burst 300 at 2.98 over 0.03
+    spread 180
+    speed 40 to 44
+    falls at 12 to 16
+    life 1.6 to 2.6
+    with seed 7
+}

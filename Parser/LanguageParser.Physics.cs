@@ -118,11 +118,36 @@ public partial class LanguageParser
                     resolver.SpreadResolver = new AngleResolver { Term = clause.Term() };
                     break;
                 case "rate":
+                    RefuseFlowAndBurst(resolver.BurstResolver, clause);
                     resolver.RateResolver = MoreThanNought(clause, "How many copies a swarm throws a second");
                     break;
                 case "since":
+                    RefuseFlowAndBurst(resolver.BurstResolver, clause);
                     resolver.SinceResolver = new TermResolver<double> { Term = clause.Term() };
                     break;
+                case "burst":
+                {
+                    RefuseFlowAndBurst(resolver.RateResolver ?? resolver.SinceResolver, clause);
+                    resolver.BurstResolver = new TermResolver<double>
+                    {
+                        Term = clause.Term(),
+                        Validator = value => value >= 1 && value == Math.Floor(value)
+                            ? null
+                            : "A burst throws a whole number of copies, one or more."
+                    };
+
+                    // When it comes and how long it takes are each optional, so which expression is which is told by
+                    // the words before them.
+                    int next = 1;
+
+                    resolver.BurstAtResolver = clause.Tokens.Any(token => token.Text == "at")
+                        ? new TermResolver<double> { Term = clause.Term(next++) }
+                        : null;
+                    resolver.BurstOverResolver = clause.Tokens.Any(token => token.Text == "over")
+                        ? NoughtOrMore(clause, "How long a burst takes", next)
+                        : null;
+                    break;
+                }
                 case "bounce":
                     resolver.BounceResolver = OneOrLess(clause, "How much of its speed a copy keeps");
                     break;
@@ -164,6 +189,19 @@ public partial class LanguageParser
         if (other is not null)
         {
             throw new TokenException("A swarm throws its copies from a place or from within a shape, not both.")
+            {
+                Token = clause.Tokens[0]
+            };
+        }
+    }
+
+    // A swarm throws a steady flow, from a time on at a rate, or one burst, not both.
+    private static void RefuseFlowAndBurst(object other, Clause clause)
+    {
+        if (other is not null)
+        {
+            throw new TokenException(
+                "A swarm throws a steady flow, with \"rate\" and \"since\", or one burst, not both.")
             {
                 Token = clause.Tokens[0]
             };

@@ -358,6 +358,7 @@ swarm {
 | `spread` | How far from that way a copy may be thrown, an angle; evenly over every way within it.  Nought, unless said, throws them all one way. |
 | `speed` | How fast, in meters a second: `speed a to b` anywhere between the two, a copy at a time.  One unless said. |
 | `rate` | How many copies a second, the first at time nought.  50 unless said. |
+| `burst` | Instead of a steady flow, `burst n` throws `n` copies at once: `at` so many seconds, nought unless said, and `over` so many, every copy at the one instant unless said.  `rate` and `since` are a flow's, and refused beside it.  See below. |
 | `since` | When it began throwing, in seconds: nought unless said, and before nought for one already in full flow when the animation begins — a fountain running, a fire long alight.  Copies whose life was up before the frame are not even looked at, so a swarm long in flow costs no more than one just begun. |
 | `life` | How long a copy lasts, in seconds, `life a to b` as a speed is; once it is up the copy is gone.  Two unless said. |
 | `spin` | How fast a copy tumbles as it flies, an angle a second, `spin a to b` as a speed is: each from a turn of its own, about a way of its own.  Nought unless said.  See below. |
@@ -414,6 +415,31 @@ A copy striking water lies on it, as on anything else, so a fountain's drops are
 down to the pool: thrown at one speed within a few degrees, they all fall back within a few thousandths of a second
 of one another.  `gallery/Local/animation/a-garden-fountain.igl` is built so, and runs `since -2`, so its jet is in
 full flow from the first frame and its movie loops with no seam.
+
+**A swarm can burst rather than flow.**  `burst n` throws `n` copies once, rather than so many a second for as long
+as the animation runs: a firework's stars, a blast's debris, a handful of seed.  `at` says when, nought unless said,
+and `over` how long the burst takes, its copies set off evenly through it; with no `over`, every one sets off at the
+one instant.  Each copy's way, speed and life are drawn from its number, as a flow's are, so a burst thrown all round
+at one speed flies out as a ball, and at `speed a to b` as a ball some of whose copies go further than others.  A
+swarm bursts once; two bursts are two swarms.
+
+```
+Star = sphere { scale 0.35  material { pigment [1, 0.78, 0.4]  emission 4  diffuse 0 } }
+
+swarm {
+    of Star
+    from [0, 60, 0]
+    burst 300 at 3 over 0.03
+    spread 180
+    speed 40 to 44
+    falls at 12 to 16
+    life 1.6 to 2.6
+}
+```
+
+`falls at` is what makes it a firework rather than a bomb: held to so few meters a second as they fall, the stars
+slow and droop, as burning stars do, and go out a few at a time as their lives run out.
+`gallery/Local/animation/a-firework.igl` sends a shell up over a lake at night to burst so.
 
 ### Joints
 
