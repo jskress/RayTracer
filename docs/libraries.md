@@ -811,7 +811,8 @@ percent of what meets it square-on and far more at a graze, so a roof seen from 
 flank seen along the street carries the sky.  Glass does the same from four percent: dark looked into,
 bright looked across.  The [trains](#trains), [aircraft](#aircraft), [vessels](#vessels) and
 [windows and doors](#windows-and-doors) are finished the same way, and their bare and brushed metals —
-satin steel, alloy, foil — are [rough](materials.md#roughness), so what they mirror is blurred.
+satin steel, alloy, foil — are real [metals](materials.md#metals), [rough](materials.md#roughness), so what
+they mirror is blurred.
 
 #### Vessels
 
@@ -2110,15 +2111,18 @@ legal thing to subtract and an empty one subtracts nothing**, so the run does no
 of its counter for the two cases.  Note that only *surfaces* may stand inside an `if` — a material, a
 transform or a name belongs to the group around it.
 
-##### A metal has to be dark
+##### A metal shows nothing of its own
 
 `FurnitureSteel` started out a light gray, which is roughly what stainless looks like to the eye.
 Under a working light it went to white and took every edge on the appliance with it: the door lines,
 the handles and the oven front all disappeared into one blank panel.
 
-**Its reflectivity is what makes it metal, not its color**, and the color has to be dark enough to
-leave the reflection somewhere to go.  That is also the only reason an appliance is recognizable
-across a room — it carries a dim, distorted picture of that room on its door.
+**What it mirrors is what makes it metal, not its color.**  It is a real [metal](materials.md#metals)
+now, `metal 'iron'` brushed, which shows nothing of its own and gets all its brightness from what it
+mirrors.  That is also the only reason an appliance is recognizable across a room — it carries a dim,
+distorted picture of that room on its door.  Every bare metal in the libraries is a real one: R2's
+aluminum dome and chrome, the instruments' hardware and strings, a door's brass, a car's chrome, a
+locomotive's copper and brass, a lamp's cast alloy.
 
 ##### A door reveal has to be deep enough to cast a shadow
 

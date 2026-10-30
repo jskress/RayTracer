@@ -54,19 +54,17 @@
 // -- Materials ----------------------------------------------------------------------------------------
 
 // The dome is polished aluminum; everything else is painted, white and blue.
-R2Aluminum = material { pigment [0.8, 0.81, 0.83]  metallic 1  reflective 0.55  roughness 0.18  diffuse 0.35 }
+R2Aluminum = material { metal 'aluminum'  roughness 0.18 }
 R2White = material { pigment [0.86, 0.86, 0.84]  specular 0.4  shininess 60  reflective 0.04  fresnel }
 R2Blue = material { pigment [0.01, 0.055, 0.45]  specular 0.4  shininess 60  reflective 0.04  fresnel }
 R2Dark = material { pigment [0.12, 0.12, 0.13]  specular 0.3  shininess 40 }
-// The gray metal of the small fittings mirrors sharply: blurred, its sixteen looks at every point cost a
-// quarter of the droid's render and showed nothing on parts this small.
-R2Metal = material {
-    pigment [0.5, 0.51, 0.53]  metallic 1  reflective 0.2  diffuse 0.6  specular 0.5  shininess 60
-}
+// The gray metal of the small fittings, steel, mirrors sharply: blurred, its sixteen looks at every point cost
+// a quarter of the droid's render and showed nothing on parts this small.
+R2Metal = material { metal 'iron' }
 R2Gray = material { pigment [0.42, 0.42, 0.43]  specular 0.3  shininess 40 }
 R2Satin = material { pigment [0.84, 0.85, 0.87]  metallic 0.3  diffuse 0.8  specular 0.6  shininess 80 }
 R2Hole = material { pigment [0.025, 0.025, 0.03]  diffuse 0.5  specular 0.1 }
-R2Brass = material { pigment [0.52, 0.4, 0.22]  metallic 1  specular 0.6  shininess 50  reflective 0.1 }
+R2Brass = material { metal 'brass' }
 // The radar eye's lens: black glass under a coating a quarter of a green wave thick, which mirrors less than
 // bare glass would and what it does mirror, purple, as a coated camera lens does.
 R2EyeLens = material {
@@ -83,9 +81,7 @@ R2LampOff = material { pigment [0.06, 0.07, 0.09]  specular 0.4  shininess 80 }
 R2IndicatorBlue = material { pigment [0.45, 0.68, 1]  emission 1.5  diffuse 0.5  specular 0.7  shininess 150 }
 R2IndicatorGreen = material { pigment [0.5, 1, 0.68]  emission 1.5  diffuse 0.5  specular 0.7  shininess 150 }
 R2LampGreen = material { pigment [0.35, 1, 0.45]  emission 2.8  diffuse 0.2  specular 0.3 }
-R2Chrome = material {
-    pigment [0.88, 0.89, 0.91]  metallic 1  reflective 0.85  diffuse 0.1  specular 0.9  shininess 400
-}
+R2Chrome = material { metal 'chromium' }
 
 // -- The dome ------------------------------------------------------------------------------------------
 
@@ -908,8 +904,9 @@ primitive R2VentRim(cy) -> group {
                     }
                 }
             }
-            material R2Metal
         }
+        // The slats are the rim's satin: tilted down to the front, a polished slat mirrors an eye above it up
+        // into the slat over it or the dark inside, and the vent came out black.
         material R2Satin
     }
 }

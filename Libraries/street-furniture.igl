@@ -63,11 +63,9 @@ StreetRed = material {
 }
 
 // Galvanized steel, which is what a modern bollard or a shelter frame is: pale, and duller than it
-// looks in a catalog once it has stood outside for a winter.
-StreetSteel = material {
-    pigment [0.400, 0.415, 0.430]
-    specular 0.50  shininess 110  reflective 0.12  ambient 0.06
-}
+// looks in a catalog once it has stood outside for a winter.  Its skin is zinc, given by the color it
+// mirrors, and weathered very rough: smoother, a railing mirrored the road beside it, dark and grainy.
+StreetSteel = material { metal [0.62, 0.64, 0.66]  roughness 0.8 }
 
 // Hardwood slats, weathered.  A bench reads as a bench from its *slats* before anything else, so these
 // want to be a different color from the frame rather than a different shade of it.

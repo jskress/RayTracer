@@ -63,10 +63,7 @@ DoorStep = material { pigment [0.560, 0.548, 0.522]  specular 0.09  shininess 20
 
 // Brass, and only on the furniture -- a knob and a letter plate.  It is the one bright thing on a door
 // and it stops being an ornament the moment there is any more of it.
-DoorBrass = material {
-    pigment [0.600, 0.470, 0.150]
-    specular 0.86  shininess 210  reflective 0.28  ambient 0.06  brilliance 1.5
-}
+DoorBrass = material { metal 'brass' }
 
 DoorSnowCap = material { pigment [0.90, 0.92, 0.96]  specular 0.26  shininess 52  ambient 0.10 }
 

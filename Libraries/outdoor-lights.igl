@@ -39,7 +39,8 @@
 
 LampIron = material { pigment [0.085, 0.088, 0.092]  specular 0.34  shininess 70  ambient 0.05 }
 LampPaint = material { pigment [0.130, 0.155, 0.140]  specular 0.30  shininess 60  ambient 0.05 }
-LampAlloy = material { pigment [0.320, 0.330, 0.345]  reflective 0.14  roughness 0.3  ambient 0.06 }
+// Cast aluminum, weathered dull.
+LampAlloy = material { metal 'aluminum'  roughness 0.4 }
 
 // The glass of a lantern that is not burning: pale, dusty, and not a mirror.  A dark globe reads as a
 // hole in the lamp, which is the commonest way an unlit fitting goes wrong.

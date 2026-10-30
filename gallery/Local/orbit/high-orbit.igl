@@ -17,6 +17,9 @@ context {
     antialiasing depth 1
     antialiasing threshold 0.4
     angles are degrees
+    // The satellite's foil is crinkled metal, and its blur takes in half the starfield: a few looks at it each
+    // catch a star or miss it, and at sixteen the bus was speckled all over.
+    reflection samples 256
     info {
         title 'High Orbit'
         author 'J. Stephen Kress'

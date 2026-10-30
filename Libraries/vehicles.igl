@@ -73,8 +73,8 @@ VehicleGray = material { pigment [0.28, 0.29, 0.31]  specular 0.85  shininess 20
 
 VehicleGlass = material { pigment [0.06, 0.08, 0.10]  specular 0.90  shininess 300  reflective 0.04  fresnel }
 VehicleTire = material { pigment [0.06, 0.06, 0.07]  specular 0.06  shininess 8 }
-VehicleHub = material { pigment [0.62, 0.63, 0.66]  reflective 0.20  roughness 0.25 }
-VehicleChrome = material { pigment [0.70, 0.71, 0.74]  specular 0.95  shininess 300  reflective 0.40 }
+VehicleHub = material { metal 'aluminum'  roughness 0.25 }
+VehicleChrome = material { metal 'chromium' }
 VehicleLamp = material { pigment [0.86, 0.83, 0.71]  specular 0.90  shininess 250 }
 VehicleTail = material { pigment [0.58, 0.06, 0.05]  specular 0.90  shininess 250 }
 VehicleBed = material { pigment [0.34, 0.30, 0.26]  specular 0.12  shininess 20 }
