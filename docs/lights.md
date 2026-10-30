@@ -299,6 +299,12 @@ Two things worth knowing when using it:
 
 Light arriving from every direction at once, which is what the outdoors is.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/lights/skyLight-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/lights/skyLight.svg">
+  <img alt="Sky light properties" src="images/lights/skyLight.svg">
+</picture>
+
 Every other light here is *somewhere* — a lamp at a point, the sun in one direction, a panel with a
 face. A sky light is nowhere in particular and everywhere at once:
 

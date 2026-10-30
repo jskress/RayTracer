@@ -5,6 +5,7 @@ context = "context" "{" { info | scanner | "angles" "are" ( "degrees" | "radians
         | "apply" "gamma" | "no" ( "gamma" | "shadows" )
         | "scale" "ambient" "by" expression
         | "medium" ( "samples" | "bounces" ) expression
+        | "emission" "samples" expression
         | "diffuse" ( ( "bounces" | "samples" ) expression | "cache" [ "error" expression ] )
         | "caustics" [ "photons" expression ]
         | "trace" "depth" expression

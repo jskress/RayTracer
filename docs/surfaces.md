@@ -1115,6 +1115,12 @@ and the loop waits that long before deciding.
 
 Wherever surfaces are listed, an `if` decides whether to make some of them:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/ifClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/ifClause.svg">
+  <img alt="Choosing what to make" src="images/surfaces/ifClause.svg">
+</picture>
+
 ```
 group {
     for post in [0, 11] {

@@ -66,6 +66,12 @@ name specified to render, and more than one camera is defined."*  The
 In the same way, a file may describe several whole scenes, each wrapped in a `scene { }`
 block with a name of its own:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/sceneClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/sceneClause.svg">
+  <img alt="A scene" src="images/scene-files/sceneClause.svg">
+</picture>
+
 ```
 scene {
     named 'day'
@@ -1019,6 +1025,12 @@ Walking a list is what [`for`](surfaces.md#walking-a-list) does with one.
 
 Beyond the [built-in functions](#expressions), a scene may write its own:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/functionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/functionClause.svg">
+  <img alt="A function" src="images/scene-files/functionClause.svg">
+</picture>
+
 ```
 function ringRadius(index, spacing = 1.1) -> number {
     reach = 1 + index * 0.35
@@ -1087,6 +1099,12 @@ the parameter.  `function Dune(x, z) -> number { … }`, called as `Dune(1500 * 
 
 A `function` gives back a number.  A **`primitive`** gives back a *thing* — something to put in a
 scene:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/primitiveClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/primitiveClause.svg">
+  <img alt="A primitive" src="images/scene-files/primitiveClause.svg">
+</picture>
 
 ```
 primitive lamp(height, shade = 0.55) -> group {
@@ -1294,6 +1312,12 @@ something different from two shapes, and there the two shapes are what you get.
 ### Choosing Inside a Body
 
 A function or a primitive may **choose** which of two answers it gives:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/choiceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/choiceClause.svg">
+  <img alt="Choosing inside a body" src="images/scene-files/choiceClause.svg">
+</picture>
 
 ```
 function reachOf(index) -> number {

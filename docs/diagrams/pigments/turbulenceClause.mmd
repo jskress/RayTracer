@@ -1,0 +1,8 @@
+railroad-ebnf-beta
+title "Turbulence"
+
+turbulence = "turbulence" ( amplitude | "{" { "amplitude" amplitude | "octaves" number
+                                           | "finer" number | "fainter" number
+                                           | "with" "seed" number } "}" ) ;
+
+amplitude = number | vector ;
