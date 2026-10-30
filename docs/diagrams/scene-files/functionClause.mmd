@@ -1,0 +1,9 @@
+railroad-ebnf-beta
+title "A function"
+
+function = "function" name "(" [ parameter { "," parameter } ] ")"
+           "->" ( "number" | "color" | "vector" ) "{" body "}" ;
+
+parameter = name [ "=" expression ] ;
+
+body = { name "=" expression | function } ( "return" expression | choice | selection ) ;

@@ -1,0 +1,7 @@
+railroad-ebnf-beta
+title "Mottling"
+
+mottled = "mottled" "{" noise body { transform } "}" ;
+
+noise = "noise" "{" { "octaves" number | "finer" number | "fainter" number
+                    | "with" "seed" number } "}" ;

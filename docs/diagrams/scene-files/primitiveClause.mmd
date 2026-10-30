@@ -1,0 +1,15 @@
+railroad-ebnf-beta
+title "A primitive"
+
+primitive = "primitive" name "(" [ parameter { "," parameter } ] ")" "->" kind "{" body "}" ;
+
+parameter = name [ "=" expression ] ;
+
+kind = "group" | "union" | "difference" | "intersection" | shape
+     | "pigment" | "material" | "interior" | "medium" ;
+
+body = { name "=" expression | function | primitive } ( "return" thing | choice | selection ) ;
+
+call = ( "object" | "material" | "interior" | "medium" ) name arguments [ "{" { entry } "}" ] | name arguments ;
+
+arguments = "(" [ expression { "," expression } ] ")" ;

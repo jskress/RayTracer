@@ -1,0 +1,8 @@
+railroad-ebnf-beta
+title "Choosing inside a body"
+
+choice = "if" "(" condition ")" "{" body "}" "else" ( "{" body "}" | choice ) ;
+
+selection = "switch" "(" expression ")" "{" case { case } "default" "{" body "}" "}" ;
+
+case = "case" expression { "," expression } "{" body "}" ;

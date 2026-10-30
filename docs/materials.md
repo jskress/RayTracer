@@ -863,6 +863,12 @@ absorbing light in the same place.
 A `normal` block tilts the surface normal from point to point, so a smooth surface catches the
 light as though it were rough — without adding any geometry.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/materials/normalClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/materials/normalClause.svg">
+  <img alt="Roughening a surface" src="images/materials/normalClause.svg">
+</picture>
+
 ```
 material {
     pigment color [0.72, 0.70, 0.66]

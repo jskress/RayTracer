@@ -538,6 +538,30 @@ something that may repeat, and a branch is a choice between the ways through it.
   <img alt="Setting a variable" src="images/scene-files/setVariableClause.svg">
 </picture>
 
+**A function** — A function a scene writes for itself. &nbsp; [_scene files_](scene-files.md#functions-of-your-own)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/functionClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/functionClause.svg">
+  <img alt="A function" src="images/scene-files/functionClause.svg">
+</picture>
+
+**A primitive** — A thing a scene writes for itself, and calling it. &nbsp; [_scene files_](scene-files.md#things-of-your-own)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/primitiveClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/primitiveClause.svg">
+  <img alt="A primitive" src="images/scene-files/primitiveClause.svg">
+</picture>
+
+**Choosing inside a body** — `if` and `switch` in a function or a primitive. &nbsp; [_scene files_](scene-files.md#choosing-inside-a-body)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/choiceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/choiceClause.svg">
+  <img alt="Choosing inside a body" src="images/scene-files/choiceClause.svg">
+</picture>
+
 **Including a file** — Reading another file in place. &nbsp; [_scene files_](scene-files.md#including-other-files)
 
 <picture>
@@ -560,6 +584,30 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/renderClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/scene-files/renderClause.svg">
   <img alt="The render command" src="images/scene-files/renderClause.svg">
+</picture>
+
+**A scene** — One of several whole scenes in a file. &nbsp; [_scene files_](scene-files.md#more-than-one-scene)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/sceneClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/sceneClause.svg">
+  <img alt="A scene" src="images/scene-files/sceneClause.svg">
+</picture>
+
+**The environment** — What fills the space between things. &nbsp; [_scene files_](scene-files.md#the-space-between-things)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/environmentClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/environmentClause.svg">
+  <img alt="The environment" src="images/scene-files/environmentClause.svg">
+</picture>
+
+**A medium** — Haze, smoke, or anything else that fills space. &nbsp; [_scene files_](scene-files.md#the-space-between-things)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/scene-files/mediumClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/scene-files/mediumClause.svg">
+  <img alt="A medium" src="images/scene-files/mediumClause.svg">
 </picture>
 
 #### The context block
@@ -640,6 +688,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <img alt="An area light" src="images/lights/areaLight.svg">
 </picture>
 
+**A sky light** — Light from every direction at once. &nbsp; [_lights_](lights.md#sky-lights)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/lights/skyLight-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/lights/skyLight.svg">
+  <img alt="A sky light" src="images/lights/skyLight.svg">
+</picture>
+
 #### Surfaces
 
 **What a surface carries** — The material, transform and other things any surface may hold. &nbsp; [_surfaces_](surfaces.md#what-every-surface-has)
@@ -672,6 +728,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/groupClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/surfaces/groupClause.svg">
   <img alt="A group" src="images/surfaces/groupClause.svg">
+</picture>
+
+**Choosing what to make** — An `if` among surfaces. &nbsp; [_surfaces_](surfaces.md#choosing-what-to-make)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/surfaces/ifClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/surfaces/ifClause.svg">
+  <img alt="Choosing what to make" src="images/surfaces/ifClause.svg">
 </picture>
 
 #### Transforms
@@ -718,6 +782,14 @@ something that may repeat, and a branch is a choice between the ways through it.
   <img alt="A decal" src="images/materials/decalClause.svg">
 </picture>
 
+**Roughening a surface** — A `normal` block tilting the surface normal by a pattern. &nbsp; [_materials_](materials.md#roughening-the-surface)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/materials/normalClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/materials/normalClause.svg">
+  <img alt="Roughening a surface" src="images/materials/normalClause.svg">
+</picture>
+
 #### Pigments and patterns
 
 **A pigment** — What colors a surface: a solid, a pattern, or an image. &nbsp; [_pigments and patterns_](pigments-and-patterns.md#pigments-and-patterns)
@@ -742,6 +814,38 @@ something that may repeat, and a branch is a choice between the ways through it.
   <source media="(prefers-color-scheme: dark)" srcset="images/pigments/imageClause-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="images/pigments/imageClause.svg">
   <img alt="An image" src="images/pigments/imageClause.svg">
+</picture>
+
+**Turbulence** — Stirring the points a pattern is asked about. &nbsp; [_pigments and patterns_](pigments-and-patterns.md#turbulence)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/turbulenceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/turbulenceClause.svg">
+  <img alt="Turbulence" src="images/pigments/turbulenceClause.svg">
+</picture>
+
+**Blending and layering** — Averaging pigments, or stacking them. &nbsp; [_pigments and patterns_](pigments-and-patterns.md#blending-and-layering)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/blendClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/blendClause.svg">
+  <img alt="Blending and layering" src="images/pigments/blendClause.svg">
+</picture>
+
+**Mottling** — Dimming a pigment by noise. &nbsp; [_pigments and patterns_](pigments-and-patterns.md#mottling)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/mottledClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/mottledClause.svg">
+  <img alt="Mottling" src="images/pigments/mottledClause.svg">
+</picture>
+
+**A physical sky** — A sky worked out from what the air does. &nbsp; [_pigments and patterns_](pigments-and-patterns.md#a-physical-sky)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/physicalSkyClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/physicalSkyClause.svg">
+  <img alt="A physical sky" src="images/pigments/physicalSkyClause.svg">
 </picture>
 
 #### Advanced surfaces

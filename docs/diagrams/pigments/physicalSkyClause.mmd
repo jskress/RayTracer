@@ -1,0 +1,6 @@
+railroad-ebnf-beta
+title "A physical sky"
+
+sky = "physical" "sky" "{" { "sun" ( "elevation" | "azimuth" ) angle | "turbidity" number
+                           | "height" number | "brightness" number
+                           | ( "rows" | "columns" ) number | "no" "light" } "}" ;

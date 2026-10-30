@@ -1,4 +1,6 @@
 railroad-ebnf-beta
 title "Point light properties"
 
-property = "named" name | "location" point | "color" color ;
+property = "named" name | "location" point
+         | "color" color | "temperature" number | "brightness" number
+         | "fade" ( "distance" | "power" ) number ;

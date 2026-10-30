@@ -37,6 +37,12 @@ A pattern is a function of position.  For each intersection point the renderer f
 surface's pattern hands back either a number or a choice among colors, and the pigment
 turns that into the color at that point.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/patternClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/patternClause.svg">
+  <img alt="A pattern pigment" src="images/pigments/patternClause.svg">
+</picture>
+
 That "either" is the important division, and it decides how you write a pattern.
 
 #### Discrete patterns
@@ -251,6 +257,12 @@ is where weathering is usually wanted, since grime is matte and rust rough where
 
 Most of the interesting patterns are dull without turbulence.  It stirs the points before the
 pattern sees them, so straight bands become wandering ones:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/turbulenceClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/turbulenceClause.svg">
+  <img alt="Turbulence" src="images/pigments/turbulenceClause.svg">
+</picture>
 
 ```
 pigment marble {
@@ -481,6 +493,12 @@ surface that names it.  You want this only when the file may change under you.
 
 Two or more pigments may be combined:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/blendClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/blendClause.svg">
+  <img alt="Blending and layering" src="images/pigments/blendClause.svg">
+</picture>
+
 ```
 pigment blend { checker { Red, Blue }, color Green }
 pigment layer { color Red, checker { White, Black } }
@@ -514,6 +532,12 @@ through untouched; and a solid color mottled.  The scene is
 `mottled` takes another pigment and dims it by noise, so a flat color gains an uneven,
 weathered look:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/mottledClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/mottledClause.svg">
+  <img alt="Mottling" src="images/pigments/mottledClause.svg">
+</picture>
+
 ```
 pigment mottled {
     noise { octaves 3 }
@@ -538,6 +562,12 @@ surface.  Mottling varies the color itself.
 
 Every pigment above says what color something *is*.  This one works out what color the sky
 **actually comes out**, from what the air does to sunlight:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/pigments/physicalSkyClause-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="images/pigments/physicalSkyClause.svg">
+  <img alt="A physical sky" src="images/pigments/physicalSkyClause.svg">
+</picture>
 
 ```
 background physical sky {
