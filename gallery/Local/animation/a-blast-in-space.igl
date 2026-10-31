@@ -1,0 +1,113 @@
+// A blast in space: a satellite four hundred kilometers over the Earth turns slowly in the sun, and then blows apart
+// -- a ball of burning gas swells out of it and clears in a second, and the scraps of its hull fly out every way,
+// catching the sun as they tumble, with the Earth's cloudy limb far below.
+//
+//     dotnet run -- -i a-blast-in-space.igl -o a-blast-in-space.webp -w 400 -h 300
+//     dotnet run -- -i a-blast-in-space.igl -o a-blast-in-space.png --still
+//
+// **It is the `explosions` library's three pieces, each told `'space'`**: the fireball, the debris and the sparks, a
+// fireball five meters across its radius, going off a second in.  The satellite is the `spacecraft` library's, and it
+// is there until the blast and gone after it.
+//
+// **Nothing falls**, so the scene says there is no gravity: the library cannot, gravity being the whole scene's.
+// Left at the ground's, the scraps would drop toward the Earth as if the blast were on it.
+//
+// **Nothing is left of the fireball.**  In space there is no air to hold a cloud together, so it swells, thins and is
+// gone, where the one on the ground leaves a cloud of smoke.
+//
+// The Earth is painted rather than a photograph: an ocean, land in patches, and clouds laid over both, on a sphere of
+// its true size four hundred kilometers down, so its limb lies where it would, a fifth of a right angle below the
+// level.
+
+import 'spacecraft' { Satellite }
+import 'explosions' { Explosion, Debris, Sparks }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    animation length 4  still 38
+    medium samples 80
+    gravity [0, 0, 0]
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'A Blast in Space'
+        author 'J. Stephen Kress'
+        description 'A satellite blowing apart in orbit over the Earth, its hull flung out every way.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-20, 8, -42]
+    look at [0, -4, 0]
+    field of view 48
+}
+
+// Stars: a granite pattern whose map shows only its highest values.
+background granite {
+    [0, Black, 0.548, Black, 0.57, [0.30, 0.32, 0.40], 0.61, White, 1, White]
+    scale 0.025
+}
+
+// The sun, from the left and a little behind the camera.
+distant light { direction [0.7, -0.35, 0.6]  color [1.05, 1.03, 1.0] }
+
+// -- The Earth ----------------------------------------------------------------------------------------
+
+sphere {
+    material {
+        pigment layer {
+            bozo {
+                turbulence { amplitude 2.2  octaves 7 }
+                [0, color [1, 1, 1, 0], 0.52, color [1, 1, 1, 0], 0.62, color [1, 1, 1, 0.45], 0.78, color [1, 1, 1, 0.9],
+                 1, color [1, 1, 1, 1]]
+                scale [0.02, 0.012, 0.02]
+            },
+            bozo with seed 3 {
+                turbulence { amplitude 0.8  octaves 5 }
+                [0, [0.015, 0.05, 0.14], 0.68, [0.02, 0.07, 0.18], 0.70, [0.20, 0.17, 0.10], 1, [0.10, 0.13, 0.06]]
+                scale 0.05
+            }
+        }
+        ambient 0  specular 0.1
+    }
+    no shadow
+    scale 6371000
+    translate Y -6771000
+}
+
+// Its air: sixty kilometers of it, thinning by half every six, that turns blue light aside some five times as readily
+// as red, as air does.  Looked down through, it hazes the ground blue; looked along at the limb, it is a bright blue
+// line between the Earth and the black.  It casts shadows, as the Earth under it needs: the sun reaches the ground
+// through it, dimmed and warmed on the way, and a shell that casts no shadow stands in no light's way at all.
+sphere {
+    material {
+        pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+        interior {
+            ior 1.0
+            medium {
+                scattering [5.8e-6, 1.35e-5, 3.31e-5]
+                phase rayleigh
+                // It thins smoothly, so a few places along each crossing do where the fireball needs eighty.
+                samples 12
+                density function { exp(-(sqrt(x * x + y * y + z * z) - 0.99067) * 6431000 / 8500) }
+            }
+        }
+    }
+    scale 6431000
+    translate Y -6771000
+}
+
+// -- The satellite, until it goes -----------------------------------------------------------------------
+
+if (time < 1) {
+    object Satellite(6) { rotate Y 30 + 6 * time }
+}
+
+// -- The blast ----------------------------------------------------------------------------------------
+
+object Explosion(5, 1, 'space')
+object Debris(5, 1, 'space')
+object Sparks(5, 1, 'space')

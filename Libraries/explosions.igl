@@ -1,0 +1,389 @@
+// Things that blow up, in meters.
+//
+//     import 'explosions' { Explosion, Debris, Sparks }
+//
+//     object Explosion(7, 0.5)
+//     object Debris(7, 0.5)
+//     object Sparks(7, 0.5)
+//
+// | `Explosion` | The fireball and the smoke it turns into.  The first number is how big the fireball grows: its radius. |
+// | `Debris` | What the blast throws: rock and earth on the ground, scraps of hull in space. |
+// | `Sparks` | Burning flecks, thrown faster and farther than the debris and gone in a second. |
+// | `Smoke` | A column of smoke on its own, from a wreck still burning.  The number is how tall it stands. |
+//
+// **The three pieces of a blast take the same four values**, and a scene writes them the same way three times:
+// how big, when, where, and which.
+//
+// - **How big** is the fireball's radius once grown.  The debris and the sparks are thrown as far as a blast that
+//   size throws them.
+// - **When** is the moment of the blast on the scene's clock, in seconds, as a swarm's `burst at` is.  Before it
+//   there is nothing; after it the blast plays out as `time` runs.  A still has a clock that stands at nought, so a
+//   still of a blast half a second old writes `-0.5`.
+// - **Where** is `'ground'`, unless said, or `'space'`.
+// - **Which** is a whole number: two blasts side by side with the same one are the same blast twice.
+//
+// -- A blast on the ground -------------------------------------------------------------------------
+//
+// **The fireball grows in a few tenths of a second and then rises**, slowing in its growth as it climbs, the hot gas
+// buoyant in the cold air.  **Its light follows its density**, as a fire's does in a real one: the thick hearts of the
+// billows burn yellow, the thinner stuff round them orange and red, and where it thins to nothing there is only the
+// soot.  **It cools as it rises**, its heart going first, so it reddens before it goes dark -- and what is left is the
+// soot it was always carrying, a dark cloud that goes on climbing, with a column of smoke and dust drawn up beneath
+// it.  Nothing about this is a second thing: the fire and the smoke are one stuff, and the smoke is the fire gone out.
+//
+// **It lights what is round it**, in the colors it burns in, and less as it cools.
+//
+// **The debris lands and stays.**  Rock and earth thrown up come down round the crater and lie where they stop;
+// sparks drift and go out.  Both are swarms, which is why they are pieces a scene writes beside the explosion rather
+// than parts of it: a swarm must stand at the top of a scene.
+//
+// -- A blast in space --------------------------------------------------------------------------------
+//
+// **Nothing rises and nothing is left.**  The fireball swells faster, since there is no air to hold it back, and
+// thins as it swells, going out in a second with no cloud after it.  The debris and sparks fly out every way and keep
+// going.
+//
+// **The scene must say there is no gravity**, which is the scene's to say and not the library's:
+//
+//     context { gravity [0, 0, 0] }
+//
+// Without it the scraps fall, toward whatever "down" the scene's space has, as if the blast were over the ground.
+//
+// -- What a blast costs ------------------------------------------------------------------------------
+//
+// The fireball is a medium and so is walked along, and how many places each crossing stops at is the scene's to say:
+//
+//     context { medium samples 80 }
+//
+// Below about forty its billows go banded.
+//
+// -- What is here for the library and not for you -----------------------------------------------------
+//
+// Everything beginning with `Blast` is the machinery.
+
+// -- The shell --------------------------------------------------------------------------------------
+
+// What a blast is carried in: seen through entirely, casting nothing, and refracting nothing.
+BlastShell = material {
+    pigment White
+    ambient 0
+    diffuse 0
+    specular 0
+    transparency 1
+}
+
+// -- How a fireball is shaped -------------------------------------------------------------------------
+
+// A fireball's stuff at a place, in meters from the foot of its shell: a ball of radius `r` standing at height `c`,
+// with three layers of noise eaten into its edge so that what is left is billows, the billows rolling up through it
+// as it burns.  Written to run from nought at the edge to about one at the heart, the range its light is read over,
+// and going on down past nought outside so that the noise erodes the ball rather than lifting a fog round it.  The
+// noise's scale goes with the ball's, so a big blast billows as a small one does.
+function BlastBall(px, py, pz, c, r, roll, ox, oz) -> number {
+    return 0.6 * (1 - sqrt(px * px + (py - c) * (py - c) + pz * pz) / r)
+           + 0.7 * (noise(2.24 * px / r + ox, 2.24 * (py - c) / r - roll, 2.24 * pz / r + oz)
+                    + 0.5 * noise(4.9 * px / r + 1.7 + ox, 4.9 * (py - c) / r - 1.6 * roll, 4.9 * pz / r + 3.9 + oz)
+                    + 0.25 * noise(10.4 * px / r + 6.2 + ox, 10.4 * (py - c) / r - 2.4 * roll, 10.4 * pz / r + 0.8 + oz)
+                    - 0.875)
+}
+
+// The smoke and dust drawn up beneath a rising fireball: a column from the ground to the ball, widening as it rises,
+// thin enough at its thickest to stay below the least of the stuff that burns, so it only ever shows as smoke.
+function BlastStem(px, py, pz, c, r, roll, ox, oz) -> number {
+    return 0.09 * min(1 - sqrt(px * px + pz * pz) / (r * (0.32 + 0.22 * min(1, max(0, py / c)))),
+                      min(1, c - py))
+           + 0.05 * (noise(3.1 * px / r + ox, 3.1 * py / r - roll, 3.1 * pz / r + oz) - 0.5)
+}
+
+// -- A blast on the ground ---------------------------------------------------------------------------
+
+// What a blast on the ground is made of, filling a box `wide` across and `high` from its middle at `mid`: the ball
+// `r` across at height `c` and the stem beneath it, burning with what `heat` it has left.
+primitive BlastStuff(c, r, roll, ox, oz, drawn, heat, cold, thick, wide, high, mid) -> medium {
+    return medium {
+        // Soot while it burns: what it stops it keeps, a little bluer than red, and it turns nothing aside.  Once the
+        // fire is out the cloud is mostly the dust the blast threw up, which turns light aside, so it is lit by the
+        // sky rather than a hole in it.
+        absorption color [1.3, 1.35, 1.4] - cold * color [0.6, 0.6, 0.6]
+        scattering cold * color [0.64, 0.56, 0.46]
+        density function {
+            max(0, max(BlastBall(x * wide, y * high + mid, z * wide, c, r, roll, ox, oz),
+                       drawn * BlastStem(x * wide, y * high + mid, z * wide, c, r, roll, ox, oz)))
+        }
+        density thick
+        // Each color the light given off for each unit of stuff, hottest at the thickest; the hotter colors fading
+        // the faster as it cools, so it reddens before it goes dark.
+        emission by density [
+            0, Black,
+            0.1, pow(heat, 0.7) * color [0.4, 0.04, 0.01],
+            0.25, pow(heat, 0.9) * color [1.6, 0.35, 0.04],
+            0.45, pow(heat, 1.2) * color [3, 1.1, 0.18],
+            0.7, pow(heat, 1.5) * color [3.6, 1.8, 0.4],
+            1, pow(heat, 1.8) * color [4.2, 2.9, 1.2]
+        ]
+    }
+}
+
+primitive BlastOnTheGround(size, age, variant) -> group {
+    // How long it takes to grow, and how long to burn, both going with its size.
+    grows = 0.022 * size
+    burns = 0.13 * size
+    // How far it has grown, and how far it has risen: it sits on the ground at first and climbs at a speed that
+    // goes with the square root of its size, as anything buoyant does.
+    r = size * (1 - exp(-age / grows)) * (1 + 0.18 * age / burns)
+    c = 0.7 * r + 0.45 * sqrt(9.81 * size) * age
+    // How much of its heat is left: all of it at first, falling away round `burns` and gone by twice that.
+    heat = exp(-(age / burns) * (age / burns))
+    // How far it has gone out: nought while it gives light, one once its glow is all but gone.
+    cold = 1 - smoothstep(0.002, 0.03, heat)
+    // The stem is drawn up as the ball rises.
+    drawn = smoothstep(0.15 * burns, 1.2 * burns, age)
+    roll = 0.9 * age / burns + 0.4 * age
+    ox = random(variant, 41) * 40
+    oz = random(variant, 42) * 40
+    // Thinning as the cloud spreads.
+    thick = 3 / (1 + 0.08 * (age / burns) * (age / burns))
+    // The shell: a box standing on the ground and reaching above the ball, as wide as the ball and a bit.  A box
+    // rather than a sphere, which narrows to nothing at its ends; on the ground rather than through it, since what is
+    // under the ground is nothing to see and a ray walking it would ask about it for nothing.
+    wide = 1.35 * r
+    high = 0.5 * (c + 1.35 * r)
+    mid = high + 0.002 * r
+
+    // **It lights what is round it only while it burns, and turns light aside only once it has gone out**: a glow
+    // that turns light aside is lit by itself, from one place in it at each step of a ray, and that comes out grain.
+    if (heat > 0.03) {
+        return group {
+            cube {
+                material BlastShell {
+                    interior { ior 1.0  medium BlastStuff(c, r, roll, ox, oz, drawn, heat, cold, thick, wide, high, mid) }
+                }
+                no shadow
+                gives light samples 64
+                scale [wide, high, wide]
+                translate Y mid
+            }
+        }
+    }
+    else {
+        return group {
+            cube {
+                material BlastShell {
+                    interior { ior 1.0  medium BlastStuff(c, r, roll, ox, oz, drawn, heat, cold, thick, wide, high, mid) }
+                }
+                no shadow
+                scale [wide, high, wide]
+                translate Y mid
+            }
+        }
+    }
+}
+
+// -- A blast in space ---------------------------------------------------------------------------------
+
+primitive BlastInSpace(size, age, variant) -> group {
+    grows = 0.012 * size
+    burns = 0.06 * size
+    // It swells and keeps swelling, nothing holding it back, and thins as it swells.
+    r = size * (1 - exp(-age / grows)) + size * age / burns
+    heat = exp(-(age / burns) * (age / burns))
+    thins = pow(size / max(r, 0.01 * size), 3)
+    roll = 0.6 * age / burns
+    ox = random(variant, 41) * 40
+    oz = random(variant, 42) * 40
+    wide = 1.35 * r
+
+    // **Once it has burned out it is not there at all.**  Nothing of it can be seen by then, but kept, its shell went
+    // on swelling until it held the camera, and every ray walked it and every place was lit from it, for nothing.
+    if (heat < 0.0001) { return group { } }
+    else {
+        return group {
+            sphere {
+                material BlastShell {
+                    interior {
+                        ior 1.0
+                        medium {
+                            // Burning gas rather than soot: it hides little of what is behind it even while it
+                            // burns, and nothing once it has gone out, since there is no air to hold a cloud
+                            // together.
+                            absorption heat * color [0.45, 0.5, 0.55]
+                            density function {
+                                max(0, BlastBall(x * wide, y * wide, z * wide, 0, r, roll, ox, oz))
+                            }
+                            density 3 * min(1, thins)
+                            emission by density [
+                                0, Black,
+                                0.1, pow(heat, 0.7) * color [0.4, 0.04, 0.01],
+                                0.25, pow(heat, 0.9) * color [1.6, 0.35, 0.04],
+                                0.45, pow(heat, 1.2) * color [3, 1.1, 0.18],
+                                0.7, pow(heat, 1.5) * color [3.6, 1.8, 0.4],
+                                1, pow(heat, 1.8) * color [4.2, 2.9, 1.2]
+                            ]
+                        }
+                    }
+                }
+                no shadow
+                gives light samples 64
+                scale wide
+            }
+        }
+    }
+}
+
+// -- The explosion -------------------------------------------------------------------------------------
+
+primitive Explosion(size, at, where = 'ground', variant = 1) -> group {
+    age = time - at
+
+    if (age <= 0) { return group { } }
+    else {
+        switch (where) {
+            case 'space' { return group { object BlastInSpace(size, age, variant) } }
+            default { return group { object BlastOnTheGround(size, age, variant) } }
+        }
+    }
+}
+
+// -- What it throws ------------------------------------------------------------------------------------
+
+// A lump of rock and earth, about a fiftieth of the fireball across.
+BlastClod = material { pigment [0.20, 0.17, 0.14]  specular 0.05  shininess 10 }
+// A scrap of hull: light gray plating, a little shiny.
+BlastScrap = material { metal [0.55, 0.56, 0.58]  roughness 0.4 }
+
+primitive BlastClodOf(size) -> superellipsoid {
+    return superellipsoid {
+        east 0.6  north 0.7
+        material BlastClod
+        scale [0.024 * size, 0.016 * size, 0.019 * size]
+    }
+}
+
+primitive BlastScrapOf(size) -> cube {
+    return cube {
+        material BlastScrap
+        scale [0.08 * size, 0.004 * size, 0.05 * size]
+    }
+}
+
+// A burning fleck: small, and as bright as it can be without its color going white.
+BlastSpark = material { pigment [1, 0.62, 0.22]  emission 2.5  ambient 0  diffuse 0  specular 0 }
+
+primitive BlastSparkOf(size) -> sphere {
+    return sphere { material BlastSpark  scale 0.006 * size }
+}
+
+primitive Debris(size, at, where = 'ground', variant = 1) -> swarm {
+    // The speed a blast this size throws things at goes with the square root of its size, as a fireball's rise does.
+    throw = sqrt(9.81 * size)
+
+    switch (where) {
+        case 'space' {
+            return swarm {
+                of BlastScrapOf(size)
+                burst 140 at at over 0.04
+                spread 180
+                speed 0.8 * throw to 3.2 * throw
+                drag 0
+                life 1000
+                spin 90 to 720
+                with seed variant
+            }
+        }
+        default {
+            return swarm {
+                of BlastClodOf(size)
+                from [0, 0.1 * size, 0]
+                burst 160 at at over 0.05
+                spread 60
+                speed 0.6 * throw to 2.6 * throw
+                life 1000
+                spin 90 to 540
+                bounce 0.25
+                friction 0.7
+                with seed variant
+            }
+        }
+    }
+}
+
+primitive Sparks(size, at, where = 'ground', variant = 1) -> swarm {
+    throw = sqrt(9.81 * size)
+
+    switch (where) {
+        case 'space' {
+            return swarm {
+                of BlastSparkOf(size)
+                burst 500 at at over 0.06
+                spread 180
+                speed 1.5 * throw to 5 * throw
+                drag 0
+                life 0.4 to 1.6
+                with seed variant + 7
+            }
+        }
+        default {
+            return swarm {
+                of BlastSparkOf(size)
+                from [0, 0.2 * size, 0]
+                burst 600 at at over 0.1
+                spread 80
+                speed 1.5 * throw to 4 * throw
+                falls at 8 to 14
+                life 0.4 to 1.4
+                with seed variant + 7
+            }
+        }
+    }
+}
+
+// -- Smoke on its own ----------------------------------------------------------------------------------
+
+// A plume's stuff at a place, in meters from its foot: a column `h` tall widening by about ten degrees as it climbs, as
+// rising smoke does, bending over by `lean` of its height at the top, thinning out over its top third, and with noise
+// eaten into it that rolls upward as the smoke rises.  Negative outside, as a fireball's is.
+function BlastPlume(px, py, pz, h, lean, rise, ox, oz) -> number {
+    return 1.3 * min(1 - sqrt((px - lean * py * py / h) * (px - lean * py * py / h) + pz * pz) / (0.04 * h + 0.17 * py),
+                     (h - py) / (0.3 * h))
+           + 0.8 * (noise(9 * (px - lean * py * py / h) / h + ox, 9 * (py - rise) / h, 9 * pz / h + oz)
+                    + 0.5 * noise(21 * (px - lean * py * py / h) / h + 1.7 + ox, 21 * (py - 1.4 * rise) / h,
+                                  21 * pz / h + 3.9 + oz)
+                    - 0.75)
+}
+
+// A column of smoke rising from a wreck still burning: narrow at its foot, widening and bending over a little as it
+// climbs, rolling upward as `time` runs.  Soot, mostly, so it is dark, and a little dust in it, so the side the sun is
+// on shows it.
+primitive Smoke(height, variant = 1) -> group {
+    ox = random(variant, 51) * 40
+    oz = random(variant, 52) * 40
+    lean = 0.15 + random(variant, 53) * 0.2
+    // How fast it climbs, in meters a second: the bigger the fire beneath, the faster.
+    rise = 0.6 * sqrt(9.81 * height) * time
+    wide = 0.33 * height + lean * height
+    half = 0.51 * height
+
+    return group {
+        cube {
+            material BlastShell {
+                interior {
+                    ior 1.0
+                    medium {
+                        absorption [1.2, 1.22, 1.25]
+                        scattering [0.32, 0.29, 0.25]
+                        density function {
+                            max(0, BlastPlume(x * wide + lean * height * 0.5, y * half + 0.49 * height, z * wide,
+                                              height, lean, rise, ox, oz))
+                        }
+                        // Thinner the bigger it is, so that a ray across a column of any height meets as much soot.
+                        density 12 / height
+                    }
+                }
+            }
+            no shadow
+            scale [wide, half, wide]
+            translate [lean * height * 0.5, 0.49 * height, 0]
+            rotate Y random(variant, 54) * 360
+        }
+    }
+}

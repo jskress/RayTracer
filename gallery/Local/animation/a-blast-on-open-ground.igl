@@ -1,0 +1,67 @@
+// A blast on open ground at dusk: a fireball swells out of the ground, throws up rock and earth and a spray of
+// sparks, lights the ground and the boulders round it, and rises, reddening as it cools, until what is left is a dark
+// cloud of dust and soot on a column of smoke, the debris lying where it fell.
+//
+//     dotnet run -- -i a-blast-on-open-ground.igl -o a-blast-on-open-ground.webp -w 400 -h 300
+//     dotnet run -- -i a-blast-on-open-ground.igl -o a-blast-on-open-ground.png --still
+//
+// **It is the `explosions` library's three pieces, written alike**: the fireball and its smoke, the debris, and the
+// sparks, each told how big the blast is -- a fireball seven meters across its radius -- and when it goes off, four
+// tenths of a second in, so the first frames are the quiet before it.  The debris and the sparks are swarms, which is
+// why they are written beside the explosion rather than inside it.
+//
+// **The light on the ground is the fireball's own.**  Its stuff gives light where it burns, in the colors it burns
+// in, so the ground and the boulders go orange as it swells and fade back to the dusk as it cools: nothing else in the
+// scene is a light but the evening.
+
+import 'daylight' { Dusk, DuskLight }
+import 'rocks' { Boulder }
+import 'explosions' { Explosion, Debris, Sparks }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    animation length 5  still 33
+    medium samples 80
+    antialiasing depth 1
+    antialiasing threshold 0.3
+    info {
+        title 'A Blast on Open Ground'
+        author 'J. Stephen Kress'
+        description 'A fireball rising off open ground at dusk, throwing debris and sparks and leaving a cloud of smoke.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-13, 2.5, -86]
+    look at [0, 17, 0]
+    field of view 50
+}
+
+background Dusk
+light DuskLight
+
+// -- The ground ---------------------------------------------------------------------------------------
+
+plane {
+    material {
+        pigment granite {
+            [0, [0.36, 0.30, 0.23], 0.5, [0.42, 0.35, 0.27], 1, [0.31, 0.26, 0.20]]
+            scale 0.6
+        }
+        specular 0.02
+    }
+}
+
+object Boulder(2.6, 'summer', 3) { translate [-17, 0.5, -10] }
+object Boulder(1.8, 'summer', 7) { translate [13, 0.35, -16] }
+object Boulder(3.2, 'summer', 11) { translate [24, 0.6, 12] }
+object Boulder(2.2, 'summer', 5) { translate [-28, 0.4, 20] }
+
+// -- The blast ----------------------------------------------------------------------------------------
+
+object Explosion(7, 0.4)
+object Debris(7, 0.4)
+object Sparks(7, 0.4)

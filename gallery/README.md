@@ -269,12 +269,28 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 166 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 168 images</summary>
 
 <details>
-<summary><b>Animation</b> &mdash; 9 images &middot; scenes that move, each a still and a movie</summary>
+<summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
 
 <table style="width: 100%; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/a-blast-in-space.webp">
+      <img alt="A Blast in Space" height="120" src="Local/animation/a-blast-in-space.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/a-blast-in-space.igl">A Blast in Space</a> (<a href="Local/animation/a-blast-in-space.webp">the movie</a>)
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/animation/a-blast-on-open-ground.webp">
+      <img alt="A Blast on Open Ground" height="120" src="Local/animation/a-blast-on-open-ground.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/animation/a-blast-on-open-ground.igl">A Blast on Open Ground</a> (<a href="Local/animation/a-blast-on-open-ground.webp">the movie</a>)
+    </td>
+  </tr>
   <tr style="border: none;">
     <td style="border: none;"><a href="Local/animation/a-fall-of-leaves.webp">
       <img alt="A Fall of Leaves" height="120" src="Local/animation/a-fall-of-leaves.png" width="160"/>
