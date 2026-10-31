@@ -170,7 +170,8 @@ public class TestCoat
 
         Scene roughly = SceneOf(rough, Colors.White);
         double expected = OverTheSky(light => Microfacets.Highlight(
-            Up, EyeAt(0.6), light, 0.09, cos => Schlick(cos))) / Math.PI;
+                              Up, EyeAt(0.6), light, 0.09, cos => Schlick(cos))) / Math.PI *
+                          Microfacets.Compensation(0.6, 0.09, Microfacets.GlassReflectanceFromAround(1, 1.5));
 
         Assert.AreEqual(expected, roughly.GetHitColor(Hit(roughly, 0.6), 2).Red, 0.02 * expected, "rough");
 
@@ -194,7 +195,8 @@ public class TestCoat
 
         Scene flaked = SceneOf(flakes, Colors.White);
         double beneath = OverTheSky(light => Microfacets.Highlight(
-            Up, EyeAt(0.6), light, 0.16, flakes.ReflectanceAt)) / Math.PI;
+                             Up, EyeAt(0.6), light, 0.16, flakes.ReflectanceAt)) / Math.PI *
+                         Microfacets.Compensation(0.6, 0.16, flakes.ReflectanceFromAround);
         double seen = flaked.GetHitColor(Hit(flaked, 0.6), 2).Red;
 
         Assert.AreEqual(Schlick(0.6) + beneath * Math.Pow(1 - Schlick(0.6), 2), seen, 0.02 * beneath, "flakes beneath");
@@ -442,7 +444,11 @@ public class TestCoat
                 double spread = Math.Sqrt(0.4 * 0.4 + 0.4 * 0.4) / toPlace.Magnitude;
                 double alpha = Math.Sqrt(0.0025 * 0.0025 + spread * spread / 4);
 
-                expected += Microfacets.Highlight(Up, middle.Eye, toPlace.Unit, alpha, cos => Schlick(cos)) / 25;
+                // Made up for what the widened facets lose among themselves, so that the window gives the same light
+                // however far its places spread it.
+                expected += Microfacets.Highlight(Up, middle.Eye, toPlace.Unit, alpha, cos => Schlick(cos)) *
+                            Microfacets.Compensation(
+                                middle.Eye.Dot(Up), alpha, Microfacets.GlassReflectanceFromAround(1, 1.5)) / 25;
             }
         }
 

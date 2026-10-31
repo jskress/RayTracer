@@ -233,6 +233,19 @@ window is one soft patch, giving the same light in all.  It is softer than a tru
 dimmer in the middle; for a crisp window in a near-mirror, put something there for it to mirror, a
 panel glowing by its `emission`.  A lamp that is a point is a point, and is left alone.
 
+**A rough surface keeps its light.**  Its facets are tiny mirrors, and on a rough surface much of
+what they mirror lands on other facets before it gets out.  Followed for one mirroring only, that
+light is lost: in an even white light, a white metal gave back seven tenths of it at roughness 0.7
+and under a third at roughness 1, where a real one gives back nearly all of it.  So what the facets
+mirror among themselves is given back, worked out for exactly these facets: a rough white metal in
+an even white light now vanishes against it, as it should.  Where the facets mirror less than all of
+the light, each further mirroring takes its share again, so a rough gold or copper comes out a deeper
+color than a polished one, as rough metals do.  It changes a surface of roughness 0.3 or less by two
+parts in a hundred at most, and anything rougher a great deal; a brushed surface, seen across its
+grooves, most of all.  Until 2026-10-31 rough surfaces came out darker than they should, the roughest
+by half or more.  It is the same for a [clear coat](#a-clear-coat) that is rough, and for the window an
+area light makes in a smooth one.  Rough glass is not yet made up for.
+
 **Rough reflections cost more than sharp ones**, because a blur is found by looking in many
 directions and averaging: sixteen, unless the scene asks for a different number with
 [`reflection samples`](context.md#rough-reflections).  Only the first rough surface along a ray
@@ -247,7 +260,9 @@ blurs the mirror only where the rough surface already blurs it, by about as much
 to see; looked at directly, a mirror is a mirror.  A transparent shell with the surroundings' own
 index, such as a lantern's, bends nothing and is left alone.
 
-`gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic.
+`gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic, and
+`gallery/Local/materials/metals-on-a-gray-day.igl` rough iron, aluminum, gold, copper and turned steel keeping
+their light under an overcast sky.
 
 #### Brushed metal
 

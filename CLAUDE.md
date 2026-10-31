@@ -314,7 +314,16 @@ lamp-lit scenes use it so real bulb temperatures read warm rather than orange. A
 (its `reflective` is then the square-on share, rising toward a graze) or `roughness` (0-1, GGX facets in
 `Core/Microfacets.cs`): a rough surface takes its highlight and its blurred reflection from the same facets,
 with Fresnel implied, looking in `reflection samples` directions at the first rough hit of a path
-(`Scene.GetRoughReflection`) and one thereafter. Lights a ray can meet (`Light.CanBeSeen`) are not counted
+(`Scene.GetRoughReflection`) and one thereafter.  Every opaque rough lobe -- a lamp's highlight (plain, brushed, coat), the reflection rays
+(`LookedAtRoughly`, so regularized mirrors too), fine wires, caustic photons -- is multiplied by Turquin's
+compensation 1 + F_avg (1/E - 1) for what the facets mirror among themselves (`Microfacets.Compensation`/
+`CompensationFor`): E from `Microfacets.Albedo`, a 65x65 table in (sqrt cos, roughness) for THIS model's separable
+masking, by visible-normal quadrature crowded toward the disc's edge (even, a narrow lobe wobbled 0.5%), built once
+(~0.5 s); brushed, `Facets.AlbedoFor`, a table per (along, across) pair over height and angle from the grooves (the
+mean lean kept 0.71 at roughness 1); F_avg `Material.ReflectanceFromAround` (Schlick: F0 + (1 - F0)/21),
+`BareMetal.MirrorsFromAround` per band, `GlassReflectanceFromAround` for coats.  In a white furnace a single
+mirroring kept 0.69/0.42/0.31 at roughness 0.7/0.9/1.  A smooth coat's point-lamp glint is left alone; an area
+light's widened highlight is made up for at the widened lean.  Rough glass is not (yet). Lights a ray can meet (`Light.CanBeSeen`) are not counted
 twice: the sky reaches a rough surface through its reflection only, and a glowing volume is shared between
 its own samples and the reflection by Veach's balance heuristic (`Scene.HighlightShareOf` /
 `ReflectionShareAt`), which is what keeps a lantern's streak on a wet road from glittering; a glow's weight is

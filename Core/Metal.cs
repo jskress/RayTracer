@@ -245,6 +245,44 @@ public sealed class Metal
         return Between(table.Averages, step, 1, place - step);
     }
 
+    /// <summary>
+    /// This method returns how much of each band the metal mirrors of light from all round, in whatever bands the
+    /// render carries light in: what its facets mirror one another's light by.  See
+    /// <see cref="Microfacets.Compensation{TS}"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="outside">The index of refraction of what lies outside the metal.</param>
+    /// <returns>The share of each band mirrored of light from all round.</returns>
+    public TS ShareFromAround<TS>(double outside)
+        where TS : struct, ISpectrum<TS>
+    {
+        if (_mixture is ({ } from, { } to, var share))
+            return from.ShareFromAround<TS>(outside) * (1 - share) + to.ShareFromAround<TS>(outside) * share;
+
+        Table table = TableFor(outside);
+        TS result = TS.Black;
+
+        if (TS.Count == 3)
+        {
+            for (int channel = 0; channel < 3; channel++)
+                result[channel] = table.ColorsFromAround[channel];
+        }
+        else if (TS.Count == 1)
+        {
+            int band = (int) Math.Clamp(
+                (TS.Wavelength - SpectralColor.ShortestWavelength) / BandWidth, 0, SpectralColor.Bands - 1);
+
+            result[0] = table.BandsFromAround[band];
+        }
+        else
+        {
+            for (int band = 0; band < SpectralColor.Bands; band++)
+                result[band] = table.BandsFromAround[band];
+        }
+
+        return result;
+    }
+
     private const double BandWidth =
         (SpectralColor.LongestWavelength - SpectralColor.ShortestWavelength) / SpectralColor.Bands;
 
@@ -288,14 +326,33 @@ public sealed class Metal
             averages[step] = sum / SpectralColor.Bands;
         }
 
-        return new Table(bands, colors, averages);
+        // Of light from all round: twice the integral of the share at each cosine times that cosine, taken by the
+        // trapezoid rule over the same steps, and in red, green and blue from the colors as they are read above.
+        double[] bandsFromAround = new double[SpectralColor.Bands];
+        double[] colorsFromAround = new double[3];
+
+        for (int step = 0; step <= Steps; step++)
+        {
+            double cos = (double) step / Steps;
+            double weight = 2 * cos * (step == 0 || step == Steps ? 0.5 : 1) / Steps;
+
+            for (int band = 0; band < SpectralColor.Bands; band++)
+                bandsFromAround[band] += bands[step * SpectralColor.Bands + band] * weight;
+
+            for (int channel = 0; channel < 3; channel++)
+                colorsFromAround[channel] += colors[step * 3 + channel] * weight;
+        }
+
+        return new Table(bands, colors, averages, bandsFromAround, colorsFromAround);
     }
 
     /// <summary>
     /// This class holds what a metal mirrors at every step of the cosine against one index outside it: each band,
-    /// in turn for each step; red, green and blue; and the bands' average.
+    /// in turn for each step; red, green and blue; and the bands' average.  And of light from all round, each band,
+    /// and red, green and blue.
     /// </summary>
-    private sealed record Table(double[] Bands, double[] Colors, double[] Averages);
+    private sealed record Table(
+        double[] Bands, double[] Colors, double[] Averages, double[] BandsFromAround, double[] ColorsFromAround);
 }
 
 /// <summary>
@@ -342,5 +399,21 @@ public readonly record struct BareMetal(Metal Metal, double Share, double Outsid
             : Metal.AverageAt(Coat.Within(cos, Outside), Coat.IndexOfRefraction);
 
         return Share >= 1 ? metal : metal * Share + (1 - Share) * other;
+    }
+
+    /// <summary>
+    /// This method returns how much of each band the surface mirrors of light from all round: the metal's share where
+    /// it is bare, and the rest of the material's where it is not.  Under a coat the metal's facets mirror one
+    /// another's light inside the coat, so against the coat's index.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="other">What the rest of the material mirrors of light from all round.</param>
+    /// <returns>The share of each band mirrored of light from all round.</returns>
+    public TS MirrorsFromAround<TS>(double other)
+        where TS : struct, ISpectrum<TS>
+    {
+        TS metal = Metal.ShareFromAround<TS>(Coat?.IndexOfRefraction ?? Outside);
+
+        return Share >= 1 ? metal : metal * Share + TS.White * ((1 - Share) * other);
     }
 }
