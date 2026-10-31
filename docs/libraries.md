@@ -516,6 +516,116 @@ inside is thin.  That is why a campfire here is one shell whose density describe
 three flames together, rather than four shells stacked — which is also cheaper, since a ray crosses one boundary
 instead of eight.
 
+#### Explosions
+
+```
+import 'explosions' { Explosion, Debris, Sparks }
+
+context { medium samples 80 }
+
+object Explosion(7, -0.5)
+object Debris(7, -0.5)
+object Sparks(7, -0.5)
+```
+
+| | |
+| --- | --- |
+| `Explosion` | The fireball and the smoke it turns into. |
+| `Debris` | What the blast throws: rock and earth on the ground, scraps of hull in space. |
+| `Sparks` | Burning flecks, thrown faster and farther than the debris, and gone in a second. |
+| `Smoke` | A column of smoke on its own, from a wreck still burning.  The number is how tall it stands, in meters. |
+
+**A blast is three pieces, and they take the same four values**, so a scene writes them alike three times:
+
+| | |
+| --- | --- |
+| How big | The fireball's radius once it has grown, in meters.  The debris and the sparks are thrown as far as a blast that size throws them. |
+| When | The moment of the blast on the scene's clock, in seconds, as a [swarm](animation.md#swarms)'s `burst at` is.  Before it there is nothing; after it the blast plays out as `time` runs. |
+| Where | `'ground'`, unless said, or `'space'`. |
+| Which | A whole number, 1 unless said.  Two blasts with the same one are the same blast twice. |
+
+**A still's clock stands at nought**, so a still of a blast half a second old says it went off half a second
+before: `-0.5`, as above.  In an [animation](animation.md) the same numbers play it out, so `Explosion(7, 2)`
+goes off two seconds in.
+
+**Three pieces, not one, because two of them are swarms.**  A swarm must stand at the top of a scene, so the
+debris and the sparks cannot be part of the explosion; they are written beside it and stand where it does.  Place
+all three alike, with the same `translate`.
+
+##### A blast on the ground
+
+**The fireball grows in a few tenths of a second and then rises**, slowing in its growth as it climbs.  How long
+it takes to grow, how long it burns and how fast it climbs all go with its size, so a big blast is slow and a small
+one quick.
+
+**Its light follows its density.**  The fireball is a medium whose [light is read by how much of it there is at a
+place](scene-files.md#a-medium-whose-light-follows-its-density): the thick hearts of its billows burn yellow, the
+thinner stuff round them orange and red, and where it thins to nothing there is only the soot.  With one color,
+or a color by place, a thick glow shows its billows only at its edges.
+
+**It cools as it rises**, its hottest colors going first, so it reddens before it goes dark — and what is left is
+what it was always carrying: a dark cloud of soot and dust that goes on climbing and spreading, thinning as it
+spreads, on a column of smoke drawn up beneath it.  The fire and the smoke are one stuff, in one shell, and the
+smoke is the fire gone out.
+
+**It lights what is round it**, in the colors it burns in, and less as it cools.  The rock and earth it throws
+come down round it and lie where they stop; the sparks drift and go out.
+
+**It lights things, or turns light aside, but never both at once.**  A glow that turns light aside is lit by itself,
+from one place in it at each step of a ray, and at full size that comes out as a fine grain all through the
+fireball.  So while it burns it turns nothing aside, and only once its glow is all but gone does the cloud turn
+light aside and the sky light it.
+
+##### A blast in space
+
+**Nothing rises and nothing is left.**  The fireball swells faster, with no air to hold it back, burns out in a
+fraction of the time, and thins as it swells until it is gone: it is burning gas, not soot, and there is no air to
+hold a cloud together afterward.  The debris is scraps of hull, metal plates that tumble and catch the sun, and
+both it and the sparks fly out every way and keep going.
+
+**The scene must say there is no gravity:**
+
+```
+import 'explosions' { Explosion, Debris, Sparks }
+
+context { gravity [0, 0, 0]  medium samples 80 }
+
+object Explosion(5, -0.2, 'space')
+object Debris(5, -0.2, 'space')
+object Sparks(5, -0.2, 'space')
+```
+
+Gravity is the whole scene's to say, not a library's.  Left at the ground's, the scraps fall toward whatever
+"down" the scene's space has, as if the blast were over the ground.
+
+##### What a blast costs
+
+A fireball is a medium, and a medium is walked along: how many places each crossing stops at is the scene's to
+say, with `medium samples`.  Eighty does; below about forty the billows go banded.  A blast at its brightest lights
+everything near it from sixty-four places within it, which is most of what it costs: a frame of the gallery's
+blast on open ground takes about eight seconds at 400 by 300 while it burns, and four to six once it has gone out
+and is only smoke.  The gallery's blast in space fills more of its picture, and takes from fifteen seconds to
+forty-five while it burns; once it has burned out it is not there at all, and costs nothing.
+
+**Two blasts must not overlap.**  Where two glowing volumes' shells partly overlap, one cuts the other off flat
+where it begins; a scene with several blasts keeps them apart.
+
+##### Smoke on its own
+
+```
+import 'explosions' { Smoke }
+
+context { medium samples 80 }
+
+object Smoke(30)
+```
+
+A column of smoke rising from something still burning: narrow at its foot, widening by about ten degrees as it
+climbs, as rising smoke does, bending over a little, and rolling upward as `time` runs.  It is soot mostly, so it is
+dark, with a little dust in it so that the side the sun is on shows it.  It thins as it grows, so a ray across a tall
+column meets as much soot as one across a short one.  The second number is its variant, which way it bends and how
+its billows fall.
+
 #### Buildings
 
 ```

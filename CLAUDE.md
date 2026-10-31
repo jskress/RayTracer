@@ -348,7 +348,11 @@ a light of several samples picks the sample per point (`Scene.ShiftFor`, salt 14
 shape's RAW value (`ShapeAt`, before `Density` scales it), held under one (a map wraps its values round), the march
 handing over the density it has (`EmissionAt(point, density)`, so the shape is not asked twice); refused for an even
 density, the last emission said wins.  A thick glow shows emission over extinction, density cancelling: with a
-pigment by place a fireball's billows showed only at its thin edges.  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
+pigment by place a fireball's billows showed only at its thin edges.  The `explosions` library builds on it:
+`Explosion`/`Debris`/`Sparks(size, at, where, variant)` read `time` against `at` (a library's scope is a child of the
+scene's, so it sees the frame's clock), one box shell per blast (a sphere narrows to nothing at its ends), and a
+fireball never `gives light` while it scatters (a scattering glow lit by
+itself, one place per march step, comes out grain), so the smoke left is the fire gone out, in the same medium; a blast in space, leaving nothing, is an empty group once burned out (kept, its shell swelled past the camera: 40 s a frame for nothing).  A material's `film { thickness a [to b by <pattern>]  ior n }` (`Core/ThinFilm.cs`) is a skin
 thinner than light, a soap bubble's or oil's: Airy's sum over both faces, s and p averaged, complex cosines past
 the critical angle, worked out over the 32 bands in every render (`FilmShares<TS>`: Mirrored, Passed, Highlight).
 It takes the place of `reflective`/`fresnel` (`GetReflectionColor` returns a film's mirror image whole; `GetHitColor`

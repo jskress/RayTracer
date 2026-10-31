@@ -1264,6 +1264,243 @@ public class TestShippedLibraries
         StringAssert.Contains(error, "FireLobe");
     }
 
+    /// <summary>
+    /// Renders pieces of a blast seven meters across its fireball's radius, seen from the side against a gray sky --
+    /// across a pale floor that nothing lights but the blast, on the ground; with nothing for its scraps to strike,
+    /// in space -- and hands back the picture.  The clock stands at nought, so a blast <c>age</c> seconds old is one
+    /// that went off at <c>-age</c>.
+    /// </summary>
+    private Canvas Blast(
+        string pieces, double age, string where = "ground", int variant = 1, string camera = null, int wide = 60,
+        int high = 45)
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "explosions.igl"),
+            Path.Combine(_directory, "explosions.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        string calls = string.Join("\n", pieces.Split(' ')
+            .Select(piece => $"object {piece}(7, {-age}, '{where}', {variant})"));
+
+        File.WriteAllText(scene, $$"""
+            import 'explosions' { Explosion, Debris, Sparks }
+            context { angles are degrees  no gamma  medium samples 40  gravity {{(where == "space" ? "[0, 0, 0]" : "[0, -9.81, 0]")}} }
+            {{camera ?? "camera { location [0, 6, -45]  look at [0, 6, 0]  field of view 60 }"}}
+            background [0.3, 0.3, 0.3]
+            {{(where == "space" ? "" : Floor)}}
+            {{calls}}
+            """);
+
+        Assert.IsNull(Render(scene, wide, high), $"{pieces} at {age} s should render");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// The pale floor a blast on the ground stands on.
+    /// </summary>
+    private const string Floor = "plane { material { pigment White  ambient 0  diffuse 1  specular 0 } }";
+
+    /// <summary>
+    /// The same view with no blast in it, on the ground or in space.
+    /// </summary>
+    private Canvas NoBlast(string camera = null, string where = "ground", int wide = 60, int high = 45)
+    {
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, $$"""
+            context { angles are degrees  no gamma }
+            {{camera ?? "camera { location [0, 6, -45]  look at [0, 6, 0]  field of view 60 }"}}
+            background [0.3, 0.3, 0.3]
+            {{(where == "space" ? "" : Floor)}}
+            """);
+
+        Assert.IsNull(Render(scene, wide, high), "the empty scene should render");
+
+        return new ImageFile(Path.Combine(_directory, "out.png")).Load()[0];
+    }
+
+    /// <summary>
+    /// How much light falls on the floor in the bottom rows of a picture, nothing else lighting it.
+    /// </summary>
+    private static double FloorLight(Canvas picture)
+    {
+        double light = 0;
+
+        for (int y = picture.Height * 4 / 5; y < picture.Height; y++)
+        {
+            for (int x = 0; x < picture.Width; x++)
+                light += picture.GetPixel(x, y).Red + picture.GetPixel(x, y).Green;
+        }
+
+        return light;
+    }
+
+    [TestMethod]
+    public void TestABlastIsNothingBeforeItGoesOff()
+    {
+        // Its moment is on the scene's clock, so a blast whose moment is yet to come is not there at all: not a
+        // small fireball, not the debris lying ready, nothing.
+        Assert.IsFalse(Differs(Blast("Explosion Debris Sparks", -0.5), NoBlast()),
+            "a blast half a second off already shows");
+        Assert.IsFalse(Differs(Blast("Explosion Debris Sparks", -0.5, "space"), NoBlast(null, "space")),
+            "a blast in space half a second off already shows");
+    }
+
+    [TestMethod]
+    public void TestABlastLightsTheGroundLessAsItCools()
+    {
+        // Nothing lights the floor but the fireball, in the colors it burns in -- so the floor is bright while it
+        // burns, dimmer as it cools, and dark once it has gone out.
+        double burning = FloorLight(Blast("Explosion", 0.3));
+        double cooling = FloorLight(Blast("Explosion", 1.5));
+        double cold = FloorLight(Blast("Explosion", 3));
+
+        Assert.IsTrue(burning > cooling * 2, $"the floor should be brighter while it burns: {burning:F2} against {cooling:F2}");
+        Assert.IsTrue(cooling > cold * 2, $"and brighter while it cools than once it is out: {cooling:F2} against {cold:F2}");
+        Assert.IsTrue(cold < 0.01, $"once it is out the floor should be dark, and has {cold:F3}");
+    }
+
+    [TestMethod]
+    public void TestABlastOnTheGroundLeavesACloudAndOneInSpaceDoesNot()
+    {
+        // On the ground the smoke is the fire gone out, and it stays; in space the burning gas thins as it swells
+        // and nothing is left of it.
+        Assert.IsTrue(Differs(Blast("Explosion", 3), NoBlast()), "a blast on the ground should leave its cloud");
+        Assert.IsFalse(Differs(Blast("Explosion", 3, "space"), NoBlast(null, "space")),
+            "a blast in space should leave nothing");
+    }
+
+    [TestMethod]
+    public void TestABlastInSpaceThatHasBurnedOutIsNotThere()
+    {
+        // Nothing is left of it to see, and nothing is left to walk through either.  Kept, its shell went on swelling
+        // until it held the camera, every ray walking it and every place lit from sixty-four places in it, for
+        // nothing: the gallery's blast in space spent forty seconds a frame so, against two without it.
+        Assert.IsTrue(Regex.IsMatch(BlastCensus(0.3), @"Lights\s+1: 1 volume light"),
+            "a burning blast in space should light what is round it");
+
+        string census = BlastCensus(3);
+
+        Assert.IsTrue(Regex.IsMatch(census, @"Surfaces\s+none"), $"a burned-out blast in space is still there: {census}");
+        Assert.IsTrue(Regex.IsMatch(census, @"Lights\s+none"), $"a burned-out blast in space still gives light: {census}");
+    }
+
+    /// <summary>
+    /// Renders a fireball in space seven meters across its radius, <c>age</c> seconds old, with nothing else in the
+    /// scene, and hands back the counts the render reports of what the scene held.
+    /// </summary>
+    private string BlastCensus(double age)
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "explosions.igl"),
+            Path.Combine(_directory, "explosions.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+        StringWriter captured = new ();
+        TextWriter was = Console.Out;
+
+        File.WriteAllText(scene, $$"""
+            import 'explosions' { Explosion }
+            context { angles are degrees  no gamma  medium samples 40 }
+            camera { location [0, 6, -45]  look at [0, 6, 0]  field of view 60 }
+            object Explosion(7, {{-age}}, 'space')
+            """);
+
+        Console.SetOut(captured);
+
+        try
+        {
+            new LanguageParser(scene).Parse().Render(new RenderOptions
+            {
+                OutputFileName = Path.Combine(_directory, "out.png"), Width = 12, Height = 9, ProgressStyleText = "none",
+                ReportStatistics = true
+            });
+        }
+        finally
+        {
+            Console.SetOut(was);
+        }
+
+        return captured.ToString();
+    }
+
+    [TestMethod]
+    public void TestDebrisComesDownOnTheGroundAndFliesOnInSpace()
+    {
+        // Looked at from low down, a quarter of a minute after the blast and again five seconds later: on the ground
+        // the rock and earth thrown up have come down and lie where they stopped, so the two pictures are the same;
+        // in space nothing stops the scraps of hull, so they are not.  A clod is fifteen centimeters, so the picture is
+        // large enough for one to cover a pixel or so, and a lamp lights the floor, which nothing else here does once
+        // the fire is out.
+        const string low = "camera { location [0, 4, -30]  look at [0, 0, 0]  field of view 50 }\n" +
+                           "point light { location [-20, 40, -30] }";
+        Canvas fallen = Blast("Debris", 15, "ground", 1, low, 240, 180);
+
+        Assert.IsTrue(Differs(fallen, NoBlast(low, "ground", 240, 180)), "debris on the ground should be seen there");
+        Assert.IsFalse(Differs(fallen, Blast("Debris", 20, "ground", 1, low, 240, 180)),
+            "debris on the ground should lie where it fell");
+        Assert.IsTrue(Differs(Blast("Debris", 15, "space", 1, low, 240, 180), Blast("Debris", 20, "space", 1, low, 240, 180)),
+            "debris in space should fly on");
+    }
+
+    [TestMethod]
+    public void TestOneBlastIsNotAnother()
+    {
+        foreach (string where in (string[]) ["ground", "space"])
+        {
+            Assert.IsTrue(Differs(Blast("Explosion", 0.3, where, 1), Blast("Explosion", 0.3, where, 2)),
+                $"two blasts {(where == "space" ? "in space" : "on the ground")} came out the same");
+        }
+    }
+
+    [TestMethod]
+    public void TestSmokeStandsOnItsOwn()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "explosions.igl"),
+            Path.Combine(_directory, "explosions.igl"), true);
+
+        Canvas empty = NoBlast();
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'explosions' { Smoke }
+            context { angles are degrees  no gamma  medium samples 40 }
+            camera { location [0, 6, -45]  look at [0, 6, 0]  field of view 60 }
+            background [0.3, 0.3, 0.3]
+            plane { material { pigment White  ambient 0  diffuse 1  specular 0 } }
+            object Smoke(14)
+            """);
+
+        Assert.IsNull(Render(scene, 60, 45), "the smoke should render");
+        Assert.IsTrue(Differs(new ImageFile(Path.Combine(_directory, "out.png")).Load()[0], empty),
+            "a column of smoke should show against the sky");
+    }
+
+    [TestMethod]
+    public void TestTheBlastsKeepTheirOwnWorkings()
+    {
+        File.Copy(
+            Shipped.First(path => Path.GetFileName(path) == "explosions.igl"),
+            Path.Combine(_directory, "explosions.igl"), true);
+
+        string scene = Path.Combine(_directory, "scene.igl");
+
+        File.WriteAllText(scene, """
+            import 'explosions' { Explosion }
+            camera { location [0, 5, -30]  look at [0, 5, 0] }
+            point light { location [-5, 5, -5] }
+            object Explosion(7, -0.5)
+            sphere { scale BlastBall(0, 0, 0, 0, 1, 0, 0, 0) }
+            """);
+
+        string error = Render(scene);
+
+        Assert.IsNotNull(error, "the library's own workings should not have reached the scene");
+        StringAssert.Contains(error, "BlastBall");
+    }
+
     [TestMethod]
     public void TestATreeKeepsItsOwnWorkings()
     {
