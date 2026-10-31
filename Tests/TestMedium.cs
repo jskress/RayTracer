@@ -800,6 +800,36 @@ public class TestMedium
     }
 
     /// <summary>
+    /// A shell that casts no shadow veils none of the light reaching what stands inside it, as it veils none of the
+    /// light reaching what stands outside it -- whether the shell says so or an instance it stands in does.  What the
+    /// box sends back is still seen through the medium; only the light's way in is whole.  Until 2026-10-30 the light
+    /// was charged for the medium inside the shell and for none of it outside, so ground running under a glow's shell
+    /// came out darker inside it than out, with an edge where the shell met the ground.
+    /// </summary>
+    [TestMethod]
+    public void TestAShellThatCastsNoShadowVeilsNoLightReachingWhatStandsInsideIt()
+    {
+        Medium absorbing = new () { Absorption = new Color(0.5, 0.5, 0.5) };
+        Ray eye = new (new Point(0, 0, -5), Directions.In);
+        Point lamp = new (0, 0, -20);
+        double bare = InAShell(null, Colors.White, 1).GetColorFor(eye).Red;
+
+        (Sphere ball, Cube box) = ShellWith(absorbing, Colors.White, 1);
+        ball.NoShadow = true;
+
+        double unshadowed = SceneOf(new Group().Add(ball).Add(box), lamp).GetColorFor(eye).Red;
+
+        (Sphere sharedBall, Cube sharedBox) = ShellWith(absorbing, Colors.White, 1);
+
+        double shared = SceneOf(
+            new Instance { Prototype = new Group().Add(sharedBall).Add(sharedBox), NoShadow = true },
+            lamp).GetColorFor(eye).Red;
+
+        Assert.AreEqual(Math.Exp(-0.5 * 1.25), unshadowed / bare, 1e-5, "a shell that casts no shadow");
+        Assert.AreEqual(Math.Exp(-0.5 * 1.25), shared / bare, 1e-5, "in an instance that casts none");
+    }
+
+    /// <summary>
     /// A lit cloud is the same wherever it is put, and however: outright, in a group that is moved, in one
     /// that is also scaled, and through an instance.  The cloud turns light again and again and is thicker
     /// in some places than others, so each of its turns asks where its edge lies and how much of it stands

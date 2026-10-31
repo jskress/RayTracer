@@ -332,7 +332,9 @@ and a shell at the surroundings' index, are untouched.  A container's interior (
 charged where a ray leaves it (end of `GetHitColor`) and, for anything met inside it, over the run to that
 (`Scene.ThroughTheInsideOf` from `Intersection.ContainerBefore`); a surface inside a medium is lit through it
 up to the container's edge (`SurvivingTheMedium` in `ReachingFrom`) -- so a log inside a flame keeps the glow
-in front of it.  Every medium helper finds its container's edges and density where it stands, the ray carried into
+in front of it -- unless the container (or an instance it stands in) casts `no shadow`: a shadow ray from OUTSIDE
+never charges a container's medium, so charged inside only, ground under a glow's shell came out darker inside it
+than out, with an edge (until 2026-10-30); so air over a planet's ground must cast shadows.  Every medium helper finds its container's edges and density where it stands, the ray carried into
 its parent's space (`IntoTheSpaceOf`) through its portals (`Intersection.Portals` leaving it,
 `Intersection.ContainerPortals` inside it); until 2026-10-19 a medium in a moved group found its edge where the
 shape would be unmoved.  No scene's instance holds a medium even so: `Instance.MayBeShared` refuses one, and a glow

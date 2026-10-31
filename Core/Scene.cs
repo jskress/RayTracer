@@ -1547,9 +1547,13 @@ public partial class Scene : NamedThing, IDisposable
                 false, intersection.FootprintRadius, light.Housing);
 
             // Something standing inside a medium is lit through it, as the medium's own stuff is: the
-            // medium stands in the light's way as far as the edge of the surface it fills.
+            // medium stands in the light's way as far as the edge of the surface it fills.  Unless that surface
+            // casts no shadow: then its medium stands in the way of no light reaching anything outside it, and so of
+            // none reaching anything inside it either -- charged inside and not out, ground running under a glow's
+            // shell came out darker inside it than out, with an edge where the shell met the ground.
             if (!intersection.Inside && !reaching.IsBlack &&
-                intersection.ContainerBefore is { } container &&
+                intersection.ContainerBefore is { NoShadow: false } container &&
+                !intersection.ContainerPortals.CastsNoShadow &&
                 intersection.InteriorBefore.Medium is { } medium)
             {
                 reaching *= SurvivingTheMedium<TS>(
