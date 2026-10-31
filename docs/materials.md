@@ -852,6 +852,13 @@ between the log and the flame's edge.  Until this was so, anything opaque inside
 glow in front of it out of the picture entirely.  A shadow is still dimmed only by a medium, not by
 `clarity`, which no shadow anywhere takes account of.
 
+**A shell that casts no shadow lights what is inside it as if it were not there**, as it lights what is
+outside it: its medium stands in the way of no light at all, the eye's view of what is inside excepted.
+Light reaching the ground under a glow from outside the glow's shell never crossed its medium, so until
+2026-10-30, when light reaching ground inside the shell did, the ground came out darker inside the shell
+than out, with an edge where the shell met it.  So a medium that should dim the light falling on what stands
+in it -- air over a planet's ground, which the sun reaches only through it -- must cast shadows.
+
 `clarity` and a medium overlap on purpose rather than one replacing the other.  Clarity is the
 one-number form of the same idea, and stays the easier thing to reach for when fading with depth is
 all a surface needs.  A medium is the richer form: it fades color by color, and it can glow.  A

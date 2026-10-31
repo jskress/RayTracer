@@ -976,6 +976,46 @@ public class TestMediumClauses
     }
 
     [TestMethod]
+    public void TestTheGroundUnderAGlowsShellIsLitAlikeInsideItAndOut()
+    {
+        // A glowing ball of soot in a box shell that casts no shadow, the box reaching down through the floor, and the
+        // floor looked at from above across the box's edge at X 1.  Nearer the ball, the floor just inside the edge is
+        // brighter than just outside it.  Until 2026-10-30 it was darker: the light reaching it was charged for the
+        // soot it crossed, while the light reaching the floor outside the shell was charged for none, so an edge ran
+        // round the ground where the shell met it.
+        (Canvas image, string error) = Render("""
+            camera { location [1, 4, -0.5]  look at [1, 0, 0]  field of view 30 }
+            background Black
+            plane { material { pigment White  ambient 0  specular 0 } }
+            cube {
+                material {
+                    pigment White  ambient 0  diffuse 0  specular 0  transparency 1
+                    interior {
+                        ior 1.0
+                        medium {
+                            absorption [3, 3, 3]
+                            emission [3, 3, 3]
+                            density function { 4 * max(0, 1 - sqrt(x * x + (y - 0.25) * (y - 0.25) + z * z) / 0.4) }
+                        }
+                    }
+                }
+                no shadow
+                gives light samples 64
+                translate Y 0.5
+            }
+            """);
+
+        Assert.IsNull(error, error);
+
+        double Column(int x) => Enumerable.Range(10, 20).Sum(y => image.GetPixel(x, y).Red);
+
+        double inside = Column(19), outside = Column(20), farther = Column(21);
+
+        Assert.IsTrue(outside > farther, $"the floor should dim away from the ball: {outside:F4} then {farther:F4}");
+        Assert.IsTrue(inside > outside, $"the floor just inside the shell came out {inside:F4}, just outside {outside:F4}");
+    }
+
+    [TestMethod]
     public void TestALightReadByDensityNeedsADensityThatVaries()
     {
         // A medium of one density has one value of its shape everywhere, so its light read by its density could only
