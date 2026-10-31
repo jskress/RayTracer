@@ -233,6 +233,14 @@ public class Material
     }
 
     /// <summary>
+    /// This property reports how much the surface mirrors of light from all round, as <see cref="ReflectanceAt"/>
+    /// says it mirrors at each angle: the share it is said to mirror, and with Fresnel's rise toward a graze, a
+    /// twenty-first of what is left besides -- twice the integral of (1 - cos)^5 cos.  It is what a rough surface's
+    /// facets mirror one another's light by; see <see cref="Microfacets.Compensation(double, double, double)"/>.
+    /// </summary>
+    public double ReflectanceFromAround => FresnelApplies ? Reflective + (1 - Reflective) / 21 : Reflective;
+
+    /// <summary>
     /// This property reports whether <see cref="Fresnel"/> has anything to do here: the surface must
     /// ask for it, or be rough, which always follows it; it must mirror something; and it must not let
     /// light through, which has a Fresnel of its own.

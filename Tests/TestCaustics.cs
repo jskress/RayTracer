@@ -489,7 +489,8 @@ public class TestCaustics
     /// This tests a rough mirror throwing the sun.  Barely rough, it throws it as a smooth one does.  Rough,
     /// it spreads it, and what lands on the floor is what its facets send downward: the mirror's share of
     /// the sun, over each facet a photon can see, of what that facet's neighbors leave unhidden on the way
-    /// out -- worked out here over a fine grid of facets with the same facets the renderer picks.
+    /// out -- worked out here over a fine grid of facets with the same facets the renderer picks -- made up
+    /// for what the facets mirror among themselves, as every rough lobe is.
     /// </summary>
     [TestMethod]
     public void TestARoughMirrorSpreadsWhatItThrows()
@@ -534,7 +535,9 @@ public class TestCaustics
             400_000, new DistantLight { Direction = new Vector(1, 0, 0) }, new Plane { Material = Matte() }, Rough(roughness));
         double landed = rough.Caustics.Photons.Sum(photon => (double) photon.Red);
 
-        Assert.AreEqual(Math.PI * Math.Sqrt(0.5) * down / (steps * steps), landed, 0.01 * landed);
+        double compensation = Microfacets.Compensation(eye.Z, alpha, Rough(roughness).Material.ReflectanceFromAround);
+
+        Assert.AreEqual(Math.PI * Math.Sqrt(0.5) * down / (steps * steps) * compensation, landed, 0.01 * landed);
     }
 
     /// <summary>

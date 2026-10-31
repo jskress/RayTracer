@@ -154,17 +154,27 @@ public partial class Scene
             return TS.Black;
 
         double factor;
+        double albedo = 1;
 
         if (material.IsRough)
         {
             double spread = light.SpreadOf(sample);
             (double lengthwise, double around) = AlphasOf(material);
 
+            // What the facets mirror among themselves, made up for as at the place that mirrors the lamp to the eye,
+            // where the lobe stands; see Microfacets.Compensation.  Brushed, by facets of its own leans there.
+            Facets brushed = material.IsAnisotropic ? new Facets(peak, frame.Tangent, lengthwise, around) : null;
+
+            albedo = brushed?.AlbedoFor(brushed.ToLocal(eye), spread) ??
+                     Microfacets.Albedo(eye.Dot(peak), Microfacets.WidenedBy(lengthwise, spread));
             lengthwise = Microfacets.WidenedBy(lengthwise, spread);
             around = Microfacets.WidenedBy(around, spread);
 
             factor = Math.PI * RoundTheLobe(frame, eye, toward, lengthwise, around, sinAxial, cosAxial, at) *
                      (metal is null ? material.ReflectanceAt(eye.Dot(halfway)) : 1) / (8 * cosEye);
+
+            if (metal is null)
+                factor *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
         }
         else
         {
@@ -186,7 +196,10 @@ public partial class Scene
         {
             double cos = material.IsRough ? eye.Dot(halfway) : peak.Dot(toward);
 
-            return glint * bare.Mirrors<TS>(cos, material.IsRough ? material.ReflectanceAt(cos) : 1);
+            return material.IsRough
+                ? glint * bare.Mirrors<TS>(cos, material.ReflectanceAt(cos)) *
+                  Microfacets.CompensationFor(albedo, bare.MirrorsFromAround<TS>(material.ReflectanceFromAround))
+                : glint * bare.Mirrors<TS>(cos, 1);
         }
 
         return material.Metallic != 0 && material.Metal is null
@@ -360,6 +373,7 @@ public partial class Scene
                 Vector normal = frame.Face * Math.Cos(angle) + frame.Side * Math.Sin(angle);
                 Vector facet = normal;
                 double masking = 1;
+                double albedo = 1;
 
                 if (material.IsRough)
                 {
@@ -379,6 +393,7 @@ public partial class Scene
                                     Microfacets.SampleVisibleNormal(local, alpha, (index + 0.5) / count, second);
 
                     facet = (x * picked.X + y * picked.Y + normal * picked.Z).Unit;
+                    albedo = facets?.AlbedoFor(local) ?? Microfacets.Albedo(local.Z, alpha);
                 }
 
                 double cosFacet = eye.Dot(facet);
@@ -403,11 +418,23 @@ public partial class Scene
                     hit.ConeSpread, hit.ConeTravelled);
                 if (metal is { } bare)
                 {
-                    sum += GetColorFor<TS>(ray, remaining - 1) *
-                           bare.Mirrors<TS>(cosFacet, material.ReflectanceAt(cosFacet)) * masking;
+                    TS mirrors = bare.Mirrors<TS>(cosFacet, material.ReflectanceAt(cosFacet));
+
+                    // What the facets mirror among themselves, made up for at this place; see
+                    // Microfacets.Compensation.
+                    if (material.IsRough)
+                    {
+                        mirrors *= Microfacets.CompensationFor(
+                            albedo, bare.MirrorsFromAround<TS>(material.ReflectanceFromAround));
+                    }
+
+                    sum += GetColorFor<TS>(ray, remaining - 1) * mirrors * masking;
 
                     continue;
                 }
+
+                if (material.IsRough)
+                    masking *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
 
                 TS seen = GetColorFor<TS>(ray, remaining - 1) * (material.ReflectanceAt(cosFacet) * masking);
 

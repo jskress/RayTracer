@@ -2256,7 +2256,8 @@ public partial class Scene : NamedThing, IDisposable
         {
             color += LookedAtRoughly<TS>(
                 intersection, coat.Roughness, value => coat.ReflectanceAt(value, outside),
-                _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples, remaining);
+                _spreading || TS.Count == 1 ? 1 : material.ReflectionSamples, remaining,
+                fromAround: TS.White * Microfacets.GlassReflectanceFromAround(outside, coat.IndexOfRefraction));
         }
         else
             mirrorWeight += TS.White * coat.ReflectanceAt(cos, outside);
@@ -2481,10 +2482,17 @@ public partial class Scene : NamedThing, IDisposable
         {
             return LookedAtRoughly<TS>(
                 intersection, material.Roughness, _ => 1, count, remaining, facets,
-                cos => bare.Mirrors<TS>(cos, material.ReflectanceAt(cos)));
+                cos => bare.Mirrors<TS>(cos, material.ReflectanceAt(cos)),
+                bare.MirrorsFromAround<TS>(material.ReflectanceFromAround));
         }
 
-        return LookedAtRoughly<TS>(intersection, material.Roughness, reflectance, count, remaining, facets);
+        // What the facets mirror among themselves is made up for (see Microfacets.Compensation), but not rough
+        // glass's, whose facets let through a share of what they send one another.
+        return LookedAtRoughly<TS>(
+            intersection, material.Roughness, reflectance, count, remaining, facets,
+            fromAround: material.Transparency > 0 || material.PigmentMayTransmit
+                ? null
+                : TS.White * material.ReflectanceFromAround);
     }
 
     /// <summary>
@@ -2492,11 +2500,12 @@ public partial class Scene : NamedThing, IDisposable
     /// mirroring by the given share at the angle it is seen at, and averages what they bring back.  It is
     /// <see cref="GetRoughReflection{TS}"/>'s looking, for any rough lobe: a rough surface's, or a coat's.  A
     /// metal's facets mirror each band by its own share, which <paramref name="tinted"/> gives, beside the share
-    /// for every band.
+    /// for every band.  Given how much the facets mirror of light from all round, <paramref name="fromAround"/>,
+    /// what they mirror among themselves is made up for; see <see cref="Microfacets.Compensation{TS}"/>.
     /// </summary>
     private TS LookedAtRoughly<TS>(
         Intersection intersection, double roughness, Func<double, double> reflectance, int count, int remaining,
-        Facets facets = null, Func<double, TS> tinted = null)
+        Facets facets = null, Func<double, TS> tinted = null, TS? fromAround = null)
         where TS : struct, ISpectrum<TS>
     {
         Vector normal = intersection.Normal;
@@ -2564,7 +2573,10 @@ public partial class Scene : NamedThing, IDisposable
             _looking = wasLooking;
         }
 
-        return sum * (1.0 / count);
+        return fromAround is { } average
+            ? sum * (1.0 / count) *
+              Microfacets.CompensationFor(facets?.AlbedoFor(eye) ?? Microfacets.Albedo(eye.Z, alpha), average)
+            : sum * (1.0 / count);
     }
 
     /// <summary>

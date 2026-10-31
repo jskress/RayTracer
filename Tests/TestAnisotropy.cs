@@ -123,8 +123,8 @@ public class TestAnisotropy
     /// <summary>
     /// This tests that the brushed facets the eye's rays are sent off are the facets the highlight is worked
     /// out from: a brushed floor under a patch of white sky mirrors what the highlight's formula, added up over
-    /// the patch, says it should -- with the patch off to one side of the mirror direction across the grooves,
-    /// and as far off along them, where far less is seen.
+    /// the patch, says it should, made up for what the facets mirror among themselves -- with the patch off to
+    /// one side of the mirror direction across the grooves, and as far off along them, where far less is seen.
     /// </summary>
     [TestMethod]
     public void TestTheRaysAgreeWithTheFacets()
@@ -157,7 +157,9 @@ public class TestAnisotropy
 
             double reflected = scene.GetReflectionColor(hit, 2).Red;
             double expected = OverCap(toward, halfAngle, light => facets.Highlight(eye, light, material.ReflectanceAt)) /
-                              Math.PI;
+                              Math.PI *
+                              Microfacets.CompensationFor(
+                                  facets.AlbedoFor(facets.ToLocal(eye)), material.ReflectanceFromAround);
 
             Assert.IsGreaterThan(0.002, expected, $"nothing to compare {name}: {expected}");
             Assert.AreEqual(expected, reflected, 0.03 * expected, name);

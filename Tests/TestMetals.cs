@@ -320,7 +320,7 @@ public class TestMetals
     /// <summary>
     /// A metal's highlight is the lamp's light in the metal's own color: a smooth one's Phong highlight is the
     /// metal's share where the lamp is mirrored, and a rough one's the facets' highlight in the metal's share at
-    /// the angle the eye meets them.
+    /// the angle the eye meets them, deepened by what the facets mirror among themselves.
     /// </summary>
     [TestMethod]
     public void TestAMetalsHighlightIsItsOwnColor()
@@ -347,6 +347,10 @@ public class TestMetals
             Color seen = scene.GetHitColor(Hit(floor, cos), 1);
             RgbSpectrum share = copper.ShareAt<RgbSpectrum>(cos, 1);
 
+            // Rough, deepened by what the facets mirror among themselves, each band by its own share again.
+            if (roughness > 0)
+                share *= Microfacets.Compensation(cos, roughness * roughness, copper.ShareFromAround<RgbSpectrum>(1));
+
             Assert.IsTrue(seen.Red > 0.1, $"there was no highlight at roughness {roughness}: {seen}");
             Assert.AreEqual(share.Green / share.Red, seen.Green / seen.Red, 1e-6, $"green, roughness {roughness}");
             Assert.AreEqual(share.Blue / share.Red, seen.Blue / seen.Red, 1e-6, $"blue, roughness {roughness}");
@@ -354,8 +358,8 @@ public class TestMetals
     }
 
     /// <summary>
-    /// A rough metal under an even white sky mirrors close to its own share -- a little less, for the facets that
-    /// hide one another -- in its own color.
+    /// A rough metal under an even white sky mirrors close to its own share, in its own color: what its facets hide
+    /// from one another they mirror on.
     /// </summary>
     [TestMethod]
     public void TestARoughMetalMirrorsItsOwnColor()
@@ -374,7 +378,6 @@ public class TestMetals
         Assert.AreEqual(gold.Red, seen.Red, 0.05, "red");
         Assert.AreEqual(gold.Green, seen.Green, 0.05, "green");
         Assert.AreEqual(gold.Blue, seen.Blue, 0.05, "blue");
-        Assert.IsTrue(seen.Red <= gold.Red + 1e-9, "the facets mirrored more than the metal");
     }
 
     /// <summary>

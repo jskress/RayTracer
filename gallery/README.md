@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 168 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 169 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1024,7 +1024,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Materials</b> &mdash; 21 images &middot; what a surface is made of</summary>
+<summary><b>Materials</b> &mdash; 22 images &middot; what a surface is made of</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1121,6 +1121,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/materials/metallic.igl">Metallic Material Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/materials/metals-on-a-gray-day.png">
+      <img alt="Metals on a Gray Day" height="120" src="Local/materials/metals-on-a-gray-day.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/materials/metals-on-a-gray-day.igl">Metals on a Gray Day</a>
     </td>
   </tr>
   <tr style="border: none;">

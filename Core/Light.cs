@@ -540,13 +540,22 @@ public abstract class Light : NamedThing
                 if (metal is not null)
                     reflectance = _ => 1;
 
+                double alpha = Microfacets.WidenedBy(material.Roughness * material.Roughness, spread);
                 double factor = share == 0
                     ? 0
                     : facets is not null
                         ? share * facets.Highlight(eye, vector, reflectance, spread)
-                        : share * Microfacets.Highlight(
-                            normal, eye, vector, Microfacets.WidenedBy(material.Roughness * material.Roughness, spread),
-                            reflectance);
+                        : share * Microfacets.Highlight(normal, eye, vector, alpha, reflectance);
+
+                // What the facets give back of the lamp after mirroring it among themselves, which the highlight
+                // of a single mirroring leaves out; see Microfacets.Compensation.  Not rough glass's, whose facets
+                // let through a share of what they send one another.
+                double albedo = factor == 0 || glass is not null
+                    ? 1
+                    : facets?.AlbedoFor(facets.ToLocal(eye), spread) ?? Microfacets.Albedo(eye.Dot(normal), alpha);
+
+                if (metal is null)
+                    factor *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
 
                 // The light along this sample, not the light's own color: a glowing volume's samples
                 // each carry what their share of the glow delivers here, which the highlight must take
@@ -558,7 +567,9 @@ public abstract class Light : NamedThing
                 {
                     double cos = eye.Dot((eye + vector).Unit);
 
-                    specularColor *= bare.Mirrors<TS>(cos, material.ReflectanceAt(cos));
+                    specularColor *= bare.Mirrors<TS>(cos, material.ReflectanceAt(cos)) *
+                                     Microfacets.CompensationFor(
+                                         albedo, bare.MirrorsFromAround<TS>(material.ReflectanceFromAround));
                 }
                 else if (factor != 0 && material.Metallic != 0 && material.Metal is null)
                     specularColor *= material.GetMetallicTint(pigmentColor, lightDotNormal);
@@ -612,11 +623,21 @@ public abstract class Light : NamedThing
             diffuseColor *= through;
             specularColor *= through;
 
+            double spread = SpreadOf(sample);
+            double alpha = coated.Coat.HighlightAlphaFor(spread);
             double factor = !highlights || coated.Share == 0
                 ? 0
                 : coated.Share * Microfacets.Highlight(
-                    normal, eye, vector, coated.Coat.HighlightAlphaFor(SpreadOf(sample)),
-                    cos => coated.Coat.ReflectanceAt(cos, coated.Outside));
+                    normal, eye, vector, alpha, cos => coated.Coat.ReflectanceAt(cos, coated.Outside));
+
+            // Made up for as any rough lobe is, where the coat is rough or an area light's patch widens it.  A smooth
+            // coat's highlight of a lamp that is a point is a mirror image drawn as a narrow lobe, and is left be.
+            if (factor != 0 && (coated.Coat.IsRough || spread > 0))
+            {
+                factor *= Microfacets.Compensation(
+                    eye.Dot(normal), alpha,
+                    Microfacets.GlassReflectanceFromAround(coated.Outside, coated.Coat.IndexOfRefraction));
+            }
 
             if (factor != 0)
                 coatColor = EmittedToward<TS>(sample) * factor;

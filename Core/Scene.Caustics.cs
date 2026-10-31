@@ -975,6 +975,19 @@ public partial class Scene
                     mirrored = metal is { } bare
                         ? bare.Mirrors<RgbSpectrum>(cosFacet, reflectance) * masking
                         : RgbSpectrum.White * (reflectance * masking);
+
+                    // What the facets mirror among themselves, made up for at the angle the photon met them, so that
+                    // facets mirroring all of it keep all of it; see Microfacets.Compensation.  Not rough glass's,
+                    // whose facets let through a share of what they send one another.
+                    double albedo = facets?.AlbedoFor(eye) ?? Microfacets.Albedo(eye.Z, alpha);
+
+                    if (metal is { } tinted)
+                    {
+                        mirrored *= Microfacets.CompensationFor(
+                            albedo, tinted.MirrorsFromAround<RgbSpectrum>(material.ReflectanceFromAround));
+                    }
+                    else if (!transmits)
+                        mirrored *= Microfacets.CompensationFor(albedo, material.ReflectanceFromAround);
                 }
             }
 
@@ -1092,7 +1105,9 @@ public partial class Scene
 
         return (
             new Ray(hit.MirrorPoint, (across * away.X + along * away.Y + hit.Normal * away.Z).Unit),
-            coat.ReflectanceAt(cosFacet, hit.N1) * Microfacets.Masking(away.Z, alpha));
+            coat.ReflectanceAt(cosFacet, hit.N1) * Microfacets.Masking(away.Z, alpha) *
+            Microfacets.Compensation(
+                eye.Z, alpha, Microfacets.GlassReflectanceFromAround(hit.N1, coat.IndexOfRefraction)));
     }
 
     // A photon's light is tested against nought exactly, never IsBlack: each carries a share of the light

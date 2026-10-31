@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using RayTracer.Basics;
+using RayTracer.Graphics;
 
 namespace RayTracer.Core;
 
@@ -109,6 +111,201 @@ public static class Microfacets
         Vector halfway = (eye + direction).Unit;
 
         return Masking(cosEye, alpha) * Distribution(normal.Dot(halfway), alpha) / (4 * cosEye);
+    }
+
+    /// <summary>
+    /// This method returns how much a rough surface whose facets each mirror all the light meeting them gives back,
+    /// toward a direction at the given angle, of light from all round, in light mirrored by ONE facet: Kulla and
+    /// Conty's directional albedo, <c>E</c>.
+    /// <para>
+    /// **The rest is lost to this renderer's facets but not to a real surface's.**  A facet whose mirror image points
+    /// at another facet sends its light on to that one, and from there, mostly, out; the facets here mirror once and
+    /// what they send at each other is dropped.  It is little for a surface of little roughness, and a great deal for
+    /// a rough one: of light from all round, seen square on, nearly a third at roughness 0.7 and nearly three fifths at
+    /// 0.9.
+    /// See <see cref="Compensation"/>, which gives it back.
+    /// </para>
+    /// <para>
+    /// **It is read from a table worked out for exactly these facets**: <see cref="Distribution"/>, and
+    /// <see cref="Masking"/> taken for the eye and the light apart (Smith's separable form, not the height-correlated
+    /// one most published tables are for).  The table runs evenly in the square root of the cosine, which crowds its
+    /// steps toward a graze where the answer changes fastest, and evenly in the roughness, and is read between its
+    /// steps in both: within 0.4% of the answer everywhere, and 0.02% on average.
+    /// </para>
+    /// </summary>
+    /// <param name="cos">The cosine of the angle between the direction and the surface normal.</param>
+    /// <param name="alpha">How far the facets lean: the square of the roughness.</param>
+    /// <returns>The share given back in a single mirroring, from nought to one; one for a mirror.</returns>
+    public static double Albedo(double cos, double alpha)
+    {
+        if (alpha <= 0)
+            return 1;
+
+        double[] albedos = Albedos.Value;
+        double across = Math.Sqrt(Math.Clamp(cos, 0, 1)) * AlbedoSteps;
+        double up = Math.Min(Math.Sqrt(alpha), 1) * AlbedoSteps;
+        int column = Math.Min((int) across, AlbedoSteps - 1);
+        int row = Math.Min((int) up, AlbedoSteps - 1);
+        double x = across - column;
+        double y = up - row;
+        int at = column * (AlbedoSteps + 1) + row;
+
+        return (albedos[at] * (1 - x) + albedos[at + AlbedoSteps + 1] * x) * (1 - y) +
+               (albedos[at + 1] * (1 - x) + albedos[at + AlbedoSteps + 2] * x) * y;
+    }
+
+    /// <summary>
+    /// This method returns what a rough lobe's light, mirrored once by its facets, is to be multiplied by to give back
+    /// what the facets lose among themselves: Turquin's compensation (2019), <c>1 + F (1 / E - 1)</c>.
+    /// <para>
+    /// **It keeps the lobe's shape and puts back its light.**  The light facets send at each other comes out
+    /// spread wider than the lobe, and is about <c>1 - E</c> of what reaches the surface, all of it where they
+    /// mirror all of it -- so a rough white metal in an even white light vanishes against it, as it should,
+    /// where it came out not half as bright at roughness 0.9.  Where they mirror less, each further mirroring
+    /// takes its share again, so less comes back, and what does is colored the more by the surface: a rough
+    /// copper is a deeper copper than a smooth one.  Kulla and Conty's way (2017) adds a lobe of its own for
+    /// it, spread as a matte surface's; this one only scales the lobe already there, so every way a lobe is
+    /// looked at, and every way two of them share a light, stands as it was.
+    /// </para>
+    /// </summary>
+    /// <param name="cos">The cosine of the angle between the eye and the surface normal.</param>
+    /// <param name="alpha">How far the facets lean that the lobe was worked out with.</param>
+    /// <param name="average">How much a facet mirrors, averaged over light from all round; see
+    /// <see cref="ReflectanceFromAround"/>.</param>
+    /// <returns>What to multiply the lobe by; one for a mirror.</returns>
+    public static double Compensation(double cos, double alpha, double average) =>
+        alpha <= 0 ? 1 : CompensationFor(Albedo(cos, alpha), average);
+
+    /// <summary>
+    /// This method returns what a rough lobe's light is to be multiplied by, for facets whose albedo is given -- a
+    /// brushed surface's, which hangs on more than how far its facets lean; see <see cref="Facets.AlbedoFor"/>.
+    /// </summary>
+    /// <param name="albedo">How much the facets give back of light from all round in a single mirroring.</param>
+    /// <param name="average">How much a facet mirrors, averaged over light from all round.</param>
+    /// <returns>What to multiply the lobe by; one for a mirror.</returns>
+    public static double CompensationFor(double albedo, double average) => 1 + average * (1 / albedo - 1);
+
+    /// <summary>
+    /// This method returns what a rough lobe's light is to be multiplied by, band by band, for facets whose albedo
+    /// is given.  See <see cref="CompensationFor(double, double)"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="albedo">How much the facets give back of light from all round in a single mirroring.</param>
+    /// <param name="average">How much a facet mirrors of each band, averaged over light from all round.</param>
+    /// <returns>What to multiply the lobe by.</returns>
+    public static TS CompensationFor<TS>(double albedo, TS average)
+        where TS : struct, ISpectrum<TS>
+    {
+        return TS.White + average * (1 / albedo - 1);
+    }
+
+    /// <summary>
+    /// This method returns what a rough lobe's light is to be multiplied by, band by band, for facets that mirror each
+    /// band by its own share, as a metal's do.  See <see cref="Compensation(double, double, double)"/>.
+    /// </summary>
+    /// <typeparam name="TS">The kind of light being carried.</typeparam>
+    /// <param name="cos">The cosine of the angle between the eye and the surface normal.</param>
+    /// <param name="alpha">How far the facets lean that the lobe was worked out with.</param>
+    /// <param name="average">How much a facet mirrors of each band, averaged over light from all round.</param>
+    /// <returns>What to multiply the lobe by.</returns>
+    public static TS Compensation<TS>(double cos, double alpha, TS average)
+        where TS : struct, ISpectrum<TS>
+    {
+        return alpha <= 0 ? TS.White : TS.White + average * (1 / Albedo(cos, alpha) - 1);
+    }
+
+    /// <summary>
+    /// This method returns how much a surface mirrors of light from all round, given how much it mirrors at each
+    /// angle: twice the integral of the share at each cosine times that cosine, light from all round reaching a
+    /// surface in proportion to the cosine.
+    /// </summary>
+    /// <param name="reflectance">How much the surface mirrors, given the cosine between the light and its normal.
+    /// </param>
+    /// <returns>The share mirrored of light from all round.</returns>
+    public static double ReflectanceFromAround(Func<double, double> reflectance)
+    {
+        const int steps = 256;
+        double sum = 0;
+
+        for (int step = 0; step < steps; step++)
+        {
+            double cos = (step + 0.5) / steps;
+
+            sum += reflectance(cos) * cos;
+        }
+
+        return 2 * sum / steps;
+    }
+
+    /// <summary>
+    /// This method returns how much a facet of glass mirrors of light from all round meeting it from a substance of
+    /// one index of refraction toward another; see <see cref="GlassReflectance"/>.  Worked out once for each pair.
+    /// </summary>
+    /// <param name="n1">The index of refraction on the light's side.</param>
+    /// <param name="n2">The index of refraction on the far side.</param>
+    /// <returns>The share mirrored of light from all round.</returns>
+    public static double GlassReflectanceFromAround(double n1, double n2) =>
+        GlassFromAround.GetOrAdd((n1, n2), pair =>
+            ReflectanceFromAround(cos => GlassReflectance(cos, pair.Item1, pair.Item2)));
+
+    private static readonly ConcurrentDictionary<(double, double), double> GlassFromAround = new ();
+
+    // How many steps the albedo table takes across each of its two ways, and how many places each step is worked out
+    // from each way.
+    private const int AlbedoSteps = 64;
+    private const int AlbedoPlaces = 64;
+
+    private static readonly Lazy<double[]> Albedos = new (MeasureAlbedos);
+
+    // The share given back in a single mirroring at every step of the table: the facets the eye sees, picked as
+    // SampleVisibleNormal picks them, each counted by how much of the surface its mirror image can see past the
+    // facets in front.  The places are crowded toward the edge of the disc the facets are picked from, where the
+    // facets lean furthest and the ones that mirror below the surface's horizon lie: spread evenly, a narrow lobe's
+    // answer wobbled by half a percent as the number of places changed, where crowded it settles to within 0.03%.
+    // Each step is worked out alone, so the table is the same however the rows are shared among threads.
+    private static double[] MeasureAlbedos()
+    {
+        double[] albedos = new double[(AlbedoSteps + 1) * (AlbedoSteps + 1)];
+
+        Parallel.For(0, AlbedoSteps + 1, column =>
+        {
+            double root = (double) column / AlbedoSteps;
+            double cos = root * root;
+            Vector eye = new (Math.Sqrt(1 - cos * cos), 0, cos);
+
+            for (int row = 0; row <= AlbedoSteps; row++)
+            {
+                double roughness = (double) row / AlbedoSteps;
+                double alpha = roughness * roughness;
+                double sum = 0;
+
+                if (alpha == 0)
+                {
+                    albedos[column * (AlbedoSteps + 1) + row] = 1;
+
+                    continue;
+                }
+
+                for (int outward = 0; outward < AlbedoPlaces; outward++)
+                {
+                    double t = (outward + 0.5) / AlbedoPlaces;
+                    double first = 1 - (1 - t) * (1 - t) * (1 - t);
+                    double weight = 3 * (1 - t) * (1 - t);
+
+                    for (int round = 0; round < AlbedoPlaces; round++)
+                    {
+                        Vector facet = SampleVisibleNormal(eye, alpha, first, (round + 0.5) / AlbedoPlaces);
+                        double mirroredZ = 2 * eye.Dot(facet) * facet.Z - eye.Z;
+
+                        sum += weight * Masking(mirroredZ, alpha);
+                    }
+                }
+
+                albedos[column * (AlbedoSteps + 1) + row] = sum / (AlbedoPlaces * AlbedoPlaces);
+            }
+        });
+
+        return albedos;
     }
 
     /// <summary>

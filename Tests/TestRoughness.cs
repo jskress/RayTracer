@@ -129,8 +129,9 @@ public class TestRoughness
 
             double seen = scene.GetReflectionColor(Hit(floor, cos), 2).Red;
             double expected = OverCap(toward, halfAngle,
-                light => Microfacets.Highlight(new Vector(0, 1, 0), eye, light, alpha, material.ReflectanceAt)) /
-                Math.PI;
+                                  light => Microfacets.Highlight(
+                                      new Vector(0, 1, 0), eye, light, alpha, material.ReflectanceAt)) / Math.PI *
+                              Microfacets.Compensation(cos, alpha, material.ReflectanceFromAround);
             string what = $"seen at a cosine of {cos}{(overhead ? ", looking overhead" : "")}";
 
             Assert.IsTrue(expected > 0.005, $"nothing to compare, {what}: {expected}");
@@ -164,8 +165,9 @@ public class TestRoughness
 
             double lit = scene.GetHitColor(Hit(floor, cos), 2).Red;
             double expected = OverCap(mirror, halfAngle,
-                light => Microfacets.Highlight(new Vector(0, 1, 0), eye, light, 0.16, material.ReflectanceAt)) /
-                Math.PI;
+                                  light => Microfacets.Highlight(
+                                      new Vector(0, 1, 0), eye, light, 0.16, material.ReflectanceAt)) / Math.PI *
+                              Microfacets.Compensation(cos, 0.16, material.ReflectanceFromAround);
 
             Assert.IsTrue(expected > 0.001, $"nothing to compare at a cosine of {cos}: {expected}");
             Assert.AreEqual(expected, lit, expected * 0.02, $"seen at a cosine of {cos}");
@@ -391,12 +393,17 @@ public class TestRoughness
                 {
                     Vector toPlace = new Point(-0.8 + u * 0.4, 10, -0.8 + v * 0.4) - middle.LitPoint;
                     double spread = Math.Sqrt(0.4 * 0.4 + 0.4 * 0.4) / toPlace.Magnitude;
+                    double alpha = Math.Sqrt(0.0025 * 0.0025 + spread * spread / 4);
+                    double albedo = facets?.AlbedoFor(facets.ToLocal(middle.Eye), spread) ??
+                                    Microfacets.Albedo(middle.Eye.Dot(middle.Normal), alpha);
 
+                    // Each place's highlight made up for what its widened facets lose among themselves, so that
+                    // the window gives the floor the same light however far its places spread it.
                     expected += (facets is null
-                        ? Microfacets.Highlight(
-                            middle.Normal, middle.Eye, toPlace.Unit,
-                            Math.Sqrt(0.0025 * 0.0025 + spread * spread / 4), material.ReflectanceAt)
-                        : facets.Highlight(middle.Eye, toPlace.Unit, material.ReflectanceAt, spread)) / 25;
+                                    ? Microfacets.Highlight(
+                                        middle.Normal, middle.Eye, toPlace.Unit, alpha, material.ReflectanceAt)
+                                    : facets.Highlight(middle.Eye, toPlace.Unit, material.ReflectanceAt, spread)) *
+                                Microfacets.CompensationFor(albedo, material.ReflectanceFromAround) / 25;
                 }
             }
 
@@ -423,7 +430,9 @@ public class TestRoughness
         under.PrepareUsing(down, found);
 
         double unspread = Microfacets.Highlight(
-            under.Normal, under.Eye, (new Point(0, 10, 0) - under.LitPoint).Unit, 0.0025, satin.ReflectanceAt);
+                              under.Normal, under.Eye, (new Point(0, 10, 0) - under.LitPoint).Unit, 0.0025,
+                              satin.ReflectanceAt) *
+                          Microfacets.Compensation(under.Eye.Dot(under.Normal), 0.0025, satin.ReflectanceFromAround);
 
         Assert.AreEqual(unspread, lamp.GetHitColor(under, 2).Red, 1e-9 * unspread, "a point lamp");
     }
