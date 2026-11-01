@@ -104,6 +104,7 @@ public partial class LanguageParser
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
+            'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -552,7 +553,7 @@ public partial class LanguageParser
         // Pattern clauses.
         patternClause:
         [
-            agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar |
+            imagePatternClause | agate | boxed | brick | checker | crevices | cubic | edges | facing | flop | hexagon | leopard | planar |
             radial | ripples | square | triangular | waves |
             {
                 [ bozo | crackle | dents | granite | wrinkles ] > withSeedClause{?}
@@ -565,6 +566,16 @@ public partial class LanguageParser
                 [ cylindrical | spherical ] > [ stripes | { bouncing{?} > gradient } ]{?}
             }
         ]
+        // A picture read as a pattern, as a height field reads one: its gray, or one channel of it, laid as an image
+        // pigment is laid.
+        imagePatternClause:
+        {
+            imageClause > imageMapTypeClause{?} > imageChannelClause{?}
+        }
+        imageChannelClause:
+        {
+            channel > [ red | green | blue | alpha ] ?? 'Expecting "red", "green", "blue" or "alpha" to follow "channel" here.'
+        }
         brickSizeClause:
         {
             [ brick | mortar ] > size > _expression
@@ -593,9 +604,10 @@ public partial class LanguageParser
             { planar > once{?} } | spherical |
             { cylindrical > once{?} } | toroidal
         ]
+        // A channel makes the picture a pattern, whose map of pigments follows in braces.
         imagePigmentClause:
         {
-            imageClause > imageMapTypeClause{?}
+            imageClause > imageMapTypeClause{?} > imageChannelClause{?}
         }
         // What may be said of an image in braces after it, besides its transforms: how bright it is, which
         // a photograph of the sky needs, being in whatever units the camera that took it left it in.
@@ -626,8 +638,8 @@ public partial class LanguageParser
         ]
         pigmentClause:
         [
-            blendPigmentClause | mottledPigmentClause | patternPigmentClause |
-            startPhysicalSkyClause | imagePigmentClause | { color > _expression } |
+            blendPigmentClause | mottledPigmentClause | imagePigmentClause | patternPigmentClause |
+            startPhysicalSkyClause | { color > _expression } |
             _expression
         ] ?? 'Expecting a pigment definition here.'
 
@@ -640,11 +652,13 @@ public partial class LanguageParser
                 { [ _identifier | _keyword ] > openBrace{?} }
             ] ?? 'Expecting an identifier or open brace to follow "material" here.'
         }
+        // A roughness, or how metallic a surface is, may run from one value to another by a pattern -- a texture
+        // set's roughness or metalness map -- which follows as a field's sizes do.
         materialValueClause:
         {
             [ ambient | emission | diffuse | specular | shininess | reflective | roughness | transparency |
               brilliance | grain ] >
-            _expression
+            _expression > { to > _expression }{?}
         }
         materialIorClause:
         {
@@ -656,14 +670,15 @@ public partial class LanguageParser
         // The amount may be left off, and then what follows may be the material's next entry rather
         // than an amount.  The entries are tried before an expression, since an expression would
         // take the next entry's word for the name of a variable -- a keyword may name one -- and the
-        // entry would then be lost: `metallic reflective 0.3` read as metallic by `reflective`.
+        // entry would then be lost: `metallic reflective 0.3` read as metallic by `reflective`.  An amount may run
+        // to another by a pattern, a metalness map, as a roughness may.
         materialMetallicClause:
         {
             metallic > [
                 pigment | normal | fresnel | materialValueClause | materialAnisotropyClause | materialMelaninClause |
                 materialMetalClause | startInteriorClause | startDecalClause | startFilmClause |
                 startSubsurfaceClause | startCoatClause | startSheenClause | _expression{?}
-            ]
+            ] > { to > _expression }{?}
         }
         // A real metal: by name, measured, or by the color it mirrors square-on and, if said, an edge color for how
         // each color fares at a slant.
@@ -696,7 +711,13 @@ public partial class LanguageParser
         // nothing to do with one another, and each wants its own scale and its own footing.
         startNormalClause:
         {
-            patternClause > openBrace ?? 'Expecting an open brace to follow the pattern here.'
+            [ patternClause | normalMapClause ] > openBrace ?? 'Expecting an open brace to follow the pattern here.'
+        }
+        // A picture whose colors are the normals themselves, as a texture set ships one: drawn OpenGL's way, its
+        // green pointing up the picture, unless it says it was drawn DirectX's.
+        normalMapClause:
+        {
+            map > _expression > imageMapTypeClause{?} > directx{?}
         }
         normalEntryClause:
         {

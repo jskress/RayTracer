@@ -3,12 +3,13 @@ using RayTracer.Core;
 using RayTracer.General;
 using RayTracer.Instructions.Patterns;
 using RayTracer.Instructions.Transforms;
+using RayTracer.Patterns;
 
 namespace RayTracer.Instructions.Surfaces;
 
 /// <summary>
 /// This class is used to resolve the roughening of a surface: the pattern whose slope tilts the
-/// normal, how far it may tilt it, and how the pattern is placed.
+/// normal, or the normal map giving it outright, how far it may tilt it, and how the pattern is placed.
 /// </summary>
 public class SurfaceNormalResolver : ObjectResolver<SurfaceNormal>, ICloneable
 {
@@ -16,6 +17,16 @@ public class SurfaceNormalResolver : ObjectResolver<SurfaceNormal>, ICloneable
     /// This property holds the resolver for the pattern the surface is roughened by.
     /// </summary>
     public IPatternResolver PatternResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the picture a normal map is read from, for a surface roughened by one.
+    /// </summary>
+    public ImagePatternResolver NormalMapResolver { get; set; }
+
+    /// <summary>
+    /// This property notes whether a normal map's green points down its picture, as DirectX draws one.
+    /// </summary>
+    public bool GreenDown { get; set; }
 
     /// <summary>
     /// This property holds the resolver for how deep the roughening reads.
@@ -45,6 +56,8 @@ public class SurfaceNormalResolver : ObjectResolver<SurfaceNormal>, ICloneable
         RenderContext context, Variables variables, SurfaceNormal value)
     {
         value.Pattern = PatternResolver?.ResolveToPattern(context, variables);
+        value.NormalMap = (ImagePattern) NormalMapResolver?.ResolveToPattern(context, variables);
+        value.GreenDown = GreenDown;
 
         DepthResolver.AssignTo(value, target => target.Depth, context, variables);
 

@@ -45,6 +45,7 @@ public class ImagePigmentResolver : PigmentResolver<ImagePigment>
 
         BrightnessResolver.AssignTo(pigment, target => target.Brightness, context, variables);
         SetProperties(context, variables, pigment);
+        pigment.Load(context);
 
         return pigment;
     }

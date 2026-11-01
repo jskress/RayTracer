@@ -731,7 +731,25 @@ linear for `.hdr`/`.exr`, which keep light above white), premultiplied by alpha,
 read by EWA over the footprint's two edges carried into texels (`ImageMapType.AxesFor`), the ellipse's half-axes 0.78
 of a pixel's side so its spread matches the pixel's box; bilinear with no footprint.  A `no gamma` scene reads an image's values as they stand (its colors are file values),
 and a height field reads the raw values too.  An image background is read with a footprint too (`Scene.SkyFootprintOf`); a pattern sky is not, since a
-footprint straddling the horizon averages in the gradient's repeat below it.  An image takes `{ brightness b  <transforms> }`
+footprint straddling the horizon averages in the gradient's repeat below it.  `image 'f' [map] [channel c]` is a
+PATTERN too (`Patterns/ImagePattern.cs`; wherever a pattern goes -- `normal`, `material blend`, a pigment's map, field
+patches, `roughness`/`metallic a to b by`): read RAW (`TextureFor(false)`) as a height field reads it (`Color.AsGray`)
+or one channel, held under one (a map wraps one round to its start: white read as black), filtered over the
+footprint, laid as an image pigment by the shared `ImageLaying`, where anything whose Parent is a `HeightField`
+defaults to `ImageMapType.Field` (texel i's middle at i/(n-1), the field's heights' own places; a planar map put each
+half a texel in) and no wearer is planar.  Its slope for `normal` is `Pattern.SlopeAt` (null for arithmetic patterns,
+which keep the 0.001 gap): a texel either way ALONG THE PICTURE'S OWN AXES (steps from `RatesAt` by the 2x2
+inverse), widened to the ray's patch (`Surface.PatchAt`; `FootprintRadius` is set before `NormalAt` for it) -- at
+0.001 each texel showed as a facet, and one isotropic widest-texel gap found no slope on a one-texel-high picture.
+`normal map 'f' [map] [directx]` (`SurfaceNormal.NormalMap`, `GreenDown`): RGB in the frame of the picture's rates
+laid flat (red across, green UP = minus the rows' way, OpenGL), `depth` scaling the tilt.  `roughness a to b by
+<pattern>` and `metallic a to b by` (`Material.RoughnessBy`/`MetallicBy`, a `MaterialMap`) are read per hit in
+`Scene.SettledFor` and `MaterialBlend.Settled` (`Material.MappedAt`: 256 steps cached per material, forgotten by a
+copy; a smooth end Splits as a blend does), so a block laid on later keeps them; beside `metal`, a metalness map is
+how much of each place is bare.  `ImagePigment.MayTransmit` is the picture's own (`Texture.IsOpaque`, or `once`),
+read when resolved (`Load`): until 2026-10-31 every image said it might, so `MetalApplies`, `CoatApplies`,
+`SheenApplies` and `FresnelApplies` were false for a picture-colored material, and a rough one defaulted to
+`reflective 1` and was shaded as glass of index one -- mirroring nothing.  An image takes `{ brightness b  <transforms> }`
 after it (parsed by hand in `ParseImagePigmentClause`).  A sky light carrying an image (`SkyLight.IsAPicture`) is
 image-based lighting: half its samples are picked by a `SkyMap` (luminance on a grid twice the image's width, at most
 4096, read at cell middles) and half evenly, each counted by the balance heuristic over both (`SkyLight.OddsToward`),

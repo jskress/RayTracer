@@ -801,10 +801,34 @@ public abstract class Surface : NamedThing
         // evaluated on.  Doing it before the normal is carried out to the world means a surface
         // that has been scaled or turned takes its bumps along with it, exactly as it takes its
         // coloring along with it.
-        if (Material?.SurfaceNormal is not null)
-            normal = Material.SurfaceNormal.PerturbAt(normal, surfacePoint);
+        if (Material?.SurfaceNormal is { } roughening)
+        {
+            normal = roughening.ReadsAPicture
+                ? roughening.PerturbAt(normal, surfacePoint, PatchAt(normal, intersection, timeIndex, portals))
+                : roughening.PerturbAt(normal, surfacePoint);
+        }
 
         return NormalToWorld(normal, timeIndex, portals);
+    }
+
+    /// <summary>
+    /// This method returns the patch of this surface a ray covers where it met it, in the surface's own space, for a
+    /// roughening read from a picture.  It is worked out here from the surface's own facing: the patch the hit keeps
+    /// is worked out from the roughened normal, after this.
+    /// </summary>
+    /// <param name="normal">The surface's own normal there, in surface space.</param>
+    /// <param name="intersection">The hit, if any.</param>
+    /// <param name="timeIndex">Which instant the hit is at.</param>
+    /// <param name="portals">The instances the surface was found through, if it was.</param>
+    /// <returns>The patch, or <c>null</c> for a ray that covers none.</returns>
+    private Footprint PatchAt(Vector normal, Intersection intersection, int timeIndex, Portals portals)
+    {
+        if (intersection is null || intersection.FootprintRadius <= 0 || intersection.Eye is null)
+            return null;
+
+        Vector facing = NormalToWorld(normal, timeIndex, portals);
+
+        return WorldToSurface(Footprint.For(intersection.FootprintRadius, -intersection.Eye, facing), timeIndex, portals);
     }
 
     /// <summary>

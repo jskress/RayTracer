@@ -7,6 +7,7 @@ using RayTracer.Instructions;
 using RayTracer.Instructions.Core;
 using RayTracer.Instructions.Patterns;
 using RayTracer.Patterns;
+using RayTracer.Pigments;
 
 namespace RayTracer.Parser;
 
@@ -25,6 +26,10 @@ public partial class LanguageParser
     /// needed.</returns>
     private (IPatternResolver, int) ParsePatternClause(Clause clause, int tokenOffset = 0)
     {
+        // A picture read as a pattern is told by its first word, and is the one pattern named by an expression.
+        if (clause.Tokens[tokenOffset].Text is "image" or "uncached")
+            return (ParseImagePatternClause(clause, tokenOffset), 0);
+
         Resolver<int?> seedResolver = null;
         string text = string.Join('.', clause.Tokens[tokenOffset..^1]
             .Select(token => token.Text));
@@ -321,5 +326,58 @@ public partial class LanguageParser
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// This method creates the resolver for a picture read as a pattern, or as a normal map: the picture named by the
+    /// clause's first expression, laid by whatever map it names, and read for whatever channel it names.
+    /// </summary>
+    /// <param name="clause">The clause naming the picture.</param>
+    /// <param name="tokenOffset">How many words open the clause before the picture's own.</param>
+    /// <returns>The resolver for the pattern.</returns>
+    private ImagePatternResolver ParseImagePatternClause(Clause clause, int tokenOffset = 0)
+    {
+        List<string> texts = clause.Tokens[tokenOffset..].Select(token => token.Text).ToList();
+        int channel = texts.IndexOf("channel");
+
+        return new ImagePatternResolver
+        {
+            ImageReferenceResolver = new ImageReferenceResolver
+            {
+                ImageNameResolver = new TermResolver<string> { Term = clause.Term() },
+                SourceDirectoryResolver = new LiteralResolver<string> { Value = CurrentDirectory },
+                AlwaysLoadResolver = new LiteralResolver<bool> { Value = texts[0] == "uncached" }
+            },
+            MapType = ImageMapTypeIn(texts),
+            Once = texts.Contains("once"),
+            Channel = channel < 0
+                ? ImageChannel.Gray
+                : texts[channel + 1] switch
+                {
+                    "red" => ImageChannel.Red,
+                    "green" => ImageChannel.Green,
+                    "blue" => ImageChannel.Blue,
+                    _ => ImageChannel.Alpha
+                }
+        };
+    }
+
+    /// <summary>
+    /// This method returns the map an image clause names, if it names one.
+    /// </summary>
+    /// <param name="texts">The words of the clause.</param>
+    /// <returns>The map named, or <c>null</c>.</returns>
+    private static ImageMapType? ImageMapTypeIn(List<string> texts)
+    {
+        if (texts.Contains("planar"))
+            return ImageMapType.Planar;
+
+        if (texts.Contains("spherical"))
+            return ImageMapType.Spherical;
+
+        if (texts.Contains("cylindrical"))
+            return ImageMapType.Cylindrical;
+
+        return texts.Contains("toroidal") ? ImageMapType.Toroidal : null;
     }
 }

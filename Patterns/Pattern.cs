@@ -302,6 +302,17 @@ public abstract class Pattern
     protected virtual double FinestDetail => 0;
 
     /// <summary>
+    /// This method returns the way the pattern climbs at a point, and how steeply, for a pattern whose detail comes
+    /// in steps of a size of its own -- a picture's texels -- and so knows better how to take its slope than by
+    /// samples a fixed short way off; see <see cref="ImagePattern.SlopeAt"/>.  <c>null</c>, for every pattern made of
+    /// arithmetic, leaves the slope to whatever is taking it.
+    /// </summary>
+    /// <param name="point">The point, in the pattern's own space.</param>
+    /// <param name="patch">The patch a ray covers there, in the pattern's own space, if any.</param>
+    /// <returns>The pattern's gradient there, or <c>null</c>.</returns>
+    public virtual Vector SlopeAt(Point point, Footprint patch) => null;
+
+    /// <summary>
     /// This method is what callers should ask, rather than <see cref="Evaluate"/> directly: it
     /// stirs the point first, where the pattern wants that done for it, and then evaluates.
     /// <para>

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using RayTracer.Basics;
+using RayTracer.Geometry;
 using RayTracer.Graphics;
 using RayTracer.Patterns;
 using RayTracer.Pigments;
@@ -29,7 +30,7 @@ public sealed class MaterialBlend
 {
     // How finely the way between two materials is cut, so that the mixtures can be kept: fine enough that a
     // step is under a level of any color, which is far below what the eye takes for banding.
-    private const int Steps = 256;
+    internal const int Steps = 256;
 
     /// <summary>
     /// This property holds the pattern the materials are blended by.
@@ -107,27 +108,52 @@ public sealed class MaterialBlend
         return Settled(Materials[^1], intersection, scene);
     }
 
-    // A material that is itself a blend is settled at the hit first.
+    // A material that is itself a blend is settled at the hit first, and one whose numbers run by patterns of its own
+    // is read there.
     private static Material Settled(Material material, Intersection intersection, Scene scene) =>
-        material.Blend is { } inner ? inner.At(intersection, scene) : material;
+        (material.Blend is { } inner ? inner.At(intersection, scene) : material).MappedAt(intersection, scene);
 
-    // The pattern's value where the ray met the surface, read in the surface's own space as a pigment is, and
-    // shown the surroundings if it looks about the place.
+    // The pattern's value where the ray met the surface; see PatternValueAt.
     private double ValueAt(Intersection intersection, Scene scene)
+    {
+        if (Transform is not null)
+            _inverse ??= Transform.Invert();
+
+        return PatternValueAt(Pattern, _inverse, intersection, scene);
+    }
+
+    /// <summary>
+    /// This method returns a pattern's value where a ray met a surface, read in the surface's own space as a pigment
+    /// is, and shown the surroundings if it looks about the place.  A picture is read over the patch the ray covers,
+    /// as an image pigment is; every other pattern at the point.
+    /// </summary>
+    /// <param name="pattern">The pattern.</param>
+    /// <param name="inverse">What carries the surface's space into the pattern's, or <c>null</c> for nothing.</param>
+    /// <param name="intersection">The hit.</param>
+    /// <param name="scene">The scene being shaded.</param>
+    /// <returns>The pattern's value there.</returns>
+    internal static double PatternValueAt(Pattern pattern, Matrix inverse, Intersection intersection, Scene scene)
     {
         // Noise in the pattern given no seed of its own draws on the surface's, as a pigment's does; see Pigment.Wearer.
         using Pigment.WornScope _ = Pigment.WornBy(intersection.Surface);
 
-        Point point = intersection.Surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals);
+        Surface surface = intersection.Surface;
+        Point point = surface.WorldToSurface(intersection.Point, intersection.TimeIndex, intersection.Portals);
 
-        if (Transform is not null)
+        if (inverse is not null)
+            point = inverse * point;
+
+        if (pattern is ImagePattern)
         {
-            _inverse ??= Transform.Invert();
-            point = _inverse * point;
+            Footprint patch = intersection.Footprint is { IsEmpty: false } footprint
+                ? surface.WorldToSurface(footprint, intersection.TimeIndex, intersection.Portals)
+                : null;
+
+            return pattern.ValueFor(point, inverse is null ? patch : patch?.TransformedBy(inverse));
         }
 
-        if (!Pattern.SeesTheSurroundings)
-            return Pattern.ValueFor(point);
+        if (!pattern.SeesTheSurroundings)
+            return pattern.ValueFor(point);
 
         Surroundings was = Surroundings.Current;
 
@@ -137,7 +163,7 @@ public sealed class MaterialBlend
 
         try
         {
-            return Pattern.ValueFor(point);
+            return pattern.ValueFor(point);
         }
         finally
         {
