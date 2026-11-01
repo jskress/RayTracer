@@ -337,7 +337,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `place` | Shape grammar: stands surfaces on the middle of a scope's near face, in its axes. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `planar` | Pattern/image map: value from a plane; also `planar` image mapping, and a decal carried straight onto a surface. | [Pigments & Patterns](pigments-and-patterns.md#patterns), [Materials](materials.md#projections) |
 | `plane` | Surface: an infinite flat plane (also a blob component). | [Surfaces](surfaces.md#plane), [Blob](surfaces.md#a-plane-component) |
-| `point` | A `point light`; also `point at` and a `focal point`.  Casts a tuple to a point. | [Lights](lights.md#point-lights), [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
+| `point` | A `point light`; also `point at` — a spotlight's aim, and where a point or area light's profile points — and a `focal point`.  Casts a tuple to a point. | [Lights](lights.md#point-lights), [Light Profiles](lights.md#light-profiles), [Scene Files](scene-files.md#numbers-points-vectors-and-colors) |
 | `points` | Patch/triangle: the control or corner points.  Grown tree: how many points fill its crown. | [Surfaces](surfaces.md#patch), [Grown tree](advanced-surfaces.md#grown-tree) |
 | `poly` | Wave shape: the value to a given power, written `poly 3 wave`. | [Pigments & Patterns](pigments-and-patterns.md#shaping-the-value) |
 | `portal` | Surface: the sky comes into a room through it -- a window, a door, a skylight -- and a sky light looks in through it. | [Surfaces](surfaces.md#portal), [Lights](lights.md#through-a-window) |
@@ -345,7 +345,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `power` | Light: with `fade`, how quickly it thins with distance.  Two is what light really does. | [Lights](lights.md#fading-with-distance) |
 | `primitive` | Declares a [thing of your own](scene-files.md#things-of-your-own) that a scene can make. | [Scene Files](scene-files.md#things-of-your-own) |
 | `productions` | L-system: the rewrite rules. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `profile` | Sweep: the 2D cross-section carried along. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
+| `profile` | Sweep: the 2D cross-section carried along.  Light: `profile 'file.ies'`, how bright a real fitting is each way, from an IES file. | [Advanced Surfaces](advanced-surfaces.md#sweep), [Light Profiles](lights.md#light-profiles) |
 | `quad` | Path/spline/tube: a quadratic (one control point) segment. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `quadric` | Surface: any second-degree surface, from its ten coefficients. | [Surfaces](surfaces.md#quadric) |
 | `radial` | Pattern: wedges around an axis. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
@@ -474,7 +474,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `turbidity` | `physical sky`: how hazy the air is; 1 is clean air, 2-3 a clear day. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `turbulence` | Stirs a pattern with noise. | [Pigments & Patterns](pigments-and-patterns.md#turbulence) |
 | `turnAround` | L-system turtle: turn 180°. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades) |
+| `turned` | Field: how far its copies may be turned about the up axis, the whole spread.  Camera: `blades n turned a`, how far the blades are turned.  Light: `profile … turned a`, how far a profile is turned about its straight down. | [Advanced Surfaces](advanced-surfaces.md#field), [Cameras](cameras.md#blades), [Light Profiles](lights.md#light-profiles) |
 | `turnLeft` | L-system turtle: yaw left. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `turnRight` | L-system turtle: yaw right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `twig` | Grown tree: how thick the end of a twig is. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |

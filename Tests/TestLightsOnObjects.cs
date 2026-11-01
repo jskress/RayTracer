@@ -328,7 +328,8 @@ public class TestLightsOnObjects
 
     /// <summary>
     /// A light may stand in a loop or a choice inside a group, and in a loop at a scene's top level; a
-    /// primitive giving back a group may hold one, and each call gives its own.
+    /// primitive giving back a group may hold one, and each call gives its own -- even a group holding the light
+    /// alone, which until 2026-11-01 was taken for an empty one and handed back with nothing in it.
     /// </summary>
     [TestMethod]
     public void TestLightsMayStandInLoopsAndPrimitives()
@@ -347,6 +348,14 @@ public class TestLightsOnObjects
                 return group { sphere { scale 0.1 }  point light { location [0, 0, 0] } }
             }
             for i in [0, 3] { object Lamp() { translate [i, 1, 0] } }
+            """));
+        Assert.AreEqual(3, LightsIn("""
+            primitive Bare(x) -> group {
+                return group { point light { location [x, 1, 0] } }
+            }
+            object Bare(0)
+            object Bare(1)
+            object Bare(2)
             """));
     }
 

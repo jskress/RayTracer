@@ -477,9 +477,14 @@ public partial class LanguageParser
             fade > [ distance | power ] ?? 'Expecting "distance" or "power" to follow "fade" here.' >
             _expression
         }
+        // A real fitting's profile, from an IES file, turned about its straight down if said.
+        profileClause:
+        {
+            profile > _expression > { turned > _expression }{?}
+        }
         pointLightEntryClause:
         [
-            namedClause | locationClause | lightColorClause | fadeClause
+            namedClause | locationClause | lightColorClause | fadeClause | profileClause | pointAtClause
         ] ?? 'Expecting a point light property here.'
         distantLightEntryClause:
         [
@@ -489,7 +494,7 @@ public partial class LanguageParser
         [
             namedClause | locationClause | pointAtClause | lightColorClause |
             { radius > _expression } | { falloff > _expression } | { tightness > _expression } |
-            fadeClause
+            fadeClause | profileClause
         ] ?? 'Expecting a spotlight property here.'
         // Light from every direction at once, as the sky gives it.  With no pigment of its own it
         // carries the scene's background, so that what lights the scene is what the scene shows.
@@ -503,7 +508,7 @@ public partial class LanguageParser
             { axisU > _expression } | { axisV > _expression } |
             { steps > _expression } | { uSteps > _expression } | { vSteps > _expression } |
             { seed > _expression } |
-            { no > jitter ?? 'Expecting "jitter" to follow "no" here.' } | fadeClause
+            { no > jitter ?? 'Expecting "jitter" to follow "no" here.' } | fadeClause | profileClause | pointAtClause
         ] ?? 'Expecting an area light property here.'
 
         // Transform clauses.

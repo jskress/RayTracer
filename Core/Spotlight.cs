@@ -51,15 +51,22 @@ public class Spotlight : PointLight
     /// <param name="placing">What carries a point from the surface's space into the world.</param>
     protected override void PlaceBy(Func<Point, Point> placing)
     {
-        PointAt = placing(PointAt);
-
+        // The light first, which works out where a profile it has points from where the cone pointed before it moved.
         base.PlaceBy(placing);
+
+        PointAt = placing(PointAt);
     }
+
+    /// <summary>
+    /// This property returns where a profile the spotlight is given points when nothing says otherwise: where its
+    /// cone does.
+    /// </summary>
+    protected override Point ProfileAimed => ProfileAim ?? PointAt;
 
     /// <summary>
     /// This method works out how much of the light is aimed at the given point: how far off the
     /// cone's axis the point lies, turned into a strength between one on the axis and nothing at
-    /// the rim.
+    /// the rim, times what any profile it has says that way.
     /// </summary>
     /// <param name="point">The point being lit.</param>
     /// <returns>The fraction of the light aimed at the point.</returns>
@@ -87,7 +94,7 @@ public class Spotlight : PointLight
         if (cosine < cosineRadius)
             intensity *= CubicEase(cosineFalloff, cosineRadius, cosine);
 
-        return intensity;
+        return intensity * base.IntensityToward(point);
     }
 
     /// <summary>
