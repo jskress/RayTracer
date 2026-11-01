@@ -89,6 +89,31 @@ public abstract class PixelToRayConverter
     }
 
     /// <summary>
+    /// This method reports whether the light from one of the lens's samples reaches a place in a pixel at all, or is
+    /// stopped on its way, as a lens's barrel stops some of it toward a picture's corners.  A sample stopped carries
+    /// no light.  Nothing is stopped unless the projection says so.
+    /// </summary>
+    /// <param name="x">The X coordinate of the pixel.</param>
+    /// <param name="y">The Y coordinate of the pixel.</param>
+    /// <param name="centerX">The X offset within the pixel to treat as center.</param>
+    /// <param name="centerY">The Y offset within the pixel to treat as center.</param>
+    /// <param name="shiftX">The amount to shift the X coordinate off center of the pixel.</param>
+    /// <param name="shiftY">The amount to shift the Y coordinate off center of the pixel.</param>
+    /// <param name="sampleIndex">Which of the lens's samples.</param>
+    /// <returns><c>true</c>, if its light gets through, or <c>false</c>, if not.</returns>
+    public virtual bool Passes(
+        int x, int y, double centerX, double centerY, double shiftX, double shiftY, int sampleIndex) => true;
+
+    /// <summary>
+    /// This method returns how much of the light that reaches a pixel's middle the lens lets through, for a lens that
+    /// darkens toward its corners; all of it unless the projection says otherwise.
+    /// </summary>
+    /// <param name="x">The X coordinate of the pixel.</param>
+    /// <param name="y">The Y coordinate of the pixel.</param>
+    /// <returns>The share of the light let through.</returns>
+    public virtual double FalloffAt(int x, int y) => 1;
+
+    /// <summary>
     /// This method is used to generate a ray for the pixel at the given location.
     /// </summary>
     /// <param name="x">The X coordinate of the pixel to get the ray for.</param>

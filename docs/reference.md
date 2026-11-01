@@ -33,6 +33,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 
 | Keyword | Meaning | Documented in |
 | --- | --- | --- |
+| `aberration` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners. | [Chromatic aberration](cameras.md#chromatic-aberration) |
 | `above` | Field: the lowest ground a dropped copy may stand on. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `absorption` | Medium: how much light it takes out per unit of distance. | [Scene Files](scene-files.md#filling-that-space) |
 | `accuracy` | Isosurface, parametric surface, distance surface, Julia set or swells: how closely a crossing is pinned down. | [Advanced Surfaces](advanced-surfaces.md#isosurface), [Swells](surfaces.md#swells) |
@@ -105,6 +106,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `channel` | Image pattern: which of the picture's channels it reads — `red`, `green`, `blue` or `alpha` — rather than its gray. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
+| `chromatic` | Camera: `chromatic aberration`, how far the lens parts red from blue toward the corners, as a share of the half-diagonal. | [Chromatic aberration](cameras.md#chromatic-aberration) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
 | `clip` | Height field: drop ground below a height. | [Advanced Surfaces](advanced-surfaces.md#height-field) |
 | `close` | Path: join back to where the run began. | [Advanced Surfaces](advanced-surfaces.md#paths) |
@@ -152,6 +154,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `dispersion` | Interior: how much it spreads colors, as an Abbe number. | [Materials](materials.md#dispersion) |
 | `distance` | Camera: `focal distance`, how far ahead the plane of sharp focus lies.  Point, spot or area light: `fade distance`, where the light is worth its color.  Also the `distance` function, between two points. | [Cameras](cameras.md#depth-of-field), [Lights](lights.md#fading-with-distance), [Scene Files](scene-files.md#functions) |
 | `distant` | A `distant light` (parallel rays, like the sun). | [Lights](lights.md#distant-lights) |
+| `distortion` | Camera: how far the lens bows straight lines — more than nought outward (barrel), less inward (pincushion). | [Distortion](cameras.md#distortion) |
 | `drag` | Body or swarm: how much of the air's drag on a thing its size and shape it feels. | [Bodies](animation.md#bodies), [Swarms](animation.md#swarms) |
 | `drawLine` | L-system turtle: draw forward. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `droop` | Hair: how far strands sag under their own weight. | [Advanced Surfaces](advanced-surfaces.md#hair) |
@@ -491,6 +494,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `verge` | Shape grammar: how far a gabled `roof` reaches past its gable ends. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `vertical` | Text layout: vertical placement of the block. | [Advanced Surfaces](advanced-surfaces.md#text) |
 | `view` | The third word of `field of view`. | [Cameras](cameras.md#field-of-view) |
+| `vignetting` | Camera: how much of what a lens loses toward its corners it loses, and with the aperture open the cat's eye its barrel cuts. | [Vignetting](cameras.md#vignetting) |
 | `vSteps` | Area light: samples across V.  Patch: how finely it may be diced across V. | [Lights](lights.md#area-lights), [Surfaces](surfaces.md#patch) |
 | `warning` | Info: a warning. | [Context](context.md#image-information) |
 | `wave` | Swells: one train of waves.  Shaping: bends a pattern's value by a wave shape. | [Surfaces](surfaces.md#swells) |

@@ -605,7 +605,14 @@ exposure, before any film curve) by the opening's diffraction pattern (`Core/Dif
 opening on a 1024 grid (opening 0.24 of it, edges supersampled), summed into a table and box-integrated over each
 pixel for each of the 32 bands (pattern size by wavelength, first dark ring 1.5 px at 550 nm in an 800-wide picture,
 the same share of any width; band weights the clipped unbalanced CIE->sRGB answer, each channel's adding to one),
-convolved by `Basics/Fourier.cs` (radix-2, grid twice the picture's sides) as (1-g) + g x pattern.
+convolved by `Basics/Fourier.cs` (radix-2, grid twice the picture's sides) as (1-g) + g x pattern.  A perspective
+camera's lens character, all off by default (other projections warn and ignore it, `Camera.Unlensed`): `distortion k`
+stretches the place each pixel's ray goes through on the unit plane by 1 + k r^2 (r a share of the half-diagonal; the
+ray's spread by 1 + 3k r^2), refused at -1/3 or less (the corners fold); `vignetting v` blends cos^4 off-axis into each
+finished pixel (`PixelToRayConverter.FalloffAt`) and, with the aperture open, stops lens samples outside a second unit
+opening standing off by v x the place / half-diagonal -- the barrel's cat's eye (`Passes`; `PixelRenderer.Trace` skips
+them as no light, coverage averaged over those passed); `chromatic aberration c` resamples the finished canvas's red at
+1/(1 + c/2) and blue at 1/(1 - c/2) about the middle (`Core/ChromaticAberration.cs`), before the glare.
 
 Animation (`docs/animation.md`): `context { animation length L | frames N [rate R] [still S] }` makes a scene an
 animation; `ImageRenderer.Render` reads it first (`InstructionContext.AnimationOf`, ContextUpdaters' animation

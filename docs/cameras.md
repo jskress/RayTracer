@@ -12,9 +12,9 @@ chosen.  This chapter is about a single camera and everything you can say about 
   <img alt="Camera" src="images/cameras/cameraClause.svg">
 </picture>
 
-The properties fall into four groups: where the camera stands and what it looks at, how much
-of the world it takes in, the two that cost extra rays — the lens and the shutter — and how
-much of the light it takes.
+The properties fall into five groups: where the camera stands and what it looks at, how much
+of the world it takes in, the two that cost extra rays — the lens and the shutter — how
+much of the light it takes, and the character its lens gives the picture.
 
 ### Placing a Camera
 
@@ -232,6 +232,63 @@ costs a second or two.
 
 `gallery/Local/cameras/lamps-at-dusk.igl` puts the blades and the glare together: far lights
 blurred into the opening's shape, and a bare bulb throwing out its rays.
+
+### A Lens's Character
+
+A real lens is not a perfect one, and the ways it falls short are much of what makes a picture look
+photographed rather than computed.  Three are offered here, each off unless asked for, and each a
+perspective camera's own: another sort of camera says so and goes on without them.
+
+```
+camera {
+    aperture 0.08
+    focal distance 1.2
+    vignetting 0.8
+    distortion 0.06
+    chromatic aberration 0.002
+}
+```
+
+#### Vignetting
+
+Every lens lets less light reach the corners of the picture than its middle.  Light reaching a
+place off the axis comes at a slant, from further off, and through an opening seen foreshortened,
+and together those take the fourth power of the cosine of the angle off the axis: most of a stop at
+the corners of a fifty-degree view, and much more at a wide one.  `vignetting` says how much of
+that the lens loses, from nought, the default, to one, all of it; real lenses are made to lose less,
+so a half or so looks like one.
+
+With the lens open, there is more to it.  Seen from a corner of the picture, the opening is cut off
+on one side by the barrel in front of it, and what is left is a cat's eye: a highlight out of focus
+there takes that shape instead of the opening's, longer round the middle of the picture than toward
+it, and the corners darken further, as a fast lens's do wide open.  The barrel is taken to be as wide
+as the opening, standing off it at a corner by the vignetting times its radius.
+
+#### Distortion
+
+A lens bows straight lines.  A wide-angle lens squeezes more of the world into its edges than a
+pinhole would, so lines that miss the middle bow outward — barrel distortion — and a long lens does
+the opposite, pincushion.  `distortion` is how much: more than nought for barrel, less for pincushion,
+the stretch at the picture's corners, which grows as the square of the way there from the middle.  The
+middle stays as it was, and the `field of view` is still the middle's.  It is worked into the direction
+each pixel's ray is sent, so nothing is resampled and nothing softened.  A few hundredths is what a
+real lens has; past a third the other way the corners would fold back over themselves, so that is
+refused.
+
+#### Chromatic aberration
+
+A lens's glass bends blue further than red, so it draws the red picture a little larger than the
+blue.  At the middle nothing differs; toward the corners the two have drawn apart, so a bright edge
+there shows a red fringe on one side and a blue one on the other.  `chromatic aberration` is how far
+apart they are at the corners, as a share of the picture's half-diagonal, so it means the same at any
+size: 0.002 is about a pixel at the corner of a picture 800 wide.  The red picture is drawn larger by
+half of it and the blue smaller by half, green standing between them.  It is done to the finished
+picture, before the [glare](#glare), since a ray carries all three colors at once.  The other sort of
+color fringe, the purple edge of something out of focus, is not offered.
+
+`gallery/Local/cameras/through-an-old-lens.igl` has all three: a game of chess by string lights, the
+lanterns out of focus behind it round in the middle and cat's eyes toward the sides, the board's near
+edge bowed, and the lanterns toward the corners fringed.
 
 ### Projections
 

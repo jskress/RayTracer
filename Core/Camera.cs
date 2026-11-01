@@ -114,6 +114,30 @@ public class Camera : NamedThing
     public double Glare { get; set; }
 
     /// <summary>
+    /// This property holds how much of what a real lens loses toward its corners this one loses, from nought, the
+    /// default, to one.  Every lens lets less light reach the corners than the middle -- the light comes at a slant,
+    /// from further off, through an opening seen foreshortened, the fourth power of the cosine of the angle off the
+    /// axis in all -- and this blends that in.  With the lens open, its barrel also cuts the opening off toward the
+    /// corners into a cat's eye, which darkens them more and gives a highlight out of focus there that shape; see
+    /// <see cref="PerspectiveRayConverter"/>.  A perspective camera's only.
+    /// </summary>
+    public double Vignetting { get; set; }
+
+    /// <summary>
+    /// This property holds how far the lens bows straight lines: more than nought outward, as a wide-angle lens bows
+    /// them (barrel distortion), less inward, as a long lens does (pincushion).  It is the stretch at a corner of the
+    /// picture, growing as the square of the way there from the middle, which stays as it was.  A perspective
+    /// camera's only.
+    /// </summary>
+    public double Distortion { get; set; }
+
+    /// <summary>
+    /// This property holds how far the lens parts the red picture from the blue toward its corners, as a share of the
+    /// picture's half-diagonal; see <see cref="Core.ChromaticAberration"/>.  A perspective camera's only.
+    /// </summary>
+    public double ChromaticAberration { get; set; }
+
+    /// <summary>
     /// This property provides the view transformation that the camera represents.
     /// </summary>
     public Matrix Transform => GetTransform();
@@ -178,6 +202,7 @@ public class Camera : NamedThing
             SpectralBasis.Shared.Prepare();
 
         WhiteBalance balance = context.WhiteBalance is { } kelvin ? new WhiteBalance(kelvin) : null;
+        bool vignetted = Vignetting > 0 && ProjectionType == CameraProjectionType.Perspective;
         double gain = Math.Pow(2, context.Exposure ?? Exposure);
 
         // The sampler tells samples apart as the picture will show them -- balanced, exposed, and developed by
@@ -207,6 +232,9 @@ public class Camera : NamedThing
             {
                 Color color = renderer.Render(scene, x, y);
 
+                if (vignetted)
+                    color = Exposed(color, converter.FalloffAt(x, y));
+
                 if (balance is not null)
                     color = balance.Apply(color);
 
@@ -223,8 +251,12 @@ public class Camera : NamedThing
             context.Progress?.Done();
         }
 
-        // The opening spreads the light as the picture forms, so the whole picture is spread at once; the
-        // film curve that develops it comes after, when it is written.
+        // The lens's glass parts the colors before the opening spreads them, and the opening spreads the light as the
+        // picture forms, so the whole picture is spread at once; the film curve that develops it comes after, when it
+        // is written.
+        if (ProjectionType == CameraProjectionType.Perspective)
+            new ChromaticAberration(ChromaticAberration).Part(canvas);
+
         new Diffraction(Glare, Blades, BladeTurn).Spread(canvas);
 
         return canvas;
@@ -277,9 +309,9 @@ public class Camera : NamedThing
         return ProjectionType switch
         {
             CameraProjectionType.Perspective => new PerspectiveRayConverter(
-                context, FieldOfView, transform, Sampler),
-            CameraProjectionType.Orthographic => new OrthographicRayConverter(
-                context, FieldOfView, transform, Sampler),
+                context, FieldOfView, transform, Sampler, Distortion, Vignetting),
+            CameraProjectionType.Orthographic => Unlensed(new OrthographicRayConverter(
+                context, FieldOfView, transform, Sampler)),
             CameraProjectionType.Fisheye => Curved(new FisheyeRayConverter(
                 context, FieldOfView, transform, Sampler)),
             CameraProjectionType.UltraWide => Curved(new UltraWideRayConverter(
@@ -294,6 +326,24 @@ public class Camera : NamedThing
     }
 
     /// <summary>
+    /// This method warns that a camera that is not a perspective one ignores the character a lens gives a picture:
+    /// its vignetting, its distortion and its parted colors belong to a lens shaped as a perspective camera's is.
+    /// </summary>
+    /// <param name="converter">The converter.</param>
+    /// <returns>The same converter, for fluency.</returns>
+    private PixelToRayConverter Unlensed(PixelToRayConverter converter)
+    {
+        if (Vignetting > 0 || Distortion != 0 || ChromaticAberration > 0)
+        {
+            Terminal.Out(
+                $"Warning: a {ProjectionType.ToString().ToLowerInvariant()} camera's picture is not a lens's, " +
+                "so its vignetting, distortion and chromatic aberration are ignored.");
+        }
+
+        return converter;
+    }
+
+    /// <summary>
     /// This method notes the one thing the curved projections share: they have no flat lens, so a
     /// scene that gave one an aperture is warned that it does nothing here.  The shutter is left
     /// alone, since motion blur works whatever the projection.
@@ -302,6 +352,8 @@ public class Camera : NamedThing
     /// <returns>The converter it was given.</returns>
     private PixelToRayConverter Curved(PixelToRayConverter converter)
     {
+        Unlensed(converter);
+
         if (Aperture > 0)
         {
             Terminal.Out(
