@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 171 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 172 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -416,7 +416,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Cameras</b> &mdash; 4 images &middot; how the picture is taken</summary>
+<summary><b>Cameras</b> &mdash; 5 images &middot; how the picture is taken</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -449,6 +449,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/cameras/motion-blur.igl">Motion Blur</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/cameras/through-an-old-lens.png">
+      <img alt="Through an Old Lens" height="120" src="Local/cameras/through-an-old-lens.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/cameras/through-an-old-lens.igl">Through an Old Lens</a>
     </td>
   </tr>
 </table>

@@ -127,6 +127,34 @@ public partial class LanguageParser
                         : "A camera's glare is the share of its light the opening spreads, from 0 to 1."
                 };
                 break;
+            case "vignetting":
+                resolver.VignettingResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = share => share is >= 0 and <= 1
+                        ? null
+                        : "A camera's vignetting runs from 0, none, to 1, all a lens loses toward its corners."
+                };
+                break;
+            // Past a third the other way, the picture's corners would fold back over themselves.
+            case "distortion":
+                resolver.DistortionResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = amount => amount > -1.0 / 3
+                        ? null
+                        : "A camera's distortion must be more than -1/3; any more pincushion folds its corners back."
+                };
+                break;
+            case "chromatic":
+                resolver.ChromaticAberrationResolver = new TermResolver<double>
+                {
+                    Term = term,
+                    Validator = share => share is >= 0 and < 0.5
+                        ? null
+                        : "A camera's chromatic aberration is a share of the picture's half-diagonal, from 0 to under a half."
+                };
+                break;
             default:
                 throw new Exception($"Internal error: unknown camera property found: {field}.");
         }

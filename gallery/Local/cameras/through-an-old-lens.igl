@@ -1,0 +1,83 @@
+// A game of chess in the evening, string lights across the garden behind it, through an old lens wide open.
+//
+// **A real lens is not a perfect one**, and three of the ways it falls short are here, each a camera property:
+//
+// - **`vignetting`**: the corners take less light than the middle, the fourth power of the cosine of the angle
+//   off the axis -- and, with the lens open, the barrel in front of it cuts the opening off toward the corners.
+//   So the lanterns out of focus are round discs in the middle and cat's eyes toward the sides, longer round the
+//   picture's middle than toward it, as they are in a photograph taken wide open.
+// - **`distortion`**: a wide lens squeezes more of the world into its edges, so the board's near edge, a straight
+//   line, bows down at its middle -- barrel distortion.
+// - **`chromatic aberration`**: the glass bends blue further than red, so toward the corners the lanterns' discs
+//   fringe red on their outer side and blue on their inner one.
+
+import 'chess' { Board, Pawn, Rook, Knight, Bishop, Queen, King, ChessAt, Ivory, Ebony }
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    white balance 4200
+    scale ambient by 0.25
+    info {
+        title 'Through an Old Lens'
+        author 'J. Stephen Kress'
+        description 'A game of chess by string lights, through an old lens wide open: cat\'s-eye bokeh toward the corners, a bowed board edge and fringed lights.'
+        copyright true
+        software __software__
+    }
+}
+
+// Low over the board with a wide lens, opened far wider than a real one of its length so that the lanterns blur well
+// past their own size, and focused on the white knight's rank.
+camera {
+    location [0.1, 1.9, -5.9]
+    look at [0.0, 0.55, 0.5]
+    field of view 54
+    aperture 0.15
+    focal point [ChessAt(8, 3), 0.5, ChessAt(8, 2)]
+    blur samples 512
+    vignetting 0.8
+    distortion 0.12
+    chromatic aberration 0.005
+}
+
+// A lamp off to the left, warmer than the balance, as a room's lamp is.
+point light { location [-5, 6, -4]  temperature 3000  brightness 0.8 }
+
+background [0.010, 0.007, 0.005]
+
+// The game, part way through.
+object Board(8)
+object King(1.0, Ivory) { translate [ChessAt(8, 6), 0, ChessAt(8, 0)] }
+object Rook(1.0, Ivory) { translate [ChessAt(8, 5), 0, ChessAt(8, 0)] }
+object Queen(1.0, Ivory) { translate [ChessAt(8, 3), 0, ChessAt(8, 3)] }
+object Knight(1.0, Ivory) { rotate Y 200  translate [ChessAt(8, 2), 0, ChessAt(8, 2)] }
+object Pawn(1.0, Ivory) { translate [ChessAt(8, 4), 0, ChessAt(8, 3)] }
+object Pawn(1.0, Ivory) { translate [ChessAt(8, 5), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Ivory) { translate [ChessAt(8, 6), 0, ChessAt(8, 1)] }
+object Pawn(1.0, Ivory) { translate [ChessAt(8, 0), 0, ChessAt(8, 2)] }
+object King(1.0, Ebony) { translate [ChessAt(8, 6), 0, ChessAt(8, 7)] }
+object Queen(1.0, Ebony) { translate [ChessAt(8, 2), 0, ChessAt(8, 5)] }
+object Bishop(1.0, Ebony) { translate [ChessAt(8, 4), 0, ChessAt(8, 5)] }
+object Knight(1.0, Ebony) { rotate Y 20  translate [ChessAt(8, 5), 0, ChessAt(8, 5)] }
+object Rook(1.0, Ebony) { translate [ChessAt(8, 0), 0, ChessAt(8, 7)] }
+object Pawn(1.0, Ebony) { translate [ChessAt(8, 3), 0, ChessAt(8, 4)] }
+object Pawn(1.0, Ebony) { translate [ChessAt(8, 5), 0, ChessAt(8, 6)] }
+object Pawn(1.0, Ebony) { translate [ChessAt(8, 7), 0, ChessAt(8, 5)] }
+
+// The table.
+cube { material { pigment [0.20, 0.11, 0.06]  specular 0.2  shininess 30 }  scale [9, 0.2, 5]  translate Y -0.21 }
+
+// Three strings of lanterns across the garden far behind, sagging between their poles.  Each lantern is large and
+// dim rather than small and bright, so that every place in its blurred disc sees it through a good share of the
+// lens and the disc comes out smooth.
+for strand in [0, 2] {
+    for bulb in [0, 16] {
+        sphere {
+            material { pigment [1, 0.55, 0.2]  emission 3.5  ambient 0  diffuse 0  specular 0 }
+            scale 0.35
+            translate [-20 + bulb * 2.5 + strand * 1.1, 9 - strand * 2.4 - 4 * (1 - (bulb - 8) * (bulb - 8) / 64), 26 + strand * 5]
+            no shadow
+        }
+    }
+}

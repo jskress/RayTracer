@@ -89,6 +89,21 @@ public class CameraResolver : NamedObjectResolver<Camera>
     public Resolver<double> GlareResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for how much of what a lens loses toward its corners our camera's loses.
+    /// </summary>
+    public Resolver<double> VignettingResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far our camera's lens bows straight lines.
+    /// </summary>
+    public Resolver<double> DistortionResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how far our camera's lens parts red from blue toward its corners.
+    /// </summary>
+    public Resolver<double> ChromaticAberrationResolver { get; set; }
+
+    /// <summary>
     /// This method is used to apply our resolvers to the appropriate properties of a camera.
     /// </summary>
     /// <param name="context">The current render context.</param>
@@ -112,6 +127,9 @@ public class CameraResolver : NamedObjectResolver<Camera>
         BladesResolver.AssignTo(value, target => target.Blades, context, variables);
         BladeTurnResolver.AssignTo(value, target => target.BladeTurn, context, variables);
         GlareResolver.AssignTo(value, target => target.Glare, context, variables);
+        VignettingResolver.AssignTo(value, target => target.Vignetting, context, variables);
+        DistortionResolver.AssignTo(value, target => target.Distortion, context, variables);
+        ChromaticAberrationResolver.AssignTo(value, target => target.ChromaticAberration, context, variables);
 
         base.SetProperties(context, variables, value);
     }

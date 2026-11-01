@@ -111,11 +111,16 @@ public abstract class PixelRenderer
 
         TS sum = TS.Black;
         double alpha = 0;
+        int passed = 0;
 
         // Light adds, and coverage averages: summed as light, every pixel came out opaque, so a camera with a lens
-        // or an open shutter filled the transparent background and lost the soft edge of what stood against it.
+        // or an open shutter filled the transparent background and lost the soft edge of what stood against it.  A
+        // sample the lens stops brings no light, but says nothing of what the pixel covers.
         for (int index = 0; index < count; index++)
         {
+            if (!Converter.Passes(x, y, centerX, centerY, shiftX, shiftY, index))
+                continue;
+
             Ray ray = Converter.GetRayForPixel(x, y, centerX, centerY, shiftX, shiftY, index);
 
             scene.ShadeHere(ray.TimeIndex);
@@ -124,9 +129,10 @@ public abstract class PixelRenderer
 
             sum += seen;
             alpha += seen.Alpha;
+            passed++;
         }
 
-        return (sum * (1.0 / count)).WithAlpha(alpha / count).ToColor();
+        return (sum * (1.0 / count)).WithAlpha(passed == 0 ? 1 : alpha / passed).ToColor();
     }
 
     /// <summary>

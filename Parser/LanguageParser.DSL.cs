@@ -104,7 +104,8 @@ public partial class LanguageParser
             'u', 'v', 'turbidity', 'turbulence', 'turnAround', 'turned', 'turnLeft', 'turnRight', 'twig', 'ultraWide', 'uncached', 'under', 'union', 'up', 'uSteps',
             'vary', 'vector', 'vertical', 'view', 'vSteps', 'warning', 'wave', 'wavelength', 'waves', 'wear', 'weather', 'weathering', 'weight', 'white', 'whole', 'width', 'with', 'within', 'wood',
             'wrinkles', 'shapes', 'rules', 'extrude', 'split', 'repeat', 'faces', 'roof', 'gable', 'hip', 'fill', 'place', 'choose', 'nothing', 'overhang', 'verge', 'across', 'gables', 'snow', 'animation', 'frames', 'rate', 'keys', 'ease', 'out', 'hold', 'loop', 'still', 'upright', 'banked', 'wheelbase', 'body', 'mass', 'velocity', 'spin', 'bounce', 'friction', 'drag', 'tether', 'box', 'gravity', 'wind', 'swarm', 'spread', 'speed', 'life', 'since', 'joint', 'pivot', 'axis', 'limits', 'aim', 'mark', 'span', 'falls', 'burst',
-            'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx',
+            'channel', 'red', 'green', 'blue', 'alpha', 'map', 'directx', 'vignetting', 'distortion', 'chromatic',
+            'aberration',
             'X', 'Y', 'Z'
 
         _expressions:
@@ -443,7 +444,10 @@ public partial class LanguageParser
             namedClause | locationClause | lookAtClause | upClause | fieldOfViewClause |
             { aperture > _expression } | focalClause | blurSamplesClause |
             { shutter > _expression } | { seed > _expression } | { exposure > _expression } |
-            bladesClause | { glare > _expression }
+            bladesClause | { glare > _expression } | { vignetting > _expression } | { distortion > _expression } |
+            {
+                chromatic > aberration ?? 'Expecting "aberration" to follow "chromatic" here.' > _expression
+            }
         ] ?? 'Expecting a camera property here.'
 
         // Light clauses.  One opener serves every sort, told apart by the word before "light":
