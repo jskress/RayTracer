@@ -42,7 +42,7 @@ def write(name, title, vertical, horizontal, candela):
     for plane in candela:
         lines += wrapped([round(value, 1) for value in plane])
     with open(os.path.join(HERE, name), 'w') as file:
-        file.write('\r\n'.join(lines) + '\r\n')
+        file.write('\n'.join(lines) + '\n')
     print('wrote', name)
 
 
