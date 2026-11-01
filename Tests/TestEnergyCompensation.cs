@@ -136,6 +136,107 @@ public class TestEnergyCompensation
         Assert.AreEqual(polished.Red, matte.Red, 0.03, $"{polished} then {matte}");
     }
 
+    /// <summary>
+    /// The glass's table, read between its steps and between the ratios of indices it stands at, agrees with its
+    /// albedo worked out another way: what the facets mirror of a lamp from every direction above, and what they
+    /// let through of one from every direction below, added up -- going into glass of index 1.5, and coming out.
+    /// </summary>
+    [TestMethod]
+    public void TestTheGlassTableIsTheGlasssOwn()
+    {
+        foreach ((double n1, double n2) in new[] { (1.0, 1.5), (1.5, 1.0) })
+        {
+            foreach (double cos in new[] { 0.93, 0.61, 0.27 })
+            {
+                foreach (double roughness in new[] { 0.43, 0.71, 0.97 })
+                {
+                    double alpha = roughness * roughness;
+                    Vector eye = EyeAt(cos);
+                    double mirrored = OverTheSky(light => Microfacets.Highlight(
+                        Up, eye, light, alpha, facing => Microfacets.GlassReflectance(facing, n1, n2)));
+                    double passed = OverTheSky(light => Microfacets.TransmittedHighlight(
+                        Up, eye, new Vector(light.X, -light.Y, light.Z), alpha, n1, n2));
+                    double expected = (mirrored + passed) / Math.PI;
+
+                    Assert.AreEqual(
+                        expected, Microfacets.GlassAlbedo(cos, alpha, n1, n2), 0.005 * expected,
+                        $"from {n1} into {n2}, at a cosine of {cos} and roughness {roughness}");
+                }
+            }
+        }
+
+        Assert.AreEqual(0.76, Microfacets.GlassAlbedo(1, 0.49, 1.5, 1), 0.01, "coming out at roughness 0.7");
+        Assert.AreEqual(0.42, Microfacets.GlassAlbedo(1, 1, 1.5, 1), 0.01, "coming out at roughness 1");
+        Assert.AreEqual(0.97, Microfacets.GlassAlbedo(1, 0.49, 1, 1.5), 0.01, "going in at roughness 0.7");
+        Assert.AreEqual(0.90, Microfacets.GlassAlbedo(1, 1, 1, 1.5), 0.01, "going in at roughness 1");
+    }
+
+    /// <summary>
+    /// One rough face of glass in an even white light, all round it, gives back all of it in what it mirrors and
+    /// what it lets through together, seen from outside and from inside -- the glass a half-space below the face,
+    /// and the eye beneath it for inside, the light it turns back going down and away for good.  Met once by its
+    /// facets, coming out of glass of roughness 1 gave back 0.42 of it, seen square on.
+    /// </summary>
+    [TestMethod]
+    public void TestOneFaceOfFrostedGlassKeepsAllOfAnEvenLight()
+    {
+        foreach (double roughness in new[] { 0.3, 0.6, 1.0 })
+        {
+            foreach (double cos in new[] { 0.9, 0.5 })
+            {
+                Scene scene = new () { Background = new SolidPigment(Colors.White) };
+                Plane face = new () { Material = FrostedGlass(roughness) };
+                double sin = Math.Sqrt(1 - cos * cos);
+
+                scene.Surfaces.Add(face);
+
+                Intersection goingIn = Hit(face, cos);
+
+                Assert.AreEqual(
+                    1, (scene.GetReflectionColor(goingIn, 8) + scene.GetRefractedColor(goingIn, 8)).Red, 0.015,
+                    $"going in, roughness {roughness}, at a cosine of {cos}");
+
+                // From beneath, the face met where the glass is left, past a crossing into it behind the eye.
+                Ray up = new (new Point(0, -cos, -sin), new Vector(0, cos, sin));
+                Intersection comingOut = new (face, 1);
+
+                comingOut.PrepareUsing(up, [new Intersection(face, -1), comingOut]);
+
+                Assert.AreEqual(1.5, comingOut.N1, 1e-12, "the eye was not inside the glass");
+                Assert.AreEqual(
+                    1, (scene.GetReflectionColor(comingOut, 8) + scene.GetRefractedColor(comingOut, 8)).Red, 0.015,
+                    $"coming out, roughness {roughness}, at a cosine of {cos}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// A ball of frosted glass in an even white light vanishes against it, seen through its middle, however rough:
+    /// every ray goes into it and out again, as often as the light turns back inside.  Met once by its facets at
+    /// every crossing, the ball gave back 0.72 of the light at roughness 0.7 and 0.38 at roughness 1.
+    /// </summary>
+    [TestMethod]
+    public void TestAFrostedBallVanishesInAnEvenLight()
+    {
+        foreach (double roughness in new[] { 0.5, 0.7, 1.0 })
+        {
+            Scene scene = new () { Background = new SolidPigment(Colors.White) };
+
+            scene.Surfaces.Add(new Sphere { Material = FrostedGlass(roughness) });
+
+            Color seen = scene.GetColorFor(new Ray(new Point(0, 0, -5), new Vector(0, 0, 1)), 32);
+
+            Assert.AreEqual(1, seen.Red, 0.025, $"roughness {roughness}");
+        }
+    }
+
+    // Glass of index 1.5 with the given roughness, showing nothing of its own, looking in many directions.
+    private static Material FrostedGlass(double roughness) => new ()
+    {
+        Ambient = 0, Diffuse = 0, Transparency = 1, Reflective = 1, Roughness = roughness,
+        Interior = new Interior { IndexOfRefraction = 1.5 }, ReflectionSamples = 4096
+    };
+
     // A gold floor of the given roughness under an even white sky, seen square on.
     private static Color GoldUnderAWhiteSky(double roughness)
     {
@@ -185,7 +286,7 @@ public class TestEnergyCompensation
     }
 
     // Where a ray meets the floor's middle, coming down at the angle whose cosine is given, prepared for shading.
-    private static Intersection Hit(Plane floor, double cos)
+    private static Intersection Hit(Surface floor, double cos)
     {
         double sin = Math.Sqrt(1 - cos * cos);
         Ray ray = new (new Point(0, cos, -sin), new Vector(0, -cos, sin));

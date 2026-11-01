@@ -2486,13 +2486,19 @@ public partial class Scene : NamedThing, IDisposable
                 bare.MirrorsFromAround<TS>(material.ReflectanceFromAround));
         }
 
-        // What the facets mirror among themselves is made up for (see Microfacets.Compensation), but not rough
-        // glass's, whose facets let through a share of what they send one another.
+        // What the facets mirror among themselves is made up for (see Microfacets.Compensation); rough glass's by
+        // its own albedo, mirrored and let through together, as what it lets through is (see GetRoughRefraction).
+        if (material.Transparency > 0 || material.PigmentMayTransmit)
+        {
+            return LookedAtRoughly<TS>(intersection, material.Roughness, reflectance, count, remaining, facets) *
+                   Microfacets.GlassCompensation(
+                       intersection.Eye.Dot(intersection.Normal), material.Roughness * material.Roughness,
+                       intersection.N1, intersection.N2);
+        }
+
         return LookedAtRoughly<TS>(
             intersection, material.Roughness, reflectance, count, remaining, facets,
-            fromAround: material.Transparency > 0 || material.PigmentMayTransmit
-                ? null
-                : TS.White * material.ReflectanceFromAround);
+            fromAround: TS.White * material.ReflectanceFromAround);
     }
 
     /// <summary>
@@ -2781,7 +2787,14 @@ public partial class Scene : NamedThing, IDisposable
             _looking = wasLooking;
         }
 
-        return side is null ? sum * (1.0 / count) : sum * (1.0 / count) + aimed;
+        // What the facets let through to one another rather than on is made up for, the rays and the aim alike, as
+        // what the glass mirrors is (see GetRoughReflection), by the glass's own albedo.
+        double compensation = Microfacets.GlassCompensation(
+            intersection.Eye.Dot(intersection.Normal), alpha, intersection.N1, intersection.N2);
+
+        return side is null
+            ? sum * (1.0 / count) * compensation
+            : (sum * (1.0 / count) + aimed) * compensation;
     }
 
     /// <summary>

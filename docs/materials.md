@@ -244,7 +244,7 @@ color than a polished one, as rough metals do.  It changes a surface of roughnes
 parts in a hundred at most, and anything rougher a great deal; a brushed surface, seen across its
 grooves, most of all.  Until 2026-10-31 rough surfaces came out darker than they should, the roughest
 by half or more.  It is the same for a [clear coat](#a-clear-coat) that is rough, and for the window an
-area light makes in a smooth one.  Rough glass is not yet made up for.
+area light makes in a smooth one, and for [frosted glass](#frosted-glass).
 
 **Rough reflections cost more than sharp ones**, because a blur is found by looking in many
 directions and averaging: sixteen, unless the scene asks for a different number with
@@ -335,6 +335,16 @@ glow and what the glass's rays find, as one in front of a rough surface is; behi
 faces are both rough, a small bright one can still come out a little grainy, the blur of the near
 face being found by the glass's sixteen directions.
 
+**Frosted glass keeps its light.**  Its facets mirror some of the light and let the rest through, and
+much of either lands on another facet before it gets away; followed for one meeting only, that light
+was lost.  Little goes going in, the light bent steeply into the glass, but a great deal coming out,
+bent toward a graze and hidden by the facets round it: met once, glass of roughness 1 let out not half
+of the light reaching it from inside, and a frosted ball in an even white light came out under half
+as bright as the light round it.  What the facets send one another is given back, between what they
+mirror and what they let through as one meeting shares it, so a frosted ball in an even light now
+vanishes against it, however rough.  Glass of roughness 0.3 changes by about a part in a hundred where
+light crosses it square on, and more toward a graze; until 2026-10-31 rougher glass came out gray.
+
 Glass that spreads colors bends each band through a facet of its own, so a frosted prism blurs its
 rainbow without costing more than a clear one.  Shadows cast by frosted glass are as they were —
 colored by the glass's `filter`, not blurred — unless the scene asks for [caustics](context.md#caustics),
@@ -344,7 +354,8 @@ when the light through the glass is the photons', spread by its facets into a so
 two substances of the same index — a thin open sheet, say, which has no inside to bend into — lets
 light straight through.  Give the glass a body and an `ior`.
 
-`gallery/Local/materials/frosted-glass.igl` shows four panes from clear to deeply frosted.
+`gallery/Local/materials/frosted-glass.igl` shows four panes from clear to deeply frosted, and
+`gallery/Local/materials/sea-glass.igl` frosted pieces of colored glass on sand with the low sun shining through them.
 
 #### Metals
 
