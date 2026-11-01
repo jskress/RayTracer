@@ -37,9 +37,18 @@ public partial class LanguageParser
         if (clause == null)
             throw CreateUnexpectedInputException("Expecting a pattern to follow \"normal\" here.");
 
-        (IPatternResolver patternResolver, _) = ParsePatternClause(clause);
+        // A normal map is a picture of the normals themselves, read in the frame it is laid in.
+        if (clause.Text() == "map")
+        {
+            resolver.NormalMapResolver = ParseImagePatternClause(clause);
+            resolver.GreenDown = clause.Tokens.Any(token => token.Text == "directx");
+        }
+        else
+        {
+            (IPatternResolver patternResolver, _) = ParsePatternClause(clause);
 
-        resolver.PatternResolver = patternResolver;
+            resolver.PatternResolver = patternResolver;
+        }
 
         // The depth and the transforms may be written in either order, and as many times as the
         // scene likes, so both are looked for until neither is there.

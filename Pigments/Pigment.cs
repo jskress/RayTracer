@@ -371,8 +371,9 @@ public abstract class Pigment
     /// It exists to be asked before the pigment is sampled rather than after.  A surface's
     /// transparency has to be known on every shadow ray that crosses it, and sampling a pigment to
     /// discover it is far from free; almost every pigment in almost every scene is wholly opaque,
-    /// and this lets those keep the cheap answer.  Saying "yes" wrongly costs only speed, so
-    /// anything unsure should say yes.
+    /// and this lets those keep the cheap answer.  Anything unsure should say yes, but a yes said
+    /// wrongly costs more than speed: what only an opaque surface can be -- bare metal, a clear coat,
+    /// a sheen, brushed grooves, a rough surface's own reflectance -- is turned off by it.
     /// </para>
     /// </summary>
     public virtual bool MayTransmit => false;

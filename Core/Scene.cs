@@ -2366,6 +2366,13 @@ public partial class Scene : NamedThing, IDisposable
             intersection.Material = material;
         }
 
+        // And so are numbers that run by patterns of their own: a roughness map, a metalness map.
+        if (material.MappedAt(intersection, Shading) is var mapped && !ReferenceEquals(mapped, material))
+        {
+            material = mapped;
+            intersection.Material = material;
+        }
+
         return material;
     }
 

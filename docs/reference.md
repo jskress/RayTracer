@@ -43,6 +43,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `align` | Lines one edge of a surface up with the matching edge of another. | [Transforms](transforms.md#placing-one-thing-against-another) |
 | `alignment` | Text layout: left/center/right justification. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text) |
 | `along` | Text layout: `along path` lays the text along a path rather than a straight line.  Also a field's `along <path>`, laying its copies along a path rather than filling an outline.  Material: which way a brushed surface's grooves run.  Transform: `along <spline> at|by <amount>` puts a thing on a spline, turned to run with it. | [Text along a path](advanced-surfaces.md#text-along-a-path), [Fields along a path](advanced-surfaces.md#laying-a-field-along-a-path), [Brushed metal](materials.md#brushed-metal), [Along a Spline](animation.md#along-a-spline) |
+| `alpha` | Image pattern: `channel alpha`, how much of each place the picture covers. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `ambient` | Finish: color shown with no light on it; in a context block, `scale ambient by`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#ambient) |
 | `amplitude` | Turbulence: how far it stirs.  Swells: how tall one train of waves is, in place of its `steepness`. | [Pigments & Patterns](pigments-and-patterns.md#turbulence), [Swells](surfaces.md#swells) |
 | `and` | True when both conditions are; the same operator as `&&`.  Also joins `ignore commands and '…'` in an L-system. | [Scene Files](scene-files.md#expressions) |
@@ -77,6 +78,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `blades` | Camera: how many blades its opening is made of, shaping what is out of focus and the rays of its glare. | [Cameras](cameras.md#blades) |
 | `blend` | Pigment: average several pigments together.  Material: `material blend <pattern>`, whole materials chosen and mixed by a pattern. | [Pigments & Patterns](pigments-and-patterns.md#blending-and-layering), [Blending Materials](materials.md#blending-materials) |
 | `blob` | Surface: metaballs that melt together. | [Surfaces](surfaces.md#blob) |
+| `blue` | Image pattern: `channel blue`, the picture's blue alone. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `blur` | Camera: `blur samples`, rays per pixel for the lens. | [Cameras](cameras.md#depth-of-field) |
 | `body` | Surface: moved by gravity, the air, what it strikes and what it is tied to, from where it stands at time nought. | [Bodies](animation.md#bodies) |
 | `bold` | Font weight. | [Advanced Surfaces](advanced-surfaces.md#text) |
@@ -92,7 +94,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `brightness` | Light: what its color or temperature is multiplied by; `physical sky`: what the whole sky and its sun are multiplied by; an image pigment's `{ brightness b }`: what its colors are multiplied by. | [Lights](lights.md#color-temperature), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Image Pigments](pigments-and-patterns.md#image-pigments) |
 | `brilliance` | Finish: sharpens or softens the diffuse falloff. | [Materials](materials.md#brilliance-and-grain) |
 | `burst` | Swarm: `burst <count> [at <time>] [over <time>]`, its copies thrown all at once, or evenly over a while, rather than in a steady flow. | [Swarms](animation.md#swarms) |
-| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, and a `for` or `over` loop's range.  `along <spline> by <distance>`.  A placement's gap or inset, `on 'x' by 0.1`.  A medium's `emission by density`. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films), [Along a Spline](animation.md#along-a-spline), [Transforms](transforms.md#placing-one-thing-against-another), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
+| `by` | Follows `bounded by`, `scale ambient by`, a hair's `facing`, a field's `picked by` and `sized … by`, a film's `thickness … to … by`, a material's `roughness … to … by` and `metallic … to … by`, and a `for` or `over` loop's range.  `along <spline> by <distance>`.  A placement's gap or inset, `on 'x' by 0.1`.  A medium's `emission by density`. | [Surfaces](surfaces.md#bounding), [Context](context.md#ambient), [Advanced Surfaces](advanced-surfaces.md#hair), [Fields in patches](advanced-surfaces.md#fields-in-patches), [Thin films](materials.md#thin-films), [Roughness](materials.md#roughness), [Along a Spline](animation.md#along-a-spline), [Transforms](transforms.md#placing-one-thing-against-another), [Light by Density](scene-files.md#a-medium-whose-light-follows-its-density) |
 | `c` | Julia set: the quaternion the iteration adds, as four numbers. | [Surfaces](advanced-surfaces.md#julia) |
 | `cache` | Context: `diffuse cache`, blending bounced light between records worked out at scattered places. | [Context](context.md#a-cache-of-bounced-light) |
 | `camera` | Where the scene is viewed from. | [Cameras](cameras.md#placing-a-camera) |
@@ -100,6 +102,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `caustics` | Context: follow light from the lamps through mirrors and glass to where it lands; a surface's `no caustics` turns none of it. | [Context](context.md#caustics), [Surfaces](surfaces.md#no-caustics) |
 | `center` | Blob sphere or disc: its center.  Text layout: center the block or a line; also `no center` on a sweep. | [Blob](surfaces.md#blob), [Disc](surfaces.md#disc), [Text](advanced-surfaces.md#text), [Sweep](advanced-surfaces.md#sweep) |
 | `centered` | With `on`, says what a placement's remaining directions are middled on. | [Transforms](transforms.md#placing-one-thing-against-another) |
+| `channel` | Image pattern: which of the picture's channels it reads — `red`, `green`, `blue` or `alpha` — rather than its gray. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `checker` | Pattern: a checkerboard of two colors. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `choose` | Shape grammar: goes one of several ways, each as likely as its weight, the same for the same seed and place. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `clarity` | Interior: how far light travels before fading. | [Materials](materials.md#transparency-and-interiors) |
@@ -142,6 +145,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `difference` | CSG: the first child with the rest carved out. | [Surfaces](surfaces.md#combining-surfaces) |
 | `diffuse` | Finish: strength of plain matte lighting; context: `diffuse bounces`, `diffuse samples` and `diffuse cache`. | [Materials](materials.md#ambient-diffuse-and-specular), [Context](context.md#bounced-light) |
 | `direction` | Distant light: the way its rays travel.  Swells: the way one train of waves runs. | [Lights](lights.md#distant-lights), [Swells](surfaces.md#swells) |
+| `directx` | Normal map: drawn DirectX's way, its green pointing down the picture. | [Normal maps](materials.md#normal-maps) |
 | `disc` | Shape: a flat disc, optionally with a hole. | [Surfaces](surfaces.md#disc) |
 | `disclaimer` | Info: a disclaimer. | [Context](context.md#image-information) |
 | `discontinuous` | Sweep/tube, or a spline given a name: the kinks between segments are meant. | [Advanced Surfaces](advanced-surfaces.md#sweep) |
@@ -209,6 +213,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `granite` | Pattern: layered noise, like stone. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `gravity` | Context: how gravity pulls bodies and swarms, 9.81 meters a second each second downward unless said. | [Bodies](animation.md#bodies) |
 | `grayscale` | Context: write the image without color. | [Context](context.md#color-depth-and-grayscale) |
+| `green` | Image pattern: `channel green`, the picture's green alone. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `grime` | Weather: dirt in crevices, seams and corners. | [Weathering a Model](materials.md#weathering-a-model) |
 | `group` | Gathers surfaces, and any lights standing on them, so a transform moves them together. | [Surfaces](surfaces.md#groups), [Lights on Things](lights.md#lights-on-things) |
 | `grown` | Surface: a tree grown by space colonization into the room it is given. | [Advanced Surfaces](advanced-surfaces.md#grown-tree) |
@@ -225,7 +230,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `icon` | Path: a FontAwesome icon's outline. | [Advanced Surfaces](advanced-surfaces.md#paths) |
 | `if` | Chooses which of two answers a [function or primitive](scene-files.md#choosing-inside-a-body) gives back, or which surfaces to make where they are listed.  In a shape grammar, which way a scope goes by what its rule sees. | [Surfaces](surfaces.md#choosing-what-to-make), [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `ignore` | L-system: characters or commands to skip. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
-| `image` | Pigment: paint a surface from an image file.  Also where a height field takes its heights from. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Height Field](advanced-surfaces.md#height-field) |
+| `image` | Pigment: paint a surface from an image file.  Pattern: a picture's gray, or one of its channels, wherever a pattern goes — a bump map, a blend, a roughness or metalness map.  Also where a height field takes its heights from. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern), [Height Field](advanced-surfaces.md#height-field) |
 | `import` | Reads named definitions from a library. | [Scene Files](scene-files.md#importing-from-a-library) |
 | `in` | Follows a `for` loop's count: `for i in [0, 11]`, and a `field`'s `index`.  And a shape grammar's `repeat ... index in`.  Keys: `ease in`. | [Surfaces](surfaces.md#repeating-things) |
 | `include` | Reads another file in place, as if pasted. | [Scene Files](scene-files.md#including-other-files) |
@@ -265,6 +270,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `loop` | Keys: begin again once the last key is reached. | [Keys](animation.md#keys) |
 | `loose` | Fracture: the pieces are separate stones, each in a place of its own in its pattern. | [Advanced Surfaces](advanced-surfaces.md#fracture) |
 | `lsystem` | Surface: a shape grown from an L-system. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
+| `map` | `normal map`: a picture of the normals themselves, as a texture set ships one. | [Normal maps](materials.md#normal-maps) |
 | `marble` | Pattern: veined, usually with turbulence; runs up its map and back down, a `triangle` wave, unless another is said. | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `mark` | A named place on a thing, carried wherever it goes, to aim at, reach with or span between. | [Marks and Spans](animation.md#marks-and-spans) |
 | `mass` | Body: its mass, in kilograms. | [Bodies](animation.md#bodies) |
@@ -275,7 +281,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `medium` | What fills a piece of space; in a context block, `medium samples` and `medium bounces`.  Also a font weight. | [Scene Files](scene-files.md#filling-that-space) |
 | `melanin` | Material, for hair only: colors it as natural hair is colored — a named shade, or amounts of eumelanin and pheomelanin. | [How hair is lit](advanced-surfaces.md#how-hair-is-lit) |
 | `metal` | Material: a real metal, by name (`'gold'`, `'chromium'`, ...) or by the color it mirrors, with an `edge` color for how it fares at a slant. | [Metals](materials.md#metals) |
-| `metallic` | Finish: POV-Ray's tint of the highlight and of what is mirrored by the surface color. | [Materials](materials.md#metallic) |
+| `metallic` | Finish: POV-Ray's tint of the highlight and of what is mirrored by the surface color.  May run from one amount to another by a pattern, a metalness map: beside `metal`, how much of each place is bare. | [Materials](materials.md#metallic), [Metals](materials.md#metals) |
 | `min` | Extrusion: the low Y of the solid (`min Y`); the same for a bounded cylinder, conic, paraboloid or hyperboloid, and the near end of a decal's reach (`min Y`, `min radius`).  Also `min()` in an expression. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Surfaces](surfaces.md#cylinder-and-conic), [Materials](materials.md#reach) |
 | `mortar` | Brick pattern: the gap between bricks (`mortar size`). | [Pigments & Patterns](pigments-and-patterns.md#patterns) |
 | `motion` | Sets a surface moving, for motion blur. | [Transforms](transforms.md#setting-a-surface-moving), [Cameras](cameras.md#motion-blur) |
@@ -286,7 +292,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `no` | Begins `no shadow`, `no shadows`, `no caustics`, `no gamma`, `no jitter`, `no center`, `no fade`, and a `physical sky`'s `no light`. | [Surfaces](surfaces.md#no-shadow), [Materials](materials.md#fading), [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky) |
 | `noise` | Mottling: dims a color by noise.  Also the `noise` function, one smooth layer of it. | [Pigments & Patterns](pigments-and-patterns.md#mottling), [Scene Files](scene-files.md#functions) |
 | `none` | Context: `film curve none`, which cuts light off at white. | [Context](context.md#film-curve) |
-| `normal` | Roughens a surface: a pattern that tilts the normal; a blob plane or a disc: which way it faces. | [Materials](materials.md#roughening-the-surface), [Blob](surfaces.md#a-plane-component), [Disc](surfaces.md#disc) |
+| `normal` | Roughens a surface: a pattern that tilts the normal, or with `map` a normal map; a blob plane or a disc: which way it faces. | [Materials](materials.md#roughening-the-surface), [Normal maps](materials.md#normal-maps), [Blob](surfaces.md#a-plane-component), [Disc](surfaces.md#disc) |
 | `normals` | Smooth triangle or bilinear patch: the normal at each corner. | [Surfaces](surfaces.md#triangle-and-smooth-triangle), [Bilinear Patch](surfaces.md#bilinear-patch) |
 | `north` | Superellipsoid: its north-south roundness. | [Surfaces](surfaces.md#superellipsoid) |
 | `not` | Negates a condition; the same operator as `!`. | [Scene Files](scene-files.md#expressions) |
@@ -347,6 +353,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rate` | Context's `animation`: frames a second, 30 unless said.  Swarm: copies thrown a second, in a steady flow rather than a `burst`. | [Saying How Long](animation.md#saying-how-long), [Swarms](animation.md#swarms) |
 | `rayleigh` | Medium: `phase rayleigh`, the shape that makes a sky blue. | [Scene Files](scene-files.md#scattering) |
 | `reach` | Grown tree: how far a point reaches to draw a twig toward it.  Joint: `reach <place or name> with <name>`, turning it and the joints in it to bring the named thing there. | [Advanced Surfaces](advanced-surfaces.md#grown-tree), [Reaching](animation.md#reaching) |
+| `red` | Image pattern: `channel red`, the picture's red alone. | [A picture as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) |
 | `reflection` | Context: `reflection samples`, how many directions a rough surface looks in. | [Context](context.md#rough-reflections) |
 | `reflective` | Finish: how mirror-like the surface is. | [Materials](materials.md#reflective) |
 | `refraction` | Interior: the second word of `index of refraction`. | [Materials](materials.md#transparency-and-interiors) |
@@ -361,7 +368,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `rollRight` | L-system turtle: roll right. | [Advanced Surfaces](advanced-surfaces.md#l-systems) |
 | `roof` | Shape grammar: roofs a box scope, `gable`, `hip` or `flat`. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
 | `rotate` | Transform: turn about an axis, or turn a 2D path in its plane. | [Transforms](transforms.md#rotate) |
-| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  Coat or sheen: how rough its own surface is.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [A clear coat](materials.md#a-clear-coat), [Cloth](materials.md#cloth), [Hair](advanced-surfaces.md#how-hair-is-lit) |
+| `roughness` | Finish: how rough the surface is, from 0 (a mirror) to 1 (matte); blurs highlight and reflection alike, and frosts glass.  May run from one roughness to another by a pattern, a roughness map.  Coat or sheen: how rough its own surface is.  Also how blurred a strand of hair's highlights are. | [Materials](materials.md#roughness), [Frosted glass](materials.md#frosted-glass), [A clear coat](materials.md#a-clear-coat), [Cloth](materials.md#cloth), [Hair](advanced-surfaces.md#how-hair-is-lit) |
 | `rounded` | How far every edge of an extrusion, or of a fracture's pieces, is rounded. | [Advanced Surfaces](advanced-surfaces.md#extrusion), [Fracture](advanced-surfaces.md#fracture) |
 | `rows` | `physical sky`: how many heights in the sky are worked out and kept.  Also a field's `rows <n> apart <d>`, rows laid side by side along a path. | [Pigments & Patterns](pigments-and-patterns.md#a-physical-sky), [Advanced Surfaces](advanced-surfaces.md#laying-a-field-along-a-path) |
 | `rules` | Shape grammar: the block holding its rules, each a name, `->` and what it does. | [Advanced Surfaces](advanced-surfaces.md#shape-grammar) |
@@ -444,7 +451,7 @@ Every word the language reserves, what it is for, and the chapter that explains 
 | `tilted` | Field: a dropped copy leans with the ground rather than standing upright. | [Advanced Surfaces](advanced-surfaces.md#dropping-a-field-onto-the-ground) |
 | `tint` | Coat: the color it gives what lies beneath it, seen square-on. | [A clear coat](materials.md#a-clear-coat) |
 | `title` | Info: the image's title. | [Context](context.md#image-information) |
-| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, weather's `wear … to`, the material it bares, a body's `tether to`, a swarm's `speed … to` and `life … to`, a joint's `limits … to` and a span's `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films), [Tethers](animation.md#tethers) |
+| `to` | Follows `move to`, `line to`, `quad … to`, blob `to`, a decal's `fade from` … `to`, a film's `thickness … to`, a material's `roughness … to` and `metallic … to`, weather's `wear … to`, the material it bares, a body's `tether to`, a swarm's `speed … to` and `life … to`, a joint's `limits … to` and a span's `to`. | [Advanced Surfaces](advanced-surfaces.md#paths), [Materials](materials.md#fading), [Thin films](materials.md#thin-films), [Tethers](animation.md#tethers) |
 | `top` | Text layout: align the block by its top, the font's ascender line.  Placement: `align top with`, its `+Y` edge level with another's. | [Advanced Surfaces](advanced-surfaces.md#laying-out-text), [Transforms](transforms.md#placing-one-thing-against-another) |
 | `toroidal` | Image map: wrap the image around a torus; also a decal wrapped around a ring. | [Pigments & Patterns](pigments-and-patterns.md#image-pigments), [Materials](materials.md#projections) |
 | `torus` | Surface: a ring. | [Surfaces](surfaces.md#torus) |

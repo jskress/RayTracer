@@ -179,23 +179,55 @@ public partial class LanguageParser
 
     /// <summary>
     /// This method is used to parse the definition of an image pigment.
+    /// <para>
+    /// A picture followed by a map of pigments, or naming a channel, is a pattern rather than a pigment of its own: its
+    /// gray or its channel picks among the pigments as any pattern's value does.
+    /// </para>
     /// </summary>
     /// <param name="clause">The clause that defines the image pigment.</param>
-    /// <returns>The image pigment resolver.</returns>
-    private ImagePigmentResolver ParseImagePigmentClause(Clause clause)
+    /// <returns>The image pigment resolver, or the pattern pigment resolver for a picture read as a pattern.</returns>
+    private IPigmentResolver ParseImagePigmentClause(Clause clause)
     {
         List<string> texts = clause.Tokens.Select(t => t.Text).ToList();
         bool once = texts.Contains("once");
-        ImageMapType? imageMapType = null;
+        ImageMapType? imageMapType = ImageMapTypeIn(texts);
 
-        if (texts.Contains("planar"))
-            imageMapType = ImageMapType.Planar;
-        else if (texts.Contains("spherical"))
-            imageMapType = ImageMapType.Spherical;
-        else if (texts.Contains("cylindrical"))
-            imageMapType = ImageMapType.Cylindrical;
-        else if (texts.Contains("toroidal"))
-            imageMapType = ImageMapType.Toroidal;
+        // What the braces after a picture open on says which it is: a map of pigments, or what is said of an image.
+        bool mapped = false;
+
+        if (CurrentParser is not null && BounderToken.OpenBrace.Matches(CurrentParser.PeekNextToken()))
+        {
+            Token brace = CurrentParser.GetNextToken();
+            Token first = CurrentParser.PeekNextToken();
+
+            mapped = first is not null && (BounderToken.OpenBracket.Matches(first) || first.Text == "banded");
+
+            if (!mapped)
+                CurrentParser.ReturnToken(brace);
+        }
+
+        if (mapped)
+        {
+            PatternPigmentResolver pattern = new ()
+            {
+                PatternResolver = ParseImagePatternClause(clause),
+                PigmentSetResolver = ParsePigmentMapClause(),
+                TransformResolver = ParseTransformClause()
+            };
+
+            CurrentParser.MatchToken(
+                true, () => "Expecting a close brace here.", BounderToken.CloseBrace);
+
+            return pattern;
+        }
+
+        if (texts.Contains("channel"))
+        {
+            throw new TokenException("A channel makes a picture a pattern, so a map of pigments must follow it in braces.")
+            {
+                Token = clause.Tokens[texts.IndexOf("channel")]
+            };
+        }
 
         Resolver<ImageReference> imageReferenceResolver = ParseImageReference(clause);
         TransformResolver transformResolver = null;

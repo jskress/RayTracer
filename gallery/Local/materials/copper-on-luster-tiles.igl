@@ -1,0 +1,95 @@
+// A hammered copper pot on a terrace of glazed tiles in the afternoon sun: teal tiles, every other one painted
+// with a ring and a flower in gold luster, the glaze worn dull along the way people walk across them.
+//
+// **Everything here but the shapes is a picture**, each made from numbers by images/make-luster-tile-maps.py:
+//
+// - **The tiles' heights are a picture**, raised as a height field, so they stand up from their grout and cast
+//   their own shadows into it.
+// - **Their colors, their roughness and their gold are pictures too**, and each lies on the tiles exactly where it
+//   was painted for: on a height field a picture is laid as the field lays its heights, pixel for pixel.
+// - **The roughness is a roughness map**: `roughness 0.02 to 0.8 by image ...` reads each place's roughness from
+//   the picture, so the sun's glint is sharp in the new glaze and spread into a soft glow where it is worn.
+// - **The gold is a metalness map**: beside `metal 'gold'`, `metallic 0 to 1 by image ...` says how much of each
+//   place is bare gold, the glaze's own color showing everywhere else.
+// - **The glaze's fine pitting is a bump map**, a picture read as a pattern, and the pot's dents a **normal map**,
+//   a picture of the normals themselves, wrapped once round it.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    antialiasing depth 1
+    antialiasing threshold 0.2
+    reflection samples 32
+    info {
+        title 'Copper on Luster Tiles'
+        author 'J. Stephen Kress'
+        description 'A hammered copper pot on glazed teal tiles painted in gold luster, the glaze worn dull where people walk, in the afternoon sun.'
+        copyright true
+        software __software__
+    }
+}
+
+camera {
+    location [-0.03, 0.44, -0.70]
+    look at [0.0, 0.0, -0.02]
+    field of view 30
+}
+
+background physical sky { sun elevation 27  sun azimuth 190  turbidity 3  brightness 3 }
+sky light { samples 32 }
+
+// The house the terrace stands against, behind the camera: a warm plaster wall in the sun, which is what the pot's
+// copper mirrors.
+cube {
+    material { pigment color [0.80, 0.72, 0.60]  diffuse 0.9 }
+    scale [3, 1.5, 0.1]
+    translate [0, 1.5, -1.4]
+}
+
+// -- The tiles --------------------------------------------------------------------------------------
+
+// Six by six tiles of fifteen centimeters, their grout three and a half millimeters down.  Every picture on them is
+// laid as the field lays its heights, so none names a mapping.
+heightfield {
+    image 'images/luster-tiles-height.png'
+    smooth
+    material {
+        pigment image 'images/luster-tiles-color.png'
+        normal image 'images/luster-tiles-glaze.png' { depth 0.05 }
+        roughness 0.02 to 0.8 by image 'images/luster-tiles-roughness.png' { }
+        metal 'gold'
+        metallic 0 to 1 by image 'images/luster-tiles-gold.png' { }
+    }
+    translate [-0.5, -0.105, -0.5]
+    scale [0.9, 0.0273, 0.9]
+}
+
+// -- The pot ----------------------------------------------------------------------------------------
+
+Radius = 0.085
+Height = 0.09
+Lining = 0.0025
+Floor = 0.0064
+
+Copper = material {
+    metal 'copper'
+    roughness 0.2
+    // The picture goes once round the pot, and as far up it as round it, so that its dents are round: in the
+    // cylinder's own space the pot is one unit tall.
+    normal map 'images/hammered-copper-normal.png' cylindrical { scale [1, 2 * π * Radius / Height, 1] }
+}
+
+// Lined with tin, as a copper pot for cooking is.
+Tin = material { metal [0.80, 0.80, 0.78]  roughness 0.08 }
+
+// The rolled rim, too thin to show the hammer.
+Rolled = material { metal 'copper'  roughness 0.18 }
+
+// Open walls, outside and in, a floor and a rolled rim.
+group {
+    cylinder { open  min Y 0  max Y 1  material Copper  scale [Radius, Height, Radius] }
+    cylinder { open  min Y 0  max Y 1  material Tin  scale [Radius - Lining, Height, Radius - Lining] }
+    disc { center [0, 0.004, 0]  normal [0, 1, 0]  radius Radius - Lining  material Tin }
+    torus { radii Radius - Lining / 2, Lining / 2 + 0.0008  material Rolled  translate Y Height }
+    translate [0.075, Floor, 0.0]
+}

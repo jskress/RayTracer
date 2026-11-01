@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 170 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 171 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -1024,7 +1024,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Materials</b> &mdash; 23 images &middot; what a surface is made of</summary>
+<summary><b>Materials</b> &mdash; 24 images &middot; what a surface is made of</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -1049,6 +1049,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/materials/clarity.igl">Clarity Test</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/materials/copper-on-luster-tiles.png">
+      <img alt="Copper on Luster Tiles" height="120" src="Local/materials/copper-on-luster-tiles.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/materials/copper-on-luster-tiles.igl">Copper on Luster Tiles</a>
     </td>
   </tr>
   <tr style="border: none;">

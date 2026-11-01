@@ -127,6 +127,7 @@ map*: pairs of a position and the color at that position, in square brackets.
 | `radial` | The angle about the Y axis. |
 | `planar`, `spherical`, `cylindrical`, `boxed` | Distance from a plane, point, axis or box. |
 | `flop` | Not a place at all: the angle the surface is seen at; see [A color that shifts with the angle](#a-color-that-shifts-with-the-angle). |
+| `image` | A picture: its gray, or one of its channels; see [A picture as a pattern](#a-picture-as-a-pattern). |
 
 ```
 pigment marble {
@@ -450,6 +451,16 @@ rather than repeating it.  Without it the image tiles, so a surface larger than 
 the picture over and over.  Outside an image drawn once the surface shows clear, and the image's
 edge fades out over the width of a pixel rather than stopping on a texel.
 
+On a [height field](advanced-surfaces.md#height-field), with no mapping named, an image is laid as the
+field lays its heights, so a picture painted for a terrain lands pixel for pixel on the heights it was
+painted for.
+
+**An image lets light through only where its picture does**: where its alpha channel says it is less
+than opaque, or past the edges of one drawn `once`.  A surface colored by an opaque picture is as
+opaque as one painted a color, and may be anything such a surface may — a [metal](materials.md#metals),
+coated, rough.  Until 2026-10-31 every image was taken to let light through somewhere, and a surface
+colored by one could be none of those: rough, it mirrored nothing at all.
+
 **A picture is read as the light it stands for.**  Almost every image file is written in sRGB,
 whose values are not light: a mid-gray of 128 in a PNG or JPEG is about a fifth of white's light,
 not half.  Each file is turned back into light by the curve it says it was written with, so a
@@ -460,7 +471,7 @@ A scene that writes [`no gamma`](context.md#gamma) takes its colors as the value
 file, and takes an image's values the same way, as they stand -- so in either kind of scene a
 picture under white light comes back as itself.  An image used for a
 [height field](advanced-surfaces.md#height-field) is different again: its grays are heights, and
-are read exactly as the file holds them.
+are read exactly as the file holds them, as is a picture read as a [pattern](#a-picture-as-a-pattern).
 
 **A pixel sees a patch of a picture, not a point of it.**  Seen from far off or at a glance, many
 of an image's texels fall within one pixel, and reading just one of them beats a fine pattern
@@ -488,6 +499,45 @@ so it is fetched again the next time you render.  See
 surface that names it.  You want this only when the file may change under you.
 
 `gallery/Local/solar-system/` is built almost entirely from image pigments.
+
+#### A picture as a pattern
+
+A picture can do more than color a surface.  Written where a pattern goes, it is a pattern, whose
+value at each place is the picture's gray there, or one of its channels: how deep a surface's bumps
+run, where it is worn, how rough it is.
+
+```
+normal image 'tiles-height.png' { depth 0.4 }
+material blend image 'wear.png' { [0, Paint, 1, Rust] }
+roughness 0.2 to 0.7 by image 'tiles-roughness.png' { }
+```
+
+**It is read as a measurement, not as light.**  A height, a mask or a roughness is written into a
+file as the number it is, not encoded the way a photograph's colors are, so a picture read as a
+pattern is read exactly as the file holds it — a mid-gray of 128 is half — the way a
+[height field](advanced-surfaces.md#height-field) reads its heights.  Its gray is the height field's
+gray, too, so one picture can raise a terrain and mark it alike.  `channel red`, `green`, `blue` or
+`alpha` reads one channel alone instead, which is how texture sets pack several maps into one file:
+
+```
+roughness 0.1 to 0.9 by image 'tiles-packed.png' channel green { }
+```
+
+It takes a mapping, and is laid on a surface, exactly as an image pigment is: flat, round, or by the
+surface's own shape, and on a height field as the field lays its heights.  Read where there is no
+surface, as a [field](advanced-surfaces.md#field)'s patches are, it lies flat on X and Z.  Like an
+image pigment, it is averaged over the patch each pixel covers.
+
+As a pigment, a picture followed by a map of pigments in braces is read this way and picks among
+them, as any pattern's value does.  Naming a channel says it is meant so, and needs the map:
+
+```
+pigment image 'mask.png' channel red { [0, Gray20, 1, Ivory]  scale 2 }
+```
+
+`gallery/Local/materials/copper-on-luster-tiles.igl` is made of little else: tiles raised from a picture of
+their heights, colored, roughened, worn and painted in gold by pictures laid over them, and a hammered copper
+pot dented by a [normal map](materials.md#normal-maps).
 
 ### Blending and Layering
 
@@ -668,8 +718,10 @@ cube   { material { pigment stone }  translate [3, 0, 0] }
 ### Patterns Elsewhere
 
 The same patterns are used by a material's [`normal` block](materials.md#roughening-the-surface),
-where the pattern's value tilts the surface normal instead of choosing a color.  Everything
-here about turbulence, shaping, seeding and transforms applies there too.
+where the pattern's value tilts the surface normal instead of choosing a color, and by a
+[roughness](materials.md#roughness) or a [metalness](materials.md#metallic) that runs from one value
+to another across a surface.  Everything here about turbulence, shaping, seeding and transforms
+applies there too.
 
 A scene's [`background`](scene-files.md#background) is a pigment as well, so any of these may be
 a sky.  One thing is different there: a background is asked about the direction a ray was

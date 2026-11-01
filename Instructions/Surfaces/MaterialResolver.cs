@@ -64,6 +64,16 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     public Resolver<double> RoughnessResolver { get; set; }
 
     /// <summary>
+    /// This property holds the resolver for the roughness a roughness map runs to, for a material given one.
+    /// </summary>
+    public Resolver<double> RoughnessToResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the pattern a roughness map runs by, for a material given one.
+    /// </summary>
+    public DensityShapeResolver RoughnessByResolver { get; set; }
+
+    /// <summary>
     /// This property holds the resolver for how sharply diffuse lighting falls away.
     /// </summary>
     public Resolver<double> BrillianceResolver { get; set; }
@@ -77,6 +87,16 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
     /// This property holds the resolver for the metallic property of the material.
     /// </summary>
     public Resolver<double> MetallicResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for how metallic a metalness map runs to, for a material given one.
+    /// </summary>
+    public Resolver<double> MetallicToResolver { get; set; }
+
+    /// <summary>
+    /// This property holds the resolver for the pattern a metalness map runs by, for a material given one.
+    /// </summary>
+    public DensityShapeResolver MetallicByResolver { get; set; }
 
     /// <summary>
     /// This property holds the resolver for the metal the material is, if it is one.
@@ -229,6 +249,10 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         ReflectiveResolver.AssignTo(value, target => target.Reflective, context, variables);
         FresnelResolver.AssignTo(value, target => target.Fresnel, context, variables);
         RoughnessResolver.AssignTo(value, target => target.Roughness, context, variables);
+
+        // A roughness said afresh is said all over, unless it runs by a pattern.
+        if (RoughnessResolver is not null)
+            value.RoughnessBy = Mapped(value.Roughness, RoughnessToResolver, RoughnessByResolver, context, variables);
         AnisotropyResolver.AssignTo(value, target => target.Anisotropy, context, variables);
 
         // A surface is brushed one way or round an axis, so saying one is saying it is not the other.
@@ -255,6 +279,16 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
             value.Metal = MetalResolver.Resolve(context, variables);
             value.Metallic = 1;
         }
+        // How metallic a material is, said afresh, is said all over unless it runs by a pattern; a metal is bare metal
+        // all over, unless its metalness runs by one.
+        if (MetallicByResolver is not null)
+        {
+            value.Metallic = MetallicResolver.Resolve(context, variables);
+            value.MetallicBy = Mapped(value.Metallic, MetallicToResolver, MetallicByResolver, context, variables);
+        }
+        else if (MetallicResolver is not null || MetalResolver is not null)
+            value.MetallicBy = null;
+
         MelaninResolver.AssignTo(value, target => target.Melanin, context, variables);
         TransparencyResolver.AssignTo(value, target => target.Transparency, context, variables);
 
@@ -263,7 +297,7 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
         // square-on -- paint, varnish, plastic -- so that `roughness` alone makes a satin finish.
         // Rough glass works out what it mirrors from its own index, facet by facet, so it is left to
         // give back all of that.
-        if (RoughnessResolver is not null && ReflectiveResolver is null && value.IsRough)
+        if (RoughnessResolver is not null && ReflectiveResolver is null && (value.IsRough || value.RoughnessBy?.To > 0))
             value.Reflective = value.Transparency > 0 || value.PigmentMayTransmit ? 1 : 0.04;
         if (InteriorResolver != null)
             value.Interior = InteriorResolver.Resolve(context, variables);
@@ -295,6 +329,32 @@ public class MaterialResolver : ObjectResolver<Material>, ICloneable, IValidatab
                 ..DecalResolvers.Select(resolver => resolver.Resolve(context, variables))
             ];
         }
+    }
+
+    /// <summary>
+    /// This method makes the map a number runs by from one value to another, if it runs by one.
+    /// </summary>
+    /// <param name="from">The value where the pattern stands at nought.</param>
+    /// <param name="to">The resolver for the value where the pattern stands at one.</param>
+    /// <param name="by">The resolver for the pattern, or <c>null</c> for a number the same all over.</param>
+    /// <param name="context">The current render context.</param>
+    /// <param name="variables">The current set of scoped variables.</param>
+    /// <returns>The map, or <c>null</c>.</returns>
+    private static MaterialMap Mapped(
+        double from, Resolver<double> to, DensityShapeResolver by, RenderContext context, Variables variables)
+    {
+        if (by is null)
+            return null;
+
+        DensityShape shape = by.Resolve(context, variables);
+
+        return new MaterialMap
+        {
+            From = from,
+            To = to.Resolve(context, variables),
+            Pattern = shape.Pattern,
+            Transform = shape.Transform is { } transform && !transform.Matches(Matrix.Identity) ? transform : null
+        };
     }
 
     /// <summary>

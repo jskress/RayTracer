@@ -260,6 +260,24 @@ blurs the mirror only where the rough surface already blurs it, by about as much
 to see; looked at directly, a mirror is a mirror.  A transparent shell with the surroundings' own
 index, such as a lantern's, bends nothing and is left alone.
 
+**A roughness may run from one value to another across a surface**, by any
+[pattern](pigments-and-patterns.md) — most often a [picture](pigments-and-patterns.md#a-picture-as-a-pattern),
+the roughness map a texture set ships with its colors:
+
+```
+material {
+    pigment image 'tiles-color.png' { }
+    roughness 0.15 to 0.6 by image 'tiles-roughness.png' { }
+}
+```
+
+Where the pattern stands at nought the surface has the first roughness, where it stands at one the
+second, and between them a roughness in proportion: glaze worn dull where feet have crossed it, a
+fingerprint on a lacquered box.  It is read where each ray meets the surface, as a
+[blend](#blending-materials) is.  A roughness of nought at one end is a mirror, and between a mirror
+and facets there is no single surface, so there the surface is shaded as both and the two mixed, as a
+blend between a smooth material and a rough one is.
+
 `gallery/Local/materials/roughness.igl` shows five roughnesses side by side, in gold and in plastic, and
 `gallery/Local/materials/metals-on-a-gray-day.igl` rough iron, aluminum, gold, copper and turned steel keeping
 their light under an overcast sky.
@@ -423,7 +441,18 @@ are, and why they are photographed in rooms and under softboxes: give one a sky,
 panel to mirror.  Where a metal is not bare, the rest of the material says what is there instead.
 Under a [decal](#decals), that is the decal's paint, lit by the material's `diffuse` and `ambient`.
 Where [weathering](#weathering-a-model) or a [blend](#blending-materials) lays grime over it, it is the
-grime, and weathering's grime leaves three tenths of the metal showing through.
+grime, and weathering's grime leaves three tenths of the metal showing through.  And where a metalness
+map says it is not — `metallic 0 to 1 by` a pattern, beside `metal` — it is the rest of the material:
+paint, where the picture is black, chipped back to the bare metal where it is white.
+
+```
+material {
+    metal 'iron'
+    pigment color [0.55, 0.08, 0.06]
+    roughness 0.4
+    metallic 0 to 1 by image 'chips.png' { }
+}
+```
 
 A metal's highlight is the lamp's light in the metal's own color: Phong's for a smooth metal, whose
 `specular` and `shininess` still say how strong and how tight it is, and its facets' for a rough one.
@@ -461,11 +490,14 @@ material {
 }
 ```
 
-Written bare, `metallic` means fully metallic; give it a number between 0 and 1 to blend.
+Written bare, `metallic` means fully metallic; give it a number between 0 and 1 to blend.  It may run
+from one amount to another across a surface by a pattern, as a [roughness](#roughness) may —
+`metallic 0 to 1 by image 'metalness.png' { }` — and beside [`metal`](#metals), where it says nothing
+otherwise, that is how much of each place is bare metal: a texture set's metalness map.
 A material written this way wants a reflection too — a metal that mirrors nothing looks like
 painted plastic — and how much is the author's guess, which is the trouble with it: the metals
 in the libraries, tuned by eye, mirror anything from a twentieth to nearly one and a half times what
-the real metal does.  `metallic` does nothing to a material that says `metal`.
+the real metal does.  `metallic` does nothing to a material that says `metal`, but for a metalness map.
 
 #### A clear coat
 
@@ -921,6 +953,46 @@ sphere still has a circular silhouette.  For roughness that shows on the edge yo
 geometry.
 
 `gallery/Local/materials/normals.igl` shows the range of it.
+
+#### Bumps from a picture
+
+A [picture read as a pattern](pigments-and-patterns.md#a-picture-as-a-pattern) roughens a surface by
+its slope, as any pattern does: a height map, bright where the surface stands up and dark where it
+sinks.
+
+```
+normal image 'tiles-height.png' { depth 0.4 }
+```
+
+`depth` means what it means for any pattern: white stands an eighth of the depth above black, in the
+units the picture is laid in.  A picture's slope is taken a pixel either side of each place, along the
+picture's own rows and columns: between its pixels a picture is read along straight lines, and its
+slope taken any closer showed every pixel as a facet.  Far off, where many of its pixels fall within
+one of the camera's, it is averaged over the patch the pixel covers, as its colors would be, so its
+bumps smooth away rather than glitter.
+
+#### Normal maps
+
+A texture set's normal map is a picture of the normals themselves: red running across the picture,
+green up it and blue out of the surface, each from minus one at nought to one at full.  `normal map`
+tilts a surface by one directly.
+
+```
+normal map 'tiles-normal.png' { }
+```
+
+It takes a mapping as an image pigment does, and is read in the frame the picture is laid in there —
+the way across the picture, the way up it and the way the surface faces — found from how the picture
+lies, so it is right flat on a floor, round a ball or over a height field's hills.  A normal map is
+drawn one of two ways, its green pointing up the picture, OpenGL's way, or down it, DirectX's; this
+reads OpenGL's unless told `directx`:
+
+```
+normal map 'tiles-normal-dx.png' directx { depth 0.6 }
+```
+
+`depth` scales how far across the surface the map tilts it: 1, the default, is the map as drawn.
+Transforms in the braces place the picture, as they place a pattern.
 
 ### Blending Materials
 

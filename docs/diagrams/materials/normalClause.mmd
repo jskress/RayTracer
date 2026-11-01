@@ -1,5 +1,10 @@
 railroad-ebnf-beta
 title "Roughening a surface"
 
-normal = "normal" [ "with" "seed" number ] name "{" [ turbulence ] [ shaping ]
-         { "depth" number | transform } "}" ;
+normal = "normal" [ "with" "seed" number ] ( name | picture ) "{" [ turbulence ] [ shaping ]
+         { "depth" number | transform } "}"
+       | "normal" "map" filename [ mapping ] [ "directx" ] "{" { "depth" number | transform } "}" ;
+
+picture = [ "uncached" ] "image" filename [ mapping ] [ "channel" ( "red" | "green" | "blue" | "alpha" ) ] ;
+
+mapping = "planar" [ "once" ] | "spherical" | "cylindrical" [ "once" ] | "toroidal" ;

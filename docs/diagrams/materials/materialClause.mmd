@@ -15,12 +15,13 @@ entry = name | material ;
 weathering = "radius" number | "toward" ( "X" | "Y" | "Z" | vector ) ;
 
 finish = ( "ambient" | "diffuse" | "specular" | "shininess" | "reflective"
-         | "roughness" | "transparency" | "brilliance" | "grain" ) number
+         | "transparency" | "brilliance" | "grain" ) number
+       | "roughness" number [ "to" number "by" pattern ]
        | "emission" ( number | color ) ;
 
 metal = "metal" ( string | color [ "edge" color ] ) ;
 
-metallic = "metallic" [ number ] ;
+metallic = "metallic" [ number [ "to" number "by" pattern ] ] ;
 
 brushing = "anisotropy" number [ ( "along" | "around" ) ( "X" | "Y" | "Z" | vector ) ] ;
 
@@ -34,4 +35,8 @@ coat = "coat" "{" { "roughness" number | ( "ior" | "index" "of" "refraction" ) n
 
 sheen = "sheen" "{" { "color" ( number | color ) | "roughness" number } "}" ;
 
-pattern = name [ "with" "seed" number ] "{" [ turbulence ] [ shaping ] { transform } "}" ;
+pattern = ( name [ "with" "seed" number ] | picture ) "{" [ turbulence ] [ shaping ] { transform } "}" ;
+
+picture = [ "uncached" ] "image" filename [ mapping ] [ "channel" ( "red" | "green" | "blue" | "alpha" ) ] ;
+
+mapping = "planar" [ "once" ] | "spherical" | "cylindrical" [ "once" ] | "toroidal" ;

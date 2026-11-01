@@ -1676,6 +1676,14 @@ field raises everything darker than the clip to the height the clip's brightness
 quarter of it, as with any brightness — in a level plain; `open`, the field leaves that plain out,
 and the terrain stops at the clip with nothing beneath it.
 
+**A picture laid on a field lies on its heights.**  An [image pigment](pigments-and-patterns.md#image-pigments),
+or a picture read as a [pattern](pigments-and-patterns.md#a-picture-as-a-pattern), laid on a height
+field with no mapping named is laid as the field lays its heights: its first and last pixels on the
+square's edges, as the field's first and last heights are.  So a picture painted for a terrain — where
+its snow lies, where its rock shows — lands pixel for pixel on the heights it was painted for, and the
+height picture itself, read as a pattern, is the height of each place.  A `planar` map, named, lays
+each pixel's middle half a pixel in from the square's edges, as it does on anything else.
+
 #### Terrain from a function
 
 The same shape written out instead of drawn.  Inside the braces, `x` and `z` run from 0 to 1 across

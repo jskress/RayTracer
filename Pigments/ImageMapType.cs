@@ -26,7 +26,16 @@ public enum ImageMapType
     /// <summary>
     /// This entry notes a toroidal image map.
     /// </summary>
-    Toroidal
+    Toroidal,
+
+    /// <summary>
+    /// This entry notes a height field's own placing, which no scene names: an image laid on anything that is
+    /// part of a height field, and told no other way, is laid as the field lays its heights -- across X and Z
+    /// over the unit square, its first and last texels' middles on the square's edges.  A planar map puts each
+    /// texel's middle half a texel in from its corner instead, which set a picture painted for a terrain half
+    /// a texel off the heights it was painted for, and stretched it by a texel over the whole.
+    /// </summary>
+    Field
 }
 
 /// <summary>
@@ -63,6 +72,7 @@ public static class ImageMapTypeExtensions
             ImageMapType.Spherical => GetSphericalImageLocationFor(point, width, height),
             ImageMapType.Cylindrical => GetCylindricalImageLocationFor(point, width, height),
             ImageMapType.Toroidal => GetToroidalImageLocationFor(point, width, height, ring),
+            ImageMapType.Field => (point.X * (width - 1) + 0.5, point.Z * (height - 1) + 0.5),
             _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
         };
     }
@@ -90,6 +100,8 @@ public static class ImageMapTypeExtensions
             ImageMapType.Spherical => (TextureWrap.Repeat, TextureWrap.Clamp),
             ImageMapType.Cylindrical => (TextureWrap.Repeat, tiled),
             ImageMapType.Toroidal => (TextureWrap.Repeat, TextureWrap.Repeat),
+            // A height field stands on its image once, and its walls go down from its edges.
+            ImageMapType.Field => (TextureWrap.Clamp, TextureWrap.Clamp),
             _ => throw new ArgumentOutOfRangeException(nameof(imageMapType), imageMapType, null)
         };
     }

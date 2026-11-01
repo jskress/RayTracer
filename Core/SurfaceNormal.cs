@@ -1,5 +1,6 @@
 using RayTracer.Basics;
 using RayTracer.Extensions;
+using RayTracer.Graphics;
 using RayTracer.Patterns;
 
 namespace RayTracer.Core;
@@ -50,11 +51,32 @@ public class SurfaceNormal
     public Pattern Pattern { get; set; }
 
     /// <summary>
+    /// This property holds a picture whose colors are the very normals to use -- a normal map, as a texture set
+    /// ships one -- in place of a pattern's slope.  Its red runs across the picture, its green up it and its blue
+    /// out of the surface, each from minus one at nought to one at full, in the frame the picture is laid in: the
+    /// way across it, the way up it and the way the surface faces.
+    /// </summary>
+    public ImagePattern NormalMap { get; set; }
+
+    /// <summary>
+    /// This property notes whether a normal map's green points down its picture rather than up it, as DirectX's
+    /// maps are drawn; OpenGL's, the default, point up.
+    /// </summary>
+    public bool GreenDown { get; set; }
+
+    /// <summary>
     /// This property holds how far the normal may be tilted, which is what decides how deep the
     /// bumps look.  Zero leaves the surface as it was, and larger numbers roughen it further;
-    /// much beyond one the lie stops being believable and the surface reads as noise.
+    /// much beyond one the lie stops being believable and the surface reads as noise.  For a normal map,
+    /// one is the map as it was drawn, and the tilt across the surface is scaled by it.
     /// </summary>
     public double Depth { get; set; } = 1;
+
+    /// <summary>
+    /// This property reports whether the surface is roughened by a picture, which wants the patch a ray covers to
+    /// be read over (see <see cref="PerturbAt"/>).
+    /// </summary>
+    public bool ReadsAPicture => NormalMap is not null || Pattern is ImagePattern;
 
     /// <summary>
     /// This property holds the transform applied to a point before the pattern is asked about it,
@@ -94,16 +116,25 @@ public class SurfaceNormal
     /// about which way the skin is tilted and would only push the normal in or out.
     /// </para>
     /// </summary>
+    /// <para>
+    /// A picture is read over the patch the ray covers, as an image pigment is: its texels are fine enough to fall
+    /// many to a pixel, and a slope read from a single one of them far off glitters.
+    /// </para>
     /// <param name="normal">The surface's own normal, in surface space.</param>
     /// <param name="point">The point being shaded, in surface space.</param>
+    /// <param name="patch">The patch the ray covers there, in surface space, for a roughening read from a picture.</param>
     /// <returns>The tilted normal.</returns>
-    public Vector PerturbAt(Vector normal, Point point)
+    public Vector PerturbAt(Vector normal, Point point, Footprint patch = null)
     {
+        if (NormalMap is not null)
+            return MappedAt(normal, point, patch);
+
         if (Pattern is null || Depth == 0)
             return normal;
 
         Point patternPoint = _inverseTransform.Value * point;
-        Vector gradient = GradientAt(patternPoint);
+        Vector gradient = Pattern.SlopeAt(patternPoint, patch?.TransformedBy(_inverseTransform.Value)) ??
+                          GradientAt(patternPoint);
 
         if (gradient.Magnitude.Near(0))
             return normal;
@@ -154,6 +185,51 @@ public class SurfaceNormal
     }
 
     /// <summary>
+    /// This method tilts the given normal by a normal map: the picture's color at the point is the normal to use, in
+    /// the frame the picture is laid in there.
+    /// <para>
+    /// The frame is the picture's own: the way across it and the way up it, each laid flat on the surface, with the
+    /// way the surface faces.  Found from how the picture's places change about the point rather than assumed, it is
+    /// right on any shape the picture can be laid on -- flat on a floor, round a ball, round a height field's hills.
+    /// </para>
+    /// </summary>
+    /// <param name="normal">The surface's own normal, in surface space.</param>
+    /// <param name="point">The point being shaded, in surface space.</param>
+    /// <param name="patch">The patch the ray covers there, in surface space, if any.</param>
+    /// <returns>The tilted normal.</returns>
+    private Vector MappedAt(Vector normal, Point point, Footprint patch)
+    {
+        Point patternPoint = _inverseTransform.Value * point;
+
+        if (NormalMap.RatesAt(patternPoint) is not var (across, down))
+            return normal;
+
+        Color color = NormalMap.ColorAt(patternPoint, patch?.TransformedBy(_inverseTransform.Value));
+
+        // Clear where the picture is not laid: past the edge of one laid once.
+        if (color.Alpha <= 0)
+            return normal;
+
+        Vector patternNormal = (_toPattern.Value * normal).Unit;
+        Vector tangent = across - patternNormal * across.Dot(patternNormal);
+        Vector bitangent = down - patternNormal * down.Dot(patternNormal);
+
+        if (tangent.Magnitude.Near(0) || bitangent.Magnitude.Near(0))
+            return normal;
+
+        tangent = tangent.Unit;
+
+        // A picture's rows are counted down it, and OpenGL's green points up it.
+        bitangent = (bitangent - tangent * bitangent.Dot(tangent)).Unit * (GreenDown ? 1 : -1);
+
+        Vector tilted = tangent * ((color.Red * 2 - 1) * Depth) +
+                        bitangent * ((color.Green * 2 - 1) * Depth) +
+                        patternNormal * (color.Blue * 2 - 1);
+
+        return tilted.Magnitude.Near(0) ? normal : (_toSurface.Value * tilted).Unit;
+    }
+
+    /// <summary>
     /// This method asks the pattern about a point a short way off from the one given.
     /// </summary>
     /// <param name="point">The point to move from.</param>
@@ -178,7 +254,9 @@ public class SurfaceNormal
     /// <returns><c>true</c>, if the two match, or <c>false</c>, if not.</returns>
     public bool Matches(SurfaceNormal other)
     {
-        if (other is null || !Depth.Near(other.Depth) || !Transform.Matches(other.Transform))
+        if (other is null || !Depth.Near(other.Depth) || !Transform.Matches(other.Transform) ||
+            GreenDown != other.GreenDown || (NormalMap is null) != (other.NormalMap is null) ||
+            (NormalMap is not null && !NormalMap.Matches(other.NormalMap)))
             return false;
 
         return Pattern is null ? other.Pattern is null : Pattern.Matches(other.Pattern);

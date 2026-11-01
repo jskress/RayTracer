@@ -287,6 +287,82 @@ public class Material
     public MaterialBlend Blend { get; set; }
 
     /// <summary>
+    /// This property holds the material's roughness running from one value to another by a pattern -- a roughness
+    /// map -- or <c>null</c> for a roughness the same all over.  Its first value is <see cref="Roughness"/>, for
+    /// whatever asks without a hit to read it at; see <see cref="MappedAt"/>.
+    /// </summary>
+    public MaterialMap RoughnessBy { get; set; }
+
+    /// <summary>
+    /// This property holds how metallic the material is running from one value to another by a pattern -- a
+    /// metalness map -- or <c>null</c> for the same all over.  Its first value is <see cref="Metallic"/>, for
+    /// whatever asks without a hit to read it at; see <see cref="MappedAt"/>.
+    /// </summary>
+    public MaterialMap MetallicBy { get; set; }
+
+    // The material as it stands at each step of its mapped numbers, kept as a blend keeps its mixtures.
+    private ConcurrentDictionary<(int Roughness, int Metallic), Material> _mapped;
+
+    /// <summary>
+    /// This method returns the material as it stands where a ray met the surface: its mapped numbers read there, or
+    /// itself, for a material with none.
+    /// <para>
+    /// The numbers are cut into as many steps as a blend's mixtures, and the material at each kept, so that no hit
+    /// makes one of its own.  Between a smooth end of a roughness map and a rough one, the material is shaded as
+    /// each and the two mixed, as a blend between a smooth material and a rough one is (see <see cref="Split"/>):
+    /// there is no single material between a mirror and facets.
+    /// </para>
+    /// </summary>
+    /// <param name="intersection">The hit.</param>
+    /// <param name="scene">The scene being shaded.</param>
+    /// <returns>The material there.</returns>
+    internal Material MappedAt(Intersection intersection, Scene scene)
+    {
+        if (RoughnessBy is null && MetallicBy is null)
+            return this;
+
+        int roughness = RoughnessBy is null ? 0 : StepOf(RoughnessBy.ShareAt(intersection, scene));
+        int metallic = MetallicBy is null ? 0 : StepOf(MetallicBy.ShareAt(intersection, scene));
+
+        return LazyInitializer.EnsureInitialized(ref _mapped)
+            .GetOrAdd((roughness, metallic), key => MadeAt(key.Roughness, key.Metallic));
+
+        static int StepOf(double share) => (int) Math.Round(share * MaterialBlend.Steps);
+    }
+
+    /// <summary>
+    /// This method makes the material as it stands at the given steps of its mapped numbers.
+    /// </summary>
+    /// <param name="roughness">The step of the way along its roughness map.</param>
+    /// <param name="metallic">The step of the way along its metalness map.</param>
+    /// <returns>The material there.</returns>
+    private Material MadeAt(int roughness, int metallic)
+    {
+        Material made = At(roughness, metallic);
+
+        if (RoughnessBy is { } map && (map.From > 0) != (map.To > 0) && roughness > 0 && roughness < MaterialBlend.Steps)
+            made.Split = (At(0, metallic), At(MaterialBlend.Steps, metallic), (double) roughness / MaterialBlend.Steps);
+
+        return made;
+
+        Material At(int roughStep, int metalStep)
+        {
+            Material copy = CopiedForBlending();
+
+            copy.RoughnessBy = null;
+            copy.MetallicBy = null;
+
+            if (RoughnessBy is not null)
+                copy.Roughness = RoughnessBy.At((double) roughStep / MaterialBlend.Steps);
+
+            if (MetallicBy is not null)
+                copy.Metallic = MetallicBy.At((double) metalStep / MaterialBlend.Steps);
+
+            return copy;
+        }
+    }
+
+    /// <summary>
     /// This method returns a copy of this material to be made into a mixture of two: everything it says, and
     /// none of what it has worked out and kept for itself.
     /// </summary>
@@ -319,6 +395,7 @@ public class Material
     private Material Forgetting()
     {
         Split = null;
+        _mapped = null;
         _roughCopies = null;
         _withoutDiffuse = null;
         _sight = null;

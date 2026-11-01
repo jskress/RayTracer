@@ -1,6 +1,13 @@
 railroad-ebnf-beta
 title "An image pigment"
 
-image = [ "uncached" ] "image" filename [ mapping ] ;
+image = picture [ "{" { "brightness" number | transform } "}" ]
+      | picture [ channel ] "{" map { transform } "}" ;
+
+picture = [ "uncached" ] "image" filename [ mapping ] ;
 
 mapping = "planar" [ "once" ] | "spherical" | "cylindrical" [ "once" ] | "toroidal" ;
+
+channel = "channel" ( "red" | "green" | "blue" | "alpha" ) ;
+
+map = [ "banded" ] "[" position "," color { "," position "," color } "]" ;

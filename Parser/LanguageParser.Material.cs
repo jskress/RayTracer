@@ -285,6 +285,16 @@ public partial class LanguageParser
         string field = clause.Text();
         Term term = clause.Term();
 
+        // Only a roughness, and how metallic a surface is, run from one value to another by a pattern.
+        if (field is not ("roughness" or "metallic") && clause.Tokens.Count > 1 && clause.Text(1) == "to")
+        {
+            throw new TokenException(
+                "Only a material's roughness, and how metallic it is, may run from one value to another by a pattern.")
+            {
+                Token = clause.Tokens[1]
+            };
+        }
+
         switch (field)
         {
             case "pigment":
@@ -323,13 +333,17 @@ public partial class LanguageParser
                 resolver.ReflectiveResolver = new TermResolver<double>() { Term = term };
                 break;
             case "roughness":
-                resolver.RoughnessResolver = new TermResolver<double>
+                resolver.RoughnessResolver = Roughness(term);
+                resolver.RoughnessToResolver = null;
+                resolver.RoughnessByResolver = null;
+
+                // A roughness running from one to another needs a pattern to say where it is which.
+                if (clause.Expressions.Count > 1)
                 {
-                    Term = term,
-                    Validator = value => value is < 0 or > 1
-                        ? "A roughness runs from nothing, a mirror, to one, which is matte."
-                        : null
-                };
+                    resolver.RoughnessToResolver = Roughness(clause.Term(1));
+                    resolver.RoughnessByResolver = ParseMappedBy("roughness");
+                }
+
                 break;
             case "fresnel":
                 resolver.FresnelResolver = new LiteralResolver<bool> { Value = true };
@@ -388,11 +402,21 @@ public partial class LanguageParser
                 // wanted; naming nothing means naming 1.  When the material's next entry follows
                 // straight on, it arrives in the same clause -- whatever amount there is belongs to
                 // it -- and is handled as itself.
-                bool followed = clause.Tokens.Count > 1;
+                bool mapped = clause.Tokens.Count > 1 && clause.Text(1) == "to";
+                bool followed = clause.Tokens.Count > 1 && !mapped;
 
                 resolver.MetallicResolver = term is null || followed
                     ? new LiteralResolver<double> { Value = 1 }
                     : new TermResolver<double> { Term = term };
+                resolver.MetallicToResolver = null;
+                resolver.MetallicByResolver = null;
+
+                // How metallic a surface is may run from one amount to another by a pattern, a metalness map.
+                if (mapped)
+                {
+                    resolver.MetallicToResolver = new TermResolver<double> { Term = clause.Term(1) };
+                    resolver.MetallicByResolver = ParseMappedBy("how metallic the material is");
+                }
 
                 if (followed)
                 {
@@ -439,6 +463,34 @@ public partial class LanguageParser
             default:
                 throw new Exception($"Internal error: unknown material property found: {field}.");
         }
+    }
+
+    /// <summary>
+    /// This method returns the resolver for a roughness, held between a mirror's and matte's.
+    /// </summary>
+    /// <param name="term">The term giving the roughness.</param>
+    /// <returns>The resolver.</returns>
+    private static TermResolver<double> Roughness(Term term) => new ()
+    {
+        Term = term,
+        Validator = value => value is < 0 or > 1
+            ? "A roughness runs from nothing, a mirror, to one, which is matte."
+            : null
+    };
+
+    /// <summary>
+    /// This method parses the pattern a material's number runs by, from one value to another, which must follow.
+    /// </summary>
+    /// <param name="what">What runs by it, for the complaint if nothing does.</param>
+    /// <returns>The resolver for the pattern.</returns>
+    private DensityShapeResolver ParseMappedBy(string what)
+    {
+        return ParseClause("fieldSizedByClause") is { } by
+            ? ParseDensityShapeClause(by)
+            : throw new TokenException($"Expecting \"by\" and the pattern that sets {what} to follow here.")
+            {
+                Token = CurrentParser.PeekNextToken()
+            };
     }
 
     /// <summary>

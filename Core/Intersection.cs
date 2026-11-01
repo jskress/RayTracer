@@ -274,6 +274,10 @@ public class Intersection : IComparable<Intersection>
         Point = ray.At(Distance);
         Eye = -ray.Direction;
         TimeIndex = ray.TimeIndex;
+
+        // How wide the ray is here is known before the normal, so that a surface roughened by a picture can read it
+        // over the patch the ray covers; see Surface.NormalAt.
+        FootprintRadius = ray.RadiusAt(Distance);
         Normal = Surface.NormalAt(Point, this);
         Inside = Normal.Dot(Eye) < 0;
 
@@ -343,7 +347,6 @@ public class Intersection : IComparable<Intersection>
         // distance and the normal are both to hand, and it is what lets a pattern answer for a patch
         // instead of for a point.  A ray that was never told it spreads gives a footprint of nothing,
         // which is every ray that existed before this did.
-        FootprintRadius = ray.RadiusAt(Distance);
         Footprint = Footprint.For(FootprintRadius, ray.Direction, Normal);
 
         // Kept so that a ray born here -- off a mirror, or through glass -- can go on widening from
