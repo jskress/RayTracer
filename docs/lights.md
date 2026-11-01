@@ -295,6 +295,55 @@ Two things worth knowing when using it:
 - **Say nothing and nothing changes.** A scene that never writes `fade distance` renders exactly as it
   did before this existed, bit for bit.
 
+### Light Profiles
+
+A real light fitting is not equally bright every way.  A downlight throws a cone and leaves the ceiling
+dark; one near a wall paints the scalloped arcs every corridor has; a wall-washer throws its light out
+sideways, evenly down a wall.  Their makers measure how bright each is in every direction, on a grid of
+angles round it, and publish the measurement as an **IES file** (IESNA LM-63).  `profile` gives a light
+one:
+
+```
+point light {
+    location [0, 2.8, 0.4]
+    profile 'downlight.ies'
+    temperature 3000
+}
+```
+
+The light is then as bright each way as the profile says, read smoothly between the angles it was
+measured at.  It shapes everything the light reaches — what it lights, the shadows it casts, haze it
+shines through, which shows the cone, hair, and [caustics](context.md#caustics).
+
+**Only the profile's shape is taken.**  It is scaled so that its brightest way is one, and the light goes
+on saying how bright it is with its `color`, `temperature`, `brightness` and [`fade`](#fading-with-distance),
+as any light does.  An IES file's numbers are candelas, which are absolute; a scene's lights carry no
+unit and fade only when told, so the file's absolute brightness would mean nothing in it.
+
+**A profile hangs straight down**, as its fitting is measured: its vertical angle nought is straight down,
+its horizontal angle nought lies along +X, and its 90 along +Z — counterclockwise seen from above.
+`turned` turns it about its straight down, in the scene's angles, and `point at` aims its straight down
+somewhere else:
+
+```
+point light {
+    location [2.2, 2.8, 0.4]
+    profile 'wall-washer.ies' turned 90
+}
+```
+
+A spotlight's profile points where its cone does and shapes the cone further; an area light's shapes the
+light of every place on its face alike, which makes it a fitting with soft shadows.  A light in a
+[group](#lights-on-things) turns with the group, profile and all.
+
+What is read is the photometry every architectural fitting is measured by, type C, measured over a
+quarter, a half or the whole way round, and down only, up only or both; a tilt table, if a file has one,
+is passed over.  Types A and B, which car lamps and floodlights are measured by, are refused.
+
+Profiles from a fitting's maker are downloads, and the gallery commits none: its own are made by a script
+beside the scene that reads them.  `gallery/Local/lights/a-gallery-after-hours.igl` hangs four paintings under
+downlights, each throwing its scallop up the wall, and washes the end wall from the ceiling.
+
 ### Sky Lights
 
 Light arriving from every direction at once, which is what the outdoors is.

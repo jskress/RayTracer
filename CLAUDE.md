@@ -177,6 +177,14 @@ Handed into the one shape at settling, the first holder's material went to every
 material is shared too (`PrimitiveCallResolver`), unless the block `GivesLight` (decided before building) or its
 material holds a medium (found once the block is laid on; the call is then built apart and the block laid on again).  `MayBeShared` asks a self-filling group (Field, GrownTree, LSystem, Fracture) what it
 WILL hold (`MayShareWhatItHolds`: its candidates or leaves made once and kept for the fill), being empty when asked.
+A point light's `profile 'f.ies' [turned a]` (`Core/LightProfile.cs`, IESNA LM-63 type C; A and B refused; tilt tables
+skipped; quarter, half, 90-270 and whole symmetries mirrored; read bilinearly between its angles) is its SHAPE only,
+normalized to a peak of one -- brightness stays the light's -- applied by `PointLight.IntensityToward` (so shading,
+media, hair and photons all take it) and by an area light's every sample; it hangs straight down, horizontal nought
+along +X and 90 along +Z, `point at` aims it (a spotlight's at its cone's aim), and its frame is kept as two points
+one unit off the light so `PlaceBy` carries it through groups (a spotlight places its base first).  A primitive's
+group holding a light and NO surface was taken for empty and handed back as a new empty group (`SharedAs`), its
+light lost, until 2026-11-01.
 An area light's samples stand at the middles of its cells, jittered within them, so every one is on its face
 (POV-Ray's grid ran edge to edge and its jitter spilled past it); a spotlight's `radius` and `falloff` are angles
 read as `angles are` says (degrees unless told), the falloff 30 degrees unless said.

@@ -120,7 +120,7 @@ public class AreaLight : PointLight
         Point on = Location + Axis1 * alongU + Axis2 * alongV;
         Vector toward = on - point;
 
-        return new LightSample(toward.Unit, toward.Magnitude, 1);
+        return new LightSample(toward.Unit, toward.Magnitude, Profile is null ? 1 : IntensityToward(point));
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public class AreaLight : PointLight
         Point on = Location + Axis1 * (first - 0.5) + Axis2 * (second - 0.5);
         Vector toward = on - point;
 
-        return new LightSample(toward.Unit, toward.Magnitude, 1);
+        return new LightSample(toward.Unit, toward.Magnitude, Profile is null ? 1 : IntensityToward(point));
     }
 
     /// <summary>

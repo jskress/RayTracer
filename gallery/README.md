@@ -269,7 +269,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Stuff Invented Here</b> &mdash; 172 images</summary>
+<summary><b>Stuff Invented Here</b> &mdash; 173 images</summary>
 
 <details>
 <summary><b>Animation</b> &mdash; 11 images &middot; scenes that move, each a still and a movie</summary>
@@ -896,7 +896,7 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
 </details>
 
 <details>
-<summary><b>Lights</b> &mdash; 14 images &middot; where the light comes from</summary>
+<summary><b>Lights</b> &mdash; 15 images &middot; where the light comes from</summary>
 
 <table style="width: 100%; border: none;">
   <tr style="border: none;">
@@ -905,6 +905,14 @@ thumbnail will show the full-sized image.  Clicking the image title will show th
     </a></td>
     <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
       <a href="Local/lights/a-bar-after-hours.igl">A Bar After Hours</a>
+    </td>
+  </tr>
+  <tr style="border: none;">
+    <td style="border: none;"><a href="Local/lights/a-gallery-after-hours.png">
+      <img alt="A Gallery After Hours" height="120" src="Local/lights/a-gallery-after-hours.png" width="160"/>
+    </a></td>
+    <td style="margin-left: 8px; margin-right: 8px; border: none; vertical-align: middle;">
+      <a href="Local/lights/a-gallery-after-hours.igl">A Gallery After Hours</a>
     </td>
   </tr>
   <tr style="border: none;">

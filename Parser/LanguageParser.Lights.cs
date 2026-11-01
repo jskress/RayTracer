@@ -209,9 +209,30 @@ public partial class LanguageParser
                 }
 
                 break;
+            case "profile":
+                HandleProfileClause(clause, resolver);
+                break;
+            // A point light's "point at" aims its profile.
+            case "point":
+                resolver.ProfileAimResolver = new TermResolver<Point> { Term = term };
+                break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
         }
+    }
+
+    /// <summary>
+    /// This method is used to handle a light's profile clause: the IES file, found from the scene's own folder, and how
+    /// far it is turned about its straight down, if said.
+    /// </summary>
+    /// <param name="clause">The clause to process.</param>
+    /// <param name="resolver">The resolver for the light.</param>
+    private void HandleProfileClause<TLight>(Clause clause, ProfiledLightResolver<TLight> resolver)
+        where TLight : RayTracer.Core.PointLight, new()
+    {
+        resolver.ProfileResolver = new TermResolver<string> { Term = clause.Term() };
+        resolver.Directory = CurrentDirectory;
+        resolver.ProfileTurnResolver = clause.Expressions.Count > 1 ? new AngleResolver { Term = clause.Term(1) } : null;
     }
 
     /// <summary>
@@ -298,6 +319,9 @@ public partial class LanguageParser
                 }
 
                 break;
+            case "profile":
+                HandleProfileClause(clause, resolver);
+                break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");
         }
@@ -373,6 +397,13 @@ public partial class LanguageParser
                     };
                 }
 
+                break;
+            case "profile":
+                HandleProfileClause(clause, resolver);
+                break;
+            // An area light's "point at" aims its profile.
+            case "point":
+                resolver.ProfileAimResolver = new TermResolver<Point> { Term = term };
                 break;
             default:
                 throw new Exception($"Internal error: unknown light property found: {clause.Text()}.");

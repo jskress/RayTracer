@@ -1,0 +1,90 @@
+// A gallery after hours: four paintings down a plaster wall, each under its own downlight, and the end wall washed
+// from the ceiling.
+//
+// **Every light here has a profile**, read from an IES file beside the scene (`profile`): how bright a real fitting
+// is in each direction, as its maker measures it.  A downlight close to a wall throws a cone, and the cone meets the
+// wall in the bright arc over each painting that every gallery and corridor has -- the scallop.  A wall-washer
+// throws its light out sideways and up, so the end wall is lit evenly from the ceiling down rather than in a pool.
+// The profiles are not any maker's: profiles/make-light-profiles.py writes them from numbers.
+//
+// The lights fade with distance as real ones do, and the room is filled by the light bouncing off its own walls.
+
+context {
+    parallel pixel scanner
+    angles are degrees
+    white balance 3300
+    diffuse bounces 2
+    diffuse samples 1024
+    diffuse cache
+    info {
+        title 'A Gallery After Hours'
+        author 'J. Stephen Kress'
+        description 'Four paintings down a plaster wall, each under a downlight throwing its scallop up the wall, and the end wall washed from the ceiling: every light a profile from an IES file.'
+        copyright true
+        software __software__
+    }
+}
+
+// Standing back along the wall, looking down the gallery to its end.
+camera {
+    location [-2.6, 1.55, -1.9]
+    look at [1.2, 1.45, 0.9]
+    field of view 62
+}
+
+// The room: the long wall at z = 1, the end wall at x = 4.5, a floor and a ceiling three meters up.
+Plaster = material { pigment [0.86, 0.83, 0.78]  specular 0.02 }
+plane { rotate X -90  translate Z 1  material Plaster }
+plane { rotate Z 90  translate X 4.5  material Plaster }
+plane { translate Y 3  material { pigment [0.5, 0.48, 0.46] } }
+plane { material { pigment wood { turbulence 0.2  [0, [0.36, 0.22, 0.12], 0.5, [0.46, 0.30, 0.17], 1, [0.30, 0.18, 0.10]]  scale [0.05, 0.05, 2] }  roughness 0.35 } }
+
+// A painting: a canvas of one of the patterns in a dark frame, hung by its middle at eye height.
+primitive Painting(canvas, wide, high, x) -> group {
+    return group {
+        cube { scale [wide / 2 + 0.04, high / 2 + 0.04, 0.02]  material { pigment [0.08, 0.06, 0.05]  roughness 0.4 } }
+        cube { scale [wide / 2, high / 2, 0.025]  material canvas }
+        translate [x, 1.55, 0.975]
+    }
+}
+
+Sunburst = material { pigment radial { frequency 8  [0, Navy, 0.5, Goldenrod, 1, Navy]  rotate X 90 } }
+Storm = material { pigment marble { turbulence 0.8  [0, Ivory, 0.6, SlateGray, 1, Black]  scale 0.3 } }
+Field = material { pigment granite { [0, Teal, 0.5, Khaki, 1, DarkOliveGreen]  scale 0.6 } }
+Sunset = material { pigment bozo { [0, OrangeRed, 0.5, Gold, 1, Indigo]  scale 0.25 } }
+
+object Painting(Sunburst, 0.8, 1.0, -1.0)
+object Painting(Storm, 1.0, 0.7, 0.6)
+object Painting(Field, 0.6, 0.8, 2.1)
+object Painting(Sunset, 0.9, 1.1, 3.6)
+
+// A downlight over each painting, 40 centimeters out from the wall: each throws its scallop up the wall, narrow over
+// the smaller paintings and wide over the large one.
+primitive Downlight(x, profiled) -> group {
+    return group {
+        area light {
+            location [x, 2.98, 0.6]  axisU [0.06, 0, 0]  axisV [0, 0, 0.06]  steps 3
+            profile profiled
+            temperature 3000  brightness 4  fade distance 1.2
+        }
+    }
+}
+
+object Downlight(-1.0, 'profiles/downlight-wide.ies')
+object Downlight(0.6, 'profiles/downlight-narrow.ies')
+object Downlight(2.1, 'profiles/downlight-narrow.ies')
+object Downlight(3.6, 'profiles/downlight-narrow.ies')
+
+// Two wall-washers before the end wall, washing it from the ceiling.
+primitive WallWasher(z) -> group {
+    return group {
+        area light {
+            location [3.55, 2.98, z]  axisU [0.06, 0, 0]  axisV [0, 0, 0.06]  steps 3
+            profile 'profiles/wall-washer.ies'
+            temperature 3000  brightness 2.4  fade distance 1.2
+        }
+    }
+}
+
+object WallWasher(-0.5)
+object WallWasher(0.5)

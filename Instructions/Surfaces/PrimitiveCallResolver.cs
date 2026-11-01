@@ -190,14 +190,16 @@ public class PrimitiveCallResolver : ISurfaceResolver
     /// </para>
     /// <para>
     /// A plain group, exactly: a field, an L-system or a line of text is a group that fills itself only
-    /// when it is prepared, and is not empty for looking so beforehand.
+    /// when it is prepared, and is not empty for looking so beforehand.  And one with no lights in it: a
+    /// group holding a light and nothing else -- a fitting written as its light alone -- was handed back as
+    /// a new group with nothing in it, and lit nothing (until 2026-11-01).
     /// </para>
     /// </summary>
     /// <param name="shape">The shape being shared.</param>
     /// <returns>What the call is handed.</returns>
     private static Surface SharedAs(Surface shape)
     {
-        return shape.GetType() == typeof(Group) && ((Group) shape).Surfaces.Count == 0
+        return shape.GetType() == typeof(Group) && ((Group) shape).Surfaces.Count == 0 && ((Group) shape).Lights.Count == 0
             ? new Group()
             : new Group().Add(new Instance { Prototype = shape });
     }
